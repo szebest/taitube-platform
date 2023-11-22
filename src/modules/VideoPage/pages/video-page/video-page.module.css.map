@@ -1,0 +1,9 @@
+{
+    "version": 3,
+    "mappings": "AAAA,AAAA,UAAU,CAAC;EACT,MAAM,EAAE,KAAK;EACb,KAAK,EAAE,IAAI;CAMZ;;AAJE,AAAD,mBAAU,CAAC;EACT,MAAM,EAAE,IAAI;EACZ,KAAK,EAAE,KAAK;CACb",
+    "sources": [
+        "video-page.module.scss"
+    ],
+    "names": [],
+    "file": "video-page.module.css"
+}

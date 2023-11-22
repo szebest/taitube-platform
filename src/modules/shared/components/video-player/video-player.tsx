@@ -3,11 +3,11 @@ import { SyntheticEvent, useEffect, useMemo, useState, MouseEvent as ReactMouseE
 import { DropdownButton } from "react-bootstrap";
 import Dropdown from 'react-bootstrap/Dropdown';
 
-import styles from './VideoPlayer.module.scss';
+import styles from './video-player.module.scss';
 
 import { useVideoSrc } from "../../hooks";
 
-import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
+import LoadingSpinner from "../loading-spinner/loading-spinner";
 
 let uniqueId = 0;
 let containerUniqueId = 0;

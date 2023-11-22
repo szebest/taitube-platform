@@ -1,0 +1,21 @@
+.container {
+  margin: 1rem;
+}
+
+.container .content {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-grid-columns: (1fr)[4];
+      grid-template-columns: repeat(4, 1fr);
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+}
+
+.container .content > * {
+  max-width: auto;
+  -webkit-box-flex: 0;
+      -ms-flex-positive: 0;
+          flex-grow: 0;
+}
+/*# sourceMappingURL=all-video-page.module.css.map */

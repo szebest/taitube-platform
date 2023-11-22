@@ -1,0 +1,9 @@
+{
+    "version": 3,
+    "mappings": "AAAA,AAAA,UAAU,CAAC;EACT,MAAM,EAAE,IAAI;CAYb;;AAbD,AAGE,UAHQ,CAGR,QAAQ,CAAC;EACP,OAAO,EAAE,IAAI;EACb,qBAAqB,EAAE,cAAc;EACrC,SAAS,EAAE,IAAI;CAMhB;;AAZH,AAQI,UARM,CAGR,QAAQ,GAKL,CAAC,CAAC;EACD,SAAS,EAAE,IAAI;EACf,SAAS,EAAE,CAAC;CACb",
+    "sources": [
+        "all-video-page.module.scss"
+    ],
+    "names": [],
+    "file": "all-video-page.module.css"
+}

@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import styles from './VideoCard.module.scss';
+import styles from './video-card.module.scss';
 
 import { API_BASE_URL } from "src/config";
 
-import VideoPlayer, { ControlsTypes } from "../VideoPlayer/VideoPlayer";
+import VideoPlayer, { ControlsTypes } from "../video-player/video-player";
 
 export type VideoCardProps = {
   video: string;
