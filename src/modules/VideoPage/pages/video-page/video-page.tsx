@@ -1,7 +1,8 @@
 import { useParams } from "react-router-dom";
-import { VideoPlayer } from "../../components";
 
 import styles from './video-page.module.scss';
+
+import { VideoPlayer } from "src/modules/shared/components";
 
 export function VideoPage() {
   const { videoId } = useParams();

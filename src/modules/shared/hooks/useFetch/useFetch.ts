@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from "../../../../config";
 
 export function useFetch<T>(url: string, method: string): [T | null, boolean, boolean] {
   const [data, setData] = useState<T | null>(null);

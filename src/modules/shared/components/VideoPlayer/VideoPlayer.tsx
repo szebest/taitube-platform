@@ -1,10 +1,12 @@
 import { SyntheticEvent, useEffect, useMemo, useState, MouseEvent as ReactMouseEvent, useRef } from "react";
-import { useVideoSrc } from "../../hooks";
 
-import Dropdown from 'react-bootstrap/Dropdown';
 import { DropdownButton } from "react-bootstrap";
+import Dropdown from 'react-bootstrap/Dropdown';
 
 import styles from './VideoPlayer.module.scss';
+
+import { useVideoSrc } from "../../hooks";
+
 import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 
 let uniqueId = 0;

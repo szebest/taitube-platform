@@ -1,17 +1,22 @@
 import { Navigate } from "react-router";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { AllVideosPage, VideoPage } from "./pages";
+
+import { VideoPage } from "./modules/VideoPage/pages";
+import { AllVideosPage } from "./modules/MainPage/pages";
 
 export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path='videos'>
+        <Route path=''>
           <Route path='' element={<AllVideosPage />}></Route>
-          <Route path=':videoId' element={<VideoPage />}></Route>
-          <Route path="*" element={<Navigate to="/videos" replace />} />
+          <Route path="*" element={<Navigate to="" replace />} />
         </Route>
-        <Route path='*' element={<Navigate to='/videos'></Navigate>}></Route>
+        <Route path='/watch'>
+          <Route path=':videoId' element={<VideoPage />}></Route>
+          <Route path="*" element={<Navigate to="/watch" replace />} />
+        </Route>
+        <Route path='*' element={<Navigate to=''></Navigate>}></Route>
       </Routes>
     </BrowserRouter>
   );

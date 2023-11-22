@@ -1,7 +1,7 @@
 import { Queue } from './queue';
 import { RetryTimer, calculateByteRangeEnd, createByteRangeString } from './util';
 import { ManifestParser } from './manifest-parser';
-import { API_BASE_URL } from '../../config';
+import { API_BASE_URL } from '../../../../config';
 
 export class Player {
   private mse: MediaSource;

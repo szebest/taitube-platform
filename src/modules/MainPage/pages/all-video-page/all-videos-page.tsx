@@ -1,7 +1,8 @@
-import { VideoCard } from "../../components";
-import { useFetch } from "../../hooks";
 
 import styles from './all-video-page.module.scss';
+
+import { VideoCard } from "src/modules/shared/components";
+import { useFetch } from 'src/modules/shared/hooks';
 
 export function AllVideosPage() {
   const [data, loading, error] = useFetch<string[]>('/videos', 'GET');
