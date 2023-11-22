@@ -1,9 +1,0 @@
-{
-    "version": 3,
-    "mappings": "AAAA,UAAU,CAAV,OAAU;EACR,EAAE;IACA,SAAS,EAAE,YAAY;;EAEzB,IAAI;IACF,SAAS,EAAE,cAAc;;;;AAI7B,AAAA,gBAAgB,CAAC;EACf,KAAK,EAAE,IAAI;EACX,MAAM,EAAE,IAAI;EACZ,MAAM,EAAE,kBAAkB;EAAE,gBAAgB;EAC5C,UAAU,EAAE,kBAAkB;EAAE,WAAW;EAC3C,aAAa,EAAE,GAAG;EAClB,SAAS,EAAE,4BAA4B;CACxC",
-    "sources": [
-        "loading-spinner.module.scss"
-    ],
-    "names": [],
-    "file": "loading-spinner.module.css"
-}
