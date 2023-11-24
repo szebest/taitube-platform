@@ -10,16 +10,18 @@ export function Login() {
 
   return (
     <div className={styles.loginWrapper}>
-      {user === null &&
+      {!user 
+        ?
         <form method='GET' action={`${API_BASE_URL}/account/facebook-login`}>
           <button type="submit" className={styles.loginWrapper__facebookLogin}>
             Login with Facebook
           </button>
         </form>
-      }
-      {user !== null &&
-        <button onClick={() => console.log('clicked')} className={styles.loginWrapper__profile}>
-        </button>
+        :
+        <div className={styles.loginWrapper__userInfo}>
+          <span>{user.firstName}</span>
+          <img src={user.profilePictureSrc} alt="profile"></img>
+        </div>
       }
     </div>
   );

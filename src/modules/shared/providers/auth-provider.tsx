@@ -1,11 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo } from "react"
 
 import { User } from "../models"
 import { useUserDetailsQuery } from "../api/authApiSlice"
 import LoadingSpinner from "../components/loading-spinner/loading-spinner"
 
 type AuthContextValue = {
-  user: User | null
+  user?: User
   logout: () => void
 }
 
@@ -15,9 +15,7 @@ type AuthProviderProps = {
   children: React.ReactNode
 }
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-
-  const { isFetching, data } = useUserDetailsQuery();
+  const { isLoading, data: user } = useUserDetailsQuery();
 
   const logout = useCallback(() => {
     
@@ -29,20 +27,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }), [user])
 
   useEffect(() => {
-    if (!data) return
-
-    setUser(data);
-  }, [data])
-
-  useEffect(() => {
     if (window.location.href.indexOf('#_=_') > 0) {
       window.location.href = window.location.href.replace(/#.*/, '');
     }
-  })
+  }, [])
 
   return (
     <AuthContext.Provider value={ctx}>
-      {isFetching ? <LoadingSpinner /> : children}
+      {isLoading ? <LoadingSpinner /> : children}
     </AuthContext.Provider>
   )
 }
@@ -50,7 +42,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 export const useAuth = () => {
   const ctx = useContext(AuthContext)
   if (!ctx) {
-    throw new Error('useCurrency must be used within CurrencyProvider')
+    throw new Error('useAuth must be used within AuthProvider')
   }
   return ctx
 }
