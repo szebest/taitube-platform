@@ -1,4 +1,5 @@
 @import "src/styles/abstract/colors";
+@import "src/styles/abstract/mixins";
 
 .dropdown-toggle {
 	&, &::after, &:hover, &:active {
@@ -22,7 +23,8 @@
 			background: $grayscale-30;
 		}
 		
-		>a {
+		.dropdown-item {
+			@include paragraph-2-regular();
 			color: $black;
 
 			&:hover {
@@ -42,7 +44,8 @@
 			background: $grayscale-70;
 		}
 		
-		>a {
+		.dropdown-item {
+			@include paragraph-2-regular();
 			color: $white;
 
 			&:hover {

@@ -1,4 +1,5 @@
 @import "src/styles/abstract/variables";
+@import "src/styles/abstract/mixins";
 
 .loginWrapper {
   &__facebookLogin {
@@ -9,6 +10,7 @@
     }
 
     >span {
+      @include paragraph-3-regular();
       margin-left: $spacing-16;
     }
   }
@@ -17,6 +19,10 @@
     display: flex;
     gap: $spacing-16;
     align-items: center;
+
+    >span {
+      @include paragraph-3-regular();
+    }
     
     img {
       border-radius: 50%;
