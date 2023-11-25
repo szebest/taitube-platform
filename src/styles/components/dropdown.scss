@@ -1,0 +1,57 @@
+@import "src/styles/abstract/colors";
+
+.dropdown-toggle {
+	&, &::after, &:hover, &:active {
+		all: initial;
+	}
+	
+	&.btn {
+		&.show, &:active {
+			background-color: $white;
+		}
+	}
+
+	cursor: pointer !important;
+}
+
+.dropdown-menu {
+	&.light {
+		background-color: $white;
+
+		>hr {
+			background: $grayscale-30;
+		}
+		
+		>a {
+			color: $black;
+
+			&:hover {
+				background-color: $grayscale-10;
+			}
+
+			&:focus {
+				background-color: $grayscale-20;
+			}
+		}
+	}
+
+	&:not(.light) {
+		background-color: $black;
+
+		>hr {
+			background: $grayscale-70;
+		}
+		
+		>a {
+			color: $white;
+
+			&:hover {
+				background-color: $grayscale-20;
+			}
+
+			&:focus {
+				background-color: $grayscale-10;
+			}
+		}
+	}
+}

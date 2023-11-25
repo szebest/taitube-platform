@@ -14,11 +14,11 @@ import { AllVideosPage } from "./modules/MainPage/pages";
 import { DefaultLayout } from "./layout/containers";
 
 // api
-import { authApiSlice } from "./modules/shared/api/authApiSlice";
+import { baseApi } from "./base-api";
 
 export function App() {
   return (
-    <ApiProvider api={authApiSlice}>
+    <ApiProvider api={baseApi}>
       <AuthProvider>
         <BrowserRouter>
           <Routes>

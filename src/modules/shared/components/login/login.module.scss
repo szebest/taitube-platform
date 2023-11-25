@@ -2,7 +2,15 @@
 
 .loginWrapper {
   &__facebookLogin {
+    >img {
+      width: $spacing-24;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+    }
 
+    >span {
+      margin-left: $spacing-16;
+    }
   }
 
   &__userInfo {

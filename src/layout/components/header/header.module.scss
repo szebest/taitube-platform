@@ -4,12 +4,7 @@
   display: flex;
   justify-content: space-between;
   padding: $spacing-16;
+  align-items: center;
 
-  &__logo {
-
-  }
-
-  &__login {
-    
-  }
+  height: $spacing-72;
 }

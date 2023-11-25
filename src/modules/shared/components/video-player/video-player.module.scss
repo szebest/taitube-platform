@@ -291,26 +291,7 @@
             }
 
             >div {
-              max-height: 200px;
-              overflow-y: auto;
-              background-color: black;
               opacity: 0.7;
-
-              >hr {
-                background: white;
-              }
-              
-              >a {
-                color: white;
-
-                &:hover {
-                  background-color: gray;
-                }
-
-                &:focus {
-                  background-color: lightgray;
-                }
-              }
             }
           }
         }
@@ -328,22 +309,7 @@
             }
 
             >div {
-              max-height: 200px;
-              overflow-y: auto;
-              background-color: black;
               opacity: 0.7;
-              
-              >a {
-                color: white;
-
-                &:hover {
-                  background-color: gray;
-                }
-
-                &:focus {
-                  background-color: lightgray;
-                }
-              }
             }
           }
         }
