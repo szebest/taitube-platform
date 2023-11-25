@@ -1,0 +1,10 @@
+@import "src/styles/abstract/variables";
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: $spacing-16;
+  align-items: center;
+
+  height: $spacing-72;
+}

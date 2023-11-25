@@ -1,0 +1,211 @@
+@mixin default-font-variables {
+  font-family: Sora, sans-serif;
+  font-stretch: normal;
+  font-style: normal;
+  text-align: left;
+}
+
+@mixin hero {
+  @include default-font-variables();
+  font-size: 4rem;
+  font-weight: bold;
+  line-height: 1.25;
+  letter-spacing: -1.92px;
+}
+
+@mixin h1 {
+  @include default-font-variables();
+  font-size: 3rem;
+  font-weight: bold;
+  line-height: 1.17;
+  letter-spacing: -1.44px;
+}
+
+@mixin h2 {
+  @include default-font-variables();
+  font-size: 2.5rem;
+  font-weight: bold;
+  line-height: 1.2;
+  letter-spacing: normal;
+}
+
+@mixin h3 {
+  @include default-font-variables();
+  font-size: 2.125rem;
+  font-weight: bold;
+  line-height: 1.29;
+  letter-spacing: normal;
+}
+
+@mixin h4 {
+  @include default-font-variables();
+  font-size: 1.75rem;
+  font-weight: bold;
+  line-height: 1.43;
+  letter-spacing: normal;
+}
+
+@mixin h5 {
+  @include default-font-variables();
+  font-size: 1.563rem;
+  font-weight: bold;
+  line-height: 1.28;
+  letter-spacing: normal;
+}
+
+@mixin h6 {
+  @include default-font-variables();
+  font-size: 1.438rem;
+  font-weight: bold;
+  line-height: 1.3;
+  letter-spacing: normal;
+}
+
+@mixin h7 {
+  @include default-font-variables();
+  font-size: 1.25rem;
+  font-weight: bold;
+  line-height: 1.3;
+  letter-spacing: normal;
+}
+
+@mixin h8 {
+  @include default-font-variables();
+  font-size: 1.125rem;
+  font-weight: bold;
+  line-height: 1.44;
+  letter-spacing: normal;
+}
+
+@mixin h9 {
+  @include default-font-variables();
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+
+@mixin h10 {
+  @include default-font-variables();
+  font-size: 0.875rem;
+  font-weight: bold;
+  line-height: 1.71;
+  letter-spacing: normal;
+}
+
+
+@mixin h11 {
+  @include default-font-variables();
+  font-size: 0.875rem;
+  font-weight: bold;
+  line-height: 1.71;
+  letter-spacing: normal;
+}
+
+/* Font styles */
+
+@mixin paragraph-1-semi-bold {
+  @include default-font-variables();
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.67;
+  letter-spacing: normal;
+}
+
+@mixin paragraph-1-regular {
+  @include default-font-variables();
+  font-size: 1.125rem;
+  font-weight: normal;
+  line-height: 1.67;
+  letter-spacing: normal;
+}
+
+@mixin paragraph-2-semi-bold {
+  @include default-font-variables();
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.75;
+  letter-spacing: normal;
+}
+
+@mixin paragraph-2-regular {
+  @include default-font-variables();
+  font-size: 1rem;
+  font-weight: normal;
+  line-height: 1.75;
+  letter-spacing: normal;
+}
+
+@mixin paragraph-3-semi-bold {
+  @include default-font-variables();
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.71;
+  letter-spacing: normal;
+}
+
+@mixin paragraph-3-regular {
+  @include default-font-variables();
+  font-size: 0.875rem;
+  font-weight: normal;
+  line-height: 1.71;
+  letter-spacing: normal;
+}
+
+@mixin paragraph-4-semi-bold {
+  @include default-font-variables();
+  font-size: 0.813rem;
+  font-weight: 600;
+  line-height: 1.69;
+  letter-spacing: 0.13px;
+}
+
+@mixin paragraph-4-regular {
+  @include default-font-variables();
+  font-size: 0.813rem;
+  font-weight: normal;
+  line-height: 1.69;
+  letter-spacing: 0.13px;
+}
+
+@mixin paragraph-5-semi-bold {
+  @include default-font-variables();
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.24px;
+}
+
+@mixin paragraph-5-medium {
+  @include default-font-variables();
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.24px;
+}
+
+@mixin paragraph-5-regular {
+  @include default-font-variables();
+  font-size: 0.75rem;
+  font-weight: normal;
+  line-height: 1.5;
+  letter-spacing: 0.24px;
+}
+
+@mixin label {
+  @include default-font-variables();
+  font-size: 0.688rem;
+  font-weight: normal;
+  line-height: 0.875rem;
+  letter-spacing: 0.22px;
+}
+
+@mixin label-2 {
+  @include default-font-variables();
+  font-size: 0.625rem;
+  font-weight: normal;
+  line-height: 0.875rem;
+  letter-spacing: 0.2px;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap');

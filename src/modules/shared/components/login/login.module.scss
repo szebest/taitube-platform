@@ -1,0 +1,34 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/mixins";
+
+.loginWrapper {
+  &__facebookLogin {
+    >img {
+      width: $spacing-24;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+    }
+
+    >span {
+      @include paragraph-3-regular();
+      margin-left: $spacing-16;
+    }
+  }
+
+  &__userInfo {
+    display: flex;
+    gap: $spacing-16;
+    align-items: center;
+
+    >span {
+      @include paragraph-3-regular();
+    }
+    
+    img {
+      border-radius: 50%;
+      width: $spacing-40;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+    }
+  }
+}
