@@ -38,7 +38,9 @@ export function Login() {
               <Dropdown.Divider></Dropdown.Divider>
 
               {/* TODO Logout */}
-              <Dropdown.Item onClick={logout}>Logout</Dropdown.Item>
+              <Dropdown.Item onClick={logout}>
+                <span>Logout</span>
+              </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
         </div>

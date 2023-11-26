@@ -1,3 +1,4 @@
+import { lazy } from "react";
 import { Navigate } from "react-router";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
@@ -5,11 +6,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ApiProvider } from "@reduxjs/toolkit/dist/query/react";
 
 import { AuthProvider } from "./modules/shared/providers";
-
-// pages
-import { VideoPage } from "./modules/VideoPage/pages";
-import { AllVideosPage } from "./modules/MainPage/pages";
-import { UploadPage } from "./modules/Upload";
 
 // layouts
 import { DefaultLayout } from "./layout/containers";
@@ -19,6 +15,11 @@ import { baseApi } from "./base-api";
 
 // components
 import { AuthorizedContainer } from "./modules/shared/components";
+
+// pages
+const VideoPage = lazy(() => import('./modules/VideoPage').then(module => ({ default: module.VideoPage })));
+const AllVideosPage = lazy(() => import('./modules/AllVideosPage').then(module => ({ default: module.AllVideosPage })));
+const UploadPage = lazy(() => import('./modules/Upload').then(module => ({ default: module.UploadPage })));
 
 export function App() {
   return (
