@@ -9,12 +9,16 @@ import { AuthProvider } from "./modules/shared/providers";
 // pages
 import { VideoPage } from "./modules/VideoPage/pages";
 import { AllVideosPage } from "./modules/MainPage/pages";
+import { UploadPage } from "./modules/Upload";
 
 // layouts
 import { DefaultLayout } from "./layout/containers";
 
 // api
 import { baseApi } from "./base-api";
+
+// components
+import { AuthorizedContainer } from "./modules/shared/components";
 
 export function App() {
   return (
@@ -30,6 +34,11 @@ export function App() {
               <Route path=':videoId' element={<VideoPage />}></Route>
               <Route path="*" element={<Navigate to="/watch" replace />} />
             </Route>
+            <Route path='/upload' element={<AuthorizedContainer><DefaultLayout /></AuthorizedContainer>}>
+              <Route path='' element={<UploadPage />}></Route>
+              <Route path="*" element={<Navigate to="/upload" replace />} />
+            </Route>
+
             <Route path='*' element={<Navigate to=''></Navigate>}></Route>
           </Routes>
         </BrowserRouter>

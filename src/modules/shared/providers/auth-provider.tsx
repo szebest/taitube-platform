@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo } from "reac
 
 import { User } from "../models"
 import { useUserDetailsQuery } from "../api/authApiSlice"
-import LoadingSpinner from "../components/loading-spinner/loading-spinner"
+
+import { LoadingSpinner } from "../components"
 
 type AuthContextValue = {
   user?: User
