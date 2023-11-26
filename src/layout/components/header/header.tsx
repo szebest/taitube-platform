@@ -1,6 +1,8 @@
-import Login from 'src/modules/shared/components/login/login';
-import styles from './header.module.scss';
 import { Link } from 'react-router-dom';
+
+import styles from './header.module.scss';
+
+import { Login } from 'src/modules/shared/components';
 
 export function Header() {
   return (
