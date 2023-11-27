@@ -10,7 +10,10 @@ import fbLogoSecondary from 'src/assets/fb-logo-secondary.png';
 
 
 export function Login() {
-  const { user, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
+
+  if (isLoading)
+    return null;
 
   return (
     <div className={styles.loginWrapper}>

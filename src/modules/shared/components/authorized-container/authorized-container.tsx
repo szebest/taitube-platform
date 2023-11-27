@@ -5,7 +5,10 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../providers';
 
 export function AuthorizedContainer({ children }: PropsWithChildren) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading)
+    return null;
 
   return (
     <>

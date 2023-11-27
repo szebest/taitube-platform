@@ -3,10 +3,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo } from "reac
 import { User } from "../models"
 import { useUserDetailsQuery } from "../api/authApiSlice"
 
-import { LoadingSpinner } from "../components"
-
 type AuthContextValue = {
   user?: User
+  isLoading: boolean
   logout: () => void
 }
 
@@ -24,8 +23,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const ctx = useMemo(() => ({
     user,
+    isLoading,
     logout,
-  }), [user])
+  }), [user, isLoading])
 
   useEffect(() => {
     if (window.location.href.indexOf('#_=_') > 0) {
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return (
     <AuthContext.Provider value={ctx}>
-      {isLoading ? <LoadingSpinner /> : children}
+      {children}
     </AuthContext.Provider>
   )
 }
