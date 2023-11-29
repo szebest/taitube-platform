@@ -1,0 +1,25 @@
+@import "src/styles/abstract/colors";
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/mixins";
+
+.dropzone {
+  @include paragraph-3-regular();
+
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-20;
+  border-width: 2px;
+  border-radius: 2px;
+  border-color: $grayscale-30;
+  border-style: dashed;
+  background-color: $grayscale-10;
+  color: $grayscale-50;
+  outline: none;
+  transition: border 250ms ease-in-out;
+
+  &:hover, &:focus-visible {
+    border-color: $grayscale-60;
+  }
+}

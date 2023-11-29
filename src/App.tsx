@@ -35,7 +35,7 @@ export function App() {
               <Route path=':videoId' element={<VideoPage />}></Route>
               <Route path="*" element={<Navigate to="/watch" replace />} />
             </Route>
-            <Route path='/upload' element={<AuthorizedContainer><DefaultLayout /></AuthorizedContainer>}>
+            <Route path='/upload' element={<AuthorizedContainer><DefaultLayout maxWidth="1280px" /></AuthorizedContainer>}>
               <Route path='' element={<UploadPage />}></Route>
               <Route path="*" element={<Navigate to="/upload" replace />} />
             </Route>

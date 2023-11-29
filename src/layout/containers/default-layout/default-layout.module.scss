@@ -1,0 +1,11 @@
+@import "src/styles/abstract/variables";
+
+.pageWrapper {
+  display: flex;
+  justify-content: center;
+  margin: $spacing-16;
+
+  &__container {
+    flex: 1;
+  }
+}

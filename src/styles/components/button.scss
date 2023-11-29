@@ -1,0 +1,14 @@
+@import "src/styles/abstract/mixins";
+
+.btn, .btn-lg {
+  @include paragraph-2-regular();
+  line-height: unset;
+}
+
+.btn-sm {
+  @include paragraph-4-regular();
+}
+
+.btn-md {
+  @include paragraph-3-regular();
+}

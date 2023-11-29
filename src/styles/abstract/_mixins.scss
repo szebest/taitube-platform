@@ -2,7 +2,6 @@
   font-family: Sora, sans-serif;
   font-stretch: normal;
   font-style: normal;
-  text-align: left;
 }
 
 @mixin hero {
@@ -194,13 +193,13 @@
 
 @mixin label {
   @include default-font-variables();
-  font-size: 0.688rem;
+  font-size: 0.813rem;
   font-weight: normal;
   line-height: 0.875rem;
   letter-spacing: 0.22px;
 }
 
-@mixin label-2 {
+@mixin label-sm {
   @include default-font-variables();
   font-size: 0.625rem;
   font-weight: normal;

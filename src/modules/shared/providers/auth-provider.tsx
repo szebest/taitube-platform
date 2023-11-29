@@ -11,7 +11,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-type AuthProviderProps = {
+export type AuthProviderProps = {
   children: React.ReactNode
 }
 export const AuthProvider = ({ children }: AuthProviderProps) => {
