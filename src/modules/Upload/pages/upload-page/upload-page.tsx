@@ -1,22 +1,22 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { Form, ProgressBar } from 'react-bootstrap';
+import { Form } from 'react-bootstrap';
 
 import styles from './upload-page.module.scss';
 
-import { useUploadMutation, useUploadProgressQuery } from '../../api/uploadApiSlice';
+import { useUploadMutation } from '../../api/uploadApiSlice';
 
 import DropzoneField from '../../components/dropzone-field/dropzone-field';
 
 import { UploadFormModel } from '../../models';
+import { UploadProgress } from '../components';
 
 export function UploadPage() {
   const acceptFileTypes = useMemo(() => ({
     'video/mp4': ['.mp4']
   }), []);
 
-  const [upload, { isError, isSuccess }] = useUploadMutation();
-  const { data: loaded } = useUploadProgressQuery();
+  const [upload, { isError, isSuccess, reset: resetMutation }] = useUploadMutation();
 
   const {
     register,
@@ -32,6 +32,7 @@ export function UploadPage() {
 
   const clearForm = () => {
     reset();
+    resetMutation();
   }
 
   return (
@@ -72,10 +73,7 @@ export function UploadPage() {
         }
 
         {isSubmitted && !isError && 
-          <div className={styles.form__progress}>
-            <p>Progress:</p>
-            <ProgressBar now={loaded} />
-          </div>
+          <UploadProgress />
         }
       </Form>
     </div>
