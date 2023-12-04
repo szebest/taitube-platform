@@ -1,3 +1,5 @@
+@import "src/styles/abstract/variables";
+
 .container {
   .content {
     display: flex;
@@ -8,5 +10,11 @@
       max-width: auto;
       flex-grow: 0;
     }
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    gap: $spacing-16;
   }
 }

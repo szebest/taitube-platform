@@ -1,4 +1,4 @@
-export interface UploadFormModel {
+export type UploadFormModel = {
   file: [File],
   title: string,
   description: string

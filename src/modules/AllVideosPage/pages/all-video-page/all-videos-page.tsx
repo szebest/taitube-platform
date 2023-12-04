@@ -1,26 +1,38 @@
+import { useCallback, useEffect, useState } from 'react';
 
 import styles from './all-video-page.module.scss';
 
-import { VideoCard } from "src/modules/shared/components";
-import { useFetch } from 'src/modules/shared/hooks';
+import { useAllVideosQuery } from '../../api';
+
+import { VideosContainer } from "src/modules/shared/components";
+import { PaginatedQueryParams } from 'src/models';
 
 export function AllVideosPage() {
-  const [data, loading, error] = useFetch<string[]>('/videos', 'GET');
+	const [query, setQuery] = useState<PaginatedQueryParams>({ pageNumber: 0, pageSize: 60 });
+	const [isListView, setIsListView] = useState(false);
+  const queryData = useAllVideosQuery(query);
+	
+	const { isFetching, originalArgs } = queryData;
+
+	const loadMore = useCallback(() => {
+		if (isFetching) return;
+
+		setQuery(prev => ({ ...prev, pageNumber: prev.pageNumber + 1 }));
+	}, [isFetching]);
+
+	useEffect(() => {
+		if (!originalArgs) return;
+		
+		setQuery(originalArgs);
+	}, [originalArgs])
 
   return (
     <div className={styles.container}>
-      <h3>Wszystkie pliki video:</h3>
-      {loading && <p>Loading...</p>}
-      {!loading && error && <p>Error...</p>}
-      {!loading && data &&
-        <div className={styles.content}>
-          {
-            data?.map((video) => {
-              return <VideoCard key={video} video={video} />
-            })
-          }
-        </div>
-      }
+			<div className={styles.container__header}>
+      	<h3>All video files:</h3>
+				<button className='btn btn-secondary' onClick={() => setIsListView(prev => !prev)}>Toggle</button>
+			</div>
+      <VideosContainer inView={() => loadMore()} {...queryData} isListView={isListView} />
     </div>
   )
 }
