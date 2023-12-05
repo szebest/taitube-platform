@@ -3,6 +3,7 @@
 
 .form-label {
   @include label();
+  color: $grayscale-50;
 
   margin-bottom: $spacing-4;
 }

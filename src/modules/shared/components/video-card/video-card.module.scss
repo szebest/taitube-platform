@@ -6,8 +6,8 @@
 	container-type: inline-size;
 
   .container {
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-columns: 1fr;
 		gap: $spacing-8;
 
     position: relative;
@@ -62,7 +62,7 @@
 			display: none;
 
 			.text {
-				@include text-overflow(4);
+				@include text-overflow(3);
 				@include paragraph-4-regular();
 				line-height: 1.25;
 
@@ -85,15 +85,17 @@
 	@container (min-width: 500px) {
 		.link {
 			.container {
-				flex-direction: row;
+				grid-template-columns: auto 1fr;
 				gap: $spacing-16;
 	
 				&__thumb {
-					max-width: 300px;
+					width: 300px;
 				}
 
 				&__additional {
-					display: initial;
+					display: flex;
+					flex-direction: column;
+					gap: $spacing-8;
 				}
 			}
 		}

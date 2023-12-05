@@ -8,13 +8,20 @@ import { useUploadMutation } from '../../api/uploadApiSlice';
 
 import DropzoneField from '../../components/dropzone-field/dropzone-field';
 
-import { UploadFormModel } from '../../models';
 import { UploadProgress } from '../components';
+
+import { UploadFormModel } from '../../models';
+
+import { getCategories } from 'src/modules/shared/helpers';
 
 export function UploadPage() {
   const acceptFileTypes = useMemo(() => ({
     'video/mp4': ['.mp4']
   }), []);
+
+  const categories = useMemo(() => {
+    return getCategories();
+  }, []);
 
   const [upload, { isError, isSuccess, reset: resetMutation }] = useUploadMutation();
 
@@ -54,6 +61,15 @@ export function UploadPage() {
         <Form.Group controlId="description">
           <Form.Label>Video description</Form.Label>
           <Form.Control as="textarea" type="text" {...register('description', { required: true })} className={styles.form__textarea} />
+        </Form.Group>
+
+        <Form.Group controlId="category">
+          <Form.Label>Category</Form.Label>
+          <Form.Select defaultValue={-1} aria-label="Video category" {...register('category', { required: true })}>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>{category.value}</option>
+            ))}
+          </Form.Select>
         </Form.Group>
 
         {

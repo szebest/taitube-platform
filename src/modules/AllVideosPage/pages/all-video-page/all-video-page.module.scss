@@ -1,6 +1,8 @@
 @import "src/styles/abstract/variables";
 
 .container {
+  container-type: inline-size;
+
   .content {
     display: flex;
     grid-template-columns: repeat(4, 1fr);
@@ -18,8 +20,25 @@
     align-items: center;
     gap: $spacing-16;
 
-    button {
-      height: max-content;
+    &__settings {
+      display: flex;
+      gap: $spacing-16;
+
+      button {
+        max-height: max-content;
+
+        i {
+          font-size: $spacing-24;
+
+          &.selected {
+            -webkit-text-stroke: 1px;
+          }
+        }
+  
+        @container (max-width: 432px) {
+          display: none;
+        }
+      }
     }
   }
 }

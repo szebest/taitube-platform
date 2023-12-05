@@ -1,0 +1,10 @@
+@import "src/styles/abstract/colors";
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/mixins";
+
+.chip {
+  padding: $spacing-4 $spacing-8;
+  background-color: $brand-secondary-main;
+  border-radius: 10px;
+  width: max-content;
+}

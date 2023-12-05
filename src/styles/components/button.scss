@@ -12,3 +12,18 @@
 .btn-md {
   @include paragraph-3-regular();
 }
+
+.btn-round {
+  aspect-ratio: 1 / 1;
+  padding: $spacing-8;
+  border-radius: 50%;
+
+  &:hover, &:focus-visible {
+    background-color: $grayscale-10;
+  }
+
+  &.btn-list-view {
+    width: $spacing-40;
+    padding: 0;
+  }
+}

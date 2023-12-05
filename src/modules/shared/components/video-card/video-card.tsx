@@ -1,16 +1,19 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 
 import styles from './video-card.module.scss';
 
-import { Video } from "../../models";
 import { timeAgo } from "src/lib";
-import { formatViews } from "../../helpers";
+
+import { Video } from "../../models";
+
+import { formatViews, mapCategory } from "../../helpers";
 
 export type VideoCardProps = {
   video: Video;
 }
 
-export function VideoCard({ video }: VideoCardProps) {
+export const VideoCard = memo(function VideoCard({ video }: VideoCardProps) {
   return (
     <Link to={`/watch/${video.id}`} className={styles.link}>
       <div className={styles.container}>
@@ -28,12 +31,12 @@ export function VideoCard({ video }: VideoCardProps) {
 					</div>
 					<div className={styles.container__additional}>
 						<p className={styles.text}>{video.description}</p>
-						{/* TODO category */}
+						<span className="chip">{mapCategory(video.category)}</span>
 					</div>
 					</div>
       </div>
     </Link>
   );
-}
+});
 
 export default VideoCard;

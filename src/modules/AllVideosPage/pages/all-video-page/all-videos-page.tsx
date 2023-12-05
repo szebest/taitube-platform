@@ -4,7 +4,7 @@ import styles from './all-video-page.module.scss';
 
 import { useAllVideosQuery } from '../../api';
 
-import { VideosContainer } from "src/modules/shared/components";
+import { Icon, VideosContainer } from "src/modules/shared/components";
 import { PaginatedQueryParams } from 'src/models';
 
 export function AllVideosPage() {
@@ -30,7 +30,14 @@ export function AllVideosPage() {
     <div className={styles.container}>
 			<div className={styles.container__header}>
       	<h3>All video files:</h3>
-				<button className='btn btn-secondary' onClick={() => setIsListView(prev => !prev)}>Toggle</button>
+				<div className={styles.container__header__settings}>
+					<button className='btn btn-round btn-list-view' onClick={() => setIsListView(false)}>
+						<i className={`bi bi-grid-3x2-gap${!isListView ? '-fill' : ''}`}></i>
+					</button>
+					<button className='btn btn-round btn-list-view' onClick={() => setIsListView(true)}>
+						<i className={`bi bi-list ${isListView ? styles.selected : ''}`}></i>
+					</button>
+				</div>
 			</div>
       <VideosContainer inView={() => loadMore()} {...queryData} isListView={isListView} />
     </div>

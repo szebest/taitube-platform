@@ -16,13 +16,14 @@ export const uploadApiSlice = baseApi.injectEndpoints({
 
         return new Promise(async (resolve, reject) => {
           try {
-            const { file, title, description } = form;
+            const { file, title, description, category } = form;
   
             const formData = new FormData();
   
             formData.append("file", file[0]);
             formData.append("title", title);
             formData.append("description", description);
+            formData.append("category", category);
 
             api.dispatch(uploadApiSlice.util.updateQueryData('uploadProgress', void 0, (x) => {
               return 0;

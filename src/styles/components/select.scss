@@ -1,0 +1,9 @@
+@import "src/styles/abstract/mixins";
+
+.form-select {
+  @include paragraph-4-regular();
+
+  &:focus {
+    box-shadow: 0 0 0 1px rgba(13,110,253,.25);
+  }
+}

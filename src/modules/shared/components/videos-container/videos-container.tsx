@@ -1,8 +1,6 @@
 import styles from './videos-container.module.scss';
 
-import IsVisibleContainer from '../is-visible-container/is-visible-container';
-import LoadingSpinner from '../loading-spinner/loading-spinner';
-import VideoCard from "../video-card/video-card";
+import { LoadingSpinner, IsVisibleContainer, VideoCard } from '..';
 
 import { Video } from "../../models";
 import { PaginatedResponse } from 'src/models';

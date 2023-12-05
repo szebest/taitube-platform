@@ -1,19 +1,7 @@
 @import "src/styles/abstract/variables";
-@import "src/styles/abstract/colors";
 
 .logo {
   display: flex;
   align-items: center;
   gap: $spacing-16;
-
-  button {
-    width: $spacing-40;
-    aspect-ratio: 1 / 1;
-    padding: $spacing-8;
-    border-radius: 50%;
-
-    &:hover {
-      background-color: $grayscale-10;
-    }
-  }
 }
