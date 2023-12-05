@@ -9,7 +9,7 @@
     grid-template-columns: 1fr;
 
     .container__sidebar {
-      position: absolute;
+      position: fixed;
       height: 100dvh;
       top: 0;
     }
@@ -31,8 +31,6 @@
     z-index: 11;
 
     > *:not(#\9) {
-      position: sticky;
-      top: $header-height;
       height: 100%;
     }
 
