@@ -3,9 +3,9 @@ import { Dropdown } from 'react-bootstrap';
 
 import styles from './login.module.scss';
 
-import { useAuth } from '../../providers';
-
 import { API_BASE_URL } from 'src/config';
+import { useAuth } from 'src/modules/shared/providers';
+
 import fbLogoSecondary from 'src/assets/fb-logo-secondary.png';
 
 

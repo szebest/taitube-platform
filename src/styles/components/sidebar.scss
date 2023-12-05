@@ -1,0 +1,5 @@
+@import "src/styles/abstract/mixins";
+
+.ps-menu-label {
+  @include paragraph-3-regular();
+}

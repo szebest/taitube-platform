@@ -1,0 +1,18 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/colors";
+
+.sidebar {
+  &__logo {
+    display: flex;
+    align-items: center;
+    height: $spacing-72;
+    padding-left: $spacing-16;
+  }
+
+  hr {
+    height: 1px;
+    background-color: $grayscale-15;
+    width: 90%;
+    margin: auto;
+  }
+}

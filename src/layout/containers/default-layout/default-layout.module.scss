@@ -1,11 +1,45 @@
 @import "src/styles/abstract/variables";
 
-.pageWrapper {
-  display: flex;
-  justify-content: center;
-  margin: $spacing-16;
+.container {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  margin-top: $header-height;
 
-  &__container {
-    flex: 1;
+  &.breakpoint {
+    grid-template-columns: 1fr;
+
+    .container__sidebar {
+      position: absolute;
+      height: 100dvh;
+      top: 0;
+    }
+  }
+
+  .pageWrapper {
+    display: flex;
+    justify-content: center;
+    margin: $spacing-16;
+    
+    &__container {
+      flex: 1;
+    }
+  }
+
+  &__sidebar {
+    position: sticky;
+    top: $header-height;
+    z-index: 11;
+
+    > *:not(#\9) {
+      position: sticky;
+      top: $header-height;
+      height: 100%;
+    }
+
+    height: calc(100dvh - $header-height);
+
+    &__breakpoint {
+      position: absolute;
+    }
   }
 }
