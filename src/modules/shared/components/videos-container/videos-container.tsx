@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import styles from './videos-container.module.scss';
 
 import { LoadingSpinner, IsVisibleContainer, VideoCard } from '..';
@@ -15,7 +17,7 @@ export type VideosContainerProps = {
 	data?: PaginatedResponse<Video> | undefined;
 }
 
-export function VideosContainer({ 
+export const VideosContainer = memo(function VideosContainer({ 
 	inView = () => {}, 
 	refetch = () => {}, 
 	isFetching = false, 
@@ -51,6 +53,6 @@ export function VideosContainer({
 			{!isFetching && data && data.data.length < data.count && <IsVisibleContainer inView={inView} />}
 		</>
 	)
-}
+});
 
 export default VideosContainer;

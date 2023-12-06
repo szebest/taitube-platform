@@ -1,8 +1,10 @@
+import { memo } from 'react';
+
 import styles from './header.module.scss';
 
 import { Logo, Login } from '..';
 
-export function Header() {
+export const Header = memo(function Header() {
   return (
     <header className={styles.header}>
       <div>
@@ -14,6 +16,6 @@ export function Header() {
       </div>
     </header>
   );
-}
+});
 
 export default Header;

@@ -1,8 +1,7 @@
 import {
 	Sidebar as ReactSidebar,
 	Menu,
-	MenuItem,
-	SubMenu,
+	MenuItem
 } from "react-pro-sidebar";
 import { Link } from "react-router-dom";
 
@@ -36,7 +35,7 @@ export function Sidebar() {
 			{isBelowBreakpoint && <div className={styles.sidebar__logo}><Logo /></div>}
 			<Menu>
 				<MenuItem component={<Link to='/' onClick={close} />}> Home </MenuItem>
-				{user && <MenuItem component={<Link to='/subscriptions' onClick={close} />}> Subscriptions </MenuItem>}
+				{user && <MenuItem component={<Link to='/subscriptions/videos' onClick={close} />}> Subscriptions </MenuItem>}
 
 				<Dropdown.Divider></Dropdown.Divider>
 
