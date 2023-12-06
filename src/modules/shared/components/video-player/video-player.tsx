@@ -14,13 +14,12 @@ export function VideoPlayer({ video }: VideoPlayerProps) {
 
   useEffect(() => {
     const videoPlayer = ref.current;
-    console.log(videoPlayer)
-    if (video === null) return;
+    if (videoPlayer === null) return;
 
     const url = `${API_BASE_URL}/videos/${video}/manifest.mpd`;
     const player = dashjs.MediaPlayer().create();
 
-    player.initialize(videoPlayer as HTMLVideoElement, url, true);
+    player.initialize(videoPlayer, url, true);
   }, [video, ref]);
 
   return (
