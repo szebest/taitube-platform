@@ -34,10 +34,10 @@ export function TrendingPage() {
 			<div className={styles.container__header}>
       	<h3>Trending videos:</h3>
 				<div className={styles.container__header__settings}>
-					<button className='btn btn-round btn-list-view' onClick={() => setIsListView(false)}>
+					<button className='btn btn-round btn-list-view' onClick={() => setIsListView(false)} aria-label="grid view">
 						<i className={`bi bi-grid-3x2-gap${!isListView ? '-fill' : ''}`}></i>
 					</button>
-					<button className='btn btn-round btn-list-view' onClick={() => setIsListView(true)}>
+					<button className='btn btn-round btn-list-view' onClick={() => setIsListView(true)} aria-label="list view">
 						<i className={`bi bi-list ${isListView ? styles.selected : ''}`}></i>
 					</button>
 				</div>

@@ -28,7 +28,7 @@ export const VideosContainer = memo(function VideosContainer({
 }: VideosContainerProps) {
 	const RetryButton = 
 		<div className={styles.center}>
-			<button type="button" className="btn btn-danger" onClick={() => refetch()}>Retry</button>
+			<button type="button" className="btn btn-danger" onClick={() => refetch()} aria-label="retry">Retry</button>
 		</div>;
 
   return (

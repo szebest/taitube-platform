@@ -74,16 +74,16 @@ export function UploadPage() {
 
         {
           isSuccess ?
-            <button type="button" onClick={clearForm} className='btn btn-primary'>
+            <button type="button" onClick={clearForm} className='btn btn-primary' aria-label="submit another video">
               Submit another video
             </button> :
             (
               isError ?
-                <button type="submit" className='btn btn-danger'>
+                <button type="submit" className='btn btn-danger' aria-label="retry">
                   Retry
                 </button> :
-                <button type="submit" disabled={!isValid || isSubmitted} className='btn btn-primary'>
-                  Submit
+                <button type="submit" disabled={!isValid || isSubmitted} className='btn btn-primary' aria-label="upload">
+                  Upload
                 </button>
             )
         }
