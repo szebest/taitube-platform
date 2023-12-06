@@ -20,6 +20,10 @@ export function VideoPlayer({ video }: VideoPlayerProps) {
     const player = dashjs.MediaPlayer().create();
 
     player.initialize(videoPlayer, url, true);
+
+    return () => {
+      player.destroy();
+    }
   }, [video, ref]);
 
   return (
