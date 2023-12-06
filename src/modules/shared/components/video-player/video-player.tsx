@@ -1,31 +1,31 @@
-import { API_BASE_URL } from 'src/config';
+import { useEffect, useRef } from 'react';
+import dashjs from 'dashjs';
 
 import styles from './video-player.module.scss';
-import { useEffect, useMemo } from 'react';
-import dashjs from 'dashjs';
+
+import { API_BASE_URL } from 'src/config';
 
 export type VideoPlayerProps = {
   video: number;
 }
 
-let uniqueId = 0;
-
 export function VideoPlayer({ video }: VideoPlayerProps) {
-  const videoId = useMemo(() => `video-player-${uniqueId}`, [])
+  const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
+    const videoPlayer = ref.current;
+    console.log(videoPlayer)
+    if (video === null) return;
+
     const url = `${API_BASE_URL}/videos/${video}/manifest.mpd`;
     const player = dashjs.MediaPlayer().create();
-    const videoPlayer = document.getElementById(videoId);
-    
-    if (!video) return;
 
     player.initialize(videoPlayer as HTMLVideoElement, url, true);
-  }, [video, videoId]);
+  }, [video, ref]);
 
   return (
     <div className={styles.container}>
-      <video id={videoId} autoPlay controls />
+      <video ref={ref} autoPlay controls />
     </div>
   )
 }
