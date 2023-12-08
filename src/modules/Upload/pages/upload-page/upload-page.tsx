@@ -6,9 +6,7 @@ import styles from './upload-page.module.scss';
 
 import { useUploadMutation } from '../../api/uploadApiSlice';
 
-import DropzoneField from '../../components/dropzone-field/dropzone-field';
-
-import { UploadProgress } from '../components';
+import { DropzoneField, UploadProgress } from '../../components';
 
 import { UploadFormModel } from '../../models';
 

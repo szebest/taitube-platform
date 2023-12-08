@@ -1,0 +1,23 @@
+@import "src/styles/abstract/variables";
+
+.container {
+	display: grid;
+	gap: $spacing-8;
+	grid-template-columns: auto 1fr;
+
+	&__form {
+		display: flex;
+		gap: $spacing-8;
+		flex-direction: column;
+
+		&__buttons {
+			align-self: flex-end;
+
+			button {
+				max-width: max-content;
+				margin-right: $spacing-8;
+				border-radius: $spacing-20;
+			}
+		}
+	}
+}

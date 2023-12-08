@@ -38,4 +38,8 @@ a {
   &:hover {
     color: inherit;
   }
+
+	&.disabled {
+		pointer-events: none;
+	}
 }

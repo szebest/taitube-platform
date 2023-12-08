@@ -19,6 +19,12 @@
     display: flex;
     justify-content: center;
     margin: $spacing-16;
+		margin-bottom: $spacing-32;
+
+		@media (max-width: 600px) {
+			margin: $spacing-8;
+			margin-bottom: $spacing-24;
+		}
     
     &__container {
       flex: 1;

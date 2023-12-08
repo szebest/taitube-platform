@@ -1,0 +1,9 @@
+@import "src/styles/abstract/variables";
+
+.container {
+	display: flex;
+	gap: $spacing-32;
+	flex-direction: column;
+		
+	margin-top: $spacing-40;
+}

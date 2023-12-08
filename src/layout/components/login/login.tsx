@@ -30,7 +30,7 @@ export function Login() {
           <span>{user.firstName}</span>
           <Dropdown>
             <Dropdown.Toggle>
-              <img src={user.profilePictureSrc} alt="profile" />
+              <img className="profile-picture-img" src={user.profilePictureSrc} alt="profile" />
             </Dropdown.Toggle>
 
             <Dropdown.Menu className='light'>

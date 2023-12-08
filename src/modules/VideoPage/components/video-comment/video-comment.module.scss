@@ -1,0 +1,28 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/colors";
+@import "src/styles/abstract/mixins";
+
+.container {
+	display: flex;
+	gap: $spacing-2;
+	flex-direction: column;
+
+	&.loading {
+		opacity: 0.7;
+		color: $grayscale-70;
+	}
+
+	&__top {
+		.username {
+			@include paragraph-2-semi-bold();
+		}
+
+		.date {
+			@include paragraph-4-regular();
+		}
+	}
+
+	&__comment {
+		@include paragraph-2-regular();
+	}
+}

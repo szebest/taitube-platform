@@ -23,12 +23,5 @@
     >span {
       @include paragraph-3-regular();
     }
-    
-    img {
-      border-radius: 50%;
-      width: $spacing-40;
-      aspect-ratio: 1 / 1;
-      object-fit: contain;
-    }
   }
 }

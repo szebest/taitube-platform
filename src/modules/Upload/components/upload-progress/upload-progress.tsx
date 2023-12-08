@@ -2,7 +2,7 @@ import { ProgressBar } from 'react-bootstrap';
 
 import styles from './upload-progress.module.scss';
 
-import { useUploadProgressQuery } from '../../../api/uploadApiSlice';
+import { useUploadProgressQuery } from '../../api/uploadApiSlice';
 
 export function UploadProgress() {
   const { data: loaded } = useUploadProgressQuery();

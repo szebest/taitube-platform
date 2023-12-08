@@ -10,7 +10,7 @@ export type DropzoneFieldProps = {
   validation?: Omit<RegisterOptions<FieldValues, string>, "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate">
 } & DropzoneProps;
 
-const DropzoneField = ({
+export const DropzoneField = ({
   name,
   control,
   validation,
