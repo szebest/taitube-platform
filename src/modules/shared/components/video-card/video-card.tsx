@@ -7,13 +7,13 @@ import { timeAgo } from "src/lib";
 
 import { Video } from "../../models";
 
-import { formatViews, mapCategory } from "../../helpers";
+import { formatNumbers, mapCategory } from "../../helpers";
 
 export type VideoCardProps = {
 	video: Video;
 }
 
-export const VideoCard = memo(function VideoCard({ video }: VideoCardProps) {
+export const VideoCard = memo(({ video }: VideoCardProps) => {
 	return (
 		<Link to={`/watch/${video.id}`} className={styles.link}>
 			<div className={styles.container}>
@@ -24,9 +24,9 @@ export const VideoCard = memo(function VideoCard({ video }: VideoCardProps) {
 					</div>
 					<div className={styles.container__stats}>
 						{/* TODO views */}
-						<span className={styles.text}>{formatViews(video.views ?? 999)} views</span>
+						<span className={styles.text}>{formatNumbers(video.views ?? 999)} views</span>
 						<span className={styles.seperator}></span>
-						<span className={styles.text}>{video.createdAt}</span>
+						<span className={styles.text}>{timeAgo.format(new Date(video.createdAt))}</span>
 					</div>
 					<div className={styles.container__additional}>
 						<p className={styles.text}>{video.description}</p>

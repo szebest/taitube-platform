@@ -17,7 +17,7 @@ export type VideosContainerProps = {
 	data?: PaginatedResponse<Video> | undefined;
 }
 
-export const VideosContainer = memo(function VideosContainer({ 
+export const VideosContainer = memo(({ 
 	inView = () => {}, 
 	refetch = () => {}, 
 	isFetching = false, 
@@ -25,7 +25,7 @@ export const VideosContainer = memo(function VideosContainer({
 	isError = false, 
 	isListView = false, 
 	data 
-}: VideosContainerProps) {
+}: VideosContainerProps) => {
 	const RetryButton = 
 		<div className={styles.center}>
 			<button type="button" className="btn btn-danger" onClick={() => refetch()} aria-label="retry">Retry</button>

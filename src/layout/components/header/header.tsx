@@ -4,7 +4,7 @@ import styles from './header.module.scss';
 
 import { Logo, Login } from '..';
 
-export const Header = memo(function Header() {
+export const Header = memo(() => {
   return (
     <header className={styles.header}>
       <div>

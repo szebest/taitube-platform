@@ -3,11 +3,11 @@ import styles from './video-comments.module.scss';
 import { VideoComment } from '..';
 import { VideoComment as VideoCommentModel } from '../../models';
 
-export type CommentsSectionProps = {
+export type VideoCommentsProps = {
 	data: VideoCommentModel[]
 }
 
-export const VideoComments = ({ data }: CommentsSectionProps) => {
+export const VideoComments = ({ data }: VideoCommentsProps) => {
 	return (
 		<div className={styles.container}>
 			{

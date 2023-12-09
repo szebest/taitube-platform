@@ -50,8 +50,8 @@ export const AddVideoComment = ({ videoId, user, loadingComments }: AddVideoComm
 					<Form.Control as="textarea" disabled={loadingComments} type="text" {...register('data', { required: true })} className={styles.form__textarea} />
 				</Form.Group>
 				<div className={styles.container__form__buttons}>
-					<button type="button" disabled={!isValid || isSubmitted || loadingComments} className="btn btn-secondary" onClick={reset}>Cancel</button>
-					<button type="submit" disabled={!isValid || isSubmitted || loadingComments} className="btn btn-primary">Comment</button>
+					<button type="button" disabled={!isValid || isSubmitted || loadingComments} className="btn btn-secondary btn-md" onClick={reset}>Cancel</button>
+					<button type="submit" disabled={!isValid || isSubmitted || loadingComments} className="btn btn-primary btn-md">Comment</button>
 				</div>
 			</Form>
 		</div>

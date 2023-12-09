@@ -1,0 +1,42 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/colors";
+@import "src/styles/abstract/mixins";
+
+.container {
+	display: flex;
+	gap: $spacing-8;
+	flex-direction: column;
+
+	button:not([role=separator]) {
+		padding-left: $spacing-16;
+		padding-right: $spacing-16;
+		border-radius: 10000px;
+	}
+
+	button[role=separator] {
+		padding: 0;
+	}
+
+	.wrapper {
+		display: flex;
+		gap: $spacing-16;
+		flex-direction: row;
+		justify-content: space-between;
+		flex-wrap: wrap;
+
+		.left {
+			display: flex;
+			gap: $spacing-24;
+			flex-direction: row;
+
+			.username {
+				@include paragraph-1-semi-bold();
+			}
+		}
+
+		.right {
+			display: flex;
+			gap: $spacing-16;
+		}
+	}
+}

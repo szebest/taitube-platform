@@ -1,2 +1,2 @@
-export * from './format-views.helper';
+export * from './format-numbers.helper';
 export * from './category.helper';

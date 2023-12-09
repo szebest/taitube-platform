@@ -6,17 +6,17 @@ import styles from './video-player.module.scss';
 import { API_BASE_URL } from 'src/config';
 
 export type VideoPlayerProps = {
-  video: number;
+  videoId: number;
 }
 
-export function VideoPlayer({ video }: VideoPlayerProps) {
+export function VideoPlayer({ videoId }: VideoPlayerProps) {
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const videoPlayer = ref.current;
     if (videoPlayer === null) return;
 
-    const url = `${API_BASE_URL}/videos/${video}/manifest.mpd`;
+    const url = `${API_BASE_URL}/videos/${videoId}/manifest.mpd`;
     const player = dashjs.MediaPlayer().create();
 
     player.initialize(videoPlayer, url, true);
@@ -24,7 +24,7 @@ export function VideoPlayer({ video }: VideoPlayerProps) {
     return () => {
       player.destroy();
     }
-  }, [video, ref]);
+  }, [videoId, ref]);
 
   return (
     <div className={styles.container}>
