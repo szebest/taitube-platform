@@ -1,7 +1,9 @@
-export const formatNumbers = (views: number, precision: number = 0): string => {
+export const formatNumbers = (number: number, precision: number = 0): string => {
+	if (number === 0) return '0';
+
   const k = 1000;
   const sizes = ['', 'K', 'M', 'B', 'T', 'Q'];
-  const i = Math.floor(Math.log(views) / Math.log(k));
+  const i = Math.floor(Math.log(number) / Math.log(k));
 
-  return `${parseFloat((views / Math.pow(k, i)).toFixed(precision))}${sizes[i]}`;
+  return `${parseFloat((number / Math.pow(k, i)).toFixed(precision))}${sizes[i]}`;
 }
