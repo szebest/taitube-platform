@@ -4,3 +4,4 @@ export * from './loading-spinner/loading-spinner';
 export * from './authorized-container/authorized-container';
 export * from './videos-container/videos-container';
 export * from './is-visible-container/is-visible-container';
+export * from './profile-picture/profile-picture';

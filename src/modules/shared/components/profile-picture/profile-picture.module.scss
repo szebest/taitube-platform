@@ -1,0 +1,15 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/colors";
+
+.profile-picture-img-wrapper {
+	width: $spacing-40;
+	height: $spacing-40;
+	border-radius: 50%;
+	background-color: $grayscale-10;
+
+	.profile-picture-img {
+		width: 100%;
+		border-radius: inherit;
+		object-fit: contain;
+	}
+}

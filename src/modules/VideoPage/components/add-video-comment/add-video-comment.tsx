@@ -8,6 +8,8 @@ import { useAddVideoCommentMutation } from '../../api/videoApiSlice';
 import { AddVideoComment as AddVideoCommentModel } from '../../models';
 import { User } from 'src/modules/shared/models';
 
+import { ProfilePicture } from 'src/modules/shared/components';
+
 export type AddVideoCommentProps = {
 	videoId: number;
 	user: User;
@@ -38,13 +40,11 @@ export const AddVideoComment = ({ videoId, user, loadingComments }: AddVideoComm
 				reset();
 			}, 0);
 		}
-  }
+	}
 
 	return (
 		<div className={styles.container}>
-			<div>
-				<img className="profile-picture-img" src={user.profilePictureSrc} alt="profile" />
-			</div>
+			<ProfilePicture src={user.profilePictureSrc} />
 			<Form className={styles.container__form} onSubmit={handleSubmit((form) => submit(form as AddVideoCommentModel))}>
 				<Form.Group controlId="description">
 					<Form.Control as="textarea" disabled={loadingComments} type="text" {...register('data', { required: true })} className={styles.form__textarea} />
