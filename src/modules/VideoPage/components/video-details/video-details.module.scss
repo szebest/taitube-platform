@@ -15,6 +15,7 @@
 
 	button[role=separator] {
 		padding: 0;
+		max-width: 1px;
 	}
 
 	.wrapper {
@@ -23,6 +24,21 @@
 		flex-direction: row;
 		justify-content: space-between;
 		flex-wrap: wrap;
+
+		@container (max-width: 750px) {
+			display: grid;
+			grid-template-columns: 1fr;
+
+			.right {
+				div {
+					flex: 3;
+				}
+
+				button {
+					flex: 1;
+				}
+			}
+		}
 
 		.left {
 			display: flex;
