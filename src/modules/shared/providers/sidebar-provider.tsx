@@ -3,7 +3,7 @@ import { createContext, useContext, useMemo, useState } from "react"
 
 type SidebarContextValue = {
   collapsed: boolean;
-  isBelowBreakpoint: boolean;
+  isBelowBreakpoint?: boolean;
   toggle: () => void;
   close: () => void;
   breakpointChanged: (_: boolean) => void;
@@ -16,7 +16,7 @@ export type SidebarProviderProps = {
 }
 export const SidebarProvider = ({ children }: SidebarProviderProps) => {
   const [collapsed, setCollapsed] = useLocalStorage('SIDEBAR', false);
-  const [isBelowBreakpoint, setIsBelowBreakpoint] = useState(false);
+  const [isBelowBreakpoint, setIsBelowBreakpoint] = useState<boolean | undefined>(undefined);
 
   const ctx = useMemo(() => ({
     collapsed,

@@ -22,17 +22,19 @@ export function DefaultLayout({ maxWidth = "100%" }: DefaultLayoutProps) {
         <div className={styles.container__sidebar}>
           <Sidebar />
         </div>
-        <main>
-          <div className={styles.pageWrapper}>
-            <div className={styles.pageWrapper__container} style={{ maxWidth }}>
-              <ErrorBoundary fallback={<div>There was an error while loading the page</div>}>
-                <Suspense fallback={<div style={{ width: "100%" }}><LoadingSpinner /></div>}>
-                  <Outlet />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          </div>
-        </main>
+        {isBelowBreakpoint !== undefined &&
+					<main>
+						<div className={styles.pageWrapper}>
+							<div className={styles.pageWrapper__container} style={{ maxWidth }}>
+								<ErrorBoundary fallback={<div>There was an error while loading the page</div>}>
+									<Suspense fallback={<div style={{ width: "100%" }}><LoadingSpinner /></div>}>
+										<Outlet />
+									</Suspense>
+								</ErrorBoundary>
+							</div>
+						</div>
+					</main>
+				}
       </div>
     </>
   );

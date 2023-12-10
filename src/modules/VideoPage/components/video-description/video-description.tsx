@@ -25,7 +25,7 @@ export const VideoDescription = ({ data }: VideoDescriptionProps) => {
 				<span className="chip">{mapCategory(data.category)}</span>
 			</div>
 			<span className={styles.description}>{descriptionExpanded ? data.description : descriptionSubstring}</span>
-			<button className={`${styles.descriptionExpandBtn} ${descriptionSubstring.length === data.description.length ? styles.hide : ''} btn`} onClick={() => setDescriptionExpanded(prev => !prev)}>
+			<button className={`${styles.descriptionExpandBtn} ${descriptionSubstring.length === data.description.length ? styles.hide : ''} ${descriptionExpanded ? styles.expanded : ''} btn`} onClick={() => setDescriptionExpanded(prev => !prev)}>
 				{descriptionExpanded ? 'Show less' : 'Show more'}
 			</button>
 		</div>

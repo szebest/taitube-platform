@@ -36,14 +36,16 @@
 	.descriptionExpandBtn:not([role=separator]) {
 		@include paragraph-2-semi-bold();
 		appearance: none;
-		padding: $spacing-4;
+		padding: 0 $spacing-4;
 		margin-left: $spacing-4;
 
 		&.hide {
 			display: none;
 		}
 
-		&:checked {
+		&.expanded {
+			display: block;
+			margin-left: 0;
 			margin-top: $spacing-16;
 		}
 	}
