@@ -18,21 +18,6 @@
 		margin-bottom: $spacing-8;
 	}
 
-	.description {
-		overflow: hidden;
-		position: relative;
-
-		&::before {
-			content: "";
-			position: absolute;
-			height: calc(1.25em * var(--line-height));
-			width: 100%;
-			bottom: 0;
-			pointer-events: none;
-			background: linear-gradient(to bottom, transparent, $grayscale-10);
-		}
-	}
-
 	.descriptionExpandBtn:not([role=separator]) {
 		@include paragraph-2-semi-bold();
 		appearance: none;
