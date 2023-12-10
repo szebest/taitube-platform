@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import styles from './video-card.module.scss';
 
+import { API_BASE_URL } from "src/config";
 import { timeAgo } from "src/lib";
 
 import { Video } from "../../models";
@@ -17,14 +18,13 @@ export const VideoCard = memo(({ video }: VideoCardProps) => {
 	return (
 		<Link to={`/watch/${video.id}`} className={styles.link}>
 			<div className={styles.container}>
-				<img className={styles.container__thumb} src={video.thumbnailSrc ?? 'https://picsum.photos/200/112'} loading="lazy" alt="thumbnail" />
+				<img className={styles.container__thumb} src={API_BASE_URL + video.thumbnailSrc} loading="lazy" alt="thumbnail" />
 				<div className={styles.container__info}>
 					<div className={styles.container__title}>
 						<p className={styles.text}>{video.title}</p>
 					</div>
 					<div className={styles.container__stats}>
-						{/* TODO views */}
-						<span className={styles.text}>{formatNumbers(video.views ?? 999)} views</span>
+						<span className={styles.text}>{formatNumbers(video.views)} views</span>
 						<span className={styles.seperator}></span>
 						<span className={styles.text}>{timeAgo.format(new Date(video.createdAt))}</span>
 					</div>
