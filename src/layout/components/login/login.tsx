@@ -35,7 +35,14 @@ export function Login() {
 							<ProfilePicture src={user.profilePictureSrc} />
 						</Dropdown.Toggle>
 
-						<Dropdown.Menu className='light'>
+						<Dropdown.Menu className={`${styles.dropdown} light`}>
+							<div className={`${styles.dropdown__username} dropdown-item`}>
+								<div>
+									<span>{user.firstName}</span>
+								</div>
+								<Dropdown.Divider></Dropdown.Divider>
+							</div>
+							
 							<Dropdown.Item>
 								<Link to='/upload'>Upload</Link>
 							</Dropdown.Item>

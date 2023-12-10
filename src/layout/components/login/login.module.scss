@@ -22,6 +22,24 @@
 
     >span {
       @include paragraph-3-regular();
+
+			@media (max-width: 600px) {
+				display: none;
+			}
     }
+
+		.dropdown {
+			&__username {
+				display: none;
+
+				span {
+					@include paragraph-2-semi-bold();
+				}
+
+				@media (max-width: 600px) {
+					display: initial;
+				}
+			}
+		}
   }
 }

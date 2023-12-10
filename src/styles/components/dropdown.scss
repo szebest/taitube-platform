@@ -18,7 +18,7 @@
 .dropdown-item {
 	padding: 0;
 
-	> * {
+	> *:not(hr) {
 		display: block;
 		padding: var(--bs-dropdown-item-padding-y) var(--bs-dropdown-item-padding-x);
 	}
@@ -28,8 +28,9 @@
 	&.light {
 		background-color: $white;
 
-		>hr {
+		hr {
 			background: $grayscale-30;
+			height: 1px;
 		}
 		
 		.dropdown-item {
