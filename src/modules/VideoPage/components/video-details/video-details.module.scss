@@ -7,17 +7,6 @@
 	gap: $spacing-8;
 	flex-direction: column;
 
-	button:not([role=separator]) {
-		padding-left: $spacing-16;
-		padding-right: $spacing-16;
-		border-radius: 10000px;
-	}
-
-	button[role=separator] {
-		padding: 0;
-		max-width: 1px;
-	}
-
 	.wrapper {
 		display: flex;
 		gap: $spacing-16;

@@ -1,9 +1,19 @@
 @import "src/styles/abstract/mixins";
 @import "src/styles/abstract/colors";
 
+.btn[role=separator] {
+  padding: 0;
+  max-width: 1px;
+}
+
 .btn, .btn-lg {
   @include paragraph-2-regular();
   line-height: unset;
+}
+
+.btn-lg {
+  padding-left: $spacing-16;
+	padding-right: $spacing-16;
 }
 
 .btn-sm {
@@ -27,6 +37,10 @@
     width: $spacing-40;
     padding: 0;
   }
+}
+
+.btn-pill {
+  border-radius: 100000px;
 }
 
 .btn-light {

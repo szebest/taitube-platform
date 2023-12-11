@@ -7,18 +7,18 @@ import { VideoComment, AddVideoComment, VideoDetails } from "../models";
 const video: VideoDetails = {
 	userFullName: "szebest",
 	userId: "aa",
-	likes: 10000,
-	dislikes: 2000,
-	subscriptions: 526,
-	isSubscribed: true,
-	isLiked: true,
+	likes: 0,
+	dislikes: 0,
+	subscriptions: 0,
+	isSubscribed: false,
+	isLiked: false,
 	isDisliked: false,
 	id: 0,
-	title: "string",
-	description: "string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string string ",
+	title: "Mockowy tytuł filmiku",
+	description: "Mockowy opis filmiku",
 	category: 0,
 	createdAt: (new Date()).toString(),
-	views: 999,
+	views: 0,
 	thumbnailSrc: "a"
 }
 
@@ -98,6 +98,71 @@ export const videoApiSlice = baseApi.injectEndpoints({
           }));
 				}
       }
+		}),
+		likeVideo: builder.mutation<void, { videoId: number, value: number }>({
+			query: ({ videoId, value }) => ({
+				url: `/videos/${videoId}/like`,
+				method: 'POST',
+				body: {
+					value
+				}
+			}),
+			// queryFn: () => ({data: void 0}),
+      async onQueryStarted({ videoId, value }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          videoApiSlice.util.updateQueryData('videoDetails', videoId, draft => {
+						if (value >= 0) {
+							//reset dislikes
+							draft.dislikes -= +draft.isDisliked;
+							draft.isDisliked = false;
+
+							//set likes
+							draft.isLiked = true;
+							draft.likes += 1;
+						}
+						else if (value <= 0) {
+							//reset likes
+							draft.likes -= +draft.isLiked;
+							draft.isLiked = false;
+
+							//set dislikes
+							draft.isDisliked = true;
+							draft.dislikes += 1;
+						}
+          })
+        )
+        try {
+          await queryFulfilled
+        } catch {
+          patchResult.undo()
+        }
+      }
+		}),
+		deleteLikeFromVideo: builder.mutation<void, { videoId: number, isLike: boolean }>({
+			query: ({ videoId }) => ({
+				url: `/videos/${videoId}/like`,
+				method: 'DELETE'
+			}),
+			// queryFn: () => ({data: void 0}),
+      async onQueryStarted({ videoId, isLike }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          videoApiSlice.util.updateQueryData('videoDetails', videoId, draft => {
+						if (isLike) {
+							draft.likes -= +draft.isLiked;
+							draft.isLiked = false;
+						}
+						else {
+							draft.dislikes -= +draft.isDisliked;
+							draft.isDisliked = false;
+						}
+          })
+        )
+        try {
+          await queryFulfilled
+        } catch {
+          patchResult.undo()
+        }
+      }
 		})
   })
 });
@@ -105,5 +170,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 export const {
   useVideoDetailsQuery,
 	useGetVideoCommentsQuery,
-	useAddVideoCommentMutation
+	useAddVideoCommentMutation,
+	useLikeVideoMutation,
+	useDeleteLikeFromVideoMutation
 } = videoApiSlice;
