@@ -1,5 +1,23 @@
 @import "src/styles/abstract/mixins";
 
-.ps-menu-label {
-  @include paragraph-3-regular();
+.ps-menu-root {
+  ul {
+    li {
+      padding-left: calc($spacing-8 + $spacing-1);
+    }
+  }
+
+  .ps-menu-label {
+    @include paragraph-3-regular();
+  
+    display: flex;
+    gap: $spacing-16;
+  }
+
+  hr {
+    height: 1px;
+    background-color: $grayscale-15;
+    width: 90%;
+    margin: auto;
+  }
 }

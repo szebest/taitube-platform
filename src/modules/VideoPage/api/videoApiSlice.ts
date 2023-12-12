@@ -6,7 +6,7 @@ import { VideoComment, AddVideoComment, VideoDetails } from "../models";
 
 const video: VideoDetails = {
 	userFullName: "szebest",
-	userId: "aa",
+	userId: "szebest",
 	likes: 0,
 	dislikes: 0,
 	subscriptions: 0,
@@ -24,8 +24,9 @@ const video: VideoDetails = {
 
 export const videoApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    videoDetails: builder.query<VideoDetails, number>({
-      //query: (id) => `/videos/${id}`,
+    videoDetails: builder.query<VideoDetails, { videoId: number }>({
+			keepUnusedDataFor: 0,
+      //query: ({ videoId }) => `/videos/${videoId}`,
 			queryFn: () => ({ data: video })
     }),
 		getVideoComments: builder.query<PaginatedResponse<VideoComment>, { videoId: number, queryParams?: PaginatedQueryParams }>({
@@ -110,7 +111,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 			// queryFn: () => ({data: void 0}),
       async onQueryStarted({ videoId, value }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          videoApiSlice.util.updateQueryData('videoDetails', videoId, draft => {
+          videoApiSlice.util.updateQueryData('videoDetails', { videoId }, draft => {
 						if (value >= 0) {
 							//reset dislikes
 							draft.dislikes -= +draft.isDisliked;
@@ -134,7 +135,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
         try {
           await queryFulfilled
         } catch {
-          patchResult.undo()
+          //patchResult.undo()
         }
       }
 		}),
@@ -146,7 +147,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 			// queryFn: () => ({data: void 0}),
       async onQueryStarted({ videoId, isLike }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          videoApiSlice.util.updateQueryData('videoDetails', videoId, draft => {
+          videoApiSlice.util.updateQueryData('videoDetails', { videoId }, draft => {
 						if (isLike) {
 							draft.likes -= +draft.isLiked;
 							draft.isLiked = false;
@@ -160,7 +161,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
         try {
           await queryFulfilled
         } catch {
-          patchResult.undo()
+          //patchResult.undo()
         }
       }
 		})

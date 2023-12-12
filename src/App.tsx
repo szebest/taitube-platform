@@ -32,6 +32,11 @@ const TrendingPage = lazy(() =>
 		default: module.TrendingPage,
 	}))
 );
+const SubscriptionPage = lazy(() =>
+	import("./modules/Subscriptions").then((module) => ({
+		default: module.SubscriptionsPage,
+	}))
+);
 const SubscriptionVideosPage = lazy(() =>
 	import("./modules/SubscriptionVideos").then((module) => ({
 		default: module.SubscriptionVideosPage,
@@ -56,13 +61,20 @@ export function App() {
 								<Route path="" element={<TrendingPage />}></Route>
 								<Route path="*" element={<Navigate to="/trending" replace />} />
 							</Route>
-							<Route path="/subscriptions/videos" element={<DefaultLayout />}>
-								<Route path="" element={<SubscriptionVideosPage />}></Route>
+							<Route path="/subscriptions" element={<DefaultLayout />}>
+								<Route path="" element={<SubscriptionPage />}></Route>
+								<Route path="videos" element={<SubscriptionVideosPage />}></Route>
 								<Route path="*" element={<Navigate to="/subscriptions/videos" replace />} />
 							</Route>
 							<Route path="/watch" element={<DefaultLayout />}>
 								<Route path=":videoId" element={<VideoPage />}></Route>
-								<Route path="*" element={<Navigate to="/watch" replace />} />
+								<Route path="" element={<Navigate to="/" replace />} />
+								<Route path="*" element={<Navigate to="/" replace />} />
+							</Route>
+							<Route path="/profile" element={<DefaultLayout />}>
+								<Route path=":userId" element={<div>User page works!</div>}></Route>
+								<Route path="" element={<Navigate to="/" replace />} />
+								<Route path="*" element={<Navigate to="/" replace />} />
 							</Route>
 							<Route
 								path="/upload"

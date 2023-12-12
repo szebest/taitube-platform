@@ -6,7 +6,7 @@ export type VideoDetails = {
 	likes: number;
 	dislikes: number;
 	subscriptions: number;
-	isSubscribed?: boolean;
+	isSubscribed: boolean;
 	isLiked: boolean;
 	isDisliked: boolean;
 } & Video;
