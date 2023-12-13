@@ -1,0 +1,15 @@
+@import "src/styles/abstract/variables";
+
+.container {
+  display: flex;
+
+  &__wrapper {
+    display: flex;
+    gap: $spacing-8;
+    flex-direction: column;
+
+    h3 {
+      line-height: 0.75;
+    }
+  }
+}

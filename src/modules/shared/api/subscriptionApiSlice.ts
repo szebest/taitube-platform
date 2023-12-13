@@ -2,6 +2,7 @@ import { baseApi } from "src/base-api";
 
 import { Subscription } from "../models";
 import { videoApiSlice } from "src/modules/VideoPage/api/videoApiSlice";
+import { userPageApiSlice } from "src/modules/UserPage/api";
 
 const subs: Subscription[] = [
   {
@@ -55,12 +56,20 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
             draft.subscriptions += 1;
           })
         )
+
+        const userPatchResult = dispatch(
+          userPageApiSlice.util.updateQueryData('getUserDetails', userId, draft => {
+            draft.isSubscribed = true;
+            draft.subscriptions += 1;
+          })
+        )
         
         try {
           await queryFulfilled
         } catch {
-          //patchResult.undo()
-          //videoPatchResult.undo()
+          //patchResult.undo();
+          //videoPatchResult.undo();
+          //userPatchResult.undo();
         }
       }
     }),
@@ -88,11 +97,19 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
           })
         )
 
+        const userPatchResult = dispatch(
+          userPageApiSlice.util.updateQueryData('getUserDetails', userId, draft => {
+            draft.isSubscribed = false;
+            draft.subscriptions -= 1;
+          })
+        )
+
         try {
           await queryFulfilled
         } catch {
-          //patchResult.undo()
+          //patchResult.undo();
           //videoPatchResult.undo();
+          //userPatchResult.undo();
         }
       }
     })

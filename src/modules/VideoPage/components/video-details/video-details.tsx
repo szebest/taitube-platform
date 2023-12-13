@@ -30,7 +30,7 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
 			<div className={styles.wrapper}>
 				<div className={styles.left}>
 					<div>
-						<div className={styles.username}><Link to={`/profile/${data.id}`}>{data.userFullName}</Link></div>
+						<div className={styles.username}><Link to={`/user/${data.userId}`}>{data.userFullName}</Link></div>
 						<div className={styles.subscriptions}>{formatNumbers(data.subscriptions, data.subscriptions >= 10000 ? 0 : 1)} subscribers</div>
 					</div>
 

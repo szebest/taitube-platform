@@ -42,6 +42,11 @@ const SubscriptionVideosPage = lazy(() =>
 		default: module.SubscriptionVideosPage,
 	}))
 );
+const UserPage = lazy(() =>
+	import("./modules/UserPage").then((module) => ({
+		default: module.UserPage,
+	}))
+);
 const UploadPage = lazy(() =>
 	import("./modules/Upload").then((module) => ({ default: module.UploadPage }))
 );
@@ -71,8 +76,8 @@ export function App() {
 								<Route path="" element={<Navigate to="/" replace />} />
 								<Route path="*" element={<Navigate to="/" replace />} />
 							</Route>
-							<Route path="/profile" element={<DefaultLayout />}>
-								<Route path=":userId" element={<div>User page works!</div>}></Route>
+							<Route path="/user" element={<DefaultLayout />}>
+								<Route path=":userId" element={<UserPage />}></Route>
 								<Route path="" element={<Navigate to="/" replace />} />
 								<Route path="*" element={<Navigate to="/" replace />} />
 							</Route>

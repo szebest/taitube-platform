@@ -48,7 +48,7 @@ export function Sidebar() {
 
 				{user && 
 					<>
-						<MenuItem component={<Link to={`/profile/${user.id}`} onClick={close} />}>
+						<MenuItem component={<Link to={`/user/${user.id}`} onClick={close} />}>
 							<i className="bi bi-person-fill"></i>
 							<span>Your channel</span>
 						</MenuItem>

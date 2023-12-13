@@ -15,19 +15,27 @@
     }
   }
 
-  .pageWrapper {
-    display: flex;
-    justify-content: center;
+  main {
     margin: $spacing-16;
 		margin-bottom: $spacing-32;
 
-		@media (max-width: 600px) {
-			margin: $spacing-8;
-			margin-bottom: $spacing-24;
-		}
-    
-    &__container {
-      flex: 1;
+    @media (max-width: 600px) {
+      margin: $spacing-8;
+      margin-bottom: $spacing-24;
+    }
+
+    .pageWrapper {
+      display: flex;
+      justify-content: center;
+  
+      @media (min-width: 1920px) {
+        max-width: 1920px;
+        margin: 0 auto;
+      }
+      
+      &__container {
+        flex: 1;
+      }
     }
   }
 

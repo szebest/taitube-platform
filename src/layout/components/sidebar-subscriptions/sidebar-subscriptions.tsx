@@ -39,7 +39,7 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 
 			{subscriptions &&
 				subscriptions.map((subscription) => (
-					<MenuItem key={subscription.userId} component={<Link to={`/profile/${subscription.userId}`} onClick={close} />}>
+					<MenuItem key={subscription.userId} component={<Link to={`/user/${subscription.userId}`} onClick={close} />}>
 						{subscription.userFullName}
 					</MenuItem>
 				))}
