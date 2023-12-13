@@ -12,14 +12,16 @@ export function SubscriptionsPage() {
   if (!data) return null;
   
   return (
-    <div className={styles.container}>
-      {
-        data.map(subscription => (
-          <SubscriptionCard key={subscription.userId} subscription={subscription} />
-        ))
-      }
-    </div>
-  )
+		<div className={styles.container}>
+			<h3>Your subsciptions:</h3>
+			{data.map((subscription) => (
+				<SubscriptionCard
+					key={subscription.userId}
+					subscription={subscription}
+				/>
+			))}
+		</div>
+	);
 }
 
 export default SubscriptionsPage;

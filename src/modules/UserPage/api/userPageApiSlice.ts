@@ -15,7 +15,7 @@ export const userPageApiSlice = baseApi.injectEndpoints({
     getUserDetails: builder.query<UserDetails, string>({
       keepUnusedDataFor: 0,
       //query: (userId) => `/user/${userId}`,
-      queryFn: () => ({ data: userDetails })
+      queryFn: (userId) => ({ data: {...userDetails, userFullName: userId} })
     }),
     getUserVideos: builder.query<PaginatedResponse<Video>, UserVideosRequestParams>({
       keepUnusedDataFor: 60,
