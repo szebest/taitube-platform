@@ -7,7 +7,7 @@ import { useDeleteSubscriptionMutation, usePostSubscriptionMutation } from "../.
 
 export type SubscribeButtonProps = {
 	isSubscribed: boolean;
-	userId: string;
+	userId: number;
 	userFullName: string;
 	videoId?: number;
 };

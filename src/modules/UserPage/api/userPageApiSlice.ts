@@ -12,10 +12,10 @@ const userDetails: UserDetails = {
 
 export const userPageApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUserDetails: builder.query<UserDetails, string>({
+    getUserDetails: builder.query<UserDetails, number>({
       keepUnusedDataFor: 0,
       //query: (userId) => `/user/${userId}`,
-      queryFn: (userId) => ({ data: {...userDetails, userFullName: userId} })
+      queryFn: () => ({ data: userDetails})
     }),
     getUserVideos: builder.query<PaginatedResponse<Video>, UserVideosRequestParams>({
       keepUnusedDataFor: 60,

@@ -6,7 +6,7 @@ import { VideoComment, AddVideoComment, VideoDetails } from "../models";
 
 const video: VideoDetails = {
 	userFullName: "szebest",
-	userId: "szebest",
+	userId: 1,
 	likes: 0,
 	dislikes: 0,
 	subscriptions: 0,

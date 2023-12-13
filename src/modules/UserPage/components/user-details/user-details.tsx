@@ -10,7 +10,7 @@ import { UserDetails as UserDetailsModel } from '../../models';
 
 export type UserDetailsProps = {
 	details: UserDetailsModel;
-	userId: string;
+	userId: number;
 	videosCount?: number;
 }
 

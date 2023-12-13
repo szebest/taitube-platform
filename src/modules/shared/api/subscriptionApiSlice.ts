@@ -7,7 +7,7 @@ import { userPageApiSlice } from "src/modules/UserPage/api";
 const subs: Subscription[] = [
   {
     userFullName: 'test',
-    userId: 'test',
+    userId: 0,
     isSubscribed: true
   }
 ]

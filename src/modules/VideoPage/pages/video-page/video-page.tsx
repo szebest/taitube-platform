@@ -8,9 +8,9 @@ import { CommentsSection, VideoDetails } from "../../components";
 export function VideoPage() {
   const { videoId } = useParams();
 
-  if (videoId === undefined || parseInt(videoId).toString() !== videoId) return <Navigate to="/" replace/>
-
-	const videoIdParsed = parseInt(videoId);
+	const videoIdParsed = parseInt(videoId!);
+  
+  if (isNaN(videoIdParsed)) return <Navigate to="/" replace/>
 
   return (
     <div className={styles.container}>

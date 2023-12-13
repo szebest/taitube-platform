@@ -1,5 +1,5 @@
 export type VideoComment = {
-	userId: string;
+	userId: number;
 	videoId: number;
 	data: string;
 	fullName: string;

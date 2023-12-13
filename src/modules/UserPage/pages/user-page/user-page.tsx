@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 
 import { useLocalStorage } from '@uidotdev/usehooks';
 
@@ -17,12 +17,14 @@ import { UserVideosRequestParams } from '../../models';
 export function UserPage() {
 	const { userId } = useParams();
 
-	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 60, userId: userId! });
-	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
-  const queryData = useGetUserVideosQuery({...query, userId: userId!});
-	const { data: userDetails, isLoading: userDetailsLoading } = useGetUserDetailsQuery(userId!);
+	const userIdParsed = parseInt(userId!);
 
-	const { data, isFetching, isLoading, originalArgs } = queryData;
+	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 60, userId: userIdParsed });
+	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
+  const queryData = useGetUserVideosQuery({...query, userId: userIdParsed});
+	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(userIdParsed);
+
+	const { data, isFetching, originalArgs } = queryData;
 	
 	const loadMore = useCallback(() => {
 		if (isFetching) return;
@@ -37,17 +39,18 @@ export function UserPage() {
 	}, [originalArgs])
 
 	useEffect(() => {
-		if (!userId || userId === query.userId) return;
+		if (!userId || userIdParsed === query.userId) return;
 		
-		setQuery(prev => ({ ...prev, userId }));
-	}, [userId])
+		setQuery(prev => ({ ...prev, userId: userIdParsed }));
+	}, [userIdParsed])
 
-	if (userDetailsLoading || isLoading) return <LoadingSpinner />
+	if (isNaN(userIdParsed)) return <Navigate to="/" replace/>
+	if (userDetailsFetching || isFetching) return <LoadingSpinner />
 	if (!userDetails || !data) return null;
 
   return (
     <div className={styles.container}>
-			<UserDetails details={userDetails} userId={userId!} videosCount={data.count} />
+			<UserDetails details={userDetails} userId={userIdParsed} videosCount={data.count} />
 			<div className={styles.container__header}>
       	<h3>{userDetails.userFullName}'s videos:</h3>
 				<div className={styles.container__header__settings}>
