@@ -27,12 +27,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
     videoDetails: builder.query<VideoDetails, { videoId: number }>({
 			keepUnusedDataFor: 0,
       //query: ({ videoId }) => `/videos/${videoId}`,
-			queryFn: () => {
-				console.log('query')
-				return {
-					data: video
-				}
-			}
+			queryFn: () => ({ data: video })
     }),
 		getVideoComments: builder.query<PaginatedResponse<VideoComment>, { videoId: number, queryParams?: PaginatedQueryParams }>({
       keepUnusedDataFor: 0,
