@@ -44,20 +44,20 @@ export function Login() {
 							</div>
 							
 							<Dropdown.Item>
-								<div>
+								<Link to='/upload'>
 									<i className="bi bi-cloud-arrow-up-fill"></i>
-									<Link to='/upload'>Upload</Link>
-								</div>
+									<span>Upload</span>
+								</Link>
 							</Dropdown.Item>
 
 							<Dropdown.Divider></Dropdown.Divider>
 
 							{/* TODO Logout */}
 							<Dropdown.Item onClick={logout}>
-								<div>
+								<Link to='/'>
 									<i className="bi bi-door-closed-fill"></i>
 									<span>Logout</span>
-								</div>
+								</Link>
 							</Dropdown.Item>
 						</Dropdown.Menu>
 					</Dropdown>
