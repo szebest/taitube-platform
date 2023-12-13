@@ -1,9 +1,14 @@
 @import "src/styles/abstract/variables";
+@import "src/styles/abstract/mixins";
 
 .container {
   &__wrapper {
     display: flex;
     gap: $spacing-16;
     justify-content: space-between;
+
+    .text {
+      @include paragraph-2-regular();
+    }
   }
 }

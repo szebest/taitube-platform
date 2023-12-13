@@ -14,7 +14,7 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
 	return (
 		<div className={styles.container}>
 			<div className={styles.container__wrapper}>
-				<Link to={`/user/${subscription.userId}`}><p>{subscription.userFullName}</p></Link>
+				<Link to={`/user/${subscription.userId}`}><p className={styles.text}>{subscription.userFullName}</p></Link>
 
 				<SubscribeButton {...subscription} />
 			</div>
