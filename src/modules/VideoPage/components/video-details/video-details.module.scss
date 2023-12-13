@@ -14,9 +14,18 @@
 		justify-content: space-between;
 		flex-wrap: wrap;
 
+		button {
+			max-height: 80%;
+			margin: auto 0;
+		}
+
 		@container (max-width: 750px) {
 			display: grid;
 			grid-template-columns: 1fr;
+
+			button {
+				max-height: 100%;
+			}
 
 			.right {
 				div {

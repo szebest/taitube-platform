@@ -19,9 +19,9 @@ export const UserDetails = memo(({ details, userId, videosCount }: UserDetailsPr
 		<div className={styles.container}>
 			<div className={styles.container__wrapper}>
 				<h2>{details.userFullName}</h2>
-				<div>
+				<div className={styles.textWrapper}>
 					<span>{formatNumbers(details.subscriptions, details.subscriptions >= 10000 ? 0 : 1)} subscribers</span>
-					<span> ‧ </span>
+					<span> • </span>
 					<span>{videosCount} videos</span>
 				</div>
 				<SubscribeButton {...details} userId={userId} />
