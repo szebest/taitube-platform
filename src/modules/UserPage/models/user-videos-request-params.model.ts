@@ -1,5 +1,5 @@
 import { PaginatedQueryParams } from "src/models";
 
 export type UserVideosRequestParams = {
-  userId: number;
+  userId: number | undefined;
 } & PaginatedQueryParams;

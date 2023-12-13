@@ -17,7 +17,7 @@ import { UserVideosRequestParams } from '../../models';
 export function UserPage() {
 	const { userId } = useParams();
 
-	const userIdParsed = parseInt(userId!);
+	const userIdParsed = isNaN(parseInt(userId!)) ? undefined : parseInt(userId!);
 
 	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 60, userId: userIdParsed });
 	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
@@ -44,7 +44,7 @@ export function UserPage() {
 		setQuery(prev => ({ ...prev, userId: userIdParsed }));
 	}, [userIdParsed])
 
-	if (isNaN(userIdParsed)) return <Navigate to="/" replace/>
+	if (userIdParsed === undefined) return <Navigate to="/" replace/>
 	if (userDetailsFetching || isFetching) return <LoadingSpinner />
 	if (!userDetails || !data) return null;
 
