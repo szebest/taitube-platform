@@ -1,23 +1,23 @@
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate } from 'react-router-dom';
 
 import styles from './video-page.module.scss';
 
 import { VideoPlayer } from "src/modules/shared/components";
 import { CommentsSection, VideoDetails } from "../../components";
 
-export function VideoPage() {
-  const { videoId } = useParams();
+export type VideoPageProps = {
+  param?: number;
+}
 
-	const videoIdParsed = parseInt(videoId!);
-  
-  if (isNaN(videoIdParsed)) return <Navigate to="/" replace/>
+export function VideoPage({ param }: VideoPageProps) {
+  if (param === undefined) return <Navigate to="/" />
 
   return (
     <div className={styles.container}>
       <div className={styles.container__wrapper}>
-        <VideoPlayer videoId={videoIdParsed} />
-				<VideoDetails videoId={videoIdParsed} />
-				<CommentsSection videoId={videoIdParsed} />
+        <VideoPlayer videoId={param} />
+				<VideoDetails videoId={param} />
+				<CommentsSection videoId={param} />
       </div>
     </div>
   )

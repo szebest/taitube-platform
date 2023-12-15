@@ -6,3 +6,4 @@ export * from './videos-container/videos-container';
 export * from './is-visible-container/is-visible-container';
 export * from './profile-picture/profile-picture';
 export * from './subscribe-button/subscribe-button';
+export * from './number-param-container/number-param-container';

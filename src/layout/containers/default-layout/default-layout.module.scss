@@ -27,11 +27,6 @@
     .pageWrapper {
       display: flex;
       justify-content: center;
-  
-      @media (min-width: 1920px) {
-        max-width: 1920px;
-        margin: 0 auto;
-      }
       
       &__container {
         flex: 1;

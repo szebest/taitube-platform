@@ -26,15 +26,6 @@ export const userPageApiSlice = baseApi.injectEndpoints({
 					url: `/videos?${params}`,
 				}
 			},
-      // queryFn: async (queryParams, _api, _extraOptions, baseQuery) => {
-      //   if (isNaN(queryParams.userId)) return { error: { status: 400, data: null } };
-
-      //   const params = new URLSearchParams(queryParams as never);
-
-      //   const result = await baseQuery(`/videos?${params}`);
-
-      //   return { data: result.data as PaginatedResponse<Video> };
-      // },
       serializeQueryArgs: ({ endpointName, queryArgs }) => {
         return endpointName + queryArgs.userId;
       },

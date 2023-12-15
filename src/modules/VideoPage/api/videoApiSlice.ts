@@ -64,7 +64,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 				body
 			}),
       async onQueryStarted({ videoId, body: { data }, user }, { dispatch, queryFulfilled }) {
-				const { fullName, id: userId } = user ?? { fullName: '', id: '' }
+				const { fullName, id: userId } = user ?? { fullName: '', id: 0 }
 
 				const item = {
 					userId,

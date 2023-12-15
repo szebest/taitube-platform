@@ -1,0 +1,13 @@
+.Toastify {
+  &__toast {
+    &-body {
+      @include paragraph-3-regular();
+    }
+
+    @media (max-width: 480px) {
+      margin-right: $spacing-16;
+    }
+  }
+
+  --toastify-color-progress-light: lightgreen;
+}

@@ -12,7 +12,7 @@ export type DefaultLayoutProps = {
   maxWidth?: string
 }
 
-export function DefaultLayout({ maxWidth = "100%" }: DefaultLayoutProps) {
+export function DefaultLayout({ maxWidth = "1920px" }: DefaultLayoutProps) {
   const { isBelowBreakpoint } = useSidebar();
   
   return (

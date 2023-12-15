@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 import { useLocalStorage } from '@uidotdev/usehooks';
 
@@ -14,15 +14,15 @@ import { UserDetails } from '../../components';
 
 import { UserVideosRequestParams } from '../../models';
 
-export function UserPage() {
-	const { userId } = useParams();
+export type UserPageProps = {
+  param?: number;
+}
 
-	const userIdParsed = isNaN(parseInt(userId!)) ? undefined : parseInt(userId!);
-
-	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 60, userId: userIdParsed });
+export function UserPage({ param }: UserPageProps) {
+	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 60, userId: param });
 	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
-  const queryData = useGetUserVideosQuery({...query, userId: userIdParsed});
-	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(userIdParsed);
+  const queryData = useGetUserVideosQuery({...query, userId: param});
+	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(param);
 
 	const { data, isFetching, originalArgs } = queryData;
 	
@@ -39,18 +39,18 @@ export function UserPage() {
 	}, [originalArgs])
 
 	useEffect(() => {
-		if (!userId || userIdParsed === query.userId) return;
+		if (param === query.userId) return;
 		
-		setQuery(prev => ({ ...prev, userId: userIdParsed }));
-	}, [userIdParsed])
+		setQuery(prev => ({ ...prev, userId: param }));
+	}, [param])
 
-	if (userIdParsed === undefined) return <Navigate to="/" replace/>
+	if (param === undefined) return <Navigate to="/" replace/>
 	if (userDetailsFetching || isFetching) return <LoadingSpinner />
 	if (!userDetails || !data) return null;
 
   return (
     <div className={styles.container}>
-			<UserDetails details={userDetails} userId={userIdParsed} videosCount={data.count} />
+			<UserDetails details={userDetails} userId={param} videosCount={data.count} />
 			<div className={styles.container__header}>
       	<h3>{userDetails.userFullName}'s videos:</h3>
 				<div className={styles.container__header__settings}>
