@@ -15,14 +15,14 @@ import { UserDetails } from '../../components';
 import { UserVideosRequestParams } from '../../models';
 
 export type UserPageProps = {
-  param?: number;
+  userId?: number;
 }
 
-export function UserPage({ param }: UserPageProps) {
-	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 60, userId: param });
+export function UserPage({ userId }: UserPageProps) {
+	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 60, userId: userId });
 	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
-  const queryData = useGetUserVideosQuery({...query, userId: param});
-	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(param);
+  const queryData = useGetUserVideosQuery({...query, userId: userId});
+	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(userId);
 
 	const { data, isFetching, originalArgs } = queryData;
 	
@@ -39,18 +39,18 @@ export function UserPage({ param }: UserPageProps) {
 	}, [originalArgs])
 
 	useEffect(() => {
-		if (param === query.userId) return;
+		if (userId === query.userId) return;
 		
-		setQuery(prev => ({ ...prev, userId: param }));
-	}, [param])
+		setQuery(prev => ({ ...prev, userId: userId }));
+	}, [userId])
 
-	if (param === undefined) return <Navigate to="/" replace/>
+	if (userId === undefined) return <Navigate to="/" replace/>
 	if (userDetailsFetching || isFetching) return <LoadingSpinner />
 	if (!userDetails || !data) return null;
 
   return (
     <div className={styles.container}>
-			<UserDetails details={userDetails} userId={param} videosCount={data.count} />
+			<UserDetails details={userDetails} userId={userId} videosCount={data.count} />
 			<div className={styles.container__header}>
       	<h3>{userDetails.userFullName}'s videos:</h3>
 				<div className={styles.container__header__settings}>

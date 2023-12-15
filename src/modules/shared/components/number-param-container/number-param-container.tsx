@@ -16,7 +16,7 @@ export function NumberParamContainer({ children, paramName }: NumberParamContain
 
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
-      return React.cloneElement(child, { param: paramParsed } as Attributes);
+      return React.cloneElement(child, { [paramName]: paramParsed } as Attributes);
     }
     return child;
   });
