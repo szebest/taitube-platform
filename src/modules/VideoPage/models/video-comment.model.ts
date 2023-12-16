@@ -7,4 +7,4 @@ export type VideoComment = {
 	loading?: boolean;
 }
 
-export type AddVideoComment = Omit<VideoComment, 'userId' | 'videoId' | 'createdAt'>;
+export type AddVideoComment = Omit<VideoComment, 'userId' | 'videoId' | 'createdAt' | 'loading' | 'fullName'>;
