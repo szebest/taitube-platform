@@ -40,6 +40,12 @@
 					display: initial;
 				}
 			}
+
+      &__logout {
+        width: 100%;
+        background-color: inherit;
+        border: unset;
+      }
 		}
   }
 }

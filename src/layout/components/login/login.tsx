@@ -12,7 +12,7 @@ import fbLogoSecondary from 'src/assets/fb-logo-secondary.png';
 
 
 export function Login() {
-	const { user, isLoading, logout } = useAuth();
+	const { user, isLoading } = useAuth();
 
 	if (isLoading)
 		return null;
@@ -43,7 +43,7 @@ export function Login() {
 								<Dropdown.Divider></Dropdown.Divider>
 							</div>
 							
-							<Dropdown.Item>
+							<Dropdown.Item tabIndex={-1}>
 								<Link to='/upload'>
 									<i className="bi bi-cloud-arrow-up-fill"></i>
 									<span>Upload</span>
@@ -52,13 +52,12 @@ export function Login() {
 
 							<Dropdown.Divider></Dropdown.Divider>
 
-							{/* TODO Logout */}
-							<Dropdown.Item onClick={logout}>
-								<Link to='/'>
+							<form method='POST' action={`${API_BASE_URL}/account/logout`} className='dropdown-item'>
+								<button type="submit" aria-label="logout" className={styles.dropdown__logout}>
 									<i className="bi bi-door-closed-fill"></i>
 									<span>Logout</span>
-								</Link>
-							</Dropdown.Item>
+								</button>
+							</form>
 						</Dropdown.Menu>
 					</Dropdown>
 				</div>

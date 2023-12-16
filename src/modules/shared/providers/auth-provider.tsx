@@ -6,7 +6,6 @@ import { useUserDetailsQuery } from "../api/authApiSlice"
 type AuthContextValue = {
   user?: User
   isLoading: boolean
-  logout: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -17,14 +16,9 @@ export type AuthProviderProps = {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { isLoading, data: user } = useUserDetailsQuery();
 
-  const logout = useCallback(() => {
-    
-  }, [])
-
   const ctx = useMemo(() => ({
     user,
-    isLoading,
-    logout,
+    isLoading
   }), [user, isLoading])
 
   useEffect(() => {
