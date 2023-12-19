@@ -4,10 +4,4 @@
   display: flex;
   gap: $spacing-24;
   flex-direction: column;
-
-  &__friends {
-    display: flex;
-    gap: $spacing-16;
-    flex-direction: column;
-  }
 }

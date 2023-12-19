@@ -6,3 +6,4 @@ export * from './video-details/video-details';
 export * from './video-description/video-description';
 export * from './video-likes/video-likes';
 export * from './user-video-share/user-video-share';
+export * from './user-friends/user-friends';

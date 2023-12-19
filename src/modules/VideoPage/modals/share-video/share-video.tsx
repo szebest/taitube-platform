@@ -2,10 +2,12 @@ import { Form, Modal } from 'react-bootstrap';
 
 import styles from './share-video.module.scss';
 
+import { useAuth } from 'src/modules/shared/providers';
+
 import { useUserFriendsQuery } from 'src/modules/shared/api';
 
 import { LoadingSpinner } from 'src/modules/shared/components';
-import { UserVideoShare } from '../../components';
+import { UserFriends, UserVideoShare } from '../../components';
 
 export type ShareVideoModalProps = {
   onClose: () => void,
@@ -14,7 +16,7 @@ export type ShareVideoModalProps = {
 }
 
 export const ShareVideoModal = ({ onClose, show, videoId }: ShareVideoModalProps) => {
-  const { data, isError } = useUserFriendsQuery();
+  const { user } = useAuth();
 
 	return (
 		<Modal show={show} onHide={onClose}>
@@ -27,18 +29,7 @@ export const ShareVideoModal = ({ onClose, show, videoId }: ShareVideoModalProps
           <Form.Control type="text" defaultValue={window.location.href} readOnly />
         </div>
 
-        <div className={styles.body__friends}>
-          {isError ?
-            <div>Could not load user's friends...</div> :
-            (
-              data ?
-                data.map(friend => (
-                  <UserVideoShare key={friend.id} friend={friend} videoId={videoId} />
-                )) :
-                <LoadingSpinner />
-            )
-          }
-        </div>
+        {user && <UserFriends videoId={videoId} />}
       </Modal.Body>
     </Modal>
 	)
