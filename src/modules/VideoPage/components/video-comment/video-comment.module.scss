@@ -24,5 +24,9 @@
 
 	&__comment {
 		@include paragraph-2-regular();
+
+		p {
+			word-break: break-word;
+		}
 	}
 }

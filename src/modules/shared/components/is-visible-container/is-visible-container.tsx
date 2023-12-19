@@ -1,11 +1,12 @@
 import debounce from 'lodash.debounce';
-import { PropsWithChildren, useEffect, useRef } from 'react';
+import { PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 
 export type IsVisibleContainerProps = PropsWithChildren<{
 	inView?: () => void;
+	rootMargin?: string;
 }>
 
-export function IsVisibleContainer({ children, inView }: IsVisibleContainerProps) {
+export function IsVisibleContainer({ children, inView, rootMargin = '100px' }: IsVisibleContainerProps) {
 	const ref = useRef<HTMLDivElement>(null);
 
 	const debouncedInView = useRef(
@@ -17,13 +18,13 @@ export function IsVisibleContainer({ children, inView }: IsVisibleContainerProps
 		})
 	).current;
 
-	const createCb = () => {
+	const createCb = useCallback(() => {
 		return (val: IntersectionObserverEntry[]) => {
 			if (!val[0].isIntersecting) return;
 
 			debouncedInView();
 		};
-	}
+	}, [debouncedInView]);
 
 	useEffect(() => {
 		if (!ref?.current) return;
@@ -31,7 +32,7 @@ export function IsVisibleContainer({ children, inView }: IsVisibleContainerProps
 		const target = ref.current;
 
 		const options: IntersectionObserverInit = {
-			rootMargin: '300px'
+			rootMargin
 		};
 
 		const cb = createCb();
@@ -41,7 +42,7 @@ export function IsVisibleContainer({ children, inView }: IsVisibleContainerProps
 		observer.observe(target);
 
 		return () => observer.unobserve(target);
-	}, [ref?.current]);
+	}, [ref, rootMargin, createCb]);
 
   return (
     <div ref={ref}>

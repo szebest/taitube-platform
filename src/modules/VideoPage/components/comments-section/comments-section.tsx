@@ -42,7 +42,8 @@ export const CommentsSection = ({ videoId }: CommentsSectionProps) => {
 					}
 				</>
 			}
-			{!isFetching && data && data.data.length < data.count && <IsVisibleContainer inView={loadMore} />}
+			{isFetching && !isLoading && <LoadingSpinner />}
+			{!isFetching && data && data.data.length < data.count && <IsVisibleContainer inView={loadMore} rootMargin='50px' />}
 		</div>
 	)
 }
