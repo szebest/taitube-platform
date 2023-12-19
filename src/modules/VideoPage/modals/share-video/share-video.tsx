@@ -4,10 +4,7 @@ import styles from './share-video.module.scss';
 
 import { useAuth } from 'src/modules/shared/providers';
 
-import { useUserFriendsQuery } from 'src/modules/shared/api';
-
-import { LoadingSpinner } from 'src/modules/shared/components';
-import { UserFriends, UserVideoShare } from '../../components';
+import { UserFriends } from '../../components';
 
 export type ShareVideoModalProps = {
   onClose: () => void,
