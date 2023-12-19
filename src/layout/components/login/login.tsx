@@ -43,7 +43,7 @@ export function Login() {
 								<Dropdown.Divider></Dropdown.Divider>
 							</div>
 							
-							<Dropdown.Item tabIndex={-1}>
+							<Dropdown.Item as='div'>
 								<Link to='/upload'>
 									<i className="bi bi-cloud-arrow-up-fill"></i>
 									<span>Upload</span>

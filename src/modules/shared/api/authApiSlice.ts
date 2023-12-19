@@ -1,6 +1,6 @@
 import { baseApi } from "src/base-api";
 
-import { User } from "../models";
+import { User, UserFriend } from "../models";
 
 export const authApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,10 +8,16 @@ export const authApiSlice = baseApi.injectEndpoints({
       query: () => ({
         url: '/account/details',
       })
+    }),
+    userFriends: builder.query<UserFriend[], void>({
+      query: () => ({
+        url: '/account/friends',
+      })
     })
   })
 });
 
 export const {
-  useUserDetailsQuery
+  useUserDetailsQuery,
+  useUserFriendsQuery
 } = authApiSlice;

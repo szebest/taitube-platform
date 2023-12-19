@@ -1,0 +1,8 @@
+@import "src/styles/abstract/variables";
+
+.container {
+	display: flex;
+	gap: $spacing-16;
+	justify-content: space-between;
+	align-items: center;
+}

@@ -5,3 +5,4 @@ export * from './comments-section/comments-section';
 export * from './video-details/video-details';
 export * from './video-description/video-description';
 export * from './video-likes/video-likes';
+export * from './user-video-share/user-video-share';

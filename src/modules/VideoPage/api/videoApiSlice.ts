@@ -164,6 +164,12 @@ export const videoApiSlice = baseApi.injectEndpoints({
           //patchResult.undo()
         }
       }
+		}),
+		shareVideo: builder.mutation<void, { videoId: number, userId: number }>({
+			query: ({ videoId, userId }) => ({
+				url: `/videos/${videoId}/share/${userId}`,
+				method: 'POST'
+			})
 		})
   })
 });
@@ -173,5 +179,6 @@ export const {
 	useGetVideoCommentsQuery,
 	useAddVideoCommentMutation,
 	useLikeVideoMutation,
-	useDeleteLikeFromVideoMutation
+	useDeleteLikeFromVideoMutation,
+	useShareVideoMutation
 } = videoApiSlice;

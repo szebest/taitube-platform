@@ -26,6 +26,11 @@
 	}
 }
 
+.dropdown-divider {
+	background: $grayscale-30;
+	height: 1px;
+}
+
 .dropdown-menu {
 	&.light {
 		background-color: $white;
