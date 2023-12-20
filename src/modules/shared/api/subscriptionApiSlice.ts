@@ -4,29 +4,19 @@ import { Subscription } from "../models";
 import { videoApiSlice } from "src/modules/VideoPage/api/videoApiSlice";
 import { userPageApiSlice } from "src/modules/UserPage/api";
 
-const subs: Subscription[] = [
-  {
-    userFullName: 'test',
-    userId: 0,
-    isSubscribed: true
-  }
-]
-
 export const subscriptionApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getUserSubscriptions: builder.query<Subscription[], {}>({
-      // query: () => ({
-      //   url: '/subscriptions',
-      // }),
-      queryFn: () => ({ data: subs }),
-      //transformResponse: (data: Subscription[]) => data.map((x) => ({ ...x, isSubscribed: true }))
+      query: () => ({
+        url: '/subscriptions/me',
+      }),
+      transformResponse: (data: Subscription[]) => data.map((x) => ({ ...x, isSubscribed: true }))
     }),
-    postSubscription: builder.mutation<void, Omit<Subscription, 'isSubscribed'> & { videoId?: number }>({
+    postSubscription: builder.mutation<Omit<Subscription, 'isSubscribed'>, Omit<Subscription, 'isSubscribed'> & { videoId?: number }>({
       query: ({ userId }) => ({
 				url: `/subscriptions/user/${userId}/subscribe`,
 				method: 'POST'
 			}),
-			// queryFn: () => ({data: void 0}),
       async onQueryStarted({ userFullName, userId, videoId }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
           subscriptionApiSlice.util.updateQueryData('getUserSubscriptions', {}, draft => {
@@ -65,20 +55,33 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
         )
         
         try {
-          await queryFulfilled
+          const result = await queryFulfilled;
+
+          dispatch(
+            subscriptionApiSlice.util.updateQueryData('getUserSubscriptions', {}, draft => {
+              const arrayIndex = draft.findIndex(x => x.userId === userId);
+  
+              if (arrayIndex >= 0) {
+                draft[arrayIndex] = {
+                  ...draft[arrayIndex],
+                  ...result.data
+                }
+              }
+            })
+          )
         } catch {
-          //patchResult.undo();
-          //videoPatchResult.undo();
-          //userPatchResult.undo();
+          patchResult.undo();
+          videoPatchResult.undo();
+          userPatchResult.undo();
         }
-      }
+      },
+      
     }),
     deleteSubscription: builder.mutation<void, Pick<Subscription, 'userId'> & { videoId?: number }>({
       query: ({ userId }) => ({
 				url: `/subscriptions/user/${userId}/subscribe`,
 				method: 'DELETE'
 			}),
-			// queryFn: () => ({data: void 0}),
       async onQueryStarted({ userId, videoId }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
           subscriptionApiSlice.util.updateQueryData('getUserSubscriptions', {}, draft => {
@@ -107,9 +110,9 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
         try {
           await queryFulfilled
         } catch {
-          //patchResult.undo();
-          //videoPatchResult.undo();
-          //userPatchResult.undo();
+          patchResult.undo();
+          videoPatchResult.undo();
+          userPatchResult.undo();
         }
       }
     })
