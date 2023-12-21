@@ -6,7 +6,6 @@ import { UserDetails, UserVideosRequestParams } from "../models";
 
 const userDetails: UserDetails = {
   userFullName: 'szebest',
-  isSubscribed: false,
   subscriptions: 0
 }
 

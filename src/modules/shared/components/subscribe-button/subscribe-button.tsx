@@ -1,29 +1,29 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 import { Button } from "react-bootstrap";
 import { toast } from 'react-toastify';
 
-import styles from "./profile-picture.module.scss";
+import styles from "./subscribe-button.module.scss";
 
 import { useDeleteSubscriptionMutation, usePostSubscriptionMutation } from "../../api";
 
 import { useAuth } from "../../providers";
+import { useIsSubscribed } from "../../hooks";
 
 export type SubscribeButtonProps = {
-	isSubscribed: boolean;
 	userId: number;
 	userFullName: string;
 	videoId?: number;
 };
 
-export const SubscribeButton = memo(({ isSubscribed, userId, userFullName, videoId }: SubscribeButtonProps) => {
-	const [showToast, setShowToast] = useState(false);
-
+export const SubscribeButton = memo(({ userId, userFullName, videoId }: SubscribeButtonProps) => {
 	const { user, isLoading: isLoadingUser } = useAuth();
+
+	const { isSubscribed, isLoading: isIssubscribedLoading } = useIsSubscribed(userId, user !== undefined);
 
 	const [subscribe, { isLoading: isSubscribeLoading }] = usePostSubscriptionMutation();
 	const [unsubscribe, { isLoading: isUnsubscribeLoading }] = useDeleteSubscriptionMutation();
 
-	const isLoading = isLoadingUser || isSubscribeLoading || isUnsubscribeLoading;
+	const isLoading = isLoadingUser || isSubscribeLoading || isUnsubscribeLoading || isIssubscribedLoading;
 
 	const handleSubscribe = () => {
 		if (!checkLoggedInStatus()) return;
@@ -56,7 +56,7 @@ export const SubscribeButton = memo(({ isSubscribed, userId, userFullName, video
 
 	return (
 		<Button
-			className={`${isSubscribed ? "btn-light" : "btn-dark"} btn-lg btn-pill`}
+			className={`${isSubscribed ? "btn-light" : "btn-dark"} btn-lg btn-pill ${styles.subscribeBtn}`}
 			onClick={isSubscribed ? handleUnsubscribe : handleSubscribe}
 			disabled={isLoading}
 		>

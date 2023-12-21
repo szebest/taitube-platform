@@ -5,12 +5,11 @@ import { User } from "src/modules/shared/models";
 import { VideoComment, AddVideoComment, VideoDetails } from "../models";
 
 const video: VideoDetails = {
-	userFullName: "Bartosz Chwila",
-	userId: 6843349902366784,
+	userFullName: "Mateusz Szebestik",
+	userId: 7017027475029109,
 	likes: 0,
 	dislikes: 0,
 	subscriptions: 0,
-	isSubscribed: false,
 	isLiked: false,
 	isDisliked: false,
 	id: 0,
