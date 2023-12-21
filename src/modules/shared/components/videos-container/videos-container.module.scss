@@ -2,15 +2,16 @@
 
 .container {
 	margin-top: $spacing-16;
-	gap: $spacing-16;
 
-	&.gallery {
+	.gallery {
 		display: grid;
+		gap: $spacing-16;
   	grid-template-columns: repeat(auto-fill, minmax(max(13rem, 17%), 1fr));
 	}
 
-	&.list {
+	.list {
 		display: flex;
+		gap: $spacing-16;
 		flex-direction: column;
 	}
 }

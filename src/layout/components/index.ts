@@ -3,3 +3,4 @@ export * from './sidebar/sidebar';
 export * from './logo/logo';
 export * from './login/login';
 export * from './sidebar-subscriptions/sidebar-subscriptions';
+export * from './search-bar/search-bar';

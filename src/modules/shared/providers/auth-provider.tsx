@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo } from "react"
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo } from "react"
 
 import { User } from "../models"
 import { useUserDetailsQuery } from "../api/authApiSlice"
@@ -10,9 +10,8 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-export type AuthProviderProps = {
-  children: React.ReactNode
-}
+export type AuthProviderProps = PropsWithChildren;
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { isLoading, data: user } = useUserDetailsQuery();
 

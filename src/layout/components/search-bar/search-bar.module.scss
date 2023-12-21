@@ -1,0 +1,31 @@
+@import "src/styles/abstract/variables";
+
+.container {
+  display: flex;
+  gap: $spacing-16;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+
+  &:not(.visible) {
+    max-width: 600px;
+    
+    @media (max-width: 768px) {
+      display: none;
+    }
+
+    .cancel {
+      display: none;
+    }
+  }
+
+  &.visible {
+    .cancel {
+      display: initial;
+
+      button {
+        width: $spacing-40;
+      }
+    }
+  }
+}

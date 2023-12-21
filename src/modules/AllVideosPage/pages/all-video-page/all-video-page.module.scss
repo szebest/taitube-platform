@@ -9,6 +9,10 @@
     align-items: center;
     gap: $spacing-16;
 
+    h3 {
+      word-break: break-word;
+    }
+
     &__settings {
       display: flex;
       gap: $spacing-16;

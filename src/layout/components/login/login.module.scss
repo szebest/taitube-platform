@@ -1,6 +1,10 @@
 @import "src/styles/abstract/variables";
 @import "src/styles/abstract/mixins";
 
+.placeholder {
+  min-width: 108px;
+}
+
 .loginWrapper {
   &__facebookLogin {
     >img {

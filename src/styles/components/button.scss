@@ -45,4 +45,13 @@
 
 .btn-light {
 	background-color: $grayscale-10;
+  border-color: $grayscale-15;
+}
+
+.btn-transparent {
+  background-color: transparent;
+}
+
+.btn-borderless {
+  border-width: 0px;
 }

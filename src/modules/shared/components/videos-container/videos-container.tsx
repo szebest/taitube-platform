@@ -14,7 +14,7 @@ export type VideosContainerProps = {
 	isError?: boolean;
 	isListView?: boolean;
 	refetch?: () => unknown;
-	data?: PaginatedResponse<Video> | undefined;
+	currentData?: PaginatedResponse<Video> | undefined;
 }
 
 export const VideosContainer = memo(({ 
@@ -24,33 +24,30 @@ export const VideosContainer = memo(({
 	isLoading = false, 
 	isError = false, 
 	isListView = false, 
-	data 
+	currentData 
 }: VideosContainerProps) => {
-	const RetryButton = 
-		<div className={styles.center}>
-			<button type="button" className="btn btn-danger" onClick={() => refetch()} aria-label="retry">Retry</button>
-		</div>;
-
   return (
 		<>
-			<div>
-				{isLoading && <LoadingSpinner />}
-				{!isLoading && isError && !data && <div>{RetryButton}</div>}
-				{data &&
+			<div className={styles.container}>
+				{currentData &&
 					<>
-						<div className={`${styles.container} ${isListView ? styles.list : styles.gallery}`}>
+						<div className={`${isListView ? styles.list : styles.gallery}`}>
 							{
-								data.data.map((video, index) => (
+								currentData.data.map((video, index) => (
 									<VideoCard key={video.id ?? index} video={video} />
 								))
 							}
 						</div>
-						{isFetching && <LoadingSpinner />}
-						{isError && <div>{RetryButton}</div>}
 					</>
 				}
+				{isFetching && <LoadingSpinner />}
+				{isError && 
+					<div className={styles.center}>
+						<button type="button" className="btn btn-danger" onClick={() => refetch()} aria-label="retry">Retry</button>
+					</div>
+				}
 			</div>
-			{!isFetching && data && data.data.length < data.count && <IsVisibleContainer inView={inView} />}
+			{!isFetching && currentData && currentData.data.length < currentData.count && <IsVisibleContainer inView={inView} />}
 		</>
 	)
 });

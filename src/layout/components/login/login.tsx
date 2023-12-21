@@ -15,7 +15,7 @@ export function Login() {
 	const { user, isLoading } = useAuth();
 
 	if (isLoading)
-		return null;
+		return <div className={styles.placeholder}></div>;
 
 	return (
 		<div className={styles.loginWrapper}>

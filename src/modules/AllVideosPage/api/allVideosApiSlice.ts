@@ -1,20 +1,22 @@
 import { baseApi } from "src/base-api";
-import { PaginatedQueryParams, PaginatedResponse } from "src/models";
+
+import { PaginatedResponse } from "src/models";
 import { Video } from "src/modules/shared/models";
+import { VideosQueryParams } from "../models";
 
 export const allVideosApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    allVideos: builder.query<PaginatedResponse<Video>, PaginatedQueryParams>({
+    allVideos: builder.query<PaginatedResponse<Video>, VideosQueryParams>({
       keepUnusedDataFor: 300,
       query: (queryParams) => {
-				const params = new URLSearchParams(queryParams as never);
+				const params = new URLSearchParams(JSON.parse(JSON.stringify(queryParams)) as never);
 
 				return {
 					url: `/videos?${params}`,
 				}
 			},
-      serializeQueryArgs: ({ endpointName }) => {
-        return endpointName;
+      serializeQueryArgs: ({ endpointName, queryArgs: { searchText } }) => {
+        return endpointName + searchText;
       },
       merge: (currentCache, newItems) => {
         const { data, ...rest } = newItems;
@@ -27,7 +29,9 @@ export const allVideosApiSlice = baseApi.injectEndpoints({
         }
       },
       forceRefetch({ currentArg, previousArg }) {
-        return currentArg!.pageNumber > (previousArg?.pageNumber ?? 0) || currentArg?.pageSize !== previousArg?.pageSize;
+        return currentArg!.pageNumber > (previousArg?.pageNumber ?? 0) || 
+          currentArg?.pageSize !== previousArg?.pageSize ||
+          currentArg?.searchText !== previousArg?.searchText;
       }
     })
   })
