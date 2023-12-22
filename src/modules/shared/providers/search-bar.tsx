@@ -24,8 +24,9 @@ export const SearchBarProvider = ({ children }: SearchBarProviderProps) => {
   const [fullscreenSearch, setFullscreenSearch] = useState(false);
 
   const search = useCallback((data: SearchBarModel) => {
+    if (query.get("search") === data.searchText) return;
+    
     setSearchText(data.searchText);
-    setFullscreenSearch(false);
 
     if (data.searchText.length === 0) {
       navigate("");
