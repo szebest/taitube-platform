@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Form, InputGroup } from "react-bootstrap";
 
@@ -14,8 +14,22 @@ export function SearchBar() {
 	const {
 		reset,
 		register,
-		handleSubmit
-	} = useForm<SearchBarModel>({ defaultValues: { searchText: "" } });
+		handleSubmit,
+		watch
+	} = useForm<SearchBarModel>({ defaultValues: { searchText: "" }, mode: 'onChange' });
+
+	const focusInputField = useCallback(() => {
+		const searchBar = document.getElementById("search-bar");
+
+		if (!searchBar) return;
+
+		searchBar.focus();
+	}, []);
+
+	const handleClear = () => {
+		reset({ searchText: "" }); 
+		focusInputField();
+	}
 
 	useEffect(() => {
 		if (searchText.length === 0) return;
@@ -28,12 +42,8 @@ export function SearchBar() {
 	useEffect(() => {
 		if (!fullscreenSearch) return;
 		
-		const searchBar = document.getElementById("search-bar");
-
-		if (!searchBar) return;
-
-		searchBar.focus();
-	}, [fullscreenSearch]);
+		focusInputField();
+	}, [fullscreenSearch, focusInputField]);
 
 	return (
 		<form className={`${styles.container} ${fullscreenSearch ? styles.visible : ''}`} onSubmit={handleSubmit(search)}>
@@ -44,6 +54,11 @@ export function SearchBar() {
 			</div>
 			<InputGroup>
 				<Form.Control id="search-bar" {...register("searchText")} />
+				{watch("searchText").length > 0 &&
+					<Button className="btn-light btn-transparent" type="button" onClick={handleClear}>
+						<i className="bi bi-x-lg"></i>
+					</Button>
+				}
 				<Button className="btn-light btn-transparent" type="submit">
 					<i className="bi bi-search"></i>
 				</Button>
