@@ -3,17 +3,21 @@ import { Button } from 'react-bootstrap';
 
 import styles from './header.module.scss';
 
-import { useSearchBar } from 'src/modules/shared/providers';
+import { useAuth, useSearchBar } from 'src/modules/shared/providers';
 
 import { Logo, Login, SearchBar } from '..';
 
 export const Header = memo(() => {
   const { setFullscreenSearch, fullscreenSearch } = useSearchBar();
+  const { isLoading } = useAuth();
+
+  if (isLoading)
+    return null;
   
   return (
     <header className={`${styles.header} ${fullscreenSearch ? styles.hideElements : ''}`}>
       <div className={styles.hide}>
-        <Logo />
+        <Logo hideLogoPart />
       </div>
       <SearchBar />
       <div className={`${styles.header__right} ${styles.hide}`}>

@@ -33,7 +33,7 @@ export function Sidebar() {
 			onBreakPoint={breakpointChanged}
 			onBackdropClick={toggle}
 		>
-			{isBelowBreakpoint && <div className={styles.sidebar__logo}><Logo /></div>}
+			{isBelowBreakpoint && <div className={styles.sidebar__logo}><Logo hideLogoPart={false} /></div>}
 			<Menu>
 				<MenuItem component={<Link to='/' onClick={close} />}>
 					<i className="bi bi-house-door-fill"></i>

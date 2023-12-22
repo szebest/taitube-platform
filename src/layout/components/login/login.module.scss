@@ -1,10 +1,6 @@
 @import "src/styles/abstract/variables";
 @import "src/styles/abstract/mixins";
 
-.placeholder {
-  min-width: 108px;
-}
-
 .loginWrapper {
   &__facebookLogin {
     >img {
@@ -16,6 +12,21 @@
     >span {
       @include paragraph-3-regular();
       margin-left: $spacing-16;
+    }
+
+    .textLong {
+      @media (max-width: 600px) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 400px) {
+      border-radius: $spacing-4;
+      padding: $spacing-8;
+      
+      .text {
+        display: none;
+      }
     }
   }
 

@@ -8,4 +8,30 @@
 	button svg {
 		min-width: $spacing-24;
 	}
+
+  &__toHide {
+    @media (max-width: 400px) {
+      display: none;
+    }
+  }
+
+  &__long {
+    width: 115px;
+    height: 28px;
+  }
+
+  &__short {
+    width: 115px;
+    height: 28px;
+
+    @media (max-width: 400px) {
+      width: 30.4px;
+      height: 28px;
+
+      .logo__icon {
+        transform: translateY(-40px) translateX(-11px);
+        scale: 4.735;
+      }
+    }
+  }
 }

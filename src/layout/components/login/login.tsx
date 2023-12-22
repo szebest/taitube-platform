@@ -15,7 +15,7 @@ export function Login() {
 	const { user, isLoading } = useAuth();
 
 	if (isLoading)
-		return <div className={styles.placeholder}></div>;
+		return null;
 
 	return (
 		<div className={styles.loginWrapper}>
@@ -24,7 +24,10 @@ export function Login() {
 				<form method='GET' action={`${API_BASE_URL}/account/facebook-login`}>
 					<button type="submit" className={`${styles.loginWrapper__facebookLogin} btn btn-primary`} aria-label="facebook login">
 						<img src={fbLogoSecondary} alt="fb" />
-						<span>Login with Facebook</span>
+						<span className={styles.text}>
+							<span>Login</span>
+							<span className={styles.textLong}> with Facebook</span>
+						</span>
 					</button>
 				</form>
 				:
