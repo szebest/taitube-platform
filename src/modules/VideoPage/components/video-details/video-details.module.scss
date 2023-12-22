@@ -42,6 +42,7 @@
 			display: flex;
 			gap: $spacing-24;
 			flex-direction: row;
+			justify-content: space-between;
 
 			.username {
 				@include paragraph-1-semi-bold();
