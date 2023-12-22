@@ -7,14 +7,16 @@ import styles from './all-video-page.module.scss';
 import { useAllVideosQuery } from '../../api';
 
 import { IN_VIEW_LOCAL_STORAGE_KEY } from 'src/config';
-import { useSearchBar } from 'src/modules/shared/providers';
+
+import { useQuery } from 'src/modules/shared/hooks';
 
 import { VideosContainer } from "src/modules/shared/components";
 
 import { VideosQueryParams } from '../../models';
 
 export function AllVideosPage() {
-	const { searchText } = useSearchBar();
+	const URLSearchQuery = useQuery();
+	const searchText = URLSearchQuery.get("search") ?? "";
 
 	const [query, setQuery] = useState<VideosQueryParams>({ 
 		pageNumber: 0, 
