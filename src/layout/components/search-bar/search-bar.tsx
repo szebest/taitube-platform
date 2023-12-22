@@ -16,7 +16,7 @@ export function SearchBar() {
 		register,
 		handleSubmit,
 		watch
-	} = useForm<SearchBarModel>({ defaultValues: { searchText: "" }, mode: 'onChange' });
+	} = useForm<SearchBarModel>({ defaultValues: { searchText: "" } });
 
 	const focusInputField = useCallback(() => {
 		const searchBar = document.getElementById("search-bar");
