@@ -40,8 +40,7 @@ export const userPageApiSlice = baseApi.injectEndpoints({
       },
       forceRefetch({ currentArg, previousArg }) {
         return currentArg!.pageNumber > (previousArg?.pageNumber ?? 0) || 
-          currentArg?.pageSize !== previousArg?.pageSize ||
-          currentArg?.userId !== previousArg?.userId;
+          currentArg?.pageSize !== previousArg?.pageSize;
       }
     })
   })

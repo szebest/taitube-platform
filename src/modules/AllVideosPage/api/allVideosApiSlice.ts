@@ -30,8 +30,7 @@ export const allVideosApiSlice = baseApi.injectEndpoints({
       },
       forceRefetch({ currentArg, previousArg }) {
         return currentArg!.pageNumber > (previousArg?.pageNumber ?? 0) || 
-          currentArg?.pageSize !== previousArg?.pageSize ||
-          currentArg?.searchText !== previousArg?.searchText;
+          currentArg?.pageSize !== previousArg?.pageSize;
       }
     })
   })

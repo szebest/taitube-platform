@@ -15,13 +15,15 @@ function Arrow({
 	className?: string
 }) {
 	return (
-		<button
-			disabled={disabled}
-			onClick={onClick}
-			className={`btn ${styles.arrow} ${disabled ? styles.disabled : ''} ${className}`}
-		>
-			{children}
-		</button>
+		<div className={`${styles.container} ${className} ${disabled ? styles.disabled : ''}`}>
+			<button
+				disabled={disabled}
+				onClick={onClick}
+				className={`btn btn-round ${styles.arrow}`}
+			>
+				{children}
+			</button>
+		</div>
 	);
 }
 
@@ -45,7 +47,7 @@ export function LeftArrow() {
 
 	const clickHandler = () => scrollToItem(getPrevElement(), "smooth", "start");
 	return (
-		<Arrow disabled={disabled} onClick={clickHandler}  className={styles.left}>
+		<Arrow disabled={disabled} onClick={clickHandler} className={styles.left}>
 			<i className="bi bi-arrow-left"></i>
 		</Arrow>
 	);

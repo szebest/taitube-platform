@@ -52,8 +52,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
       },
       forceRefetch({ currentArg, previousArg }) {
         return (currentArg!.queryParams?.pageNumber ?? 0) > (previousArg?.queryParams?.pageNumber ?? 0) || 
-					currentArg?.queryParams?.pageSize !== previousArg?.queryParams?.pageSize || 
-					currentArg?.videoId !== previousArg?.videoId;
+					currentArg?.queryParams?.pageSize !== previousArg?.queryParams?.pageSize;
       }
     }),
     addVideoComment: builder.mutation<VideoComment, { videoId: number, body: AddVideoComment, user?: User }>({
