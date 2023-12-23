@@ -3,7 +3,7 @@
 .ps-menu-root {
   ul {
     li {
-      padding-left: calc($spacing-8 + $spacing-1);
+      padding: $spacing-2 $spacing-2 $spacing-2 calc($spacing-8 + $spacing-1);
     }
   }
 
