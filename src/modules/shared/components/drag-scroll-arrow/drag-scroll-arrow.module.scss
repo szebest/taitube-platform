@@ -1,0 +1,43 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/colors";
+
+.arrow {
+	position: absolute;
+	z-index: 100;
+
+	background-color: $white !important;
+	border-radius: 0px !important;
+	border: 0px !important;
+	height: 40px;
+
+	&::before {
+		content: "";
+		width: 60px;
+		position: absolute;
+		top: -5px;
+		bottom: -5px;
+		z-index: 10;
+	}
+
+	&.disabled {
+		display: none;
+	}
+}
+
+.left {
+	left: -1px;
+
+	&::before {
+		background: linear-gradient(to right,#fff 20%,rgba(255,255,255,0) 80%);
+		left: 40px;
+	}
+}
+
+.right {
+	right: -1px;
+
+	&::before {
+		background: linear-gradient(to left,#fff 20%,rgba(255,255,255,0) 80%);
+		right: 40px;
+	}
+}

@@ -13,6 +13,7 @@ import { useQuery } from 'src/modules/shared/hooks';
 import { VideosContainer } from "src/modules/shared/components";
 
 import { VideosQueryParams } from '../../models';
+import { CategoryList } from '../../components';
 
 export function AllVideosPage() {
 	const URLSearchQuery = useQuery();
@@ -21,7 +22,8 @@ export function AllVideosPage() {
 	const [query, setQuery] = useState<VideosQueryParams>({ 
 		pageNumber: 0, 
 		pageSize: 60, 
-		searchText: searchText.length > 0 ? searchText : undefined 
+		searchText: searchText.length > 0 ? searchText : undefined,
+		categoryId: undefined
 	});
 	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
   const queryData = useAllVideosQuery(query);
@@ -33,6 +35,10 @@ export function AllVideosPage() {
 
 		setQuery(prev => ({ ...prev, pageNumber: prev.pageNumber + 1 }));
 	}, [isFetching]);
+
+	const onCategoryChange = useCallback((categoryId: number | undefined) => {
+		setQuery(prev => ({ ...prev, categoryId }));
+	}, []);
 
 	useEffect(() => {
 		setQuery(prev => ({ ...prev, pageNumber: 0, searchText: searchText.length > 0 ? searchText : undefined }));
@@ -46,6 +52,7 @@ export function AllVideosPage() {
 
   return (
     <div className={styles.container}>
+			<CategoryList onCategoryChange={onCategoryChange} selectedCategoryId={query.categoryId} />
 			<div className={styles.container__header}>
       	<h3>{searchText.length === 0 ? 'All videos:' : `Search results for: '${searchText}'`}</h3>
 				<div className={styles.container__header__settings}>

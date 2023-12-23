@@ -15,8 +15,8 @@ export const allVideosApiSlice = baseApi.injectEndpoints({
 					url: `/videos?${params}`,
 				}
 			},
-      serializeQueryArgs: ({ endpointName, queryArgs: { searchText } }) => {
-        return endpointName + searchText;
+      serializeQueryArgs: ({ endpointName, queryArgs: { searchText, categoryId } }) => {
+        return `${endpointName} | ${categoryId} | ${searchText}`;
       },
       merge: (currentCache, newItems) => {
         const { data, ...rest } = newItems;

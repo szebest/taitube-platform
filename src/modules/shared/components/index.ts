@@ -7,3 +7,5 @@ export * from './is-visible-container/is-visible-container';
 export * from './profile-picture/profile-picture';
 export * from './subscribe-button/subscribe-button';
 export * from './number-param-container/number-param-container';
+export * from './drag-scroll-menu/drag-scroll-menu';
+export * from './drag-scroll-arrow/drag-scroll-arrow';

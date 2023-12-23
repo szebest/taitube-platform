@@ -1,0 +1,14 @@
+@import "src/styles/abstract/variables";
+
+.container {
+	display: flex;
+	gap: $spacing-8;
+	flex-direction: row;
+
+	-ms-overflow-style: none;
+  scrollbar-width: none;
+	
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}

@@ -4,10 +4,12 @@
   container-type: inline-size;
 
   &__header {
-    display: flex;
+		display: flex;
     justify-content: space-between;
     align-items: center;
     gap: $spacing-16;
+		
+		margin-top: $spacing-16;
 
     h3 {
       word-break: break-word;
