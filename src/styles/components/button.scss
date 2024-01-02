@@ -6,6 +6,11 @@
   max-width: 1px;
 }
 
+.btn-initial {
+	background-color: inherit;
+  border: unset;
+}
+
 .btn, .btn-lg {
   @include paragraph-2-regular();
   line-height: unset;

@@ -62,15 +62,14 @@ export const videoApiSlice = baseApi.injectEndpoints({
 				body
 			}),
       async onQueryStarted({ videoId, body: { data }, user }, { dispatch, queryFulfilled }) {
-				const { fullName, id: userId } = user ?? { fullName: '', id: -1 }
+				const { fullName, id: userId } = user ?? { fullName: '', id: -1 };
 
 				const item = {
 					userId,
 					videoId,
 					data,
 					fullName,
-					createdAt: (new Date()).toString(),
-					loading: true
+					createdAt: (new Date()).toString()
 				};
 
         const patchResult = dispatch(
@@ -78,16 +77,14 @@ export const videoApiSlice = baseApi.injectEndpoints({
             draft.data.unshift(item);
           })
         )
+
         try {
-          await queryFulfilled
-        } catch {
-          patchResult.undo()
-        }
-				finally {
+          const queryResult = await queryFulfilled;
+
 					dispatch(videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
 						const newData = draft.data.map(x => {
-							if (x.createdAt === item.createdAt && item.loading) {
-								return { ...x, loading: false }
+							if (x.createdAt === item.createdAt && x.id === undefined) {
+								return { ...x, id: queryResult.data.id }
 							}
 
 							return x;
@@ -95,7 +92,58 @@ export const videoApiSlice = baseApi.injectEndpoints({
 
 						draft.data = newData;
           }));
-				}
+        } catch {
+          patchResult.undo();
+        }
+      }
+		}),
+		editVideoComment: builder.mutation<VideoComment, { id: number, videoId: number, body: AddVideoComment }>({
+			query: ({ id, videoId, body }) => ({
+				url: `/videos/${videoId}/comments/${id}`,
+				method: 'PATCH',
+				body
+			}),
+      async onQueryStarted({ id, videoId, body: { data } }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
+						const newData = draft.data.map(x => {
+							if (x.id === id) {
+								return { ...x, data }
+							}
+
+							return x;
+						});
+
+            draft.data = newData;
+          })
+        )
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      }
+		}),
+		deleteVideoComment: builder.mutation<VideoComment, { id: number, videoId: number }>({
+			query: ({ id, videoId }) => ({
+				url: `/videos/${videoId}/comments/${id}`,
+				method: 'DELETE'
+			}),
+      async onQueryStarted({ id, videoId }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
+						const newData = draft.data.filter(x => x.id !== id);
+
+            draft.data = newData;
+          })
+        )
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
       }
 		}),
 		likeVideo: builder.mutation<void, { videoId: number, value: number }>({
@@ -176,6 +224,8 @@ export const {
   useVideoDetailsQuery,
 	useGetVideoCommentsQuery,
 	useAddVideoCommentMutation,
+	useEditVideoCommentMutation,
+	useDeleteVideoCommentMutation,
 	useLikeVideoMutation,
 	useDeleteLikeFromVideoMutation,
 	useShareVideoMutation

@@ -5,9 +5,9 @@ import styles from './comments-section.module.scss';
 import { useGetVideoCommentsQuery } from '../../api/videoApiSlice';
 
 import { PaginatedQueryParams } from 'src/models';
+
 import { IsVisibleContainer, LoadingSpinner } from 'src/modules/shared/components';
 import { AddVideoComment, VideoComments } from '..';
-import { useAuth } from 'src/modules/shared/providers';
 
 export type CommentsSectionProps = {
 	videoId: number;
@@ -15,7 +15,6 @@ export type CommentsSectionProps = {
 
 export const CommentsSection = ({ videoId }: CommentsSectionProps) => {
 	const [query, setQuery] = useState<PaginatedQueryParams>({ pageNumber: 0, pageSize: 10 });
-	const { user, isLoading: userIsLoading } = useAuth();
 	const { data, isFetching, originalArgs, isLoading, isError } = useGetVideoCommentsQuery({ videoId, queryParams: query });
 
 	const loadMore = useCallback(() => {
@@ -32,7 +31,7 @@ export const CommentsSection = ({ videoId }: CommentsSectionProps) => {
 
 	return (
 		<div className={styles.container}>
-			{!userIsLoading && user && <AddVideoComment videoId={videoId} user={user} loadingComments={isLoading || isError} />}
+			<AddVideoComment videoId={videoId} loadingComments={isLoading || isError} />
 			{isLoading ?
 				<LoadingSpinner /> :
 				<>

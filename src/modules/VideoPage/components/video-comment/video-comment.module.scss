@@ -13,12 +13,23 @@
 	}
 
 	&__top {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+
 		.username {
 			@include paragraph-2-semi-bold();
 		}
 
 		.date {
 			@include paragraph-4-regular();
+		}
+
+		.toggle {
+			width: 36px;
+			height: 36px;
+			font-size: $spacing-12;
 		}
 	}
 

@@ -34,7 +34,7 @@ export function Login() {
 				<div className={styles.loginWrapper__userInfo}>
 					<span>{user.firstName}</span>
 					<Dropdown>
-						<Dropdown.Toggle>
+						<Dropdown.Toggle as='div'>
 							<ProfilePicture src={user.profilePictureSrc} />
 						</Dropdown.Toggle>
 
@@ -56,7 +56,7 @@ export function Login() {
 							<Dropdown.Divider></Dropdown.Divider>
 
 							<form method='POST' action={`${API_BASE_URL}/account/logout`} className='dropdown-item'>
-								<button type="submit" aria-label="logout" className={styles.dropdown__logout}>
+								<button type="submit" aria-label="logout" className='btn-initial'>
 									<i className="bi bi-door-closed-fill"></i>
 									<span>Logout</span>
 								</button>

@@ -1,22 +1,88 @@
-import { memo } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Dropdown } from 'react-bootstrap';
 
 import styles from './video-comment.module.scss';
 
 import { timeAgo } from 'src/lib';
 
+import { useDeleteVideoCommentMutation } from '../../api/videoApiSlice';
+
+import { useAuth } from 'src/modules/shared/providers';
+
 import { VideoComment as VideoCommentModel } from '../../models';
+
+import { AddVideoComment } from '../add-video-comment/add-video-comment';
 
 export type VideoCommentProps = {
 	comment: VideoCommentModel;
 }
 
 export const VideoComment = memo(({ comment }: VideoCommentProps) => {
+	const [isEditing, setIsEditing] = useState(false);
+
+	const { user } = useAuth();
+	const [deleteVideoComment] = useDeleteVideoCommentMutation();
+
+	const handleDelete = () => {
+		if (comment.id === undefined) return;
+
+		deleteVideoComment({
+			id: comment.id,
+			videoId: comment.videoId
+		});
+	}
+
+	const handleEdit = () => {
+		setIsEditing(true);
+	}
+
+	const handleCancelEdit = useCallback(() => {
+		setIsEditing(false);
+	}, []);
+
+	if (isEditing) return <AddVideoComment {...comment} loadingComments={false} initialText={comment.data} onClose={handleCancelEdit} />
+
+	const commentLoading = comment.id === undefined;
+
   return (
-    <div className={`${styles.container} ${comment.loading ? styles.loading : ''}`}>
+    <div className={`${styles.container} ${commentLoading ? styles.loading : ''}`}>
 			<div className={styles.container__top}>
-				<span className={styles.username}><Link to={`/user/${comment.userId}`} className={comment.userId === -1 ? 'disabled' : ''}>{comment.fullName}</Link> </span>
-				{!comment.loading && <span className={styles.date}>{timeAgo.format(new Date(comment.createdAt))}</span>}
+				<div>
+					<span className={styles.username}><Link to={`/user/${comment.userId}`} className={comment.userId === -1 ? 'disabled' : ''}>{comment.fullName}</Link> </span>
+					{!commentLoading && <span className={styles.date}>{timeAgo.format(new Date(comment.createdAt))}</span>}
+				</div>
+				<div>
+					{user && comment.userId === user.id &&
+						<>
+							<Dropdown>
+								<Dropdown.Toggle as='div'>
+									<button className={`btn btn-round ${styles.toggle}`}>
+										<i className="bi bi-three-dots-vertical"></i>
+									</button>
+								</Dropdown.Toggle>
+
+								<Dropdown.Menu className={`${styles.dropdown} light`}>
+									<Dropdown.Item as='div'>
+										<button className='btn-initial' onClick={handleEdit}>
+											<i className="bi bi-pencil"></i>
+											<span>Edit</span>
+										</button>
+									</Dropdown.Item>
+
+									<Dropdown.Divider></Dropdown.Divider>
+
+									<Dropdown.Item as='div'>
+										<button className='btn-initial' onClick={handleDelete}>
+											<i className="bi bi-trash"></i>
+											<span>Delete</span>
+										</button>
+									</Dropdown.Item>
+								</Dropdown.Menu>
+							</Dropdown>
+						</>
+					}
+				</div>
 			</div>
 			<div className={styles.container__comment}>
 				<p>{comment.data}</p>

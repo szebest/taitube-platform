@@ -3,38 +3,61 @@ import { Form } from 'react-bootstrap';
 
 import styles from './add-video-comment.module.scss';
 
-import { useAddVideoCommentMutation } from '../../api/videoApiSlice';
+import { useAddVideoCommentMutation, useEditVideoCommentMutation } from '../../api/videoApiSlice';
+
+import { useAuth } from 'src/modules/shared/providers';
 
 import { AddVideoComment as AddVideoCommentModel } from '../../models';
-import { User } from 'src/modules/shared/models';
 
 import { ProfilePicture } from 'src/modules/shared/components';
 
 export type AddVideoCommentProps = {
+	id?: number;
 	videoId: number;
-	user: User;
 	loadingComments: boolean;
+	onClose?: VoidFunction;
+	initialText?: string;
 }
 
-export const AddVideoComment = ({ videoId, user, loadingComments }: AddVideoCommentProps) => {
+export const AddVideoComment = ({ id, videoId, loadingComments, onClose, initialText }: AddVideoCommentProps) => {
+	const { user, isLoading: userIsLoading } = useAuth();
 	const [addVideoComment, { isLoading }] = useAddVideoCommentMutation();
+	const [editVideoComment] = useEditVideoCommentMutation();
 
 	const {
 		register,
 		handleSubmit,
 		reset,
 		formState: { isValid }
-	} = useForm<AddVideoCommentModel>({ defaultValues: { data: "" } });
+	} = useForm<AddVideoCommentModel>({ defaultValues: { data: initialText } });
 
 	const submit = (body: AddVideoCommentModel) => {
 		reset();
 
-		addVideoComment({
-			videoId,
-			body,
-			user
-		});
+		if (id !== undefined) {
+			editVideoComment({
+				id,
+				videoId,
+				body
+			});
+		}
+		else {
+			addVideoComment({
+				videoId,
+				body,
+				user
+			});
+		}
+
+		onClose?.();
 	}
+
+	const handleCancel = () => {
+		onClose?.();
+		reset();
+	}
+
+	if (userIsLoading || !user) return null;
 
 	return (
 		<div className={styles.container}>
@@ -44,7 +67,7 @@ export const AddVideoComment = ({ videoId, user, loadingComments }: AddVideoComm
 					<Form.Control as="textarea" disabled={loadingComments} type="text" {...register('data', { required: true })} className={styles.form__textarea} />
 				</Form.Group>
 				<div className={styles.container__form__buttons}>
-					<button type="button" disabled={!isValid || isLoading || loadingComments} className="btn btn-secondary btn-md" onClick={() => reset()}>Cancel</button>
+					<button type="button" disabled={(!isValid || isLoading || loadingComments) && id === undefined} className="btn btn-secondary btn-md" onClick={handleCancel}>Cancel</button>
 					<button type="submit" disabled={!isValid || isLoading || loadingComments} className="btn btn-primary btn-md">Comment</button>
 				</div>
 			</Form>
