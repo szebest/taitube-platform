@@ -1,9 +1,12 @@
 @import "src/styles/abstract/variables";
+@import "src/styles/abstract/colors";
 
 .container {
   display: grid;
   grid-template-columns: auto 1fr;
   margin-top: $header-height;
+	
+	background-color: $white;
 
   &.breakpoint {
     grid-template-columns: 1fr;
@@ -16,6 +19,8 @@
   }
 
   main {
+		min-height: 100dvh;
+		
     margin: $spacing-16;
 		margin-bottom: $spacing-32;
 

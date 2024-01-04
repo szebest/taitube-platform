@@ -47,6 +47,10 @@
 			.username {
 				@include paragraph-1-semi-bold();
 			}
+
+			.subscriptions {
+				@include paragraph-3-semi-bold();
+			}
 		}
 
 		.right {

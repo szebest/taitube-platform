@@ -1,0 +1,20 @@
+@mixin dark() {
+	--grayscale-100: #f8f9fa;
+	--grayscale-90: #e8e9ef;
+	--grayscale-80: #d0d3de;
+	--grayscale-70: #aeb3c3;
+	--grayscale-60: #979db0;
+	--grayscale-50: #6f7387;
+	--grayscale-40: #505568;
+	--grayscale-30: #31343e;
+	--grayscale-20: #2a2b2c;
+	--grayscale-15: #1e1f1f;
+	--grayscale-10: #121313;
+	--grayscale-5: #0b0b0c;
+
+	--white: #1e1f1f;
+	--black: #d0d3de;
+
+	--brand-primary-main: #e6e6e6;
+	--brand-secondary-main: rgba(255, 255, 255, 0.95);
+}

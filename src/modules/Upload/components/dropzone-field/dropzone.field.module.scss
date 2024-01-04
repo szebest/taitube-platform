@@ -12,12 +12,11 @@
   padding: $spacing-20;
   border-width: 2px;
   border-radius: 2px;
-  border-color: $grayscale-30;
+  border-color: $grayscale-40;
   border-style: dashed;
   background-color: $grayscale-10;
-  color: $grayscale-50;
+  color: $grayscale-70;
   outline: none;
-  transition: border 250ms ease-in-out;
 
   &:hover, &:focus-visible {
     border-color: $grayscale-60;

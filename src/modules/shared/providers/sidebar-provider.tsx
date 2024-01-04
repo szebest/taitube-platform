@@ -4,8 +4,8 @@ import { PropsWithChildren, createContext, useContext, useMemo, useState } from 
 type SidebarContextValue = {
   collapsed: boolean;
   isBelowBreakpoint?: boolean;
-  toggle: () => void;
-  close: () => void;
+  toggle: VoidFunction;
+  close: VoidFunction;
   breakpointChanged: (_: boolean) => void;
 }
 
@@ -35,7 +35,7 @@ export const SidebarProvider = ({ children }: SidebarProviderProps) => {
 export const useSidebar = () => {
   const ctx = useContext(SidebarContext)
   if (!ctx) {
-    throw new Error('useSidebar must be used within AuthProvider')
+    throw new Error('useSidebar must be used within SidebarProvider')
   }
   return ctx
 }

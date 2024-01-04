@@ -9,11 +9,11 @@ import { LeftArrow, RightArrow } from '../drag-scroll-arrow/drag-scroll-arrow';
 
 type ScrollVisibilityApiType = React.ContextType<typeof VisibilityContext>;
 
-export type DragScrollMenu = {
+export type DragScrollMenuProps = {
 	onDraggingChange?: (dragging: boolean) => void
 } & PropsWithChildren;
 
-export function DragScrollMenu({ children, onDraggingChange }: DragScrollMenu) {
+export function DragScrollMenu({ children, onDraggingChange }: DragScrollMenuProps) {
 	const { dragStart, dragStop, dragMove, dragging } = useDrag();
 
 	const handleDrag = ({ scrollContainer }: ScrollVisibilityApiType) => (

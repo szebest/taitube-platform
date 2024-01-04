@@ -1,4 +1,6 @@
 @import "styles/main";
+@import 'styles/abstract/light';
+@import 'styles/abstract/dark';
 
 body {
   margin: 0;
@@ -10,4 +12,20 @@ html {
   &:not(:has(body .modal)) {
     scrollbar-gutter: stable;
   }
+}
+
+* {
+	transition: color .15s ease-in-out,
+							background-color .15s ease-in-out,
+							border-color .15s ease-in-out,
+							box-shadow .15s ease-in-out;
+}
+
+body,
+body[data-theme=light] {
+	@include light();
+}
+
+body[data-theme=dark] {
+	@include dark();
 }

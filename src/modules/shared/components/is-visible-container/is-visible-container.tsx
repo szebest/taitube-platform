@@ -2,7 +2,7 @@ import debounce from 'lodash.debounce';
 import { PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 
 export type IsVisibleContainerProps = PropsWithChildren<{
-	inView?: () => void;
+	inView?: VoidFunction;
 	rootMargin?: string;
 }>
 

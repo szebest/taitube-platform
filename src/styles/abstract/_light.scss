@@ -1,0 +1,20 @@
+@mixin light {
+	--grayscale-100: #0b0b0c;
+	--grayscale-90: #121313;
+	--grayscale-80: #1e1f1f;
+	--grayscale-70: #2a2b2c;
+	--grayscale-60: #31343e;
+	--grayscale-50: #505568;
+	--grayscale-40: #6f7387;
+	--grayscale-30: #979db0;
+	--grayscale-20: #aeb3c3;
+	--grayscale-15: #d0d3de;
+	--grayscale-10: #e8e9ef;
+	--grayscale-5: #f8f9fa;
+	
+	--white: #fff;
+	--black: #000;
+
+	--brand-primary-main: #191919;
+	--brand-secondary-main: rgba(0, 0, 0, 0.05);
+}

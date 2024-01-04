@@ -1,9 +1,17 @@
 @import "src/styles/abstract/mixins";
+@import "src/styles/abstract/colors";
 
 .form-select {
-  @include paragraph-4-regular();
+  &, &:focus {
+		@include paragraph-4-regular();
+		background-color: transparent;
+	}
 
   &:focus {
     box-shadow: 0 0 0 1px rgba(13,110,253,.25);
   }
+
+	option {
+		background-color: $white;
+	}
 }

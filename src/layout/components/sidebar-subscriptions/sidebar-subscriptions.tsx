@@ -8,7 +8,7 @@ import styles from "./sidebar-subscriptions.module.scss";
 import { useGetUserSubscriptionsQuery } from "src/modules/shared/api";
 
 export type SidebarSubscriptionsProps = {
-	close: () => void
+	close: VoidFunction
 }
 
 const SUBSCRIPTIONS_COLLAPSED_AMOUNT = 5;

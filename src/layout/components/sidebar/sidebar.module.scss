@@ -2,6 +2,8 @@
 @import "src/styles/abstract/colors";
 
 .sidebar {
+	background-color: $white;
+	
   &__logo {
     display: flex;
     align-items: center;

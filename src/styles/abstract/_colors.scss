@@ -1,31 +1,17 @@
-$grayscale-100: #0b0b0c;
-$grayscale-90: #121313;
-$grayscale-80: #1e1f1f;
-$grayscale-70: #2a2b2c;
-$grayscale-60: #31343e;
-$grayscale-50: #505568;
-$grayscale-40: #6f7387;
-$grayscale-30: #979db0;
-$grayscale-20: #aeb3c3;
-$grayscale-15: #d0d3de;
-$grayscale-10: #e8e9ef;
-$grayscale-5: #f8f9fa;
-$white: #fff;
-$black: #000;
+$grayscale-100: var(--grayscale-100);
+$grayscale-90: var(--grayscale-90);
+$grayscale-80: var(--grayscale-80);
+$grayscale-70: var(--grayscale-70);
+$grayscale-60: var(--grayscale-60);
+$grayscale-50: var(--grayscale-50);
+$grayscale-40: var(--grayscale-40);
+$grayscale-30: var(--grayscale-30);
+$grayscale-20: var(--grayscale-20);
+$grayscale-15: var(--grayscale-15);
+$grayscale-10: var(--grayscale-10);
+$grayscale-5: var(--grayscale-5);
+$white: var(--white);
+$black: var(--black);
 
-$red-100: #420405;
-$red-90: #870002;
-$red-80: #a3000a;
-$red-70: #be0014;
-$red-60: #d70020;
-$red-50: #ed002d;
-$red-40: #ff0039;
-$red-30: #ff2358;
-$red-20: #ff4e7b;
-$red-15: #ff82a2;
-$red-10: rgba(255, 221, 230, 0.9);;
-$red-5: #fff8fa;
-
-/* Brand scale */
-$brand-primary-main: #191919;
-$brand-secondary-main: rgba(0, 0, 0, 0.05);
+$brand-primary-main: var(--brand-primary-main);
+$brand-secondary-main: var(--brand-secondary-main);

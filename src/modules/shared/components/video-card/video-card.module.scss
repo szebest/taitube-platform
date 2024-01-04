@@ -52,9 +52,12 @@
 			gap: $spacing-4;
 			flex-wrap: wrap;
 
-			.text {
+			.text, .seperator {
 				@include paragraph-4-regular();
-				line-height: 1.25;
+			}
+
+			.seperator {
+				line-height: 2.5;
 			}
 		}
 

@@ -1,7 +1,10 @@
+@import './colors';
+
 @mixin default-font-variables {
   font-family: Sora, sans-serif;
   font-stretch: normal;
   font-style: normal;
+	color: $black;
 }
 
 @mixin hero {

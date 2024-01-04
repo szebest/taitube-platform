@@ -8,7 +8,7 @@ import { Video } from "../../models";
 import { PaginatedResponse } from 'src/models';
 
 export type VideosContainerProps = {
-	inView?: () => void;
+	inView?: VoidFunction;
 	isFetching?: boolean;
 	isLoading?: boolean;
 	isError?: boolean;

@@ -7,7 +7,7 @@ import { useAuth } from 'src/modules/shared/providers';
 import { UserFriends } from '../../components';
 
 export type ShareVideoModalProps = {
-  onClose: () => void,
+  onClose: VoidFunction,
   show: boolean,
   videoId: number
 }

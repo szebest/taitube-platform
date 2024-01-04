@@ -33,46 +33,23 @@
 }
 
 .dropdown-menu {
-	&.light {
-		background-color: $white;
+	background-color: $white;
 
-		hr {
-			background: $grayscale-30;
-			height: 1px;
-		}
-		
-		.dropdown-item {
-			@include paragraph-2-regular();
-			color: $black;
-
-			&:hover {
-				background-color: $grayscale-10;
-			}
-
-			&:focus {
-				background-color: $grayscale-20;
-			}
-		}
+	hr {
+		background: $grayscale-30;
+		height: 1px;
 	}
 
-	&:not(.light) {
-		background-color: $black;
+	.dropdown-item {
+		@include paragraph-2-regular();
+		color: $black;
 
-		>hr {
-			background: $grayscale-70;
+		&:hover {
+			background-color: $grayscale-10;
 		}
-		
-		.dropdown-item {
-			@include paragraph-2-regular();
-			color: $white;
 
-			&:hover {
-				background-color: $grayscale-20;
-			}
-
-			&:focus {
-				background-color: $grayscale-10;
-			}
+		&:focus {
+			background-color: $grayscale-20;
 		}
 	}
 }

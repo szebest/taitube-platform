@@ -26,7 +26,6 @@ export function Sidebar() {
 			className={styles.sidebar}
 			width={width}
 			collapsedWidth="0px"
-			backgroundColor="white"
 			collapsed={collapsed}
 			toggled={!collapsed}
 			breakPoint="md"

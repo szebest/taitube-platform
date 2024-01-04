@@ -25,7 +25,7 @@ export function CategoryList({ onCategoryChange, selectedCategoryId }: CategoryL
 		setDragging(dragging);
 	}, []);
 
-	const handleCategoryChange = (categoryId: number) => {
+	const handleCategoryChange = (categoryId: number | undefined) => {
 		if (dragging) return;
 
 		onCategoryChange(categoryId);

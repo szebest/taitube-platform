@@ -1,22 +1,33 @@
 @import "src/styles/abstract/mixins";
+@import "src/styles/abstract/colors";
 
-.ps-menu-root {
-  ul {
-    li {
-      padding: $spacing-2 $spacing-2 $spacing-2 calc($spacing-8 + $spacing-1);
-    }
-  }
-
-  .ps-menu-label {
-    @include paragraph-3-regular();
-  
-    display: flex;
-    gap: $spacing-16;
-  }
-
-  hr {
-    background-color: $grayscale-15;
-    width: 90%;
-    margin: auto;
-  }
+div {
+	.ps-sidebar-root {
+		border-right: 0px;
+		
+		.ps-sidebar-container {
+			background-color: $white;
+		
+			.ps-menu-root {
+				ul {
+					li {
+						padding: $spacing-2 calc($spacing-8 + $spacing-1);
+					}
+				}
+			
+				.ps-menu-label {
+					@include paragraph-3-regular();
+				
+					display: flex;
+					gap: $spacing-16;
+				}
+			
+				hr {
+					background-color: $grayscale-50;
+					width: 90%;
+					margin: auto;
+				}
+			}
+		}
+	}
 }

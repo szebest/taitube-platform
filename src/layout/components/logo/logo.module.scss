@@ -1,12 +1,20 @@
 @import "src/styles/abstract/variables";
+@import "src/styles/abstract/colors";
 
 .logo {
   display: flex;
   align-items: center;
   gap: $spacing-16;
 	
-	button svg {
-		min-width: $spacing-24;
+	button {
+		font-size: $spacing-24;
+		width: $spacing-40;
+		height: $spacing-40;
+		padding: 0;
+	}
+
+	&__name {
+		fill: $grayscale-70;
 	}
 
   &__toHide {
