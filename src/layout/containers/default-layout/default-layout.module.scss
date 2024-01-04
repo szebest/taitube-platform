@@ -8,6 +8,8 @@
 	
 	background-color: $white;
 
+	min-height: calc(100dvh - $header-height);
+
   &.breakpoint {
     grid-template-columns: 1fr;
 
@@ -19,8 +21,6 @@
   }
 
   main {
-		min-height: 100dvh;
-		
     margin: $spacing-16;
 		margin-bottom: $spacing-32;
 
