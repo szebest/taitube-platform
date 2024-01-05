@@ -21,7 +21,7 @@ export function Logo({ hideLogoPart }: LogoProps) {
 			>
 				<i className="bi bi-list"></i>
 			</button>
-			<Link to="/" onClick={close}>
+			<Link to="/" onClick={close} role="link">
 				<svg
 					viewBox="0 0 369.89473684210526 92.10270473369745"
 					className={`${hideLogoPart ? styles.logo__short : styles.logo__long}`}

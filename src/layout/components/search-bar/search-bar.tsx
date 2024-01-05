@@ -53,13 +53,13 @@ export function SearchBar() {
 				</Button>
 			</div>
 			<InputGroup>
-				<Form.Control id="search-bar" {...register("searchText")} className="pill" />
+				<Form.Control id="search-bar" {...register("searchText")} className="pill" aria-label="Search" autoCorrect="false" placeholder="Search" />
 				{watch("searchText").length > 0 &&
-					<Button className="btn-light btn-transparent btn-pill" type="button" onClick={handleClear}>
+					<Button className="btn-light btn-transparent btn-pill" type="button" onClick={handleClear} aria-label="clear">
 						<i className="bi bi-x-lg"></i>
 					</Button>
 				}
-				<Button className="btn-light btn-transparent btn-pill" type="submit">
+				<Button className="btn-light btn-transparent btn-pill" type="submit" aria-label="search">
 					<i className="bi bi-search"></i>
 				</Button>
 			</InputGroup>

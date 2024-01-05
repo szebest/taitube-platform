@@ -59,7 +59,7 @@ export const VideoComment = memo(({ comment }: VideoCommentProps) => {
 			{user && comment.userId === user.id &&
 				<div>
 					<Dropdown>
-						<Dropdown.Toggle as='div'>
+						<Dropdown.Toggle as='div' aria-label='comment actions'>
 							<button className={`btn btn-round ${styles.toggle}`}>
 								<i className="bi bi-three-dots-vertical"></i>
 							</button>

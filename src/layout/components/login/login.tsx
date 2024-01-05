@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Dropdown, Form } from 'react-bootstrap';
+import { Dropdown } from 'react-bootstrap';
 
 import styles from './login.module.scss';
 
 import { API_BASE_URL } from 'src/config';
-import { useAuth, useTheme } from 'src/modules/shared/providers';
+import { useAuth } from 'src/modules/shared/providers';
 
 import { ProfilePicture } from 'src/modules/shared/components';
 
@@ -13,7 +13,6 @@ import fbLogoSecondary from 'src/assets/fb-logo-secondary.png';
 
 export function Login() {
 	const { user, isLoading } = useAuth();
-	const { theme, changeTheme } = useTheme();
 
 	if (isLoading)
 		return null;
@@ -35,7 +34,7 @@ export function Login() {
 				<div className={styles.loginWrapper__userInfo}>
 					<span>{user.firstName}</span>
 					<Dropdown>
-						<Dropdown.Toggle as='div'>
+						<Dropdown.Toggle as='div' aria-label="settings">
 							<ProfilePicture src={user.profilePictureSrc} />
 						</Dropdown.Toggle>
 
@@ -44,23 +43,6 @@ export function Login() {
 								<div>
 									<span>{user.firstName}</span>
 								</div>
-							</div>
-
-							<div className='dropdown-item'>
-								<div>
-									<div className={styles.theme}>
-										<p>{theme} theme</p>
-										<Form.Check
-											type="switch"
-											id="theme-switch"
-											label="Change theme"
-											onChange={() => changeTheme(theme === 'light' ? 'dark' : 'light')}
-											checked={theme === 'dark'}
-										/>
-									</div>
-								</div>
-
-								<Dropdown.Divider></Dropdown.Divider>
 							</div>
 							
 							<Dropdown.Item as='div'>

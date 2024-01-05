@@ -1,5 +1,6 @@
 @import "src/styles/abstract/variables";
 @import "src/styles/abstract/colors";
+@import "src/styles/abstract/mixins";
 
 .header {
   position: fixed;
@@ -30,6 +31,10 @@
       width: $spacing-40;
       display: none;
     }
+
+		.theme {
+			@include paragraph-5-regular();
+		}
   }
 
   @media (max-width: 768px) {
