@@ -50,7 +50,7 @@ export const VideoComment = memo(({ comment }: VideoCommentProps) => {
 			<div className={`${styles.wrapper} ${commentLoading ? styles.loading : ''}`}>
 				<div className={styles.wrapper__top}>
 					<span className={styles.username}><Link to={`/user/${comment.userId}`} className={comment.userId === -1 ? 'disabled' : ''}>{comment.fullName}</Link> </span>
-					{!commentLoading && <span className={styles.date}>{timeAgo.format(new Date(comment.createdAt))}</span>}
+					<span className={styles.date}>{timeAgo.format(new Date(comment.createdAt))}</span>
 				</div>
 				<div className={styles.wrapper__comment}>
 					<p>{comment.data}</p>

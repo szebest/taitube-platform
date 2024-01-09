@@ -6,6 +6,7 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: $black;
 }
 
 html {
@@ -15,8 +16,9 @@ html {
 }
 
 * {
-	transition: color .15s ease-in-out,
-							background-color .15s ease-in-out,
+  color: inherit;
+
+	transition: background-color .15s ease-in-out,
 							border-color .15s ease-in-out,
 							box-shadow .15s ease-in-out;
 }

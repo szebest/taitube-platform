@@ -67,8 +67,8 @@ export const AddVideoComment = ({ id, videoId, loadingComments, onClose, initial
 					<Form.Control as="textarea" disabled={loadingComments} type="text" {...register('data', { required: true })} className={styles.form__textarea} aria-label="Comment text" />
 				</Form.Group>
 				<div className={styles.container__form__buttons}>
-					<button type="button" disabled={(!isValid || isLoading || loadingComments) && id === undefined} className="btn btn-secondary btn-md" onClick={handleCancel}>Cancel</button>
-					<button type="submit" disabled={!isValid || isLoading || loadingComments} className="btn btn-primary btn-md">Comment</button>
+					<button type="button" disabled={(!isValid || isLoading || loadingComments) && id === undefined} className="btn btn-secondary btn-md btn-white-text" onClick={handleCancel}>Cancel</button>
+					<button type="submit" disabled={!isValid || isLoading || loadingComments} className="btn btn-primary btn-md btn-white-text">Comment</button>
 				</div>
 			</Form>
 		</div>

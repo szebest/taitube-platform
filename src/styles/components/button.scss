@@ -28,12 +28,12 @@
   border-color: $grayscale-40;
 
 	&, &:focus-visible, &:hover, &:active:not(#\9) {
-		color: $grayscale-80;
+		color: $white;
 	}
 
 	&:focus-visible, &:hover, &:active:not(#\9) {
-		background-color: $grayscale-50;
-  	border-color: $grayscale-60;
+		background-color: $grayscale-40;
+  	border-color: $grayscale-50;
 	}
 }
 
