@@ -15,7 +15,7 @@ export function Logo({ hideLogoPart }: LogoProps) {
 		<div className={styles.logo}>
 			<button
 				type="button"
-				className="btn btn-round"
+				className="btn btn-transparent btn-round"
 				onClick={toggle}
 				aria-label="toggle sidebar"
 			>

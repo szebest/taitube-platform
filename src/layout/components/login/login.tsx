@@ -22,7 +22,7 @@ export function Login() {
 			{!user
 				?
 				<form method='GET' action={`${API_BASE_URL}/account/facebook-login`}>
-					<button type="submit" className={`${styles.loginWrapper__facebookLogin} btn btn-primary`} aria-label="facebook login">
+					<button type="submit" className={`${styles.loginWrapper__facebookLogin} btn btn-primary btn-white-text btn-md`} aria-label="facebook login">
 						<img src={fbLogoSecondary} alt="fb" />
 						<span className={styles.text}>
 							<span>Login</span>

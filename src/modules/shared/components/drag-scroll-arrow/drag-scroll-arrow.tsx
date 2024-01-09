@@ -19,7 +19,7 @@ function Arrow({
 			<button
 				disabled={disabled}
 				onClick={onClick}
-				className={`btn btn-round ${styles.arrow}`}
+				className={`btn btn-transparent btn-round ${styles.arrow}`}
 			>
 				{children}
 			</button>

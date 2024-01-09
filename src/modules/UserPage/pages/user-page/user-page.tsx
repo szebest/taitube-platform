@@ -54,10 +54,10 @@ export function UserPage({ userId }: UserPageProps) {
 			<div className={styles.container__header}>
       	<h3>{userDetails.userFullName}'s videos:</h3>
 				<div className={styles.container__header__settings}>
-					<button className='btn btn-round btn-list-view' onClick={() => setIsListView(false)} aria-label="grid view">
+					<button className='btn btn-transparent btn-round btn-list-view' onClick={() => setIsListView(false)} aria-label="grid view">
 						<i className={`bi bi-grid-3x2-gap${!isListView ? '-fill' : ''}`}></i>
 					</button>
-					<button className='btn btn-round btn-list-view' onClick={() => setIsListView(true)} aria-label="list view">
+					<button className='btn btn-transparent btn-round btn-list-view' onClick={() => setIsListView(true)} aria-label="list view">
 						<i className={`bi bi-list ${isListView ? styles.selected : ''}`}></i>
 					</button>
 				</div>

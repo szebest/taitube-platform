@@ -26,16 +26,15 @@ export const Header = memo(() => {
 					<i className="bi bi-search"></i>
 				</Button>
 				<div>
-					<div className={styles.theme}>
-						<p>{theme}</p>
+					<Form.Group className={styles.theme} controlId="theme-switch">
+						<Form.Label>{theme}</Form.Label>
 						<Form.Check
 							type="switch"
-							id="theme-switch"
 							aria-label='theme switch'
 							onChange={() => changeTheme(theme === 'light' ? 'dark' : 'light')}
 							checked={theme === 'dark'}
 						/>
-					</div>
+					</Form.Group>
 				</div>
 				<Login />
 			</div>

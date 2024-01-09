@@ -196,18 +196,10 @@
 
 @mixin label {
   @include default-font-variables();
-  font-size: 0.813rem;
+  font-size: 0.75rem;
   font-weight: normal;
   line-height: 0.875rem;
   letter-spacing: 0.22px;
-}
-
-@mixin label-sm {
-  @include default-font-variables();
-  font-size: 0.625rem;
-  font-weight: normal;
-  line-height: 0.875rem;
-  letter-spacing: 0.2px;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap');

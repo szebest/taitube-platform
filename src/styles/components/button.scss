@@ -23,20 +23,6 @@
 
 
 //variants
-.btn {
-	background-color: transparent;
-  border-color: transparent;
-
-	&, &:focus-visible, &:hover, &:active:not(#\9) {
-		color: $black;
-	}
-
-	&:focus-visible, &:hover, &:active:not(#\9) {
-		background-color: $grayscale-50;
-  	border-color: $grayscale-60;
-	}
-}
-
 .btn-secondary {
 	background-color: $grayscale-30;
   border-color: $grayscale-40;
@@ -52,16 +38,16 @@
 }
 
 .btn-light {
-	background-color: $grayscale-10;
-  border-color: $grayscale-15;
+	background-color: $grayscale-15;
+  border-color: $grayscale-20;
 
 	&, &:focus-visible, &:hover, &:active:not(#\9) {
 		color: $black;
 	}
 
 	&:focus-visible, &:hover, &:active:not(#\9) {
-		background-color: $grayscale-20;
-  	border-color: $grayscale-30;
+		background-color: $grayscale-30;
+  	border-color: $grayscale-40;
 	}
 }
 
@@ -102,8 +88,16 @@
 }
 
 .btn-transparent {
+	background-color: transparent;
+  border-color: transparent;
+
 	&, &:focus-visible, &:hover, &:active:not(#\9) {
-		background-color: transparent;
+		color: $black;
+	}
+
+	&:focus-visible, &:hover, &:active:not(#\9) {
+		background-color: $grayscale-15;
+  	border-color: $grayscale-20;
 	}
 }
 
@@ -120,4 +114,8 @@
 .btn[role=separator] {
   padding: 0;
   max-width: 1px;
+}
+
+.btn-white-text {
+	color: #fff;
 }

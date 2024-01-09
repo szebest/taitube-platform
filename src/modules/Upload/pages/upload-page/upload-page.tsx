@@ -77,7 +77,7 @@ export function UploadPage() {
             </button> :
             (
               isError ?
-                <button type="submit" className='btn btn-danger' aria-label="retry">
+                <button type="submit" className='btn btn-danger btn-white-text' aria-label="retry">
                   Retry
                 </button> :
                 <button type="submit" disabled={!isValid || isSubmitted} className='btn btn-primary' aria-label="upload">
