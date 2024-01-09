@@ -39,7 +39,7 @@
 
 .btn-light {
 	background-color: $grayscale-15;
-  border-color: $grayscale-20;
+  border-color: $grayscale-40;
 
 	&, &:focus-visible, &:hover, &:active:not(#\9) {
 		color: $black;
@@ -47,7 +47,7 @@
 
 	&:focus-visible, &:hover, &:active:not(#\9) {
 		background-color: $grayscale-30;
-  	border-color: $grayscale-40;
+  	border-color: $grayscale-60;
 	}
 }
 
@@ -61,7 +61,7 @@
 
 	&:focus-visible, &:hover, &:active:not(#\9) {
 		background-color: $grayscale-60;
-  	border-color: $grayscale-70;
+  	border-color: $grayscale-90;
 	}
 }
 
@@ -97,7 +97,7 @@
 
 	&:focus-visible, &:hover, &:active:not(#\9) {
 		background-color: $grayscale-15;
-  	border-color: $grayscale-20;
+  	border-color: $grayscale-40;
 	}
 }
 
