@@ -52,16 +52,16 @@
 }
 
 .btn-dark {
-	background-color: $grayscale-80;
-  border-color: $grayscale-90;
+	background-color: $grayscale-90;
+  border-color: $grayscale-100;
 
 	&, &:focus-visible, &:hover, &:active:not(#\9) {
 		color: $white;
 	}
 
 	&:focus-visible, &:hover, &:active:not(#\9) {
-		background-color: $grayscale-60;
-  	border-color: $grayscale-90;
+		background-color: $grayscale-70;
+  	border-color: $grayscale-80;
 	}
 }
 
