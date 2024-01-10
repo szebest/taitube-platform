@@ -48,7 +48,6 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
 
         const userPatchResult = dispatch(
           userPageApiSlice.util.updateQueryData('getUserDetails', userId, draft => {
-            draft.isSubscribed = true;
             draft.subscriptions += 1;
           })
         )
@@ -100,7 +99,6 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
 
         const userPatchResult = dispatch(
           userPageApiSlice.util.updateQueryData('getUserDetails', userId, draft => {
-            draft.isSubscribed = false;
             draft.subscriptions -= 1;
           })
         )
@@ -119,7 +117,6 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
 
 export const {
   useGetUserSubscriptionsQuery,
-  useLazyGetUserSubscriptionsQuery,
   usePostSubscriptionMutation,
   useDeleteSubscriptionMutation
 } = subscriptionApiSlice;
