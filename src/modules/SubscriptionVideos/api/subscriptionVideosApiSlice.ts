@@ -5,12 +5,12 @@ import { Video } from "src/modules/shared/models";
 export const subscriptionVideosApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     subscriptionVideos: builder.query<PaginatedResponse<Video>, PaginatedQueryParams>({
-      keepUnusedDataFor: 300,
+      keepUnusedDataFor: 30,
       query: (queryParams) => {
 				const params = new URLSearchParams(queryParams as never);
 
 				return {
-					url: `/videos?${params}`,
+					url: `/videos/subscriptions?${params}`,
 				}
 			},
       serializeQueryArgs: ({ endpointName }) => {

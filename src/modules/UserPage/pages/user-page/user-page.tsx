@@ -19,7 +19,7 @@ export type UserPageProps = {
 }
 
 export function UserPage({ userId }: UserPageProps) {
-	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 60, userId: userId });
+	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 30, userId: userId });
 	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
   const queryData = useGetUserVideosQuery({...query, userId: userId});
 	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(userId);

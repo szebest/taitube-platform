@@ -21,7 +21,7 @@ export function AllVideosPage() {
 
 	const [query, setQuery] = useState<VideosQueryParams>({ 
 		pageNumber: 0, 
-		pageSize: 60, 
+		pageSize: 30, 
 		searchText: searchText.length > 0 ? searchText : undefined,
 		categoryId: undefined
 	});
