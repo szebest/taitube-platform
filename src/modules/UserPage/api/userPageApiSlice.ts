@@ -4,25 +4,20 @@ import { PaginatedResponse } from "src/models";
 import { Video } from "src/modules/shared/models";
 import { UserDetails, UserVideosRequestParams } from "../models";
 
-const userDetails: UserDetails = {
-  userFullName: 'szebest',
-  subscriptions: 0
-}
-
 export const userPageApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUserDetails: builder.query<UserDetails, number | undefined>({
+    getUserDetails: builder.query<UserDetails, number>({
       keepUnusedDataFor: 0,
-      //query: (userId) => `/user/${userId}`,
-      queryFn: () => ({ data: userDetails })
+      query: (userId) => `/account/profile/details/${userId}`,
     }),
     getUserVideos: builder.query<PaginatedResponse<Video>, UserVideosRequestParams>({
       keepUnusedDataFor: 60,
-      query: (queryParams) => {
+      query: (requestParams) => {
+				const { userId, ...queryParams } = requestParams;
 				const params = new URLSearchParams(JSON.parse(JSON.stringify(queryParams)) as never);
 
 				return {
-					url: `/videos?${params}`,
+					url: `/videos/user/${userId}?${params}`,
 				}
 			},
       serializeQueryArgs: ({ endpointName, queryArgs }) => {

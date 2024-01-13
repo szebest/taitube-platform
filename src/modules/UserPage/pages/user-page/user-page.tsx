@@ -15,7 +15,7 @@ import { UserDetails } from '../../components';
 import { UserVideosRequestParams } from '../../models';
 
 export type UserPageProps = {
-  userId?: number;
+  userId: number;
 }
 
 export function UserPage({ userId }: UserPageProps) {
