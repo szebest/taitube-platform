@@ -17,8 +17,7 @@ const video: VideoDetails = {
 	description: "Mockowy opis filmiku",
 	category: 0,
 	createdAt: (new Date()).toString(),
-	views: 0,
-	thumbnailSrc: "a"
+	views: 0
 }
 
 export const videoApiSlice = baseApi.injectEndpoints({
