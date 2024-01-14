@@ -1,0 +1,14 @@
+@import "src/styles/abstract/colors";
+
+.modal-content {
+	background-color: $white;
+	border: 1px solid $grayscale-30;
+}
+
+body[data-theme=dark] {
+	.modal-content {
+		.btn-close {
+			filter: invert(1);
+		}
+	}
+}
