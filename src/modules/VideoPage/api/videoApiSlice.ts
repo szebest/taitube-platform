@@ -4,28 +4,11 @@ import { PaginatedQueryParams, PaginatedResponse } from "src/models";
 import { User } from "src/modules/shared/models";
 import { VideoComment, AddVideoComment, VideoDetails } from "../models";
 
-const video: VideoDetails = {
-	userFullName: "Mateusz Szebestik",
-	userId: 7017027475029109,
-	likes: 0,
-	dislikes: 0,
-	subscriptions: 0,
-	isLiked: false,
-	isDisliked: false,
-	id: 0,
-	title: "Mockowy tytuł filmiku",
-	description: "Mockowy opis filmiku",
-	category: 0,
-	createdAt: (new Date()).toString(),
-	views: 0
-}
-
 export const videoApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     videoDetails: builder.query<VideoDetails, { videoId: number }>({
 			keepUnusedDataFor: 0,
-      //query: ({ videoId }) => `/videos/${videoId}`,
-			queryFn: () => ({ data: video })
+      query: ({ videoId }) => `/videos/${videoId}/details`,
     }),
 		getVideoComments: builder.query<PaginatedResponse<VideoComment>, { videoId: number, queryParams?: PaginatedQueryParams }>({
       keepUnusedDataFor: 0,
