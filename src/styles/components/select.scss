@@ -5,6 +5,7 @@
   &, &:focus {
 		@include paragraph-4-regular();
 		background-color: transparent;
+		color: $black;
 	}
 
   &:focus {
