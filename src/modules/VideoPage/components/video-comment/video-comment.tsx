@@ -45,16 +45,17 @@ export const VideoComment = memo(({ comment }: VideoCommentProps) => {
 	if (isEditing) return <AddVideoComment {...comment} loadingComments={false} initialText={comment.data} onClose={handleCancelEdit} />
 
 	const commentLoading = comment.id === undefined;
+	const userProfileRoute = `/user/${comment.userId}`;
 
 	return (
 		<div className={styles.container}>
 			<div className={`${styles.column} ${commentLoading ? styles.loading : ''}`}>
-				<div>
+				<Link to={userProfileRoute}>
 					<ProfilePicture src={comment.profilePictureSrc} />
-				</div>
+				</Link>
 				<div className={styles.wrapper} >
 					<div className={styles.wrapper__top}>
-						<span className={styles.username}><Link to={`/user/${comment.userId}`} className={comment.userId === -1 ? 'disabled' : ''}>{comment.fullName}</Link> </span>
+						<span className={styles.username}><Link to={userProfileRoute} className={comment.userId === -1 ? 'disabled' : ''}>{comment.fullName}</Link> </span>
 						<span className={styles.date}>{timeAgo.format(new Date(comment.createdAt))}</span>
 					</div>
 					<div className={styles.wrapper__comment}>

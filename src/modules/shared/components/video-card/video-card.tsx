@@ -17,22 +17,25 @@ export type VideoCardProps = {
 }
 
 export const VideoCard = memo(({ video }: VideoCardProps) => {
+	const userProfileRoute = `/user/${video.userId}`;
+	const videoRoute = `/watch/${video.id}`;
+	
 	return (
-		<Link to={`/watch/${video.id}`} className={styles.link}>
+		<Link to={videoRoute} className={styles.link}>
 			<div className={styles.container}>
 				<img className={styles.container__thumb} src={API_BASE_URL + video.thumbnailSrc} loading="lazy" alt="thumbnail" />
 				<div className={styles.container__info}>
 					<div className={styles.container__main}>
-						<div className={styles.container__avatar}>
+						<Link to={userProfileRoute} className={styles.container__avatar}>
 							<ProfilePicture src={video.profilePictureSrc} />
-						</div>
+						</Link>
 						<div>
 							<div className={styles.container__title}>
 								<p className={styles.text}>{video.title}</p>
 							</div>
 							<div className={styles.container__meta}>
 								<div className={styles.container__meta__user}>
-									<Link to={`/user/${video.userId}`}>
+									<Link to={userProfileRoute}>
 										<p>{video.userFullName}</p>
 									</Link>
 								</div>

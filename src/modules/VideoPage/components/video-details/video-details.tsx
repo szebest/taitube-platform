@@ -32,6 +32,8 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
 		setIsShareModalOpen(false);
 	}
 
+	const userProfileRoute = `/user/${data.userId}`;
+
   return (
     <>
 			<div className={styles.container}>
@@ -39,11 +41,11 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
 				<div className={styles.wrapper}>
 					<div className={styles.left}>
 						<div className={styles.profile}>
-							<div>
+							<Link to={userProfileRoute}>
 								<ProfilePicture src={data.profilePictureSrc} />
-							</div>
+							</Link>
 							<div>
-								<div className={styles.username}><Link to={`/user/${data.userId}`}>{data.userFullName}</Link></div>
+								<div className={styles.username}><Link to={userProfileRoute}>{data.userFullName}</Link></div>
 								<div className={styles.subscriptions}>{formatNumbers(data.subscriptions, data.subscriptions >= 10000 ? 0 : 1)} subscribers</div>
 							</div>
 						</div>

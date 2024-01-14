@@ -31,7 +31,7 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
               }
             }
             else {
-              draft.push({
+              draft.unshift({
                 userId,
                 userFullName,
                 isSubscribed: true
