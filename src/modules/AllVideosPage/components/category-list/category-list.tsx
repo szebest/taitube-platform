@@ -35,7 +35,7 @@ export function CategoryList({ onCategoryChange, selectedCategoryId }: CategoryL
 		<DragScrollMenu onDraggingChange={onDraggingChange}>
 			{
 				categories.map(x => (
-					<button key={x.id} className={`btn ${selectedCategoryId === x.id ? 'btn-secondary' : 'btn-light'}`} onClick={() => handleCategoryChange(x.id)}>{x.value}</button>
+					<button key={x.id} className={`btn ${selectedCategoryId === x.id ? 'btn-dark' : 'btn-light'}`} onClick={() => handleCategoryChange(x.id)}>{x.value}</button>
 				))
 			}
 		</DragScrollMenu>

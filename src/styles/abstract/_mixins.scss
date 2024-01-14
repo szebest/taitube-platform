@@ -206,7 +206,7 @@
 
 
 @mixin text-overflow($max-lines: 1) {
-  word-break: break-all;
+  word-break: break-word;
   white-space: break-spaces;
   display: -webkit-box;
   -webkit-line-clamp: $max-lines;

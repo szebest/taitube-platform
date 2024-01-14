@@ -10,6 +10,8 @@ import { Video } from "../../models";
 
 import { formatNumbers, mapCategory } from "../../helpers";
 
+import { ProfilePicture } from "..";
+
 export type VideoCardProps = {
 	video: Video;
 }
@@ -20,13 +22,27 @@ export const VideoCard = memo(({ video }: VideoCardProps) => {
 			<div className={styles.container}>
 				<img className={styles.container__thumb} src={API_BASE_URL + video.thumbnailSrc} loading="lazy" alt="thumbnail" />
 				<div className={styles.container__info}>
-					<div className={styles.container__title}>
-						<p className={styles.text}>{video.title}</p>
-					</div>
-					<div className={styles.container__stats}>
-						<span className={styles.text}>{formatNumbers(video.views)} views</span>
-						<span className={styles.seperator}></span>
-						<span className={styles.text}>{timeAgo.format(new Date(video.createdAt))}</span>
+					<div className={styles.container__main}>
+						<div className={styles.container__avatar}>
+							<ProfilePicture src={video.profilePictureSrc} />
+						</div>
+						<div>
+							<div className={styles.container__title}>
+								<p className={styles.text}>{video.title}</p>
+							</div>
+							<div className={styles.container__meta}>
+								<div className={styles.container__meta__user}>
+									<Link to={`/user/${video.userId}`}>
+										<p>{video.userFullName}</p>
+									</Link>
+								</div>
+								<div className={styles.container__meta__stats}>
+									<span className={styles.text}>{formatNumbers(video.views)} views</span>
+									<span className={styles.seperator}></span>
+									<span className={styles.text}>{timeAgo.format(new Date(video.createdAt))}</span>
+								</div>
+							</div>
+						</div>
 					</div>
 					<div className={styles.container__additional}>
 						<p className={styles.text}>{video.description}</p>

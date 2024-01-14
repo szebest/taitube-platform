@@ -8,7 +8,7 @@ import { useVideoDetailsQuery } from '../../api/videoApiSlice';
 
 import { formatNumbers } from 'src/modules/shared/helpers';
 
-import { LoadingSpinner, SubscribeButton } from 'src/modules/shared/components';
+import { LoadingSpinner, ProfilePicture, SubscribeButton } from 'src/modules/shared/components';
 
 import { VideoDescription, VideoLikes } from '..';
 import { ShareVideoModal } from '../../modals';
@@ -38,9 +38,14 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
 				<h4 className={styles.title}>{data.title}</h4>
 				<div className={styles.wrapper}>
 					<div className={styles.left}>
-						<div>
-							<div className={styles.username}><Link to={`/user/${data.userId}`}>{data.userFullName}</Link></div>
-							<div className={styles.subscriptions}>{formatNumbers(data.subscriptions, data.subscriptions >= 10000 ? 0 : 1)} subscribers</div>
+						<div className={styles.profile}>
+							<div>
+								<ProfilePicture src={data.profilePictureSrc} />
+							</div>
+							<div>
+								<div className={styles.username}><Link to={`/user/${data.userId}`}>{data.userFullName}</Link></div>
+								<div className={styles.subscriptions}>{formatNumbers(data.subscriptions, data.subscriptions >= 10000 ? 0 : 1)} subscribers</div>
+							</div>
 						</div>
 
 						<SubscribeButton {...data} videoId={videoId} />

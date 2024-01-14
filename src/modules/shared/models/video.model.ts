@@ -8,4 +8,5 @@ export type Video = {
 	createdAt: string;
 	views: number;
 	thumbnailSrc: string;
+	profilePictureSrc: string;
 }

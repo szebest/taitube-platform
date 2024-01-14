@@ -13,6 +13,7 @@ import { useAuth } from 'src/modules/shared/providers';
 import { VideoComment as VideoCommentModel } from '../../models';
 
 import { AddVideoComment } from '../add-video-comment/add-video-comment';
+import { ProfilePicture } from 'src/modules/shared/components';
 
 export type VideoCommentProps = {
 	comment: VideoCommentModel;
@@ -47,13 +48,18 @@ export const VideoComment = memo(({ comment }: VideoCommentProps) => {
 
 	return (
 		<div className={styles.container}>
-			<div className={`${styles.wrapper} ${commentLoading ? styles.loading : ''}`}>
-				<div className={styles.wrapper__top}>
-					<span className={styles.username}><Link to={`/user/${comment.userId}`} className={comment.userId === -1 ? 'disabled' : ''}>{comment.fullName}</Link> </span>
-					<span className={styles.date}>{timeAgo.format(new Date(comment.createdAt))}</span>
+			<div className={`${styles.column} ${commentLoading ? styles.loading : ''}`}>
+				<div>
+					<ProfilePicture src={comment.profilePictureSrc} />
 				</div>
-				<div className={styles.wrapper__comment}>
-					<p>{comment.data}</p>
+				<div className={styles.wrapper} >
+					<div className={styles.wrapper__top}>
+						<span className={styles.username}><Link to={`/user/${comment.userId}`} className={comment.userId === -1 ? 'disabled' : ''}>{comment.fullName}</Link> </span>
+						<span className={styles.date}>{timeAgo.format(new Date(comment.createdAt))}</span>
+					</div>
+					<div className={styles.wrapper__comment}>
+						<p>{comment.data}</p>
+					</div>
 				</div>
 			</div>
 			{user && comment.userId === user.id &&

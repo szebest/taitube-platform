@@ -32,32 +32,58 @@
 		&__info {
 			display: flex;
 			flex-direction: column;
+			gap: $spacing-4;
+		}
+
+		&__main {
+			display: grid;
+			grid-template-columns: auto 1fr;
+
 			gap: $spacing-8;
 		}
   
     &__title {
+			margin-bottom: $spacing-4;
       max-width: 100%;
 
 			.text {
 				@include text-overflow(2);
 				@include paragraph-3-semi-bold();
 				line-height: 1.25;
-
-				word-break: normal;
 			}
     }
   
-    &__stats {
-			display: flex;
-			gap: $spacing-4;
-			flex-wrap: wrap;
+    &__meta {
+			display: grid;
+			color: $grayscale-60;
 
-			.text, .seperator {
-				@include paragraph-4-regular();
+			&__user {
+				@include text-overflow(1);
+				@include paragraph-3-regular();
+			
+				max-width: max-content;
+			
+				--hover-color: #{$black};
+			
+				&:hover {
+					color: var(--hover-color);
+					text-shadow: 0.01px 0px 0px var(--hover-color);
+				}
 			}
 
-			.seperator {
-				line-height: 2.5;
+			&__stats {
+				display: flex;
+				gap: $spacing-4;
+				flex-wrap: wrap;
+	
+				.text, .seperator {
+					@include text-overflow(1);
+					@include paragraph-4-regular();
+				}
+	
+				.seperator {
+					margin-top: calc($spacing-4 + $spacing-1);
+				}
 			}
 		}
 
@@ -65,11 +91,9 @@
 			display: none;
 
 			.text {
-				@include text-overflow(3);
+				@include text-overflow(2);
 				@include paragraph-4-regular();
 				line-height: 1.25;
-
-				word-break: normal;
 			}
     }
   }
