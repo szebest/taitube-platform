@@ -5,7 +5,7 @@ export type VideoComment = {
 	data: string;
 	fullName: string;
 	createdAt: string;
-	profilePictureSrc: string;
+	profilePictureSrc: string | null;
 }
 
 export type AddVideoComment = Omit<VideoComment, 'userId' | 'videoId' | 'createdAt' | 'loading' | 'fullName' | 'profilePictureSrc'>;

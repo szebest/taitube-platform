@@ -46,12 +46,13 @@ export const videoApiSlice = baseApi.injectEndpoints({
       async onQueryStarted({ videoId, body: { data }, user }, { dispatch, queryFulfilled }) {
 				const { fullName, id: userId } = user ?? { fullName: '', id: -1 };
 
-				const item = {
+				const item: VideoComment = {
 					userId,
 					videoId,
 					data,
 					fullName,
-					createdAt: (new Date()).toString()
+					createdAt: (new Date()).toString(),
+					profilePictureSrc: null
 				};
 
         const patchResult = dispatch(
@@ -66,7 +67,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 					dispatch(videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
 						const newData = draft.data.map(x => {
 							if (x.createdAt === item.createdAt && x.id === undefined) {
-								return { ...x, id: queryResult.data.id }
+								return { ...x, ...queryResult.data }
 							}
 
 							return x;
