@@ -2,7 +2,9 @@
 @import "src/styles/abstract/mixins";
 
 .container {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax($spacing-104, 1fr) 15fr;
+  gap: $spacing-24;
 
   &__wrapper {
     display: flex;

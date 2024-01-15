@@ -4,7 +4,7 @@ import styles from './user-details.module.scss';
 
 import { formatNumbers } from 'src/modules/shared/helpers';
 
-import {  SubscribeButton } from 'src/modules/shared/components';
+import {  ProfilePicture, SubscribeButton } from 'src/modules/shared/components';
 
 import { UserDetails as UserDetailsModel } from '../../models';
 
@@ -17,6 +17,9 @@ export type UserDetailsProps = {
 export const UserDetails = memo(({ details, userId, videosCount }: UserDetailsProps) => {
 	return (
 		<div className={styles.container}>
+			<div>
+				<ProfilePicture src={details.profilePictureSrc} />
+			</div>
 			<div className={styles.container__wrapper}>
 				<h2>{details.userFullName}</h2>
 				<div className={styles.textWrapper}>
