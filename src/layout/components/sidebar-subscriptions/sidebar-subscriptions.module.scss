@@ -6,6 +6,10 @@
   grid-template-columns: auto 1fr;
   padding-left: $spacing-12 !important;
 
+  &__avatar {
+    width: $spacing-32;
+  }
+
   &__name {
     height: max-content;
     align-self: center;

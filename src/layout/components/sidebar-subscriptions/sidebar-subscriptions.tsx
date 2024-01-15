@@ -42,7 +42,7 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 			{subscriptions &&
 				subscriptions.map((subscription) => (
 					<MenuItem key={subscription.userId} className={styles.item} component={<Link className="ps-menu-img" to={`/user/${subscription.userId}`} onClick={close} />}>
-						<span>
+						<span className={styles.item__avatar}>
 							<ProfilePicture src={subscription.profilePictureSrc} />
 						</span>
 						<span className={styles.item__name}>
