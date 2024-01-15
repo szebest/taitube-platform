@@ -2,5 +2,5 @@ export type Subscription = {
 	userId: number;
   userFullName: string;
   isSubscribed: boolean;
-  profilePictureSrc: string;
+  profilePictureSrc: string | null;
 }

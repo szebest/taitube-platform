@@ -7,6 +7,8 @@ import styles from "./sidebar-subscriptions.module.scss";
 
 import { useGetUserSubscriptionsQuery } from "src/modules/shared/api";
 
+import { ProfilePicture } from "src/modules/shared/components";
+
 export type SidebarSubscriptionsProps = {
 	close: VoidFunction
 }
@@ -39,8 +41,13 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 
 			{subscriptions &&
 				subscriptions.map((subscription) => (
-					<MenuItem key={subscription.userId} component={<Link to={`/user/${subscription.userId}`} onClick={close} />}>
-						{subscription.userFullName}
+					<MenuItem key={subscription.userId} className={styles.item} component={<Link className="ps-menu-img" to={`/user/${subscription.userId}`} onClick={close} />}>
+						<span>
+							<ProfilePicture src={subscription.profilePictureSrc} />
+						</span>
+						<span className={styles.item__name}>
+							{subscription.userFullName}
+						</span>
 					</MenuItem>
 				))}
 

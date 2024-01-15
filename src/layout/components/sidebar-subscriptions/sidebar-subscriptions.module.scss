@@ -1,0 +1,15 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/mixins";
+
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  padding-left: $spacing-12 !important;
+
+  &__name {
+    height: max-content;
+    align-self: center;
+
+    @include text-overflow(1);
+  }
+}

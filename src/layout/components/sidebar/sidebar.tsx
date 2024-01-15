@@ -17,7 +17,7 @@ export function Sidebar() {
 	const { collapsed, isBelowBreakpoint, breakpointChanged, toggle, close } = useSidebar();
 	const { user, isLoading } = useAuth();
 
-	const width = '210px';
+	const width = '240px';
 
 	if (isLoading) return <div style={{ width }}></div>;
 

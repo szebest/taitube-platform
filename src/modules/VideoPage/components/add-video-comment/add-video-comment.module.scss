@@ -2,8 +2,12 @@
 
 .container {
 	display: grid;
-	gap: $spacing-8;
+	gap: $spacing-12;
 	grid-template-columns: auto 1fr;
+
+	&__avatar {
+		width: $spacing-40;
+	}
 
 	&__form {
 		display: flex;

@@ -50,7 +50,7 @@ export const VideoComment = memo(({ comment }: VideoCommentProps) => {
 	return (
 		<div className={styles.container}>
 			<div className={`${styles.column} ${commentLoading ? styles.loading : ''}`}>
-				<Link to={userProfileRoute}>
+				<Link to={userProfileRoute} className={styles.column__avatar}>
 					<ProfilePicture src={comment.profilePictureSrc} />
 				</Link>
 				<div className={styles.wrapper} >

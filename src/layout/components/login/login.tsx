@@ -33,7 +33,7 @@ export function Login() {
 				:
 				<div className={styles.loginWrapper__userInfo}>
 					<span>{user.fullName}</span>
-					<Dropdown>
+					<Dropdown className={styles.dropdown}>
 						<Dropdown.Toggle as='div' aria-label="settings">
 							<ProfilePicture src={user.profilePictureSrc} />
 						</Dropdown.Toggle>

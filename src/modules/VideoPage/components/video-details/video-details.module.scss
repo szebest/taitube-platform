@@ -49,7 +49,8 @@
 			justify-content: space-between;
 
 			.profile {
-				display: flex;
+				display: grid;
+				grid-template-columns: $spacing-40 1fr;
 				gap: $spacing-8;
 				
 				.username {

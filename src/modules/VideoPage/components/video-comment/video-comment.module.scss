@@ -12,8 +12,13 @@
 	}
 	
 	.column {
-		display: flex;
-		gap: $spacing-8;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: $spacing-12;
+
+		&__avatar {
+			width: $spacing-40;
+		}
 		
 		.wrapper {
 			display: flex;

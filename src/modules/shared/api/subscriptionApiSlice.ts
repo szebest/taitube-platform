@@ -34,7 +34,8 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
               draft.unshift({
                 userId,
                 userFullName,
-                isSubscribed: true
+                isSubscribed: true,
+                profilePictureSrc: null
               });
             }
           })

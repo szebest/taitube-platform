@@ -37,7 +37,7 @@
 
 		&__main {
 			display: grid;
-			grid-template-columns: auto 1fr;
+			grid-template-columns: $spacing-40 1fr;
 
 			gap: $spacing-8;
 		}

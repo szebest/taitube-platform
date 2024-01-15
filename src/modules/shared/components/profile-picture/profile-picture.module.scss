@@ -2,11 +2,12 @@
 @import "src/styles/abstract/colors";
 
 .profile-picture-img-wrapper {
-	min-width: $spacing-40;
-	min-height: $spacing-40;
+	min-width: $spacing-32;
+	min-height: $spacing-32;
 	border-radius: 50%;
 	background-color: $grayscale-15;
 	aspect-ratio: 1 / 1;
+	border: 1px solid $grayscale-30;
 
 	.profile-picture-img {
 		width: 100%;

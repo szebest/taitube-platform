@@ -61,7 +61,9 @@ export const AddVideoComment = ({ id, videoId, loadingComments, onClose, initial
 
 	return (
 		<div className={styles.container}>
-			<ProfilePicture src={user.profilePictureSrc} />
+			<div className={styles.container__avatar}>
+				<ProfilePicture src={user.profilePictureSrc} />
+			</div>
 			<Form className={styles.container__form} onSubmit={handleSubmit(submit)}>
 				<Form.Group controlId="description">
 					<Form.Control as="textarea" disabled={loadingComments} type="text" {...register('data', { required: true })} className={styles.form__textarea} aria-label="Comment text" />

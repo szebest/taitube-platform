@@ -19,12 +19,20 @@ div {
 					@include paragraph-3-regular();
 				
 					display: flex;
-					gap: $spacing-16;
+					gap: $spacing-24;
 				}
 
 				.ps-menu-button {
 					&:hover {
 						background-color: $grayscale-15;
+					}
+
+					&.ps-menu-img {
+						padding-left: calc($spacing-8 + $spacing-2);
+
+						.ps-menu-label {
+							gap: $spacing-14;
+						}
 					}
 				}
 			
