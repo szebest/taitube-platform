@@ -54,7 +54,7 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
         )
         
         try {
-          const result = await queryFulfilled;
+          const result = await queryFulfilled;;
 
           dispatch(
             subscriptionApiSlice.util.updateQueryData('getUserSubscriptions', {}, draft => {
@@ -105,7 +105,7 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
         )
 
         try {
-          await queryFulfilled
+          await queryFulfilled;
         } catch {
           patchResult.undo();
           videoPatchResult.undo();

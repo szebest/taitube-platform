@@ -62,7 +62,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
         )
 
         try {
-          const queryResult = await queryFulfilled;
+          const queryResult = await queryFulfilled;;
 
 					dispatch(videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
 						const newData = draft.data.map(x => {
@@ -76,7 +76,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 						draft.data = newData;
           }));
         } catch {
-          patchResult.undo();
+          patchResult.undo();;
         }
       }
 		}),
@@ -102,9 +102,9 @@ export const videoApiSlice = baseApi.injectEndpoints({
         )
 
         try {
-          await queryFulfilled;
+          await queryFulfilled;;
         } catch {
-          patchResult.undo();
+          patchResult.undo();;
         }
       }
 		}),
@@ -123,13 +123,13 @@ export const videoApiSlice = baseApi.injectEndpoints({
         )
 
         try {
-          await queryFulfilled;
+          await queryFulfilled;;
         } catch {
-          patchResult.undo();
+          patchResult.undo();;
         }
       }
 		}),
-		likeVideo: builder.mutation<void, { videoId: number, value: number }>({
+		likeVideo: builder.mutation<Pick<VideoDetails, 'isLiked' | 'isDisliked'>, { videoId: number, value: number }>({
 			query: ({ videoId, value }) => ({
 				url: `/videos/${videoId}/like`,
 				method: 'POST',
@@ -161,9 +161,16 @@ export const videoApiSlice = baseApi.injectEndpoints({
           })
         )
         try {
-          await queryFulfilled
+          const result = await queryFulfilled;
+
+					dispatch(
+            videoApiSlice.util.updateQueryData('videoDetails', { videoId }, draft => {
+              draft.isLiked = result.data.isLiked;
+							draft.isDisliked = result.data.isDisliked;
+            })
+          )
         } catch {
-          patchResult.undo()
+          patchResult.undo();
         }
       }
 		}),
@@ -186,9 +193,9 @@ export const videoApiSlice = baseApi.injectEndpoints({
           })
         )
         try {
-          await queryFulfilled
+          await queryFulfilled;
         } catch {
-          patchResult.undo()
+          patchResult.undo();
         }
       }
 		}),
