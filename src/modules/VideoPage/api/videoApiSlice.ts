@@ -137,7 +137,6 @@ export const videoApiSlice = baseApi.injectEndpoints({
 					value
 				}
 			}),
-			// queryFn: () => ({data: void 0}),
       async onQueryStarted({ videoId, value }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
           videoApiSlice.util.updateQueryData('videoDetails', { videoId }, draft => {
@@ -164,7 +163,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
         try {
           await queryFulfilled
         } catch {
-          //patchResult.undo()
+          patchResult.undo()
         }
       }
 		}),
@@ -173,7 +172,6 @@ export const videoApiSlice = baseApi.injectEndpoints({
 				url: `/videos/${videoId}/like`,
 				method: 'DELETE'
 			}),
-			// queryFn: () => ({data: void 0}),
       async onQueryStarted({ videoId, isLike }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
           videoApiSlice.util.updateQueryData('videoDetails', { videoId }, draft => {
@@ -190,7 +188,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
         try {
           await queryFulfilled
         } catch {
-          //patchResult.undo()
+          patchResult.undo()
         }
       }
 		}),
