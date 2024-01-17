@@ -10,7 +10,7 @@ export const trendingApiSlice = baseApi.injectEndpoints({
 				const params = new URLSearchParams(queryParams as never);
 
 				return {
-					url: `/videos?${params}`,
+					url: `/videos/trending?${params}`,
 				}
 			},
       serializeQueryArgs: ({ endpointName }) => {
