@@ -136,6 +136,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 						const newData = draft.data.filter(x => x.id !== id);
 
             draft.data = newData;
+						draft.count -= 1;
           })
         )
 
