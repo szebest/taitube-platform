@@ -52,7 +52,8 @@ export const videoApiSlice = baseApi.injectEndpoints({
 					data,
 					fullName,
 					createdAt: (new Date()).toString(),
-					profilePictureSrc: null
+					profilePictureSrc: null,
+					isEdited: false
 				};
 
         const patchResult = dispatch(
@@ -62,7 +63,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
         )
 
         try {
-          const queryResult = await queryFulfilled;;
+          const queryResult = await queryFulfilled;
 
 					dispatch(videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
 						const newData = draft.data.map(x => {
@@ -76,7 +77,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 						draft.data = newData;
           }));
         } catch {
-          patchResult.undo();;
+          patchResult.undo();
         }
       }
 		}),
@@ -91,7 +92,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
           videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
 						const newData = draft.data.map(x => {
 							if (x.id === id) {
-								return { ...x, data }
+								return { ...x, data, isEdited: true }
 							}
 
 							return x;
@@ -102,9 +103,25 @@ export const videoApiSlice = baseApi.injectEndpoints({
         )
 
         try {
-          await queryFulfilled;;
+          const result = await queryFulfilled;
+
+					dispatch(
+						videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
+							const newData = draft.data.map(x => {
+								if (x.id === result.data.id) {
+									return { ...x, ...result.data }
+								}
+	
+								return x;
+							});
+
+							console.log(newData)
+	
+							draft.data = newData;
+						})
+					);
         } catch {
-          patchResult.undo();;
+          patchResult.undo();
         }
       }
 		}),
@@ -123,9 +140,9 @@ export const videoApiSlice = baseApi.injectEndpoints({
         )
 
         try {
-          await queryFulfilled;;
+          await queryFulfilled;
         } catch {
-          patchResult.undo();;
+          patchResult.undo();
         }
       }
 		}),

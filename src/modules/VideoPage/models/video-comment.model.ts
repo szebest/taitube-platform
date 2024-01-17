@@ -5,6 +5,7 @@ export type VideoComment = {
 	data: string;
 	fullName: string;
 	createdAt: string;
+	isEdited: boolean;
 	profilePictureSrc: string | null;
 }
 

@@ -33,6 +33,11 @@
 				.date {
 					@include paragraph-4-regular();
 				}
+
+				.edited {
+					@include paragraph-4-regular();
+					font-style: italic;
+				}
 			}
 		
 			&__comment {

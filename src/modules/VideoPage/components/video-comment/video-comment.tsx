@@ -56,6 +56,9 @@ export const VideoComment = memo(({ comment }: VideoCommentProps) => {
 				<div className={styles.wrapper} >
 					<div className={styles.wrapper__top}>
 						<span className={styles.username}><Link to={userProfileRoute} className={comment.userId === -1 ? 'disabled' : ''}>{comment.fullName}</Link> </span>
+						{comment.isEdited &&
+							<span className={styles.edited}>Edited </span>
+						}
 						<span className={styles.date}>{timeAgo.format(new Date(comment.createdAt))}</span>
 					</div>
 					<div className={styles.wrapper__comment}>
