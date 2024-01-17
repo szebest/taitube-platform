@@ -2,8 +2,6 @@
 @import "src/styles/abstract/mixins";
 
 .item {
-  display: grid;
-  grid-template-columns: auto 1fr;
   padding-left: $spacing-12 !important;
 
   &__avatar {

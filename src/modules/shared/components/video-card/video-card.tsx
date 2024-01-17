@@ -31,10 +31,10 @@ export const VideoCard = memo(({ video }: VideoCardProps) => {
 						</Link>
 						<div>
 							<div className={styles.container__title}>
-								<p className={styles.text}>{video.title}</p>
+								<p className={styles.text} title={video.title}>{video.title}</p>
 							</div>
 							<div className={styles.container__meta}>
-								<div className={styles.container__meta__user}>
+								<div className={styles.container__meta__user} title={video.userFullName}>
 									<Link to={userProfileRoute}>
 										<p>{video.userFullName}</p>
 									</Link>
@@ -48,7 +48,7 @@ export const VideoCard = memo(({ video }: VideoCardProps) => {
 						</div>
 					</div>
 					<div className={styles.container__additional}>
-						<p className={styles.text}>{video.description}</p>
+						<p className={styles.text} title={video.description}>{video.description}</p>
 						<span className="chip">{mapCategory(video.category)}</span>
 					</div>
 				</div>

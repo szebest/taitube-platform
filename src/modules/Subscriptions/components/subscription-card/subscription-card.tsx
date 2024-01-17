@@ -18,7 +18,9 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
 				<ProfilePicture src={subscription.profilePictureSrc} />
 			</Link>
 			<div className={styles.container__wrapper}>
-				<Link to={userProfileRoute}><p className={styles.text}>{subscription.userFullName}</p></Link>
+				<Link to={userProfileRoute} title={subscription.userFullName}>
+					<p className={styles.text}>{subscription.userFullName}</p>
+				</Link>
 
 				<SubscribeButton {...subscription} />
 			</div>

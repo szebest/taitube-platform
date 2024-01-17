@@ -45,7 +45,7 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 						<span className={styles.item__avatar}>
 							<ProfilePicture src={subscription.profilePictureSrc} />
 						</span>
-						<span className={styles.item__name}>
+						<span className={styles.item__name} title={subscription.userFullName}>
 							{subscription.userFullName}
 						</span>
 					</MenuItem>

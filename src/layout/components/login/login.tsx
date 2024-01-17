@@ -41,7 +41,7 @@ export function Login() {
 						<Dropdown.Menu>
 							<div className={`${styles.dropdown__username} dropdown-item`}>
 								<div>
-									<span>{user.firstName}</span>
+									<span title={user.fullName}>{user.fullName}</span>
 								</div>
 							</div>
 							

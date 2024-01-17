@@ -37,7 +37,7 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
   return (
     <>
 			<div className={styles.container}>
-				<h4 className={styles.title}>{data.title}</h4>
+				<h4 className={styles.title} title={data.title}>{data.title}</h4>
 				<div className={styles.wrapper}>
 					<div className={styles.left}>
 						<div className={styles.profile}>
@@ -45,7 +45,7 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
 								<ProfilePicture src={data.profilePictureSrc} />
 							</Link>
 							<div>
-								<div className={styles.username}><Link to={userProfileRoute}>{data.userFullName}</Link></div>
+								<div className={styles.username} title={data.userFullName}><Link to={userProfileRoute}>{data.userFullName}</Link></div>
 								<div className={styles.subscriptions}>{formatNumbers(data.subscriptions, data.subscriptions >= 10000 ? 0 : 1)} subscribers</div>
 							</div>
 						</div>
