@@ -11,6 +11,7 @@ import { DropzoneField, UploadProgress } from '../../components';
 import { UploadFormModel } from '../../models';
 
 import { getCategories } from 'src/modules/shared/helpers';
+import { Link } from 'react-router-dom';
 
 export function UploadPage() {
   const acceptFileTypes = useMemo(() => ({
@@ -21,7 +22,7 @@ export function UploadPage() {
     return getCategories();
   }, []);
 
-  const [upload, { isError, isSuccess, reset: resetMutation }] = useUploadMutation();
+  const [upload, { isError, isSuccess, reset: resetMutation, data }] = useUploadMutation();
 
   const {
     register,
@@ -84,6 +85,10 @@ export function UploadPage() {
                   Upload
                 </button>
             )
+        }
+
+        {isSuccess && data &&
+          <Link to={`/watch/${data.id}`} className="btn btn-primary">Go to the uploaded video page</Link>
         }
 
         {isSubmitted && !isError && 

@@ -2,7 +2,7 @@ import axios from "axios";
 
 import { baseApi } from "src/base-api";
 
-import { UploadFormModel } from "../models";
+import { UploadFormModel, UploadResponse } from "../models";
 
 import { API_BASE_URL } from "src/config";
 
@@ -11,7 +11,7 @@ export const uploadApiSlice = baseApi.injectEndpoints({
     uploadProgress: builder.query<number, void>({
       queryFn: () => ({data: 0})
     }),
-    upload: builder.mutation<void, UploadFormModel>({
+    upload: builder.mutation<UploadResponse, UploadFormModel>({
       queryFn: async (form, api) => {
 
         return new Promise(async (resolve, reject) => {
