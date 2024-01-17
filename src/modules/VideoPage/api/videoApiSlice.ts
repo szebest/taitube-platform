@@ -59,6 +59,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
         const patchResult = dispatch(
           videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
             draft.data.unshift(item);
+						draft.count += 1;
           })
         )
 
