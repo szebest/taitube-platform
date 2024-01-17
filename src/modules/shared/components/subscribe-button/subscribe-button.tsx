@@ -37,12 +37,6 @@ export const SubscribeButton = memo(({ userId, userFullName, videoId }: Subscrib
 	const handleSubscribe = () => {
 		if (!checkLoggedInStatus()) return;
 
-		subscribe({
-			userId,
-			userFullName,
-			videoId
-		});
-
 		const sparkles = Array.from({ length: 20 });
     const sparklesAnimation: AnimationSequence = sparkles.map((_, index) => [
       `.sparkle-${index}`,
@@ -86,9 +80,15 @@ export const SubscribeButton = memo(({ userId, userFullName, videoId }: Subscrib
       ["button", { scale: 0.75 }, { duration: 0.1, at: "<" }],
       ["button", { scale: 1 }, { duration: 0.1 }],
       ...sparklesAnimation,
-			["button", { scale: 1 }, { duration: 0.0000000001 }],
-      ...sparklesFadeOut,
+			["button", { scale: 1 }, { duration: 0.000001 }],
+      ...sparklesFadeOut
     ]);
+
+		subscribe({
+			userId,
+			userFullName,
+			videoId
+		});
 	}
 
 	const handleUnsubscribe = () => {
@@ -135,7 +135,6 @@ export const SubscribeButton = memo(({ userId, userFullName, videoId }: Subscrib
 							height="10"
 						>
 							<path
-								className="fill-blue-600"
 								d="M64.39,2,80.11,38.76,120,42.33a3.2,3.2,0,0,1,1.83,5.59h0L91.64,74.25l8.92,39a3.2,3.2,0,0,1-4.87,3.4L61.44,96.19,27.09,116.73a3.2,3.2,0,0,1-4.76-3.46h0l8.92-39L1.09,47.92A3.2,3.2,0,0,1,3,42.32l39.74-3.56L58.49,2a3.2,3.2,0,0,1,5.9,0Z"
 							/>
 						</svg>
