@@ -12,7 +12,7 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
       }),
       transformResponse: (data: Subscription[]) => data.map((x) => ({ ...x, isSubscribed: true }))
     }),
-    postSubscription: builder.mutation<Omit<Subscription, 'isSubscribed'>, Omit<Subscription, 'isSubscribed'> & { videoId?: number }>({
+    postSubscription: builder.mutation<Omit<Subscription, 'isSubscribed'>, Omit<Subscription, 'isSubscribed' | 'profilePictureSrc'> & { videoId?: number }>({
       query: ({ userId }) => ({
 				url: `/subscriptions/user/${userId}/subscribe`,
 				method: 'POST'

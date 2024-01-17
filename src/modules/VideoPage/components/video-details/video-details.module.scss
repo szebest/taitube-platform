@@ -9,6 +9,7 @@
 
 	.title {
 		@include text-overflow(2);
+		max-width: max-content;
 	}
 
 	.wrapper {

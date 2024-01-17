@@ -50,6 +50,7 @@
 				@include text-overflow(2);
 				@include paragraph-3-semi-bold();
 				line-height: 1.25;
+				max-width: max-content;
 			}
     }
   
@@ -60,6 +61,7 @@
 			&__user {
 				@include text-overflow(1);
 				@include paragraph-3-regular();
+				line-height: 1.25;
 			
 				max-width: max-content;
 			
@@ -79,6 +81,8 @@
 				.text, .seperator {
 					@include text-overflow(1);
 					@include paragraph-4-regular();
+
+					line-height: 1.25;
 				}
 	
 				.seperator {
