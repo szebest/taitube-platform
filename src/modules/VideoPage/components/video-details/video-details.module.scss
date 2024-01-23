@@ -6,6 +6,8 @@
 	display: flex;
 	gap: $spacing-8;
 	flex-direction: column;
+	
+	margin-top: $spacing-8;
 
 	.title {
 		@include text-overflow(2);
