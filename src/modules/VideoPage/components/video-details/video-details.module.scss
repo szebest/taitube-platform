@@ -62,7 +62,13 @@
 				.subscriptions {
 					@include text-overflow(1);
 					@include paragraph-3-semi-bold();
+
+					color: $text-color-secondary;
 				}
+			}
+
+			.subscribeBtn {
+				align-self: center;
 			}
 		}
 

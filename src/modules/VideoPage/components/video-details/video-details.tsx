@@ -50,7 +50,9 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
 							</div>
 						</div>
 
-						<SubscribeButton {...data} videoId={videoId} />
+						<div className={styles.subscribeBtn}>
+							<SubscribeButton {...data} videoId={videoId} />
+						</div>
 					</div>
 
 					<div className={styles.right}>
