@@ -63,7 +63,7 @@
 	
 				.subscriptions {
 					@include text-overflow(1);
-					@include paragraph-3-semi-bold();
+					@include paragraph-3-regular();
 
 					color: $text-color-secondary;
 				}
