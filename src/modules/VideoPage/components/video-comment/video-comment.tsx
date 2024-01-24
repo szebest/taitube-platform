@@ -59,7 +59,7 @@ export const VideoComment = memo(({ comment }: VideoCommentProps) => {
 						{comment.isEdited &&
 							<span className={styles.edited}>Edited </span>
 						}
-						<span className={styles.date}>{timeAgo.format(new Date(comment.createdAt))}</span>
+						<span className={styles.date} title={new Date(comment.createdAt).toLocaleString()}>{timeAgo.format(new Date(comment.createdAt).getTime() - 10000)}</span>
 					</div>
 					<div className={styles.wrapper__comment}>
 						<p>{comment.data}</p>

@@ -23,12 +23,18 @@
 
 
 //variants
+.btn-primary {
+	&, &:focus-visible, &:hover, &:active:not(#\9), &:disabled {
+		color: #fff;
+	}
+}
+
 .btn-secondary {
 	background-color: $grayscale-30;
   border-color: $grayscale-40;
 
 	&, &:focus-visible, &:hover, &:active:not(#\9), &:disabled {
-		color: $black;
+		color: #fff;
 	}
 
 	&:focus-visible, &:hover, &:active:not(#\9) {
@@ -77,6 +83,12 @@
 	&:disabled {
 		background-color: $grayscale-80;
 		border-color: $grayscale-90;
+	}
+}
+
+.btn-danger {
+	&, &:focus-visible, &:hover, &:active:not(#\9), &:disabled {
+		color: #fff;
 	}
 }
 

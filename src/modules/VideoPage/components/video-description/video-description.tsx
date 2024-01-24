@@ -21,7 +21,7 @@ export const VideoDescription = ({ data }: VideoDescriptionProps) => {
 		<div className={styles.wrapper}>
 			<div className={styles.details}>
 				<span>{formatNumbers(data.views, data.views >= 10000 ? 0 : 1)} views</span>
-				<span>{timeAgo.format(new Date(data.createdAt))}</span>
+				<span title={new Date(data.createdAt).toLocaleString()}>{timeAgo.format(new Date(data.createdAt).getTime() - 10000)}</span>
 				<span className="chip">{mapCategory(data.category)}</span>
 			</div>
 			<span className={styles.description}>{descriptionExpanded ? data.description : descriptionSubstring}</span>

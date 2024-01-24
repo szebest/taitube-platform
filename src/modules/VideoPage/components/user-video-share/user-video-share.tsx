@@ -20,7 +20,7 @@ export const UserVideoShare = ({ friend, videoId }: UserVideoShareProps) => {
 		<div className={styles.container}>
 			<p>{friend.name}</p>
 			<button
-				className={`btn btn-pill btn-white-text ${isError ? 'btn-danger' : 'btn-primary'}`}
+				className={`btn btn-pill ${isError ? 'btn-danger' : 'btn-primary'}`}
 				onClick={() => handleShare(friend.id)}
 				disabled={isLoading}
 			>

@@ -43,7 +43,7 @@ export const VideosContainer = memo(({
 				{isFetching && <LoadingSpinner />}
 				{isError && 
 					<div className={styles.center}>
-						<button type="button" className="btn btn-danger btn-white-text" onClick={() => refetch()} aria-label="retry">Retry</button>
+						<button type="button" className="btn btn-danger" onClick={() => refetch()} aria-label="retry">Retry</button>
 					</div>
 				}
 			</div>
