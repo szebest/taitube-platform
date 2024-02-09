@@ -9,3 +9,4 @@ export * from './subscribe-button/subscribe-button';
 export * from './number-param-container/number-param-container';
 export * from './drag-scroll-menu/drag-scroll-menu';
 export * from './drag-scroll-arrow/drag-scroll-arrow';
+export * from './video-settings-dropdown/video-settings-dropdown';

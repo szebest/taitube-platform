@@ -19,25 +19,27 @@ export function AllVideosPage() {
 	const URLSearchQuery = useQuery();
 	const searchText = URLSearchQuery.get("search") ?? "";
 
+	const [blockInit, setBlockInit] = useState(true);
+
 	const [query, setQuery] = useState<VideosQueryParams>({ 
 		pageNumber: 0, 
-		pageSize: 30, 
+		pageSize: 1, 
 		searchText: searchText.length > 0 ? searchText : undefined,
 		categoryId: undefined
 	});
 	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
   const queryData = useAllVideosQuery(query);
 	
-	const { isFetching, originalArgs } = queryData;
+	const { isFetching } = queryData;
 
 	const loadMore = useCallback(() => {
 		if (isFetching) return;
 
-		setQuery(prev => ({ ...prev, pageNumber: prev.pageNumber + 1 }));
-	}, [isFetching]);
+		setQuery(prev => ({ ...prev, pageNumber: (queryData.currentData?.pageNumber ?? 0) + 1 }));
+	}, [isFetching, queryData]);
 
 	const onCategoryChange = useCallback((categoryId: number | undefined) => {
-		setQuery(prev => ({ ...prev, categoryId }));
+		setQuery(prev => ({ ...prev, categoryId, pageNumber: 0 }));
 	}, []);
 
 	useEffect(() => {
@@ -45,10 +47,15 @@ export function AllVideosPage() {
 	}, [searchText]);
 
 	useEffect(() => {
-		if (!originalArgs) return;
-		
-		setQuery(originalArgs);
-	}, [originalArgs]);
+		if (isFetching) return;
+
+		if (blockInit) {
+			setBlockInit(true);
+			return;
+		}
+
+		queryData.refetch();
+	}, [query]);
 
   return (
     <div className={styles.container}>

@@ -10,7 +10,6 @@ import { PaginatedResponse } from 'src/models';
 export type VideosContainerProps = {
 	inView?: VoidFunction;
 	isFetching?: boolean;
-	isLoading?: boolean;
 	isError?: boolean;
 	isListView?: boolean;
 	refetch?: () => unknown;
@@ -21,7 +20,6 @@ export const VideosContainer = memo(({
 	inView = () => {}, 
 	refetch = () => {}, 
 	isFetching = false, 
-	isLoading = false, 
 	isError = false, 
 	isListView = false, 
 	currentData 
@@ -33,8 +31,8 @@ export const VideosContainer = memo(({
 					<>
 						<div className={`${isListView ? styles.list : styles.gallery}`}>
 							{
-								currentData.data.map((video, index) => (
-									<VideoCard key={video.id ?? index} video={video} />
+								currentData.data.map((video, index, arr) => (
+									<VideoCard key={video.id ?? index} video={video} zIndex={arr.length - index} />
 								))
 							}
 						</div>

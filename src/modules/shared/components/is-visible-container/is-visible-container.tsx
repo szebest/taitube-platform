@@ -11,7 +11,7 @@ export function IsVisibleContainer({ children, inView, rootMargin = '100px' }: I
 
 	const debouncedInView = useRef(
 		debounce(() => {
-			inView && inView();
+			inView?.();
 		}, 500, {
 			leading: true,
 			trailing: false

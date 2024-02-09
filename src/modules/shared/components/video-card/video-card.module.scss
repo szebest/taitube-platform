@@ -37,9 +37,15 @@
 
 		&__main {
 			display: grid;
-			grid-template-columns: $spacing-40 1fr;
+			grid-template-columns: $spacing-40 1fr auto;
 
 			gap: $spacing-8;
+
+			.toggle {
+				width: 36px;
+				height: 36px;
+				font-size: $spacing-12;
+			}
 		}
   
     &__title {

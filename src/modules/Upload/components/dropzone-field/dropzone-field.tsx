@@ -1,7 +1,7 @@
 import Dropzone, { DropzoneProps } from "react-dropzone";
 import { Control, Controller, FieldValues, RegisterOptions } from "react-hook-form";
 
-import styles from './dropzone.field.module.scss';
+import styles from './dropzone-field.module.scss';
 
 export type DropzoneFieldProps = {
   name: string,

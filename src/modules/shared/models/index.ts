@@ -4,3 +4,4 @@ export * from './category.model';
 export * from './subscription.model';
 export * from './user-friend.model';
 export * from './search-bar.model';
+export * from './edit-video-form.model';

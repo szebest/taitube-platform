@@ -15,19 +15,13 @@ export type CommentsSectionProps = {
 
 export const CommentsSection = ({ videoId }: CommentsSectionProps) => {
 	const [query, setQuery] = useState<PaginatedQueryParams>({ pageNumber: 0, pageSize: 10 });
-	const { data, isFetching, originalArgs, isLoading, isError } = useGetVideoCommentsQuery({ videoId, queryParams: query });
+	const { data, isFetching, isLoading, isError, currentData } = useGetVideoCommentsQuery({ videoId, queryParams: query });
 
 	const loadMore = useCallback(() => {
 		if (isFetching) return;
 
-		setQuery(prev => ({ ...prev, pageNumber: prev.pageNumber + 1 }));
+		setQuery(prev => ({ ...prev, pageNumber: (currentData?.pageNumber ?? 0) + 1 }));
 	}, [isFetching]);
-
-	useEffect(() => {
-		if (!originalArgs || !originalArgs.queryParams) return;
-
-		setQuery(originalArgs.queryParams);
-	}, [originalArgs])
 
 	return (
 		<div className={styles.container}>

@@ -15,34 +15,34 @@ import { UserDetails } from '../../components';
 import { UserVideosRequestParams } from '../../models';
 
 export type UserPageProps = {
-  userId: number;
+  userId?: number;
 }
 
 export function UserPage({ userId }: UserPageProps) {
 	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 30, userId: userId });
 	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
   const queryData = useGetUserVideosQuery({...query, userId: userId});
-	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(userId);
+	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(userId!);
 
-	const { data, isFetching, originalArgs } = queryData;
+	const { data, isFetching } = queryData;
 	
 	const loadMore = useCallback(() => {
 		if (isFetching) return;
 
-		setQuery(prev => ({ ...prev, pageNumber: prev.pageNumber + 1 }));
-	}, [isFetching]);
-
-	useEffect(() => {
-		if (!originalArgs) return;
-		
-		setQuery(originalArgs);
-	}, [originalArgs])
+		setQuery(prev => ({ ...prev, pageNumber: (queryData.currentData?.pageNumber ?? 0) + 1 }));
+	}, [isFetching, queryData]);
 
 	useEffect(() => {
 		if (userId === query.userId) return;
 		
 		setQuery(prev => ({ ...prev, userId: userId }));
 	}, [userId])
+
+	useEffect(() => {
+		if (isFetching) return;
+
+		queryData.refetch();
+	}, [query])
 
 	if (userId === undefined) return <Navigate to="/" replace/>
 	if (userDetailsFetching || isFetching) return <LoadingSpinner />

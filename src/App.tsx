@@ -51,6 +51,9 @@ const UserPage = lazy(() =>
 const UploadPage = lazy(() =>
 	import("./modules/Upload").then((module) => ({ default: module.UploadPage }))
 );
+const EditPage = lazy(() =>
+	import("./modules/Upload").then((module) => ({ default: module.EditPage }))
+);
 
 export function App() {
 	return (
@@ -106,6 +109,7 @@ export function App() {
 										}
 									>
 										<Route path="" element={<UploadPage />}></Route>
+										<Route path="edit/:videoId" element={<NumberParamContainer paramName="videoId"><EditPage /></NumberParamContainer>}></Route>
 										<Route path="*" element={<Navigate to="/upload" replace />} />
 									</Route>
 

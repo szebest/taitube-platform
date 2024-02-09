@@ -8,7 +8,7 @@ import { useVideoDetailsQuery } from '../../api/videoApiSlice';
 
 import { formatNumbers } from 'src/modules/shared/helpers';
 
-import { LoadingSpinner, ProfilePicture, SubscribeButton } from 'src/modules/shared/components';
+import { LoadingSpinner, ProfilePicture, SubscribeButton, VideoSettingsDropdown } from 'src/modules/shared/components';
 
 import { VideoDescription, VideoLikes } from '..';
 import { ShareVideoModal } from '../../modals';
@@ -37,7 +37,10 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
   return (
     <>
 			<div className={styles.container}>
-				<h4 className={styles.title} title={data.title}>{data.title}</h4>
+				<div className={styles.top}>
+					<h4 className={styles.title} title={data.title}>{data.title}</h4>
+					<VideoSettingsDropdown video={data} />
+				</div>
 				<div className={styles.wrapper}>
 					<div className={styles.left}>
 						<div className={styles.profile}>

@@ -9,9 +9,15 @@
 	
 	margin-top: $spacing-8;
 
-	.title {
-		@include text-overflow(2);
-		max-width: max-content;
+	.top {
+		display: grid;
+		gap: $spacing-8;
+		grid-template-columns: 1fr auto;
+		
+		.title {
+			@include text-overflow(2);
+			max-width: max-content;
+		}
 	}
 
 	.wrapper {

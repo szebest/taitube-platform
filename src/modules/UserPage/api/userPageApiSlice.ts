@@ -4,6 +4,8 @@ import { PaginatedResponse } from "src/models";
 import { Video } from "src/modules/shared/models";
 import { UserDetails, UserVideosRequestParams } from "../models";
 
+let previousPageNumber = 0;
+
 export const userPageApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getUserDetails: builder.query<UserDetails, number>({
@@ -11,10 +13,17 @@ export const userPageApiSlice = baseApi.injectEndpoints({
       query: (userId) => `/account/profile/details/${userId}`,
     }),
     getUserVideos: builder.query<PaginatedResponse<Video>, UserVideosRequestParams>({
-      keepUnusedDataFor: 60,
+      keepUnusedDataFor: 300,
+			providesTags: ['VIDEOS'],
       query: (requestParams) => {
 				const { userId, ...queryParams } = requestParams;
-				const params = new URLSearchParams(JSON.parse(JSON.stringify(queryParams)) as never);
+				const queryParamsCopied = { ...queryParams };
+
+				if (queryParamsCopied.pageNumber === previousPageNumber) queryParamsCopied.pageNumber = 0;
+
+				previousPageNumber = queryParamsCopied.pageNumber;
+
+				const params = new URLSearchParams(JSON.parse(JSON.stringify(queryParamsCopied)) as never);
 
 				return {
 					url: `/videos/user/${userId}?${params}`,
@@ -24,14 +33,17 @@ export const userPageApiSlice = baseApi.injectEndpoints({
         return endpointName + queryArgs.userId;
       },
       merge: (currentCache, newItems) => {
-        const { data, ...rest } = newItems;
+        const { data, count } = newItems;
 
-        currentCache.data.push(...newItems.data);
+				if (previousPageNumber === 0) {
+					currentCache.data.length = 0;
+				}
 
-        currentCache = {
-          ...currentCache,
-          ...rest
-        }
+				currentCache.data.push(...data);
+				currentCache.pageNumber = previousPageNumber;
+				currentCache.count = count;
+
+				currentCache = { ...currentCache };
       },
       forceRefetch({ currentArg, previousArg }) {
         return currentArg!.pageNumber > (previousArg?.pageNumber ?? 0) || 

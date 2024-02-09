@@ -16,15 +16,15 @@ export function VideoPlayer({ videoId }: VideoPlayerProps) {
 	const [volume, setVolume] = useLocalStorage(VOLUME_KEY, 1);
 	const [seeking, setSeeking] = useState(false);
 
-  return (
-    <div className={styles.container}>
+	return (
+ 		<div className={styles.container}>
 			<ReactPlayer
-        url={`${API_BASE_URL}/videos/${videoId}/manifest.mpd`}
-        playing={!seeking}
+				url={`${API_BASE_URL}/videos/${videoId}/manifest.mpd`}
+				playing={!seeking}
 				volume={volume}
 				controls
 				width='100%'
-        height='100%'
+				height='100%'
 				onSeek={() => setSeeking(true)}
 				onReady={(player) => {
 					const internalPlayer = player.getInternalPlayer() as HTMLVideoElement;
@@ -33,9 +33,9 @@ export function VideoPlayer({ videoId }: VideoPlayerProps) {
 						setVolume(internalPlayer.volume);
 					})
 				}}
-      />
-    </div>
-  )
+ 			/>
+ 		</div>
+	)
 }
 
 export default VideoPlayer;

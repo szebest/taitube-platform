@@ -115,8 +115,6 @@ export const videoApiSlice = baseApi.injectEndpoints({
 	
 								return x;
 							});
-
-							console.log(newData)
 	
 							draft.data = newData;
 						})

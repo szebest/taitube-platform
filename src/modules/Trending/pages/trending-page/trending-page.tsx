@@ -15,19 +15,19 @@ export function TrendingPage() {
 	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
   const queryData = useTrendingVideosQuery(query);
 	
-	const { isFetching, originalArgs } = queryData;
+	const { isFetching } = queryData;
 
 	const loadMore = useCallback(() => {
 		if (isFetching) return;
 
-		setQuery(prev => ({ ...prev, pageNumber: prev.pageNumber + 1 }));
-	}, [isFetching]);
+		setQuery(prev => ({ ...prev, pageNumber: (queryData.currentData?.pageNumber ?? 0) + 1 }));
+	}, [isFetching, queryData]);
 
 	useEffect(() => {
-		if (!originalArgs) return;
-		
-		setQuery(originalArgs);
-	}, [originalArgs])
+		if (isFetching) return;
+
+		queryData.refetch();
+	}, [query])
 
   return (
     <div className={styles.container}>
