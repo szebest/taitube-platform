@@ -44,7 +44,7 @@ export function Login() {
 									<span title={user.fullName}>{user.fullName}</span>
 								</div>
 							</div>
-							
+
 							<Dropdown.Item as='div'>
 								<Link to='/upload'>
 									<i className="bi bi-cloud-arrow-up-fill"></i>

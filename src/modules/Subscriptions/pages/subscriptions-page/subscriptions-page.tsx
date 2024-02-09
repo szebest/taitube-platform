@@ -6,12 +6,12 @@ import { LoadingSpinner } from 'src/modules/shared/components';
 import { SubscriptionCard } from '../../components';
 
 export function SubscriptionsPage() {
-  const { data, isLoading } = useGetUserSubscriptionsQuery({});
+	const { data, isLoading } = useGetUserSubscriptionsQuery({});
 
-  if (isLoading) return <LoadingSpinner />
-  if (!data) return null;
-  
-  return (
+	if (isLoading) return <LoadingSpinner />
+	if (!data) return null;
+
+	return (
 		<div className={styles.container}>
 			<h3>Your subsciptions:</h3>
 			{data.map((subscription) => (

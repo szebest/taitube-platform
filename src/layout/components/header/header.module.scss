@@ -3,53 +3,53 @@
 @import "src/styles/abstract/mixins";
 
 .header {
-  position: fixed;
-  top: 0;
-  width: 100dvw;
-  background-color: $white;
-  z-index: 10;
-  
-  display: flex;
-  gap: $spacing-104;
-  justify-content: space-between;
-  padding: $spacing-16 $spacing-32 $spacing-16 $spacing-16;
-  align-items: center;
+	position: fixed;
+	top: 0;
+	width: 100dvw;
+	background-color: $white;
+	z-index: 10;
 
-  height: $header-height;
+	display: flex;
+	gap: $spacing-104;
+	justify-content: space-between;
+	padding: $spacing-16 $spacing-32 $spacing-16 $spacing-16;
+	align-items: center;
+
+	height: $header-height;
 
 	@media (max-width: 600px) {
 		padding-right: $spacing-24;
 	}
 
-  &__right {
-    display: flex;
-    gap: $spacing-8;
-    flex-direction: row;
-    align-items: center;
+	&__right {
+		display: flex;
+		gap: $spacing-8;
+		flex-direction: row;
+		align-items: center;
 
-    > button {
-      width: $spacing-40;
-      display: none;
-    }
+		>button {
+			width: $spacing-40;
+			display: none;
+		}
 
 		.theme {
 			@include paragraph-5-regular();
 		}
-  }
+	}
 
-  @media (max-width: 768px) {
-    gap: $spacing-8;
-    
-    &__right {
-      > button {
-        display: initial;
-      }
-    }
-  }
+	@media (max-width: 768px) {
+		gap: $spacing-8;
+
+		&__right {
+			>button {
+				display: initial;
+			}
+		}
+	}
 }
 
 .hideElements {
-  .hide {
-    display: none;
-  }
+	.hide {
+		display: none;
+	}
 }

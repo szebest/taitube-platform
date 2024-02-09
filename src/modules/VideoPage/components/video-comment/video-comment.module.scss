@@ -10,7 +10,7 @@
 		opacity: 0.3;
 		color: $grayscale-70;
 	}
-	
+
 	.column {
 		display: grid;
 		grid-template-columns: auto 1fr;
@@ -19,17 +19,17 @@
 		&__avatar {
 			width: $spacing-40;
 		}
-		
+
 		.wrapper {
 			display: flex;
 			gap: $spacing-2;
 			flex-direction: column;
-		
+
 			&__top {
 				.username {
 					@include paragraph-2-semi-bold();
 				}
-		
+
 				.date {
 					@include paragraph-4-regular();
 				}
@@ -39,10 +39,10 @@
 					font-style: italic;
 				}
 			}
-		
+
 			&__comment {
 				@include paragraph-2-regular();
-		
+
 				p {
 					word-break: break-word;
 				}

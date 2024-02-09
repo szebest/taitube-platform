@@ -2,44 +2,50 @@
 
 /* Headings */
 h1 {
-  @include h1();
+	@include h1();
 }
 
 h2 {
-  @include h2();
+	@include h2();
 }
 
 h3 {
-  @include h3();
+	@include h3();
 }
 
 h4 {
-  @include h4();
+	@include h4();
 }
 
 h5 {
-  @include h5();
+	@include h5();
 }
 
 h6 {
-  @include h6();
+	@include h6();
 }
 
 /* Reset margin */
-p, h1, h2, h3, h4, h5, h6 {
-  margin: 0;
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0;
 
 	word-break: break-word;
 }
 
 /* Reset a tag styles */
 a {
-  text-decoration: inherit;
-  color: inherit;
+	text-decoration: inherit;
+	color: inherit;
 
-  &:hover {
-    color: inherit;
-  }
+	&:hover {
+		color: inherit;
+	}
 
 	&.disabled {
 		pointer-events: none;

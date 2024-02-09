@@ -3,9 +3,9 @@
 @import "src/styles/abstract/mixins";
 
 .chip {
-  padding: $spacing-4 $spacing-8;
-  background-color: $grayscale-80;
+	padding: $spacing-4 $spacing-8;
+	background-color: $grayscale-80;
 	color: $white;
-  border-radius: 10px;
-  width: max-content;
+	border-radius: 10px;
+	width: max-content;
 }

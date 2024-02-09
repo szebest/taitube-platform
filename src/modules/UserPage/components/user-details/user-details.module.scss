@@ -2,21 +2,21 @@
 @import "src/styles/abstract/mixins";
 
 .container {
-  display: grid;
-  grid-template-columns: minmax($spacing-104, 1fr) 15fr;
-  gap: $spacing-24;
+	display: grid;
+	grid-template-columns: minmax($spacing-104, 1fr) 15fr;
+	gap: $spacing-24;
 
-  &__wrapper {
-    display: flex;
-    gap: $spacing-8;
-    flex-direction: column;
+	&__wrapper {
+		display: flex;
+		gap: $spacing-8;
+		flex-direction: column;
 
-    h3 {
-      line-height: 0.75;
-    }
+		h3 {
+			line-height: 0.75;
+		}
 
-    .textWrapper {
-      @include paragraph-2-regular();
-    }
-  }
+		.textWrapper {
+			@include paragraph-2-regular();
+		}
+	}
 }

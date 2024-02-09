@@ -16,15 +16,15 @@ export type VideosContainerProps = {
 	currentData?: PaginatedResponse<Video> | undefined;
 }
 
-export const VideosContainer = memo(({ 
-	inView = () => {}, 
-	refetch = () => {}, 
-	isFetching = false, 
-	isError = false, 
-	isListView = false, 
-	currentData 
+export const VideosContainer = memo(({
+	inView = () => { },
+	refetch = () => { },
+	isFetching = false,
+	isError = false,
+	isListView = false,
+	currentData
 }: VideosContainerProps) => {
-  return (
+	return (
 		<>
 			<div className={styles.container}>
 				{currentData &&
@@ -39,7 +39,7 @@ export const VideosContainer = memo(({
 					</>
 				}
 				{isFetching && <LoadingSpinner />}
-				{isError && 
+				{isError &&
 					<div className={styles.center}>
 						<button type="button" className="btn btn-danger" onClick={() => refetch()} aria-label="retry">Retry</button>
 					</div>

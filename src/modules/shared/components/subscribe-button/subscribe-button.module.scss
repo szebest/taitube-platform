@@ -1,22 +1,22 @@
 .subscribeBtn {
-  position: relative;
-  max-width: max-content;
+	position: relative;
+	max-width: max-content;
 
-  .stars {
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    display: block;
-    z-index: -1;
+	.stars {
+		pointer-events: none;
+		position: absolute;
+		inset: 0;
+		display: block;
+		z-index: -1;
 
-    &__star {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      opacity: 0;
+		&__star {
+			position: absolute;
+			transform: translate(-50%, -50%);
+			opacity: 0;
 
-      > * {
-        fill: rgb(68, 68, 251);
-      }
-    }
-  }
+			>* {
+				fill: rgb(68, 68, 251);
+			}
+		}
+	}
 }

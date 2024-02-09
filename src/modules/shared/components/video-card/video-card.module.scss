@@ -5,29 +5,29 @@
 .link {
 	container-type: inline-size;
 
-  .container {
+	.container {
 		display: grid;
 		grid-template-columns: 1fr;
 		gap: $spacing-8;
 
-    position: relative;
-    width: 100%;
-  
-    &__thumb {
+		position: relative;
+		width: 100%;
+
+		&__thumb {
 			width: 100%;
 			aspect-ratio: 16/9;
 			background-color: $grayscale-30;
-      border-radius: 10px;
-      transition: border-radius 350ms ease-in-out;
+			border-radius: 10px;
+			transition: border-radius 350ms ease-in-out;
 
-      box-shadow: 0 0 1px black;
-    }
-  
-    &:hover {
-      .container__thumb {
-        border-radius: inherit;
-      }
-    }
+			box-shadow: 0 0 1px black;
+		}
+
+		&:hover {
+			.container__thumb {
+				border-radius: inherit;
+			}
+		}
 
 		&__info {
 			display: flex;
@@ -47,10 +47,10 @@
 				font-size: $spacing-12;
 			}
 		}
-  
-    &__title {
+
+		&__title {
 			margin-bottom: $spacing-4;
-      max-width: 100%;
+			max-width: 100%;
 
 			.text {
 				@include text-overflow(2);
@@ -58,9 +58,9 @@
 				line-height: 1.25;
 				max-width: max-content;
 			}
-    }
-  
-    &__meta {
+		}
+
+		&__meta {
 			display: grid;
 			color: $text-color-secondary;
 
@@ -68,11 +68,11 @@
 				@include text-overflow(1);
 				@include paragraph-3-regular();
 				line-height: 1.25;
-			
+
 				max-width: max-content;
-			
+
 				--hover-color: #{$text-color-primary};
-			
+
 				&:hover {
 					color: var(--hover-color);
 					text-shadow: 0.01px 0px 0px var(--hover-color);
@@ -83,14 +83,15 @@
 				display: flex;
 				gap: $spacing-4;
 				flex-wrap: wrap;
-	
-				.text, .seperator {
+
+				.text,
+				.seperator {
 					@include text-overflow(1);
 					@include paragraph-4-regular();
 
 					line-height: 1.25;
 				}
-	
+
 				.seperator {
 					margin-top: calc($spacing-4 + $spacing-1);
 				}
@@ -105,8 +106,8 @@
 				@include paragraph-4-regular();
 				line-height: 1.25;
 			}
-    }
-  }
+		}
+	}
 
 	.seperator {
 		&::before {
@@ -124,7 +125,7 @@
 			.container {
 				grid-template-columns: auto 1fr;
 				gap: $spacing-16;
-	
+
 				&__thumb {
 					width: 300px;
 				}

@@ -21,15 +21,15 @@ export function AllVideosPage() {
 
 	const [blockInit, setBlockInit] = useState(true);
 
-	const [query, setQuery] = useState<VideosQueryParams>({ 
-		pageNumber: 0, 
-		pageSize: 1, 
+	const [query, setQuery] = useState<VideosQueryParams>({
+		pageNumber: 0,
+		pageSize: 1,
 		searchText: searchText.length > 0 ? searchText : undefined,
 		categoryId: undefined
 	});
 	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
-  const queryData = useAllVideosQuery(query);
-	
+	const queryData = useAllVideosQuery(query);
+
 	const { isFetching } = queryData;
 
 	const loadMore = useCallback(() => {
@@ -57,11 +57,11 @@ export function AllVideosPage() {
 		queryData.refetch();
 	}, [query]);
 
-  return (
-    <div className={styles.container}>
+	return (
+		<div className={styles.container}>
 			<CategoryList onCategoryChange={onCategoryChange} selectedCategoryId={query.categoryId} />
 			<div className={styles.container__header}>
-      	<h3>{searchText.length === 0 ? 'All videos:' : `Search results for: '${searchText}'`}</h3>
+				<h3>{searchText.length === 0 ? 'All videos:' : `Search results for: '${searchText}'`}</h3>
 				<div className={styles.container__header__settings}>
 					<button className='btn btn-transparent btn-round btn-list-view' onClick={() => setIsListView(false)} aria-label="grid view">
 						<i className={`bi bi-grid-3x2-gap${!isListView ? '-fill' : ''}`}></i>
@@ -71,9 +71,9 @@ export function AllVideosPage() {
 					</button>
 				</div>
 			</div>
-      <VideosContainer inView={loadMore} {...queryData} isListView={isListView} />
-    </div>
-  )
+			<VideosContainer inView={loadMore} {...queryData} isListView={isListView} />
+		</div>
+	)
 }
 
 export default AllVideosPage;

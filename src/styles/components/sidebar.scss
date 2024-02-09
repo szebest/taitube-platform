@@ -4,20 +4,20 @@
 div {
 	.ps-sidebar-root {
 		border-right: 0px;
-		
+
 		.ps-sidebar-container {
 			background-color: $white;
-		
+
 			.ps-menu-root {
 				ul {
 					li {
 						padding: $spacing-2 calc($spacing-8 + $spacing-1);
 					}
 				}
-			
+
 				.ps-menu-label {
 					@include paragraph-3-regular();
-				
+
 					display: flex;
 					gap: $spacing-24;
 				}
@@ -35,7 +35,7 @@ div {
 						}
 					}
 				}
-			
+
 				hr {
 					background-color: $grayscale-50;
 					width: 90%;

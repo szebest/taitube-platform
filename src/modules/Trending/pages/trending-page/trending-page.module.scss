@@ -1,33 +1,33 @@
 @import "src/styles/abstract/variables";
 
 .container {
-  container-type: inline-size;
+	container-type: inline-size;
 
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: $spacing-16;
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: $spacing-16;
 
-    &__settings {
-      display: flex;
-      gap: $spacing-16;
+		&__settings {
+			display: flex;
+			gap: $spacing-16;
 
-      button {
-        max-height: max-content;
+			button {
+				max-height: max-content;
 
-        i {
-          font-size: $spacing-24;
+				i {
+					font-size: $spacing-24;
 
-          &.selected {
-            -webkit-text-stroke: 1px;
-          }
-        }
-  
-        @container (max-width: 432px) {
-          display: none;
-        }
-      }
-    }
-  }
+					&.selected {
+						-webkit-text-stroke: 1px;
+					}
+				}
+
+				@container (max-width: 432px) {
+					display: none;
+				}
+			}
+		}
+	}
 }

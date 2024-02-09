@@ -11,7 +11,7 @@ import { useAuth } from "../../providers";
 import { useIsSubscribed } from "../../hooks";
 
 const randomNumberBetween = (min: number, max: number) => {
-  return Math.floor(Math.random() * (max - min + 1) + min);
+	return Math.floor(Math.random() * (max - min + 1) + min);
 };
 
 type AnimationSequence = Parameters<typeof animate>[0];
@@ -24,7 +24,7 @@ export type SubscribeButtonProps = {
 
 export const SubscribeButton = memo(({ userId, userFullName, videoId }: SubscribeButtonProps) => {
 	const [scope, animate] = useAnimate();
-	
+
 	const { user, isLoading: isLoadingUser } = useAuth();
 
 	const { isSubscribed, isLoading: isIssubscribedLoading } = useIsSubscribed(userId, user !== undefined);
@@ -38,51 +38,51 @@ export const SubscribeButton = memo(({ userId, userFullName, videoId }: Subscrib
 		if (!checkLoggedInStatus()) return;
 
 		const sparkles = Array.from({ length: 20 });
-    const sparklesAnimation: AnimationSequence = sparkles.map((_, index) => [
-      `.sparkle-${index}`,
-      {
-        x: randomNumberBetween(-80, 80),
-        y: randomNumberBetween(-80, 80),
-        scale: randomNumberBetween(1.5, 2.5),
-        opacity: 1,
-      },
-      {
-        duration: 0.4,
-        at: "<",
-      },
-    ]);
+		const sparklesAnimation: AnimationSequence = sparkles.map((_, index) => [
+			`.sparkle-${index}`,
+			{
+				x: randomNumberBetween(-80, 80),
+				y: randomNumberBetween(-80, 80),
+				scale: randomNumberBetween(1.5, 2.5),
+				opacity: 1,
+			},
+			{
+				duration: 0.4,
+				at: "<",
+			},
+		]);
 
-    const sparklesFadeOut: AnimationSequence = sparkles.map((_, index) => [
-      `.sparkle-${index}`,
-      {
-        opacity: 0,
-        scale: 0,
-      },
-      {
-        duration: 0.3,
-        at: "<",
-      },
-    ]);
+		const sparklesFadeOut: AnimationSequence = sparkles.map((_, index) => [
+			`.sparkle-${index}`,
+			{
+				opacity: 0,
+				scale: 0,
+			},
+			{
+				duration: 0.3,
+				at: "<",
+			},
+		]);
 
-    const sparklesReset: AnimationSequence = sparkles.map((_, index) => [
-      `.sparkle-${index}`,
-      {
-        x: 0,
-        y: 0,
-      },
-      {
-        duration: 0.000001,
-      },
-    ]);
+		const sparklesReset: AnimationSequence = sparkles.map((_, index) => [
+			`.sparkle-${index}`,
+			{
+				x: 0,
+				y: 0,
+			},
+			{
+				duration: 0.000001,
+			},
+		]);
 
-    animate([
-      ...sparklesReset,
-      ["button", { scale: 0.75 }, { duration: 0.1, at: "<" }],
-      ["button", { scale: 1 }, { duration: 0.1 }],
-      ...sparklesAnimation,
+		animate([
+			...sparklesReset,
+			["button", { scale: 0.75 }, { duration: 0.1, at: "<" }],
+			["button", { scale: 1 }, { duration: 0.1 }],
+			...sparklesAnimation,
 			["button", { scale: 1 }, { duration: 0.000001 }],
-      ...sparklesFadeOut
-    ]);
+			...sparklesFadeOut
+		]);
 
 		subscribe({
 			userId,
@@ -113,9 +113,8 @@ export const SubscribeButton = memo(({ userId, userFullName, videoId }: Subscrib
 	return (
 		<div ref={scope}>
 			<Button
-				className={`${isSubscribed ? "btn-light" : "btn-dark"} btn-lg btn-pill ${
-					styles.subscribeBtn
-				}`}
+				className={`${isSubscribed ? "btn-light" : "btn-dark"} btn-lg btn-pill ${styles.subscribeBtn
+					}`}
 				onClick={isSubscribed ? handleUnsubscribe : handleSubscribe}
 				disabled={isLoading}
 			>

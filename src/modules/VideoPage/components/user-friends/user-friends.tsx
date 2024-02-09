@@ -11,7 +11,7 @@ export type UserFriendsProps = {
 
 export const UserFriends = ({ videoId }: UserFriendsProps) => {
 	const { data, isError } = useUserFriendsQuery();
-	
+
 	return (
 		<div className={styles.container}>
 			{isError ? (

@@ -21,26 +21,26 @@ export type VideoFormProps = {
 
 export const VideoForm = ({ isEdit, isError, isSuccess, reset: resetMutation, data, submit }: VideoFormProps) => {
 	const acceptFileTypes = useMemo(() => ({
-    'video/mp4': ['.mp4']
-  }), []);
+		'video/mp4': ['.mp4']
+	}), []);
 
-  const categories = useMemo(() => {
-    return getCategories();
-  }, []);
+	const categories = useMemo(() => {
+		return getCategories();
+	}, []);
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    formState: { isSubmitted, isValid }
-  } = useForm<UploadFormModel>();
+	const {
+		register,
+		handleSubmit,
+		control,
+		reset,
+		formState: { isSubmitted, isValid }
+	} = useForm<UploadFormModel>();
 
-  const clearForm = () => {
-    reset();
-    resetMutation();
-  }
-	
+	const clearForm = () => {
+		reset();
+		resetMutation();
+	}
+
 	return (
 		<Form onSubmit={handleSubmit((form) => submit(form))} className={styles.form}>
 			{!isEdit &&

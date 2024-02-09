@@ -16,16 +16,16 @@ export type EditVideoFormProps = {
 }
 
 export const EditVideoForm = ({ isError, isLoading, defaultValues, submit }: EditVideoFormProps) => {
-  const categories = useMemo(() => {
-    return getCategories();
-  }, []);
+	const categories = useMemo(() => {
+		return getCategories();
+	}, []);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { isValid }
-  } = useForm<EditVideoFormModel>({ defaultValues });
-	
+	const {
+		register,
+		handleSubmit,
+		formState: { isValid }
+	} = useForm<EditVideoFormModel>({ defaultValues });
+
 	return (
 		<Form onSubmit={handleSubmit((form) => submit(form))} className={styles.form}>
 			<Form.Group controlId="title">

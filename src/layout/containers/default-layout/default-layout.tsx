@@ -9,20 +9,20 @@ import { LoadingSpinner } from "src/modules/shared/components";
 import { useSidebar } from "src/modules/shared/providers";
 
 export type DefaultLayoutProps = {
-  maxWidth?: string
+	maxWidth?: string
 }
 
 export function DefaultLayout({ maxWidth = "1920px" }: DefaultLayoutProps) {
-  const { isBelowBreakpoint } = useSidebar();
-  
-  return (
-    <>
-      <Header />
-      <div className={`${styles.container} ${isBelowBreakpoint ? styles.breakpoint : ''}`}>
-        <div className={styles.container__sidebar}>
-          <Sidebar />
-        </div>
-        {isBelowBreakpoint !== undefined &&
+	const { isBelowBreakpoint } = useSidebar();
+
+	return (
+		<>
+			<Header />
+			<div className={`${styles.container} ${isBelowBreakpoint ? styles.breakpoint : ''}`}>
+				<div className={styles.container__sidebar}>
+					<Sidebar />
+				</div>
+				{isBelowBreakpoint !== undefined &&
 					<main>
 						<div className={styles.pageWrapper}>
 							<div className={styles.pageWrapper__container} style={{ maxWidth }}>
@@ -35,9 +35,9 @@ export function DefaultLayout({ maxWidth = "1920px" }: DefaultLayoutProps) {
 						</div>
 					</main>
 				}
-      </div>
-    </>
-  );
+			</div>
+		</>
+	);
 }
 
 export default DefaultLayout;

@@ -2,10 +2,10 @@
 @import "src/styles/abstract/colors";
 
 .logo {
-  display: flex;
-  align-items: center;
-  gap: $spacing-16;
-	
+	display: flex;
+	align-items: center;
+	gap: $spacing-16;
+
 	button {
 		font-size: $spacing-24;
 		width: $spacing-40;
@@ -17,29 +17,29 @@
 		fill: $grayscale-100;
 	}
 
-  &__toHide {
-    @media (max-width: 400px) {
-      display: none;
-    }
-  }
+	&__toHide {
+		@media (max-width: 400px) {
+			display: none;
+		}
+	}
 
-  &__long {
-    width: 115px;
-    height: 28px;
-  }
+	&__long {
+		width: 115px;
+		height: 28px;
+	}
 
-  &__short {
-    width: 115px;
-    height: 28px;
+	&__short {
+		width: 115px;
+		height: 28px;
 
-    @media (max-width: 400px) {
-      width: 30.4px;
-      height: 28px;
+		@media (max-width: 400px) {
+			width: 30.4px;
+			height: 28px;
 
-      .logo__icon {
-        transform: translateY(-40px) translateX(-11px);
-        scale: 4.735;
-      }
-    }
-  }
+			.logo__icon {
+				transform: translateY(-40px) translateX(-11px);
+				scale: 4.735;
+			}
+		}
+	}
 }

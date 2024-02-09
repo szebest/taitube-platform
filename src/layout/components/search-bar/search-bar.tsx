@@ -10,7 +10,7 @@ import { SearchBarModel } from "src/modules/shared/models";
 
 export function SearchBar() {
 	const { searchText, search, fullscreenSearch, setFullscreenSearch } = useSearchBar();
-	
+
 	const {
 		reset,
 		register,
@@ -27,13 +27,13 @@ export function SearchBar() {
 	}, []);
 
 	const handleClear = () => {
-		reset({ searchText: "" }); 
+		reset({ searchText: "" });
 		focusInputField();
 	}
 
 	useEffect(() => {
 		if (searchText.length === 0) return;
-		
+
 		reset({
 			searchText
 		})
@@ -41,7 +41,7 @@ export function SearchBar() {
 
 	useEffect(() => {
 		if (!fullscreenSearch) return;
-		
+
 		focusInputField();
 	}, [fullscreenSearch, focusInputField]);
 

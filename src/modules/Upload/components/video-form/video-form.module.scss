@@ -3,17 +3,17 @@
 @import "src/styles/abstract/mixins";
 
 .form {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-16;
+	display: flex;
+	flex-direction: column;
+	gap: $spacing-16;
 
-  &__textarea:not(#\9) {
-    min-height: 100px;
-  }
+	&__textarea:not(#\9) {
+		min-height: 100px;
+	}
 
-  &__progress {
-    p {
-      @include paragraph-4-regular();
-    }
-  }
+	&__progress {
+		p {
+			@include paragraph-4-regular();
+		}
+	}
 }

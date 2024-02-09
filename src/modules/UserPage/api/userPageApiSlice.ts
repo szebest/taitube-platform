@@ -7,15 +7,15 @@ import { UserDetails, UserVideosRequestParams } from "../models";
 let previousPageNumber = 0;
 
 export const userPageApiSlice = baseApi.injectEndpoints({
-  endpoints: (builder) => ({
-    getUserDetails: builder.query<UserDetails, number>({
-      keepUnusedDataFor: 0,
-      query: (userId) => `/account/profile/details/${userId}`,
-    }),
-    getUserVideos: builder.query<PaginatedResponse<Video>, UserVideosRequestParams>({
-      keepUnusedDataFor: 300,
+	endpoints: (builder) => ({
+		getUserDetails: builder.query<UserDetails, number>({
+			keepUnusedDataFor: 0,
+			query: (userId) => `/account/profile/details/${userId}`,
+		}),
+		getUserVideos: builder.query<PaginatedResponse<Video>, UserVideosRequestParams>({
+			keepUnusedDataFor: 300,
 			providesTags: ['VIDEOS'],
-      query: (requestParams) => {
+			query: (requestParams) => {
 				const { userId, ...queryParams } = requestParams;
 				const queryParamsCopied = { ...queryParams };
 
@@ -29,11 +29,11 @@ export const userPageApiSlice = baseApi.injectEndpoints({
 					url: `/videos/user/${userId}?${params}`,
 				}
 			},
-      serializeQueryArgs: ({ endpointName, queryArgs }) => {
-        return endpointName + queryArgs.userId;
-      },
-      merge: (currentCache, newItems) => {
-        const { data, count } = newItems;
+			serializeQueryArgs: ({ endpointName, queryArgs }) => {
+				return endpointName + queryArgs.userId;
+			},
+			merge: (currentCache, newItems) => {
+				const { data, count } = newItems;
 
 				if (previousPageNumber === 0) {
 					currentCache.data.length = 0;
@@ -44,16 +44,16 @@ export const userPageApiSlice = baseApi.injectEndpoints({
 				currentCache.count = count;
 
 				currentCache = { ...currentCache };
-      },
-      forceRefetch({ currentArg, previousArg }) {
-        return currentArg!.pageNumber > (previousArg?.pageNumber ?? 0) || 
-          currentArg?.pageSize !== previousArg?.pageSize;
-      }
-    })
-  })
+			},
+			forceRefetch({ currentArg, previousArg }) {
+				return currentArg!.pageNumber > (previousArg?.pageNumber ?? 0) ||
+					currentArg?.pageSize !== previousArg?.pageSize;
+			}
+		})
+	})
 });
 
 export const {
-  useGetUserVideosQuery,
-  useGetUserDetailsQuery
+	useGetUserVideosQuery,
+	useGetUserDetailsQuery
 } = userPageApiSlice;

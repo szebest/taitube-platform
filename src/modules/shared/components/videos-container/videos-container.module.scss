@@ -6,7 +6,7 @@
 	.gallery {
 		display: grid;
 		gap: $spacing-16;
-  	grid-template-columns: repeat(auto-fill, minmax(max(13rem, 17%), 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(max(13rem, 17%), 1fr));
 	}
 
 	.list {

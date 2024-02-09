@@ -7,7 +7,7 @@ import styles from './video-player.module.scss';
 import { API_BASE_URL } from 'src/config';
 
 export type VideoPlayerProps = {
-  videoId: number;
+	videoId: number;
 }
 
 const VOLUME_KEY = "VOLUME";
@@ -17,7 +17,7 @@ export function VideoPlayer({ videoId }: VideoPlayerProps) {
 	const [seeking, setSeeking] = useState(false);
 
 	return (
- 		<div className={styles.container}>
+		<div className={styles.container}>
 			<ReactPlayer
 				url={`${API_BASE_URL}/videos/${videoId}/manifest.mpd`}
 				playing={!seeking}
@@ -33,8 +33,8 @@ export function VideoPlayer({ videoId }: VideoPlayerProps) {
 						setVolume(internalPlayer.volume);
 					})
 				}}
- 			/>
- 		</div>
+			/>
+		</div>
 	)
 }
 

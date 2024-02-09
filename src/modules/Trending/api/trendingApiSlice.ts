@@ -5,11 +5,11 @@ import { Video } from "src/modules/shared/models";
 let previousPageNumber = 0;
 
 export const trendingApiSlice = baseApi.injectEndpoints({
-  endpoints: (builder) => ({
-    trendingVideos: builder.query<PaginatedResponse<Video>, PaginatedQueryParams>({
-      keepUnusedDataFor: 300,
+	endpoints: (builder) => ({
+		trendingVideos: builder.query<PaginatedResponse<Video>, PaginatedQueryParams>({
+			keepUnusedDataFor: 300,
 			providesTags: ['VIDEOS'],
-      query: (queryParams) => {
+			query: (queryParams) => {
 				const queryParamsCopied = { ...queryParams };
 
 				if (queryParamsCopied.pageNumber === previousPageNumber) queryParamsCopied.pageNumber = 0;
@@ -22,11 +22,11 @@ export const trendingApiSlice = baseApi.injectEndpoints({
 					url: `/videos/trending?${params}`,
 				}
 			},
-      serializeQueryArgs: ({ endpointName }) => {
-        return endpointName;
-      },
-      merge: (currentCache, newItems) => {
-        const { data, count } = newItems;
+			serializeQueryArgs: ({ endpointName }) => {
+				return endpointName;
+			},
+			merge: (currentCache, newItems) => {
+				const { data, count } = newItems;
 
 				if (previousPageNumber === 0) {
 					currentCache.data.length = 0;
@@ -37,14 +37,14 @@ export const trendingApiSlice = baseApi.injectEndpoints({
 				currentCache.count = count;
 
 				currentCache = { ...currentCache };
-      },
-      forceRefetch({ currentArg, previousArg }) {
-        return currentArg!.pageNumber > (previousArg?.pageNumber ?? 0) || currentArg?.pageSize !== previousArg?.pageSize;
-      }
-    })
-  })
+			},
+			forceRefetch({ currentArg, previousArg }) {
+				return currentArg!.pageNumber > (previousArg?.pageNumber ?? 0) || currentArg?.pageSize !== previousArg?.pageSize;
+			}
+		})
+	})
 });
 
 export const {
-  useTrendingVideosQuery
+	useTrendingVideosQuery
 } = trendingApiSlice;

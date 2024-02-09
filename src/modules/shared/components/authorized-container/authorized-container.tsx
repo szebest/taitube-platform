@@ -15,7 +15,7 @@ export function AuthorizedContainer({ children }: PropsWithChildren) {
       {
         user ?
           children :
-          <Navigate to="/" replace/>
+          <Navigate to="/" replace />
       }
     </>
   );

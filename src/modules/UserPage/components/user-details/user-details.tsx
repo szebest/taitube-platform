@@ -4,7 +4,7 @@ import styles from './user-details.module.scss';
 
 import { formatNumbers } from 'src/modules/shared/helpers';
 
-import {  ProfilePicture, SubscribeButton } from 'src/modules/shared/components';
+import { ProfilePicture, SubscribeButton } from 'src/modules/shared/components';
 
 import { UserDetails as UserDetailsModel } from '../../models';
 

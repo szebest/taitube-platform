@@ -22,11 +22,11 @@ export type VideoCardProps = {
 
 export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
 	const { user } = useAuth();
-	
+
 	const navigate = useNavigate();
 
 	const [deleteVideoComment, { isLoading: isDeleteLoading }] = useDeleteVideoMutation();
-	
+
 	const userProfileRoute = `/user/${video.userId}`;
 	const videoRoute = `/watch/${video.id}`;
 
@@ -37,7 +37,7 @@ export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
 	const handleDelete = () => {
 		deleteVideoComment(video.id);
 	}
-	
+
 	return (
 		<Link style={{ zIndex }} to={videoRoute} className={styles.link}>
 			<div className={styles.container}>
@@ -65,9 +65,9 @@ export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
 							</div>
 						</div>
 						<div>
-						{user && video.userId === user.id &&
-							<VideoSettingsDropdown video={video} />
-						}
+							{user && video.userId === user.id &&
+								<VideoSettingsDropdown video={video} />
+							}
 						</div>
 					</div>
 					<div className={styles.container__additional}>

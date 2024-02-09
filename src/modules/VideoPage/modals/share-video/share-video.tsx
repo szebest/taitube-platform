@@ -15,8 +15,8 @@ export type ShareVideoModalProps = {
 export const ShareVideoModal = ({ onClose, show, videoId }: ShareVideoModalProps) => {
   const { user } = useAuth();
 
-	return (
-		<Modal show={show} onHide={onClose}>
+  return (
+    <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
         <Modal.Title>Share video</Modal.Title>
       </Modal.Header>
@@ -29,5 +29,5 @@ export const ShareVideoModal = ({ onClose, show, videoId }: ShareVideoModalProps
         {user && <UserFriends videoId={videoId} />}
       </Modal.Body>
     </Modal>
-	)
+  )
 }

@@ -28,7 +28,7 @@ export function IsVisibleContainer({ children, inView, rootMargin = '100px' }: I
 
 	useEffect(() => {
 		if (!ref?.current) return;
-		
+
 		const target = ref.current;
 
 		const options: IntersectionObserverInit = {
@@ -36,7 +36,7 @@ export function IsVisibleContainer({ children, inView, rootMargin = '100px' }: I
 		};
 
 		const cb = createCb();
-		
+
 		const observer = new IntersectionObserver(cb, options);
 
 		observer.observe(target);
@@ -44,11 +44,11 @@ export function IsVisibleContainer({ children, inView, rootMargin = '100px' }: I
 		return () => observer.unobserve(target);
 	}, [ref, rootMargin, createCb]);
 
-  return (
-    <div ref={ref}>
-      {children}
-    </div>
-  );
+	return (
+		<div ref={ref}>
+			{children}
+		</div>
+	);
 }
 
 export default IsVisibleContainer;

@@ -2,7 +2,7 @@ import { baseApi } from "src/base-api";
 import { EditVideoFormModel, Video } from "../models";
 
 export const videoApiSlice = baseApi.injectEndpoints({
-  endpoints: (builder) => ({
+	endpoints: (builder) => ({
 		videoInfo: builder.query<Video, number>({
 			keepUnusedDataFor: 0,
 			query: (videoId: number) => ({
@@ -10,15 +10,15 @@ export const videoApiSlice = baseApi.injectEndpoints({
 				method: 'GET',
 			})
 		}),
-    deleteVideo: builder.mutation<void, number>({
-      query: (videoId: number) => ({
-        url: `/videos/${videoId}`,
+		deleteVideo: builder.mutation<void, number>({
+			query: (videoId: number) => ({
+				url: `/videos/${videoId}`,
 				method: 'DELETE',
-      }),
+			}),
 			invalidatesTags: ['VIDEOS']
-    }),
-    editVideo: builder.mutation<void, EditVideoFormModel & { videoId: number }>({
-      query: (data) => {
+		}),
+		editVideo: builder.mutation<void, EditVideoFormModel & { videoId: number }>({
+			query: (data) => {
 				const { videoId, ...body } = data;
 
 				return {
@@ -28,12 +28,12 @@ export const videoApiSlice = baseApi.injectEndpoints({
 				}
 			},
 			invalidatesTags: ['VIDEOS']
-    })
-  })
+		})
+	})
 });
 
 export const {
-  useDeleteVideoMutation,
-  useEditVideoMutation,
+	useDeleteVideoMutation,
+	useEditVideoMutation,
 	useVideoInfoQuery
 } = videoApiSlice;

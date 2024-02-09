@@ -11,7 +11,7 @@ export const ProfilePicture = memo(({ src }: ProfilePictureProps) => {
 		<div className={styles["profile-picture-img-wrapper"]}>
 			{src &&
 				<img
-				className={styles["profile-picture-img"]}
+					className={styles["profile-picture-img"]}
 					src={src}
 					alt="profile"
 					onError={(e: SyntheticEvent) => (e.target as HTMLImageElement).style.display = 'none'}

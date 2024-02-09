@@ -6,14 +6,14 @@
 	display: flex;
 	gap: $spacing-8;
 	flex-direction: column;
-	
+
 	margin-top: $spacing-8;
 
 	.top {
 		display: grid;
 		gap: $spacing-8;
 		grid-template-columns: 1fr auto;
-		
+
 		.title {
 			@include text-overflow(2);
 			max-width: max-content;
@@ -61,12 +61,12 @@
 				display: grid;
 				grid-template-columns: $spacing-40 1fr;
 				gap: $spacing-8;
-				
+
 				.username {
 					@include text-overflow(1);
 					@include paragraph-1-semi-bold();
 				}
-	
+
 				.subscriptions {
 					@include text-overflow(1);
 					@include paragraph-3-regular();

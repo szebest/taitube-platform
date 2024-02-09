@@ -45,7 +45,7 @@ export function Sidebar() {
 
 				<Dropdown.Divider></Dropdown.Divider>
 
-				{user && 
+				{user &&
 					<>
 						<MenuItem component={<Link to={`/user/${user.id}`} onClick={close} />}>
 							<i className="bi bi-person-fill"></i>

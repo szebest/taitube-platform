@@ -34,8 +34,8 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
 
 	const userProfileRoute = `/user/${data.userId}`;
 
-  return (
-    <>
+	return (
+		<>
 			<div className={styles.container}>
 				<div className={styles.top}>
 					<h4 className={styles.title} title={data.title}>{data.title}</h4>
@@ -69,7 +69,7 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
 
 			<ShareVideoModal onClose={handleCloseShareModal} show={isShareModalOpen} videoId={videoId} />
 		</>
-  )
+	)
 };
 
 export default VideoDetails;

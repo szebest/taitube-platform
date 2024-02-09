@@ -6,21 +6,21 @@ import { VideoPlayer } from "src/modules/shared/components";
 import { CommentsSection, VideoDetails } from "../../components";
 
 export type VideoPageProps = {
-  videoId?: number;
+	videoId?: number;
 }
 
 export function VideoPage({ videoId }: VideoPageProps) {
-  if (videoId === undefined) return <Navigate to="/" />
+	if (videoId === undefined) return <Navigate to="/" />
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.container__wrapper}>
-        <VideoPlayer videoId={videoId} />
+	return (
+		<div className={styles.container}>
+			<div className={styles.container__wrapper}>
+				<VideoPlayer videoId={videoId} />
 				<VideoDetails videoId={videoId} />
 				<CommentsSection videoId={videoId} />
-      </div>
-    </div>
-  )
+			</div>
+		</div>
+	)
 }
 
 export default VideoPage;

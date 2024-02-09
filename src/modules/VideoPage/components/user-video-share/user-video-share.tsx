@@ -13,9 +13,9 @@ export const UserVideoShare = ({ friend, videoId }: UserVideoShareProps) => {
 	const [share, { isLoading, isError }] = useShareVideoMutation();
 
 	const handleShare = (userId: number) => {
-    share({ videoId, userId });
-  }
-	
+		share({ videoId, userId });
+	}
+
 	return (
 		<div className={styles.container}>
 			<p>{friend.name}</p>

@@ -4,48 +4,54 @@
 
 .dropdown {
 	.dropdown-toggle {
-		&, &::after, &:hover, &:active {
+
+		&,
+		&::after,
+		&:hover,
+		&:active {
 			all: initial;
 		}
-		
+
 		&.btn {
-			&.show, &:active {
+
+			&.show,
+			&:active {
 				background-color: $white;
 			}
 		}
-	
+
 		cursor: pointer !important;
 	}
-	
+
 	.dropdown-item {
 		padding: 0;
-	
-		> *:not(hr) {
+
+		>*:not(hr) {
 			display: flex;
 			gap: $spacing-8;
 			padding: var(--bs-dropdown-item-padding-y) var(--bs-dropdown-item-padding-x);
 			width: 100%;
 		}
 	}
-	
+
 	.dropdown-divider {
 		background: $grayscale-30;
 		height: 1px;
 	}
-	
+
 	.dropdown-menu {
 		background-color: $white;
 		border-color: $grayscale-20;
-	
+
 		hr {
 			background: $grayscale-30;
 			height: 1px;
 		}
-	
+
 		.dropdown-item {
 			@include paragraph-2-regular();
 			color: $black;
-	
+
 			&:hover {
 				background-color: $grayscale-15;
 			}
