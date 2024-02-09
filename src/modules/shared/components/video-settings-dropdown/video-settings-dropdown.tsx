@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import styles from './video-settings-dropdown.module.scss';
 
@@ -10,9 +11,10 @@ import { useDeleteVideoMutation } from "../../api";
 
 export type VideoSettingsDropdownProps = {
 	video: Omit<Video, 'thumbnailSrc'>;
+	shouldRedirectOnDelete?: boolean;
 }
 
-export const VideoSettingsDropdown = memo(({ video }: VideoSettingsDropdownProps) => {
+export const VideoSettingsDropdown = memo(({ video, shouldRedirectOnDelete }: VideoSettingsDropdownProps) => {
 	const navigate = useNavigate();
 
 	const [deleteVideoComment, { isLoading: isDeleteLoading }] = useDeleteVideoMutation();
@@ -21,8 +23,16 @@ export const VideoSettingsDropdown = memo(({ video }: VideoSettingsDropdownProps
 		navigate(`/upload/edit/${video.id}`);
 	}
 
-	const handleDelete = () => {
-		deleteVideoComment(video.id);
+	const handleDelete = async () => {
+		const result = await deleteVideoComment(video.id);
+
+		if ("data" in result) {
+			toast(`Successfully deleted the video`);
+
+			if (shouldRedirectOnDelete) {
+				navigate(-1);
+			}
+		}
 	}
 
 	return (

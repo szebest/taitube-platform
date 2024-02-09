@@ -39,7 +39,7 @@ export const VideoDetails = ({ videoId }: VideoDetailsProps) => {
 			<div className={styles.container}>
 				<div className={styles.top}>
 					<h4 className={styles.title} title={data.title}>{data.title}</h4>
-					<VideoSettingsDropdown video={data} />
+					<VideoSettingsDropdown video={data} shouldRedirectOnDelete />
 				</div>
 				<div className={styles.wrapper}>
 					<div className={styles.left}>

@@ -7,18 +7,26 @@ import { EditVideoFormModel } from 'src/modules/shared/models';
 import { EditVideoForm } from '../../components';
 import { LoadingSpinner } from 'src/modules/shared/components';
 import { toast } from 'react-toastify';
+import { useEffect } from 'react';
 
 export type EditPageProps = {
 	videoId?: number;
 }
 
 export function EditPage({ videoId }: EditPageProps) {
-	const { data, isFetching } = useVideoInfoQuery(videoId ?? -1, {
+	const { data, isFetching, isError } = useVideoInfoQuery(videoId ?? -1, {
 		skip: videoId === undefined
 	});
 	const [edit, state] = useEditVideoMutation();
 
 	const navigate = useNavigate();
+
+	useEffect(() => {
+		if (!isError) return;
+
+		toast("No video with given id exists!");
+		navigate("/");
+	}, [isError])
 
 	if (videoId === undefined) return <Navigate to="/" replace />
 
