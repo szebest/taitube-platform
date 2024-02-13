@@ -45,6 +45,7 @@ export const uploadApiSlice = baseApi.injectEndpoints({
 					}
 				})
 			},
+			invalidatesTags: ['VIDEOS']
 		}),
 	}),
 });
