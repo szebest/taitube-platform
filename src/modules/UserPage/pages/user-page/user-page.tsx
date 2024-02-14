@@ -1,55 +1,31 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-
-import { useLocalStorage } from '@uidotdev/usehooks';
 
 import styles from './user-page.module.scss';
 
-import { IN_VIEW_LOCAL_STORAGE_KEY } from 'src/config';
-
 import { useGetUserDetailsQuery, useGetUserVideosQuery } from '../../api';
+
+import { useInfiniteScroll, useIsView } from 'src/modules/shared/hooks';
 
 import { LoadingSpinner, VideosContainer } from "src/modules/shared/components";
 import { UserDetails } from '../../components';
-
-import { UserVideosRequestParams } from '../../models';
 
 export type UserPageProps = {
 	userId?: number;
 }
 
 export function UserPage({ userId }: UserPageProps) {
-	const [blockInit, setBlockInit] = useState(true);
-
-	const [query, setQuery] = useState<UserVideosRequestParams>({ pageNumber: 0, pageSize: 30, userId: userId });
-	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
-	const queryData = useGetUserVideosQuery({ ...query, userId: userId });
-	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(userId!);
+	const [isListView, setIsListView] = useIsView();
+	const { loadMore, queryData, query, setQuery } = useInfiniteScroll(useGetUserVideosQuery, { pageNumber: 0, pageSize: 30, userId });
+	const { data: userDetails, isFetching: userDetailsFetching } = useGetUserDetailsQuery(userId ?? -1, { skip: userId === undefined });
 
 	const { data, isFetching } = queryData;
-
-	const loadMore = useCallback(() => {
-		if (isFetching) return;
-
-		setQuery(prev => ({ ...prev, pageNumber: (queryData.currentData?.pageNumber ?? 0) + 1 }));
-	}, [isFetching, queryData]);
 
 	useEffect(() => {
 		if (userId === query.userId) return;
 
 		setQuery(prev => ({ ...prev, userId: userId }));
 	}, [userId])
-
-	useEffect(() => {
-		if (isFetching) return;
-
-		if (blockInit) {
-			setBlockInit(true);
-			return;
-		}
-
-		queryData.refetch();
-	}, [query])
 
 	if (userId === undefined) return <Navigate to="/" replace />
 	if (userDetailsFetching || isFetching) return <LoadingSpinner />

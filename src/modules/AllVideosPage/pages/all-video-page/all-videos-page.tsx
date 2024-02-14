@@ -1,42 +1,26 @@
-import { useCallback, useEffect, useState } from 'react';
-
-import { useLocalStorage } from '@uidotdev/usehooks';
+import { useCallback, useEffect } from 'react';
 
 import styles from './all-video-page.module.scss';
 
 import { useAllVideosQuery } from '../../api';
 
-import { IN_VIEW_LOCAL_STORAGE_KEY } from 'src/config';
-
-import { useQuery } from 'src/modules/shared/hooks';
+import { useInfiniteScroll, useIsView, useQuery } from 'src/modules/shared/hooks';
 
 import { VideosContainer } from "src/modules/shared/components";
 
-import { VideosQueryParams } from '../../models';
 import { CategoryList } from '../../components';
 
 export function AllVideosPage() {
 	const URLSearchQuery = useQuery();
 	const searchText = URLSearchQuery.get("search") ?? "";
 
-	const [blockInit, setBlockInit] = useState(true);
-
-	const [query, setQuery] = useState<VideosQueryParams>({
-		pageNumber: 0,
-		pageSize: 1,
+	const [isListView, setIsListView] = useIsView();
+	const { loadMore, queryData, query, setQuery } = useInfiniteScroll(useAllVideosQuery, { 
+		pageNumber: 0, 
+		pageSize: 30,
 		searchText: searchText.length > 0 ? searchText : undefined,
 		categoryId: undefined
 	});
-	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
-	const queryData = useAllVideosQuery(query);
-
-	const { isFetching } = queryData;
-
-	const loadMore = useCallback(() => {
-		if (isFetching) return;
-
-		setQuery(prev => ({ ...prev, pageNumber: (queryData.currentData?.pageNumber ?? 0) + 1 }));
-	}, [isFetching, queryData]);
 
 	const onCategoryChange = useCallback((categoryId: number | undefined) => {
 		setQuery(prev => ({ ...prev, categoryId, pageNumber: 0 }));
@@ -45,17 +29,6 @@ export function AllVideosPage() {
 	useEffect(() => {
 		setQuery(prev => ({ ...prev, pageNumber: 0, searchText: searchText.length > 0 ? searchText : undefined }));
 	}, [searchText]);
-
-	useEffect(() => {
-		if (isFetching) return;
-
-		if (blockInit) {
-			setBlockInit(true);
-			return;
-		}
-
-		queryData.refetch();
-	}, [query]);
 
 	return (
 		<div className={styles.container}>

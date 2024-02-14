@@ -1,40 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-
-import { useLocalStorage } from '@uidotdev/usehooks';
-
 import styles from './subscription-videos-page.module.scss';
 
 import { useSubscriptionVideosQuery } from '../../api';
 
+import { useInfiniteScroll, useIsView } from 'src/modules/shared/hooks';
+
 import { VideosContainer } from "src/modules/shared/components";
-import { PaginatedQueryParams } from 'src/models';
-import { IN_VIEW_LOCAL_STORAGE_KEY } from 'src/config';
 
 export function SubscriptionVideosPage() {
-	const [blockInit, setBlockInit] = useState(true);
-
-	const [query, setQuery] = useState<PaginatedQueryParams>({ pageNumber: 0, pageSize: 30 });
-	const [isListView, setIsListView] = useLocalStorage(IN_VIEW_LOCAL_STORAGE_KEY, false);
-	const queryData = useSubscriptionVideosQuery(query);
-
-	const { isFetching } = queryData;
-
-	const loadMore = useCallback(() => {
-		if (isFetching) return;
-
-		setQuery(prev => ({ ...prev, pageNumber: (queryData.currentData?.pageNumber ?? 0) + 1 }));
-	}, [isFetching, queryData]);
-
-	useEffect(() => {
-		if (isFetching) return;
-
-		if (blockInit) {
-			setBlockInit(true);
-			return;
-		}
-
-		queryData.refetch();
-	}, [query])
+	const [isListView, setIsListView] = useIsView();
+	const { loadMore, queryData } = useInfiniteScroll(useSubscriptionVideosQuery, { pageNumber: 0, pageSize: 30 });
 
 	return (
 		<div className={styles.container}>
