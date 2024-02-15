@@ -10,7 +10,7 @@
 	&:not(.visible) {
 		max-width: 600px;
 
-		@media (max-width: 768px) {
+		@media (max-width: 900px) {
 			display: none;
 		}
 
