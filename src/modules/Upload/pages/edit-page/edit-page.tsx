@@ -5,6 +5,8 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 import { useEditVideoMutation, useVideoInfoQuery } from 'src/modules/shared/api';
 
+import { useAuth } from 'src/modules/shared/providers';
+
 import { EditVideoFormModel } from 'src/modules/shared/models';
 
 import { EditVideoForm } from '../../components';
@@ -18,6 +20,9 @@ export function EditPage({ videoId }: EditPageProps) {
 	const { data, isFetching, isError } = useVideoInfoQuery(videoId ?? -1, {
 		skip: videoId === undefined
 	});
+
+	const { user, isLoading } = useAuth();
+
 	const [edit, state] = useEditVideoMutation();
 
 	const navigate = useNavigate();
@@ -28,6 +33,14 @@ export function EditPage({ videoId }: EditPageProps) {
 		toast("No video with given id exists!");
 		navigate("/");
 	}, [isError])
+
+	useEffect(() => {
+		if (!data || isLoading) return;
+		if (data.userId !== user?.id) {
+			toast("This is not yours video!");
+			navigate("/");
+		}
+	}, [data, isLoading, user])
 
 	if (videoId === undefined) return <Navigate to="/" replace />
 
