@@ -17,6 +17,7 @@ export const subscriptionApiSlice = baseApi.injectEndpoints({
 				url: `/subscriptions/user/${userId}/subscribe`,
 				method: 'POST'
 			}),
+			invalidatesTags: ['SUBSCRIPTION-VIDEOS'],
 			async onQueryStarted({ userFullName, userId, videoId }, { dispatch, queryFulfilled }) {
 				const patchResult = dispatch(
 					subscriptionApiSlice.util.updateQueryData('getUserSubscriptions', {}, draft => {

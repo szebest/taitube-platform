@@ -8,7 +8,7 @@ export const subscriptionVideosApiSlice = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		subscriptionVideos: builder.query<PaginatedResponse<Video>, PaginatedQueryParams>({
 			keepUnusedDataFor: 300,
-			providesTags: ['VIDEOS'],
+			providesTags: ['VIDEOS', 'SUBSCRIPTION-VIDEOS'],
 			query: (queryParams) => {
 				const queryParamsCopied = { ...queryParams };
 
