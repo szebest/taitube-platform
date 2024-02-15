@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-
 import styles from './comments-section.module.scss';
 
 import { useGetVideoCommentsQuery } from '../../api/videoApiSlice';
 
-import { PaginatedQueryParams } from 'src/models';
+import { useInfiniteScroll } from 'src/modules/shared/hooks';
 
 import { IsVisibleContainer, LoadingSpinner } from 'src/modules/shared/components';
 import { AddVideoComment, VideoComments } from '..';
@@ -14,14 +12,7 @@ export type CommentsSectionProps = {
 }
 
 export const CommentsSection = ({ videoId }: CommentsSectionProps) => {
-	const [query, setQuery] = useState<PaginatedQueryParams>({ pageNumber: 0, pageSize: 10 });
-	const { data, isFetching, isLoading, isError, currentData } = useGetVideoCommentsQuery({ videoId, queryParams: query });
-
-	const loadMore = useCallback(() => {
-		if (isFetching) return;
-
-		setQuery(prev => ({ ...prev, pageNumber: (currentData?.pageNumber ?? 0) + 1 }));
-	}, [isFetching]);
+	const { loadMore, queryData: { data, isFetching, isLoading, isError } } = useInfiniteScroll(useGetVideoCommentsQuery, { pageNumber: 0, pageSize: 10, videoId });
 
 	return (
 		<div className={styles.container}>

@@ -2,7 +2,7 @@ import { baseApi } from "src/base-api";
 
 import { PaginatedQueryParams, PaginatedResponse } from "src/models";
 import { User } from "src/modules/shared/models";
-import { VideoComment, AddVideoComment, VideoDetails } from "../models";
+import { VideoComment, AddVideoComment, VideoDetails, VideoCommentQueryParams } from "../models";
 
 export const videoApiSlice = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
@@ -10,9 +10,10 @@ export const videoApiSlice = baseApi.injectEndpoints({
 			keepUnusedDataFor: 0,
 			query: ({ videoId }) => `/videos/${videoId}/details`,
 		}),
-		getVideoComments: builder.query<PaginatedResponse<VideoComment>, { videoId: number, queryParams?: PaginatedQueryParams }>({
+		getVideoComments: builder.query<PaginatedResponse<VideoComment>, VideoCommentQueryParams>({
 			keepUnusedDataFor: 0,
-			query: ({ videoId, queryParams }) => {
+			query: (query) => {
+				const { videoId, ...queryParams } = query;
 				const params = new URLSearchParams(queryParams as never);
 
 				return {
@@ -33,8 +34,8 @@ export const videoApiSlice = baseApi.injectEndpoints({
 				}
 			},
 			forceRefetch({ currentArg, previousArg }) {
-				return (currentArg!.queryParams?.pageNumber ?? 0) > (previousArg?.queryParams?.pageNumber ?? 0) ||
-					currentArg?.queryParams?.pageSize !== previousArg?.queryParams?.pageSize;
+				return (currentArg?.pageNumber ?? 0) > (previousArg?.pageNumber ?? 0) ||
+					currentArg?.pageSize !== previousArg?.pageSize;
 			}
 		}),
 		addVideoComment: builder.mutation<VideoComment, { videoId: number, body: AddVideoComment, user?: User }>({
@@ -57,7 +58,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 				};
 
 				const patchResult = dispatch(
-					videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
+					videoApiSlice.util.updateQueryData('getVideoComments', { videoId } as VideoCommentQueryParams, draft => {
 						draft.data.unshift(item);
 						draft.count += 1;
 					})
@@ -66,7 +67,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 				try {
 					const queryResult = await queryFulfilled;
 
-					dispatch(videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
+					dispatch(videoApiSlice.util.updateQueryData('getVideoComments', { videoId } as VideoCommentQueryParams, draft => {
 						const newData = draft.data.map(x => {
 							if (x.createdAt === item.createdAt && x.id === undefined) {
 								return { ...x, ...queryResult.data }
@@ -90,7 +91,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 			}),
 			async onQueryStarted({ id, videoId, body: { data } }, { dispatch, queryFulfilled }) {
 				const patchResult = dispatch(
-					videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
+					videoApiSlice.util.updateQueryData('getVideoComments', { videoId } as VideoCommentQueryParams, draft => {
 						const newData = draft.data.map(x => {
 							if (x.id === id) {
 								return { ...x, data, isEdited: true }
@@ -107,7 +108,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 					const result = await queryFulfilled;
 
 					dispatch(
-						videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
+						videoApiSlice.util.updateQueryData('getVideoComments', { videoId } as VideoCommentQueryParams, draft => {
 							const newData = draft.data.map(x => {
 								if (x.id === result.data.id) {
 									return { ...x, ...result.data }
@@ -131,7 +132,7 @@ export const videoApiSlice = baseApi.injectEndpoints({
 			}),
 			async onQueryStarted({ id, videoId }, { dispatch, queryFulfilled }) {
 				const patchResult = dispatch(
-					videoApiSlice.util.updateQueryData('getVideoComments', { videoId }, draft => {
+					videoApiSlice.util.updateQueryData('getVideoComments', { videoId } as VideoCommentQueryParams, draft => {
 						const newData = draft.data.filter(x => x.id !== id);
 
 						draft.data = newData;
