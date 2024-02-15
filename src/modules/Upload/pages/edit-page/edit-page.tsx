@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 import { useEditVideoMutation, useVideoInfoQuery } from 'src/modules/shared/api';
 
@@ -6,8 +9,6 @@ import { EditVideoFormModel } from 'src/modules/shared/models';
 
 import { EditVideoForm } from '../../components';
 import { LoadingSpinner } from 'src/modules/shared/components';
-import { toast } from 'react-toastify';
-import { useEffect } from 'react';
 
 export type EditPageProps = {
 	videoId?: number;
@@ -37,6 +38,13 @@ export function EditPage({ videoId }: EditPageProps) {
 			toast(`Successfully edited the video`);
 
 			navigate(-1);
+		}
+		else {
+			if ((response.error as FetchBaseQueryError)?.status === 404) {
+				toast(`Video does not exist`);
+
+				navigate(-1);
+			}
 		}
 	}
 
