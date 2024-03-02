@@ -13,7 +13,7 @@ export const Header = memo(() => {
 	const { theme, changeTheme } = useTheme();
 
 	if (isLoading)
-		return null;
+		return <div className={styles.header}></div>;
 
 	return (
 		<header className={`${styles.header} ${fullscreenSearch ? styles.hideElements : ''}`}>

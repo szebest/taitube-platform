@@ -1,4 +1,5 @@
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo } from "react"
+import { toast } from "react-toastify"
 
 import { User } from "../models"
 import { useUserDetailsQuery } from "../api/authApiSlice"
@@ -25,6 +26,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 			window.location.href = window.location.href.replace(/#.*/, '');
 		}
 	}, [])
+
+	useEffect(() => {
+		let timeoutId: NodeJS.Timeout;
+		if (isLoading) {
+			timeoutId = setTimeout(() => {
+				toast("The backend is delayed with the user info...")
+			}, 2000);
+		}
+
+		return () => {
+			timeoutId && clearTimeout(timeoutId);
+		}
+	}, [isLoading])
 
 	return (
 		<AuthContext.Provider value={ctx}>
