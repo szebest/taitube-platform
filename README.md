@@ -2,8 +2,7 @@
 
 ![image](https://github.com/szebest/youtube-frontend/assets/56255905/06fd4838-3911-42ef-ada4-c1b92a862a16)
 
-![image](https://github.com/szebest/youtube-frontend/assets/56255905/f83b7180-7d96-408b-9e2d-6e57ac9c843c)
-
+![image](https://github.com/szebest/youtube-frontend/assets/56255905/5de4e000-f2cb-4098-952f-fde1de31f2bb)
 
 # Projekt zaliczeniowy z przedmiotu Tworzenie Aplikacji Internetowych
 
