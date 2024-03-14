@@ -1,6 +1,6 @@
-![image](https://github.com/szebest/youtube-frontend/assets/56255905/f1f47fe8-2cd0-42f3-9840-cf7054c382fe)
+![image](https://github.com/szebest/youtube-frontend/assets/56255905/82f6a08e-de2b-4a53-88f4-98a39a6af227)
 
-![image](https://github.com/szebest/youtube-frontend/assets/56255905/06fd4838-3911-42ef-ada4-c1b92a862a16)
+![image](https://github.com/szebest/youtube-frontend/assets/56255905/f1f47fe8-2cd0-42f3-9840-cf7054c382fe)
 
 ![image](https://github.com/szebest/youtube-frontend/assets/56255905/5de4e000-f2cb-4098-952f-fde1de31f2bb)
 
