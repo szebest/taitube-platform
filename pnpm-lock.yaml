@@ -57,6 +57,9 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
@@ -100,6 +103,9 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
@@ -122,6 +128,9 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -141,6 +150,9 @@ importers:
         specifier: workspace:*
         version: link:../errors
     devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -156,6 +168,9 @@ importers:
 
   packages/errors:
     devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -175,6 +190,9 @@ importers:
         specifier: workspace:*
         version: link:../job-contracts
     devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -194,6 +212,9 @@ importers:
         specifier: workspace:*
         version: link:../errors
     devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -213,6 +234,9 @@ importers:
         specifier: ^3.24.2
         version: 3.25.76
     devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -228,6 +252,9 @@ importers:
 
   packages/observability:
     devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig

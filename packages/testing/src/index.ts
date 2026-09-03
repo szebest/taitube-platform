@@ -1,4 +1,4 @@
-import { type UserConfig, defineConfig } from 'vitest/config';
+import { type ViteUserConfig, defineConfig } from 'vitest/config';
 
 /**
  * Standard test fixtures based on SDD domain model and .env.example contracts.
@@ -15,7 +15,7 @@ export const FIXTURES = {
  * Helper to define package-level Vitest configs with consistent defaults.
  */
 export function definePackageTestConfig(
-  overrides: UserConfig = {}
+  overrides: ViteUserConfig = {}
 ): ReturnType<typeof defineConfig> {
   return defineConfig({
     test: {
