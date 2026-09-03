@@ -1,8 +1,13 @@
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { type Database, createDbClient } from '@vp/db';
+import { ErrorCodes } from '@vp/errors';
+import type { S3Client } from '@vp/storage';
+import { createStorageClient } from '@vp/storage';
+import type { Queue } from 'bullmq';
 import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import type { Redis } from 'ioredis';
@@ -10,13 +15,19 @@ import { registerAuth } from './plugins/auth.js';
 import { registerErrorHandler } from './plugins/errors.js';
 import { registerDevJwksRoute } from './routes/dev-jwks.js';
 import { registerHealthRoutes } from './routes/health.js';
+import { registerUploadsRoutes } from './routes/uploads.js';
 import { registerVideosRoutes } from './routes/videos.js';
 
 export interface BuildAppOptions {
   db?: Database;
   redisClient?: Redis | null;
+  s3Client?: S3Client;
   s3HealthCheck?: () => Promise<boolean>;
+  rawBucket?: string;
+  probeQueue?: Queue;
   cdnBaseUrl?: string;
+  rateLimitMax?: number;
+  maxUploadBytes?: number;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -25,6 +36,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   });
 
   const db = options.db ?? createDbClient().db;
+  const s3Client = options.s3Client ?? createStorageClient();
+  const rawBucket = options.rawBucket ?? process.env.STORAGE_RAW_BUCKET ?? 'raw';
   const cdnBaseUrl =
     options.cdnBaseUrl ?? process.env.CDN_BASE_URL ?? 'http://localhost:9000/public';
 
@@ -41,13 +54,26 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     contentSecurityPolicy: false,
   });
 
-  // 3. Register RFC 9457 Problem+JSON Error Handler
+  // 3. Register Rate Limit Plugin
+  await app.register(rateLimit, {
+    global: false,
+    errorResponseBuilder: (req) => ({
+      type: `https://errors.video-pipeline.local/${ErrorCodes.RATE_LIMITED}`,
+      title: 'Too Many Requests',
+      status: 429,
+      detail: 'Rate limit exceeded',
+      code: ErrorCodes.RATE_LIMITED,
+      instance: req.url,
+    }),
+  });
+
+  // 4. Register RFC 9457 Problem+JSON Error Handler
   registerErrorHandler(app);
 
-  // 4. Register Authentication Plugin (dev token verification)
+  // 5. Register Authentication Plugin (dev token verification)
   await app.register(registerAuth);
 
-  // 5. Register OpenAPI Documentation (/docs)
+  // 6. Register OpenAPI Documentation (/docs)
   await app.register(swagger, {
     openapi: {
       info: {
@@ -68,7 +94,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     routePrefix: '/docs',
   });
 
-  // 6. Register Routes
+  // 7. Register Routes
   registerHealthRoutes(app, {
     db,
     redisClient: options.redisClient,
@@ -76,6 +102,15 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   });
 
   registerDevJwksRoute(app);
+
+  registerUploadsRoutes(app, {
+    db,
+    s3Client,
+    rawBucket,
+    probeQueue: options.probeQueue,
+    rateLimitMax: options.rateLimitMax,
+    maxUploadBytes: options.maxUploadBytes,
+  });
 
   registerVideosRoutes(app, {
     db,

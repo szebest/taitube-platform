@@ -14,7 +14,7 @@ describe('@vp/storage smoke test', () => {
   const videoId = FIXTURES.VIDEO_ID;
 
   it('generates expected deterministic keys according to SDD §7', () => {
-    expect(rawSourceKey(videoId, 'mp4')).toBe(`${videoId}/source.mp4`);
+    expect(rawSourceKey(videoId, 'mp4')).toBe(`raw/${videoId}/source.mp4`);
     expect(masterPlaylistKey(videoId)).toBe(`videos/${videoId}/hls/master.m3u8`);
     expect(renditionPlaylistKey(videoId, '720p')).toBe(`videos/${videoId}/hls/720p/index.m3u8`);
     expect(segmentKey(videoId, '720p', 1)).toBe(`videos/${videoId}/hls/720p/seg_00001.ts`);

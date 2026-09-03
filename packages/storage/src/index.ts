@@ -1,4 +1,6 @@
 export * from './keys.js';
+export * from './client.js';
+export * from './mime.js';
 
 export const ContentTypes = {
   HLS_PLAYLIST: 'application/vnd.apple.mpegurl',
@@ -6,6 +8,7 @@ export const ContentTypes = {
   JPEG: 'image/jpeg',
   WEBVTT: 'text/vtt',
   JSON: 'application/json',
+  MP4: 'video/mp4',
 } as const;
 
 export const CacheControl = {

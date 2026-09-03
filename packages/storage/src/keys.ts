@@ -4,7 +4,7 @@
 
 export function rawSourceKey(videoId: string, ext = 'mp4'): string {
   const cleanExt = ext.startsWith('.') ? ext.slice(1) : ext;
-  return `${videoId}/source.${cleanExt}`;
+  return `raw/${videoId}/source.${cleanExt}`;
 }
 
 export function masterPlaylistKey(videoId: string, generation = 1): string {
