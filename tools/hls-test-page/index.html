@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>video-pipeline — HLS Test Player & SSE Monitor</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    header {
+      grid-column: 1 / -1;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+
+    h1 { font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .badge {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: #1e3a8a;
+      color: #93c5fd;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      background: #0b1329;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    input:focus { outline: 2px solid var(--primary); }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    button:hover { background: var(--primary-hover); }
+    button.secondary {
+      background: #334155;
+      color: #cbd5e1;
+    }
+    button.secondary:hover { background: #475569; }
+    button.success { background: var(--success); }
+    button.success:hover { background: #059669; }
+
+    .player-container {
+      position: relative;
+      background: #000;
+      border-radius: 6px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .progress-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .progress-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+    }
+
+    .progress-bar-bg {
+      background: #0b1329;
+      border: 1px solid var(--border);
+      height: 10px;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-bar-fill.overall { background: var(--success); }
+    .progress-bar-fill.r1080 { background: #8b5cf6; }
+    .progress-bar-fill.r720 { background: #3b82f6; }
+    .progress-bar-fill.r480 { background: #06b6d4; }
+
+    .log-container {
+      background: #050a17;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      height: 240px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-entry {
+      line-height: 1.4;
+      word-break: break-all;
+    }
+    .log-entry.snapshot { color: #60a5fa; }
+    .log-entry.progress { color: #34d399; }
+    .log-entry.status { color: #fbbf24; }
+    .log-entry.error { color: #f87171; }
+    .log-entry.info { color: #94a3b8; }
+  </style>
+  <script src="vendor/hls.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>video-pipeline HLS Player</h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Deterministic playback, real-time SSE progress & status monitor</p>
+      </div>
+      <span class="badge">Phase 0 Tooling</span>
+    </header>
+
+    <!-- Column 1: Connection & Video Player -->
+    <div class="card">
+      <div class="card-title">
+        <span>Video Playback</span>
+        <span id="player-status" style="font-size: 0.8rem; color: var(--text-muted);">Idle</span>
+      </div>
+
+      <div class="form-group">
+        <label for="stream-url">Stream URL (.m3u8)</label>
+        <input type="text" id="stream-url" placeholder="http://localhost:9000/public/raw/.../master.m3u8" />
+      </div>
+
+      <div class="btn-group">
+        <button id="btn-play">Load & Play</button>
+        <button class="secondary" id="btn-sample">Play Public Sample</button>
+      </div>
+
+      <div class="player-container">
+        <video id="video" controls playsinline></video>
+      </div>
+
+      <div class="form-group">
+        <label>Active Stream Info</label>
+        <div id="stream-info" style="font-size: 0.8rem; color: var(--text-muted);">No stream loaded</div>
+      </div>
+    </div>
+
+    <!-- Column 2: API & SSE Status -->
+    <div class="card">
+      <div class="card-title">
+        <span>Pipeline Real-Time Status</span>
+        <span id="sse-status-badge" class="badge" style="background:#334155; color:#cbd5e1;">Disconnected</span>
+      </div>
+
+      <div class="form-group">
+        <label for="api-url">API Base URL</label>
+        <input type="text" id="api-url" value="http://localhost:3000" />
+      </div>
+
+      <div class="form-group">
+        <label for="video-id">Video ID (UUID)</label>
+        <input type="text" id="video-id" placeholder="01923456-789a-7bc0-8000-000000000001" />
+      </div>
+
+      <div class="form-group">
+        <label for="token">Bearer Token (optional / dev)</label>
+        <input type="text" id="token" placeholder="Bearer eyJhbGciOiJFZERTQ..." />
+      </div>
+
+      <div class="btn-group">
+        <button class="success" id="btn-subscribe">Subscribe SSE</button>
+        <button class="secondary" id="btn-unsubscribe" disabled>Unsubscribe</button>
+        <button class="secondary" id="btn-mock-sse">Simulate Mock SSE</button>
+      </div>
+
+      <!-- Per-rendition Progress Bars -->
+      <div class="progress-section">
+        <div class="progress-item">
+          <div class="progress-labels">
+            <span>Overall Transcode</span>
+            <span id="lbl-overall">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="bar-overall" class="progress-bar-fill overall"></div>
+          </div>
+        </div>
+
+        <div class="progress-item">
+          <div class="progress-labels">
+            <span>1080p Rendition</span>
+            <span id="lbl-1080">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="bar-1080" class="progress-bar-fill r1080"></div>
+          </div>
+        </div>
+
+        <div class="progress-item">
+          <div class="progress-labels">
+            <span>720p Rendition</span>
+            <span id="lbl-720">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="bar-720" class="progress-bar-fill r720"></div>
+          </div>
+        </div>
+
+        <div class="progress-item">
+          <div class="progress-labels">
+            <span>480p Rendition</span>
+            <span id="lbl-480">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="bar-480" class="progress-bar-fill r480"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SSE Event Log -->
+      <div class="form-group">
+        <label>SSE Event Stream Log (SDD §20 SseEvent)</label>
+        <div id="sse-log" class="log-container">
+          <div class="log-entry info">[system] Ready. Connect to live SSE or click "Simulate Mock SSE".</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const streamUrlInput = document.getElementById('stream-url');
+    const btnPlay = document.getElementById('btn-play');
+    const btnSample = document.getElementById('btn-sample');
+    const playerStatus = document.getElementById('player-status');
+    const streamInfo = document.getElementById('stream-info');
+
+    const apiUrlInput = document.getElementById('api-url');
+    const videoIdInput = document.getElementById('video-id');
+    const tokenInput = document.getElementById('token');
+    const btnSubscribe = document.getElementById('btn-subscribe');
+    const btnUnsubscribe = document.getElementById('btn-unsubscribe');
+    const btnMockSse = document.getElementById('btn-mock-sse');
+    const sseStatusBadge = document.getElementById('sse-status-badge');
+    const sseLog = document.getElementById('sse-log');
+
+    const barOverall = document.getElementById('bar-overall');
+    const bar1080 = document.getElementById('bar-1080');
+    const bar720 = document.getElementById('bar-720');
+    const bar480 = document.getElementById('bar-480');
+    const lblOverall = document.getElementById('lbl-overall');
+    const lbl1080 = document.getElementById('lbl-1080');
+    const lbl720 = document.getElementById('lbl-720');
+    const lbl480 = document.getElementById('lbl-480');
+
+    let hls = null;
+    let eventSource = null;
+
+    function log(type, message) {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      const time = new Date().toISOString().split('T')[1].slice(0, 8);
+      entry.textContent = `[${time}] ${message}`;
+      sseLog.appendChild(entry);
+      sseLog.scrollTop = sseLog.scrollHeight;
+    }
+
+    function updateProgress(overall, r1080, r720, r480) {
+      if (overall !== undefined) {
+        barOverall.style.width = `${overall}%`;
+        lblOverall.textContent = `${Math.round(overall)}%`;
+      }
+      if (r1080 !== undefined) {
+        bar1080.style.width = `${r1080}%`;
+        lbl1080.textContent = `${Math.round(r1080)}%`;
+      }
+      if (r720 !== undefined) {
+        bar720.style.width = `${r720}%`;
+        lbl720.textContent = `${Math.round(r720)}%`;
+      }
+      if (r480 !== undefined) {
+        bar480.style.width = `${r480}%`;
+        lbl480.textContent = `${Math.round(r480)}%`;
+      }
+    }
+
+    function loadStream(url) {
+      if (!url) return;
+      playerStatus.textContent = 'Loading...';
+      streamInfo.textContent = `Loading ${url}`;
+
+      if (Hls.isSupported()) {
+        if (hls) {
+          hls.destroy();
+        }
+        hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+        });
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+          playerStatus.textContent = 'Playing';
+          streamInfo.textContent = `Manifest parsed: ${data.levels.length} quality level(s) found.`;
+          video.play().catch(() => {});
+        });
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            playerStatus.textContent = 'Fatal Error';
+            streamInfo.textContent = `Error: ${data.type} - ${data.details}`;
+            log('error', `HLS Error: ${data.details}`);
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+          playerStatus.textContent = 'Playing';
+          video.play().catch(() => {});
+        });
+      } else {
+        playerStatus.textContent = 'Not Supported';
+        streamInfo.textContent = 'HLS is not supported in this browser.';
+      }
+    }
+
+    btnPlay.addEventListener('click', () => {
+      const url = streamUrlInput.value.trim();
+      if (!url) {
+        alert('Please enter a stream URL');
+        return;
+      }
+      loadStream(url);
+    });
+
+    btnSample.addEventListener('click', () => {
+      const sampleUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+      streamUrlInput.value = sampleUrl;
+      loadStream(sampleUrl);
+      log('info', 'Loaded public test HLS sample stream (Mux big buck bunny).');
+    });
+
+    // Handle incoming SSE Event conforming to SDD §20 SseEvent schema
+    function handleSseEvent(event) {
+      const type = event.event;
+      const data = event.data;
+
+      if (type === 'snapshot') {
+        log('snapshot', `snapshot: status=${data.status}, overall=${data.progress?.overall}%, renditions=${JSON.stringify(data.progress?.byRendition)}`);
+        const renditions = data.progress?.byRendition || {};
+        updateProgress(data.progress?.overall, renditions['1080p'], renditions['720p'], renditions['480p']);
+      } else if (type === 'progress') {
+        log('progress', `progress: rendition=${data.rendition || 'overall'}, percent=${data.percent}%, overall=${data.overall}%`);
+        if (data.rendition === '1080p') updateProgress(data.overall, data.percent, undefined, undefined);
+        else if (data.rendition === '720p') updateProgress(data.overall, undefined, data.percent, undefined);
+        else if (data.rendition === '480p') updateProgress(data.overall, undefined, undefined, data.percent);
+        else updateProgress(data.overall);
+      } else if (type === 'status') {
+        log('status', `status: status=${data.status}, playbackUrl=${data.playbackUrl || 'none'}`);
+        if (data.playbackUrl) {
+          streamUrlInput.value = data.playbackUrl;
+          loadStream(data.playbackUrl);
+        }
+      }
+    }
+
+    // Mock SSE Demonstration
+    let mockInterval = null;
+    btnMockSse.addEventListener('click', () => {
+      if (mockInterval) clearInterval(mockInterval);
+      log('info', '--- Simulating SSE Stream (SDD §20 SseEvent) ---');
+      updateProgress(0, 0, 0, 0);
+
+      const mockEvents = [
+        { event: 'snapshot', data: { videoId: '01923456-789a-7bc0-8000-000000000001', status: 'PROCESSING', progress: { overall: 0, byRendition: { '1080p': 0, '720p': 0, '480p': 0 } } } },
+        { event: 'progress', data: { rendition: '480p', percent: 25, overall: 8 } },
+        { event: 'progress', data: { rendition: '720p', percent: 20, overall: 15 } },
+        { event: 'progress', data: { rendition: '480p', percent: 65, overall: 30 } },
+        { event: 'progress', data: { rendition: '1080p', percent: 35, overall: 45 } },
+        { event: 'progress', data: { rendition: '720p', percent: 80, overall: 65 } },
+        { event: 'progress', data: { rendition: '480p', percent: 100, overall: 75 } },
+        { event: 'progress', data: { rendition: '1080p', percent: 85, overall: 90 } },
+        { event: 'progress', data: { rendition: '720p', percent: 100, overall: 95 } },
+        { event: 'progress', data: { rendition: '1080p', percent: 100, overall: 100 } },
+        { event: 'status', data: { status: 'READY', playbackUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' } },
+      ];
+
+      let idx = 0;
+      mockInterval = setInterval(() => {
+        if (idx >= mockEvents.length) {
+          clearInterval(mockInterval);
+          mockInterval = null;
+          log('info', '--- Mock SSE Stream Completed ---');
+          return;
+        }
+        handleSseEvent(mockEvents[idx++]);
+      }, 500);
+    });
+
+    btnSubscribe.addEventListener('click', () => {
+      const apiUrl = apiUrlInput.value.trim().replace(/\/$/, '');
+      const videoId = videoIdInput.value.trim();
+      const token = tokenInput.value.trim();
+
+      if (!videoId) {
+        alert('Please enter a Video ID');
+        return;
+      }
+
+      const sseUrl = `${apiUrl}/v1/videos/${videoId}/events`;
+      log('info', `Connecting to SSE: ${sseUrl}...`);
+
+      if (eventSource) {
+        eventSource.close();
+      }
+
+      try {
+        eventSource = new EventSource(sseUrl);
+        sseStatusBadge.style.background = '#065f46';
+        sseStatusBadge.style.color = '#a7f3d0';
+        sseStatusBadge.textContent = 'Connected';
+        btnSubscribe.disabled = true;
+        btnUnsubscribe.disabled = false;
+
+        eventSource.onopen = () => {
+          log('info', 'SSE connection opened.');
+        };
+
+        eventSource.addEventListener('snapshot', (e) => {
+          handleSseEvent({ event: 'snapshot', data: JSON.parse(e.data) });
+        });
+
+        eventSource.addEventListener('progress', (e) => {
+          handleSseEvent({ event: 'progress', data: JSON.parse(e.data) });
+        });
+
+        eventSource.addEventListener('status', (e) => {
+          handleSseEvent({ event: 'status', data: JSON.parse(e.data) });
+        });
+
+        eventSource.onerror = (err) => {
+          log('error', 'SSE connection error or closed.');
+        };
+      } catch (err) {
+        log('error', `Failed to initialize EventSource: ${err.message}`);
+      }
+    });
+
+    btnUnsubscribe.addEventListener('click', () => {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      sseStatusBadge.style.background = '#334155';
+      sseStatusBadge.style.color = '#cbd5e1';
+      sseStatusBadge.textContent = 'Disconnected';
+      btnSubscribe.disabled = false;
+      btnUnsubscribe.disabled = true;
+      log('info', 'Unsubscribed from SSE.');
+    });
+  </script>
+</body>
+</html>

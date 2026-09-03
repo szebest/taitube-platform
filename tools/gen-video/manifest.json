@@ -1,0 +1,177 @@
+{
+  "version": "1.0",
+  "description": "Deterministic test video fixture manifest for video-pipeline",
+  "fixtures": [
+    {
+      "id": "s15",
+      "filename": "s15.mp4",
+      "description": "Standard 15-second 1080p24 test video with burnt-in timecode and audio sine wave",
+      "category": "standard",
+      "slow": false,
+      "durationSeconds": 15,
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "s60",
+      "filename": "s60.mp4",
+      "description": "Standard 60-second 1080p24 test video with burnt-in timecode and audio sine wave",
+      "category": "standard",
+      "slow": false,
+      "durationSeconds": 60,
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "p720",
+      "filename": "p720.mp4",
+      "description": "720p24 test video (no-upscale testing: should not generate 1080p rendition)",
+      "category": "standard",
+      "slow": false,
+      "durationSeconds": 15,
+      "width": 1280,
+      "height": 720,
+      "fps": 24,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "sd360",
+      "filename": "sd360.mp4",
+      "description": "360p24 SD test video (no-upscale testing: only 480p/360p or lowest rendition)",
+      "category": "standard",
+      "slow": false,
+      "durationSeconds": 15,
+      "width": 640,
+      "height": 360,
+      "fps": 24,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "portrait",
+      "filename": "portrait.mp4",
+      "description": "Portrait video with 90-degree rotation display metadata tag",
+      "category": "standard",
+      "slow": false,
+      "durationSeconds": 15,
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "rotate": 90,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "vfr",
+      "filename": "vfr.mp4",
+      "description": "Variable frame rate video fixture for VFR handling tests",
+      "category": "standard",
+      "slow": false,
+      "durationSeconds": 15,
+      "width": 1920,
+      "height": 1080,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "k60",
+      "filename": "k60.mp4",
+      "description": "4K 60fps high-resolution fixture (3840x2160 @ 60fps)",
+      "category": "standard",
+      "slow": false,
+      "durationSeconds": 10,
+      "width": 3840,
+      "height": 2160,
+      "fps": 60,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "m10",
+      "filename": "m10.mp4",
+      "description": "10-minute 1080p24 medium-duration source",
+      "category": "standard",
+      "slow": true,
+      "durationSeconds": 600,
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "l30",
+      "filename": "l30.mp4",
+      "description": "30-minute 720p24 long-duration source for streaming uploader & disk bounding tests",
+      "category": "standard",
+      "slow": true,
+      "durationSeconds": 1800,
+      "width": 1280,
+      "height": 720,
+      "fps": 24,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "over-duration",
+      "filename": "over-duration.mp4",
+      "description": "Over-duration hostile test fixture exceeding MAX_DURATION_SEC (3605 seconds > 3600s)",
+      "category": "hostile",
+      "slow": true,
+      "durationSeconds": 3605,
+      "width": 640,
+      "height": 360,
+      "fps": 24,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
+      "id": "truncated",
+      "filename": "truncated.mp4",
+      "description": "Hostile corrupted MP4 fixture truncated mid-stream (missing moov/mdat fragments)",
+      "category": "hostile",
+      "slow": false
+    },
+    {
+      "id": "audio-only",
+      "filename": "audio-only.mp4",
+      "description": "Hostile audio-only fixture without video stream (should be rejected by probe stage)",
+      "category": "hostile",
+      "slow": false,
+      "durationSeconds": 5,
+      "audioCodec": "aac"
+    },
+    {
+      "id": "hevc.mkv",
+      "filename": "hevc.mkv",
+      "description": "Hostile container/codec fixture: HEVC (H.265) video in MKV container",
+      "category": "hostile",
+      "slow": false,
+      "durationSeconds": 5,
+      "width": 640,
+      "height": 360,
+      "videoCodec": "hevc"
+    },
+    {
+      "id": "zero-bytes",
+      "filename": "zero-bytes.mp4",
+      "description": "Hostile 0-byte empty file",
+      "category": "hostile",
+      "slow": false
+    },
+    {
+      "id": "not-a-video",
+      "filename": "not-a-video.mp4",
+      "description": "Hostile non-video text content disguised as MP4",
+      "category": "hostile",
+      "slow": false
+    }
+  ]
+}

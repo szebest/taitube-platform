@@ -307,6 +307,42 @@ importers:
 
   packages/tsconfig: {}
 
+  tools/dev-token:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)
+
+  tools/gen-video:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)
+
 packages:
 
   '@biomejs/biome@1.9.4':
