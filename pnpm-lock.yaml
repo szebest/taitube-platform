@@ -243,6 +243,9 @@ importers:
 
   packages/storage:
     devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -255,6 +258,25 @@ importers:
       vitest:
         specifier: ^3.0.7
         version: 3.2.7(@types/node@24.13.3)
+
+  packages/testing:
+    dependencies:
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
 
   packages/tsconfig: {}
 

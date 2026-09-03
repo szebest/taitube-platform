@@ -1,5 +1,5 @@
 {
-  "name": "@vp/storage",
+  "name": "@vp/testing",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,11 +10,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./keys": {
-      "types": "./dist/keys.d.ts",
-      "import": "./dist/keys.js",
-      "default": "./dist/keys.js"
     }
   },
   "scripts": {
@@ -23,11 +18,13 @@
     "test": "vitest run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
+  "dependencies": {
+    "vitest": "^3.0.7"
+  },
   "devDependencies": {
-    "@vp/testing": "workspace:*",
+    "@types/node": "^24.0.0",
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
-    "typescript": "^5.7.3",
-    "vitest": "^3.0.7"
+    "typescript": "^5.7.3"
   }
 }

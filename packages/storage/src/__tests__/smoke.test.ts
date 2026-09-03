@@ -1,3 +1,4 @@
+import { FIXTURES } from '@vp/testing';
 import { describe, expect, it } from 'vitest';
 import {
   masterPlaylistKey,
@@ -10,7 +11,7 @@ import {
 } from '../keys.js';
 
 describe('@vp/storage smoke test', () => {
-  const videoId = '11111111-1111-7111-8111-111111111111';
+  const videoId = FIXTURES.VIDEO_ID;
 
   it('generates expected deterministic keys according to SDD §7', () => {
     expect(rawSourceKey(videoId, 'mp4')).toBe(`${videoId}/source.mp4`);
