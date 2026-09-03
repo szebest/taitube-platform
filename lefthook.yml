@@ -1,0 +1,7 @@
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      run: pnpm typecheck
+    biome:
+      run: pnpm biome check --staged

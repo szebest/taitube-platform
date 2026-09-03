@@ -1,0 +1,32 @@
+{
+  "name": "video-pipeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": "^24.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "vitest run",
+    "test:integration": "turbo run test:integration",
+    "test:bun": "bun test apps/worker",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rimraf node_modules",
+    "prepare": "lefthook install || true"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^24.0.0",
+    "lefthook": "^1.10.10",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.4.4",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  }
+}

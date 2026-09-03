@@ -1,0 +1,1996 @@
+# SDD — Video Ingestion & Transcoding Backend ("video-pipeline")
+
+| Field | Value |
+|---|---|
+| Document | System Design Document + Implementation Blueprint |
+| Version | 1.0 — baseline for PDLC kick-off |
+| Date | 2026-09-03 |
+| Author | Mateusz Szebestik — Principal Architect / Staff Engineer (solo) |
+| Status | **Approved for implementation** — requirements in `docs/PRD.md` |
+| Facts verified | Vendor pricing, library versions and platform limits were re-verified against official sources on 2026-09-03; see §17 "Fact sheet". |
+
+> **How to read this document.** §1–3 give the shape of the system. §4 is the decision log: every stack choice with ranked alternatives and the reason the winner won. §5–11 are the deep dives (data model, API, storage, FFmpeg, queue/worker design, real-time status, security). §12–13 cover deployment, autoscaling and observability. §14 is the load-test plan, §15 the repository layout and tooling, §16 the environment variables, §17 the fact sheet, §18 the phased roadmap.
+
+---
+
+## Table of Contents
+
+1. Context & Scope
+2. Architecture Overview
+3. End-to-End Data Flows
+4. Architecture Decision Records (ranked alternatives)
+5. Domain Model & Database Schema
+6. API Contract
+7. Object Storage Layout
+8. Media Processing (FFmpeg) Specification
+9. Distributed Queue & Worker Design (deep dive)
+10. Real-Time Status (SSE)
+11. Security
+12. Deployment Topologies (local → Kubernetes → cloud) & Cost Model
+13. Autoscaling & Observability
+14. Distributed Load Testing & Chaos Plan
+15. Repository Structure, Tooling & External Services
+16. Environment Variables
+17. Fact Sheet (verified 2026-09-03)
+18. Implementation Roadmap (Phase 0–4)
+19. Risks, Open Issues, Future Work
+20. Appendix: Job Contracts (code)
+
+---
+
+## 1. Context & Scope
+
+`video-pipeline` is the backend for a YouTube-like application. A creator uploads a video from a browser; the system probes it, transcodes it into an adaptive-bitrate HLS ladder, generates thumbnails, publishes a master playlist, and tells the client when it is playable. Everything after the upload is asynchronous and runs on a pool of stateless workers fed by a durable job queue.
+
+Three pillars from the original brief are treated as first-class, co-equal requirements:
+
+1. **Video Processing Pipeline** — direct upload, S3-compatible storage, probe, multi-rendition FFmpeg transcode, HLS packaging.
+2. **Distributed Job Queue** — worker pools, retries with exponential backoff, DLQ, acknowledgements, idempotency, concurrency control.
+3. **Scalability & Distributed Load Testing** — containerised autoscaling on queue depth, metrics/tracing/logs, high-concurrency and chaos simulation.
+
+### 1.1 In scope
+
+Everything server-side from the moment the browser asks for an upload URL to the moment a player fetches `master.m3u8` from the CDN, plus the operational tooling to run it (dashboards, alerts, admin endpoints, load tests, deployment manifests).
+
+### 1.2 Out of scope
+
+Frontend, live streaming, DRM, moderation, social features, GPU encoding, HEVC/AV1 output, multi-region. See PRD §3.2.
+
+### 1.3 Design principles (used to break ties throughout)
+
+| # | Principle | Consequence |
+|---|---|---|
+| P1 | **The API never touches video bytes.** | Presigned uploads; CDN playback; API is control-plane only. |
+| P2 | **Postgres is the truth, Redis is a cache of intent.** | Any queue state can be rebuilt from DB by the reconciler; losing Redis loses time, not videos. |
+| P3 | **Every step is idempotent; delivery is at-least-once.** | Deterministic IDs and object keys; compare-and-set transitions; overwrite is safe. |
+| P4 | **Fail fast on poison, retry patiently on transient.** | Error taxonomy decides retry vs DLQ at throw-site, not in config. |
+| P5 | **Provider-agnostic edges.** | S3 API, Postgres wire protocol, Redis protocol, OpenTelemetry — no vendor SDK leaks past `packages/*`. |
+| P6 | **One image, many roles.** | Worker stage is a runtime env var; scaling granularity without build granularity. |
+| P7 | **Measure, then believe.** | Every NFR has a metric and a load-test scenario that exercises it. |
+| P8 | **Cheap by default.** | Scale-to-zero, free tiers, zero-egress storage. Anything that bills per-command or per-GB-egress is suspect. |
+| P9 | **Local-first.** Everything runs on one machine with no external accounts and no internet; the cloud rung is optional. | Every dependency has a compose container (Postgres, Redis, MinIO, dev JWKS issuer, Prometheus/Grafana/Tempo/Loki); `.env.example` is all-local; no phone-home; `make smoke-offline` gates CI (ticket 35). |
+
+---
+
+## 2. Architecture Overview
+
+### 2.1 High-level diagram
+
+```mermaid
+flowchart LR
+    subgraph Client
+        FE["youtube-frontend<br/>browser"]
+        PLAYER["HLS player<br/>hls.js / Safari"]
+    end
+
+    subgraph Edge["Edge — Cloudflare (free)"]
+        CDN["CDN / custom domain<br/>caches playlists + segments"]
+    end
+
+    subgraph API_PLANE["Control plane — apps/api (Node 24 LTS · Fastify 5)"]
+        API["REST API<br/>uploads · videos · admin · Bull Board"]
+        SSE["SSE hub<br/>/v1/videos/:id/events"]
+    end
+
+    subgraph State
+        PG[("PostgreSQL<br/>source of truth")]
+        REDIS[("Redis / Valkey<br/>BullMQ queues · Pub/Sub")]
+        RAW[("Object storage<br/>bucket: raw (private)")]
+        PUB[("Object storage<br/>bucket: public (CDN-fronted)")]
+    end
+
+    subgraph WORKERS["Data plane — apps/worker (Bun 1.4) · one image · WORKER_STAGE=…"]
+        direction TB
+        W1["probe"] ~~~ W2["transcode-1080p · 720p · 480p"] ~~~ W3["thumbnail"] ~~~ W4["package"] ~~~ W5["notify"] ~~~ W6["housekeeping"]
+    end
+
+    subgraph OBS["Observability & autoscaling"]
+        PROM["Prometheus"] --> GRAF["Grafana"]
+        TEMPO["Tempo · Loki"] --> GRAF
+        PROM -- "queue depth" --> KEDA["KEDA"]
+    end
+
+    FE -- "1 POST /uploads · 4 POST /complete" --> API
+    API -- "2 presigned URLs · 202" --> FE
+    FE -- "3 PUT parts — bytes never touch the API" --> RAW
+    API -- "5 HEAD verify" --> RAW
+    API -- "6 enqueue probe" --> REDIS
+    API <--> PG
+    FE -- "7 subscribe" --> SSE
+    REDIS -. "Pub/Sub video:*" .-> SSE
+
+    REDIS -- "pull jobs · ack · lock renewal" --> WORKERS
+    WORKERS -- "CAS transitions · events · steps" --> PG
+    RAW -- "source" --> WORKERS
+    WORKERS -- "HLS · thumbnails · master.m3u8" --> PUB
+    WORKERS -- "PUBLISH progress/status" --> REDIS
+
+    PLAYER -- "8 GET master.m3u8 + segments" --> CDN --> PUB
+
+    API -. "metrics · traces · logs" .-> OBS
+    WORKERS -. "metrics · traces · logs" .-> OBS
+    KEDA -- "replicas 0..N per stage" --> WORKERS
+```
+
+### 2.2 Components and responsibilities
+
+| Component | Runtime | Responsibility | Scales |
+|---|---|---|---|
+| `apps/api` | Node.js 24 LTS · Fastify 5 | Auth, upload orchestration (presign / multipart / complete / verify), video CRUD, SSE hub, admin (Bull Board, DLQ replay), `/metrics`, `/healthz`, `/readyz`. Stateless. | Horizontally, on CPU/RPS (HPA). Long-running, so cold start is irrelevant. |
+| `apps/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`. | Per stage, on queue depth (KEDA), 0 → N. |
+| PostgreSQL 16 | Neon (cloud) / container (local) | Source of truth: users, videos, uploads, renditions, processing steps, append-only `video_events`, DLQ mirror. | Vertical; read replicas out of scope. |
+| Redis 7 / Valkey 8 | container / same VPS | BullMQ queues (`noeviction`), Pub/Sub for SSE fan-out, small caches (presign throttles, idempotency keys). | Single node; persistence AOF `everysec`. |
+| Object storage | MinIO (local) / Cloudflare R2 (cloud) | `raw` bucket (private, sources, 7-day lifecycle) and `public` bucket (HLS, thumbnails, CDN-fronted). | Managed. |
+| Cloudflare CDN | free plan | Caches segments/playlists in front of `public` bucket; custom domain; zero egress from R2. | Managed. |
+| Prometheus · Grafana · Tempo · Loki | containers (local) / Grafana Cloud free (cloud) | Metrics, dashboards, traces, logs. | Managed in cloud. |
+| KEDA 2.20 | Kubernetes add-on | `ScaledObject` per worker stage; Prometheus scaler (primary) or Redis list scaler (fallback). | n/a |
+| Bull Board | mounted in `apps/api` | Queue/job inspection UI at `/admin/queues`. | with API |
+
+### 2.3 Runtime split — why two runtimes
+
+Agreed in the design discussion and kept here: **Node LTS for the API, Bun for workers.**
+
+- Workers scale from zero; Bun's ~10–15 ms cold start (vs ~60–120 ms for Node) is on the critical path of "backlog appears → first job starts". Workers spawn `ffmpeg` and talk to Redis/S3 — pure-JS dependencies (`bullmq`, `ioredis`, `@aws-sdk/client-s3`) that run on Bun today.
+- The API is long-running; cold start is irrelevant and ecosystem stability (SSE, auth plugins, rate limiting, Bull Board) matters more.
+- **Guard-rail:** worker code is written runtime-neutral (`node:child_process`, `node:fs`, `node:stream` — no `Bun.*` APIs). `apps/worker/Dockerfile` accepts `--build-arg WORKER_RUNTIME=bun|node`; CI runs the worker test suite on both. If a Bun regression bites (they exist: stdio piping edge cases, AWS SDK stream hangs under concurrency were reported on 1.3.x), flipping the runtime is a one-line change, not a rewrite.
+
+---
+
+## 3. End-to-End Data Flows
+
+### 3.1 Upload (multipart, direct-to-storage)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant API as apps/api
+    participant PG as Postgres
+    participant S3 as Object storage (raw)
+    participant Q as Redis / BullMQ
+
+    B->>API: POST /v1/uploads {filename, sizeBytes, contentType, sha256?}
+    API->>API: validate size/type/quota · pick strategy (single ≤100MB, else multipart) · partSize = clamp(ceil(size/1000), 8MB, 64MB)
+    API->>PG: INSERT videos(status=UPLOADING), uploads(...)
+    API->>S3: CreateMultipartUpload(key=raw/{videoId}/source.{ext})
+    API->>PG: UPDATE uploads SET multipart_upload_id
+    API-->>B: {videoId, uploadId, strategy, partSize, parts:[{n, url, expiresAt}...]}
+    loop parts in parallel (client concurrency 4–6), resumable
+        B->>S3: PUT presigned part n  (bytes never pass through API)
+        S3-->>B: ETag
+    end
+    Note over B,API: On resume: GET /v1/uploads/:id → ListParts → already-uploaded ETags · POST /parts?from=n for fresh URLs
+    B->>API: POST /v1/uploads/:id/complete {parts:[{n, etag}]}
+    API->>S3: CompleteMultipartUpload
+    API->>S3: HeadObject → ContentLength, ContentType
+    API->>API: verify size == declared, ≤ cap, type allowlisted (else DeleteObject, status=REJECTED)
+    API->>PG: UPDATE videos SET status=UPLOADED, source_size WHERE status=UPLOADING (CAS)
+    API->>PG: INSERT video_events(type=upload.completed)
+    API->>Q: add("probe", {videoId, sourceKey, traceparent}, {jobId: `${videoId}--probe`})
+    API-->>B: 202 {videoId, status: "UPLOADED"}
+```
+
+Design notes:
+
+- **The trigger is the explicit `complete` call, not a bucket notification.** Cloudflare R2 event notifications can only target Cloudflare Queues (not arbitrary webhooks), and MinIO webhooks are local-only. A client-driven completion plus server-side `HEAD` verification is portable and testable. MinIO bucket notifications can be wired as an *accelerator* in dev, but the pipeline must never depend on them.
+- **Belt and braces against the "complete" call never arriving:** the `housekeeping` worker runs a `reconcile-uploads` schedule every 15 min: (a) videos `UPLOADING` for > 24 h → `AbortMultipartUpload`, status `ABANDONED`; (b) videos `UPLOADED` with no `probe` step row for > 5 min → re-enqueue `probe` (idempotent job id makes this safe). The bucket also carries a lifecycle rule `AbortIncompleteMultipartUpload: 1 day`.
+- Presigned PUT URLs expire after 15 min; part URLs are issued in batches (`POST /uploads/:id/parts?from=n&count=100`) so a slow 4 GB upload never holds thousands of live URLs.
+
+### 3.2 Processing pipeline (fan-out / fan-in)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Q as BullMQ
+    participant P as probe worker
+    participant T as transcode-{1080p,720p,480p} workers
+    participant TH as thumbnail worker
+    participant PK as package worker
+    participant N as notify worker
+    participant PG as Postgres
+    participant S3 as Object storage
+    participant PS as Redis Pub/Sub → SSE
+
+    Q->>P: probe job (videoId)
+    P->>PG: CAS videos UPLOADED→PROBING · upsert processing_steps(probe, RUNNING, attempt)
+    P->>S3: GetObject (range/stream) → ffprobe -show_streams -show_format
+    P->>P: validate (duration ≤ 60min, codec allowlist, sane dims) → else throw UnrecoverableError(code)
+    P->>P: compute ladder: renditions with height ≤ source height (min 1)
+    P->>PG: UPDATE videos SET duration_ms, width, height, fps, ladder · status=PROCESSING · INSERT renditions(PENDING)
+    P->>Q: FlowProducer.add({ name:"package", queue:"package", jobId:`${videoId}--package`, children:[transcode-1080p, transcode-720p, transcode-480p, thumbnail] })
+    P->>PS: PUBLISH video:{id} {status:PROCESSING, ladder}
+
+    par each rendition, independent queue & worker pool
+        Q->>T: transcode-720p job
+        T->>PG: upsert processing_steps(transcode,720p,RUNNING)  · renditions.status=RUNNING
+        T->>S3: stream source → ffmpeg → tmp/{videoId}/720p/*.ts + index.m3u8
+        T-->>PS: progress every 2s (parsed from ffmpeg -progress) → job.updateProgress() + PUBLISH
+        T->>S3: upload segments as they close (concurrency 4) + index.m3u8 last
+        T->>PG: renditions.status=DONE, segment_count, bytes, ms  · steps DONE (fencing token check)
+    and thumbnails
+        Q->>TH: thumbnail job → poster.jpg, sprite.jpg, sprite.vtt → S3 public
+    end
+
+    Note over Q,PK: parent "package" leaves waiting-children only when ALL children completed
+    Q->>PK: package job
+    PK->>S3: HEAD every rendition index.m3u8 + sample segments · read children results via getChildrenValues()
+    PK->>S3: PUT videos/{id}/hls/master.m3u8 (BANDWIDTH, RESOLUTION, CODECS, FRAME-RATE)
+    PK->>PG: CAS videos PROCESSING→READY, master_playlist_key, ready_at  · INSERT video_events(video.ready)
+    PK->>Q: add("notify", {videoId, event:"video.ready"})
+    Q->>N: notify job → PUBLISH video:{id} {status:READY, playbackUrl} · optional HMAC webhook
+```
+
+Failure path (any child): BullMQ retries with backoff; when attempts are exhausted or an `UnrecoverableError` is thrown, the `failed` handler moves the job to `dlq`, marks the rendition `FAILED`, and — because `failParentOnFailure: true` is set on children — the parent `package` job fails too, which flips the video to `FAILED` with the first child error as `errorCode`. See §9.6.
+
+### 3.3 Playback
+
+```mermaid
+sequenceDiagram
+    participant B as Browser (hls.js)
+    participant API as apps/api
+    participant CDN as Cloudflare CDN
+    participant S3 as public bucket (R2)
+
+    B->>API: GET /v1/videos/:id
+    API-->>B: {status:READY, playbackUrl:"https://cdn.example.com/videos/{id}/hls/master.m3u8", poster, sprite}
+    B->>CDN: GET master.m3u8 (cache: 60s)
+    CDN->>S3: miss → fetch
+    B->>CDN: GET 720p/index.m3u8, seg_00001.ts … (cache: immutable, 1y)
+```
+
+The API is not in the playback path (P1). Playlists are cached briefly (VOD playlists are immutable once READY, but a 60 s TTL keeps re-processing cheap); segments are immutable and cached for a year.
+
+### 3.4 Status reporting
+
+Workers publish to Redis channel `video:{videoId}`; each API instance holds one pattern subscription (`PSUBSCRIBE video:*`) and fans out to its local SSE connections. On connect the API sends a **snapshot** from Postgres first, then live events. Details in §10.
+
+### 3.5 State machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> UPLOADING: POST /uploads
+    UPLOADING --> UPLOADED: complete + HEAD ok
+    UPLOADING --> REJECTED: HEAD mismatch / over cap / bad type
+    UPLOADING --> ABANDONED: reconciler, >24h
+    UPLOADED --> PROBING: probe job starts
+    PROBING --> PROCESSING: probe ok, flow created
+    PROBING --> FAILED: UnrecoverableError
+    PROCESSING --> READY: package ok
+    PROCESSING --> FAILED: child exhausted retries / unrecoverable
+    FAILED --> PROBING: admin re-process
+    READY --> DELETED: soft delete + purge job
+    REJECTED --> [*]
+    ABANDONED --> [*]
+    DELETED --> [*]
+```
+
+Transitions are enforced in SQL with compare-and-set (`UPDATE … WHERE id = $1 AND status = $expected`), and every transition writes a `video_events` row in the same transaction.
+
+---
+
+## 4. Architecture Decision Records
+
+Every record lists the candidates **ranked** (1 = chosen), the reason the winner won for *this* workload, why the runners-up lost, and the condition under which we would revisit. Scores are 1–5 on the axes that matter most here: **fit** (technical fit for an FFmpeg-orchestrating, I/O-bound pipeline), **velocity** (solo developer speed), **cost** (free/cheap to run), **career** (market signal / learning value).
+
+### ADR-01 — Primary language & runtime: TypeScript (Node LTS API + Bun workers)
+
+| Rank | Option | Fit | Velocity | Cost | Career | Notes |
+|---|---|---|---|---|---|---|
+| **1** | **TypeScript** — Node 24 LTS (API) + Bun 1.4 (workers) | 4 | 5 | 5 | 4 | Best queue library for Redis (BullMQ), shared types with the TS frontend, huge ecosystem; workload is I/O-bound orchestration, FFmpeg does the CPU work. |
+| 2 | Go | 5 | 3 | 5 | 5 | Best raw fit for worker concurrency and small images; but no BullMQ-class library (asynq/river are good, not equal), slower solo velocity, no type sharing with frontend. **Kept as the Phase-4+ worker rewrite path** (`apps/worker-go`). |
+| 3 | .NET 8/9 (C#) | 4 | 3 | 4 | 4 | Excellent async I/O, MassTransit/Hangfire mature; heavier images, less natural for R2/MinIO tooling, weaker fit with the frontend stack. |
+| 4 | Java / Spring Boot | 4 | 2 | 3 | 4 | Enterprise-standard but slowest cold start (kills scale-to-zero economics), heaviest memory footprint on 4 GB nodes, slowest solo iteration. |
+
+**Why it won.** The hot path is `ffmpeg` as a subprocess; the application layer moves bytes between S3 and a child process and updates state. That is exactly what Node/Bun's event loop is good at, and it is where BullMQ — the most complete Redis job library in any language (flows, stalled-job detection, rate limiting, priorities, job schedulers, custom backoff) — lives. TypeScript also lets `packages/job-contracts` be consumed by the frontend later for SSE event types.
+
+**Why the runtime split.** Cold start matters only where we scale from zero (workers); ecosystem stability matters most where we accumulate features (API). Bun runs `bullmq`/`ioredis`/`@aws-sdk/client-s3` (all pure JS). Bun's native `Bun.redis` client is *not* usable by BullMQ (open issue) — we use `ioredis` on both runtimes. Bun 1.4 (Aug 2026) is the current stable line; the Anthropic acquisition (Dec 2025) removed the "single small startup" risk.
+
+**Consequences.** Worker code must stay runtime-neutral (no `Bun.*` APIs); CI tests workers under both runtimes; `WORKER_RUNTIME` build arg.
+
+**Revisit if.** Bun regressions in `child_process`/AWS SDK streams recur on stable releases → flip workers to Node (one-line). Transcode orchestration itself becomes CPU-bound (e.g. in-process demuxing) → Go worker.
+
+---
+
+### ADR-02 — HTTP framework: Fastify 5
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **Fastify 5** | Fastest mainstream Node framework; first-class JSON-schema/zod validation (`fastify-type-provider-zod`), plugin encapsulation, `reply.raw` for SSE, mature `@fastify/rate-limit`, `@fastify/jwt`, `@bull-board/fastify`, `@fastify/under-pressure` (load shedding). |
+| 2 | Hono | Excellent, runtime-agnostic, tiny; but weaker ecosystem for server-side concerns we need (Bull Board adapter, under-pressure, mature JWT/JWKS plugins). Would be #1 if the API ran on Bun/edge. |
+| 3 | NestJS | Enterprise-familiar DI; adds a large abstraction layer for a solo project, slower cold start, more ceremony per endpoint. Good career signal but poor velocity here. |
+| 4 | Express 5 | Ubiquitous, but slower, weaker typing/validation story, no encapsulation model. |
+
+**Revisit if.** API moves to Bun for a single-runtime deployment → Hono.
+
+---
+
+### ADR-03 — Message broker: BullMQ 6 on Redis (task queue), with Postgres `video_events` as the append-only log
+
+The brief asked explicitly: transient task queue vs event-streaming log vs hybrid.
+
+| Rank | Option | Fit | Velocity | Cost | Career | Notes |
+|---|---|---|---|---|---|---|
+| **1** | **BullMQ (Redis)** | 5 | 5 | 5 | 4 | Task-queue semantics we need: per-job ack, retries w/ exponential backoff + jitter, delayed jobs, priorities, rate limiting, **Flows** (parent/child fan-out/fan-in), stalled-job detection via lock renewal, job progress, job schedulers. Redis is already needed for SSE Pub/Sub → one fewer moving part. |
+| 2 | RabbitMQ (quorum queues) | 5 | 3 | 4 | 5 | Also a correct fit: per-message ack/nack, `x-delivery-limit` + DLX for DLQ, consumer prefetch for concurrency. Loses on: extra broker to run on a 4 GB node; delayed retries need the delayed-message plugin or TTL+DLX dance; no native parent/child flows; consumer timeout (30 min default) must be raised for long transcodes. Best "second implementation" for learning. |
+| 3 | pg-boss (Postgres as queue) | 4 | 4 | 5 | 3 | Zero extra infrastructure, transactional enqueue with business writes (solves outbox for free), `SKIP LOCKED` polling. Loses on: no flows, fewer knobs, polling latency, DB load under 1000-job bursts, less impressive operationally. Strong candidate if we ever drop Redis. |
+| 4 | Kafka / Redpanda | 2 | 2 | 2 | 5 | **Wrong tool for the pipeline.** Partition-ordered log with consumer-group offsets means a 10-minute 1080p transcode blocks every job behind it in the partition (head-of-line blocking); `max.poll.interval.ms` gymnastics for long jobs; no per-message retry/backoff/DLQ — you build them; no fan-in. Kafka shines for *replayable events consumed by many independent consumers* (analytics, search indexing) — not for distributing CPU jobs. |
+| 5 | Temporal | 5 | 3 | 3 | 4 | Durable workflows would model the pipeline beautifully (fan-out, retries, heartbeats built in) but adds a heavy server + Cassandra/Postgres deployment and hides the very mechanics this project exists to learn. |
+| 6 | Raw Redis Streams | 3 | 2 | 5 | 3 | Consumer groups + `XAUTOCLAIM` can build a queue, but we would re-implement everything BullMQ already gives us. |
+
+**Hybrid verdict.** A pipeline is a *work distribution* problem → task queue. The *"what happened to this video"* history is an *event log* problem → but at MVP scale, Kafka is a €0-budget-breaking, operationally heavy answer to it. We therefore keep an **append-only `video_events` table in Postgres** (every state transition, every retry, every DLQ move) which gives us replayability and audit for free and can be tailed into Kafka/Redpanda later (Debezium/outbox) if multiple downstream consumers appear. Redis **Pub/Sub** carries the ephemeral real-time fan-out to SSE (loss-tolerant by design: SSE clients re-sync from the DB snapshot).
+
+**Consequences.** Redis must run with `maxmemory-policy noeviction` and AOF persistence; queue names cannot contain `:` (BullMQ throws) — we use `transcode-1080p` and job IDs `${videoId}--probe`. BullMQ 6 made `ioredis` an optional peer dependency and removed legacy repeatables in favour of Job Schedulers — we target v6 APIs from day one. No native DLQ exists → we implement the documented pattern (§9.6).
+
+**Revisit if.** Multiple independent consumers need the event history (search, analytics, notifications) → add Redpanda fed from `video_events`/outbox. Per-tenant fairness becomes a product requirement → BullMQ Pro groups or RabbitMQ per-tenant queues.
+
+---
+
+### ADR-04 — Database: PostgreSQL 16 (Neon in cloud) + Drizzle ORM
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **PostgreSQL** (Neon Free: 0.5 GB, 100 CU-h/mo, autosuspend 5 min) | Relational fits the model (videos → renditions → steps); we need `ON CONFLICT`, `SKIP LOCKED`, advisory locks, `jsonb` for ladder/metadata, CAS updates. Neon scale-to-zero matches our cost model. Same image locally (`postgres:16-alpine`). |
+| 2 | Supabase Postgres | Same engine, but free projects pause after 1 week idle (Neon suspends and *resumes on demand*); Supabase Auth is attractive for the frontend later — may be used for auth only. |
+| 3 | SQLite/libSQL (Turso) | Enough for a demo, but multi-writer workers + a stateless API need a network DB. |
+| 4 | MongoDB Atlas free | Document model is a poor fit for the constraints/transactions we rely on. |
+
+**ORM ranking.**
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **Drizzle ORM** (0.45 stable; 1.0 RC) + `drizzle-kit` migrations + `postgres.js` driver | SQL-first: `insert().onConflictDoUpdate()`, `for('update', {skipLocked:true})`, raw `sql` for CAS, no code-gen step, tiny bundle (matters for Bun cold start), runs identically on Node and Bun. |
+| 2 | Prisma 7/8 | Since v7 the client is Rust-free and Prisma 8 (RC, tagged `latest` on npm) is a full TS rewrite — the old "binary engine" objection is gone. Still: generated client step, less direct SQL control for CAS/locking patterns, heavier. Solid #2. |
+| 3 | Kysely | Excellent typed query builder; Drizzle gives the same plus a schema/migration story. |
+
+**Revisit if.** Drizzle 1.0 GA introduces breaking changes we cannot absorb → Kysely.
+
+---
+
+### ADR-05 — Redis flavour: self-hosted Redis 7 / Valkey 8 next to the workers
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **Self-hosted `redis:7-alpine` (or `valkey/valkey:8`)** on the same VPS/cluster | BullMQ polls, renews locks and runs Lua scripts constantly; a queue with 8 idle workers can issue hundreds of thousands of commands per day. Self-hosting makes that free. Valkey is Redis-protocol compatible (BullMQ requires Redis ≥ 6.2 semantics; not officially listed but widely used). |
+| 2 | Upstash Redis Free (500k commands/**month**, 256 MB) | Officially supports BullMQ but Upstash itself warns BullMQ's polling burns commands and recommends fixed plans ($10/mo+). 500k/month ≈ 11 commands/min budget — exhausted in a day by idle workers. Use only for something non-chatty. |
+| 3 | Dragonfly | The only vendor BullMQ officially tests against; needs `{hashtag}` queue names; heavier binary, no benefit at our scale. |
+| 4 | Redis Cloud free (30 MB) | Too small for job payloads + AOF. |
+
+**Consequences.** Redis config: `maxmemory-policy noeviction`, `appendonly yes`, `appendfsync everysec`, `maxmemory 256mb` (local). Separate logical DB indexes: `0` queues, `1` pub/sub & cache.
+
+---
+
+### ADR-06 — Object storage: MinIO locally; Cloudflare R2 in cloud (Backblaze B2 fallback)
+
+| Rank | Option | Free tier | Egress | Notes |
+|---|---|---|---|---|
+| **1** | **Cloudflare R2** | 10 GB storage, 1 M Class A, 10 M Class B ops / month | **$0** | Zero egress is decisive for video delivery. S3 API: multipart ✔, presigned PUT/GET ✔ (≤ 7 days, no POST-policy uploads). Custom-domain CDN on the free plan. Event notifications only to Cloudflare Queues → we do not rely on them (ADR-09). |
+| 2 | Backblaze B2 | 10 GB | free up to 3× storage/month, then $0.01/GB; **unlimited free to Cloudflare** via Bandwidth Alliance | Full S3 API incl. notifications. Best fallback if R2 free tier changes; put Cloudflare CDN in front. |
+| 3 | Supabase Storage | 1 GB, 5 GB egress | | Too small; egress capped. |
+| 4 | AWS S3 | 5 GB / 12 months | $0.09/GB | Egress pricing is the exact thing we must avoid. |
+| Local | **MinIO** (`minio/minio`) | — | — | Faithful S3 emulation incl. multipart, presigned URLs, lifecycle rules, bucket notifications (webhook) for dev. |
+
+**Consequences.** One `packages/storage` module over `@aws-sdk/client-s3` v3 with `forcePathStyle` for MinIO and `region: 'auto'` for R2. Two buckets: `raw` (private) and `public` (CDN-fronted). Object keys are deterministic (§7).
+
+---
+
+### ADR-07 — Delivery format: HLS with MPEG-TS segments (MVP), CMAF/fMP4 upgrade path
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **HLS, `.ts` segments, 6 s target duration, 2 s GOP** | Matches the brief; simplest FFmpeg muxer path (`-f hls -hls_segment_type mpegts`); plays everywhere (hls.js, Safari, Android). Apple's authoring spec: target duration SHOULD be 6 s, IDR every 2 s, segments MUST start with an IDR. |
+| 2 | HLS + DASH from **CMAF fMP4** | One segment set, two manifests (`.m3u8` + `.mpd`); required for HEVC/AV1; lower overhead than TS. Planned Phase-4 stretch: flip `-hls_segment_type fmp4` and add `EXT-X-MAP`; generate `.mpd` via shaka-packager or ffmpeg's dash muxer. |
+| 3 | DASH only | No native Safari/iOS support. |
+| 4 | Progressive MP4 per rendition | No adaptive switching; large seeks; not "YouTube-like". |
+
+---
+
+### ADR-08 — Transcode parallelism: one job per rendition (fan-out), chunked transcoding as stretch
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **One BullMQ job per rendition**, separate queues `transcode-1080p/720p/480p` | Parallelism across workers, independent retry/backoff per rendition, per-queue KEDA sizing (1080p is ~2.5× the CPU of 480p), 480p can be *first playable* while 1080p still encodes. Cost: source decoded 3× (acceptable; decode is cheap relative to x264 encode). |
+| 2 | Single FFmpeg with three outputs (`-filter_complex split=3`) | Decode once, encode thrice in one process — most CPU-efficient, but the job is as slow as the slowest rendition, retries redo everything, and it defeats per-queue autoscaling. Good for a single-node deployment; kept as a `TRANSCODE_MODE=combined` option for tiny nodes. |
+| 3 | **Chunked (YouTube-style)**: split source at keyframes into N chunks → N×renditions jobs → concat | Highest parallelism and fastest wall-clock for long videos; requires keyframe-aligned splitting (`-f segment -c copy -segment_time 30 -reset_timestamps 1`), concat with `-f concat`, and audio handled separately to avoid seams. **Designed for (job contract has `chunkIndex`), built in Phase 4 stretch.** |
+
+---
+
+### ADR-09 — Upload-completion trigger: explicit `complete` call + server verification (+ reconciler)
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **Client `POST /uploads/:id/complete` → server `CompleteMultipartUpload` + `HeadObject` → enqueue** | Portable across MinIO/R2/B2, testable, synchronous validation (size/type) before any work starts; client gets an immediate 202 with status. |
+| 2 | Bucket event notification → webhook/queue | Fast and "event-driven", but R2 only emits to Cloudflare Queues; MinIO webhooks are dev-only; B2 supports HTTP notifications. Used as an *optional* accelerator in dev to demonstrate the pattern, never the sole trigger. |
+| 3 | Polling `ListObjects` | Wasteful, slow, Class B ops cost. |
+
+**Safety net.** `housekeeping` `reconcile-uploads` scheduler (every 15 min) catches videos stuck in `UPLOADED` with no probe step and abandons stale `UPLOADING` rows; lifecycle rule aborts incomplete multiparts after 1 day.
+
+---
+
+### ADR-10 — Status transport: Server-Sent Events
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **SSE** (`text/event-stream`) | Unidirectional server→client is all we need; plain HTTP (works through every proxy/CDN, HTTP/2 multiplexed), browser `EventSource` auto-reconnects with `Last-Event-ID`, no extra library, trivial to load test with k6. |
+| 2 | WebSockets | Bidirectional and stateful for no benefit here; needs sticky sessions or a pub/sub layer anyway; harder through some proxies. Revisit if the client must *send* real-time commands (e.g. cancel upload). |
+| 3 | Long polling | Simple but wasteful; SSE is strictly better where supported. |
+| 4 | Managed push (Pusher/Ably) | Costs money; adds a vendor for a solved problem. |
+
+**Consequences.** `: ping` comment every 15 s (proxy timeouts), snapshot-on-connect from Postgres, Redis `PSUBSCRIBE video:*` per API instance, per-connection backpressure (drop progress events if `res.write` returns false; never drop terminal events).
+
+---
+
+### ADR-11 — Repository topology: modular monorepo, multiple deployables, one worker image
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **pnpm workspaces + Turborepo monorepo**: `apps/api`, `apps/worker`, `packages/*` | Shared `job-contracts`, `db`, `storage`, `ffmpeg`, `observability` packages — zero contract drift between producer and consumers; one CI; one `docker compose up`. Independent deployables give independent scaling. |
+| 2 | Multi-repo microservices | Team-autonomy tooling for a team of one = "distributed monolith": duplicated types, N pipelines, publish-bump-cycle for every payload change. |
+| 3 | Single monolith process | Cannot scale `transcode-1080p` independently of `probe`; cannot run Bun for workers and Node for API. |
+
+**One image, many roles.** `apps/worker` builds one image; each Kubernetes Deployment / compose service sets `WORKER_STAGE`. Split into separate images only if a stage's dependencies diverge materially (they will not: ffmpeg is the fixed cost every stage pays).
+
+**Tooling ranking:** pnpm + Turborepo (chosen) > Nx (heavier, more opinionated) > Bun workspaces (would force Bun for the API build too) > npm workspaces (no task caching).
+
+---
+
+### ADR-12 — Autoscaling: KEDA `ScaledObject` per stage, Prometheus scaler primary, Redis-list scaler fallback
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **KEDA + Prometheus scaler** on `bullmq_queue_jobs{state=~"waiting|active|prioritized"}` | Scales on *waiting + active* so a busy worker is never counted as spare capacity; single metric source for dashboards, alerts and scaling; supports `activationThreshold` for scale-to-zero. |
+| 2 | KEDA + Redis list scaler (`listName: bull:transcode-1080p:wait`) | Zero dependency on Prometheus; but only sees the plain `wait` list — prioritized jobs live in a ZSET (`:prioritized`) and are invisible, and it ignores `active`. Fine as a fallback. |
+| 3 | KEDA `ScaledJob` (one K8s Job per BullMQ job) | KEDA's own recommendation for long-running work, but it conflicts with BullMQ's pull model (the Job must still *pull* a job; if two Jobs start and one queue item exists, one Job idles). Kept as an experiment note. |
+| 4 | Compose-level scaler script (`docker compose up --scale`) | Used in **Phase 3-lite** for the non-Kubernetes path; demonstrates the loop (poll depth → set replicas) without a cluster. |
+| 5 | CPU-based HPA | Lagging indicator; workers are pegged at 100 % CPU by design while transcoding — CPU says nothing about backlog. |
+
+**Graceful scale-in.** `terminationGracePeriodSeconds: 900` for transcode pods; on `SIGTERM` the worker stops taking new jobs and lets the active job finish (`worker.close()`); if the pod is killed anyway, lock expiry → stalled → re-queue → idempotent redo.
+
+---
+
+### ADR-13 — Load testing: k6 (+ k6-operator for distributed runs)
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **k6 2.x** | JS scenarios (same language as the codebase), built-in thresholds → CI pass/fail, `k6-operator` 1.6 runs distributed tests in the same kind/k3s cluster, native Prometheus remote-write output, Grafana Cloud k6 gives 500 VU-hours/month free for cloud runs. Handles presigned S3 PUTs and SSE (via `k6/experimental/streams` or `xk6-sse`). |
+| 2 | Locust | Python, great distributed master/worker model; second language in the repo; weaker CI thresholds story. |
+| 3 | Artillery | Node-based, distributed via Lambda/Fargate (cost); heavier per-VU footprint. |
+| 4 | Gatling / JMeter | JVM; overkill for a solo TS project. |
+
+---
+
+### ADR-14 — Observability stack: OpenTelemetry → Prometheus + Grafana + Tempo + Loki (Grafana Cloud free in cloud)
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1** | **OTel SDK (traces) + `prom-client` (metrics) + pino (logs) → Prometheus / Tempo / Loki / Grafana** locally; **Grafana Cloud Free** (10k series, 50 GB logs, 50 GB traces, 14-day retention) in cloud | Industry standard, vendor-neutral, free, one UI. KEDA reads the same Prometheus. |
+| 2 | Elastic stack | Heavy on a 4 GB node; weaker metrics story. |
+| 3 | Datadog / New Relic free tiers | Excellent UX but vendor lock-in and free tiers are host-limited; violates P5. |
+| 4 | Sentry (errors only) | Complementary, optional (free 5k errors/mo). |
+
+---
+
+### ADR-15 — Cloud hosting for the reference deployment
+
+Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09-03.
+
+| Rank | Option | Monthly cost | Fit | Notes |
+|---|---|---|---|---|
+| **1** | **Hetzner Cloud CAX11** (2 Arm vCPU, 4 GB, 40 GB NVMe, 20 TB traffic) running **k3s** + KEDA | **€5.99** (+ ~€0.50 IPv4; ex-VAT) | 5 | Reliable, real Kubernetes, arm64 images (Bun/ffmpeg fine). CX23 (x86, €5.49) if you prefer amd64. Prices rose in June 2026 — budget €6–7. |
+| 2 | **Oracle Cloud Always Free** Ampere A1 (**now 2 OCPU / 12 GB** — halved on 2026-06-15), 200 GB block, 10 TB egress | **€0** | 4 | Still enough for k3s + API + 1–2 concurrent transcodes. Risks: chronic "Out of host capacity" on sign-up, idle-instance reclamation (< 20 % util over 7 days). Use if you can get an instance; design is identical. |
+| 3 | Koyeb free instance (0.1 vCPU, 512 MB) / Render free web service | €0 | 2 | API only; both scale to zero (Koyeb after 1 h, Render after 15 min); neither offers free background workers; Render free Postgres expires after 30 days. Not viable for transcoding. |
+| 4 | Fly.io | ~$2/mo per small machine, **no free tier** (trial only) | 3 | Nice Machines API for scale-to-zero workers, but no KEDA, and trial ends in days. |
+
+**Managed pieces (all free):** Neon Postgres, Cloudflare R2 + CDN + DNS, Grafana Cloud, GitHub Actions + GHCR, Cloudflare Tunnel (expose the VPS without opening ports; Zero Trust free plan ≤ 50 seats).
+
+**Total reference cost:** €0 (Oracle) or ≈ €6.5/month (Hetzner). Everything else is free tier.
+
+---
+
+### ADR-16 — Enqueue reliability: idempotent enqueue + reconciler (MVP), transactional outbox (Phase 4)
+
+| Rank | Option | Reason |
+|---|---|---|
+| **1 (MVP)** | **Commit DB → enqueue with deterministic `jobId` → reconciler re-enqueues gaps** | Simple; the dual-write hazard ("DB committed, Redis add failed") is healed within 5 min by the reconciler, and deterministic job IDs make a duplicate `add` a no-op. |
+| 2 (Phase 4) | Transactional outbox (`outbox` table written in the same tx; relay polls `SKIP LOCKED` and adds to BullMQ) | Removes the window entirely; costs a relay loop and a table. Implemented as a hardening step once the pipeline is stable. |
+| 3 | pg-boss (queue in Postgres) | Solves it by construction, but loses BullMQ (ADR-03). |
+
+---
+
+### ADR-17 — Schema/validation & IDs
+
+- **zod** (chosen) over TypeBox/ajv-only: one schema language for API bodies (`fastify-type-provider-zod`), job payloads (`packages/job-contracts`) and env parsing (`packages/config`), with inferred TS types. TypeBox is faster at validation but the payloads are tiny.
+- **UUIDv7** for `videoId`/`jobId` roots: time-ordered (index-friendly), unguessable enough for public playback paths, native `gen_uuid_v7()` in Postgres 17 / `uuidv7` package until then.
+
+---
+
+### ADR-18 — Error taxonomy decides retry policy
+
+- `TransientError` (S3 5xx/timeouts, Redis hiccups, ffmpeg exit due to `SIGKILL`/OOM, disk full after cleanup) → BullMQ retry with backoff.
+- `UnrecoverableError` (BullMQ built-in: corrupt container, unsupported codec, duration exceeded, source object missing) → **no retry**, straight to DLQ + `FAILED`.
+- Unknown errors default to transient with a lower attempt cap (3) — "when unsure, retry a little, then park".
+
+Decided at the throw site, never by regex on messages.
+
+---
+
+## 5. Domain Model & Database Schema
+
+### 5.1 Entity relationship
+
+```mermaid
+erDiagram
+    users ||--o{ videos : owns
+    videos ||--o| uploads : "has one"
+    videos ||--o{ renditions : produces
+    videos ||--o{ processing_steps : runs
+    videos ||--o{ video_events : emits
+    processing_steps ||--o{ dlq_entries : "may park in"
+
+    users {
+        uuid id PK
+        text email UK
+        text tier
+    }
+    videos {
+        uuid id PK
+        uuid owner_id FK
+        video_status status
+        text source_key
+        int duration_ms
+        jsonb ladder
+        text master_playlist_key
+        text error_code
+        int version
+    }
+    uploads {
+        uuid id PK
+        uuid video_id FK
+        text strategy
+        text multipart_upload_id
+        bigint declared_size_bytes
+        upload_status status
+        timestamptz expires_at
+    }
+    renditions {
+        uuid id PK
+        uuid video_id FK
+        text name
+        rendition_status status
+        text playlist_key
+        int segment_count
+        bigint bytes
+    }
+    processing_steps {
+        uuid id PK
+        uuid video_id FK
+        text step
+        text rendition
+        text job_id
+        int attempt
+        step_status status
+        uuid lock_token
+        timestamptz heartbeat_at
+    }
+    video_events {
+        bigint id PK
+        uuid video_id FK
+        text type
+        jsonb payload
+        text trace_id
+    }
+    dlq_entries {
+        uuid id PK
+        text queue
+        text job_id
+        uuid video_id FK
+        jsonb payload
+        text error_code
+        int attempts_made
+        text status
+    }
+```
+
+### 5.2 DDL (Drizzle migration 0001 — authoritative excerpt)
+
+```sql
+CREATE TYPE video_status AS ENUM ('UPLOADING','UPLOADED','PROBING','PROCESSING','READY','FAILED','REJECTED','ABANDONED','DELETED');
+CREATE TYPE upload_status AS ENUM ('OPEN','COMPLETED','ABORTED');
+CREATE TYPE rendition_status AS ENUM ('PENDING','RUNNING','DONE','FAILED','SKIPPED');
+CREATE TYPE step_status AS ENUM ('QUEUED','RUNNING','DONE','FAILED','DEAD');
+
+CREATE TABLE users (
+  id          uuid PRIMARY KEY,
+  email       text NOT NULL UNIQUE,
+  tier        text NOT NULL DEFAULT 'free',           -- drives job priority & quotas
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE videos (
+  id                  uuid PRIMARY KEY,               -- UUIDv7
+  owner_id            uuid NOT NULL REFERENCES users(id),
+  title               text NOT NULL DEFAULT '',
+  description         text NOT NULL DEFAULT '',
+  visibility          text NOT NULL DEFAULT 'private', -- private|unlisted|public
+  status              video_status NOT NULL DEFAULT 'UPLOADING',
+  source_key          text NOT NULL,                  -- raw/{id}/source.{ext}
+  source_size_bytes   bigint,
+  source_content_type text,
+  duration_ms         integer,
+  width               integer,
+  height              integer,
+  fps                 numeric(6,3),
+  video_codec         text,
+  audio_codec         text,
+  ladder              jsonb,                          -- [{"name":"720p","width":1280,"height":720,"videoKbps":2800,"audioKbps":128}]
+  master_playlist_key text,
+  poster_key          text,
+  sprite_key          text,
+  error_code          text,
+  error_message       text,
+  version             integer NOT NULL DEFAULT 0,     -- optimistic lock for metadata edits
+  ready_at            timestamptz,
+  deleted_at          timestamptz,
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  updated_at          timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX videos_owner_created_idx ON videos (owner_id, created_at DESC);
+CREATE INDEX videos_status_updated_idx ON videos (status, updated_at);   -- reconciler scans
+
+CREATE TABLE uploads (
+  id                    uuid PRIMARY KEY,
+  video_id              uuid NOT NULL UNIQUE REFERENCES videos(id) ON DELETE CASCADE,
+  strategy              text NOT NULL,                -- single|multipart
+  multipart_upload_id   text,
+  part_size_bytes       integer,
+  parts_expected        integer,
+  declared_size_bytes   bigint NOT NULL,
+  declared_content_type text NOT NULL,
+  sha256                text,
+  status                upload_status NOT NULL DEFAULT 'OPEN',
+  expires_at            timestamptz NOT NULL,
+  completed_at          timestamptz
+);
+
+CREATE TABLE renditions (
+  id                 uuid PRIMARY KEY,
+  video_id           uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  name               text NOT NULL,                   -- 1080p|720p|480p
+  width              integer NOT NULL,
+  height             integer NOT NULL,
+  video_bitrate_kbps integer NOT NULL,
+  audio_bitrate_kbps integer NOT NULL,
+  status             rendition_status NOT NULL DEFAULT 'PENDING',
+  playlist_key       text,
+  segment_count      integer,
+  bytes              bigint,
+  processing_ms      integer,
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  updated_at         timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (video_id, name)                             -- idempotent upsert target
+);
+
+CREATE TABLE processing_steps (
+  id            uuid PRIMARY KEY,
+  video_id      uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  step          text NOT NULL,                        -- probe|transcode|thumbnail|package|notify
+  rendition     text NOT NULL DEFAULT '-',            -- '-' when not rendition-scoped (part of the unique key)
+  job_id        text NOT NULL,
+  attempt       integer NOT NULL DEFAULT 1,
+  status        step_status NOT NULL DEFAULT 'QUEUED',
+  worker_id     text,
+  lock_token    uuid,                                 -- fencing token (§9.5)
+  started_at    timestamptz,
+  heartbeat_at  timestamptz,
+  finished_at   timestamptz,
+  error_code    text,
+  error_message text,
+  result        jsonb,
+  UNIQUE (video_id, step, rendition)
+);
+
+CREATE TABLE video_events (                            -- append-only; never UPDATE/DELETE
+  id         bigserial PRIMARY KEY,
+  video_id   uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  type       text NOT NULL,                           -- upload.completed, probe.started, transcode.progress, …
+  payload    jsonb NOT NULL DEFAULT '{}',
+  trace_id   text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX video_events_video_idx ON video_events (video_id, id);
+
+CREATE TABLE dlq_entries (
+  id            uuid PRIMARY KEY,
+  queue         text NOT NULL,
+  job_id        text NOT NULL,
+  video_id      uuid REFERENCES videos(id) ON DELETE SET NULL,
+  payload       jsonb NOT NULL,
+  error_code    text,
+  error_message text,
+  stack         text,
+  attempts_made integer NOT NULL,
+  worker_id     text,
+  status        text NOT NULL DEFAULT 'PARKED',       -- PARKED|REPLAYED|DISCARDED
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  replayed_at   timestamptz,
+  UNIQUE (queue, job_id, attempts_made)
+);
+```
+
+Why `dlq_entries` exists in Postgres when BullMQ already has a `dlq` queue: Redis is not the truth (P2). The Postgres mirror survives Redis loss, is queryable ("all DLQ entries for codec X this week"), and gives the admin UI a stable, paginated view. The Redis `dlq` queue holds the replayable job; the table holds the record.
+
+### 5.3 Key queries that encode the guarantees
+
+```sql
+-- Compare-and-set transition (returns 0 rows if someone else moved it first)
+UPDATE videos SET status = 'PROBING', updated_at = now()
+WHERE id = $1 AND status = 'UPLOADED';
+
+-- Idempotent step claim: first attempt inserts; a retry bumps attempt and takes a new fencing token
+INSERT INTO processing_steps (id, video_id, step, rendition, job_id, attempt, status, worker_id, lock_token, started_at, heartbeat_at)
+VALUES ($1, $2, 'transcode', '720p', $3, $4, 'RUNNING', $5, $6, now(), now())
+ON CONFLICT (video_id, step, rendition) DO UPDATE
+  SET attempt = EXCLUDED.attempt, status = 'RUNNING', worker_id = EXCLUDED.worker_id,
+      lock_token = EXCLUDED.lock_token, started_at = now(), heartbeat_at = now(), error_code = NULL
+  WHERE processing_steps.status <> 'DONE'            -- never re-open a finished step
+RETURNING lock_token;
+
+-- Fenced completion: only the holder of the current token may finish the step
+UPDATE processing_steps SET status = 'DONE', finished_at = now(), result = $3
+WHERE video_id = $1 AND step = 'transcode' AND rendition = '720p' AND lock_token = $2;
+
+-- Reconciler: videos that were marked UPLOADED but never got a probe step
+SELECT v.id FROM videos v
+LEFT JOIN processing_steps s ON s.video_id = v.id AND s.step = 'probe'
+WHERE v.status = 'UPLOADED' AND v.updated_at < now() - interval '5 minutes' AND s.id IS NULL
+FOR UPDATE SKIP LOCKED LIMIT 100;
+```
+
+---
+
+## 6. API Contract
+
+Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; `AUTH_DEV_USER_ID` bypass when `NODE_ENV=development`). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
+
+### 6.1 Endpoints
+
+| Method & path | Purpose | Request | Response | Notes |
+|---|---|---|---|---|
+| `POST /uploads` | Start upload | `{ filename, sizeBytes, contentType, sha256? , title? }` | `201 { videoId, uploadId, strategy, partSizeBytes, parts:[{partNumber,url,expiresAt}], singleUrl?, expiresAt }` | ≤ 100 MB → `single` (one presigned PUT). Else multipart; first 100 part URLs inline. Rate limit 30/min/user. |
+| `GET /uploads/:uploadId` | Resume info | — | `200 { status, partSizeBytes, partsExpected, uploadedParts:[{partNumber, etag, size}] }` | Backed by `ListParts`. |
+| `POST /uploads/:uploadId/parts?from=&count=` | More part URLs | — | `200 { parts:[…] }` | `count ≤ 100`. |
+| `POST /uploads/:uploadId/complete` | Finish | `{ parts:[{partNumber, etag}] }` (multipart) or `{}` (single) | `202 { videoId, status:"UPLOADED" }` or `422 { code:"UPLOAD_SIZE_MISMATCH" \| "UPLOAD_TOO_LARGE" \| "UNSUPPORTED_CONTENT_TYPE" }` | Idempotent: second call returns 202 with current status. |
+| `DELETE /uploads/:uploadId` | Abort | — | `204` | `AbortMultipartUpload`, video → `ABANDONED`. |
+| `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
+| `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `error?`) | Owner or public/unlisted. |
+| `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`. |
+| `DELETE /videos/:id` | Soft delete | — | `202` | Enqueues `housekeeping:purge-video`. |
+| `GET /videos/:id/events` | SSE stream | header `Last-Event-ID?` | `text/event-stream` | See §10. |
+| `GET /me/events` | SSE for all my videos | — | `text/event-stream` | Channel `user:{userId}`. |
+| `POST /videos/:id/reprocess` | Re-run pipeline | `{ renditions?: ["720p"] }` | `202` | Owner (rate-limited) or admin. |
+| **Admin** (`x-admin-token` or admin role) | | | | |
+| `GET /admin/queues/*` | Bull Board UI | — | HTML | `@bull-board/fastify`. |
+| `GET /admin/dlq?cursor=` | List DLQ | — | `200 { items:[DlqEntry] }` | From Postgres mirror. |
+| `POST /admin/dlq/:id/replay` | Replay | `{ resetAttempts?: true }` | `202` | Re-adds to origin queue with fresh `jobId` suffix `--r{n}`; audit event. |
+| `DELETE /admin/dlq/:id` | Discard | — | `204` | |
+| **Ops** | | | | |
+| `GET /healthz` | Liveness | — | `200` | Process up. |
+| `GET /readyz` | Readiness | — | `200/503` | Postgres `SELECT 1`, Redis `PING`, S3 `HeadBucket` (cached 10 s). |
+| `GET /metrics` | Prometheus | — | text | Bound to a separate port (`METRICS_PORT`) so it is never public. |
+| `GET /docs` | OpenAPI UI | — | HTML | Generated from zod schemas via `@fastify/swagger`. |
+
+### 6.2 Error codes (stable, machine-readable)
+
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED` (pipeline).
+
+### 6.3 Video resource (response shape)
+
+```ts
+type Video = {
+  id: string; title: string; description: string; visibility: 'private'|'unlisted'|'public';
+  status: 'UPLOADING'|'UPLOADED'|'PROBING'|'PROCESSING'|'READY'|'FAILED'|'REJECTED'|'ABANDONED'|'DELETED';
+  progress: { overall: number; byRendition: Record<string, number> };   // 0–100
+  durationMs?: number; width?: number; height?: number; fps?: number;
+  ladder?: Array<{ name: string; width: number; height: number; videoKbps: number; audioKbps: number }>;
+  renditions: Array<{ name: string; status: string; playlistUrl?: string }>;
+  playbackUrl?: string; posterUrl?: string; spriteUrl?: string; spriteVttUrl?: string;
+  error?: { code: string; message: string };
+  version: number; createdAt: string; updatedAt: string; readyAt?: string;
+};
+```
+
+---
+
+## 7. Object Storage Layout
+
+Two buckets, deterministic keys, no per-request randomness — this is what makes re-running any step safe.
+
+```
+raw/                                   (private; lifecycle: expire objects after 7 days; abort incomplete multipart after 1 day)
+└── {videoId}/
+    └── source.{ext}                   ← original upload
+
+public/                                (private bucket, public read via CDN custom domain; lifecycle: none)
+└── videos/{videoId}/
+    ├── hls/
+    │   ├── master.m3u8                ← written last by `package`; presence == READY
+    │   ├── 1080p/
+    │   │   ├── index.m3u8
+    │   │   └── seg_00001.ts … seg_NNNNN.ts
+    │   ├── 720p/ …
+    │   └── 480p/ …
+    ├── thumbs/
+    │   ├── poster.jpg                 (1280×720)
+    │   ├── sprite.jpg                 (10×N grid of 160×90 frames, 1 frame / 5 s)
+    │   └── sprite.vtt                 (WebVTT thumbnails with #xywh= fragments)
+    └── meta.json                      (probe output snapshot; debugging aid)
+```
+
+Rules:
+
+- Segment naming is zero-padded and derived from FFmpeg's `%05d` — a retry overwrites identical keys with identical bytes (same encoder settings, same source, deterministic `-fflags +bitexact` where practical).
+- Every writer uses `Content-Type` (`application/vnd.apple.mpegurl`, `video/MP2T`, `image/jpeg`, `text/vtt`) and `Cache-Control` (`public, max-age=60` for playlists, `public, max-age=31536000, immutable` for segments and images).
+- A re-process that changes the ladder writes into a new *generation* prefix `hls/g{n}/` and `master_playlist_key` is switched atomically in the DB; the old generation is purged by housekeeping. MVP: `g1` implied (no prefix); the generation column exists from day one.
+- Local dev: MinIO console at `:9001`; the `public` bucket gets an anonymous `download` policy so hls.js can fetch directly from `http://localhost:9000/public/...`.
+
+---
+
+## 8. Media Processing (FFmpeg) Specification
+
+FFmpeg 7.x static build inside the worker image (`jrottenberg/ffmpeg:7-ubuntu` layer or `apt install ffmpeg` on Debian 13; multi-arch). Everything below is wrapped by `packages/ffmpeg` which builds argv arrays (never shell strings) and parses `-progress pipe:1`.
+
+### 8.1 Probe
+
+```bash
+ffprobe -v error -print_format json -show_format -show_streams -show_error \
+  -i "$SOURCE_URL"           # presigned GET URL, or a local path after a range-limited download
+```
+
+Validation rules (→ `UnrecoverableError` codes): no video stream → `CORRUPT_CONTAINER`; `codec_name` not in `{h264,hevc,vp9,av1,mpeg4}` → `UNSUPPORTED_CODEC`; `duration > MAX_DURATION_SEC` → `DURATION_EXCEEDED`; width/height ≤ 0 or > 7680 → `CORRUPT_CONTAINER`. Rotation from `side_data_list` / `tags.rotate` is honoured (swap width/height for ladder selection; ffmpeg autorotates on transcode).
+
+Ladder selection: candidates below, keep those with `height ≤ sourceHeight` (rotated-aware), always keep at least the smallest rung.
+
+| Name | Resolution (max, keep AR) | Video kbps (maxrate / bufsize) | Audio | Profile / level | Approx CPU weight |
+|---|---|---|---|---|---|
+| 1080p | 1920×1080 | 5000 (5350 / 7500) | AAC-LC 128k, 48 kHz | High @ 4.1 | 2.5 |
+| 720p | 1280×720 | 2800 (2996 / 4200) | AAC-LC 128k | High @ 3.1 | 1.2 |
+| 480p | 854×480 | 1400 (1498 / 2100) | AAC-LC 96k | Main @ 3.1 | 0.6 |
+
+(Bitrates follow the Apple HLS authoring guidance ranges; tune after Phase 3 measurements.)
+
+### 8.2 Transcode one rendition to HLS (TS segments)
+
+```bash
+ffmpeg -hide_banner -nostdin -loglevel error -progress pipe:1 \
+  -i "$SOURCE" \
+  -map 0:v:0 -map 0:a:0? \
+  -vf "scale=w=1280:h=720:force_original_aspect_ratio=decrease:force_divisible_by=2" \
+  -c:v libx264 -preset veryfast -profile:v high -level 3.1 -pix_fmt yuv420p \
+  -b:v 2800k -maxrate 2996k -bufsize 4200k \
+  -g 48 -keyint_min 48 -sc_threshold 0 \
+  -force_key_frames "expr:gte(t,n_forced*2)" \
+  -c:a aac -b:a 128k -ac 2 -ar 48000 \
+  -f hls -hls_time 6 -hls_playlist_type vod -hls_flags independent_segments+temp_file \
+  -hls_segment_type mpegts -hls_segment_filename "$OUT/seg_%05d.ts" \
+  -threads "$FFMPEG_THREADS" \
+  "$OUT/index.m3u8"
+```
+
+Notes that matter for correctness at scale:
+
+- **Keyframe alignment across renditions** (`-force_key_frames expr:gte(t,n_forced*2)` + `-sc_threshold 0` + `-g` = 2 s × fps) is what makes ABR switching seamless; `-g 48` assumes 24 fps — `packages/ffmpeg` computes `g = round(2 * fps)` from probe.
+- `independent_segments` + `temp_file` guarantee each `.ts` starts with an IDR and is only renamed into place when complete → the uploader can safely tail the directory and upload segments as they close (`chokidar`/`fs.watch` on rename), keeping local disk usage bounded (delete after successful upload).
+- `-preset veryfast` is the MVP quality/speed point; expose as `X264_PRESET` for the load tests (measure `veryfast` vs `fast`).
+- `FFMPEG_THREADS` = container CPU limit (K8s `resources.limits.cpu`), so one job saturates its pod and concurrency stays 1 per pod (§9.4).
+- Source access: for MVP the worker downloads the source once to local disk (simple, seekable — ffmpeg seeks the `moov` atom for MP4); a **streaming variant** (`-i https://presigned-url`) is kept for constrained disks. Local disk requirement is documented: `sourceSize + ~1 segment` (segments are uploaded as they close).
+
+### 8.3 Thumbnails
+
+```bash
+# poster at 10% of duration (fallback: first frame if duration unknown), 1280x720 letterboxed
+ffmpeg -ss "$T10" -i "$SOURCE" -frames:v 1 -vf "thumbnail,scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2" -q:v 3 "$OUT/poster.jpg"
+# sprite sheet: one 160x90 frame every 5 s, 10 columns
+ffmpeg -i "$SOURCE" -vf "fps=1/5,scale=160:90:force_original_aspect_ratio=decrease,pad=160:90:(ow-iw)/2:(oh-ih)/2,tile=10x${ROWS}" -frames:v 1 -q:v 5 "$OUT/sprite.jpg"
+```
+
+`sprite.vtt` is generated in TypeScript from `durationMs` (`00:00:00.000 --> 00:00:05.000` / `sprite.jpg#xywh=0,0,160,90`, …).
+
+### 8.4 Master playlist (generated by `package`, not by ffmpeg)
+
+```
+#EXTM3U
+#EXT-X-VERSION:6
+#EXT-X-INDEPENDENT-SEGMENTS
+#EXT-X-STREAM-INF:BANDWIDTH=5350000,AVERAGE-BANDWIDTH=5128000,RESOLUTION=1920x1080,FRAME-RATE=24.000,CODECS="avc1.640029,mp4a.40.2"
+1080p/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2996000,AVERAGE-BANDWIDTH=2928000,RESOLUTION=1280x720,FRAME-RATE=24.000,CODECS="avc1.64001f,mp4a.40.2"
+720p/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1498000,AVERAGE-BANDWIDTH=1496000,RESOLUTION=854x480,FRAME-RATE=24.000,CODECS="avc1.4d401f,mp4a.40.2"
+480p/index.m3u8
+```
+
+`BANDWIDTH` = peak (`maxrate` + audio); `AVERAGE-BANDWIDTH` = measured (`bytes*8/duration`) from the rendition result; `CODECS` derived from profile/level (`avc1.64xxyy`). Renditions are listed highest-first; hls.js starts at the first entry unless `startLevel` is set — the frontend can pick 480p as the initial level for time-to-first-frame.
+
+### 8.5 Chunked parallel transcoding (Phase 4 stretch — designed, not built)
+
+1. `probe` decides `chunkSeconds = 30` for sources > 5 min.
+2. `split` stage: `ffmpeg -i src -c copy -map 0 -f segment -segment_time 30 -reset_timestamps 1 -segment_format mp4 chunk_%03d.mp4` (splits only at existing keyframes — chunk lengths vary; fine).
+3. Flow: `package` ← `concat-{rendition}` ← `transcode-chunk-{rendition}` × N. Each chunk job transcodes with the same ladder settings **plus** `-force_key_frames` relative to chunk start; audio is transcoded once from the full source to avoid seam artefacts and muxed at concat.
+4. `concat-{rendition}` uses `-f concat -safe 0 -i list.txt -c copy` then re-segments to HLS with `-c copy -f hls`.
+5. Job contract already carries `chunkIndex?/chunkCount?` so no schema change is needed.
+
+---
+
+## 9. Distributed Queue & Worker Design (deep dive)
+
+### 9.1 Queue topology
+
+BullMQ has no exchanges; a *queue* is the routing unit and Redis key prefix. One queue per stage, one per rendition for transcodes so each can be scaled and rate-limited independently.
+
+| Queue (BullMQ name) | Producer | Consumer stage | Concurrency / pod | Attempts | Backoff | Lock duration | Typical duration |
+|---|---|---|---|---|---|---|---|
+| `probe` | API (`complete`), reconciler, reprocess | `probe` | 4 | 5 | exp 5 s, jitter 0.5 | 60 s | 1–10 s |
+| `transcode-1080p` | probe (as Flow child) | `transcode-1080p` | 1 | 4 | exp 10 s, jitter 0.5 | 120 s | 1–25 min |
+| `transcode-720p` | probe | `transcode-720p` | 1 | 4 | exp 10 s | 120 s | 0.5–12 min |
+| `transcode-480p` | probe | `transcode-480p` | 1 (or 2) | 4 | exp 10 s | 120 s | 0.3–6 min |
+| `thumbnail` | probe | `thumbnail` | 2 | 4 | exp 5 s | 60 s | 5–60 s |
+| `package` | probe (Flow parent) | `package` | 4 | 5 | exp 5 s | 60 s | 1–5 s |
+| `notify` | package, failure handler | `notify` | 8, **rate limit 100/10 s** | 8 | exp 2 s | 30 s | < 1 s |
+| `housekeeping` | Job Schedulers (cron) | `housekeeping` | 1 | 3 | fixed 60 s | 300 s | seconds–minutes |
+| `dlq` | `failed` handlers | *none* (admin replay only) | — | — | — | — | — |
+
+Redis key shape: `bull:{queue}:wait` (LIST), `:prioritized` (ZSET), `:active`, `:delayed` (ZSET), `:completed`, `:failed`, `:events` (STREAM), `:meta`, plus `:{jobId}` hashes. Queue names must not contain `:`.
+
+Job options applied by `packages/job-contracts` factory functions (never hand-written at call sites):
+
+```ts
+// packages/job-contracts/src/options.ts
+export const defaultJobOptions = {
+  removeOnComplete: { age: 24 * 3600, count: 5000 },     // keep for Bull Board, cap memory
+  removeOnFail:     { age: 7 * 24 * 3600 },              // failed jobs stay a week (DLQ mirror in Postgres anyway)
+} satisfies JobsOptions;
+
+export const stagePolicies = {
+  'probe':          { attempts: 5, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 }, priority: 5 },
+  'transcode-1080p':{ attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
+  'transcode-720p': { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
+  'transcode-480p': { attempts: 4, backoff: { type: 'exponential', delay: 10_000, jitter: 0.5 } },
+  'thumbnail':      { attempts: 4, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
+  'package':        { attempts: 5, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
+  'notify':         { attempts: 8, backoff: { type: 'exponential', delay: 2_000,  jitter: 0.3 } },
+  'housekeeping':   { attempts: 3, backoff: { type: 'fixed', delay: 60_000 } },
+} as const;
+```
+
+Exponential with `delay: 10 s` gives 10 s → 20 s → 40 s (+ jitter) between four attempts — long enough for a storage blip to pass, short enough that a video is not stuck for an hour.
+
+### 9.2 Job identity & payload contracts
+
+Deterministic IDs are the first line of idempotency: BullMQ ignores an `add()` whose `jobId` already exists in the queue (any state except removed). IDs use `--` as separator because `:` is forbidden.
+
+| Job | `jobId` | Payload (zod, see §20) |
+|---|---|---|
+| probe | `${videoId}--probe--g${generation}` | `{ videoId, sourceKey, generation, traceparent }` |
+| transcode | `${videoId}--transcode--720p--g${generation}` | `{ videoId, sourceKey, generation, rendition: LadderEntry, fps, durationMs, chunkIndex?, chunkCount?, traceparent }` |
+| thumbnail | `${videoId}--thumbnail--g${generation}` | `{ videoId, sourceKey, generation, durationMs, traceparent }` |
+| package | `${videoId}--package--g${generation}` | `{ videoId, generation, ladder, traceparent }` |
+| notify | `${videoId}--notify--${event}--${eventSeq}` | `{ videoId, userId, event, payload, traceparent }` |
+| dlq | `${originQueue}--${originJobId}--a${attemptsMade}` | `{ originQueue, originJobId, payload, error, attemptsMade, workerId, failedAt }` |
+
+`generation` increments on every admin/owner re-process so a fresh run never collides with the terminal job IDs of the previous one, while accidental duplicate triggers within a generation collapse.
+
+### 9.3 Fan-out / fan-in with Flows
+
+```ts
+// apps/worker/src/stages/probe.ts (excerpt)
+await flowProducer.add({
+  name: 'package',
+  queueName: 'package',
+  data: PackageJob.parse({ videoId, generation, ladder, traceparent }),
+  opts: { jobId: ids.package(videoId, generation), ...stagePolicies.package, ...defaultJobOptions },
+  children: [
+    ...ladder.map((r) => ({
+      name: `transcode-${r.name}`,
+      queueName: `transcode-${r.name}`,
+      data: TranscodeJob.parse({ videoId, sourceKey, generation, rendition: r, fps, durationMs, traceparent }),
+      opts: {
+        jobId: ids.transcode(videoId, r.name, generation),
+        ...stagePolicies[`transcode-${r.name}`], ...defaultJobOptions,
+        failParentOnFailure: true,          // one dead rendition fails the whole video (explicit product decision)
+        removeDependencyOnFailure: false,
+      },
+    })),
+    {
+      name: 'thumbnail', queueName: 'thumbnail',
+      data: ThumbnailJob.parse({ videoId, sourceKey, generation, durationMs, traceparent }),
+      opts: { jobId: ids.thumbnail(videoId, generation), ...stagePolicies.thumbnail, ...defaultJobOptions,
+              failParentOnFailure: false, ignoreDependencyOnFailure: true },   // a missing sprite must not block READY
+    },
+  ],
+});
+```
+
+The parent `package` job sits in `waiting-children` and becomes processable only when every child has completed (or has been ignored per `ignoreDependencyOnFailure`). `package` reads `await job.getChildrenValues()` to collect each rendition's `{ playlistKey, segmentCount, bytes, avgBitrate }` return value — no extra DB round-trip for the fan-in.
+
+### 9.4 Worker process model
+
+```ts
+// apps/worker/src/main.ts (shape)
+const stage = Env.WORKER_STAGE;                                  // e.g. "transcode-1080p"
+const def = stageRegistry[stage];                                // { queue, processor, concurrency, lockDuration }
+const worker = new Worker(def.queue, withTelemetry(def.processor), {
+  connection, prefix: 'bull',
+  concurrency: def.concurrency,
+  lockDuration: def.lockDuration,        // e.g. 120_000 for transcodes
+  lockRenewTime: def.lockDuration / 2,   // heartbeat cadence (BullMQ default = lockDuration/2)
+  stalledInterval: 30_000,
+  maxStalledCount: 2,                    // a job may be recovered from a dead worker twice before it is failed
+  drainDelay: 5,
+  settings: { backoffStrategy: jitteredBackoff },   // only if a custom curve is ever needed; built-in jitter covers MVP
+});
+worker.on('failed', onFailed(def));      // DLQ pattern (§9.6)
+worker.on('stalled', (jobId) => metrics.stalled.inc({ queue: def.queue }));
+registerGracefulShutdown(worker, { timeoutMs: def.shutdownTimeoutMs });   // SIGTERM → worker.close() (waits for active job)
+```
+
+Concurrency rules:
+
+- **Transcode = 1 job per pod**, `FFMPEG_THREADS` = CPU limit. Parallelism comes from replicas (KEDA), not from in-process concurrency — this keeps memory predictable (x264 1080p ≈ 1–1.5 GB) and lets a pod be a clean unit of scale.
+- I/O stages (`probe`, `package`, `notify`) run concurrency 4–8 per pod.
+- **Global rate limit** on `notify` (`limiter: { max: 100, duration: 10_000 }`) protects downstream webhooks.
+- **Per-user fairness** (Should-have): the API checks `count(videos WHERE owner_id = $1 AND status IN (PROBING, PROCESSING)) < MAX_INFLIGHT_PER_USER` before enqueueing; excess videos stay `UPLOADED` and are released by the reconciler — a poor man's admission controller. Priority: `tier = 'pro' → priority 1`, `free → 5` (lower is higher in BullMQ).
+
+### 9.5 Long-running jobs: heartbeats, crashes, double-processing
+
+**Heartbeat = lock renewal.** A BullMQ worker holds a Redis lock on the active job and renews it every `lockRenewTime`. If the process dies, the lock expires after `lockDuration`; the stalled-checker (any worker, every `stalledInterval`) moves the job back to `wait` and increments `stalledCounter`. After `maxStalledCount` stalls the job fails (→ DLQ). Nothing in our code polls a "heartbeat table" — but we *also* write `processing_steps.heartbeat_at` on every progress tick so operators can see liveness in SQL and so a "stuck-but-locked" job (renewing locks while ffmpeg hangs) is detectable: `heartbeat_at` stale + `status = RUNNING` → alert `WorkerStuck`, and the processor enforces a **hard per-job timeout** (`max(3 × durationMs, 10 min)`) that kills ffmpeg and throws `TransientError('FFMPEG_TIMEOUT')`.
+
+**Progress as a signal.** ffmpeg `-progress pipe:1` emits `out_time_ms` every ~0.5 s; the processor throttles to one `job.updateProgress(pct)` + one `PUBLISH` per 2 s, and one `video_events` row per 10 %.
+
+**Crash scenarios and outcomes**
+
+| Scenario | Detection | Outcome |
+|---|---|---|
+| Worker pod `kill -9` at 50 % | Lock expires (≤ 120 s) → stalled → re-queued | Another pod restarts the rendition from scratch; identical object keys overwritten; `renditions.status` goes RUNNING → DONE once; `stalledCounter=1`. |
+| Worker network-partitioned but alive (keeps encoding, cannot renew lock) | Stalled → re-queued → **two workers encode the same rendition** | Both write identical bytes to identical keys — harmless. The **fencing token** (`processing_steps.lock_token`) means only the second (current) worker's `DONE` update matches; the zombie's fenced `UPDATE … WHERE lock_token = $old` affects 0 rows, it logs `FENCED_OUT` and exits without emitting events. |
+| ffmpeg hangs (no progress) | Job timeout → `TransientError` | Retry with backoff; DLQ after 4. |
+| OOM-killed ffmpeg (exit 137) | Non-zero exit → `TransientError('FFMPEG_OOM')` | Retry; the processor lowers `-threads` by one on each attempt as a mitigation; DLQ after 4 with the hint `INCREASE_MEMORY`. |
+| Redis restart | Workers reconnect (ioredis retry strategy); in-flight jobs continue and complete on reconnect (BullMQ moves them via `moveToCompleted` when the connection returns); jobs whose locks expired are re-queued | AOF `everysec` bounds loss to ≤ 1 s of *queue state*; DB reconciler re-adds anything lost. |
+| Postgres unavailable | `TransientError` from `packages/db` | Backoff; readiness probe fails → KEDA/HPA hold. |
+| Storage 503 for 60 s | AWS SDK retries (3, adaptive) then `TransientError('STORAGE_UNAVAILABLE')` | Backoff 10/20/40 s covers the window. |
+
+**Preventing double *effects* rather than double *execution*.** Under at-least-once delivery we do not try to prevent two executions — that would require a distributed lock stronger than the queue's own. We make executions idempotent (deterministic keys; overwrite-safe) and make the *commit* exclusive (fencing token + CAS). This is the standard "effectively-once" pattern and is cheaper and more robust than exactly-once machinery.
+
+### 9.6 Failure handling, retries, DLQ, poison pills
+
+```mermaid
+flowchart TD
+    A["processor throws"] --> B{"error type"}
+    B -- "UnrecoverableError" --> D["BullMQ: no retry → failed"]
+    B -- "TransientError / unknown" --> C{"attemptsMade < attempts?"}
+    C -- "yes" --> R["delayed → wait<br/>exp backoff + jitter"]
+    C -- "no" --> D
+    D --> E["worker.on('failed')"]
+    E --> F["INSERT dlq_entries<br/>UPDATE processing_steps DEAD<br/>UPDATE renditions FAILED"]
+    F --> G["dlqQueue.add(copy of job + error)"]
+    G --> H{"child with failParentOnFailure?"}
+    H -- "yes" --> I["parent package fails → video FAILED<br/>notify(video.failed)"]
+    H -- "no" --> J["ignored dependency<br/>package proceeds without it"]
+    I --> K["metrics dlq_total++<br/>alert DLQNotEmpty"]
+    K --> L["Admin: inspect → replay (new generation or --r{n}) or discard"]
+```
+
+Rules:
+
+1. **Classification at the throw site** (ADR-18). `probe` is the main poison-pill filter: it runs first, is cheap, and throws `UnrecoverableError` for anything ffmpeg cannot fix by retrying. A corrupt file therefore costs one ffprobe run, not four 1080p attempts.
+2. **No native DLQ in BullMQ** → the `failed` listener implements it: park a copy in the `dlq` queue (no consumer) and mirror to Postgres. `removeOnFail` keeps the original visible in Bull Board for a week.
+3. **Replay** re-adds to the origin queue with `jobId = original + '--r' + n` (fresh attempt counter) and writes `video_events(dlq.replayed)`; **discard** marks the entry `DISCARDED`. Both are admin-only and audited.
+4. **Backoff with jitter** avoids thundering herds when storage comes back (`jitter: 0.5` spreads 40 s → 20–40 s).
+5. **Circuit for systemic failures:** if `jobs_failed_total` for a queue exceeds 50 % over 5 min, the alert `SystemicFailure` fires and the runbook says *pause the queue* (`queue.pause()`, available in Bull Board) rather than burning attempts against a dead dependency.
+6. **Retries are bounded per attempt too**: `attempt n` uses `FFMPEG_THREADS - (n-1)` (min 1) to survive marginal memory situations.
+
+### 9.7 Idempotency guarantees per step
+
+| Step | Idempotency mechanism | Duplicate-run behaviour |
+|---|---|---|
+| Upload complete | `uploads.status` CAS `OPEN → COMPLETED`; `CompleteMultipartUpload` is idempotent on the storage side (same parts → same object); `HeadObject` re-verifies | Second call returns 202 with current status; no second probe job (same `jobId`). |
+| probe | Job ID; `processing_steps` upsert; `videos` CAS `UPLOADED→PROBING` (0 rows → check status: already `PROCESSING`/`READY` → return early "already done") | Flow add with same child IDs is a no-op if the flow exists. |
+| transcode | Deterministic keys; playlist uploaded **last** (its presence = rendition complete); fenced `DONE` | Re-encode overwrites bytes; only current token commits. |
+| thumbnail | Deterministic keys; fenced commit | Same. |
+| package | Verifies children via `getChildrenValues()` + `HEAD` each playlist; writes `master.m3u8` last; `videos` CAS `PROCESSING→READY` | Second run re-writes an identical master; CAS returns 0 rows → no duplicate `video.ready` event. |
+| notify | `jobId` includes `eventSeq`; SSE publish is loss-tolerant; webhook carries `Idempotency-Key = jobId` | Receiver deduplicates on the key. |
+| housekeeping | `SKIP LOCKED` batches; every action is a CAS | Overlapping schedulers cannot double-abort. |
+
+### 9.8 Housekeeping (Job Schedulers)
+
+BullMQ 6 Job Schedulers (`queue.upsertJobScheduler(id, { pattern }, template)`) replace legacy repeatables — the API upserts them on boot, so restarting the API is safe.
+
+| Scheduler ID | Cron | Action |
+|---|---|---|
+| `reconcile-uploads` | `*/15 * * * *` | Abort `UPLOADING > 24h` (→ `ABANDONED`); re-enqueue `UPLOADED` with no probe step > 5 min; release admission-held videos. |
+| `reconcile-processing` | `*/10 * * * *` | Videos `PROCESSING > 3h` with no RUNNING step and no waiting job → mark `FAILED('ORPHANED')` + DLQ entry (belt-and-braces for lost Redis state). |
+| `purge-deleted` | `0 * * * *` | Delete objects for `DELETED` videos older than 1 h (paginated `DeleteObjects`), then hard-delete rows. |
+| `expire-raw` | `30 3 * * *` | Delete `raw/` sources of `READY` videos older than `RAW_RETENTION_DAYS` (lifecycle rule is the primary mechanism; this is the audit trail). |
+| `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
+
+---
+
+## 10. Real-Time Status (SSE)
+
+### 10.1 Wire format
+
+```
+GET /v1/videos/{id}/events
+Accept: text/event-stream
+Last-Event-ID: 1842            (optional, on reconnect)
+
+HTTP/1.1 200
+Content-Type: text/event-stream
+Cache-Control: no-cache
+X-Accel-Buffering: no
+
+id: 1839
+event: snapshot
+data: {"videoId":"…","status":"PROCESSING","progress":{"overall":41,"byRendition":{"1080p":22,"720p":55,"480p":100}}}
+
+id: 1840
+event: progress
+data: {"rendition":"720p","percent":57,"overall":42}
+
+: ping
+
+id: 1841
+event: status
+data: {"status":"READY","playbackUrl":"https://cdn…/master.m3u8"}
+```
+
+`id` is the `video_events.id` (bigserial) so `Last-Event-ID` maps to "replay rows with id > X" — reconnecting clients receive exactly the transitions they missed, then go live. Progress events are *not* persisted per tick (only every 10 %), so a reconnect may skip intermediate percentages; the snapshot fixes the current value immediately.
+
+### 10.2 Fan-out architecture
+
+```mermaid
+flowchart LR
+    W[worker] -- "PUBLISH video:{id} · user:{uid}" --> R[(Redis Pub/Sub)]
+    R -- "PSUBSCRIBE video:* user:*" --> A1[api pod 1<br/>SseHub]
+    R --> A2[api pod 2<br/>SseHub]
+    A1 --> C1[client]
+    A1 --> C2[client]
+    A2 --> C3[client]
+```
+
+- One dedicated ioredis connection per API pod in subscriber mode; `SseHub` keeps `Map<channel, Set<Reply>>`. O(1) publish, O(subscribers-of-channel) fan-out.
+- **Snapshot-on-connect**: authorise → `SELECT` video → write `snapshot` → subscribe → replay `video_events WHERE id > lastEventId` (if header present). Ordering: subscribe *before* the DB read to avoid a gap; deduplicate by `id`.
+- **Backpressure**: if `reply.raw.write()` returns `false`, coalesce `progress` events (keep latest) until `drain`; never coalesce `status`/`error` events.
+- **Limits**: 20 SSE connections per user; 5 000 per pod (`@fastify/under-pressure` sheds beyond); heartbeat `: ping` every 15 s; server closes idle streams after 30 min (client auto-reconnects).
+- **Ordering & loss**: Pub/Sub is fire-and-forget; that is acceptable because the DB is the truth and the snapshot/replay path re-synchronises. Terminal states are additionally persisted in `notify` (`video_events`) before publishing.
+- Also exposed: `GET /v1/me/events` on channel `user:{userId}` for list pages.
+
+---
+
+## 11. Security
+
+| Area | Control |
+|---|---|
+| Authentication | JWT bearer verified with `@fastify/jwt` against `AUTH_JWKS_URL` (RS256/EdDSA); `sub` → `users.id` (auto-provision on first sight). Dev bypass only when `NODE_ENV=development` **and** `AUTH_DEV_USER_ID` set. Admin routes require role claim `admin` or `x-admin-token` (constant-time compare). |
+| Authorisation | Every video query scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
+| Upload safety | Presigned URLs TTL 15 min; `Content-Type` and `Content-Length` are signed into the single-PUT URL; multipart verified via `HeadObject` after completion; server deletes and `REJECT`s on mismatch. Content-type allowlist (`video/mp4, video/quicktime, video/webm, video/x-matroska`). Per-user quota (`MAX_UPLOAD_BYTES`, `MAX_INFLIGHT_PER_USER`). |
+| Storage | Buckets private; CDN reads `public` via R2 custom domain (no public bucket URL exposed). Least-privilege access keys: API key may `Put/Get/Head/Multipart*` on `raw` only; worker key may `Get` on `raw` and `Put/Delete` on `public`. |
+| Command injection | FFmpeg invoked with argv arrays via `spawn` (never `exec`/shell); object keys are derived from UUIDs, never from user filenames (original filename stored as metadata only). |
+| Webhooks | HMAC-SHA256 signature header `X-Signature: t=…,v1=…` with 5-min replay window; `Idempotency-Key` header. Outbound webhooks only to `https://` URLs; SSRF guard (deny private IP ranges). |
+| Rate limiting | `@fastify/rate-limit` keyed by user (fallback IP): 30/min uploads, 300/min reads, 5/min reprocess. |
+| Transport | TLS terminated by Cloudflare (Tunnel/Proxy) in cloud; `HSTS`; CORS allowlist = frontend origins. |
+| Secrets | Env only; `.env` git-ignored; cloud via Kubernetes Secrets (sealed-secrets or SOPS+age in repo). No secrets in images. |
+| Containers | Non-root user, read-only root FS, `tmpfs`/emptyDir for `/tmp/vp`, `resources.limits` on every pod, distroless-ish base for API (`node:24-slim`), minimal ffmpeg layer for workers. |
+| Redis | `requirepass`, not exposed outside the network/cluster, `noeviction`. |
+| Supply chain | `pnpm audit` + Dependabot/Renovate; lockfile frozen in CI; images built in CI and pinned by digest in manifests; Trivy scan on images. |
+| Privacy | No PII beyond email; logs redact `Authorization`, presigned URLs (query string stripped). |
+
+---
+
+## 12. Deployment Topologies & Cost Model
+
+Three rungs, same images, same env contract. Moving up a rung changes manifests, never code.
+
+### 12.1 Rung 1 — Docker Compose (local dev, Phase 0–2)
+
+```yaml
+# infra/compose/docker-compose.yml (outline — full file in repo)
+name: video-pipeline
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: vp, POSTGRES_PASSWORD: vp, POSTGRES_DB: vp }
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U vp"], interval: 5s }
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec",
+              "--maxmemory", "256mb", "--maxmemory-policy", "noeviction", "--requirepass", "vp"]
+    ports: ["6379:6379"]
+    volumes: [redisdata:/data]
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment: { MINIO_ROOT_USER: minioadmin, MINIO_ROOT_PASSWORD: minioadmin }
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [miniodata:/data]
+    healthcheck: { test: ["CMD", "mc", "ready", "local"], interval: 5s }
+
+  minio-init:                      # creates buckets, lifecycle rules, anonymous read on `public`, optional webhook
+    image: minio/mc
+    depends_on: { minio: { condition: service_healthy } }
+    entrypoint: ["/bin/sh", "/init/minio-init.sh"]
+    volumes: ["./minio-init.sh:/init/minio-init.sh:ro"]
+
+  api:
+    build: { context: ../.., dockerfile: apps/api/Dockerfile }
+    env_file: [../../.env]
+    ports: ["3000:3000", "9464:9464"]          # http, metrics
+    depends_on: [postgres, redis, minio-init]
+    command: ["node", "dist/main.js"]
+
+  migrate:
+    build: { context: ../.., dockerfile: apps/api/Dockerfile }
+    env_file: [../../.env]
+    command: ["node", "dist/migrate.js"]
+    depends_on: { postgres: { condition: service_healthy } }
+    restart: "no"
+
+  # ---- workers: one image, WORKER_STAGE picks the role -----------------------
+  worker-probe:          &worker
+    build: { context: ../.., dockerfile: apps/worker/Dockerfile }
+    env_file: [../../.env]
+    environment: { WORKER_STAGE: probe }
+    depends_on: [redis, postgres, minio-init]
+    tmpfs: ["/tmp/vp:size=2g"]
+    deploy: { resources: { limits: { cpus: "1", memory: 1g } } }
+  worker-transcode-1080p:
+    <<: *worker
+    environment: { WORKER_STAGE: transcode-1080p, FFMPEG_THREADS: "2" }
+    deploy: { resources: { limits: { cpus: "2", memory: 2g } } }
+  worker-transcode-720p:
+    <<: *worker
+    environment: { WORKER_STAGE: transcode-720p, FFMPEG_THREADS: "2" }
+    deploy: { resources: { limits: { cpus: "2", memory: 1500m } } }
+  worker-transcode-480p:
+    <<: *worker
+    environment: { WORKER_STAGE: transcode-480p, FFMPEG_THREADS: "1" }
+  worker-thumbnail:      { <<: *worker, environment: { WORKER_STAGE: thumbnail } }
+  worker-package:        { <<: *worker, environment: { WORKER_STAGE: package } }
+  worker-notify:         { <<: *worker, environment: { WORKER_STAGE: notify } }
+  worker-housekeeping:   { <<: *worker, environment: { WORKER_STAGE: housekeeping } }
+
+  # ---- observability (profile: observability) ---------------------------------
+  prometheus:   { image: prom/prometheus:latest, profiles: [observability], ports: ["9090:9090"], volumes: ["./prometheus.yml:/etc/prometheus/prometheus.yml:ro"] }
+  grafana:      { image: grafana/grafana:latest, profiles: [observability], ports: ["3001:3000"], volumes: ["./grafana/provisioning:/etc/grafana/provisioning:ro", "../../observability/dashboards:/var/lib/grafana/dashboards:ro"] }
+  tempo:        { image: grafana/tempo:latest, profiles: [observability], command: ["-config.file=/etc/tempo.yml"], volumes: ["./tempo.yml:/etc/tempo.yml:ro"] }
+  loki:         { image: grafana/loki:latest,  profiles: [observability] }
+  otel-collector: { image: otel/opentelemetry-collector-contrib:latest, profiles: [observability], volumes: ["./otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro"], ports: ["4318:4318"] }
+  hls-test-page: { image: nginx:alpine, profiles: [tools], ports: ["8080:80"], volumes: ["../../tools/hls-test-page:/usr/share/nginx/html:ro"] }
+
+volumes: { pgdata: {}, redisdata: {}, miniodata: {} }
+```
+
+Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`docker compose up postgres redis minio minio-init`); `docker compose --profile observability up` adds the monitoring stack; `pnpm compose:scale transcode-1080p 3` is the Phase-3-lite scaler wrapper.
+
+**Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `tools/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
+
+**Worker Dockerfile (runtime-switchable, multi-arch):**
+
+```dockerfile
+# apps/worker/Dockerfile
+ARG WORKER_RUNTIME=bun                     # bun | node
+FROM node:24-slim AS build
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /repo
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY apps/worker/package.json apps/worker/
+COPY packages/*/package.json packages/
+RUN pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm turbo run build --filter=@vp/worker... && pnpm deploy --filter=@vp/worker --prod /out
+
+FROM oven/bun:1.4-slim AS runtime-bun
+FROM node:24-slim      AS runtime-node
+FROM runtime-${WORKER_RUNTIME} AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg ca-certificates tini \
+ && rm -rf /var/lib/apt/lists/* && useradd -r -u 10001 worker
+COPY --from=build /out /app
+WORKDIR /app
+USER worker
+ENV NODE_ENV=production TMPDIR=/tmp/vp
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} dist/main.js"]
+```
+
+(`tini` forwards `SIGTERM` and reaps zombie ffmpeg processes; `sh -c exec` keeps PID 1 clean. Built with `docker buildx build --platform linux/amd64,linux/arm64`.)
+
+### 12.2 Rung 2 — Kubernetes locally (kind or k3d, Phase 3)
+
+`infra/k8s/` is a Kustomize tree (`base/` + `overlays/{local,cloud}`) — Helm only for third-party charts (KEDA, kube-prometheus-stack, MinIO, Redis). Local cluster: `k3d cluster create vp --agents 2 -p "3000:80@loadbalancer"` (k3d is faster than kind and ships Traefik; either works — the Makefile supports both).
+
+Base manifests: `api` Deployment (2 replicas, HPA on CPU 70 %), one Deployment per worker stage, `ScaledObject` per worker Deployment, `Secret`/`ConfigMap` from the same `.env` contract, `ServiceMonitor`s, `PrometheusRule`s, Grafana dashboards as ConfigMaps.
+
+Transcode Deployment essentials:
+
+```yaml
+spec:
+  replicas: 0                                   # KEDA owns this
+  template:
+    spec:
+      terminationGracePeriodSeconds: 900        # let a 1080p job finish on scale-in
+      containers:
+        - name: worker
+          image: ghcr.io/szebest/vp-worker@sha256:…
+          env:
+            - { name: WORKER_STAGE, value: transcode-1080p }
+            - { name: FFMPEG_THREADS, valueFrom: { resourceFieldRef: { resource: limits.cpu } } }
+          resources:
+            requests: { cpu: "1500m", memory: "1.5Gi", ephemeral-storage: "6Gi" }
+            limits:   { cpu: "2",     memory: "2Gi",   ephemeral-storage: "8Gi" }
+          volumeMounts: [{ name: tmp, mountPath: /tmp/vp }]
+          securityContext: { runAsNonRoot: true, readOnlyRootFilesystem: true, allowPrivilegeEscalation: false }
+          livenessProbe:  { exec: { command: ["sh", "-c", "test $(( $(date +%s) - $(cat /tmp/vp/heartbeat) )) -lt 120"] }, periodSeconds: 30 }
+      volumes: [{ name: tmp, emptyDir: { sizeLimit: 8Gi } }]
+```
+
+### 12.3 Rung 3 — Cloud reference deployment (Phase 4)
+
+```mermaid
+flowchart LR
+    U[Users / frontend] --> CF[Cloudflare<br/>DNS · CDN · Tunnel · WAF]
+    CF -- "api.example.com (Tunnel)" --> K3S
+    CF -- "cdn.example.com (R2 custom domain)" --> R2[(Cloudflare R2<br/>raw · public)]
+    subgraph VPS["Hetzner CAX11 (arm64, 2 vCPU / 4 GB) or Oracle A1 (2 OCPU / 12 GB) — k3s"]
+        K3S[Traefik ingress] --> API[api ×1]
+        KEDA[KEDA] --> W[worker deployments<br/>0..N per stage]
+        REDIS[(Redis, 256 MB, AOF, PVC)]
+        ALLOY[Grafana Alloy<br/>metrics · logs · traces]
+    end
+    API & W --> NEON[(Neon Postgres free)]
+    API & W --> R2
+    API & W --> REDIS
+    ALLOY --> GC[Grafana Cloud free<br/>Prometheus · Loki · Tempo]
+    GH[GitHub Actions] -- "buildx multi-arch → GHCR" --> K3S
+```
+
+Capacity reality check on a 2-vCPU node: the API (~150 MB), Redis (~50 MB), KEDA + k3s (~600 MB) leave ~2.5 GB / 1.5 vCPU for **one** 1080p transcode at a time (or two 480p). That is fine for a portfolio deployment; the load tests that need real parallelism run locally on the laptop (8 vCPU) or on a temporary Hetzner CCX instance for an hour (≈ €0.10). KEDA `maxReplicaCount` in the cloud overlay is therefore 1 for 1080p/720p and 2 for 480p/probe — scale-to-zero is what saves money, not scale-out.
+
+**Monthly cost model (verified 2026-09-03):**
+
+| Item | Oracle path | Hetzner path |
+|---|---|---|
+| Compute | €0 (A1 2 OCPU/12 GB Always Free) | €5.99 CAX11 (or €5.49 CX23) + €0.50 IPv4 |
+| Object storage | R2 free: 10 GB, 1 M Class A, 10 M Class B, **€0 egress** | same |
+| Postgres | Neon free (0.5 GB, 100 CU-h) | same |
+| Redis | self-hosted on node | same |
+| Observability | Grafana Cloud free (10k series, 50 GB logs/traces, 14 d) | same |
+| CDN / DNS / Tunnel | Cloudflare free | same |
+| CI / registry | GitHub Actions + GHCR free (public repo) | same |
+| **Total** | **€0** | **≈ €6.5** |
+
+Guardrails: R2 Class A ops are the metric to watch (every segment upload is one PUT: a 10-min video ≈ 100 segments × 3 renditions ≈ 300 Class A ops → 1 M free ops ≈ 3 300 videos/month); Neon compute hours are burned by the reconciler's cron — keep its frequency at 15 min so autosuspend (5 min idle) still kicks in between runs; set `RAW_RETENTION_DAYS=7` to stay under 10 GB.
+
+**Provider fallback ladder** (all env-only switches): R2 → B2 (+Cloudflare CDN via Bandwidth Alliance) → MinIO on the VPS PVC. Neon → Supabase (note 1-week pause) → Postgres on the VPS. Hetzner → Oracle → any €5 VPS.
+
+---
+
+## 13. Autoscaling & Observability
+
+### 13.1 Metrics catalogue
+
+Exposed by `packages/observability` (`prom-client` registry; API on `:9464/metrics`, workers likewise; scraped by Prometheus/Alloy).
+
+| Metric | Type | Labels | Source | Used for |
+|---|---|---|---|---|
+| `http_request_duration_seconds` | histogram | `method, route, status` | API | RED, SLO p95 < 200 ms |
+| `http_requests_in_flight` | gauge | — | API | load shedding |
+| `sse_connections` | gauge | `channel_type` | API | fan-out capacity |
+| `sse_events_published_total` | counter | `event` | workers | |
+| `bullmq_queue_jobs` | gauge | `queue, state ∈ {waiting, prioritized, active, delayed, failed, completed, waiting-children}` | API (`queue-metrics` poller every 5 s via `queue.getJobCounts()`) | **KEDA scaling**, dashboards |
+| `bullmq_queue_oldest_waiting_age_seconds` | gauge | `queue` | API poller | starvation alert |
+| `jobs_processed_total` | counter | `queue, result ∈ {completed, failed, dlq, stalled}` | workers | failure rate |
+| `job_duration_seconds` | histogram | `queue` | workers | p95 job latency |
+| `job_wait_seconds` | histogram | `queue` | workers (`processedOn - timestamp`) | queue lag |
+| `transcode_realtime_factor` | histogram | `rendition, preset` | transcode | video-seconds per wall-second (>1 = faster than realtime) |
+| `transcode_output_bytes_total` | counter | `rendition` | transcode | storage growth |
+| `ffmpeg_exit_total` | counter | `stage, code` | workers | OOM (137) detection |
+| `storage_ops_total` / `storage_op_duration_seconds` | counter / histogram | `op ∈ {put,get,head,multipart}, bucket, result` | all | R2 Class A budget, latency |
+| `worker_tmp_bytes` | gauge | `stage` | workers | disk pressure |
+| `dlq_entries_total` | counter | `queue, error_code` | failed handler | alerting |
+| `videos_by_status` | gauge | `status` | API poller (SQL) | business view |
+| `time_to_ready_seconds` | histogram | `bucket ∈ {<1min,1-5,5-15,15-60}` (source duration) | package | product SLO |
+
+### 13.2 KEDA ScaledObject (Prometheus scaler, primary)
+
+```yaml
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: { name: worker-transcode-1080p }
+spec:
+  scaleTargetRef: { name: worker-transcode-1080p }
+  minReplicaCount: 0
+  maxReplicaCount: 6                 # overlay: 1 in cloud, 6 locally
+  pollingInterval: 10
+  cooldownPeriod: 300                # wait 5 min of empty queue before scaling to zero
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:   { stabilizationWindowSeconds: 0,   policies: [{ type: Pods, value: 2, periodSeconds: 30 }] }
+        scaleDown: { stabilizationWindowSeconds: 300, policies: [{ type: Pods, value: 1, periodSeconds: 60 }] }
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
+        query: |
+          sum(bullmq_queue_jobs{queue="transcode-1080p", state=~"waiting|prioritized|active"})
+        threshold: "1"               # one pod per outstanding job (concurrency = 1)
+        activationThreshold: "0"     # any job wakes the deployment from zero
+```
+
+Fallback trigger (no Prometheus dependency):
+
+```yaml
+    - type: redis
+      metadata:
+        addressFromEnv: REDIS_ADDR          # host:port
+        passwordFromEnv: REDIS_PASSWORD
+        listName: "bull:transcode-1080p:wait"
+        listLength: "1"
+        activationListLength: "0"
+        databaseIndex: "0"
+```
+
+Why `waiting + active` and threshold 1: with concurrency 1 per pod, `desired = ceil(outstanding / 1)` means every queued job gets a pod and no busy pod is counted as free capacity. KEDA scales the Deployment; the HPA behaviour block prevents flapping and the long `terminationGracePeriodSeconds` plus `worker.close()` makes scale-in safe. Because the queue is *pulled*, over-provisioning during a burst is harmless — surplus pods idle and are removed after cooldown.
+
+**Compose-level scaler (Phase 3-lite, no Kubernetes):** `tools/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose up -d --scale worker-transcode-1080p=N --no-recreate` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
+
+### 13.3 Tracing (OpenTelemetry)
+
+- `packages/observability/otel.ts` bootstraps `@opentelemetry/sdk-node` with OTLP/HTTP exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`), auto-instrumentation for Fastify, `pg`/`postgres`, `ioredis`, `http`, plus a manual BullMQ instrumentation: producers inject `traceparent` into `job.data` (`packages/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. `ffmpeg` runs are child spans with argv (redacted URLs) and exit code.
+- Result: one trace = `POST /uploads/:id/complete` → `probe` → three `transcode-*` → `thumbnail` → `package` → `notify`, viewable in Tempo; `trace_id` is also written to `video_events` so an operator can go from a video row to its trace.
+- Sampling: parent-based, 100 % in dev, 20 % in cloud (Grafana Cloud 50 GB/month is generous, but transcode spans are long-lived).
+
+### 13.4 Logging
+
+pino JSON to stdout; base bindings `{ service, stage, version, pod }`; every job log line carries `{ videoId, jobId, attempt, traceId, spanId }` via `AsyncLocalStorage` child loggers. Loki/Grafana Cloud Logs via Alloy/otel-collector; `ffmpeg` stderr is captured and attached to the failure record (last 50 lines) instead of being streamed as logs.
+
+### 13.5 Dashboards & alerts (committed under `observability/`)
+
+Dashboards (`dashboards/*.json`, provisioned): **Pipeline Overview** (videos by status, time-to-ready, throughput/min), **Queues** (per-queue waiting/active/delayed/failed, oldest age, wait p95, replicas vs backlog — the autoscaling proof graph), **Workers** (job duration p50/p95, realtime factor by rendition/preset, ffmpeg exit codes, tmp bytes, CPU/mem), **API** (RED, SSE connections, under-pressure events), **Storage & Cost** (Class A/B ops per hour, bytes written, projected monthly ops vs free tier).
+
+Alert rules (`alerts/*.yaml`, PrometheusRule):
+
+| Alert | Expression (sketch) | For | Severity |
+|---|---|---|---|
+| `DLQNotEmpty` | `increase(dlq_entries_total[10m]) > 0` | 0m | warning |
+| `QueueStarvation` | `bullmq_queue_oldest_waiting_age_seconds > 900` | 5m | warning |
+| `JobFailureRateHigh` | `rate(jobs_processed_total{result="failed"}[10m]) / rate(jobs_processed_total[10m]) > 0.05` | 10m | critical |
+| `SystemicFailure` | same ratio `> 0.5` | 5m | critical (runbook: pause queue) |
+| `WorkerStalledJobs` | `increase(jobs_processed_total{result="stalled"}[30m]) > 3` | 0m | warning |
+| `WorkerStuck` | SQL exporter: `RUNNING` steps with `heartbeat_at < now()-5m` | 5m | warning |
+| `ScaleToZeroBroken` | `bullmq_queue_jobs{state="waiting"} > 0 and kube_deployment_status_replicas == 0` | 3m | critical |
+| `R2ClassABudget` | `predict_linear(storage_ops_total{op="put"}[1d], 30*86400) > 900000` | 1h | info |
+| `APILatencyHigh` | `histogram_quantile(0.95, …http_request_duration_seconds…) > 0.2` | 10m | warning |
+| `WorkerTmpDiskHigh` | `worker_tmp_bytes / 8e9 > 0.8` | 5m | warning |
+
+Alertmanager → Discord/Telegram webhook (free) locally; Grafana Cloud IRM (3 free users) in cloud.
+
+---
+
+## 14. Distributed Load Testing & Chaos Plan
+
+### 14.1 Principles
+
+- **Synthetic media only.** `tools/gen-video` produces deterministic sources with `ffmpeg -f lavfi -i testsrc2=size=1920x1080:rate=24 -f lavfi -i sine=frequency=440 -t {sec}` at 15 s / 60 s / 10 min / 30 min and a "hostile" set (truncated file, audio-only, 4K/60fps, rotated portrait, HEVC-in-MKV). Checked into `tools/gen-video/manifest.json`, generated on demand (never committed as binaries).
+- **Every scenario has a threshold** (k6 `thresholds`) so it can fail CI, and a **Grafana snapshot** committed under `docs/load-tests/results/{date}-{scenario}/`.
+- **Two execution modes:** `k6 run` from the laptop against compose (Phases 2–3), and **k6-operator** `TestRun` CRDs inside the k3d/k3s cluster with `parallelism: N` for distributed runs (Phase 3–4). Optional: Grafana Cloud k6 (500 VU-h/month free) for a cloud-sourced run against the reference deployment.
+- k6 outputs to Prometheus remote-write (`K6_PROMETHEUS_RW_SERVER_URL`) so load-generator metrics and system metrics sit on the same dashboard timeline.
+
+### 14.2 Scenarios
+
+| # | Scenario | What it proves | k6 shape | Pass thresholds | Chaos injected |
+|---|---|---|---|---|---|
+| S1 | **Upload storm** | API is not in the data path; presign/complete scale | `ramping-vus` 0→500 over 5 min, hold 10 min; each VU: `POST /uploads` (20 MB synthetic) → 3 multipart PUTs to storage → `complete` | `http_req_duration{route:presign} p95<200ms`, `p99<500ms`; API container network I/O flat vs file size; `checks>99.5%`; 0 `5xx` | none |
+| S2 | **Large file** | Streaming end-to-end, bounded memory/disk | 5 VUs each uploading a 4 GB synthetic source as 64 × 64 MB parts (concurrency 4), followed by full processing of a 30-min 1080p source | API RSS < 300 MB throughout; worker RSS < 2 GB; `worker_tmp_bytes` never > source + 1 segment; `ListParts` resume works after killing the VU at 50 % | VU killed mid-upload and resumed |
+| S3 | **Backlog burst / queue starvation** | Autoscaling, fairness, drain time | `shared-iterations` 1 000 uploads of the 15 s source in 60 s (one user = 700, nine users = 300) | KEDA reaches `maxReplicaCount` ≤ 60 s after backlog appears; drain time recorded; `bullmq_queue_oldest_waiting_age_seconds` for the nine small users < 2× that of the big user (admission control working); 0 DLQ | none |
+| S4 | **Worker node failure recovery** | Stalled detection, idempotent redo, effectively-once | 50 × 60 s sources in flight; chaos script kills pods | Every video reaches READY; `stalled` counter > 0; exactly one `video.ready` event per video; `segment_count` matches; no orphan keys (`ListObjects` audit) | `kubectl delete pod -l stage=transcode-720p` every 45 s for 5 min; `docker kill -s KILL` in compose mode |
+| S5 | **Dependency outage** | Backoff, DLQ, circuit runbook | 30 videos in flight | Storage 503 for 60 s → all videos READY (retries visible); storage down 15 min → jobs land in DLQ after 4 attempts, `SystemicFailure` fires, **replay** from DLQ succeeds; Redis restart → no lost videos (reconciler) | `toxiproxy` in front of MinIO (latency 2 s, 503 injection); `docker restart redis`; `iptables` drop for Neon in cloud |
+| S6 | **SSE fan-out** | Real-time path scales | 5 000 VUs open `/videos/:id/events` across 200 videos while S3 runs | `sse_connections=5000` on one API pod, RSS < 512 MB; publish→receive p95 < 2 s (k6 measures timestamp in event payload); reconnect with `Last-Event-ID` yields no gaps | API pod restart mid-test (clients must reconnect and receive snapshot) |
+| S7 | **Soak** | Leaks, disk hygiene, scheduler drift | 4 h at 1 upload/10 s (60 s source) | Flat RSS trend (< 5 %/h) on API and workers; `/tmp/vp` empty between jobs; `videos_by_status{PROCESSING}` returns to 0; Neon autosuspends between reconciler runs | none |
+
+### 14.3 k6 sketch (S1 core)
+
+```js
+// load-tests/k6/scenarios/s1-upload-storm.js
+import http from 'k6/http';
+import { check } from 'k6';
+import { randomBytes } from 'k6/crypto';
+export const options = {
+  scenarios: { storm: { executor: 'ramping-vus', stages: [{ duration: '5m', target: 500 }, { duration: '10m', target: 500 }, { duration: '1m', target: 0 }] } },
+  thresholds: {
+    'http_req_duration{name:presign}':  ['p(95)<200', 'p(99)<500'],
+    'http_req_duration{name:complete}': ['p(95)<300'],
+    'checks': ['rate>0.995'],
+  },
+};
+const PART = 8 * 1024 * 1024, PARTS = 3;
+export default function () {
+  const h = { headers: { Authorization: `Bearer ${__ENV.TOKEN}`, 'Content-Type': 'application/json' } };
+  const up = http.post(`${__ENV.API}/v1/uploads`, JSON.stringify({ filename: 'synthetic.mp4', sizeBytes: PART * PARTS, contentType: 'video/mp4' }), { ...h, tags: { name: 'presign' } });
+  check(up, { 'presign 201': (r) => r.status === 201 });
+  const { uploadId, parts } = up.json();
+  const etags = parts.slice(0, PARTS).map((p) => {
+    const r = http.put(p.url, randomBytes(PART), { headers: { 'Content-Type': 'video/mp4' }, tags: { name: 'storage-put' } });
+    return { partNumber: p.partNumber, etag: r.headers['Etag'] };
+  });
+  const done = http.post(`${__ENV.API}/v1/uploads/${uploadId}/complete`, JSON.stringify({ parts: etags }), { ...h, tags: { name: 'complete' } });
+  check(done, { 'complete 202': (r) => r.status === 202 });
+}
+```
+
+(For S1 the bytes are random, so `probe` will fail with `CORRUPT_CONTAINER` and exercise the DLQ path on purpose; S3–S7 upload real synthetic MP4s via `open()` + `SharedArray`.)
+
+### 14.4 Chaos tooling
+
+`tools/chaos/` — small scripts, not a platform: `kill-worker.sh` (random pod of a stage every N s), `toxiproxy` compose profile for MinIO (latency, timeout, 503 via `http` toxic on a tiny proxy), `redis-restart.sh`, `disk-fill.sh` (fills the worker `emptyDir` to trigger `ENOSPC` handling). Chaos Mesh is deliberately not used — the point is to understand the failure, not to operate a chaos platform.
+
+### 14.5 Reporting
+
+`docs/load-tests/README.md` records, per run: commit SHA, hardware, scenario, thresholds pass/fail, drain time, realtime factors, Grafana snapshot PNG, and one paragraph of interpretation. The Phase 3 exit criterion is a table with S1–S3 filled; Phase 4 completes S4–S7.
+
+---
+
+## 15. Repository Structure, Tooling & External Services
+
+### 15.1 Repository layout (monorepo `video-pipeline`)
+
+```
+video-pipeline/
+├── apps/
+│   ├── api/                              # Node 24 LTS · Fastify 5
+│   │   ├── src/
+│   │   │   ├── main.ts                   # boot: env → otel → db → redis → fastify → schedulers upsert
+│   │   │   ├── migrate.ts                # drizzle-kit migrate entrypoint (run as compose/k8s Job)
+│   │   │   ├── app.ts                    # buildApp(): plugins, routes, error handler (problem+json)
+│   │   │   ├── plugins/                  # auth (jwt/jwks), rate-limit, under-pressure, swagger, bull-board, metrics
+│   │   │   ├── modules/
+│   │   │   │   ├── uploads/              # routes, service (presign/multipart/complete/verify), schemas
+│   │   │   │   ├── videos/               # routes, service, repository, sse controller
+│   │   │   │   ├── admin/                # dlq list/replay/discard, reprocess, queue pause
+│   │   │   │   └── health/               # healthz, readyz
+│   │   │   ├── sse/                      # SseHub (redis psubscribe → connections), snapshot, replay
+│   │   │   ├── queues/                   # QueueRegistry (BullMQ Queue instances), queue-metrics poller, schedulers
+│   │   │   └── config.ts                 # zod env schema for the API
+│   │   ├── test/                         # vitest: unit + integration (testcontainers)
+│   │   ├── Dockerfile
+│   │   └── package.json
+│   └── worker/                           # Bun 1.4 (runtime-switchable) · one image, WORKER_STAGE picks role
+│       ├── src/
+│       │   ├── main.ts                   # reads WORKER_STAGE → stageRegistry → Worker + graceful shutdown
+│       │   ├── registry.ts               # { queue, processor, concurrency, lockDuration, shutdownTimeoutMs } per stage
+│       │   ├── stages/
+│       │   │   ├── probe.ts
+│       │   │   ├── transcode.ts          # shared by transcode-1080p/720p/480p (rendition from payload)
+│       │   │   ├── thumbnail.ts
+│       │   │   ├── package.ts
+│       │   │   ├── notify.ts
+│       │   │   └── housekeeping/         # reconcile-uploads, reconcile-processing, purge-deleted, expire-raw, tmp-sweep
+│       │   ├── lib/
+│       │   │   ├── with-telemetry.ts     # traceparent extraction, spans, metrics, logger bindings
+│       │   │   ├── failure-handler.ts    # DLQ pattern: dlq_entries + dlq queue + rendition/video state
+│       │   │   ├── fencing.ts            # claimStep() / completeStep(lockToken)
+│       │   │   ├── tmpdir.ts             # per-job temp dir with guaranteed cleanup + heartbeat file
+│       │   │   └── segment-uploader.ts   # watches ffmpeg output dir, uploads closed segments, bounded concurrency
+│       │   └── config.ts
+│       ├── test/                         # vitest (node) + bun test (bun) — both in CI
+│       ├── Dockerfile                    # ARG WORKER_RUNTIME=bun|node
+│       └── package.json
+├── packages/
+│   ├── job-contracts/                    # zod schemas + types for every job payload, jobId builders, stagePolicies, queue names
+│   ├── db/                               # drizzle schema, migrations/, repositories (videos, steps, events, dlq), CAS helpers
+│   ├── storage/                          # S3 client factory (MinIO/R2/B2), presign, multipart, keys.ts (deterministic key builders), lifecycle setup
+│   ├── ffmpeg/                           # probe(), buildTranscodeArgs(), buildThumbnailArgs(), progress parser, ladder.ts, master-playlist.ts, error classification
+│   ├── observability/                    # prom-client registry + metric definitions, otel bootstrap, pino logger factory
+│   ├── events/                           # Redis Pub/Sub publisher/subscriber, channel names, SSE event schemas (shared with frontend later)
+│   ├── config/                           # shared zod env fragments (redis, postgres, storage, otel) + loadEnv()
+│   ├── errors/                           # TransientError, UnrecoverableError re-export, error codes enum, problem+json mapper
+│   └── tsconfig/                         # base tsconfig presets
+├── infra/
+│   ├── compose/                          # docker-compose.yml, minio-init.sh, prometheus.yml, tempo.yml, otel-collector.yml, grafana/provisioning, toxiproxy profile
+│   ├── k8s/
+│   │   ├── base/                         # namespace, api, worker-<stage> deployments, scaledobjects, secrets(template), servicemonitors, prometheusrules
+│   │   ├── overlays/local/               # k3d/kind: MinIO + Postgres + Redis in-cluster, maxReplicaCount 6
+│   │   └── overlays/cloud/               # Neon + R2, cloudflared, Alloy → Grafana Cloud, maxReplicaCount 1–2
+│   ├── helm-values/                      # keda, kube-prometheus-stack, redis, minio
+│   └── terraform/                        # cloudflare (R2 buckets, custom domain, tunnel, DNS), hetzner (server, firewall) — optional, small
+├── observability/
+│   ├── dashboards/                       # pipeline-overview.json, queues.json, workers.json, api.json, storage-cost.json
+│   └── alerts/                           # prometheus rules yaml
+├── load-tests/
+│   ├── k6/scenarios/                     # s1-upload-storm.js … s7-soak.js, lib/ (auth, upload helpers, sse client)
+│   ├── k6-operator/                      # TestRun CRDs
+│   └── results/                          # committed snapshots + README template
+├── tools/
+│   ├── gen-video/                        # synthetic source generator (ffmpeg lavfi) + manifest.json
+│   ├── hls-test-page/                    # index.html with hls.js, paste a videoId → plays master.m3u8 + shows SSE log
+│   ├── compose-autoscaler/               # Phase-3-lite scaler script
+│   ├── chaos/                            # kill-worker.sh, redis-restart.sh, disk-fill.sh
+│   └── dev-token/                        # mint dev JWTs (local JWKS) for curl/k6
+├── docs/
+│   ├── PRD.md
+│   ├── SDD.md                            # this document
+│   ├── adr/                              # one file per ADR when they evolve beyond §4
+│   ├── runbooks/                         # dlq-replay.md, queue-paused.md, worker-stuck.md, storage-outage.md, cost-budget.md
+│   └── load-tests/                       # results & README
+├── .github/workflows/
+│   ├── ci.yml                            # typecheck · lint · unit · integration (services: postgres/redis/minio) · worker tests on bun AND node
+│   ├── images.yml                        # buildx multi-arch → ghcr.io/szebest/vp-api, vp-worker (tags: sha, latest) · Trivy scan
+│   └── load-smoke.yml                    # nightly: compose up → S1 (60 VU/2 min) → thresholds
+├── .env.example                          # §16 — the single env contract for api + worker
+├── package.json · pnpm-workspace.yaml · turbo.json · tsconfig.base.json
+├── biome.json                            # lint + format (Biome replaces eslint+prettier)
+├── vitest.workspace.ts
+├── Makefile                              # make up / down / observability / k3d-up / k3d-deploy / load-s1 / chaos-s4
+└── README.md
+```
+
+Package naming: `@vp/api`, `@vp/worker`, `@vp/job-contracts`, `@vp/db`, … Dependencies flow **apps → packages** only; packages never import apps; `job-contracts`, `errors`, `config` have zero runtime deps beyond zod.
+
+### 15.2 Toolchain
+
+| Concern | Choice | Version (2026-09) | Notes |
+|---|---|---|---|
+| Package manager / workspaces | pnpm | 10.x | `pnpm deploy --prod` for slim images |
+| Task runner / cache | Turborepo | 2.x | remote cache optional (Vercel free) |
+| Language | TypeScript | 5.x, `strict`, `noUncheckedIndexedAccess`, ESM | |
+| API runtime | Node.js | 24 LTS (v26 becomes LTS 2026-10-28 — upgrade in Phase 4) | |
+| Worker runtime | Bun | 1.4.x (Node fallback) | |
+| HTTP | Fastify 5 + `fastify-type-provider-zod`, `@fastify/jwt`, `@fastify/rate-limit`, `@fastify/under-pressure`, `@fastify/swagger`, `@fastify/cors`, `@fastify/helmet` | | |
+| Queue | BullMQ 6 + ioredis 5 | | `@bull-board/api` + `@bull-board/fastify` |
+| DB | PostgreSQL 16, Drizzle ORM 0.45 (1.0 when GA) + drizzle-kit, `postgres` (postgres.js) driver | | |
+| Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `@aws-sdk/lib-storage` | 3.x | |
+| Media | FFmpeg 7.x (system package in image), `packages/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
+| Validation | zod 4 | | |
+| IDs | `uuidv7` | | |
+| Logging | pino 9 + pino-pretty (dev) | | |
+| Metrics | prom-client 15 | | |
+| Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
+| Testing | vitest 3 (unit/integration), `@testcontainers/postgresql`, `@testcontainers/redis`, `testcontainers` (MinIO), `bun test` for worker parity, supertest-style via `app.inject()` | | |
+| Lint/format | Biome 2 | | one tool, fast |
+| Git hooks | lefthook | | typecheck + biome on staged |
+| Containers | Docker 27 + buildx, Compose v2 | | |
+| Local Kubernetes | k3d (or kind) + kubectl + kustomize + helm | k3d 5.x | |
+| Autoscaling | KEDA 2.20 | | |
+| Monitoring | kube-prometheus-stack (Prometheus 3, Grafana 12, Alertmanager), Tempo 2, Loki 3, Grafana Alloy / otel-collector-contrib | | |
+| Load testing | k6 2.x, k6-operator 1.6 | | |
+| Chaos | toxiproxy 2.x, shell scripts | | |
+| Secrets (cloud) | SOPS + age (encrypted in repo) or sealed-secrets | | |
+| IaC (cloud) | Terraform 1.x with `cloudflare` and `hcloud` providers (optional) | | |
+| CI/CD | GitHub Actions, GHCR, Renovate | | |
+| API docs | OpenAPI 3.1 via `@fastify/swagger` + Scalar UI | | |
+
+### 15.3 External services & accounts to create (all free unless noted)
+
+> **None of these are needed to develop, test, load-test or demo the system.** The entire architecture runs locally in Docker Compose (P9, PRD G11). Create these accounts only when you start Phase 4 (ticket 31); until then the *Needed from* column is the only thing that matters.
+
+| Service | Purpose | Sign-up / docs | Free-tier facts (verified 2026-09-03) | Needed from |
+|---|---|---|---|---|
+| **GitHub** (repo `szebest/video-pipeline`, Actions, GHCR, Renovate) | Source, CI, multi-arch image registry | github.com | Actions free for public repos; GHCR free for public images | Phase 0 |
+| **Cloudflare** account + a domain (or a free `*.workers.dev`-style subdomain is *not* enough for R2 custom domain — a real domain ≈ €5–10/yr is the one unavoidable cost if you want a CDN hostname; otherwise use R2's presigned GETs) | DNS, CDN in front of R2, **R2** buckets, **Tunnel** to the VPS, Zero Trust Access for `/admin` | dash.cloudflare.com → R2; developers.cloudflare.com/r2 | R2: 10 GB, 1 M Class A, 10 M Class B / month, $0 egress; Zero Trust free ≤ 50 seats | Phase 4 (R2 from Phase 2 optional) |
+| **Backblaze B2** (fallback) | S3-compatible storage | backblaze.com/cloud-storage | 10 GB free; egress free to Cloudflare; 3× storage/month elsewhere | optional |
+| **Neon** | Serverless Postgres | neon.com | 0.5 GB, 100 CU-h/month, autosuspend after 5 min, 100 projects | Phase 4 |
+| **Supabase** (fallback / auth) | Postgres or Auth | supabase.com | 500 MB, 2 projects, pauses after 1 week idle | optional |
+| **Grafana Cloud** | Hosted Prometheus/Loki/Tempo, IRM, k6 cloud | grafana.com | 10k series, 50 GB logs, 50 GB traces, 14-day retention, 500 k6 VU-h | Phase 4 |
+| **Hetzner Cloud** | VPS for k3s (paid) | console.hetzner.cloud | CAX11 €5.99 / CX23 €5.49 per month + IPv4 €0.50 (ex-VAT), 20 TB traffic | Phase 4 |
+| **Oracle Cloud** (alternative) | Always Free Arm VM | cloud.oracle.com | 2 OCPU / 12 GB A1 (since 2026-06-15), 200 GB block, 10 TB egress; capacity errors common; idle reclamation | Phase 4 |
+| **Docker Hub** (read-only pulls) / GHCR | Base images | | rate limits: authenticate in CI | Phase 0 |
+| **Sentry** (optional) | Error tracking | sentry.io | 5k errors/month | optional |
+| **Discord or Telegram** bot webhook | Alertmanager notifications | | free | Phase 3 |
+| **Renovate** GitHub app | Dependency updates | github.com/apps/renovate | free | Phase 0 |
+| **Vercel** (optional) | Turborepo remote cache | vercel.com | free hobby | optional |
+
+Local tools to install: Docker Desktop/Engine + Compose, Node 24 (via `fnm`/`volta`), Bun 1.4, pnpm 10 (`corepack enable`), `ffmpeg`/`ffprobe` (for `tools/gen-video` and local unit tests), `k3d` or `kind`, `kubectl`, `helm`, `kustomize`, `k6`, `mc` (MinIO client, optional), `cloudflared` (Phase 4), `terraform` (optional), `sops` + `age` (Phase 4).
+
+Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Going to production, Job Schedulers) · keda.sh/docs (Prometheus & Redis scalers, ScaledObject spec) · developers.cloudflare.com/r2 (S3 API compatibility, presigned URLs, event notifications) · developer.apple.com HLS Authoring Specification · ffmpeg.org/ffmpeg-formats.html#hls-2 · orm.drizzle.team · fastify.dev · opentelemetry.io/docs/languages/js · grafana.com/docs/k6 · neon.com/docs · bun.com/docs.
+
+---
+
+## 16. Environment Variables
+
+One contract for both apps, parsed with zod in `packages/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒.
+
+### 16.1 Core
+
+| Variable | Used by | Example (local) | Notes |
+|---|---|---|---|
+| `NODE_ENV` | both | `development` | `production` disables dev auth bypass and pretty logs |
+| `LOG_LEVEL` | both | `debug` | pino level |
+| `OTEL_SERVICE_NAME` / `SERVICE_VERSION` | both | `vp-api` / git sha | OTel resource attributes; service name defaults per app (`vp-api`, `vp-worker-<stage>`), version set by Dockerfile |
+| `PUBLIC_API_URL` | api | `http://localhost:3000` | for OpenAPI, webhooks |
+| `CORS_ORIGINS` | api | `http://localhost:5173` | comma list of frontend origins |
+| `PORT` / `METRICS_PORT` | both | `3000` / `9464` | metrics bound to a separate port |
+| `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | both (dev + images) | `1` / `1` | no phone-home from tooling/libraries (P9) |
+
+### 16.2 PostgreSQL
+
+| Variable | Example (local) | Cloud (Neon) |
+|---|---|---|
+| `DATABASE_URL` 🔒 | `postgres://vp:vp@localhost:5432/vp` | `postgresql://user:pass@ep-xxx.eu-central-1.aws.neon.tech/vp?sslmode=require` (pooled endpoint `-pooler` for the API; direct for migrations) |
+| `DATABASE_URL_MIGRATIONS` 🔒 | same as above | Neon **direct** (non-pooled) URL |
+| `DATABASE_POOL_MAX` | `10` | `5` per pod (Neon free ≈ 100 connections via pooler) |
+
+### 16.3 Redis (BullMQ + Pub/Sub)
+
+| Variable | Example (local) | Notes |
+|---|---|---|
+| `REDIS_URL` 🔒 | `redis://:vp@localhost:6379/0` | queues, db 0; `rediss://` for TLS |
+| `REDIS_PUBSUB_URL` 🔒 | `redis://:vp@localhost:6379/1` | separate logical DB / connection for Pub/Sub |
+| `REDIS_ADDR` / `REDIS_PASSWORD` 🔒 | `redis:6379` / `vp` | only for the KEDA Redis-list fallback scaler |
+| `BULLMQ_PREFIX` | `bull` | must match KEDA `listName` prefix |
+
+### 16.4 Object storage (S3-compatible)
+
+| Variable | MinIO (local) | Cloudflare R2 | Backblaze B2 |
+|---|---|---|---|
+| `S3_ENDPOINT` | `http://localhost:9000` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` | `https://s3.<region>.backblazeb2.com` |
+| `S3_REGION` | `us-east-1` | `auto` | `<region>` e.g. `eu-central-003` |
+| `S3_FORCE_PATH_STYLE` | `true` | `false` | `false` |
+| `S3_ACCESS_KEY_ID` 🔒 | `minioadmin` | R2 API token → Access Key ID | B2 application keyID |
+| `S3_SECRET_ACCESS_KEY` 🔒 | `minioadmin` | R2 Secret Access Key | B2 applicationKey |
+| `S3_BUCKET_RAW` | `raw` | `vp-raw` | `vp-raw` |
+| `S3_BUCKET_PUBLIC` | `public` | `vp-public` | `vp-public` |
+| `S3_PRESIGN_TTL_SEC` | `900` | `900` | `900` |
+| `CDN_BASE_URL` | `http://localhost:9000/public` | `https://cdn.example.com` (R2 custom domain) | `https://cdn.example.com` (Cloudflare → B2) |
+| `S3_MULTIPART_THRESHOLD_BYTES` | `104857600` (100 MB) | same | same |
+| `S3_PART_SIZE_MIN_BYTES` / `S3_PART_SIZE_MAX_BYTES` | `8388608` / `67108864` | same | same |
+| `RAW_RETENTION_DAYS` | `7` | `7` | `7` |
+
+Worker and API should use **different** access keys with the scoped permissions from §11; env names are identical, values differ per deployment.
+
+### 16.5 Auth
+
+| Variable | Example | Notes |
+|---|---|---|
+| `AUTH_JWKS_URL` | `http://localhost:3000/.well-known/jwks.json` (dev issuer from `tools/dev-token`) or your IdP (`https://<clerk|supabase|auth0>/.well-known/jwks.json`) | RS256/EdDSA verification |
+| `AUTH_ISSUER` / `AUTH_AUDIENCE` | `vp-dev` / `vp-api` | claim checks |
+| `AUTH_DEV_USER_ID` | `00000000-0000-7000-8000-000000000001` | development only |
+| `ADMIN_TOKEN` 🔒 | random 32 bytes | `x-admin-token` for admin routes / Bull Board (or role claim) |
+| `WEBHOOK_SIGNING_SECRET` 🔒 | random 32 bytes | HMAC for outbound webhooks |
+
+### 16.6 Pipeline tuning
+
+| Variable | Default | Notes |
+|---|---|---|
+| `WORKER_STAGE` | — (required in worker) | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` |
+| `WORKER_CONCURRENCY` | per stage registry | override |
+| `WORKER_RUNTIME` | `bun` | build arg / CMD switch |
+| `FFMPEG_PATH` / `FFPROBE_PATH` | `ffmpeg` / `ffprobe` | |
+| `FFMPEG_THREADS` | CPU limit | K8s `resourceFieldRef` |
+| `X264_PRESET` | `veryfast` | load-test variable |
+| `HLS_SEGMENT_SECONDS` | `6` | |
+| `GOP_SECONDS` | `2` | |
+| `TRANSCODE_MODE` | `per-rendition` | `combined` for tiny nodes (ADR-08 #2) |
+| `MAX_UPLOAD_BYTES` | `4294967296` | 4 GB |
+| `MAX_DURATION_SEC` | `3600` | |
+| `MAX_INFLIGHT_PER_USER` | `3` | admission control |
+| `ALLOWED_CONTENT_TYPES` | `video/mp4,video/quicktime,video/webm,video/x-matroska` | |
+| `JOB_TIMEOUT_FACTOR` | `3` | hard timeout = max(factor × duration, 10 min) |
+| `TMP_DIR` | `/tmp/vp` | emptyDir/tmpfs |
+| `SSE_HEARTBEAT_MS` | `15000` | |
+| `SSE_MAX_PER_USER` / `SSE_MAX_PER_POD` | `20` / `5000` | |
+| `WEBHOOK_URL_ALLOWLIST` | empty | optional outbound targets |
+
+### 16.7 Observability
+
+| Variable | Local | Grafana Cloud |
+|---|---|---|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318` | `https://otlp-gateway-<region>.grafana.net/otlp` |
+| `OTEL_EXPORTER_OTLP_HEADERS` 🔒 | — | `Authorization=Basic <base64(instanceId:token)>` |
+| `OTEL_TRACES_SAMPLER` / `OTEL_TRACES_SAMPLER_ARG` | `parentbased_always_on` | `parentbased_traceidratio` / `0.2` |
+| `OTEL_RESOURCE_ATTRIBUTES` | `deployment.environment=local` | `deployment.environment=cloud` |
+| `PROMETHEUS_REMOTE_WRITE_URL` 🔒 (Alloy/k6 only) | — | `https://prometheus-prod-xx.grafana.net/api/prom/push` + basic auth |
+| `LOKI_URL` 🔒 (Alloy only) | `http://loki:3100` | `https://logs-prod-xx.grafana.net/loki/api/v1/push` |
+| `SENTRY_DSN` 🔒 (optional) | — | |
+| `API` / `TOKEN` / `K6_PROMETHEUS_RW_SERVER_URL` (k6 only) | `http://localhost:3000` / dev JWT / `http://localhost:9090/api/v1/write` | reference deployment URL / Grafana Cloud k6 |
+
+### 16.8 Cloud-only
+
+| Variable | Notes |
+|---|---|
+| `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` sidecar/DaemonSet |
+| `CLOUDFLARE_API_TOKEN` 🔒, `CLOUDFLARE_ACCOUNT_ID` | Terraform (R2 buckets, DNS, tunnel) |
+| `HCLOUD_TOKEN` 🔒 | Terraform (Hetzner) |
+| `GHCR_USERNAME` / `GHCR_TOKEN` 🔒 | image pull secret for private images (public images need none) |
+| `SOPS_AGE_KEY` 🔒 | decrypting `infra/k8s/overlays/cloud/secrets.enc.yaml` |
+
+---
+
+## 17. Fact Sheet (verified 2026-09-03)
+
+Items the design leans on, re-checked against vendor sources on the document date. Re-verify before Phase 4 — free tiers moved three times in 2026 alone.
+
+| Topic | Fact | Design impact |
+|---|---|---|
+| Cloudflare R2 | Free: 10 GB storage, 1 M Class A, 10 M Class B ops/month; $0 egress. S3 multipart ✔, presigned PUT/GET ✔ (≤ 7 d, no POST policy). Event notifications → Cloudflare Queues only. | Storage choice; explicit `complete` trigger (ADR-09); Class A budget alert. |
+| Backblaze B2 | 10 GB free; free egress ≤ 3× storage, unlimited to Cloudflare (Bandwidth Alliance). Storage ≈ $6–7/TB. | Fallback storage. |
+| Neon Free | 0.5 GB, 100 CU-h/month/project, autosuspend 5 min, 100 projects, 10 branches. | DB choice; keep reconciler cadence ≥ 15 min. |
+| Supabase Free | 500 MB, 2 projects, paused after 1 week idle. | Fallback / auth only. |
+| Upstash Redis Free | 500k commands/**month**, 256 MB; Upstash documents BullMQ but warns about polling cost. | Self-host Redis (ADR-05). |
+| BullMQ | v6 (6.3.x, Sept 2026): ioredis optional peer dep, Job Schedulers replace repeatables, `Job#discard()` removed → `UnrecoverableError`. Queue names/job IDs cannot contain `:`. Flows ✔. Defaults: `lockDuration 30 s`, `stalledInterval 30 s`, `maxStalledCount 1`, `lockRenewTime = lockDuration/2`. Built-in `exponential/fixed` backoff with `jitter`; custom `backoffStrategy`. No native DLQ. | §9 throughout. |
+| KEDA | v2.20.x; `redis` list scaler (`listName`, `listLength`, `activationListLength`); `prometheus` scaler (`serverAddress`, `query`, `threshold`, `activationThreshold`); `minReplicaCount` default 0; ScaledJob recommended for long per-event jobs (we use ScaledObject deliberately — ADR-12). | §13.2 |
+| Bun | 1.4.0 (Aug 2026); acquired by Anthropic Dec 2025; BullMQ works via ioredis (not `Bun.redis`); historical issues with `child_process` stdio piping and AWS SDK stream hangs on 1.3.x — mitigated by runtime switch. | ADR-01 guard-rails. |
+| Node.js | v24 Active LTS until 2026-10-20 (then Maintenance); v26 LTS from 2026-10-28. | Upgrade API base image in Phase 4. |
+| Fastify / Drizzle / Prisma | Fastify 5.12; Drizzle 0.45 stable, 1.0 RC; Prisma 7 Rust-free by default, Prisma 8 RC tagged `latest`. | ADR-02/04. |
+| Apple HLS Authoring Spec | Target duration SHOULD be 6 s; IDR every 2 s; segments MUST start with IDR; H.264 may be fMP4 or MPEG-TS; HEVC/AV1 MUST be fMP4. | §8, ADR-07. |
+| k6 | 2.2.x; k6-operator 1.6.x maintained; Grafana Cloud k6 500 VU-h/month free. | §14. |
+| Oracle Always Free | A1 allowance **2 OCPU / 12 GB** since 2026-06-15 (was 4/24); 200 GB block; 10 TB egress; capacity errors common; idle reclamation (< 20 % over 7 d). | ADR-15 ranking. |
+| Hetzner | CX23 €5.49, CAX11 €5.99 (ex-VAT, + IPv4) after June 2026 adjustment; 20 TB traffic. | ADR-15 cost model. |
+| Fly.io / Render / Koyeb | Fly: trial only, no free tier; Render: free web only, spins down 15 min, free Postgres expires 30 d, no free workers; Koyeb: one 0.1 vCPU free instance, scales to zero after 1 h. | Rejected for workers. |
+| Grafana Cloud Free | 10k series, 50 GB logs, 50 GB traces, 14-day retention, 3 users, 500 k6 VU-h. | §12.3, §13. |
+| GitHub | Actions free for public repos; GHCR free for public images. | CI/CD. |
+| Cloudflare Zero Trust | Free plan ≤ 50 seats (Tunnel, Access). | Expose VPS without open ports; protect `/admin`. |
+
+---
+
+## 18. Implementation Roadmap
+
+Each phase ends with a demo and a **Definition of Done** that is binary. Estimated effort assumes evenings/weekends; adjust freely, but do not reorder — every phase depends on the invariants of the previous one.
+
+### Phase 0 — Bootstrap (≈ 1 week)
+
+Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/{config,errors,job-contracts,db,storage,ffmpeg,observability,events}` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `tools/gen-video`, `tools/dev-token`, `tools/hls-test-page`.
+
+**DoD:** `git clone && make up && pnpm test` green on a fresh machine; `pnpm gen-video 60s` produces a playable synthetic MP4; images published for `amd64`+`arm64`.
+
+### Phase 1 — Walking skeleton (≈ 2 weeks)
+
+Build: `POST /uploads` (single presigned PUT only) → `complete` (+ `HEAD` verify) → `probe` job → `transcode-720p` job → `package` (single rendition master) → `READY`; `GET /videos/:id` with polling; JWT auth with dev issuer; Bull Board mounted; pino + prom-client basics; worker `main.ts` with `WORKER_STAGE`.
+
+**DoD:** Upload a 60 s synthetic video via curl script, watch status flip to `READY`, play it in `tools/hls-test-page`. Kill the transcode worker mid-job → job retried → still `READY`, exactly one `video.ready` event. Both runtimes pass worker tests in CI.
+
+### Phase 2 — Real pipeline (≈ 3 weeks)
+
+Build: multipart uploads with resume + sweeper + lifecycle rules; ladder selection; **Flows** fan-out to `transcode-{1080p,720p,480p}` + `thumbnail`, fan-in `package` with `getChildrenValues()`; segment uploader streaming as segments close; master playlist with `CODECS`/`BANDWIDTH`; SSE hub (snapshot, replay, heartbeat, backpressure); error taxonomy + `UnrecoverableError` on probe; retries with jitter; **DLQ** (queue + Postgres mirror) + admin replay/discard; fencing tokens + CAS transitions; `video_events`; reconciler schedulers; admission control per user; OpenAPI docs; hostile test-video set passing (each lands in DLQ with the right code).
+
+**DoD:** 20 mixed videos (15 s–10 min, incl. hostile set) uploaded concurrently → all terminal within 15 min on the laptop; every hostile file in DLQ with a correct `error_code`; replay of a transient DLQ entry succeeds; SSE shows per-rendition progress in the test page; `docs/runbooks/dlq-replay.md` written.
+
+### Phase 3 — Observe & scale (≈ 3 weeks)
+
+Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler + Redis fallback), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `tools/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
+
+**DoD:** On k3d: backlog of 1 000 probe jobs → KEDA scales `probe` and `transcode-*` to max within 60 s, drains, returns to 0 after cooldown — captured as a Grafana panel PNG in `docs/load-tests/results/`. One trace shows the full journey of a video. S1–S3 pass thresholds; results table committed.
+
+### Phase 4 — Resilience & cloud (≈ 3–4 weeks)
+
+Build: chaos scenarios S4–S7 with toxiproxy and kill scripts; transactional outbox (ADR-16 #2); `reconcile-processing`; Node 26 LTS upgrade for the API; cloud overlay: k3s on Hetzner CAX11 (or Oracle A1), Neon, R2 + custom-domain CDN, `cloudflared` Tunnel, Zero Trust on `/admin`, Grafana Alloy → Grafana Cloud, SOPS secrets, Terraform for Cloudflare/Hetzner; cost guardrails (Class A budget alert, `RAW_RETENTION_DAYS`); runbooks completed.
+
+**DoD:** Public URL serving a `READY` video via CDN; monthly cost statement ≤ €6.5 (or €0 on Oracle); S4–S7 pass and are documented; a worker pod deleted mid-transcode in the cloud cluster recovers without operator action.
+
+### Phase 5 — Stretch backlog (unscheduled)
+
+Chunked parallel transcoding (§8.5) · CMAF/fMP4 + DASH manifest · `apps/worker-go` sibling consuming the same queues (proves the contract boundary) · BullMQ Pro groups or RabbitMQ implementation of the same topology as a comparative write-up · signed playback URLs · Redpanda tail of `video_events` for a search indexer · frontend integration with `youtube-frontend` (upload widget, SSE progress, hls.js player using `packages/events` types).
+
+---
+
+## 19. Risks, Open Issues, Future Work
+
+| Risk / issue | Mitigation in this design | Owner / when |
+|---|---|---|
+| Free-tier volatility (Oracle, Hetzner, Fly changes in 2026) | Provider-agnostic edges; fallback ladder (§12.3); fact sheet re-verified before Phase 4 | Phase 4 |
+| BullMQ 6 API drift (young major) | Pin minor; `packages/job-contracts` isolates option shapes; changelog watch via Renovate | continuous |
+| Bun regressions | Runtime-neutral worker code, dual-runtime CI, `WORKER_RUNTIME` switch | continuous |
+| 2-vCPU cloud node can only run one 1080p job | Accepted: scale-to-zero is the cost lever; parallelism demos run locally / burst instance | Phase 4 |
+| Disk pressure on large sources | Segment streaming uploader, `emptyDir.sizeLimit`, `worker_tmp_bytes` alert, S2 test | Phase 2–3 |
+| Redis single point of failure | Postgres is truth; reconciler rebuilds; AOF; documented RTO (minutes) | Phase 2 |
+| Class A ops budget with many small videos | Segment length 6 s (fewer PUTs than 2–4 s), budget alert, projection panel | Phase 3 |
+| Keyframe alignment for VFR sources | `-vsync cfr`/`fps` filter when probe detects VFR; documented caveat | Phase 2 |
+| Auth provider undecided | JWKS-based verification fixes the interface; provider is config | Phase 1 (dev issuer), Phase 5 (real) |
+| Domain name cost (only unavoidable spend besides VPS) | ≈ €5–10/yr; alternative: presigned GET playback without CDN for demos | Phase 4 |
+
+Open issues carried from PRD §12: auth provider, public vs signed playback, source retention, sprite density.
+
+---
+
+## 20. Appendix — Job Contracts (code)
+
+```ts
+// packages/job-contracts/src/index.ts
+import { z } from 'zod';
+
+export const QUEUES = ['probe', 'transcode-1080p', 'transcode-720p', 'transcode-480p',
+  'thumbnail', 'package', 'notify', 'housekeeping', 'dlq'] as const;
+export type QueueName = (typeof QUEUES)[number];
+export const RENDITIONS = ['1080p', '720p', '480p'] as const;
+export type RenditionName = (typeof RENDITIONS)[number];
+
+export const LadderEntry = z.object({
+  name: z.enum(RENDITIONS), width: z.number().int().positive(), height: z.number().int().positive(),
+  videoKbps: z.number().int().positive(), maxrateKbps: z.number().int().positive(), bufsizeKbps: z.number().int().positive(),
+  audioKbps: z.number().int().positive(), profile: z.enum(['main', 'high']), level: z.string(),
+});
+export type LadderEntry = z.infer<typeof LadderEntry>;
+
+const Base = z.object({
+  videoId: z.string().uuid(),
+  generation: z.number().int().min(1),
+  traceparent: z.string(),                       // W3C trace context, injected by producer
+});
+
+export const ProbeJob     = Base.extend({ sourceKey: z.string() });
+export const TranscodeJob = Base.extend({
+  sourceKey: z.string(), rendition: LadderEntry, fps: z.number().positive(), durationMs: z.number().int().positive(),
+  chunkIndex: z.number().int().min(0).optional(), chunkCount: z.number().int().min(1).optional(),   // Phase 5 chunked mode
+});
+export const ThumbnailJob = Base.extend({ sourceKey: z.string(), durationMs: z.number().int().positive() });
+export const PackageJob   = Base.extend({ ladder: z.array(LadderEntry).min(1) });
+export const NotifyJob    = z.object({
+  videoId: z.string().uuid(), userId: z.string().uuid(),
+  event: z.enum(['video.processing', 'video.ready', 'video.failed']),
+  eventSeq: z.number().int(), payload: z.record(z.unknown()), traceparent: z.string(),
+});
+export const HousekeepingJob = z.object({
+  task: z.enum(['reconcile-uploads', 'reconcile-processing', 'purge-deleted', 'expire-raw', 'tmp-sweep']),
+});
+export const DlqJob = z.object({
+  originQueue: z.enum(QUEUES), originJobId: z.string(), payload: z.unknown(),
+  error: z.object({ code: z.string(), message: z.string(), stack: z.string().optional(), unrecoverable: z.boolean() }),
+  attemptsMade: z.number().int(), workerId: z.string(), failedAt: z.string().datetime(),
+});
+
+// Return values (used by package via getChildrenValues())
+export const TranscodeResult = z.object({
+  rendition: z.enum(RENDITIONS), playlistKey: z.string(), segmentCount: z.number().int(),
+  bytes: z.number().int(), durationMs: z.number().int(), avgBitrateBps: z.number().int(), processingMs: z.number().int(),
+});
+export const ThumbnailResult = z.object({ posterKey: z.string(), spriteKey: z.string(), spriteVttKey: z.string() });
+
+// Deterministic job ids — ':' is forbidden by BullMQ, so '--' is the separator
+export const ids = {
+  probe:     (v: string, g: number) => `${v}--probe--g${g}`,
+  transcode: (v: string, r: RenditionName, g: number) => `${v}--transcode--${r}--g${g}`,
+  thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
+  package:   (v: string, g: number) => `${v}--package--g${g}`,
+  notify:    (v: string, e: string, seq: number) => `${v}--notify--${e}--${seq}`,
+  dlq:       (q: string, j: string, a: number) => `${q}--${j}--a${a}`,
+  replay:    (original: string, n: number) => `${original}--r${n}`,
+};
+
+// SSE event schemas (shared with the frontend later)
+export const SseEvent = z.discriminatedUnion('event', [
+  z.object({ event: z.literal('snapshot'), data: z.object({ videoId: z.string(), status: z.string(), progress: z.object({ overall: z.number(), byRendition: z.record(z.number()) }) }) }),
+  z.object({ event: z.literal('progress'), data: z.object({ rendition: z.enum(RENDITIONS).optional(), percent: z.number(), overall: z.number() }) }),
+  z.object({ event: z.literal('status'),   data: z.object({ status: z.string(), playbackUrl: z.string().url().optional(), error: z.object({ code: z.string(), message: z.string() }).optional() }) }),
+]);
+export type SseEvent = z.infer<typeof SseEvent>;
+```
+
+```ts
+// packages/job-contracts/src/policies.ts — see §9.1 for the table these encode
+export { defaultJobOptions, stagePolicies } from './options';
+```
+
+---
+
+*End of SDD v1.0. Changes to this document go through a PR that also updates the affected ADR and, where relevant, `.env.example`.*

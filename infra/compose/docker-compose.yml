@@ -1,0 +1,82 @@
+name: video-pipeline
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vp-postgres
+    environment:
+      POSTGRES_USER: vp
+      POSTGRES_PASSWORD: vp
+      POSTGRES_DB: vp
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    container_name: vp-redis
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--appendfsync",
+        "everysec",
+        "--maxmemory",
+        "256mb",
+        "--maxmemory-policy",
+        "noeviction",
+        "--requirepass",
+        "vp"
+      ]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "vp", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  minio:
+    image: minio/minio:latest
+    container_name: vp-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: vp-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/init/minio-init.sh"]
+    volumes:
+      - ./minio-init.sh:/init/minio-init.sh:ro
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

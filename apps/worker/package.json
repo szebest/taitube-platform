@@ -1,0 +1,31 @@
+{
+  "name": "@vp/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node dist/main.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:bun": "bun test",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@vp/config": "workspace:*",
+    "@vp/db": "workspace:*",
+    "@vp/errors": "workspace:*",
+    "@vp/events": "workspace:*",
+    "@vp/ffmpeg": "workspace:*",
+    "@vp/job-contracts": "workspace:*",
+    "@vp/observability": "workspace:*",
+    "@vp/storage": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@vp/tsconfig": "workspace:*",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  }
+}
