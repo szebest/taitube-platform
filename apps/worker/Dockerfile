@@ -30,7 +30,7 @@ FROM runtime-${WORKER_RUNTIME} AS runtime
 ARG WORKER_RUNTIME=bun
 ENV WORKER_RUNTIME=${WORKER_RUNTIME}
 
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg ca-certificates tini curl \
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core ca-certificates tini curl \
  && rm -rf /var/lib/apt/lists/* \
  && (id -u 10001 >/dev/null 2>&1 || useradd -r -u 10001 -m appuser) \
  && mkdir -p /tmp/vp && chown -R 10001:10001 /tmp/vp
@@ -39,6 +39,6 @@ WORKDIR /app
 COPY --from=build --chown=10001:10001 /out /app
 
 USER 10001
-ENV NODE_ENV=production TMPDIR=/tmp/vp WORKER_HEARTBEAT_PATH=/tmp/vp/heartbeat
+ENV NODE_ENV=production TMPDIR=/tmp/vp WORKER_HEARTBEAT_PATH=/tmp/vp/heartbeat TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} dist/main.js"]

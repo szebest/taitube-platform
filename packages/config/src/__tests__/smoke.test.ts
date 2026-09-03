@@ -92,4 +92,44 @@ describe('@vp/config test suite (AC 5)', () => {
     });
     expect(pg.DATABASE_POOL_MAX).toBe(10);
   });
+
+  it('AC 22: unmodified .env.example defaults are 100% all-local and valid for API and Worker boot', () => {
+    const envExamplePath = path.resolve(__dirname, '../../../../.env.example');
+    const content = fs.readFileSync(envExamplePath, 'utf8');
+    const parsedExampleEnv: Record<string, string> = {};
+
+    for (const rawLine of content.split('\n')) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith('#')) continue;
+      const equalIdx = line.indexOf('=');
+      if (equalIdx === -1) continue;
+      const key = line.slice(0, equalIdx).trim();
+      let value = line.slice(equalIdx + 1).trim();
+      const commentIdx = value.indexOf('#');
+      if (commentIdx !== -1) {
+        value = value.slice(0, commentIdx).trim();
+      }
+      parsedExampleEnv[key] = value;
+    }
+
+    const validated = AppEnvSchema.parse(parsedExampleEnv);
+
+    // Verify all endpoints are local
+    expect(validated.DATABASE_URL).toContain('localhost');
+    expect(validated.REDIS_URL).toContain('localhost');
+    expect(validated.S3_ENDPOINT).toContain('localhost');
+    expect(validated.CDN_BASE_URL).toContain('localhost');
+    expect(validated.PUBLIC_API_URL).toContain('localhost');
+
+    // Telemetry strictly disabled
+    expect(validated.TURBO_TELEMETRY_DISABLED).toBe('1');
+    expect(validated.DO_NOT_TRACK).toBe('1');
+
+    // Zero cloud endpoints
+    for (const val of Object.values(parsedExampleEnv)) {
+      expect(val).not.toMatch(/r2\.cloudflarestorage\.com/);
+      expect(val).not.toMatch(/neon\.tech/);
+      expect(val).not.toMatch(/grafana\.net/);
+    }
+  });
 });

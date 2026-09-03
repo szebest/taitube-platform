@@ -1,0 +1,6 @@
+# infra/compose/docker-compose.offline.yml — offline mode override (SDD §12.1, PRD G11, Ticket 35)
+# Enforces an internal network with zero internet egress while preserving inter-container and localhost communication.
+
+networks:
+  default:
+    internal: true
