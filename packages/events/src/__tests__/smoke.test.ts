@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { VIDEO_WILDCARD_CHANNEL, userChannel, videoChannel } from '../src/index.js';
+import { VIDEO_WILDCARD_CHANNEL, userChannel, videoChannel } from '../index.js';
 
 describe('@vp/events smoke test', () => {
   it('formats Redis channels correctly', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LADDER } from '../src/index.js';
+import { DEFAULT_LADDER } from '../index.js';
 
 describe('@vp/ffmpeg smoke test', () => {
   it('defines default HLS ladder with 1080p, 720p, 480p renditions', () => {

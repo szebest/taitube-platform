@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ProbeJob, QUEUES, ids } from '../src/index.js';
+import { ProbeJob, QUEUES, ids } from '../index.js';
 
 describe('@vp/job-contracts smoke test', () => {
   it('builds deterministic job IDs with -- separator', () => {

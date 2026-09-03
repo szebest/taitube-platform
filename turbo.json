@@ -5,19 +5,19 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"],
-      "inputs": ["src/**", "tsconfig.json", "package.json"]
+      "inputs": ["src/**", "tsconfig.json", "tsconfig.build.json", "package.json"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**", "test/**", "tsconfig.json", "package.json"]
+      "inputs": ["src/**", "tsconfig.json", "package.json"]
     },
     "test": {
       "dependsOn": ["build"],
-      "inputs": ["src/**", "test/**", "tsconfig.json", "package.json"]
+      "inputs": ["src/**", "tsconfig.json", "package.json"]
     },
     "test:integration": {
       "dependsOn": ["build"],
-      "inputs": ["src/**", "test/**", "tsconfig.json", "package.json"]
+      "inputs": ["src/**", "tsconfig.json", "package.json"]
     },
     "dev": {
       "cache": false,

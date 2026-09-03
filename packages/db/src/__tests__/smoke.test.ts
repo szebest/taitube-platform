@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { StepStatuses, VideoStatuses } from '../src/index.js';
+import { StepStatuses, VideoStatuses } from '../index.js';
 
 describe('@vp/db smoke test', () => {
   it('exports video and step statuses matching SDD domain model', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PostgresEnvSchema, loadEnv } from '../src/index.js';
+import { PostgresEnvSchema, loadEnv } from '../index.js';
 
 describe('@vp/config smoke test', () => {
   it('loads default environment cleanly', () => {

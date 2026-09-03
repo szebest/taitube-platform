@@ -7,7 +7,7 @@ import {
   segmentKey,
   spriteKey,
   spriteVttKey,
-} from '../src/keys.js';
+} from '../keys.js';
 
 describe('@vp/storage smoke test', () => {
   const videoId = '11111111-1111-7111-8111-111111111111';
