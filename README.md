@@ -147,7 +147,17 @@ Run the full end-to-end upload and transcoding flow locally:
    - Copy the `playbackUrl` (`http://localhost:9000/public/videos/<VIDEO_ID>/hls/master.m3u8`).
    - Open `tools/hls-test-page/index.html` in your browser, paste the URL, and press **Load & Play**.
 
-### 5. Useful commands
+### 5. Operations & Queue Dashboard (Bull Board)
+
+An operator dashboard powered by Bull Board is mounted at `/admin/queues` under the API (Ticket 10):
+- **All Queues Visible:** Displays `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`, and `dlq`.
+- **Job Inspection & Control:** Real-time visibility into waiting, active, completed, delayed, and failed jobs. Operators can inspect job payloads, errors, pause/resume queues, and retry jobs.
+- **Admin Authorization:**
+  - Provide an admin JWT: `Authorization: Bearer <token>` (minted via `pnpm dev-token mint --role admin`).
+  - Or provide the constant-time admin secret header: `x-admin-token: <ADMIN_TOKEN>`.
+  - Non-admin callers receive RFC 9457 `401 Unauthorized` or `403 Forbidden`.
+
+### 6. Useful commands
 | Command | Description |
 |---|---|
 | `make up` | Start local Postgres, Redis, MinIO with buckets initialized |

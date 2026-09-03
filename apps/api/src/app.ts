@@ -13,6 +13,7 @@ import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod
 import type { Redis } from 'ioredis';
 import { registerAuth } from './plugins/auth.js';
 import { registerErrorHandler } from './plugins/errors.js';
+import { registerAdminQueuesRoutes } from './routes/admin/queues.js';
 import { registerDevJwksRoute } from './routes/dev-jwks.js';
 import { registerHealthRoutes } from './routes/health.js';
 import { registerUploadsRoutes } from './routes/uploads.js';
@@ -28,6 +29,7 @@ export interface BuildAppOptions {
   cdnBaseUrl?: string;
   rateLimitMax?: number;
   maxUploadBytes?: number;
+  adminQueues?: Map<string, Queue>;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -115,6 +117,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerVideosRoutes(app, {
     db,
     cdnBaseUrl,
+  });
+
+  await registerAdminQueuesRoutes(app, {
+    redisClient: options.redisClient,
+    queues: options.adminQueues,
   });
 
   return app;
