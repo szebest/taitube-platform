@@ -29,6 +29,7 @@ export interface BuildAppOptions {
   cdnBaseUrl?: string;
   rateLimitMax?: number;
   maxUploadBytes?: number;
+  multipartThresholdBytes?: number;
   adminQueues?: Map<string, Queue>;
 }
 
@@ -112,6 +113,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     probeQueue: options.probeQueue,
     rateLimitMax: options.rateLimitMax,
     maxUploadBytes: options.maxUploadBytes,
+    multipartThresholdBytes: options.multipartThresholdBytes,
   });
 
   registerVideosRoutes(app, {

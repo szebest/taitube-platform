@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MULTIPART_MAX_PART_SIZE,
+  MULTIPART_MIN_PART_SIZE,
+  calculatePartSize,
+  calculateTotalParts,
   createPresignedPutUrl,
   createStorageClient,
   getHeaderMapping,
@@ -101,5 +105,32 @@ describe('packages/storage (AC 17, AC 22)', () => {
     expect(cleanUrl).toBe('http://localhost:9000/raw/018f/source.mp4');
     expect(cleanUrl).not.toContain('X-Amz-Signature');
     expect(cleanUrl).not.toContain('abcd1234secret');
+  });
+
+  it('AC 17: calculatePartSize clamps ceil(size/1000) between 8 MiB and 64 MiB', () => {
+    // 1. Minimum bound: 8 MiB (8388608 bytes)
+    expect(MULTIPART_MIN_PART_SIZE).toBe(8 * 1024 * 1024);
+    expect(MULTIPART_MAX_PART_SIZE).toBe(64 * 1024 * 1024);
+
+    // Small file (e.g. 150 MB) -> 150_000_000 / 1000 = 150_000 < 8 MiB -> clamps to 8 MiB
+    expect(calculatePartSize(150 * 1024 * 1024)).toBe(8 * 1024 * 1024);
+
+    // 4 GB file (4294967296 bytes) -> 4294967 < 8 MiB -> clamps to 8 MiB
+    const fourGb = 4 * 1024 * 1024 * 1024;
+    const partSize4Gb = calculatePartSize(fourGb);
+    expect(partSize4Gb).toBe(8 * 1024 * 1024);
+    const totalParts4Gb = calculateTotalParts(fourGb, partSize4Gb);
+    expect(totalParts4Gb).toBe(512); // exactly 512 parts <= 10 000 parts
+
+    // 20 GB file (21474836480 bytes) -> 21474837 bytes (~20.48 MiB, between 8 and 64 MiB)
+    const twentyGb = 20 * 1024 * 1024 * 1024;
+    const partSize20Gb = calculatePartSize(twentyGb);
+    expect(partSize20Gb).toBe(Math.ceil(twentyGb / 1000));
+    expect(partSize20Gb).toBeGreaterThanOrEqual(8 * 1024 * 1024);
+    expect(partSize20Gb).toBeLessThanOrEqual(64 * 1024 * 1024);
+
+    // 100 GB file -> clamps to 64 MiB
+    const hundredGb = 100 * 1024 * 1024 * 1024;
+    expect(calculatePartSize(hundredGb)).toBe(64 * 1024 * 1024);
   });
 });
