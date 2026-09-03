@@ -1,13 +1,18 @@
 import * as fs from 'node:fs';
 import { pipeline } from 'node:stream/promises';
 import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
+  CreateMultipartUploadCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListPartsCommand,
   PutObjectCommand,
   type PutObjectCommandInput,
   S3Client,
   type S3ClientConfig,
+  UploadPartCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -220,6 +225,189 @@ export async function uploadObject(client: S3Client, options: UploadObjectOption
       Body: options.body,
       ContentType: options.contentType,
       CacheControl: options.cacheControl,
+    })
+  );
+}
+
+export const MULTIPART_MIN_PART_SIZE = 8 * 1024 * 1024; // 8 MiB (AC 17)
+export const MULTIPART_MAX_PART_SIZE = 64 * 1024 * 1024; // 64 MiB (AC 17)
+export const MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024; // 100 MB (SDD §3.1)
+export const MULTIPART_MAX_PARTS = 10000; // <= 10 000 parts (AC 17)
+export const MULTIPART_URL_BATCH_SIZE = 100; // batches of <= 100 URLs (AC 17)
+export const PRESIGNED_URL_TTL_SEC = 900; // 15 min (AC 17)
+
+/**
+ * Computes part size using clamp(ceil(size/1000), 8 MiB, 64 MiB) (SDD §3.1, AC 17).
+ */
+export function calculatePartSize(sizeBytes: number): number {
+  const calculated = Math.ceil(sizeBytes / 1000);
+  return Math.min(Math.max(calculated, MULTIPART_MIN_PART_SIZE), MULTIPART_MAX_PART_SIZE);
+}
+
+/**
+ * Calculates total expected parts for a given file size and part size.
+ */
+export function calculateTotalParts(sizeBytes: number, partSize: number): number {
+  return Math.ceil(sizeBytes / partSize);
+}
+
+/**
+ * Initiates a multipart upload in S3 storage (SDD §3.1, §6.1, AC 17).
+ */
+export async function createMultipartUpload(
+  client: S3Client,
+  bucket: string,
+  key: string,
+  contentType: string
+): Promise<string> {
+  const res = await client.send(
+    new CreateMultipartUploadCommand({
+      Bucket: bucket,
+      Key: key,
+      ContentType: contentType,
+    })
+  );
+  if (!res.UploadId) {
+    throw new Error(`Failed to initiate multipart upload for ${key}`);
+  }
+  return res.UploadId;
+}
+
+export interface PresignedPartOptions {
+  bucket: string;
+  key: string;
+  uploadId: string;
+  partNumber: number;
+  expiresInSeconds?: number;
+}
+
+export interface PresignedPartInfo {
+  partNumber: number;
+  url: string;
+  expiresAt: string;
+}
+
+/**
+ * Generates a presigned URL for uploading an individual part (SDD §3.1, AC 17).
+ */
+export async function createPresignedPartUrl(
+  client: S3Client,
+  options: PresignedPartOptions
+): Promise<PresignedPartInfo> {
+  const { bucket, key, uploadId, partNumber, expiresInSeconds = PRESIGNED_URL_TTL_SEC } = options;
+  const command = new UploadPartCommand({
+    Bucket: bucket,
+    Key: key,
+    UploadId: uploadId,
+    PartNumber: partNumber,
+  });
+  const url = await getSignedUrl(client, command, {
+    expiresIn: expiresInSeconds,
+  });
+  const expiresAt = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
+  return {
+    partNumber,
+    url,
+    expiresAt,
+  };
+}
+
+export interface UploadedPartInfo {
+  partNumber: number;
+  etag: string;
+  size: number;
+}
+
+/**
+ * Lists parts already uploaded to S3 storage for resumability (SDD §3.1, §6.1, AC 18).
+ */
+export async function listMultipartParts(
+  client: S3Client,
+  bucket: string,
+  key: string,
+  uploadId: string
+): Promise<UploadedPartInfo[]> {
+  const parts: UploadedPartInfo[] = [];
+  let partNumberMarker: string | undefined;
+
+  do {
+    const res = await client.send(
+      new ListPartsCommand({
+        Bucket: bucket,
+        Key: key,
+        UploadId: uploadId,
+        PartNumberMarker: partNumberMarker,
+      })
+    );
+
+    if (res.Parts) {
+      for (const p of res.Parts) {
+        if (p.PartNumber && p.ETag) {
+          parts.push({
+            partNumber: p.PartNumber,
+            etag: p.ETag.replace(/^"|"$/g, ''),
+            size: p.Size ?? 0,
+          });
+        }
+      }
+    }
+
+    if (res.IsTruncated && res.NextPartNumberMarker) {
+      partNumberMarker = String(res.NextPartNumberMarker);
+    } else {
+      break;
+    }
+  } while (partNumberMarker);
+
+  return parts;
+}
+
+export interface CompletePartInput {
+  partNumber: number;
+  etag: string;
+}
+
+/**
+ * Completes a multipart upload in S3 storage (SDD §3.1, AC 18, AC 19).
+ */
+export async function completeMultipartUpload(
+  client: S3Client,
+  bucket: string,
+  key: string,
+  uploadId: string,
+  parts: CompletePartInput[]
+): Promise<void> {
+  const sortedParts = [...parts].sort((a, b) => a.partNumber - b.partNumber);
+
+  await client.send(
+    new CompleteMultipartUploadCommand({
+      Bucket: bucket,
+      Key: key,
+      UploadId: uploadId,
+      MultipartUpload: {
+        Parts: sortedParts.map((p) => ({
+          PartNumber: p.partNumber,
+          ETag: p.etag.startsWith('"') ? p.etag : `"${p.etag}"`,
+        })),
+      },
+    })
+  );
+}
+
+/**
+ * Aborts a multipart upload and cleans up stored parts in S3 (SDD §3.1, §6.1, AC 20).
+ */
+export async function abortMultipartUpload(
+  client: S3Client,
+  bucket: string,
+  key: string,
+  uploadId: string
+): Promise<void> {
+  await client.send(
+    new AbortMultipartUploadCommand({
+      Bucket: bucket,
+      Key: key,
+      UploadId: uploadId,
     })
   );
 }

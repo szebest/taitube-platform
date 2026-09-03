@@ -50,6 +50,9 @@ export function registerErrorHandler(app: FastifyInstance): void {
           case ErrorCodes.VERSION_CONFLICT:
             statusCode = 409;
             break;
+          case ErrorCodes.UPLOAD_NOT_OPEN:
+            statusCode = 410;
+            break;
           case ErrorCodes.RATE_LIMITED:
             statusCode = 429;
             break;
@@ -60,7 +63,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
             statusCode = 500;
             break;
           case ErrorCodes.VALIDATION_FAILED:
-            statusCode = 400;
+            statusCode = 422;
             break;
           default:
             statusCode = 422;

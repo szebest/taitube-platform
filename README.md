@@ -112,6 +112,19 @@ Open `tools/hls-test-page/index.html` in any browser (uses vendored `hls.js`, 10
 - **Simulate Mock SSE**: Tests real-time transcode progress bars (`1080p`, `720p`, `480p`, overall) using `SseEvent` schema (SDD §20).
 - **Subscribe SSE**: Connects to `GET /v1/videos/:id/events` when the API is running.
 
+#### Resumable Multipart Upload Client (`@vp/upload-client`)
+For files above 100 MB (up to 4 GB+), uploads use S3 multipart direct-to-storage with concurrency 4 (Ticket 11):
+```bash
+# Upload a large file (single PUT for <= 100 MB, multipart with 8-64 MiB parts for > 100 MB)
+pnpm upload-client path/to/video.mp4 --title "My Large Video"
+
+# Resume an interrupted upload from stored parts (backed by S3 ListParts)
+pnpm upload-client --resume <uploadId> path/to/video.mp4
+
+# Abort an incomplete upload in storage and mark video ABANDONED
+pnpm upload-client --abort <uploadId>
+```
+
 ### 4. First video end-to-end (Walking Skeleton)
 
 Run the full end-to-end upload and transcoding flow locally:
