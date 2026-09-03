@@ -1,5 +1,8 @@
+import * as fs from 'node:fs';
+import { pipeline } from 'node:stream/promises';
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -145,6 +148,43 @@ export async function deleteObject(client: S3Client, bucket: string, key: string
       Key: key,
     })
   );
+}
+
+/**
+ * Downloads an object from storage directly to a local file.
+ * Returns false if the object does not exist.
+ */
+export async function downloadObject(
+  client: S3Client,
+  bucket: string,
+  key: string,
+  targetFilePath: string
+): Promise<boolean> {
+  try {
+    const res = await client.send(
+      new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      })
+    );
+
+    if (!res.Body) {
+      return false;
+    }
+
+    const writeStream = fs.createWriteStream(targetFilePath);
+    await pipeline(res.Body as NodeJS.ReadableStream, writeStream);
+    return true;
+  } catch (err: unknown) {
+    const errorName = (err as { name?: string }).name;
+    const statusCode = (err as { $metadata?: { httpStatusCode?: number } })?.$metadata
+      ?.httpStatusCode;
+
+    if (errorName === 'NotFound' || errorName === 'NoSuchKey' || statusCode === 404) {
+      return false;
+    }
+    throw err;
+  }
 }
 
 /**

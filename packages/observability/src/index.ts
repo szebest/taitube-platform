@@ -1,3 +1,7 @@
+export * from './metrics.js';
+export * from './logger.js';
+export * from './tracing.js';
+
 export interface ServiceInfo {
   name: string;
   version: string;

@@ -1,13 +1,28 @@
-import { getWorkerStage } from './config.js';
-import { STAGE_REGISTRY } from './registry.js';
+import { createWorkerRunner } from './runner.js';
 
-export async function main(): Promise<void> {
-  const stage = getWorkerStage();
-  const config = STAGE_REGISTRY[stage];
-  if (!config) {
-    throw new Error(`Unknown WORKER_STAGE: ${stage}`);
-  }
-  console.log(`[worker:${stage}] Started with concurrency=${config.concurrency}`);
+export async function main(): Promise<() => Promise<void>> {
+  const runner = createWorkerRunner();
+  console.log(`[worker] Started processing on queue "${runner.worker.name}"`);
+
+  const shutdown = async () => {
+    console.log('[worker] Received shutdown signal, closing worker gracefully...');
+    await runner.close();
+    console.log('[worker] Shutdown complete.');
+  };
+
+  process.on('SIGTERM', () => {
+    shutdown()
+      .then(() => process.exit(0))
+      .catch(() => process.exit(1));
+  });
+
+  process.on('SIGINT', () => {
+    shutdown()
+      .then(() => process.exit(0))
+      .catch(() => process.exit(1));
+  });
+
+  return shutdown;
 }
 
 if (process.env['NODE_ENV'] !== 'test') {

@@ -19,7 +19,11 @@
     "@vp/ffmpeg": "workspace:*",
     "@vp/job-contracts": "workspace:*",
     "@vp/observability": "workspace:*",
-    "@vp/storage": "workspace:*"
+    "@vp/storage": "workspace:*",
+    "bullmq": "^6.3.4",
+    "drizzle-orm": "^0.45.2",
+    "ioredis": "^5.11.1",
+    "uuidv7": "^1.2.1"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
