@@ -178,6 +178,11 @@ jobs:
           node-version: 24
           cache: 'pnpm'
 
+      - name: Set up Bun 1.4
+        uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 # v2.0.1
+        with:
+          bun-version: 1.4.0
+
       - name: Restore Turborepo cache
         uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
@@ -189,14 +194,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Prepared cache step for Ticket 03 video fixtures:
-      # - name: Cache test video fixtures
-      #   uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
-      #   with:
-      #     path: tests/fixtures
-      #     key: fixtures-${{ runner.os }}-${{ hashFiles('tools/gen-video/manifest.json') }}
-      #     restore-keys: |
-      #       fixtures-${{ runner.os }}-
+      - name: Cache test video fixtures
+        id: fixtures-cache
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: tests/fixtures
+          key: fixtures-${{ runner.os }}-${{ hashFiles('tools/gen-video/manifest.json') }}
+          restore-keys: |
+            fixtures-${{ runner.os }}-
+
+      - name: Generate video fixtures if cache miss
+        if: steps.fixtures-cache.outputs.cache-hit != 'true'
+        run: pnpm gen-video
+
+      - name: Verify video fixtures against manifest
+        run: pnpm gen-video --check
 
       - name: Initialize MinIO buckets & policies
         env:

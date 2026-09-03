@@ -49,7 +49,10 @@
       ".agents",
       ".claude",
       "docs",
-      "skills-bundle"
+      "skills-bundle",
+      "tools/hls-test-page/vendor",
+      "tests/fixtures",
+      "fixtures"
     ]
   }
 }

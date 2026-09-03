@@ -51,7 +51,40 @@ pnpm test
 pnpm test:bun
 ```
 
-### 3. Useful commands
+### 3. Try it locally (Phase 0 Dev Tooling)
+
+#### Generate Deterministic Video Fixtures
+```bash
+# Generate fast fixture set into tests/fixtures (< 10s)
+pnpm gen-video
+
+# Verify generated fixtures against manifest (ffprobe stream analysis + checksums)
+pnpm gen-video --check
+
+# Generate a single fixture or include slow sets (m10, l30, over-duration)
+pnpm gen-video --only s15
+pnpm gen-video --include-slow
+```
+
+#### Mint Offline Dev JWTs (EdDSA / Ed25519)
+```bash
+# Mint an admin JWT with 8-hour TTL
+pnpm dev-token mint --sub 00000000-0000-7000-8000-000000000001 --role admin --ttl 8h
+
+# Output JWKS public keys JSON (deterministic Ed25519 keypair)
+pnpm dev-token jwks
+
+# Run standalone local JWKS server on port 3001
+pnpm dev-token serve --port 3001
+```
+
+#### HLS Player & Real-Time SSE Monitor
+Open `tools/hls-test-page/index.html` in any browser (uses vendored `hls.js`, 100% offline & local-first):
+- **Play Public Sample**: Tests adaptive bitrate HLS playback.
+- **Simulate Mock SSE**: Tests real-time transcode progress bars (`1080p`, `720p`, `480p`, overall) using `SseEvent` schema (SDD §20).
+- **Subscribe SSE**: Connects to `GET /v1/videos/:id/events` when the API is running.
+
+### 4. Useful commands
 | Command | Description |
 |---|---|
 | `make up` | Start local Postgres, Redis, MinIO with buckets initialized |
@@ -70,6 +103,8 @@ pnpm test:bun
 | `pnpm format` | Auto-format codebase with Biome |
 | `pnpm test` | Run Vitest tests across all packages |
 | `pnpm test:bun` | Run worker smoke tests with Bun test runner |
+| `pnpm gen-video` | Generate deterministic synthetic video test fixtures |
+| `pnpm dev-token` | Mint signed EdDSA JWTs and serve JWKS for local auth |
 
 ## Rules that never bend
 Local-first (no external services at runtime, `make smoke-offline` must pass) · dual runtime (worker code passes under Node and Bun) · single-sourced contracts (`packages/job-contracts`, `keys.ts`, error codes, `.env.example`) · CAS transitions with `video_events` · errors classified at the throw site · prove with tests before claiming done. Details: `AGENTS.md`.
