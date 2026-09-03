@@ -8,7 +8,7 @@
 | Blocks | 05, 10, 15, 19 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model-database-schema) · [SDD §5.3 Key queries](../SDD.md#53-key-queries-that-encode-the-guarantees) · [SDD §3.5 State machine](../SDD.md#35-state-machine) · [SDD §6 API contract](../SDD.md#6-api-contract) · [SDD §11 Security](../SDD.md#11-security) · [SDD §16 Env](../SDD.md#16-environment-variables) · [ADR-02](../SDD.md#adr-02-http-framework-fastify-5) · [ADR-04](../SDD.md#adr-04-database-postgresql-16-neon-in-cloud-drizzle-orm) · [ADR-17](../SDD.md#adr-17-schemavalidation-ids) · [ADR-18](../SDD.md#adr-18-error-taxonomy-decides-retry-policy) |
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## What to build
 A caller with a dev JWT can `GET /v1/videos/:id` and receive the `Video` resource from SDD §6.3 for a seeded row; without a token they get a problem+json 401; for someone else's private video, 403/404. Behind that single endpoint lands the whole persistence and HTTP foundation: `packages/config` (zod env, fail-fast), `packages/errors` (Transient/Permanent + codes), `packages/db` (Drizzle schema exactly as SDD §5.2, migration 0001, repositories with CAS transitions, fencing-token claim/complete, optimistic-lock metadata update, append-only events written in the same transaction as every transition), and the Fastify app (zod type provider, JWKS auth with dev bypass, problem+json error handler, rate limit, under-pressure, helmet/cors, `/healthz`, `/readyz` checking Postgres/Redis/S3, `/metrics` on a separate port, OpenAPI at `/docs`).
