@@ -8,7 +8,7 @@
 | Blocks | 04, 06 |
 | Spec | [PRD FR-15, FR-18](../PRD.md#6-functional-requirements) · [PRD OQ-1 auth](../PRD.md#12-open-questions-to-resolve-during-phase-01) · [SDD §14.1 Principles (synthetic media)](../SDD.md#141-principles) · [SDD §11 Authentication](../SDD.md#11-security) · [SDD §16.5 Auth env](../SDD.md#165-auth) |
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## What to build
 Three tools a human or agent uses for the rest of the project: (1) `pnpm gen-video` produces copyright-free, byte-reproducible test videos (a standard set and a *hostile* set) from a manifest; (2) `pnpm dev-token mint` issues an EdDSA JWT and serves/writes a JWKS so the API can be called with `Authorization: Bearer …` without any identity provider; (3) a static hls.js test page where you paste API URL + token + videoId, fetch the video, play it, and watch SSE events — proven today against a public HLS sample, used from ticket 07 on against our own output.
