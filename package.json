@@ -20,6 +20,9 @@
     "clean": "turbo run clean && rimraf node_modules",
     "gen-video": "bun tools/gen-video/src/index.ts",
     "dev-token": "bun tools/dev-token/src/index.ts",
+    "db:migrate": "pnpm --filter @vp/db migrate",
+    "db:seed": "pnpm --filter @vp/db seed",
+    "db:check": "pnpm --filter @vp/db check",
     "prepare": "lefthook install || true"
   },
   "devDependencies": {

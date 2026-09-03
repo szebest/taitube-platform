@@ -4,6 +4,9 @@ import * as path from 'node:path';
 import { mintToken, verifyToken } from './jwt.js';
 import { getDevJwks } from './keys.js';
 
+export * from './jwt.js';
+export * from './keys.js';
+
 function parseArgs(args: string[]) {
   const command = args[0] ?? 'help';
   const rest = args.slice(1);

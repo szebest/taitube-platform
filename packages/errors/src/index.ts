@@ -1,3 +1,5 @@
+import { UnrecoverableError } from 'bullmq';
+
 export const ErrorCodes = {
   // API Errors
   UPLOAD_TOO_LARGE: 'UPLOAD_TOO_LARGE',
@@ -10,6 +12,9 @@ export const ErrorCodes = {
   VERSION_CONFLICT: 'VERSION_CONFLICT',
   FORBIDDEN: 'FORBIDDEN',
   RATE_LIMITED: 'RATE_LIMITED',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  VALIDATION_FAILED: 'VALIDATION_FAILED',
+  INTERNAL: 'INTERNAL',
   // Pipeline Errors
   UNSUPPORTED_CODEC: 'UNSUPPORTED_CODEC',
   CORRUPT_CONTAINER: 'CORRUPT_CONTAINER',
@@ -36,8 +41,18 @@ export abstract class PipelineError extends Error {
   }
 }
 
-export class PermanentError extends PipelineError {
+export class PermanentError extends UnrecoverableError {
   readonly isRetryable = false;
+
+  constructor(
+    public readonly code: ErrorCode | string,
+    message: string,
+    public readonly details?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'PermanentError';
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
 }
 
 export class TransientError extends PipelineError {

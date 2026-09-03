@@ -25,6 +25,8 @@ export interface VerifyTokenOptions {
   seed?: string;
 }
 
+export { verifyToken as verifyDevToken, mintToken as mintDevToken };
+
 export function parseTtlSeconds(ttl: string | number | undefined): number {
   if (typeof ttl === 'number') {
     return ttl;
