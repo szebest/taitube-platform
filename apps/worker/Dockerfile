@@ -1,27 +1,44 @@
+# apps/worker/Dockerfile (SDD §12.1)
 ARG WORKER_RUNTIME=bun
 
-FROM node:24-alpine AS node-base
-WORKDIR /app
-RUN npm i -g pnpm@10.18.3
+FROM node:24-slim AS build
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /repo
 
-FROM node-base AS builder
-COPY . .
+# Copy monorepo dependency manifests
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY apps/worker/package.json apps/worker/
+COPY packages/*/package.json packages/
+COPY tools/*/package.json tools/
+
+# Install dependencies
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @vp/worker... build
 
-# Runner stage using Bun or Node based on WORKER_RUNTIME
-FROM oven/bun:1.4-alpine AS runner-bun
+# Copy source trees
+COPY . .
+
+# Build worker and dependencies, deploy production bundle
+RUN pnpm turbo run build --filter=@vp/worker... \
+ && pnpm deploy --filter=@vp/worker --prod /out
+
+# Base runtime choices
+FROM oven/bun:1.4-slim AS runtime-bun
+FROM node:24-slim AS runtime-node
+
+# Selected runtime target
+FROM runtime-${WORKER_RUNTIME} AS runtime
+ARG WORKER_RUNTIME=bun
+ENV WORKER_RUNTIME=${WORKER_RUNTIME}
+
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg ca-certificates tini curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && (id -u 10001 >/dev/null 2>&1 || useradd -r -u 10001 -m appuser) \
+ && mkdir -p /tmp/vp && chown -R 10001:10001 /tmp/vp
+
 WORKDIR /app
-RUN apk add --no-cache ffmpeg
-ENV NODE_ENV=production
-COPY --from=builder /app /app
-CMD ["bun", "apps/worker/dist/main.js"]
+COPY --from=build --chown=10001:10001 /out /app
 
-FROM node:24-alpine AS runner-node
-WORKDIR /app
-RUN apk add --no-cache ffmpeg
-ENV NODE_ENV=production
-COPY --from=builder /app /app
-CMD ["node", "apps/worker/dist/main.js"]
-
-FROM runner-${WORKER_RUNTIME} AS runner
+USER 10001
+ENV NODE_ENV=production TMPDIR=/tmp/vp WORKER_HEARTBEAT_PATH=/tmp/vp/heartbeat
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} dist/main.js"]

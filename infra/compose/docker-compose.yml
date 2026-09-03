@@ -5,15 +5,15 @@ services:
     image: postgres:16-alpine
     container_name: vp-postgres
     environment:
-      POSTGRES_USER: vp
-      POSTGRES_PASSWORD: vp
-      POSTGRES_DB: vp
+      POSTGRES_USER: ${POSTGRES_USER:-vp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vp}
+      POSTGRES_DB: ${POSTGRES_DB:-vp}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vp"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vp}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -34,14 +34,14 @@ services:
         "--maxmemory-policy",
         "noeviction",
         "--requirepass",
-        "vp"
+        "${REDIS_PASSWORD:-vp}"
       ]
     ports:
       - "6379:6379"
     volumes:
       - redisdata:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "vp", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-vp}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -52,8 +52,8 @@ services:
     container_name: vp-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_ACCESS_KEY:-minioadmin}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -75,6 +75,125 @@ services:
     entrypoint: ["/bin/sh", "/init/minio-init.sh"]
     volumes:
       - ./minio-init.sh:/init/minio-init.sh:ro
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    container_name: vp-migrate
+    env_file:
+      - ../../.env
+    command: ["node", "dist/migrate.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    container_name: vp-api
+    env_file:
+      - ../../.env
+    ports:
+      - "3000:3000"
+      - "9464:9464"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+    command: ["node", "dist/main.js"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/healthz || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ---- workers: one image, WORKER_STAGE picks the role (SDD §12.1) ----
+  worker-probe: &worker
+    build:
+      context: ../..
+      dockerfile: apps/worker/Dockerfile
+      args:
+        WORKER_RUNTIME: ${WORKER_RUNTIME:-bun}
+    env_file:
+      - ../../.env
+    environment:
+      WORKER_STAGE: probe
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    tmpfs:
+      - /tmp/vp:size=2g
+    restart: on-failure
+
+  worker-transcode-1080p:
+    <<: *worker
+    environment:
+      WORKER_STAGE: transcode-1080p
+      FFMPEG_THREADS: "2"
+    tmpfs:
+      - /tmp/vp:size=4g
+
+  worker-transcode-720p:
+    <<: *worker
+    environment:
+      WORKER_STAGE: transcode-720p
+      FFMPEG_THREADS: "2"
+    tmpfs:
+      - /tmp/vp:size=4g
+
+  worker-transcode-480p:
+    <<: *worker
+    environment:
+      WORKER_STAGE: transcode-480p
+      FFMPEG_THREADS: "1"
+    tmpfs:
+      - /tmp/vp:size=2g
+
+  worker-thumbnail:
+    <<: *worker
+    environment:
+      WORKER_STAGE: thumbnail
+    tmpfs:
+      - /tmp/vp:size=1g
+
+  worker-package:
+    <<: *worker
+    environment:
+      WORKER_STAGE: package
+    tmpfs:
+      - /tmp/vp:size=1g
+
+  worker-notify:
+    <<: *worker
+    environment:
+      WORKER_STAGE: notify
+
+  worker-housekeeping:
+    <<: *worker
+    environment:
+      WORKER_STAGE: housekeeping
+
+  hls-test-page:
+    image: nginx:alpine
+    profiles:
+      - tools
+    ports:
+      - "8080:80"
+    volumes:
+      - ../../tools/hls-test-page:/usr/share/nginx/html:ro
 
 volumes:
   pgdata:
