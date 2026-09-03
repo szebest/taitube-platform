@@ -10,6 +10,12 @@ help: ## Show help for each target
 up: ## Start local infrastructure (Postgres, Redis, MinIO, minio-init)
 	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --wait
 
+up-all: ## Start full stack (infra, migrations, API, all worker stages)
+	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --build --wait
+
+build-images: ## Build local Docker images for API and Worker
+	docker compose -f $(COMPOSE_FILE) build
+
 down: ## Stop local infrastructure
 	docker compose -f $(COMPOSE_FILE) down
 
@@ -53,8 +59,11 @@ typecheck: ## Typecheck all workspace packages with TypeScript
 clean: ## Clean build artifacts and dist directories
 	pnpm clean
 
-smoke: ## Run local infrastructure smoke tests
+smoke: ## Run end-to-end smoke tests against running stack
+	bash scripts/e2e-smoke.sh
+
+smoke-infra: ## Run infrastructure smoke tests
 	bash infra/compose/test.sh
 
 smoke-offline: ## Run smoke tests in offline mode
-	bash infra/compose/test.sh
+	bash scripts/e2e-smoke.sh

@@ -24,7 +24,34 @@ Everything needed to start building the asynchronous video ingestion & HLS trans
 - pnpm 10 (`npm i -g pnpm@10`)
 - Docker & Docker Compose (`docker compose version`)
 
-### 1. Start local infrastructure
+### Run everything in Docker (Phase 1 Walking Skeleton)
+
+Someone with only Docker installed can clone the repository and run the full stack and end-to-end smoke test without installing Node, Bun, or FFmpeg locally:
+
+```bash
+# 1. Clone and set up environment contract
+cp .env.example .env
+
+# 2. Start full stack (Infra + Migrations + Fastify API + Worker stages)
+make up-all
+
+# 3. Run end-to-end smoke test (uploads fixture s15, waits for READY, verifies HLS playback)
+make smoke
+
+# 4. (Optional) Open the HLS test page with tools profile
+docker compose --profile tools -f infra/compose/docker-compose.yml up -d
+# Open http://localhost:8080 in your browser
+```
+
+#### Docker Image Specifications & Sizes
+- **API (`vp-api`)**: Node 24 slim, multi-stage build, non-root user (`appuser:10001`), `tini` PID 1, read-only root FS, exposed on ports 3000 and 9464. Image size: ~225 MB.
+- **Worker (`vp-worker`)**: Dual-runtime switchable via `WORKER_RUNTIME` build arg, FFmpeg + tini, non-root user (`10001`), read-only root FS with tmpfs for `/tmp/vp`.
+  - **Bun variant (`WORKER_RUNTIME=bun`)**: ~240 MB.
+  - **Node variant (`WORKER_RUNTIME=node`)**: ~310 MB.
+
+### Local development
+
+#### 1. Start local infrastructure
 ```bash
 # Copy local environment contract
 cp .env.example .env
@@ -34,7 +61,7 @@ make up
 
 # Verify Redis and storage health
 make check-redis
-make smoke
+make smoke-infra
 ```
 
 ### 2. Install dependencies & verify build

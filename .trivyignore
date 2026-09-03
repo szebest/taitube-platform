@@ -1,0 +1,5 @@
+# .trivyignore — Trivy vulnerability allowlist (Ticket 08)
+# Format: CVE-ID or vulnerability ID with rationale comment
+
+# Sample / accepted low-risk or non-actionable issues
+# CVE-YYYY-XXXXX

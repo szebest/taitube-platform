@@ -1,0 +1,129 @@
+name: Images
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: build-and-push-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@49b3bc8e6bdd4480b82837b0b8e9060ab62b08a9 # v3.2.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@c47758b77c9736f4b4e2402b48073fae99ea4e87 # v3.7.1
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build API image
+      - name: Extract metadata for API image
+        id: meta-api
+        uses: docker/metadata-action@8e5442c4ef9f78452e203c73f23e6bc8dbfe3282 # v5.5.1
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/vp-api
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push API image (linux/amd64,linux/arm64)
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          load: ${{ github.event_name == 'pull_request' }}
+
+      # Build Worker image (Bun runtime)
+      - name: Extract metadata for Worker image (Bun)
+        id: meta-worker
+        uses: docker/metadata-action@8e5442c4ef9f78452e203c73f23e6bc8dbfe3282 # v5.5.1
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/vp-worker
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Worker image (Bun, linux/amd64,linux/arm64)
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          build-args: |
+            WORKER_RUNTIME=bun
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-worker.outputs.tags }}
+          labels: ${{ steps.meta-worker.outputs.labels }}
+
+      # Build Worker image (Node runtime)
+      - name: Extract metadata for Worker image (Node)
+        id: meta-worker-node
+        uses: docker/metadata-action@8e5442c4ef9f78452e203c73f23e6bc8dbfe3282 # v5.5.1
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/vp-worker
+          tags: |
+            type=sha,format=long,suffix=-node
+            type=raw,value=node,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Worker image (Node, linux/amd64,linux/arm64)
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          build-args: |
+            WORKER_RUNTIME=node
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-worker-node.outputs.tags }}
+          labels: ${{ steps.meta-worker-node.outputs.labels }}
+
+      # Trivy Security Scans
+      - name: Run Trivy vulnerability scanner on API
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/vp-api:${{ steps.meta-api.outputs.version || 'latest' }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+          trivyignores: '.trivyignore'
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+
+      - name: Run Trivy vulnerability scanner on Worker
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/vp-worker:${{ steps.meta-worker.outputs.version || 'latest' }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+          trivyignores: '.trivyignore'
+        continue-on-error: ${{ github.event_name == 'pull_request' }}

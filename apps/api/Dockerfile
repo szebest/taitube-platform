@@ -1,15 +1,37 @@
-FROM node:24-alpine AS base
-WORKDIR /app
-RUN npm i -g pnpm@10.18.3
+# apps/api/Dockerfile
+FROM node:24-slim AS build
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /repo
 
-FROM base AS builder
-COPY . .
+# Copy monorepo dependency manifests
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY apps/api/package.json apps/api/
+COPY packages/*/package.json packages/
+COPY tools/*/package.json tools/
+
+# Install dependencies
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @vp/api... build
 
-FROM node:24-alpine AS runner
+# Copy source trees
+COPY . .
+
+# Build API and dependencies, deploy production bundle
+RUN pnpm turbo run build --filter=@vp/api... \
+ && pnpm deploy --filter=@vp/api --prod /out \
+ && cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle
+
+# Production runtime image
+FROM node:24-slim AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tini curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd -r -u 10001 -m appuser
+
 WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app /app
+COPY --from=build --chown=appuser:appuser /out /app
+
+USER appuser
+ENV NODE_ENV=production PORT=3000 METRICS_PORT=9464
 EXPOSE 3000 9464
-CMD ["node", "apps/api/dist/main.js"]
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["node", "dist/main.js"]
