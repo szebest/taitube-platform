@@ -1,3 +1,4 @@
+import * as crypto from 'node:crypto';
 import { verifyDevToken } from '@vp/dev-token';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -61,5 +62,37 @@ export function requireAuth(request: FastifyRequest): AuthUser {
       'Authentication required to access this resource'
     );
   }
+  return request.user;
+}
+
+export function requireAdmin(request: FastifyRequest): AuthUser {
+  // 1. Check x-admin-token header with constant-time comparison (AC 17)
+  const adminTokenHeader = request.headers['x-admin-token'];
+  const expectedAdminToken = process.env.ADMIN_TOKEN || 'change-me-32-bytes-random';
+
+  if (typeof adminTokenHeader === 'string') {
+    const hashA = crypto.createHash('sha256').update(adminTokenHeader).digest();
+    const hashB = crypto.createHash('sha256').update(expectedAdminToken).digest();
+    if (crypto.timingSafeEqual(hashA, hashB)) {
+      return {
+        id: '00000000-0000-7000-8000-000000000003',
+        role: 'admin',
+      };
+    }
+  }
+
+  // 2. Unauthenticated check (AC 17)
+  if (!request.user) {
+    throw new PermanentError(
+      ErrorCodes.UNAUTHORIZED,
+      'Authentication required: provide an admin Bearer token or valid x-admin-token header'
+    );
+  }
+
+  // 3. Role check: non-admin JWT -> 403 Forbidden (AC 17)
+  if (request.user.role !== 'admin') {
+    throw new PermanentError(ErrorCodes.FORBIDDEN, 'Admin role required to access this resource');
+  }
+
   return request.user;
 }
