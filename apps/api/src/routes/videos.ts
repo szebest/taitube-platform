@@ -89,10 +89,9 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
             audioKbps: number;
           }>) ?? undefined,
         renditions: renditionsResponse,
-        playbackUrl:
-          isReady && video.masterPlaylistKey
-            ? `${cleanCdnBase}/${video.masterPlaylistKey.replace(/^\/+/, '')}`
-            : undefined,
+        playbackUrl: isReady
+          ? `${cleanCdnBase}/${(video.masterPlaylistKey || `videos/${video.id}/hls/master.m3u8`).replace(/^\/+/, '')}`
+          : undefined,
         posterUrl: video.posterKey
           ? `${cleanCdnBase}/${video.posterKey.replace(/^\/+/, '')}`
           : undefined,
