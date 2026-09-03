@@ -1,8 +1,12 @@
 #!/bin/sh
 set -e
 
-echo "[minio-init] Waiting for MinIO to be ready..."
-until mc alias set local http://minio:9000 minioadmin minioadmin; do
+MINIO_ENDPOINT="${MINIO_ENDPOINT:-http://minio:9000}"
+MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY:-minioadmin}"
+MINIO_SECRET_KEY="${MINIO_SECRET_KEY:-minioadmin}"
+
+echo "[minio-init] Waiting for MinIO at ${MINIO_ENDPOINT} to be ready..."
+until mc alias set local "${MINIO_ENDPOINT}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"; do
   echo "[minio-init] MinIO not ready yet, retrying in 2s..."
   sleep 2
 done

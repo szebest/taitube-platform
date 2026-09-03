@@ -1,5 +1,7 @@
 # video-pipeline — design package (PDLC kick-off)
 
+[![CI](https://github.com/szebest/video-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/szebest/video-pipeline/actions/workflows/ci.yml)
+
 Everything needed to start building the asynchronous video ingestion & HLS transcoding backend, in one tree laid out like the future repository. Nothing here is code yet — it is the specification, the work breakdown, and the agent tooling that turns the specification into code.
 
 | Path | What it is | Latest version |
