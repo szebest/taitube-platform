@@ -1,4 +1,5 @@
 import { z } from 'zod';
+export * from './policies.js';
 
 export const QUEUES = [
   'probe',
