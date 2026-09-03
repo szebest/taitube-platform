@@ -5,6 +5,7 @@ import {
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
+  type PutObjectCommandInput,
   S3Client,
   type S3ClientConfig,
 } from '@aws-sdk/client-s3';
@@ -198,4 +199,27 @@ export function sanitizeStorageUrl(url: string): string {
   } catch {
     return url.split('?')[0] || url;
   }
+}
+
+export interface UploadObjectOptions {
+  bucket: string;
+  key: string;
+  body: PutObjectCommandInput['Body'];
+  contentType: string;
+  cacheControl?: string;
+}
+
+/**
+ * Uploads an object with authoritative metadata (SDD §7).
+ */
+export async function uploadObject(client: S3Client, options: UploadObjectOptions): Promise<void> {
+  await client.send(
+    new PutObjectCommand({
+      Bucket: options.bucket,
+      Key: options.key,
+      Body: options.body,
+      ContentType: options.contentType,
+      CacheControl: options.cacheControl,
+    })
+  );
 }

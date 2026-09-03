@@ -7,10 +7,13 @@ import {
   initTracing,
 } from '@vp/observability';
 import { type S3Client, createStorageClient } from '@vp/storage';
-import { type Job, Worker } from 'bullmq';
+import { type Job, Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { STAGE_REGISTRY, validateQueueName } from './registry.js';
+import { createNotifyProcessor } from './stages/notify.js';
+import { createPackageProcessor } from './stages/package.js';
 import { createProbeProcessor } from './stages/probe.js';
+import { createTranscodeProcessor } from './stages/transcode.js';
 
 export interface WorkerRunnerOptions {
   stage?: string;
@@ -59,6 +62,19 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
       enableReadyCheck: false,
     });
 
+  const queues = new Map<string, Queue>();
+  const getQueue = (name: string): Queue => {
+    let q = queues.get(name);
+    if (!q) {
+      q = new Queue(name, {
+        connection: connection.duplicate(),
+        prefix: 'bull',
+      });
+      queues.set(name, q);
+    }
+    return q;
+  };
+
   // Processor selection based on stage
   let processor: (job: Job) => Promise<unknown>;
   if (stage === 'probe') {
@@ -68,6 +84,31 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
       workerId: options.workerId,
       logger,
       heartbeatPath: options.heartbeatPath,
+      getQueue,
+    });
+  } else if (stage.startsWith('transcode-')) {
+    processor = createTranscodeProcessor({
+      db,
+      s3Client,
+      workerId: options.workerId,
+      logger,
+      heartbeatPath: options.heartbeatPath,
+      getQueue,
+    });
+  } else if (stage === 'package') {
+    processor = createPackageProcessor({
+      db,
+      s3Client,
+      workerId: options.workerId,
+      logger,
+      getQueue,
+    });
+  } else if (stage === 'notify') {
+    processor = createNotifyProcessor({
+      db,
+      redis: connection,
+      workerId: options.workerId,
+      logger,
     });
   } else {
     throw new Error(`Stage "${stage}" processor not implemented yet`);
@@ -119,6 +160,9 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
   const close = async () => {
     logger.info('Shutting down worker...');
     await worker.close();
+    for (const q of queues.values()) {
+      await q.close().catch(() => {});
+    }
     if (!options.redisConnection) {
       await connection.quit().catch(() => {});
     }

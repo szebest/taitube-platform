@@ -13,10 +13,16 @@ import {
 } from '@vp/db';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
-import type { ProbeJob } from '@vp/job-contracts';
+import {
+  type ProbeJob,
+  TranscodeJob,
+  defaultJobOptions,
+  ids,
+  stagePolicies,
+} from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
 import { type S3Client, downloadObject, headObject } from '@vp/storage';
-import { type Job, UnrecoverableError } from 'bullmq';
+import { type Job, type Queue, UnrecoverableError } from 'bullmq';
 import { eq } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { validateJobId } from '../registry.js';
@@ -28,6 +34,7 @@ export interface ProbeProcessorDeps {
   workerId?: string;
   logger: Logger;
   heartbeatPath?: string;
+  getQueue?: (name: string) => Queue;
 }
 
 export function createProbeProcessor(deps: ProbeProcessorDeps) {
@@ -38,6 +45,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     workerId = `worker-${process.pid}`,
     logger,
     heartbeatPath = process.env.WORKER_HEARTBEAT_PATH || path.join(os.tmpdir(), 'worker-heartbeat'),
+    getQueue,
   } = deps;
 
   return async function processProbeJob(
@@ -291,6 +299,37 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           ladder: metadata.ladder,
         },
       });
+
+      // 10. Enqueue follow-up transcode job (Ticket 07, SDD §9.2)
+      if (getQueue) {
+        const r720 = metadata.ladder.find((r) => r.name === '720p') || metadata.ladder[0];
+        if (r720) {
+          const transcodeQueueName = `transcode-${r720.name}`;
+          const transcodeJobId = ids.transcode(videoId, r720.name, job.data.generation);
+          const queue = getQueue(transcodeQueueName);
+          await queue.add(
+            transcodeQueueName,
+            TranscodeJob.parse({
+              videoId,
+              sourceKey,
+              generation: job.data.generation,
+              rendition: r720,
+              fps: metadata.fps,
+              durationMs: metadata.durationMs,
+              traceparent: job.data.traceparent,
+            }),
+            {
+              jobId: transcodeJobId,
+              ...stagePolicies[transcodeQueueName as keyof typeof stagePolicies],
+              ...defaultJobOptions,
+            }
+          );
+          log.info(
+            { transcodeJobId, queue: transcodeQueueName },
+            'Enqueued transcode follow-up job'
+          );
+        }
+      }
 
       return {
         videoId,

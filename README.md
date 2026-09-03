@@ -84,7 +84,42 @@ Open `tools/hls-test-page/index.html` in any browser (uses vendored `hls.js`, 10
 - **Simulate Mock SSE**: Tests real-time transcode progress bars (`1080p`, `720p`, `480p`, overall) using `SseEvent` schema (SDD §20).
 - **Subscribe SSE**: Connects to `GET /v1/videos/:id/events` when the API is running.
 
-### 4. Useful commands
+### 4. First video end-to-end (Walking Skeleton)
+
+Run the full end-to-end upload and transcoding flow locally:
+
+1. **Start the API and workers:**
+   ```bash
+   # Terminal 1: Fastify API
+   pnpm --filter @vp/api dev
+
+   # Terminal 2: Probe Worker
+   WORKER_STAGE=probe pnpm --filter @vp/worker dev
+
+   # Terminal 3: Transcode Worker
+   WORKER_STAGE=transcode-720p pnpm --filter @vp/worker dev
+
+   # Terminal 4: Package Worker
+   WORKER_STAGE=package pnpm --filter @vp/worker dev
+
+   # Terminal 5: Notify Worker
+   WORKER_STAGE=notify pnpm --filter @vp/worker dev
+   ```
+
+2. **Upload a video:**
+   ```bash
+   ./scripts/upload.sh tests/fixtures/s60.mp4 "My Test Video"
+   ```
+
+3. **Verify and play:**
+   - Query the video via API:
+     ```bash
+     curl -H "Authorization: Bearer $(pnpm dev-token mint --sub 00000000-0000-7000-8000-000000000001 --role admin)" http://localhost:3000/v1/videos/<VIDEO_ID>
+     ```
+   - Copy the `playbackUrl` (`http://localhost:9000/public/videos/<VIDEO_ID>/hls/master.m3u8`).
+   - Open `tools/hls-test-page/index.html` in your browser, paste the URL, and press **Load & Play**.
+
+### 5. Useful commands
 | Command | Description |
 |---|---|
 | `make up` | Start local Postgres, Redis, MinIO with buckets initialized |
