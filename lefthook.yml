@@ -4,4 +4,4 @@ pre-commit:
     typecheck:
       run: pnpm typecheck
     biome:
-      run: pnpm biome check --staged
+      run: pnpm biome check --no-errors-on-unmatched --staged

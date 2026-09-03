@@ -8,7 +8,7 @@
 | Blocks | 08 |
 | Spec | [SDD §15.1 workflows](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §2.3 Runtime split guard-rail](../SDD.md#23-runtime-split-why-two-runtimes) · [SDD §11 Supply chain](../SDD.md#11-security) · [SDD §17 Fact sheet (GitHub)](../SDD.md#17-fact-sheet-verified-2026-09-03) |
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## What to build
 Every pull request proves the repo builds, lints and passes unit + integration tests against real Postgres/Redis/MinIO, and proves worker code runs under both Bun and Node. Dependency updates arrive weekly, grouped, with actions pinned by digest.
