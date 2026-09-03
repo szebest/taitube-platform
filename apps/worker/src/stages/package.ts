@@ -142,7 +142,10 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       });
 
       if (comp.fenced) {
-        log.warn({ lockToken }, 'Fenced out on package completion; not flipping video to READY');
+        log.warn(
+          { lockToken, event: 'FENCED_OUT' },
+          'Fenced out on package completion; not flipping video to READY'
+        );
         return { videoId, masterKey, playbackUrl };
       }
 
