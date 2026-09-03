@@ -1,11 +1,25 @@
+import { loadEnv } from '@vp/config';
 import { buildApp } from './app.js';
+import { startMetricsServer } from './plugins/metrics.js';
 
 export async function main(): Promise<void> {
-  const app = buildApp();
-  console.log(`[${app.name}] Starting in ${process.env['NODE_ENV'] ?? 'development'} mode...`);
+  const env = loadEnv();
+  const app = await buildApp({
+    cdnBaseUrl: env.CDN_BASE_URL,
+  });
+
+  const apiAddress = await app.listen({
+    port: env.PORT,
+    host: '0.0.0.0',
+  });
+  console.log(`[api] Fastify server listening on ${apiAddress}`);
+
+  // Start Prometheus metrics server on isolated METRICS_PORT (SDD §6.1, AC 6)
+  const metricsServer = await startMetricsServer(env.METRICS_PORT);
+  console.log(`[api] Metrics server listening on http://0.0.0.0:${metricsServer.port}/metrics`);
 }
 
-if (process.env['NODE_ENV'] !== 'test') {
+if (process.env.NODE_ENV !== 'test') {
   main().catch((err) => {
     console.error('Fatal API error:', err);
     process.exit(1);
