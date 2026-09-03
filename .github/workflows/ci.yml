@@ -287,3 +287,6 @@ jobs:
       - name: Run E2E smoke test
         run: make smoke
 
+      - name: Run offline smoke test (internal network with zero internet egress)
+        run: make smoke-offline
+

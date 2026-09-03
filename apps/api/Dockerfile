@@ -30,7 +30,7 @@ WORKDIR /app
 COPY --from=build --chown=appuser:appuser /out /app
 
 USER appuser
-ENV NODE_ENV=production PORT=3000 METRICS_PORT=9464
+ENV NODE_ENV=production PORT=3000 METRICS_PORT=9464 TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1
 EXPOSE 3000 9464
 
 ENTRYPOINT ["/usr/bin/tini", "--"]

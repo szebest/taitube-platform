@@ -8,6 +8,7 @@ Everything needed to start building the asynchronous video ingestion & HLS trans
 |---|---|---|
 | `docs/PRD.md` | Product Requirements Document (goals G1–G11 incl. **local-first**, user stories, FR-1…19, NFR/SLOs, risks, open questions) | v1.0 + local-first update |
 | `docs/SDD.md` | System Design Document & Implementation Blueprint (architecture, 18 ADRs with ranked alternatives, DDL, API, storage, FFmpeg, queue/worker deep-dive, SSE, security, deployment & cost, autoscaling, observability, load/chaos plan, repo layout, env, fact sheet, roadmap) | v1.0 + P9 local-first / offline mode |
+| `docs/LOCAL_FIRST.md` | Local-first and offline execution guide (zero external dependencies, zero egress) | v1.0 |
 | `docs/diagrams/` | Rendered architecture diagram and ticket dependency graph (PNG) | — |
 | `docs/tickets/` | 35 tracer-bullet tickets (`NN-slug.md`), index with status board / dependency graph / parallel lanes (`README.md`), and the generator (`gen-index.py`) | — |
 | `docs/agents/` | Config the workflow skills read: where tickets live (`issue-tracker.md`), how to use glossary/ADRs (`domain.md`) | — |

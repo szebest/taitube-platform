@@ -65,5 +65,6 @@ smoke: ## Run end-to-end smoke tests against running stack
 smoke-infra: ## Run infrastructure smoke tests
 	bash infra/compose/test.sh
 
-smoke-offline: ## Run smoke tests in offline mode
+smoke-offline: ## Run smoke tests in offline mode (internal network with zero internet egress)
+	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) -f infra/compose/docker-compose.offline.yml up -d --build --wait
 	bash scripts/e2e-smoke.sh
