@@ -247,7 +247,10 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       });
 
       if (comp.fenced) {
-        log.warn({ lockToken }, 'Fenced out on transcode completion; not enqueueing package');
+        log.warn(
+          { lockToken, event: 'FENCED_OUT' },
+          'Fenced out on transcode completion; not enqueueing package'
+        );
         return {
           videoId,
           rendition: rendition.name,

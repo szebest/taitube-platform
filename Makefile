@@ -68,3 +68,6 @@ smoke-infra: ## Run infrastructure smoke tests
 smoke-offline: ## Run smoke tests in offline mode (internal network with zero internet egress)
 	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) -f infra/compose/docker-compose.offline.yml up -d --build --wait
 	bash scripts/e2e-smoke.sh
+
+chaos-kill: ## Run crash-safety chaos test (kill worker mid-transcode, assert effectively-once READY)
+	bash scripts/chaos-kill.sh 5
