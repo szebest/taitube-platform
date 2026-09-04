@@ -1,8 +1,11 @@
 import { EventRepository, type NewVideoEventInput, type VideoEventRecord } from '@vp/core/ports';
 
 export class InMemoryEventRepository extends EventRepository {
-  constructor(private readonly eventsList: VideoEventRecord[]) {
+  private readonly eventsList: VideoEventRecord[];
+
+  constructor(eventsList: VideoEventRecord[] = []) {
     super();
+    this.eventsList = eventsList;
   }
 
   async create(data: NewVideoEventInput): Promise<void> {
@@ -17,5 +20,9 @@ export class InMemoryEventRepository extends EventRepository {
 
   async findByVideoId(videoId: string): Promise<VideoEventRecord[]> {
     return this.eventsList.filter((e) => e.videoId === videoId);
+  }
+
+  clear(): void {
+    this.eventsList.length = 0;
   }
 }

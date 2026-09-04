@@ -37,6 +37,7 @@ export interface UploadWithVideo {
 
 export abstract class UploadRepository {
   abstract findById(id: string): Promise<UploadRecord | null>;
+  abstract findByVideoId(videoId: string): Promise<UploadRecord | null>;
   abstract findWithVideo(uploadId: string): Promise<UploadWithVideo | null>;
   abstract create(data: NewUploadInput): Promise<UploadRecord>;
   abstract updateStatus(uploadId: string, status: string): Promise<UploadRecord | null>;

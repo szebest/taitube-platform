@@ -11,8 +11,11 @@ import {
 import type { InternalStep } from './types.js';
 
 export class InMemoryStepRepository extends StepRepository {
-  constructor(private readonly stepsMap: Map<string, InternalStep>) {
+  private readonly stepsMap: Map<string, InternalStep>;
+
+  constructor(stepsMap: Map<string, InternalStep> = new Map()) {
     super();
+    this.stepsMap = stepsMap;
   }
 
   private getStepKey(videoId: string, step: string, rendition: string): string {
@@ -104,5 +107,9 @@ export class InMemoryStepRepository extends StepRepository {
       }
     }
     return results;
+  }
+
+  clear(): void {
+    this.stepsMap.clear();
   }
 }

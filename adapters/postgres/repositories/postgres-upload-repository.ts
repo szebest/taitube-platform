@@ -30,6 +30,24 @@ export class PostgresUploadRepository extends UploadRepository {
     }
   }
 
+  async findByVideoId(videoId: string): Promise<UploadRecord | null> {
+    try {
+      const rows = await this.db
+        .select()
+        .from(schema.uploads)
+        .where(eq(schema.uploads.videoId, videoId))
+        .limit(1);
+      return (rows[0] as unknown as UploadRecord) || null;
+    } catch (err: unknown) {
+      throw new DatabaseError(
+        `Failed to get upload for video ${videoId}: ${(err as Error).message}`,
+        {
+          cause: err,
+        }
+      );
+    }
+  }
+
   async findWithVideo(uploadId: string): Promise<UploadWithVideo | null> {
     try {
       const rows = await this.db

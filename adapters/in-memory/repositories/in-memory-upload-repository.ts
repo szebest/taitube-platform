@@ -4,24 +4,63 @@ import {
   UploadRepository,
   type UploadWithVideo,
   type VideoRecord,
+  type VideoRepository,
 } from '@vp/core/ports';
 
+export interface InMemoryUploadRepositoryOptions {
+  uploadsMap?: Map<string, UploadRecord>;
+  videosMap?: Map<string, VideoRecord>;
+  videosRepo?: VideoRepository;
+}
+
 export class InMemoryUploadRepository extends UploadRepository {
+  private readonly uploadsMap: Map<string, UploadRecord>;
+  private readonly videosMap?: Map<string, VideoRecord>;
+  private videosRepo?: VideoRepository;
+
   constructor(
-    private readonly uploadsMap: Map<string, UploadRecord>,
-    private readonly videosMap: Map<string, VideoRecord>
+    optionsOrUploadsMap?: InMemoryUploadRepositoryOptions | Map<string, UploadRecord>,
+    legacyVideosMap?: Map<string, VideoRecord>
   ) {
     super();
+    if (optionsOrUploadsMap instanceof Map) {
+      this.uploadsMap = optionsOrUploadsMap;
+      this.videosMap = legacyVideosMap;
+    } else {
+      this.uploadsMap = optionsOrUploadsMap?.uploadsMap ?? new Map();
+      this.videosMap = optionsOrUploadsMap?.videosMap;
+      this.videosRepo = optionsOrUploadsMap?.videosRepo;
+    }
+  }
+
+  setVideosRepo(repo: VideoRepository): void {
+    this.videosRepo = repo;
   }
 
   async findById(id: string): Promise<UploadRecord | null> {
     return this.uploadsMap.get(id) ?? null;
   }
 
+  async findByVideoId(videoId: string): Promise<UploadRecord | null> {
+    for (const upload of this.uploadsMap.values()) {
+      if (upload.videoId === videoId) {
+        return upload;
+      }
+    }
+    return null;
+  }
+
   async findWithVideo(uploadId: string): Promise<UploadWithVideo | null> {
     const upload = this.uploadsMap.get(uploadId);
     if (!upload) return null;
-    const video = this.videosMap.get(upload.videoId);
+
+    let video: VideoRecord | null = null;
+    if (this.videosRepo) {
+      video = await this.videosRepo.findById(upload.videoId);
+    } else if (this.videosMap) {
+      video = this.videosMap.get(upload.videoId) ?? null;
+    }
+
     if (!video) return null;
     return { upload, video };
   }
@@ -55,5 +94,9 @@ export class InMemoryUploadRepository extends UploadRepository {
       upload.completedAt = new Date();
     }
     return upload;
+  }
+
+  clear(): void {
+    this.uploadsMap.clear();
   }
 }

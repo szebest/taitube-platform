@@ -1,8 +1,11 @@
 import { type NewRenditionInput, type RenditionRecord, RenditionRepository } from '@vp/core/ports';
 
 export class InMemoryRenditionRepository extends RenditionRepository {
-  constructor(private readonly renditionsMap: Map<string, RenditionRecord>) {
+  private readonly renditionsMap: Map<string, RenditionRecord>;
+
+  constructor(renditionsMap: Map<string, RenditionRecord> = new Map()) {
     super();
+    this.renditionsMap = renditionsMap;
   }
 
   async create(data: NewRenditionInput): Promise<RenditionRecord> {
@@ -50,5 +53,9 @@ export class InMemoryRenditionRepository extends RenditionRepository {
     if (!rendition) return null;
     Object.assign(rendition, patch);
     return { ...rendition };
+  }
+
+  clear(): void {
+    this.renditionsMap.clear();
   }
 }

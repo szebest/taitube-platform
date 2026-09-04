@@ -1,11 +1,15 @@
 import {
   DatabaseError,
+  type EventRepository,
   type NewVideoInput,
   type ProcessingStepRecord,
   type RenditionRecord,
+  type RenditionRepository,
+  type StepRepository,
   type TransitionVideoOptions,
   type UpdateVideoMetadataOptions,
   type UploadRecord,
+  type UploadRepository,
   type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
@@ -13,15 +17,63 @@ import {
 } from '@vp/core/ports';
 import type { InternalStep } from './types.js';
 
+export interface InMemoryVideoRepositoryOptions {
+  videosMap?: Map<string, VideoRecord>;
+  eventsRepo?: EventRepository;
+  renditionsRepo?: RenditionRepository;
+  stepsRepo?: StepRepository;
+  uploadsRepo?: UploadRepository;
+}
+
 export class InMemoryVideoRepository extends VideoRepository {
+  private readonly videosMap: Map<string, VideoRecord>;
+  private readonly eventsList?: VideoEventRecord[];
+  private readonly renditionsMap?: Map<string, RenditionRecord>;
+  private readonly stepsMap?: Map<string, InternalStep>;
+  private readonly uploadsMap?: Map<string, UploadRecord>;
+
+  private eventsRepo?: EventRepository;
+  private renditionsRepo?: RenditionRepository;
+  private stepsRepo?: StepRepository;
+  private uploadsRepo?: UploadRepository;
+
   constructor(
-    private readonly videosMap: Map<string, VideoRecord>,
-    private readonly eventsList: VideoEventRecord[],
-    private readonly renditionsMap: Map<string, RenditionRecord>,
-    private readonly stepsMap: Map<string, InternalStep>,
-    private readonly uploadsMap: Map<string, UploadRecord>
+    optionsOrVideosMap?: InMemoryVideoRepositoryOptions | Map<string, VideoRecord>,
+    eventsList?: VideoEventRecord[],
+    renditionsMap?: Map<string, RenditionRecord>,
+    stepsMap?: Map<string, InternalStep>,
+    uploadsMap?: Map<string, UploadRecord>
   ) {
     super();
+    if (optionsOrVideosMap instanceof Map) {
+      this.videosMap = optionsOrVideosMap;
+      this.eventsList = eventsList;
+      this.renditionsMap = renditionsMap;
+      this.stepsMap = stepsMap;
+      this.uploadsMap = uploadsMap;
+    } else {
+      this.videosMap = optionsOrVideosMap?.videosMap ?? new Map();
+      this.eventsRepo = optionsOrVideosMap?.eventsRepo;
+      this.renditionsRepo = optionsOrVideosMap?.renditionsRepo;
+      this.stepsRepo = optionsOrVideosMap?.stepsRepo;
+      this.uploadsRepo = optionsOrVideosMap?.uploadsRepo;
+    }
+  }
+
+  setUploadsRepo(repo: UploadRepository): void {
+    this.uploadsRepo = repo;
+  }
+
+  setEventsRepo(repo: EventRepository): void {
+    this.eventsRepo = repo;
+  }
+
+  setRenditionsRepo(repo: RenditionRepository): void {
+    this.renditionsRepo = repo;
+  }
+
+  setStepsRepo(repo: StepRepository): void {
+    this.stepsRepo = repo;
   }
 
   async findById(id: string): Promise<VideoRecord | null> {
@@ -32,27 +84,40 @@ export class InMemoryVideoRepository extends VideoRepository {
     const video = this.videosMap.get(id);
     if (!video) return null;
 
-    const renditions: RenditionRecord[] = [];
-    for (const r of this.renditionsMap.values()) {
-      if (r.videoId === id) {
-        renditions.push(r);
+    let renditions: RenditionRecord[] = [];
+    if (this.renditionsRepo) {
+      renditions = await this.renditionsRepo.findByVideoId(id);
+    } else if (this.renditionsMap) {
+      for (const r of this.renditionsMap.values()) {
+        if (r.videoId === id) renditions.push(r);
       }
     }
 
-    const steps: ProcessingStepRecord[] = [];
-    for (const s of this.stepsMap.values()) {
-      if (s.videoId === id) {
-        steps.push({ ...s });
+    let steps: ProcessingStepRecord[] = [];
+    if (this.stepsRepo) {
+      steps = await this.stepsRepo.findByVideoId(id);
+    } else if (this.stepsMap) {
+      for (const s of this.stepsMap.values()) {
+        if (s.videoId === id) steps.push({ ...s });
       }
     }
 
-    const events = this.eventsList.filter((e) => e.videoId === id);
+    let events: VideoEventRecord[] = [];
+    if (this.eventsRepo) {
+      events = await this.eventsRepo.findByVideoId(id);
+    } else if (this.eventsList) {
+      events = this.eventsList.filter((e) => e.videoId === id);
+    }
 
     let upload: UploadRecord | null = null;
-    for (const u of this.uploadsMap.values()) {
-      if (u.videoId === id) {
-        upload = u;
-        break;
+    if (this.uploadsRepo) {
+      upload = await this.uploadsRepo.findByVideoId(id);
+    } else if (this.uploadsMap) {
+      for (const u of this.uploadsMap.values()) {
+        if (u.videoId === id) {
+          upload = u;
+          break;
+        }
       }
     }
 
@@ -140,14 +205,26 @@ export class InMemoryVideoRepository extends VideoRepository {
     });
 
     const effectiveEventType = eventType || `video.${to.toLowerCase()}`;
-    this.eventsList.push({
-      id: this.eventsList.length + 1,
-      videoId,
-      type: effectiveEventType,
-      payload: eventPayload,
-      createdAt: now,
-    });
+    if (this.eventsRepo) {
+      await this.eventsRepo.create({
+        videoId,
+        type: effectiveEventType,
+        payload: eventPayload,
+      });
+    } else if (this.eventsList) {
+      this.eventsList.push({
+        id: this.eventsList.length + 1,
+        videoId,
+        type: effectiveEventType,
+        payload: eventPayload,
+        createdAt: now,
+      });
+    }
 
     return true;
+  }
+
+  clear(): void {
+    this.videosMap.clear();
   }
 }

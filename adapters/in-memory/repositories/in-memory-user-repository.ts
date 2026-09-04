@@ -1,8 +1,47 @@
 import { type UpsertUserInput, type UserRecord, UserRepository } from '@vp/core/ports';
 
 export class InMemoryUserRepository extends UserRepository {
-  constructor(private readonly usersMap: Map<string, UserRecord>) {
+  private readonly usersMap: Map<string, UserRecord>;
+
+  constructor(usersMap: Map<string, UserRecord> = new Map()) {
     super();
+    this.usersMap = usersMap;
+    if (this.usersMap.size === 0) {
+      this.seedDevUsers();
+    }
+  }
+
+  seedDevUsers(): void {
+    this.usersMap.set('00000000-0000-7000-8000-000000000001', {
+      id: '00000000-0000-7000-8000-000000000001',
+      email: 'dev@video-pipeline.local',
+      tier: 'pro',
+      maxConcurrentUploads: 10,
+      maxVideoDurationSec: 3600,
+      storageQuotaBytes: 100 * 1024 * 1024 * 1024,
+      webhookUrl: null,
+      createdAt: new Date(),
+    });
+    this.usersMap.set('00000000-0000-7000-8000-000000000002', {
+      id: '00000000-0000-7000-8000-000000000002',
+      email: 'user@video-pipeline.local',
+      tier: 'free',
+      maxConcurrentUploads: 2,
+      maxVideoDurationSec: 300,
+      storageQuotaBytes: 1024 * 1024 * 1024,
+      webhookUrl: null,
+      createdAt: new Date(),
+    });
+    this.usersMap.set('00000000-0000-7000-8000-000000000003', {
+      id: '00000000-0000-7000-8000-000000000003',
+      email: 'admin@video-pipeline.local',
+      tier: 'enterprise',
+      maxConcurrentUploads: 50,
+      maxVideoDurationSec: 14400,
+      storageQuotaBytes: 1024 * 1024 * 1024 * 1024,
+      webhookUrl: null,
+      createdAt: new Date(),
+    });
   }
 
   async findById(id: string): Promise<UserRecord | null> {
@@ -34,5 +73,10 @@ export class InMemoryUserRepository extends UserRepository {
     };
     this.usersMap.set(user.id, record);
     return record;
+  }
+
+  clear(): void {
+    this.usersMap.clear();
+    this.seedDevUsers();
   }
 }
