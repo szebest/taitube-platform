@@ -13,6 +13,7 @@ import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package.js';
 import { createProbeProcessor } from '../stages/probe.js';
+import { createThumbnailProcessor } from '../stages/thumbnail.js';
 import { createTranscodeProcessor } from '../stages/transcode.js';
 
 describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', () => {
@@ -134,6 +135,23 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
         };
       });
 
+    const thumbSpy = vi
+      .spyOn(ffmpegModule, 'runFfmpegThumbnail')
+      .mockImplementation(async (options) => {
+        await fs.writeFile(path.join(options.outputDir, 'poster.jpg'), Buffer.alloc(100));
+        await fs.writeFile(path.join(options.outputDir, 'sprite.jpg'), Buffer.alloc(100));
+        await fs.writeFile(path.join(options.outputDir, 'sprite.vtt'), 'WEBVTT\n');
+        return {
+          outputDir: options.outputDir,
+          posterPath: path.join(options.outputDir, 'poster.jpg'),
+          spritePath: path.join(options.outputDir, 'sprite.jpg'),
+          vttPath: path.join(options.outputDir, 'sprite.vtt'),
+          frameCount: 12,
+          rows: 2,
+          columns: 10,
+        };
+      });
+
     // 1. Run probe processor
     const probeProcessor = createProbeProcessor({
       repositories,
@@ -178,19 +196,25 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     const videoBeforeTranscode = await repositories.videos.findById(videoId);
     expect(videoBeforeTranscode?.status).toBe('PROCESSING');
 
-    // 2. Process transcode children on queues transcode-1080p, transcode-720p, transcode-480p
+    // 2. Process transcode children on queues transcode-1080p, transcode-720p, transcode-480p and thumbnail
     const q1080 = getQueue('transcode-1080p');
     const q720 = getQueue('transcode-720p');
     const q480 = getQueue('transcode-480p');
+    const qThumb = getQueue('thumbnail');
 
     const transcode1080 = createTranscodeProcessor({ repositories, storage, logger, getQueue });
     const transcode720 = createTranscodeProcessor({ repositories, storage, logger, getQueue });
     const transcode480 = createTranscodeProcessor({ repositories, storage, logger, getQueue });
+    const thumbnailProcessor = createThumbnailProcessor({ repositories, storage, logger });
 
     // Process 1080p and 720p first; package should STILL be in waiting-children
     await q1080.process(transcode1080);
     await q720.process(transcode720);
 
+    expect(await packageQueue.getJobState(packageJobId)).toBe('waiting-children');
+
+    // Process thumbnail; package should STILL be in waiting-children because 480p is pending
+    await qThumb.process(thumbnailProcessor);
     expect(await packageQueue.getJobState(packageJobId)).toBe('waiting-children');
 
     // Process 480p (the final child)
@@ -249,6 +273,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
 
     probeSpy.mockRestore();
     transcodeSpy.mockRestore();
+    thumbSpy.mockRestore();
   });
 
   it('AC 2: p720 yields 2 variants, sd360 yields 1 variant (480p rung), ladder stored on video, renditions progress PENDING -> RUNNING -> DONE independently', async () => {
@@ -474,15 +499,18 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     const q1080 = getQueue('transcode-1080p');
     const q720 = getQueue('transcode-720p');
     const q480 = getQueue('transcode-480p');
+    const qThumb = getQueue('thumbnail');
 
     expect(q1080.enqueuedJobs).toHaveLength(1);
     expect(q720.enqueuedJobs).toHaveLength(1);
     expect(q480.enqueuedJobs).toHaveLength(1);
+    expect(qThumb.enqueuedJobs).toHaveLength(1);
 
     // Verify deterministic child job IDs (AC 4)
     expect(q1080.enqueuedJobs[0]?.id).toBe(`${videoId}--transcode--1080p--g1`);
     expect(q720.enqueuedJobs[0]?.id).toBe(`${videoId}--transcode--720p--g1`);
     expect(q480.enqueuedJobs[0]?.id).toBe(`${videoId}--transcode--480p--g1`);
+    expect(qThumb.enqueuedJobs[0]?.id).toBe(`${videoId}--thumbnail--g1`);
 
     // Re-run probe (simulate re-enqueue of same probe job)
     await probeProcessor({
@@ -492,10 +520,11 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
       attemptsMade: 1,
     });
 
-    // Verify AC 4: no duplicate children added to any transcode queue
+    // Verify AC 4: no duplicate children added to any transcode or thumbnail queue
     expect(q1080.enqueuedJobs).toHaveLength(1);
     expect(q720.enqueuedJobs).toHaveLength(1);
     expect(q480.enqueuedJobs).toHaveLength(1);
+    expect(qThumb.enqueuedJobs).toHaveLength(1);
   });
 
   it('AC 5: Simulated permanent failure in transcode-480p -> parent fails -> video FAILED with child error_code, other children outputs left in place', async () => {

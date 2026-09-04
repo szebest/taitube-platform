@@ -31,6 +31,7 @@ export interface StorageUploadResult {
 export interface StorageObjectMetadata {
   contentLength: number;
   contentType?: string;
+  cacheControl?: string;
   etag?: string;
 }
 

@@ -80,6 +80,7 @@ export class InMemoryStorageClient extends StorageClient {
     return {
       contentLength: item.data.length,
       contentType: item.contentType,
+      cacheControl: item.cacheControl,
       etag: item.etag,
     };
   }

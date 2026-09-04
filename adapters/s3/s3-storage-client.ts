@@ -105,6 +105,7 @@ export class S3StorageClient extends StorageClient {
       return {
         contentLength: res.ContentLength ?? 0,
         contentType: res.ContentType,
+        cacheControl: res.CacheControl,
         etag: res.ETag,
       };
     } catch (err: unknown) {

@@ -146,6 +146,7 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     expect(body.playbackUrl).toBe(`${cdnBase}/videos/${SEED_VIDEO_ID}/hls/master.m3u8`);
     expect(body.posterUrl).toBe(`${cdnBase}/videos/${SEED_VIDEO_ID}/thumbs/poster.jpg`);
     expect(body.spriteUrl).toBe(`${cdnBase}/videos/${SEED_VIDEO_ID}/thumbs/sprite.jpg`);
+    expect(body.spriteVttUrl).toBe(`${cdnBase}/videos/${SEED_VIDEO_ID}/thumbs/sprite.vtt`);
     expect(body.renditions.length).toBe(3);
     expect(body.renditions[0].playlistUrl).toBe(
       `${cdnBase}/videos/${SEED_VIDEO_ID}/hls/1080p/index.m3u8`

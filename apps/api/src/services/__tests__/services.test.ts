@@ -102,4 +102,29 @@ describe('Deep Domain Services (UploadService & VideoService)', () => {
       expect(err.code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
     }
   });
+
+  it('VideoService: exposes posterUrl, spriteUrl, and spriteVttUrl when thumbnails are present', async () => {
+    const videoId = '00000000-0000-7000-8000-000000000099';
+    await repositories.videos.create({
+      id: videoId,
+      ownerId: testUser.id,
+      title: 'Thumbnail Test',
+      visibility: 'public',
+      status: 'READY',
+      sourceKey: `raw/${videoId}/source.mp4`,
+      posterKey: `videos/${videoId}/thumbs/poster.jpg`,
+      spriteKey: `videos/${videoId}/thumbs/sprite.jpg`,
+    });
+
+    const details = await videoService.get(null, videoId);
+    expect(details.posterUrl).toBe(
+      'http://localhost:9000/public/videos/00000000-0000-7000-8000-000000000099/thumbs/poster.jpg'
+    );
+    expect(details.spriteUrl).toBe(
+      'http://localhost:9000/public/videos/00000000-0000-7000-8000-000000000099/thumbs/sprite.jpg'
+    );
+    expect(details.spriteVttUrl).toBe(
+      'http://localhost:9000/public/videos/00000000-0000-7000-8000-000000000099/thumbs/sprite.vtt'
+    );
+  });
 });

@@ -1825,6 +1825,7 @@ Worker and API should use **different** access keys with the scoped permissions 
 | `TMP_DIR` | `/tmp/vp` | emptyDir/tmpfs |
 | `SSE_HEARTBEAT_MS` | `15000` | |
 | `SSE_MAX_PER_USER` / `SSE_MAX_PER_POD` | `20` / `5000` | |
+| `SPRITE_INTERVAL_SECONDS` | `5` | thumbnail sprite frame interval (PRD OQ-4) |
 | `WEBHOOK_URL_ALLOWLIST` | empty | optional outbound targets |
 
 ### 16.7 Observability
@@ -1968,7 +1969,7 @@ export const TranscodeJob = Base.extend({
   sourceKey: z.string(), rendition: LadderEntry, fps: z.number().positive(), durationMs: z.number().int().positive(),
   chunkIndex: z.number().int().min(0).optional(), chunkCount: z.number().int().min(1).optional(),   // Phase 5 chunked mode
 });
-export const ThumbnailJob = Base.extend({ sourceKey: z.string(), durationMs: z.number().int().positive() });
+export const ThumbnailJob = Base.extend({ sourceKey: z.string(), durationMs: z.number().int().positive(), forceFailure: z.boolean().optional() });
 export const PackageJob   = Base.extend({ ladder: z.array(LadderEntry).min(1) });
 export const NotifyJob    = z.object({
   videoId: z.string().uuid(), userId: z.string().uuid(),

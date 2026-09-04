@@ -76,6 +76,15 @@ export class InMemoryFlowProducer extends FlowProducerPort {
               if (parentQueue instanceof InMemoryJobQueue) {
                 parentQueue.failJob(parentJob.id, err).catch(() => {});
               }
+            } else if (childNode.opts?.ignoreDependencyOnFailure) {
+              pendingChildrenCount--;
+              if (pendingChildrenCount === 0 && !parentFailed) {
+                if (parentQueue instanceof InMemoryJobQueue) {
+                  parentQueue.setJobState(parentJob.id, 'waiting');
+                  (parentQueue as any).enqueuedJobs.push(parentJob);
+                  parentQueue.executeJob(parentJob).catch(() => {});
+                }
+              }
             }
           }
         });

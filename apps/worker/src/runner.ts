@@ -29,6 +29,7 @@ import { STAGE_REGISTRY, validateQueueName } from './registry.js';
 import { createNotifyProcessor } from './stages/notify.js';
 import { createPackageProcessor } from './stages/package.js';
 import { createProbeProcessor } from './stages/probe.js';
+import { createThumbnailProcessor } from './stages/thumbnail.js';
 import { createTranscodeProcessor } from './stages/transcode.js';
 
 export interface WorkerRunnerOptions {
@@ -120,6 +121,14 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
       logger,
       heartbeatPath: options.heartbeatPath,
       getQueue,
+    });
+  } else if (stage === 'thumbnail') {
+    processor = createThumbnailProcessor({
+      repositories,
+      storage,
+      workerId: options.workerId,
+      logger,
+      heartbeatPath: options.heartbeatPath,
     });
   } else if (stage === 'package') {
     processor = createPackageProcessor({

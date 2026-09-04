@@ -38,6 +38,7 @@ const Base = z.object({
 
 export const ProbeJob = Base.extend({
   sourceKey: z.string(),
+  forceThumbnailFailure: z.boolean().optional(),
 });
 export type ProbeJob = z.infer<typeof ProbeJob>;
 
@@ -54,6 +55,7 @@ export type TranscodeJob = z.infer<typeof TranscodeJob>;
 export const ThumbnailJob = Base.extend({
   sourceKey: z.string(),
   durationMs: z.number().int().positive(),
+  forceFailure: z.boolean().optional(),
 });
 export type ThumbnailJob = z.infer<typeof ThumbnailJob>;
 

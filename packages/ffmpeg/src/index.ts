@@ -2,6 +2,7 @@ export * from './ladder.js';
 export * from './master.js';
 export * from './probe.js';
 export * from './transcode.js';
+export * from './thumbnail.js';
 
 export interface FfmpegLadderSpec {
   name: '1080p' | '720p' | '480p';

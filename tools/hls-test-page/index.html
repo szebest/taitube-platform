@@ -208,6 +208,100 @@
     .log-entry.status { color: #fbbf24; }
     .log-entry.error { color: #f87171; }
     .log-entry.info { color: #94a3b8; }
+
+    /* Timeline Scrubber & Thumbnail Preview Styles */
+    .scrubber-wrapper {
+      position: relative;
+      width: 100%;
+      margin-top: 10px;
+      user-select: none;
+    }
+
+    .scrubber-bar {
+      position: relative;
+      height: 12px;
+      background: #0b1329;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .scrubber-progress {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 5px;
+      pointer-events: none;
+    }
+
+    .scrubber-hover-point {
+      position: absolute;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      pointer-events: none;
+      display: none;
+    }
+
+    .scrubber-tooltip {
+      position: absolute;
+      bottom: 24px;
+      transform: translateX(-50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .thumbnail-preview-frame {
+      width: 160px;
+      height: 90px;
+      background-color: #000;
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      background-repeat: no-repeat;
+    }
+
+    .scrubber-time {
+      font-size: 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .meta-preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .meta-preview-box {
+      background: #050a17;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .meta-preview-box img {
+      width: 100%;
+      max-height: 135px;
+      object-fit: contain;
+      background: #000;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
   </style>
   <script src="vendor/hls.min.js"></script>
 </head>
@@ -236,10 +330,38 @@
       <div class="btn-group">
         <button id="btn-play">Load & Play</button>
         <button class="secondary" id="btn-sample">Play Public Sample</button>
+        <button class="secondary" id="btn-demo-thumbnails">Demo Poster & Hover Scrub</button>
       </div>
 
       <div class="player-container">
         <video id="video" controls playsinline></video>
+      </div>
+
+      <!-- Interactive Scrubber with Sprite Hover Preview -->
+      <div class="scrubber-wrapper" id="scrubber-wrapper">
+        <label style="font-size: 0.75rem; margin-bottom: 4px; display: block; color: var(--text-muted);">Interactive Timeline Scrubber (Hover for Sprite Preview)</label>
+        <div class="scrubber-bar" id="scrubber-bar">
+          <div class="scrubber-progress" id="scrubber-progress"></div>
+          <div class="scrubber-hover-point" id="scrubber-hover-point"></div>
+        </div>
+        <div class="scrubber-tooltip" id="scrubber-tooltip">
+          <div class="thumbnail-preview-frame" id="thumbnail-preview-frame"></div>
+          <span class="scrubber-time" id="scrubber-time">00:00</span>
+        </div>
+      </div>
+
+      <!-- Poster and Sprite Preview Gallery -->
+      <div class="meta-preview-grid">
+        <div class="meta-preview-box">
+          <label>Poster Preview (1280x720 letterbox)</label>
+          <img id="poster-preview-img" alt="Poster preview" style="display: none;" />
+          <div id="poster-empty-hint" style="font-size: 0.75rem; color: var(--text-muted);">No poster loaded</div>
+        </div>
+        <div class="meta-preview-box">
+          <label>Sprite Sheet (10-col grid)</label>
+          <img id="sprite-preview-img" alt="Sprite preview" style="display: none;" />
+          <div id="sprite-empty-hint" style="font-size: 0.75rem; color: var(--text-muted);">No sprite loaded</div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -273,6 +395,7 @@
       <div class="btn-group">
         <button class="success" id="btn-subscribe">Subscribe SSE</button>
         <button class="secondary" id="btn-unsubscribe" disabled>Unsubscribe</button>
+        <button class="secondary" id="btn-fetch-video">Fetch Video Details</button>
         <button class="secondary" id="btn-mock-sse">Simulate Mock SSE</button>
       </div>
 
@@ -355,8 +478,25 @@
     const lbl720 = document.getElementById('lbl-720');
     const lbl480 = document.getElementById('lbl-480');
 
+    // Scrubber & Thumbnail Preview Elements
+    const scrubberBar = document.getElementById('scrubber-bar');
+    const scrubberProgress = document.getElementById('scrubber-progress');
+    const scrubberHoverPoint = document.getElementById('scrubber-hover-point');
+    const scrubberTooltip = document.getElementById('scrubber-tooltip');
+    const thumbnailPreviewFrame = document.getElementById('thumbnail-preview-frame');
+    const scrubberTime = document.getElementById('scrubber-time');
+    const posterPreviewImg = document.getElementById('poster-preview-img');
+    const posterEmptyHint = document.getElementById('poster-empty-hint');
+    const spritePreviewImg = document.getElementById('sprite-preview-img');
+    const spriteEmptyHint = document.getElementById('sprite-empty-hint');
+    const btnDemoThumbnails = document.getElementById('btn-demo-thumbnails');
+    const btnFetchVideo = document.getElementById('btn-fetch-video');
+
     let hls = null;
     let eventSource = null;
+    let activeSpriteUrl = null;
+    let activeSpriteCues = []; // array of { start, end, x, y, w, h }
+    let mockDuration = null;
 
     function log(type, message) {
       const entry = document.createElement('div');
@@ -462,6 +602,12 @@
           streamUrlInput.value = data.playbackUrl;
           loadStream(data.playbackUrl);
         }
+        if (data.status === 'READY') {
+          const targetId = data.videoId || videoIdInput.value.trim();
+          if (targetId) {
+            fetchVideoDetails(targetId);
+          }
+        }
       }
     }
 
@@ -558,6 +704,278 @@
       btnSubscribe.disabled = false;
       btnUnsubscribe.disabled = true;
       log('info', 'Unsubscribed from SSE.');
+    });
+
+    // --- Scrubber, Poster & Sprite Sheet Preview Logic ---
+
+    function formatTime(seconds) {
+      const s = Math.max(0, Math.floor(seconds));
+      const mins = Math.floor(s / 60);
+      const secs = s % 60;
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function parseWebVTT(vttText) {
+      const cues = [];
+      const lines = vttText.split(/\r?\n/);
+      let currentStart = null;
+      let currentEnd = null;
+
+      function toSeconds(ts) {
+        const parts = ts.trim().split(':');
+        if (parts.length === 3) {
+          const [h, m, rest] = parts;
+          const [s, ms = '0'] = rest.split('.');
+          return parseInt(h, 10) * 3600 + parseInt(m, 10) * 60 + parseInt(s, 10) + parseInt(ms, 10) / 1000;
+        } else if (parts.length === 2) {
+          const [m, rest] = parts;
+          const [s, ms = '0'] = rest.split('.');
+          return parseInt(m, 10) * 60 + parseInt(s, 10) + parseInt(ms, 10) / 1000;
+        }
+        return 0;
+      }
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const arrowMatch = line.match(/^(\d{2}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})/);
+        if (arrowMatch) {
+          currentStart = toSeconds(arrowMatch[1]);
+          currentEnd = toSeconds(arrowMatch[2]);
+          continue;
+        }
+        const xywhMatch = line.match(/#xywh=(\d+),(\d+),(\d+),(\d+)/);
+        if (xywhMatch && currentStart !== null) {
+          cues.push({
+            start: currentStart,
+            end: currentEnd,
+            x: parseInt(xywhMatch[1], 10),
+            y: parseInt(xywhMatch[2], 10),
+            w: parseInt(xywhMatch[3], 10),
+            h: parseInt(xywhMatch[4], 10),
+          });
+          currentStart = null;
+          currentEnd = null;
+        }
+      }
+      return cues;
+    }
+
+    function setPoster(url) {
+      if (!url) return;
+      video.poster = url;
+      posterPreviewImg.src = url;
+      posterPreviewImg.style.display = 'block';
+      posterEmptyHint.style.display = 'none';
+      log('info', `Poster set: ${url.startsWith('data:') ? '[data URL]' : url}`);
+    }
+
+    async function setSprite(spriteUrl, vttUrl) {
+      activeSpriteUrl = spriteUrl;
+      spritePreviewImg.src = spriteUrl;
+      spritePreviewImg.style.display = 'block';
+      spriteEmptyHint.style.display = 'none';
+
+      if (vttUrl) {
+        try {
+          const res = await fetch(vttUrl);
+          if (res.ok) {
+            const text = await res.text();
+            activeSpriteCues = parseWebVTT(text);
+            log('info', `Parsed ${activeSpriteCues.length} WebVTT sprite cues from ${vttUrl}`);
+          }
+        } catch (err) {
+          log('error', `Failed to fetch WebVTT: ${err.message}`);
+        }
+      }
+    }
+
+    function updateScrubberHover(e) {
+      const rect = scrubberBar.getBoundingClientRect();
+      const clientX = e.clientX !== undefined ? e.clientX : (rect.left + rect.width * 0.25);
+      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+      const fraction = rect.width > 0 ? x / rect.width : 0;
+      const duration = (video.duration && !isNaN(video.duration) && video.duration > 0) ? video.duration : (mockDuration || 60);
+      const hoverTime = fraction * duration;
+
+      scrubberHoverPoint.style.display = 'block';
+      scrubberHoverPoint.style.left = `${x}px`;
+
+      scrubberTooltip.style.display = 'flex';
+      scrubberTooltip.style.left = `${x}px`;
+      scrubberTime.textContent = formatTime(hoverTime);
+
+      let cue = activeSpriteCues.find(c => hoverTime >= c.start && hoverTime < c.end);
+      if (!cue && activeSpriteCues.length > 0) {
+        if (hoverTime >= activeSpriteCues[activeSpriteCues.length - 1].end) {
+          cue = activeSpriteCues[activeSpriteCues.length - 1];
+        } else {
+          cue = activeSpriteCues[0];
+        }
+      }
+
+      if (cue && activeSpriteUrl) {
+        thumbnailPreviewFrame.style.display = 'block';
+        thumbnailPreviewFrame.style.backgroundImage = `url("${activeSpriteUrl}")`;
+        thumbnailPreviewFrame.style.backgroundPosition = `-${cue.x}px -${cue.y}px`;
+        thumbnailPreviewFrame.style.backgroundSize = 'auto';
+      } else if (activeSpriteUrl) {
+        const frameIdx = Math.floor(hoverTime / 5);
+        const col = frameIdx % 10;
+        const row = Math.floor(frameIdx / 10);
+        thumbnailPreviewFrame.style.display = 'block';
+        thumbnailPreviewFrame.style.backgroundImage = `url("${activeSpriteUrl}")`;
+        thumbnailPreviewFrame.style.backgroundPosition = `-${col * 160}px -${row * 90}px`;
+        thumbnailPreviewFrame.style.backgroundSize = 'auto';
+      } else {
+        thumbnailPreviewFrame.style.display = 'none';
+      }
+    }
+
+    scrubberBar.addEventListener('mousemove', updateScrubberHover);
+    scrubberBar.addEventListener('mouseleave', () => {
+      scrubberHoverPoint.style.display = 'none';
+      scrubberTooltip.style.display = 'none';
+    });
+    scrubberBar.addEventListener('click', (e) => {
+      const rect = scrubberBar.getBoundingClientRect();
+      const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      const fraction = rect.width > 0 ? x / rect.width : 0;
+      const duration = (video.duration && !isNaN(video.duration) && video.duration > 0) ? video.duration : (mockDuration || 60);
+      if (video.duration && !isNaN(video.duration)) {
+        video.currentTime = fraction * duration;
+      }
+      scrubberProgress.style.width = `${fraction * 100}%`;
+    });
+
+    video.addEventListener('timeupdate', () => {
+      if (video.duration && !isNaN(video.duration)) {
+        const pct = (video.currentTime / video.duration) * 100;
+        scrubberProgress.style.width = `${pct}%`;
+      }
+    });
+
+    async function fetchVideoDetails(targetId) {
+      const apiUrl = apiUrlInput.value.trim().replace(/\/$/, '');
+      const id = targetId || videoIdInput.value.trim();
+      if (!id) {
+        alert('Please enter a Video ID');
+        return;
+      }
+      log('info', `Fetching video metadata for ${id}...`);
+      try {
+        const token = tokenInput.value.trim();
+        const headers = token ? { Authorization: token } : {};
+        const res = await fetch(`${apiUrl}/v1/videos/${id}`, { headers });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          log('error', `Failed to fetch video: HTTP ${res.status} - ${err.title || err.detail || 'Unknown error'}`);
+          return;
+        }
+        const data = await res.json();
+        log('info', `Video details loaded: status=${data.status}, renditions=${(data.renditions || []).length}`);
+        if (data.playbackUrl) {
+          streamUrlInput.value = data.playbackUrl;
+          loadStream(data.playbackUrl);
+        }
+        if (data.posterUrl) {
+          setPoster(data.posterUrl);
+        }
+        if (data.spriteUrl) {
+          await setSprite(data.spriteUrl, data.spriteVttUrl);
+        }
+      } catch (err) {
+        log('error', `Network error fetching video: ${err.message}`);
+      }
+    }
+
+    btnFetchVideo.addEventListener('click', () => fetchVideoDetails());
+
+    btnDemoThumbnails.addEventListener('click', () => {
+      log('info', '--- Generating Demo Poster & Sprite Sheet (Canvas) ---');
+      mockDuration = 60;
+
+      // 1. Generate Sample Poster Canvas (1280x720)
+      const posterCanvas = document.createElement('canvas');
+      posterCanvas.width = 1280;
+      posterCanvas.height = 720;
+      const pctx = posterCanvas.getContext('2d');
+      const pGrad = pctx.createLinearGradient(0, 0, 1280, 720);
+      pGrad.addColorStop(0, '#0f172a');
+      pGrad.addColorStop(0.5, '#1e3a8a');
+      pGrad.addColorStop(1, '#0284c7');
+      pctx.fillStyle = pGrad;
+      pctx.fillRect(0, 0, 1280, 720);
+
+      pctx.fillStyle = '#ffffff';
+      pctx.font = 'bold 56px sans-serif';
+      pctx.textAlign = 'center';
+      pctx.fillText('VIDEO PIPELINE POSTER', 640, 330);
+      pctx.fillStyle = '#94a3b8';
+      pctx.font = '28px sans-serif';
+      pctx.fillText('1280x720 Letterboxed @ 10% Duration', 640, 390);
+
+      pctx.strokeStyle = '#38bdf8';
+      pctx.lineWidth = 8;
+      pctx.strokeRect(30, 30, 1220, 660);
+      const posterDataUrl = posterCanvas.toDataURL('image/jpeg', 0.9);
+      setPoster(posterDataUrl);
+
+      // 2. Generate 12-Frame Sprite Sheet Canvas (1600x180: 10 cols x 2 rows of 160x90)
+      const spriteCanvas = document.createElement('canvas');
+      spriteCanvas.width = 1600;
+      spriteCanvas.height = 180;
+      const sctx = spriteCanvas.getContext('2d');
+
+      const cues = [];
+      const hues = [210, 220, 230, 240, 260, 280, 300, 320, 340, 360, 30, 60];
+
+      for (let i = 0; i < 12; i++) {
+        const col = i % 10;
+        const row = Math.floor(i / 10);
+        const x = col * 160;
+        const y = row * 90;
+        const startSec = i * 5;
+        const endSec = (i + 1) * 5;
+
+        sctx.fillStyle = `hsl(${hues[i]}, 70%, 25%)`;
+        sctx.fillRect(x, y, 160, 90);
+
+        sctx.strokeStyle = '#ffffff';
+        sctx.lineWidth = 1;
+        sctx.strokeRect(x + 1, y + 1, 158, 88);
+
+        sctx.fillStyle = '#ffffff';
+        sctx.font = 'bold 16px monospace';
+        sctx.textAlign = 'center';
+        sctx.fillText(`Frame ${i + 1}`, x + 80, y + 42);
+        sctx.font = '13px monospace';
+        sctx.fillStyle = '#cbd5e1';
+        sctx.fillText(`${formatTime(startSec)} - ${formatTime(endSec)}`, x + 80, y + 64);
+
+        cues.push({
+          start: startSec,
+          end: endSec,
+          x,
+          y,
+          w: 160,
+          h: 90,
+        });
+      }
+
+      const spriteDataUrl = spriteCanvas.toDataURL('image/jpeg', 0.9);
+      activeSpriteUrl = spriteDataUrl;
+      activeSpriteCues = cues;
+
+      spritePreviewImg.src = spriteDataUrl;
+      spritePreviewImg.style.display = 'block';
+      spriteEmptyHint.style.display = 'none';
+
+      // Pre-position hover preview at 25% (15s, Frame 4) so it is immediately visible
+      const dummyRect = scrubberBar.getBoundingClientRect();
+      const demoX = dummyRect.width > 0 ? dummyRect.width * 0.25 : 140;
+      updateScrubberHover({ clientX: dummyRect.left + demoX });
+
+      log('info', 'Demo Poster & 12-Frame Sprite Sheet loaded! Scrubber preview activated at 00:15.');
     });
   </script>
 </body>

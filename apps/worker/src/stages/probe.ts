@@ -13,6 +13,7 @@ import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
 import {
   PackageJob,
   type ProbeJob,
+  ThumbnailJob,
   TranscodeJob,
   defaultJobOptions,
   ids,
@@ -117,35 +118,36 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     // 4. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `vp-probe-${videoId}-`));
 
+    // Helper for recording failure on processing_steps & videos before throwing
+    const failProbe = async (code: string, msg: string): Promise<never> => {
+      await repositories.steps.fail({
+        videoId,
+        step: 'probe',
+        rendition: '-',
+        lockToken,
+        errorCode: code,
+        errorMessage: msg,
+      });
+
+      await repositories.videos.transition({
+        videoId,
+        from: 'PROBING',
+        to: 'FAILED',
+        eventType: 'probe.failed',
+        eventPayload: { errorCode: code, errorMessage: msg },
+        patch: { errorCode: code, errorMessage: msg },
+      });
+
+      throw new PermanentError(code, msg);
+    };
+
     try {
       // 5. Verify source in S3 (AC 19)
       const head = await storage.headObject(rawBucket, sourceKey);
       if (!head) {
         const errorMsg = `Source object not found in storage at ${sourceKey}`;
         log.error({ sourceKey }, errorMsg);
-
-        await repositories.steps.fail({
-          videoId,
-          step: 'probe',
-          rendition: '-',
-          lockToken,
-          errorCode: ErrorCodes.SOURCE_MISSING,
-          errorMessage: errorMsg,
-        });
-
-        await repositories.videos.transition({
-          videoId,
-          from: 'PROBING',
-          to: 'FAILED',
-          eventType: 'probe.failed',
-          eventPayload: { errorCode: ErrorCodes.SOURCE_MISSING },
-          patch: {
-            errorCode: ErrorCodes.SOURCE_MISSING,
-            errorMessage: errorMsg,
-          },
-        });
-
-        throw new PermanentError(ErrorCodes.SOURCE_MISSING, errorMsg);
+        return await failProbe(ErrorCodes.SOURCE_MISSING, errorMsg);
       }
 
       // Download source to local file for ffprobe analysis
@@ -155,29 +157,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       if (!downloaded) {
         const errorMsg = `Failed to download source object from ${sourceKey}`;
         log.error({ sourceKey }, errorMsg);
-
-        await repositories.steps.fail({
-          videoId,
-          step: 'probe',
-          rendition: '-',
-          lockToken,
-          errorCode: ErrorCodes.SOURCE_MISSING,
-          errorMessage: errorMsg,
-        });
-
-        await repositories.videos.transition({
-          videoId,
-          from: 'PROBING',
-          to: 'FAILED',
-          eventType: 'probe.failed',
-          eventPayload: { errorCode: ErrorCodes.SOURCE_MISSING },
-          patch: {
-            errorCode: ErrorCodes.SOURCE_MISSING,
-            errorMessage: errorMsg,
-          },
-        });
-
-        throw new PermanentError(ErrorCodes.SOURCE_MISSING, errorMsg);
+        return await failProbe(ErrorCodes.SOURCE_MISSING, errorMsg);
       }
 
       // 6. Run ffprobe and validate media (AC 17, AC 18)
@@ -194,35 +174,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           { errorCode: permError.code, err: permError.message },
           'Probe validation failed with permanent error'
         );
-
-        // Record failure in processing_steps
-        await repositories.steps.fail({
-          videoId,
-          step: 'probe',
-          rendition: '-',
-          lockToken,
-          errorCode: permError.code,
-          errorMessage: permError.message,
-        });
-
-        // Transition video to FAILED (AC 18)
-        await repositories.videos.transition({
-          videoId,
-          from: 'PROBING',
-          to: 'FAILED',
-          eventType: 'probe.failed',
-          eventPayload: {
-            errorCode: permError.code,
-            errorMessage: permError.message,
-          },
-          patch: {
-            errorCode: permError.code,
-            errorMessage: permError.message,
-          },
-        });
-
-        // Fail job immediately on attempt 1 without retry
-        throw permError;
+        return await failProbe(permError.code, permError.message);
       }
 
       log.info(
@@ -307,30 +259,51 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
             ...stagePolicies.package,
             ...defaultJobOptions,
           },
-          children: metadata.ladder.map((r) => {
-            const queueName = `transcode-${r.name}` as const;
-            const transcodeJobId = ids.transcode(videoId, r.name, job.data.generation);
-            return {
-              name: queueName,
-              queueName,
-              data: TranscodeJob.parse({
+          children: [
+            ...metadata.ladder.map((r) => {
+              const queueName = `transcode-${r.name}` as const;
+              const transcodeJobId = ids.transcode(videoId, r.name, job.data.generation);
+              return {
+                name: queueName,
+                queueName,
+                data: TranscodeJob.parse({
+                  videoId,
+                  sourceKey,
+                  generation: job.data.generation,
+                  rendition: r,
+                  fps: metadata.fps,
+                  durationMs: metadata.durationMs,
+                  traceparent: job.data.traceparent,
+                }),
+                opts: {
+                  jobId: transcodeJobId,
+                  ...stagePolicies[queueName as keyof typeof stagePolicies],
+                  ...defaultJobOptions,
+                  failParentOnFailure: true,
+                  removeDependencyOnFailure: false,
+                },
+              };
+            }),
+            {
+              name: 'thumbnail',
+              queueName: 'thumbnail',
+              data: ThumbnailJob.parse({
                 videoId,
                 sourceKey,
                 generation: job.data.generation,
-                rendition: r,
-                fps: metadata.fps,
                 durationMs: metadata.durationMs,
                 traceparent: job.data.traceparent,
+                ...(job.data.forceThumbnailFailure ? { forceFailure: true } : {}),
               }),
               opts: {
-                jobId: transcodeJobId,
-                ...stagePolicies[queueName as keyof typeof stagePolicies],
+                jobId: ids.thumbnail(videoId, job.data.generation),
+                ...stagePolicies.thumbnail,
                 ...defaultJobOptions,
-                failParentOnFailure: true,
-                removeDependencyOnFailure: false,
+                failParentOnFailure: false,
+                ignoreDependencyOnFailure: true,
               },
-            };
-          }),
+            },
+          ],
         });
         log.info(
           { packageJobId, ladder: metadata.ladder.map((r) => r.name) },
@@ -363,6 +336,28 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
             { transcodeJobId, queue: transcodeQueueName },
             'Enqueued transcode follow-up job'
           );
+        }
+
+        const thumbnailQueue = getQueue('thumbnail');
+        if (thumbnailQueue) {
+          const thumbnailJobId = ids.thumbnail(videoId, job.data.generation);
+          await thumbnailQueue.add(
+            'thumbnail',
+            ThumbnailJob.parse({
+              videoId,
+              sourceKey,
+              generation: job.data.generation,
+              durationMs: metadata.durationMs,
+              traceparent: job.data.traceparent,
+              ...(job.data.forceThumbnailFailure ? { forceFailure: true } : {}),
+            }),
+            {
+              jobId: thumbnailJobId,
+              ...stagePolicies.thumbnail,
+              ...defaultJobOptions,
+            }
+          );
+          log.info({ thumbnailJobId, queue: 'thumbnail' }, 'Enqueued thumbnail follow-up job');
         }
       }
 

@@ -91,6 +91,7 @@ export const PipelineEnvSchema = z.object({
   SSE_HEARTBEAT_MS: z.coerce.number().int().positive().default(15000),
   SSE_MAX_PER_USER: z.coerce.number().int().positive().default(20),
   SSE_MAX_PER_POD: z.coerce.number().int().positive().default(5000),
+  SPRITE_INTERVAL_SECONDS: z.coerce.number().int().positive().default(5),
 });
 
 export const OtelEnvSchema = z.object({

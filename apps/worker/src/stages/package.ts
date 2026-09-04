@@ -4,6 +4,8 @@ import { generateMasterPlaylist } from '@vp/ffmpeg';
 import {
   NotifyJob,
   type PackageJob,
+  type ThumbnailResult,
+  type TranscodeResult,
   defaultJobOptions,
   ids,
   stagePolicies,
@@ -84,14 +86,20 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
         { bytes?: number; durationMs?: number; avgBitrateBps?: number }
       > = {};
 
+      let thumbResult: ThumbnailResult | undefined;
+
       for (const val of childrenValues) {
-        if (val && typeof val === 'object' && 'rendition' in val) {
-          const res = val as any;
-          measuredResults[res.rendition] = {
-            bytes: res.bytes,
-            durationMs: res.durationMs,
-            avgBitrateBps: res.avgBitrateBps,
-          };
+        if (val && typeof val === 'object') {
+          if ('rendition' in val) {
+            const res = val as unknown as TranscodeResult;
+            measuredResults[res.rendition] = {
+              bytes: res.bytes,
+              durationMs: res.durationMs,
+              avgBitrateBps: res.avgBitrateBps,
+            };
+          } else if ('posterKey' in val) {
+            thumbResult = val as unknown as ThumbnailResult;
+          }
         }
       }
 
@@ -116,7 +124,10 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
       // Query video metadata for fps
       const video = await repositories.videos.findById(videoId);
-      const fps = (video as any)?.fps ?? 24;
+      const fps =
+        video && 'fps' in video && typeof (video as { fps?: number }).fps === 'number'
+          ? (video as { fps: number }).fps
+          : 24;
 
       // 4. Generate master playlist content with measured AVERAGE-BANDWIDTH (SDD §8.4, AC 6)
       const masterContent = generateMasterPlaylist({ ladder, fps, measuredResults });
@@ -152,16 +163,24 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       }
 
       // 6. AC 19: CAS-flip PROCESSING -> READY (happens once, writes video.ready event)
+      const patch: Record<string, unknown> = {
+        masterPlaylistKey: masterKey,
+        readyAt: new Date(),
+      };
+      if (thumbResult?.posterKey) {
+        patch['posterKey'] = thumbResult.posterKey;
+      }
+      if (thumbResult?.spriteKey) {
+        patch['spriteKey'] = thumbResult.spriteKey;
+      }
+
       const transitioned = await repositories.videos.transition({
         videoId,
         from: 'PROCESSING',
         to: 'READY',
         eventType: 'video.ready',
         eventPayload: { playbackUrl, masterKey },
-        patch: {
-          masterPlaylistKey: masterKey,
-          readyAt: new Date(),
-        },
+        patch,
       });
 
       log.info({ videoId, playbackUrl, transitioned }, 'Video transitioned to READY');
