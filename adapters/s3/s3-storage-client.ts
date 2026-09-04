@@ -2,8 +2,10 @@ import * as fs from 'node:fs';
 import { pipeline } from 'node:stream/promises';
 import {
   DeleteObjectCommand,
+  DeleteObjectsCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
   type S3ClientConfig,
@@ -11,7 +13,10 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   StorageClient,
+  type StorageDeleteObjectsResult,
   StorageError,
+  type StorageListObjectsParams,
+  type StorageListObjectsResult,
   type StorageObjectMetadata,
   type StoragePresignedGetParams,
   type StoragePresignedPutParams,
@@ -134,10 +139,10 @@ export class S3StorageClient extends StorageClient {
       if (!res.Body) {
         throw new Error('Empty response body received from S3');
       }
-      const stream = res.Body as any;
+      const stream = res.Body as AsyncIterable<Uint8Array | Buffer | string>;
       const chunks: Buffer[] = [];
       for await (const chunk of stream) {
-        chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
       }
       return Buffer.concat(chunks);
     } catch (err: unknown) {
@@ -188,6 +193,79 @@ export class S3StorageClient extends StorageClient {
         cause: err,
       });
     }
+  }
+
+  async deleteObjects(bucket: string, keys: string[]): Promise<StorageDeleteObjectsResult> {
+    if (keys.length === 0) {
+      return { deletedKeys: [] };
+    }
+    try {
+      const chunks: string[][] = [];
+      for (let i = 0; i < keys.length; i += 1000) {
+        chunks.push(keys.slice(i, i + 1000));
+      }
+      const deleted: string[] = [];
+      for (const chunk of chunks) {
+        const command = new DeleteObjectsCommand({
+          Bucket: bucket,
+          Delete: {
+            Objects: chunk.map((Key) => ({ Key })),
+            Quiet: true,
+          },
+        });
+        await this.client.send(command);
+        deleted.push(...chunk);
+      }
+      return { deletedKeys: deleted };
+    } catch (err: unknown) {
+      throw new StorageError(`Failed to delete objects: ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
+
+  async listObjects(params: StorageListObjectsParams): Promise<StorageListObjectsResult> {
+    try {
+      const command = new ListObjectsV2Command({
+        Bucket: params.bucket,
+        Prefix: params.prefix,
+        ContinuationToken: params.continuationToken,
+        MaxKeys: params.maxKeys,
+      });
+      const res = await this.client.send(command);
+      const keys = (res.Contents ?? [])
+        .map((obj) => obj.Key)
+        .filter((k): k is string => typeof k === 'string' && k.length > 0);
+      return {
+        keys,
+        nextContinuationToken: res.NextContinuationToken,
+        isTruncated: res.IsTruncated ?? false,
+      };
+    } catch (err: unknown) {
+      throw new StorageError(
+        `Failed to list objects in bucket ${params.bucket}: ${(err as Error).message}`,
+        { cause: err }
+      );
+    }
+  }
+
+  async purgePrefix(bucket: string, prefix: string): Promise<number> {
+    let totalDeleted = 0;
+    let continuationToken: string | undefined;
+    do {
+      const page = await this.listObjects({
+        bucket,
+        prefix,
+        continuationToken,
+        maxKeys: 1000,
+      });
+      if (page.keys.length > 0) {
+        await this.deleteObjects(bucket, page.keys);
+        totalDeleted += page.keys.length;
+      }
+      continuationToken = page.isTruncated ? page.nextContinuationToken : undefined;
+    } while (continuationToken);
+    return totalDeleted;
   }
 
   async createPresignedPutUrl(

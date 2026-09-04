@@ -1,7 +1,10 @@
 import * as fs from 'node:fs';
 import {
   StorageClient,
+  type StorageDeleteObjectsResult,
   StorageError,
+  type StorageListObjectsParams,
+  type StorageListObjectsResult,
   type StorageObjectMetadata,
   type StoragePresignedGetParams,
   type StoragePresignedPutParams,
@@ -88,6 +91,62 @@ export class InMemoryStorageClient extends StorageClient {
 
   async deleteObject(bucket: string, key: string): Promise<void> {
     this.storage.delete(this.getStorageKey(bucket, key));
+  }
+
+  async deleteObjects(bucket: string, keys: string[]): Promise<StorageDeleteObjectsResult> {
+    const deleted: string[] = [];
+    for (const key of keys) {
+      this.storage.delete(this.getStorageKey(bucket, key));
+      deleted.push(key);
+    }
+    return { deletedKeys: deleted };
+  }
+
+  async listObjects(params: StorageListObjectsParams): Promise<StorageListObjectsResult> {
+    const bucketPrefix = `${params.bucket}/`;
+    const fullPrefix = `${params.bucket}/${params.prefix ?? ''}`;
+    const matchingKeys: string[] = [];
+    for (const k of this.storage.keys()) {
+      if (k.startsWith(fullPrefix)) {
+        matchingKeys.push(k.slice(bucketPrefix.length));
+      }
+    }
+    matchingKeys.sort();
+
+    const maxKeys = params.maxKeys ?? 1000;
+    let filteredKeys = matchingKeys;
+    if (params.continuationToken) {
+      const token = params.continuationToken;
+      filteredKeys = matchingKeys.filter((k) => k > token);
+    }
+
+    const slice = filteredKeys.slice(0, maxKeys);
+    const isTruncated = filteredKeys.length > maxKeys;
+    const lastKey = slice.length > 0 ? slice[slice.length - 1] : undefined;
+    return {
+      keys: slice,
+      nextContinuationToken: isTruncated ? lastKey : undefined,
+      isTruncated,
+    };
+  }
+
+  async purgePrefix(bucket: string, prefix: string): Promise<number> {
+    let totalDeleted = 0;
+    let continuationToken: string | undefined;
+    do {
+      const page = await this.listObjects({
+        bucket,
+        prefix,
+        continuationToken,
+        maxKeys: 1000,
+      });
+      if (page.keys.length > 0) {
+        await this.deleteObjects(bucket, page.keys);
+        totalDeleted += page.keys.length;
+      }
+      continuationToken = page.isTruncated ? page.nextContinuationToken : undefined;
+    } while (continuationToken);
+    return totalDeleted;
   }
 
   async getObject(bucket: string, key: string): Promise<Buffer> {

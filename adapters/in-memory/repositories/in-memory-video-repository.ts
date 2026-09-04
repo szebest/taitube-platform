@@ -226,6 +226,136 @@ export class InMemoryVideoRepository extends VideoRepository {
     return true;
   }
 
+  async findStaleUploading(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
+    const cutoff = new Date(Date.now() - thresholdMs);
+    const results: VideoRecord[] = [];
+    for (const video of this.videosMap.values()) {
+      if (video.status === 'UPLOADING' && video.updatedAt < cutoff) {
+        results.push({ ...video });
+        if (results.length >= limit) break;
+      }
+    }
+    return results;
+  }
+
+  async findStaleUploadedWithoutProbe(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
+    const cutoff = new Date(Date.now() - thresholdMs);
+    const results: VideoRecord[] = [];
+    for (const video of this.videosMap.values()) {
+      if (video.status === 'UPLOADED' && video.updatedAt < cutoff) {
+        let hasProbe = false;
+        if (this.stepsRepo) {
+          const steps = await this.stepsRepo.findByVideoId(video.id);
+          hasProbe = steps.some((s) => s.step === 'probe');
+        } else if (this.stepsMap) {
+          for (const s of this.stepsMap.values()) {
+            if (s.videoId === video.id && s.step === 'probe') {
+              hasProbe = true;
+              break;
+            }
+          }
+        }
+        if (!hasProbe) {
+          results.push({ ...video });
+          if (results.length >= limit) break;
+        }
+      }
+    }
+    return results;
+  }
+
+  async findStaleProcessing(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
+    const cutoff = new Date(Date.now() - thresholdMs);
+    const results: VideoRecord[] = [];
+    for (const video of this.videosMap.values()) {
+      if (video.status === 'PROCESSING' && video.updatedAt < cutoff) {
+        results.push({ ...video });
+        if (results.length >= limit) break;
+      }
+    }
+    return results;
+  }
+
+  async findSoftDeleted(thresholdMs: number, limit = 50): Promise<VideoRecord[]> {
+    const cutoff = new Date(Date.now() - thresholdMs);
+    const results: VideoRecord[] = [];
+    for (const video of this.videosMap.values()) {
+      if (video.status === 'DELETED') {
+        const deletedTime = (video as unknown as { deletedAt?: Date }).deletedAt ?? video.updatedAt;
+        if (deletedTime < cutoff) {
+          results.push({ ...video });
+          if (results.length >= limit) break;
+        }
+      }
+    }
+    return results;
+  }
+
+  async findExpiredRaw(retentionDays: number, limit = 50): Promise<VideoRecord[]> {
+    const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+    const results: VideoRecord[] = [];
+    for (const video of this.videosMap.values()) {
+      if (video.status === 'READY') {
+        const readyTime = video.readyAt ?? video.updatedAt;
+        if (readyTime < cutoff) {
+          let alreadyExpired = false;
+          if (this.eventsRepo) {
+            const events = await this.eventsRepo.findByVideoId(video.id);
+            alreadyExpired = events.some((e) => e.type === 'video.raw_expired');
+          } else if (this.eventsList) {
+            alreadyExpired = this.eventsList.some(
+              (e) => e.videoId === video.id && e.type === 'video.raw_expired'
+            );
+          }
+          if (!alreadyExpired) {
+            results.push({ ...video });
+            if (results.length >= limit) break;
+          }
+        }
+      }
+    }
+    return results;
+  }
+
+  async findReadyWithOldGenerations(limit = 50): Promise<VideoRecord[]> {
+    const results: VideoRecord[] = [];
+    for (const video of this.videosMap.values()) {
+      const currentGen = video.generation || 1;
+      if (video.status === 'READY' && currentGen > 1) {
+        let alreadyPurged = false;
+        if (this.eventsRepo) {
+          const events = await this.eventsRepo.findByVideoId(video.id);
+          alreadyPurged = events.some(
+            (e) =>
+              e.type === 'video.generation_purged' &&
+              Number((e.payload as { generation?: number })?.generation ?? 0) >= currentGen
+          );
+        } else if (this.eventsList) {
+          alreadyPurged = this.eventsList.some(
+            (e) =>
+              e.videoId === video.id &&
+              e.type === 'video.generation_purged' &&
+              Number((e.payload as { generation?: number })?.generation ?? 0) >= currentGen
+          );
+        }
+        if (!alreadyPurged) {
+          results.push({ ...video });
+          if (results.length >= limit) break;
+        }
+      }
+    }
+    return results;
+  }
+
+  async hardDelete(id: string): Promise<boolean> {
+    const video = this.videosMap.get(id);
+    if (!video || video.status !== 'DELETED') {
+      return false;
+    }
+    this.videosMap.delete(id);
+    return true;
+  }
+
   clear(): void {
     this.videosMap.clear();
   }

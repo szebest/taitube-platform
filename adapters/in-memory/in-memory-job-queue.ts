@@ -1,9 +1,12 @@
 import {
   JobQueue,
+  type JobSchedulerInfo,
+  type JobSchedulerTemplate,
   type QueueJob,
   type QueueJobCounts,
   type QueueJobOptions,
   type QueueWorkerOptions,
+  type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
 
 export class InMemoryJobQueue extends JobQueue {
@@ -14,6 +17,7 @@ export class InMemoryJobQueue extends JobQueue {
   private failedHandler?: (job: QueueJob<unknown>, err: Error) => Promise<void> | void;
   private readonly allJobs = new Map<string, QueueJob<unknown>>();
   private readonly jobStates = new Map<string, string>();
+  private readonly schedulers = new Map<string, JobSchedulerInfo>();
   readonly enqueuedJobs: QueueJob<unknown>[] = [];
   readonly completedJobs: QueueJob<unknown>[] = [];
   readonly failedJobs: { job: QueueJob<unknown>; error: unknown }[] = [];
@@ -232,7 +236,12 @@ export class InMemoryJobQueue extends JobQueue {
 
   async getJobs(types: string[] = ['waiting']): Promise<QueueJob<unknown>[]> {
     const result: QueueJob<unknown>[] = [];
-    if (types.includes('waiting')) {
+    if (
+      types.includes('waiting') ||
+      types.includes('prioritized') ||
+      types.includes('delayed') ||
+      (this.paused && types.includes('paused'))
+    ) {
       result.push(...this.enqueuedJobs);
     }
     if (types.includes('completed')) {
@@ -242,6 +251,35 @@ export class InMemoryJobQueue extends JobQueue {
       result.push(...this.failedJobs.map((f) => f.job));
     }
     return result;
+  }
+
+  async upsertJobScheduler<T = unknown>(
+    id: string,
+    repeatOpts: UpsertJobSchedulerOptions,
+    template?: JobSchedulerTemplate<T>
+  ): Promise<unknown> {
+    const scheduler: JobSchedulerInfo = {
+      id,
+      name: template?.name ?? id,
+      pattern: repeatOpts.pattern,
+      every: repeatOpts.every,
+      data: template?.data,
+    };
+    this.schedulers.set(id, scheduler);
+    return scheduler;
+  }
+
+  async getJobSchedulers(): Promise<JobSchedulerInfo[]> {
+    return Array.from(this.schedulers.values());
+  }
+
+  clear(): void {
+    this.allJobs.clear();
+    this.jobStates.clear();
+    this.enqueuedJobs.length = 0;
+    this.completedJobs.length = 0;
+    this.failedJobs.length = 0;
+    this.schedulers.clear();
   }
 
   async close(): Promise<void> {

@@ -1,11 +1,15 @@
 import {
   JobQueue,
+  type JobSchedulerInfo,
+  type JobSchedulerTemplate,
   QueueError,
   type QueueJob,
   type QueueJobCounts,
   type QueueJobOptions,
   type QueueWorkerOptions,
+  type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
+
 import {
   type ConnectionOptions,
   type Job,
@@ -297,6 +301,52 @@ export class BullMqJobQueue extends JobQueue {
     } catch (err: unknown) {
       throw new QueueError(
         `Failed to get jobs for queue "${this.queue.name}": ${(err as Error).message}`,
+        { cause: err }
+      );
+    }
+  }
+
+  async upsertJobScheduler<T = unknown>(
+    id: string,
+    repeatOpts: UpsertJobSchedulerOptions,
+    template?: JobSchedulerTemplate<T>
+  ): Promise<unknown> {
+    try {
+      return await this.queue.upsertJobScheduler(
+        id,
+        {
+          pattern: repeatOpts.pattern,
+          every: repeatOpts.every,
+        },
+        template
+          ? {
+              name: template.name,
+              data: template.data as unknown as Record<string, unknown>,
+              opts: template.opts as unknown as JobsOptions,
+            }
+          : undefined
+      );
+    } catch (err: unknown) {
+      throw new QueueError(
+        `Failed to upsert job scheduler "${id}" on queue "${this.queue.name}": ${(err as Error).message}`,
+        { cause: err }
+      );
+    }
+  }
+
+  async getJobSchedulers(): Promise<JobSchedulerInfo[]> {
+    try {
+      const schedulers = await this.queue.getJobSchedulers();
+      return schedulers.map((s) => ({
+        id: s.id ?? s.name ?? s.key,
+        name: s.name ?? s.id ?? '',
+        pattern: s.pattern,
+        every: s.every,
+        data: s.template?.data,
+      }));
+    } catch (err: unknown) {
+      throw new QueueError(
+        `Failed to get job schedulers for queue "${this.queue.name}": ${(err as Error).message}`,
         { cause: err }
       );
     }

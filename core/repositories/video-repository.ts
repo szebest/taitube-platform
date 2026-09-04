@@ -39,6 +39,7 @@ export interface VideoRecord {
   createdAt: Date;
   updatedAt: Date;
   readyAt: Date | null;
+  deletedAt?: Date | null;
 }
 
 export interface NewVideoInput {
@@ -66,6 +67,7 @@ export interface NewVideoInput {
   errorMessage?: string | null;
   generation?: number;
   readyAt?: Date | null;
+  deletedAt?: Date | null;
 }
 
 export interface UpdateVideoMetadataOptions {
@@ -107,4 +109,14 @@ export abstract class VideoRepository {
   abstract create(data: NewVideoInput): Promise<VideoRecord>;
   abstract updateMetadata(options: UpdateVideoMetadataOptions): Promise<VideoRecord>;
   abstract transition(options: TransitionVideoOptions): Promise<boolean>;
+  abstract findStaleUploading(thresholdMs: number, limit?: number): Promise<VideoRecord[]>;
+  abstract findStaleUploadedWithoutProbe(
+    thresholdMs: number,
+    limit?: number
+  ): Promise<VideoRecord[]>;
+  abstract findStaleProcessing(thresholdMs: number, limit?: number): Promise<VideoRecord[]>;
+  abstract findSoftDeleted(thresholdMs: number, limit?: number): Promise<VideoRecord[]>;
+  abstract findExpiredRaw(retentionDays: number, limit?: number): Promise<VideoRecord[]>;
+  abstract findReadyWithOldGenerations(limit?: number): Promise<VideoRecord[]>;
+  abstract hardDelete(id: string): Promise<boolean>;
 }

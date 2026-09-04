@@ -26,6 +26,7 @@ export interface QueueJob<T = unknown> {
 export interface QueueJobOptions {
   jobId?: string;
   attempts?: number;
+  priority?: number;
   backoff?: unknown;
   removeOnComplete?: unknown;
   removeOnFail?: unknown;
@@ -48,6 +49,25 @@ export interface QueueWorkerOptions {
   maxStalledCount?: number;
 }
 
+export interface JobSchedulerInfo<T = unknown> {
+  id: string;
+  name: string;
+  pattern?: string;
+  every?: number;
+  data?: T;
+}
+
+export interface UpsertJobSchedulerOptions {
+  pattern?: string;
+  every?: number;
+}
+
+export interface JobSchedulerTemplate<T = unknown> {
+  name?: string;
+  data?: T;
+  opts?: QueueJobOptions;
+}
+
 export abstract class JobQueue implements HealthCheckable {
   abstract checkHealth(): Promise<boolean>;
   abstract getName(): string;
@@ -62,6 +82,16 @@ export abstract class JobQueue implements HealthCheckable {
   abstract resume(): Promise<void>;
   abstract getJobCounts(): Promise<QueueJobCounts>;
   abstract getJobs(types?: string[]): Promise<QueueJob<unknown>[]>;
+  async upsertJobScheduler<T = unknown>(
+    _id: string,
+    _repeatOpts: UpsertJobSchedulerOptions,
+    _template?: JobSchedulerTemplate<T>
+  ): Promise<unknown> {
+    return undefined;
+  }
+  async getJobSchedulers(): Promise<JobSchedulerInfo[]> {
+    return [];
+  }
   abstract close(): Promise<void>;
   onFailed?(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void;
 }

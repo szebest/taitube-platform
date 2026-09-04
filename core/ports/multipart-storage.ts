@@ -25,6 +25,12 @@ export interface StorageCompletePartInput {
   etag: string;
 }
 
+export interface StorageMultipartUploadInfo {
+  uploadId: string;
+  key: string;
+  initiated?: Date;
+}
+
 export abstract class MultipartStorage implements HealthCheckable {
   abstract checkHealth(): Promise<boolean>;
   abstract createMultipartUpload(bucket: string, key: string, contentType: string): Promise<string>;
@@ -36,6 +42,10 @@ export abstract class MultipartStorage implements HealthCheckable {
     key: string,
     uploadId: string
   ): Promise<StorageUploadedPartInfo[]>;
+  abstract listMultipartUploads(
+    bucket: string,
+    prefix?: string
+  ): Promise<StorageMultipartUploadInfo[]>;
   abstract completeMultipartUpload(
     bucket: string,
     key: string,

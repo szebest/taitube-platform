@@ -55,12 +55,32 @@ export interface StoragePresignedGetParams {
   expiresInSeconds?: number;
 }
 
+export interface StorageListObjectsParams {
+  bucket: string;
+  prefix?: string;
+  continuationToken?: string;
+  maxKeys?: number;
+}
+
+export interface StorageListObjectsResult {
+  keys: string[];
+  nextContinuationToken?: string;
+  isTruncated: boolean;
+}
+
+export interface StorageDeleteObjectsResult {
+  deletedKeys: string[];
+}
+
 export abstract class StorageClient implements HealthCheckable {
   abstract checkHealth(): Promise<boolean>;
   abstract uploadObject(params: StorageUploadParams): Promise<StorageUploadResult>;
   abstract downloadObject(bucket: string, key: string, targetFilePath: string): Promise<boolean>;
   abstract headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null>;
   abstract deleteObject(bucket: string, key: string): Promise<void>;
+  abstract deleteObjects(bucket: string, keys: string[]): Promise<StorageDeleteObjectsResult>;
+  abstract listObjects(params: StorageListObjectsParams): Promise<StorageListObjectsResult>;
+  abstract purgePrefix(bucket: string, prefix: string): Promise<number>;
   abstract getObject(bucket: string, key: string): Promise<Buffer>;
   abstract createPresignedPutUrl(
     params: StoragePresignedPutParams

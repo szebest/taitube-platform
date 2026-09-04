@@ -2,6 +2,7 @@ import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
+  ListMultipartUploadsCommand,
   ListPartsCommand,
   type S3Client,
   UploadPartCommand,
@@ -11,6 +12,7 @@ import {
   MultipartStorage,
   type StorageCompletePartInput,
   StorageError,
+  type StorageMultipartUploadInfo,
   type StoragePresignedPartInfo,
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
@@ -108,6 +110,31 @@ export class S3MultipartStorage extends MultipartStorage {
     } catch (err: unknown) {
       throw new StorageError(
         `Failed to list multipart parts for upload ${uploadId}: ${(err as Error).message}`,
+        { cause: err }
+      );
+    }
+  }
+
+  async listMultipartUploads(
+    bucket: string,
+    prefix?: string
+  ): Promise<StorageMultipartUploadInfo[]> {
+    try {
+      const command = new ListMultipartUploadsCommand({
+        Bucket: bucket,
+        Prefix: prefix,
+      });
+      const res = await this.client.send(command);
+      return (
+        res.Uploads?.map((u) => ({
+          uploadId: u.UploadId ?? '',
+          key: u.Key ?? '',
+          initiated: u.Initiated,
+        })) ?? []
+      );
+    } catch (err: unknown) {
+      throw new StorageError(
+        `Failed to list multipart uploads for bucket ${bucket}: ${(err as Error).message}`,
         { cause: err }
       );
     }

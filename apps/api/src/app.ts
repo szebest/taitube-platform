@@ -38,6 +38,7 @@ import { registerEventsRoutes } from './routes/events.js';
 import { registerHealthRoutes } from './routes/health.js';
 import { registerUploadsRoutes } from './routes/uploads.js';
 import { registerVideosRoutes } from './routes/videos.js';
+import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers.js';
 import { SseHub } from './services/sse-hub.js';
 
 export * from './services/index.js';
@@ -101,6 +102,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
         isInMemory ? new InMemoryJobQueue(qName) : new BullMqJobQueue({ name: qName })
       );
     }
+  }
+
+  const housekeepingQueue = adminQueues.get('housekeeping');
+  if (housekeepingQueue) {
+    await registerHousekeepingSchedulers(housekeepingQueue);
   }
 
   const jobQueue = options.jobQueue ?? adminQueues.get('probe');

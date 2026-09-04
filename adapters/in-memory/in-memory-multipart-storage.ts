@@ -3,6 +3,7 @@ import {
   type StorageClient,
   type StorageCompletePartInput,
   StorageError,
+  type StorageMultipartUploadInfo,
   type StoragePresignedPartInfo,
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
@@ -79,6 +80,24 @@ export class InMemoryMultipartStorage extends MultipartStorage {
       etag: p.etag,
       size: p.data.length,
     }));
+  }
+
+  async listMultipartUploads(
+    bucket: string,
+    prefix?: string
+  ): Promise<StorageMultipartUploadInfo[]> {
+    const result: StorageMultipartUploadInfo[] = [];
+    for (const [uploadId, upload] of this.uploads.entries()) {
+      if (upload.bucket === bucket) {
+        if (!prefix || upload.key.startsWith(prefix)) {
+          result.push({
+            uploadId,
+            key: upload.key,
+          });
+        }
+      }
+    }
+    return result;
   }
 
   async completeMultipartUpload(

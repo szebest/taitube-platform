@@ -98,8 +98,8 @@ describe('Deep Domain Services (UploadService & VideoService)', () => {
     try {
       await videoService.get(otherUser, res.videoId);
       expect.unreachable('Should have thrown');
-    } catch (err: any) {
-      expect(err.code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
+    } catch (err: unknown) {
+      expect((err as { code?: string }).code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
     }
   });
 
@@ -126,5 +126,40 @@ describe('Deep Domain Services (UploadService & VideoService)', () => {
     expect(details.spriteVttUrl).toBe(
       'http://localhost:9000/public/videos/00000000-0000-7000-8000-000000000099/thumbs/sprite.vtt'
     );
+  });
+
+  it('VideoService.softDelete: marks video DELETED, sets deletedAt, and enforces permissions', async () => {
+    const videoId = '00000000-0000-7000-8000-000000000100';
+    await repositories.videos.create({
+      id: videoId,
+      ownerId: testUser.id,
+      title: 'Delete Test',
+      visibility: 'public',
+      status: 'READY',
+      sourceKey: `raw/${videoId}/source.mp4`,
+    });
+
+    const otherUser = {
+      id: '44444444-4444-4444-4444-444444444444',
+      email: 'other@test.local',
+      role: 'creator' as const,
+    };
+
+    // Non-owner cannot delete
+    await expect(videoService.softDelete(otherUser, videoId)).rejects.toThrow(
+      'Only the video owner or an admin may delete this video'
+    );
+
+    // Owner can soft-delete
+    const res = await videoService.softDelete(testUser, videoId);
+    expect(res).toEqual({ videoId, status: 'DELETED' });
+
+    const updated = await repositories.videos.findById(videoId);
+    expect(updated?.status).toBe('DELETED');
+    expect(updated?.deletedAt).toBeDefined();
+
+    // Idempotent second call
+    const res2 = await videoService.softDelete(testUser, videoId);
+    expect(res2).toEqual({ videoId, status: 'DELETED' });
   });
 });

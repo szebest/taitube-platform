@@ -53,6 +53,27 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
     );
   }
 
+  // DELETE /v1/videos/:id and /videos/:id (Ticket 17 AC 4, SDD §6.1)
+  for (const path of ['/v1/videos/:id', '/videos/:id'] as const) {
+    server.delete(
+      path,
+      {
+        schema: {
+          params: z.object({
+            id: z.string().uuid({ message: 'Invalid video ID format' }),
+          }),
+        },
+      },
+      async (request, reply) => {
+        const user = requireAuth(request);
+        const { id } = request.params;
+
+        const result = await videoService.softDelete(user, id);
+        return reply.status(202).send(result);
+      }
+    );
+  }
+
   // POST /v1/videos/:id/reprocess and /videos/:id/reprocess (Ticket 16 AC 5)
   for (const path of ['/v1/videos/:id/reprocess', '/videos/:id/reprocess'] as const) {
     server.post(

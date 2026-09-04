@@ -1,4 +1,4 @@
-import type { VideoRepository } from '@vp/core/ports';
+import type { VideoRepository, VideoStatus } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { AuthUser } from '../plugins/auth.js';
 
@@ -157,5 +157,59 @@ export class VideoService {
           : String(video.readyAt)
         : undefined,
     };
+  }
+
+  /**
+   * Soft deletes a video (SDD §6.1, §9.8, Ticket 17 AC 4).
+   * Enforces ownership/admin check, transitions status to DELETED, and sets deletedAt.
+   */
+  async softDelete(
+    user: AuthUser,
+    videoId: string
+  ): Promise<{ videoId: string; status: 'DELETED' }> {
+    const video = await this.videos.findById(videoId);
+    if (!video) {
+      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+    }
+
+    if (user.role !== 'admin' && video.ownerId !== user.id) {
+      throw new PermanentError(
+        ErrorCodes.FORBIDDEN,
+        'Only the video owner or an admin may delete this video'
+      );
+    }
+
+    if (video.status === 'DELETED') {
+      return { videoId, status: 'DELETED' };
+    }
+
+    const allowedFrom: VideoStatus[] = [
+      'UPLOADING',
+      'UPLOADED',
+      'PROBING',
+      'PROCESSING',
+      'READY',
+      'FAILED',
+      'REJECTED',
+      'ABANDONED',
+    ];
+
+    const transitioned = await this.videos.transition({
+      videoId,
+      from: allowedFrom,
+      to: 'DELETED',
+      eventType: 'video.deleted',
+      eventPayload: { requestedBy: user.id },
+      patch: { deletedAt: new Date() },
+    });
+
+    if (!transitioned) {
+      throw new PermanentError(
+        ErrorCodes.VERSION_CONFLICT,
+        'State conflict while transitioning video to DELETED'
+      );
+    }
+
+    return { videoId, status: 'DELETED' };
   }
 }

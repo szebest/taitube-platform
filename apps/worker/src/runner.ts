@@ -4,16 +4,19 @@ import {
   InMemoryCacheClient,
   InMemoryFlowProducer,
   InMemoryJobQueue,
+  InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
   PostgresRepositories,
   RedisCacheClient,
+  S3MultipartStorage,
   S3StorageClient,
 } from '@vp/adapters';
 import type {
   CacheClient,
   FlowProducerPort,
   JobQueue,
+  MultipartStorage,
   Repositories,
   StorageClient,
 } from '@vp/core/ports';
@@ -26,6 +29,7 @@ import {
 } from '@vp/observability';
 import { createFailureHandler } from './failure-handler.js';
 import { STAGE_REGISTRY, validateQueueName } from './registry.js';
+import { createHousekeepingProcessor } from './stages/housekeeping/index.js';
 import { createNotifyProcessor } from './stages/notify.js';
 import { createPackageProcessor } from './stages/package.js';
 import { createProbeProcessor } from './stages/probe.js';
@@ -36,6 +40,7 @@ export interface WorkerRunnerOptions {
   stage?: string;
   repositories?: Repositories;
   storage?: StorageClient;
+  multipart?: MultipartStorage;
   cache?: CacheClient;
   jobQueue?: JobQueue;
   getQueue?: (name: string) => JobQueue;
@@ -83,6 +88,13 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
     options.repositories || (isInMemory ? new InMemoryRepositories() : new PostgresRepositories());
   const storage =
     options.storage || (isInMemory ? new InMemoryStorageClient() : new S3StorageClient());
+  const multipart =
+    options.multipart ||
+    (isInMemory
+      ? new InMemoryMultipartStorage(storage)
+      : new S3MultipartStorage({
+          storageClient: storage instanceof S3StorageClient ? storage : undefined,
+        }));
   const cache = options.cache || (isInMemory ? new InMemoryCacheClient() : new RedisCacheClient());
 
   const queues = new Map<string, JobQueue>();
@@ -143,6 +155,15 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
     processor = createNotifyProcessor({
       repositories,
       cache,
+      workerId: options.workerId,
+      logger,
+    }) as unknown as Parameters<JobQueue['process']>[0];
+  } else if (stage === 'housekeeping') {
+    processor = createHousekeepingProcessor({
+      repositories,
+      storage,
+      multipart,
+      getQueue,
       workerId: options.workerId,
       logger,
     }) as unknown as Parameters<JobQueue['process']>[0];

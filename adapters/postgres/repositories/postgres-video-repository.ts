@@ -189,4 +189,171 @@ export class PostgresVideoRepository extends VideoRepository {
       );
     }
   }
+
+  async findStaleUploading(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
+    try {
+      const cutoff = new Date(Date.now() - thresholdMs);
+      const rows = await this.db
+        .select()
+        .from(schema.videos)
+        .where(
+          and(eq(schema.videos.status, 'UPLOADING'), sql`${schema.videos.updatedAt} < ${cutoff}`)
+        )
+        .for('update', { skipLocked: true })
+        .limit(limit);
+      return rows as unknown as VideoRecord[];
+    } catch (err: unknown) {
+      throw new DatabaseError(`Failed to find stale uploading videos: ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
+
+  async findStaleUploadedWithoutProbe(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
+    try {
+      const cutoff = new Date(Date.now() - thresholdMs);
+      const rows = await this.db
+        .select({
+          video: schema.videos,
+        })
+        .from(schema.videos)
+        .leftJoin(
+          schema.processingSteps,
+          and(
+            eq(schema.processingSteps.videoId, schema.videos.id),
+            eq(schema.processingSteps.step, 'probe')
+          )
+        )
+        .where(
+          and(
+            eq(schema.videos.status, 'UPLOADED'),
+            sql`${schema.videos.updatedAt} < ${cutoff}`,
+            sql`${schema.processingSteps.id} IS NULL`
+          )
+        )
+        .for('update', { skipLocked: true })
+        .limit(limit);
+      return rows.map((r) => r.video as unknown as VideoRecord);
+    } catch (err: unknown) {
+      throw new DatabaseError(`Failed to find stale uploaded videos: ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
+
+  async findStaleProcessing(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
+    try {
+      const cutoff = new Date(Date.now() - thresholdMs);
+      const rows = await this.db
+        .select()
+        .from(schema.videos)
+        .where(
+          and(eq(schema.videos.status, 'PROCESSING'), sql`${schema.videos.updatedAt} < ${cutoff}`)
+        )
+        .for('update', { skipLocked: true })
+        .limit(limit);
+      return rows as unknown as VideoRecord[];
+    } catch (err: unknown) {
+      throw new DatabaseError(`Failed to find stale processing videos: ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
+
+  async findSoftDeleted(thresholdMs: number, limit = 50): Promise<VideoRecord[]> {
+    try {
+      const cutoff = new Date(Date.now() - thresholdMs);
+      const rows = await this.db
+        .select()
+        .from(schema.videos)
+        .where(
+          and(
+            eq(schema.videos.status, 'DELETED'),
+            sql`COALESCE(${schema.videos.deletedAt}, ${schema.videos.updatedAt}) < ${cutoff}`
+          )
+        )
+        .for('update', { skipLocked: true })
+        .limit(limit);
+      return rows as unknown as VideoRecord[];
+    } catch (err: unknown) {
+      throw new DatabaseError(`Failed to find soft deleted videos: ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
+
+  async findExpiredRaw(retentionDays: number, limit = 50): Promise<VideoRecord[]> {
+    try {
+      const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+      const rows = await this.db
+        .select({ video: schema.videos })
+        .from(schema.videos)
+        .leftJoin(
+          schema.videoEvents,
+          and(
+            eq(schema.videoEvents.videoId, schema.videos.id),
+            eq(schema.videoEvents.type, 'video.raw_expired')
+          )
+        )
+        .where(
+          and(
+            eq(schema.videos.status, 'READY'),
+            sql`COALESCE(${schema.videos.readyAt}, ${schema.videos.updatedAt}) < ${cutoff}`,
+            sql`${schema.videoEvents.id} IS NULL`
+          )
+        )
+        .for('update', { skipLocked: true })
+        .limit(limit);
+      return rows.map((r) => r.video) as unknown as VideoRecord[];
+    } catch (err: unknown) {
+      throw new DatabaseError(`Failed to find expired raw videos: ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
+
+  async findReadyWithOldGenerations(limit = 50): Promise<VideoRecord[]> {
+    try {
+      const rows = await this.db
+        .select({ video: schema.videos })
+        .from(schema.videos)
+        .leftJoin(
+          schema.videoEvents,
+          and(
+            eq(schema.videoEvents.videoId, schema.videos.id),
+            eq(schema.videoEvents.type, 'video.generation_purged'),
+            sql`(${schema.videoEvents.payload}->>'generation')::int >= ${schema.videos.generation}`
+          )
+        )
+        .where(
+          and(
+            eq(schema.videos.status, 'READY'),
+            sql`${schema.videos.generation} > 1`,
+            sql`${schema.videoEvents.id} IS NULL`
+          )
+        )
+        .for('update', { skipLocked: true })
+        .limit(limit);
+      return rows.map((r) => r.video) as unknown as VideoRecord[];
+    } catch (err: unknown) {
+      throw new DatabaseError(
+        `Failed to find ready videos with old generations: ${(err as Error).message}`,
+        { cause: err }
+      );
+    }
+  }
+
+  async hardDelete(id: string): Promise<boolean> {
+    try {
+      const deleted = await this.db
+        .delete(schema.videos)
+        .where(and(eq(schema.videos.id, id), eq(schema.videos.status, 'DELETED')))
+        .returning({ id: schema.videos.id });
+      return deleted.length > 0;
+    } catch (err: unknown) {
+      throw new DatabaseError(`Failed to hard delete video ${id}: ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
 }
