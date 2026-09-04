@@ -19,7 +19,8 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@vp/job-contracts": "workspace:*"
+    "@vp/job-contracts": "workspace:*",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@vp/testing": "workspace:*",

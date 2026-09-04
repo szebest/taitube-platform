@@ -1,18 +1,20 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import type { JobQueue, QueueJob, Repositories, StorageClient } from '@vp/core/ports';
+import type { CacheClient, JobQueue, QueueJob, Repositories, StorageClient } from '@vp/core/ports';
 import { ErrorCodes, PermanentError, PipelineError, TransientError } from '@vp/errors';
 import { computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
 import type { TranscodeJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { validateJobId } from '../registry.js';
+import { TranscodeProgressReporter } from './progress-reporter.js';
 import { StreamingSegmentUploader } from './segment-uploader.js';
 
 export interface TranscodeProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
+  cache?: CacheClient;
   rawBucket?: string;
   publicBucket?: string;
   workerId?: string;
@@ -69,6 +71,14 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       { rendition: rendition.name, sourceKey, threads, attempt },
       `Transcode attempt ${attempt}: threads = ${threads}`
     );
+
+    const progressReporter = new TranscodeProgressReporter({
+      cache: deps.cache,
+      repositories,
+      videoId,
+      rendition: rendition.name,
+      logger: log,
+    });
 
     // Liveness heartbeat file (AC 21)
     await fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
@@ -206,14 +216,16 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
           attempt,
           onProgress: ({ percent }) => {
             const now = Date.now();
-            if (now - lastProgressHeartbeat >= 2000) {
+            if (now - lastProgressHeartbeat >= 2000 || percent === 100) {
               lastProgressHeartbeat = now;
               (job as any).updateProgress?.(percent)?.catch?.(() => {});
               repositories.steps.heartbeat(lockToken).catch(() => {});
               fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
+              progressReporter.report(percent).catch(() => {});
             }
           },
         });
+        await progressReporter.report(100).catch(() => {});
       } catch (err) {
         ffmpegError = err as Error;
       }

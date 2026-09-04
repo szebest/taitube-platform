@@ -1,5 +1,5 @@
 import type { CacheClient, QueueJob, Repositories } from '@vp/core/ports';
-import { userChannel, videoChannel } from '@vp/events';
+import { publishVideoEvent, userChannel, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
@@ -51,21 +51,25 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
     await repositories.steps.heartbeat(lockToken);
 
     try {
-      // 2. AC 20: Publish {event:'status', data:{status:'READY', playbackUrl}} on video:{id} and user:{uid}
-      const message = JSON.stringify({
+      // 2. AC 20: Publish {event:'status', data:{status:'READY', playbackUrl}} on video:{id} and user:{uid} with ts
+      const now = Date.now();
+      const latestId = await repositories.events.getLatestEventId(videoId).catch(() => 0);
+      await publishVideoEvent({
+        cache,
+        videoId,
+        userId,
         event: 'status',
         data: {
-          status: payload['status'] || 'READY',
-          playbackUrl: payload['playbackUrl'],
+          status: (payload['status'] as string) || 'READY',
+          playbackUrl: payload['playbackUrl'] as string | undefined,
         },
+        id: latestId > 0 ? latestId : undefined,
+        ts: now,
       });
 
       const chVideo = videoChannel(videoId);
       const chUser = userChannel(userId);
-
-      await Promise.all([cache.publish(chVideo, message), cache.publish(chUser, message)]);
-
-      log.info({ chVideo, chUser }, 'Published status update to Redis channels');
+      log.info({ chVideo, chUser, latestId }, 'Published status update to Redis channels');
 
       // 3. Complete step
       await repositories.steps.complete({

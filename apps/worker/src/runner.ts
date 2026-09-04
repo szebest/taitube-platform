@@ -117,6 +117,7 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
     processor = createTranscodeProcessor({
       repositories,
       storage,
+      cache,
       workerId: options.workerId,
       logger,
       heartbeatPath: options.heartbeatPath,

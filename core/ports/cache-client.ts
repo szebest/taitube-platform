@@ -13,9 +13,16 @@ export class CacheError extends Error {
   }
 }
 
+export type MessageListener = (channel: string, message: string) => void;
+export type PatternMessageListener = (pattern: string, channel: string, message: string) => void;
+
 export abstract class CacheClient implements HealthCheckable {
   abstract checkHealth(): Promise<boolean>;
   abstract ping(): Promise<string>;
   abstract publish(channel: string, message: string): Promise<number>;
+  abstract subscribe(channel: string, listener: MessageListener): Promise<void> | void;
+  abstract unsubscribe(channel: string, listener?: MessageListener): Promise<void> | void;
+  abstract psubscribe(pattern: string, listener: PatternMessageListener): Promise<void> | void;
+  abstract punsubscribe(pattern: string, listener?: PatternMessageListener): Promise<void> | void;
   abstract close(): Promise<void>;
 }

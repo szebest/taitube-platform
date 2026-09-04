@@ -341,6 +341,9 @@ importers:
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../job-contracts
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@vp/testing':
         specifier: workspace:*

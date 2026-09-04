@@ -28,6 +28,7 @@ export class InMemoryRepositories implements Repositories {
       videosRepo: this.videos,
     });
     this.videos.setUploadsRepo(this.uploads);
+    this.events.setVideosRepo(this.videos);
   }
 
   clear(): void {

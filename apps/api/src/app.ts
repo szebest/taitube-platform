@@ -33,9 +33,11 @@ import { registerAuth } from './plugins/auth.js';
 import { registerErrorHandler } from './plugins/errors.js';
 import { registerAdminQueuesRoutes } from './routes/admin/queues.js';
 import { registerDevJwksRoute } from './routes/dev-jwks.js';
+import { registerEventsRoutes } from './routes/events.js';
 import { registerHealthRoutes } from './routes/health.js';
 import { registerUploadsRoutes } from './routes/uploads.js';
 import { registerVideosRoutes } from './routes/videos.js';
+import { SseHub } from './services/sse-hub.js';
 
 export * from './services/index.js';
 
@@ -52,6 +54,11 @@ export interface BuildAppOptions {
   maxUploadBytes?: number;
   multipartThresholdBytes?: number;
   adminQueues?: Map<string, JobQueue>;
+  sseHub?: SseHub;
+  sseMaxPerUser?: number;
+  sseMaxPodConnections?: number;
+  sseHeartbeatMs?: number;
+  sseIdleTimeoutMs?: number;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -177,6 +184,27 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerVideosRoutes(app, {
     videos: repositories.videos,
     cdnBaseUrl,
+  });
+
+  const sseHub =
+    options.sseHub ??
+    new SseHub({
+      cache,
+      maxConnectionsPerUser: options.sseMaxPerUser,
+      maxPodConnections: options.sseMaxPodConnections,
+      heartbeatMs: options.sseHeartbeatMs,
+      idleTimeoutMs: options.sseIdleTimeoutMs,
+    });
+  await sseHub.init();
+
+  registerEventsRoutes(app, {
+    sseHub,
+    repositories,
+    cdnBaseUrl,
+  });
+
+  app.addHook('onClose', async () => {
+    await sseHub.close();
   });
 
   await registerAdminQueuesRoutes(app, {

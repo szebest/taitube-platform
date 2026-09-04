@@ -13,6 +13,9 @@ export interface NewVideoEventInput {
 }
 
 export abstract class EventRepository {
-  abstract create(data: NewVideoEventInput): Promise<void>;
+  abstract create(data: NewVideoEventInput): Promise<VideoEventRecord>;
   abstract findByVideoId(videoId: string): Promise<VideoEventRecord[]>;
+  abstract findAfterId(videoId: string, afterId: number): Promise<VideoEventRecord[]>;
+  abstract findAfterIdForUser(userId: string, afterId: number): Promise<VideoEventRecord[]>;
+  abstract getLatestEventId(videoId: string): Promise<number>;
 }

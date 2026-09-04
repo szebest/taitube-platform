@@ -1,3 +1,4 @@
+import type { MessageListener, PatternMessageListener } from '@vp/core/ports';
 import { CacheClient } from '@vp/core/ports';
 
 export interface PublishedMessage {
@@ -7,7 +8,8 @@ export interface PublishedMessage {
 }
 
 export class InMemoryCacheClient extends CacheClient {
-  private readonly listeners = new Map<string, Set<(message: string) => void>>();
+  private readonly listeners = new Map<string, Set<MessageListener>>();
+  private readonly patternListeners = new Map<string, Set<PatternMessageListener>>();
   readonly publishedMessages: PublishedMessage[] = [];
   private isHealthy = true;
 
@@ -33,23 +35,39 @@ export class InMemoryCacheClient extends CacheClient {
       publishedAt: new Date(),
     });
 
-    const channelListeners = this.listeners.get(channel);
-    if (!channelListeners || channelListeners.size === 0) {
-      return 0;
-    }
+    let count = 0;
 
-    for (const listener of channelListeners) {
-      try {
-        listener(message);
-      } catch {
-        // Safe listener execution
+    // Direct channel listeners
+    const channelListeners = this.listeners.get(channel);
+    if (channelListeners && channelListeners.size > 0) {
+      for (const listener of channelListeners) {
+        try {
+          listener(channel, message);
+          count++;
+        } catch {
+          // Safe listener execution
+        }
       }
     }
 
-    return channelListeners.size;
+    // Pattern listeners (e.g. 'video:*' -> matches 'video:123')
+    for (const [pattern, set] of this.patternListeners.entries()) {
+      if (this.matchesPattern(pattern, channel)) {
+        for (const listener of set) {
+          try {
+            listener(pattern, channel, message);
+            count++;
+          } catch {
+            // Safe listener execution
+          }
+        }
+      }
+    }
+
+    return count;
   }
 
-  subscribe(channel: string, listener: (message: string) => void): void {
+  subscribe(channel: string, listener: MessageListener): void {
     let set = this.listeners.get(channel);
     if (!set) {
       set = new Set();
@@ -58,14 +76,60 @@ export class InMemoryCacheClient extends CacheClient {
     set.add(listener);
   }
 
-  unsubscribe(channel: string, listener: (message: string) => void): void {
+  unsubscribe(channel: string, listener?: MessageListener): void {
+    if (!listener) {
+      this.listeners.delete(channel);
+      return;
+    }
     const set = this.listeners.get(channel);
     if (set) {
       set.delete(listener);
+      if (set.size === 0) {
+        this.listeners.delete(channel);
+      }
     }
   }
 
-  async close(): Promise<void> {
+  psubscribe(pattern: string, listener: PatternMessageListener): void {
+    let set = this.patternListeners.get(pattern);
+    if (!set) {
+      set = new Set();
+      this.patternListeners.set(pattern, set);
+    }
+    set.add(listener);
+  }
+
+  punsubscribe(pattern: string, listener?: PatternMessageListener): void {
+    if (!listener) {
+      this.patternListeners.delete(pattern);
+      return;
+    }
+    const set = this.patternListeners.get(pattern);
+    if (set) {
+      set.delete(listener);
+      if (set.size === 0) {
+        this.patternListeners.delete(pattern);
+      }
+    }
+  }
+
+  clear(): void {
+    this.publishedMessages.length = 0;
+  }
+
+  clearListeners(): void {
     this.listeners.clear();
+    this.patternListeners.clear();
+  }
+
+  async close(): Promise<void> {
+    this.clear();
+    this.clearListeners();
+  }
+
+  private matchesPattern(pattern: string, channel: string): boolean {
+    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+    const regex = new RegExp(`^${escaped}$`);
+    return regex.test(channel);
   }
 }

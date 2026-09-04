@@ -665,7 +665,7 @@
         return;
       }
 
-      const sseUrl = `${apiUrl}/v1/videos/${videoId}/events`;
+      const sseUrl = `${apiUrl}/v1/videos/${videoId}/events${token ? `?token=${encodeURIComponent(token)}` : ''}`;
       log('info', `Connecting to SSE: ${sseUrl}...`);
 
       if (eventSource) {
