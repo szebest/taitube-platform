@@ -17,6 +17,7 @@ export interface UploadsRouteOptions {
   rateLimitMax?: number;
   multipartThresholdBytes?: number;
   uploadService?: UploadService;
+  maxInflightPerUser?: number;
 }
 
 const ALLOWED_CONTENT_TYPES = new Set([
@@ -40,17 +41,20 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
     maxUploadBytes = 5 * 1024 * 1024 * 1024, // 5 GB default cap
     rateLimitMax = 30,
     multipartThresholdBytes = MULTIPART_THRESHOLD_BYTES,
+    maxInflightPerUser = options.maxInflightPerUser,
     uploadService = options.uploadService ??
       (repositories && storage && multipart
         ? new UploadService({
             uploads: repositories.uploads,
             videos: repositories.videos,
             events: repositories.events,
+            users: repositories.users,
             storage,
             multipart,
             rawBucket,
             probeQueue,
             multipartThresholdBytes,
+            maxInflightPerUser,
           })
         : undefined),
   } = options;
@@ -230,6 +234,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
           202: z.object({
             videoId: z.string().uuid(),
             status: z.string(),
+            admission: z.enum(['admitted', 'held']).optional(),
           }),
         },
       },

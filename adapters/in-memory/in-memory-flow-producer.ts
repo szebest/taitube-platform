@@ -29,21 +29,28 @@ export class InMemoryFlowProducer extends FlowProducerPort {
 
     // 1. Add parent in 'waiting-children' state if children exist, or 'waiting' if no children
     const initialState = children.length > 0 ? 'waiting-children' : 'waiting';
-    const parentJob = await (parentQueue as any).add(node.name, node.data, {
-      ...node.opts,
-      jobId: parentJobId,
-      initialState,
-    });
+    const parentJob =
+      parentQueue instanceof InMemoryJobQueue
+        ? await parentQueue.add(node.name, node.data, {
+            ...node.opts,
+            jobId: parentJobId,
+            initialState,
+          })
+        : await parentQueue.add(node.name, node.data, {
+            ...node.opts,
+            jobId: parentJobId,
+          });
 
     // Provide getChildrenValues to parent
-    parentJob.getChildrenValues = async () => childrenValues;
+    parentJob.getChildrenValues = async <R = Record<string, unknown>>() =>
+      childrenValues as unknown as R;
 
     if (children.length === 0) {
       return { job: parentJob, children: [] };
     }
 
     // 2. Add each child and hook into completion / failure
-    const childJobs: QueueJob<any>[] = [];
+    const childJobs: QueueJob<unknown>[] = [];
 
     for (const childNode of children) {
       const childQueue = this.getQueue(childNode.queueName);
@@ -61,8 +68,7 @@ export class InMemoryFlowProducer extends FlowProducerPort {
             if (pendingChildrenCount === 0 && !parentFailed) {
               // All children complete: transition parent from waiting-children to waiting
               if (parentQueue instanceof InMemoryJobQueue) {
-                parentQueue.setJobState(parentJob.id, 'waiting');
-                (parentQueue as any).enqueuedJobs.push(parentJob);
+                parentQueue.enqueueWaiting(parentJob);
                 parentQueue.executeJob(parentJob).catch(() => {});
               }
             }
@@ -80,8 +86,7 @@ export class InMemoryFlowProducer extends FlowProducerPort {
               pendingChildrenCount--;
               if (pendingChildrenCount === 0 && !parentFailed) {
                 if (parentQueue instanceof InMemoryJobQueue) {
-                  parentQueue.setJobState(parentJob.id, 'waiting');
-                  (parentQueue as any).enqueuedJobs.push(parentJob);
+                  parentQueue.enqueueWaiting(parentJob);
                   parentQueue.executeJob(parentJob).catch(() => {});
                 }
               }

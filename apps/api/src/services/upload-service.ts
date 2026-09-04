@@ -7,6 +7,7 @@ import type {
   StoragePresignedPartInfo,
   StorageUploadedPartInfo,
   UploadRepository,
+  UserRepository,
   VideoRepository,
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
@@ -52,18 +53,21 @@ export interface UploadResumeInfo {
 export interface CompleteUploadResult {
   videoId: string;
   status: string;
+  admission?: 'admitted' | 'held';
 }
 
 export interface UploadServiceDeps {
   uploads: UploadRepository;
   videos: VideoRepository;
   events: EventRepository;
+  users?: UserRepository;
   storage: StorageClient;
   multipart: MultipartStorage;
   rawBucket?: string;
   probeQueue?: JobQueue;
   multipartThresholdBytes?: number;
   presignedUrlTtlSeconds?: number;
+  maxInflightPerUser?: number;
 }
 
 /**
@@ -80,23 +84,31 @@ export class UploadService {
   private readonly uploads: UploadRepository;
   private readonly videos: VideoRepository;
   private readonly events: EventRepository;
+  private readonly users?: UserRepository;
   private readonly storage: StorageClient;
   private readonly multipart: MultipartStorage;
   private readonly rawBucket: string;
   private readonly probeQueue?: JobQueue;
   private readonly multipartThresholdBytes: number;
   private readonly presignedUrlTtlSeconds: number;
+  private readonly maxInflightPerUser: number;
 
   constructor(deps: UploadServiceDeps) {
     this.uploads = deps.uploads;
     this.videos = deps.videos;
     this.events = deps.events;
+    this.users = deps.users;
     this.storage = deps.storage;
     this.multipart = deps.multipart;
     this.rawBucket = deps.rawBucket || process.env['STORAGE_RAW_BUCKET'] || 'raw';
     this.probeQueue = deps.probeQueue;
     this.multipartThresholdBytes = deps.multipartThresholdBytes ?? MULTIPART_THRESHOLD_BYTES;
     this.presignedUrlTtlSeconds = deps.presignedUrlTtlSeconds ?? 15 * 60; // 15 minutes
+    this.maxInflightPerUser =
+      deps.maxInflightPerUser ??
+      (process.env['MAX_INFLIGHT_PER_USER']
+        ? Number.parseInt(process.env['MAX_INFLIGHT_PER_USER'], 10)
+        : 3);
   }
 
   /**
@@ -449,8 +461,38 @@ export class UploadService {
       },
     });
 
+    if (!transitioned) {
+      return {
+        videoId: video.id,
+        status: 'UPLOADED',
+      };
+    }
+
+    // Admission control (SDD §9.4, PRD FR-13, Ticket 18):
+    // Count active in-flight videos for owner (status IN ('PROBING', 'PROCESSING'))
+    const inFlightCount = await this.videos.countInFlightByOwner(video.ownerId);
+
+    if (inFlightCount >= this.maxInflightPerUser) {
+      return {
+        videoId: video.id,
+        status: 'UPLOADED',
+        admission: 'held',
+      };
+    }
+
+    // Determine priority according to user tier (pro/enterprise = 1, free = 5)
+    let priority = 5;
+    if (this.users) {
+      const userRecord = await this.users.findById(video.ownerId);
+      if (userRecord?.tier === 'pro' || userRecord?.tier === 'enterprise') {
+        priority = 1;
+      }
+    } else if ((user as { tier?: string })?.tier === 'pro') {
+      priority = 1;
+    }
+
     // Enqueue probe job
-    if (this.probeQueue && transitioned) {
+    if (this.probeQueue) {
       const probeJobId = ids.probe(video.id, 1);
       await this.probeQueue.add(
         'probe',
@@ -464,6 +506,7 @@ export class UploadService {
           jobId: probeJobId,
           ...stagePolicies.probe,
           ...defaultJobOptions,
+          priority,
         }
       );
     }
@@ -471,6 +514,7 @@ export class UploadService {
     return {
       videoId: video.id,
       status: 'UPLOADED',
+      admission: 'admitted',
     };
   }
 

@@ -356,6 +356,20 @@ export class InMemoryVideoRepository extends VideoRepository {
     return true;
   }
 
+  async countInFlightByOwner(ownerId: string): Promise<number> {
+    let count = 0;
+    for (const video of this.videosMap.values()) {
+      if (
+        video.ownerId === ownerId &&
+        (video.status === 'PROBING' || video.status === 'PROCESSING') &&
+        !video.deletedAt
+      ) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   clear(): void {
     this.videosMap.clear();
   }

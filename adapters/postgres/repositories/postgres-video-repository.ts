@@ -356,4 +356,25 @@ export class PostgresVideoRepository extends VideoRepository {
       });
     }
   }
+
+  async countInFlightByOwner(ownerId: string): Promise<number> {
+    try {
+      const [res] = await this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.videos)
+        .where(
+          and(
+            eq(schema.videos.ownerId, ownerId),
+            inArray(schema.videos.status, ['PROBING', 'PROCESSING']),
+            sql`${schema.videos.deletedAt} IS NULL`
+          )
+        );
+      return res?.count ?? 0;
+    } catch (err: unknown) {
+      throw new DatabaseError(
+        `Failed to count in-flight videos for owner ${ownerId}: ${(err as Error).message}`,
+        { cause: err }
+      );
+    }
+  }
 }

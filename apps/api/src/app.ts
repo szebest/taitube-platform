@@ -56,6 +56,7 @@ export interface BuildAppOptions {
   maxUploadBytes?: number;
   multipartThresholdBytes?: number;
   adminQueues?: Map<string, JobQueue>;
+  maxInflightPerUser?: number;
   sseHub?: SseHub;
   sseMaxPerUser?: number;
   sseMaxPodConnections?: number;
@@ -186,6 +187,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     rateLimitMax: options.rateLimitMax,
     maxUploadBytes: options.maxUploadBytes,
     multipartThresholdBytes: options.multipartThresholdBytes,
+    maxInflightPerUser: options.maxInflightPerUser,
   });
 
   registerVideosRoutes(app, {

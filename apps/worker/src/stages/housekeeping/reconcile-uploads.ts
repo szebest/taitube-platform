@@ -9,6 +9,7 @@ export interface ReconcileUploadsOptions {
   rawBucket?: string;
   uploadingThresholdMs?: number;
   uploadedThresholdMs?: number;
+  maxInflightPerUser?: number;
   logger?: Logger;
 }
 
@@ -21,6 +22,7 @@ export interface ReconcileUploadsResult {
  * Reconciler for upload lifecycle (SDD §9.8, §5.3, ADR-09, ADR-16):
  * 1. Abort uploads stuck in UPLOADING for > threshold (default 24h) -> ABANDONED, abort multipart.
  * 2. Re-enqueue videos left UPLOADED with no probe step for > threshold (default 5m) -> probe job.
+ *    Only releases videos if owner's active in-flight count < MAX_INFLIGHT_PER_USER (Ticket 18).
  */
 export async function runReconcileUploads(
   options: ReconcileUploadsOptions
@@ -36,6 +38,10 @@ export async function runReconcileUploads(
     uploadedThresholdMs = process.env['RECONCILE_UPLOADED_THRESHOLD_MS']
       ? Number.parseInt(process.env['RECONCILE_UPLOADED_THRESHOLD_MS'], 10)
       : 5 * 60 * 1000,
+    maxInflightPerUser = options.maxInflightPerUser ??
+      (process.env['MAX_INFLIGHT_PER_USER']
+        ? Number.parseInt(process.env['MAX_INFLIGHT_PER_USER'], 10)
+        : 3),
     logger,
   } = options;
 
@@ -83,11 +89,35 @@ export async function runReconcileUploads(
     }
   }
 
-  // 2. Stale UPLOADED without probe step -> re-enqueue probe
+  // 2. Stale UPLOADED without probe step -> re-enqueue probe if under in-flight limit
   const staleUploaded =
     await repositories.videos.findStaleUploadedWithoutProbe(uploadedThresholdMs);
+  const ownerInflightCounts = new Map<string, number>();
+
   for (const video of staleUploaded) {
     if (probeQueue) {
+      let currentInflight = ownerInflightCounts.get(video.ownerId);
+      if (currentInflight === undefined) {
+        currentInflight = await repositories.videos.countInFlightByOwner(video.ownerId);
+        ownerInflightCounts.set(video.ownerId, currentInflight);
+      }
+
+      if (currentInflight >= maxInflightPerUser) {
+        logger?.info(
+          { videoId: video.id, ownerId: video.ownerId, currentInflight, maxInflightPerUser },
+          'Reconciler skipping held video: owner in-flight limit reached'
+        );
+        continue;
+      }
+
+      let priority = 5;
+      if (repositories.users) {
+        const user = await repositories.users.findById(video.ownerId);
+        if (user?.tier === 'pro' || user?.tier === 'enterprise') {
+          priority = 1;
+        }
+      }
+
       const probeJobId = ids.probe(video.id, video.generation ?? 1);
       await probeQueue.add(
         'probe',
@@ -101,11 +131,16 @@ export async function runReconcileUploads(
           jobId: probeJobId,
           ...stagePolicies.probe,
           ...defaultJobOptions,
+          priority,
         }
       );
 
+      ownerInflightCounts.set(video.ownerId, currentInflight + 1);
       reenqueuedCount += 1;
-      logger?.info({ videoId: video.id, probeJobId }, 'Reconciler re-enqueued missing probe job');
+      logger?.info(
+        { videoId: video.id, probeJobId, priority },
+        'Reconciler released held video and enqueued probe job'
+      );
     }
   }
 

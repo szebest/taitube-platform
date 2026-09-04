@@ -119,4 +119,5 @@ export abstract class VideoRepository {
   abstract findExpiredRaw(retentionDays: number, limit?: number): Promise<VideoRecord[]>;
   abstract findReadyWithOldGenerations(limit?: number): Promise<VideoRecord[]>;
   abstract hardDelete(id: string): Promise<boolean>;
+  abstract countInFlightByOwner(ownerId: string): Promise<number>;
 }

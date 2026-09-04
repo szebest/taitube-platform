@@ -53,6 +53,22 @@ export class InMemoryJobQueue extends JobQueue {
     this.failedHandler = handler;
   }
 
+  private getJobPriority(job: QueueJob<unknown>): number {
+    const opts = (job as QueueJob<unknown> & { opts?: QueueJobOptions }).opts;
+    return opts?.priority ?? 5;
+  }
+
+  enqueueWaiting(job: QueueJob<unknown>): void {
+    this.jobStates.set(job.id, 'waiting');
+    const priority = this.getJobPriority(job);
+    const index = this.enqueuedJobs.findIndex((j) => this.getJobPriority(j) > priority);
+    if (index === -1) {
+      this.enqueuedJobs.push(job);
+    } else {
+      this.enqueuedJobs.splice(index, 0, job);
+    }
+  }
+
   async add<T = unknown>(
     name: string,
     data: T,
@@ -80,11 +96,11 @@ export class InMemoryJobQueue extends JobQueue {
     this.jobStates.set(jobId, initialState);
 
     if (initialState === 'waiting') {
-      this.enqueuedJobs.push(job);
+      this.enqueueWaiting(job);
       // If a worker is listening and we are not paused, execute
-      if (this.processor && !this.paused) {
+      if (this.processor && !this.paused && !this.isDraining) {
         queueMicrotask(() => {
-          this.executeJob(job).catch(() => {});
+          this.drain().catch(() => {});
         });
       }
     }
@@ -147,8 +163,7 @@ export class InMemoryJobQueue extends JobQueue {
 
       if ((job.attemptsMade ?? 1) < maxAttempts) {
         this.jobStates.set(job.id, 'delayed');
-        this.enqueuedJobs.push(job);
-        this.jobStates.set(job.id, 'waiting');
+        this.enqueueWaiting(job);
         if (!this.paused) {
           await this.executeJob(job);
         }
@@ -199,12 +214,23 @@ export class InMemoryJobQueue extends JobQueue {
     }
   }
 
+  private isDraining = false;
+
   async drain(): Promise<void> {
-    const pending = [...this.enqueuedJobs];
-    for (const job of pending) {
-      if (this.jobStates.get(job.id) === 'waiting') {
+    if (this.isDraining) return;
+    this.isDraining = true;
+    try {
+      while (!this.paused && this.processor) {
+        const nextIndex = this.enqueuedJobs.findIndex(
+          (job) => this.jobStates.get(job.id) === 'waiting'
+        );
+        if (nextIndex === -1) break;
+        const job = this.enqueuedJobs[nextIndex];
+        if (!job) break;
         await this.executeJob(job);
       }
+    } finally {
+      this.isDraining = false;
     }
   }
 
@@ -218,8 +244,10 @@ export class InMemoryJobQueue extends JobQueue {
 
   async resume(): Promise<void> {
     this.paused = false;
-    if (this.processor) {
-      await this.drain();
+    if (this.processor && !this.isDraining) {
+      queueMicrotask(() => {
+        this.drain().catch(() => {});
+      });
     }
   }
 
@@ -274,6 +302,7 @@ export class InMemoryJobQueue extends JobQueue {
   }
 
   clear(): void {
+    this.isDraining = false;
     this.allJobs.clear();
     this.jobStates.clear();
     this.enqueuedJobs.length = 0;
@@ -284,5 +313,6 @@ export class InMemoryJobQueue extends JobQueue {
 
   async close(): Promise<void> {
     this.processor = undefined;
+    this.isDraining = false;
   }
 }

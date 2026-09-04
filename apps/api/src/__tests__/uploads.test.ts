@@ -1,6 +1,6 @@
 import * as http from 'node:http';
 import { InMemoryRepositories, S3MultipartStorage, S3StorageClient } from '@vp/adapters';
-import { JobQueue } from '@vp/core/ports';
+import { JobQueue, type QueueJob, type QueueJobCounts, type QueueJobOptions } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
@@ -23,7 +23,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
   interface MockJobRecord {
     name: string;
     data: Record<string, unknown>;
-    opts: { jobId?: string; [key: string]: unknown };
+    opts?: QueueJobOptions;
   }
 
   const probeJobs: MockJobRecord[] = [];
@@ -34,9 +34,9 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     getName(): string {
       return 'probe';
     }
-    async add<T = unknown>(name: string, data: T, opts?: any): Promise<any> {
-      probeJobs.push({ name, data: data as any, opts });
-      return { id: opts?.jobId || 'probe-1', name, data };
+    async add<T = unknown>(name: string, data: T, opts?: QueueJobOptions): Promise<QueueJob<T>> {
+      probeJobs.push({ name, data: data as Record<string, unknown>, opts });
+      return { id: opts?.jobId || 'probe-1', name, data, opts };
     }
     async process(): Promise<void> {}
     async isPaused(): Promise<boolean> {
@@ -44,10 +44,10 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     }
     async pause(): Promise<void> {}
     async resume(): Promise<void> {}
-    async getJobCounts(): Promise<any> {
+    async getJobCounts(): Promise<QueueJobCounts> {
       return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
     }
-    async getJobs(): Promise<any[]> {
+    async getJobs(): Promise<QueueJob<unknown>[]> {
       return [];
     }
     async getJobState(_jobId: string): Promise<string | undefined> {
@@ -280,6 +280,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     expect(completeRes.json()).toEqual({
       videoId,
       status: 'UPLOADED',
+      admission: 'admitted',
     });
 
     // Verify video in DB is UPLOADED
@@ -288,11 +289,11 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
 
     // Verify upload.completed event written to video_events
     const events = await repositories.events.findByVideoId(videoId);
-    expect(events.some((e: any) => e.type === 'upload.completed')).toBe(true);
+    expect(events.some((e) => e.type === 'upload.completed')).toBe(true);
 
     // Verify probe job was enqueued in Redis with deterministic jobId
     const expectedJobId = `${videoId}--probe--g1`;
-    const enqueuedJob = probeJobs.find((j) => j.opts.jobId === expectedJobId);
+    const enqueuedJob = probeJobs.find((j) => j.opts?.jobId === expectedJobId);
     expect(enqueuedJob).toBeDefined();
     expect(enqueuedJob?.name).toBe('probe');
     expect(enqueuedJob?.data.videoId).toBe(videoId);

@@ -21,6 +21,7 @@
     "gen-video": "bun tools/gen-video/src/index.ts",
     "dev-token": "bun tools/dev-token/src/index.ts",
     "upload-client": "bun tools/upload-client/src/cli.ts",
+    "fairness": "bun scripts/fairness-simulation.ts",
     "db:migrate": "pnpm --filter @vp/db migrate",
     "db:seed": "pnpm --filter @vp/db seed",
     "db:check": "pnpm --filter @vp/db check",

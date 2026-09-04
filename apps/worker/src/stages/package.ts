@@ -205,11 +205,15 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
           }),
           {
             jobId: notifyJobId,
+            priority: job.opts?.priority,
             ...stagePolicies.notify,
             ...defaultJobOptions,
           }
         );
-        log.info({ notifyJobId }, 'Enqueued notify job for video.ready');
+        log.info(
+          { notifyJobId, priority: job.opts?.priority },
+          'Enqueued notify job for video.ready'
+        );
       }
 
       return { videoId, masterKey, playbackUrl };

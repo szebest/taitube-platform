@@ -243,6 +243,23 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         },
       });
 
+      // Determine priority from job opts or user tier (SDD §9.4, AC 3)
+      let priority = job.opts?.priority;
+      if (priority === undefined && repositories.users) {
+        try {
+          const videoRec = await repositories.videos.findById(videoId);
+          if (videoRec?.ownerId) {
+            const userRec = await repositories.users.findById(videoRec.ownerId);
+            if (userRec?.tier === 'pro' || userRec?.tier === 'enterprise') {
+              priority = 1;
+            }
+          }
+        } catch {}
+      }
+      if (priority === undefined) {
+        priority = 5;
+      }
+
       // 10. Enqueue fan-out / fan-in Flow (SDD §3.2, §9.3, Ticket 12)
       if (flowProducer) {
         const packageJobId = ids.package(videoId, job.data.generation);
@@ -257,6 +274,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           }),
           opts: {
             jobId: packageJobId,
+            priority,
             ...stagePolicies.package,
             ...defaultJobOptions,
           },
@@ -278,6 +296,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
                 }),
                 opts: {
                   jobId: transcodeJobId,
+                  priority,
                   ...stagePolicies[queueName as keyof typeof stagePolicies],
                   ...defaultJobOptions,
                   failParentOnFailure: true,
@@ -298,6 +317,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
               }),
               opts: {
                 jobId: ids.thumbnail(videoId, job.data.generation),
+                priority,
                 ...stagePolicies.thumbnail,
                 ...defaultJobOptions,
                 failParentOnFailure: false,
@@ -307,7 +327,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           ],
         });
         log.info(
-          { packageJobId, ladder: metadata.ladder.map((r) => r.name) },
+          { packageJobId, ladder: metadata.ladder.map((r) => r.name), priority },
           'Created BullMQ flow with package parent and transcode children'
         );
       } else if (getQueue) {
@@ -329,12 +349,13 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
             }),
             {
               jobId: transcodeJobId,
+              priority,
               ...stagePolicies[transcodeQueueName as keyof typeof stagePolicies],
               ...defaultJobOptions,
             }
           );
           log.info(
-            { transcodeJobId, queue: transcodeQueueName },
+            { transcodeJobId, queue: transcodeQueueName, priority },
             'Enqueued transcode follow-up job'
           );
         }
@@ -354,11 +375,15 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
             }),
             {
               jobId: thumbnailJobId,
+              priority,
               ...stagePolicies.thumbnail,
               ...defaultJobOptions,
             }
           );
-          log.info({ thumbnailJobId, queue: 'thumbnail' }, 'Enqueued thumbnail follow-up job');
+          log.info(
+            { thumbnailJobId, queue: 'thumbnail', priority },
+            'Enqueued thumbnail follow-up job'
+          );
         }
       }
 

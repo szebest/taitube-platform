@@ -122,6 +122,7 @@ export class BullMqJobQueue extends JobQueue {
       const job = await this.queue.add(name, data, {
         jobId: options?.jobId,
         attempts: options?.attempts,
+        priority: options?.priority,
         backoff: options?.backoff as JobsOptions['backoff'],
         removeOnComplete: options?.removeOnComplete as JobsOptions['removeOnComplete'],
         removeOnFail: options?.removeOnFail as JobsOptions['removeOnFail'],
@@ -131,6 +132,11 @@ export class BullMqJobQueue extends JobQueue {
         id: job.id ?? '',
         name: job.name,
         data: job.data as T,
+        opts: {
+          jobId: job.id,
+          attempts: job.opts?.attempts,
+          priority: job.opts?.priority,
+        },
         attemptsMade: job.attemptsMade,
       };
     } catch (err: unknown) {
@@ -159,6 +165,11 @@ export class BullMqJobQueue extends JobQueue {
               id: job.id ?? '',
               name: job.name,
               data: job.data as T,
+              opts: {
+                jobId: job.id,
+                attempts: job.opts?.attempts,
+                priority: job.opts?.priority,
+              },
               attemptsMade: job.attemptsMade,
               updateProgress: async (progress: number | object) => {
                 await job.updateProgress(progress);

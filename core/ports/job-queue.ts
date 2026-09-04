@@ -17,6 +17,7 @@ export interface QueueJob<T = unknown> {
   id: string;
   name: string;
   data: T;
+  opts?: QueueJobOptions;
   attemptsMade?: number;
   updateProgress?: (progress: number | object) => Promise<void>;
   getChildrenValues?: <R = Record<string, unknown>>() => Promise<R>;
