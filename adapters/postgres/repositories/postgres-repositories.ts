@@ -3,6 +3,7 @@ import * as schema from '@vp/db';
 import { type PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import type { PostgresDatabaseClient } from '../postgres-database-client.js';
+import { PostgresDlqRepository } from './postgres-dlq-repository.js';
 import { PostgresEventRepository } from './postgres-event-repository.js';
 import { PostgresRenditionRepository } from './postgres-rendition-repository.js';
 import { PostgresStepRepository } from './postgres-step-repository.js';
@@ -25,6 +26,7 @@ export class PostgresRepositories implements Repositories {
   readonly renditions: PostgresRenditionRepository;
   readonly events: PostgresEventRepository;
   readonly users: PostgresUserRepository;
+  readonly dlq: PostgresDlqRepository;
 
   private readonly sql?: Sql;
 
@@ -56,6 +58,7 @@ export class PostgresRepositories implements Repositories {
     this.renditions = new PostgresRenditionRepository(db);
     this.events = new PostgresEventRepository(db);
     this.users = new PostgresUserRepository(db);
+    this.dlq = new PostgresDlqRepository(db);
   }
 
   async close(): Promise<void> {

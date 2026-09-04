@@ -155,6 +155,7 @@ export class InMemoryVideoRepository extends VideoRepository {
       spriteVttUrl: data.spriteVttUrl ?? null,
       errorCode: data.errorCode ?? null,
       errorMessage: data.errorMessage ?? null,
+      generation: data.generation ?? 1,
       version: 1,
       createdAt: now,
       updatedAt: now,

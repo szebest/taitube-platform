@@ -1,4 +1,5 @@
 import type { Repositories } from '@vp/core/ports';
+import { InMemoryDlqRepository } from './in-memory-dlq-repository.js';
 import { InMemoryEventRepository } from './in-memory-event-repository.js';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository.js';
 import { InMemoryStepRepository } from './in-memory-step-repository.js';
@@ -13,12 +14,14 @@ export class InMemoryRepositories implements Repositories {
   readonly users: InMemoryUserRepository;
   readonly videos: InMemoryVideoRepository;
   readonly uploads: InMemoryUploadRepository;
+  readonly dlq: InMemoryDlqRepository;
 
   constructor() {
     this.events = new InMemoryEventRepository();
     this.renditions = new InMemoryRenditionRepository();
     this.steps = new InMemoryStepRepository();
     this.users = new InMemoryUserRepository();
+    this.dlq = new InMemoryDlqRepository();
     this.videos = new InMemoryVideoRepository({
       eventsRepo: this.events,
       renditionsRepo: this.renditions,
@@ -38,5 +41,6 @@ export class InMemoryRepositories implements Repositories {
     this.users.clear();
     this.videos.clear();
     this.uploads.clear();
+    this.dlq.clear();
   }
 }

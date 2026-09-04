@@ -5,4 +5,5 @@ export * from './in-memory-step-repository.js';
 export * from './in-memory-rendition-repository.js';
 export * from './in-memory-event-repository.js';
 export * from './in-memory-user-repository.js';
+export * from './in-memory-dlq-repository.js';
 export * from './in-memory-repositories.js';

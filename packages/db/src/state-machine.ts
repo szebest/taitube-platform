@@ -3,9 +3,9 @@ export const ALLOWED_TRANSITIONS: Record<string, readonly string[]> = {
   UPLOADING: ['UPLOADED', 'REJECTED', 'ABANDONED'],
   UPLOADED: ['PROBING'],
   PROBING: ['PROCESSING', 'FAILED'],
-  PROCESSING: ['READY', 'FAILED'],
-  FAILED: ['PROBING'], // Admin re-process
-  READY: ['DELETED'],
+  PROCESSING: ['READY', 'FAILED', 'PROBING'],
+  FAILED: ['PROBING'], // Re-process
+  READY: ['DELETED', 'PROBING'], // Soft delete or re-process
   REJECTED: [],
   ABANDONED: [],
   DELETED: [],

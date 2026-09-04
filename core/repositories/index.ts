@@ -4,4 +4,5 @@ export * from './step-repository.js';
 export * from './rendition-repository.js';
 export * from './event-repository.js';
 export * from './user-repository.js';
+export * from './dlq-repository.js';
 export * from './repositories.js';

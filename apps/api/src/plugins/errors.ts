@@ -39,6 +39,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
         let statusCode = 422;
         switch (errCode) {
           case ErrorCodes.VIDEO_NOT_FOUND:
+          case ErrorCodes.DLQ_ENTRY_NOT_FOUND:
             statusCode = 404;
             break;
           case ErrorCodes.UNAUTHORIZED:

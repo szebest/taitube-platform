@@ -132,6 +132,15 @@ export const ids = {
   replay: (original: string, n: number) => `${original}--r${n}`,
 };
 
+export function generateReplayJobId(originalJobId: string): string {
+  const match = originalJobId.match(/--r(\d+)$/);
+  if (match?.[1]) {
+    const nextNum = Number.parseInt(match[1], 10) + 1;
+    return originalJobId.replace(/--r\d+$/, `--r${nextNum}`);
+  }
+  return `${originalJobId}--r1`;
+}
+
 // SSE event schemas
 export const SseEvent = z.discriminatedUnion('event', [
   z.object({

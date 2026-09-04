@@ -34,6 +34,7 @@ export interface VideoRecord {
   spriteVttUrl?: string | null;
   errorCode?: string | null;
   errorMessage?: string | null;
+  generation: number;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -63,6 +64,7 @@ export interface NewVideoInput {
   spriteVttUrl?: string | null;
   errorCode?: string | null;
   errorMessage?: string | null;
+  generation?: number;
   readyAt?: Date | null;
 }
 

@@ -64,10 +64,19 @@ export interface FailStepResult {
   failed: boolean;
 }
 
+export interface MarkDeadOptions {
+  videoId: string;
+  step: string;
+  rendition?: string;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
 export abstract class StepRepository {
   abstract claim(options: ClaimStepOptions): Promise<ClaimStepResult>;
   abstract complete(options: CompleteStepOptions): Promise<CompleteStepResult>;
   abstract fail(options: FailStepOptions): Promise<FailStepResult>;
+  abstract markDead(options: MarkDeadOptions): Promise<boolean>;
   abstract heartbeat(lockToken: string): Promise<boolean>;
   abstract findByVideoId(videoId: string): Promise<ProcessingStepRecord[]>;
 }

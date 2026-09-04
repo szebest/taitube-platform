@@ -6,6 +6,7 @@ import {
   DatabaseError,
   type FailStepOptions,
   type FailStepResult,
+  type MarkDeadOptions,
   type ProcessingStepRecord,
   StepRepository,
 } from '@vp/core/ports';
@@ -62,7 +63,7 @@ export class PostgresStepRepository extends StepRepository {
           status: 'DONE',
           completedAt: new Date(),
           result,
-        } as any)
+        } as unknown as Partial<typeof schema.processingSteps.$inferInsert>)
         .where(
           and(
             eq(schema.processingSteps.videoId, videoId),
@@ -95,7 +96,7 @@ export class PostgresStepRepository extends StepRepository {
           completedAt: new Date(),
           errorCode,
           errorMessage: errorMessage || null,
-        } as any)
+        } as unknown as Partial<typeof schema.processingSteps.$inferInsert>)
         .where(
           and(
             eq(schema.processingSteps.videoId, videoId),
@@ -113,6 +114,35 @@ export class PostgresStepRepository extends StepRepository {
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to fail step ${step} on video ${videoId}: ${(err as Error).message}`,
+        { cause: err }
+      );
+    }
+  }
+
+  async markDead(options: MarkDeadOptions): Promise<boolean> {
+    const { videoId, step, rendition = '-', errorCode, errorMessage } = options;
+    try {
+      const updatedRows = await this.db
+        .update(schema.processingSteps)
+        .set({
+          status: 'DEAD',
+          completedAt: new Date(),
+          errorCode: errorCode || null,
+          errorMessage: errorMessage || null,
+        } as unknown as Partial<typeof schema.processingSteps.$inferInsert>)
+        .where(
+          and(
+            eq(schema.processingSteps.videoId, videoId),
+            eq(schema.processingSteps.step, step),
+            eq(schema.processingSteps.rendition, rendition)
+          )
+        )
+        .returning({ id: schema.processingSteps.id });
+
+      return updatedRows.length > 0;
+    } catch (err: unknown) {
+      throw new DatabaseError(
+        `Failed to mark step ${step} DEAD on video ${videoId}: ${(err as Error).message}`,
         { cause: err }
       );
     }

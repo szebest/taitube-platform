@@ -3,11 +3,12 @@ import * as path from 'node:path';
 import type { StorageClient } from '@vp/core/ports';
 import { ErrorCodes, TransientError } from '@vp/errors';
 import type { Logger } from '@vp/observability';
-import { getHeaderMapping } from '@vp/storage';
+import { getHeaderMapping, renditionPlaylistKey } from '@vp/storage';
 
 export interface SegmentUploaderOptions {
   outputDir: string;
   videoId: string;
+  generation?: number;
   rendition: string;
   publicBucket: string;
   storage: StorageClient;
@@ -31,6 +32,7 @@ export interface UploaderResult {
 export class StreamingSegmentUploader {
   private readonly outputDir: string;
   private readonly videoId: string;
+  private readonly generation: number;
   private readonly rendition: string;
   private readonly publicBucket: string;
   private readonly storage: StorageClient;
@@ -51,6 +53,7 @@ export class StreamingSegmentUploader {
   constructor(options: SegmentUploaderOptions) {
     this.outputDir = options.outputDir;
     this.videoId = options.videoId;
+    this.generation = options.generation ?? 1;
     this.rendition = options.rendition;
     this.publicBucket = options.publicBucket;
     this.storage = options.storage;
@@ -110,7 +113,10 @@ export class StreamingSegmentUploader {
 
   private async uploadSegment(filename: string): Promise<void> {
     const filePath = path.join(this.outputDir, filename);
-    const key = `videos/${this.videoId}/hls/${this.rendition}/${filename}`;
+    const key =
+      this.generation > 1
+        ? `videos/${this.videoId}/hls/g${this.generation}/${this.rendition}/${filename}`
+        : `videos/${this.videoId}/hls/${this.rendition}/${filename}`;
     const headers = getHeaderMapping(filename);
 
     let attempts = 0;
@@ -201,7 +207,7 @@ export class StreamingSegmentUploader {
       throw new Error(`Playlist index.m3u8 not found in ${this.outputDir}`);
     }
 
-    const playlistKey = `videos/${this.videoId}/hls/${this.rendition}/index.m3u8`;
+    const playlistKey = renditionPlaylistKey(this.videoId, this.rendition, this.generation);
     const playlistHeaders = getHeaderMapping('index.m3u8');
 
     await this.storage.uploadObject({

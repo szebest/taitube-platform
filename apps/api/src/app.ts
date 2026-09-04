@@ -31,6 +31,7 @@ import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { registerAuth } from './plugins/auth.js';
 import { registerErrorHandler } from './plugins/errors.js';
+import { registerAdminDlqRoutes } from './routes/admin/dlq.js';
 import { registerAdminQueuesRoutes } from './routes/admin/queues.js';
 import { registerDevJwksRoute } from './routes/dev-jwks.js';
 import { registerEventsRoutes } from './routes/events.js';
@@ -184,6 +185,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerVideosRoutes(app, {
     videos: repositories.videos,
     cdnBaseUrl,
+    probeQueue: jobQueue,
   });
 
   const sseHub =
@@ -209,6 +211,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   await registerAdminQueuesRoutes(app, {
     cache,
+    queues: adminQueues,
+  });
+
+  registerAdminDlqRoutes(app, {
+    repositories,
     queues: adminQueues,
   });
 

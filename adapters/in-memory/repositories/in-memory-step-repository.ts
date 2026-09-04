@@ -5,6 +5,7 @@ import {
   type CompleteStepResult,
   type FailStepOptions,
   type FailStepResult,
+  type MarkDeadOptions,
   type ProcessingStepRecord,
   StepRepository,
 } from '@vp/core/ports';
@@ -87,6 +88,21 @@ export class InMemoryStepRepository extends StepRepository {
     existing.errorCode = errorCode;
     existing.errorMessage = errorMessage ?? null;
     return { failed: true, fenced: false };
+  }
+
+  async markDead(options: MarkDeadOptions): Promise<boolean> {
+    const { videoId, step, rendition = '-', errorCode, errorMessage } = options;
+    const key = this.getStepKey(videoId, step, rendition);
+    const existing = this.stepsMap.get(key);
+    if (!existing) {
+      return false;
+    }
+    existing.status = 'DEAD';
+    existing.finishedAt = new Date();
+    existing.completedAt = new Date();
+    if (errorCode !== undefined) existing.errorCode = errorCode;
+    if (errorMessage !== undefined) existing.errorMessage = errorMessage ?? null;
+    return true;
   }
 
   async heartbeat(lockToken: string): Promise<boolean> {

@@ -195,6 +195,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       const uploader = new StreamingSegmentUploader({
         outputDir: outDir,
         videoId,
+        generation: job.data.generation,
         rendition: rendition.name,
         publicBucket,
         storage,
@@ -218,7 +219,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
             const now = Date.now();
             if (now - lastProgressHeartbeat >= 2000 || percent === 100) {
               lastProgressHeartbeat = now;
-              (job as any).updateProgress?.(percent)?.catch?.(() => {});
+              job.updateProgress?.(percent)?.catch?.(() => {});
               repositories.steps.heartbeat(lockToken).catch(() => {});
               fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
               progressReporter.report(percent).catch(() => {});
@@ -319,11 +320,12 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       };
     } catch (err: unknown) {
       let classifiedErr = err as Error;
+      const errorWithCode = err as { code?: string; hint?: string };
       const isEnospc =
-        (err as any)?.code === 'ENOSPC' ||
+        errorWithCode?.code === 'ENOSPC' ||
         (err as Error).message?.includes('ENOSPC') ||
         (err as Error).message?.toLowerCase().includes('no space left on device') ||
-        (err as any)?.hint === 'DISK_FULL';
+        errorWithCode?.hint === 'DISK_FULL';
 
       if (isEnospc && !(err instanceof PipelineError)) {
         classifiedErr = new TransientError(

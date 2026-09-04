@@ -9,11 +9,24 @@ import {
 import {
   type ConnectionOptions,
   type Job,
+  type JobType,
+  type JobsOptions,
   Queue,
   type QueueOptions,
   UnrecoverableError,
   Worker,
 } from 'bullmq';
+
+class CustomUnrecoverableError extends UnrecoverableError {
+  code?: string;
+  override cause?: unknown;
+}
+
+interface ErrorWithDetails {
+  isRetryable?: boolean;
+  code?: string;
+  message: string;
+}
 
 export interface BullMqJobQueueConfig {
   name: string;
@@ -50,7 +63,9 @@ export class BullMqJobQueue extends JobQueue {
 
   async checkHealth(): Promise<boolean> {
     try {
-      const client = await (this.queue as any).client;
+      const client = await (
+        this.queue as unknown as { client: Promise<{ ping(): Promise<string> }> }
+      ).client;
       if (!client) return true;
       const res = await client.ping();
       return res === 'PONG';
@@ -103,9 +118,9 @@ export class BullMqJobQueue extends JobQueue {
       const job = await this.queue.add(name, data, {
         jobId: options?.jobId,
         attempts: options?.attempts,
-        backoff: options?.backoff as any,
-        removeOnComplete: options?.removeOnComplete as any,
-        removeOnFail: options?.removeOnFail as any,
+        backoff: options?.backoff as JobsOptions['backoff'],
+        removeOnComplete: options?.removeOnComplete as JobsOptions['removeOnComplete'],
+        removeOnFail: options?.removeOnFail as JobsOptions['removeOnFail'],
       });
 
       return {
@@ -127,7 +142,7 @@ export class BullMqJobQueue extends JobQueue {
     options?: QueueWorkerOptions
   ): Promise<void> {
     try {
-      const connection = (this.queue.opts.connection as any) ?? {
+      const connection = (this.queue.opts.connection as ConnectionOptions | undefined) ?? {
         host: process.env['REDIS_HOST'] ?? '127.0.0.1',
         port: Number(process.env['REDIS_PORT'] ?? 6379),
       };
@@ -142,7 +157,7 @@ export class BullMqJobQueue extends JobQueue {
               data: job.data as T,
               attemptsMade: job.attemptsMade,
               updateProgress: async (progress: number | object) => {
-                await job.updateProgress(progress as any);
+                await job.updateProgress(progress);
               },
               getChildrenValues: async <R = Record<string, unknown>>() => {
                 const values = await job.getChildrenValues();
@@ -153,9 +168,23 @@ export class BullMqJobQueue extends JobQueue {
               },
             });
           } catch (err: unknown) {
+            const errObj = err as ErrorWithDetails;
             // If the error is marked permanent (non-retryable), signal BullMQ via UnrecoverableError
-            if ((err as { isRetryable?: boolean }).isRetryable === false) {
-              throw new UnrecoverableError((err as Error).message);
+            if (errObj.isRetryable === false) {
+              const unrec = new CustomUnrecoverableError(errObj.message);
+              if (errObj.code) unrec.code = errObj.code;
+              unrec.cause = err;
+              throw unrec;
+            }
+            // Unknown errors treated as transient with cap 3 (AC 2)
+            const isTransient = errObj.isRetryable === true;
+            if (!isTransient) {
+              if ((job.attemptsMade ?? 0) + 1 >= 3) {
+                const unrec = new CustomUnrecoverableError(errObj.message);
+                if (errObj.code) unrec.code = errObj.code;
+                unrec.cause = err;
+                throw unrec;
+              }
             }
             throw err;
           }
@@ -236,7 +265,7 @@ export class BullMqJobQueue extends JobQueue {
         'completed',
         'failed',
         'delayed',
-        'paused' as any
+        'paused' as unknown as JobType
       );
       return {
         waiting: counts.waiting ?? 0,
@@ -255,7 +284,7 @@ export class BullMqJobQueue extends JobQueue {
   }
 
   async getJobs(
-    types: any = ['waiting', 'active', 'completed', 'failed']
+    types: JobType[] = ['waiting', 'active', 'completed', 'failed']
   ): Promise<QueueJob<unknown>[]> {
     try {
       const jobs = await this.queue.getJobs(types);

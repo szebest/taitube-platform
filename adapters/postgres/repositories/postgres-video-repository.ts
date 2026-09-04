@@ -94,7 +94,8 @@ export class PostgresVideoRepository extends VideoRepository {
           spriteVttUrl: data.spriteVttUrl ?? null,
           errorCode: data.errorCode ?? null,
           errorMessage: data.errorMessage ?? null,
-        } as any)
+          generation: data.generation ?? 1,
+        } as typeof schema.videos.$inferInsert)
         .returning();
 
       if (!created) {
@@ -148,8 +149,14 @@ export class PostgresVideoRepository extends VideoRepository {
     try {
       return await this.db.transaction(async (tx) => {
         const statusCondition = Array.isArray(from)
-          ? inArray(schema.videos.status, from as any)
-          : eq(schema.videos.status, from as any);
+          ? inArray(
+              schema.videos.status,
+              from as unknown as (typeof schema.videoStatusEnum.enumValues)[number][]
+            )
+          : eq(
+              schema.videos.status,
+              from as unknown as (typeof schema.videoStatusEnum.enumValues)[number]
+            );
 
         const updatedRows = await tx
           .update(schema.videos)
@@ -158,7 +165,7 @@ export class PostgresVideoRepository extends VideoRepository {
             status: to,
             updatedAt: new Date(),
             ...(to === 'READY' ? { readyAt: new Date() } : {}),
-          } as any)
+          } as unknown as typeof schema.videos.$inferInsert)
           .where(and(eq(schema.videos.id, videoId), statusCondition))
           .returning({ id: schema.videos.id });
 
@@ -171,7 +178,7 @@ export class PostgresVideoRepository extends VideoRepository {
           type: effectiveEventType,
           payload: eventPayload,
           createdAt: new Date(),
-        } as any);
+        } as typeof schema.videoEvents.$inferInsert);
 
         return true;
       });

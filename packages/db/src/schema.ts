@@ -91,6 +91,7 @@ export const videos = pgTable(
     spriteKey: text('sprite_key'),
     errorCode: text('error_code'),
     errorMessage: text('error_message'),
+    generation: integer('generation').notNull().default(1),
     version: integer('version').notNull().default(0),
     readyAt: timestamptz('ready_at'),
     deletedAt: timestamptz('deleted_at'),

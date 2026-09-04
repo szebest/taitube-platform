@@ -14,7 +14,6 @@ import type {
   CacheClient,
   FlowProducerPort,
   JobQueue,
-  QueueJob,
   Repositories,
   StorageClient,
 } from '@vp/core/ports';
@@ -25,6 +24,7 @@ import {
   getMetrics,
   initTracing,
 } from '@vp/observability';
+import { createFailureHandler } from './failure-handler.js';
 import { STAGE_REGISTRY, validateQueueName } from './registry.js';
 import { createNotifyProcessor } from './stages/notify.js';
 import { createPackageProcessor } from './stages/package.js';
@@ -102,7 +102,7 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
     (isInMemory ? new InMemoryFlowProducer(getQueue) : new BullMqFlowProducer());
 
   // Processor selection based on stage
-  let processor: (job: QueueJob<any>) => Promise<unknown>;
+  let processor: Parameters<JobQueue['process']>[0];
   if (stage === 'probe') {
     processor = createProbeProcessor({
       repositories,
@@ -112,7 +112,7 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
       heartbeatPath: options.heartbeatPath,
       getQueue,
       flowProducer,
-    });
+    }) as unknown as Parameters<JobQueue['process']>[0];
   } else if (stage.startsWith('transcode-')) {
     processor = createTranscodeProcessor({
       repositories,
@@ -122,7 +122,7 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
       logger,
       heartbeatPath: options.heartbeatPath,
       getQueue,
-    });
+    }) as unknown as Parameters<JobQueue['process']>[0];
   } else if (stage === 'thumbnail') {
     processor = createThumbnailProcessor({
       repositories,
@@ -130,7 +130,7 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
       workerId: options.workerId,
       logger,
       heartbeatPath: options.heartbeatPath,
-    });
+    }) as unknown as Parameters<JobQueue['process']>[0];
   } else if (stage === 'package') {
     processor = createPackageProcessor({
       repositories,
@@ -138,41 +138,31 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
       workerId: options.workerId,
       logger,
       getQueue,
-    });
+    }) as unknown as Parameters<JobQueue['process']>[0];
   } else if (stage === 'notify') {
     processor = createNotifyProcessor({
       repositories,
       cache,
       workerId: options.workerId,
       logger,
-    });
+    }) as unknown as Parameters<JobQueue['process']>[0];
   } else {
     throw new Error(`Stage "${stage}" processor not implemented yet`);
   }
 
   const queue: JobQueue = options.jobQueue ?? getQueue(config.queue);
 
-  if (stage === 'package' && queue.onFailed) {
-    queue.onFailed(async (job, err) => {
-      const videoId = (job.data as any)?.videoId;
-      if (videoId) {
-        logger.error(
-          { videoId, err: err.message },
-          'Package job failed; transitioning video to FAILED'
-        );
-        const errorCode = (err as any)?.code || 'TRANSCODE_FAILED';
-        await repositories.videos
-          .transition({
-            videoId,
-            from: 'PROCESSING',
-            to: 'FAILED',
-            eventType: 'video.failed',
-            eventPayload: { errorCode, errorMessage: err.message },
-            patch: { errorCode, errorMessage: err.message },
-          })
-          .catch(() => {});
-      }
+  if (queue.onFailed) {
+    const onFailedHandler = createFailureHandler({
+      stage,
+      queueName: config.queue,
+      repositories,
+      getQueue,
+      logger,
+      metrics,
+      workerId: options.workerId,
     });
+    queue.onFailed(onFailedHandler);
   }
 
   queue.process(
