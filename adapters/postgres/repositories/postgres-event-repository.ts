@@ -22,7 +22,7 @@ export class PostgresEventRepository extends EventRepository {
           type: data.type,
           payload: data.payload ?? {},
           createdAt: new Date(),
-        } as any)
+        })
         .returning();
       return row as unknown as VideoEventRecord;
     } catch (err: unknown) {

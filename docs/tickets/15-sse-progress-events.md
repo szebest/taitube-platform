@@ -37,3 +37,17 @@ Integration with a raw HTTP client parsing `text/event-stream`; multi-instance t
 
 ## Definition of Done
 - [x] AC green; test page shows live bars; SDD §10 unchanged or updated in the same PR.
+
+## Code Review
+- **Status:** Approved
+- **Review Report:** [Review Report](../reviews/15-sse-progress-events-review.md)
+- **Key Findings:**
+  - Full compliance with AC 1–7, SDD §10, §20, ADR-10, PRD US-11, PRD FR-8, and PRD §7.
+  - Wire format conforms to SDD §10.1 (`snapshot`, `progress`, `status`, `: ping` comment every 15s).
+  - Subscribe-before-read connection sequence eliminates race conditions with snapshot emitted first and in-flight events deduplicated.
+  - Reconnection via `Last-Event-ID` re-queries PostgreSQL `video_events` and reliably re-synchronizes missed progress and terminal `READY` states.
+  - Worker progress reporting throttled to 1 per 2 seconds per rendition and persisted only at 10% decile boundaries, safeguarding database throughput.
+  - Connection quotas (20 streams/user → 429), pod caps, 30-minute idle stream timeouts, and private video authorization strictly enforced.
+  - Socket backpressure coalesces ephemeral progress events per rendition while preserving terminal status events without loss.
+  - Multi-instance fan-out over Redis Pub/Sub (`video:*`, `user:*`) verified across multiple API instances.
+

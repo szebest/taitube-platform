@@ -38,7 +38,11 @@ function mapEventToSse(record: { id: number; type: string; payload: unknown }): 
   data: unknown;
 } {
   let sseEvent = 'status';
-  let data = record.payload as any;
+  let data: unknown = record.payload;
+  const payloadObj =
+    record.payload && typeof record.payload === 'object'
+      ? (record.payload as Record<string, unknown>)
+      : undefined;
 
   if (record.type === 'progress') {
     sseEvent = 'progress';
@@ -46,15 +50,15 @@ function mapEventToSse(record: { id: number; type: string; payload: unknown }): 
     sseEvent = 'status';
     data = {
       status: 'READY',
-      playbackUrl: data?.playbackUrl,
+      playbackUrl: payloadObj?.['playbackUrl'],
     };
   } else if (record.type === 'video.failed' || record.type === 'probe.failed') {
     sseEvent = 'status';
     data = {
       status: 'FAILED',
       error: {
-        code: data?.errorCode || 'FAILED',
-        message: data?.errorMessage || '',
+        code: (payloadObj?.['errorCode'] as string) || 'FAILED',
+        message: (payloadObj?.['errorMessage'] as string) || '',
       },
     };
   } else if (record.type === 'video.processing' || record.type === 'probe.completed') {
