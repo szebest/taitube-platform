@@ -31,7 +31,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
 
   it('AC 1: seed inserts dev user + one READY video', async (ctx) => {
     if (!postgresAvailable) {
-      ctx.skip();
+      ctx?.skip?.();
       return;
     }
     const user = await db.select().from(users).where(eq(users.id, DEV_USER_ID)).limit(1);
@@ -47,7 +47,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
 
   it('AC 3: concurrency test on real Postgres — two parallel CAS transitions UPLOADED->PROBING -> exactly one succeeds', async (ctx) => {
     if (!postgresAvailable) {
-      ctx.skip();
+      ctx?.skip?.();
       return;
     }
     const testVideoId = uuidv7();
@@ -95,7 +95,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
 
   it('AC 4: every state transition helper writes a video_events row in the same transaction (atomic guarantee)', async (ctx) => {
     if (!postgresAvailable) {
-      ctx.skip();
+      ctx?.skip?.();
       return;
     }
     const testVideoId = uuidv7();
@@ -150,7 +150,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
 
   it('AC 3: fenced completion with a stale token changes 0 rows and reports fenced: true', async (ctx) => {
     if (!postgresAvailable) {
-      ctx.skip();
+      ctx?.skip?.();
       return;
     }
     const testVideoId = uuidv7();
@@ -228,7 +228,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
 
   it('AC 3: stale version on metadata update throws VERSION_CONFLICT (409)', async (ctx) => {
     if (!postgresAvailable) {
-      ctx.skip();
+      ctx?.skip?.();
       return;
     }
     const testVideoId = uuidv7();
