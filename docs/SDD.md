@@ -533,6 +533,24 @@ Decided at the throw site, never by regex on messages.
 
 ---
 
+### ADR-19 — Hexagonal Architecture, Interface Segregation, and Modular Repository Boundaries
+
+- **Ports as Abstract Classes (`core/ports/`, `core/repositories/`)**:
+  - Abstract classes extending `HealthCheckable` allow uniform `instanceof` checks, exception wrapping, and liveness contracts.
+  - Driver/connection primitives (`DatabaseClient`) are segregated from domain entities (`Repositories`: `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`).
+  - Standard object storage (`StorageClient`) is segregated from multipart chunk lifecycle (`MultipartStorage`).
+- **Concrete SDK Isolation (`adapters/`)**:
+  - `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, and `drizzle-orm` are strictly forbidden outside `adapters/` and composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`).
+  - Domain services, controllers, and worker stages depend purely on injected port interfaces.
+- **Single Responsibility & File Length Discipline**:
+  - Every repository implementation resides in its own dedicated file under `repositories/` (e.g. `adapters/postgres/repositories/postgres-video-repository.ts`).
+  - Monolithic multi-repository files are forbidden. Target file length: <= 250 lines (strict max 400 lines / ~10 KB).
+- **Autonomous In-Memory Test Doubles (`adapters/in-memory/`)**:
+  - In-memory repositories encapsulate their state internally, provide a `.clear()` method, and communicate through port interfaces.
+  - Enables in-process unit and end-to-end integration tests without Docker, real databases, or network sockets.
+
+---
+
 ## 5. Domain Model & Database Schema
 
 ### 5.1 Entity relationship
@@ -1568,27 +1586,34 @@ export default function () {
 
 ```
 video-pipeline/
+├── core/                                   # Abstract ports & domain models (@vp/core)
+│   ├── ports/                              # DatabaseClient, StorageClient, MultipartStorage, CacheClient, JobQueue, FlowProducer
+│   └── repositories/                       # VideoRepository, UploadRepository, StepRepository, RenditionRepository, EventRepository, UserRepository
+├── adapters/                               # Isolated concrete & in-memory implementations (@vp/adapters)
+│   ├── postgres/                           # PostgresDatabaseClient & modular repositories/ (drizzle-orm + postgres.js)
+│   ├── s3/                                 # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
+│   ├── redis/                              # RedisCacheClient (ioredis)
+│   ├── bullmq/                             # BullMqJobQueue & BullMqFlowProducer (bullmq)
+│   └── in-memory/                          # Autonomous test doubles with encapsulated state & modular repositories/
 ├── apps/
 │   ├── api/                              # Node 24 LTS · Fastify 5
 │   │   ├── src/
 │   │   │   ├── main.ts                   # boot: env → otel → db → redis → fastify → schedulers upsert
 │   │   │   ├── migrate.ts                # drizzle-kit migrate entrypoint (run as compose/k8s Job)
-│   │   │   ├── app.ts                    # buildApp(): plugins, routes, error handler (problem+json)
+│   │   │   ├── app.ts                    # buildApp(): composition root, plugins, routes, error handler (problem+json)
 │   │   │   ├── plugins/                  # auth (jwt/jwks), rate-limit, under-pressure, swagger, bull-board, metrics
-│   │   │   ├── modules/
-│   │   │   │   ├── uploads/              # routes, service (presign/multipart/complete/verify), schemas
-│   │   │   │   ├── videos/               # routes, service, repository, sse controller
-│   │   │   │   ├── admin/                # dlq list/replay/discard, reprocess, queue pause
-│   │   │   │   └── health/               # healthz, readyz
+│   │   │   ├── routes/                   # thin transport adapters (uploads, videos, admin, health)
+│   │   │   ├── services/                 # deep domain services (UploadService, VideoService)
 │   │   │   ├── sse/                      # SseHub (redis psubscribe → connections), snapshot, replay
 │   │   │   ├── queues/                   # QueueRegistry (BullMQ Queue instances), queue-metrics poller, schedulers
 │   │   │   └── config.ts                 # zod env schema for the API
-│   │   ├── test/                         # vitest: unit + integration (testcontainers)
+│   │   ├── test/                         # vitest: unit + integration (in-memory e2e)
 │   │   ├── Dockerfile
 │   │   └── package.json
 │   └── worker/                           # Bun 1.4 (runtime-switchable) · one image, WORKER_STAGE picks role
 │       ├── src/
 │       │   ├── main.ts                   # reads WORKER_STAGE → stageRegistry → Worker + graceful shutdown
+│       │   ├── runner.ts                 # composition root: wires adapters and stage processors
 │       │   ├── registry.ts               # { queue, processor, concurrency, lockDuration, shutdownTimeoutMs } per stage
 │       │   ├── stages/
 │       │   │   ├── probe.ts
@@ -1610,7 +1635,7 @@ video-pipeline/
 ├── packages/
 │   ├── job-contracts/                    # zod schemas + types for every job payload, jobId builders, stagePolicies, queue names
 │   ├── db/                               # drizzle schema, migrations/, repositories (videos, steps, events, dlq), CAS helpers
-│   ├── storage/                          # S3 client factory (MinIO/R2/B2), presign, multipart, keys.ts (deterministic key builders), lifecycle setup
+│   ├── storage/                          # keys.ts (deterministic key builders), mime.ts, multipart.ts (part math/constants)
 │   ├── ffmpeg/                           # probe(), buildTranscodeArgs(), buildThumbnailArgs(), progress parser, ladder.ts, master-playlist.ts, error classification
 │   ├── observability/                    # prom-client registry + metric definitions, otel bootstrap, pino logger factory
 │   ├── events/                           # Redis Pub/Sub publisher/subscriber, channel names, SSE event schemas (shared with frontend later)

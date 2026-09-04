@@ -101,11 +101,12 @@ Low-level client for executing raw SQL, parameterized queries, transactions, and
 
 ### Domain Repositories (`@vp/core/repositories`)
 - **`VideoRepository`**: `findById`, `findWithDetails`, `create`, `updateMetadata` (optimistic version check), `transition` (atomic CAS with events).
-- **`UploadRepository`**: `findById`, `findWithVideo`, `create`, `updateStatus`.
+- **`UploadRepository`**: `findById`, `findByVideoId`, `findWithVideo`, `create`, `updateStatus`.
 - **`StepRepository`**: `claim`, `complete`, `fail` (worker fencing tokens), `heartbeat`, `findByVideoId`.
 - **`RenditionRepository`**: `create`, `findByVideoId`, `update`.
 - **`EventRepository`**: `create`, `findByVideoId`.
 - **`UserRepository`**: `findById`, `upsert`.
+- **`Repositories`**: Aggregating container interface bundling the six domain repositories.
 
 ### `StorageClient`
 Abstracts standard S3-compatible object storage operations across local MinIO and Cloudflare R2:
@@ -148,7 +149,40 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 
 ---
 
-## 5. Verification & Enforcement
+## 5. Design Patterns & Clean Architecture Rules
+
+### Rule 1: Single Responsibility & Dedicated Repository Files
+- Every repository implementation MUST live in its own dedicated file inside `repositories/` subfolders:
+  - `adapters/postgres/repositories/postgres-<domain>-repository.ts`
+  - `adapters/in-memory/repositories/in-memory-<domain>-repository.ts`
+- Never combine multiple domain repository implementations into one monolithic file.
+- The `*Repositories` container class (e.g. `PostgresRepositories`, `InMemoryRepositories`) is strictly a lightweight factory/bundle that wires the individual instances together.
+
+### Rule 2: Strict File Length & Size Limits
+- Files must remain cohesive, understandable, and modular.
+- **Target size:** <= 250 lines of code per file.
+- **Strict upper limit:** 400 lines (or ~10 KB) per file.
+- Any module exceeding 300 lines must be evaluated for decomposition into submodules, domain services, or extracted helper components.
+
+### Rule 3: Interface Segregation (ISP)
+- Never create god-objects that bundle disparate responsibilities.
+- Standard storage operations (`StorageClient`) are cleanly segregated from chunk-level multipart operations (`MultipartStorage`).
+- Driver/connection primitives (`DatabaseClient`) are segregated from entity data access (`Repositories`).
+
+### Rule 4: Autonomous Test Doubles
+- In-memory test doubles must be self-contained and autonomous:
+  - Private internal collections (`Map`, `Array`) initialized by default.
+  - Expose `.clear()` to allow test fixtures to reset state without recreating classes.
+  - Can be instantiated independently (`new InMemoryVideoRepository()`).
+  - Collaborate with other repositories via port interfaces (e.g., calling `uploadsRepo.findByVideoId` or `eventRepo.create`), NOT by directly manipulating private foreign data structures.
+
+### Rule 5: Deep Domain Services vs Thin Transport Routes
+- Route handlers in `apps/api/src/routes/` are strictly transport adapters: they validate HTTP inputs, check authorization, and format HTTP responses.
+- All orchestration, multi-system transaction coordination, and business invariants live in Deep Domain Services in `apps/api/src/services/` (`UploadService`, `VideoService`).
+
+---
+
+## 6. Verification & Enforcement
 
 The repository enforces architectural boundaries through static verification:
 1. `git grep "@aws-sdk/client-s3"` matches only `adapters/s3/`.
@@ -156,3 +190,4 @@ The repository enforces architectural boundaries through static verification:
 3. `git grep "bullmq"` matches only `adapters/bullmq/`.
 4. `git grep "postgres"` and `git grep "drizzle-orm"` match only `adapters/postgres/` and `packages/db`.
 5. Full dual-runtime test parity under `vitest` and `bun test`.
+6. Biome formatting and linting pass with zero errors (`pnpm biome check --diagnostic-level=error`).
