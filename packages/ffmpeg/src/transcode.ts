@@ -10,6 +10,7 @@ export interface TranscodeOptions {
   fps: number;
   durationMs?: number;
   threads?: number;
+  attempt?: number;
   preset?: string;
   timeoutMs?: number;
   onProgress?: (progress: { percent: number; outTimeMs: number }) => void;
@@ -23,6 +24,18 @@ export interface TranscodeExecutionResult {
 }
 
 /**
+ * Computes the number of threads for FFmpeg based on base threads and retry attempt (SDD §9.6 rule 6, Ticket 14 AC 3).
+ * Attempt 1: FFMPEG_THREADS
+ * Attempt 2: FFMPEG_THREADS - 1
+ * Attempt >= FFMPEG_THREADS: 1
+ */
+export function computeFfmpegThreads(baseThreads: number, attempt = 1): number {
+  const effectiveBase = baseThreads > 0 ? baseThreads : 2;
+  const computed = effectiveBase - (attempt - 1);
+  return Math.max(1, computed);
+}
+
+/**
  * Builds the exact FFmpeg argument array according to SDD §8.2.
  */
 export function buildTranscodeArgs(options: TranscodeOptions): string[] {
@@ -31,9 +44,16 @@ export function buildTranscodeArgs(options: TranscodeOptions): string[] {
     outputDir,
     rendition,
     fps,
-    threads = Number(process.env.FFMPEG_THREADS || '0'),
     preset = process.env.X264_PRESET || 'veryfast',
   } = options;
+
+  const baseThreads =
+    options.threads !== undefined ? options.threads : Number(process.env.FFMPEG_THREADS || '0');
+
+  const threads =
+    options.attempt !== undefined
+      ? computeFfmpegThreads(baseThreads, options.attempt)
+      : baseThreads;
 
   // SDD §8.2 & AC 18: GOP = round(2 * fps)
   const gop = Math.max(1, Math.round(2 * fps));
@@ -57,6 +77,8 @@ export function buildTranscodeArgs(options: TranscodeOptions): string[] {
     `scale=w=${rendition.width}:h=${rendition.height}:force_original_aspect_ratio=decrease:force_divisible_by=2`,
     '-c:v',
     'libx264',
+    '-fps_mode',
+    'cfr',
     '-preset',
     preset,
     '-profile:v',
@@ -110,7 +132,7 @@ export function buildTranscodeArgs(options: TranscodeOptions): string[] {
 }
 
 /**
- * Classifies an FFmpeg failure into PermanentError vs TransientError (SDD §9.5, §9.6, ADR-18, AC 23).
+ * Classifies an FFmpeg failure into PermanentError vs TransientError (SDD §9.5, §9.6, ADR-18, AC 23, Ticket 14 AC 6).
  */
 export function classifyFfmpegError(
   exitCode: number | null,
@@ -132,6 +154,19 @@ export function classifyFfmpegError(
     return new TransientError(
       ErrorCodes.FFMPEG_TIMEOUT,
       `FFmpeg process timed out: ${stderr.slice(-300)}`
+    );
+  }
+
+  // Disk exhaustion (Ticket 14 AC 6)
+  if (
+    lowerStderr.includes('no space left on device') ||
+    lowerStderr.includes('enospc') ||
+    lowerStderr.includes('disk full')
+  ) {
+    return new TransientError(
+      ErrorCodes.DISK_FULL,
+      `Disk full during FFmpeg transcode: ${stderr.slice(-300)}`,
+      { hint: 'DISK_FULL' }
     );
   }
 

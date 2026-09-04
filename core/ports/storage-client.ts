@@ -49,6 +49,12 @@ export interface StoragePresignedPutResult {
   expiresAt: Date;
 }
 
+export interface StoragePresignedGetParams {
+  bucket: string;
+  key: string;
+  expiresInSeconds?: number;
+}
+
 export abstract class StorageClient implements HealthCheckable {
   abstract checkHealth(): Promise<boolean>;
   abstract uploadObject(params: StorageUploadParams): Promise<StorageUploadResult>;
@@ -59,5 +65,6 @@ export abstract class StorageClient implements HealthCheckable {
   abstract createPresignedPutUrl(
     params: StoragePresignedPutParams
   ): Promise<StoragePresignedPutResult>;
+  abstract createPresignedGetUrl(params: StoragePresignedGetParams): Promise<string>;
   abstract close(): Promise<void>;
 }

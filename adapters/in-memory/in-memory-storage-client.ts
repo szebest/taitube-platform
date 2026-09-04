@@ -3,6 +3,7 @@ import {
   StorageClient,
   StorageError,
   type StorageObjectMetadata,
+  type StoragePresignedGetParams,
   type StoragePresignedPutParams,
   type StoragePresignedPutResult,
   type StorageUploadParams,
@@ -109,6 +110,10 @@ export class InMemoryStorageClient extends StorageClient {
       },
       expiresAt: new Date(Date.now() + expiresIn * 1000),
     };
+  }
+
+  async createPresignedGetUrl(params: StoragePresignedGetParams): Promise<string> {
+    return `http://localhost:9000/${params.bucket}/${params.key}?mock-presigned-get=true`;
   }
 
   async close(): Promise<void> {

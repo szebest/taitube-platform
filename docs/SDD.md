@@ -818,7 +818,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED` (pipeline).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL` (pipeline).
 
 ### 6.3 Video resource (response shape)
 
@@ -919,7 +919,7 @@ Notes that matter for correctness at scale:
 - `independent_segments` + `temp_file` guarantee each `.ts` starts with an IDR and is only renamed into place when complete → the uploader can safely tail the directory and upload segments as they close (`chokidar`/`fs.watch` on rename), keeping local disk usage bounded (delete after successful upload).
 - `-preset veryfast` is the MVP quality/speed point; expose as `X264_PRESET` for the load tests (measure `veryfast` vs `fast`).
 - `FFMPEG_THREADS` = container CPU limit (K8s `resources.limits.cpu`), so one job saturates its pod and concurrency stays 1 per pod (§9.4).
-- Source access: for MVP the worker downloads the source once to local disk (simple, seekable — ffmpeg seeks the `moov` atom for MP4); a **streaming variant** (`-i https://presigned-url`) is kept for constrained disks. Local disk requirement is documented: `sourceSize + ~1 segment` (segments are uploaded as they close).
+- Source access & disk bound (Ticket 14): for MVP the worker downloads the source once to local disk (simple, seekable — ffmpeg seeks the `moov` atom for MP4); an optional **streaming variant** (`-i https://presigned-url`, enabled via `TRANSCODE_STREAMING_INPUT=true` or `job.data.streamingInput=true`) is available as the low-disk fallback. Local disk requirement is strictly bounded: peak disk usage never exceeds `sourceSize + 3 × maxSegmentBytes` (measured on 60s/30-minute sources: source file + at most 3 segments in flight ≈ sourceSize + ~3.5 MB segments, or ~3.5 MB total with streaming input; local temp directory is guaranteed cleaned on completion and on forced failure).
 
 ### 8.3 Thumbnails
 

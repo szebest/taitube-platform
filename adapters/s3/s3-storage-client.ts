@@ -13,6 +13,7 @@ import {
   StorageClient,
   StorageError,
   type StorageObjectMetadata,
+  type StoragePresignedGetParams,
   type StoragePresignedPutParams,
   type StoragePresignedPutResult,
   type StorageUploadParams,
@@ -216,6 +217,27 @@ export class S3StorageClient extends StorageClient {
     } catch (err: unknown) {
       throw new StorageError(
         `Failed to create presigned PUT url for ${params.key}: ${(err as Error).message}`,
+        {
+          cause: err,
+        }
+      );
+    }
+  }
+
+  async createPresignedGetUrl(params: StoragePresignedGetParams): Promise<string> {
+    try {
+      const expiresIn = params.expiresInSeconds ?? 900;
+      const command = new GetObjectCommand({
+        Bucket: params.bucket,
+        Key: params.key,
+      });
+
+      return await getSignedUrl(this.client, command, {
+        expiresIn,
+      });
+    } catch (err: unknown) {
+      throw new StorageError(
+        `Failed to create presigned GET url for ${params.key}: ${(err as Error).message}`,
         {
           cause: err,
         }

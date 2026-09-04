@@ -49,6 +49,7 @@ export const TranscodeJob = Base.extend({
   durationMs: z.number().int().positive(),
   chunkIndex: z.number().int().min(0).optional(),
   chunkCount: z.number().int().min(1).optional(),
+  streamingInput: z.boolean().optional(),
 });
 export type TranscodeJob = z.infer<typeof TranscodeJob>;
 

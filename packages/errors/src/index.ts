@@ -23,6 +23,7 @@ export const ErrorCodes = {
   FFMPEG_TIMEOUT: 'FFMPEG_TIMEOUT',
   STORAGE_UNAVAILABLE: 'STORAGE_UNAVAILABLE',
   SEGMENT_VERIFY_FAILED: 'SEGMENT_VERIFY_FAILED',
+  DISK_FULL: 'DISK_FULL',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
