@@ -10,13 +10,14 @@ export function getAvcCodecString(profile: 'main' | 'high' | string, level: stri
 export interface MasterPlaylistOptions {
   ladder: LadderEntry[];
   fps?: number;
+  measuredResults?: Record<string, { bytes?: number; durationMs?: number; avgBitrateBps?: number }>;
 }
 
 /**
  * Generates an RFC 8216 / Apple HLS authoring-compliant master playlist (SDD §8.4).
  */
 export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
-  const { ladder, fps = 24 } = options;
+  const { ladder, fps = 24, measuredResults } = options;
   const frameRateStr = Number(fps).toFixed(3);
 
   const lines: string[] = ['#EXTM3U', '#EXT-X-VERSION:6', '#EXT-X-INDEPENDENT-SEGMENTS'];
@@ -26,7 +27,16 @@ export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
 
   for (const r of sorted) {
     const bandwidth = r.maxrateKbps * 1000;
-    const avgBandwidth = (r.videoKbps + r.audioKbps) * 1000;
+    const measured = measuredResults?.[r.name];
+    let avgBandwidth: number;
+    if (measured?.avgBitrateBps) {
+      avgBandwidth = measured.avgBitrateBps;
+    } else if (measured?.bytes && measured?.durationMs && measured.durationMs > 0) {
+      avgBandwidth = Math.round((measured.bytes * 8) / (measured.durationMs / 1000));
+    } else {
+      avgBandwidth = (r.videoKbps + r.audioKbps) * 1000;
+    }
+
     const resolution = `${r.width}x${r.height}`;
     const avcCodec = getAvcCodecString(r.profile, r.level);
     const codecs = `${avcCodec},mp4a.40.2`;

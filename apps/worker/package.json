@@ -19,6 +19,8 @@
     "@vp/ffmpeg": "workspace:*",
     "@vp/job-contracts": "workspace:*",
     "@vp/observability": "workspace:*",
+    "@vp/adapters": "workspace:*",
+    "@vp/core": "workspace:*",
     "@vp/storage": "workspace:*",
     "bullmq": "^6.3.4",
     "drizzle-orm": "^0.45.2",

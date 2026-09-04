@@ -1,4 +1,23 @@
-import { type Database, createDbClient } from '@vp/db';
+import {
+  BullMqFlowProducer,
+  BullMqJobQueue,
+  InMemoryCacheClient,
+  InMemoryFlowProducer,
+  InMemoryJobQueue,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+  PostgresRepositories,
+  RedisCacheClient,
+  S3StorageClient,
+} from '@vp/adapters';
+import type {
+  CacheClient,
+  FlowProducerPort,
+  JobQueue,
+  QueueJob,
+  Repositories,
+  StorageClient,
+} from '@vp/core/ports';
 import {
   type Logger,
   type PipelineMetrics,
@@ -6,9 +25,6 @@ import {
   getMetrics,
   initTracing,
 } from '@vp/observability';
-import { type S3Client, createStorageClient } from '@vp/storage';
-import { type Job, Queue, Worker } from 'bullmq';
-import { Redis } from 'ioredis';
 import { STAGE_REGISTRY, validateQueueName } from './registry.js';
 import { createNotifyProcessor } from './stages/notify.js';
 import { createPackageProcessor } from './stages/package.js';
@@ -17,9 +33,12 @@ import { createTranscodeProcessor } from './stages/transcode.js';
 
 export interface WorkerRunnerOptions {
   stage?: string;
-  db?: Database;
-  s3Client?: S3Client;
-  redisConnection?: Redis;
+  repositories?: Repositories;
+  storage?: StorageClient;
+  cache?: CacheClient;
+  jobQueue?: JobQueue;
+  getQueue?: (name: string) => JobQueue;
+  flowProducer?: FlowProducerPort;
   logger?: Logger;
   metrics?: PipelineMetrics;
   workerId?: string;
@@ -27,12 +46,13 @@ export interface WorkerRunnerOptions {
 }
 
 export interface WorkerRunner {
-  worker: Worker;
+  queue: JobQueue;
+  worker: { name: string };
   close: () => Promise<void>;
 }
 
 export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRunner {
-  const stage = options.stage || process.env.WORKER_STAGE || 'probe';
+  const stage = options.stage || process.env['WORKER_STAGE'] || 'probe';
   const config = STAGE_REGISTRY[stage];
   if (!config) {
     throw new Error(`Unknown WORKER_STAGE: "${stage}"`);
@@ -50,46 +70,52 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
       bindings: { stage },
     });
 
-  const metrics = options.metrics || getMetrics();
-  const db = options.db || createDbClient().db;
-  const s3Client = options.s3Client || createStorageClient();
+  const isInMemory =
+    options.jobQueue instanceof InMemoryJobQueue ||
+    options.jobQueue?.constructor.name === 'InMemoryJobQueue' ||
+    options.repositories instanceof InMemoryRepositories ||
+    options.repositories?.constructor.name === 'InMemoryRepositories' ||
+    process.env['NODE_ENV'] === 'test';
 
-  const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
-  const connection =
-    options.redisConnection ||
-    new Redis(redisUrl, {
-      maxRetriesPerRequest: null,
-      enableReadyCheck: false,
+  const metrics = options.metrics || getMetrics();
+  const repositories =
+    options.repositories || (isInMemory ? new InMemoryRepositories() : new PostgresRepositories());
+  const storage =
+    options.storage || (isInMemory ? new InMemoryStorageClient() : new S3StorageClient());
+  const cache = options.cache || (isInMemory ? new InMemoryCacheClient() : new RedisCacheClient());
+
+  const queues = new Map<string, JobQueue>();
+  const getQueue: (name: string) => JobQueue =
+    options.getQueue ??
+    ((name: string): JobQueue => {
+      let q = queues.get(name);
+      if (!q) {
+        q = isInMemory ? new InMemoryJobQueue(name) : new BullMqJobQueue({ name });
+        queues.set(name, q);
+      }
+      return q;
     });
 
-  const queues = new Map<string, Queue>();
-  const getQueue = (name: string): Queue => {
-    let q = queues.get(name);
-    if (!q) {
-      q = new Queue(name, {
-        connection: connection.duplicate(),
-        prefix: 'bull',
-      });
-      queues.set(name, q);
-    }
-    return q;
-  };
+  const flowProducer =
+    options.flowProducer ||
+    (isInMemory ? new InMemoryFlowProducer(getQueue) : new BullMqFlowProducer());
 
   // Processor selection based on stage
-  let processor: (job: Job) => Promise<unknown>;
+  let processor: (job: QueueJob<any>) => Promise<unknown>;
   if (stage === 'probe') {
     processor = createProbeProcessor({
-      db,
-      s3Client,
+      repositories,
+      storage,
       workerId: options.workerId,
       logger,
       heartbeatPath: options.heartbeatPath,
       getQueue,
+      flowProducer,
     });
   } else if (stage.startsWith('transcode-')) {
     processor = createTranscodeProcessor({
-      db,
-      s3Client,
+      repositories,
+      storage,
       workerId: options.workerId,
       logger,
       heartbeatPath: options.heartbeatPath,
@@ -97,16 +123,16 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
     });
   } else if (stage === 'package') {
     processor = createPackageProcessor({
-      db,
-      s3Client,
+      repositories,
+      storage,
       workerId: options.workerId,
       logger,
       getQueue,
     });
   } else if (stage === 'notify') {
     processor = createNotifyProcessor({
-      db,
-      redis: connection,
+      repositories,
+      cache,
       workerId: options.workerId,
       logger,
     });
@@ -114,9 +140,32 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
     throw new Error(`Stage "${stage}" processor not implemented yet`);
   }
 
-  // BullMQ Worker initialization matching SDD §9.1 and §9.4
-  const worker = new Worker(
-    config.queue,
+  const queue: JobQueue = options.jobQueue ?? getQueue(config.queue);
+
+  if (stage === 'package' && queue.onFailed) {
+    queue.onFailed(async (job, err) => {
+      const videoId = (job.data as any)?.videoId;
+      if (videoId) {
+        logger.error(
+          { videoId, err: err.message },
+          'Package job failed; transitioning video to FAILED'
+        );
+        const errorCode = (err as any)?.code || 'TRANSCODE_FAILED';
+        await repositories.videos
+          .transition({
+            videoId,
+            from: 'PROCESSING',
+            to: 'FAILED',
+            eventType: 'video.failed',
+            eventPayload: { errorCode, errorMessage: err.message },
+            patch: { errorCode, errorMessage: err.message },
+          })
+          .catch(() => {});
+      }
+    });
+  }
+
+  queue.process(
     async (job) => {
       const startTime = Date.now();
       metrics.bullmqQueueJobs.set({ queue: config.queue, state: 'active' }, 1);
@@ -135,41 +184,28 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
       }
     },
     {
-      connection,
-      prefix: 'bull',
       concurrency: config.concurrency,
-      lockDuration: config.lockDurationMs,
-      lockRenewTime: config.lockRenewTimeMs,
-      stalledInterval: config.stalledIntervalMs,
+      lockDurationMs: config.lockDurationMs,
+      lockRenewTimeMs: config.lockRenewTimeMs,
+      stalledIntervalMs: config.stalledIntervalMs,
       maxStalledCount: config.maxStalledCount,
     }
   );
 
-  worker.on('failed', (job, err) => {
-    logger.error(
-      { jobId: job?.id, attemptsMade: job?.attemptsMade, err: err.message },
-      'Job failed'
-    );
-  });
-
-  worker.on('stalled', (jobId) => {
-    logger.warn({ jobId }, 'Job stalled');
-    metrics.jobsProcessed.inc({ queue: config.queue, result: 'stalled' });
-  });
-
   const close = async () => {
     logger.info('Shutting down worker...');
-    await worker.close();
+    await flowProducer.close().catch(() => {});
+    await queue.close();
     for (const q of queues.values()) {
-      await q.close().catch(() => {});
-    }
-    if (!options.redisConnection) {
-      await connection.quit().catch(() => {});
+      if (q !== queue) {
+        await q.close().catch(() => {});
+      }
     }
   };
 
   return {
-    worker,
+    queue,
+    worker: { name: config.queue },
     close,
   };
 }

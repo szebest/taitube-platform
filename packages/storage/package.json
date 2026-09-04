@@ -24,14 +24,11 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "devDependencies": {
+    "@vp/adapters": "workspace:*",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.1125.0",
-    "@aws-sdk/s3-request-presigner": "^3.1125.0"
   }
 }

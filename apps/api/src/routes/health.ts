@@ -1,16 +1,14 @@
-import type { Database } from '@vp/db';
-import { sql } from 'drizzle-orm';
+import type { CacheClient, DatabaseClient, StorageClient } from '@vp/core/ports';
 import type { FastifyInstance } from 'fastify';
-import type { Redis } from 'ioredis';
 
 export interface HealthRouteOptions {
-  db: Database;
-  redisClient?: Redis | null;
-  s3HealthCheck?: () => Promise<boolean>;
+  dbClient?: DatabaseClient | null;
+  cache?: CacheClient | null;
+  storage?: StorageClient | null;
 }
 
 export function registerHealthRoutes(app: FastifyInstance, options: HealthRouteOptions): void {
-  const { db, redisClient, s3HealthCheck } = options;
+  const { dbClient, cache, storage } = options;
 
   // Liveness probe (SDD §6.1)
   app.get('/healthz', async (_request, reply) => {
@@ -26,38 +24,44 @@ export function registerHealthRoutes(app: FastifyInstance, options: HealthRouteO
     };
     let isHealthy = true;
 
-    // 1. Postgres check (SELECT 1)
-    try {
-      await db.execute(sql`SELECT 1 as healthy;`);
-    } catch {
-      checks.postgres = 'failed';
-      isHealthy = false;
-    }
-
-    // 2. Redis check (PING -> PONG)
-    if (redisClient) {
+    // 1. Postgres check
+    if (dbClient) {
       try {
-        const pingRes = await redisClient.ping();
-        if (pingRes !== 'PONG') {
-          checks.redis = 'failed';
+        const dbOk = await dbClient.checkHealth();
+        if (!dbOk) {
+          checks['postgres'] = 'failed';
           isHealthy = false;
         }
       } catch {
-        checks.redis = 'failed';
+        checks['postgres'] = 'failed';
+        isHealthy = false;
+      }
+    }
+
+    // 2. Redis check
+    if (cache) {
+      try {
+        const cacheOk = await cache.checkHealth();
+        if (!cacheOk) {
+          checks['redis'] = 'failed';
+          isHealthy = false;
+        }
+      } catch {
+        checks['redis'] = 'failed';
         isHealthy = false;
       }
     }
 
     // 3. S3 check
-    if (s3HealthCheck) {
+    if (storage) {
       try {
-        const s3Ok = await s3HealthCheck();
+        const s3Ok = await storage.checkHealth();
         if (!s3Ok) {
-          checks.s3 = 'failed';
+          checks['s3'] = 'failed';
           isHealthy = false;
         }
       } catch {
-        checks.s3 = 'failed';
+        checks['s3'] = 'failed';
         isHealthy = false;
       }
     }

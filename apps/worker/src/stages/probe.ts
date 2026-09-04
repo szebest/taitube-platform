@@ -1,19 +1,17 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import {
-  type Database,
-  claimStep,
-  completeStep,
-  failStep,
-  heartbeatStep,
-  renditions,
-  transitionVideo,
-  videos,
-} from '@vp/db';
+import type {
+  FlowProducerPort,
+  JobQueue,
+  QueueJob,
+  Repositories,
+  StorageClient,
+} from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
 import {
+  PackageJob,
   type ProbeJob,
   TranscodeJob,
   defaultJobOptions,
@@ -21,35 +19,35 @@ import {
   stagePolicies,
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
-import { type S3Client, downloadObject, headObject } from '@vp/storage';
-import { type Job, type Queue, UnrecoverableError } from 'bullmq';
-import { eq } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { validateJobId } from '../registry.js';
 
 export interface ProbeProcessorDeps {
-  db: Database;
-  s3Client: S3Client;
+  repositories: Repositories;
+  storage: StorageClient;
   rawBucket?: string;
   workerId?: string;
   logger: Logger;
   heartbeatPath?: string;
-  getQueue?: (name: string) => Queue;
+  getQueue?: (name: string) => JobQueue;
+  flowProducer?: FlowProducerPort;
 }
 
 export function createProbeProcessor(deps: ProbeProcessorDeps) {
   const {
-    db,
-    s3Client,
-    rawBucket = process.env.STORAGE_RAW_BUCKET || 'raw',
+    repositories,
+    storage,
+    rawBucket = process.env['STORAGE_RAW_BUCKET'] || 'raw',
     workerId = `worker-${process.pid}`,
     logger,
-    heartbeatPath = process.env.WORKER_HEARTBEAT_PATH || path.join(os.tmpdir(), 'worker-heartbeat'),
+    heartbeatPath = process.env['WORKER_HEARTBEAT_PATH'] ||
+      path.join(os.tmpdir(), 'worker-heartbeat'),
     getQueue,
+    flowProducer,
   } = deps;
 
   return async function processProbeJob(
-    job: Job<ProbeJob>
+    job: QueueJob<ProbeJob>
   ): Promise<{ videoId: string; status: string; durationMs: number }> {
     // 1. Validate Job ID (AC 22)
     validateJobId(job.id || '');
@@ -58,7 +56,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     const log = logger.child({
       videoId,
       jobId: job.id,
-      attempt: job.attemptsMade + 1,
+      attempt: (job.attemptsMade ?? 0) + 1,
       stage: 'probe',
     });
 
@@ -68,20 +66,20 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     await fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
 
     // 2. CAS Transition: UPLOADED -> PROBING (AC 17)
-    const started = await transitionVideo(db, {
+    const started = await repositories.videos.transition({
       videoId,
       from: 'UPLOADED',
       to: 'PROBING',
       eventType: 'probe.started',
       eventPayload: {
         jobId: job.id,
-        attempt: job.attemptsMade + 1,
+        attempt: (job.attemptsMade ?? 0) + 1,
       },
     });
 
     if (!started) {
       // Check current video state
-      const [current] = await db.select().from(videos).where(eq(videos.id, videoId));
+      const current = await repositories.videos.findById(videoId);
       if (current && ['PROCESSING', 'READY', 'FAILED', 'DELETED'].includes(current.status)) {
         log.info(
           { status: current.status },
@@ -97,13 +95,13 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
 
     // 3. Claim processing step with fresh fencing token (SDD §5.3, §9.5, AC 20)
     const lockToken = uuidv7();
-    const claim = await claimStep(db, {
+    const claim = await repositories.steps.claim({
       id: uuidv7(),
       videoId,
       step: 'probe',
       rendition: '-',
       jobId: job.id || '',
-      attempt: job.attemptsMade + 1,
+      attempt: (job.attemptsMade ?? 0) + 1,
       workerId,
       lockToken,
     });
@@ -114,19 +112,19 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     }
 
     // Heartbeat update on processing_steps (AC 20)
-    await heartbeatStep(db, lockToken);
+    await repositories.steps.heartbeat(lockToken);
 
     // 4. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `vp-probe-${videoId}-`));
 
     try {
       // 5. Verify source in S3 (AC 19)
-      const head = await headObject(s3Client, rawBucket, sourceKey);
+      const head = await storage.headObject(rawBucket, sourceKey);
       if (!head) {
         const errorMsg = `Source object not found in storage at ${sourceKey}`;
         log.error({ sourceKey }, errorMsg);
 
-        await failStep(db, {
+        await repositories.steps.fail({
           videoId,
           step: 'probe',
           rendition: '-',
@@ -135,7 +133,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           errorMessage: errorMsg,
         });
 
-        await transitionVideo(db, {
+        await repositories.videos.transition({
           videoId,
           from: 'PROBING',
           to: 'FAILED',
@@ -147,20 +145,18 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           },
         });
 
-        throw new UnrecoverableError(
-          new PermanentError(ErrorCodes.SOURCE_MISSING, errorMsg).message
-        );
+        throw new PermanentError(ErrorCodes.SOURCE_MISSING, errorMsg);
       }
 
       // Download source to local file for ffprobe analysis
       const localSourcePath = path.join(tmpDir, path.basename(sourceKey));
-      const downloaded = await downloadObject(s3Client, rawBucket, sourceKey, localSourcePath);
+      const downloaded = await storage.downloadObject(rawBucket, sourceKey, localSourcePath);
 
       if (!downloaded) {
         const errorMsg = `Failed to download source object from ${sourceKey}`;
         log.error({ sourceKey }, errorMsg);
 
-        await failStep(db, {
+        await repositories.steps.fail({
           videoId,
           step: 'probe',
           rendition: '-',
@@ -169,7 +165,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           errorMessage: errorMsg,
         });
 
-        await transitionVideo(db, {
+        await repositories.videos.transition({
           videoId,
           from: 'PROBING',
           to: 'FAILED',
@@ -181,7 +177,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           },
         });
 
-        throw new UnrecoverableError(errorMsg);
+        throw new PermanentError(ErrorCodes.SOURCE_MISSING, errorMsg);
       }
 
       // 6. Run ffprobe and validate media (AC 17, AC 18)
@@ -200,7 +196,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         );
 
         // Record failure in processing_steps
-        await failStep(db, {
+        await repositories.steps.fail({
           videoId,
           step: 'probe',
           rendition: '-',
@@ -210,7 +206,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         });
 
         // Transition video to FAILED (AC 18)
-        await transitionVideo(db, {
+        await repositories.videos.transition({
           videoId,
           from: 'PROBING',
           to: 'FAILED',
@@ -225,8 +221,8 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           },
         });
 
-        // Fail job immediately on attempt 1 without BullMQ retry (AC 18)
-        throw new UnrecoverableError(permError.message);
+        // Fail job immediately on attempt 1 without retry
+        throw permError;
       }
 
       log.info(
@@ -240,23 +236,20 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
 
       // 7. Insert pending renditions rows for each ladder entry (AC 17)
       for (const entry of metadata.ladder) {
-        await db
-          .insert(renditions)
-          .values({
-            id: uuidv7(),
-            videoId,
-            name: entry.name,
-            width: entry.width,
-            height: entry.height,
-            videoBitrateKbps: entry.videoKbps,
-            audioBitrateKbps: entry.audioKbps,
-            status: 'PENDING',
-          })
-          .onConflictDoNothing();
+        await repositories.renditions.create({
+          id: uuidv7(),
+          videoId,
+          name: entry.name,
+          width: entry.width,
+          height: entry.height,
+          videoBitrateKbps: entry.videoKbps,
+          audioBitrateKbps: entry.audioKbps,
+          status: 'PENDING',
+        });
       }
 
       // 8. Complete step with fencing token check (AC 20)
-      const comp = await completeStep(db, {
+      const comp = await repositories.steps.complete({
         videoId,
         step: 'probe',
         rendition: '-',
@@ -280,7 +273,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       }
 
       // 9. CAS transition: PROBING -> PROCESSING with metadata patch (AC 17)
-      await transitionVideo(db, {
+      await repositories.videos.transition({
         videoId,
         from: 'PROBING',
         to: 'PROCESSING',
@@ -293,15 +286,57 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           durationMs: metadata.durationMs,
           width: metadata.effectiveWidth,
           height: metadata.effectiveHeight,
-          fps: String(metadata.fps),
-          videoCodec: metadata.videoCodec,
-          audioCodec: metadata.audioCodec,
           ladder: metadata.ladder,
         },
       });
 
-      // 10. Enqueue follow-up transcode job (Ticket 07, SDD §9.2)
-      if (getQueue) {
+      // 10. Enqueue fan-out / fan-in Flow (SDD §3.2, §9.3, Ticket 12)
+      if (flowProducer) {
+        const packageJobId = ids.package(videoId, job.data.generation);
+        await flowProducer.add({
+          name: 'package',
+          queueName: 'package',
+          data: PackageJob.parse({
+            videoId,
+            generation: job.data.generation,
+            ladder: metadata.ladder,
+            traceparent: job.data.traceparent,
+          }),
+          opts: {
+            jobId: packageJobId,
+            ...stagePolicies.package,
+            ...defaultJobOptions,
+          },
+          children: metadata.ladder.map((r) => {
+            const queueName = `transcode-${r.name}` as const;
+            const transcodeJobId = ids.transcode(videoId, r.name, job.data.generation);
+            return {
+              name: queueName,
+              queueName,
+              data: TranscodeJob.parse({
+                videoId,
+                sourceKey,
+                generation: job.data.generation,
+                rendition: r,
+                fps: metadata.fps,
+                durationMs: metadata.durationMs,
+                traceparent: job.data.traceparent,
+              }),
+              opts: {
+                jobId: transcodeJobId,
+                ...stagePolicies[queueName as keyof typeof stagePolicies],
+                ...defaultJobOptions,
+                failParentOnFailure: true,
+                removeDependencyOnFailure: false,
+              },
+            };
+          }),
+        });
+        log.info(
+          { packageJobId, ladder: metadata.ladder.map((r) => r.name) },
+          'Created BullMQ flow with package parent and transcode children'
+        );
+      } else if (getQueue) {
         const r720 = metadata.ladder.find((r) => r.name === '720p') || metadata.ladder[0];
         if (r720) {
           const transcodeQueueName = `transcode-${r720.name}`;

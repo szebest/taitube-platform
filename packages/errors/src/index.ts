@@ -1,5 +1,3 @@
-import { UnrecoverableError } from 'bullmq';
-
 export const ErrorCodes = {
   // API Errors
   UPLOAD_TOO_LARGE: 'UPLOAD_TOO_LARGE',
@@ -29,6 +27,11 @@ export const ErrorCodes = {
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
 
+export interface ErrorDetail {
+  code: ErrorCode | string;
+  message: string;
+}
+
 export abstract class PipelineError extends Error {
   abstract readonly isRetryable: boolean;
 
@@ -43,7 +46,7 @@ export abstract class PipelineError extends Error {
   }
 }
 
-export class PermanentError extends UnrecoverableError {
+export class PermanentError extends PipelineError {
   readonly isRetryable = false;
 
   constructor(
@@ -51,7 +54,7 @@ export class PermanentError extends UnrecoverableError {
     message: string,
     public readonly details?: Record<string, unknown>
   ) {
-    super(message);
+    super(code, message, details);
     this.name = 'PermanentError';
     Object.setPrototypeOf(this, new.target.prototype);
   }

@@ -1,5 +1,5 @@
 import * as http from 'node:http';
-import { createDbClient, seedDatabase } from '@vp/db';
+import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -8,36 +8,92 @@ import { startMetricsServer } from '../plugins/metrics.js';
 
 describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
   let app: FastifyInstance;
-  const { db, sql } = createDbClient();
+  const repositories = new InMemoryRepositories();
+  const cache = new InMemoryCacheClient();
+  const storage = new InMemoryStorageClient();
   const cdnBase = 'http://localhost:9000/public';
 
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
   const SEED_VIDEO_ID = '018f0000-0000-7000-8000-000000000001';
   const OTHER_PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000002';
 
-  // Controllable mock Redis client for readiness testing
-  let redisHealthy = true;
-  const mockRedisClient = {
-    ping: async () => {
-      if (!redisHealthy) throw new Error('Connection refused');
-      return 'PONG';
-    },
-  } as unknown as import('ioredis').Redis;
-
   beforeAll(async () => {
-    await seedDatabase();
+    await repositories.videos.create({
+      id: SEED_VIDEO_ID,
+      ownerId: DEV_USER_ID,
+      title: 'Test Sintel Trailer',
+      description: 'Sintel trailer test video',
+      visibility: 'public',
+      status: 'READY',
+      sourceKey: `raw/${SEED_VIDEO_ID}/source.mp4`,
+      durationMs: 52000,
+      width: 1920,
+      height: 1080,
+      ladder: [
+        { name: '1080p', width: 1920, height: 1080 },
+        { name: '720p', width: 1280, height: 720 },
+        { name: '480p', width: 854, height: 480 },
+      ],
+      playbackUrl: `${cdnBase}/videos/${SEED_VIDEO_ID}/hls/master.m3u8`,
+      masterPlaylistKey: `videos/${SEED_VIDEO_ID}/hls/master.m3u8`,
+      posterKey: `videos/${SEED_VIDEO_ID}/thumbs/poster.jpg`,
+      spriteKey: `videos/${SEED_VIDEO_ID}/thumbs/sprite.jpg`,
+    });
+
+    await repositories.renditions.create({
+      id: 'rend-1',
+      videoId: SEED_VIDEO_ID,
+      name: '1080p',
+      width: 1920,
+      height: 1080,
+      videoBitrateKbps: 4000,
+      audioBitrateKbps: 128,
+      status: 'DONE',
+      playlistKey: `videos/${SEED_VIDEO_ID}/hls/1080p/index.m3u8`,
+    });
+    await repositories.renditions.create({
+      id: 'rend-2',
+      videoId: SEED_VIDEO_ID,
+      name: '720p',
+      width: 1280,
+      height: 720,
+      videoBitrateKbps: 2500,
+      audioBitrateKbps: 128,
+      status: 'DONE',
+      playlistKey: `videos/${SEED_VIDEO_ID}/hls/720p/index.m3u8`,
+    });
+    await repositories.renditions.create({
+      id: 'rend-3',
+      videoId: SEED_VIDEO_ID,
+      name: '480p',
+      width: 854,
+      height: 480,
+      videoBitrateKbps: 1200,
+      audioBitrateKbps: 96,
+      status: 'DONE',
+      playlistKey: `videos/${SEED_VIDEO_ID}/hls/480p/index.m3u8`,
+    });
+
+    await repositories.videos.create({
+      id: OTHER_PRIVATE_VIDEO_ID,
+      ownerId: '00000000-0000-7000-8000-000000000002',
+      title: 'Other Private Video',
+      visibility: 'private',
+      status: 'READY',
+      sourceKey: `raw/${OTHER_PRIVATE_VIDEO_ID}/source.mp4`,
+    });
+
     app = await buildApp({
-      db,
-      redisClient: mockRedisClient,
+      repositories,
+      cache,
+      storage,
       cdnBaseUrl: cdnBase,
-      s3HealthCheck: async () => true,
     });
     await app.ready();
   });
 
   afterAll(async () => {
     await app.close();
-    await sql.end();
   });
 
   it('GET /healthz returns 200 liveness', async () => {
@@ -154,7 +210,7 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
 
   it('AC 6: /readyz returns 503 when Redis is stopped and 200 when back', async () => {
     // 1. When Redis is healthy
-    redisHealthy = true;
+    cache.setHealthy(true);
     const resHealthy = await app.inject({
       method: 'GET',
       url: '/readyz',
@@ -170,7 +226,7 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     });
 
     // 2. When Redis stops responding
-    redisHealthy = false;
+    cache.setHealthy(false);
     const resDegraded = await app.inject({
       method: 'GET',
       url: '/readyz',
@@ -186,7 +242,7 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     });
 
     // 3. When Redis recovers
-    redisHealthy = true;
+    cache.setHealthy(true);
     const resRecovered = await app.inject({
       method: 'GET',
       url: '/readyz',

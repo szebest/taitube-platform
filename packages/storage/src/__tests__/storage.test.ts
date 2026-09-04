@@ -1,11 +1,10 @@
+import { S3StorageClient } from '@vp/adapters';
 import { describe, expect, it } from 'vitest';
 import {
   MULTIPART_MAX_PART_SIZE,
   MULTIPART_MIN_PART_SIZE,
   calculatePartSize,
   calculateTotalParts,
-  createPresignedPutUrl,
-  createStorageClient,
   getHeaderMapping,
   masterPlaylistKey,
   metaKey,
@@ -69,7 +68,7 @@ describe('packages/storage (AC 17, AC 22)', () => {
   });
 
   it('AC 17: createPresignedPutUrl generates signed PUT URL with content headers and <= 15 min expiry', async () => {
-    const s3 = createStorageClient({
+    const s3 = new S3StorageClient({
       endpoint: 'http://localhost:9000',
       region: 'us-east-1',
       accessKeyId: 'minioadmin',
@@ -77,7 +76,7 @@ describe('packages/storage (AC 17, AC 22)', () => {
     });
 
     const key = rawSourceKey(videoId, 'mp4');
-    const presigned = await createPresignedPutUrl(s3, {
+    const presigned = await s3.createPresignedPutUrl({
       bucket: 'raw',
       key,
       contentType: 'video/mp4',

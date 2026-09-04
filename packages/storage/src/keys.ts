@@ -49,3 +49,13 @@ export function spriteVttKey(videoId: string): string {
 export function metaKey(videoId: string): string {
   return `videos/${videoId}/meta.json`;
 }
+
+export function sanitizeStorageUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.search = '';
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}

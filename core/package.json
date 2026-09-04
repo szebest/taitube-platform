@@ -1,0 +1,17 @@
+{
+  "name": "@vp/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    "./ports": "./ports/index.ts",
+    "./ports/*": "./ports/*.ts"
+  },
+  "devDependencies": {
+    "@vp/tsconfig": "workspace:*",
+    "typescript": "^5.7.3"
+  }
+}

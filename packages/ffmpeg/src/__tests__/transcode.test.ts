@@ -135,6 +135,49 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     expect(firstStreamIdx).toBeLessThan(secondStreamIdx); // 1080p comes before 720p
   });
 
+  it('generates master playlist with measured AVERAGE-BANDWIDTH when measuredResults provided', () => {
+    const ladder480p: LadderEntry = {
+      name: '480p',
+      width: 854,
+      height: 480,
+      videoKbps: 1400,
+      maxrateKbps: 1498,
+      bufsizeKbps: 2100,
+      audioKbps: 96,
+      profile: 'main',
+      level: '3.1',
+    };
+
+    // 10-second duration: 5_000_000 bytes -> (5_000_000 * 8) / 10 = 4_000_000 bps
+    const master = generateMasterPlaylist({
+      ladder: [ladder1080p, ladder720p, ladder480p],
+      fps: 24,
+      measuredResults: {
+        '1080p': { bytes: 5_000_000, durationMs: 10_000 },
+        '720p': { avgBitrateBps: 2_500_000 },
+      },
+    });
+
+    expect(master).toContain(
+      '#EXT-X-STREAM-INF:BANDWIDTH=5350000,AVERAGE-BANDWIDTH=4000000,RESOLUTION=1920x1080,FRAME-RATE=24.000,CODECS="avc1.640029,mp4a.40.2"'
+    );
+    expect(master).toContain(
+      '#EXT-X-STREAM-INF:BANDWIDTH=2996000,AVERAGE-BANDWIDTH=2500000,RESOLUTION=1280x720,FRAME-RATE=24.000,CODECS="avc1.64001f,mp4a.40.2"'
+    );
+    // 480p without measured results falls back to theoretical bitrate (1400 + 96) * 1000 = 1496000
+    expect(master).toContain(
+      '#EXT-X-STREAM-INF:BANDWIDTH=1498000,AVERAGE-BANDWIDTH=1496000,RESOLUTION=854x480,FRAME-RATE=24.000,CODECS="avc1.4d401f,mp4a.40.2"'
+    );
+
+    // Verify ordering: 1080p -> 720p -> 480p
+    const lines = master.split('\n');
+    const idx1080 = lines.findIndex((l) => l.includes('1080p/index.m3u8'));
+    const idx720 = lines.findIndex((l) => l.includes('720p/index.m3u8'));
+    const idx480 = lines.findIndex((l) => l.includes('480p/index.m3u8'));
+    expect(idx1080).toBeLessThan(idx720);
+    expect(idx720).toBeLessThan(idx480);
+  });
+
   it('getAvcCodecString computes correct RFC 6381 codec strings for profile and level', () => {
     expect(getAvcCodecString('high', '4.1')).toBe('avc1.640029');
     expect(getAvcCodecString('high', '3.1')).toBe('avc1.64001f');

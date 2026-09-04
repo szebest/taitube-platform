@@ -1,47 +1,37 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import {
-  createDbClient,
-  processingSteps,
-  renditions,
-  seedDatabase,
-  videoEvents,
-  videos,
-} from '@vp/db';
+import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import { JobQueue, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import type { NotifyJob, PackageJob, TranscodeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
-import type { S3Client } from '@vp/storage';
-import type { Job, Queue } from 'bullmq';
-import { eq } from 'drizzle-orm';
-import type { Redis } from 'ioredis';
 import { uuidv7 } from 'uuidv7';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createNotifyProcessor } from '../stages/notify.js';
 import { createPackageProcessor } from '../stages/package.js';
 import { createTranscodeProcessor } from '../stages/transcode.js';
 
 describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23)', () => {
-  const { db, sql } = createDbClient();
+  let repositories: InMemoryRepositories;
+  let storage: InMemoryStorageClient;
+  let cache: InMemoryCacheClient;
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
   const logger = createLogger({ service: 'worker-pipeline-test', level: 'silent' });
-  const fakeS3 = {} as S3Client;
 
-  function createMockJob<T>(id: string, data: T): Job<T> {
+  function createMockJob<T>(id: string, data: T): QueueJob<T> {
     return {
       id,
+      name: 'job',
       data,
       attemptsMade: 0,
       updateProgress: vi.fn().mockResolvedValue(undefined),
-    } as unknown as Job<T>;
+    };
   }
 
-  beforeAll(async () => {
-    await seedDatabase();
-  });
-
-  afterAll(async () => {
-    await sql.end();
+  beforeEach(() => {
+    repositories = new InMemoryRepositories();
+    storage = new InMemoryStorageClient();
+    cache = new InMemoryCacheClient();
   });
 
   async function setupProcessingVideo(
@@ -49,17 +39,14 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     title = 'Pipeline Video'
   ): Promise<string> {
     const videoId = uuidv7();
-    await db.insert(videos).values({
+    await repositories.videos.create({
       id: videoId,
       ownerId: DEV_USER_ID,
       title,
       status: 'PROCESSING',
       sourceKey,
       sourceSizeBytes: 5000000,
-      sourceContentType: 'video/mp4',
-      fps: '24',
       durationMs: 60000,
-      version: 1,
     });
     return videoId;
   }
@@ -68,7 +55,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     const videoId = await setupProcessingVideo('raw/s60.mp4');
 
     // Seed pending rendition row
-    await db.insert(renditions).values({
+    await repositories.renditions.create({
       id: uuidv7(),
       videoId,
       name: '720p',
@@ -79,28 +66,23 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
       status: 'PENDING',
     });
 
-    const storageModule = await import('@vp/storage');
-    const headSpy = vi.spyOn(storageModule, 'headObject').mockResolvedValue({
-      contentLength: 5000000,
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/s60.mp4',
+      body: Buffer.from('mock-source-media'),
       contentType: 'video/mp4',
     });
-    const downloadSpy = vi
-      .spyOn(storageModule, 'downloadObject')
-      .mockImplementation(async (_client, _b, _k, targetPath) => {
-        await fs.writeFile(targetPath, Buffer.from('mock-source-media'));
-        return true;
-      });
 
     const uploadedObjects: Array<{ key: string; contentType: string; cacheControl?: string }> = [];
-    const uploadSpy = vi
-      .spyOn(storageModule, 'uploadObject')
-      .mockImplementation(async (_client, options) => {
-        uploadedObjects.push({
-          key: options.key,
-          contentType: options.contentType,
-          cacheControl: options.cacheControl,
-        });
+    const origUpload = storage.uploadObject.bind(storage);
+    vi.spyOn(storage, 'uploadObject').mockImplementation(async (options) => {
+      uploadedObjects.push({
+        key: options.key,
+        contentType: options.contentType,
+        cacheControl: options.cacheControl,
       });
+      return origUpload(options);
+    });
 
     // Mock runFfmpegTranscode creating dummy TS segments and playlist in outputDir
     const ffmpegModule = await import('@vp/ffmpeg');
@@ -130,16 +112,39 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
       });
 
     const enqueuedJobs: Array<{ queue: string; data: unknown }> = [];
-    const mockQueue = {
-      add: vi.fn().mockImplementation((name, data) => {
+    class MockTranscodeQueue extends JobQueue {
+      async checkHealth() {
+        return true;
+      }
+      getName() {
+        return 'package';
+      }
+      async add<T = unknown>(name: string, data: T): Promise<any> {
         enqueuedJobs.push({ queue: name, data });
-        return Promise.resolve();
-      }),
-    } as unknown as Queue;
+        return { id: 'mock-id', name, data };
+      }
+      async process() {}
+      async getJobState() {
+        return undefined;
+      }
+      async isPaused() {
+        return false;
+      }
+      async pause() {}
+      async resume() {}
+      async getJobCounts() {
+        return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
+      }
+      async getJobs() {
+        return [];
+      }
+      async close() {}
+    }
+    const mockQueue = new MockTranscodeQueue();
 
     const processor = createTranscodeProcessor({
-      db,
-      s3Client: fakeS3,
+      repositories,
+      storage,
       logger,
       getQueue: () => mockQueue,
     });
@@ -183,50 +188,72 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     expect(lastUpload?.cacheControl).toBe('public, max-age=60');
 
     // 3. Verify renditions row is DONE with segmentCount=10 and bytes (AC 17)
-    const [rend] = await db.select().from(renditions).where(eq(renditions.videoId, videoId));
+    const rends = await repositories.renditions.findByVideoId(videoId);
+    const rend = rends.find((r: any) => r.name === '720p');
     expect(rend?.status).toBe('DONE');
     expect(rend?.segmentCount).toBe(10);
     expect(rend?.bytes).toBeGreaterThan(10000);
     expect(rend?.playlistKey).toBe(`videos/${videoId}/hls/720p/index.m3u8`);
 
-    // 4. Verify package job was enqueued
-    expect(enqueuedJobs.length).toBe(1);
-    expect(enqueuedJobs[0]?.queue).toBe('package');
+    // 4. Verify transcode returns TranscodeResult with playlistKey and avgBitrateBps for the Flow parent
+    expect(result.rendition).toBe('720p');
+    expect(result.playlistKey).toBe(`videos/${videoId}/hls/720p/index.m3u8`);
+    expect(result.avgBitrateBps).toBeGreaterThan(0);
 
-    headSpy.mockRestore();
-    downloadSpy.mockRestore();
-    uploadSpy.mockRestore();
     transcodeSpy.mockRestore();
   });
 
   it('AC 19: package verifies rendition playlist exists via HEAD, writes master LAST, CAS flips PROCESSING -> READY once, and enqueues notify', async () => {
     const videoId = await setupProcessingVideo('raw/s60.mp4');
 
-    const storageModule = await import('@vp/storage');
-    // Mock headObject returning exists
-    const headSpy = vi.spyOn(storageModule, 'headObject').mockResolvedValue({
-      contentLength: 500,
+    await storage.uploadObject({
+      bucket: 'public',
+      key: `videos/${videoId}/hls/720p/index.m3u8`,
+      body: Buffer.from('#EXTM3U\n'),
       contentType: 'application/vnd.apple.mpegurl',
     });
 
     const uploadedObjects: string[] = [];
-    const uploadSpy = vi
-      .spyOn(storageModule, 'uploadObject')
-      .mockImplementation(async (_client, options) => {
-        uploadedObjects.push(options.key);
-      });
+    const origUpload = storage.uploadObject.bind(storage);
+    vi.spyOn(storage, 'uploadObject').mockImplementation(async (options) => {
+      uploadedObjects.push(options.key);
+      return origUpload(options);
+    });
 
     const enqueuedJobs: Array<{ queue: string; data: unknown }> = [];
-    const mockQueue = {
-      add: vi.fn().mockImplementation((name, data) => {
+    class MockPackageQueue extends JobQueue {
+      async checkHealth() {
+        return true;
+      }
+      getName() {
+        return 'notify';
+      }
+      async add<T = unknown>(name: string, data: T): Promise<any> {
         enqueuedJobs.push({ queue: name, data });
-        return Promise.resolve();
-      }),
-    } as unknown as Queue;
+        return { id: 'mock-id', name, data };
+      }
+      async process() {}
+      async getJobState() {
+        return undefined;
+      }
+      async isPaused() {
+        return false;
+      }
+      async pause() {}
+      async resume() {}
+      async getJobCounts() {
+        return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
+      }
+      async getJobs() {
+        return [];
+      }
+      async close() {}
+    }
+    const mockQueue = new MockPackageQueue();
 
     const processor = createPackageProcessor({
-      db,
-      s3Client: fakeS3,
+      repositories,
+      storage,
       logger,
       getQueue: () => mockQueue,
     });
@@ -255,34 +282,27 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     expect(uploadedObjects).toContain(`videos/${videoId}/hls/master.m3u8`);
 
     // 1. Verify video transitioned to READY (AC 19)
-    const [video] = await db.select().from(videos).where(eq(videos.id, videoId));
+    const video = await repositories.videos.findById(videoId);
     expect(video?.status).toBe('READY');
     expect(video?.masterPlaylistKey).toBe(`videos/${videoId}/hls/master.m3u8`);
     expect(video?.readyAt).toBeDefined();
 
     // 2. Verify video_events has exactly ONE video.ready (AC 19)
-    const events = await db.select().from(videoEvents).where(eq(videoEvents.videoId, videoId));
-    const readyEvents = events.filter((e) => e.type === 'video.ready');
+    const events = await repositories.events.findByVideoId(videoId);
+    const readyEvents = events.filter((e: any) => e.type === 'video.ready');
     expect(readyEvents.length).toBe(1);
 
     // 3. Verify notify job was enqueued (AC 19)
     expect(enqueuedJobs.length).toBe(1);
     expect(enqueuedJobs[0]?.queue).toBe('notify');
-
-    headSpy.mockRestore();
-    uploadSpy.mockRestore();
   });
 
   it('AC 19: package fails when rendition playlist does NOT exist on storage', async () => {
     const videoId = await setupProcessingVideo('raw/missing-rendition.mp4');
 
-    const storageModule = await import('@vp/storage');
-    // Mock headObject returning null (missing rendition playlist)
-    const headSpy = vi.spyOn(storageModule, 'headObject').mockResolvedValue(null);
-
     const processor = createPackageProcessor({
-      db,
-      s3Client: fakeS3,
+      repositories,
+      storage,
       logger,
     });
 
@@ -308,13 +328,9 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     await expect(processor(job)).rejects.toThrow();
 
     // Verify step recorded SEGMENT_VERIFY_FAILED
-    const [step] = await db
-      .select()
-      .from(processingSteps)
-      .where(eq(processingSteps.videoId, videoId));
+    const steps = await repositories.steps.findByVideoId(videoId);
+    const step = steps.find((s: any) => s.step === 'package');
     expect(step?.errorCode).toBe(ErrorCodes.SEGMENT_VERIFY_FAILED);
-
-    headSpy.mockRestore();
   });
 
   it('AC 20: notify publishes {event:"status", data:{status:"READY", playbackUrl}} on video:{id} and user:{uid}', async () => {
@@ -323,16 +339,14 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     const playbackUrl = `http://localhost:9000/public/videos/${videoId}/hls/master.m3u8`;
 
     const publishedMessages: Array<{ channel: string; message: string }> = [];
-    const mockRedis = {
-      publish: vi.fn().mockImplementation((channel: string, message: string) => {
-        publishedMessages.push({ channel, message });
-        return Promise.resolve(1);
-      }),
-    } as unknown as Redis;
+    vi.spyOn(cache, 'publish').mockImplementation(async (channel: string, message: string) => {
+      publishedMessages.push({ channel, message });
+      return 1;
+    });
 
     const processor = createNotifyProcessor({
-      db,
-      redis: mockRedis,
+      repositories,
+      cache,
       logger,
     });
 
@@ -370,10 +384,8 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     expect(parsedUserMsg.data.playbackUrl).toBe(playbackUrl);
 
     // Verify step completed in DB
-    const [step] = await db
-      .select()
-      .from(processingSteps)
-      .where(eq(processingSteps.videoId, videoId));
+    const steps = await repositories.steps.findByVideoId(videoId);
+    const step = steps.find((s: any) => s.step === 'notify');
     expect(step?.status).toBe('DONE');
   });
 });

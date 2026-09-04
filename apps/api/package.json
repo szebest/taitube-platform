@@ -36,6 +36,8 @@
     "@vp/errors": "workspace:*",
     "@vp/events": "workspace:*",
     "@vp/job-contracts": "workspace:*",
+    "@vp/adapters": "workspace:*",
+    "@vp/core": "workspace:*",
     "@vp/observability": "workspace:*",
     "@vp/storage": "workspace:*",
     "bullmq": "^6.3.4",

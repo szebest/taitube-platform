@@ -1,50 +1,52 @@
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { FastifyAdapter } from '@bull-board/fastify';
+import type { CacheClient, JobQueue } from '@vp/core/ports';
 import { ErrorCodes, PermanentError, PipelineError } from '@vp/errors';
 import { QUEUES, type QueueName } from '@vp/job-contracts';
-import { Queue } from 'bullmq';
 import type { FastifyInstance } from 'fastify';
-import { Redis } from 'ioredis';
 import { requireAdmin } from '../../plugins/auth.js';
 
 export interface AdminQueuesOptions {
-  redisClient?: Redis | null;
-  queues?: Map<string, Queue>;
+  cache?: CacheClient | null;
+  redisClient?: CacheClient | null;
+  queues?: Map<string, JobQueue>;
 }
 
 export async function registerAdminQueuesRoutes(
   app: FastifyInstance,
   options: AdminQueuesOptions = {}
 ): Promise<void> {
-  const queuesMap = options.queues || new Map<string, Queue>();
+  const queuesMap = options.queues || new Map<string, JobQueue>();
 
   // 1. Initialize BullMQAdapter for all queues in QUEUES (including 'dlq')
   const queueAdapters = QUEUES.map((queueName: QueueName) => {
-    let q = queuesMap.get(queueName);
+    const q = queuesMap.get(queueName);
     if (!q) {
-      if (
-        options.redisClient &&
-        typeof (options.redisClient as unknown as { duplicate?: unknown }).duplicate === 'function'
-      ) {
-        q = new Queue(queueName, {
-          connection: (options.redisClient as Redis).duplicate(),
-          prefix: 'bull',
-        });
-      } else {
-        const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
-        const client = new Redis(redisUrl, {
-          maxRetriesPerRequest: null,
-          lazyConnect: true,
-        });
-        q = new Queue(queueName, {
-          connection: client,
-          prefix: 'bull',
-        });
-      }
-      queuesMap.set(queueName, q);
+      // Create a mock/empty queue wrapper if not provided
+      const dummyQueue = {
+        name: queueName,
+        isPaused: async () => false,
+        pause: async () => {},
+        resume: async () => {},
+        getJobCounts: async () => ({
+          active: 0,
+          completed: 0,
+          failed: 0,
+          delayed: 0,
+          waiting: 0,
+          paused: 0,
+        }),
+        getJobs: async () => [],
+        opts: { prefix: 'bull' },
+        metaValues: { version: 'bullmq' },
+      };
+      return new BullMQAdapter(dummyQueue as any);
     }
-    return new BullMQAdapter(q);
+
+    // Unwrap concrete BullMQ queue if wrapped, otherwise adapt directly
+    const rawQueue = typeof (q as any).getRawQueue === 'function' ? (q as any).getRawQueue() : q;
+    return new BullMQAdapter(rawQueue);
   });
 
   const serverAdapter = new FastifyAdapter();

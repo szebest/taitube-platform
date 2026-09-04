@@ -1,4 +1,3 @@
-import { UnrecoverableError } from 'bullmq';
 import { describe, expect, it } from 'vitest';
 import { ErrorCodes, PermanentError, TransientError } from '../index.js';
 
@@ -10,7 +9,6 @@ describe('@vp/errors smoke test', () => {
     expect(err.isRetryable).toBe(false);
     expect(err).toBeInstanceOf(Error);
     expect(err).toBeInstanceOf(PermanentError);
-    expect(err).toBeInstanceOf(UnrecoverableError);
   });
 
   it('instantiates TransientError with correct properties', () => {

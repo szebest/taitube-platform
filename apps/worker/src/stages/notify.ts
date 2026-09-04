@@ -1,24 +1,22 @@
-import { type Database, claimStep, completeStep, failStep, heartbeatStep } from '@vp/db';
+import type { CacheClient, QueueJob, Repositories } from '@vp/core/ports';
 import { userChannel, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
-import type { Job } from 'bullmq';
-import type { Redis } from 'ioredis';
 import { uuidv7 } from 'uuidv7';
 import { validateJobId } from '../registry.js';
 
 export interface NotifyProcessorDeps {
-  db: Database;
-  redis: Redis;
+  repositories: Repositories;
+  cache: CacheClient;
   workerId?: string;
   logger: Logger;
 }
 
 export function createNotifyProcessor(deps: NotifyProcessorDeps) {
-  const { db, redis, workerId = `worker-${process.pid}`, logger } = deps;
+  const { repositories, cache, workerId = `worker-${process.pid}`, logger } = deps;
 
   return async function processNotifyJob(
-    job: Job<NotifyJob>
+    job: QueueJob<NotifyJob>
   ): Promise<{ videoId: string; published: boolean }> {
     validateJobId(job.id || '');
 
@@ -27,20 +25,20 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
       videoId,
       jobId: job.id,
       stage: 'notify',
-      attempt: job.attemptsMade + 1,
+      attempt: (job.attemptsMade ?? 0) + 1,
     });
 
     log.info({ userId }, 'Notify job started');
 
     // 1. Claim step
     const lockToken = uuidv7();
-    const claim = await claimStep(db, {
+    const claim = await repositories.steps.claim({
       id: uuidv7(),
       videoId,
       step: 'notify',
       rendition: '-',
       jobId: job.id || '',
-      attempt: job.attemptsMade + 1,
+      attempt: (job.attemptsMade ?? 0) + 1,
       workerId,
       lockToken,
     });
@@ -50,7 +48,7 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
       return { videoId, published: false };
     }
 
-    await heartbeatStep(db, lockToken);
+    await repositories.steps.heartbeat(lockToken);
 
     try {
       // 2. AC 20: Publish {event:'status', data:{status:'READY', playbackUrl}} on video:{id} and user:{uid}
@@ -65,12 +63,12 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
       const chVideo = videoChannel(videoId);
       const chUser = userChannel(userId);
 
-      await Promise.all([redis.publish(chVideo, message), redis.publish(chUser, message)]);
+      await Promise.all([cache.publish(chVideo, message), cache.publish(chUser, message)]);
 
       log.info({ chVideo, chUser }, 'Published status update to Redis channels');
 
       // 3. Complete step
-      await completeStep(db, {
+      await repositories.steps.complete({
         videoId,
         step: 'notify',
         rendition: '-',
@@ -83,7 +81,7 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
       return { videoId, published: true };
     } catch (err: unknown) {
       const errorMsg = (err as Error).message || 'Notify failed';
-      await failStep(db, {
+      await repositories.steps.fail({
         videoId,
         step: 'notify',
         rendition: '-',

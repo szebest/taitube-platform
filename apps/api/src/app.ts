@@ -3,14 +3,32 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import { type Database, createDbClient } from '@vp/db';
+import {
+  BullMqJobQueue,
+  InMemoryCacheClient,
+  InMemoryDatabaseClient,
+  InMemoryJobQueue,
+  InMemoryMultipartStorage,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+  PostgresDatabaseClient,
+  PostgresRepositories,
+  RedisCacheClient,
+  S3MultipartStorage,
+  S3StorageClient,
+} from '@vp/adapters';
+import type {
+  CacheClient,
+  DatabaseClient,
+  JobQueue,
+  MultipartStorage,
+  Repositories,
+  StorageClient,
+} from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
-import type { S3Client } from '@vp/storage';
-import { createStorageClient } from '@vp/storage';
-import type { Queue } from 'bullmq';
+import { QUEUES } from '@vp/job-contracts';
 import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
-import type { Redis } from 'ioredis';
 import { registerAuth } from './plugins/auth.js';
 import { registerErrorHandler } from './plugins/errors.js';
 import { registerAdminQueuesRoutes } from './routes/admin/queues.js';
@@ -19,18 +37,21 @@ import { registerHealthRoutes } from './routes/health.js';
 import { registerUploadsRoutes } from './routes/uploads.js';
 import { registerVideosRoutes } from './routes/videos.js';
 
+export * from './services/index.js';
+
 export interface BuildAppOptions {
-  db?: Database;
-  redisClient?: Redis | null;
-  s3Client?: S3Client;
-  s3HealthCheck?: () => Promise<boolean>;
+  dbClient?: DatabaseClient;
+  repositories?: Repositories;
+  cache?: CacheClient;
+  storage?: StorageClient;
+  multipart?: MultipartStorage;
+  jobQueue?: JobQueue;
   rawBucket?: string;
-  probeQueue?: Queue;
   cdnBaseUrl?: string;
   rateLimitMax?: number;
   maxUploadBytes?: number;
   multipartThresholdBytes?: number;
-  adminQueues?: Map<string, Queue>;
+  adminQueues?: Map<string, JobQueue>;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -38,11 +59,47 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     logger: false,
   });
 
-  const db = options.db ?? createDbClient().db;
-  const s3Client = options.s3Client ?? createStorageClient();
-  const rawBucket = options.rawBucket ?? process.env.STORAGE_RAW_BUCKET ?? 'raw';
+  const isInMemory =
+    options.cache instanceof InMemoryCacheClient ||
+    options.cache?.constructor.name === 'InMemoryCacheClient' ||
+    options.repositories instanceof InMemoryRepositories ||
+    options.repositories?.constructor.name === 'InMemoryRepositories' ||
+    options.dbClient instanceof InMemoryDatabaseClient ||
+    options.dbClient?.constructor.name === 'InMemoryDatabaseClient' ||
+    process.env['NODE_ENV'] === 'test';
+
+  // Wire ports with default concrete adapters when omitted
+  const dbClient =
+    options.dbClient ?? (isInMemory ? new InMemoryDatabaseClient() : new PostgresDatabaseClient());
+  const repositories =
+    options.repositories ?? (isInMemory ? new InMemoryRepositories() : new PostgresRepositories());
+  const storage =
+    options.storage ?? (isInMemory ? new InMemoryStorageClient() : new S3StorageClient());
+  const multipart =
+    options.multipart ??
+    (isInMemory
+      ? new InMemoryMultipartStorage(storage)
+      : new S3MultipartStorage({
+          storageClient: storage instanceof S3StorageClient ? storage : undefined,
+        }));
+  const cache = options.cache ?? (isInMemory ? new InMemoryCacheClient() : new RedisCacheClient());
+
+  let adminQueues = options.adminQueues;
+  if (!adminQueues) {
+    adminQueues = new Map<string, JobQueue>();
+    for (const qName of QUEUES) {
+      adminQueues.set(
+        qName,
+        isInMemory ? new InMemoryJobQueue(qName) : new BullMqJobQueue({ name: qName })
+      );
+    }
+  }
+
+  const jobQueue = options.jobQueue ?? adminQueues.get('probe');
+
+  const rawBucket = options.rawBucket ?? process.env['STORAGE_RAW_BUCKET'] ?? 'raw';
   const cdnBaseUrl =
-    options.cdnBaseUrl ?? process.env.CDN_BASE_URL ?? 'http://localhost:9000/public';
+    options.cdnBaseUrl ?? process.env['CDN_BASE_URL'] ?? 'http://localhost:9000/public';
 
   // 1. Configure Zod Type Provider
   app.setValidatorCompiler(validatorCompiler);
@@ -97,33 +154,34 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     routePrefix: '/docs',
   });
 
-  // 7. Register Routes
+  // 7. Register Routes with injected ports
   registerHealthRoutes(app, {
-    db,
-    redisClient: options.redisClient,
-    s3HealthCheck: options.s3HealthCheck,
+    dbClient,
+    cache,
+    storage,
   });
 
   registerDevJwksRoute(app);
 
   registerUploadsRoutes(app, {
-    db,
-    s3Client,
+    repositories,
+    storage,
+    multipart,
     rawBucket,
-    probeQueue: options.probeQueue,
+    probeQueue: jobQueue,
     rateLimitMax: options.rateLimitMax,
     maxUploadBytes: options.maxUploadBytes,
     multipartThresholdBytes: options.multipartThresholdBytes,
   });
 
   registerVideosRoutes(app, {
-    db,
+    videos: repositories.videos,
     cdnBaseUrl,
   });
 
   await registerAdminQueuesRoutes(app, {
-    redisClient: options.redisClient,
-    queues: options.adminQueues,
+    cache,
+    queues: adminQueues,
   });
 
   return app;

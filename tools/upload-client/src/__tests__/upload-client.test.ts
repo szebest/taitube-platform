@@ -2,11 +2,15 @@ import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import {
+  InMemoryCacheClient,
+  InMemoryDatabaseClient,
+  InMemoryRepositories,
+  S3MultipartStorage,
+  S3StorageClient,
+} from '@vp/adapters';
 import { buildApp } from '@vp/api';
-import { createDbClient, seedDatabase, videos } from '@vp/db';
 import { mintToken } from '@vp/dev-token';
-import { createStorageClient } from '@vp/storage';
-import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ClientCrashedError, UploadClient } from '../client.js';
@@ -16,7 +20,9 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
   let apiPort: number;
   let s3Server: http.Server;
   let s3Port: number;
-  const { db, sql } = createDbClient();
+  const repositories = new InMemoryRepositories();
+  const dbClient = new InMemoryDatabaseClient();
+  const cache = new InMemoryCacheClient();
 
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
   let authToken: string;
@@ -36,8 +42,6 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
   const TOTAL_SIZE = 4 * PART_SIZE; // 32 MB = 4 parts
 
   beforeAll(async () => {
-    await seedDatabase();
-
     authToken = mintToken({
       sub: DEV_USER_ID,
       role: 'user',
@@ -80,14 +84,18 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
         const partNumber = Number(url.searchParams.get('partNumber') || 1);
         const etag = `"etag-${partNumber}"`;
 
-        let len = 0;
+        let bodyLen = 0;
         req.on('data', (c) => {
-          len += c.length;
+          bodyLen += c.length;
         });
         req.on('end', () => {
           const up = multipartUploads.get(uploadId);
           if (up) {
-            up.parts.push({ partNumber, etag: `etag-${partNumber}`, size: len || PART_SIZE });
+            up.parts.push({
+              partNumber,
+              etag: etag.replace(/"/g, ''),
+              size: bodyLen || PART_SIZE,
+            });
           }
           res.writeHead(200, { ETag: etag });
           res.end();
@@ -165,7 +173,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
       });
     });
 
-    const s3Client = createStorageClient({
+    const storage = new S3StorageClient({
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',
@@ -173,18 +181,20 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
       forcePathStyle: true,
     });
 
-    const mockRedis = {
-      status: 'ready',
-      ping: async () => 'PONG',
-      on: () => {},
-      quit: async () => 'OK',
-      disconnect: () => {},
-    } as unknown as import('ioredis').Redis;
+    const multipart = new S3MultipartStorage({
+      endpoint: `http://127.0.0.1:${s3Port}`,
+      region: 'us-east-1',
+      accessKeyId: 'test',
+      secretAccessKey: 'test',
+      forcePathStyle: true,
+    });
 
     app = await buildApp({
-      db,
-      redisClient: mockRedis,
-      s3Client,
+      repositories,
+      dbClient,
+      cache,
+      storage,
+      multipart,
       rawBucket: 'raw',
       multipartThresholdBytes: 8 * 1024 * 1024, // 8 MB threshold so 32 MB triggers multipart
     });
@@ -197,10 +207,13 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     if (fs.existsSync(tempFilePath)) {
       fs.unlinkSync(tempFilePath);
     }
-    await app.close();
-    (s3Server as any).closeAllConnections?.();
-    await new Promise((resolve) => s3Server.close(resolve));
-    await sql.end();
+    if (app) {
+      await app.close();
+    }
+    (s3Server as any)?.closeAllConnections?.();
+    if (s3Server) {
+      await new Promise((resolve) => s3Server.close(resolve));
+    }
   });
 
   it('AC 18: uploads file with concurrency 4, survives crash at 50%, resumes from ListParts and reaches UPLOADED', async () => {
@@ -221,15 +234,14 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     });
     crashedUploadId = init.uploadId;
 
-    // Step B: Start upload with killAtPercent: 50
     try {
       await client.uploadFile({
         filePath: tempFilePath,
         concurrency: 4,
-        existingUploadId: crashedUploadId,
         killAtPercent: 50,
+        existingUploadId: init.uploadId,
       });
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof ClientCrashedError) {
         crashedErrorCaught = true;
       } else {
@@ -260,7 +272,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     expect(resumed.status).toBe('UPLOADED');
 
     // 3. Database assertion: video reaches UPLOADED status
-    const [video] = await db.select().from(videos).where(eq(videos.id, resumed.videoId));
+    const video = await repositories.videos.findById(resumed.videoId);
     expect(video).toBeDefined();
     expect(video?.status).toBe('UPLOADED');
     expect(video?.sourceSizeBytes).toBe(TOTAL_SIZE);

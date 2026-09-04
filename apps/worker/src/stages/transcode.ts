@@ -1,76 +1,59 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import {
-  type Database,
-  claimStep,
-  completeStep,
-  failStep,
-  heartbeatStep,
-  renditions,
-  videoEvents,
-} from '@vp/db';
+import type { JobQueue, QueueJob, Repositories, StorageClient } from '@vp/core/ports';
 import { PermanentError } from '@vp/errors';
 import { runFfmpegTranscode } from '@vp/ffmpeg';
-import {
-  PackageJob,
-  type TranscodeJob,
-  defaultJobOptions,
-  ids,
-  stagePolicies,
-} from '@vp/job-contracts';
+import type { TranscodeJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
-import {
-  type S3Client,
-  downloadObject,
-  getHeaderMapping,
-  headObject,
-  uploadObject,
-} from '@vp/storage';
-import { type Job, type Queue, UnrecoverableError } from 'bullmq';
-import { and, eq } from 'drizzle-orm';
+import { getHeaderMapping } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { validateJobId } from '../registry.js';
 
 export interface TranscodeProcessorDeps {
-  db: Database;
-  s3Client: S3Client;
+  repositories: Repositories;
+  storage: StorageClient;
   rawBucket?: string;
   publicBucket?: string;
   workerId?: string;
   logger: Logger;
   heartbeatPath?: string;
-  getQueue?: (name: string) => Queue;
+  getQueue?: (name: string) => JobQueue;
+  simulateFailureRendition?: string;
 }
 
 export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
   const {
-    db,
-    s3Client,
-    rawBucket = process.env.STORAGE_RAW_BUCKET || 'raw',
-    publicBucket = process.env.STORAGE_PUBLIC_BUCKET || 'public',
+    repositories,
+    storage,
+    rawBucket = process.env['STORAGE_RAW_BUCKET'] || 'raw',
+    publicBucket = process.env['STORAGE_PUBLIC_BUCKET'] || 'public',
     workerId = `worker-${process.pid}`,
     logger,
-    heartbeatPath = process.env.WORKER_HEARTBEAT_PATH || path.join(os.tmpdir(), 'worker-heartbeat'),
-    getQueue,
+    heartbeatPath = process.env['WORKER_HEARTBEAT_PATH'] ||
+      path.join(os.tmpdir(), 'worker-heartbeat'),
+    simulateFailureRendition = process.env['SIMULATE_FAILURE_RENDITION'],
   } = deps;
 
-  return async function processTranscodeJob(job: Job<TranscodeJob>): Promise<{
+  return async function processTranscodeJob(job: QueueJob<TranscodeJob>): Promise<{
     videoId: string;
     rendition: string;
+    playlistKey: string;
     segmentCount: number;
     bytes: number;
+    durationMs: number;
+    avgBitrateBps: number;
     processingMs: number;
   }> {
     validateJobId(job.id || '');
 
-    const { videoId, sourceKey, generation, rendition, fps, durationMs } = job.data;
+    const { videoId, sourceKey, rendition, fps, durationMs } = job.data;
     const log = logger.child({
       videoId,
       jobId: job.id,
       stage: `transcode-${rendition.name}`,
       rendition: rendition.name,
-      attempt: job.attemptsMade + 1,
+      attempt: (job.attemptsMade ?? 0) + 1,
     });
 
     const startTime = Date.now();
@@ -81,13 +64,13 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
 
     // 1. Claim processing step with fencing token (SDD §5.3, §9.5, AC 20)
     const lockToken = uuidv7();
-    const claim = await claimStep(db, {
+    const claim = await repositories.steps.claim({
       id: uuidv7(),
       videoId,
       step: 'transcode',
       rendition: rendition.name,
       jobId: job.id || '',
-      attempt: job.attemptsMade + 1,
+      attempt: (job.attemptsMade ?? 0) + 1,
       workerId,
       lockToken,
     });
@@ -97,10 +80,36 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       return {
         videoId,
         rendition: rendition.name,
+        playlistKey: '',
         segmentCount: 0,
         bytes: 0,
+        durationMs,
+        avgBitrateBps: 0,
         processingMs: 0,
       };
+    }
+
+    // Update rendition status to RUNNING (AC 2: PENDING -> RUNNING -> DONE)
+    await repositories.renditions.update(videoId, rendition.name, {
+      status: 'RUNNING',
+    });
+
+    // Simulated permanent failure check for resilience tests (AC 5)
+    if (simulateFailureRendition === rendition.name) {
+      const errorMsg = `Simulated permanent failure in transcode-${rendition.name}`;
+      log.error({ rendition: rendition.name }, errorMsg);
+      await repositories.steps.fail({
+        videoId,
+        step: 'transcode',
+        rendition: rendition.name,
+        lockToken,
+        errorCode: 'FFMPEG_FAILED',
+        errorMessage: errorMsg,
+      });
+      await repositories.renditions.update(videoId, rendition.name, {
+        status: 'FAILED',
+      });
+      throw new PermanentError('FFMPEG_FAILED', errorMsg);
     }
 
     // 2. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
@@ -115,11 +124,11 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     try {
       // 3. Download source from storage
       const localSourcePath = path.join(tmpDir, path.basename(sourceKey));
-      const head = await headObject(s3Client, rawBucket, sourceKey);
+      const head = await storage.headObject(rawBucket, sourceKey);
       if (!head) {
         const errorMsg = `Source object not found in storage at ${sourceKey}`;
         log.error({ sourceKey }, errorMsg);
-        await failStep(db, {
+        await repositories.steps.fail({
           videoId,
           step: 'transcode',
           rendition: rendition.name,
@@ -127,14 +136,14 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
           errorCode: 'SOURCE_MISSING',
           errorMessage: errorMsg,
         });
-        throw new UnrecoverableError(errorMsg);
+        throw new PermanentError('SOURCE_MISSING', errorMsg);
       }
 
-      const downloaded = await downloadObject(s3Client, rawBucket, sourceKey, localSourcePath);
+      const downloaded = await storage.downloadObject(rawBucket, sourceKey, localSourcePath);
       if (!downloaded) {
         const errorMsg = `Failed to download source object from ${sourceKey}`;
         log.error({ sourceKey }, errorMsg);
-        await failStep(db, {
+        await repositories.steps.fail({
           videoId,
           step: 'transcode',
           rendition: rendition.name,
@@ -142,7 +151,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
           errorCode: 'SOURCE_MISSING',
           errorMessage: errorMsg,
         });
-        throw new UnrecoverableError(errorMsg);
+        throw new PermanentError('SOURCE_MISSING', errorMsg);
       }
 
       // 4. Run FFmpeg transcode with throttled progress (AC 22)
@@ -157,8 +166,8 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
           // Throttled to at most every 2 seconds (AC 22, SDD §9.5)
           if (now - lastProgressHeartbeat >= 2000) {
             lastProgressHeartbeat = now;
-            job.updateProgress(percent).catch(() => {});
-            heartbeatStep(db, lockToken).catch(() => {});
+            (job as any).updateProgress?.(percent)?.catch?.(() => {});
+            repositories.steps.heartbeat(lockToken).catch(() => {});
             fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
           }
         },
@@ -184,7 +193,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         const segKey = `videos/${videoId}/hls/${rendition.name}/${segName}`;
         const headers = getHeaderMapping(segName);
 
-        await uploadObject(s3Client, {
+        await storage.uploadObject({
           bucket: publicBucket,
           key: segKey,
           body,
@@ -200,7 +209,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       const playlistKey = `videos/${videoId}/hls/${rendition.name}/index.m3u8`;
       const playlistHeaders = getHeaderMapping('index.m3u8');
 
-      await uploadObject(s3Client, {
+      await storage.uploadObject({
         bucket: publicBucket,
         key: playlistKey,
         body: playlistContent,
@@ -220,20 +229,16 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       );
 
       // 6. Update renditions table to DONE (AC 17)
-      await db
-        .update(renditions)
-        .set({
-          status: 'DONE',
-          playlistKey,
-          segmentCount: segmentFiles.length,
-          bytes: totalBytes,
-          processingMs,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(renditions.videoId, videoId), eq(renditions.name, rendition.name)));
+      await repositories.renditions.update(videoId, rendition.name, {
+        status: 'DONE',
+        playlistKey,
+        segmentCount: segmentFiles.length,
+        bytes: totalBytes,
+        processingMs,
+      });
 
       // 7. Complete step with fencing check (AC 20)
-      const comp = await completeStep(db, {
+      const comp = await repositories.steps.complete({
         videoId,
         step: 'transcode',
         rendition: rendition.name,
@@ -246,65 +251,51 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         },
       });
 
+      const avgBitrateBps = durationMs > 0 ? Math.round((totalBytes * 8) / (durationMs / 1000)) : 0;
+
       if (comp.fenced) {
-        log.warn(
-          { lockToken, event: 'FENCED_OUT' },
-          'Fenced out on transcode completion; not enqueueing package'
-        );
+        log.warn({ lockToken, event: 'FENCED_OUT' }, 'Fenced out on transcode completion');
         return {
           videoId,
           rendition: rendition.name,
+          playlistKey,
           segmentCount: segmentFiles.length,
           bytes: totalBytes,
+          durationMs,
+          avgBitrateBps,
           processingMs,
         };
       }
 
       // 8. Record transcode.completed in video_events
-      await db.insert(videoEvents).values({
+      await repositories.events.create({
         videoId,
         type: 'transcode.completed',
         payload: {
           rendition: rendition.name,
           segmentCount: segmentFiles.length,
           bytes: totalBytes,
+          durationMs,
+          avgBitrateBps,
           processingMs,
         },
       });
 
-      // 9. Enqueue package job (SDD §3.2, §9.2)
-      if (getQueue) {
-        const packageQueue = getQueue('package');
-        const packageJobId = ids.package(videoId, generation);
-        await packageQueue.add(
-          'package',
-          PackageJob.parse({
-            videoId,
-            generation,
-            ladder: [rendition],
-            traceparent: job.data.traceparent,
-          }),
-          {
-            jobId: packageJobId,
-            ...stagePolicies.package,
-            ...defaultJobOptions,
-          }
-        );
-        log.info({ packageJobId }, 'Enqueued package follow-up job');
-      }
-
       return {
         videoId,
         rendition: rendition.name,
+        playlistKey,
         segmentCount: segmentFiles.length,
         bytes: totalBytes,
+        durationMs,
+        avgBitrateBps,
         processingMs,
       };
     } catch (err: unknown) {
       const errorMsg = (err as Error).message || 'Transcode failed';
       const isPermanent = err instanceof PermanentError;
 
-      await failStep(db, {
+      await repositories.steps.fail({
         videoId,
         step: 'transcode',
         rendition: rendition.name,
@@ -313,9 +304,6 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         errorMessage: errorMsg,
       });
 
-      if (isPermanent) {
-        throw new UnrecoverableError(errorMsg);
-      }
       throw err;
     } finally {
       // Guaranteed temp directory removal on every exit path (AC 21)

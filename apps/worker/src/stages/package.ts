@@ -1,12 +1,4 @@
-import {
-  type Database,
-  claimStep,
-  completeStep,
-  failStep,
-  heartbeatStep,
-  transitionVideo,
-  videos,
-} from '@vp/db';
+import type { JobQueue, QueueJob, Repositories, StorageClient } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { generateMasterPlaylist } from '@vp/ffmpeg';
 import {
@@ -17,35 +9,26 @@ import {
   stagePolicies,
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
-import {
-  type S3Client,
-  getHeaderMapping,
-  headObject,
-  masterPlaylistKey,
-  renditionPlaylistKey,
-  uploadObject,
-} from '@vp/storage';
-import { type Job, type Queue, UnrecoverableError } from 'bullmq';
-import { eq } from 'drizzle-orm';
+import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { validateJobId } from '../registry.js';
 
 export interface PackageProcessorDeps {
-  db: Database;
-  s3Client: S3Client;
+  repositories: Repositories;
+  storage: StorageClient;
   publicBucket?: string;
   cdnBaseUrl?: string;
   workerId?: string;
   logger: Logger;
-  getQueue?: (name: string) => Queue;
+  getQueue?: (name: string) => JobQueue;
 }
 
 export function createPackageProcessor(deps: PackageProcessorDeps) {
   const {
-    db,
-    s3Client,
-    publicBucket = process.env.STORAGE_PUBLIC_BUCKET || 'public',
-    cdnBaseUrl = process.env.CDN_BASE_URL || 'http://localhost:9000/public',
+    repositories,
+    storage,
+    publicBucket = process.env['STORAGE_PUBLIC_BUCKET'] || 'public',
+    cdnBaseUrl = process.env['CDN_BASE_URL'] || 'http://localhost:9000/public',
     workerId = `worker-${process.pid}`,
     logger,
     getQueue,
@@ -54,7 +37,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
   const cleanCdnBase = cdnBaseUrl.replace(/\/+$/, '');
 
   return async function processPackageJob(
-    job: Job<PackageJob>
+    job: QueueJob<PackageJob>
   ): Promise<{ videoId: string; masterKey: string; playbackUrl: string }> {
     validateJobId(job.id || '');
 
@@ -63,20 +46,20 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       videoId,
       jobId: job.id,
       stage: 'package',
-      attempt: job.attemptsMade + 1,
+      attempt: (job.attemptsMade ?? 0) + 1,
     });
 
     log.info({ ladder: ladder.map((r) => r.name) }, 'Package job started');
 
     // 1. Claim processing step (SDD §5.3, §9.5, AC 20)
     const lockToken = uuidv7();
-    const claim = await claimStep(db, {
+    const claim = await repositories.steps.claim({
       id: uuidv7(),
       videoId,
       step: 'package',
       rendition: '-',
       jobId: job.id || '',
-      attempt: job.attemptsMade + 1,
+      attempt: (job.attemptsMade ?? 0) + 1,
       workerId,
       lockToken,
     });
@@ -90,17 +73,36 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       };
     }
 
-    await heartbeatStep(db, lockToken);
+    await repositories.steps.heartbeat(lockToken);
 
     try {
-      // 2. AC 19: Verify every rendition playlist exists via HEAD before writing master
+      // 2. Read children values from Flow transcode jobs (SDD §9.3, Ticket 12 AC 6)
+      const rawChildren = job.getChildrenValues ? await job.getChildrenValues() : {};
+      const childrenValues = rawChildren ? Object.values(rawChildren) : [];
+      const measuredResults: Record<
+        string,
+        { bytes?: number; durationMs?: number; avgBitrateBps?: number }
+      > = {};
+
+      for (const val of childrenValues) {
+        if (val && typeof val === 'object' && 'rendition' in val) {
+          const res = val as any;
+          measuredResults[res.rendition] = {
+            bytes: res.bytes,
+            durationMs: res.durationMs,
+            avgBitrateBps: res.avgBitrateBps,
+          };
+        }
+      }
+
+      // 3. AC 19: Verify every rendition playlist exists via HEAD before writing master
       for (const r of ladder) {
         const rendKey = renditionPlaylistKey(videoId, r.name, generation);
-        const head = await headObject(s3Client, publicBucket, rendKey);
+        const head = await storage.headObject(publicBucket, rendKey);
         if (!head) {
           const errorMsg = `Rendition playlist missing at ${rendKey}`;
           log.error({ rendKey }, errorMsg);
-          await failStep(db, {
+          await repositories.steps.fail({
             videoId,
             step: 'package',
             rendition: '-',
@@ -113,16 +115,16 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       }
 
       // Query video metadata for fps
-      const [video] = await db.select().from(videos).where(eq(videos.id, videoId));
-      const fps = video?.fps ? Number.parseFloat(video.fps) : 24;
+      const video = await repositories.videos.findById(videoId);
+      const fps = (video as any)?.fps ?? 24;
 
-      // 3. Generate master playlist content (SDD §8.4)
-      const masterContent = generateMasterPlaylist({ ladder, fps });
+      // 4. Generate master playlist content with measured AVERAGE-BANDWIDTH (SDD §8.4, AC 6)
+      const masterContent = generateMasterPlaylist({ ladder, fps, measuredResults });
       const masterKey = masterPlaylistKey(videoId, generation);
       const headers = getHeaderMapping('master.m3u8');
 
       // 4. AC 19: Master is written LAST (presence == READY)
-      await uploadObject(s3Client, {
+      await storage.uploadObject({
         bucket: publicBucket,
         key: masterKey,
         body: masterContent,
@@ -133,7 +135,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       const playbackUrl = `${cleanCdnBase}/${masterKey}`;
 
       // 5. Complete step in DB with fencing token (AC 20)
-      const comp = await completeStep(db, {
+      const comp = await repositories.steps.complete({
         videoId,
         step: 'package',
         rendition: '-',
@@ -150,7 +152,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       }
 
       // 6. AC 19: CAS-flip PROCESSING -> READY (happens once, writes video.ready event)
-      const transitioned = await transitionVideo(db, {
+      const transitioned = await repositories.videos.transition({
         videoId,
         from: 'PROCESSING',
         to: 'READY',
@@ -193,7 +195,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       const errorMsg = (err as Error).message || 'Package failed';
       const isPermanent = err instanceof PermanentError;
 
-      await failStep(db, {
+      await repositories.steps.fail({
         videoId,
         step: 'package',
         rendition: '-',
@@ -202,9 +204,6 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
         errorMessage: errorMsg,
       });
 
-      if (isPermanent) {
-        throw new UnrecoverableError(errorMsg);
-      }
       throw err;
     }
   };

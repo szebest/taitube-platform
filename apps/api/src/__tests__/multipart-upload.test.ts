@@ -1,9 +1,14 @@
 import * as http from 'node:http';
-import { createDbClient, seedDatabase, videoEvents, videos } from '@vp/db';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  S3MultipartStorage,
+  S3StorageClient,
+} from '@vp/adapters';
+import { JobQueue } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
-import { MULTIPART_MIN_PART_SIZE, createStorageClient } from '@vp/storage';
-import { eq } from 'drizzle-orm';
+import { MULTIPART_MIN_PART_SIZE } from '@vp/storage';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
@@ -12,7 +17,8 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
   let app: FastifyInstance;
   let s3Server: http.Server;
   let s3Port: number;
-  const { db, sql } = createDbClient();
+  const repositories = new InMemoryRepositories();
+  const cache = new InMemoryCacheClient();
 
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
   let authToken: string;
@@ -28,16 +34,37 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
 
   // Probe queue recording
   const probeJobs: Array<{ videoId: string }> = [];
-  const mockProbeQueue = {
-    add: async (_name: string, data: { videoId: string }) => {
-      probeJobs.push(data);
-      return { id: 'job-probe' };
-    },
-  } as unknown as import('bullmq').Queue;
+  class MockProbeJobQueue extends JobQueue {
+    async checkHealth(): Promise<boolean> {
+      return true;
+    }
+    getName(): string {
+      return 'probe';
+    }
+    async add<T = unknown>(_name: string, data: T): Promise<any> {
+      probeJobs.push(data as any);
+      return { id: 'job-probe', name: 'probe', data };
+    }
+    async process(): Promise<void> {}
+    async isPaused(): Promise<boolean> {
+      return false;
+    }
+    async pause(): Promise<void> {}
+    async resume(): Promise<void> {}
+    async getJobCounts(): Promise<any> {
+      return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
+    }
+    async getJobs(): Promise<any[]> {
+      return [];
+    }
+    async getJobState(_jobId: string): Promise<string | undefined> {
+      return 'completed';
+    }
+    async close(): Promise<void> {}
+  }
+  const mockProbeQueue = new MockProbeJobQueue();
 
   beforeAll(async () => {
-    await seedDatabase();
-
     authToken = mintToken({
       sub: DEV_USER_ID,
       role: 'user',
@@ -177,7 +204,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
       });
     });
 
-    const s3Client = createStorageClient({
+    const s3Client = new S3StorageClient({
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',
@@ -185,20 +212,15 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
       forcePathStyle: true,
     });
 
-    const mockRedis = {
-      status: 'ready',
-      ping: async () => 'PONG',
-      on: () => {},
-      quit: async () => 'OK',
-      disconnect: () => {},
-    } as unknown as import('ioredis').Redis;
+    const multipart = new S3MultipartStorage({ storageClient: s3Client });
 
     app = await buildApp({
-      db,
-      redisClient: mockRedis,
-      s3Client,
+      repositories,
+      cache,
+      storage: s3Client,
+      multipart,
       rawBucket: 'raw',
-      probeQueue: mockProbeQueue,
+      jobQueue: mockProbeQueue,
       adminQueues: new Map(),
       multipartThresholdBytes: 10 * 1024 * 1024, // 10 MB threshold for tests
     });
@@ -208,7 +230,6 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
   afterAll(async () => {
     await app.close();
     await new Promise((resolve) => s3Server.close(resolve));
-    await sql.end();
   });
 
   it('AC 17: POST /v1/uploads selects multipart strategy for files > 100 MB with clamped part size and batched URLs', async () => {
@@ -243,7 +264,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(firstPart.expiresAt).toBeDefined();
 
     // Verify video in DB is UPLOADING
-    const [video] = await db.select().from(videos).where(eq(videos.id, data.videoId));
+    const video = await repositories.videos.findById(data.videoId);
     expect(video?.status).toBe('UPLOADING');
     expect(video?.sourceSizeBytes).toBe(fourGb);
   });
@@ -412,7 +433,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(body.code).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
 
     // Verify video is marked REJECTED in database
-    const [video] = await db.select().from(videos).where(eq(videos.id, videoId));
+    const video = await repositories.videos.findById(videoId);
     expect(video?.status).toBe('REJECTED');
     expect(video?.errorCode).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
   });
@@ -446,12 +467,12 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(multipartUploads.has(s3UploadId)).toBe(false);
 
     // Invariant: Video status marked ABANDONED in DB
-    const [video] = await db.select().from(videos).where(eq(videos.id, videoId));
+    const video = await repositories.videos.findById(videoId);
     expect(video?.status).toBe('ABANDONED');
 
     // Invariant: video_events has upload.aborted event
-    const events = await db.select().from(videoEvents).where(eq(videoEvents.videoId, videoId));
-    expect(events.some((e) => e.type === 'upload.aborted')).toBe(true);
+    const events = await repositories.events.findByVideoId(videoId);
+    expect(events.some((e: any) => e.type === 'upload.aborted')).toBe(true);
 
     // Subsequent GET returns 410 with UPLOAD_NOT_OPEN
     const getRes = await app.inject({

@@ -14,16 +14,17 @@ An asynchronous video ingestion and HLS transcoding backend: Fastify API (Node 2
 1. **Local-first (PRD G11, SDD P9):** no runtime dependency on any external service; `.env.example` stays all-local; nothing phones home; `make smoke-offline` must pass. See the `vp-local-first-check` skill.
 2. **Dual runtime:** worker code and shared packages must pass under `vitest` and `bun test`; no `Bun.*` APIs.
 3. **Contracts are single-sourced:** job payloads/ids in `packages/job-contracts`, object keys in `packages/storage/keys.ts`, error codes in `packages/errors` (SDD §6.2), env in `packages/config` mirrored by `.env.example`. Changing one means updating the SDD in the same PR.
-4. **State changes go through the CAS helper** that also appends `video_events`; worker commits use fencing tokens (`vp-postgres-cas-fencing`).
-5. **Errors are classified at the throw site** (`PermanentError` vs `TransientError`, ADR-18).
-6. **Prove, don't claim:** run typecheck/lint/tests and paste output before saying done (`verification-before-completion`).
+4. **Dependency inversion / ports & adapters:** Concrete SDKs (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`) must never be imported outside `adapters/` and composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`). Domain logic and routes depend on abstract class ports in `@vp/core/ports` (`hexagonal-port-adapter`).
+5. **State changes go through the CAS helper** that also appends `video_events`; worker commits use fencing tokens (`vp-postgres-cas-fencing`).
+6. **Errors are classified at the throw site** (`PermanentError` vs `TransientError`, ADR-18).
+7. **Prove, don't claim:** run typecheck/lint/tests and paste output before saying done (`verification-before-completion`).
 
 ## Commands
 `make up` (infra) · `make up-all` (everything) · `make smoke` · `make smoke-offline` · `pnpm dev` · `pnpm test` · `pnpm test:integration` · `bun test` (worker parity) · `pnpm lint` · `pnpm typecheck` · `make k3d-up && make k3d-deploy` (Kubernetes) · `make e2e` (Phase 2 acceptance).
 
 ## Agent skills
 
-Skills live in `.agents/skills/` (Codex, Gemini CLI, Cursor, Copilot, OpenCode) with symlinks in `.claude/skills/` (Claude Code). Start with `vp-work-ticket`; it routes to `tdd`, `code-review`, `verification-before-completion` and the domain skills (`vp-ffmpeg-hls-ladder`, `vp-bullmq-pipeline`, `vp-keda-queue-autoscaling`, `vp-fastify-sse-problem-json`, `vp-postgres-cas-fencing`, `vp-chaos-toxiproxy`, `vp-local-first-check`).
+Skills live in `.agents/skills/` (Codex, Gemini CLI, Cursor, Copilot, OpenCode) with symlinks in `.claude/skills/` (Claude Code). Start with `vp-work-ticket`; it routes to `tdd`, `code-review`, `verification-before-completion` and the domain skills (`hexagonal-port-adapter`, `vp-ffmpeg-hls-ladder`, `vp-bullmq-pipeline`, `vp-keda-queue-autoscaling`, `vp-fastify-sse-problem-json`, `vp-postgres-cas-fencing`, `vp-chaos-toxiproxy`, `vp-local-first-check`).
 
 ### Issue tracker
 

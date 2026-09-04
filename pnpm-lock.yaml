@@ -30,6 +30,46 @@ importers:
         specifier: ^3.0.7
         version: 3.2.7(@types/node@24.13.3)(tsx@4.23.13)(yaml@2.9.0)
 
+  adapters:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.1125.0
+        version: 3.1125.0
+      '@aws-sdk/s3-request-presigner':
+        specifier: ^3.1125.0
+        version: 3.1125.0
+      '@vp/core':
+        specifier: workspace:*
+        version: link:../core
+      '@vp/db':
+        specifier: workspace:*
+        version: link:../packages/db
+      bullmq:
+        specifier: ^6.3.4
+        version: 6.3.4(ioredis@5.11.1)
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@opentelemetry/api@1.9.1)(postgres@3.4.9)
+      ioredis:
+        specifier: ^5.11.1
+        version: 5.11.1
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
+      uuidv7:
+        specifier: ^1.2.1
+        version: 1.2.1
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../packages/tsconfig
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   apps/api:
     dependencies:
       '@bull-board/api':
@@ -59,9 +99,15 @@ importers:
       '@fastify/under-pressure':
         specifier: ^9.1.0
         version: 9.1.0
+      '@vp/adapters':
+        specifier: workspace:*
+        version: link:../../adapters
       '@vp/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@vp/core':
+        specifier: workspace:*
+        version: link:../../core
       '@vp/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -132,9 +178,15 @@ importers:
 
   apps/worker:
     dependencies:
+      '@vp/adapters':
+        specifier: workspace:*
+        version: link:../../adapters
       '@vp/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@vp/core':
+        specifier: workspace:*
+        version: link:../../core
       '@vp/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -187,6 +239,15 @@ importers:
       vitest:
         specifier: ^3.0.7
         version: 3.2.7(@types/node@24.13.3)(tsx@4.23.13)(yaml@2.9.0)
+
+  core:
+    devDependencies:
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../packages/tsconfig
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
 
   packages/config:
     dependencies:
@@ -370,14 +431,10 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(tsx@4.23.13)(yaml@2.9.0)
 
   packages/storage:
-    dependencies:
-      '@aws-sdk/client-s3':
-        specifier: ^3.1125.0
-        version: 3.1125.0
-      '@aws-sdk/s3-request-presigner':
-        specifier: ^3.1125.0
-        version: 3.1125.0
     devDependencies:
+      '@vp/adapters':
+        specifier: workspace:*
+        version: link:../../adapters
       '@vp/testing':
         specifier: workspace:*
         version: link:../testing
@@ -463,12 +520,15 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
+      '@vp/adapters':
+        specifier: workspace:*
+        version: link:../../adapters
       '@vp/api':
         specifier: workspace:*
         version: link:../../apps/api
-      '@vp/db':
+      '@vp/core':
         specifier: workspace:*
-        version: link:../../packages/db
+        version: link:../../core
       '@vp/dev-token':
         specifier: workspace:*
         version: link:../dev-token
@@ -478,15 +538,9 @@ importers:
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
-      drizzle-orm:
-        specifier: ^0.45.1
-        version: 0.45.2(@opentelemetry/api@1.9.1)(postgres@3.4.9)
       fastify:
         specifier: ^5.2.1
         version: 5.12.1
-      ioredis:
-        specifier: ^5.5.0
-        version: 5.11.1
       typescript:
         specifier: ^5.7.3
         version: 5.9.3

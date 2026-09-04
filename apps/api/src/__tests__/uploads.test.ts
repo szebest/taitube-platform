@@ -1,26 +1,25 @@
 import * as http from 'node:http';
-import { createDbClient, seedDatabase, videoEvents, videos } from '@vp/db';
+import { InMemoryRepositories, S3MultipartStorage, S3StorageClient } from '@vp/adapters';
+import { JobQueue } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
-import { createStorageClient } from '@vp/storage';
-import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 
 describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
   let app: FastifyInstance;
-  const { db, sql } = createDbClient();
+  const repositories = new InMemoryRepositories();
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
   const authToken = mintToken({ sub: DEV_USER_ID, role: 'user', ttl: '1h' });
 
   // In-memory mock S3 HTTP Server simulating MinIO
   let s3Server: http.Server;
   let s3Port: number;
-  const storageMap = new Map<string, { bytes: Buffer; contentType: string }>();
+  const storageMap = new Map<Buffer | string, { bytes: Buffer; contentType: string }>();
   const signedLengths = new Map<string, number>();
 
-  // Mock BullMQ queue for probe
+  // Mock queue for probe
   interface MockJobRecord {
     name: string;
     data: Record<string, unknown>;
@@ -28,24 +27,37 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
   }
 
   const probeJobs: MockJobRecord[] = [];
-  const mockProbeQueue = {
-    add: async (
-      name: string,
-      data: Record<string, unknown>,
-      opts: { jobId?: string; [key: string]: unknown }
-    ) => {
-      probeJobs.push({ name, data, opts });
-      return { id: opts.jobId };
-    },
-    getJob: async (jobId: string) => {
-      const found = probeJobs.find((j) => j.opts?.jobId === jobId);
-      return found ? { id: jobId, data: found.data } : null;
-    },
-  } as unknown as import('bullmq').Queue;
+  class MockProbeJobQueue extends JobQueue {
+    async checkHealth(): Promise<boolean> {
+      return true;
+    }
+    getName(): string {
+      return 'probe';
+    }
+    async add<T = unknown>(name: string, data: T, opts?: any): Promise<any> {
+      probeJobs.push({ name, data: data as any, opts });
+      return { id: opts?.jobId || 'probe-1', name, data };
+    }
+    async process(): Promise<void> {}
+    async isPaused(): Promise<boolean> {
+      return false;
+    }
+    async pause(): Promise<void> {}
+    async resume(): Promise<void> {}
+    async getJobCounts(): Promise<any> {
+      return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
+    }
+    async getJobs(): Promise<any[]> {
+      return [];
+    }
+    async getJobState(_jobId: string): Promise<string | undefined> {
+      return 'completed';
+    }
+    async close(): Promise<void> {}
+  }
+  const mockProbeQueue = new MockProbeJobQueue();
 
   beforeAll(async () => {
-    await seedDatabase();
-
     // 1. Start lightweight S3 mock server with signature / length checks
     s3Server = http.createServer((req, res) => {
       const url = new URL(req.url ?? '/', `http://127.0.0.1:${s3Port}`);
@@ -123,7 +135,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     });
 
     // 2. Build Fastify API with storage client pointing to local test S3 server
-    const s3Client = createStorageClient({
+    const s3Client = new S3StorageClient({
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test-key',
@@ -131,11 +143,14 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
       forcePathStyle: true,
     });
 
+    const multipart = new S3MultipartStorage({ storageClient: s3Client });
+
     app = await buildApp({
-      db,
-      s3Client,
+      repositories,
+      storage: s3Client,
+      multipart,
       rawBucket: 'raw',
-      probeQueue: mockProbeQueue,
+      jobQueue: mockProbeQueue,
       maxUploadBytes: 100 * 1024 * 1024, // 100 MB max for test
     });
     await app.ready();
@@ -143,7 +158,6 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
 
   afterAll(async () => {
     await app.close();
-    await sql.end();
     await new Promise<void>((resolve) => s3Server.close(() => resolve()));
   });
 
@@ -269,12 +283,12 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     });
 
     // Verify video in DB is UPLOADED
-    const [video] = await db.select().from(videos).where(eq(videos.id, videoId));
+    const video = await repositories.videos.findById(videoId);
     expect(video?.status).toBe('UPLOADED');
 
     // Verify upload.completed event written to video_events
-    const events = await db.select().from(videoEvents).where(eq(videoEvents.videoId, videoId));
-    expect(events.some((e) => e.type === 'upload.completed')).toBe(true);
+    const events = await repositories.events.findByVideoId(videoId);
+    expect(events.some((e: any) => e.type === 'upload.completed')).toBe(true);
 
     // Verify probe job was enqueued in Redis with deterministic jobId
     const expectedJobId = `${videoId}--probe--g1`;
@@ -346,7 +360,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     expect(storageMap.has(sourceKey)).toBe(false);
 
     // Verify video status became REJECTED in DB
-    const [video] = await db.select().from(videos).where(eq(videos.id, videoId));
+    const video = await repositories.videos.findById(videoId);
     expect(video?.status).toBe('REJECTED');
     expect(video?.errorCode).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
   });
@@ -393,7 +407,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     // App rate limit configured with 30/min
     // We create an app instance with rateLimitMax: 3 to quickly trigger 429
     const limitedApp = await buildApp({
-      db,
+      repositories,
       rawBucket: 'raw',
       rateLimitMax: 3,
     });

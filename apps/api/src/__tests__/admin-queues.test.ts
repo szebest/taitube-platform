@@ -1,13 +1,85 @@
+import { JobQueue } from '@vp/core/ports';
 import { mintDevToken } from '@vp/dev-token';
 import { QUEUES } from '@vp/job-contracts';
-import { Queue } from 'bullmq';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
+
+class MockAdminJobQueue extends JobQueue {
+  private _paused = false;
+  readonly name: string;
+  readonly metaValues = { version: 'bullmq' };
+  readonly opts = { prefix: 'bull' };
+  readonly backend = {
+    getQueueMetaField: async () => null,
+    getQueueMetaFields: async () => [null, null],
+    on: () => {},
+  };
+
+  constructor(name: string) {
+    super();
+    this.name = name;
+  }
+
+  async getJobState(_jobId: string): Promise<string | undefined> {
+    return 'completed';
+  }
+
+  async checkHealth(): Promise<boolean> {
+    return true;
+  }
+
+  getName(): string {
+    return this.name;
+  }
+
+  async add<_T = unknown>(): Promise<any> {
+    return { id: '1', name: this.name, data: {} };
+  }
+
+  async process(): Promise<void> {}
+
+  async isPaused(): Promise<boolean> {
+    return this._paused;
+  }
+
+  async pause(): Promise<void> {
+    this._paused = true;
+  }
+
+  async resume(): Promise<void> {
+    this._paused = false;
+  }
+
+  async getJobCounts(): Promise<any> {
+    return {
+      active: 0,
+      completed: 0,
+      failed: 0,
+      delayed: 0,
+      waiting: 0,
+      paused: 0,
+    };
+  }
+
+  async getJobs(): Promise<any[]> {
+    return [];
+  }
+
+  async getWorkers(): Promise<any[]> {
+    return [];
+  }
+
+  async getJobSchedulersCount(): Promise<number> {
+    return 0;
+  }
+
+  async close(): Promise<void> {}
+}
 
 describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
   let app: FastifyInstance;
-  const queuesMap = new Map<string, Queue>();
+  const queuesMap = new Map<string, JobQueue>();
 
   const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
   const REGULAR_USER_ID = '00000000-0000-7000-8000-000000000002';
@@ -16,43 +88,12 @@ describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
   let adminJwt: string;
   let regularJwt: string;
 
-  function createMockQueue(name: string): Queue {
-    let paused = false;
-    const q = Object.create(Queue.prototype);
-    q.name = name;
-    q.isPaused = vi.fn().mockImplementation(async () => paused);
-    q.pause = vi.fn().mockImplementation(async () => {
-      paused = true;
-    });
-    q.resume = vi.fn().mockImplementation(async () => {
-      paused = false;
-    });
-    q.getJobCounts = vi.fn().mockResolvedValue({
-      active: 0,
-      completed: 0,
-      failed: 0,
-      delayed: 0,
-      waiting: 0,
-      paused: 0,
-    });
-    q.getJobs = vi.fn().mockResolvedValue([]);
-    q.opts = { prefix: 'bull' };
-    q.backend = {
-      getQueueMetaField: async () => null,
-      getQueueMetaFields: async () => [null, null],
-      on: () => {},
-    };
-    q.getWorkers = async () => [];
-    q.getJobSchedulersCount = async () => 0;
-    return q as Queue;
-  }
-
   beforeAll(async () => {
     process.env.ADMIN_TOKEN = VALID_ADMIN_TOKEN;
 
     // Create mock queue instances for all queues in QUEUES
     for (const qName of QUEUES) {
-      queuesMap.set(qName, createMockQueue(qName));
+      queuesMap.set(qName, new MockAdminJobQueue(qName));
     }
 
     app = await buildApp({

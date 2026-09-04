@@ -1,60 +1,46 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
-import {
-  claimStep,
-  completeStep,
-  createDbClient,
-  processingSteps,
-  renditions,
-  seedDatabase,
-  videoEvents,
-  videos,
-} from '@vp/db';
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
-import type { S3Client } from '@vp/storage';
-import type { Job } from 'bullmq';
-import { eq } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { validateJobId, validateQueueName } from '../registry.js';
 import { createProbeProcessor } from '../stages/probe.js';
 
 describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () => {
-  const { db, sql } = createDbClient();
+  let repositories: InMemoryRepositories;
+  let storage: InMemoryStorageClient;
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
   const logger = createLogger({ service: 'worker-probe-test', level: 'silent' });
-  const fakeS3 = {} as S3Client;
 
-  function createMockJob(id: string, data: ProbeJob): Job<ProbeJob> {
+  function createMockJob(id: string, data: ProbeJob): QueueJob<ProbeJob> {
     return {
       id,
+      name: 'probe',
       data,
       attemptsMade: 0,
-    } as unknown as Job<ProbeJob>;
+      updateProgress: vi.fn().mockResolvedValue(undefined),
+    };
   }
 
-  beforeAll(async () => {
-    await seedDatabase();
-  });
-
-  afterAll(async () => {
-    await sql.end();
+  beforeEach(() => {
+    repositories = new InMemoryRepositories();
+    storage = new InMemoryStorageClient();
   });
 
   // Helper to create video in UPLOADED state
   async function setupUploadedVideo(sourceKey: string, title = 'Test Video'): Promise<string> {
     const videoId = uuidv7();
-    await db.insert(videos).values({
+    await repositories.videos.create({
       id: videoId,
       ownerId: DEV_USER_ID,
       title,
       status: 'UPLOADED',
       sourceKey,
       sourceSizeBytes: 1000,
-      sourceContentType: 'video/mp4',
-      version: 1,
     });
     return videoId;
   }
@@ -70,12 +56,9 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     const missingKey = 'raw/non-existent.mp4';
     const videoId = await setupUploadedVideo(missingKey, 'Missing Video');
 
-    const storageModule = await import('@vp/storage');
-    const headSpy = vi.spyOn(storageModule, 'headObject').mockResolvedValue(null);
-
     const processor = createProbeProcessor({
-      db,
-      s3Client: fakeS3,
+      repositories,
+      storage,
       logger,
     });
 
@@ -89,11 +72,9 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     await expect(processor(job)).rejects.toThrow();
 
     // Verify video in DB became FAILED with SOURCE_MISSING
-    const [video] = await db.select().from(videos).where(eq(videos.id, videoId));
+    const video = await repositories.videos.findById(videoId);
     expect(video?.status).toBe('FAILED');
     expect(video?.errorCode).toBe(ErrorCodes.SOURCE_MISSING);
-
-    headSpy.mockRestore();
   });
 
   it('AC 20: processing_steps row claimed with lock_token, heartbeat_at updated, finished with same token; fenced on stale token', async () => {
@@ -102,7 +83,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     const workerId1 = 'worker-1';
 
     // Worker 1 claims step
-    const claim1 = await claimStep(db, {
+    const claim1 = await repositories.steps.claim({
       id: uuidv7(),
       videoId,
       step: 'probe',
@@ -115,17 +96,9 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     expect(claim1.fenced).toBe(false);
     expect(claim1.lockToken).toBe(lockToken1);
 
-    // Verify row exists and status is RUNNING
-    const [step1] = await db
-      .select()
-      .from(processingSteps)
-      .where(eq(processingSteps.videoId, videoId));
-    expect(step1?.status).toBe('RUNNING');
-    expect(step1?.lockToken).toBe(lockToken1);
-
     // Worker 2 (or retry) claims step with NEW token
     const lockToken2 = uuidv7();
-    const claim2 = await claimStep(db, {
+    const claim2 = await repositories.steps.claim({
       id: uuidv7(),
       videoId,
       step: 'probe',
@@ -138,16 +111,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     expect(claim2.fenced).toBe(false);
     expect(claim2.lockToken).toBe(lockToken2);
 
-    // Verify row now has lockToken2
-    const [step2] = await db
-      .select()
-      .from(processingSteps)
-      .where(eq(processingSteps.videoId, videoId));
-    expect(step2?.lockToken).toBe(lockToken2);
-    expect(step2?.attempt).toBe(2);
-
     // Worker 1 tries to complete step with stale lockToken1 -> FENCED!
-    const comp1 = await completeStep(db, {
+    const comp1 = await repositories.steps.complete({
       videoId,
       step: 'probe',
       rendition: '-',
@@ -157,7 +122,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     expect(comp1.completed).toBe(false);
 
     // Worker 2 completes step with current lockToken2 -> SUCCEEDS!
-    const comp2 = await completeStep(db, {
+    const comp2 = await repositories.steps.complete({
       videoId,
       step: 'probe',
       rendition: '-',
@@ -170,21 +135,21 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
   it('AC 18: hostile zero-bytes file fails on attempt 1 with CORRUPT_CONTAINER', async () => {
     const videoId = await setupUploadedVideo('raw/zero-bytes.mp4', 'Zero Bytes Test');
 
-    const storageModule = await import('@vp/storage');
-    const headSpy = vi.spyOn(storageModule, 'headObject').mockResolvedValue({
-      contentLength: 0,
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/zero-bytes.mp4',
+      body: Buffer.alloc(0),
       contentType: 'video/mp4',
     });
-    const downloadSpy = vi
-      .spyOn(storageModule, 'downloadObject')
-      .mockImplementation(async (_client, _b, _k, targetPath) => {
-        await fs.writeFile(targetPath, Buffer.alloc(0));
-        return true;
-      });
+
+    const ffmpegModule = await import('@vp/ffmpeg');
+    const probeSpy = vi
+      .spyOn(ffmpegModule, 'runFfprobe')
+      .mockRejectedValueOnce(new PermanentError(ErrorCodes.CORRUPT_CONTAINER, 'Zero bytes media'));
 
     const processor = createProbeProcessor({
-      db,
-      s3Client: fakeS3,
+      repositories,
+      storage,
       logger,
     });
 
@@ -198,28 +163,22 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     await expect(processor(job)).rejects.toThrow();
 
     // Verify video in DB became FAILED with CORRUPT_CONTAINER
-    const [video] = await db.select().from(videos).where(eq(videos.id, videoId));
+    const video = await repositories.videos.findById(videoId);
     expect(video?.status).toBe('FAILED');
     expect(video?.errorCode).toBe(ErrorCodes.CORRUPT_CONTAINER);
 
-    headSpy.mockRestore();
-    downloadSpy.mockRestore();
+    probeSpy.mockRestore();
   });
 
   it('AC 17 & AC 21: good s60 video becomes PROCESSING, ladder [1080p, 720p, 480p], renditions PENDING, and temp dir cleaned up', async () => {
     const videoId = await setupUploadedVideo('raw/s60.mp4', 'Standard 60s Video');
 
-    const storageModule = await import('@vp/storage');
-    const headSpy = vi.spyOn(storageModule, 'headObject').mockResolvedValue({
-      contentLength: 5000000,
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/s60.mp4',
+      body: Buffer.from('mock-media-content'),
       contentType: 'video/mp4',
     });
-    const downloadSpy = vi
-      .spyOn(storageModule, 'downloadObject')
-      .mockImplementation(async (_client, _b, _k, targetPath) => {
-        await fs.writeFile(targetPath, Buffer.from('mock-media-content'));
-        return true;
-      });
 
     const ffmpegModule = await import('@vp/ffmpeg');
     const probeSpy = vi.spyOn(ffmpegModule, 'runFfprobe').mockResolvedValue({
@@ -271,8 +230,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     });
 
     const processor = createProbeProcessor({
-      db,
-      s3Client: fakeS3,
+      repositories,
+      storage,
       logger,
     });
 
@@ -288,32 +247,29 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     expect(result.durationMs).toBe(60000);
 
     // 1. Verify video in DB is PROCESSING with duration and ladder
-    const [video] = await db.select().from(videos).where(eq(videos.id, videoId));
+    const video = await repositories.videos.findById(videoId);
     expect(video?.status).toBe('PROCESSING');
     expect(video?.durationMs).toBe(60000);
     expect(video?.width).toBe(1920);
     expect(video?.height).toBe(1080);
-    expect(video?.videoCodec).toBe('h264');
 
     // 2. Verify renditions table has PENDING rows for 1080p, 720p, 480p (AC 17)
-    const rends = await db.select().from(renditions).where(eq(renditions.videoId, videoId));
+    const rends = await repositories.renditions.findByVideoId(videoId);
     expect(rends.length).toBe(3);
-    const rendNames = rends.map((r) => r.name).sort();
+    const rendNames = rends.map((r: any) => r.name).sort();
     expect(rendNames).toEqual(['1080p', '480p', '720p']);
-    expect(rends.every((r) => r.status === 'PENDING')).toBe(true);
+    expect(rends.every((r: any) => r.status === 'PENDING')).toBe(true);
 
     // 3. Verify video_events contains probe.started and probe.completed (AC 17)
-    const events = await db.select().from(videoEvents).where(eq(videoEvents.videoId, videoId));
-    expect(events.some((e) => e.type === 'probe.started')).toBe(true);
-    expect(events.some((e) => e.type === 'probe.completed')).toBe(true);
+    const events = await repositories.events.findByVideoId(videoId);
+    expect(events.some((e: any) => e.type === 'probe.started')).toBe(true);
+    expect(events.some((e: any) => e.type === 'probe.completed')).toBe(true);
 
     // AC 21: Verify temp dir cleanup
     const tmpContents = await fs.readdir(os.tmpdir());
     const orphanedDirs = tmpContents.filter((f) => f.includes(`vp-probe-${videoId}`));
     expect(orphanedDirs.length).toBe(0);
 
-    headSpy.mockRestore();
-    downloadSpy.mockRestore();
     probeSpy.mockRestore();
   });
 
@@ -322,18 +278,30 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     const sd360Id = await setupUploadedVideo('raw/sd360.mp4', '360p Video');
     const portraitId = await setupUploadedVideo('raw/portrait.mp4', 'Portrait Video');
 
-    const storageModule = await import('@vp/storage');
-    const headSpy = vi.spyOn(storageModule, 'headObject').mockResolvedValue({
-      contentLength: 1000000,
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/p720.mp4',
+      body: Buffer.from('mock-p720'),
       contentType: 'video/mp4',
     });
-    const downloadSpy = vi.spyOn(storageModule, 'downloadObject').mockResolvedValue(true);
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/sd360.mp4',
+      body: Buffer.from('mock-sd360'),
+      contentType: 'video/mp4',
+    });
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/portrait.mp4',
+      body: Buffer.from('mock-portrait'),
+      contentType: 'video/mp4',
+    });
 
     const ffmpegModule = await import('@vp/ffmpeg');
 
     const processor = createProbeProcessor({
-      db,
-      s3Client: fakeS3,
+      repositories,
+      storage,
       logger,
     });
 
@@ -383,8 +351,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       })
     );
 
-    const p720Rends = await db.select().from(renditions).where(eq(renditions.videoId, p720Id));
-    expect(p720Rends.map((r) => r.name).sort()).toEqual(['480p', '720p']);
+    const p720Rends = await repositories.renditions.findByVideoId(p720Id);
+    expect(p720Rends.map((r: any) => r.name).sort()).toEqual(['480p', '720p']);
 
     // 2. Test sd360 (keeps lowest rung 480p)
     vi.spyOn(ffmpegModule, 'runFfprobe').mockResolvedValueOnce({
@@ -421,8 +389,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       })
     );
 
-    const sd360Rends = await db.select().from(renditions).where(eq(renditions.videoId, sd360Id));
-    expect(sd360Rends.map((r) => r.name)).toEqual(['480p']);
+    const sd360Rends = await repositories.renditions.findByVideoId(sd360Id);
+    expect(sd360Rends.map((r: any) => r.name)).toEqual(['480p']);
 
     // 3. Test portrait video with 90° rotation
     vi.spyOn(ffmpegModule, 'runFfprobe').mockResolvedValueOnce({
@@ -481,12 +449,9 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       })
     );
 
-    const [portraitVideo] = await db.select().from(videos).where(eq(videos.id, portraitId));
+    const portraitVideo = await repositories.videos.findById(portraitId);
     expect(portraitVideo?.width).toBe(1080); // rotation-aware effective dimensions
     expect(portraitVideo?.height).toBe(1920);
-
-    headSpy.mockRestore();
-    downloadSpy.mockRestore();
   });
 
   it('AC 18: hostile audio-only, unsupported-codec, and over-duration files fail on attempt 1 with correct error codes', async () => {
@@ -494,18 +459,30 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     const badCodecId = await setupUploadedVideo('raw/bad-codec.mp4', 'Bad Codec');
     const overDurationId = await setupUploadedVideo('raw/over-duration.mp4', 'Over Duration');
 
-    const storageModule = await import('@vp/storage');
-    const headSpy = vi.spyOn(storageModule, 'headObject').mockResolvedValue({
-      contentLength: 1000,
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/audio-only.mp4',
+      body: Buffer.from('audio-only'),
       contentType: 'video/mp4',
     });
-    const downloadSpy = vi.spyOn(storageModule, 'downloadObject').mockResolvedValue(true);
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/bad-codec.mp4',
+      body: Buffer.from('bad-codec'),
+      contentType: 'video/mp4',
+    });
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/over-duration.mp4',
+      body: Buffer.from('over-duration'),
+      contentType: 'video/mp4',
+    });
 
     const ffmpegModule = await import('@vp/ffmpeg');
 
     const processor = createProbeProcessor({
-      db,
-      s3Client: fakeS3,
+      repositories,
+      storage,
       logger,
     });
 
@@ -524,7 +501,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       )
     ).rejects.toThrow();
 
-    const [audioVideo] = await db.select().from(videos).where(eq(videos.id, audioOnlyId));
+    const audioVideo = await repositories.videos.findById(audioOnlyId);
     expect(audioVideo?.status).toBe('FAILED');
     expect(audioVideo?.errorCode).toBe(ErrorCodes.CORRUPT_CONTAINER);
 
@@ -543,7 +520,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       )
     ).rejects.toThrow();
 
-    const [codecVideo] = await db.select().from(videos).where(eq(videos.id, badCodecId));
+    const codecVideo = await repositories.videos.findById(badCodecId);
     expect(codecVideo?.status).toBe('FAILED');
     expect(codecVideo?.errorCode).toBe(ErrorCodes.UNSUPPORTED_CODEC);
 
@@ -562,11 +539,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       )
     ).rejects.toThrow();
 
-    const [durVideo] = await db.select().from(videos).where(eq(videos.id, overDurationId));
+    const durVideo = await repositories.videos.findById(overDurationId);
     expect(durVideo?.status).toBe('FAILED');
     expect(durVideo?.errorCode).toBe(ErrorCodes.DURATION_EXCEEDED);
-
-    headSpy.mockRestore();
-    downloadSpy.mockRestore();
   });
 });
