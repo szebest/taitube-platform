@@ -113,13 +113,13 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         step: 'transcode',
         rendition: rendition.name,
         lockToken,
-        errorCode: 'FFMPEG_FAILED',
+        errorCode: ErrorCodes.FFMPEG_FAILED,
         errorMessage: errorMsg,
       });
       await repositories.renditions.update(videoId, rendition.name, {
         status: 'FAILED',
       });
-      throw new PermanentError('FFMPEG_FAILED', errorMsg);
+      throw new PermanentError(ErrorCodes.FFMPEG_FAILED, errorMsg);
     }
 
     // 2. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
@@ -158,10 +158,10 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
             step: 'transcode',
             rendition: rendition.name,
             lockToken,
-            errorCode: 'SOURCE_MISSING',
+            errorCode: ErrorCodes.SOURCE_MISSING,
             errorMessage: errorMsg,
           });
-          throw new PermanentError('SOURCE_MISSING', errorMsg);
+          throw new PermanentError(ErrorCodes.SOURCE_MISSING, errorMsg);
         }
 
         const downloaded = await storage.downloadObject(rawBucket, sourceKey, localSourcePath);

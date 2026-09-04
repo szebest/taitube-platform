@@ -543,8 +543,19 @@
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
           playerStatus.textContent = 'Playing';
-          streamInfo.textContent = `Manifest parsed: ${data.levels.length} quality level(s) found.`;
+          const levelDescriptions = data.levels
+            .map((lvl) => `${lvl.height || lvl.attrs?.RESOLUTION || 'unknown'}p (${Math.round(lvl.bitrate / 1000)} kbps)`)
+            .join(', ');
+          streamInfo.textContent = `Manifest parsed: ${data.levels.length} quality level(s) found: [${levelDescriptions}].`;
+          log('info', `HLS quality levels loaded (${data.levels.length}): ${levelDescriptions}`);
           video.play().catch(() => {});
+        });
+        hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+          const currentLevel = hls.levels[data.level];
+          const desc = currentLevel
+            ? `${currentLevel.height || currentLevel.attrs?.RESOLUTION || 'unknown'}p (${Math.round(currentLevel.bitrate / 1000)} kbps)`
+            : `Level ${data.level}`;
+          log('info', `ABR quality level switched to: ${desc}`);
         });
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {

@@ -124,10 +124,13 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
       // Query video metadata for fps
       const video = await repositories.videos.findById(videoId);
+      const rawFps = video?.fps;
       const fps =
-        video && 'fps' in video && typeof (video as { fps?: number }).fps === 'number'
-          ? (video as { fps: number }).fps
-          : 24;
+        typeof rawFps === 'number'
+          ? rawFps
+          : typeof rawFps === 'string'
+            ? Number.parseFloat(rawFps) || 24
+            : 24;
 
       // 4. Generate master playlist content with measured AVERAGE-BANDWIDTH (SDD §8.4, AC 6)
       const masterContent = generateMasterPlaylist({ ladder, fps, measuredResults });

@@ -238,6 +238,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           durationMs: metadata.durationMs,
           width: metadata.effectiveWidth,
           height: metadata.effectiveHeight,
+          fps: metadata.fps,
           ladder: metadata.ladder,
         },
       });

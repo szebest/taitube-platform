@@ -33,3 +33,13 @@ Integration with real FFmpeg; unit for VTT generation.
 
 ## Definition of Done
 - [x] AC green; screenshot of hover preview in PR (`tools/hls-test-page/hover-preview-screenshot.png`).
+
+## Code Review
+- **Status:** Approved (with zombie worker fencing race fixed)
+- **Review Report:** [Review Report](../reviews/13-thumbnails-flow-child-review.md)
+- **Key Findings:**
+  - Full compliance with AC 1–4, SDD §8.3, and PRD FR-5/OQ-4.
+  - Zombie worker race condition resolved in `apps/worker/src/stages/thumbnail.ts`: step completion with fencing token executes prior to video record updates, discarding updates if fenced out.
+  - Duplicated sprite grid math refactored into shared `calculateSpriteGrid()` helper in `packages/ffmpeg/src/thumbnail.ts`.
+  - Hover preview functionality and screenshot verified in `tools/hls-test-page/hover-preview-screenshot.png`.
+

@@ -88,16 +88,30 @@ export function buildPosterArgs(options: PosterOptions): string[] {
   ];
 }
 
+export interface SpriteGrid {
+  durationSec: number;
+  frameCount: number;
+  rows: number;
+  columns: number;
+}
+
+/**
+ * Computes frame count and grid dimensions for sprite sheet tiling.
+ */
+export function calculateSpriteGrid(durationMs: number, intervalSec = 5, columns = 10): SpriteGrid {
+  const durationSec = durationMs / 1000;
+  const frameCount = Math.max(1, Math.ceil(durationSec / intervalSec));
+  const rows = Math.max(1, Math.ceil(frameCount / columns));
+  return { durationSec, frameCount, rows, columns };
+}
+
 /**
  * Builds FFmpeg argument array for tiled thumbnail sprite sheet (SDD §8.3, PRD OQ-4).
  * 4K sources are scaled down before tiling to keep memory bounded.
  */
 export function buildSpriteArgs(options: SpriteOptions): string[] {
   const { sourcePath, outputPath, durationMs, intervalSec = 5, columns = 10 } = options;
-
-  const durationSec = durationMs / 1000;
-  const frameCount = Math.max(1, Math.ceil(durationSec / intervalSec));
-  const rows = Math.max(1, Math.ceil(frameCount / columns));
+  const { rows } = calculateSpriteGrid(durationMs, intervalSec, columns);
 
   return [
     '-hide_banner',
@@ -143,8 +157,7 @@ export function generateSpriteVtt(options: GenerateSpriteVttOptions): string {
     spriteFilename = 'sprite.jpg',
   } = options;
 
-  const durationSec = durationMs / 1000;
-  const frameCount = Math.max(1, Math.ceil(durationSec / intervalSec));
+  const { frameCount } = calculateSpriteGrid(durationMs, intervalSec, columns);
   const intervalMs = intervalSec * 1000;
 
   const lines: string[] = ['WEBVTT', ''];
@@ -328,9 +341,7 @@ export async function runFfmpegThumbnail(
   const spritePath = path.join(outputDir, 'sprite.jpg');
   const vttPath = path.join(outputDir, 'sprite.vtt');
 
-  const durationSec = durationMs / 1000;
-  const frameCount = Math.max(1, Math.ceil(durationSec / intervalSec));
-  const rows = Math.max(1, Math.ceil(frameCount / columns));
+  const { frameCount, rows } = calculateSpriteGrid(durationMs, intervalSec, columns);
 
   // 1. Generate WebVTT
   const vttContent = generateSpriteVtt({

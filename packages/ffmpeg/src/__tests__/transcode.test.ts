@@ -176,6 +176,20 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     const idx480 = lines.findIndex((l) => l.includes('480p/index.m3u8'));
     expect(idx1080).toBeLessThan(idx720);
     expect(idx720).toBeLessThan(idx480);
+
+    // Snapshot master playlist for s60 fixture (Ticket 12 testing plan)
+    expect(master).toMatchInlineSnapshot(`
+      "#EXTM3U
+      #EXT-X-VERSION:6
+      #EXT-X-INDEPENDENT-SEGMENTS
+      #EXT-X-STREAM-INF:BANDWIDTH=5350000,AVERAGE-BANDWIDTH=4000000,RESOLUTION=1920x1080,FRAME-RATE=24.000,CODECS="avc1.640029,mp4a.40.2"
+      1080p/index.m3u8
+      #EXT-X-STREAM-INF:BANDWIDTH=2996000,AVERAGE-BANDWIDTH=2500000,RESOLUTION=1280x720,FRAME-RATE=24.000,CODECS="avc1.64001f,mp4a.40.2"
+      720p/index.m3u8
+      #EXT-X-STREAM-INF:BANDWIDTH=1498000,AVERAGE-BANDWIDTH=1496000,RESOLUTION=854x480,FRAME-RATE=24.000,CODECS="avc1.4d401f,mp4a.40.2"
+      480p/index.m3u8
+      "
+    `);
   });
 
   it('getAvcCodecString computes correct RFC 6381 codec strings for profile and level', () => {

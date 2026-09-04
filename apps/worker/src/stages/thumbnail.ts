@@ -169,17 +169,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
 
       log.info({ posterKey, spriteKey, spriteVttKey }, 'Uploaded thumbnail assets to storage');
 
-      // 4. Update video row with posterKey and spriteKey (AC 1, AC 3)
-      await repositories.videos.transition({
-        videoId,
-        from: 'PROCESSING',
-        to: 'PROCESSING',
-        eventType: 'thumbnail.completed',
-        eventPayload: { posterKey, spriteKey, spriteVttKey },
-        patch: { posterKey, spriteKey },
-      });
-
-      // 5. Complete processing step with fencing token
+      // 4. Complete processing step with fencing token (SDD §5.3, §9.5, AC 20)
       const comp = await repositories.steps.complete({
         videoId,
         step: 'thumbnail',
@@ -189,8 +179,26 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       });
 
       if (comp.fenced) {
-        log.warn({ lockToken }, 'Fenced out on thumbnail completion');
+        log.warn(
+          { lockToken, event: 'FENCED_OUT' },
+          'Fenced out on thumbnail completion; discarding update'
+        );
+        return {
+          posterKey,
+          spriteKey,
+          spriteVttKey,
+        };
       }
+
+      // 5. Update video row with posterKey and spriteKey (AC 1, AC 3) only if not fenced out
+      await repositories.videos.transition({
+        videoId,
+        from: 'PROCESSING',
+        to: 'PROCESSING',
+        eventType: 'thumbnail.completed',
+        eventPayload: { posterKey, spriteKey, spriteVttKey },
+        patch: { posterKey, spriteKey },
+      });
 
       return {
         posterKey,

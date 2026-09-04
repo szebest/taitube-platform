@@ -36,3 +36,16 @@ Integration with `l30` (CI uses `m10` for time); disk sampling in the test; faul
 
 ## Definition of Done
 - [x] AC green; SDD §8.2 note on disk requirement updated with measured numbers.
+
+## Code Review
+- **Status:** Approved
+- **Review Report:** [Review Report](../reviews/14-segment-streaming-uploader-disk-bounds-review.md)
+- **Key Findings:**
+  - Full compliance with AC 1–6, SDD §8.2, §9.6 rule 6, and §14.2 S2.
+  - `StreamingSegmentUploader` bounds worker disk to `sourceSize + 3 × maxSegmentBytes` by tailing directory, uploading closed segments, and unlinking immediately.
+  - Playlist `index.m3u8` is uploaded strictly last, after all segments succeed.
+  - Thread back-off calculation reduces `-threads` on retry attempts down to 1 (`baseThreads - (attempt - 1)`).
+  - Constant frame rate output (`-fps_mode cfr`) enforces keyframe PTS alignment across 1080p/720p/480p within 1 frame (< 0.05s) for both `s60` and `vfr` sources.
+  - Presigned GET streaming input mode works seamlessly without downloading the source locally.
+  - `ENOSPC` error classified as `TransientError` with hint `DISK_FULL` and temp directory cleaned on all exit paths.
+

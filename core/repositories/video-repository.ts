@@ -23,6 +23,7 @@ export interface VideoRecord {
   durationMs: number | null;
   width: number | null;
   height: number | null;
+  fps?: number | null;
   ladder: unknown;
   masterPlaylistKey?: string | null;
   posterKey?: string | null;
@@ -51,6 +52,7 @@ export interface NewVideoInput {
   durationMs?: number | null;
   width?: number | null;
   height?: number | null;
+  fps?: number | null;
   ladder?: unknown;
   masterPlaylistKey?: string | null;
   posterKey?: string | null;

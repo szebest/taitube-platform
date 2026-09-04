@@ -83,6 +83,7 @@ export class PostgresVideoRepository extends VideoRepository {
           durationMs: data.durationMs ?? null,
           width: data.width ?? null,
           height: data.height ?? null,
+          fps: data.fps !== undefined ? (data.fps !== null ? String(data.fps) : null) : null,
           ladder: data.ladder ?? null,
           masterPlaylistKey: data.masterPlaylistKey ?? null,
           posterKey: data.posterKey ?? null,

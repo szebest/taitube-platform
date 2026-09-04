@@ -144,6 +144,7 @@ export class InMemoryVideoRepository extends VideoRepository {
       durationMs: data.durationMs ?? null,
       width: data.width ?? null,
       height: data.height ?? null,
+      fps: data.fps ?? null,
       ladder: data.ladder ?? null,
       masterPlaylistKey: data.masterPlaylistKey ?? null,
       posterKey: data.posterKey ?? null,
