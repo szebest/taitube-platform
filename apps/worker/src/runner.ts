@@ -26,6 +26,7 @@ import {
   createLogger,
   getMetrics,
   initTracing,
+  startMetricsServer,
 } from '@vp/observability';
 import { createFailureHandler } from './failure-handler.js';
 import { STAGE_REGISTRY, validateQueueName } from './registry.js';
@@ -47,6 +48,7 @@ export interface WorkerRunnerOptions {
   flowProducer?: FlowProducerPort;
   logger?: Logger;
   metrics?: PipelineMetrics;
+  metricsPort?: number;
   workerId?: string;
   heartbeatPath?: string;
 }
@@ -54,10 +56,13 @@ export interface WorkerRunnerOptions {
 export interface WorkerRunner {
   queue: JobQueue;
   worker: { name: string };
+  metricsServer?: { port: number; close: () => Promise<void> };
   close: () => Promise<void>;
 }
 
-export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRunner {
+export async function createWorkerRunner(
+  options: WorkerRunnerOptions = {}
+): Promise<WorkerRunner> {
   const stage = options.stage || process.env['WORKER_STAGE'] || 'probe';
   const config = STAGE_REGISTRY[stage];
   if (!config) {
@@ -213,8 +218,23 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
     }
   );
 
+  let metricsServer: { port: number; close: () => Promise<void> } | undefined;
+  if (options.metricsPort !== undefined) {
+    try {
+      metricsServer = await startMetricsServer({
+        port: options.metricsPort,
+        registry: metrics.registry,
+      });
+    } catch (err) {
+      logger.error({ err }, 'Failed to start worker metrics server');
+    }
+  }
+
   const close = async () => {
     logger.info('Shutting down worker...');
+    if (metricsServer) {
+      await metricsServer.close().catch(() => {});
+    }
     await flowProducer.close().catch(() => {});
     await queue.close();
     for (const q of queues.values()) {
@@ -224,9 +244,12 @@ export function createWorkerRunner(options: WorkerRunnerOptions = {}): WorkerRun
     }
   };
 
-  return {
+  const returnedRunner: WorkerRunner = {
     queue,
     worker: { name: config.queue },
+    metricsServer,
     close,
   };
+
+  return returnedRunner;
 }

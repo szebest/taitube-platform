@@ -1,0 +1,74 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - /etc/prometheus/rules/*.yaml
+
+scrape_configs:
+  - job_name: 'api'
+    static_configs:
+      - targets: ['api:9464']
+        labels:
+          service: 'vp-api'
+
+  - job_name: 'worker-probe'
+    static_configs:
+      - targets: ['worker-probe:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'probe'
+
+  - job_name: 'worker-transcode-1080p'
+    static_configs:
+      - targets: ['worker-transcode-1080p:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'transcode-1080p'
+
+  - job_name: 'worker-transcode-720p'
+    static_configs:
+      - targets: ['worker-transcode-720p:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'transcode-720p'
+
+  - job_name: 'worker-transcode-480p'
+    static_configs:
+      - targets: ['worker-transcode-480p:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'transcode-480p'
+
+  - job_name: 'worker-thumbnail'
+    static_configs:
+      - targets: ['worker-thumbnail:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'thumbnail'
+
+  - job_name: 'worker-package'
+    static_configs:
+      - targets: ['worker-package:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'package'
+
+  - job_name: 'worker-notify'
+    static_configs:
+      - targets: ['worker-notify:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'notify'
+
+  - job_name: 'worker-housekeeping'
+    static_configs:
+      - targets: ['worker-housekeeping:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'housekeeping'

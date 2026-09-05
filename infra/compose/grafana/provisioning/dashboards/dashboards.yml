@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: 'video-pipeline'
+    orgId: 1
+    folder: 'video-pipeline'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

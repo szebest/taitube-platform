@@ -741,7 +741,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
     });
 
     it('starts a worker runner for housekeeping stage successfully', async () => {
-      const runner = createWorkerRunner({
+      const runner = await createWorkerRunner({
         stage: 'housekeeping',
         repositories,
         storage,
