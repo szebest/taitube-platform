@@ -2,7 +2,7 @@ SHELL := /bin/bash
 COMPOSE_FILE := infra/compose/docker-compose.yml
 REDIS_IMAGE ?= redis:7-alpine
 
-.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill
+.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -74,3 +74,12 @@ e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostil
 
 chaos-kill: ## Run crash-safety chaos test (kill worker mid-transcode, assert effectively-once READY)
 	bash scripts/chaos-kill.sh 5
+
+obs-up: ## Start observability stack profile (Prometheus, Grafana, Tempo, Loki, OTel collector, Alertmanager)
+	docker compose -f $(COMPOSE_FILE) --profile observability up -d
+
+obs-down: ## Stop observability stack
+	docker compose -f $(COMPOSE_FILE) --profile observability stop
+
+obs-check: ## Assert observability stack targets UP and healthy via Prometheus API
+	bash scripts/obs-check.sh

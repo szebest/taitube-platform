@@ -81,7 +81,7 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
   const metrics = createMetricsRegistry({ env: 'test' });
 
   for (const stage of workerStages) {
-    const runner = createWorkerRunner({
+    const runner = await createWorkerRunner({
       stage,
       repositories,
       storage,

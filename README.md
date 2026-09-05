@@ -170,10 +170,37 @@ An operator dashboard powered by Bull Board is mounted at `/admin/queues` under 
   - Or provide the constant-time admin secret header: `x-admin-token: <ADMIN_TOKEN>`.
   - Non-admin callers receive RFC 9457 `401 Unauthorized` or `403 Forbidden`.
 
-### 6. Useful commands
+### 6. Observability Stack (Prometheus, Grafana, Tempo, Loki, OTel Collector, Alertmanager)
+
+A complete local observability stack is available as a Docker Compose profile (SDD §12.1, §13, ADR-14, Ticket 21):
+
+```bash
+# 1. Start full stack with observability profile enabled
+docker compose -f infra/compose/docker-compose.yml --profile observability up -d
+
+# Or using Makefile:
+make obs-up
+
+# 2. Verify all targets and components with automated health check:
+make obs-check
+```
+
+#### Endpoints
+- **Prometheus** (`http://localhost:9090`): Scrapes API (`:9464`) and every worker stage (`:9464`) every 5 s.
+- **Grafana** (`http://localhost:3001`): Pre-provisioned with Prometheus, Tempo, and Loki data sources, plus an automatically wired `video-pipeline` dashboards folder (`observability/dashboards/`). Default login: `admin` / `admin`.
+- **Tempo** (`http://localhost:3200`): Distributed tracing receiver (OTLP gRPC on `4317` and HTTP on `4318`).
+- **Loki** (`http://localhost:3100`): Log aggregation receiver.
+- **OTel Collector** (`http://localhost:4318`): Accepts standard OTLP HTTP spans and logs, routing traces to Tempo and logs to Loki.
+- **Alertmanager** (`http://localhost:9093`): Mounted with `observability/alerts/` rules directory and webhook routing.
+
+### 7. Useful commands
 | Command | Description |
 |---|---|
 | `make up` | Start local Postgres, Redis, MinIO with buckets initialized |
+| `make up-all` | Start full stack (infra, migrations, API, all worker stages) |
+| `make obs-up` | Start local observability profile (Prometheus, Grafana, Tempo, Loki, OTel, Alertmanager) |
+| `make obs-down` | Stop local observability profile |
+| `make obs-check` | Verify Prometheus targets UP and datasources healthy |
 | `make down` | Stop local infrastructure containers |
 | `make logs` | Follow compose logs |
 | `make psql` | Open psql shell inside Postgres |
@@ -181,6 +208,8 @@ An operator dashboard powered by Bull Board is mounted at `/admin/queues` under 
 | `make mc` | Run MinIO client |
 | `make check-redis` | Verify BullMQ Redis constraints (`noeviction` + `appendonly`) |
 | `make smoke` | Run local infrastructure smoke tests |
+| `make smoke-offline` | Run offline smoke tests with zero egress |
+| `make e2e` | Run Phase 2 pipeline E2E acceptance suite |
 | `make nuke` | Teardown containers and destroy persistent volumes |
 | `pnpm dev` | Run monorepo in development mode via Turborepo |
 | `pnpm build` | Build all workspace packages with Turborepo |
