@@ -1900,7 +1900,7 @@ Build: `POST /uploads` (single presigned PUT only) → `complete` (+ `HEAD` veri
 
 Build: multipart uploads with resume + sweeper + lifecycle rules; ladder selection; **Flows** fan-out to `transcode-{1080p,720p,480p}` + `thumbnail`, fan-in `package` with `getChildrenValues()`; segment uploader streaming as segments close; master playlist with `CODECS`/`BANDWIDTH`; SSE hub (snapshot, replay, heartbeat, backpressure); error taxonomy + `UnrecoverableError` on probe; retries with jitter; **DLQ** (queue + Postgres mirror) + admin replay/discard; fencing tokens + CAS transitions; `video_events`; reconciler schedulers; admission control per user; OpenAPI docs; hostile test-video set passing (each lands in DLQ with the right code).
 
-**DoD:** 20 mixed videos (15 s–10 min, incl. hostile set) uploaded concurrently → all terminal within 15 min on the laptop; every hostile file in DLQ with a correct `error_code`; replay of a transient DLQ entry succeeds; SSE shows per-rendition progress in the test page; `docs/runbooks/dlq-replay.md` written.
+**DoD:** [x] 20 mixed videos (15 s–10 min, incl. hostile set) uploaded concurrently → all terminal within 15 min on the laptop (passed in 86.7s; see [`docs/load-tests/results/2026-09-05-e2e/`](load-tests/results/2026-09-05-e2e/README.md)); every hostile file in DLQ with a correct `error_code`; replay of a transient DLQ entry succeeds; SSE shows per-rendition progress in the test page; `docs/runbooks/dlq-replay.md` written. [Tag: `phase2-done`]
 
 ### Phase 3 — Observe & scale (≈ 3 weeks)
 

@@ -6,6 +6,7 @@ export async function main(): Promise<void> {
   const env = loadEnv();
   const app = await buildApp({
     cdnBaseUrl: env.CDN_BASE_URL,
+    multipartThresholdBytes: env.S3_MULTIPART_THRESHOLD_BYTES,
   });
 
   const apiAddress = await app.listen({

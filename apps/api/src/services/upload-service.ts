@@ -25,6 +25,7 @@ export interface InitiateUploadParams {
   filename: string;
   sizeBytes: number;
   contentType: string;
+  strategy?: 'single' | 'multipart';
   sha256?: string;
   title?: string;
   visibility?: 'private' | 'unlisted' | 'public';
@@ -123,7 +124,9 @@ export class UploadService {
     const sourceKey = rawSourceKey(videoId, ext);
     const expiresAt = new Date(Date.now() + this.presignedUrlTtlSeconds * 1000);
 
-    const isMultipart = sizeBytes > this.multipartThresholdBytes;
+    const isMultipart = params.strategy
+      ? params.strategy === 'multipart'
+      : sizeBytes > this.multipartThresholdBytes;
 
     if (!isMultipart) {
       // 1. Single PUT Strategy
