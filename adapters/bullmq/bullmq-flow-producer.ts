@@ -1,5 +1,6 @@
 import { type FlowJobNode, FlowProducerPort, QueueError } from '@vp/core/ports';
 import { type ConnectionOptions, FlowProducer } from 'bullmq';
+import { getRedisConnectionOptions } from './connection.js';
 
 export interface BullMqFlowProducerConfig {
   connection?: ConnectionOptions;
@@ -16,12 +17,7 @@ export class BullMqFlowProducer extends FlowProducerPort {
       return;
     }
 
-    const connection =
-      config.connection ??
-      ({
-        host: process.env['REDIS_HOST'] ?? '127.0.0.1',
-        port: Number(process.env['REDIS_PORT'] ?? 6379),
-      } as ConnectionOptions);
+    const connection = getRedisConnectionOptions(config.connection);
 
     this.producer = new FlowProducer({
       connection,

@@ -44,16 +44,30 @@ export class S3StorageClient extends StorageClient {
       return;
     }
 
-    const endpoint = config.endpoint ?? process.env['STORAGE_ENDPOINT'] ?? 'http://localhost:9000';
-    const region = config.region ?? process.env['STORAGE_REGION'] ?? 'us-east-1';
-    const accessKeyId = config.accessKeyId ?? process.env['STORAGE_ACCESS_KEY_ID'] ?? 'minioadmin';
+    const endpoint =
+      config.endpoint ??
+      process.env['S3_ENDPOINT'] ??
+      process.env['STORAGE_ENDPOINT'] ??
+      'http://localhost:9000';
+    const region =
+      config.region ?? process.env['S3_REGION'] ?? process.env['STORAGE_REGION'] ?? 'us-east-1';
+    const accessKeyId =
+      config.accessKeyId ??
+      process.env['S3_ACCESS_KEY_ID'] ??
+      process.env['STORAGE_ACCESS_KEY_ID'] ??
+      'minioadmin';
     const secretAccessKey =
-      config.secretAccessKey ?? process.env['STORAGE_SECRET_ACCESS_KEY'] ?? 'minioadmin';
+      config.secretAccessKey ??
+      process.env['S3_SECRET_ACCESS_KEY'] ??
+      process.env['STORAGE_SECRET_ACCESS_KEY'] ??
+      'minioadmin';
     const forcePathStyle =
       config.forcePathStyle ??
-      (process.env['STORAGE_FORCE_PATH_STYLE'] === 'true' ||
+      (process.env['S3_FORCE_PATH_STYLE'] === 'true' ||
+        process.env['STORAGE_FORCE_PATH_STYLE'] === 'true' ||
         endpoint.includes('localhost') ||
-        endpoint.includes('127.0.0.1'));
+        endpoint.includes('127.0.0.1') ||
+        endpoint.includes('minio'));
 
     const s3Config: S3ClientConfig = {
       endpoint,

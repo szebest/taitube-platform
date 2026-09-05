@@ -1,0 +1,1 @@
+ALTER TABLE "videos" ADD COLUMN "generation" integer DEFAULT 1 NOT NULL;

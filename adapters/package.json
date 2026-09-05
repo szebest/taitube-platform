@@ -3,17 +3,49 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "exports": {
-    ".": "./index.ts",
-    "./s3": "./s3/index.ts",
-    "./redis": "./redis/index.ts",
-    "./bullmq": "./bullmq/index.ts",
-    "./postgres": "./postgres/index.ts",
-    "./in-memory": "./in-memory/index.ts",
-    "./in-memory/*": "./in-memory/*.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./s3": {
+      "types": "./dist/s3/index.d.ts",
+      "import": "./dist/s3/index.js",
+      "default": "./dist/s3/index.js"
+    },
+    "./redis": {
+      "types": "./dist/redis/index.d.ts",
+      "import": "./dist/redis/index.js",
+      "default": "./dist/redis/index.js"
+    },
+    "./bullmq": {
+      "types": "./dist/bullmq/index.d.ts",
+      "import": "./dist/bullmq/index.js",
+      "default": "./dist/bullmq/index.js"
+    },
+    "./postgres": {
+      "types": "./dist/postgres/index.d.ts",
+      "import": "./dist/postgres/index.js",
+      "default": "./dist/postgres/index.js"
+    },
+    "./in-memory": {
+      "types": "./dist/in-memory/index.d.ts",
+      "import": "./dist/in-memory/index.js",
+      "default": "./dist/in-memory/index.js"
+    },
+    "./in-memory/*": {
+      "types": "./dist/in-memory/*.d.ts",
+      "import": "./dist/in-memory/*.js",
+      "default": "./dist/in-memory/*.js"
+    }
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1125.0",
@@ -29,6 +61,7 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@vp/tsconfig": "workspace:*",
+    "rimraf": "^6.0.1",
     "typescript": "^5.7.3"
   }
 }

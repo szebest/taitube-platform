@@ -6,8 +6,13 @@ x-app-env: &app-env
   REDIS_URL: redis://:vp@redis:6379/0
   REDIS_PUBSUB_URL: redis://:vp@redis:6379/1
   REDIS_ADDR: redis:6379
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: vp
   STORAGE_ENDPOINT: http://minio:9000
   S3_ENDPOINT: http://minio:9000
+  S3_FORCE_PATH_STYLE: "true"
+  STORAGE_FORCE_PATH_STYLE: "true"
 
 services:
   postgres:
@@ -149,7 +154,7 @@ services:
       minio-init:
         condition: service_completed_successfully
     tmpfs:
-      - /tmp/vp:size=2g
+      - /tmp/vp:size=2g,mode=1777
     restart: on-failure
 
   worker-transcode-1080p:
@@ -159,7 +164,7 @@ services:
       WORKER_STAGE: transcode-1080p
       FFMPEG_THREADS: "2"
     tmpfs:
-      - /tmp/vp:size=4g
+      - /tmp/vp:size=4g,mode=1777
 
   worker-transcode-720p:
     <<: *worker
@@ -168,7 +173,7 @@ services:
       WORKER_STAGE: transcode-720p
       FFMPEG_THREADS: "2"
     tmpfs:
-      - /tmp/vp:size=4g
+      - /tmp/vp:size=4g,mode=1777
 
   worker-transcode-480p:
     <<: *worker
@@ -177,7 +182,7 @@ services:
       WORKER_STAGE: transcode-480p
       FFMPEG_THREADS: "1"
     tmpfs:
-      - /tmp/vp:size=2g
+      - /tmp/vp:size=2g,mode=1777
 
   worker-thumbnail:
     <<: *worker
@@ -185,7 +190,7 @@ services:
       <<: *app-env
       WORKER_STAGE: thumbnail
     tmpfs:
-      - /tmp/vp:size=1g
+      - /tmp/vp:size=1g,mode=1777
 
   worker-package:
     <<: *worker
@@ -193,7 +198,7 @@ services:
       <<: *app-env
       WORKER_STAGE: package
     tmpfs:
-      - /tmp/vp:size=1g
+      - /tmp/vp:size=1g,mode=1777
 
   worker-notify:
     <<: *worker

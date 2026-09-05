@@ -20,6 +20,7 @@ import {
   UnrecoverableError,
   Worker,
 } from 'bullmq';
+import { getRedisConnectionOptions } from './connection.js';
 
 class CustomUnrecoverableError extends UnrecoverableError {
   code?: string;
@@ -51,12 +52,7 @@ export class BullMqJobQueue extends JobQueue {
       return;
     }
 
-    const connection =
-      config.connection ??
-      ({
-        host: process.env['REDIS_HOST'] ?? '127.0.0.1',
-        port: Number(process.env['REDIS_PORT'] ?? 6379),
-      } as ConnectionOptions);
+    const connection = getRedisConnectionOptions(config.connection);
 
     this.queue = new Queue(config.name, {
       connection,
@@ -152,10 +148,9 @@ export class BullMqJobQueue extends JobQueue {
     options?: QueueWorkerOptions
   ): Promise<void> {
     try {
-      const connection = (this.queue.opts.connection as ConnectionOptions | undefined) ?? {
-        host: process.env['REDIS_HOST'] ?? '127.0.0.1',
-        port: Number(process.env['REDIS_PORT'] ?? 6379),
-      };
+      const connection =
+        (this.queue.opts.connection as ConnectionOptions | undefined) ??
+        getRedisConnectionOptions();
 
       this.worker = new Worker(
         this.queue.name,
