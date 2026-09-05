@@ -42,6 +42,17 @@ export class InMemoryRenditionRepository extends RenditionRepository {
     return results;
   }
 
+  async findByVideoIds(videoIds: string[]): Promise<RenditionRecord[]> {
+    const idSet = new Set(videoIds);
+    const results: RenditionRecord[] = [];
+    for (const r of this.renditionsMap.values()) {
+      if (idSet.has(r.videoId)) {
+        results.push(r);
+      }
+    }
+    return results;
+  }
+
   async update(
     videoId: string,
     name: string,

@@ -2,6 +2,26 @@ import type { VideoRepository, VideoStatus } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { AuthUser } from '../plugins/auth.js';
 
+export type VideoVisibility = 'private' | 'unlisted' | 'public';
+
+export interface VideoLadderEntry {
+  name: string;
+  width: number;
+  height: number;
+  videoKbps?: number;
+  audioKbps?: number;
+}
+
+export interface VideoProgressView {
+  overall: number;
+  byRendition: Record<string, number>;
+}
+
+export interface VideoErrorView {
+  code: string;
+  message: string;
+}
+
 export interface VideoRenditionView {
   name: string;
   status: string;
@@ -12,31 +32,35 @@ export interface VideoDetailView {
   id: string;
   title: string | null;
   description: string | null;
-  visibility: string;
-  status: string;
-  progress: {
-    overall: number;
-    byRendition: Record<string, number>;
-  };
+  visibility: VideoVisibility;
+  status: VideoStatus;
+  progress: VideoProgressView;
   durationMs?: number;
   width?: number;
   height?: number;
-  ladder?: Array<{
-    name: string;
-    width: number;
-    height: number;
-    videoKbps: number;
-    audioKbps: number;
-  }>;
+  fps?: number;
+  ladder?: VideoLadderEntry[];
   renditions: VideoRenditionView[];
   playbackUrl?: string;
   posterUrl?: string;
   spriteUrl?: string;
   spriteVttUrl?: string;
-  error?: {
-    code: string;
-    message: string;
-  };
+  error?: VideoErrorView;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  readyAt?: string;
+}
+
+export interface VideoSummaryView {
+  id: string;
+  title: string | null;
+  description: string | null;
+  visibility: VideoVisibility;
+  status: VideoStatus;
+  durationMs?: number;
+  posterUrl?: string;
+  playbackUrl?: string;
   version: number;
   createdAt: string;
   updatedAt: string;
@@ -48,13 +72,28 @@ export interface VideoServiceDeps {
   cdnBaseUrl?: string;
 }
 
+export function encodeVideoCursor(v: { createdAt: Date | string; id: string }): string {
+  const d =
+    v.createdAt instanceof Date ? v.createdAt.toISOString() : new Date(v.createdAt).toISOString();
+  return Buffer.from(JSON.stringify({ createdAt: d, id: v.id })).toString('base64url');
+}
+
+export function decodeVideoCursor(cursor?: string): { createdAt: Date; id: string } | null {
+  if (!cursor) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+    if (parsed && typeof parsed.createdAt === 'string' && typeof parsed.id === 'string') {
+      const date = new Date(parsed.createdAt);
+      if (!Number.isNaN(date.getTime())) return { createdAt: date, id: parsed.id };
+    }
+  } catch {
+    throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
+  }
+  throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
+}
+
 /**
- * VideoService — Deep domain module for video retrieval and projections (SDD §6.1, §6.3).
- *
- * Encapsulates:
- * 1. Privacy & visibility access control (unlisted/public vs owner/admin private)
- * 2. CDN asset URL derivation (playback, poster, sprite, vtt)
- * 3. Rendition progress aggregation and RFC-compliant response projection
+ * VideoService — Deep domain module for video operations and projections (SDD §6.1, §6.3).
  */
 export class VideoService {
   private readonly videos: VideoRepository;
@@ -68,40 +107,109 @@ export class VideoService {
   }
 
   /**
-   * Retrieves video details and enforces visibility access control.
+   * Keyset paginated video list scoped to caller (SDD §6.1, PRD US-12).
+   */
+  async list(
+    user: AuthUser,
+    options: { cursor?: string; limit?: number; status?: VideoStatus }
+  ): Promise<{ items: VideoSummaryView[]; nextCursor: string | null }> {
+    const decodedCursor = decodeVideoCursor(options.cursor);
+    const limit = Math.max(1, Math.min(100, options.limit ?? 20));
+
+    const rows = await this.videos.listByOwner({
+      ownerId: user.id,
+      cursor: decodedCursor,
+      limit,
+      status: options.status,
+    });
+
+    const hasMore = rows.length > limit;
+    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    const lastRow = hasMore && pageRows.length > 0 ? pageRows[pageRows.length - 1] : undefined;
+    const nextCursor = lastRow ? encodeVideoCursor(lastRow) : null;
+
+    const items: VideoSummaryView[] = pageRows.map((v) => ({
+      id: v.id,
+      title: v.title,
+      description: v.description,
+      visibility: v.visibility as 'private' | 'unlisted' | 'public',
+      status: v.status,
+      durationMs: v.durationMs ?? undefined,
+      posterUrl: v.posterKey
+        ? `${this.cleanCdnBase}/${v.posterKey.replace(/^\/+/, '')}`
+        : undefined,
+      playbackUrl:
+        v.status === 'READY'
+          ? `${this.cleanCdnBase}/${(v.masterPlaylistKey || `videos/${v.id}/hls/master.m3u8`).replace(/^\/+/, '')}`
+          : undefined,
+      version: v.version,
+      createdAt: v.createdAt instanceof Date ? v.createdAt.toISOString() : String(v.createdAt),
+      updatedAt: v.updatedAt instanceof Date ? v.updatedAt.toISOString() : String(v.updatedAt),
+      readyAt: v.readyAt
+        ? v.readyAt instanceof Date
+          ? v.readyAt.toISOString()
+          : String(v.readyAt)
+        : undefined,
+    }));
+
+    return { items, nextCursor };
+  }
+
+  /**
+   * Retrieves video details and enforces visibility access control (SDD §6.1, §11).
    */
   async get(user: AuthUser | null, videoId: string): Promise<VideoDetailView> {
     const details = await this.videos.findWithDetails(videoId);
-    if (!details) {
+    if (!details)
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-    }
 
     const { video, renditions: videoRenditions } = details;
 
-    // Access control (SDD §6.1, §11, AC 2):
-    // - If private: must be authenticated and owner (or admin); other owner + private -> 404
-    // - If unlisted or public: viewable by anyone -> 200
     if (video.visibility === 'private') {
-      if (!user) {
+      if (!user)
         throw new PermanentError(
           ErrorCodes.UNAUTHORIZED,
           'Authentication required to view private video'
         );
-      }
-
       if (user.id !== video.ownerId && user.role !== 'admin') {
-        // Do not leak existence: return 404 VIDEO_NOT_FOUND for non-owners
         throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
       }
     }
 
     const isReady = video.status === 'READY';
     const byRendition: Record<string, number> = {};
-    for (const r of videoRenditions) {
-      byRendition[r.name] = r.status === 'DONE' ? 100 : 0;
+
+    if (Array.isArray(video.ladder)) {
+      for (const rung of video.ladder as Array<{ name: string }>) {
+        if (rung?.name) byRendition[rung.name] = isReady ? 100 : 0;
+      }
     }
 
-    const renditionsResponse = videoRenditions.map((r) => ({
+    for (const r of videoRenditions) {
+      byRendition[r.name] = isReady || r.status === 'DONE' ? 100 : 0;
+    }
+
+    if (details.events) {
+      for (const ev of details.events) {
+        if ((ev.type === 'progress' || ev.type === 'transcode.progress') && ev.payload) {
+          const p = ev.payload as { rendition?: string; percent?: number };
+          if (p.rendition && typeof p.percent === 'number' && byRendition[p.rendition] !== 100) {
+            byRendition[p.rendition] = Math.max(byRendition[p.rendition] ?? 0, p.percent);
+          }
+        }
+      }
+    }
+
+    let overall = isReady ? 100 : 0;
+    if (!isReady) {
+      const keys = Object.keys(byRendition);
+      if (keys.length > 0) {
+        const sum = keys.reduce((acc, k) => acc + (byRendition[k] ?? 0), 0);
+        overall = Math.round(sum / keys.length);
+      }
+    }
+
+    const renditions = videoRenditions.map((r) => ({
       name: r.name,
       status: r.status,
       playlistUrl: r.playlistKey
@@ -113,24 +221,15 @@ export class VideoService {
       id: video.id,
       title: video.title,
       description: video.description,
-      visibility: video.visibility,
+      visibility: video.visibility as 'private' | 'unlisted' | 'public',
       status: video.status,
-      progress: {
-        overall: isReady ? 100 : 0,
-        byRendition,
-      },
+      progress: { overall, byRendition },
       durationMs: video.durationMs ?? undefined,
       width: video.width ?? undefined,
       height: video.height ?? undefined,
-      ladder:
-        (video.ladder as unknown as Array<{
-          name: string;
-          width: number;
-          height: number;
-          videoKbps: number;
-          audioKbps: number;
-        }>) ?? undefined,
-      renditions: renditionsResponse,
+      fps: video.fps ? Number(video.fps) : undefined,
+      ladder: (video.ladder as VideoDetailView['ladder']) ?? undefined,
+      renditions,
       playbackUrl: isReady
         ? `${this.cleanCdnBase}/${(video.masterPlaylistKey || `videos/${video.id}/hls/master.m3u8`).replace(/^\/+/, '')}`
         : undefined,
@@ -160,17 +259,74 @@ export class VideoService {
   }
 
   /**
+   * Updates video metadata with optimistic locking on version (SDD §6.1).
+   */
+  async updateMetadata(
+    user: AuthUser,
+    videoId: string,
+    input: {
+      title?: string | null;
+      description?: string | null;
+      visibility?: 'private' | 'unlisted' | 'public';
+      version: number;
+    }
+  ): Promise<VideoDetailView> {
+    const existing = await this.videos.findById(videoId);
+    if (!existing)
+      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+
+    if (user.role !== 'admin' && existing.ownerId !== user.id) {
+      if (existing.visibility === 'private') {
+        throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+      }
+      throw new PermanentError(
+        ErrorCodes.FORBIDDEN,
+        'Only the video owner or an admin may edit video metadata'
+      );
+    }
+
+    if (existing.version !== input.version) {
+      throw new PermanentError(
+        ErrorCodes.VERSION_CONFLICT,
+        `Version conflict on video ${videoId}: expected version ${input.version}, got ${existing.version}`
+      );
+    }
+
+    const patch: {
+      title?: string | null;
+      description?: string | null;
+      visibility?: 'private' | 'unlisted' | 'public';
+    } = {};
+    if (input.title !== undefined) patch.title = input.title;
+    if (input.description !== undefined) patch.description = input.description;
+    if (input.visibility !== undefined) patch.visibility = input.visibility;
+
+    try {
+      await this.videos.updateMetadata({
+        videoId,
+        expectedVersion: input.version,
+        patch,
+        userId: user.id,
+      });
+    } catch (err: unknown) {
+      if ((err as { code?: string })?.code === 'VERSION_CONFLICT') {
+        throw new PermanentError(ErrorCodes.VERSION_CONFLICT, (err as Error).message);
+      }
+      throw err;
+    }
+
+    return this.get(user, videoId);
+  }
+
+  /**
    * Soft deletes a video (SDD §6.1, §9.8, Ticket 17 AC 4).
-   * Enforces ownership/admin check, transitions status to DELETED, and sets deletedAt.
    */
   async softDelete(
     user: AuthUser,
     videoId: string
   ): Promise<{ videoId: string; status: 'DELETED' }> {
     const video = await this.videos.findById(videoId);
-    if (!video) {
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-    }
+    if (!video) throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
     if (user.role !== 'admin' && video.ownerId !== user.id) {
       throw new PermanentError(
@@ -179,9 +335,7 @@ export class VideoService {
       );
     }
 
-    if (video.status === 'DELETED') {
-      return { videoId, status: 'DELETED' };
-    }
+    if (video.status === 'DELETED') return { videoId, status: 'DELETED' };
 
     const allowedFrom: VideoStatus[] = [
       'UPLOADING',

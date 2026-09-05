@@ -2,7 +2,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
-import swaggerUi from '@fastify/swagger-ui';
+import scalar from '@scalar/fastify-api-reference';
 import {
   BullMqJobQueue,
   InMemoryCacheClient,
@@ -28,7 +28,11 @@ import type {
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import fastify, { type FastifyInstance } from 'fastify';
-import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+} from 'fastify-type-provider-zod';
 import { registerAuth } from './plugins/auth.js';
 import { registerErrorHandler } from './plugins/errors.js';
 import { registerAdminDlqRoutes } from './routes/admin/dlq.js';
@@ -151,9 +155,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   // 6. Register OpenAPI Documentation (/docs)
   await app.register(swagger, {
     openapi: {
+      openapi: '3.1.0',
       info: {
         title: 'video-pipeline API',
-        description: 'Asynchronous video ingestion and HLS transcoding API',
+        description:
+          'Asynchronous video ingestion and HLS transcoding API. All video playback assets (master and media playlists, segments) are served via public CDN.',
         version: '1.0.0',
       },
       servers: [
@@ -162,11 +168,35 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
           description: 'Local development server',
         },
       ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            description: 'Dev or production bearer JWT',
+          },
+          adminToken: {
+            type: 'apiKey',
+            in: 'header',
+            name: 'x-admin-token',
+            description: 'Static admin token for administrative operations',
+          },
+        },
+      },
+    },
+    transform: jsonSchemaTransform,
+  });
+
+  await app.register(scalar, {
+    routePrefix: '/docs',
+    configuration: {
+      pageTitle: 'video-pipeline API Documentation',
     },
   });
 
-  await app.register(swaggerUi, {
-    routePrefix: '/docs',
+  app.get('/openapi.json', { schema: { hide: true } }, async (_req, reply) => {
+    return reply.header('Content-Type', 'application/json').send(app.swagger());
   });
 
   // 7. Register Routes with injected ports

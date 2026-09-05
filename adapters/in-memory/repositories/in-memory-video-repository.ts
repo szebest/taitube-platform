@@ -1,6 +1,7 @@
 import {
   DatabaseError,
   type EventRepository,
+  type ListVideosOptions,
   type NewVideoInput,
   type ProcessingStepRecord,
   type RenditionRecord,
@@ -15,15 +16,13 @@ import {
   VideoRepository,
   type VideoWithDetails,
 } from '@vp/core/ports';
-import type { InternalStep } from './types.js';
+import {
+  DEFAULT_VIDEO_RECORD,
+  type InMemoryVideoRepositoryOptions,
+  type InternalStep,
+} from './types.js';
 
-export interface InMemoryVideoRepositoryOptions {
-  videosMap?: Map<string, VideoRecord>;
-  eventsRepo?: EventRepository;
-  renditionsRepo?: RenditionRepository;
-  stepsRepo?: StepRepository;
-  uploadsRepo?: UploadRepository;
-}
+export type { InMemoryVideoRepositoryOptions };
 
 export class InMemoryVideoRepository extends VideoRepository {
   private readonly videosMap: Map<string, VideoRecord>;
@@ -31,48 +30,44 @@ export class InMemoryVideoRepository extends VideoRepository {
   private readonly renditionsMap?: Map<string, RenditionRecord>;
   private readonly stepsMap?: Map<string, InternalStep>;
   private readonly uploadsMap?: Map<string, UploadRecord>;
-
   private eventsRepo?: EventRepository;
   private renditionsRepo?: RenditionRepository;
   private stepsRepo?: StepRepository;
   private uploadsRepo?: UploadRepository;
 
   constructor(
-    optionsOrVideosMap?: InMemoryVideoRepositoryOptions | Map<string, VideoRecord>,
+    optsOrMap?: InMemoryVideoRepositoryOptions | Map<string, VideoRecord>,
     eventsList?: VideoEventRecord[],
     renditionsMap?: Map<string, RenditionRecord>,
     stepsMap?: Map<string, InternalStep>,
     uploadsMap?: Map<string, UploadRecord>
   ) {
     super();
-    if (optionsOrVideosMap instanceof Map) {
-      this.videosMap = optionsOrVideosMap;
+    if (optsOrMap instanceof Map) {
+      this.videosMap = optsOrMap;
       this.eventsList = eventsList;
       this.renditionsMap = renditionsMap;
       this.stepsMap = stepsMap;
       this.uploadsMap = uploadsMap;
     } else {
-      this.videosMap = optionsOrVideosMap?.videosMap ?? new Map();
-      this.eventsRepo = optionsOrVideosMap?.eventsRepo;
-      this.renditionsRepo = optionsOrVideosMap?.renditionsRepo;
-      this.stepsRepo = optionsOrVideosMap?.stepsRepo;
-      this.uploadsRepo = optionsOrVideosMap?.uploadsRepo;
+      this.videosMap = optsOrMap?.videosMap ?? new Map();
+      this.eventsRepo = optsOrMap?.eventsRepo;
+      this.renditionsRepo = optsOrMap?.renditionsRepo;
+      this.stepsRepo = optsOrMap?.stepsRepo;
+      this.uploadsRepo = optsOrMap?.uploadsRepo;
     }
   }
 
-  setUploadsRepo(repo: UploadRepository): void {
+  setUploadsRepo(repo: UploadRepository) {
     this.uploadsRepo = repo;
   }
-
-  setEventsRepo(repo: EventRepository): void {
+  setEventsRepo(repo: EventRepository) {
     this.eventsRepo = repo;
   }
-
-  setRenditionsRepo(repo: RenditionRepository): void {
+  setRenditionsRepo(repo: RenditionRepository) {
     this.renditionsRepo = repo;
   }
-
-  setStepsRepo(repo: StepRepository): void {
+  setStepsRepo(repo: StepRepository) {
     this.stepsRepo = repo;
   }
 
@@ -80,111 +75,117 @@ export class InMemoryVideoRepository extends VideoRepository {
     return this.videosMap.get(id) ?? null;
   }
 
+  private async getEvents(id: string): Promise<VideoEventRecord[]> {
+    if (this.eventsRepo) return this.eventsRepo.findByVideoId(id);
+    return this.eventsList ? this.eventsList.filter((e) => e.videoId === id) : [];
+  }
+
+  private async getSteps(id: string): Promise<ProcessingStepRecord[]> {
+    if (this.stepsRepo) return this.stepsRepo.findByVideoId(id);
+    return this.stepsMap ? Array.from(this.stepsMap.values()).filter((s) => s.videoId === id) : [];
+  }
+
+  private async getRenditions(id: string): Promise<RenditionRecord[]> {
+    if (this.renditionsRepo) return this.renditionsRepo.findByVideoId(id);
+    return this.renditionsMap
+      ? Array.from(this.renditionsMap.values()).filter((r) => r.videoId === id)
+      : [];
+  }
+
+  private async getUpload(id: string): Promise<UploadRecord | null> {
+    if (this.uploadsRepo) return this.uploadsRepo.findByVideoId(id);
+    return this.uploadsMap
+      ? (Array.from(this.uploadsMap.values()).find((u) => u.videoId === id) ?? null)
+      : null;
+  }
+
+  private async emitEvent(
+    videoId: string,
+    type: string,
+    payload: Record<string, unknown>
+  ): Promise<void> {
+    if (this.eventsRepo) {
+      await this.eventsRepo.create({ videoId, type, payload });
+    } else if (this.eventsList) {
+      this.eventsList.push({
+        id: this.eventsList.length + 1,
+        videoId,
+        type,
+        payload,
+        createdAt: new Date(),
+      });
+    }
+  }
+
   async findWithDetails(id: string): Promise<VideoWithDetails | null> {
     const video = this.videosMap.get(id);
     if (!video) return null;
-
-    let renditions: RenditionRecord[] = [];
-    if (this.renditionsRepo) {
-      renditions = await this.renditionsRepo.findByVideoId(id);
-    } else if (this.renditionsMap) {
-      for (const r of this.renditionsMap.values()) {
-        if (r.videoId === id) renditions.push(r);
-      }
-    }
-
-    let steps: ProcessingStepRecord[] = [];
-    if (this.stepsRepo) {
-      steps = await this.stepsRepo.findByVideoId(id);
-    } else if (this.stepsMap) {
-      for (const s of this.stepsMap.values()) {
-        if (s.videoId === id) steps.push({ ...s });
-      }
-    }
-
-    let events: VideoEventRecord[] = [];
-    if (this.eventsRepo) {
-      events = await this.eventsRepo.findByVideoId(id);
-    } else if (this.eventsList) {
-      events = this.eventsList.filter((e) => e.videoId === id);
-    }
-
-    let upload: UploadRecord | null = null;
-    if (this.uploadsRepo) {
-      upload = await this.uploadsRepo.findByVideoId(id);
-    } else if (this.uploadsMap) {
-      for (const u of this.uploadsMap.values()) {
-        if (u.videoId === id) {
-          upload = u;
-          break;
-        }
-      }
-    }
-
-    return {
-      video,
-      renditions,
-      steps,
-      events,
-      upload,
-    };
+    const [renditions, steps, events, upload] = await Promise.all([
+      this.getRenditions(id),
+      this.getSteps(id),
+      this.getEvents(id),
+      this.getUpload(id),
+    ]);
+    return { video, renditions, steps, events, upload };
   }
 
   async create(data: NewVideoInput): Promise<VideoRecord> {
     const now = new Date();
     const record: VideoRecord = {
-      id: data.id,
-      ownerId: data.ownerId,
-      title: data.title ?? null,
-      description: data.description ?? null,
+      ...DEFAULT_VIDEO_RECORD,
+      ...data,
       visibility: data.visibility ?? 'private',
       status: data.status ?? 'UPLOADING',
-      sourceKey: data.sourceKey,
-      sourceSizeBytes: data.sourceSizeBytes ?? null,
-      durationMs: data.durationMs ?? null,
-      width: data.width ?? null,
-      height: data.height ?? null,
-      fps: data.fps ?? null,
-      ladder: data.ladder ?? null,
-      masterPlaylistKey: data.masterPlaylistKey ?? null,
-      posterKey: data.posterKey ?? null,
-      spriteKey: data.spriteKey ?? null,
-      playbackUrl: data.playbackUrl ?? null,
-      posterUrl: data.posterUrl ?? null,
-      spriteUrl: data.spriteUrl ?? null,
-      spriteVttUrl: data.spriteVttUrl ?? null,
-      errorCode: data.errorCode ?? null,
-      errorMessage: data.errorMessage ?? null,
       generation: data.generation ?? 1,
       version: 1,
       createdAt: now,
       updatedAt: now,
       readyAt: data.readyAt ?? (data.status === 'READY' ? now : null),
-    };
+    } as VideoRecord;
     this.videosMap.set(record.id, record);
     return record;
   }
 
-  async updateMetadata(options: UpdateVideoMetadataOptions): Promise<VideoRecord> {
-    const { videoId, expectedVersion, patch } = options;
-    const video = this.videosMap.get(videoId);
-    if (!video) {
-      throw new DatabaseError(`Video ${videoId} not found`);
-    }
+  async listByOwner(options: ListVideosOptions): Promise<VideoRecord[]> {
+    const { ownerId, cursor, limit, status } = options;
+    const filtered = Array.from(this.videosMap.values()).filter((v) => {
+      if (v.ownerId !== ownerId) return false;
+      if (status ? v.status !== status : v.status === 'DELETED') return false;
+      if (cursor) {
+        const [vt, ct] = [v.createdAt.getTime(), cursor.createdAt.getTime()];
+        return vt < ct || (vt === ct && v.id < cursor.id);
+      }
+      return true;
+    });
+    filtered.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id)
+    );
+    return filtered.slice(0, limit + 1);
+  }
 
+  async updateMetadata(options: UpdateVideoMetadataOptions): Promise<VideoRecord> {
+    const { videoId, expectedVersion, patch, userId } = options;
+    const video = this.videosMap.get(videoId);
+    if (!video) throw new DatabaseError(`Video ${videoId} not found`);
     if (video.version !== expectedVersion) {
       throw new DatabaseError(
         `Version conflict on video ${videoId}: expected version ${expectedVersion}`,
-        { code: 'VERSION_CONFLICT' }
+        {
+          code: 'VERSION_CONFLICT',
+        }
       );
     }
-
     video.version += 1;
     video.updatedAt = new Date();
     if (patch.title !== undefined) video.title = patch.title;
     if (patch.description !== undefined) video.description = patch.description;
     if (patch.visibility !== undefined) video.visibility = patch.visibility;
-
+    await this.emitEvent(videoId, 'video.metadata_updated', {
+      patch,
+      expectedVersion,
+      newVersion: video.version,
+      ...(userId ? { requestedBy: userId } : {}),
+    });
     return video;
   }
 
@@ -192,11 +193,8 @@ export class InMemoryVideoRepository extends VideoRepository {
     const { videoId, from, to, patch = {}, eventType, eventPayload = {} } = options;
     const video = this.videosMap.get(videoId);
     if (!video) return false;
-
-    const allowedSources = Array.isArray(from) ? from : [from];
-    if (!allowedSources.includes(video.status)) {
-      return false;
-    }
+    const allowed = Array.isArray(from) ? from : [from];
+    if (!allowed.includes(video.status)) return false;
 
     const now = new Date();
     Object.assign(video, {
@@ -205,58 +203,25 @@ export class InMemoryVideoRepository extends VideoRepository {
       updatedAt: now,
       readyAt: to === 'READY' ? now : video.readyAt,
     });
-
-    const effectiveEventType = eventType || `video.${to.toLowerCase()}`;
-    if (this.eventsRepo) {
-      await this.eventsRepo.create({
-        videoId,
-        type: effectiveEventType,
-        payload: eventPayload,
-      });
-    } else if (this.eventsList) {
-      this.eventsList.push({
-        id: this.eventsList.length + 1,
-        videoId,
-        type: effectiveEventType,
-        payload: eventPayload,
-        createdAt: now,
-      });
-    }
-
+    await this.emitEvent(videoId, eventType || `video.${to.toLowerCase()}`, eventPayload);
     return true;
   }
 
   async findStaleUploading(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
     const cutoff = new Date(Date.now() - thresholdMs);
-    const results: VideoRecord[] = [];
-    for (const video of this.videosMap.values()) {
-      if (video.status === 'UPLOADING' && video.updatedAt < cutoff) {
-        results.push({ ...video });
-        if (results.length >= limit) break;
-      }
-    }
-    return results;
+    return Array.from(this.videosMap.values())
+      .filter((v) => v.status === 'UPLOADING' && v.updatedAt < cutoff)
+      .slice(0, limit);
   }
 
   async findStaleUploadedWithoutProbe(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
     const cutoff = new Date(Date.now() - thresholdMs);
     const results: VideoRecord[] = [];
-    for (const video of this.videosMap.values()) {
-      if (video.status === 'UPLOADED' && video.updatedAt < cutoff) {
-        let hasProbe = false;
-        if (this.stepsRepo) {
-          const steps = await this.stepsRepo.findByVideoId(video.id);
-          hasProbe = steps.some((s) => s.step === 'probe');
-        } else if (this.stepsMap) {
-          for (const s of this.stepsMap.values()) {
-            if (s.videoId === video.id && s.step === 'probe') {
-              hasProbe = true;
-              break;
-            }
-          }
-        }
-        if (!hasProbe) {
-          results.push({ ...video });
+    for (const v of this.videosMap.values()) {
+      if (v.status === 'UPLOADED' && v.updatedAt < cutoff) {
+        const steps = await this.getSteps(v.id);
+        if (!steps.some((s) => s.step === 'probe')) {
+          results.push({ ...v });
           if (results.length >= limit) break;
         }
       }
@@ -266,51 +231,30 @@ export class InMemoryVideoRepository extends VideoRepository {
 
   async findStaleProcessing(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
     const cutoff = new Date(Date.now() - thresholdMs);
-    const results: VideoRecord[] = [];
-    for (const video of this.videosMap.values()) {
-      if (video.status === 'PROCESSING' && video.updatedAt < cutoff) {
-        results.push({ ...video });
-        if (results.length >= limit) break;
-      }
-    }
-    return results;
+    return Array.from(this.videosMap.values())
+      .filter((v) => v.status === 'PROCESSING' && v.updatedAt < cutoff)
+      .slice(0, limit);
   }
 
   async findSoftDeleted(thresholdMs: number, limit = 50): Promise<VideoRecord[]> {
     const cutoff = new Date(Date.now() - thresholdMs);
-    const results: VideoRecord[] = [];
-    for (const video of this.videosMap.values()) {
-      if (video.status === 'DELETED') {
-        const deletedTime = (video as unknown as { deletedAt?: Date }).deletedAt ?? video.updatedAt;
-        if (deletedTime < cutoff) {
-          results.push({ ...video });
-          if (results.length >= limit) break;
-        }
-      }
-    }
-    return results;
+    return Array.from(this.videosMap.values())
+      .filter((v) => {
+        if (v.status !== 'DELETED') return false;
+        return ((v as { deletedAt?: Date }).deletedAt ?? v.updatedAt) < cutoff;
+      })
+      .slice(0, limit);
   }
 
   async findExpiredRaw(retentionDays: number, limit = 50): Promise<VideoRecord[]> {
-    const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+    const cutoff = new Date(Date.now() - retentionDays * 86400000);
     const results: VideoRecord[] = [];
-    for (const video of this.videosMap.values()) {
-      if (video.status === 'READY') {
-        const readyTime = video.readyAt ?? video.updatedAt;
-        if (readyTime < cutoff) {
-          let alreadyExpired = false;
-          if (this.eventsRepo) {
-            const events = await this.eventsRepo.findByVideoId(video.id);
-            alreadyExpired = events.some((e) => e.type === 'video.raw_expired');
-          } else if (this.eventsList) {
-            alreadyExpired = this.eventsList.some(
-              (e) => e.videoId === video.id && e.type === 'video.raw_expired'
-            );
-          }
-          if (!alreadyExpired) {
-            results.push({ ...video });
-            if (results.length >= limit) break;
-          }
+    for (const v of this.videosMap.values()) {
+      if (v.status === 'READY' && (v.readyAt ?? v.updatedAt) < cutoff) {
+        const events = await this.getEvents(v.id);
+        if (!events.some((e) => e.type === 'video.raw_expired')) {
+          results.push({ ...v });
+          if (results.length >= limit) break;
         }
       }
     }
@@ -319,27 +263,17 @@ export class InMemoryVideoRepository extends VideoRepository {
 
   async findReadyWithOldGenerations(limit = 50): Promise<VideoRecord[]> {
     const results: VideoRecord[] = [];
-    for (const video of this.videosMap.values()) {
-      const currentGen = video.generation || 1;
-      if (video.status === 'READY' && currentGen > 1) {
-        let alreadyPurged = false;
-        if (this.eventsRepo) {
-          const events = await this.eventsRepo.findByVideoId(video.id);
-          alreadyPurged = events.some(
-            (e) =>
-              e.type === 'video.generation_purged' &&
-              Number((e.payload as { generation?: number })?.generation ?? 0) >= currentGen
-          );
-        } else if (this.eventsList) {
-          alreadyPurged = this.eventsList.some(
-            (e) =>
-              e.videoId === video.id &&
-              e.type === 'video.generation_purged' &&
-              Number((e.payload as { generation?: number })?.generation ?? 0) >= currentGen
-          );
-        }
-        if (!alreadyPurged) {
-          results.push({ ...video });
+    for (const v of this.videosMap.values()) {
+      const curGen = v.generation || 1;
+      if (v.status === 'READY' && curGen > 1) {
+        const events = await this.getEvents(v.id);
+        const purged = events.some(
+          (e) =>
+            e.type === 'video.generation_purged' &&
+            Number((e.payload as { generation?: number })?.generation ?? 0) >= curGen
+        );
+        if (!purged) {
+          results.push({ ...v });
           if (results.length >= limit) break;
         }
       }
@@ -349,25 +283,18 @@ export class InMemoryVideoRepository extends VideoRepository {
 
   async hardDelete(id: string): Promise<boolean> {
     const video = this.videosMap.get(id);
-    if (!video || video.status !== 'DELETED') {
-      return false;
-    }
+    if (!video || video.status !== 'DELETED') return false;
     this.videosMap.delete(id);
     return true;
   }
 
   async countInFlightByOwner(ownerId: string): Promise<number> {
-    let count = 0;
-    for (const video of this.videosMap.values()) {
-      if (
-        video.ownerId === ownerId &&
-        (video.status === 'PROBING' || video.status === 'PROCESSING') &&
-        !video.deletedAt
-      ) {
-        count++;
-      }
-    }
-    return count;
+    return Array.from(this.videosMap.values()).filter(
+      (v) =>
+        v.ownerId === ownerId &&
+        (v.status === 'PROBING' || v.status === 'PROCESSING') &&
+        !v.deletedAt
+    ).length;
   }
 
   clear(): void {

@@ -78,6 +78,17 @@ export interface UpdateVideoMetadataOptions {
     description?: string | null;
     visibility?: VideoVisibility;
   };
+  userId?: string;
+}
+
+export interface ListVideosOptions {
+  ownerId: string;
+  cursor?: {
+    createdAt: Date;
+    id: string;
+  } | null;
+  limit: number;
+  status?: VideoStatus;
 }
 
 export interface TransitionVideoOptions {
@@ -107,6 +118,7 @@ export abstract class VideoRepository {
   abstract findById(id: string): Promise<VideoRecord | null>;
   abstract findWithDetails(id: string): Promise<VideoWithDetails | null>;
   abstract create(data: NewVideoInput): Promise<VideoRecord>;
+  abstract listByOwner(options: ListVideosOptions): Promise<VideoRecord[]>;
   abstract updateMetadata(options: UpdateVideoMetadataOptions): Promise<VideoRecord>;
   abstract transition(options: TransitionVideoOptions): Promise<boolean>;
   abstract findStaleUploading(thresholdMs: number, limit?: number): Promise<VideoRecord[]>;
