@@ -1,5 +1,14 @@
 name: video-pipeline
 
+x-app-env: &app-env
+  DATABASE_URL: postgres://vp:vp@postgres:5432/vp
+  DATABASE_URL_MIGRATIONS: postgres://vp:vp@postgres:5432/vp
+  REDIS_URL: redis://:vp@redis:6379/0
+  REDIS_PUBSUB_URL: redis://:vp@redis:6379/1
+  REDIS_ADDR: redis:6379
+  STORAGE_ENDPOINT: http://minio:9000
+  S3_ENDPOINT: http://minio:9000
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -83,6 +92,8 @@ services:
     container_name: vp-migrate
     env_file:
       - ../../.env
+    environment:
+      <<: *app-env
     command: ["node", "dist/migrate.js"]
     depends_on:
       postgres:
@@ -96,6 +107,8 @@ services:
     container_name: vp-api
     env_file:
       - ../../.env
+    environment:
+      <<: *app-env
     ports:
       - "3000:3000"
       - "9464:9464"
@@ -126,6 +139,7 @@ services:
     env_file:
       - ../../.env
     environment:
+      <<: *app-env
       WORKER_STAGE: probe
     depends_on:
       postgres:
@@ -141,6 +155,7 @@ services:
   worker-transcode-1080p:
     <<: *worker
     environment:
+      <<: *app-env
       WORKER_STAGE: transcode-1080p
       FFMPEG_THREADS: "2"
     tmpfs:
@@ -149,6 +164,7 @@ services:
   worker-transcode-720p:
     <<: *worker
     environment:
+      <<: *app-env
       WORKER_STAGE: transcode-720p
       FFMPEG_THREADS: "2"
     tmpfs:
@@ -157,6 +173,7 @@ services:
   worker-transcode-480p:
     <<: *worker
     environment:
+      <<: *app-env
       WORKER_STAGE: transcode-480p
       FFMPEG_THREADS: "1"
     tmpfs:
@@ -165,6 +182,7 @@ services:
   worker-thumbnail:
     <<: *worker
     environment:
+      <<: *app-env
       WORKER_STAGE: thumbnail
     tmpfs:
       - /tmp/vp:size=1g
@@ -172,6 +190,7 @@ services:
   worker-package:
     <<: *worker
     environment:
+      <<: *app-env
       WORKER_STAGE: package
     tmpfs:
       - /tmp/vp:size=1g
@@ -179,11 +198,13 @@ services:
   worker-notify:
     <<: *worker
     environment:
+      <<: *app-env
       WORKER_STAGE: notify
 
   worker-housekeeping:
     <<: *worker
     environment:
+      <<: *app-env
       WORKER_STAGE: housekeeping
 
   hls-test-page:

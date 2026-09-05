@@ -11,6 +11,7 @@ import type {
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
 import {
+  NotifyJob,
   PackageJob,
   type ProbeJob,
   ThumbnailJob,
@@ -129,14 +130,40 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         errorMessage: msg,
       });
 
-      await repositories.videos.transition({
+      const transitioned = await repositories.videos.transition({
         videoId,
         from: 'PROBING',
         to: 'FAILED',
-        eventType: 'probe.failed',
+        eventType: 'video.failed',
         eventPayload: { errorCode: code, errorMessage: msg },
         patch: { errorCode: code, errorMessage: msg },
       });
+
+      if (transitioned && getQueue) {
+        const video = await repositories.videos.findById(videoId).catch(() => null);
+        if (video) {
+          const notifyQueue = getQueue('notify');
+          const notifyJobId = ids.notify(videoId, 'video.failed', 1);
+          await notifyQueue
+            .add(
+              'notify',
+              NotifyJob.parse({
+                videoId,
+                userId: video.ownerId,
+                event: 'video.failed',
+                eventSeq: 1,
+                payload: { status: 'FAILED', errorCode: code, errorMessage: msg },
+                traceparent: job.data.traceparent || '',
+              }),
+              {
+                jobId: notifyJobId,
+                ...stagePolicies.notify,
+                ...defaultJobOptions,
+              }
+            )
+            .catch(() => {});
+        }
+      }
 
       throw new PermanentError(code, msg);
     };

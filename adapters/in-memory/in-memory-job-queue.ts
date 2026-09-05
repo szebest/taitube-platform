@@ -98,7 +98,7 @@ export class InMemoryJobQueue extends JobQueue {
     if (initialState === 'waiting') {
       this.enqueueWaiting(job);
       // If a worker is listening and we are not paused, execute
-      if (this.processor && !this.paused && !this.isDraining) {
+      if (this.processor && !this.paused) {
         queueMicrotask(() => {
           this.drain().catch(() => {});
         });
@@ -219,6 +219,7 @@ export class InMemoryJobQueue extends JobQueue {
   async drain(): Promise<void> {
     if (this.isDraining) return;
     this.isDraining = true;
+    let firstError: Error | undefined;
     try {
       while (!this.paused && this.processor) {
         const nextIndex = this.enqueuedJobs.findIndex(
@@ -227,10 +228,29 @@ export class InMemoryJobQueue extends JobQueue {
         if (nextIndex === -1) break;
         const job = this.enqueuedJobs[nextIndex];
         if (!job) break;
-        await this.executeJob(job);
+        try {
+          await this.executeJob(job);
+        } catch (err: unknown) {
+          if (!firstError) {
+            firstError = err as Error;
+          }
+        }
       }
     } finally {
       this.isDraining = false;
+      if (
+        !this.paused &&
+        this.processor &&
+        this.enqueuedJobs.some((job) => this.jobStates.get(job.id) === 'waiting')
+      ) {
+        queueMicrotask(() => {
+          this.drain().catch(() => {});
+        });
+      }
+    }
+
+    if (firstError) {
+      throw firstError;
     }
   }
 

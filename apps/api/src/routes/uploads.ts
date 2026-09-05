@@ -88,8 +88,9 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
             'Initiates a direct-to-storage upload (single PUT for <= 100 MB, multipart for larger files).',
           body: z.object({
             filename: z.string().min(1).max(255),
-            sizeBytes: z.number().int().positive(),
+            sizeBytes: z.number().int().min(0),
             contentType: z.string(),
+            strategy: z.enum(['single', 'multipart']).optional(),
             sha256: z.string().optional(),
             title: z.string().optional(),
             visibility: z.enum(['private', 'unlisted', 'public']).optional(),
@@ -131,7 +132,8 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        const { filename, sizeBytes, contentType, sha256, title, visibility } = request.body;
+        const { filename, sizeBytes, contentType, strategy, sha256, title, visibility } =
+          request.body;
 
         if (sizeBytes > maxUploadBytes) {
           throw new PermanentError(
@@ -151,6 +153,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
           filename,
           sizeBytes,
           contentType,
+          strategy,
           sha256,
           title,
           visibility,

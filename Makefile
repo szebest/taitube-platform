@@ -2,7 +2,7 @@ SHELL := /bin/bash
 COMPOSE_FILE := infra/compose/docker-compose.yml
 REDIS_IMAGE ?= redis:7-alpine
 
-.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-offline
+.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -68,6 +68,9 @@ smoke-infra: ## Run infrastructure smoke tests
 smoke-offline: ## Run smoke tests in offline mode (internal network with zero internet egress)
 	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) -f infra/compose/docker-compose.offline.yml up -d --build --wait
 	bash scripts/e2e-smoke.sh
+
+e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostile set)
+	bash scripts/e2e-suite.sh
 
 chaos-kill: ## Run crash-safety chaos test (kill worker mid-transcode, assert effectively-once READY)
 	bash scripts/chaos-kill.sh 5

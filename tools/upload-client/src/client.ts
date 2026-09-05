@@ -11,6 +11,7 @@ export interface InitUploadParams {
   contentType: string;
   title?: string;
   sha256?: string;
+  strategy?: 'single' | 'multipart';
 }
 
 export interface PartInfo {
@@ -172,6 +173,7 @@ export class UploadClient {
     filePath: string;
     contentType?: string;
     title?: string;
+    strategy?: 'single' | 'multipart';
     concurrency?: number;
     existingUploadId?: string;
     killAtPercent?: number; // for testing simulated crash at ~50%
@@ -181,6 +183,7 @@ export class UploadClient {
       filePath,
       contentType = 'video/mp4',
       title,
+      strategy: requestedStrategy,
       concurrency = 4, // Default concurrency 4 per AC 18
       existingUploadId,
       killAtPercent,
@@ -219,6 +222,7 @@ export class UploadClient {
         sizeBytes,
         contentType,
         title,
+        strategy: requestedStrategy,
       });
 
       uploadId = init.uploadId;

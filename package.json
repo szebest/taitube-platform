@@ -22,6 +22,8 @@
     "dev-token": "bun tools/dev-token/src/index.ts",
     "upload-client": "bun tools/upload-client/src/cli.ts",
     "fairness": "bun scripts/fairness-simulation.ts",
+    "e2e": "bun scripts/run-e2e.ts",
+    "test:e2e": "vitest run --config tests/vitest.config.ts",
     "db:migrate": "pnpm --filter @vp/db migrate",
     "db:seed": "pnpm --filter @vp/db seed",
     "db:check": "pnpm --filter @vp/db check",

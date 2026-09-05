@@ -5,21 +5,15 @@ FROM node:24-slim AS build
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /repo
 
-# Copy monorepo dependency manifests
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
-COPY apps/worker/package.json apps/worker/
-COPY packages/*/package.json packages/
-COPY tools/*/package.json tools/
+# Copy source trees
+COPY . .
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source trees
-COPY . .
-
 # Build worker and dependencies, deploy production bundle
 RUN pnpm turbo run build --filter=@vp/worker... \
- && pnpm deploy --filter=@vp/worker --prod /out
+ && pnpm deploy --legacy --filter=@vp/worker --prod /out
 
 # Base runtime choices
 FROM oven/bun:1.4-slim AS runtime-bun
