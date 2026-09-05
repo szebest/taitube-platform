@@ -5,7 +5,7 @@ import {
   RenditionRepository,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
 
@@ -26,11 +26,12 @@ export class PostgresRenditionRepository extends RenditionRepository {
           height: data.height,
           videoBitrateKbps: data.videoBitrateKbps ?? 0,
           audioBitrateKbps: data.audioBitrateKbps ?? 0,
-          status: (data.status as any) || 'PENDING',
+          status:
+            (data.status as (typeof schema.renditionStatusEnum.enumValues)[number]) || 'PENDING',
           playlistKey: data.playlistKey ?? null,
           segmentCount: data.segmentCount ?? null,
           bytes: data.bytes ?? null,
-        } as any)
+        } as unknown as typeof schema.renditions.$inferInsert)
         .returning();
 
       if (!created) {
@@ -57,6 +58,21 @@ export class PostgresRenditionRepository extends RenditionRepository {
         `Failed to get renditions for video ${videoId}: ${(err as Error).message}`,
         { cause: err }
       );
+    }
+  }
+
+  async findByVideoIds(videoIds: string[]): Promise<RenditionRecord[]> {
+    if (videoIds.length === 0) return [];
+    try {
+      const rows = await this.db
+        .select()
+        .from(schema.renditions)
+        .where(inArray(schema.renditions.videoId, videoIds));
+      return rows as unknown as RenditionRecord[];
+    } catch (err: unknown) {
+      throw new DatabaseError(`Failed to get renditions for videos: ${(err as Error).message}`, {
+        cause: err,
+      });
     }
   }
 

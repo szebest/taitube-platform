@@ -6,6 +6,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { AuthUser } from '../plugins/auth.js';
+import { problemResponse } from '../schemas/problem.js';
 import type { SseHub } from '../services/sse-hub.js';
 
 export interface EventsRouteOptions {
@@ -48,11 +49,8 @@ function mapEventToSse(record: { id: number; type: string; payload: unknown }): 
     sseEvent = 'progress';
   } else if (record.type === 'video.ready') {
     sseEvent = 'status';
-    data = {
-      status: 'READY',
-      playbackUrl: payloadObj?.['playbackUrl'],
-    };
-  } else if (record.type === 'video.failed' || record.type === 'probe.failed') {
+    data = { status: 'READY' };
+  } else if (record.type === 'video.failed') {
     sseEvent = 'status';
     data = {
       status: 'FAILED',
@@ -80,177 +78,213 @@ export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteO
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  // GET /v1/videos/:id/events (SDD §10.1, §10.2, AC 1-6)
-  server.get(
-    '/v1/videos/:id/events',
-    {
-      schema: {
-        params: z.object({
-          id: z.string().uuid({ message: 'Invalid video ID format' }),
-        }),
-        querystring: z
-          .object({
-            token: z.string().optional(),
-            'last-event-id': z.string().optional(),
-          })
-          .optional(),
+  // GET /v1/videos/:id/events (and /videos/:id/events) (SDD §10.1, §10.2, AC 1-6)
+  for (const path of ['/v1/videos/:id/events', '/videos/:id/events'] as const) {
+    const isAlias = path === '/videos/:id/events';
+    server.get(
+      path,
+      {
+        schema: {
+          tags: ['Events'],
+          summary: 'SSE stream for single video',
+          description:
+            'Streams realtime video progress and status events over Server-Sent Events with snapshot and replay.',
+          params: z.object({
+            id: z.string().uuid({ message: 'Invalid video ID format' }),
+          }),
+          querystring: z
+            .object({
+              token: z
+                .string()
+                .optional()
+                .describe('JWT token for query-string auth bypass in EventSource'),
+              'last-event-id': z.string().optional().describe('Replay events after this ID'),
+            })
+            .optional(),
+          response: {
+            200: z.string().describe('text/event-stream Server-Sent Events stream'),
+            400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
+            401: problemResponse(
+              [ErrorCodes.UNAUTHORIZED],
+              'Authentication required for private video'
+            ),
+            404: problemResponse([ErrorCodes.VIDEO_NOT_FOUND], 'Video not found'),
+            429: problemResponse([ErrorCodes.RATE_LIMITED], 'SSE connection limit exceeded'),
+          },
+          ...(isAlias ? { hide: true } : {}),
+        },
       },
-    },
-    async (request, reply) => {
-      const { id: videoId } = request.params;
-      const user = extractUser(request);
+      async (request, reply) => {
+        const { id: videoId } = request.params;
+        const user = extractUser(request);
 
-      // 1. Authorise identically to GET /v1/videos/:id (SDD §6.1, §11, AC 2)
-      const video = await repositories.videos.findById(videoId);
-      if (!video) {
-        throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+        // 1. Authorise identically to GET /v1/videos/:id (SDD §6.1, §11, AC 2)
+        const video = await repositories.videos.findById(videoId);
+        if (!video) {
+          throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+        }
+
+        if (video.visibility === 'private') {
+          if (!user) {
+            throw new PermanentError(
+              ErrorCodes.UNAUTHORIZED,
+              'Authentication required to view private video'
+            );
+          }
+          if (user.id !== video.ownerId && user.role !== 'admin') {
+            throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+          }
+        }
+
+        // 2. Subscribe FIRST before reading DB snapshot to close any gap (SDD §10.2, AC 2)
+        const connection = sseHub.register({
+          channel: videoChannel(videoId),
+          userId: user?.id,
+          rawResponse: reply.raw,
+        });
+
+        // 3. Hijack raw response and set SSE headers (SDD §10.1)
+        reply.raw.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'X-Accel-Buffering': 'no',
+          Connection: 'keep-alive',
+        });
+        reply.raw.flushHeaders?.();
+
+        // 4. Query DB for snapshot and latest event ID
+        const [renditions, latestEventId] = await Promise.all([
+          repositories.renditions.findByVideoId(videoId).catch(() => []),
+          repositories.events.getLatestEventId(videoId).catch(() => 0),
+        ]);
+
+        const isReady = video.status === 'READY';
+        const byRendition: Record<string, number> = {};
+        for (const r of renditions) {
+          byRendition[r.name] = r.status === 'DONE' ? 100 : 0;
+        }
+        const doneCount = renditions.filter((r) => r.status === 'DONE').length;
+        const overall = isReady
+          ? 100
+          : renditions.length > 0
+            ? Math.round((doneCount * 100) / renditions.length)
+            : 0;
+
+        const snapshotData: Record<string, unknown> = {
+          videoId,
+          status: video.status,
+          progress: {
+            overall,
+            byRendition,
+          },
+        };
+
+        if (isReady) {
+          const key = video.masterPlaylistKey || `videos/${videoId}/hls/master.m3u8`;
+          snapshotData['playbackUrl'] = `${cleanCdnBase}/${key.replace(/^\/+/, '')}`;
+        }
+
+        connection.sendSnapshot(snapshotData, latestEventId);
+
+        // 5. Replay missed events if Last-Event-ID header is present (AC 3)
+        const lastEventIdHeader =
+          request.headers['last-event-id'] ||
+          (request.query as Record<string, string> | undefined)?.['last-event-id'];
+
+        let lastSentId = latestEventId;
+        if (lastEventIdHeader) {
+          const afterId = Number.parseInt(String(lastEventIdHeader), 10);
+          if (!Number.isNaN(afterId)) {
+            const missed = await repositories.events.findAfterId(videoId, afterId);
+            for (const ev of missed) {
+              const mapped = mapEventToSse(ev);
+              connection.sendReplayEvent(ev.id, mapped.event, mapped.data);
+              lastSentId = Math.max(lastSentId, ev.id);
+            }
+          }
+        }
+
+        connection.markLive(lastSentId);
       }
+    );
+  }
 
-      if (video.visibility === 'private') {
+  // GET /v1/me/events (and /me/events) (SDD §10.1, AC 5)
+  for (const path of ['/v1/me/events', '/me/events'] as const) {
+    const isAlias = path === '/me/events';
+    server.get(
+      path,
+      {
+        schema: {
+          tags: ['Events'],
+          summary: 'SSE stream for all user videos',
+          description:
+            'Streams realtime video events for all videos owned by the authenticated caller.',
+          querystring: z
+            .object({
+              token: z
+                .string()
+                .optional()
+                .describe('JWT token for query-string auth bypass in EventSource'),
+              'last-event-id': z.string().optional().describe('Replay events after this ID'),
+            })
+            .optional(),
+          response: {
+            200: z.string().describe('text/event-stream Server-Sent Events stream'),
+            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
+            429: problemResponse([ErrorCodes.RATE_LIMITED], 'SSE connection limit exceeded'),
+          },
+          ...(isAlias ? { hide: true } : {}),
+        },
+      },
+      async (request, reply) => {
+        const user = extractUser(request);
         if (!user) {
           throw new PermanentError(
             ErrorCodes.UNAUTHORIZED,
-            'Authentication required to view private video'
+            'Authentication required to subscribe to personal event stream'
           );
         }
-        if (user.id !== video.ownerId && user.role !== 'admin') {
-          throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-        }
-      }
 
-      // 2. Subscribe FIRST before reading DB snapshot to close any gap (SDD §10.2, AC 2)
-      const connection = sseHub.register({
-        channel: videoChannel(videoId),
-        userId: user?.id,
-        rawResponse: reply.raw,
-      });
+        const connection = sseHub.register({
+          channel: userChannel(user.id),
+          userId: user.id,
+          rawResponse: reply.raw,
+        });
 
-      // 3. Hijack raw response and set SSE headers (SDD §10.1)
-      reply.raw.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'X-Accel-Buffering': 'no',
-        Connection: 'keep-alive',
-      });
-      reply.raw.flushHeaders?.();
+        reply.raw.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'X-Accel-Buffering': 'no',
+          Connection: 'keep-alive',
+        });
+        reply.raw.flushHeaders?.();
 
-      // 4. Query DB for snapshot and latest event ID
-      const [renditions, latestEventId] = await Promise.all([
-        repositories.renditions.findByVideoId(videoId).catch(() => []),
-        repositories.events.getLatestEventId(videoId).catch(() => 0),
-      ]);
+        connection.sendSnapshot({
+          userId: user.id,
+          status: 'SUBSCRIBED',
+          progress: { overall: 0, byRendition: {} },
+        });
 
-      const isReady = video.status === 'READY';
-      const byRendition: Record<string, number> = {};
-      for (const r of renditions) {
-        byRendition[r.name] = r.status === 'DONE' ? 100 : 0;
-      }
-      const doneCount = renditions.filter((r) => r.status === 'DONE').length;
-      const overall = isReady
-        ? 100
-        : renditions.length > 0
-          ? Math.round((doneCount * 100) / renditions.length)
-          : 0;
+        const lastEventIdHeader =
+          request.headers['last-event-id'] ||
+          (request.query as Record<string, string> | undefined)?.['last-event-id'];
 
-      const snapshotData: Record<string, unknown> = {
-        videoId,
-        status: video.status,
-        progress: {
-          overall,
-          byRendition,
-        },
-      };
-
-      if (isReady) {
-        const key = video.masterPlaylistKey || `videos/${videoId}/hls/master.m3u8`;
-        snapshotData['playbackUrl'] = `${cleanCdnBase}/${key.replace(/^\/+/, '')}`;
-      }
-
-      connection.sendSnapshot(snapshotData, latestEventId);
-
-      // 5. Replay missed events if Last-Event-ID header is present (AC 3)
-      const lastEventIdHeader =
-        request.headers['last-event-id'] ||
-        (request.query as Record<string, string> | undefined)?.['last-event-id'];
-
-      let lastSentId = latestEventId;
-      if (lastEventIdHeader) {
-        const afterId = Number.parseInt(String(lastEventIdHeader), 10);
-        if (!Number.isNaN(afterId)) {
-          const missed = await repositories.events.findAfterId(videoId, afterId);
-          for (const ev of missed) {
-            const mapped = mapEventToSse(ev);
-            connection.sendReplayEvent(ev.id, mapped.event, mapped.data);
-            lastSentId = Math.max(lastSentId, ev.id);
+        let lastSentId = 0;
+        if (lastEventIdHeader) {
+          const afterId = Number.parseInt(String(lastEventIdHeader), 10);
+          if (!Number.isNaN(afterId)) {
+            const missed = await repositories.events.findAfterIdForUser(user.id, afterId);
+            for (const ev of missed) {
+              const mapped = mapEventToSse(ev);
+              connection.sendReplayEvent(ev.id, mapped.event, mapped.data);
+              lastSentId = Math.max(lastSentId, ev.id);
+            }
           }
         }
+
+        connection.markLive(lastSentId);
       }
-
-      // 6. Transition to live with deduplication of buffered events
-      connection.markLive(lastSentId);
-    }
-  );
-
-  // GET /v1/me/events (SDD §10.2, PRD FR-8)
-  server.get(
-    '/v1/me/events',
-    {
-      schema: {
-        querystring: z
-          .object({
-            token: z.string().optional(),
-            'last-event-id': z.string().optional(),
-          })
-          .optional(),
-      },
-    },
-    async (request, reply) => {
-      const user = extractUser(request);
-      if (!user) {
-        throw new PermanentError(
-          ErrorCodes.UNAUTHORIZED,
-          'Authentication required to subscribe to personal event stream'
-        );
-      }
-
-      const connection = sseHub.register({
-        channel: userChannel(user.id),
-        userId: user.id,
-        rawResponse: reply.raw,
-      });
-
-      reply.raw.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'X-Accel-Buffering': 'no',
-        Connection: 'keep-alive',
-      });
-      reply.raw.flushHeaders?.();
-
-      connection.sendSnapshot({
-        userId: user.id,
-        status: 'SUBSCRIBED',
-        progress: { overall: 0, byRendition: {} },
-      });
-
-      const lastEventIdHeader =
-        request.headers['last-event-id'] ||
-        (request.query as Record<string, string> | undefined)?.['last-event-id'];
-
-      let lastSentId = 0;
-      if (lastEventIdHeader) {
-        const afterId = Number.parseInt(String(lastEventIdHeader), 10);
-        if (!Number.isNaN(afterId)) {
-          const missed = await repositories.events.findAfterIdForUser(user.id, afterId);
-          for (const ev of missed) {
-            const mapped = mapEventToSse(ev);
-            connection.sendReplayEvent(ev.id, mapped.event, mapped.data);
-            lastSentId = Math.max(lastSentId, ev.id);
-          }
-        }
-      }
-
-      connection.markLive(lastSentId);
-    }
-  );
+    );
+  }
 }

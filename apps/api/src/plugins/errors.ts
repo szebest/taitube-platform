@@ -29,13 +29,34 @@ export function registerErrorHandler(app: FastifyInstance): void {
     (error: FastifyError | Error, request: FastifyRequest, reply: FastifyReply) => {
       reply.header('content-type', 'application/problem+json; charset=utf-8');
 
-      // 1. Domain / Pipeline Errors (@vp/errors)
+      // 1. Rate-limit error (HTTP 429)
+      const errorStatusCode = (error as ErrorWithStatusCode).statusCode;
+      const errorCode = (error as ErrorWithCode).code;
+
+      if (
+        errorStatusCode === 429 ||
+        errorCode === ErrorCodes.RATE_LIMITED ||
+        errorCode === 'FST_ERR_RATE_LIMIT'
+      ) {
+        const problem: ProblemDetails = {
+          type: `https://errors.video-pipeline.local/${ErrorCodes.RATE_LIMITED}`,
+          title: 'Too Many Requests',
+          status: 429,
+          detail: error.message || 'Rate limit exceeded',
+          code: ErrorCodes.RATE_LIMITED,
+          instance: request.url,
+        };
+        return reply.status(429).send(problem);
+      }
+
+      // 2. Domain / Pipeline Errors (@vp/errors)
       if (
         error instanceof PipelineError ||
         error instanceof PermanentError ||
-        ('code' in error && typeof (error as ErrorWithCode).code === 'string')
+        (typeof errorCode === 'string' &&
+          Object.values(ErrorCodes).includes(errorCode as ErrorCode))
       ) {
-        const errCode = (error as ErrorWithCode).code;
+        const errCode = errorCode;
         let statusCode = 422;
         switch (errCode) {
           case ErrorCodes.VIDEO_NOT_FOUND:
@@ -83,7 +104,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
         return reply.status(statusCode).send(problem);
       }
 
-      // 2. Fastify / Zod validation error
+      // 3. Fastify / Zod validation error
       const validationError = error as ErrorWithValidation;
       if (validationError.validation || validationError.issues) {
         const problem: ProblemDetails = {
@@ -98,23 +119,9 @@ export function registerErrorHandler(app: FastifyInstance): void {
         return reply.status(400).send(problem);
       }
 
-      // 3. Rate-limit error
-      if ((error as ErrorWithStatusCode).statusCode === 429) {
-        const problem: ProblemDetails = {
-          type: `https://errors.video-pipeline.local/${ErrorCodes.RATE_LIMITED}`,
-          title: 'Too Many Requests',
-          status: 429,
-          detail: error.message || 'Rate limit exceeded',
-          code: ErrorCodes.RATE_LIMITED,
-          instance: request.url,
-        };
-        return reply.status(429).send(problem);
-      }
-
       // 4. Default unexpected error (Internal Server Error)
       const requestId = request.id || 'req-unknown';
       request.log.error({ err: error, requestId }, 'Unhandled exception');
-
       const problem: ProblemDetails = {
         type: `https://errors.video-pipeline.local/${ErrorCodes.INTERNAL}`,
         title: 'Internal Server Error',

@@ -38,6 +38,7 @@ export interface NewRenditionInput {
 export abstract class RenditionRepository {
   abstract create(data: NewRenditionInput): Promise<RenditionRecord>;
   abstract findByVideoId(videoId: string): Promise<RenditionRecord[]>;
+  abstract findByVideoIds(videoIds: string[]): Promise<RenditionRecord[]>;
   abstract update(
     videoId: string,
     name: string,
