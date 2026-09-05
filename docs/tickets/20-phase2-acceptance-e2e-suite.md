@@ -8,7 +8,7 @@
 | Blocks | 28 |
 | Spec | [SDD §18 Phase 2 DoD](../SDD.md#phase-2-real-pipeline-3-weeks) · [PRD §9 Success metrics](../PRD.md#9-success-metrics) · [SDD §14.1 Principles](../SDD.md#141-principles) |
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## What to build
 One command (`make e2e`) uploads twenty mixed fixtures concurrently — short/long, 1080p/720p/360p, portrait, VFR, plus the hostile set — through multipart and single-PUT paths, subscribes to SSE for each, and asserts every video reaches a terminal state within 15 minutes with the expected outcome: good files `READY` with the right number of variants, thumbnails present, hostile files in the DLQ with the right codes; one transient DLQ entry replayed successfully; abandoned upload cleaned up. The suite is the executable definition of "Phase 2 done" and becomes the regression gate for Phases 3–4.
