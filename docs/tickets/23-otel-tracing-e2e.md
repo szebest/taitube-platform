@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [PRD US-16](../PRD.md#54-operations) · [SDD §13.3 Tracing](../SDD.md#133-tracing-opentelemetry) · [SDD §13.4 Logging correlation](../SDD.md#134-logging) · [SDD §20 (`traceparent` field)](../SDD.md#20-appendix-job-contracts-code) |
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## What to build
 Upload a video, copy the `trace_id` from its `upload.completed` event row, paste it into Tempo: one trace shows `POST /uploads/:id/complete` → `bullmq.process probe` → three `bullmq.process transcode-*` (each with an `ffmpeg` child span carrying exit code and redacted argv) → `thumbnail` → `package` → `notify`, with queue wait time visible as the gap between spans. Every log line for the job carries the same `traceId`/`spanId`; every `video_events` row carries `trace_id`.
