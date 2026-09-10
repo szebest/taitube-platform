@@ -10,19 +10,16 @@ describe('@vp/worker smoke test (dual-runtime)', () => {
     expect(STAGE_REGISTRY.probe?.concurrency).toBeGreaterThan(0);
   });
 
-  it('contains configurations for all required stages', () => {
-    const expectedStages = [
-      'probe',
-      'transcode-1080p',
-      'transcode-720p',
-      'transcode-480p',
-      'thumbnail',
-      'package',
-      'notify',
-      'housekeeping',
-    ];
-    for (const st of expectedStages) {
-      expect(STAGE_REGISTRY[st]).toBeDefined();
-    }
+  it.each([
+    'probe',
+    'transcode-1080p',
+    'transcode-720p',
+    'transcode-480p',
+    'thumbnail',
+    'package',
+    'notify',
+    'housekeeping',
+  ])('contains configuration for stage "%s"', (stage) => {
+    expect(STAGE_REGISTRY[stage]).toBeDefined();
   });
 });

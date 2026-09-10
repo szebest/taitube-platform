@@ -408,28 +408,27 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
   });
 
   // AC 7: Hostile fixture set: every file ends in DLQ with expected code and attemptsMade = 1
-  it('AC 7: Hostile fixtures (audio-only, unsupported codec) end in DLQ with attemptsMade = 1 and expected error codes', async () => {
-    const hostileFixtures = [
-      {
-        key: 'raw/audio-only.mp4',
-        expectedCode: ErrorCodes.CORRUPT_CONTAINER,
-        errorMsg: 'Source file contains no video stream',
-      },
-      {
-        key: 'raw/bad-codec.mp4',
-        expectedCode: ErrorCodes.UNSUPPORTED_CODEC,
-        errorMsg: 'Unsupported video codec "prores"',
-      },
-      {
-        key: 'raw/over-duration.mp4',
-        expectedCode: ErrorCodes.DURATION_EXCEEDED,
-        errorMsg: 'Video duration exceeds maximum allowed',
-      },
-    ];
+  it.each([
+    {
+      key: 'raw/audio-only.mp4',
+      expectedCode: ErrorCodes.CORRUPT_CONTAINER,
+      errorMsg: 'Source file contains no video stream',
+    },
+    {
+      key: 'raw/bad-codec.mp4',
+      expectedCode: ErrorCodes.UNSUPPORTED_CODEC,
+      errorMsg: 'Unsupported video codec "prores"',
+    },
+    {
+      key: 'raw/over-duration.mp4',
+      expectedCode: ErrorCodes.DURATION_EXCEEDED,
+      errorMsg: 'Video duration exceeds maximum allowed',
+    },
+  ])(
+    'AC 7: Hostile fixture "$key" ends in DLQ with attemptsMade = 1 and expected code $expectedCode',
+    async (fixture) => {
+      const ffmpegModule = await import('@vp/ffmpeg');
 
-    const ffmpegModule = await import('@vp/ffmpeg');
-
-    for (const fixture of hostileFixtures) {
       const probeQueue = new InMemoryJobQueue('probe');
       queues.set('probe', probeQueue);
 
@@ -489,5 +488,5 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       expect(video?.status).toBe('FAILED');
       expect(video?.errorCode).toBe(fixture.expectedCode);
     }
-  });
+  );
 });

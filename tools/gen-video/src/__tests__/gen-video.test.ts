@@ -17,33 +17,32 @@ describe('tools/gen-video: deterministic fixture generator', () => {
     }
   });
 
-  it('loads valid manifest with all required fixture definitions', () => {
+  it('loads valid manifest with at least 15 fixtures', () => {
     const manifest = loadManifest();
     expect(manifest.version).toBeDefined();
     expect(manifest.fixtures.length).toBeGreaterThanOrEqual(15);
+  });
 
-    const requiredIds = [
-      's15',
-      's60',
-      'm10',
-      'l30',
-      'p720',
-      'sd360',
-      'portrait',
-      'vfr',
-      'k60',
-      'truncated',
-      'audio-only',
-      'hevc.mkv',
-      'zero-bytes',
-      'not-a-video',
-      'over-duration',
-    ];
-
+  it.each([
+    's15',
+    's60',
+    'm10',
+    'l30',
+    'p720',
+    'sd360',
+    'portrait',
+    'vfr',
+    'k60',
+    'truncated',
+    'audio-only',
+    'hevc.mkv',
+    'zero-bytes',
+    'not-a-video',
+    'over-duration',
+  ])('defines required fixture "%s" in manifest', (id) => {
+    const manifest = loadManifest();
     const presentIds = manifest.fixtures.map((f) => f.id);
-    for (const id of requiredIds) {
-      expect(presentIds).toContain(id);
-    }
+    expect(presentIds).toContain(id);
   });
 
   it('generates and checks zero-bytes hostile fixture', async () => {

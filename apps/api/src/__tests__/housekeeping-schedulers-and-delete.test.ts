@@ -72,14 +72,18 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       expect(map.get('purge-deleted')?.pattern).toBe('0 * * * *');
       expect(map.get('expire-raw')?.pattern).toBe('30 3 * * *');
       expect(map.get('tmp-sweep')?.pattern).toBe('*/30 * * * *');
-
-      // Check task data payload
-      for (const config of HOUSEKEEPING_SCHEDULER_CONFIGS) {
-        const item = map.get(config.id);
-        expect(item).toBeDefined();
-        expect((item?.data as { task: string })?.task).toBe(config.id);
-      }
     });
+
+    it.each(HOUSEKEEPING_SCHEDULER_CONFIGS)(
+      'scheduler "$id" carries task payload matching its id',
+      async ({ id }) => {
+        const schedulers = await housekeepingQueue.getJobSchedulers();
+        const map = new Map(schedulers.map((s) => [s.id, s]));
+        const item = map.get(id);
+        expect(item).toBeDefined();
+        expect((item?.data as { task: string })?.task).toBe(id);
+      },
+    );
 
     it('restarting the API twice leaves exactly one of each scheduler', async () => {
       // Boot a second API instance on the same queues

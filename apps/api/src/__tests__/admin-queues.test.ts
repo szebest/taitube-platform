@@ -185,10 +185,7 @@ describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
     expect(data.queues).toBeDefined();
 
     const exposedQueueNames = data.queues.map((q: { name: string }) => q.name);
-    for (const queueName of QUEUES) {
-      expect(exposedQueueNames).toContain(queueName);
-    }
-    expect(exposedQueueNames).toContain('dlq');
+    expect(exposedQueueNames).toEqual(expect.arrayContaining([...QUEUES, 'dlq']));
   });
 
   it('AC 18: pausing transcode-720p stops new jobs, resuming continues', async () => {

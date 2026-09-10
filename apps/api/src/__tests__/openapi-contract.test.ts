@@ -103,45 +103,44 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
     });
   });
 
-  it('AC 6: Contract test — all SDD §6.1 endpoints and methods are present in OpenAPI spec', () => {
-    interface SddEndpointContract {
-      path: string;
-      method: 'get' | 'post' | 'patch' | 'delete';
-      expectedStatuses: number[];
-      expectedErrorCodes?: string[];
-      hasQueryParams?: boolean;
-      hasBody?: boolean;
-      hasPathParams?: boolean;
-    }
+  interface SddEndpointContract {
+    path: string;
+    method: 'get' | 'post' | 'patch' | 'delete';
+    expectedStatuses: number[];
+    expectedErrorCodes?: string[];
+    hasQueryParams?: boolean;
+    hasBody?: boolean;
+    hasPathParams?: boolean;
+  }
 
-    const CONTRACT: SddEndpointContract[] = [
-      // 1. Uploads (§6.1)
-      {
-        path: '/v1/uploads',
-        method: 'post',
-        expectedStatuses: [201, 400, 401, 422, 429],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.UPLOAD_TOO_LARGE,
-          ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
-          ErrorCodes.QUOTA_EXCEEDED,
-          ErrorCodes.RATE_LIMITED,
-        ],
-        hasBody: true,
-      },
-      {
-        path: '/v1/uploads/{uploadId}',
-        method: 'get',
-        expectedStatuses: [200, 400, 401, 403, 404],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.FORBIDDEN,
-          ErrorCodes.VIDEO_NOT_FOUND,
-        ],
-        hasPathParams: true,
-      },
+  const CONTRACT: SddEndpointContract[] = [
+    // 1. Uploads (§6.1)
+    {
+      path: '/v1/uploads',
+      method: 'post',
+      expectedStatuses: [201, 400, 401, 422, 429],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.UPLOAD_TOO_LARGE,
+        ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
+        ErrorCodes.QUOTA_EXCEEDED,
+        ErrorCodes.RATE_LIMITED,
+      ],
+      hasBody: true,
+    },
+    {
+      path: '/v1/uploads/{uploadId}',
+      method: 'get',
+      expectedStatuses: [200, 400, 401, 403, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.VIDEO_NOT_FOUND,
+      ],
+      hasPathParams: true,
+    },
       {
         path: '/v1/uploads/{uploadId}/parts',
         method: 'post',
@@ -311,22 +310,24 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
       },
     ];
 
-    const paths = (swaggerSpec['paths'] || {}) as Record<
-      string,
-      Record<
+  it.each(CONTRACT)(
+    'AC 6: endpoint $method $path adheres to OpenAPI contract',
+    (item) => {
+      const paths = (swaggerSpec['paths'] || {}) as Record<
         string,
-        {
-          parameters?: Array<{ name: string; in: string }>;
-          requestBody?: unknown;
-          responses?: Record<
-            string,
-            { content?: Record<string, { schema?: Record<string, unknown> }> }
-          >;
-        }
-      >
-    >;
+        Record<
+          string,
+          {
+            parameters?: Array<{ name: string; in: string }>;
+            requestBody?: unknown;
+            responses?: Record<
+              string,
+              { content?: Record<string, { schema?: Record<string, unknown> }> }
+            >;
+          }
+        >
+      >;
 
-    for (const item of CONTRACT) {
       const pathItem = paths[item.path];
       expect(pathItem, `Expected endpoint "${item.path}" to exist in OpenAPI spec`).toBeDefined();
 
@@ -336,7 +337,6 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
         `Expected HTTP method "${item.method.toUpperCase()}" for path "${item.path}"`
       ).toBeDefined();
 
-      // Check parameters
       if (item.hasPathParams) {
         expect(
           op?.parameters?.some((p) => p.in === 'path'),
@@ -358,7 +358,6 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
         ).toBeDefined();
       }
 
-      // Check expected statuses
       const responses = op?.responses || {};
       for (const status of item.expectedStatuses) {
         expect(
@@ -367,7 +366,6 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
         ).toBeDefined();
       }
 
-      // Check error code enums in problem+json responses
       if (item.expectedErrorCodes && item.expectedErrorCodes.length > 0) {
         const errorStatuses = item.expectedStatuses.filter((s) => s >= 400);
         const documentedCodes: string[] = [];
@@ -393,8 +391,13 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
         }
       }
     }
+  );
 
-    // Drift assertion: Every /v1/ endpoint exposed in OpenAPI must be in the contract
+  it('detects no drift between /v1/ endpoints in OpenAPI and the SDD contract', () => {
+    const paths = (swaggerSpec['paths'] || {}) as Record<
+      string,
+      Record<string, unknown>
+    >;
     const contractKeys = new Set(CONTRACT.map((c) => `${c.method.toUpperCase()} ${c.path}`));
     for (const [p, methods] of Object.entries(paths)) {
       if (p.startsWith('/v1/')) {
