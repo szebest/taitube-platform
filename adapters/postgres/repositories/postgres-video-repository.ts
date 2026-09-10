@@ -1,3 +1,4 @@
+import { trace } from '@opentelemetry/api';
 import {
   DatabaseError,
   type ListVideosOptions,
@@ -167,8 +168,10 @@ export class PostgresVideoRepository extends VideoRepository {
   }
 
   async transition(options: TransitionVideoOptions): Promise<boolean> {
-    const { videoId, from, to, patch = {}, eventType, eventPayload = {} } = options;
+    const { videoId, from, to, patch = {}, eventType, eventPayload = {}, traceId } = options;
     const effectiveEventType = eventType || `video.${to.toLowerCase()}`;
+    const activeSpan = trace.getActiveSpan();
+    const effectiveTraceId = traceId || (activeSpan ? activeSpan.spanContext().traceId : null);
     try {
       return await this.db.transaction(async (tx) => {
         const statusCond = Array.isArray(from)
@@ -192,6 +195,7 @@ export class PostgresVideoRepository extends VideoRepository {
           videoId,
           type: effectiveEventType,
           payload: eventPayload,
+          traceId: effectiveTraceId,
           createdAt: new Date(),
         } as VideoEventInsert);
         return true;

@@ -3,6 +3,7 @@ export interface VideoEventRecord {
   videoId: string;
   type: string;
   payload: unknown;
+  traceId?: string | null;
   createdAt: Date;
 }
 
@@ -10,6 +11,7 @@ export interface NewVideoEventInput {
   videoId: string;
   type: string;
   payload?: Record<string, unknown>;
+  traceId?: string | null;
 }
 
 export abstract class EventRepository {

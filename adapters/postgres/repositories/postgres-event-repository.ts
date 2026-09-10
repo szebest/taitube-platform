@@ -21,6 +21,7 @@ export class PostgresEventRepository extends EventRepository {
           videoId: data.videoId,
           type: data.type,
           payload: data.payload ?? {},
+          traceId: data.traceId ?? null,
           createdAt: new Date(),
         })
         .returning();

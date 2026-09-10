@@ -36,6 +36,7 @@ import { createPackageProcessor } from './stages/package.js';
 import { createProbeProcessor } from './stages/probe.js';
 import { createThumbnailProcessor } from './stages/thumbnail.js';
 import { createTranscodeProcessor } from './stages/transcode.js';
+import { withTelemetry } from './with-telemetry.js';
 
 export interface WorkerRunnerOptions {
   stage?: string;
@@ -189,41 +190,40 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     queue.onFailed(onFailedHandler);
   }
 
-  queue.process(
-    async (job) => {
-      const startTime = Date.now();
-      metrics.bullmqQueueJobs.set({ queue: config.queue, state: 'active' }, 1);
+  const instrumentedProcessor = withTelemetry(config.queue, async (job) => {
+    const startTime = Date.now();
+    metrics.bullmqQueueJobs.set({ queue: config.queue, state: 'active' }, 1);
 
-      // Observe how long the job waited in the queue before being picked up
-      const enqueuedAt =
-        (job as unknown as { timestamp?: number }).timestamp ??
-        (job.opts as { timestamp?: number } | undefined)?.timestamp;
-      if (enqueuedAt && enqueuedAt > 0) {
-        const waitSec = Math.max(0, (startTime - enqueuedAt) / 1000);
-        metrics.jobWaitDuration.observe({ queue: config.queue }, waitSec);
-      }
-
-      try {
-        const result = await processor(job);
-        const durationSec = (Date.now() - startTime) / 1000;
-        metrics.jobDuration.observe({ queue: config.queue }, durationSec);
-        metrics.jobsProcessed.inc({ queue: config.queue, result: 'completed' });
-        return result;
-      } catch (err) {
-        const durationSec = (Date.now() - startTime) / 1000;
-        metrics.jobDuration.observe({ queue: config.queue }, durationSec);
-        metrics.jobsProcessed.inc({ queue: config.queue, result: 'failed' });
-        throw err;
-      }
-    },
-    {
-      concurrency: config.concurrency,
-      lockDurationMs: config.lockDurationMs,
-      lockRenewTimeMs: config.lockRenewTimeMs,
-      stalledIntervalMs: config.stalledIntervalMs,
-      maxStalledCount: config.maxStalledCount,
+    // Observe how long the job waited in the queue before being picked up
+    const enqueuedAt =
+      (job as unknown as { timestamp?: number }).timestamp ??
+      (job.opts as { timestamp?: number } | undefined)?.timestamp;
+    if (enqueuedAt && enqueuedAt > 0) {
+      const waitSec = Math.max(0, (startTime - enqueuedAt) / 1000);
+      metrics.jobWaitDuration.observe({ queue: config.queue }, waitSec);
     }
-  );
+
+    try {
+      const result = await processor(job);
+      const durationSec = (Date.now() - startTime) / 1000;
+      metrics.jobDuration.observe({ queue: config.queue }, durationSec);
+      metrics.jobsProcessed.inc({ queue: config.queue, result: 'completed' });
+      return result;
+    } catch (err) {
+      const durationSec = (Date.now() - startTime) / 1000;
+      metrics.jobDuration.observe({ queue: config.queue }, durationSec);
+      metrics.jobsProcessed.inc({ queue: config.queue, result: 'failed' });
+      throw err;
+    }
+  });
+
+  queue.process(instrumentedProcessor as unknown as Parameters<JobQueue['process']>[0], {
+    concurrency: config.concurrency,
+    lockDurationMs: config.lockDurationMs,
+    lockRenewTimeMs: config.lockRenewTimeMs,
+    stalledIntervalMs: config.stalledIntervalMs,
+    maxStalledCount: config.maxStalledCount,
+  });
 
   let metricsServer: { port: number; close: () => Promise<void> } | undefined;
   if (options.metricsPort !== undefined) {

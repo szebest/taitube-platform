@@ -1,9 +1,13 @@
 import { loadEnv } from '@vp/config';
+import { initTracing } from '@vp/observability';
 import { buildApp } from './app.js';
 import { startMetricsServer } from './plugins/metrics.js';
 
 export async function main(): Promise<void> {
   const env = loadEnv();
+  initTracing({
+    serviceName: 'vp-api',
+  });
   const app = await buildApp({
     cdnBaseUrl: env.CDN_BASE_URL,
     multipartThresholdBytes: env.S3_MULTIPART_THRESHOLD_BYTES,
