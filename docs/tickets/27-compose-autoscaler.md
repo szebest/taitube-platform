@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §13.2 (compose-level scaler paragraph)](../SDD.md#132-keda-scaledobject-prometheus-scaler-primary) · [ADR-12 option 4](../SDD.md#adr-12-autoscaling-keda-scaledobject-per-stage-prometheus-scaler-primary-redis-list-scaler-fallback) |
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## What to build
 `pnpm compose-autoscaler` polls the API's `/metrics` every 10 s and runs `docker compose up -d --scale worker-<stage>=N --no-recreate` per stage using the same min/max/cooldown semantics as 26, so a laptop without a cluster can demonstrate queue-depth scaling and the dashboards' replicas-vs-backlog panel moves the same way.
