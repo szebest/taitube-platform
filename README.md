@@ -209,9 +209,31 @@ With the observability stack running (`make obs-up`), every video upload creates
 4. **FFmpeg Execution**: Detailed child spans capture `ffmpeg` transcodes and thumbnail extractions with exit codes, duration, and sanitized command lines (no presigned URLs).
 5. **Trace-to-Logs**: Every Pino log line carries `traceId` and `spanId`. In Grafana (`http://localhost:3001`), searching a `trace_id` in Tempo provides one-click navigation directly to correlated Loki log lines.
 
-### 7. Useful commands
+### 7. Autoscaling without Kubernetes (Compose Autoscaler)
+
+For local development or resource-constrained environments without Kubernetes or KEDA (Ticket 27, SDD §13.2, ADR-12 Option 4), the repository provides `pnpm compose-autoscaler`:
+- **Queue Polling:** Polls Prometheus metrics (`bullmq_queue_jobs{queue, state}`) from the API's `/metrics` every 10 seconds.
+- **Pure Decision Control Loop:** Calculates target replicas per worker stage (`worker-probe`, `worker-transcode-1080p`, etc.) using queue backlog (`waiting + prioritized + active`), threshold 1 (1 container per outstanding job), bounded by `minReplicas` and `maxReplicas`.
+- **Active Job Protection:** Invariant ensures target replicas never scale below the number of currently active jobs.
+- **Scale-Down Stabilization:** Enforces a 300 s cooldown period of empty queues before scaling down to prevent flapping.
+- **Docker Compose Scaling:** Executes dynamic scaling via `docker compose up -d --scale worker-<stage>=N --no-recreate`.
+- **Dry-Run Inspection:** `--dry-run` flag prints intended scaling actions and commands without invoking Docker.
+
+```bash
+# Run compose autoscaler in dry-run mode
+pnpm compose-autoscaler --dry-run
+
+# Run compose autoscaler against running Docker Compose stack
+pnpm compose-autoscaler --interval 10
+
+# Pass custom stage config JSON
+pnpm compose-autoscaler --config my-stages.json
+```
+
+### 8. Useful commands
 | Command | Description |
 |---|---|
+| `pnpm compose-autoscaler` | Run compose queue-depth autoscaler loop |
 | `make up` | Start local Postgres, Redis, MinIO with buckets initialized |
 | `make up-all` | Start full stack (infra, migrations, API, all worker stages) |
 | `make obs-up` | Start local observability profile (Prometheus, Grafana, Tempo, Loki, OTel, Alertmanager) |
