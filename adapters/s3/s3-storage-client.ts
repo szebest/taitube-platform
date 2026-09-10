@@ -24,6 +24,7 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
+import { measureStorageOp } from '../storage-metrics-helper.js';
 
 export interface S3StorageClientConfig {
   endpoint?: string;
@@ -95,172 +96,186 @@ export class S3StorageClient extends StorageClient {
   }
 
   async uploadObject(params: StorageUploadParams): Promise<StorageUploadResult> {
-    try {
-      const command = new PutObjectCommand({
-        Bucket: params.bucket,
-        Key: params.key,
-        Body: params.body as PutObjectCommand['input']['Body'],
-        ContentType: params.contentType,
-        CacheControl: params.cacheControl,
-      });
-      const res = await this.client.send(command);
-      return {
-        key: params.key,
-        etag: res.ETag,
-      };
-    } catch (err: unknown) {
-      throw new StorageError(`Failed to upload object ${params.key}: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+    return measureStorageOp('put', params.bucket, async () => {
+      try {
+        const command = new PutObjectCommand({
+          Bucket: params.bucket,
+          Key: params.key,
+          Body: params.body as PutObjectCommand['input']['Body'],
+          ContentType: params.contentType,
+          CacheControl: params.cacheControl,
+        });
+        const res = await this.client.send(command);
+        return {
+          key: params.key,
+          etag: res.ETag,
+        };
+      } catch (err: unknown) {
+        throw new StorageError(`Failed to upload object ${params.key}: ${(err as Error).message}`, {
+          cause: err,
+        });
+      }
+    });
   }
 
   async headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null> {
-    try {
-      const command = new HeadObjectCommand({
-        Bucket: bucket,
-        Key: key,
-      });
-      const res = await this.client.send(command);
-      return {
-        contentLength: res.ContentLength ?? 0,
-        contentType: res.ContentType,
-        cacheControl: res.CacheControl,
-        etag: res.ETag,
-      };
-    } catch (err: unknown) {
-      const error = err as { name?: string; $metadata?: { httpStatusCode?: number } };
-      if (
-        error.name === 'NotFound' ||
-        error.name === 'NoSuchKey' ||
-        error.$metadata?.httpStatusCode === 404
-      ) {
-        return null;
+    return measureStorageOp('head', bucket, async () => {
+      try {
+        const command = new HeadObjectCommand({
+          Bucket: bucket,
+          Key: key,
+        });
+        const res = await this.client.send(command);
+        return {
+          contentLength: res.ContentLength ?? 0,
+          contentType: res.ContentType,
+          cacheControl: res.CacheControl,
+          etag: res.ETag,
+        };
+      } catch (err: unknown) {
+        const error = err as { name?: string; $metadata?: { httpStatusCode?: number } };
+        if (
+          error.name === 'NotFound' ||
+          error.name === 'NoSuchKey' ||
+          error.$metadata?.httpStatusCode === 404
+        ) {
+          return null;
+        }
+        throw new StorageError(`Failed to head object ${key}: ${(err as Error).message}`, {
+          cause: err,
+        });
       }
-      throw new StorageError(`Failed to head object ${key}: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+    });
   }
 
   async getObject(bucket: string, key: string): Promise<Buffer> {
-    try {
-      const command = new GetObjectCommand({
-        Bucket: bucket,
-        Key: key,
-      });
-      const res = await this.client.send(command);
-      if (!res.Body) {
-        throw new Error('Empty response body received from S3');
+    return measureStorageOp('get', bucket, async () => {
+      try {
+        const command = new GetObjectCommand({
+          Bucket: bucket,
+          Key: key,
+        });
+        const res = await this.client.send(command);
+        if (!res.Body) {
+          throw new Error('Empty response body received from S3');
+        }
+        const stream = res.Body as AsyncIterable<Uint8Array | Buffer | string>;
+        const chunks: Buffer[] = [];
+        for await (const chunk of stream) {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        }
+        return Buffer.concat(chunks);
+      } catch (err: unknown) {
+        throw new StorageError(`Failed to get object ${key}: ${(err as Error).message}`, {
+          cause: err,
+        });
       }
-      const stream = res.Body as AsyncIterable<Uint8Array | Buffer | string>;
-      const chunks: Buffer[] = [];
-      for await (const chunk of stream) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-      }
-      return Buffer.concat(chunks);
-    } catch (err: unknown) {
-      throw new StorageError(`Failed to get object ${key}: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+    });
   }
 
   async downloadObject(bucket: string, key: string, targetFilePath: string): Promise<boolean> {
-    try {
-      const command = new GetObjectCommand({
-        Bucket: bucket,
-        Key: key,
-      });
-      const res = await this.client.send(command);
-      if (!res.Body) {
-        return false;
+    return measureStorageOp('get', bucket, async () => {
+      try {
+        const command = new GetObjectCommand({
+          Bucket: bucket,
+          Key: key,
+        });
+        const res = await this.client.send(command);
+        if (!res.Body) {
+          return false;
+        }
+        const readStream = res.Body as NodeJS.ReadableStream;
+        const writeStream = fs.createWriteStream(targetFilePath);
+        await pipeline(readStream, writeStream);
+        return true;
+      } catch (err: unknown) {
+        const error = err as { name?: string; $metadata?: { httpStatusCode?: number } };
+        if (
+          error.name === 'NotFound' ||
+          error.name === 'NoSuchKey' ||
+          error.$metadata?.httpStatusCode === 404
+        ) {
+          return false;
+        }
+        throw new StorageError(`Failed to download object ${key}: ${(err as Error).message}`, {
+          cause: err,
+        });
       }
-      const readStream = res.Body as NodeJS.ReadableStream;
-      const writeStream = fs.createWriteStream(targetFilePath);
-      await pipeline(readStream, writeStream);
-      return true;
-    } catch (err: unknown) {
-      const error = err as { name?: string; $metadata?: { httpStatusCode?: number } };
-      if (
-        error.name === 'NotFound' ||
-        error.name === 'NoSuchKey' ||
-        error.$metadata?.httpStatusCode === 404
-      ) {
-        return false;
-      }
-      throw new StorageError(`Failed to download object ${key}: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+    });
   }
 
   async deleteObject(bucket: string, key: string): Promise<void> {
-    try {
-      const command = new DeleteObjectCommand({
-        Bucket: bucket,
-        Key: key,
-      });
-      await this.client.send(command);
-    } catch (err: unknown) {
-      throw new StorageError(`Failed to delete object ${key}: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+    return measureStorageOp('delete', bucket, async () => {
+      try {
+        const command = new DeleteObjectCommand({
+          Bucket: bucket,
+          Key: key,
+        });
+        await this.client.send(command);
+      } catch (err: unknown) {
+        throw new StorageError(`Failed to delete object ${key}: ${(err as Error).message}`, {
+          cause: err,
+        });
+      }
+    });
   }
 
   async deleteObjects(bucket: string, keys: string[]): Promise<StorageDeleteObjectsResult> {
     if (keys.length === 0) {
       return { deletedKeys: [] };
     }
-    try {
-      const chunks: string[][] = [];
-      for (let i = 0; i < keys.length; i += 1000) {
-        chunks.push(keys.slice(i, i + 1000));
-      }
-      const deleted: string[] = [];
-      for (const chunk of chunks) {
-        const command = new DeleteObjectsCommand({
-          Bucket: bucket,
-          Delete: {
-            Objects: chunk.map((Key) => ({ Key })),
-            Quiet: true,
-          },
+    return measureStorageOp('delete', bucket, async () => {
+      try {
+        const chunks: string[][] = [];
+        for (let i = 0; i < keys.length; i += 1000) {
+          chunks.push(keys.slice(i, i + 1000));
+        }
+        const deleted: string[] = [];
+        for (const chunk of chunks) {
+          const command = new DeleteObjectsCommand({
+            Bucket: bucket,
+            Delete: {
+              Objects: chunk.map((Key) => ({ Key })),
+              Quiet: true,
+            },
+          });
+          await this.client.send(command);
+          deleted.push(...chunk);
+        }
+        return { deletedKeys: deleted };
+      } catch (err: unknown) {
+        throw new StorageError(`Failed to delete objects: ${(err as Error).message}`, {
+          cause: err,
         });
-        await this.client.send(command);
-        deleted.push(...chunk);
       }
-      return { deletedKeys: deleted };
-    } catch (err: unknown) {
-      throw new StorageError(`Failed to delete objects: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+    });
   }
 
   async listObjects(params: StorageListObjectsParams): Promise<StorageListObjectsResult> {
-    try {
-      const command = new ListObjectsV2Command({
-        Bucket: params.bucket,
-        Prefix: params.prefix,
-        ContinuationToken: params.continuationToken,
-        MaxKeys: params.maxKeys,
-      });
-      const res = await this.client.send(command);
-      const keys = (res.Contents ?? [])
-        .map((obj) => obj.Key)
-        .filter((k): k is string => typeof k === 'string' && k.length > 0);
-      return {
-        keys,
-        nextContinuationToken: res.NextContinuationToken,
-        isTruncated: res.IsTruncated ?? false,
-      };
-    } catch (err: unknown) {
-      throw new StorageError(
-        `Failed to list objects in bucket ${params.bucket}: ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+    return measureStorageOp('list', params.bucket, async () => {
+      try {
+        const command = new ListObjectsV2Command({
+          Bucket: params.bucket,
+          Prefix: params.prefix,
+          ContinuationToken: params.continuationToken,
+          MaxKeys: params.maxKeys,
+        });
+        const res = await this.client.send(command);
+        const keys = (res.Contents ?? [])
+          .map((obj) => obj.Key)
+          .filter((k): k is string => typeof k === 'string' && k.length > 0);
+        return {
+          keys,
+          nextContinuationToken: res.NextContinuationToken,
+          isTruncated: res.IsTruncated ?? false,
+        };
+      } catch (err: unknown) {
+        throw new StorageError(
+          `Failed to list objects in bucket ${params.bucket}: ${(err as Error).message}`,
+          { cause: err }
+        );
+      }
+    });
   }
 
   async purgePrefix(bucket: string, prefix: string): Promise<number> {

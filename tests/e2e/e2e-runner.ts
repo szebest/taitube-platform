@@ -58,11 +58,14 @@ export class E2ERunner {
   user2Token!: string;
   adminToken!: string;
 
+  private explicitResultsDir: boolean;
+
   constructor(options: E2ERunnerOptions = {}) {
     this.apiUrl = options.apiUrl;
     this.fixturesDir = options.fixturesDir || path.resolve(process.cwd(), 'tests/fixtures');
     this.resultsDir =
       options.resultsDir || path.resolve(process.cwd(), 'docs/load-tests/results/2026-09-05-e2e');
+    this.explicitResultsDir = options.resultsDir !== undefined;
     this.reduced = Boolean(options.reduced);
   }
 
@@ -182,10 +185,20 @@ export class E2ERunner {
       totalTimeMs,
     });
 
-    fs.mkdirSync(this.resultsDir, { recursive: true });
-    const reportPath = path.join(this.resultsDir, 'README.md');
-    fs.writeFileSync(reportPath, markdownReport, 'utf-8');
-    console.log(`[e2e-runner] Results written to ${reportPath}`);
+    const shouldWriteReport =
+      process.env['WRITE_E2E_REPORT'] === 'true' ||
+      (!this.reduced && (Boolean(process.env['FULL']) || this.explicitResultsDir));
+
+    if (shouldWriteReport) {
+      fs.mkdirSync(this.resultsDir, { recursive: true });
+      const reportPath = path.join(this.resultsDir, 'README.md');
+      fs.writeFileSync(reportPath, markdownReport, 'utf-8');
+      console.log(`[e2e-runner] Results written to ${reportPath}`);
+    } else {
+      console.log(
+        `[e2e-runner] Skipping overwrite of benchmark report in ${this.resultsDir} (set WRITE_E2E_REPORT=true or run full suite to write)`
+      );
+    }
 
     await this.teardown();
 

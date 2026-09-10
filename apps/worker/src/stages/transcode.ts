@@ -5,7 +5,7 @@ import type { CacheClient, JobQueue, QueueJob, Repositories, StorageClient } fro
 import { ErrorCodes, PermanentError, PipelineError, TransientError } from '@vp/errors';
 import { computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
 import type { TranscodeJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
+import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { validateJobId } from '../registry.js';
 import { TranscodeProgressReporter } from './progress-reporter.js';
@@ -19,6 +19,7 @@ export interface TranscodeProcessorDeps {
   publicBucket?: string;
   workerId?: string;
   logger: Logger;
+  metrics?: PipelineMetrics;
   heartbeatPath?: string;
   getQueue?: (name: string) => JobQueue;
   simulateFailureRendition?: string;
@@ -33,11 +34,14 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     publicBucket = process.env['STORAGE_PUBLIC_BUCKET'] || 'public',
     workerId = `worker-${process.pid}`,
     logger,
+    metrics: depsMetrics,
     heartbeatPath = process.env['WORKER_HEARTBEAT_PATH'] ||
       path.join(os.tmpdir(), 'worker-heartbeat'),
     simulateFailureRendition = process.env['SIMULATE_FAILURE_RENDITION'],
     streamingInput: depsStreamingInput,
   } = deps;
+
+  const metrics = depsMetrics ?? getMetrics();
 
   return async function processTranscodeJob(job: QueueJob<TranscodeJob>): Promise<{
     videoId: string;
@@ -138,6 +142,12 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     );
     const outDir = path.join(tmpDir, 'hls');
     await fs.mkdir(outDir, { recursive: true });
+
+    // Track temporary disk usage (worker_tmp_bytes metric)
+    const srcBytes = (job.data as unknown as { sourceSizeBytes?: number }).sourceSizeBytes ?? 0;
+    if (srcBytes > 0) {
+      metrics.workerTmpBytes.set({ stage: `transcode-${rendition.name}` }, srcBytes);
+    }
 
     let lastProgressHeartbeat = 0;
 
@@ -280,6 +290,18 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
 
       const avgBitrateBps = durationMs > 0 ? Math.round((totalBytes * 8) / (durationMs / 1000)) : 0;
 
+      // Transcode-specific metrics (Ticket 22 AC 1)
+      if (durationMs > 0 && processingMs > 0) {
+        const realtimeFactor = durationMs / processingMs; // video_duration / encode_duration
+        metrics.transcodeRealtimeFactor.observe(
+          { rendition: rendition.name, preset: 'ultrafast' },
+          realtimeFactor
+        );
+      }
+      if (totalBytes > 0) {
+        metrics.transcodeOutputBytes.inc({ rendition: rendition.name }, totalBytes);
+      }
+
       if (comp.fenced) {
         log.warn({ lockToken, event: 'FENCED_OUT' }, 'Fenced out on transcode completion');
         return {
@@ -342,6 +364,12 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
             ? ErrorCodes.DISK_FULL
             : 'FFMPEG_FAILED';
 
+      // ffmpeg_exit_total counter — classify transcode failures
+      metrics.ffmpegExitTotal.inc({
+        stage: `transcode-${rendition.name}`,
+        code: errorCode,
+      });
+
       await repositories.steps.fail({
         videoId,
         step: 'transcode',
@@ -355,6 +383,8 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     } finally {
       // Guaranteed temp directory removal on every exit path (AC 21, Ticket 14 AC 1, 6)
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+      // Clear tmp bytes metric once disk is freed
+      metrics.workerTmpBytes.set({ stage: `transcode-${rendition.name}` }, 0);
     }
   };
 }

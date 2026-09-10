@@ -8,6 +8,7 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
+import { measureStorageOp } from '../storage-metrics-helper.js';
 
 interface InFlightPart {
   partNumber: number;
@@ -36,14 +37,16 @@ export class InMemoryMultipartStorage extends MultipartStorage {
   }
 
   async createMultipartUpload(bucket: string, key: string, contentType: string): Promise<string> {
-    const uploadId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    this.uploads.set(uploadId, {
-      bucket,
-      key,
-      contentType,
-      parts: new Map(),
+    return measureStorageOp('multipart', bucket, async () => {
+      const uploadId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      this.uploads.set(uploadId, {
+        bucket,
+        key,
+        contentType,
+        parts: new Map(),
+      });
+      return uploadId;
     });
-    return uploadId;
   }
 
   async createPresignedPartUrl(

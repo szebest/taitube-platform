@@ -2,6 +2,7 @@ import type { ServerResponse } from 'node:http';
 import type { CacheClient } from '@vp/core/ports';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { SseMessageEnvelope, USER_WILDCARD_CHANNEL, VIDEO_WILDCARD_CHANNEL } from '@vp/events';
+import { getMetrics } from '@vp/observability';
 import { SseConnection } from './sse-connection.js';
 
 export interface SseHubOptions {
@@ -95,6 +96,10 @@ export class SseHub {
     set.add(connection);
     this.activeConnections++;
 
+    // Increment SSE connections metric (channel_type = 'video' or 'user')
+    const channelType = channel.startsWith('video:') ? 'video' : 'user';
+    getMetrics().sseConnections.inc({ channel_type: channelType });
+
     connection.once('close', () => {
       this.unregister(connection);
     });
@@ -121,6 +126,10 @@ export class SseHub {
     }
 
     this.activeConnections = Math.max(0, this.activeConnections - 1);
+
+    // Decrement SSE connections metric
+    const channelType = connection.channel.startsWith('video:') ? 'video' : 'user';
+    getMetrics().sseConnections.dec({ channel_type: channelType });
   }
 
   private handlePubSubMessage(channel: string, rawMessage: string): void {

@@ -82,7 +82,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
         const item = map.get(id);
         expect(item).toBeDefined();
         expect((item?.data as { task: string })?.task).toBe(id);
-      },
+      }
     );
 
     it('restarting the API twice leaves exactly one of each scheduler', async () => {

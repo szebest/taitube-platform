@@ -1,6 +1,6 @@
 import type { CacheClient, Repositories } from '@vp/core/ports';
 import { publishVideoEvent } from '@vp/events';
-import type { Logger } from '@vp/observability';
+import { type Logger, getMetrics } from '@vp/observability';
 
 export interface ProgressReporterDeps {
   cache?: CacheClient;
@@ -81,6 +81,8 @@ export class TranscodeProgressReporter {
         id: eventId,
         ts: now,
       });
+
+      getMetrics().sseEventsPublished.inc({ event: 'progress' });
     } catch (err) {
       this.deps.logger.warn({ err, percent }, 'Failed to report transcode progress');
     }

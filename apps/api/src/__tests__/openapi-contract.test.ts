@@ -141,263 +141,257 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
       ],
       hasPathParams: true,
     },
-      {
-        path: '/v1/uploads/{uploadId}/parts',
-        method: 'post',
-        expectedStatuses: [200, 400, 401, 403, 404, 410],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.FORBIDDEN,
-          ErrorCodes.VIDEO_NOT_FOUND,
-          ErrorCodes.UPLOAD_NOT_OPEN,
-        ],
-        hasQueryParams: true,
-        hasPathParams: true,
-      },
-      {
-        path: '/v1/uploads/{uploadId}/complete',
-        method: 'post',
-        expectedStatuses: [202, 400, 401, 403, 404, 410, 422],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.FORBIDDEN,
-          ErrorCodes.VIDEO_NOT_FOUND,
-          ErrorCodes.UPLOAD_NOT_OPEN,
-          ErrorCodes.UPLOAD_SIZE_MISMATCH,
-          ErrorCodes.UPLOAD_TOO_LARGE,
-          ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
-        ],
-        hasBody: true,
-        hasPathParams: true,
-      },
-      {
-        path: '/v1/uploads/{uploadId}',
-        method: 'delete',
-        expectedStatuses: [204, 400, 401, 403, 404],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.FORBIDDEN,
-          ErrorCodes.VIDEO_NOT_FOUND,
-        ],
-        hasPathParams: true,
-      },
+    {
+      path: '/v1/uploads/{uploadId}/parts',
+      method: 'post',
+      expectedStatuses: [200, 400, 401, 403, 404, 410],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.VIDEO_NOT_FOUND,
+        ErrorCodes.UPLOAD_NOT_OPEN,
+      ],
+      hasQueryParams: true,
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/uploads/{uploadId}/complete',
+      method: 'post',
+      expectedStatuses: [202, 400, 401, 403, 404, 410, 422],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.VIDEO_NOT_FOUND,
+        ErrorCodes.UPLOAD_NOT_OPEN,
+        ErrorCodes.UPLOAD_SIZE_MISMATCH,
+        ErrorCodes.UPLOAD_TOO_LARGE,
+        ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
+      ],
+      hasBody: true,
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/uploads/{uploadId}',
+      method: 'delete',
+      expectedStatuses: [204, 400, 401, 403, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.VIDEO_NOT_FOUND,
+      ],
+      hasPathParams: true,
+    },
 
-      // 2. Videos (§6.1)
-      {
-        path: '/v1/videos',
-        method: 'get',
-        expectedStatuses: [200, 400, 401],
-        expectedErrorCodes: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.UNAUTHORIZED],
-        hasQueryParams: true,
-      },
-      {
-        path: '/v1/videos/{id}',
-        method: 'get',
-        expectedStatuses: [200, 400, 401, 404],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.VIDEO_NOT_FOUND,
-        ],
-        hasPathParams: true,
-      },
-      {
-        path: '/v1/videos/{id}',
-        method: 'patch',
-        expectedStatuses: [200, 400, 401, 403, 404, 409],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.FORBIDDEN,
-          ErrorCodes.VIDEO_NOT_FOUND,
-          ErrorCodes.VERSION_CONFLICT,
-        ],
-        hasBody: true,
-        hasPathParams: true,
-      },
-      {
-        path: '/v1/videos/{id}',
-        method: 'delete',
-        expectedStatuses: [202, 400, 401, 403, 404],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.FORBIDDEN,
-          ErrorCodes.VIDEO_NOT_FOUND,
-        ],
-        hasPathParams: true,
-      },
-      {
-        path: '/v1/videos/{id}/events',
-        method: 'get',
-        expectedStatuses: [200, 400, 401, 404, 429],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.VIDEO_NOT_FOUND,
-          ErrorCodes.RATE_LIMITED,
-        ],
-        hasPathParams: true,
-      },
-      {
-        path: '/v1/me/events',
-        method: 'get',
-        expectedStatuses: [200, 401, 429],
-        expectedErrorCodes: [ErrorCodes.UNAUTHORIZED, ErrorCodes.RATE_LIMITED],
-      },
-      {
-        path: '/v1/videos/{id}/reprocess',
-        method: 'post',
-        expectedStatuses: [202, 400, 401, 403, 404, 429],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.FORBIDDEN,
-          ErrorCodes.VIDEO_NOT_FOUND,
-          ErrorCodes.RATE_LIMITED,
-        ],
-        hasBody: true,
-        hasPathParams: true,
-      },
+    // 2. Videos (§6.1)
+    {
+      path: '/v1/videos',
+      method: 'get',
+      expectedStatuses: [200, 400, 401],
+      expectedErrorCodes: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.UNAUTHORIZED],
+      hasQueryParams: true,
+    },
+    {
+      path: '/v1/videos/{id}',
+      method: 'get',
+      expectedStatuses: [200, 400, 401, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.VIDEO_NOT_FOUND,
+      ],
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/videos/{id}',
+      method: 'patch',
+      expectedStatuses: [200, 400, 401, 403, 404, 409],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.VIDEO_NOT_FOUND,
+        ErrorCodes.VERSION_CONFLICT,
+      ],
+      hasBody: true,
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/videos/{id}',
+      method: 'delete',
+      expectedStatuses: [202, 400, 401, 403, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.VIDEO_NOT_FOUND,
+      ],
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/videos/{id}/events',
+      method: 'get',
+      expectedStatuses: [200, 400, 401, 404, 429],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.VIDEO_NOT_FOUND,
+        ErrorCodes.RATE_LIMITED,
+      ],
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/me/events',
+      method: 'get',
+      expectedStatuses: [200, 401, 429],
+      expectedErrorCodes: [ErrorCodes.UNAUTHORIZED, ErrorCodes.RATE_LIMITED],
+    },
+    {
+      path: '/v1/videos/{id}/reprocess',
+      method: 'post',
+      expectedStatuses: [202, 400, 401, 403, 404, 429],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.VIDEO_NOT_FOUND,
+        ErrorCodes.RATE_LIMITED,
+      ],
+      hasBody: true,
+      hasPathParams: true,
+    },
 
-      // 3. Admin (§6.1)
-      {
-        path: '/v1/admin/dlq',
-        method: 'get',
-        expectedStatuses: [200, 401, 403],
-        expectedErrorCodes: [ErrorCodes.UNAUTHORIZED, ErrorCodes.FORBIDDEN],
-        hasQueryParams: true,
-      },
-      {
-        path: '/v1/admin/dlq/{id}/replay',
-        method: 'post',
-        expectedStatuses: [202, 400, 401, 403, 404],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.FORBIDDEN,
-          ErrorCodes.DLQ_ENTRY_NOT_FOUND,
-        ],
-        hasBody: true,
-        hasPathParams: true,
-      },
-      {
-        path: '/v1/admin/dlq/{id}',
-        method: 'delete',
-        expectedStatuses: [204, 400, 401, 403, 404],
-        expectedErrorCodes: [
-          ErrorCodes.VALIDATION_FAILED,
-          ErrorCodes.UNAUTHORIZED,
-          ErrorCodes.FORBIDDEN,
-          ErrorCodes.DLQ_ENTRY_NOT_FOUND,
-        ],
-        hasPathParams: true,
-      },
+    // 3. Admin (§6.1)
+    {
+      path: '/v1/admin/dlq',
+      method: 'get',
+      expectedStatuses: [200, 401, 403],
+      expectedErrorCodes: [ErrorCodes.UNAUTHORIZED, ErrorCodes.FORBIDDEN],
+      hasQueryParams: true,
+    },
+    {
+      path: '/v1/admin/dlq/{id}/replay',
+      method: 'post',
+      expectedStatuses: [202, 400, 401, 403, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.DLQ_ENTRY_NOT_FOUND,
+      ],
+      hasBody: true,
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/admin/dlq/{id}',
+      method: 'delete',
+      expectedStatuses: [204, 400, 401, 403, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.DLQ_ENTRY_NOT_FOUND,
+      ],
+      hasPathParams: true,
+    },
 
-      // 4. Ops (§6.1)
-      {
-        path: '/healthz',
-        method: 'get',
-        expectedStatuses: [200],
-      },
-      {
-        path: '/readyz',
-        method: 'get',
-        expectedStatuses: [200, 503],
-      },
-    ];
+    // 4. Ops (§6.1)
+    {
+      path: '/healthz',
+      method: 'get',
+      expectedStatuses: [200],
+    },
+    {
+      path: '/readyz',
+      method: 'get',
+      expectedStatuses: [200, 503],
+    },
+  ];
 
-  it.each(CONTRACT)(
-    'AC 6: endpoint $method $path adheres to OpenAPI contract',
-    (item) => {
-      const paths = (swaggerSpec['paths'] || {}) as Record<
-        string,
-        Record<
-          string,
-          {
-            parameters?: Array<{ name: string; in: string }>;
-            requestBody?: unknown;
-            responses?: Record<
-              string,
-              { content?: Record<string, { schema?: Record<string, unknown> }> }
-            >;
-          }
-        >
-      >;
-
-      const pathItem = paths[item.path];
-      expect(pathItem, `Expected endpoint "${item.path}" to exist in OpenAPI spec`).toBeDefined();
-
-      const op = pathItem?.[item.method];
-      expect(
-        op,
-        `Expected HTTP method "${item.method.toUpperCase()}" for path "${item.path}"`
-      ).toBeDefined();
-
-      if (item.hasPathParams) {
-        expect(
-          op?.parameters?.some((p) => p.in === 'path'),
-          `Expected path parameter for ${item.method.toUpperCase()} ${item.path}`
-        ).toBe(true);
-      }
-
-      if (item.hasQueryParams) {
-        expect(
-          op?.parameters?.some((p) => p.in === 'query'),
-          `Expected query parameter for ${item.method.toUpperCase()} ${item.path}`
-        ).toBe(true);
-      }
-
-      if (item.hasBody) {
-        expect(
-          op?.requestBody,
-          `Expected requestBody for ${item.method.toUpperCase()} ${item.path}`
-        ).toBeDefined();
-      }
-
-      const responses = op?.responses || {};
-      for (const status of item.expectedStatuses) {
-        expect(
-          responses[String(status)],
-          `Expected status ${status} response schema in ${item.method.toUpperCase()} ${item.path}`
-        ).toBeDefined();
-      }
-
-      if (item.expectedErrorCodes && item.expectedErrorCodes.length > 0) {
-        const errorStatuses = item.expectedStatuses.filter((s) => s >= 400);
-        const documentedCodes: string[] = [];
-
-        for (const s of errorStatuses) {
-          const resp = responses[String(s)];
-          const content = resp?.content || {};
-          const schema = (content['application/problem+json']?.schema ??
-            content['application/json']?.schema) as {
-            properties?: { code?: { enum?: string[] } };
-          };
-          const codeEnum = schema?.properties?.code?.enum;
-          if (Array.isArray(codeEnum)) {
-            documentedCodes.push(...codeEnum);
-          }
-        }
-
-        for (const code of item.expectedErrorCodes) {
-          expect(
-            documentedCodes,
-            `Expected error code "${code}" to be documented in error responses for ${item.method.toUpperCase()} ${item.path}`
-          ).toContain(code);
-        }
-      }
-    }
-  );
-
-  it('detects no drift between /v1/ endpoints in OpenAPI and the SDD contract', () => {
+  it.each(CONTRACT)('AC 6: endpoint $method $path adheres to OpenAPI contract', (item) => {
     const paths = (swaggerSpec['paths'] || {}) as Record<
       string,
-      Record<string, unknown>
+      Record<
+        string,
+        {
+          parameters?: Array<{ name: string; in: string }>;
+          requestBody?: unknown;
+          responses?: Record<
+            string,
+            { content?: Record<string, { schema?: Record<string, unknown> }> }
+          >;
+        }
+      >
     >;
+
+    const pathItem = paths[item.path];
+    expect(pathItem, `Expected endpoint "${item.path}" to exist in OpenAPI spec`).toBeDefined();
+
+    const op = pathItem?.[item.method];
+    expect(
+      op,
+      `Expected HTTP method "${item.method.toUpperCase()}" for path "${item.path}"`
+    ).toBeDefined();
+
+    if (item.hasPathParams) {
+      expect(
+        op?.parameters?.some((p) => p.in === 'path'),
+        `Expected path parameter for ${item.method.toUpperCase()} ${item.path}`
+      ).toBe(true);
+    }
+
+    if (item.hasQueryParams) {
+      expect(
+        op?.parameters?.some((p) => p.in === 'query'),
+        `Expected query parameter for ${item.method.toUpperCase()} ${item.path}`
+      ).toBe(true);
+    }
+
+    if (item.hasBody) {
+      expect(
+        op?.requestBody,
+        `Expected requestBody for ${item.method.toUpperCase()} ${item.path}`
+      ).toBeDefined();
+    }
+
+    const responses = op?.responses || {};
+    for (const status of item.expectedStatuses) {
+      expect(
+        responses[String(status)],
+        `Expected status ${status} response schema in ${item.method.toUpperCase()} ${item.path}`
+      ).toBeDefined();
+    }
+
+    if (item.expectedErrorCodes && item.expectedErrorCodes.length > 0) {
+      const errorStatuses = item.expectedStatuses.filter((s) => s >= 400);
+      const documentedCodes: string[] = [];
+
+      for (const s of errorStatuses) {
+        const resp = responses[String(s)];
+        const content = resp?.content || {};
+        const schema = (content['application/problem+json']?.schema ??
+          content['application/json']?.schema) as {
+          properties?: { code?: { enum?: string[] } };
+        };
+        const codeEnum = schema?.properties?.code?.enum;
+        if (Array.isArray(codeEnum)) {
+          documentedCodes.push(...codeEnum);
+        }
+      }
+
+      for (const code of item.expectedErrorCodes) {
+        expect(
+          documentedCodes,
+          `Expected error code "${code}" to be documented in error responses for ${item.method.toUpperCase()} ${item.path}`
+        ).toContain(code);
+      }
+    }
+  });
+
+  it('detects no drift between /v1/ endpoints in OpenAPI and the SDD contract', () => {
+    const paths = (swaggerSpec['paths'] || {}) as Record<string, Record<string, unknown>>;
     const contractKeys = new Set(CONTRACT.map((c) => `${c.method.toUpperCase()} ${c.path}`));
     for (const [p, methods] of Object.entries(paths)) {
       if (p.startsWith('/v1/')) {

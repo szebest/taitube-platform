@@ -316,4 +316,23 @@ export class PostgresVideoRepository extends VideoRepository {
       throw dbErr(`Failed to count in-flight videos for owner ${ownerId}`, err);
     }
   }
+
+  async countByStatus(): Promise<Record<string, number>> {
+    try {
+      const rows = await this.db
+        .select({
+          status: v.status,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(v)
+        .groupBy(v.status);
+      const result: Record<string, number> = {};
+      for (const row of rows) {
+        result[row.status] = row.count;
+      }
+      return result;
+    } catch (err) {
+      throw dbErr('Failed to count videos by status', err);
+    }
+  }
 }

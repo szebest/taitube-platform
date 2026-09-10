@@ -297,6 +297,14 @@ export class InMemoryVideoRepository extends VideoRepository {
     ).length;
   }
 
+  async countByStatus(): Promise<Record<string, number>> {
+    const counts: Record<string, number> = {};
+    for (const video of this.videosMap.values()) {
+      counts[video.status] = (counts[video.status] ?? 0) + 1;
+    }
+    return counts;
+  }
+
   clear(): void {
     this.videosMap.clear();
   }

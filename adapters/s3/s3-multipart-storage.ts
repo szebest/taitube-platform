@@ -17,6 +17,7 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
+import { measureStorageOp } from '../storage-metrics-helper.js';
 import { S3StorageClient, type S3StorageClientConfig } from './s3-storage-client.js';
 
 export interface S3MultipartStorageConfig extends S3StorageClientConfig {
@@ -40,23 +41,25 @@ export class S3MultipartStorage extends MultipartStorage {
   }
 
   async createMultipartUpload(bucket: string, key: string, contentType: string): Promise<string> {
-    try {
-      const command = new CreateMultipartUploadCommand({
-        Bucket: bucket,
-        Key: key,
-        ContentType: contentType,
-      });
-      const res = await this.client.send(command);
-      if (!res.UploadId) {
-        throw new Error('No UploadId returned from S3 createMultipartUpload');
+    return measureStorageOp('multipart', bucket, async () => {
+      try {
+        const command = new CreateMultipartUploadCommand({
+          Bucket: bucket,
+          Key: key,
+          ContentType: contentType,
+        });
+        const res = await this.client.send(command);
+        if (!res.UploadId) {
+          throw new Error('No UploadId returned from S3 createMultipartUpload');
+        }
+        return res.UploadId;
+      } catch (err: unknown) {
+        throw new StorageError(
+          `Failed to create multipart upload for ${key}: ${(err as Error).message}`,
+          { cause: err }
+        );
       }
-      return res.UploadId;
-    } catch (err: unknown) {
-      throw new StorageError(
-        `Failed to create multipart upload for ${key}: ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+    });
   }
 
   async createPresignedPartUrl(
@@ -146,26 +149,28 @@ export class S3MultipartStorage extends MultipartStorage {
     uploadId: string,
     parts: StorageCompletePartInput[]
   ): Promise<void> {
-    try {
-      const sorted = [...parts].sort((a, b) => a.partNumber - b.partNumber);
-      const command = new CompleteMultipartUploadCommand({
-        Bucket: bucket,
-        Key: key,
-        UploadId: uploadId,
-        MultipartUpload: {
-          Parts: sorted.map((p) => ({
-            PartNumber: p.partNumber,
-            ETag: p.etag.startsWith('"') ? p.etag : `"${p.etag}"`,
-          })),
-        },
-      });
-      await this.client.send(command);
-    } catch (err: unknown) {
-      throw new StorageError(
-        `Failed to complete multipart upload ${uploadId}: ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+    return measureStorageOp('multipart', bucket, async () => {
+      try {
+        const sorted = [...parts].sort((a, b) => a.partNumber - b.partNumber);
+        const command = new CompleteMultipartUploadCommand({
+          Bucket: bucket,
+          Key: key,
+          UploadId: uploadId,
+          MultipartUpload: {
+            Parts: sorted.map((p) => ({
+              PartNumber: p.partNumber,
+              ETag: p.etag.startsWith('"') ? p.etag : `"${p.etag}"`,
+            })),
+          },
+        });
+        await this.client.send(command);
+      } catch (err: unknown) {
+        throw new StorageError(
+          `Failed to complete multipart upload ${uploadId}: ${(err as Error).message}`,
+          { cause: err }
+        );
+      }
+    });
   }
 
   async abortMultipartUpload(bucket: string, key: string, uploadId: string): Promise<void> {

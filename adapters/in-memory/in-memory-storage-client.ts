@@ -12,6 +12,7 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
+import { measureStorageOp } from '../storage-metrics-helper.js';
 
 interface StoredObject {
   data: Buffer;
@@ -37,97 +38,109 @@ export class InMemoryStorageClient extends StorageClient {
   }
 
   async uploadObject(params: StorageUploadParams): Promise<StorageUploadResult> {
-    let buf: Buffer;
-    if (Buffer.isBuffer(params.body)) {
-      buf = params.body;
-    } else if (typeof params.body === 'string') {
-      buf = Buffer.from(params.body);
-    } else if (params.body instanceof Uint8Array) {
-      buf = Buffer.from(params.body);
-    } else {
-      // Readable stream
-      const chunks: Buffer[] = [];
-      for await (const chunk of params.body as AsyncIterable<Uint8Array | Buffer>) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    return measureStorageOp('put', params.bucket, async () => {
+      let buf: Buffer;
+      if (Buffer.isBuffer(params.body)) {
+        buf = params.body;
+      } else if (typeof params.body === 'string') {
+        buf = Buffer.from(params.body);
+      } else if (params.body instanceof Uint8Array) {
+        buf = Buffer.from(params.body);
+      } else {
+        // Readable stream
+        const chunks: Buffer[] = [];
+        for await (const chunk of params.body as AsyncIterable<Uint8Array | Buffer>) {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        }
+        buf = Buffer.concat(chunks);
       }
-      buf = Buffer.concat(chunks);
-    }
 
-    const etag = `etag-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    this.storage.set(this.getStorageKey(params.bucket, params.key), {
-      data: buf,
-      contentType: params.contentType,
-      cacheControl: params.cacheControl,
-      etag,
+      const etag = `etag-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      this.storage.set(this.getStorageKey(params.bucket, params.key), {
+        data: buf,
+        contentType: params.contentType,
+        cacheControl: params.cacheControl,
+        etag,
+      });
+
+      return {
+        key: params.key,
+        etag,
+      };
     });
-
-    return {
-      key: params.key,
-      etag,
-    };
   }
 
   async downloadObject(bucket: string, key: string, targetFilePath: string): Promise<boolean> {
-    const item = this.storage.get(this.getStorageKey(bucket, key));
-    if (!item) {
-      return false;
-    }
-    fs.writeFileSync(targetFilePath, item.data);
-    return true;
+    return measureStorageOp('get', bucket, async () => {
+      const item = this.storage.get(this.getStorageKey(bucket, key));
+      if (!item) {
+        return false;
+      }
+      fs.writeFileSync(targetFilePath, item.data);
+      return true;
+    });
   }
 
   async headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null> {
-    const item = this.storage.get(this.getStorageKey(bucket, key));
-    if (!item) {
-      return null;
-    }
-    return {
-      contentLength: item.data.length,
-      contentType: item.contentType,
-      cacheControl: item.cacheControl,
-      etag: item.etag,
-    };
+    return measureStorageOp('head', bucket, async () => {
+      const item = this.storage.get(this.getStorageKey(bucket, key));
+      if (!item) {
+        return null;
+      }
+      return {
+        contentLength: item.data.length,
+        contentType: item.contentType,
+        cacheControl: item.cacheControl,
+        etag: item.etag,
+      };
+    });
   }
 
   async deleteObject(bucket: string, key: string): Promise<void> {
-    this.storage.delete(this.getStorageKey(bucket, key));
+    return measureStorageOp('delete', bucket, async () => {
+      this.storage.delete(this.getStorageKey(bucket, key));
+    });
   }
 
   async deleteObjects(bucket: string, keys: string[]): Promise<StorageDeleteObjectsResult> {
     const deleted: string[] = [];
-    for (const key of keys) {
-      this.storage.delete(this.getStorageKey(bucket, key));
-      deleted.push(key);
-    }
-    return { deletedKeys: deleted };
+    return measureStorageOp('delete', bucket, async () => {
+      for (const key of keys) {
+        this.storage.delete(this.getStorageKey(bucket, key));
+        deleted.push(key);
+      }
+      return { deletedKeys: deleted };
+    });
   }
 
   async listObjects(params: StorageListObjectsParams): Promise<StorageListObjectsResult> {
-    const bucketPrefix = `${params.bucket}/`;
-    const fullPrefix = `${params.bucket}/${params.prefix ?? ''}`;
-    const matchingKeys: string[] = [];
-    for (const k of this.storage.keys()) {
-      if (k.startsWith(fullPrefix)) {
-        matchingKeys.push(k.slice(bucketPrefix.length));
+    return measureStorageOp('list', params.bucket, async () => {
+      const bucketPrefix = `${params.bucket}/`;
+      const fullPrefix = `${params.bucket}/${params.prefix ?? ''}`;
+      const matchingKeys: string[] = [];
+      for (const k of this.storage.keys()) {
+        if (k.startsWith(fullPrefix)) {
+          matchingKeys.push(k.slice(bucketPrefix.length));
+        }
       }
-    }
-    matchingKeys.sort();
+      matchingKeys.sort();
 
-    const maxKeys = params.maxKeys ?? 1000;
-    let filteredKeys = matchingKeys;
-    if (params.continuationToken) {
-      const token = params.continuationToken;
-      filteredKeys = matchingKeys.filter((k) => k > token);
-    }
+      const maxKeys = params.maxKeys ?? 1000;
+      let filteredKeys = matchingKeys;
+      if (params.continuationToken) {
+        const token = params.continuationToken;
+        filteredKeys = matchingKeys.filter((k) => k > token);
+      }
 
-    const slice = filteredKeys.slice(0, maxKeys);
-    const isTruncated = filteredKeys.length > maxKeys;
-    const lastKey = slice.length > 0 ? slice[slice.length - 1] : undefined;
-    return {
-      keys: slice,
-      nextContinuationToken: isTruncated ? lastKey : undefined,
-      isTruncated,
-    };
+      const slice = filteredKeys.slice(0, maxKeys);
+      const isTruncated = filteredKeys.length > maxKeys;
+      const lastKey = slice.length > 0 ? slice[slice.length - 1] : undefined;
+      return {
+        keys: slice,
+        nextContinuationToken: isTruncated ? lastKey : undefined,
+        isTruncated,
+      };
+    });
   }
 
   async purgePrefix(bucket: string, prefix: string): Promise<number> {
@@ -150,11 +163,13 @@ export class InMemoryStorageClient extends StorageClient {
   }
 
   async getObject(bucket: string, key: string): Promise<Buffer> {
-    const item = this.storage.get(this.getStorageKey(bucket, key));
-    if (!item) {
-      throw new StorageError(`Object not found: ${bucket}/${key}`);
-    }
-    return item.data;
+    return measureStorageOp('get', bucket, async () => {
+      const item = this.storage.get(this.getStorageKey(bucket, key));
+      if (!item) {
+        throw new StorageError(`Object not found: ${bucket}/${key}`);
+      }
+      return item.data;
+    });
   }
 
   async createPresignedPutUrl(

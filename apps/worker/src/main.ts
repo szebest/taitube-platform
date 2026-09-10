@@ -10,7 +10,9 @@ export async function main(): Promise<() => Promise<void>> {
   });
   console.log(`[worker] Started processing on queue "${runner.worker.name}"`);
   if (runner.metricsServer) {
-    console.log(`[worker] Metrics server listening on http://0.0.0.0:${runner.metricsServer.port}/metrics`);
+    console.log(
+      `[worker] Metrics server listening on http://0.0.0.0:${runner.metricsServer.port}/metrics`
+    );
   }
 
   const shutdown = async () => {

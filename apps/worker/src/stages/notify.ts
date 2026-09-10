@@ -1,7 +1,7 @@
 import type { CacheClient, QueueJob, Repositories } from '@vp/core/ports';
 import { publishVideoEvent, userChannel, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
+import { type Logger, getMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { validateJobId } from '../registry.js';
 
@@ -70,6 +70,9 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
       const chVideo = videoChannel(videoId);
       const chUser = userChannel(userId);
       log.info({ chVideo, chUser, latestId }, 'Published status update to Redis channels');
+
+      // Record sse_events_published_total (Ticket 22 / SDD §13.1)
+      getMetrics().sseEventsPublished.inc({ event: 'status' });
 
       // 3. Complete step
       await repositories.steps.complete({
