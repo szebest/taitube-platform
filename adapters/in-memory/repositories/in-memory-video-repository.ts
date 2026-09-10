@@ -1,3 +1,4 @@
+import { trace } from '@opentelemetry/api';
 import {
   DatabaseError,
   type EventRepository,
@@ -102,16 +103,18 @@ export class InMemoryVideoRepository extends VideoRepository {
   private async emitEvent(
     videoId: string,
     type: string,
-    payload: Record<string, unknown>
+    payload: Record<string, unknown>,
+    traceId?: string | null
   ): Promise<void> {
     if (this.eventsRepo) {
-      await this.eventsRepo.create({ videoId, type, payload });
+      await this.eventsRepo.create({ videoId, type, payload, traceId });
     } else if (this.eventsList) {
       this.eventsList.push({
         id: this.eventsList.length + 1,
         videoId,
         type,
         payload,
+        traceId: traceId ?? null,
         createdAt: new Date(),
       });
     }
@@ -190,11 +193,14 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   async transition(options: TransitionVideoOptions): Promise<boolean> {
-    const { videoId, from, to, patch = {}, eventType, eventPayload = {} } = options;
+    const { videoId, from, to, patch = {}, eventType, eventPayload = {}, traceId } = options;
     const video = this.videosMap.get(videoId);
     if (!video) return false;
     const allowed = Array.isArray(from) ? from : [from];
     if (!allowed.includes(video.status)) return false;
+
+    const activeSpan = trace.getActiveSpan();
+    const effectiveTraceId = traceId || (activeSpan ? activeSpan.spanContext().traceId : null);
 
     const now = new Date();
     Object.assign(video, {
@@ -203,7 +209,12 @@ export class InMemoryVideoRepository extends VideoRepository {
       updatedAt: now,
       readyAt: to === 'READY' ? now : video.readyAt,
     });
-    await this.emitEvent(videoId, eventType || `video.${to.toLowerCase()}`, eventPayload);
+    await this.emitEvent(
+      videoId,
+      eventType || `video.${to.toLowerCase()}`,
+      eventPayload,
+      effectiveTraceId
+    );
     return true;
   }
 

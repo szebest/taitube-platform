@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { classifyFfmpegError } from './transcode.js';
 
@@ -263,6 +264,29 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
 }
 
 function runSpawn(args: string[], timeoutMs: number): Promise<void> {
+  const redactedCmd = [
+    'ffmpeg',
+    ...args.map((a) => {
+      try {
+        if (a.startsWith('http://') || a.startsWith('https://')) {
+          const u = new URL(a);
+          u.search = '';
+          return u.toString();
+        }
+      } catch {}
+      return a;
+    }),
+  ].join(' ');
+
+  const tracer = trace.getTracer('video-pipeline');
+  const span = tracer.startSpan('ffmpeg', {
+    attributes: {
+      'ffmpeg.stage': 'thumbnail',
+      'ffmpeg.command': redactedCmd,
+    },
+  });
+  const startTime = Date.now();
+
   return new Promise((resolve, reject) => {
     const proc = spawn('ffmpeg', args, {
       stdio: ['ignore', 'ignore', 'pipe'],
@@ -294,12 +318,25 @@ function runSpawn(args: string[], timeoutMs: number): Promise<void> {
 
     proc.on('error', (err) => {
       clearTimeout(timer);
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      span.setAttribute('ffmpeg.duration_ms', Date.now() - startTime);
+      span.end();
       reject(err);
     });
 
     proc.on('close', (code, signal) => {
       clearTimeout(timer);
+      const elapsedMs = Date.now() - startTime;
+      span.setAttribute('ffmpeg.exit_code', code ?? (signal ? -1 : 0));
+      span.setAttribute('ffmpeg.duration_ms', elapsedMs);
+      if (signal) {
+        span.setAttribute('ffmpeg.signal', signal);
+      }
+
       if (timedOut) {
+        span.setStatus({ code: SpanStatusCode.ERROR, message: 'FFmpeg thumbnail timeout' });
+        span.end();
         return reject(
           new TransientError(
             ErrorCodes.FFMPEG_TIMEOUT,
@@ -310,9 +347,15 @@ function runSpawn(args: string[], timeoutMs: number): Promise<void> {
 
       if (code !== 0) {
         const stderrStr = stderrLines.join('\n');
-        return reject(classifyFfmpegError(code, signal, stderrStr));
+        const classified = classifyFfmpegError(code, signal, stderrStr);
+        span.recordException(classified);
+        span.setStatus({ code: SpanStatusCode.ERROR, message: classified.message });
+        span.end();
+        return reject(classified);
       }
 
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
       resolve();
     });
   });

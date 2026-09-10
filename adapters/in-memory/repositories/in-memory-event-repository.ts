@@ -23,6 +23,7 @@ export class InMemoryEventRepository extends EventRepository {
       videoId: data.videoId,
       type: data.type,
       payload: data.payload,
+      traceId: data.traceId ?? null,
       createdAt: new Date(),
     };
     this.eventsList.push(record);

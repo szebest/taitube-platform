@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import * as path from 'node:path';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
 
@@ -196,6 +197,31 @@ export async function runFfmpegTranscode(
   options: TranscodeOptions
 ): Promise<TranscodeExecutionResult> {
   const args = buildTranscodeArgs(options);
+  const redactedCmd = [
+    'ffmpeg',
+    ...args.map((a) => {
+      try {
+        if (a.startsWith('http://') || a.startsWith('https://')) {
+          const u = new URL(a);
+          u.search = '';
+          return u.toString();
+        }
+      } catch {}
+      return a;
+    }),
+  ].join(' ');
+
+  const tracer = trace.getTracer('video-pipeline');
+  const span = tracer.startSpan('ffmpeg', {
+    attributes: {
+      'ffmpeg.stage': 'transcode',
+      'ffmpeg.rendition': options.rendition.name,
+      'ffmpeg.command': redactedCmd,
+      rendition: options.rendition.name,
+    },
+  });
+
+  const startTime = Date.now();
 
   // Compute hard per-job timeout: max(3 * durationMs, 10 min) (SDD §9.5)
   const durationMs = options.durationMs || 60000;
@@ -260,13 +286,25 @@ export async function runFfmpegTranscode(
 
     proc.on('error', (err) => {
       clearTimeout(timer);
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      span.setAttribute('ffmpeg.duration_ms', Date.now() - startTime);
+      span.end();
       reject(err);
     });
 
     proc.on('close', (code, signal) => {
       clearTimeout(timer);
+      const elapsedMs = Date.now() - startTime;
+      span.setAttribute('ffmpeg.exit_code', code ?? (signal ? -1 : 0));
+      span.setAttribute('ffmpeg.duration_ms', elapsedMs);
+      if (signal) {
+        span.setAttribute('ffmpeg.signal', signal);
+      }
 
       if (timedOut) {
+        span.setStatus({ code: SpanStatusCode.ERROR, message: 'FFmpeg timeout' });
+        span.end();
         return reject(
           new TransientError(
             ErrorCodes.FFMPEG_TIMEOUT,
@@ -278,9 +316,14 @@ export async function runFfmpegTranscode(
       if (code !== 0) {
         const stderrStr = stderrLines.join('\n');
         const classified = classifyFfmpegError(code, signal, stderrStr);
+        span.recordException(classified);
+        span.setStatus({ code: SpanStatusCode.ERROR, message: classified.message });
+        span.end();
         return reject(classified);
       }
 
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
       resolve({
         outputDir: options.outputDir,
         playlistPath: path.join(options.outputDir, 'index.m3u8'),

@@ -201,6 +201,14 @@ Five production-grade dashboards are provisioned in Grafana under the `video-pip
 4. **API (`api.json`)**: RED metrics (request rate, error rate with 5xx classification, duration latency p50/p95/p99), active SSE connections (`sse_connections`), SSE events published to Pub/Sub (`sse_events_published_total`), and HTTP requests in flight (`http_requests_in_flight`).
 5. **Storage & Cost (`storage-cost.json`)**: Class A (PUT/multipart) & Class B (GET/HEAD) operations per hour, linear projection of monthly Class A operations against Cloudflare R2 1M/month free tier (`predict_linear(storage_ops_total{op="put"}[1d], 30*86400)`), transcode output bytes rate (`transcode_output_bytes_total`), and storage operation duration p95 (`storage_op_duration_seconds`).
 
+#### Following a video through the system (Distributed Tracing)
+With the observability stack running (`make obs-up`), every video upload creates an unbroken trace tree spanning all pipeline stages (Ticket 23, SDD §13.3):
+1. **API Upload Complete**: `POST /uploads/:id/complete` creates the root span and injects the W3C `traceparent` into BullMQ `job.data`.
+2. **Database & Events Correlation**: Every `video_events` row and database mutation includes `trace_id`.
+3. **Worker Processing**: The worker wrapper extracts `traceparent` and executes each job within a `bullmq.process {stage}` child span (`probe` → `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail` → `package` → `notify`).
+4. **FFmpeg Execution**: Detailed child spans capture `ffmpeg` transcodes and thumbnail extractions with exit codes, duration, and sanitized command lines (no presigned URLs).
+5. **Trace-to-Logs**: Every Pino log line carries `traceId` and `spanId`. In Grafana (`http://localhost:3001`), searching a `trace_id` in Tempo provides one-click navigation directly to correlated Loki log lines.
+
 ### 7. Useful commands
 | Command | Description |
 |---|---|

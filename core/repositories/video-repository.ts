@@ -97,6 +97,7 @@ export interface TransitionVideoOptions {
   to: VideoStatus;
   eventType: string;
   eventPayload?: Record<string, unknown>;
+  traceId?: string | null;
   patch?: Partial<
     Omit<VideoRecord, 'id' | 'ownerId' | 'status' | 'createdAt' | 'updatedAt' | 'version'>
   >;

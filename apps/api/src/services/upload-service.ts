@@ -12,6 +12,7 @@ import type {
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
+import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
 import {
   MULTIPART_THRESHOLD_BYTES,
   calculatePartSize,
@@ -452,6 +453,11 @@ export class UploadService {
     // Mark upload COMPLETED
     await this.uploads.updateStatus(uploadId, 'COMPLETED');
 
+    // Determine trace context: from active span if available, or generate a fresh traceparent
+    const activeCtx = getActiveSpanContext();
+    const traceparent = activeCtx.traceparent || getActiveTraceparent() || createTraceparent();
+    const traceId = activeCtx.traceId || traceparent.split('-')[1];
+
     // CAS transition: UPLOADING -> UPLOADED
     const transitioned = await this.videos.transition({
       videoId: video.id,
@@ -462,6 +468,7 @@ export class UploadService {
         uploadId,
         sizeBytes: head.contentLength,
       },
+      traceId,
     });
 
     if (!transitioned) {
@@ -503,7 +510,7 @@ export class UploadService {
           videoId: video.id,
           sourceKey: video.sourceKey,
           generation: 1,
-          traceparent: '00-00000000000000000000000000000000-0000000000000000-01',
+          traceparent,
         }),
         {
           jobId: probeJobId,

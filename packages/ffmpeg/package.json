@@ -19,6 +19,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "@vp/errors": "workspace:*",
     "@vp/job-contracts": "workspace:*"
   },

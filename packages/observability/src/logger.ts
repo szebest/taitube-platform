@@ -1,3 +1,4 @@
+import { trace } from '@opentelemetry/api';
 import pino, { type Logger, type LoggerOptions } from 'pino';
 
 export interface LoggerConfig {
@@ -18,6 +19,16 @@ export function createLogger(config: LoggerConfig): Logger {
     },
     formatters: {
       level: (label) => ({ level: label }),
+    },
+    mixin() {
+      const activeSpan = trace.getActiveSpan();
+      if (!activeSpan) return {};
+      const spanContext = activeSpan.spanContext();
+      if (!(spanContext.traceId && spanContext.spanId)) return {};
+      return {
+        traceId: spanContext.traceId,
+        spanId: spanContext.spanId,
+      };
     },
     timestamp: pino.stdTimeFunctions.isoTime,
   };
