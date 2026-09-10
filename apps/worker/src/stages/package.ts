@@ -10,7 +10,7 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
+import { type Logger, getMetrics } from '@vp/observability';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { validateJobId } from '../registry.js';
@@ -187,6 +187,23 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       });
 
       log.info({ videoId, playbackUrl, transitioned }, 'Video transitioned to READY');
+
+      // Record time_to_ready_seconds metric (Ticket 22 / SDD §13.1)
+      if (transitioned && video) {
+        const durationSec = (video.durationMs || 0) / 1000;
+        let bucket = '<1min';
+        if (durationSec >= 900) {
+          bucket = '15-60';
+        } else if (durationSec >= 300) {
+          bucket = '5-15';
+        } else if (durationSec >= 60) {
+          bucket = '1-5';
+        }
+
+        const createdAtTime = video.createdAt ? new Date(video.createdAt).getTime() : Date.now();
+        const timeToReadySec = Math.max(0, (Date.now() - createdAtTime) / 1000);
+        getMetrics().timeToReady.observe({ bucket }, timeToReadySec);
+      }
 
       // 7. Enqueue notify job if this was the successful CAS transition (AC 19, AC 20)
       if (transitioned && getQueue && video) {

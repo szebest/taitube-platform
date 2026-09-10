@@ -27,6 +27,7 @@ import type {
 } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
+import { getMetrics } from '@vp/observability';
 import fastify, { type FastifyInstance } from 'fastify';
 import {
   jsonSchemaTransform,
@@ -35,6 +36,7 @@ import {
 } from 'fastify-type-provider-zod';
 import { registerAuth } from './plugins/auth.js';
 import { registerErrorHandler } from './plugins/errors.js';
+import { registerHttpMetricsPlugin } from './plugins/http-metrics.js';
 import { registerAdminDlqRoutes } from './routes/admin/dlq.js';
 import { registerAdminQueuesRoutes } from './routes/admin/queues.js';
 import { registerDevJwksRoute } from './routes/dev-jwks.js';
@@ -43,6 +45,8 @@ import { registerHealthRoutes } from './routes/health.js';
 import { registerUploadsRoutes } from './routes/uploads.js';
 import { registerVideosRoutes } from './routes/videos.js';
 import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers.js';
+import { startQueuePoller } from './services/queue-poller.js';
+import { startSqlPoller } from './services/sql-poller.js';
 import { SseHub } from './services/sse-hub.js';
 
 export * from './services/index.js';
@@ -152,6 +156,9 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   // 5. Register Authentication Plugin (dev token verification)
   await app.register(registerAuth);
 
+  // 5a. Register HTTP RED metrics hooks (http_request_duration_seconds, http_requests_in_flight)
+  await app.register(registerHttpMetricsPlugin);
+
   // 6. Register OpenAPI Documentation (/docs)
   await app.register(swagger, {
     openapi: {
@@ -245,7 +252,14 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   app.addHook('onClose', async () => {
     await sseHub.close();
+    queuePoller.stop();
+    sqlPoller.stop();
   });
+
+  // Start queue + SQL pollers after SSE hub initialisation
+  const metrics = getMetrics();
+  const queuePoller = startQueuePoller({ queues: adminQueues, metrics });
+  const sqlPoller = startSqlPoller({ repositories, metrics });
 
   await registerAdminQueuesRoutes(app, {
     cache,

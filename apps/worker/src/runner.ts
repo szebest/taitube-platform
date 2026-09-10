@@ -60,9 +60,7 @@ export interface WorkerRunner {
   close: () => Promise<void>;
 }
 
-export async function createWorkerRunner(
-  options: WorkerRunnerOptions = {}
-): Promise<WorkerRunner> {
+export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Promise<WorkerRunner> {
   const stage = options.stage || process.env['WORKER_STAGE'] || 'probe';
   const config = STAGE_REGISTRY[stage];
   if (!config) {
@@ -195,6 +193,15 @@ export async function createWorkerRunner(
     async (job) => {
       const startTime = Date.now();
       metrics.bullmqQueueJobs.set({ queue: config.queue, state: 'active' }, 1);
+
+      // Observe how long the job waited in the queue before being picked up
+      const enqueuedAt =
+        (job as unknown as { timestamp?: number }).timestamp ??
+        (job.opts as { timestamp?: number } | undefined)?.timestamp;
+      if (enqueuedAt && enqueuedAt > 0) {
+        const waitSec = Math.max(0, (startTime - enqueuedAt) / 1000);
+        metrics.jobWaitDuration.observe({ queue: config.queue }, waitSec);
+      }
 
       try {
         const result = await processor(job);

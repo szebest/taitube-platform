@@ -1,4 +1,5 @@
 import * as http from 'node:http';
+import { getMetrics } from '@vp/observability';
 import client from 'prom-client';
 
 export interface MetricsServer {
@@ -7,8 +8,10 @@ export interface MetricsServer {
   close: () => Promise<void>;
 }
 
-export const register = new client.Registry();
-client.collectDefaultMetrics({ register, prefix: 'vp_api_' });
+export const register = getMetrics().registry;
+try {
+  client.collectDefaultMetrics({ register, prefix: 'vp_api_' });
+} catch {}
 
 export async function startMetricsServer(port: number): Promise<MetricsServer> {
   const server = http.createServer(async (req, res) => {

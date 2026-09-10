@@ -18,7 +18,7 @@ export async function startMetricsServer(
   registryArg?: Registry
 ): Promise<MetricsServer> {
   const port = typeof options === 'number' ? options : options.port;
-  const host = typeof options === 'number' ? '0.0.0.0' : options.host ?? '0.0.0.0';
+  const host = typeof options === 'number' ? '0.0.0.0' : (options.host ?? '0.0.0.0');
   const registry = typeof options === 'number' ? (registryArg as Registry) : options.registry;
 
   const server = http.createServer(async (req, res) => {

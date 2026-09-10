@@ -5,7 +5,7 @@ import type { QueueJob, Repositories, StorageClient } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { runFfmpegThumbnail } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
+import { type Logger, getMetrics } from '@vp/observability';
 import {
   getHeaderMapping,
   posterKey as getPosterKey,
@@ -120,16 +120,28 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
         throw new PermanentError(ErrorCodes.SOURCE_MISSING, errorMsg);
       }
 
+      const head = await storage.headObject(rawBucket, sourceKey);
+      if (head?.contentLength) {
+        getMetrics().workerTmpBytes.set({ stage: 'thumbnail' }, head.contentLength);
+      }
+
       // 2. Generate poster, sprite, and WebVTT using FFmpeg
       const intervalSec =
         spriteIntervalSec ?? Number(process.env['SPRITE_INTERVAL_SECONDS'] || '5');
 
-      const result = await runFfmpegThumbnail({
-        sourcePath: localSourcePath,
-        outputDir: tmpDir,
-        durationMs,
-        intervalSec,
-      });
+      let result: Awaited<ReturnType<typeof runFfmpegThumbnail>>;
+      try {
+        result = await runFfmpegThumbnail({
+          sourcePath: localSourcePath,
+          outputDir: tmpDir,
+          durationMs,
+          intervalSec,
+        });
+        getMetrics().ffmpegExitTotal.inc({ stage: 'thumbnail', code: '0' });
+      } catch (thumbErr) {
+        getMetrics().ffmpegExitTotal.inc({ stage: 'thumbnail', code: '1' });
+        throw thumbErr;
+      }
 
       // 3. Upload generated files to public storage (SDD §7)
       const posterKey = getPosterKey(videoId);
@@ -226,6 +238,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       throw err;
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+      getMetrics().workerTmpBytes.set({ stage: 'thumbnail' }, 0);
     }
   };
 }

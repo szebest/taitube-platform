@@ -193,6 +193,14 @@ make obs-check
 - **OTel Collector** (`http://localhost:4318`): Accepts standard OTLP HTTP spans and logs, routing traces to Tempo and logs to Loki.
 - **Alertmanager** (`http://localhost:9093`): Mounted with `observability/alerts/` rules directory and webhook routing.
 
+#### Dashboards
+Five production-grade dashboards are provisioned in Grafana under the `video-pipeline` folder (`observability/dashboards/*.json`, SDD §13.5, Ticket 22):
+1. **Pipeline Overview (`pipeline.json`)**: Live videos count by status (`videos_by_status`), end-to-end completion throughput (`jobs_processed_total`), and p50/p95 Time-to-Ready latency broken down by duration buckets (`<1min`, `1-5min`, `5-15min`, `15-60min`).
+2. **Queues (`queues.json`)**: Per-queue depth across all BullMQ states (waiting, prioritized, active, delayed, failed), oldest waiting job starvation gauge (`bullmq_queue_oldest_waiting_age_seconds`), queue wait p95 (`job_wait_seconds`), and outstanding backlog vs worker replicas (the autoscaling proof panel).
+3. **Workers (`workers.json`)**: Processing duration p50/p95 by queue (`job_duration_seconds`), transcode realtime factor by rendition and preset (`transcode_realtime_factor`), FFmpeg process exit codes (`ffmpeg_exit_total`), temp disk usage gauge (`worker_tmp_bytes`), and Dead Letter Queue entries (`dlq_entries_total`).
+4. **API (`api.json`)**: RED metrics (request rate, error rate with 5xx classification, duration latency p50/p95/p99), active SSE connections (`sse_connections`), SSE events published to Pub/Sub (`sse_events_published_total`), and HTTP requests in flight (`http_requests_in_flight`).
+5. **Storage & Cost (`storage-cost.json`)**: Class A (PUT/multipart) & Class B (GET/HEAD) operations per hour, linear projection of monthly Class A operations against Cloudflare R2 1M/month free tier (`predict_linear(storage_ops_total{op="put"}[1d], 30*86400)`), transcode output bytes rate (`transcode_output_bytes_total`), and storage operation duration p95 (`storage_op_duration_seconds`).
+
 ### 7. Useful commands
 | Command | Description |
 |---|---|

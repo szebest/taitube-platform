@@ -1,6 +1,6 @@
+import { InMemoryJobQueue, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { describe, expect, it } from 'vitest';
 import { createWorkerRunner } from '../runner.js';
-import { InMemoryJobQueue, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 
 describe('@vp/worker metrics server', () => {
   it('exposes /metrics and /healthz on configured port', async () => {
