@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import * as yaml from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 
-describe('Kubernetes Manifests & Overlays (Ticket 25)', () => {
+describe('Kubernetes Manifests & Overlays (Ticket 25 & 26)', () => {
   const repoRoot = path.resolve(__dirname, '../../../../');
   const localOverlayDir = path.join(repoRoot, 'infra/k8s/overlays/local');
   const cloudOverlayDir = path.join(repoRoot, 'infra/k8s/overlays/cloud');
@@ -185,12 +185,139 @@ describe('Kubernetes Manifests & Overlays (Ticket 25)', () => {
     expect(paths).toContain('/livez');
   });
 
-  it('renders cloud overlay skeleton successfully using kustomize', () => {
+  it('validates KEDA ScaledObjects in local overlay (Ticket 26)', () => {
+    const output = execSync(`kubectl kustomize "${localOverlayDir}"`, {
+      encoding: 'utf-8',
+    });
+    const documents = yaml.loadAll(output) as Array<Record<string, any>>;
+    const scaledObjects = documents.filter((d) => d?.kind === 'ScaledObject');
+
+    expect(scaledObjects.length).toBe(8);
+
+    const expectedConfigs: Record<
+      string,
+      {
+        stage: string;
+        targetDep: string;
+        maxReplicas: number;
+        hasRedisFallback?: boolean;
+      }
+    > = {
+      'vp-worker-probe-scaledobject': {
+        stage: 'probe',
+        targetDep: 'vp-worker-probe',
+        maxReplicas: 4,
+      },
+      'vp-worker-transcode-1080p-scaledobject': {
+        stage: 'transcode-1080p',
+        targetDep: 'vp-worker-transcode-1080p',
+        maxReplicas: 6,
+      },
+      'vp-worker-transcode-720p-scaledobject': {
+        stage: 'transcode-720p',
+        targetDep: 'vp-worker-transcode-720p',
+        maxReplicas: 6,
+      },
+      'vp-worker-transcode-480p-scaledobject': {
+        stage: 'transcode-480p',
+        targetDep: 'vp-worker-transcode-480p',
+        maxReplicas: 6,
+        hasRedisFallback: true,
+      },
+      'vp-worker-thumbnail-scaledobject': {
+        stage: 'thumbnail',
+        targetDep: 'vp-worker-thumbnail',
+        maxReplicas: 4,
+      },
+      'vp-worker-package-scaledobject': {
+        stage: 'package',
+        targetDep: 'vp-worker-package',
+        maxReplicas: 4,
+      },
+      'vp-worker-notify-scaledobject': {
+        stage: 'notify',
+        targetDep: 'vp-worker-notify',
+        maxReplicas: 4,
+      },
+      'vp-worker-housekeeping-scaledobject': {
+        stage: 'housekeeping',
+        targetDep: 'vp-worker-housekeeping',
+        maxReplicas: 2,
+      },
+    };
+
+    for (const so of scaledObjects) {
+      const name = so.metadata?.name;
+      const expected = expectedConfigs[name];
+      expect(expected, `ScaledObject ${name} must be known`).toBeDefined();
+      if (!expected) continue;
+
+      expect(so.metadata?.namespace).toBe('video-pipeline');
+      expect(so.spec.scaleTargetRef.name).toBe(expected.targetDep);
+      expect(so.spec.minReplicaCount).toBe(0);
+      expect(so.spec.maxReplicaCount).toBe(expected.maxReplicas);
+      expect(so.spec.pollingInterval).toBe(10);
+      expect(so.spec.cooldownPeriod).toBe(300);
+
+      // HPA behavior: fast up, slow down
+      const hpaConfig = so.spec.advanced?.horizontalPodAutoscalerConfig?.behavior;
+      expect(hpaConfig).toBeDefined();
+      expect(hpaConfig.scaleUp.stabilizationWindowSeconds).toBe(0);
+      expect(hpaConfig.scaleDown.stabilizationWindowSeconds).toBe(300);
+
+      // Prometheus scaler trigger
+      const promTrigger = so.spec.triggers.find((t: any) => t.type === 'prometheus');
+      expect(promTrigger, `ScaledObject ${name} must have a Prometheus trigger`).toBeDefined();
+      expect(promTrigger.metadata.serverAddress).toBe(
+        'http://kube-prometheus-stack-prometheus.monitoring.svc:9090'
+      );
+      expect(promTrigger.metadata.threshold).toBe('1');
+      expect(promTrigger.metadata.activationThreshold).toBe('0');
+      expect(promTrigger.metadata.query).toContain(`queue="${expected.stage}"`);
+      expect(promTrigger.metadata.query).toContain('state=~"waiting|prioritized|active"');
+      expect(promTrigger.metadata.query).toContain('or vector(0)');
+
+      // Redis fallback trigger on transcode-480p
+      if (expected.hasRedisFallback) {
+        const redisTrigger = so.spec.triggers.find((t: any) => t.type === 'redis');
+        expect(redisTrigger, 'vp-worker-transcode-480p must have a redis trigger').toBeDefined();
+        expect(redisTrigger.metadata.addressFromEnv).toBe('REDIS_ADDR');
+        expect(redisTrigger.metadata.passwordFromEnv).toBe('REDIS_PASSWORD');
+        expect(redisTrigger.metadata.listName).toBe('bull:transcode-480p:wait');
+        expect(redisTrigger.metadata.listLength).toBe('1');
+        expect(redisTrigger.metadata.activationListLength).toBe('0');
+      }
+    }
+  });
+
+  it('renders cloud overlay and validates overlay replica caps (Ticket 26)', () => {
     const output = execSync(`kubectl kustomize "${cloudOverlayDir}"`, {
       encoding: 'utf-8',
     });
     expect(output).toBeDefined();
     const documents = yaml.loadAll(output) as Array<Record<string, any>>;
     expect(documents.length).toBeGreaterThan(10);
+
+    const scaledObjects = documents.filter((d) => d?.kind === 'ScaledObject');
+    expect(scaledObjects.length).toBe(8);
+
+    // Cloud overlay constraints per SDD §12.3: 1 for 1080p/720p, 2 for 480p/probe
+    const transcode1080p = scaledObjects.find(
+      (s) => s.metadata?.name === 'vp-worker-transcode-1080p-scaledobject'
+    );
+    expect(transcode1080p?.spec.maxReplicaCount).toBe(1);
+
+    const transcode720p = scaledObjects.find(
+      (s) => s.metadata?.name === 'vp-worker-transcode-720p-scaledobject'
+    );
+    expect(transcode720p?.spec.maxReplicaCount).toBe(1);
+
+    const transcode480p = scaledObjects.find(
+      (s) => s.metadata?.name === 'vp-worker-transcode-480p-scaledobject'
+    );
+    expect(transcode480p?.spec.maxReplicaCount).toBe(2);
+
+    const probe = scaledObjects.find((s) => s.metadata?.name === 'vp-worker-probe-scaledobject');
+    expect(probe?.spec.maxReplicaCount).toBe(2);
   });
 });

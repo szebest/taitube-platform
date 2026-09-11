@@ -15,3 +15,44 @@ images:
   - name: ghcr.io/szebest/vp-worker
     newName: ghcr.io/szebest/vp-worker
     newTag: latest
+
+# Sizing per SDD §12.3 & Ticket 26 AC 1:
+# On constrained cloud VPS (e.g. Hetzner CAX11 2-vCPU / 4GB):
+# maxReplicaCount is 1 for 1080p and 720p; 2 for 480p and probe.
+patches:
+  - target:
+      group: keda.sh
+      version: v1alpha1
+      kind: ScaledObject
+      name: vp-worker-transcode-1080p-scaledobject
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 1
+  - target:
+      group: keda.sh
+      version: v1alpha1
+      kind: ScaledObject
+      name: vp-worker-transcode-720p-scaledobject
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 1
+  - target:
+      group: keda.sh
+      version: v1alpha1
+      kind: ScaledObject
+      name: vp-worker-transcode-480p-scaledobject
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 2
+  - target:
+      group: keda.sh
+      version: v1alpha1
+      kind: ScaledObject
+      name: vp-worker-probe-scaledobject
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 2
