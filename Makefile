@@ -152,3 +152,23 @@ load-s3: ## Run S3 Backlog Burst load test (requires Compose stack)
 load-smoke: ## Run reduced S1 Load Smoke Test
 	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
 	API="http://localhost:3000" TOKEN=$$TOKEN k6 run --vus 60 --duration 2m tests/load/s1-upload-storm.js
+
+toxiproxy-up: ## Start toxiproxy service fronting MinIO for chaos testing
+	docker compose -f $(COMPOSE_FILE) --profile chaos up -d toxiproxy
+
+chaos-s4: ## Run S4 Worker Kills chaos test (50 videos with worker kills)
+	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
+	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s4-worker-kills.js
+
+chaos-s5: ## Run S5 Dependency Outage chaos test
+	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
+	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s5-dependency-outage.js
+
+chaos-s6: ## Run S6 SSE Fan-out load & reconnect test
+	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
+	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s6-sse-fanout.js
+
+chaos-s7: ## Run S7 Soak test (4h duration, configurable with SOAK_DURATION)
+	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
+	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s7-soak.js
+
