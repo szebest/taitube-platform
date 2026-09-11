@@ -9,11 +9,23 @@ BullMQ lacks a native Dead-Letter Queue mechanism. `video-pipeline` implements t
 
 ---
 
-## 2. Alerting & Triage
+## 2. Trigger
+- **Alert / Symptom**:
+  - `DLQNotEmpty`: Alerts when `dlq_entries_total{queue, error_code}` increases or unhandled items land in `PARKED`.
+  - `SystemicFailure`: Fires when `jobs_failed_total` for a queue exceeds 50% over a 5-minute rolling window.
+  - Operator observation of failed videos in `FAILED` status with permanent error codes.
 
-### Trigger Alerts
-- **`DLQNotEmpty`**: Alerts when `dlq_entries_total{queue, error_code}` increases or unhandled items land in `PARKED`.
-- **`SystemicFailure`**: Fires when `jobs_failed_total` for a queue exceeds 50% over a 5-minute rolling window.
+---
+
+## 3. Dashboards to Open
+- **Workers Dashboard**: `/d/workers` — Check "DLQ Entries Total by Queue & Error Code" and error distributions.
+- **Pipeline Overview**: `/d/pipeline` — Check throughput and pipeline failure rates.
+- **Queues Dashboard**: `/d/queues` — Check queue depths and dead-letter queue count.
+- **Bull Board UI**: `http://localhost:3000/admin/queues` — Inspect active, failed, and `dlq` queues.
+
+---
+
+## 4. Diagnosis Steps
 
 ### Step 1: Inspect DLQ Entries
 Use the admin API to paginate and filter parked entries:
@@ -53,7 +65,7 @@ Response format:
 
 ---
 
-## 3. Operator Actions
+## 5. Remediation Commands
 
 ### Option A: Replay DLQ Entry
 Replay re-adds the exact payload into the origin queue with a new deterministic job ID suffix `--r{n}` (fresh attempts counter):
@@ -95,20 +107,34 @@ curl -X POST \
 - Transcodes write to `videos/${videoId}/hls/g2/` without colliding with `g1`.
 - `master_playlist_key` switches atomically to `g2` only when the flow reaches `READY`.
 
+### Option D: Systemic Failure Circuit Breaker
+When dependency degradation causes systemic failures (> 50% failures over 5 min):
+1. **Pause the Affected Queue Immediately**:
+   - Follow `docs/runbooks/queue-paused.md` or click **Pause** in Bull Board UI.
+2. **Diagnose and Restore Infrastructure**:
+   - Verify MinIO/S3, Redis, and PostgreSQL availability.
+3. **Resume the Queue**:
+   - Click **Resume** in Bull Board.
+4. **Bulk Replay Parked DLQ Entries**:
+   ```bash
+   curl -X POST \
+     -H "x-admin-token: $ADMIN_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"resetAttempts": true}' \
+     "http://localhost:3000/admin/dlq/replay-all"
+   ```
+
 ---
 
-## 4. Systemic Failure Mitigation (Circuit Breaker)
+## 6. Verification
+1. Query `GET /admin/dlq?status=PARKED` — confirm count drops to 0 or only discarded entries remain.
+2. Verify re-enqueued jobs appear as `active` or `completed` in the origin queue.
+3. Verify videos reach `READY` status with valid playback URLs.
+4. Verify `DLQNotEmpty` alert resolves in Prometheus / Alertmanager.
 
-When dependency degradation causes systemic failures (> 50% failures over 5 min):
+---
 
-1. **Pause the Affected Queue Immediately**:
-   - Via Bull Board UI: Navigate to `http://localhost:3000/admin/queues` -> Click **Pause** on the affected queue (e.g. `transcode-1080p`).
-   - Prevent burning attempts while storage or infrastructure is degraded.
-2. **Diagnose and Restore Infrastructure**:
-   - Verify MinIO/S3 availability: `docker compose ps` / health endpoints.
-   - Verify Redis connectivity and memory usage: `redis-cli INFO memory`.
-   - Verify PostgreSQL connection pool limits.
-3. **Resume the Queue**:
-   - Once dependencies are confirmed healthy, click **Resume** in Bull Board.
-4. **Replay Parked DLQ Entries**:
-   - Replay parked jobs in batches using the Replay API above.
+## 7. Prevention
+1. **Error Classification at Throw Site**: Ensure all worker exceptions throw either `TransientError` or `PermanentError` with standard SDD §6.2 error codes.
+2. **Deterministic Replay IDs**: All replays append `--r{n}`, preventing queue collisions while maintaining complete event lineage in `video_events`.
+3. **DLQ Mirroring Durability**: Even if Redis restarts, the authoritative `dlq_entries` table in PostgreSQL preserves failed payloads and stack traces indefinitely.

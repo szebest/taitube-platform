@@ -233,16 +233,18 @@ Targets are for the **reference hardware**: local dev (8 vCPU laptop) and the cl
 
 ## 11. Risks & Mitigations
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Free tiers shrink or vanish mid-project | High (observed 3× in 2026) | Medium | Provider-agnostic S3/Postgres/Redis; Terraform/compose per provider; documented fallback ladder (SDD §12) |
-| BullMQ is chatty → managed Redis per-command billing (Upstash) explodes | High if Upstash used | High (cost) | Self-host Redis/Valkey next to workers; Upstash only for Pub/Sub if ever |
-| Long transcodes exceed lock/visibility windows → duplicate processing | Medium | Medium | Lock renewal (heartbeat), idempotent object keys, fencing token on final commit |
-| Worker disk exhaustion (temp segments for 4 GB sources) | Medium | High | Stream-to-storage per segment, ephemeral-storage requests/limits, cleanup on every exit path, disk metric + alert |
-| Bun compatibility regressions (child_process stdio, AWS SDK streams) | Medium | Medium | Worker code is runtime-neutral; CI runs worker tests on **both** Bun and Node; `WORKER_RUNTIME` switch in Dockerfile |
-| Oracle "out of host capacity" blocks Always Free provisioning | High | Low | Hetzner CX23/CAX11 as paid fallback (≈ €5.5–6 / mo); design identical |
-| Scope creep toward "build YouTube" | High | High | Non-goals list (§3.2) is binding; anything new goes to Phase 5 backlog |
-| Egress cost from video playback | Medium | High | R2 (zero egress) + Cloudflare CDN; never serve video via API; B2 via Bandwidth Alliance as fallback |
+| Risk | Likelihood | Impact | Mitigation | Status |
+|---|---|---|---|---|
+| Free tiers shrink or vanish mid-project | High (observed 3× in 2026) | Medium | Provider-agnostic S3/Postgres/Redis; Terraform/compose per provider; documented fallback ladder (SDD §12, `docs/runbooks/cost-budget.md`) | **Implemented** |
+| BullMQ is chatty → managed Redis per-command billing (Upstash) explodes | High if Upstash used | High (cost) | Self-host Redis/Valkey next to workers; Upstash only for Pub/Sub if ever | **Implemented** |
+| Long transcodes exceed lock/visibility windows → duplicate processing | Medium | Medium | Lock renewal (heartbeat), idempotent object keys, fencing token on final commit | **Implemented** |
+| Worker disk exhaustion (temp segments for 4 GB sources) | Medium | High | Stream-to-storage per segment, ephemeral-storage requests/limits, cleanup on every exit path, disk metric + alert (`WorkerTmpDiskHigh`, `docs/runbooks/worker-disk.md`) | **Implemented** |
+| Bun compatibility regressions (child_process stdio, AWS SDK streams) | Medium | Medium | Worker code is runtime-neutral; CI runs worker tests on **both** Bun and Node; `WORKER_RUNTIME` switch in Dockerfile | **Implemented** |
+| Oracle "out of host capacity" blocks Always Free provisioning | High | Low | Hetzner CX23/CAX11 as paid fallback (≈ €5.5–6 / mo); design identical | **Implemented** |
+| Scope creep toward "build YouTube" | High | High | Non-goals list (§3.2) is binding; anything new goes to Phase 5 backlog | **Implemented** |
+| Egress cost from video playback | Medium | High | R2 (zero egress) + Cloudflare CDN; never serve video via API; B2 via Bandwidth Alliance as fallback; R2 Class A budget alert (`R2ClassABudget`, `docs/runbooks/cost-budget.md`) | **Implemented** |
+| Class A operations budget exhaustion (> 1M ops/month on R2) | Medium | Medium | R2 Class A budget alert (`R2ClassABudget`), Storage & Cost dashboard, segment sizing guardrails, fallback ladder (`docs/runbooks/cost-budget.md`) | **Implemented** |
+| Neon compute-hour exhaustion (> 100 CU-h/month) | Medium | Medium | 10–15 min reconciler cron intervals to preserve 5m idle autosuspend; Storage & Cost usage tracking panel | **Implemented** |
 
 ---
 

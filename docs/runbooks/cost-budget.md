@@ -9,7 +9,7 @@ The `R2ClassABudget` alert uses `predict_linear` over a 24-hour observation wind
 
 ---
 
-## 2. Trigger Alert
+## 2. Trigger
 - **Alert Name**: `R2ClassABudget`
 - **Expression**: `predict_linear(storage_ops_total{op="put"}[1d], 30*86400) > 900000`
 - **Severity**: `info`
@@ -18,11 +18,11 @@ The `R2ClassABudget` alert uses `predict_linear` over a 24-hour observation wind
 ---
 
 ## 3. Dashboards to Open
-- **Storage & Cost Dashboard**: `/d/storage-cost` — Check "Projected Monthly Class A Ops (R2 1M/mo Free Tier Budget)" gauge and "Class A & Class B Storage Ops per Hour" time series.
+- **Storage & Cost Dashboard**: `/d/storage-cost` — Check "Projected Monthly Class A Ops (R2 1M/mo Free Tier Budget)" gauge, "Class A & Class B Storage Ops per Hour", "Neon Compute-Hour (CU-h) Monthly Usage", and "Grafana Cloud Active Metric Series Count".
 
 ---
 
-## 4. Diagnosis & Remediation Steps
+## 4. Diagnosis Steps
 
 ### Step 1: Check Current Rate of Uploads
 Query Prometheus for current rate of PUT operations:
@@ -40,21 +40,39 @@ Excessive PUT ops can be caused by:
 - Unusually short segment duration (ensure standard 6-second segments: `FFMPEG_SEGMENT_SECONDS=6`).
 - Upload storms / abuse by a single user. Check `POST /v1/uploads` request rates in API logs.
 
-### Step 3: Mitigation Options
-1. **Enable Admission Control**: Clamp concurrent in-flight uploads per user or reduce rate limits.
-2. **Increase Segment Duration**: Increasing segment duration from 6s to 10s decreases segment count (and PUT ops) by 40%.
+---
+
+## 5. Remediation Commands
+
+1. **Enable Admission Control**: Clamp concurrent in-flight uploads per user or reduce rate limits in API configuration.
+2. **Increase Segment Duration**: Increasing segment duration from 6s to 10s decreases segment count (and PUT ops) by 40%:
+```bash
+# Update ConfigMap patch in infra/k8s/overlays/cloud/kustomization.yaml:
+# FFMPEG_SEGMENT_SECONDS: "10"
+kubectl rollout restart deployment -n video-pipeline vp-worker-transcode
+```
 3. **Provider Fallback Ladder (SDD §12.3)**: If workload legitimately exceeds free tier, switch to Backblaze B2 via Cloudflare Bandwidth Alliance, or add payment details to R2 ($4.50 per million ops beyond 1M).
 
 ---
 
-## 5. Verification
+## 6. Verification
 1. Inspect the Storage & Cost dashboard gauge `Projected Monthly Class A Ops`.
 2. Confirm the projection drops below 900,000 operations.
-3. Verify alert `R2ClassABudget` resolves.
+3. Verify alert `R2ClassABudget` resolves:
+```bash
+curl -s http://alertmanager:9093/api/v2/alerts | jq '.[] | select(.labels.alertname=="R2ClassABudget")'
+```
 
 ---
 
-## 6. Cost Statement (≤ €6.5/mo Reference Deployment)
+## 7. Prevention
+1. **Autosuspend & Housekeeping Hygiene**: Ensure `HOUSEKEEPING_INTERVAL_MS` is set to `900000` (15m) so Neon Postgres can autosuspend after 5m of inactivity, staying within 100 CU-h/mo.
+2. **Metric Cardinality Limits**: Monitor Grafana Cloud active series to ensure worker metrics use bounded labels (e.g. queue names, stage names) and no high-cardinality video IDs as labels.
+3. **Proactive Budget Alerts**: Review Alertmanager notifications weekly and verify predicted monthly operations stay comfortably under limits.
+
+---
+
+## 8. Cost Statement (≤ €6.5/mo Reference Deployment)
 As per SDD §12.3 Phase 4 Cloud Reference Deployment, the target monthly running cost is ≤ €6.50.
 
 ### Bill Breakdown:
@@ -71,7 +89,7 @@ As per SDD §12.3 Phase 4 Cloud Reference Deployment, the target monthly running
 
 ---
 
-## 7. Provider Fallback Ladder
+## 9. Provider Fallback Ladder
 
 If usage outgrows the free tiers or availability guarantees of the primary serverless providers, apply these exact environment variable changes to migrate to the next rung (SDD §12.3).
 
