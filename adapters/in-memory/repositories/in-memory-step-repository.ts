@@ -125,6 +125,20 @@ export class InMemoryStepRepository extends StepRepository {
     return results;
   }
 
+  async countRunningStale(thresholdMs: number): Promise<number> {
+    const cutoffTime = Date.now() - thresholdMs;
+    let count = 0;
+    for (const step of this.stepsMap.values()) {
+      if (step.status === 'RUNNING') {
+        const lastActivity = step.heartbeatAt ?? step.startedAt;
+        if (lastActivity && lastActivity.getTime() < cutoffTime) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
   clear(): void {
     this.stepsMap.clear();
   }

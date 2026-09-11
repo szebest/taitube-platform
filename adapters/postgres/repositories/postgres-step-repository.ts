@@ -179,4 +179,25 @@ export class PostgresStepRepository extends StepRepository {
       );
     }
   }
+
+  async countRunningStale(thresholdMs: number): Promise<number> {
+    try {
+      const cutoff = new Date(Date.now() - thresholdMs);
+      const [res] = await this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.processingSteps)
+        .where(
+          and(
+            eq(schema.processingSteps.status, 'RUNNING'),
+            sql`COALESCE(${schema.processingSteps.heartbeatAt}, ${schema.processingSteps.startedAt}) < ${cutoff}`
+          )
+        );
+      return res?.count ?? 0;
+    } catch (err: unknown) {
+      throw new DatabaseError(
+        `Failed to count running stale processing steps: ${(err as Error).message}`,
+        { cause: err }
+      );
+    }
+  }
 }
