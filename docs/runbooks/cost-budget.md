@@ -51,3 +51,46 @@ Excessive PUT ops can be caused by:
 1. Inspect the Storage & Cost dashboard gauge `Projected Monthly Class A Ops`.
 2. Confirm the projection drops below 900,000 operations.
 3. Verify alert `R2ClassABudget` resolves.
+
+---
+
+## 6. Cost Statement (≤ €6.5/mo Reference Deployment)
+As per SDD §12.3 Phase 4 Cloud Reference Deployment, the target monthly running cost is ≤ €6.50.
+
+### Bill Breakdown:
+- **Compute (VPS)**: Hetzner CAX11 (2 vCPU Arm64, 4GB RAM) = €5.99/mo (or Oracle Cloud A1 Always Free = €0/mo)
+- **Networking**: Included IPv4 = €0.50/mo (if applicable)
+- **Domain**: Amortized ~€0.80/mo (annual fee varies by TLD)
+- **Total fixed cost**: ~€6.49/mo (ex-VAT)
+
+### Free Tier Usage Snapshot (Zero Cost Additions):
+- **Object Storage**: Cloudflare R2 (10 GB storage, 1M Class A ops, 10M Class B ops, $0 egress).
+- **Database**: Neon Serverless Postgres (0.5 GB storage, 100 CU-h/mo, 5 min autosuspend).
+- **Observability**: Grafana Cloud Free (10k active series, 50 GB logs, 50 GB traces, 14-day retention).
+- **CDN / Tunnel**: Cloudflare Free tier (Zero Trust Access, Cloudflare Tunnel).
+
+---
+
+## 7. Provider Fallback Ladder
+
+If usage outgrows the free tiers or availability guarantees of the primary serverless providers, apply these exact environment variable changes to migrate to the next rung (SDD §12.3).
+
+### Storage: R2 → Backblaze B2
+When R2 free tier is exceeded or Backblaze is cheaper for the workload (e.g. storage size vs ops):
+1. **Provision**: Create a Backblaze B2 bucket and App Keys.
+2. **Env changes** in `infra/k8s/overlays/cloud/kustomization.yaml` (via ConfigMap patches) and `secrets.enc.yaml`:
+   - `S3_ENDPOINT`: `https://s3.<region>.backblazeb2.com`
+   - `S3_ACCESS_KEY_ID`: `<B2_KEY_ID>`
+   - `S3_SECRET_ACCESS_KEY`: `<B2_APPLICATION_KEY>`
+   - `S3_REGION`: `<region>`
+   - `CDN_BASE_URL`: Proxy via Cloudflare Worker or B2 native CDN integration.
+
+### Database: Neon → Self-Hosted VPS Postgres
+When 100 CU-h/mo is exceeded or autosuspend latency is unacceptable:
+1. **Provision**: Run Postgres via Helm on the k3s cluster or on a secondary VPS.
+2. **Env changes** in `secrets.enc.yaml`:
+   - `DATABASE_URL`: `postgres://vp:<password>@vp-postgres:5432/vp` (internal DNS)
+   - `DATABASE_URL_MIGRATIONS`: `postgres://vp:<password>@vp-postgres:5432/vp`
+3. **Env changes** in `kustomization.yaml`:
+   - `DATABASE_POOL_MAX`: Can be increased to `20` or higher since it's no longer constrained by Neon connection limits.
+   - `HOUSEKEEPING_INTERVAL_MS`: Can be reduced to `60000` (1 minute) as autosuspend is no longer a factor.

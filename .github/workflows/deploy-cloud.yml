@@ -1,0 +1,67 @@
+name: Deploy Cloud (Phase 4)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Cloud (k3s)
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Install sops & age
+        run: |
+          sudo apt-get update && sudo apt-get install -y age
+          wget -qO sops https://github.com/getsops/sops/releases/download/v3.9.0/sops-v3.9.0.linux.amd64
+          chmod +x sops
+          sudo mv sops /usr/local/bin/sops
+
+      - name: Set up kubeconfig
+        env:
+          KUBECONFIG_BASE64: ${{ secrets.KUBECONFIG_BASE64 }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBECONFIG_BASE64" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Write age key
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+
+      - name: Decrypt secrets and deploy cloud overlay
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          # Apply decrypted secrets directly
+          sops -d infra/k8s/overlays/cloud/secrets.enc.yaml | kubectl apply -f -
+          
+          # Build and apply Kustomize overlay
+          kubectl kustomize infra/k8s/overlays/cloud | kubectl apply -f -
+
+      - name: Trigger Migration Job
+        run: |
+          kubectl delete job vp-migrate -n video-pipeline --ignore-not-found
+          kubectl create -f infra/k8s/base/migrate-job.yaml -n video-pipeline
+          kubectl wait --for=condition=complete job/vp-migrate -n video-pipeline --timeout=120s
+
+      - name: Validate rollout status
+        run: |
+          kubectl rollout status deployment/vp-api -n video-pipeline --timeout=120s
+          kubectl rollout status deployment/vp-worker-transcode-1080p -n video-pipeline --timeout=120s
+          kubectl rollout status deployment/alloy -n video-pipeline --timeout=120s
+          kubectl rollout status deployment/cloudflared -n video-pipeline --timeout=120s
+          kubectl rollout status statefulset/vp-redis-master -n video-pipeline --timeout=120s
