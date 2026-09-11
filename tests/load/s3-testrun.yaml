@@ -1,0 +1,17 @@
+apiVersion: k6.io/v1alpha1
+kind: TestRun
+metadata:
+  name: s3-backlog-burst
+  namespace: default
+spec:
+  parallelism: 3
+  script:
+    configMap:
+      name: s3-script
+      file: s3-backlog-burst.js
+  runner:
+    env:
+      - name: API
+        value: "http://vp-api.default.svc.cluster.local:3000"
+      - name: TOKEN
+        value: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InZwLWRldi1rZXktMSJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlIjoidXNlciIsImlzcyI6InZwLWRldiIsImF1ZCI6InZwLWFwaSIsImlhdCI6MTc4OTE0NTQ1NiwiZXhwIjoyMTA0NTA1NDU2fQ.s309zkg-MQ6oDZHunmIfqrvyZgBETHgmuLRtcWsD_1hSZciougdfedfR2s7a2ac-oCnXmJG6TultN5c26_eeDQ"

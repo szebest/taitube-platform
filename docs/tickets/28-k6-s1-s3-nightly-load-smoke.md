@@ -8,7 +8,7 @@
 | Blocks | 29 |
 | Spec | [PRD G8, US-1 AC, §7 NFR](../PRD.md#7-non-functional-requirements-slos) · [SDD §14 Load testing plan (S1–S3, k6 sketch, reporting)](../SDD.md#14-distributed-load-testing-chaos-plan) · [ADR-13](../SDD.md#adr-13-load-testing-k6-k6-operator-for-distributed-runs) |
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## What to build
 Three k6 scenarios that turn the PRD's performance hypotheses into measurements: S1 upload storm (500 VUs presign → direct PUT → complete; proves the API is out of the data path), S2 large file (4 GB multipart with resume; proves bounded memory/disk), S3 backlog burst (1 000 uploads in a minute; proves KEDA ramp, drain time and fairness). Each has pass/fail thresholds, writes metrics to Prometheus remote-write so load and system graphs share a timeline, and produces an entry in the results README. A reduced S1 runs nightly in CI. Distributed execution via k6-operator on k3d is demonstrated for S3.
