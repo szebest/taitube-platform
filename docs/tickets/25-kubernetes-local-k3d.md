@@ -8,7 +8,7 @@
 | Blocks | 26, 32 |
 | Spec | [SDD §12.2 Rung 2 (manifests, Deployment essentials)](../SDD.md#122-rung-2-kubernetes-locally-kind-or-k3d-phase-3) · [SDD §15.1 `infra/k8s`](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §11 Containers](../SDD.md#11-security) |
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## What to build
 `make k3d-up && make k3d-deploy && make smoke` brings up a local k3d cluster with in-cluster Postgres/Redis/MinIO (Helm), KEDA and kube-prometheus-stack installed (Helm values committed), applies the Kustomize `base` + `local` overlay (API Deployment with HPA, one Deployment per worker stage at 1 replica for now, Secrets/ConfigMap from the same `.env` contract, ServiceMonitors, dashboards as ConfigMaps), and the same smoke script from 08 passes against the cluster ingress.
