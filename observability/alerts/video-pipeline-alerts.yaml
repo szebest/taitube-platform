@@ -1,0 +1,122 @@
+groups:
+  - name: video_pipeline_alerts
+    rules:
+      # 1. DLQNotEmpty
+      - alert: DLQNotEmpty
+        expr: increase(dlq_entries_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Job routed to Dead-Letter Queue (DLQ) in queue {{ $labels.queue }}"
+          description: "New DLQ entry detected for queue {{ $labels.queue }} with error_code {{ $labels.error_code }} in the last 10 minutes."
+          runbook_url: "docs/runbooks/dlq-replay.md"
+
+      # 2. QueueStarvation
+      - alert: QueueStarvation
+        expr: bullmq_queue_oldest_waiting_age_seconds > 900
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue {{ $labels.queue }} is starving: oldest waiting job is older than 15 minutes"
+          description: "Jobs in queue {{ $labels.queue }} have been waiting for {{ $value | humanizeDuration }}, exceeding 15m threshold."
+          runbook_url: "docs/runbooks/queue-starvation.md"
+
+      # 3. JobFailureRateHigh
+      - alert: JobFailureRateHigh
+        expr: |
+          sum(rate(jobs_processed_total{result="failed"}[10m])) by (queue)
+          /
+          sum(rate(jobs_processed_total[10m])) by (queue) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High job failure rate in queue {{ $labels.queue }} (> 5%)"
+          description: "Queue {{ $labels.queue }} has a failure rate of {{ $value | humanizePercentage }} over the last 10 minutes."
+          runbook_url: "docs/runbooks/job-failure.md"
+
+      # 4. SystemicFailure
+      - alert: SystemicFailure
+        expr: |
+          sum(rate(jobs_processed_total{result="failed"}[5m])) by (queue)
+          /
+          sum(rate(jobs_processed_total[5m])) by (queue) > 0.5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Systemic failure in queue {{ $labels.queue }} (> 50% failures) — pause queue"
+          description: "Queue {{ $labels.queue }} has a failure rate of {{ $value | humanizePercentage }} over 5m. Execute systemic failure runbook to pause queue."
+          runbook_url: "docs/runbooks/job-failure.md"
+
+      # 5. WorkerStalledJobs
+      - alert: WorkerStalledJobs
+        expr: sum(increase(jobs_processed_total{result="stalled"}[30m])) by (queue) > 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Multiple stalled jobs detected in queue {{ $labels.queue }}"
+          description: "Queue {{ $labels.queue }} observed {{ $value }} stalled jobs in the last 30 minutes. Worker containers may be crashing or killed by OOM."
+          runbook_url: "docs/runbooks/worker-stalled.md"
+
+      # 6. WorkerStuck
+      - alert: WorkerStuck
+        expr: processing_steps_running_stale > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Worker step stuck: RUNNING with heartbeat older than 5 minutes"
+          description: "{{ $value }} processing steps in RUNNING status have not updated heartbeats for > 5m."
+          runbook_url: "docs/runbooks/worker-stuck.md"
+
+      # 7. ScaleToZeroBroken (Kubernetes-only)
+      - alert: ScaleToZeroBroken
+        expr: |
+          (bullmq_queue_jobs{state="waiting"} > 0)
+          and on()
+          (sum(kube_deployment_status_replicas{deployment=~"worker-.*"}) == 0)
+        for: 3m
+        labels:
+          severity: critical
+          environment: kubernetes-only
+        annotations:
+          summary: "Autoscaling broken: jobs waiting but worker replicas remain 0"
+          description: "Queue has waiting jobs for > 3m while worker deployment replicas remain 0. Check KEDA operator and ScaledObject status."
+          runbook_url: "docs/runbooks/scale-to-zero.md"
+
+      # 8. R2ClassABudget
+      - alert: R2ClassABudget
+        expr: predict_linear(storage_ops_total{op="put"}[1d], 30 * 86400) > 900000
+        for: 1h
+        labels:
+          severity: info
+        annotations:
+          summary: "Projected monthly R2 Class A ops exceeds 90% of free budget (> 900k ops/month)"
+          description: "Linear projection from last 24h indicates {{ $value | humanize }} Class A ops/month against the 1,000,000 free tier limit."
+          runbook_url: "docs/runbooks/cost-budget.md"
+
+      # 9. APILatencyHigh
+      - alert: APILatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency exceeds 200 ms SLO ({{ $value | humanizeDuration }})"
+          description: "Overall 95th percentile HTTP request duration has exceeded 200 ms for 10 minutes."
+          runbook_url: "docs/runbooks/api-latency.md"
+
+      # 10. WorkerTmpDiskHigh
+      - alert: WorkerTmpDiskHigh
+        expr: (worker_tmp_bytes / 8e9) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Worker temporary disk usage exceeds 80% of 8 GB emptyDir limit on {{ $labels.stage }}"
+          description: "Stage {{ $labels.stage }} temporary storage (/tmp/vp) usage is {{ $value | humanizePercentage }} of 8 GB limit."
+          runbook_url: "docs/runbooks/worker-disk.md"

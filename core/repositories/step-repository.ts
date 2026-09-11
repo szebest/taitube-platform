@@ -79,4 +79,5 @@ export abstract class StepRepository {
   abstract markDead(options: MarkDeadOptions): Promise<boolean>;
   abstract heartbeat(lockToken: string): Promise<boolean>;
   abstract findByVideoId(videoId: string): Promise<ProcessingStepRecord[]>;
+  abstract countRunningStale(thresholdMs: number): Promise<number>;
 }

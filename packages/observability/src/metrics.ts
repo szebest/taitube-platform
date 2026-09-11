@@ -29,6 +29,7 @@ export interface PipelineMetrics {
   workerTmpBytes: Gauge<string>;
   dlqEntriesTotal: Counter<string>;
   videosByStatus: Gauge<string>;
+  processingStepsRunningStale: Gauge<string>;
   timeToReady: Histogram<string>;
 }
 
@@ -160,6 +161,12 @@ export function createMetricsRegistry(defaultLabels: Record<string, string> = {}
     registers: [registry],
   });
 
+  const processingStepsRunningStale = new Gauge({
+    name: 'processing_steps_running_stale',
+    help: 'Number of RUNNING processing steps with stale heartbeats (> 5 min)',
+    registers: [registry],
+  });
+
   const timeToReady = new Histogram({
     name: 'time_to_ready_seconds',
     help: 'Total time from upload complete to video ready status',
@@ -187,6 +194,7 @@ export function createMetricsRegistry(defaultLabels: Record<string, string> = {}
     workerTmpBytes,
     dlqEntriesTotal,
     videosByStatus,
+    processingStepsRunningStale,
     timeToReady,
   };
 }

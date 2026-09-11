@@ -1438,6 +1438,7 @@ Exposed by `packages/observability` (`prom-client` registry; API on `:9464/metri
 | `worker_tmp_bytes` | gauge | `stage` | workers | disk pressure |
 | `dlq_entries_total` | counter | `queue, error_code` | failed handler | alerting |
 | `videos_by_status` | gauge | `status` | API poller (SQL) | business view |
+| `processing_steps_running_stale` | gauge | — | API poller (SQL) | stuck worker alert |
 | `time_to_ready_seconds` | histogram | `bucket ∈ {<1min,1-5,5-15,15-60}` (source duration) | package | product SLO |
 
 ### 13.2 KEDA ScaledObject (Prometheus scaler, primary)

@@ -8,16 +8,16 @@
 | Blocks | 29, 33 |
 | Spec | [PRD US-13](../PRD.md#54-operations) · [SDD §13.5 Alert rules table](../SDD.md#135-dashboards-alerts-committed-under-observability) · [SDD §9.6 rule 5 (systemic failure runbook)](../SDD.md#96-failure-handling-retries-dlq-poison-pills) |
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## What to build
 The ten alert rules from SDD §13.5 are committed as Prometheus rule files, loaded locally and reusable as `PrometheusRule` objects in Kubernetes; Alertmanager routes them to a Discord/Telegram webhook with severity-based grouping. Uploading a hostile file produces a `DLQNotEmpty` notification within a minute, with a link to the runbook.
 
 ## Acceptance criteria
-- [ ] Rules: `DLQNotEmpty`, `QueueStarvation`, `JobFailureRateHigh`, `SystemicFailure`, `WorkerStalledJobs`, `WorkerStuck`, `ScaleToZeroBroken`, `R2ClassABudget`, `APILatencyHigh`, `WorkerTmpDiskHigh` — `promtool check rules` passes; unit tests with `promtool test rules` for at least DLQNotEmpty, QueueStarvation, JobFailureRateHigh.
-- [ ] Every alert carries `runbook_url` annotation pointing at `docs/runbooks/*.md` (stubs created where missing).
-- [ ] Hostile upload → Discord/Telegram message received (screenshot).
-- [ ] `WorkerStuck` uses a SQL exporter or the API's SQL poller exposing `processing_steps_running_stale`.
+- [x] Rules: `DLQNotEmpty`, `QueueStarvation`, `JobFailureRateHigh`, `SystemicFailure`, `WorkerStalledJobs`, `WorkerStuck`, `ScaleToZeroBroken`, `R2ClassABudget`, `APILatencyHigh`, `WorkerTmpDiskHigh` — `promtool check rules` passes; unit tests with `promtool test rules` for at least DLQNotEmpty, QueueStarvation, JobFailureRateHigh.
+- [x] Every alert carries `runbook_url` annotation pointing at `docs/runbooks/*.md` (stubs created where missing).
+- [x] Hostile upload → Discord/Telegram message received (screenshot).
+- [x] `WorkerStuck` uses a SQL exporter or the API's SQL poller exposing `processing_steps_running_stale`.
 
 ## Out of scope
 Grafana Cloud IRM routing (33).
@@ -32,4 +32,4 @@ Grafana Cloud IRM routing (33).
 - None.
 
 ## Definition of Done
-- [ ] Rules + tests committed; runbook stubs exist for every alert.
+- [x] Rules + tests committed; runbook stubs exist for every alert.

@@ -82,13 +82,13 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
       `Metrics present in code registry but missing in SDD §13.1: ${extraInCode.join(', ')}`
     ).toEqual([]);
 
-    expect(codeSet.size).toBe(18);
+    expect(codeSet.size).toBe(19);
   });
 
-  it('registers all 18 metrics in the registry', async () => {
+  it('registers all 19 metrics in the registry', async () => {
     const metrics = createMetricsRegistry();
     const registeredMetrics = await metrics.registry.getMetricsAsJSON();
-    expect(registeredMetrics.length).toBeGreaterThanOrEqual(18);
+    expect(registeredMetrics.length).toBeGreaterThanOrEqual(19);
   });
 
   const EXPECTED_METRICS = [
@@ -113,6 +113,7 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     { name: 'worker_tmp_bytes', type: 'gauge', labels: ['stage'] },
     { name: 'dlq_entries_total', type: 'counter', labels: ['queue', 'error_code'] },
     { name: 'videos_by_status', type: 'gauge', labels: ['status'] },
+    { name: 'processing_steps_running_stale', type: 'gauge', labels: [] },
     { name: 'time_to_ready_seconds', type: 'histogram', labels: ['bucket'] },
   ];
 
@@ -168,6 +169,7 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     metrics.workerTmpBytes.set({ stage: 'probe' }, 2048);
     metrics.dlqEntriesTotal.inc({ queue: 'probe', error_code: 'UNSUPPORTED_CODEC' });
     metrics.videosByStatus.set({ status: 'READY' }, 5);
+    metrics.processingStepsRunningStale.set(1);
     metrics.timeToReady.observe({ bucket: '<1min' }, 25);
 
     const testPort = 19475;
