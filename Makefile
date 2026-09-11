@@ -5,7 +5,7 @@ REDIS_IMAGE ?= redis:7-alpine
 CLUSTER_TOOL ?= k3d
 CLUSTER_NAME ?= vp
 
-.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-validate
+.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-validate load-s1 load-s2 load-s3 load-smoke
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -136,3 +136,19 @@ k3d-down: ## Delete local k3d (or kind) cluster
 		k3d cluster delete $(CLUSTER_NAME); \
 	fi
 
+
+load-s1: ## Run S1 Upload Storm load test (requires Compose stack)
+	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
+	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s1-upload-storm.js
+
+load-s2: ## Run S2 Large File load test (requires Compose stack)
+	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
+	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s2-large-file.js
+
+load-s3: ## Run S3 Backlog Burst load test (requires Compose stack)
+	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
+	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s3-backlog-burst.js
+
+load-smoke: ## Run reduced S1 Load Smoke Test
+	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
+	API="http://localhost:3000" TOKEN=$$TOKEN k6 run --vus 60 --duration 2m tests/load/s1-upload-storm.js

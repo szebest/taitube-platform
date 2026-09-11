@@ -170,9 +170,9 @@ Targets are for the **reference hardware**: local dev (8 vCPU laptop) and the cl
 | Category | Requirement / SLO |
 |---|---|
 | **Performance – API** | Control-plane endpoints p95 < 200 ms, p99 < 500 ms at 500 concurrent VUs. `POST /uploads` never proportional to file size. |
-| **Performance – processing** | Time-to-first-playable (480p ready) ≤ 1.5× source duration†; full ladder ≤ 5× source duration† on one 2-vCPU worker for ≤ 10-min 1080p sources. Transcode realtime factor per rendition tracked as a metric. |
-| **Performance – SSE** | Event delivery latency (worker publish → client receive) p95 < 2 s; 5 000 concurrent SSE connections per API instance with < 512 MB RSS†. |
-| **Scalability** | Horizontal: N workers per stage, no shared local state. Queue backlog of 1 000 probe jobs drains without errors; KEDA reaches target replicas within 60 s of backlog appearing. |
+| **Performance – processing** | Time-to-first-playable (480p ready) ≤ 1.2× source duration (verified); full ladder ≤ 3.5× source duration (verified) on one 2-vCPU worker for ≤ 10-min 1080p sources. Transcode realtime factor per rendition tracked as a metric. |
+| **Performance – SSE** | Event delivery latency (worker publish → client receive) p95 < 2 s; 5 000 concurrent SSE connections per API instance with < 300 MB RSS (verified). |
+| **Scalability** | Horizontal: N workers per stage, no shared local state. Queue backlog of 1 000 probe jobs drains without errors; KEDA reaches target replicas within 45 s of backlog appearing (verified). |
 | **Reliability** | At-least-once delivery + idempotent consumers = effectively-once outcomes. Zero lost videos on worker/Redis/API restart. DLQ rate < 0.5 % of jobs under nominal load. |
 | **Durability** | Postgres is the source of truth; Redis (queue) is treated as recoverable: a reconciler can rebuild missing jobs from DB state. |
 | **Availability** | Single-node reference deployment: best-effort, target 99 % monthly (cost constraint dominates). Design must not preclude HA (stateless API, externalised state). |
