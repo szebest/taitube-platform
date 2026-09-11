@@ -1,0 +1,18 @@
+# Cloudflare credentials & configuration
+cloudflare_account_id = "0123456789abcdef0123456789abcdef"
+cloudflare_api_token  = "example-cf-api-token-secret"
+domain                = "example.com"
+admin_email           = "operator@example.com"
+
+# Hetzner Cloud credentials & configuration
+hcloud_token          = "example-hetzner-api-token-secret"
+hcloud_location       = "fsn1"    # fsn1 (Falkenstein), nbg1 (Nuremberg), hel1 (Helsinki)
+hcloud_server_type    = "cax11"   # cax11 (Arm64, 2 vCPU, 4GB RAM) or cx23 (x86, 2 vCPU, 4GB RAM)
+hcloud_ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... operator@video-pipeline"
+
+# Operator security
+operator_ssh_ip       = "203.0.113.10/32"
+
+# Storage retention
+raw_retention_days    = 7
+environment           = "cloud"
