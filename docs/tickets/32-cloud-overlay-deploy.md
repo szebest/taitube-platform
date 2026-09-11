@@ -8,7 +8,7 @@
 | Blocks | 33 |
 | Spec | [PRD G9, §7 Cost](../PRD.md#7-non-functional-requirements-slos) · [SDD §12.3 Rung 3 (diagram, capacity, cost model, fallback ladder)](../SDD.md#123-rung-3-cloud-reference-deployment-phase-4) · [SDD §13 (Alloy → Grafana Cloud)](../SDD.md#13-autoscaling-observability) · [SDD §16 cloud env columns](../SDD.md#16-environment-variables) · [ADR-15](../SDD.md#adr-15-cloud-hosting-for-the-reference-deployment) |
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## What to build
 The `cloud` Kustomize overlay deploys the same images to k3s on the VPS: API behind Traefik exposed only through the Cloudflare Tunnel (`api.<domain>`), workers with cloud-sized KEDA maxima (1 for 1080p/720p, 2 for 480p/probe), self-hosted Redis with a PVC, Neon as Postgres, R2 as storage with the CDN hostname as `CDN_BASE_URL`, Grafana Alloy shipping metrics/logs/traces to Grafana Cloud, SOPS-decrypted secrets, and a GitHub Actions deploy job (on tag) that applies the overlay. Uploading through the public API and playing the result from `cdn.<domain>` works; `/admin` is behind Cloudflare Access; a cost statement shows ≤ €6.5/month (or €0 on Oracle).
