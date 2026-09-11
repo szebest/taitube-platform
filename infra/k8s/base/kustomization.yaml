@@ -19,3 +19,4 @@ resources:
   - service-monitors.yaml
   - dashboards-configmaps.yaml
   - ingress.yaml
+  - scaled-objects.yaml

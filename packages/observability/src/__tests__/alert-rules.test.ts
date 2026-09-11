@@ -308,6 +308,29 @@ describe('Prometheus Alert Rules & Alertmanager (Ticket 24, SDD §13.5)', () => 
       expect(evalP95(0.2)).toBe(false);
       expect(evalP95(0.25)).toBe(true);
     });
+
+    it('evaluates ScaleToZeroBroken: triggers when waiting jobs > 0 and replicas == 0 (e.g. paused ScaledObject)', () => {
+      // Expression: (bullmq_queue_jobs{state="waiting"} > 0) and on() (sum(kube_deployment_status_replicas{deployment=~"worker-.*"}) == 0)
+      // Simulates Ticket 26 AC 6:
+      // When ScaledObject has annotation `autoscaling.keda.sh/paused-replicas: "0"`,
+      // KEDA holds replicas at 0 even while waiting backlog accumulates.
+      const evalScaleToZeroBroken = (waitingJobs: number, activeWorkerReplicas: number) => {
+        return waitingJobs > 0 && activeWorkerReplicas === 0;
+      };
+
+      // Case 1: Idle cluster - 0 waiting, 0 replicas -> OK (scale-to-zero working as intended)
+      expect(evalScaleToZeroBroken(0, 0)).toBe(false);
+
+      // Case 2: Healthy active cluster - backlog > 0, workers running -> OK
+      expect(evalScaleToZeroBroken(10, 4)).toBe(false);
+
+      // Case 3: ScaledObject paused with annotation autoscaling.keda.sh/paused-replicas="0"
+      // Backlog appears (e.g. 5 waiting jobs), but replicas pinned to 0 -> FIRING
+      expect(evalScaleToZeroBroken(5, 0)).toBe(true);
+
+      // Case 4: Unpaused - KEDA activates pod within seconds, replicas become > 0 -> RESOLVED / CLEARS
+      expect(evalScaleToZeroBroken(5, 1)).toBe(false);
+    });
   });
 
   describe('Alertmanager Configuration Verification', () => {
