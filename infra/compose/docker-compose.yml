@@ -309,7 +309,21 @@ services:
       - loki
     restart: on-failure
 
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.9.0
+    container_name: vp-toxiproxy
+    profiles:
+      - chaos
+    ports:
+      - "8474:8474"
+      - "9002:9002"
+    volumes:
+      - ./toxiproxy/toxiproxy.json:/etc/toxiproxy.json:ro
+    command: ["-host=0.0.0.0", "-config=/etc/toxiproxy.json"]
+    restart: on-failure
+
 volumes:
   pgdata:
   redisdata:
   miniodata:
+

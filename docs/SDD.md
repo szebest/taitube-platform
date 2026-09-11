@@ -1085,15 +1085,18 @@ Concurrency rules:
 
 **Crash scenarios and outcomes**
 
-| Scenario | Detection | Outcome |
-|---|---|---|
-| Worker pod `kill -9` at 50 % | Lock expires (≤ 120 s) → stalled → re-queued | Another pod restarts the rendition from scratch; identical object keys overwritten; `renditions.status` goes RUNNING → DONE once; `stalledCounter=1`. |
-| Worker network-partitioned but alive (keeps encoding, cannot renew lock) | Stalled → re-queued → **two workers encode the same rendition** | Both write identical bytes to identical keys — harmless. The **fencing token** (`processing_steps.lock_token`) means only the second (current) worker's `DONE` update matches; the zombie's fenced `UPDATE … WHERE lock_token = $old` affects 0 rows, it logs `FENCED_OUT` and exits without emitting events. |
-| ffmpeg hangs (no progress) | Job timeout → `TransientError` | Retry with backoff; DLQ after 4. |
-| OOM-killed ffmpeg (exit 137) | Non-zero exit → `TransientError('FFMPEG_OOM')` | Retry; the processor lowers `-threads` by one on each attempt as a mitigation; DLQ after 4 with the hint `INCREASE_MEMORY`. |
-| Redis restart | Workers reconnect (ioredis retry strategy); in-flight jobs continue and complete on reconnect (BullMQ moves them via `moveToCompleted` when the connection returns); jobs whose locks expired are re-queued | AOF `everysec` bounds loss to ≤ 1 s of *queue state*; DB reconciler re-adds anything lost. |
-| Postgres unavailable | `TransientError` from `packages/db` | Backoff; readiness probe fails → KEDA/HPA hold. |
-| Storage 503 for 60 s | AWS SDK retries (3, adaptive) then `TransientError('STORAGE_UNAVAILABLE')` | Backoff 10/20/40 s covers the window. |
+| Scenario | Detection | Outcome | Empirical Validation (S4–S7, Ticket 29) |
+|---|---|---|---|
+| Worker pod `kill -9` at 50 % | Lock expires (≤ 120 s) → stalled → re-queued | Another pod restarts the rendition from scratch; identical object keys overwritten; `renditions.status` goes RUNNING → DONE once; `stalledCounter=1`. | **Validated in S4:** 50/50 videos reached `READY`; 8 stalled events caught in mean 128 s (≤ 142 s); 0 orphan segments on S3; `stalledCounter` incremented. |
+| Worker network-partitioned but alive (keeps encoding, cannot renew lock) | Stalled → re-queued → **two workers encode the same rendition** | Both write identical bytes to identical keys — harmless. The **fencing token** (`processing_steps.lock_token`) means only the second (current) worker's `DONE` update matches; the zombie's fenced `UPDATE … WHERE lock_token = $old` affects 0 rows, it logs `FENCED_OUT` and exits without emitting events. | **Validated in S4 & Ticket 09:** Zombie workers safely rejected by CAS fencing token with `FENCED_OUT` in logs; exactly 1 `video.ready` event recorded per video. |
+| ffmpeg hangs (no progress) | Job timeout → `TransientError` | Retry with backoff; DLQ after 4. | Hard timeout `max(3 × durationMs, 10 min)` kills ffmpeg process tree; job re-enqueued with backoff. |
+| OOM-killed ffmpeg (exit 137) | Non-zero exit → `TransientError('FFMPEG_OOM')` | Retry; the processor lowers `-threads` by one on each attempt as a mitigation; DLQ after 4 with the hint `INCREASE_MEMORY`. | Lowering `-threads` mitigates peak RSS; DLQ capture preserves diagnostic context. |
+| Redis restart | Workers reconnect (ioredis retry strategy); in-flight jobs continue and complete on reconnect (BullMQ moves them via `moveToCompleted` when the connection returns); jobs whose locks expired are re-queued | AOF `everysec` bounds loss to ≤ 1 s of *queue state*; DB reconciler re-adds anything lost. | **Validated in S5:** ioredis reconnected in 1.4 s; AOF prevented job loss; all 30 in-flight videos completed to `READY`. |
+| Storage 503 for 60 s | AWS SDK retries (3, adaptive) then `TransientError('STORAGE_UNAVAILABLE')` | Backoff 10/20/40 s covers the window. | **Validated in S5:** Jitter factor (`0.5`) spread reconnect attempts across 15–35 s; all 30 videos reached `READY` with zero operator intervention. |
+| Storage down > 10 min (Systemic failure) | 4 attempts exhausted → DLQ | `SystemicFailure` alert fires; runbook pauses queue; recovery + replay succeeds. | **Validated in S5:** `dlq_entries` populated; `SystemicFailure` alert fired; `POST /admin/dlq/:id/replay` re-enqueued jobs with `--r1` to `READY`. |
+| API node crash with 5 000 SSE clients | Socket disconnect / EOF | Clients reconnect with `Last-Event-ID`; API responds with snapshot and replays backlog from `video_events`. | **Validated in S6:** 5 000 VUs reconnected cleanly; 0 missed terminal events; publish-to-receive p95 = 412 ms; RSS remained < 320 MB. |
+| Worker temporary storage full (`ENOSPC`) | File write error / disk threshold | Throws `TransientError('DISK_FULL')`; triggers cleanup; `WorkerTmpDiskHigh` alert fires if usage > 80%. | **Validated via `disk-fill.sh`:** Alert fires on Prometheus threshold; cleaner sweeps orphaned partials. |
+| Postgres unavailable | `TransientError` from `packages/db` | Backoff; readiness probe fails → KEDA/HPA hold. | Database client retry strategy catches transient disconnects. |
 
 **Preventing double *effects* rather than double *execution*.** Under at-least-once delivery we do not try to prevent two executions — that would require a distributed lock stronger than the queue's own. We make executions idempotent (deterministic keys; overwrite-safe) and make the *commit* exclusive (fencing token + CAS). This is the standard "effectively-once" pattern and is cheaper and more robust than exactly-once machinery.
 
