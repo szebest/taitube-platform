@@ -6,9 +6,10 @@ import {
   type ListDlqEntriesOptions,
   type ListDlqEntriesResult,
   type NewDlqEntryInput,
+  type NewOutboxInput,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
-import { and, desc, eq, lt, or } from 'drizzle-orm';
+import { and, desc, eq, lt, or, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 function encodeCursor(createdAt: Date, id: string): string {
@@ -138,12 +139,33 @@ export class PostgresDlqRepository extends DlqRepository {
   async updateStatus(
     id: string,
     status: DlqStatus,
-    patch?: { replayedAt?: Date }
+    patch?: { replayedAt?: Date },
+    outbox?: NewOutboxInput
   ): Promise<DlqEntryRecord | null> {
     try {
       const updateData: { status: string; replayedAt?: Date } = { status };
       if (patch?.replayedAt !== undefined) {
         updateData.replayedAt = patch.replayedAt;
+      }
+
+      if (outbox) {
+        return await this.db.transaction(async (tx) => {
+          const rows = await tx
+            .update(schema.dlqEntries)
+            .set(updateData)
+            .where(eq(schema.dlqEntries.id, id))
+            .returning();
+
+          await tx.insert(schema.outbox).values({
+            id: outbox.id || sql`gen_random_uuid()`,
+            kind: outbox.kind,
+            payload: outbox.payload,
+            createdAt: new Date(),
+            attempts: 0,
+          });
+
+          return (rows[0] as unknown as DlqEntryRecord) || null;
+        });
       }
 
       const rows = await this.db

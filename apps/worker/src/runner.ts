@@ -30,7 +30,7 @@ import {
 } from '@vp/observability';
 import { createFailureHandler } from './failure-handler.js';
 import { STAGE_REGISTRY, validateQueueName } from './registry.js';
-import { createHousekeepingProcessor } from './stages/housekeeping/index.js';
+import { OutboxRelay, createHousekeepingProcessor } from './stages/housekeeping/index.js';
 import { createNotifyProcessor } from './stages/notify.js';
 import { createPackageProcessor } from './stages/package.js';
 import { createProbeProcessor } from './stages/probe.js';
@@ -52,12 +52,15 @@ export interface WorkerRunnerOptions {
   metricsPort?: number;
   workerId?: string;
   heartbeatPath?: string;
+  outboxRelayIntervalMs?: number;
+  disableOutboxRelay?: boolean;
 }
 
 export interface WorkerRunner {
   queue: JobQueue;
   worker: { name: string };
   metricsServer?: { port: number; close: () => Promise<void> };
+  outboxRelay?: OutboxRelay;
   close: () => Promise<void>;
 }
 
@@ -237,8 +240,30 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     }
   }
 
+  let outboxRelay: OutboxRelay | undefined;
+  if (stage === 'housekeeping' && !options.disableOutboxRelay) {
+    const relayIntervalMs =
+      options.outboxRelayIntervalMs ??
+      (process.env['OUTBOX_RELAY_INTERVAL_MS']
+        ? Number.parseInt(process.env['OUTBOX_RELAY_INTERVAL_MS'], 10)
+        : 1000);
+
+    outboxRelay = new OutboxRelay({
+      repositories,
+      getQueue,
+      flowProducer,
+      logger,
+      metrics,
+      intervalMs: relayIntervalMs,
+    });
+    outboxRelay.start();
+  }
+
   const close = async () => {
     logger.info('Shutting down worker...');
+    if (outboxRelay) {
+      await outboxRelay.stop().catch(() => {});
+    }
     if (metricsServer) {
       await metricsServer.close().catch(() => {});
     }
@@ -255,6 +280,7 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     queue,
     worker: { name: config.queue },
     metricsServer,
+    outboxRelay,
     close,
   };
 

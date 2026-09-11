@@ -508,11 +508,11 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 ### ADR-16 — Enqueue reliability: idempotent enqueue + reconciler (MVP), transactional outbox (Phase 4)
 
-| Rank | Option | Reason |
-|---|---|---|
-| **1 (MVP)** | **Commit DB → enqueue with deterministic `jobId` → reconciler re-enqueues gaps** | Simple; the dual-write hazard ("DB committed, Redis add failed") is healed within 5 min by the reconciler, and deterministic job IDs make a duplicate `add` a no-op. |
-| 2 (Phase 4) | Transactional outbox (`outbox` table written in the same tx; relay polls `SKIP LOCKED` and adds to BullMQ) | Removes the window entirely; costs a relay loop and a table. Implemented as a hardening step once the pipeline is stable. |
-| 3 | pg-boss (queue in Postgres) | Solves it by construction, but loses BullMQ (ADR-03). |
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| **1 (Phase 4)** | **Transactional outbox** (`outbox` table written atomically with state changes; housekeeping relay polls `SKIP LOCKED` and publishes to BullMQ) | **Implemented** | Removes the dual-write window entirely; atomic with CAS state changes; relay ensures effectively-once publishing with deterministic job IDs; records older than 7 days pruned. |
+| 2 (MVP) | Commit DB → enqueue with deterministic `jobId` → reconciler re-enqueues gaps | Superseded / Fallback | Reconciler remains as belt-and-braces fallback (`reconciler_repairs_total` stays 0 under normal outbox operation). |
+| 3 | pg-boss (queue in Postgres) | Rejected | Solves it by construction, but loses BullMQ (ADR-03). |
 
 ---
 
@@ -1440,6 +1440,9 @@ Exposed by `packages/observability` (`prom-client` registry; API on `:9464/metri
 | `videos_by_status` | gauge | `status` | API poller (SQL) | business view |
 | `processing_steps_running_stale` | gauge | — | API poller (SQL) | stuck worker alert |
 | `time_to_ready_seconds` | histogram | `bucket ∈ {<1min,1-5,5-15,15-60}` (source duration) | package | product SLO |
+| `reconciler_repairs_total` | counter | `type` | reconciler | stuck/lost jobs repaired (stays 0 under outbox) |
+| `outbox_drain_duration_seconds` | histogram | — | housekeeping | outbox batch drain latency |
+| `outbox_events_published_total` | counter | `kind` | housekeeping | outbox events published to BullMQ |
 
 ### 13.2 KEDA ScaledObject (Prometheus scaler, primary)
 

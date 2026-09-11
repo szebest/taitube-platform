@@ -5,7 +5,10 @@ import {
   type ListDlqEntriesOptions,
   type ListDlqEntriesResult,
   type NewDlqEntryInput,
+  type NewOutboxInput,
+  type OutboxRepository,
 } from '@vp/core/ports';
+
 import { uuidv7 } from 'uuidv7';
 
 function encodeCursor(createdAt: Date, id: string): string {
@@ -27,10 +30,15 @@ function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
 
 export class InMemoryDlqRepository extends DlqRepository {
   private readonly entriesMap: Map<string, DlqEntryRecord>;
+  private outboxRepo?: OutboxRepository;
 
-  constructor(entriesMap?: Map<string, DlqEntryRecord>) {
+  constructor(
+    entriesMap?: Map<string, DlqEntryRecord>,
+    options?: { outboxRepo?: OutboxRepository }
+  ) {
     super();
     this.entriesMap = entriesMap ?? new Map();
+    this.outboxRepo = options?.outboxRepo;
   }
 
   clear(): void {
@@ -115,10 +123,15 @@ export class InMemoryDlqRepository extends DlqRepository {
     return { items: pagedItems, nextCursor };
   }
 
+  setOutboxRepo(repo: OutboxRepository): void {
+    this.outboxRepo = repo;
+  }
+
   async updateStatus(
     id: string,
     status: DlqStatus,
-    patch?: { replayedAt?: Date }
+    patch?: { replayedAt?: Date },
+    outbox?: NewOutboxInput
   ): Promise<DlqEntryRecord | null> {
     const entry = this.entriesMap.get(id);
     if (!entry) return null;
@@ -126,6 +139,10 @@ export class InMemoryDlqRepository extends DlqRepository {
     entry.status = status;
     if (patch?.replayedAt !== undefined) {
       entry.replayedAt = patch.replayedAt;
+    }
+
+    if (outbox && this.outboxRepo) {
+      await this.outboxRepo.enqueue(outbox);
     }
 
     return { ...entry };

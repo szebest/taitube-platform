@@ -216,6 +216,19 @@ export const dlqEntries = pgTable(
   ]
 );
 
+export const outbox = pgTable(
+  'outbox',
+  {
+    id: uuid('id').primaryKey(),
+    kind: text('kind').notNull(),
+    payload: jsonb('payload').notNull(),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    publishedAt: timestamptz('published_at'),
+    attempts: integer('attempts').notNull().default(0),
+  },
+  (table) => [index('outbox_drain_idx').on(table.publishedAt, table.createdAt)]
+);
+
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -231,3 +244,5 @@ export type VideoEvent = typeof videoEvents.$inferSelect;
 export type NewVideoEvent = typeof videoEvents.$inferInsert;
 export type DlqEntry = typeof dlqEntries.$inferSelect;
 export type NewDlqEntry = typeof dlqEntries.$inferInsert;
+export type OutboxRow = typeof outbox.$inferSelect;
+export type NewOutboxRow = typeof outbox.$inferInsert;

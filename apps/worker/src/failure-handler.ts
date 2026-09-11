@@ -175,6 +175,24 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         }
       } catch {}
 
+      const video = await repositories.videos.findById(videoId).catch(() => null);
+      const notifyJobId = ids.notify(videoId, 'video.failed', 1);
+      const notifyJobData = video
+        ? NotifyJob.parse({
+            videoId,
+            userId: video.ownerId,
+            event: 'video.failed',
+            eventSeq: 1,
+            payload: { status: 'FAILED', errorCode: videoErrorCode, errorMessage },
+            traceparent: (payload.traceparent as string) || '',
+          })
+        : undefined;
+      const notifyJobOpts = {
+        jobId: notifyJobId,
+        ...stagePolicies.notify,
+        ...defaultJobOptions,
+      };
+
       const transitioned = await repositories.videos
         .transition({
           videoId,
@@ -183,6 +201,20 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
           eventType: 'video.failed',
           eventPayload: { errorCode: videoErrorCode, errorMessage },
           patch: { errorCode: videoErrorCode, errorMessage },
+          outbox: notifyJobData
+            ? {
+                kind: 'notify',
+                payload: {
+                  type: 'queue',
+                  queueName: 'notify',
+                  job: {
+                    name: 'notify',
+                    data: notifyJobData,
+                    opts: notifyJobOpts,
+                  },
+                },
+              }
+            : undefined,
         })
         .catch(() => false);
 
@@ -193,28 +225,9 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         );
 
         // Publish video.failed notification
-        const video = await repositories.videos.findById(videoId).catch(() => null);
-        if (video && getQueue) {
+        if (notifyJobData && getQueue) {
           const notifyQueue = getQueue('notify');
-          const notifyJobId = ids.notify(videoId, 'video.failed', 1);
-          await notifyQueue
-            .add(
-              'notify',
-              NotifyJob.parse({
-                videoId,
-                userId: video.ownerId,
-                event: 'video.failed',
-                eventSeq: 1,
-                payload: { status: 'FAILED', errorCode: videoErrorCode, errorMessage },
-                traceparent: (payload.traceparent as string) || '',
-              }),
-              {
-                jobId: notifyJobId,
-                ...stagePolicies.notify,
-                ...defaultJobOptions,
-              }
-            )
-            .catch(() => {});
+          await notifyQueue.add('notify', notifyJobData, notifyJobOpts).catch(() => {});
         }
       }
     }

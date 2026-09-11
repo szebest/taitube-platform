@@ -5,6 +5,7 @@ import postgres, { type Sql } from 'postgres';
 import type { PostgresDatabaseClient } from '../postgres-database-client.js';
 import { PostgresDlqRepository } from './postgres-dlq-repository.js';
 import { PostgresEventRepository } from './postgres-event-repository.js';
+import { PostgresOutboxRepository } from './postgres-outbox-repository.js';
 import { PostgresRenditionRepository } from './postgres-rendition-repository.js';
 import { PostgresStepRepository } from './postgres-step-repository.js';
 import { PostgresUploadRepository } from './postgres-upload-repository.js';
@@ -27,6 +28,7 @@ export class PostgresRepositories implements Repositories {
   readonly events: PostgresEventRepository;
   readonly users: PostgresUserRepository;
   readonly dlq: PostgresDlqRepository;
+  readonly outbox: PostgresOutboxRepository;
 
   private readonly sql?: Sql;
 
@@ -59,6 +61,7 @@ export class PostgresRepositories implements Repositories {
     this.events = new PostgresEventRepository(db);
     this.users = new PostgresUserRepository(db);
     this.dlq = new PostgresDlqRepository(db);
+    this.outbox = new PostgresOutboxRepository(db);
   }
 
   async close(): Promise<void> {

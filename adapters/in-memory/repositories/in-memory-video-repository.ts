@@ -4,6 +4,7 @@ import {
   type EventRepository,
   type ListVideosOptions,
   type NewVideoInput,
+  type OutboxRepository,
   type ProcessingStepRecord,
   type RenditionRecord,
   type RenditionRepository,
@@ -17,6 +18,7 @@ import {
   VideoRepository,
   type VideoWithDetails,
 } from '@vp/core/ports';
+
 import {
   DEFAULT_VIDEO_RECORD,
   type InMemoryVideoRepositoryOptions,
@@ -35,6 +37,7 @@ export class InMemoryVideoRepository extends VideoRepository {
   private renditionsRepo?: RenditionRepository;
   private stepsRepo?: StepRepository;
   private uploadsRepo?: UploadRepository;
+  private outboxRepo?: OutboxRepository;
 
   constructor(
     optsOrMap?: InMemoryVideoRepositoryOptions | Map<string, VideoRecord>,
@@ -56,6 +59,7 @@ export class InMemoryVideoRepository extends VideoRepository {
       this.renditionsRepo = optsOrMap?.renditionsRepo;
       this.stepsRepo = optsOrMap?.stepsRepo;
       this.uploadsRepo = optsOrMap?.uploadsRepo;
+      this.outboxRepo = optsOrMap?.outboxRepo;
     }
   }
 
@@ -215,6 +219,9 @@ export class InMemoryVideoRepository extends VideoRepository {
       eventPayload,
       effectiveTraceId
     );
+    if (options.outbox && this.outboxRepo) {
+      await this.outboxRepo.enqueue(options.outbox);
+    }
     return true;
   }
 

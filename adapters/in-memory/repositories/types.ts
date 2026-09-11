@@ -1,5 +1,6 @@
 import type {
   EventRepository,
+  OutboxRepository,
   RenditionRepository,
   StepRepository,
   UploadRepository,
@@ -32,6 +33,7 @@ export interface InMemoryVideoRepositoryOptions {
   renditionsRepo?: RenditionRepository;
   stepsRepo?: StepRepository;
   uploadsRepo?: UploadRepository;
+  outboxRepo?: OutboxRepository;
 }
 
 export const DEFAULT_VIDEO_RECORD: Omit<

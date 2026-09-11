@@ -17,7 +17,7 @@ interface ParsedRule {
  * Robust line-by-line parser for Prometheus alerting rule files without external YAML dependency.
  */
 function parsePrometheusRules(yamlContent: string): ParsedRule[] {
-  const lines = yamlContent.split('\n');
+  const lines = yamlContent.split(/\r?\n/);
   const rules: ParsedRule[] = [];
   let currentRule: Partial<ParsedRule> | null = null;
   let inExprBlock = false;

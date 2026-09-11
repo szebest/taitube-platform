@@ -91,6 +91,12 @@ export interface ListVideosOptions {
   status?: VideoStatus;
 }
 
+import type { VideoEventRecord } from './event-repository.js';
+import type { NewOutboxInput } from './outbox-repository.js';
+import type { RenditionRecord } from './rendition-repository.js';
+import type { ProcessingStepRecord } from './step-repository.js';
+import type { UploadRecord } from './upload-repository.js';
+
 export interface TransitionVideoOptions {
   videoId: string;
   from: VideoStatus | VideoStatus[];
@@ -101,11 +107,8 @@ export interface TransitionVideoOptions {
   patch?: Partial<
     Omit<VideoRecord, 'id' | 'ownerId' | 'status' | 'createdAt' | 'updatedAt' | 'version'>
   >;
+  outbox?: NewOutboxInput;
 }
-import type { VideoEventRecord } from './event-repository.js';
-import type { RenditionRecord } from './rendition-repository.js';
-import type { ProcessingStepRecord } from './step-repository.js';
-import type { UploadRecord } from './upload-repository.js';
 
 export interface VideoWithDetails {
   video: VideoRecord;
