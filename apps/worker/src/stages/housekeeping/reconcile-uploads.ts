@@ -1,6 +1,6 @@
 import type { JobQueue, MultipartStorage, Repositories } from '@vp/core/ports';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
+import { type Logger, getMetrics } from '@vp/observability';
 
 export interface ReconcileUploadsOptions {
   repositories: Repositories;
@@ -137,6 +137,9 @@ export async function runReconcileUploads(
 
       ownerInflightCounts.set(video.ownerId, currentInflight + 1);
       reenqueuedCount += 1;
+      try {
+        getMetrics().reconcilerRepairsTotal.inc({ type: 'missing_probe' });
+      } catch {}
       logger?.info(
         { videoId: video.id, probeJobId, priority },
         'Reconciler released held video and enqueued probe job'

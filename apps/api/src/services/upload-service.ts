@@ -52,6 +52,10 @@ export interface UploadResumeInfo {
   uploadedParts?: StorageUploadedPartInfo[];
 }
 
+export interface CompleteUploadOptions {
+  testCrashAfterCommit?: boolean;
+}
+
 export interface CompleteUploadResult {
   videoId: string;
   status: string;
@@ -353,7 +357,8 @@ export class UploadService {
   async complete(
     user: AuthUser,
     uploadId: string,
-    parts?: { partNumber: number; etag: string }[]
+    parts?: { partNumber: number; etag: string }[],
+    options?: CompleteUploadOptions
   ): Promise<CompleteUploadResult> {
     const record = await this.uploads.findWithVideo(uploadId);
     if (!record) {
@@ -458,7 +463,33 @@ export class UploadService {
     const traceparent = activeCtx.traceparent || getActiveTraceparent() || createTraceparent();
     const traceId = activeCtx.traceId || traceparent.split('-')[1];
 
-    // CAS transition: UPLOADING -> UPLOADED
+    // Determine priority according to user tier (pro/enterprise = 1, free = 5)
+    let priority = 5;
+    if (this.users) {
+      const userRecord = await this.users.findById(video.ownerId);
+      if (userRecord?.tier === 'pro' || userRecord?.tier === 'enterprise') {
+        priority = 1;
+      }
+    } else if ((user as { tier?: string })?.tier === 'pro') {
+      priority = 1;
+    }
+
+    // Prepare probe job payload
+    const probeJobId = ids.probe(video.id, 1);
+    const probeJobData = ProbeJob.parse({
+      videoId: video.id,
+      sourceKey: video.sourceKey,
+      generation: 1,
+      traceparent,
+    });
+    const probeJobOpts = {
+      jobId: probeJobId,
+      ...stagePolicies.probe,
+      ...defaultJobOptions,
+      priority,
+    };
+
+    // CAS transition: UPLOADING -> UPLOADED, atomically writing to outbox
     const transitioned = await this.videos.transition({
       videoId: video.id,
       from: 'UPLOADING',
@@ -469,6 +500,18 @@ export class UploadService {
         sizeBytes: head.contentLength,
       },
       traceId,
+      outbox: {
+        kind: 'probe',
+        payload: {
+          type: 'queue',
+          queueName: 'probe',
+          job: {
+            name: 'probe',
+            data: probeJobData,
+            opts: probeJobOpts,
+          },
+        },
+      },
     });
 
     if (!transitioned) {
@@ -476,6 +519,11 @@ export class UploadService {
         videoId: video.id,
         status: 'UPLOADED',
       };
+    }
+
+    // Fault injection hook for Ticket 30: crash right after commit before direct enqueue
+    if (options?.testCrashAfterCommit) {
+      throw new Error('CRASH_AFTER_COMMIT');
     }
 
     // Admission control (SDD §9.4, PRD FR-13, Ticket 18):
@@ -490,35 +538,9 @@ export class UploadService {
       };
     }
 
-    // Determine priority according to user tier (pro/enterprise = 1, free = 5)
-    let priority = 5;
-    if (this.users) {
-      const userRecord = await this.users.findById(video.ownerId);
-      if (userRecord?.tier === 'pro' || userRecord?.tier === 'enterprise') {
-        priority = 1;
-      }
-    } else if ((user as { tier?: string })?.tier === 'pro') {
-      priority = 1;
-    }
-
-    // Enqueue probe job
+    // Direct enqueue for sub-second fast path (relay serves as reliable fallback / primary drainer)
     if (this.probeQueue) {
-      const probeJobId = ids.probe(video.id, 1);
-      await this.probeQueue.add(
-        'probe',
-        ProbeJob.parse({
-          videoId: video.id,
-          sourceKey: video.sourceKey,
-          generation: 1,
-          traceparent,
-        }),
-        {
-          jobId: probeJobId,
-          ...stagePolicies.probe,
-          ...defaultJobOptions,
-          priority,
-        }
-      );
+      await this.probeQueue.add('probe', probeJobData, probeJobOpts);
     }
 
     return {

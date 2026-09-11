@@ -316,7 +316,10 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
       async (request, reply) => {
         const user = requireAuth(request);
         const { uploadId } = request.params;
-        const result = await uploadService.complete(user, uploadId, request.body?.parts);
+        const testCrashAfterCommit = request.headers['x-test-crash-after-commit'] === 'true';
+        const result = await uploadService.complete(user, uploadId, request.body?.parts, {
+          testCrashAfterCommit,
+        });
         return reply.status(202).send(result);
       }
     );

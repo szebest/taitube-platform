@@ -41,6 +41,8 @@ export interface ListDlqEntriesResult {
   nextCursor: string | null;
 }
 
+import type { NewOutboxInput } from './outbox-repository.js';
+
 export abstract class DlqRepository {
   abstract create(entry: NewDlqEntryInput): Promise<DlqEntryRecord>;
   abstract findById(id: string): Promise<DlqEntryRecord | null>;
@@ -48,6 +50,7 @@ export abstract class DlqRepository {
   abstract updateStatus(
     id: string,
     status: DlqStatus,
-    patch?: { replayedAt?: Date }
+    patch?: { replayedAt?: Date },
+    outbox?: NewOutboxInput
   ): Promise<DlqEntryRecord | null>;
 }

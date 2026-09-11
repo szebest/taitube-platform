@@ -254,6 +254,20 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
         }
 
         const nextGeneration = (video.generation || 1) + 1;
+        const probeJobId = ids.probe(id, nextGeneration);
+        const probeData = ProbeJob.parse({
+          videoId: id,
+          sourceKey: video.sourceKey,
+          generation: nextGeneration,
+          traceparent:
+            (request.headers['traceparent'] as string) ||
+            '00-00000000000000000000000000000001-0000000000000001-01',
+        });
+        const probeJobOpts = {
+          jobId: probeJobId,
+          ...stagePolicies.probe,
+          ...defaultJobOptions,
+        };
 
         const transitioned = await videos.transition({
           videoId: id,
@@ -266,6 +280,18 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
             errorCode: null,
             errorMessage: null,
           },
+          outbox: {
+            kind: 'probe',
+            payload: {
+              type: 'queue',
+              queueName: 'probe',
+              job: {
+                name: 'probe',
+                data: probeData,
+                opts: probeJobOpts,
+              },
+            },
+          },
         });
 
         if (!transitioned) {
@@ -276,21 +302,7 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
         }
 
         if (probeQueue) {
-          const probeJobId = ids.probe(id, nextGeneration);
-          const probeData = ProbeJob.parse({
-            videoId: id,
-            sourceKey: video.sourceKey,
-            generation: nextGeneration,
-            traceparent:
-              (request.headers['traceparent'] as string) ||
-              '00-00000000000000000000000000000001-0000000000000001-01',
-          });
-
-          await probeQueue.add('probe', probeData, {
-            jobId: probeJobId,
-            ...stagePolicies.probe,
-            ...defaultJobOptions,
-          });
+          await probeQueue.add('probe', probeData, probeJobOpts);
         }
 
         return reply.status(202).send({

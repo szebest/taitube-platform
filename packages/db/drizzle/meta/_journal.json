@@ -15,6 +15,13 @@
       "when": 1788625843065,
       "tag": "0001_minor_titania",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789113109275,
+      "tag": "0002_foamy_silver_fox",
+      "breakpoints": true
     }
   ]
 }

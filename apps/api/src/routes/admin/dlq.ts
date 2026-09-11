@@ -126,14 +126,31 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
           entry.queue in stagePolicies
             ? stagePolicies[entry.queue as keyof typeof stagePolicies]
             : {};
-
-        await targetQueue.add(entry.queue, entry.payload, {
+        const replayOpts = {
           jobId: replayJobId,
           ...stageOpts,
           ...defaultJobOptions,
-        });
+        };
 
-        await repositories.dlq.updateStatus(id, 'REPLAYED', { replayedAt: new Date() });
+        await repositories.dlq.updateStatus(
+          id,
+          'REPLAYED',
+          { replayedAt: new Date() },
+          {
+            kind: 'dlq_replay',
+            payload: {
+              type: 'queue',
+              queueName: entry.queue,
+              job: {
+                name: entry.queue,
+                data: entry.payload,
+                opts: replayOpts,
+              },
+            },
+          }
+        );
+
+        await targetQueue.add(entry.queue, entry.payload, replayOpts);
 
         if (entry.videoId) {
           await repositories.events.create({

@@ -455,4 +455,83 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
       await limitedApp.close();
     }
   });
+
+  it('Ticket 30 AC 2: Crash right after DB commit -> outbox entry written -> relay drains and publishes probe job', async () => {
+    const size = 100;
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/v1/uploads',
+      headers: {
+        authorization: `Bearer ${authToken}`,
+      },
+      payload: {
+        filename: 'crash-test.mp4',
+        sizeBytes: size,
+        contentType: 'video/mp4',
+      },
+    });
+    expect(createRes.statusCode).toBe(201);
+    const { videoId, uploadId, singleUrl } = createRes.json();
+
+    // Upload bytes directly to mock S3
+    await fetch(singleUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Content-Length': String(size),
+      },
+      body: Buffer.alloc(size, 'x'),
+    });
+
+    const initialProbeCount = probeJobs.length;
+
+    // Simulate crash after commit via test header
+    const crashRes = await app.inject({
+      method: 'POST',
+      url: `/v1/uploads/${uploadId}/complete`,
+      headers: {
+        authorization: `Bearer ${authToken}`,
+        'x-test-crash-after-commit': 'true',
+      },
+      payload: {},
+    });
+
+    // Request failed due to injected crash error
+    expect(crashRes.statusCode).toBe(500);
+
+    // But DB commit succeeded! Video is UPLOADED in DB
+    const video = await repositories.videos.findById(videoId);
+    expect(video?.status).toBe('UPLOADED');
+
+    // And direct enqueue was NOT executed due to crash
+    expect(probeJobs.length).toBe(initialProbeCount);
+
+    // Outbox record was atomically written in the DB transaction
+    const pendingOutbox = await repositories.outbox.claimBatch(10);
+    const probeOutboxItem = pendingOutbox.find(
+      (item) =>
+        item.kind === 'probe' &&
+        item.payload.type === 'queue' &&
+        (item.payload.job.data as { videoId?: string }).videoId === videoId
+    );
+    expect(probeOutboxItem).toBeDefined();
+
+    // Outbox relay logic: claims batch from outbox and adds to queue, marking published
+    for (const item of pendingOutbox) {
+      if (item.payload.type === 'queue') {
+        await mockProbeQueue.add(
+          item.payload.job.name,
+          item.payload.job.data,
+          item.payload.job.opts
+        );
+        await repositories.outbox.markPublished(item.id);
+      }
+    }
+
+    // Now probe job is enqueued in the queue!
+    const expectedJobId = `${videoId}--probe--g1`;
+    const relayedJob = probeJobs.find((j) => j.opts?.jobId === expectedJobId);
+    expect(relayedJob).toBeDefined();
+    expect(relayedJob?.data.videoId).toBe(videoId);
+  });
 });

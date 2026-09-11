@@ -198,6 +198,17 @@ export class PostgresVideoRepository extends VideoRepository {
           traceId: effectiveTraceId,
           createdAt: new Date(),
         } as VideoEventInsert);
+
+        if (options.outbox) {
+          await tx.insert(schema.outbox).values({
+            id: options.outbox.id || sql`gen_random_uuid()`,
+            kind: options.outbox.kind,
+            payload: options.outbox.payload,
+            createdAt: new Date(),
+            attempts: 0,
+          });
+        }
+
         return true;
       });
     } catch (err) {

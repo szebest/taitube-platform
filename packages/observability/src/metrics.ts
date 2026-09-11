@@ -31,6 +31,9 @@ export interface PipelineMetrics {
   videosByStatus: Gauge<string>;
   processingStepsRunningStale: Gauge<string>;
   timeToReady: Histogram<string>;
+  reconcilerRepairsTotal: Counter<string>;
+  outboxDrainDuration: Histogram<string>;
+  outboxEventsPublished: Counter<string>;
 }
 
 export function createMetricsRegistry(defaultLabels: Record<string, string> = {}): PipelineMetrics {
@@ -175,6 +178,27 @@ export function createMetricsRegistry(defaultLabels: Record<string, string> = {}
     registers: [registry],
   });
 
+  const reconcilerRepairsTotal = new Counter({
+    name: 'reconciler_repairs_total',
+    help: 'Total number of stuck or lost jobs repaired by the reconciler',
+    labelNames: ['type'],
+    registers: [registry],
+  });
+
+  const outboxDrainDuration = new Histogram({
+    name: 'outbox_drain_duration_seconds',
+    help: 'Time taken to drain an outbox batch to BullMQ in seconds',
+    buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5],
+    registers: [registry],
+  });
+
+  const outboxEventsPublished = new Counter({
+    name: 'outbox_events_published_total',
+    help: 'Total number of outbox records published to queues',
+    labelNames: ['kind'],
+    registers: [registry],
+  });
+
   return {
     registry,
     httpRequestDuration,
@@ -196,6 +220,9 @@ export function createMetricsRegistry(defaultLabels: Record<string, string> = {}
     videosByStatus,
     processingStepsRunningStale,
     timeToReady,
+    reconcilerRepairsTotal,
+    outboxDrainDuration,
+    outboxEventsPublished,
   };
 }
 

@@ -18,6 +18,7 @@ export * from './reconcile-processing.js';
 export * from './purge-deleted.js';
 export * from './expire-raw.js';
 export * from './tmp-sweep.js';
+export * from './outbox-relay.js';
 
 export interface HousekeepingProcessorOptions {
   repositories: Repositories;

@@ -1,5 +1,6 @@
 import type { DlqRepository } from './dlq-repository.js';
 import type { EventRepository } from './event-repository.js';
+import type { OutboxRepository } from './outbox-repository.js';
 import type { RenditionRepository } from './rendition-repository.js';
 import type { StepRepository } from './step-repository.js';
 import type { UploadRepository } from './upload-repository.js';
@@ -14,4 +15,5 @@ export interface Repositories {
   events: EventRepository;
   users: UserRepository;
   dlq: DlqRepository;
+  outbox: OutboxRepository;
 }

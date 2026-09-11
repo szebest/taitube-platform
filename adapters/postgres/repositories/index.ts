@@ -5,5 +5,6 @@ export * from './postgres-rendition-repository.js';
 export * from './postgres-event-repository.js';
 export * from './postgres-user-repository.js';
 export * from './postgres-dlq-repository.js';
+export * from './postgres-outbox-repository.js';
 export * from './postgres-repositories.js';
 export * from './types.js';

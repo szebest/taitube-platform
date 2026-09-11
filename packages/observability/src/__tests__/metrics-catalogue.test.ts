@@ -82,13 +82,13 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
       `Metrics present in code registry but missing in SDD §13.1: ${extraInCode.join(', ')}`
     ).toEqual([]);
 
-    expect(codeSet.size).toBe(19);
+    expect(codeSet.size).toBe(22);
   });
 
-  it('registers all 19 metrics in the registry', async () => {
+  it('registers all 22 metrics in the registry', async () => {
     const metrics = createMetricsRegistry();
     const registeredMetrics = await metrics.registry.getMetricsAsJSON();
-    expect(registeredMetrics.length).toBeGreaterThanOrEqual(19);
+    expect(registeredMetrics.length).toBeGreaterThanOrEqual(22);
   });
 
   const EXPECTED_METRICS = [
@@ -115,6 +115,9 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     { name: 'videos_by_status', type: 'gauge', labels: ['status'] },
     { name: 'processing_steps_running_stale', type: 'gauge', labels: [] },
     { name: 'time_to_ready_seconds', type: 'histogram', labels: ['bucket'] },
+    { name: 'reconciler_repairs_total', type: 'counter', labels: ['type'] },
+    { name: 'outbox_drain_duration_seconds', type: 'histogram', labels: [] },
+    { name: 'outbox_events_published_total', type: 'counter', labels: ['kind'] },
   ];
 
   it.each(EXPECTED_METRICS)(

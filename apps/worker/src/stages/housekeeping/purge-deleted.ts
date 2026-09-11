@@ -103,5 +103,15 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
     });
   }
 
+  // 3. Prune published outbox rows older than 7 days (Ticket 30 AC 3)
+  try {
+    const prunedOutboxCount = await repositories.outbox.prune(7);
+    if (prunedOutboxCount > 0) {
+      logger?.info({ prunedOutboxCount }, 'Pruned published outbox rows older than 7 days');
+    }
+  } catch (err: unknown) {
+    logger?.warn({ err: (err as Error).message }, 'Failed to prune published outbox rows');
+  }
+
   return { purgedVideosCount, purgedGenerationsCount };
 }

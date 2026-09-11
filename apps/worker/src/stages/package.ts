@@ -177,6 +177,24 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
         patch['spriteKey'] = thumbResult.spriteKey;
       }
 
+      const notifyJobId = ids.notify(videoId, 'video.ready', 1);
+      const notifyJobData = video
+        ? NotifyJob.parse({
+            videoId,
+            userId: video.ownerId,
+            event: 'video.ready',
+            eventSeq: 1,
+            payload: { status: 'READY', playbackUrl },
+            traceparent: job.data.traceparent,
+          })
+        : undefined;
+      const notifyJobOpts = {
+        jobId: notifyJobId,
+        priority: job.opts?.priority,
+        ...stagePolicies.notify,
+        ...defaultJobOptions,
+      };
+
       const transitioned = await repositories.videos.transition({
         videoId,
         from: 'PROCESSING',
@@ -184,6 +202,20 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
         eventType: 'video.ready',
         eventPayload: { playbackUrl, masterKey },
         patch,
+        outbox: notifyJobData
+          ? {
+              kind: 'notify',
+              payload: {
+                type: 'queue',
+                queueName: 'notify',
+                job: {
+                  name: 'notify',
+                  data: notifyJobData,
+                  opts: notifyJobOpts,
+                },
+              },
+            }
+          : undefined,
       });
 
       log.info({ videoId, playbackUrl, transitioned }, 'Video transitioned to READY');
@@ -206,27 +238,9 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       }
 
       // 7. Enqueue notify job if this was the successful CAS transition (AC 19, AC 20)
-      if (transitioned && getQueue && video) {
+      if (transitioned && getQueue && notifyJobData) {
         const notifyQueue = getQueue('notify');
-        const notifyJobId = ids.notify(videoId, 'video.ready', 1);
-
-        await notifyQueue.add(
-          'notify',
-          NotifyJob.parse({
-            videoId,
-            userId: video.ownerId,
-            event: 'video.ready',
-            eventSeq: 1,
-            payload: { status: 'READY', playbackUrl },
-            traceparent: job.data.traceparent,
-          }),
-          {
-            jobId: notifyJobId,
-            priority: job.opts?.priority,
-            ...stagePolicies.notify,
-            ...defaultJobOptions,
-          }
-        );
+        await notifyQueue.add('notify', notifyJobData, notifyJobOpts);
         log.info(
           { notifyJobId, priority: job.opts?.priority },
           'Enqueued notify job for video.ready'
