@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: video-pipeline
+
+resources:
+  - namespace.yaml
+  - configmap-secret.yaml
+  - migrate-job.yaml
+  - api.yaml
+  - worker-probe.yaml
+  - worker-transcode-1080p.yaml
+  - worker-transcode-720p.yaml
+  - worker-transcode-480p.yaml
+  - worker-thumbnail.yaml
+  - worker-package.yaml
+  - worker-notify.yaml
+  - worker-housekeeping.yaml
+  - service-monitors.yaml
+  - dashboards-configmaps.yaml
+  - ingress.yaml

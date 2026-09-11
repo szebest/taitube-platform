@@ -230,7 +230,39 @@ pnpm compose-autoscaler --interval 10
 pnpm compose-autoscaler --config my-stages.json
 ```
 
-### 8. Useful commands
+### 8. Run on Kubernetes locally (k3d / kind, Phase 3)
+
+The pipeline can run locally on Kubernetes (SDD §12.2 Rung 2, Ticket 25) with in-cluster Postgres, Redis, MinIO, KEDA, and Prometheus/Grafana:
+
+```bash
+# 1. Bring up local k3d cluster with Helm releases (< 5 min)
+# Installs KEDA, kube-prometheus-stack, Redis, MinIO, and Postgres via Helm with committed values
+make k3d-up
+
+# Alternatively, if using kind instead of k3d:
+CLUSTER_TOOL=kind make k3d-up
+
+# 2. Deploy database migrations, Fastify API, and worker stages via Kustomize
+make k3d-deploy
+
+# 3. Run end-to-end smoke test against the cluster ingress
+make smoke
+
+# 4. Validate manifests across local and cloud overlays
+make k8s-validate
+# Or run package vitest suite:
+pnpm --filter @vp/testing test
+```
+
+#### Kubernetes Architecture Highlights
+- **Kustomize Structure**: `infra/k8s/base` defines common Deployments, Services, ConfigMaps, Secrets, ServiceMonitors, Ingress, and Grafana dashboard ConfigMaps; `infra/k8s/overlays/local` customizes images and endpoints for k3d/kind, while `infra/k8s/overlays/cloud` serves as the skeleton for Cloudflare R2 + Neon deployments (Ticket 32).
+- **Pod Hardening (SDD §11 & §12.2)**: Every container runs as `runAsNonRoot: true`, `runAsUser: 10001`, `allowPrivilegeEscalation: false`, with `readOnlyRootFilesystem: true`, dropping all capabilities.
+- **Worker Stage Topology**: Stage-specific ephemeral-storage `emptyDir` mounts (`/tmp/vp`), explicit CPU/memory requests/limits, and per-stage `terminationGracePeriodSeconds` (e.g. 900s for 1080p, 600s for 720p).
+- **Dynamic Threading**: `FFMPEG_THREADS` is bound to container CPU limits via Kubernetes Downward API (`resourceFieldRef: { resource: limits.cpu }`).
+- **Health Probes**: Workers verify liveness via `/tmp/vp/heartbeat` touched during active transcoding ticks and worker main loops; API verifies readiness via `/readyz` and liveness via `/livez`.
+- **In-Cluster Observability**: ServiceMonitors scrape API (`:9464`) and worker stages; Grafana loads the committed dashboard ConfigMaps via the sidecar.
+
+### 9. Useful commands
 | Command | Description |
 |---|---|
 | `pnpm compose-autoscaler` | Run compose queue-depth autoscaler loop |
@@ -248,6 +280,10 @@ pnpm compose-autoscaler --config my-stages.json
 | `make smoke` | Run local infrastructure smoke tests |
 | `make smoke-offline` | Run offline smoke tests with zero egress |
 | `make e2e` | Run Phase 2 pipeline E2E acceptance suite |
+| `make k3d-up` | Create local k3d cluster and install in-cluster Helm charts |
+| `make k3d-deploy` | Build and deploy API and Worker stages via Kustomize |
+| `make k3d-down` | Delete local k3d cluster |
+| `make k8s-validate` | Validate local and cloud Kustomize overlays |
 | `make nuke` | Teardown containers and destroy persistent volumes |
 | `pnpm dev` | Run monorepo in development mode via Turborepo |
 | `pnpm build` | Build all workspace packages with Turborepo |

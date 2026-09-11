@@ -105,6 +105,15 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     expect(res.json()).toEqual({ status: 'ok' });
   });
 
+  it('GET /livez returns 200 liveness (K8s alias)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/livez',
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ status: 'ok' });
+  });
+
   it('GET /.well-known/jwks.json returns valid Ed25519 dev JWKS', async () => {
     const res = await app.inject({
       method: 'GET',

@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: video-pipeline
+
+resources:
+  - ../../base
+
+images:
+  - name: ghcr.io/szebest/vp-api
+    newName: vp-api
+    newTag: local
+  - name: ghcr.io/szebest/vp-worker
+    newName: vp-worker
+    newTag: local
+
+patches:
+  - target:
+      kind: Deployment
+      name: vp-api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent
+  - target:
+      kind: Deployment
+      name: .*
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent

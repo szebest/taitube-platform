@@ -1,0 +1,23 @@
+# infra/k8s/helm-values/redis.yaml
+auth:
+  enabled: true
+  password: vp
+
+architecture: standalone
+
+master:
+  persistence:
+    enabled: true
+    size: 2Gi
+  configuration: |
+    appendonly yes
+    appendfsync everysec
+    maxmemory 256mb
+    maxmemory-policy noeviction
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

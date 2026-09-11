@@ -2,7 +2,10 @@ SHELL := /bin/bash
 COMPOSE_FILE := infra/compose/docker-compose.yml
 REDIS_IMAGE ?= redis:7-alpine
 
-.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check
+CLUSTER_TOOL ?= k3d
+CLUSTER_NAME ?= vp
+
+.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-validate
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -83,3 +86,53 @@ obs-down: ## Stop observability stack
 
 obs-check: ## Assert observability stack targets UP and healthy via Prometheus API
 	bash scripts/obs-check.sh
+
+k8s-validate: ## Validate Kubernetes manifests across local and cloud overlays
+	bash scripts/validate-k8s.sh
+
+k3d-up: ## Create local k3d (or kind) cluster and install Helm charts (Postgres, Redis, MinIO, KEDA, Prometheus Stack)
+	@if [ "$(CLUSTER_TOOL)" = "kind" ]; then \
+		kind get clusters | grep -q "^$(CLUSTER_NAME)$$" || kind create cluster --name $(CLUSTER_NAME) --config infra/k8s/kind-config.yaml; \
+	else \
+		k3d cluster list | grep -q "^$(CLUSTER_NAME) " || k3d cluster create $(CLUSTER_NAME) --agents 2 -p "3000:80@loadbalancer" -p "9000:9000@loadbalancer"; \
+	fi
+	@echo "Installing/upgrading in-cluster Helm releases..."
+	helm repo add bitnami https://charts.bitnami.com/bitnami --force-update || true
+	helm repo add minio https://charts.min.io/ --force-update || true
+	helm repo add kedacore https://kedacore.github.io/charts --force-update || true
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update || true
+	helm repo update
+	helm upgrade --install vp-postgres bitnami/postgresql -n video-pipeline --create-namespace -f infra/k8s/helm-values/postgres.yaml
+	helm upgrade --install vp-redis bitnami/redis -n video-pipeline --create-namespace -f infra/k8s/helm-values/redis.yaml
+	helm upgrade --install vp-minio minio/minio -n video-pipeline --create-namespace -f infra/k8s/helm-values/minio.yaml
+	helm upgrade --install keda kedacore/keda -n keda --create-namespace -f infra/k8s/helm-values/keda.yaml
+	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace -f infra/k8s/helm-values/kube-prometheus-stack.yaml
+	@echo "Cluster infrastructure ready."
+
+k3d-deploy: ## Build local images, import to k3d, and apply Kustomize local overlay
+	@echo "Building local Docker images..."
+	docker compose -f $(COMPOSE_FILE) build api worker-probe
+	docker tag video-pipeline-api:latest vp-api:local
+	docker tag video-pipeline-worker-probe:latest vp-worker:local
+	@if [ "$(CLUSTER_TOOL)" = "kind" ]; then \
+		kind load docker-image vp-api:local --name $(CLUSTER_NAME); \
+		kind load docker-image vp-worker:local --name $(CLUSTER_NAME); \
+	else \
+		k3d image import vp-api:local vp-worker:local -c $(CLUSTER_NAME); \
+	fi
+	@echo "Applying Kubernetes manifests (local overlay)..."
+	kubectl apply -k infra/k8s/overlays/local
+	@echo "Waiting for database migrations Job to complete..."
+	kubectl wait --for=condition=complete job/vp-migrate -n video-pipeline --timeout=120s || kubectl logs job/vp-migrate -n video-pipeline
+	@echo "Waiting for API and Worker deployments to become ready..."
+	kubectl rollout status deployment/vp-api -n video-pipeline --timeout=180s
+	kubectl rollout status deployment/vp-worker-probe -n video-pipeline --timeout=180s
+	@echo "Deployment complete."
+
+k3d-down: ## Delete local k3d (or kind) cluster
+	@if [ "$(CLUSTER_TOOL)" = "kind" ]; then \
+		kind delete cluster --name $(CLUSTER_NAME); \
+	else \
+		k3d cluster delete $(CLUSTER_NAME); \
+	fi
+
