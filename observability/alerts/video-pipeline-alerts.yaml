@@ -49,7 +49,7 @@ groups:
         annotations:
           summary: "Systemic failure in queue {{ $labels.queue }} (> 50% failures) — pause queue"
           description: "Queue {{ $labels.queue }} has a failure rate of {{ $value | humanizePercentage }} over 5m. Execute systemic failure runbook to pause queue."
-          runbook_url: "docs/runbooks/job-failure.md"
+          runbook_url: "docs/runbooks/queue-paused.md"
 
       # 5. WorkerStalledJobs
       - alert: WorkerStalledJobs

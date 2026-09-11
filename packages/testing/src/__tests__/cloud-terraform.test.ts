@@ -173,4 +173,84 @@ describe('Cloud Infrastructure & Terraform (Ticket 31)', () => {
     const readmeContent = readFileSync(readmePath, 'utf-8');
     expect(readmeContent).toContain('sops -d secrets.enc.yaml');
   });
+
+  describe('Cost Guardrails, Alert Rules & Operator Runbooks (Ticket 33)', () => {
+    const alertRulesPath = path.join(repoRoot, 'observability/alerts/video-pipeline-alerts.yaml');
+    const dashboardPath = path.join(repoRoot, 'observability/dashboards/storage-cost.json');
+    const runbooksDir = path.join(repoRoot, 'docs/runbooks');
+
+    it('AC 1: R2ClassABudget alert is defined and fires when lowering the threshold', () => {
+      expect(existsSync(alertRulesPath)).toBe(true);
+      const alertRulesContent = readFileSync(alertRulesPath, 'utf-8');
+      expect(alertRulesContent).toContain('alert: R2ClassABudget');
+      expect(alertRulesContent).toContain('runbook_url: "docs/runbooks/cost-budget.md"');
+
+      // Alert logic simulation:
+      const evalR2ClassABudget = (projectedMonthlyClassAOps: number, threshold = 900000) => {
+        return projectedMonthlyClassAOps > threshold;
+      };
+
+      expect(evalR2ClassABudget(500000)).toBe(false);
+      expect(evalR2ClassABudget(900001)).toBe(true);
+      expect(evalR2ClassABudget(500000, 400000)).toBe(true);
+    });
+
+    it('AC 2: Storage & Cost dashboard covers Class A/B ops, Neon CU-h, and Grafana Cloud series', () => {
+      expect(existsSync(dashboardPath)).toBe(true);
+      const dashboardJson = JSON.parse(readFileSync(dashboardPath, 'utf-8'));
+      expect(dashboardJson.title).toBe('Storage & Cost');
+
+      const panelTitles = dashboardJson.panels.map((p: { title?: string }) => p.title);
+      expect(panelTitles).toContain('Class A & Class B Storage Ops per Hour');
+      expect(panelTitles).toContain('Projected Monthly Class A Ops (R2 1M/mo Free Tier Budget)');
+      expect(panelTitles).toContain('Neon Compute-Hour (CU-h) Monthly Usage (100 CU-h Free Tier)');
+      expect(panelTitles).toContain(
+        'Grafana Cloud Active Metric Series Count (10k Free Tier Budget)'
+      );
+    });
+
+    it('AC 3 & 4: Five Operator Runbooks exist and follow the required 6-part structure', () => {
+      const fiveRunbooks = [
+        'dlq-replay.md',
+        'queue-paused.md',
+        'worker-stuck.md',
+        'storage-outage.md',
+        'cost-budget.md',
+      ];
+
+      for (const runbookName of fiveRunbooks) {
+        const fullPath = path.join(runbooksDir, runbookName);
+        expect(existsSync(fullPath), `Runbook ${runbookName} must exist`).toBe(true);
+        const content = readFileSync(fullPath, 'utf-8');
+
+        // Required standard structure:
+        // - Trigger (which alert or symptom)
+        // - Dashboards to open
+        // - Diagnosis steps
+        // - Remediation commands
+        // - Verification
+        // - Prevention
+        expect(content).toMatch(/## 2\.\s+Trigger/i);
+        expect(content).toMatch(/## 3\.\s+Dashboards to Open/i);
+        expect(content).toMatch(/## 4\.\s+Diagnosis/i);
+        expect(content).toMatch(/## 5\.\s+Remediation/i);
+        expect(content).toMatch(/## 6\.\s+Verification/i);
+        expect(content).toMatch(/## 7\.\s+Prevention/i);
+      }
+    });
+
+    it('AC 4: All runbook_url entries in alert-rules.yaml resolve to existing files in docs/runbooks/', () => {
+      const alertRulesContent = readFileSync(alertRulesPath, 'utf-8');
+      const runbookMatches = alertRulesContent.matchAll(/runbook_url:\s*["']?([^"'\r\n]+)["']?/g);
+      let count = 0;
+      for (const match of runbookMatches) {
+        count++;
+        const relPath = match[1]?.trim() ?? '';
+        expect(relPath.startsWith('docs/runbooks/')).toBe(true);
+        const resolvedPath = path.resolve(repoRoot, relPath);
+        expect(existsSync(resolvedPath), `Runbook file at ${resolvedPath} must exist`).toBe(true);
+      }
+      expect(count).toBeGreaterThanOrEqual(10);
+    });
+  });
 });

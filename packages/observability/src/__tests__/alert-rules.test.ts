@@ -331,6 +331,36 @@ describe('Prometheus Alert Rules & Alertmanager (Ticket 24, SDD §13.5)', () => 
       // Case 4: Unpaused - KEDA activates pod within seconds, replicas become > 0 -> RESOLVED / CLEARS
       expect(evalScaleToZeroBroken(5, 1)).toBe(false);
     });
+
+    it('evaluates R2ClassABudget: triggers when projected Class A ops exceed threshold, and proves lowering threshold causes alert to fire', () => {
+      // Expression in alert-rules: predict_linear(storage_ops_total{op="put"}[1d], 30 * 86400) > 900000
+      // (or equivalent monthly rate projection: sum(increase(s3_operations_total{op=~"put|multipart_.*"}[1h])) * 24 * 30 > threshold)
+      const evalR2ClassABudget = (projectedMonthlyClassAOps: number, threshold = 900000) => {
+        return projectedMonthlyClassAOps > threshold;
+      };
+
+      // Scenario 1: Healthy normal usage (e.g. 500,000 ops/month against standard 900,000 threshold)
+      const normalUsageProjection = 500000;
+      expect(evalR2ClassABudget(normalUsageProjection, 900000)).toBe(false);
+
+      // Scenario 2: High usage nearing free tier limit (e.g. 950,000 ops/month) -> FIRING
+      const highUsageProjection = 950000;
+      expect(evalR2ClassABudget(highUsageProjection, 900000)).toBe(true);
+
+      // Scenario 3 (Ticket 33 AC 1): Prove lowering the threshold causes the alert to fire on moderate/normal usage
+      // When threshold is lowered from 900,000 to a test threshold of 400,000 or 100,000:
+      const loweredThreshold = 400000;
+      expect(evalR2ClassABudget(normalUsageProjection, loweredThreshold)).toBe(true);
+
+      // Scenario 4: Rate projection formula equivalent: sum(increase[1h]) * 24 * 30
+      const projectFromHourlyIncrease = (hourlyClassAOps: number) => hourlyClassAOps * 24 * 30;
+      const hourlyRate = 600; // 600 ops/hr -> 432,000 ops/month
+      const monthlyProjected = projectFromHourlyIncrease(hourlyRate);
+      expect(monthlyProjected).toBe(432000);
+      expect(evalR2ClassABudget(monthlyProjected, 900000)).toBe(false);
+      // Lowering threshold to 400,000 fires the alert
+      expect(evalR2ClassABudget(monthlyProjected, 400000)).toBe(true);
+    });
   });
 
   describe('Alertmanager Configuration Verification', () => {

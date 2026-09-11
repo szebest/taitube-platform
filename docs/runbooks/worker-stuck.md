@@ -31,17 +31,25 @@ The `housekeeping` worker executes five automated job schedulers:
 
 ---
 
-## 2. Alerting & Symptoms
-
-### Key Alerts
-- **`VideoProcessingStuck`**: Fires when videos remain in `PROCESSING` or `PROBING` for > 3 hours.
-- **`ReconcilerRepairsHigh`**: Fires when `reconciler_repairs_total` spikes, indicating Redis job dropouts or API dual-write failures.
-- **`StaleUploadsHigh`**: Fires when more than 50 uploads remain in `UPLOADING` without progress for > 24 hours.
-- **`DLQEntryCreated`**: Fires when `dlq_entries_total{error_code="ORPHANED"}` increments.
+## 2. Trigger
+- **Alert / Symptom**:
+  - `WorkerStuck`: Fires when a processing step remains in `RUNNING` status with heartbeat older than 5 minutes (`processing_steps_running_stale > 0`).
+  - `VideoProcessingStuck`: Fires when videos remain in `PROCESSING` or `PROBING` for > 3 hours.
+  - `ReconcilerRepairsHigh`: Fires when `reconciler_repairs_total` spikes, indicating Redis job dropouts or API dual-write failures.
+  - `StaleUploadsHigh`: Fires when more than 50 uploads remain in `UPLOADING` without progress for > 24 hours.
+  - `DLQEntryCreated`: Fires when `dlq_entries_total{error_code="ORPHANED"}` increments.
 
 ---
 
-## 3. Triage & Investigation Steps
+## 3. Dashboards to Open
+- **Workers Dashboard**: `/d/workers` — Check "Stuck Worker Steps (Stale Heartbeats)", worker CPU/memory, and OOM exits.
+- **Pipeline Overview**: `/d/pipeline` — Check "Videos by Status" (videos in `PROBING` or `PROCESSING`), and time-to-ready latency.
+- **Queues Dashboard**: `/d/queues` — Check active vs waiting jobs across transcode and package queues.
+- **Bull Board UI**: `http://localhost:3000/admin/queues` — Inspect queue depths and stalled counters.
+
+---
+
+## 4. Diagnosis Steps
 
 ### Step 1: Query Stuck Videos in Postgres
 Inspect any videos stuck in `PROCESSING` or `PROBING`:
@@ -74,7 +82,7 @@ Look at `waiting`, `active`, and `failed` counts for `transcode-1080p`, `transco
 
 ---
 
-## 4. Remediation Actions
+## 5. Remediation Commands
 
 ### Option A: Let the Automated Reconciler Handle the Video
 - **For `UPLOADED` videos with missing probe jobs**: Wait for `reconcile-uploads` (`*/15 * * * *`). It will detect the video and re-enqueue with deterministic ID `${videoId}--probe--g${generation}`.
@@ -109,8 +117,15 @@ aws --endpoint-url http://localhost:9000 s3api abort-multipart-upload \
 
 ---
 
-## 5. Prevention & Guardrails
+## 6. Verification
+1. Verify processing step reaches `COMPLETED` or `FAILED`.
+2. Verify video transitions from `PROCESSING` to `READY` with playable master playlist.
+3. Confirm `processing_steps_running_stale` drops back to 0.
+4. Verify alert `WorkerStuck` resolves in Alertmanager.
 
+---
+
+## 7. Prevention
 1. **Autosuspend Compatibility (Neon Guardrail)**: Reconciler schedules run every 10–15 minutes, allowing Neon compute to idle down (5 min autosuspend). Do not reduce cron frequency below 10 minutes in cloud production.
 2. **Deterministic Job IDs**: All probe and stage jobs use `${videoId}--${step}--g${generation}`. Duplicate enqueues are idempotent no-ops.
-3. **CAS State Transitions**: All status changes use compare-and-set queries (`WHERE id = $1 AND status = '...'`), preventing race conditions between concurrent housekeeping workers.
+3. **CAS State Transitions & Fencing Tokens**: All status changes use compare-and-set queries (`WHERE id = $1 AND status = '...'`) and lock token validation on processing step completion, preventing zombie workers from corrupting state.
