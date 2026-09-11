@@ -19,7 +19,8 @@ images:
     newName: ghcr.io/szebest/vp-worker
     newTag: latest
 
-# Cloud-specific ConfigMap overrides
+# Cloud-specific ConfigMap overrides and ScaledObject sizing per SDD §12.3:
+# maxReplicaCount is 1 for 1080p and 720p; 2 for 480p and probe.
 patches:
   - target:
       kind: ConfigMap
@@ -46,11 +47,6 @@ patches:
       - op: add
         path: /data/HOUSEKEEPING_INTERVAL_MS
         value: "900000"
-
-# Sizing per SDD §12.3 & Ticket 26 AC 1:
-# On constrained cloud VPS (e.g. Hetzner CAX11 2-vCPU / 4GB):
-# maxReplicaCount is 1 for 1080p and 720p; 2 for 480p and probe.
-patches:
   - target:
       group: keda.sh
       version: v1alpha1

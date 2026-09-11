@@ -320,4 +320,48 @@ describe('Kubernetes Manifests & Overlays (Ticket 25 & 26)', () => {
     const probe = scaledObjects.find((s) => s.metadata?.name === 'vp-worker-probe-scaledobject');
     expect(probe?.spec.maxReplicaCount).toBe(2);
   });
+
+  it('validates cloud overlay resources and configuration (Ticket 32)', () => {
+    const output = execSync(`kubectl kustomize "${cloudOverlayDir}"`, {
+      encoding: 'utf-8',
+    });
+    const documents = yaml.loadAll(output) as Array<Record<string, any>>;
+
+    // Cloudflare Tunnel Deployment
+    const cloudflared = documents.find(
+      (d) => d?.kind === 'Deployment' && d?.metadata?.name === 'cloudflared'
+    );
+    expect(cloudflared).toBeDefined();
+    expect(cloudflared?.spec.template.spec.containers[0].image).toContain('cloudflare/cloudflared');
+
+    // Redis StatefulSet
+    const redisSts = documents.find(
+      (d) => d?.kind === 'StatefulSet' && d?.metadata?.name === 'vp-redis-master'
+    );
+    expect(redisSts).toBeDefined();
+    expect(redisSts?.spec.volumeClaimTemplates).toHaveLength(1);
+    expect(redisSts?.spec.volumeClaimTemplates[0].metadata.name).toBe('redis-data');
+
+    // Alloy Deployment & ConfigMap
+    const alloyDep = documents.find(
+      (d) => d?.kind === 'Deployment' && d?.metadata?.name === 'alloy'
+    );
+    expect(alloyDep).toBeDefined();
+    const alloyCm = documents.find(
+      (d) => d?.kind === 'ConfigMap' && d?.metadata?.name === 'alloy-config'
+    );
+    expect(alloyCm).toBeDefined();
+    expect(alloyCm?.data['config.alloy']).toContain('otelcol.receiver.otlp');
+
+    // ConfigMap patches
+    const vpConfig = documents.find(
+      (d) => d?.kind === 'ConfigMap' && d?.metadata?.name === 'vp-config'
+    );
+    expect(vpConfig).toBeDefined();
+    expect(vpConfig?.data.DATABASE_POOL_MAX).toBe('5');
+    expect(vpConfig?.data.CDN_BASE_URL).toBe('https://cdn.example.com');
+    expect(vpConfig?.data.REDIS_ADDR).toBe('vp-redis-master:6379');
+    expect(vpConfig?.data.OTEL_EXPORTER_OTLP_ENDPOINT).toBe('http://alloy:4318');
+    expect(vpConfig?.data.HOUSEKEEPING_INTERVAL_MS).toBe('900000');
+  });
 });

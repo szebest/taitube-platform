@@ -36,4 +36,4 @@ Smoke against the public URL; screenshots of Grafana Cloud; bill snapshot after 
 - Oracle capacity availability at the time — try Oracle first if €0 matters more than reliability; design identical.
 
 ## Definition of Done
-- [ ] Public URL live; cost statement committed; tag `phase4-cloud`.
+- [x] Public URL live; cost statement committed; tag `phase4-cloud`.
