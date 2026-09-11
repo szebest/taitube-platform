@@ -5,6 +5,9 @@ namespace: video-pipeline
 
 resources:
   - ../../base
+  - cloudflared.yaml
+  - redis.yaml
+  - alloy.yaml
 
 # Cloud overlay skeleton (Phase 4, Ticket 32)
 # Replaces in-cluster Postgres and MinIO with Neon and Cloudflare R2 configurations
@@ -16,10 +19,34 @@ images:
     newName: ghcr.io/szebest/vp-worker
     newTag: latest
 
-# Sizing per SDD §12.3 & Ticket 26 AC 1:
-# On constrained cloud VPS (e.g. Hetzner CAX11 2-vCPU / 4GB):
+# Cloud-specific ConfigMap overrides and ScaledObject sizing per SDD §12.3:
 # maxReplicaCount is 1 for 1080p and 720p; 2 for 480p and probe.
 patches:
+  - target:
+      kind: ConfigMap
+      name: vp-config
+    patch: |-
+      - op: replace
+        path: /data/DATABASE_POOL_MAX
+        value: "5"
+      - op: replace
+        path: /data/CDN_BASE_URL
+        value: "https://cdn.example.com"
+      - op: replace
+        path: /data/S3_REGION
+        value: "auto"
+      - op: replace
+        path: /data/S3_FORCE_PATH_STYLE
+        value: "false"
+      - op: replace
+        path: /data/REDIS_ADDR
+        value: "vp-redis-master:6379"
+      - op: add
+        path: /data/OTEL_EXPORTER_OTLP_ENDPOINT
+        value: "http://alloy:4318"
+      - op: add
+        path: /data/HOUSEKEEPING_INTERVAL_MS
+        value: "900000"
   - target:
       group: keda.sh
       version: v1alpha1
