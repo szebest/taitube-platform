@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vp-ingress
+  namespace: video-pipeline
+  annotations:
+    ingress.class: traefik
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /v1
+            pathType: Prefix
+            backend:
+              service:
+                name: vp-api
+                port:
+                  number: 3000
+          - path: /readyz
+            pathType: Exact
+            backend:
+              service:
+                name: vp-api
+                port:
+                  number: 3000
+          - path: /livez
+            pathType: Exact
+            backend:
+              service:
+                name: vp-api
+                port:
+                  number: 3000
+          - path: /healthz
+            pathType: Exact
+            backend:
+              service:
+                name: vp-api
+                port:
+                  number: 3000

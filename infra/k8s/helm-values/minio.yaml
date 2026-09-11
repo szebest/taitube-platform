@@ -1,0 +1,27 @@
+# infra/k8s/helm-values/minio.yaml
+rootUser: minioadmin
+rootPassword: minioadmin
+
+mode: standalone
+replicas: 1
+
+persistence:
+  enabled: true
+  size: 10Gi
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+defaultBuckets: "raw,public"
+
+postJob:
+  podAnnotations: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi

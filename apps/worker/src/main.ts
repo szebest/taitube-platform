@@ -15,7 +15,23 @@ export async function main(): Promise<() => Promise<void>> {
     );
   }
 
+  const heartbeatPath = process.env['WORKER_HEARTBEAT_PATH'] || '/tmp/vp/heartbeat';
+  const writeHeartbeat = async () => {
+    try {
+      const fs = await import('node:fs/promises');
+      const path = await import('node:path');
+      await fs.mkdir(path.dirname(heartbeatPath), { recursive: true });
+      await fs.writeFile(heartbeatPath, `${Math.floor(Date.now() / 1000)}\n`);
+    } catch {
+      // Ignore heartbeat write errors (e.g. read-only if misconfigured)
+    }
+  };
+  await writeHeartbeat();
+  const heartbeatTimer = setInterval(writeHeartbeat, 15000);
+  heartbeatTimer.unref?.();
+
   const shutdown = async () => {
+    clearInterval(heartbeatTimer);
     console.log('[worker] Received shutdown signal, closing worker gracefully...');
     await runner.close();
     console.log('[worker] Shutdown complete.');

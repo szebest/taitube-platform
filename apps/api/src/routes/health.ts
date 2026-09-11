@@ -13,7 +13,11 @@ export function registerHealthRoutes(app: FastifyInstance, options: HealthRouteO
   const { dbClient, cache, storage } = options;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  // Liveness probe (SDD §6.1)
+  // Liveness probe (SDD §6.1, SDD §12.2)
+  const livenessHandler = async () => {
+    return { status: 'ok' as const };
+  };
+
   server.get(
     '/healthz',
     {
@@ -28,9 +32,24 @@ export function registerHealthRoutes(app: FastifyInstance, options: HealthRouteO
         },
       },
     },
-    async (_request, reply) => {
-      return reply.status(200).send({ status: 'ok' });
-    }
+    livenessHandler
+  );
+
+  server.get(
+    '/livez',
+    {
+      schema: {
+        tags: ['Ops'],
+        summary: 'Liveness probe (K8s alias)',
+        description: 'Returns 200 if API server process is alive.',
+        response: {
+          200: z.object({
+            status: z.literal('ok'),
+          }),
+        },
+      },
+    },
+    livenessHandler
   );
 
   // Readiness probe: checks Postgres, Redis, S3 (SDD §6.1, AC 6)

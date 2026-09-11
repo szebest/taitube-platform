@@ -1,0 +1,25 @@
+# infra/k8s/helm-values/keda.yaml
+image:
+  keda:
+    tag: 2.14.0
+  metricsApiServer:
+    tag: 2.14.0
+
+crds:
+  install: true
+
+resources:
+  operator:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  metricServer:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
