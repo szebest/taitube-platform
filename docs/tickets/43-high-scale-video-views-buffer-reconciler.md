@@ -15,38 +15,49 @@
 Directly incrementing a video's view counter in PostgreSQL (UPDATE videos SET views = views + 1 WHERE id = ) on every playback event saturates database locks and crashes the DB under heavy traffic.
 
 This ticket delivers:
-1. **Redis-Buffered View Counter**:
-   - POST /v1/videos/:id/views registers a playback view.
-   - Deduplication: Uses a sliding window or HyperLogLog (vp:views:dedup:{videoId}:{date}) to deduplicate repeated views from the same IP/user within a cooldown period (e.g. 30 seconds).
-   - Atomic buffering: Increments in Redis key vp:views:buffer:{videoId}.
-2. **Batched View Flush Reconciler (BullMQ Worker)**:
-   - Schedulable worker job running periodically (e.g., every 10–30 seconds) that collects dirty keys, sums increments, and flushes batch updates to PostgreSQL in a single multi-row UPDATE query.
-3. **Persistent View Analytics**:
-   - video_views_daily table for historical views per day per video.
-   - Aggregate views_count on videos updated in batch.
-4. **Creator Studio Analytics API**:
-   - GET /v1/creator/videos/:id/analytics: Views over time (daily buckets for last 7, 30, 90 days), total views.
-   - GET /v1/creator/channel/analytics: Total channel views, subscriber growth over time.
+1. **Redis-Buffered View Ingestion & Anti-Fraud Engine**:
+   - `POST /v1/videos/:id/views` registers playback telemetry (session UUID, watch duration, client timestamp).
+   - **Anti-Fraud Filter**: Discards synthetic bots or pings with watch time < 5s.
+   - **HyperLogLog Viewer Deduplication**: Uses Redis HyperLogLog (`vp:views:dedup:{videoId}:{YYYYMMDD}`) with a 24-hour sliding TTL. Constant 12 KB memory footprint per video for millions of unique viewers.
+   - **Atomic View Buffer**: Increments dirty video view counts via Redis Hash `vp:views:buffer` (`HINCRBY vp:views:buffer {videoId} 1`) returning `202 Accepted` in < 2ms without holding database connections.
+2. **Zero-Loss Atomic Drain Reconciler (BullMQ & Lua Script)**:
+   - Reconciler worker runs periodically (every 5–15s).
+   - Executes atomic Redis Lua script to swap and snapshot `vp:views:buffer` to `vp:views:flush:{batchId}` without race conditions or lost increments.
+   - Consolidates updates and executes a high-throughput multi-row PostgreSQL `UPDATE videos` query using SQL `VALUES (...)` tuples and transactional `INSERT INTO video_views_daily ... ON CONFLICT DO UPDATE`.
+3. **Resilient Circuit Breaker & Fallback**:
+   - If Redis is degraded, gracefully fails over to in-process memory ring-buffer without dropping client view beacons or throwing 500 errors.
+4. **Creator Studio High-Scale Analytics API**:
+   - `GET /v1/creator/videos/:id/analytics`: Views timeline with date bucketing (last 7, 30, 90 days), total views, average retention.
+   - `GET /v1/creator/channel/analytics`: Aggregated channel views metrics, daily velocity, top-performing videos.
 
 ## Acceptance criteria
 
-- [ ] Migration creating video_views_daily:
-  - video_id UUID not null references videos.id on delete cascade, view_date date not null, views integer not null default 0.
-  - Primary key (video_id, view_date).
-- [ ] Add views_count bigint not null default 0 to videos table with index.
-- [ ] ViewBufferPort in @vp/core/ports/view-buffer.port.ts and Redis adapter in adapters/redis/redis-view-buffer.adapter.ts.
-- [ ] POST /v1/videos/:id/views endpoint:
-  - Takes client telemetry (session id, watch duration).
-  - Enforces deduplication window per viewer.
-  - Buffers increment in Redis, returning 202 Accepted immediately (< 10ms latency).
-- [ ] BullMQ scheduled job flush-video-views:
-  - Runs periodically via worker reconciler scheduler.
-  - Reads buffered views, flushes to videos.views_count and video_views_daily in a single transaction.
-  - Clears flushed Redis buffers safely without losing newly arriving increments.
+- [ ] Database migration creating `video_views_daily`:
+  - `video_id UUID not null references videos.id on delete cascade, view_date date not null, views integer not null default 0`.
+  - Primary key `(video_id, view_date)` with composite index on `(view_date DESC, video_id)`.
+- [ ] Add `views_count bigint not null default 0` to `videos` table with index.
+- [ ] `ViewBufferPort` in `@vp/core/ports/view-buffer.port.ts` and `RedisViewBufferAdapter` in `adapters/redis/redis-view-buffer.adapter.ts`.
+- [ ] `POST /v1/videos/:id/views` endpoint:
+  - Validates telemetry payload with Zod schema (sessionId, watchSeconds, videoDuration).
+  - Evaluates HyperLogLog deduplication (`PFADD vp:views:dedup:{videoId}:{date} {sessionId}`).
+  - Buffers increment in Redis, returning `202 Accepted` immediately (< 5ms p99 latency).
+- [ ] BullMQ scheduled job `flush-video-views`:
+  - Runs on worker reconciler schedule (every 10s).
+  - Drains snapshot key atomically, executes batched PostgreSQL update in single transaction:
+    ```sql
+    UPDATE videos AS v
+    SET views_count = v.views_count + b.delta
+    FROM (VALUES ($1::uuid, $2::bigint), ...) AS b(video_id, delta)
+    WHERE v.id = b.video_id;
+    ```
+  - Upserts daily metrics into `video_views_daily`.
+  - Clears flushed batch key on successful commit.
 - [ ] Creator analytics endpoints:
-  - GET /v1/creator/videos/:id/analytics: Requires creator ownership. Returns views timeline.
-  - GET /v1/creator/channel/analytics: Aggregated channel views metrics.
-- [ ] Load / concurrency test: Simulating 5,000 rapid view requests produces 0 database lock timeouts and results in exact consolidated view counts in Postgres after worker flush.
+  - `GET /v1/creator/videos/:id/analytics`: Requires creator ownership. Returns daily views timeseries and summary stats.
+  - `GET /v1/creator/channel/analytics`: Aggregated channel views metrics.
+- [ ] Concurrency & resilience tests:
+  - Simulating 10,000 rapid view requests produces 0 database lock timeouts and exact consolidated view count in Postgres.
+  - Simulated worker restart mid-batch recovers uncommitted snapshot without view counter loss.
 
 ## Out of scope
 
@@ -54,14 +65,16 @@ This ticket delivers:
 
 ## Notes for the implementer
 
-- **Atomic Redis buffer drain pattern:**
-  Rename the dirty buffer key to a processing key before reading:
-  ```ts
-  const processingKey = `vp:views:processing:${Date.now()}`;
-  await redis.rename(BUFFER_KEY, processingKey);
-  const data = await redis.hgetall(processingKey);
-  // Batch update Postgres
-  await redis.del(processingKey);
+- **Atomic Redis Lua buffer snapshot script:**
+  ```lua
+  -- Atomic swap buffer to batch key
+  local bufferKey = KEYS[1]
+  local batchKey = KEYS[2]
+  if redis.call('EXISTS', bufferKey) == 1 then
+    redis.call('RENAME', bufferKey, batchKey)
+    return 1
+  end
+  return 0
   ```
 - File length limit: <= 250 lines per file.
 

@@ -15,15 +15,20 @@
 The frontend allows viewers to like and dislike videos (POST /videos/:id/like, DELETE /videos/:id/like). In a viral video scenario, naive transactional DB updates on every reaction lock table rows and destroy database write throughput.
 
 This ticket delivers:
-1. **Durable storage**: PostgreSQL video_reactions table (user_id, video_id, 
-eaction_type: like / dislike, created_at) with unique composite key (user_id, video_id).
-2. **High-performance Redis cache & counters**:
-   - Redis hash or string counters caching likes_count and dislikes_count for instant retrieval with video detail queries.
-   - User reaction lookup cached in Redis set/hash to avoid DB queries on video page load.
-3. **Atomic API mutations**:
+1. **Durable Storage & Atomic Upsert**:
+   - PostgreSQL `video_reactions` table (`user_id`, `video_id`, `reaction_type`: `LIKE` / `DISLIKE`, `created_at`, `updated_at`) with unique composite key `(user_id, video_id)`.
+   - Atomic PostgreSQL upsert pattern updating state without race conditions.
+2. **High-Performance Multi-Tier Redis Counter Cache**:
+   - Redis hash `vp:video:{id}:reactions` (`likes`, `dislikes`) for sub-millisecond retrieval.
+   - User reaction lookup cached in Redis set/hash (`vp:user:{userId}:reactions`) to eliminate DB hits on video page load.
+3. **Cache Stampede Protection (Singleflight & Probabilistic Early Expiration)**:
+   - Singleflight promise coalescing in Fastify: if 1,000 concurrent requests miss the reaction cache for a newly published or viral video, exactly 1 query executes against Postgres while all 999 callers await the coalesced result.
+   - XFetch / Probabilistic background refresh for hot video counters.
+4. **Periodic Drift Reconciler (BullMQ Worker)**:
+   - Scheduled background job running hourly/daily verifying that cached counters match ground-truth `COUNT(*)` from `video_reactions`, repairing any drift automatically.
+5. **Atomic API Mutations**:
    - `PUT /v1/videos/:id/reactions` (payload `{ type: 'LIKE' | 'DISLIKE' | 'NONE' }`): Idempotent upsert. Atomically transitions between states (e.g. from dislike to like or clearing reaction) and adjusts counters cleanly in Redis and Postgres.
    - `GET /v1/videos/:id/reactions/me`: Returns current authenticated caller reaction state (`{ reaction: 'LIKE' | 'DISLIKE' | null }`).
-4. Clean, standard RESTful design with zero legacy shims.
 
 ## Acceptance criteria
 
@@ -34,12 +39,16 @@ eaction_type: like / dislike, created_at) with unique composite key (user_id, vi
 - [ ] `VideoReactionRepositoryPort` in `@vp/core/repositories/video-reaction-repository.port.ts`.
 - [ ] Modular `PostgresVideoReactionRepository` in `adapters/postgres/repositories/postgres-video-reaction-repository.ts` (<= 250 lines).
 - [ ] In-memory implementation `InMemoryVideoReactionRepository` with `.clear()`.
-- [ ] Redis caching service for reaction counts (`vp:video:{id}:reactions` hash with `likes` and `dislikes`).
+- [ ] Redis reaction cache adapter with singleflight deduplication (`adapters/redis/redis-reaction-cache.adapter.ts`).
 - [ ] Route implementations:
-  - `PUT /v1/videos/:id/reactions` (auth required): records reaction, adjusts counters atomically.
+  - `PUT /v1/videos/:id/reactions` (auth required): records reaction, adjusts counters atomically in Redis and Postgres.
   - `GET /v1/videos/:id/reactions/me`: returns authenticated caller reaction.
   - Video response in `GET /v1/videos/:id` enriched with `likesCount` and `dislikesCount`.
-- [ ] Concurrency test: 50 simultaneous reaction toggles from different users update the counters accurately without drift or deadlocks.
+- [ ] Scheduled reconciler job `reconcile-reaction-counters`:
+  - Compares Redis/denormalized counters with actual count from `video_reactions` for active videos.
+- [ ] Concurrency & stampede tests:
+  - 100 simultaneous concurrent requests on an uncached video trigger only 1 Postgres query.
+  - 50 simultaneous reaction toggles from different users update the counters accurately without drift or deadlocks.
 
 ## Out of scope
 

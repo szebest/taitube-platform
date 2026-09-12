@@ -17,7 +17,11 @@ The legacy frontend (`szebest/youtube-frontend`) hardcoded static numeric catego
 This ticket delivers:
 1. **PostgreSQL dynamic categories table** (`categories`) with slug uniqueness, active toggle, and display ordering.
 2. **Administrative category CRUD** (`POST /v1/admin/categories`, `PATCH /v1/admin/categories/:id`, `DELETE /v1/admin/categories/:id`) restricted to users with `role=admin` or tier permissions.
-3. **High-performance public API** (`GET /v1/categories`) cached in Redis with HTTP conditional requests (`ETag` / `If-None-Match` returning `304 Not Modified`). Cache invalidation happens immediately upon any admin modification.
+3. **L1/L2 Multi-Tier Caching Architecture**:
+   - **L1 In-Memory Fastify Cache**: Ultra-fast in-process LRU memory cache (TTL: 60s) serving categories in 0.05ms without any Redis network hops for 99.9% of queries.
+   - **L2 Distributed Redis Cache**: `vp:cache:categories:v1` shared across all API instances.
+   - **Distributed Invalidation via Redis Pub/Sub**: When an admin mutates a category, Fastify broadcasts `vp:events:cache:categories:invalidated` over Redis Pub/Sub, immediately purging L1 in-memory caches across all cluster pods simultaneously.
+   - **HTTP 304 Not Modified & ETag**: Response includes deterministic SHA-1 `ETag` and `Cache-Control: public, max-age=300, stale-while-revalidate=60`. Clients sending `If-None-Match` receive instantaneous `304 Not Modified` with zero serialization cost.
 4. Clean port and repository abstractions following hexagonal architecture and file size limits (<= 250 lines).
 
 ## Acceptance criteria
@@ -27,21 +31,24 @@ This ticket delivers:
 - [ ] `CategoryRepositoryPort` defined in `@vp/core/repositories/category-repository.port.ts` and domain entity in `@vp/core/domain/category.ts`.
 - [ ] Modular PostgreSQL implementation in `adapters/postgres/repositories/postgres-category-repository.ts` (<= 250 lines).
 - [ ] In-memory test double in `adapters/in-memory/repositories/in-memory-category-repository.ts` with `.clear()` encapsulation.
+- [ ] L1/L2 Cache Service in `adapters/redis/category-cache.service.ts`:
+  - L1 in-process LRU cache with 60s TTL.
+  - L2 Redis caching key `vp:cache:categories:v1`.
+  - Redis Pub/Sub subscriber invalidating L1 cache on multi-replica setups.
 - [ ] `GET /v1/categories` public endpoint (no auth required):
   - Returns array of active categories sorted by `sort_order ASC, name ASC`.
-  - Backed by Redis cache key `vp:cache:categories:v1`.
   - Sets HTTP `ETag` and `Cache-Control: public, max-age=300, stale-while-revalidate=60`.
   - Supports `If-None-Match` returning `304 Not Modified` with zero database round-trips.
 - [ ] Admin endpoints (`POST /v1/admin/categories`, `PATCH /v1/admin/categories/:id`, `DELETE /v1/admin/categories/:id`):
   - Enforces `requireAuth` + admin verification (role or dev admin token).
   - Validates request body using Zod (`name`, `slug` format `^[a-z0-9-]+$`, `sortOrder`, `isActive`).
-  - Automatically evicts Redis cache key `vp:cache:categories:v1` on any mutation.
+  - Automatically purges L1/L2 caches and broadcasts invalidation on any mutation.
 - [ ] Route tests via `app.inject()`:
   - Anonymous `GET /v1/categories` returns 200 with categories and valid `ETag`.
   - Repeated `GET /v1/categories` with matching `If-None-Match` returns 304.
   - Non-admin callers get 403 on `/v1/admin/categories/*`.
   - Admin mutations invalidate the cache and subsequent GET returns fresh data with new `ETag`.
-- [ ] OpenAPI 3.1 schema updated and registered for `/docs`.
+- [ ] Multi-instance test: Invalidation on Node instance A purges in-memory L1 cache on Node instance B via Pub/Sub.
 
 ## Out of scope
 
