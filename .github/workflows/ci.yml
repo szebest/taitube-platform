@@ -228,7 +228,7 @@ jobs:
 
       - name: Stop infrastructure services
         if: always()
-        run: docker compose -f infra/compose/docker-compose.yml down -v
+        run: docker compose -f infra/compose/docker-compose.yml down -v --remove-orphans || true
 
   e2e:
     name: e2e-smoke
@@ -281,5 +281,5 @@ jobs:
 
       - name: Stop stack
         if: always()
-        run: docker compose -f infra/compose/docker-compose.yml down -v
+        run: docker compose -f infra/compose/docker-compose.yml down -v --remove-orphans || true
 
