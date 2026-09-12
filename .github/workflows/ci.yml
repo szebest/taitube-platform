@@ -55,10 +55,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies (ffmpeg)
+      - name: Install system dependencies (ffmpeg, fonts)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core fontconfig
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -98,10 +98,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies (ffmpeg)
+      - name: Install system dependencies (ffmpeg, fonts)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core fontconfig
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -141,12 +141,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies (psql, redis-cli, ffmpeg, curl, mc)
+      - name: Install system dependencies (psql, redis-cli, ffmpeg, curl)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends postgresql-client redis-tools ffmpeg curl
-          sudo curl -sSf https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
-          sudo chmod +x /usr/local/bin/mc
+          sudo apt-get install -y --no-install-recommends postgresql-client redis-tools ffmpeg curl fonts-dejavu-core fontconfig
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -186,30 +184,7 @@ jobs:
           cp .env.example .env
           docker compose -f infra/compose/docker-compose.yml up -d postgres redis minio minio-init --wait
 
-      - name: Verify service containers connectivity (psql, redis-cli, mc)
-        run: |
-          echo "==> Testing PostgreSQL connectivity via psql..."
-          PGPASSWORD=vp psql -h localhost -p 5432 -U vp -d vp -c "SELECT 1 as connected;"
-
-          echo "==> Testing Redis connectivity via redis-cli PING..."
-          redis-cli -h localhost -p 6379 -a vp ping
-
-          echo "==> Testing MinIO bucket listing via mc ls..."
-          mc alias set local http://localhost:9000 minioadmin minioadmin
-          mc ls local
-
       - name: Run infrastructure smoke test (infra/compose/test.sh)
-        env:
-          TEST_MODE: direct
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
-          POSTGRES_USER: vp
-          POSTGRES_DB: vp
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-          REDIS_PASSWORD: vp
-          MINIO_HOST: localhost
-          MINIO_PORT: 9000
         run: bash infra/compose/test.sh
 
       - name: Run integration tests
