@@ -155,7 +155,7 @@ export async function seedDatabase(connectionUrl?: string): Promise<void> {
       },
     ])
     .onConflictDoUpdate({
-      target: [renditions.videoId, renditions.name],
+      target: renditions.id,
       set: {
         status: 'DONE',
       },

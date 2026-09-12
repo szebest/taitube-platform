@@ -319,7 +319,7 @@ jobs:
           REDIS_PASSWORD: vp
         run: |
           cp .env.example .env
-          docker compose -f infra/compose/docker-compose.yml up -d --build --wait
+          docker compose -f infra/compose/docker-compose.yml up -d --build --wait --wait-timeout 120
 
       - name: Run E2E smoke test
         run: make smoke
