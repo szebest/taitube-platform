@@ -197,7 +197,7 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]?.trim() ?? '';
     const timeMatch = line.match(
-      /((?:\d{1,2}:)?\d{2}:\d{2}(?:\.\d{1,3})?)\s*-->\s*((?:\d{1,2}:)?\d{2}:\d{2}(?:\.\d{1,3})?)/
+      /(\d{2}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}:\d{2}|\d{2}:\d{2})\s*-->\s*(\d{2}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}:\d{2}|\d{2}:\d{2})/
     );
     if (!timeMatch) {
       continue;
