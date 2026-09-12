@@ -55,7 +55,7 @@ This ticket delivers the **Multi-Resource Search & Discovery Engine**:
      - Playlists: `Score = ts_rank_cd * log10(video_count + 5)`
    - **Trigram Typo Recovery:** If lexical full-text query produces zero hits, automatically falls back to `similarity(title, :query) > 0.25` across all three entity tables.
 
-4. **Multi-Type Autocomplete Suggestions API (`GET /v1/search/suggestions?q=...`)**:
+4. **Ultra-Low Latency Autocomplete Suggestions Engine (`GET /v1/search/suggestions?q=...`)**:
    - Returns up to 10 typed suggestions combining popular query phrases and direct channel quick-hits:
      ```ts
      interface SearchSuggestion {
@@ -66,10 +66,11 @@ This ticket delivers the **Multi-Resource Search & Discovery Engine**:
        avatarUrl?: string;
      }
      ```
-   - Sub-15ms response backed by Redis cache (`vp:search:suggest:{prefix}`).
+   - Sub-5ms response backed by Redis Sorted Set prefix index / Trie (`vp:search:suggest:{prefix}`).
 
-5. **Sub-15ms Redis Query Cache**:
+5. **Sub-10ms Redis Query Cache with Singleflight Stampede Protection**:
    - Caches search responses with SHA-256 query key: `vp:search:q:{type}:{hash}` with 120s TTL.
+   - Singleflight promise coalescing in Fastify: prevents database query storms when thousands of users search for breaking or trending topics simultaneously.
    - Emits `X-Cache: HIT` / `X-Cache: MISS` headers.
 
 ## Acceptance criteria

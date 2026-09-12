@@ -36,9 +36,11 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
      - Returns all playlists owned by the authenticated user with a computed boolean flag `containsVideo: true/false`.
      - Powers the frontend "Save to Playlist" modal in a single round-trip without requiring client-side item fan-out.
 
-4. **Watch History & Playback Progress Engine**:
+4. **High-Scale Watch History & Resumable Playhead Engine**:
    - **`watch_history` table:** `id UUIDv7 PK, user_id UUID FK on delete cascade, video_id UUID FK on delete cascade, progress_seconds integer not null, duration_seconds integer not null, watched_at timestamptz not null`. Unique on `(user_id, video_id)`.
-   - `POST /v1/me/history`: Atomic upsert saving current playback position. If `progress_seconds >= duration_seconds * 0.92`, marks video as completed.
+   - **Redis Playhead Buffer (`vp:user:{id}:playhead:{videoId}`)**: High-frequency 5-second playback heartbeats buffer in Redis with 7-day TTL for instant `< 1ms` resume queries without hammering PostgreSQL with UPDATE statements on every playback ping.
+   - **Write-Behind Flush**: Playhead positions periodically flushed to `watch_history` table upon video completion, pause, or session end. If `progress_seconds >= duration_seconds * 0.92`, automatically marks video as completed.
+   - `POST /v1/me/history`: Atomic upsert saving playback progress.
    - `GET /v1/me/history`: Keyset-paginated watch history ordered by `watched_at DESC` with video details, creator channel info, and progress percentage.
    - `DELETE /v1/me/history`: Clears entire history.
    - `DELETE /v1/me/history/:videoId`: Removes an individual video from watch history.
@@ -55,6 +57,7 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
   - `playlist_items` table with unique constraint on `(playlist_id, video_id)` and index on `(playlist_id, position)`.
   - `watch_history` table with unique constraint on `(user_id, video_id)` and index on `(user_id, watched_at desc)`.
 - [ ] JIT provisioner / service creates default "Watch Later" system playlist for user upon registration.
+- [ ] Redis playhead caching service in `adapters/redis/playhead-cache.service.ts`.
 - [ ] Playlist API Endpoints:
   - `POST /v1/playlists`: Creates custom playlist with title, description, and visibility (`public`, `unlisted`, `private`).
   - `GET /v1/playlists/:id`: Returns playlist metadata, owner channel profile, total video count, and ordered video items. Enforces privacy rules (404/403 for private playlist accessed by non-owner).

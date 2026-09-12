@@ -15,30 +15,38 @@
 The original frontend expected full comment interactions (GET /videos/:id/comments, POST /videos/:id/comments, PATCH /videos/:id/comments/:id, DELETE /videos/:id/comments/:id) but lacked hierarchical replies, pinned comments, author badges, and scalable keyset pagination.
 
 This ticket delivers:
-1. **Threaded / Hierarchical Comment Model**: Root comments (parent_id IS NULL) with 1-level reply nesting (parent_id = root_comment_id).
-2. **Key properties**: content, edited indicator, pinned by creator indicator, likes count.
-3. **Resilient Pagination**: High-performance keyset cursor (created_at, id) pagination, plus a backward-compatible adapter supporting the legacy frontend page and size query params.
-4. **Moderation with RBAC/ABAC**:
-   - Comment author can edit (PATCH) and delete (DELETE) their comment.
-   - Video owner can pin/unpin comments (POST /v1/comments/:id/pin) and delete any comment under their video.
+1. **Threaded / Hierarchical Comment Model**: Root comments (`parent_id IS NULL`) with 1-level reply nesting (`parent_id = root_comment_id`).
+2. **Dual-Sort Keyset Pagination**:
+   - `sort=top` (default): Keyset cursor on `(is_pinned DESC, like_count DESC, created_at DESC, id DESC)`.
+   - `sort=newest`: Keyset cursor on `(is_pinned DESC, created_at DESC, id DESC)`.
+3. **Hot Comments Cache & Singleflight**:
+   - Top 20 comments and total comment count cached in Redis (`vp:video:{id}:comments:top`) with 60s TTL for instant video watch page rendering.
+   - Fastify singleflight promise coalescing on comment cache misses.
+4. **Denormalized Comment Counter**:
+   - `videos.comments_count` updated transactionally on comment creation/deletion.
+5. **Moderation with RBAC/ABAC**:
+   - Comment author can edit (`PATCH`) and delete (`DELETE`) their comment.
+   - Video owner can pin/unpin comments (`POST /v1/comments/:id/pin`) and delete any comment under their video.
    - Admin can delete any comment.
 
 ## Acceptance criteria
 
-- [ ] Migration creating video_comments:
-  - id UUIDv7 PK, video_id UUID not null references videos.id on delete cascade, author_id UUID not null references users.id, parent_id UUID references video_comments.id on delete cascade, content text not null, is_pinned boolean not null default false, is_edited boolean not null default false, like_count integer not null default 0, created_at, updated_at.
-  - Composite indexes: (video_id, parent_id, is_pinned DESC, created_at DESC) for efficient retrieval.
-- [ ] CommentRepositoryPort in @vp/core/repositories/comment-repository.port.ts.
-- [ ] PostgresCommentRepository in adapters/postgres/repositories/postgres-comment-repository.ts (<= 250 lines).
-- [ ] InMemoryCommentRepository in adapters/in-memory/repositories/in-memory-comment-repository.ts.
+- [ ] Migration creating `video_comments`:
+  - `id UUIDv7 PK, video_id UUID not null references videos.id on delete cascade, author_id UUID not null references users.id, parent_id UUID references video_comments.id on delete cascade, content text not null, is_pinned boolean not null default false, is_edited boolean not null default false, like_count integer not null default 0, created_at, updated_at`.
+  - Composite indexes: `(video_id, parent_id, is_pinned DESC, like_count DESC, created_at DESC)` and `(video_id, parent_id, is_pinned DESC, created_at DESC)`.
+- [ ] Add `comments_count integer not null default 0` to `videos` table.
+- [ ] `CommentRepositoryPort` in `@vp/core/repositories/comment-repository.port.ts`.
+- [ ] `PostgresCommentRepository` in `adapters/postgres/repositories/postgres-comment-repository.ts` (<= 250 lines).
+- [ ] `InMemoryCommentRepository` in `adapters/in-memory/repositories/in-memory-comment-repository.ts`.
+- [ ] Redis hot comments cache service (`adapters/redis/comment-cache.service.ts`).
 - [ ] Endpoints:
-  - GET /v1/videos/:id/comments: Returns top-level comments (with pinned comments first), author channel profile, and reply counts. Supports keyset cursor + fallback page/size.
-  - GET /v1/comments/:commentId/replies: Returns threaded replies under a specific comment.
-  - POST /v1/videos/:id/comments: Adds a comment or reply (validates max 2000 chars, non-empty).
-  - PATCH /v1/comments/:id: Edits comment content (sets is_edited = true, checks author permission via ticket 39 engine).
-  - DELETE /v1/comments/:id: Soft or hard deletes comment (verifies author, video owner, or admin).
-  - POST /v1/comments/:id/pin: Pins comment (verifies video owner or admin; unpins existing pinned comment on video).
-- [ ] Integration tests verifying threading, moderation rules, pagination cursor stability, and legacy page query param translation.
+  - `GET /v1/videos/:id/comments`: Returns top-level comments (with pinned comments first), author channel profile, and reply counts. Supports `sort=top|newest`, keyset cursor + fallback `page`/`size`.
+  - `GET /v1/comments/:commentId/replies`: Returns threaded replies under a specific comment (keyset paginated).
+  - `POST /v1/videos/:id/comments`: Adds a comment or reply (validates max 2000 chars, non-empty), increments `videos.comments_count`, and purges hot comments cache.
+  - `PATCH /v1/comments/:id`: Edits comment content (`is_edited = true`, checks author permission).
+  - `DELETE /v1/comments/:id`: Deletes comment, decrements `videos.comments_count`, purges cache.
+  - `POST /v1/comments/:id/pin`: Pins comment (verifies video owner or admin; unpins existing pinned comment on video).
+- [ ] Concurrency & route tests verifying threading, dual sorting, hot comments caching, and moderation guards.
 
 ## Out of scope
 

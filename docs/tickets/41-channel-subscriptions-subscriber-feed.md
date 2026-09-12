@@ -15,35 +15,40 @@
 Channel subscriptions are central to YouTube. Viewers subscribe to channels they like and want to see a curated feed of new videos uploaded by those creators.
 
 This ticket delivers:
-1. **Durable subscriptions model**: channel_subscriptions table (subscriber_id, channel_id, created_at) with unique composite key.
-2. **Channel subscriber counter synchronization**: Atomic increments/decrements on channels.subscriber_count with Redis counter caching.
-3. **Subscription management endpoints**:
-   - `POST /v1/channels/:id/subscribers` (subscribe to channel)
-   - `DELETE /v1/channels/:id/subscribers` (unsubscribe from channel)
-   - `GET /v1/channels/:id/subscribers/me`: check if current authenticated caller is subscribed.
-   - `GET /v1/me/subscriptions`: list channels the current user is subscribed to (with keyset pagination).
-4. **Subscription Feed API**:
-   - `GET /v1/feed/subscriptions`: Keyset-paginated list of `READY` + `public` videos published by channels the user subscribes to, sorted newest first.
+1. **Durable Subscriptions Model & Atomic Upsert**:
+   - `channel_subscriptions` table (`subscriber_id`, `channel_id`, `created_at`) with unique composite key `(subscriber_id, channel_id)`.
+2. **High-Performance Redis Subscription Caching**:
+   - User subscription set cached in Redis (`vp:user:{id}:subscriptions`) for instant O(1) `< 0.1ms` `SISMEMBER` checks when opening channels.
+   - Channel subscriber counter cached in Redis (`vp:channel:{id}:subscriber_count`) with atomic increment/decrement (`INCRBY` / `DECRBY`).
+3. **Subscription Management Endpoints**:
+   - `POST /v1/channels/:id/subscribers` (subscribe to channel) — idempotent, updates Redis set and DB transactionally.
+   - `DELETE /v1/channels/:id/subscribers` (unsubscribe from channel).
+   - `GET /v1/channels/:id/subscribers/me`: checks if current authenticated caller is subscribed (served in < 0.2ms via Redis set).
+   - `GET /v1/me/subscriptions`: list channels the current user is subscribed to (with keyset pagination on `(created_at, channel_id)`).
+4. **High-Scale Subscription Feed API**:
+   - `GET /v1/feed/subscriptions`: Keyset-paginated list of `READY` + `public` videos published by channels the user subscribes to, sorted newest first `(created_at DESC, id DESC)`.
+   - Backed by indexed join on `(subscriber_id, channel_id)` -> `(owner_id, visibility, status)`.
 
 ## Acceptance criteria
 
 - [ ] Migration creating `channel_subscriptions`:
   - `id UUIDv7 PK, subscriber_id UUID not null references users.id, channel_id UUID not null references channels.id, created_at timestamptz not null`.
   - Unique constraint on `(subscriber_id, channel_id)`.
-  - Indexes on `subscriber_id` and `channel_id`.
+  - Composite indexes on `(subscriber_id, created_at DESC)` and `(channel_id, created_at DESC)`.
 - [ ] Self-subscription prevention: Returning 400 `CANNOT_SUBSCRIBE_TO_SELF` if `subscriber_id === channel.userId`.
 - [ ] `SubscriptionRepositoryPort` in `@vp/core/repositories/subscription-repository.port.ts`.
 - [ ] `PostgresSubscriptionRepository` in `adapters/postgres/repositories/postgres-subscription-repository.ts` (<= 250 lines).
 - [ ] `InMemorySubscriptionRepository` with `.clear()`.
+- [ ] Redis subscription set caching service (`adapters/redis/subscription-cache.service.ts`).
 - [ ] Atomic subscription flow:
-  - Creates/deletes subscription record.
-  - Updates `channels.subscriber_count` in a transaction.
-  - Invalidates Redis channel subscriber cache key `vp:channel:{id}:stats`.
+  - Creates/deletes subscription record in PostgreSQL.
+  - Updates `channels.subscriber_count` counter.
+  - Synchronously updates user's Redis subscription set (`SADD` / `SREM`).
 - [ ] `GET /v1/feed/subscriptions`:
   - Requires authentication.
   - Performs indexed join on `channel_subscriptions` -> `videos` (where `visibility = 'public'` and `status = 'READY'`).
   - Cursor pagination `(created_at, id)`.
-- [ ] Integration tests verifying subscription lifecycle, count consistency, and subscription feed isolation.
+- [ ] Integration tests verifying subscription lifecycle, count consistency, Redis cache synchronization, and feed isolation.
 
 ## Out of scope
 
