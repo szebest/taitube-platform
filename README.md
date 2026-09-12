@@ -1,299 +1,394 @@
-# video-pipeline — design package (PDLC kick-off)
+﻿# TaiTube Platform
 
-[![CI](https://github.com/szebest/video-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/szebest/video-pipeline/actions/workflows/ci.yml)
+[![CI](https://github.com/szebest/taitube-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/szebest/taitube-platform/actions/workflows/ci.yml)
 
-Everything needed to start building the asynchronous video ingestion & HLS transcoding backend, in one tree laid out like the future repository. Nothing here is code yet — it is the specification, the work breakdown, and the agent tooling that turns the specification into code.
+TaiTube is an asynchronous video ingestion, processing, and streaming platform. It provides direct-to-storage multipart uploads, keyframe-aligned multi-rendition HLS transcoding via FFmpeg, distributed job coordination with BullMQ, real-time Server-Sent Events (SSE) progress tracking, and full observability out of the box.
 
-| Path | What it is | Latest version |
-|---|---|---|
-| `docs/PRD.md` | Product Requirements Document (goals G1–G11 incl. **local-first**, user stories, FR-1…19, NFR/SLOs, risks, open questions) | v1.0 + local-first update |
-| `docs/SDD.md` | System Design Document & Implementation Blueprint (architecture, 18 ADRs with ranked alternatives, DDL, API, storage, FFmpeg, queue/worker deep-dive, SSE, security, deployment & cost, autoscaling, observability, load/chaos plan, repo layout, env, fact sheet, roadmap) | v1.0 + P9 local-first / offline mode |
-| `docs/LOCAL_FIRST.md` | Local-first and offline execution guide (zero external dependencies, zero egress) | v1.0 |
-| `docs/diagrams/` | Rendered architecture diagram and ticket dependency graph (PNG) | — |
-| `docs/tickets/` | 35 tracer-bullet tickets (`NN-slug.md`), index with status board / dependency graph / parallel lanes (`README.md`), and the generator (`gen-index.py`) | — |
-| `docs/agents/` | Config the workflow skills read: where tickets live (`issue-tracker.md`), how to use glossary/ADRs (`domain.md`) | — |
-| `.env.example` | The single environment contract for API and workers (all-local defaults; cloud values commented) | — |
-| `AGENTS.md` / `CLAUDE.md` | Instructions every coding agent reads (CLAUDE.md just includes AGENTS.md) | — |
-| `.agents/skills/` | 58 portable Agent Skills, pre-installed (8 project-specific `vp-*`, 50 curated from open-source libraries); licenses in `.agents/skills/.licenses-video-pipeline-skills/` | — |
-| `skills-bundle/` | Skill tooling: `install.py` (any agent, profiles, strict mode), `validate.py`, `manifest.json`, `README.md` (which skill for which ticket), `PORTABILITY.md`, `ATTRIBUTION.md` | — |
+The repository is structured as a modular TypeScript monorepo designed around hexagonal architecture (ports and adapters), dual-runtime execution (Node.js 24 and Bun 1.4), and a strict local-first approach that runs completely offline with zero external cloud dependencies.
 
-## Quick start
+---
 
-### Prerequisites
-- Node.js 24 LTS (`node -v`)
-- Bun 1.4+ (`bun -v`)
-- pnpm 10 (`npm i -g pnpm@10`)
-- Docker & Docker Compose (`docker compose version`)
+## Table of Contents
 
-### Run everything in Docker (Phase 1 Walking Skeleton)
+- [Architecture Overview](#architecture-overview)
+- [Monorepo Structure](#monorepo-structure)
+- [Key Capabilities](#key-capabilities)
+- [Prerequisites](#prerequisites)
+- [Quick Start with Docker](#quick-start-with-docker)
+- [Local Development Setup](#local-development-setup)
+- [End-to-End Workflow](#end-to-end-workflow)
+- [Observability and Monitoring](#observability-and-monitoring)
+- [Autoscaling](#autoscaling)
+- [Kubernetes Deployment](#kubernetes-deployment)
+- [Available Commands](#available-commands)
+- [Engineering Standards](#engineering-standards)
+- [Documentation Index](#documentation-index)
 
-Someone with only Docker installed can clone the repository and run the full stack and end-to-end smoke test without installing Node, Bun, or FFmpeg locally:
+---
+
+## Architecture Overview
+
+TaiTube decouples high-throughput API ingestion from resource-heavy video transcoding jobs through dedicated worker queues and object storage.
+
+```
+                  +----------------------------------------------+
+                  |                 Client / Web                 |
+                  +-------+------------------------------+-------+
+                          |                              |
+            1. Presigned  |                 3. Direct S3 |
+               Upload URL |                    Multipart |
+                          v                              v
+                  +-------+----------+           +-------+----------+
+                  |  Fastify API     |           |  S3 / MinIO      |
+                  |  (Node.js 24)    |           |  Storage Bucket  |
+                  +-------+----------+           +-------+----------+
+                          |                              ^
+             2. Enqueue   |                 4. Download  | 5. Upload HLS
+                Jobs      v                    & Process |    & WebVTT
+                  +-------+----------+                   |
+                  |  Redis / BullMQ  +-------------------+
+                  +-------+----------+
+                          |
+                          v
+                  +-------+----------+
+                  |  Worker Pipeline |  (Probe -> Transcode -> Package -> Notify)
+                  |  (Bun / Node)    |
+                  +------------------+
+```
+
+1. **Ingestion**: The client requests a presigned single-PUT or multipart upload URL from the API. Files stream directly to S3-compatible storage (MinIO locally, Cloudflare R2 in production) without passing video payload bytes through API server memory.
+2. **Coordination**: Upload completion registers the video in PostgreSQL and dispatches a deterministic BullMQ job flow with parent-child dependencies.
+3. **Transcoding Pipeline**:
+   - `probe`: Validates container metadata, codec support, aspect ratios, and duration limits using `ffprobe`.
+   - `transcode-1080p / 720p / 480p`: Parallel FFmpeg workers generate keyframe-aligned H.264 video and AAC audio TS segments.
+   - `thumbnail`: Generates high-resolution poster frames and synchronized WebVTT scrub thumbnail sprite sheets.
+   - `package`: Generates master HLS `.m3u8` playlists linking all processed renditions.
+   - `notify`: Finalizes state transitions, updates read models, and publishes real-time SSE completion events.
+4. **State and Durability**: All database state transitions execute through transactional Compare-and-Set (CAS) operations that append immutable audit records to `video_events` with worker fencing tokens to prevent zombie overwrites.
+
+---
+
+## Monorepo Structure
+
+The monorepo is organized using `pnpm` workspaces and `Turborepo`:
+
+```
+taitube-platform/
+├── apps/
+│   ├── api/                 # Fastify REST API, SSE streaming, authentication, admin
+│   ├── web/                 # React frontend application
+│   └── worker/              # BullMQ distributed queue workers (switchable Node/Bun)
+├── core/                    # Pure domain models, entities, and port interfaces
+├── adapters/                # Concrete drivers for external systems
+│   ├── postgres/            # PostgreSQL repository implementations via Drizzle ORM
+│   ├── redis/               # Redis connection pools and pub/sub client
+│   ├── bullmq/              # BullMQ queue and worker adapter implementations
+│   ├── s3/                  # S3 and MinIO storage client adapter
+│   └── in-memory/           # High-speed in-memory test doubles for unit and integration suites
+├── packages/                # Shared internal libraries
+│   ├── config/              # Centralized environment variable validation (Zod)
+│   ├── db/                  # PostgreSQL schema definitions, migrations, and seeds
+│   ├── errors/              # Domain and HTTP error classifications (RFC 9457)
+│   ├── events/              # Event definitions and Redis pub/sub dispatcher
+│   ├── ffmpeg/              # FFmpeg argument builders, progress parsers, probe helpers
+│   ├── job-contracts/       # BullMQ job payload schemas and queue naming contracts
+│   ├── observability/       # OpenTelemetry, Prometheus metrics, and Pino logging
+│   ├── storage/             # S3 object key layout and presigned URL helpers
+│   └── testing/             # Shared test utilities, fixtures, and assertion helpers
+├── infra/
+│   ├── compose/             # Docker Compose manifests (local infra, full stack, observability)
+│   ├── k8s/                 # Kubernetes manifests (Kustomize base, local k3d, and cloud overlays)
+│   └── terraform/           # Cloud infrastructure definitions (Cloudflare R2, DNS, compute)
+├── tools/
+│   ├── compose-autoscaler/  # Queue-depth based autoscaler for Docker Compose
+│   ├── dev-token/           # Ed25519 JWT generator and local JWKS mock server
+│   ├── gen-video/           # Deterministic synthetic video fixture generator
+│   └── upload-client/       # Reference CLI for resumable multipart uploads
+├── docs/                    # Architecture documentation, PRD, SDD, ADRs, runbooks, and tickets
+└── scripts/                 # Development, build, and ticket synchronization scripts
+```
+
+---
+
+## Key Capabilities
+
+- **Local-First Architecture**: Runs fully offline with zero external network access. Local development uses MinIO, Redis, and PostgreSQL with default credentials.
+- **Dual-Runtime Worker Parity**: Worker services and packages execute interchangeably under Node.js 24 and Bun 1.4. All test suites pass under both `vitest` and `bun test`.
+- **Direct Multipart Storage Uploads**: S3-compatible chunked uploads with automatic part sizing (8 MiB to 64 MiB), concurrency control, checksum verification, resume from stored parts, and abort cleanup.
+- **Keyframe-Aligned HLS Ladder**: Transcodes multi-bitrate video streams (1080p, 720p, 480p) with identical keyframe cadence across renditions for clean adaptive bitrate switching in video players.
+- **Real-Time Progress Tracking**: Server-Sent Events (SSE) backed by Redis Pub/Sub broadcast per-rendition percentage, ETA, and state changes with snapshot replay on reconnect.
+- **Resilient State Machine**: Optimistic concurrency control via PostgreSQL CAS transactions and worker fencing tokens to guarantee exactly-once processing outcomes.
+- **Dead Letter Queue and Reprocessing**: Permanent failures route to a dedicated DLQ queue with complete error classification and administrative retry capabilities.
+- **Comprehensive Observability**: Pre-configured OpenTelemetry tracing across all API calls and worker jobs, Prometheus RED metrics, Grafana dashboards, Loki log aggregation, and Alertmanager rules.
+
+---
+
+## Prerequisites
+
+- **Node.js**: 24.x LTS (`node -v`)
+- **pnpm**: >= 10.0.0 (`pnpm -v`)
+- **Bun**: >= 1.4.0 (`bun -v`, optional for Bun worker runtime)
+- **Docker**: Docker Engine with Docker Compose v2 (`docker compose version`)
+
+---
+
+## Quick Start with Docker
+
+You can run the full platform using Docker Compose without installing Node, Bun, or FFmpeg locally:
 
 ```bash
-# 1. Clone and set up environment contract
+# 1. Copy local environment variables
 cp .env.example .env
 
-# 2. Start full stack (Infra + Migrations + Fastify API + Worker stages)
+# 2. Start all infrastructure, API, and worker services
 make up-all
 
-# 3. Run end-to-end smoke test (uploads fixture s15, waits for READY, verifies HLS playback)
+# 3. Run the end-to-end smoke test
 make smoke
-
-# 4. (Optional) Open the HLS test page with tools profile
-docker compose --profile tools -f infra/compose/docker-compose.yml up -d
-# Open http://localhost:8080 in your browser
 ```
 
-#### Docker Image Specifications & Sizes
-- **API (`vp-api`)**: Node 24 slim, multi-stage build, non-root user (`appuser:10001`), `tini` PID 1, read-only root FS, exposed on ports 3000 and 9464. Image size: ~225 MB.
-- **Worker (`vp-worker`)**: Dual-runtime switchable via `WORKER_RUNTIME` build arg, FFmpeg + tini, non-root user (`10001`), read-only root FS with tmpfs for `/tmp/vp`.
-  - **Bun variant (`WORKER_RUNTIME=bun`)**: ~240 MB.
-  - **Node variant (`WORKER_RUNTIME=node`)**: ~310 MB.
+Service endpoints once running:
+- **Fastify API**: `http://localhost:3000`
+- **MinIO Storage Console**: `http://localhost:9001` (User: `minioadmin`, Password: `minioadmin`)
+- **Bull Board Queue UI**: `http://localhost:3000/admin/queues` (Requires admin token)
+- **HLS Test Player**: Open `tools/hls-test-page/index.html` in your browser
 
-### Local development
-
-#### 1. Start local infrastructure
+To stop and remove containers:
 ```bash
-# Copy local environment contract
-cp .env.example .env
+make down
+```
 
-# Start Postgres, Redis (noeviction + AOF), MinIO (raw + public buckets, ILM rules, anonymous read)
+---
+
+## Local Development Setup
+
+### 1. Start Infrastructure Services
+
+Start PostgreSQL, Redis, and MinIO storage containers:
+
+```bash
 make up
-
-# Verify Redis and storage health
 make check-redis
-make smoke-infra
 ```
 
-### 2. Install dependencies & verify build
+### 2. Install Dependencies and Run Verifications
+
 ```bash
-# Install dependencies across all workspace packages
+# Install workspace dependencies
 pnpm install
 
-# Typecheck, lint, and run tests across the monorepo
+# Run typechecking across all packages
 pnpm typecheck
+
+# Run linter
 pnpm lint
+
+# Run unit and integration tests
 pnpm test
 
-# Verify worker runtime parity with Bun
+# Run worker parity tests in Bun
 pnpm test:bun
 ```
 
-### 3. Try it locally (Phase 0 Dev Tooling)
+### 3. Generate Test Video Fixtures
 
-#### Generate Deterministic Video Fixtures
+Create deterministic synthetic video files for testing transcode flows:
+
 ```bash
-# Generate fast fixture set into tests/fixtures (< 10s)
+# Generate fast standard fixture set into tests/fixtures/
 pnpm gen-video
 
-# Verify generated fixtures against manifest (ffprobe stream analysis + checksums)
+# Verify generated fixtures against manifest checksums
 pnpm gen-video --check
-
-# Generate a single fixture or include slow sets (m10, l30, over-duration)
-pnpm gen-video --only s15
-pnpm gen-video --include-slow
 ```
 
-#### Mint Offline Dev JWTs (EdDSA / Ed25519)
+### 4. Mint Local Authentication Tokens
+
+Generate signed Ed25519 JWTs for local API authorization:
+
 ```bash
-# Mint an admin JWT with 8-hour TTL
+# Generate an admin token valid for 8 hours
 pnpm dev-token mint --sub 00000000-0000-7000-8000-000000000001 --role admin --ttl 8h
 
-# Output JWKS public keys JSON (deterministic Ed25519 keypair)
-pnpm dev-token jwks
-
-# Run standalone local JWKS server on port 3001
+# Start a local standalone JWKS endpoint on port 3001
 pnpm dev-token serve --port 3001
 ```
 
-#### HLS Player & Real-Time SSE Monitor
-Open `tools/hls-test-page/index.html` in any browser (uses vendored `hls.js`, 100% offline & local-first):
-- **Play Public Sample**: Tests adaptive bitrate HLS playback.
-- **Simulate Mock SSE**: Tests real-time transcode progress bars (`1080p`, `720p`, `480p`, overall) using `SseEvent` schema (SDD §20).
-- **Subscribe SSE**: Connects to `GET /v1/videos/:id/events` when the API is running.
+---
 
-#### Resumable Multipart Upload Client (`@vp/upload-client`)
-For files above 100 MB (up to 4 GB+), uploads use S3 multipart direct-to-storage with concurrency 4 (Ticket 11):
+## End-to-End Workflow
+
+### 1. Start API and Workers
+
+In separate terminals:
+
 ```bash
-# Upload a large file (single PUT for <= 100 MB, multipart with 8-64 MiB parts for > 100 MB)
-pnpm upload-client path/to/video.mp4 --title "My Large Video"
+# Terminal 1: Fastify API
+pnpm --filter @vp/api dev
 
-# Resume an interrupted upload from stored parts (backed by S3 ListParts)
-pnpm upload-client --resume <uploadId> path/to/video.mp4
+# Terminal 2: Probe Worker
+WORKER_STAGE=probe pnpm --filter @vp/worker dev
 
-# Abort an incomplete upload in storage and mark video ABANDONED
+# Terminal 3: Transcode Workers (run one or more renditions)
+WORKER_STAGE=transcode-720p pnpm --filter @vp/worker dev
+WORKER_STAGE=transcode-1080p pnpm --filter @vp/worker dev
+
+# Terminal 4: Thumbnail and Package Workers
+WORKER_STAGE=thumbnail pnpm --filter @vp/worker dev
+WORKER_STAGE=package pnpm --filter @vp/worker dev
+
+# Terminal 5: Notification Worker
+WORKER_STAGE=notify pnpm --filter @vp/worker dev
+```
+
+### 2. Upload a Video
+
+Use the reference upload client to ingest a video file:
+
+```bash
+pnpm upload-client tests/fixtures/s60.mp4 --title "Demo Video"
+```
+
+For large files, the client automatically handles S3 multipart chunking with resume support:
+
+```bash
+# Resume an interrupted upload
+pnpm upload-client --resume <uploadId> tests/fixtures/s60.mp4
+
+# Abort an upload
 pnpm upload-client --abort <uploadId>
 ```
 
-### 4. First video end-to-end (Walking Skeleton)
+### 3. Verify Video and Playback
 
-Run the full end-to-end upload and transcoding flow locally:
-
-1. **Start the API and workers:**
-   ```bash
-   # Terminal 1: Fastify API
-   pnpm --filter @vp/api dev
-
-   # Terminal 2: Probe Worker
-   WORKER_STAGE=probe pnpm --filter @vp/worker dev
-
-   # Terminal 3: Transcode Worker
-   WORKER_STAGE=transcode-720p pnpm --filter @vp/worker dev
-
-   # Terminal 4: Package Worker
-   WORKER_STAGE=package pnpm --filter @vp/worker dev
-
-   # Terminal 5: Notify Worker
-   WORKER_STAGE=notify pnpm --filter @vp/worker dev
-   ```
-
-2. **Upload a video:**
-   ```bash
-   ./scripts/upload.sh tests/fixtures/s60.mp4 "My Test Video"
-   ```
-
-3. **Verify and play:**
-   - Query the video via API:
-     ```bash
-     curl -H "Authorization: Bearer $(pnpm dev-token mint --sub 00000000-0000-7000-8000-000000000001 --role admin)" http://localhost:3000/v1/videos/<VIDEO_ID>
-     ```
-   - Copy the `playbackUrl` (`http://localhost:9000/public/videos/<VIDEO_ID>/hls/master.m3u8`).
-   - Open `tools/hls-test-page/index.html` in your browser, paste the URL, and press **Load & Play**.
-
-### 5. Operations & Queue Dashboard (Bull Board)
-
-An operator dashboard powered by Bull Board is mounted at `/admin/queues` under the API (Ticket 10):
-- **All Queues Visible:** Displays `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`, and `dlq`.
-- **Job Inspection & Control:** Real-time visibility into waiting, active, completed, delayed, and failed jobs. Operators can inspect job payloads, errors, pause/resume queues, and retry jobs.
-- **Admin Authorization:**
-  - Provide an admin JWT: `Authorization: Bearer <token>` (minted via `pnpm dev-token mint --role admin`).
-  - Or provide the constant-time admin secret header: `x-admin-token: <ADMIN_TOKEN>`.
-  - Non-admin callers receive RFC 9457 `401 Unauthorized` or `403 Forbidden`.
-
-### 6. Observability Stack (Prometheus, Grafana, Tempo, Loki, OTel Collector, Alertmanager)
-
-A complete local observability stack is available as a Docker Compose profile (SDD §12.1, §13, ADR-14, Ticket 21):
+Query the video record via the REST API:
 
 ```bash
-# 1. Start full stack with observability profile enabled
-docker compose -f infra/compose/docker-compose.yml --profile observability up -d
+curl -H "Authorization: Bearer $(pnpm dev-token mint --role admin)" \
+  http://localhost:3000/v1/videos/<VIDEO_ID>
+```
 
-# Or using Makefile:
+When processing completes (`status: "READY"`), open the playback URL (`http://localhost:9000/public/videos/<VIDEO_ID>/hls/master.m3u8`) in any HLS player or use the included test harness at `tools/hls-test-page/index.html`.
+
+---
+
+## Observability and Monitoring
+
+A dedicated observability profile provisions Prometheus, Grafana, Tempo, Loki, OpenTelemetry Collector, and Alertmanager:
+
+```bash
+# Start observability services
 make obs-up
 
-# 2. Verify all targets and components with automated health check:
+# Verify scraper targets and data sources
 make obs-check
 ```
 
-#### Endpoints
-- **Prometheus** (`http://localhost:9090`): Scrapes API (`:9464`) and every worker stage (`:9464`) every 5 s.
-- **Grafana** (`http://localhost:3001`): Pre-provisioned with Prometheus, Tempo, and Loki data sources, plus an automatically wired `video-pipeline` dashboards folder (`observability/dashboards/`). Default login: `admin` / `admin`.
-- **Tempo** (`http://localhost:3200`): Distributed tracing receiver (OTLP gRPC on `4317` and HTTP on `4318`).
-- **Loki** (`http://localhost:3100`): Log aggregation receiver.
-- **OTel Collector** (`http://localhost:4318`): Accepts standard OTLP HTTP spans and logs, routing traces to Tempo and logs to Loki.
-- **Alertmanager** (`http://localhost:9093`): Mounted with `observability/alerts/` rules directory and webhook routing.
+### Endpoints and Dashboards
+- **Grafana**: `http://localhost:3001` (Default credentials: `admin` / `admin`)
+  - **Pipeline Overview**: Live video status distribution, throughput, and completion latency.
+  - **Queues**: Real-time BullMQ depth by state, backlog vs active workers, and job wait duration.
+  - **Workers**: Transcode real-time factor, FFmpeg exit codes, temp disk usage, and DLQ entries.
+  - **API Metrics**: RED metrics (Rate, Errors, Duration), active SSE connections, and HTTP request rates.
+  - **Storage and Cost**: S3/R2 Class A and Class B operations, output volume, and operation latency.
+- **Prometheus**: `http://localhost:9090`
+- **Tempo Tracing**: `http://localhost:3200` (OTLP receiver on ports `4317` and `4318`)
+- **Loki Logs**: `http://localhost:3100`
+- **Alertmanager**: `http://localhost:9093`
 
-#### Dashboards
-Five production-grade dashboards are provisioned in Grafana under the `video-pipeline` folder (`observability/dashboards/*.json`, SDD §13.5, Ticket 22):
-1. **Pipeline Overview (`pipeline.json`)**: Live videos count by status (`videos_by_status`), end-to-end completion throughput (`jobs_processed_total`), and p50/p95 Time-to-Ready latency broken down by duration buckets (`<1min`, `1-5min`, `5-15min`, `15-60min`).
-2. **Queues (`queues.json`)**: Per-queue depth across all BullMQ states (waiting, prioritized, active, delayed, failed), oldest waiting job starvation gauge (`bullmq_queue_oldest_waiting_age_seconds`), queue wait p95 (`job_wait_seconds`), and outstanding backlog vs worker replicas (the autoscaling proof panel).
-3. **Workers (`workers.json`)**: Processing duration p50/p95 by queue (`job_duration_seconds`), transcode realtime factor by rendition and preset (`transcode_realtime_factor`), FFmpeg process exit codes (`ffmpeg_exit_total`), temp disk usage gauge (`worker_tmp_bytes`), and Dead Letter Queue entries (`dlq_entries_total`).
-4. **API (`api.json`)**: RED metrics (request rate, error rate with 5xx classification, duration latency p50/p95/p99), active SSE connections (`sse_connections`), SSE events published to Pub/Sub (`sse_events_published_total`), and HTTP requests in flight (`http_requests_in_flight`).
-5. **Storage & Cost (`storage-cost.json`)**: Class A (PUT/multipart) & Class B (GET/HEAD) operations per hour, linear projection of monthly Class A operations against Cloudflare R2 1M/month free tier (`predict_linear(storage_ops_total{op="put"}[1d], 30*86400)`), transcode output bytes rate (`transcode_output_bytes_total`), and storage operation duration p95 (`storage_op_duration_seconds`).
+---
 
-#### Following a video through the system (Distributed Tracing)
-With the observability stack running (`make obs-up`), every video upload creates an unbroken trace tree spanning all pipeline stages (Ticket 23, SDD §13.3):
-1. **API Upload Complete**: `POST /uploads/:id/complete` creates the root span and injects the W3C `traceparent` into BullMQ `job.data`.
-2. **Database & Events Correlation**: Every `video_events` row and database mutation includes `trace_id`.
-3. **Worker Processing**: The worker wrapper extracts `traceparent` and executes each job within a `bullmq.process {stage}` child span (`probe` → `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail` → `package` → `notify`).
-4. **FFmpeg Execution**: Detailed child spans capture `ffmpeg` transcodes and thumbnail extractions with exit codes, duration, and sanitized command lines (no presigned URLs).
-5. **Trace-to-Logs**: Every Pino log line carries `traceId` and `spanId`. In Grafana (`http://localhost:3001`), searching a `trace_id` in Tempo provides one-click navigation directly to correlated Loki log lines.
+## Autoscaling
 
-### 7. Autoscaling without Kubernetes (Compose Autoscaler)
+### Docker Compose Autoscaler
 
-For local development or resource-constrained environments without Kubernetes or KEDA (Ticket 27, SDD §13.2, ADR-12 Option 4), the repository provides `pnpm compose-autoscaler`:
-- **Queue Polling:** Polls Prometheus metrics (`bullmq_queue_jobs{queue, state}`) from the API's `/metrics` every 10 seconds.
-- **Pure Decision Control Loop:** Calculates target replicas per worker stage (`worker-probe`, `worker-transcode-1080p`, etc.) using queue backlog (`waiting + prioritized + active`), threshold 1 (1 container per outstanding job), bounded by `minReplicas` and `maxReplicas`.
-- **Active Job Protection:** Invariant ensures target replicas never scale below the number of currently active jobs.
-- **Scale-Down Stabilization:** Enforces a 300 s cooldown period of empty queues before scaling down to prevent flapping.
-- **Docker Compose Scaling:** Executes dynamic scaling via `docker compose up -d --scale worker-<stage>=N --no-recreate`.
-- **Dry-Run Inspection:** `--dry-run` flag prints intended scaling actions and commands without invoking Docker.
+For local development or single-host deployments without Kubernetes, run the built-in queue autoscaler:
 
 ```bash
-# Run compose autoscaler in dry-run mode
+# Run in dry-run mode to inspect scaling calculations
 pnpm compose-autoscaler --dry-run
 
-# Run compose autoscaler against running Docker Compose stack
+# Run live autoscaling loop against Docker Compose
 pnpm compose-autoscaler --interval 10
-
-# Pass custom stage config JSON
-pnpm compose-autoscaler --config my-stages.json
 ```
 
-### 8. Run on Kubernetes locally (k3d / kind, Phase 3)
+The autoscaler monitors BullMQ backlog metrics from Prometheus, computes target worker replica counts with active-job protection, and dynamically adjusts container instances using `docker compose scale`.
 
-The pipeline can run locally on Kubernetes (SDD §12.2 Rung 2, Ticket 25) with in-cluster Postgres, Redis, MinIO, KEDA, and Prometheus/Grafana:
+### Kubernetes Autoscaling with KEDA
+
+In Kubernetes environments, worker Deployments autoscale from 0 to N replicas using KEDA `ScaledObject` resources triggered by queue depth metrics.
+
+---
+
+## Kubernetes Deployment
+
+Deploy the stack locally using `k3d` or `kind`:
 
 ```bash
-# 1. Bring up local k3d cluster with Helm releases (< 5 min)
-# Installs KEDA, kube-prometheus-stack, Redis, MinIO, and Postgres via Helm with committed values
+# 1. Create a local k3d cluster with Helm dependencies
 make k3d-up
 
-# Alternatively, if using kind instead of k3d:
-CLUSTER_TOOL=kind make k3d-up
-
-# 2. Deploy database migrations, Fastify API, and worker stages via Kustomize
+# 2. Deploy database migrations, Fastify API, and worker deployments
 make k3d-deploy
 
-# 3. Run end-to-end smoke test against the cluster ingress
+# 3. Execute the smoke test against cluster ingress
 make smoke
 
-# 4. Validate manifests across local and cloud overlays
-make k8s-validate
-# Or run package vitest suite:
-pnpm --filter @vp/testing test
+# 4. Clean up cluster
+make k3d-down
 ```
 
-#### Kubernetes Architecture Highlights
-- **Kustomize Structure**: `infra/k8s/base` defines common Deployments, Services, ConfigMaps, Secrets, ServiceMonitors, Ingress, and Grafana dashboard ConfigMaps; `infra/k8s/overlays/local` customizes images and endpoints for k3d/kind, while `infra/k8s/overlays/cloud` serves as the skeleton for Cloudflare R2 + Neon deployments (Ticket 32).
-- **Pod Hardening (SDD §11 & §12.2)**: Every container runs as `runAsNonRoot: true`, `runAsUser: 10001`, `allowPrivilegeEscalation: false`, with `readOnlyRootFilesystem: true`, dropping all capabilities.
-- **Worker Stage Topology**: Stage-specific ephemeral-storage `emptyDir` mounts (`/tmp/vp`), explicit CPU/memory requests/limits, and per-stage `terminationGracePeriodSeconds` (e.g. 900s for 1080p, 600s for 720p).
-- **Dynamic Threading**: `FFMPEG_THREADS` is bound to container CPU limits via Kubernetes Downward API (`resourceFieldRef: { resource: limits.cpu }`).
-- **Health Probes**: Workers verify liveness via `/tmp/vp/heartbeat` touched during active transcoding ticks and worker main loops; API verifies readiness via `/readyz` and liveness via `/livez`.
-- **In-Cluster Observability**: ServiceMonitors scrape API (`:9464`) and worker stages; Grafana loads the committed dashboard ConfigMaps via the sidecar.
+Manifests are organized with Kustomize under `infra/k8s/base` with overlays for `infra/k8s/overlays/local` and `infra/k8s/overlays/cloud`.
 
-### 9. Useful commands
+---
+
+## Available Commands
+
 | Command | Description |
 |---|---|
-| `pnpm compose-autoscaler` | Run compose queue-depth autoscaler loop |
-| `make up` | Start local Postgres, Redis, MinIO with buckets initialized |
-| `make up-all` | Start full stack (infra, migrations, API, all worker stages) |
-| `make obs-up` | Start local observability profile (Prometheus, Grafana, Tempo, Loki, OTel, Alertmanager) |
-| `make obs-down` | Stop local observability profile |
-| `make obs-check` | Verify Prometheus targets UP and datasources healthy |
-| `make down` | Stop local infrastructure containers |
-| `make logs` | Follow compose logs |
-| `make psql` | Open psql shell inside Postgres |
-| `make redis-cli` | Open redis-cli shell inside Redis |
-| `make mc` | Run MinIO client |
-| `make check-redis` | Verify BullMQ Redis constraints (`noeviction` + `appendonly`) |
-| `make smoke` | Run local infrastructure smoke tests |
-| `make smoke-offline` | Run offline smoke tests with zero egress |
-| `make e2e` | Run Phase 2 pipeline E2E acceptance suite |
-| `make k3d-up` | Create local k3d cluster and install in-cluster Helm charts |
-| `make k3d-deploy` | Build and deploy API and Worker stages via Kustomize |
-| `make k3d-down` | Delete local k3d cluster |
-| `make k8s-validate` | Validate local and cloud Kustomize overlays |
-| `make nuke` | Teardown containers and destroy persistent volumes |
-| `pnpm dev` | Run monorepo in development mode via Turborepo |
-| `pnpm build` | Build all workspace packages with Turborepo |
-| `pnpm typecheck` | Run TypeScript typechecking across all packages |
+| `make up` | Start local Postgres, Redis, and MinIO containers |
+| `make up-all` | Start full stack (infrastructure, migrations, API, and all worker stages) |
+| `make down` | Stop running containers |
+| `make obs-up` | Start Prometheus, Grafana, Tempo, Loki, and Alertmanager stack |
+| `make obs-down` | Stop observability stack |
+| `make obs-check` | Verify Prometheus scraping targets and Grafana data sources |
+| `make smoke` | Run end-to-end ingestion and playback smoke tests |
+| `make smoke-offline` | Run smoke tests with simulated network isolation |
+| `make e2e` | Run full end-to-end integration test suite |
+| `make k3d-up` | Create local k3d Kubernetes cluster with in-cluster dependencies |
+| `make k3d-deploy` | Deploy API and worker stages to Kubernetes via Kustomize |
+| `make k3d-down` | Tear down local k3d Kubernetes cluster |
+| `make nuke` | Destroy all containers, networks, and persistent data volumes |
+| `pnpm dev` | Run monorepo development services via Turborepo |
+| `pnpm build` | Build all workspace packages and applications |
+| `pnpm typecheck` | Run TypeScript compiler checks across all workspaces |
 | `pnpm lint` | Run Biome linter across the repository |
-| `pnpm format` | Auto-format codebase with Biome |
-| `pnpm test` | Run Vitest tests across all packages |
-| `pnpm test:bun` | Run worker smoke tests with Bun test runner |
-| `pnpm gen-video` | Generate deterministic synthetic video test fixtures |
-| `pnpm dev-token` | Mint signed EdDSA JWTs and serve JWKS for local auth |
+| `pnpm format` | Format repository code using Biome |
+| `pnpm test` | Run Vitest test suites across all packages |
+| `pnpm test:bun` | Run worker and shared package test suites using Bun test runner |
+| `pnpm gen-video` | Generate deterministic video test fixtures |
+| `pnpm dev-token` | Mint local Ed25519 JWTs and run mock JWKS server |
+| `pnpm upload-client` | Run reference multipart upload CLI |
+| `pnpm compose-autoscaler` | Run Docker Compose queue autoscaler daemon |
+| `pnpm sync:tickets` | Synchronize local markdown tickets with GitHub Issues |
 
-## Rules that never bend
-Local-first (no external services at runtime, `make smoke-offline` must pass) · dual runtime (worker code passes under Node and Bun) · single-sourced contracts (`packages/job-contracts`, `keys.ts`, error codes, `.env.example`) · CAS transitions with `video_events` · errors classified at the throw site · prove with tests before claiming done. Details: `AGENTS.md`.
+---
+
+## Engineering Standards
+
+1. **Local-First Guarantees**: All core services function without internet access or third-party cloud accounts.
+2. **Dependency Inversion (Hexagonal Architecture)**: Domain business logic in `core/` depends only on abstract port interfaces. Concrete adapters (`postgres`, `redis`, `s3`, `bullmq`) are isolated in `adapters/` and wired at composition roots (`apps/api`, `apps/worker`).
+3. **Modular Repository Discipline**: Every repository implementation resides in its own dedicated file under `adapters/*/repositories/` with strict modularity (<= 250 lines target).
+4. **Single-Source Contracts**: Job payloads are defined in `@vp/job-contracts`, storage paths in `@vp/storage`, error codes in `@vp/errors`, and environment configuration in `@vp/config`.
+5. **State Durability**: All entity mutations execute through compare-and-set transactions that record audit events in `video_events` with fencing tokens.
+6. **Dual-Runtime Compatibility**: All worker logic and shared libraries run cleanly under both Node.js and Bun without runtime-specific proprietary APIs.
+
+---
+
+## Documentation Index
+
+- [System Design Document (SDD)](docs/SDD.md): System architecture, database schemas, and 18 Architecture Decision Records (ADRs).
+- [Product Requirements Document (PRD)](docs/PRD.md): Product goals, functional requirements, and service-level objectives.
+- [Local-First Guide](docs/LOCAL_FIRST.md): Guide for running and verifying offline operations.
+- [Backlog and Work Breakdown](docs/tickets/README.md): Roadmap of 78 vertical tracer-bullet work items and dependency graphs.
+- [Agent and Contributor Guidelines](AGENTS.md): Coding conventions, Definition of Done, and architectural constraints.
