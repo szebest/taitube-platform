@@ -55,6 +55,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Install system dependencies (ffmpeg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+
       - name: Install pnpm
         uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
 
@@ -63,6 +68,11 @@ jobs:
         with:
           node-version: 24
           cache: 'pnpm'
+
+      - name: Set up Bun 1.4
+        uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 # v2.0.1
+        with:
+          bun-version: 1.4.0
 
       - name: Restore Turborepo cache
         uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
@@ -75,6 +85,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate video fixtures
+        run: pnpm gen-video
+
       - name: Run unit tests (Node 24)
         run: pnpm test
 
@@ -84,6 +97,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install system dependencies (ffmpeg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
 
       - name: Install pnpm
         uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
@@ -109,6 +127,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate video fixtures
+        run: pnpm gen-video
 
       - name: Run worker & packages unit tests under Bun (runtime parity gate)
         run: pnpm test:bun
@@ -151,18 +172,13 @@ jobs:
         env:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: minioadmin
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
         command: server /data --console-address ":9001"
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Install system dependencies (psql, redis-cli, ffmpeg, mc)
+      - name: Install system dependencies (psql, redis-cli, ffmpeg, curl, mc)
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends postgresql-client redis-tools ffmpeg curl
@@ -194,21 +210,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Cache test video fixtures
-        id: fixtures-cache
-        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
-        with:
-          path: tests/fixtures
-          key: fixtures-${{ runner.os }}-${{ hashFiles('tools/gen-video/manifest.json') }}
-          restore-keys: |
-            fixtures-${{ runner.os }}-
-
-      - name: Generate video fixtures if cache miss
-        if: steps.fixtures-cache.outputs.cache-hit != 'true'
+      - name: Generate video fixtures
         run: pnpm gen-video
 
       - name: Verify video fixtures against manifest
         run: pnpm gen-video --check
+
+      - name: Wait for services readiness
+        run: |
+          echo "==> Waiting for PostgreSQL..."
+          until pg_isready -h localhost -p 5432 -U vp; do sleep 1; done
+          echo "==> Waiting for Redis..."
+          until redis-cli -h localhost -p 6379 -a vp ping; do sleep 1; done
+          echo "==> Waiting for MinIO..."
+          until curl -sSf http://localhost:9000/minio/health/live; do sleep 1; done
+          echo "==> All service containers are ready!"
 
       - name: Initialize MinIO buckets & policies
         env:
