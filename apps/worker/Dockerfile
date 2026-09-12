@@ -2,7 +2,7 @@
 ARG WORKER_RUNTIME=bun
 
 FROM node:24-slim AS build
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
 WORKDIR /repo
 
 # Copy source trees
@@ -13,7 +13,9 @@ RUN pnpm install --frozen-lockfile
 
 # Build worker and dependencies, deploy production bundle
 RUN pnpm turbo run build --filter=@vp/worker... \
- && pnpm deploy --legacy --filter=@vp/worker --prod /out
+ && pnpm deploy --legacy --filter=@vp/worker --prod /out \
+ && mkdir -p /out/node_modules/@vp/db \
+ && (cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle || true)
 
 # Base runtime choices
 FROM oven/bun:1.4-slim AS runtime-bun

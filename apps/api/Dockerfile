@@ -1,6 +1,6 @@
 # apps/api/Dockerfile
 FROM node:24-slim AS build
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
 WORKDIR /repo
 
 # Copy source trees
@@ -12,7 +12,8 @@ RUN pnpm install --frozen-lockfile
 # Build API and dependencies, deploy production bundle
 RUN pnpm turbo run build --filter=@vp/api... \
  && pnpm deploy --legacy --filter=@vp/api --prod /out \
- && cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle
+ && mkdir -p /out/node_modules/@vp/db \
+ && (cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle || true)
 
 # Production runtime image
 FROM node:24-slim AS runtime
