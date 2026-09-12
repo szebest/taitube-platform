@@ -30,7 +30,7 @@ Inspired by clean ABAC (Attribute-Based Access Control) and WebDevSimplified per
 
 ## Acceptance criteria
 
-- [ ] Pure domain permission package/module in @vp/core/permissions:
+- [ ] Pure domain permission package/module in @taitube/core/permissions:
   - Typed definitions for Role, Action, UserContext, and Resource.
   - Pure function can(user: UserContext | null, action: Action, resource?: Resource): boolean.
   - Declarative policy rules map defining capabilities per role and dynamic predicates for ownership.
@@ -61,7 +61,7 @@ ole enum (USER, CREATOR, MODERATOR, ADMIN) defaulting to USER.
     return rule(user, resource);
   }
   ```
-- File structure: Keep policy rules organized in @vp/core/permissions/policies/ with <= 250 lines per file.
+- File structure: Keep policy rules organized in @taitube/core/permissions/policies/ with <= 250 lines per file.
 
 ## Testing plan
 

@@ -18,17 +18,17 @@
 |---|---|---|---|
 | **Git Submodule** | Keeps git history isolated | Painful developer experience, detached HEAD states, requires manual hash pinning, broken PR previews, separate CI steps, cannot easily share workspace packages | **Rejected** |
 | **Separate Repo** | Independent access control | Contract drift between frontend DTOs and backend Zod schemas, duplicated types, double PRs for every single feature | **Rejected** |
-| **Monorepo App (`apps/web`)** | Single PR changes full stack, shares TypeScript types directly from `@vp/*`, single `pnpm install`, unified Turborepo caching, seamless local-first `make up` | Slightly larger initial git clone | **Accepted (Recommended)** |
+| **Monorepo App (`apps/web`)** | Single PR changes full stack, shares TypeScript types directly from `@taitube/*`, single `pnpm install`, unified Turborepo caching, seamless local-first `make up` | Slightly larger initial git clone | **Accepted (Recommended)** |
 
 This ticket integrates `youtube-frontend` directly into this repository as **`apps/web`**, turning this project into a unified, full-stack video streaming platform.
 
 This ticket delivers:
 1. **Repository Ingestion & Workspace Setup**:
    - Ingests `youtube-frontend` into `apps/web/`.
-   - Aligns `package.json` namespacing (`@taitube/web` or `@vp/web`) within the pnpm workspace (`apps/*` is already configured in `pnpm-workspace.yaml`).
+   - Aligns `package.json` namespacing (`@taitube/web` or `@taitube/web`) within the pnpm workspace (`apps/*` is already configured in `pnpm-workspace.yaml`).
    - Hooks into `turbo.json` so `pnpm dev`, `pnpm build`, `pnpm lint`, and `pnpm test` orchestrate API, workers, and Web frontend together.
 2. **Direct TypeScript Contract Sharing**:
-   - Replaces fragile, hand-written frontend API types with shared types exported from `@vp/core` or `apps/api/schemas`.
+   - Replaces fragile, hand-written frontend API types with shared types exported from `@taitube/core` or `apps/api/schemas`.
    - Guarantees zero contract drift at compile-time: if a backend endpoint or response changes, frontend typechecking immediately flags it.
 3. **Environment & Gateway Configuration**:
    - Configures `VITE_API_URL` (or `NEXT_PUBLIC_API_URL`) to proxy to `http://localhost:3000` locally.

@@ -33,7 +33,7 @@ This ticket implements:
   - channels table: id UUIDv7 PK, user_id UUID FK to users.id unique, handle text unique lowercase, display_name text not null, avatar_url text, banner_url text, bio text, subscriber_count integer not null default 0, created_at, updated_at.
   - Indexes on channels.handle and channels.user_id.
 - [ ] JIT (Just-In-Time) user & channel provisioning hook in Fastify auth middleware: if a verified JWT contains subject sub not yet in DB, inserts user and default channel with handle derived from email/sub.
-- [ ] Domain entity Channel and ChannelRepositoryPort defined in @vp/core.
+- [ ] Domain entity Channel and ChannelRepositoryPort defined in @taitube/core.
 - [ ] PostgresChannelRepository in adapters/postgres/repositories/postgres-channel-repository.ts (<= 250 lines).
 - [ ] InMemoryChannelRepository in adapters/in-memory/repositories/in-memory-channel-repository.ts.
 - [ ] API Endpoints:

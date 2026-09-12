@@ -66,10 +66,10 @@ This ticket delivers the **Multi-Resource Search & Discovery Engine**:
        avatarUrl?: string;
      }
      ```
-   - Sub-5ms response backed by Redis Sorted Set prefix index / Trie (`vp:search:suggest:{prefix}`).
+   - Sub-5ms response backed by Redis Sorted Set prefix index / Trie (`taitube:search:suggest:{prefix}`).
 
 5. **Sub-10ms Redis Query Cache with Singleflight Stampede Protection**:
-   - Caches search responses with SHA-256 query key: `vp:search:q:{type}:{hash}` with 120s TTL.
+   - Caches search responses with SHA-256 query key: `taitube:search:q:{type}:{hash}` with 120s TTL.
    - Singleflight promise coalescing in Fastify: prevents database query storms when thousands of users search for breaking or trending topics simultaneously.
    - Emits `X-Cache: HIT` / `X-Cache: MISS` headers.
 
@@ -79,7 +79,7 @@ This ticket delivers the **Multi-Resource Search & Discovery Engine**:
   - Enables `pg_trgm` extension.
   - Adds generated stored `search_vector tsvector` columns and GIN indexes to `videos`, `channels`, and `playlists`.
   - Creates trigram indexes on `channels.handle`, `channels.display_name`, and `playlists.title`.
-- [ ] `SearchRepositoryPort` in `@vp/core/repositories/search-repository.port.ts` supporting multi-entity queries.
+- [ ] `SearchRepositoryPort` in `@taitube/core/repositories/search-repository.port.ts` supporting multi-entity queries.
 - [ ] Modular `PostgresSearchRepository` in `adapters/postgres/repositories/postgres-search-repository.ts` (<= 250 lines).
 - [ ] `InMemorySearchRepository` double with `.clear()`.
 - [ ] Endpoints:

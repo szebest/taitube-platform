@@ -19,7 +19,7 @@ A frontend developer building a public-facing video platform (think YouTube home
    - Supports `sort=trending` (time-decayed engagement gravity score), `sort=popular` (views count), and `sort=recent` (newest first).
    - Supports `categoryId` query parameter to filter feed by category.
 2. **High-Performance Redis Feed Caching & Singleflight**:
-   - First-page feed responses cached in Redis (`vp:feed:public:{sort}:{categoryId}`) with 30s TTL + stale-while-revalidate.
+   - First-page feed responses cached in Redis (`taitube:feed:public:{sort}:{categoryId}`) with 30s TTL + stale-while-revalidate.
    - Singleflight promise coalescing: 5,000 concurrent anonymous visitors hitting the homepage execute exactly 1 database query.
    - HTTP `ETag` and `Cache-Control: public, max-age=30, stale-while-revalidate=60` returning `304 Not Modified` on cache hits.
 3. **Fetch a single public video without a token** — `GET /v1/videos/:id` handles this for `public` and `unlisted` videos.

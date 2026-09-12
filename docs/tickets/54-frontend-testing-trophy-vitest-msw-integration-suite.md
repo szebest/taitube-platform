@@ -19,9 +19,9 @@ Following Kent C. Dodds' **Testing Trophy** philosophy (focusing heavily on inte
 1. **Vitest 3 & React Testing Library Infrastructure**:
    - Modern, blazing-fast test runner (vitest) running directly in ESM mode without Babel/ts-jest overhead.
    - JSDOM test environment with @testing-library/react, @testing-library/user-event, and custom matchers (@testing-library/jest-dom/vitest).
-   - Integrated with Turborepo: pnpm test executes tests in parallel across @vp/* and apps/web.
+   - Integrated with Turborepo: pnpm test executes tests in parallel across @taitube/* and apps/web.
 2. **MSW (Mock Service Worker) Integration Layer**:
-   - Network-level mocking via MSW v2 (apps/web/src/test/mocks/handlers.ts) intercepting @vp/api-contracts endpoints.
+   - Network-level mocking via MSW v2 (apps/web/src/test/mocks/handlers.ts) intercepting @taitube/api-contracts endpoints.
    - Zero mocking of internal React state, hooks, or components: components render real DOM elements and perform real TanStack Query network lifecycles against the MSW mock server.
 3. **Core Workflow Integration Tests**:
    - **Video Feed & Filtering:** Mounts <BrowsePage />, tests initial video card rendering, category pill filtering, and error toast presentation when network fails.
@@ -34,7 +34,7 @@ Following Kent C. Dodds' **Testing Trophy** philosophy (focusing heavily on inte
 ## Acceptance criteria
 
 - [ ] Vitest 3 configured in apps/web/vitest.config.ts with JSDOM and @testing-library/react.
-- [ ] MSW v2 network interception handlers established covering all @vp/api-contracts routes (/v1/feed, /v1/videos/:id, /v1/videos/:id/reactions, /v1/videos/:id/comments).
+- [ ] MSW v2 network interception handlers established covering all @taitube/api-contracts routes (/v1/feed, /v1/videos/:id, /v1/videos/:id/reactions, /v1/videos/:id/comments).
 - [ ] Integration tests in apps/web/src/__tests__/:
   - feed.integration.test.tsx: Verifies public feed rendering, category switching, and infinite scroll pagination.
   - watch.integration.test.tsx: Verifies video details loading, optimistic like button mutation, and comment submission.

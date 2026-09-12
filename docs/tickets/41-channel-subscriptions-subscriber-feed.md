@@ -18,8 +18,8 @@ This ticket delivers:
 1. **Durable Subscriptions Model & Atomic Upsert**:
    - `channel_subscriptions` table (`subscriber_id`, `channel_id`, `created_at`) with unique composite key `(subscriber_id, channel_id)`.
 2. **High-Performance Redis Subscription Caching**:
-   - User subscription set cached in Redis (`vp:user:{id}:subscriptions`) for instant O(1) `< 0.1ms` `SISMEMBER` checks when opening channels.
-   - Channel subscriber counter cached in Redis (`vp:channel:{id}:subscriber_count`) with atomic increment/decrement (`INCRBY` / `DECRBY`).
+   - User subscription set cached in Redis (`taitube:user:{id}:subscriptions`) for instant O(1) `< 0.1ms` `SISMEMBER` checks when opening channels.
+   - Channel subscriber counter cached in Redis (`taitube:channel:{id}:subscriber_count`) with atomic increment/decrement (`INCRBY` / `DECRBY`).
 3. **Subscription Management Endpoints**:
    - `POST /v1/channels/:id/subscribers` (subscribe to channel) — idempotent, updates Redis set and DB transactionally.
    - `DELETE /v1/channels/:id/subscribers` (unsubscribe from channel).
@@ -36,7 +36,7 @@ This ticket delivers:
   - Unique constraint on `(subscriber_id, channel_id)`.
   - Composite indexes on `(subscriber_id, created_at DESC)` and `(channel_id, created_at DESC)`.
 - [ ] Self-subscription prevention: Returning 400 `CANNOT_SUBSCRIBE_TO_SELF` if `subscriber_id === channel.userId`.
-- [ ] `SubscriptionRepositoryPort` in `@vp/core/repositories/subscription-repository.port.ts`.
+- [ ] `SubscriptionRepositoryPort` in `@taitube/core/repositories/subscription-repository.port.ts`.
 - [ ] `PostgresSubscriptionRepository` in `adapters/postgres/repositories/postgres-subscription-repository.ts` (<= 250 lines).
 - [ ] `InMemorySubscriptionRepository` with `.clear()`.
 - [ ] Redis subscription set caching service (`adapters/redis/subscription-cache.service.ts`).

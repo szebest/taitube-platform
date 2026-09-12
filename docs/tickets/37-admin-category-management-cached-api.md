@@ -19,8 +19,8 @@ This ticket delivers:
 2. **Administrative category CRUD** (`POST /v1/admin/categories`, `PATCH /v1/admin/categories/:id`, `DELETE /v1/admin/categories/:id`) restricted to users with `role=admin` or tier permissions.
 3. **L1/L2 Multi-Tier Caching Architecture**:
    - **L1 In-Memory Fastify Cache**: Ultra-fast in-process LRU memory cache (TTL: 60s) serving categories in 0.05ms without any Redis network hops for 99.9% of queries.
-   - **L2 Distributed Redis Cache**: `vp:cache:categories:v1` shared across all API instances.
-   - **Distributed Invalidation via Redis Pub/Sub**: When an admin mutates a category, Fastify broadcasts `vp:events:cache:categories:invalidated` over Redis Pub/Sub, immediately purging L1 in-memory caches across all cluster pods simultaneously.
+   - **L2 Distributed Redis Cache**: `taitube:cache:categories:v1` shared across all API instances.
+   - **Distributed Invalidation via Redis Pub/Sub**: When an admin mutates a category, Fastify broadcasts `taitube:events:cache:categories:invalidated` over Redis Pub/Sub, immediately purging L1 in-memory caches across all cluster pods simultaneously.
    - **HTTP 304 Not Modified & ETag**: Response includes deterministic SHA-1 `ETag` and `Cache-Control: public, max-age=300, stale-while-revalidate=60`. Clients sending `If-None-Match` receive instantaneous `304 Not Modified` with zero serialization cost.
 4. Clean port and repository abstractions following hexagonal architecture and file size limits (<= 250 lines).
 
@@ -28,12 +28,12 @@ This ticket delivers:
 
 - [ ] Database migration adding `categories` table (`id` UUIDv7, `slug` text unique, `name` text not null, `description` text, `icon_url` text, `sort_order` integer default 0, `is_active` boolean default true, `created_at`, `updated_at`).
 - [ ] Foreign key relation / indexing prepared for video categorization (nullable `category_id` references `categories.id` on `videos`).
-- [ ] `CategoryRepositoryPort` defined in `@vp/core/repositories/category-repository.port.ts` and domain entity in `@vp/core/domain/category.ts`.
+- [ ] `CategoryRepositoryPort` defined in `@taitube/core/repositories/category-repository.port.ts` and domain entity in `@taitube/core/domain/category.ts`.
 - [ ] Modular PostgreSQL implementation in `adapters/postgres/repositories/postgres-category-repository.ts` (<= 250 lines).
 - [ ] In-memory test double in `adapters/in-memory/repositories/in-memory-category-repository.ts` with `.clear()` encapsulation.
 - [ ] L1/L2 Cache Service in `adapters/redis/category-cache.service.ts`:
   - L1 in-process LRU cache with 60s TTL.
-  - L2 Redis caching key `vp:cache:categories:v1`.
+  - L2 Redis caching key `taitube:cache:categories:v1`.
   - Redis Pub/Sub subscriber invalidating L1 cache on multi-replica setups.
 - [ ] `GET /v1/categories` public endpoint (no auth required):
   - Returns array of active categories sorted by `sort_order ASC, name ASC`.
@@ -59,7 +59,7 @@ This ticket delivers:
 
 - **Cache invalidation:**
   ```ts
-  const CATEGORIES_CACHE_KEY = 'vp:cache:categories:v1';
+  const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';
   // On GET:
   const cached = await redis.get(CATEGORIES_CACHE_KEY);
   // On Admin mutations:

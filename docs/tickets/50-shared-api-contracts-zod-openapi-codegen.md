@@ -1,4 +1,4 @@
-# 50: Shared API contracts package (`@vp/api-contracts`) & automated OpenAPI TypeScript codegen
+# 50: Shared API contracts package (`@taitube/api-contracts`) & automated OpenAPI TypeScript codegen
 
 | Field | Value |
 |---|---|
@@ -14,7 +14,7 @@
 
 In many full-stack applications, frontend developers manually write and maintain duplicate TypeScript interfaces for backend responses. Over time, when a backend engineer renames a field, changes an enum, or makes a property optional, the frontend experiences silent runtime errors and broken UI rendering.
 
-This ticket establishes **End-to-End Type Safety** by single-sourcing all API schemas into a dedicated workspace package: **`packages/api-contracts`** (`@vp/api-contracts` or `@taitube/api-contracts`):
+This ticket establishes **End-to-End Type Safety** by single-sourcing all API schemas into a dedicated workspace package: **`packages/api-contracts`** (`@taitube/api-contracts` or `@taitube/api-contracts`):
 
 1. **Single-Sourced Zod Schemas**:
    - Moves HTTP request body, query params, path params, and response Zod schemas from `apps/api/src/schemas/` into `packages/api-contracts/src/schemas/`.
@@ -36,8 +36,8 @@ This ticket establishes **End-to-End Type Safety** by single-sourcing all API sc
   - Channel / User schemas (`ChannelProfileDto`, `UpdateAccountDto`).
   - Comments & Reactions schemas (`CommentDto`, `ReactionDto`).
   - Problem Details standard error schema (`ProblemDetailsDto`).
-- [ ] Fastify `apps/api` updated to consume schemas from `@vp/api-contracts`.
-- [ ] Fastify type provider (`ZodTypeProvider`) infers route parameters directly from `@vp/api-contracts`.
+- [ ] Fastify `apps/api` updated to consume schemas from `@taitube/api-contracts`.
+- [ ] Fastify type provider (`ZodTypeProvider`) infers route parameters directly from `@taitube/api-contracts`.
 - [ ] CLI command `pnpm gen:contracts` exports static types into `packages/api-contracts/dist/types.d.ts`.
 - [ ] CI drift guard test: Fails if an endpoint is changed in `apps/api` without running `pnpm gen:contracts`.
 - [ ] Dual runtime compatibility: `packages/api-contracts` passes all tests under both `vitest` and `bun test`.
@@ -67,7 +67,7 @@ This ticket establishes **End-to-End Type Safety** by single-sourcing all API sc
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @vp/api-contracts test` passes under Vitest and Bun.
+- [ ] `pnpm --filter @taitube/api-contracts test` passes under Vitest and Bun.
 - [ ] `apps/api` builds and typechecks cleanly with the new package.
 - [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
 - [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.

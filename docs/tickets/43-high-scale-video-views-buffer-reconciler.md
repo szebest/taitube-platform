@@ -18,11 +18,11 @@ This ticket delivers:
 1. **Redis-Buffered View Ingestion & Anti-Fraud Engine**:
    - `POST /v1/videos/:id/views` registers playback telemetry (session UUID, watch duration, client timestamp).
    - **Anti-Fraud Filter**: Discards synthetic bots or pings with watch time < 5s.
-   - **HyperLogLog Viewer Deduplication**: Uses Redis HyperLogLog (`vp:views:dedup:{videoId}:{YYYYMMDD}`) with a 24-hour sliding TTL. Constant 12 KB memory footprint per video for millions of unique viewers.
-   - **Atomic View Buffer**: Increments dirty video view counts via Redis Hash `vp:views:buffer` (`HINCRBY vp:views:buffer {videoId} 1`) returning `202 Accepted` in < 2ms without holding database connections.
+   - **HyperLogLog Viewer Deduplication**: Uses Redis HyperLogLog (`taitube:views:dedup:{videoId}:{YYYYMMDD}`) with a 24-hour sliding TTL. Constant 12 KB memory footprint per video for millions of unique viewers.
+   - **Atomic View Buffer**: Increments dirty video view counts via Redis Hash `taitube:views:buffer` (`HINCRBY taitube:views:buffer {videoId} 1`) returning `202 Accepted` in < 2ms without holding database connections.
 2. **Zero-Loss Atomic Drain Reconciler (BullMQ & Lua Script)**:
    - Reconciler worker runs periodically (every 5–15s).
-   - Executes atomic Redis Lua script to swap and snapshot `vp:views:buffer` to `vp:views:flush:{batchId}` without race conditions or lost increments.
+   - Executes atomic Redis Lua script to swap and snapshot `taitube:views:buffer` to `taitube:views:flush:{batchId}` without race conditions or lost increments.
    - Consolidates updates and executes a high-throughput multi-row PostgreSQL `UPDATE videos` query using SQL `VALUES (...)` tuples and transactional `INSERT INTO video_views_daily ... ON CONFLICT DO UPDATE`.
 3. **Resilient Circuit Breaker & Fallback**:
    - If Redis is degraded, gracefully fails over to in-process memory ring-buffer without dropping client view beacons or throwing 500 errors.
@@ -36,10 +36,10 @@ This ticket delivers:
   - `video_id UUID not null references videos.id on delete cascade, view_date date not null, views integer not null default 0`.
   - Primary key `(video_id, view_date)` with composite index on `(view_date DESC, video_id)`.
 - [ ] Add `views_count bigint not null default 0` to `videos` table with index.
-- [ ] `ViewBufferPort` in `@vp/core/ports/view-buffer.port.ts` and `RedisViewBufferAdapter` in `adapters/redis/redis-view-buffer.adapter.ts`.
+- [ ] `ViewBufferPort` in `@taitube/core/ports/view-buffer.port.ts` and `RedisViewBufferAdapter` in `adapters/redis/redis-view-buffer.adapter.ts`.
 - [ ] `POST /v1/videos/:id/views` endpoint:
   - Validates telemetry payload with Zod schema (sessionId, watchSeconds, videoDuration).
-  - Evaluates HyperLogLog deduplication (`PFADD vp:views:dedup:{videoId}:{date} {sessionId}`).
+  - Evaluates HyperLogLog deduplication (`PFADD taitube:views:dedup:{videoId}:{date} {sessionId}`).
   - Buffers increment in Redis, returning `202 Accepted` immediately (< 5ms p99 latency).
 - [ ] BullMQ scheduled job `flush-video-views`:
   - Runs on worker reconciler schedule (every 10s).

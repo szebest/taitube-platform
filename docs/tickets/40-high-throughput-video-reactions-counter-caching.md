@@ -19,8 +19,8 @@ This ticket delivers:
    - PostgreSQL `video_reactions` table (`user_id`, `video_id`, `reaction_type`: `LIKE` / `DISLIKE`, `created_at`, `updated_at`) with unique composite key `(user_id, video_id)`.
    - Atomic PostgreSQL upsert pattern updating state without race conditions.
 2. **High-Performance Multi-Tier Redis Counter Cache**:
-   - Redis hash `vp:video:{id}:reactions` (`likes`, `dislikes`) for sub-millisecond retrieval.
-   - User reaction lookup cached in Redis set/hash (`vp:user:{userId}:reactions`) to eliminate DB hits on video page load.
+   - Redis hash `taitube:video:{id}:reactions` (`likes`, `dislikes`) for sub-millisecond retrieval.
+   - User reaction lookup cached in Redis set/hash (`taitube:user:{userId}:reactions`) to eliminate DB hits on video page load.
 3. **Cache Stampede Protection (Singleflight & Probabilistic Early Expiration)**:
    - Singleflight promise coalescing in Fastify: if 1,000 concurrent requests miss the reaction cache for a newly published or viral video, exactly 1 query executes against Postgres while all 999 callers await the coalesced result.
    - XFetch / Probabilistic background refresh for hot video counters.
@@ -36,7 +36,7 @@ This ticket delivers:
   - `id UUIDv7 PK, video_id UUID FK not null, user_id UUID FK not null, type text (LIKE, DISLIKE) not null, created_at, updated_at`.
   - Unique constraint on `(user_id, video_id)`.
   - Index on `(video_id, type)`.
-- [ ] `VideoReactionRepositoryPort` in `@vp/core/repositories/video-reaction-repository.port.ts`.
+- [ ] `VideoReactionRepositoryPort` in `@taitube/core/repositories/video-reaction-repository.port.ts`.
 - [ ] Modular `PostgresVideoReactionRepository` in `adapters/postgres/repositories/postgres-video-reaction-repository.ts` (<= 250 lines).
 - [ ] In-memory implementation `InMemoryVideoReactionRepository` with `.clear()`.
 - [ ] Redis reaction cache adapter with singleflight deduplication (`adapters/redis/redis-reaction-cache.adapter.ts`).

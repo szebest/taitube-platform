@@ -38,7 +38,7 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
 
 4. **High-Scale Watch History & Resumable Playhead Engine**:
    - **`watch_history` table:** `id UUIDv7 PK, user_id UUID FK on delete cascade, video_id UUID FK on delete cascade, progress_seconds integer not null, duration_seconds integer not null, watched_at timestamptz not null`. Unique on `(user_id, video_id)`.
-   - **Redis Playhead Buffer (`vp:user:{id}:playhead:{videoId}`)**: High-frequency 5-second playback heartbeats buffer in Redis with 7-day TTL for instant `< 1ms` resume queries without hammering PostgreSQL with UPDATE statements on every playback ping.
+   - **Redis Playhead Buffer (`taitube:user:{id}:playhead:{videoId}`)**: High-frequency 5-second playback heartbeats buffer in Redis with 7-day TTL for instant `< 1ms` resume queries without hammering PostgreSQL with UPDATE statements on every playback ping.
    - **Write-Behind Flush**: Playhead positions periodically flushed to `watch_history` table upon video completion, pause, or session end. If `progress_seconds >= duration_seconds * 0.92`, automatically marks video as completed.
    - `POST /v1/me/history`: Atomic upsert saving playback progress.
    - `GET /v1/me/history`: Keyset-paginated watch history ordered by `watched_at DESC` with video details, creator channel info, and progress percentage.
@@ -46,7 +46,7 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
    - `DELETE /v1/me/history/:videoId`: Removes an individual video from watch history.
 
 5. **Hexagonal Architecture & File Sizing**:
-   - `PlaylistRepositoryPort` and `WatchHistoryRepositoryPort` defined in `@vp/core/repositories/`.
+   - `PlaylistRepositoryPort` and `WatchHistoryRepositoryPort` defined in `@taitube/core/repositories/`.
    - Modular Postgres repositories in `adapters/postgres/repositories/` (each <= 250 lines).
    - In-memory test doubles with `.clear()`.
 

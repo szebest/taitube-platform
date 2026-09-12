@@ -20,7 +20,7 @@ This ticket delivers:
    - `sort=top` (default): Keyset cursor on `(is_pinned DESC, like_count DESC, created_at DESC, id DESC)`.
    - `sort=newest`: Keyset cursor on `(is_pinned DESC, created_at DESC, id DESC)`.
 3. **Hot Comments Cache & Singleflight**:
-   - Top 20 comments and total comment count cached in Redis (`vp:video:{id}:comments:top`) with 60s TTL for instant video watch page rendering.
+   - Top 20 comments and total comment count cached in Redis (`taitube:video:{id}:comments:top`) with 60s TTL for instant video watch page rendering.
    - Fastify singleflight promise coalescing on comment cache misses.
 4. **Denormalized Comment Counter**:
    - `videos.comments_count` updated transactionally on comment creation/deletion.
@@ -35,7 +35,7 @@ This ticket delivers:
   - `id UUIDv7 PK, video_id UUID not null references videos.id on delete cascade, author_id UUID not null references users.id, parent_id UUID references video_comments.id on delete cascade, content text not null, is_pinned boolean not null default false, is_edited boolean not null default false, like_count integer not null default 0, created_at, updated_at`.
   - Composite indexes: `(video_id, parent_id, is_pinned DESC, like_count DESC, created_at DESC)` and `(video_id, parent_id, is_pinned DESC, created_at DESC)`.
 - [ ] Add `comments_count integer not null default 0` to `videos` table.
-- [ ] `CommentRepositoryPort` in `@vp/core/repositories/comment-repository.port.ts`.
+- [ ] `CommentRepositoryPort` in `@taitube/core/repositories/comment-repository.port.ts`.
 - [ ] `PostgresCommentRepository` in `adapters/postgres/repositories/postgres-comment-repository.ts` (<= 250 lines).
 - [ ] `InMemoryCommentRepository` in `adapters/in-memory/repositories/in-memory-comment-repository.ts`.
 - [ ] Redis hot comments cache service (`adapters/redis/comment-cache.service.ts`).
