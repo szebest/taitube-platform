@@ -43,7 +43,7 @@ fi
 echo "==> Uploaded video ID: $VIDEO_ID"
 
 # 4. Mint auth token for API inspection
-TOKEN=$(pnpm --silent dev-token mint --sub "$DEV_USER_ID" --role admin --ttl 1h)
+TOKEN=$(pnpm --silent dev-token mint --sub "$DEV_USER_ID" --role admin --ttl 1h --raw)
 
 # 5. Poll until video is READY
 START_TIME=$(date +%s)

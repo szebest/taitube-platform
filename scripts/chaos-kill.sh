@@ -74,7 +74,7 @@ run_scenario() {
 
   # 5. Poll for video to reach READY (timeout 180s)
   local token
-  token=$(pnpm --silent dev-token mint --sub "$DEV_USER_ID" --role admin --ttl 1h)
+  token=$(pnpm --silent dev-token mint --sub "$DEV_USER_ID" --role admin --ttl 1h --raw)
   local start_time
   start_time=$(date +%s)
   local video_status=""
