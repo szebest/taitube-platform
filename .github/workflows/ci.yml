@@ -90,6 +90,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages
+        run: pnpm build
+
       - name: Generate video fixtures
         run: pnpm gen-video
 
@@ -137,6 +140,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
 
       - name: Generate video fixtures
         run: pnpm gen-video
@@ -186,6 +192,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages
+        run: pnpm build
+
       - name: Generate video fixtures
         run: pnpm gen-video
 
@@ -198,6 +207,7 @@ jobs:
         run: |
           cp .env.example .env
           docker compose -f infra/compose/docker-compose.yml up -d postgres redis minio
+          until docker compose -f infra/compose/docker-compose.yml exec -T postgres pg_isready -U vp -d vp; do sleep 1; done
           docker compose -f infra/compose/docker-compose.yml up minio-init
           DATABASE_URL="postgres://vp:vp@localhost:5432/vp" DATABASE_URL_MIGRATIONS="postgres://vp:vp@localhost:5432/vp" pnpm db:migrate
 
