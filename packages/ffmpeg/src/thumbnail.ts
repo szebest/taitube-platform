@@ -185,44 +185,45 @@ export function generateSpriteVtt(options: GenerateSpriteVttOptions): string {
  * Strictly parses and validates WebVTT content for thumbnail sprite sheets.
  */
 export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
-  const normalized = vttContent.replace(/\r\n/g, '\n').trim();
+  const normalized = vttContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
   if (!normalized.startsWith('WEBVTT')) {
     throw new Error('Invalid WebVTT: header does not start with WEBWTT');
   }
 
   const lines = normalized.split('\n');
   const cues: SpriteVttCue[] = [];
-
-  let idx = 0;
-  while (idx < lines.length && lines[idx]?.trim() !== '') {
-    idx++;
-  }
-
   let cueIndex = 0;
-  while (idx < lines.length) {
-    const line = lines[idx]?.trim() || '';
-    if (!line) {
-      idx++;
-      continue;
-    }
 
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]?.trim() ?? '';
     const timeMatch = line.match(/^(\d{2}:\d{2}:\d{2}\.\d{3})\s+-->\s+(\d{2}:\d{2}:\d{2}\.\d{3})/);
     if (!timeMatch) {
-      idx++;
       continue;
     }
 
-    const startTime = timeMatch[1];
-    const endTime = timeMatch[2];
-    if (!(startTime && endTime)) {
-      throw new Error(`Invalid WebVTT cue time line at line ${idx + 1}: "${line}"`);
-    }
-    idx++;
+    const startTime = timeMatch[1]!;
+    const endTime = timeMatch[2]!;
 
-    const payloadLine = lines[idx]?.trim() || '';
+    // Scan for the payload line with xywh coordinates
+    let payloadLine = '';
+    let j = i + 1;
+    while (j < lines.length) {
+      const candidate = lines[j]?.trim() ?? '';
+      if (candidate) {
+        payloadLine = candidate;
+        i = j;
+        break;
+      }
+      j++;
+    }
+
+    if (!payloadLine) {
+      throw new Error(`Invalid WebVTT cue payload after line ${i + 1}`);
+    }
+
     const payloadMatch = payloadLine.match(/^(.*)#xywh=(\d+),(\d+),(\d+),(\d+)$/);
     if (!payloadMatch) {
-      throw new Error(`Invalid WebVTT cue payload at line ${idx + 1}: "${payloadLine}"`);
+      throw new Error(`Invalid WebVTT cue payload at line ${i + 1}: "${payloadLine}"`);
     }
 
     const spriteFilename = payloadMatch[1] ?? '';
@@ -256,8 +257,6 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
       width,
       height,
     });
-
-    idx++;
   }
 
   return cues;
