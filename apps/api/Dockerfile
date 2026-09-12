@@ -14,9 +14,7 @@ RUN pnpm turbo run build --filter=@vp/api... \
  && pnpm deploy --legacy --filter=@vp/api --prod /out \
  && cp -r packages/db/drizzle /out/drizzle \
  && mkdir -p /out/node_modules/@vp/db \
- && cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle \
- && cp apps/api/loader.mjs /out/loader.mjs \
- && cp apps/api/register.js /out/register.js
+ && cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle
 
 # Production runtime image
 FROM node:24-slim AS runtime
@@ -28,7 +26,7 @@ WORKDIR /app
 COPY --from=build --chown=appuser:appuser /out /app
 
 USER appuser
-ENV NODE_ENV=production PORT=3000 METRICS_PORT=9464 TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 NODE_OPTIONS="--import=/app/register.js"
+ENV NODE_ENV=production PORT=3000 METRICS_PORT=9464 TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 NODE_OPTIONS="--import @vp/config/register"
 EXPOSE 3000 9464
 
 ENTRYPOINT ["/usr/bin/tini", "--"]

@@ -13,7 +13,7 @@ x-app-env: &app-env
   S3_ENDPOINT: http://minio:9000
   S3_FORCE_PATH_STYLE: "true"
   STORAGE_FORCE_PATH_STYLE: "true"
-  NODE_OPTIONS: "--import=/app/register.js"
+  NODE_OPTIONS: "--import @vp/config/register"
 
 services:
   postgres:

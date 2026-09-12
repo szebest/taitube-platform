@@ -16,9 +16,7 @@ RUN pnpm turbo run build --filter=@vp/worker... \
  && pnpm deploy --legacy --filter=@vp/worker --prod /out \
  && cp -r packages/db/drizzle /out/drizzle \
  && mkdir -p /out/node_modules/@vp/db \
- && cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle \
- && cp apps/worker/loader.mjs /out/loader.mjs \
- && cp apps/worker/register.js /out/register.js
+ && cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle
 
 # Base runtime choices
 FROM oven/bun:1.4-slim AS runtime-bun
@@ -38,6 +36,6 @@ WORKDIR /app
 COPY --from=build --chown=10001:10001 /out /app
 
 USER 10001
-ENV NODE_ENV=production TMPDIR=/tmp/vp WORKER_HEARTBEAT_PATH=/tmp/vp/heartbeat TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 NODE_OPTIONS="--import=/app/register.js"
+ENV NODE_ENV=production TMPDIR=/tmp/vp WORKER_HEARTBEAT_PATH=/tmp/vp/heartbeat TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 NODE_OPTIONS="--import @vp/config/register"
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} dist/main.js"]
