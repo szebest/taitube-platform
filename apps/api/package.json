@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "dev": "node dist/main.js",
+    "dev": "node --import ./register.js dist/main.js",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
