@@ -35,6 +35,6 @@ Run and paste the output of: `pnpm typecheck && pnpm lint && pnpm test` (+ `pnpm
 
 ## 5. Hand off
 - `code-review` against the ticket (spec axis) and standards axis.
-- **Update Architecture & Decisions:** If any schemas, boundaries, workspace packages, or architecture decisions changed or were introduced, ensure `ARCHITECTURE.md` and `docs/SDD.md` (and its ADRs) are updated and consistent.
+- **Update Architecture, Docs & README:** If any features, endpoints, commands, schemas, boundaries, workspace packages, or architecture decisions changed or were introduced, ensure `README.md`, `ARCHITECTURE.md`, and `docs/SDD.md` (and its ADRs) are updated and consistent. Keep `README.md` accurate, professional, human-written (no emojis, no AI clichés), and continuously improved.
 - Set `**Status:**` to `done`, re-run `python3 docs/tickets/gen-index.py`, sync ticket status to GitHub Issues / Project board via `pnpm sync:tickets` (or automatic CI workflow), update the SDD/PRD if a decision changed, write a `handoff` note if the next ticket is for another agent.
 - PR title `NN: <ticket title>`; body = AC checklist with evidence links + decisions made + documentation updates.
