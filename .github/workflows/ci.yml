@@ -137,43 +137,6 @@ jobs:
   integration:
     name: integration
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: vp
-          POSTGRES_PASSWORD: vp
-          POSTGRES_DB: vp
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U vp -d vp"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli -a vp ping"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-        command: >-
-          redis-server --appendonly yes --appendfsync everysec --maxmemory 256mb --maxmemory-policy noeviction --requirepass vp
-
-      minio:
-        image: minio/minio:latest
-        ports:
-          - 9000:9000
-          - 9001:9001
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        command: server /data --console-address ":9001"
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -216,22 +179,12 @@ jobs:
       - name: Verify video fixtures against manifest
         run: pnpm gen-video --check
 
-      - name: Wait for services readiness
-        run: |
-          echo "==> Waiting for PostgreSQL..."
-          until pg_isready -h localhost -p 5432 -U vp; do sleep 1; done
-          echo "==> Waiting for Redis..."
-          until redis-cli -h localhost -p 6379 -a vp ping; do sleep 1; done
-          echo "==> Waiting for MinIO..."
-          until curl -sSf http://localhost:9000/minio/health/live; do sleep 1; done
-          echo "==> All service containers are ready!"
-
-      - name: Initialize MinIO buckets & policies
+      - name: Start infrastructure services with Docker Compose
         env:
-          MINIO_ENDPOINT: http://localhost:9000
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-        run: bash infra/compose/minio-init.sh
+          REDIS_PASSWORD: vp
+        run: |
+          cp .env.example .env
+          docker compose -f infra/compose/docker-compose.yml up -d postgres redis minio minio-init --wait
 
       - name: Verify service containers connectivity (psql, redis-cli, mc)
         run: |
@@ -242,6 +195,7 @@ jobs:
           redis-cli -h localhost -p 6379 -a vp ping
 
           echo "==> Testing MinIO bucket listing via mc ls..."
+          mc alias set local http://localhost:9000 minioadmin minioadmin
           mc ls local
 
       - name: Run infrastructure smoke test (infra/compose/test.sh)
@@ -269,6 +223,10 @@ jobs:
           S3_RAW_BUCKET: raw
           S3_PUBLIC_BUCKET: public
         run: pnpm test:integration
+
+      - name: Stop infrastructure services
+        if: always()
+        run: docker compose -f infra/compose/docker-compose.yml down -v
 
   e2e:
     name: e2e-smoke
