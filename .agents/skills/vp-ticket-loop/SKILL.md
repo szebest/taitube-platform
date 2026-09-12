@@ -108,11 +108,14 @@ that gives the worker everything it needs without reading this skill. Include:
 4. **Non-negotiable rules**: Paste this verbatim into every briefing:
    > You must follow the `vp-work-ticket` skill end-to-end. Read the ticket,
    > load only the linked PRD/SDD sections, build with TDD, and run full
-   > verification (`pnpm typecheck && pnpm lint && pnpm test`) before claiming
+   > verification (`pnpm typecheck && pnpm lint && pnpm test`, `bun test`) before claiming
    > done. Respect local-first (no external services), dual-runtime (vitest +
-   > bun test for worker code), and all AGENTS.md rules. Update the ticket
-   > status to `done` and run `python3 docs/tickets/gen-index.py`. When
-   > finished, respond with a structured completion report (see format below).
+   > bun test for worker code), and all AGENTS.md rules. All CI checks on GitHub
+   > Actions (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`)
+   > MUST pass green as part of the Definition of Done. Merging or finishing
+   > a ticket that fails CI checks is strictly forbidden. Update the ticket
+   > status to `done` only after CI is green, and run `python3 docs/tickets/gen-index.py`.
+   > When finished, respond with a structured completion report (see format below).
 5. **Working directory**: The repo root, or the worktree path if parallel.
 6. **Branch**: Tell the worker which branch it's on.
 
@@ -167,19 +170,21 @@ Once the worker reports completion, spawn a **reviewer** subagent:
   - The spec: `docs/tickets/NN-slug.md`
   - Ask it to also run `pnpm typecheck && pnpm lint && pnpm test` independently
     (verification-before-completion — don't trust the worker's claim).
+  - Ask it to inspect GitHub Actions CI status (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`).
   - Output format: a structured review with `## Standards`, `## Spec`,
-    `## Verification`, and a final `## Verdict: PASS | FAIL` line.
+    `## Verification`, `## CI Status`, and a final `## Verdict: PASS | FAIL` line.
+  - If any CI job is failing, the reviewer MUST issue `FAIL` and raise a blocking CI issue under DoD.
   - If FAIL, list each finding with a fix instruction.
 
 ### Review-fix loop
 
-- If the reviewer says **PASS** → proceed to step 5.
-- If the reviewer says **FAIL**:
-  1. Send the reviewer's findings to the **original worker** via `send_message`.
-     Tell the worker: "The reviewer found these issues. Fix them and report back."
+- If the reviewer says **PASS** (and CI is fully green) → proceed to step 5.
+- If the reviewer says **FAIL** (or CI failed):
+  1. Send the reviewer's findings and CI logs to the **original worker** via `send_message`.
+     Tell the worker: "The reviewer found these issues / CI failed. Fix them and report back."
   2. Wait for the worker to report the fixes are done.
   3. Send a message to the **reviewer**: "The worker applied fixes. Please
-     re-review: run the diff and verification again."
+     re-review: run the diff and verification again, and check CI."
   4. Wait for the reviewer's updated verdict.
   5. Repeat until PASS (max 3 rounds — if still failing after 3 rounds, stop
      the loop and report the situation to the user).
@@ -189,14 +194,15 @@ Once the worker reports completion, spawn a **reviewer** subagent:
 
 ## 5. Commit and merge
 
-After review passes:
+After review passes and all CI checks on GitHub Actions are verified GREEN:
 
 1. Tell the worker to make a final commit:
    ```
    git add -A && git commit -m "NN: <ticket title>"
    ```
-2. If on a branch (not main), merge to main (see §1 for commands).
-3. Kill both the worker and reviewer subagents.
+2. Forbid merging or finishing if any CI check has failed or is unresolved.
+3. If on a branch (not main), merge to main (see §1 for commands).
+4. Kill both the worker and reviewer subagents.
 4. Record the worker's **completion report** — especially the
    "Notes for the next agent" section — in your memory. You will paste this
    into the next worker's briefing.

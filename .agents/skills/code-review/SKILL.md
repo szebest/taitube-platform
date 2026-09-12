@@ -71,11 +71,16 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 If the spec is missing, skip the Spec sub-agent and note this in the final report.
 
-### 5. Aggregate
+### 5. Aggregate & CI Gate
 
 Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings, because the two axes are deliberately separate (see _Why two axes_).
 
-End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes: that's the reranking the separation exists to prevent.
+**CI Check & Definition of Done Gate:**
+Check the CI status on GitHub Actions (all workflow jobs: `lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`).
+- If any CI job has failed, the reviewer **MUST** raise a blocking issue under `## CI Status` and `## Standards (DoD)`, issue a verdict of `FAIL`, and explicitly state that merging or finishing the ticket is forbidden until all CI checks are green.
+- If CI is still running, flag it as pending and block merge until green.
+
+End with a summary: total findings per axis, CI status, and the final verdict (`PASS` or `FAIL`).
 
 ## Why two axes
 

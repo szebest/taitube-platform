@@ -1,11 +1,7 @@
 name: Images
 
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
-  pull_request:
-    branches: [main]
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
@@ -50,8 +46,9 @@ jobs:
         with:
           images: ${{ env.IMAGE_API }}
           tags: |
+            type=ref,event=tag
             type=sha,format=long
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Build and push API image (linux/amd64,linux/arm64)
         uses: docker/build-push-action@v6
@@ -59,7 +56,7 @@ jobs:
           context: .
           file: apps/api/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
           tags: ${{ steps.meta-api.outputs.tags }}
           labels: ${{ steps.meta-api.outputs.labels }}
 
@@ -70,8 +67,9 @@ jobs:
         with:
           images: ${{ env.IMAGE_WORKER }}
           tags: |
+            type=ref,event=tag
             type=sha,format=long
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Build and push Worker image (Bun, linux/amd64,linux/arm64)
         uses: docker/build-push-action@v6
@@ -81,7 +79,7 @@ jobs:
           build-args: |
             WORKER_RUNTIME=bun
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
           tags: ${{ steps.meta-worker.outputs.tags }}
           labels: ${{ steps.meta-worker.outputs.labels }}
 
@@ -92,8 +90,9 @@ jobs:
         with:
           images: ${{ env.IMAGE_WORKER }}
           tags: |
+            type=ref,event=tag,suffix=-node
             type=sha,format=long,suffix=-node
-            type=raw,value=node,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=node,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Build and push Worker image (Node, linux/amd64,linux/arm64)
         uses: docker/build-push-action@v6
@@ -103,7 +102,7 @@ jobs:
           build-args: |
             WORKER_RUNTIME=node
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
           tags: ${{ steps.meta-worker-node.outputs.tags }}
           labels: ${{ steps.meta-worker-node.outputs.labels }}
 

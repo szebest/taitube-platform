@@ -36,6 +36,6 @@ WORKDIR /app
 COPY --from=build --chown=10001:10001 /out /app
 
 USER 10001
-ENV NODE_ENV=production TMPDIR=/tmp/vp WORKER_HEARTBEAT_PATH=/tmp/vp/heartbeat TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1
+ENV NODE_ENV=production TMPDIR=/tmp/vp WORKER_HEARTBEAT_PATH=/tmp/vp/heartbeat TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 NODE_OPTIONS="--experimental-specifier-resolution=node"
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} dist/main.js"]

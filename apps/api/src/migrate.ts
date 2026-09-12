@@ -1,4 +1,4 @@
-import { runMigrations } from '@vp/db';
+import { runMigrations } from '@vp/db/migrate';
 
 runMigrations()
   .then(() => {
