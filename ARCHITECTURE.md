@@ -79,7 +79,22 @@ video-pipeline/
 │
 ├── apps/
 │   ├── api/                        # Fastify API (Composition root: apps/api/src/app.ts)
-│   └── worker/                     # BullMQ Worker (Composition root: apps/worker/src/runner.ts)
+│   ├── worker/                     # BullMQ Worker (Composition root: apps/worker/src/runner.ts)
+│   └── web/                        # Taitube Frontend (React 19, TanStack Start, Router, Query, Form, Table, Virtual, Vite 6)
+│
+├── packages/
+│   ├── api-contracts/              # Single-sourced Zod schemas & DTO types for BE + FE
+│   ├── api-client/                 # Type-safe client SDK + TanStack Query hooks
+│   ├── job-contracts/              # BullMQ queue names, payloads, and retry policies
+│   ├── db/                         # Drizzle schema, migrations, connection pools
+│   ├── storage/                    # S3 key conventions & presigned URL helpers
+│   ├── ffmpeg/                     # FFmpeg command builders, ladder specs, probe parser
+│   ├── observability/              # Prometheus metrics, OTel tracing & logger
+│   ├── events/                     # Redis Pub/Sub events & SSE event schemas
+│   ├── config/                     # Shared Zod environment schemas
+│   ├── errors/                     # RFC 9457 ProblemDetails & error taxonomy
+│   ├── testing/                    # Test fixtures, dev tokens, doubles
+│   └── tsconfig/                   # Shared TypeScript presets
 ```
 
 ---
@@ -180,6 +195,35 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 - Route handlers in `apps/api/src/routes/` are strictly transport adapters: they validate HTTP inputs, check authorization, and format HTTP responses.
 - All orchestration, multi-system transaction coordination, and business invariants live in Deep Domain Services in `apps/api/src/services/` (`UploadService`, `VideoService`).
 
+### Rule 6: Client-Server Boundary & Contract Single-Sourcing
+- **Frontend Isolation:** `apps/web` must NEVER import `core`, `adapters`, `packages/db`, or any server-only package. It interacts with the backend strictly through `@vp/api-client`.
+- **Contract Single-Sourcing:** All API DTO schemas and query parameters are authored once in `packages/api-contracts` (using Zod) and consumed by both Fastify route schemas (`apps/api`) and `@vp/api-client` (`apps/web`).
+- **Shared Declarative Permissions:** RBAC/ABAC rules are defined in `@vp/core/permissions` without driver dependencies and shared between backend route decorators and frontend `<Can />` authorization components.
+
+### Rule 7: Frontend Resilience & Presentation Invariants
+- **Classified Retry & Idempotent Mutation Policy:** Queries auto-retry at most 3 times with exponential backoff and randomized jitter on transient 5xx/network failures, and never on permanent 4xx errors. Mutations must never auto-retry on server responses to guarantee side-effect idempotency and prevent duplicate writes.
+- **Hierarchical Error Isolation:** Route-level boundaries catch critical page-level failures (`<NotFoundRoute />`, `<ForbiddenRoute />`, `<ServerErrorRoute />`, `<RootErrorPage />`), while contextual widget boundaries (`<QueryErrorCard />`) isolate non-critical failures (e.g. comments or recommendations) to ensure primary media playback is never interrupted.
+- **Layout-Stable Skeleton Placeholders:** Skeletons are strictly scoped to primary initial viewports and must strictly preserve component aspect ratios (16:9 video thumbnail, 16:3 banner) and typography heights to guarantee zero Cumulative Layout Shift (`CLS < 0.05`).
+
+### Rule 8: URL-Driven State Architecture & Modal Deep-Linking (The STS Pattern)
+- **URL as Single Source of Truth:** All active modals (`?modal=...`), drawers, active tabs, filter chips, and search facets must be reflected in the browser URL search parameters rather than ephemeral component local state (`useState`).
+- **History Discipline (Push vs Replace):** Opening dialogs and major state transitions must push history (`replace: false`) so the browser Back button closes the modal naturally. Filter toggling, sort changes, seekbar scrubbing, and search pagination must replace history (`replace: true`) to avoid polluting the browser history stack.
+- **Search Parameter Type-Safety:** Every frontend route must define a strict Zod `validateSearch` schema in TanStack Router.
+
+### Rule 9: Unified TanStack Full-Stack & Server-First SSR Architecture
+- **Server-First Fetching & Rendering Baseline:** All public and discovery pages (Home Feed `/`, Video Watch `/watch/$videoId`, Search `/search`, Channel Profile `/channels/$handle`, Playlists `/playlist`, and Categories) must be **server-rendered by default** using TanStack Start:
+  - **Server Functions (`createServerFn`):** Execute on the Node/Nitro server, querying internal backend APIs or databases directly to eliminate browser network waterfalls and TTFB lag.
+  - **Route Loaders & Query Prefetching:** Route `loader` functions prefetch server state into `QueryClient` during SSR (`await queryClient.prefetchQuery(...)`), dehydrating state directly into the streamed HTML.
+  - **Zero Client Hydration Duplication:** The client hydrates the dehydrated Query cache instantly on initial load, triggering zero duplicate HTTP calls on mount.
+  - **Streaming HTML & SEO Metadata:** Pages stream initial HTML with fully populated `<head>` (OpenGraph, Twitter Player Cards, `VideoObject` JSON-LD schema) and server-rendered layout markup so web crawlers and humans see complete content without executing client JavaScript.
+- **The TanStack Full-Stack Ecosystem:**
+  - **TanStack Start (`@tanstack/react-start`):** Nitro/Vite 6 server runtime, streaming SSR, server functions (`createServerFn`), dynamic `<head>` injection.
+  - **TanStack Router (`@tanstack/react-router`):** 100% type-safe file routes, Zod search param validation (`validateSearch`), and server-side route loaders.
+  - **TanStack Query (`@tanstack/react-query` v5):** Server state management, SSR dehydration/hydration, optimistic mutations, and cache invalidation.
+  - **TanStack Form (`@tanstack/react-form` + `@tanstack/zod-form-adapter`):** Reactive, zero-re-render forms for uploads, metadata editing, playlists, and settings.
+  - **TanStack Table (`@tanstack/react-table` v8):** Headless tables for Studio video management, Admin taxonomies, and queue inspection.
+  - **TanStack Virtual (`@tanstack/react-virtual` v3):** DOM node virtualization for infinite feeds, comments, and playlist trays.
+
 ---
 
 ## 6. Verification & Enforcement
@@ -189,5 +233,7 @@ The repository enforces architectural boundaries through static verification:
 2. `git grep "ioredis"` matches only `adapters/redis/`.
 3. `git grep "bullmq"` matches only `adapters/bullmq/`.
 4. `git grep "postgres"` and `git grep "drizzle-orm"` match only `adapters/postgres/` and `packages/db`.
-5. Full dual-runtime test parity under `vitest` and `bun test`.
-6. Biome formatting and linting pass with zero errors (`pnpm biome check --diagnostic-level=error`).
+5. `apps/web` imports only from `@vp/api-client`, `@vp/api-contracts`, and pure frontend packages.
+6. Full dual-runtime test parity under `vitest` and `bun test`.
+7. Biome formatting and linting pass with zero errors (`pnpm biome check --diagnostic-level=error`).
+

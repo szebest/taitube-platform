@@ -5,7 +5,7 @@
 | Phase | 1 — Walking skeleton |
 | Size | L (largest foundation slice; still one session if the DDL is copied from the SDD) |
 | Blocked by | 01 — Repo skeleton · 03 — Dev tooling (dev token) |
-| Blocks | 05, 10, 15, 19 |
+| Blocks | 05, 10, 15, 19, 37, 38 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model-database-schema) · [SDD §5.3 Key queries](../SDD.md#53-key-queries-that-encode-the-guarantees) · [SDD §3.5 State machine](../SDD.md#35-state-machine) · [SDD §6 API contract](../SDD.md#6-api-contract) · [SDD §11 Security](../SDD.md#11-security) · [SDD §16 Env](../SDD.md#16-environment-variables) · [ADR-02](../SDD.md#adr-02-http-framework-fastify-5) · [ADR-04](../SDD.md#adr-04-database-postgresql-16-neon-in-cloud-drizzle-orm) · [ADR-17](../SDD.md#adr-17-schemavalidation-ids) · [ADR-18](../SDD.md#adr-18-error-taxonomy-decides-retry-policy) |
 
 **Status:** done

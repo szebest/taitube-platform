@@ -5,7 +5,7 @@
 | Phase | 2 — Real pipeline |
 | Size | M |
 | Blocked by | 04 — API skeleton |
-| Blocks | — |
+| Blocks | 36, 50 |
 | Spec | [PRD US-12](../PRD.md#53-status-feedback) · [PRD FR-14](../PRD.md#6-functional-requirements) · [SDD §6 API contract (all)](../SDD.md#6-api-contract) · [SDD §11 Authorisation](../SDD.md#11-security) |
 
 **Status:** done

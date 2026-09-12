@@ -5,7 +5,7 @@
 | Phase | 0 — Bootstrap |
 | Size | M (one focused session) |
 | Blocked by | None (can start immediately) |
-| Blocks | 02, 03, 04, 31 |
+| Blocks | 02, 03, 04, 31, 48 |
 | Spec | [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §15.2 Toolchain](../SDD.md#152-toolchain) · [SDD §12.1 Compose](../SDD.md#121-rung-1-docker-compose-local-dev-phase-02) · [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [ADR-05](../SDD.md#adr-05-redis-flavour-self-hosted-redis-7-valkey-8-next-to-the-workers) · [ADR-11](../SDD.md#adr-11-repository-topology-modular-monorepo-multiple-deployables-one-worker-image) · [`.env.example`](../../.env.example) |
 
 **Status:** done

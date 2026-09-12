@@ -45,7 +45,12 @@ L=["# Tickets — video-pipeline\n",
 2. Read the ticket, then **only** the PRD/SDD sections it links. Do not read the whole SDD — the links are the context budget.
 3. Create a branch `ticket/NN-slug`. Implement the *whole* slice: schema → code → tests → docs. Keep `.env.example`, `packages/job-contracts` and the SDD in sync if you touch them (the drift tests will tell you).
 4. Every acceptance criterion becomes a test or a recorded demo (screenshot/GIF/result table in the PR).
-5. PR checklist: AC ticked · tests green under Node **and** Bun where the worker is involved · no new external runtime dependency (local-first, SDD P9 / PRD G11) · SDD/PRD updated if a decision changed · ticket `**Status:**` set to `done` and `gen-index.py` re-run.
+5. PR checklist & Definition of Done:
+   - All AC ticked with verifiable evidence.
+   - Tests green under Node **and** Bun where the worker or shared packages are involved.
+   - No new external runtime dependency (local-first, SDD P9 / PRD G11).
+   - **Documentation & Architecture in DoD:** `ARCHITECTURE.md` and `docs/SDD.md` (and relevant ADRs) MUST be updated if any boundary, contract, workspace package, schema, or architecture decision is added or changed.
+   - Ticket `**Status:**` set to `done` and `python3 docs/tickets/gen-index.py` re-run.
 6. Found a decision the ticket doesn't cover? Don't guess silently: pick the option most consistent with the SDD ADRs, write it into the ticket's *Open questions* as "Decided: …", and flag it in the PR.
 
 **Sizes:** S ≈ half a session · M ≈ one session · L ≈ one long session (still one context window if you follow the links only).

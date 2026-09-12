@@ -551,6 +551,31 @@ Decided at the throw site, never by regex on messages.
 
 ---
 
+### ADR-20 — Monorepo Topology, Workspace Boundaries, and Contract Single-Sourcing
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| **1** | **Single Monorepo (`video-pipeline`) with strict pnpm workspace boundaries (`apps/*`, `packages/*`, `core`, `adapters`) + single-sourced Zod contracts (`@vp/api-contracts`)** | **Chosen** | Direct type-safety without build-time sync rituals or schema drift; `apps/web` consumes `@vp/api-client` with inferred route types; zero SDK leaks into frontend; backend route definitions share the identical schema; permissions (`@vp/core/permissions`) shared between backend Fastify hooks and frontend UI guard components. |
+| 2 | Separate Git repositories (backend repo vs frontend repo) with published NPM packages | Rejected | High ceremony, slow solo iteration, version mismatch risk, tedious local package linking (`pnpm link`) during rapid API feature evolution. |
+| 3 | Backend-only monorepo with tRPC for client-server RPC | Rejected | Couples API transport to tRPC runtime; prevents clean REST/OpenAPI standard documentation for public consumers, third-party integrations, and standard load testing tools (k6). |
+
+**Consequences:**
+- `apps/web` must **never** import `core`, `adapters`, `packages/db`, or server runtimes. Enforced via ESLint/Biome import boundaries and CI build checks.
+- API endpoints are authored once in `packages/api-contracts` (Zod) and compiled to OpenAPI schemas.
+- `packages/api-client` generates TanStack React Query hooks and type-safe fetchers from `@vp/api-contracts`.
+
+---
+
+### ADR-21 — Modern Frontend Framework: React 19 + TanStack Start (SSR) + TanStack Router (No Next.js)
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| **1** | **React 19 + TanStack Start (SSR/Streaming) + TanStack Router + Vite 6 + Tailwind CSS v4** | **Chosen** | 100% type-safe search params and route paths; streaming SSR without vendor lock-in to Vercel; perfect synergy with TanStack Query v5; client hydration and SSR play well with local-first Node/Docker deployment; no magic file conventions or Next.js server actions obfuscation. |
+| 2 | Next.js 15 (App Router) | Rejected | Explicitly rejected by user requirement. Heavy Vercel coupling, opaque server component caching bugs, proprietary cache tags, heavy server footprint for self-hosting. |
+| 3 | Pure Client-Side SPA (Vite + React Router v7 SPA mode) | Rejected | Insufficient for video SEO (needs SSR `VideoObject` JSON-LD and OpenGraph metadata for search indexing and social sharing). |
+
+---
+
 ## 5. Domain Model & Database Schema
 
 ### 5.1 Entity relationship
@@ -1639,7 +1664,15 @@ video-pipeline/
 │       ├── test/                         # vitest (node) + bun test (bun) — both in CI
 │       ├── Dockerfile                    # ARG WORKER_RUNTIME=bun|node
 │       └── package.json
+│   └── web/                              # Taitube Frontend: React 19 · TanStack Start/Router · Vite 6 · Tailwind v4
+│       ├── src/
+│       │   ├── routes/                   # TanStack Router file-based routes
+│       │   ├── components/               # Radix UI primitives, player, drawer, studio
+│       │   └── hooks/                    # TanStack Query hooks from @vp/api-client
+│       └── package.json
 ├── packages/
+│   ├── api-contracts/                    # zod schemas + DTO types for all HTTP endpoints & query params (single-sourced)
+│   ├── api-client/                       # type-safe fetch client SDK + auto-generated TanStack React Query hooks
 │   ├── job-contracts/                    # zod schemas + types for every job payload, jobId builders, stagePolicies, queue names
 │   ├── db/                               # drizzle schema, migrations/, repositories (videos, steps, events, dlq), CAS helpers
 │   ├── storage/                          # keys.ts (deterministic key builders), mime.ts, multipart.ts (part math/constants)
@@ -1648,6 +1681,7 @@ video-pipeline/
 │   ├── events/                           # Redis Pub/Sub publisher/subscriber, channel names, SSE event schemas (shared with frontend later)
 │   ├── config/                           # shared zod env fragments (redis, postgres, storage, otel) + loadEnv()
 │   ├── errors/                           # TransientError, UnrecoverableError re-export, error codes enum, problem+json mapper
+│   ├── testing/                          # test fixtures, dev tokens, doubles
 │   └── tsconfig/                         # base tsconfig presets
 ├── infra/
 │   ├── compose/                          # docker-compose.yml, minio-init.sh, prometheus.yml, tempo.yml, otel-collector.yml, grafana/provisioning, toxiproxy profile

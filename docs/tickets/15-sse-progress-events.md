@@ -5,7 +5,7 @@
 | Phase | 2 — Real pipeline |
 | Size | M–L |
 | Blocked by | 07 — Playable READY video · 04 — API skeleton |
-| Blocks | 20 |
+| Blocks | 20, 36 |
 | Spec | [PRD US-11](../PRD.md#53-status-feedback) · [PRD FR-8](../PRD.md#6-functional-requirements) · [PRD §7 SSE SLOs](../PRD.md#7-non-functional-requirements-slos) · [SDD §10 Real-time status (wire format, fan-out, limits)](../SDD.md#10-real-time-status-sse) · [SDD §20 `SseEvent`](../SDD.md#20-appendix-job-contracts-code) · [ADR-10](../SDD.md#adr-10-status-transport-server-sent-events) |
 
 **Status:** done

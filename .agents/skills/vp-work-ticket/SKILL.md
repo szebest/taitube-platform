@@ -35,5 +35,7 @@ Run and paste the output of: `pnpm typecheck && pnpm lint && pnpm test` (+ `pnpm
 
 ## 5. Hand off
 - `code-review` against the ticket (spec axis) and standards axis.
-- Set `**Status:**` to `done`, re-run `gen-index.py`, update the SDD/PRD if a decision changed, write a `handoff` note if the next ticket is for another agent.
-- PR title `NN: <ticket title>`; body = AC checklist with evidence links + decisions made.
+- **Update Architecture & Decisions:** If any schemas, boundaries, workspace packages, or architecture decisions changed or were introduced, ensure `ARCHITECTURE.md` and `docs/SDD.md` (and its ADRs) are updated and consistent.
+- Set `**Status:**` to `done`, re-run `python3 docs/tickets/gen-index.py`, update the SDD/PRD if a decision changed, write a `handoff` note if the next ticket is for another agent.
+- PR title `NN: <ticket title>`; body = AC checklist with evidence links + decisions made + documentation updates.
+
