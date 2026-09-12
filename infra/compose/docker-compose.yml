@@ -73,19 +73,12 @@ services:
       - "9001:9001"
     volumes:
       - miniodata:/data
-    healthcheck:
-      test: ["CMD-SHELL", "mc ready local || curl -f http://localhost:9000/minio/health/live || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 5s
 
   minio-init:
     image: minio/mc:latest
     container_name: vp-minio-init
     depends_on:
-      minio:
-        condition: service_healthy
+      - minio
     entrypoint: ["/bin/sh", "/init/minio-init.sh"]
     volumes:
       - ./minio-init.sh:/init/minio-init.sh:ro

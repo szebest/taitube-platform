@@ -197,9 +197,9 @@ jobs:
           REDIS_PASSWORD: vp
         run: |
           cp .env.example .env
-          docker compose -f infra/compose/docker-compose.yml up -d postgres redis minio --wait
+          docker compose -f infra/compose/docker-compose.yml up -d postgres redis minio
           docker compose -f infra/compose/docker-compose.yml up minio-init
-          docker compose -f infra/compose/docker-compose.yml up migrate
+          DATABASE_URL="postgres://vp:vp@localhost:5432/vp" DATABASE_URL_MIGRATIONS="postgres://vp:vp@localhost:5432/vp" pnpm db:migrate
 
       - name: Run infrastructure smoke test (infra/compose/test.sh)
         run: bash infra/compose/test.sh
@@ -228,6 +228,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install system dependencies (psql, redis-cli, ffmpeg, curl)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client redis-tools ffmpeg curl fonts-dejavu-core fontconfig
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
@@ -237,8 +242,16 @@ jobs:
           node-version: 24
           cache: 'pnpm'
 
+      - name: Set up Bun 1.4
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate video fixtures
+        run: pnpm gen-video
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -255,4 +268,8 @@ jobs:
 
       - name: Run offline smoke test (internal network with zero internet egress)
         run: make smoke-offline
+
+      - name: Stop stack
+        if: always()
+        run: docker compose -f infra/compose/docker-compose.yml down -v
 

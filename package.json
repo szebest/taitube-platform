@@ -2,6 +2,7 @@
   "name": "video-pipeline",
   "version": "0.0.0",
   "private": true,
+  "license": "CC-BY-NC-4.0",
   "type": "module",
   "packageManager": "pnpm@10.18.3",
   "engines": {
