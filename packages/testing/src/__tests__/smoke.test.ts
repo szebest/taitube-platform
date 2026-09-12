@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FIXTURES, createMockJob, withEnv } from '../index.js';
+import { FIXTURES, createMockJob, withEnv } from '../index';
 
 describe('@vp/testing smoke test', () => {
   it('provides standard test fixtures', () => {

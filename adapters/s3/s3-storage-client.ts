@@ -24,7 +24,7 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
-import { measureStorageOp } from '../storage-metrics-helper.js';
+import { measureStorageOp } from '../storage-metrics-helper';
 
 export interface S3StorageClientConfig {
   endpoint?: string;

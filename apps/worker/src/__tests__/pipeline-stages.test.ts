@@ -7,9 +7,9 @@ import type { NotifyJob, PackageJob, TranscodeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createNotifyProcessor } from '../stages/notify.js';
-import { createPackageProcessor } from '../stages/package.js';
-import { createTranscodeProcessor } from '../stages/transcode.js';
+import { createNotifyProcessor } from '../stages/notify';
+import { createPackageProcessor } from '../stages/package';
+import { createTranscodeProcessor } from '../stages/transcode';
 
 describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23)', () => {
   let repositories: InMemoryRepositories;

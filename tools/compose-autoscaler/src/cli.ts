@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
-import { ComposeAutoscaler } from './runner.js';
-import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler.js';
+import { ComposeAutoscaler } from './runner';
+import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler';
 
 interface CliArgs {
   metricsUrl: string;

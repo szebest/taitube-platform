@@ -4,7 +4,7 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { ErrorCodes, TransientError } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createTranscodeProcessor } from '../stages/transcode.js';
+import { createTranscodeProcessor } from '../stages/transcode';
 
 describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off', () => {
   let repositories: InMemoryRepositories;

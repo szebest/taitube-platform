@@ -7,9 +7,9 @@ import { computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
 import type { TranscodeJob } from '@vp/job-contracts';
 import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
-import { validateJobId } from '../registry.js';
-import { TranscodeProgressReporter } from './progress-reporter.js';
-import { StreamingSegmentUploader } from './segment-uploader.js';
+import { validateJobId } from '../registry';
+import { TranscodeProgressReporter } from './progress-reporter';
+import { StreamingSegmentUploader } from './segment-uploader';
 
 export interface TranscodeProcessorDeps {
   repositories: Repositories;

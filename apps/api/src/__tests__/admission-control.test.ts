@@ -7,7 +7,7 @@ import {
 import { mintDevToken } from '@vp/dev-token';
 import type { FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
+import { buildApp } from '../app';
 
 describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)', () => {
   let app: FastifyInstance;

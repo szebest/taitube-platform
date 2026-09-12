@@ -1,2 +1,2 @@
-export * from './scaler.js';
-export * from './runner.js';
+export * from './scaler';
+export * from './runner';

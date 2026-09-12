@@ -4,7 +4,7 @@ import { ids } from '@vp/job-contracts';
 import { getMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { OutboxRelay, drainOutboxOnce } from '../stages/housekeeping/outbox-relay.js';
+import { OutboxRelay, drainOutboxOnce } from '../stages/housekeeping/outbox-relay';
 
 describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
   let repositories: InMemoryRepositories;

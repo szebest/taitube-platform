@@ -1,6 +1,6 @@
 import { Registry } from 'prom-client';
 import { describe, expect, it } from 'vitest';
-import { startMetricsServer } from '../server.js';
+import { startMetricsServer } from '../server';
 
 describe('@vp/observability startMetricsServer', () => {
   it('serves metrics from the provided registry and healthz endpoint', async () => {

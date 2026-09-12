@@ -34,22 +34,22 @@ import {
   serializerCompiler,
   validatorCompiler,
 } from 'fastify-type-provider-zod';
-import { registerAuth } from './plugins/auth.js';
-import { registerErrorHandler } from './plugins/errors.js';
-import { registerHttpMetricsPlugin } from './plugins/http-metrics.js';
-import { registerAdminDlqRoutes } from './routes/admin/dlq.js';
-import { registerAdminQueuesRoutes } from './routes/admin/queues.js';
-import { registerDevJwksRoute } from './routes/dev-jwks.js';
-import { registerEventsRoutes } from './routes/events.js';
-import { registerHealthRoutes } from './routes/health.js';
-import { registerUploadsRoutes } from './routes/uploads.js';
-import { registerVideosRoutes } from './routes/videos.js';
-import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers.js';
-import { startQueuePoller } from './services/queue-poller.js';
-import { startSqlPoller } from './services/sql-poller.js';
-import { SseHub } from './services/sse-hub.js';
+import { registerAuth } from './plugins/auth';
+import { registerErrorHandler } from './plugins/errors';
+import { registerHttpMetricsPlugin } from './plugins/http-metrics';
+import { registerAdminDlqRoutes } from './routes/admin/dlq';
+import { registerAdminQueuesRoutes } from './routes/admin/queues';
+import { registerDevJwksRoute } from './routes/dev-jwks';
+import { registerEventsRoutes } from './routes/events';
+import { registerHealthRoutes } from './routes/health';
+import { registerUploadsRoutes } from './routes/uploads';
+import { registerVideosRoutes } from './routes/videos';
+import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
+import { startQueuePoller } from './services/queue-poller';
+import { startSqlPoller } from './services/sql-poller';
+import { SseHub } from './services/sse-hub';
 
-export * from './services/index.js';
+export * from './services/index';
 
 export interface BuildAppOptions {
   dbClient?: DatabaseClient;

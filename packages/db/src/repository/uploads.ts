@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
-import type { Database } from '../client.js';
-import { type NewUpload, type Upload, type Video, uploads, videos } from '../schema.js';
+import type { Database } from '../client';
+import { type NewUpload, type Upload, type Video, uploads, videos } from '../schema';
 
 export interface UploadWithVideo {
   upload: Upload;

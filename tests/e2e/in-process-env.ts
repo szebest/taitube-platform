@@ -6,10 +6,10 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '../../adapters/index.js';
-import { buildApp } from '../../apps/api/src/app.js';
-import { createWorkerRunner } from '../../apps/worker/src/runner.js';
-import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads.js';
+} from '../../adapters/index';
+import { buildApp } from '../../apps/api/src/app';
+import { createWorkerRunner } from '../../apps/worker/src/runner';
+import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -17,9 +17,9 @@ import type {
   MultipartStorage,
   Repositories,
   StorageClient,
-} from '../../core/ports/index.js';
-import { createLogger, createMetricsRegistry } from '../../packages/observability/src/index.js';
-import { startMockS3Server } from './s3-mock-server.js';
+} from '../../core/ports/index';
+import { createLogger, createMetricsRegistry } from '../../packages/observability/src/index';
+import { startMockS3Server } from './s3-mock-server';
 
 export interface InProcessEnv {
   app: FastifyInstance;

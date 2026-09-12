@@ -1,4 +1,4 @@
-import { createWorkerRunner } from './runner.js';
+import { createWorkerRunner } from './runner';
 
 export async function main(): Promise<() => Promise<void>> {
   const metricsPortEnv = process.env['METRICS_PORT'];

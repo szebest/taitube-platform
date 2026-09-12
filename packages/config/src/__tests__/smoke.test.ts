@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { AppEnvSchema, PostgresEnvSchema, loadEnv } from '../index.js';
+import { AppEnvSchema, PostgresEnvSchema, loadEnv } from '../index';
 
 describe('@vp/config test suite (AC 5)', () => {
   it('loadEnv() with missing DATABASE_URL exits 1 listing every invalid key, secrets redacted', () => {

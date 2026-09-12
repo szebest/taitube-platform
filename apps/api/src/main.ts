@@ -1,7 +1,7 @@
 import { loadEnv } from '@vp/config';
 import { initTracing } from '@vp/observability';
-import { buildApp } from './app.js';
-import { startMetricsServer } from './plugins/metrics.js';
+import { buildApp } from './app';
+import { startMetricsServer } from './plugins/metrics';
 
 export async function main(): Promise<void> {
   const env = loadEnv();

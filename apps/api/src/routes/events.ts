@@ -5,9 +5,9 @@ import { userChannel, videoChannel } from '@vp/events';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import type { AuthUser } from '../plugins/auth.js';
-import { problemResponse } from '../schemas/problem.js';
-import type { SseHub } from '../services/sse-hub.js';
+import type { AuthUser } from '../plugins/auth';
+import { problemResponse } from '../schemas/problem';
+import type { SseHub } from '../services/sse-hub';
 
 export interface EventsRouteOptions {
   sseHub: SseHub;

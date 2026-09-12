@@ -1,6 +1,6 @@
 import type { VideoRepository, VideoStatus } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import type { AuthUser } from '../plugins/auth.js';
+import type { AuthUser } from '../plugins/auth';
 
 export type VideoVisibility = 'private' | 'unlisted' | 'public';
 

@@ -2,11 +2,11 @@ import { ErrorCodes } from '@vp/errors';
 import { eq } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createDbClient } from '../client.js';
-import { claimStep, completeStep } from '../repository/steps.js';
-import { getVideoById, transitionVideo, updateVideoMetadata } from '../repository/videos.js';
-import { users, videoEvents, videos } from '../schema.js';
-import { DEV_USER_ID, seedDatabase } from '../seed.js';
+import { createDbClient } from '../client';
+import { claimStep, completeStep } from '../repository/steps';
+import { getVideoById, transitionVideo, updateVideoMetadata } from '../repository/videos';
+import { users, videoEvents, videos } from '../schema';
+import { DEV_USER_ID, seedDatabase } from '../seed';
 
 describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
   const { db, sql } = createDbClient();

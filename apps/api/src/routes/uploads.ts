@@ -4,9 +4,9 @@ import { MULTIPART_THRESHOLD_BYTES } from '@vp/storage';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { requireAuth } from '../plugins/auth.js';
-import { problemResponse } from '../schemas/problem.js';
-import { UploadService } from '../services/upload-service.js';
+import { requireAuth } from '../plugins/auth';
+import { problemResponse } from '../schemas/problem';
+import { UploadService } from '../services/upload-service';
 
 export interface UploadsRouteOptions {
   repositories?: Repositories;

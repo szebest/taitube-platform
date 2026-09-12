@@ -3,7 +3,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
-import { classifyFfmpegError } from './transcode.js';
+import { classifyFfmpegError } from './transcode';
 
 export interface PosterOptions {
   sourcePath: string;

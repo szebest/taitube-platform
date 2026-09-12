@@ -4,7 +4,7 @@ import {
   type StageScalingState,
   computeReplicas,
   parsePrometheusQueueMetrics,
-} from '../scaler.js';
+} from '../scaler';
 
 describe('Compose Autoscaler - computeReplicas decision function', () => {
   const defaultConfig: ScalerStageConfig = {

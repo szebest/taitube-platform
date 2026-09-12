@@ -13,8 +13,8 @@ import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
 import { NotifyJob, type ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
-import { validateJobId } from '../registry.js';
-import { enqueueFollowUpJobs } from './probe-enqueue.js';
+import { validateJobId } from '../registry';
+import { enqueueFollowUpJobs } from './probe-enqueue';
 
 export interface ProbeProcessorDeps {
   repositories: Repositories;

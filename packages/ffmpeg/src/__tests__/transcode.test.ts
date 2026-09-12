@@ -6,7 +6,7 @@ import {
   classifyFfmpegError,
   generateMasterPlaylist,
   getAvcCodecString,
-} from '../index.js';
+} from '../index';
 
 describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', () => {
   const ladder720p: LadderEntry = {

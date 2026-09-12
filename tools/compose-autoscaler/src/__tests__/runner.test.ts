@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ComposeAutoscaler } from '../runner.js';
-import type { ScalerStageConfig } from '../scaler.js';
+import { ComposeAutoscaler } from '../runner';
+import type { ScalerStageConfig } from '../scaler';
 
 describe('ComposeAutoscaler runner integration', () => {
   const customConfig: Record<string, ScalerStageConfig> = {

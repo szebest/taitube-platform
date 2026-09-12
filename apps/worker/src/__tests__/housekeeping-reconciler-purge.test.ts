@@ -11,7 +11,7 @@ import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { ids } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorkerRunner } from '../runner.js';
+import { createWorkerRunner } from '../runner';
 import {
   createHousekeepingProcessor,
   runExpireRaw,
@@ -19,7 +19,7 @@ import {
   runReconcileProcessing,
   runReconcileUploads,
   runTmpSweep,
-} from '../stages/housekeeping/index.js';
+} from '../stages/housekeeping/index';
 
 describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket 17)', () => {
   let repositories: InMemoryRepositories;

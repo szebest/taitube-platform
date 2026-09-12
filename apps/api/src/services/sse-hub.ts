@@ -3,7 +3,7 @@ import type { CacheClient } from '@vp/core/ports';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { SseMessageEnvelope, USER_WILDCARD_CHANNEL, VIDEO_WILDCARD_CHANNEL } from '@vp/events';
 import { getMetrics } from '@vp/observability';
-import { SseConnection } from './sse-connection.js';
+import { SseConnection } from './sse-connection';
 
 export interface SseHubOptions {
   cache: CacheClient;

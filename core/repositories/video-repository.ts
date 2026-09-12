@@ -91,11 +91,11 @@ export interface ListVideosOptions {
   status?: VideoStatus;
 }
 
-import type { VideoEventRecord } from './event-repository.js';
-import type { NewOutboxInput } from './outbox-repository.js';
-import type { RenditionRecord } from './rendition-repository.js';
-import type { ProcessingStepRecord } from './step-repository.js';
-import type { UploadRecord } from './upload-repository.js';
+import type { VideoEventRecord } from './event-repository';
+import type { NewOutboxInput } from './outbox-repository';
+import type { RenditionRecord } from './rendition-repository';
+import type { ProcessingStepRecord } from './step-repository';
+import type { UploadRecord } from './upload-repository';
 
 export interface TransitionVideoOptions {
   videoId: string;

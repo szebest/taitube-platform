@@ -12,10 +12,10 @@ import type { ProbeJob, ThumbnailJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPackageProcessor } from '../stages/package.js';
-import { createProbeProcessor } from '../stages/probe.js';
-import { createThumbnailProcessor } from '../stages/thumbnail.js';
-import { createTranscodeProcessor } from '../stages/transcode.js';
+import { createPackageProcessor } from '../stages/package';
+import { createProbeProcessor } from '../stages/probe';
+import { createThumbnailProcessor } from '../stages/thumbnail';
+import { createTranscodeProcessor } from '../stages/transcode';
 
 describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', () => {
   let repositories: InMemoryRepositories;

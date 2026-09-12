@@ -1,6 +1,6 @@
 import { type FlowJobNode, FlowProducerPort, QueueError } from '@vp/core/ports';
 import { type ConnectionOptions, FlowProducer } from 'bullmq';
-import { getRedisConnectionOptions } from './connection.js';
+import { getRedisConnectionOptions } from './connection';
 
 export interface BullMqFlowProducerConfig {
   connection?: ConnectionOptions;

@@ -23,7 +23,7 @@ import {
   DEFAULT_VIDEO_RECORD,
   type InMemoryVideoRepositoryOptions,
   type InternalStep,
-} from './types.js';
+} from './types';
 
 export type { InMemoryVideoRepositoryOptions };
 

@@ -2,15 +2,15 @@ import type { Repositories } from '@vp/core/ports';
 import * as schema from '@vp/db';
 import { type PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
-import type { PostgresDatabaseClient } from '../postgres-database-client.js';
-import { PostgresDlqRepository } from './postgres-dlq-repository.js';
-import { PostgresEventRepository } from './postgres-event-repository.js';
-import { PostgresOutboxRepository } from './postgres-outbox-repository.js';
-import { PostgresRenditionRepository } from './postgres-rendition-repository.js';
-import { PostgresStepRepository } from './postgres-step-repository.js';
-import { PostgresUploadRepository } from './postgres-upload-repository.js';
-import { PostgresUserRepository } from './postgres-user-repository.js';
-import { PostgresVideoRepository } from './postgres-video-repository.js';
+import type { PostgresDatabaseClient } from '../postgres-database-client';
+import { PostgresDlqRepository } from './postgres-dlq-repository';
+import { PostgresEventRepository } from './postgres-event-repository';
+import { PostgresOutboxRepository } from './postgres-outbox-repository';
+import { PostgresRenditionRepository } from './postgres-rendition-repository';
+import { PostgresStepRepository } from './postgres-step-repository';
+import { PostgresUploadRepository } from './postgres-upload-repository';
+import { PostgresUserRepository } from './postgres-user-repository';
+import { PostgresVideoRepository } from './postgres-video-repository';
 
 export interface PostgresRepositoriesConfig {
   url?: string;

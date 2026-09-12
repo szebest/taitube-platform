@@ -1,6 +1,6 @@
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { describe, expect, it } from 'vitest';
-import { validateAndParseProbe } from '../index.js';
+import { validateAndParseProbe } from '../index';
 
 describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
   it('AC 17: s60 1080p video selects full ladder [1080p, 720p, 480p]', () => {

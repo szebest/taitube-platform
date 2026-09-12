@@ -1,12 +1,12 @@
 import type { Repositories } from '@vp/core/ports';
-import { InMemoryDlqRepository } from './in-memory-dlq-repository.js';
-import { InMemoryEventRepository } from './in-memory-event-repository.js';
-import { InMemoryOutboxRepository } from './in-memory-outbox-repository.js';
-import { InMemoryRenditionRepository } from './in-memory-rendition-repository.js';
-import { InMemoryStepRepository } from './in-memory-step-repository.js';
-import { InMemoryUploadRepository } from './in-memory-upload-repository.js';
-import { InMemoryUserRepository } from './in-memory-user-repository.js';
-import { InMemoryVideoRepository } from './in-memory-video-repository.js';
+import { InMemoryDlqRepository } from './in-memory-dlq-repository';
+import { InMemoryEventRepository } from './in-memory-event-repository';
+import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
+import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
+import { InMemoryStepRepository } from './in-memory-step-repository';
+import { InMemoryUploadRepository } from './in-memory-upload-repository';
+import { InMemoryUserRepository } from './in-memory-user-repository';
+import { InMemoryVideoRepository } from './in-memory-video-repository';
 
 export class InMemoryRepositories implements Repositories {
   readonly events: InMemoryEventRepository;

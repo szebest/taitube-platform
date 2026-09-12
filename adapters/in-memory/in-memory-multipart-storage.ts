@@ -8,7 +8,7 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
-import { measureStorageOp } from '../storage-metrics-helper.js';
+import { measureStorageOp } from '../storage-metrics-helper';
 
 interface InFlightPart {
   partNumber: number;

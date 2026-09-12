@@ -1,6 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
-import type { Database } from '../client.js';
-import { processingSteps } from '../schema.js';
+import type { Database } from '../client';
+import { processingSteps } from '../schema';
 
 export interface ClaimStepOptions {
   id: string;

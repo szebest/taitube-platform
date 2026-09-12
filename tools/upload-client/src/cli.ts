@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as fs from 'node:fs';
-import { UploadClient } from './client.js';
+import { UploadClient } from './client';
 
 function parseArgs(args: string[]) {
   let file = '';

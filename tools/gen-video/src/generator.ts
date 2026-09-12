@@ -8,7 +8,7 @@ import type {
   FixtureManifest,
   GeneratorOptions,
   ProbeResult,
-} from './types.js';
+} from './types';
 
 export function loadManifest(): FixtureManifest {
   const manifestPath = path.resolve(__dirname, '..', 'manifest.json');

@@ -2,7 +2,7 @@ import { InMemoryJobQueue, InMemoryMultipartStorage, InMemoryRepositories } from
 import { ids } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { describe, expect, it } from 'vitest';
-import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads.js';
+import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
 
 describe('Fairness & Admission Control Simulation (Ticket 18: AC 4, SDD §9.4, §14.2)', () => {
   it('User B (5 videos, pro tier) reaches READY before User A (50 videos, free tier) finishes', async () => {

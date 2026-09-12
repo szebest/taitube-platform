@@ -41,7 +41,7 @@ export interface ListDlqEntriesResult {
   nextCursor: string | null;
 }
 
-import type { NewOutboxInput } from './outbox-repository.js';
+import type { NewOutboxInput } from './outbox-repository';
 
 export abstract class DlqRepository {
   abstract create(entry: NewDlqEntryInput): Promise<DlqEntryRecord>;

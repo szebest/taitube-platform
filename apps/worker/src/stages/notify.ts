@@ -3,7 +3,7 @@ import { publishVideoEvent, userChannel, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
-import { validateJobId } from '../registry.js';
+import { validateJobId } from '../registry';
 
 export interface NotifyProcessorDeps {
   repositories: Repositories;

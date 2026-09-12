@@ -1,6 +1,6 @@
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { and, eq, sql } from 'drizzle-orm';
-import type { Database } from '../client.js';
+import type { Database } from '../client';
 import {
   type NewVideo,
   type Rendition,
@@ -10,8 +10,8 @@ import {
   uploads,
   videoEvents,
   videos,
-} from '../schema.js';
-import { canTransition } from '../state-machine.js';
+} from '../schema';
+import { canTransition } from '../state-machine';
 
 export type VideoStatus = Video['status'];
 

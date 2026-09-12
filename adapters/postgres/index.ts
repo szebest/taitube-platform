@@ -1,2 +1,2 @@
-export * from './postgres-database-client.js';
-export * from './repositories/index.js';
+export * from './postgres-database-client';
+export * from './repositories/index';

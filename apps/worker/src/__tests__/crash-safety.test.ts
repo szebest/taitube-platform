@@ -4,7 +4,7 @@ import type { PackageJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPackageProcessor } from '../stages/package.js';
+import { createPackageProcessor } from '../stages/package';
 
 describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 17, 18)', () => {
   let repositories: InMemoryRepositories;

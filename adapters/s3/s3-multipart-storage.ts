@@ -17,8 +17,8 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
-import { measureStorageOp } from '../storage-metrics-helper.js';
-import { S3StorageClient, type S3StorageClientConfig } from './s3-storage-client.js';
+import { measureStorageOp } from '../storage-metrics-helper';
+import { S3StorageClient, type S3StorageClientConfig } from './s3-storage-client';
 
 export interface S3MultipartStorageConfig extends S3StorageClientConfig {
   storageClient?: S3StorageClient;

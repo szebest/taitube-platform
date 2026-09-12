@@ -4,8 +4,8 @@ import { defaultJobOptions, generateReplayJobId, stagePolicies } from '@vp/job-c
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { requireAdmin } from '../../plugins/auth.js';
-import { problemResponse } from '../../schemas/problem.js';
+import { requireAdmin } from '../../plugins/auth';
+import { problemResponse } from '../../schemas/problem';
 
 export interface AdminDlqRouteOptions {
   repositories: Repositories;

@@ -10,7 +10,7 @@ import {
   classifyFfmpegError,
   computeFfmpegThreads,
   runFfmpegTranscode,
-} from '../index.js';
+} from '../index';
 
 describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
   const defaultRendition: LadderEntry = {

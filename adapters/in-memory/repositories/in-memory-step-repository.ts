@@ -9,7 +9,7 @@ import {
   type ProcessingStepRecord,
   StepRepository,
 } from '@vp/core/ports';
-import type { InternalStep } from './types.js';
+import type { InternalStep } from './types';
 
 export class InMemoryStepRepository extends StepRepository {
   private readonly stepsMap: Map<string, InternalStep>;

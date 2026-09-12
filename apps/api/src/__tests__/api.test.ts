@@ -3,8 +3,8 @@ import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from
 import { mintToken } from '@vp/dev-token';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
-import { startMetricsServer } from '../plugins/metrics.js';
+import { buildApp } from '../app';
+import { startMetricsServer } from '../plugins/metrics';
 
 describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
   let app: FastifyInstance;

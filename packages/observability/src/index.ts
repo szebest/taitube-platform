@@ -1,7 +1,7 @@
-export * from './metrics.js';
-export * from './logger.js';
-export * from './tracing.js';
-export * from './server.js';
+export * from './metrics';
+export * from './logger';
+export * from './tracing';
+export * from './server';
 
 export interface ServiceInfo {
   name: string;

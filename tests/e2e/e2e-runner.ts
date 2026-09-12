@@ -7,7 +7,7 @@ import {
   PostgresRepositories,
   S3MultipartStorage,
   S3StorageClient,
-} from '../../adapters/index.js';
+} from '../../adapters/index';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -15,24 +15,24 @@ import type {
   MultipartStorage,
   Repositories,
   StorageClient,
-} from '../../core/ports/index.js';
-import { mintToken } from '../../tools/dev-token/src/index.js';
+} from '../../core/ports/index';
+import { mintToken } from '../../tools/dev-token/src/index';
 import {
   type DlqCheckContext,
   auditDlqHostile,
   runAbandonedUploadTest,
   runForcedTransientDlqReplay,
-} from './dlq-checks.js';
-import { type InProcessEnv, setupInProcessEnv } from './in-process-env.js';
-import { renderMarkdownReport } from './report-generator.js';
+} from './dlq-checks';
+import { type InProcessEnv, setupInProcessEnv } from './in-process-env';
+import { renderMarkdownReport } from './report-generator';
 import {
   type E2ERunnerOptions,
   type E2ESuiteResult,
   type VideoTestResult,
   type VideoTestSpec,
   getSpecs,
-} from './specs.js';
-import { runSingleVideo } from './video-runner.js';
+} from './specs';
+import { runSingleVideo } from './video-runner';
 
 export type { VideoTestSpec, VideoTestResult, E2ERunnerOptions, E2ESuiteResult };
 

@@ -4,15 +4,15 @@ import { ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contrac
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { requireAuth } from '../plugins/auth.js';
-import { problemResponse } from '../schemas/problem.js';
+import { requireAuth } from '../plugins/auth';
+import { problemResponse } from '../schemas/problem';
 import {
   ListVideosQuerySchema,
   UpdateVideoMetadataSchema,
   VideoListResponseSchema,
   VideoSchema,
-} from '../schemas/videos.js';
-import { VideoService } from '../services/video-service.js';
+} from '../schemas/videos';
+import { VideoService } from '../services/video-service';
 
 export interface VideosRouteOptions {
   videos?: VideoRepository;

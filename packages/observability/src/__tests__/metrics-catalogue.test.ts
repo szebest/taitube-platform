@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { createMetricsRegistry, getMetrics } from '../metrics.js';
+import { createMetricsRegistry, getMetrics } from '../metrics';
 
 /**
  * Extracts metric names from the markdown table in docs/SDD.md §13.1.
@@ -148,7 +148,7 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
   });
 
   it('exposes every §13.1 metric on /metrics via startMetricsServer', async () => {
-    const { startMetricsServer } = await import('../server.js');
+    const { startMetricsServer } = await import('../server');
     const metrics = getMetrics();
 
     // Populate a sample for every metric

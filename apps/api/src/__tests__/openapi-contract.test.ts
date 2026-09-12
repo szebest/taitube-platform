@@ -2,7 +2,7 @@ import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
+import { buildApp } from '../app';
 
 describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
   let app: FastifyInstance;

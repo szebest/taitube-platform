@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ErrorCodes, PermanentError, TransientError } from '../index.js';
+import { ErrorCodes, PermanentError, TransientError } from '../index';
 
 describe('@vp/errors smoke test', () => {
   it('instantiates PermanentError with correct properties', () => {

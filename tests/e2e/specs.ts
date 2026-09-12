@@ -1,4 +1,4 @@
-import { ErrorCodes } from '../../packages/errors/src/index.js';
+import { ErrorCodes } from '../../packages/errors/src/index';
 
 export interface VideoTestSpec {
   name: string;

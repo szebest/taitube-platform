@@ -1,4 +1,4 @@
-import type { HealthCheckable } from './health-checkable.js';
+import type { HealthCheckable } from './health-checkable';
 
 export interface StoragePresignedPartParams {
   bucket: string;

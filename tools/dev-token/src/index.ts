@@ -1,11 +1,11 @@
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as path from 'node:path';
-import { mintToken, verifyToken } from './jwt.js';
-import { getDevJwks } from './keys.js';
+import { mintToken, verifyToken } from './jwt';
+import { getDevJwks } from './keys';
 
-export * from './jwt.js';
-export * from './keys.js';
+export * from './jwt';
+export * from './keys';
 
 function parseArgs(args: string[]) {
   const command = args[0] ?? 'help';

@@ -1,6 +1,6 @@
-export * from './keys.js';
-export * from './mime.js';
-export * from './multipart.js';
+export * from './keys';
+export * from './mime';
+export * from './multipart';
 
 export const ContentTypes = {
   HLS_PLAYLIST: 'application/vnd.apple.mpegurl',

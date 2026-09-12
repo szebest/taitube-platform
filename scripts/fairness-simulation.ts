@@ -17,9 +17,9 @@ import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
-} from '../adapters/index.js';
-import { runReconcileUploads } from '../apps/worker/src/stages/housekeeping/reconcile-uploads.js';
-import { ids } from '../packages/job-contracts/src/index.js';
+} from '../adapters/index';
+import { runReconcileUploads } from '../apps/worker/src/stages/housekeeping/reconcile-uploads';
+import { ids } from '../packages/job-contracts/src/index';
 
 async function runFairnessSimulation() {
   console.log('================================================================');

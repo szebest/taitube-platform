@@ -1,5 +1,5 @@
 import { type FlowJobNode, FlowProducerPort, type JobQueue, type QueueJob } from '@vp/core/ports';
-import { InMemoryJobQueue } from './in-memory-job-queue.js';
+import { InMemoryJobQueue } from './in-memory-job-queue';
 
 export class InMemoryFlowProducer extends FlowProducerPort {
   private readonly getQueue: (name: string) => JobQueue;

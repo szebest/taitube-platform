@@ -1,4 +1,4 @@
-import type { VideoTestResult } from './specs.js';
+import type { VideoTestResult } from './specs';
 
 export interface ReportData {
   videoResults: VideoTestResult[];

@@ -385,7 +385,7 @@ describe('Prometheus Alert Rules & Alertmanager (Ticket 24, SDD §13.5)', () => 
     it('simulates hostile upload producing DLQ entry and triggering Alertmanager webhook notification payload', async () => {
       // Hostile file upload flow (e.g. corrupt or unsupported codec: prores)
       // When probe fails with permanent error, worker DLQ failure handler increments dlq_entries_total
-      const { createMetricsRegistry } = await import('../metrics.js');
+      const { createMetricsRegistry } = await import('../metrics');
       const metrics = createMetricsRegistry();
 
       // Step 1: Simulate hostile upload processing failure

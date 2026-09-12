@@ -15,7 +15,7 @@ import {
   segmentKey,
   spriteKey,
   spriteVttKey,
-} from '../index.js';
+} from '../index';
 
 describe('packages/storage (AC 17, AC 22)', () => {
   const videoId = '018f0000-0000-7000-8000-000000000001';

@@ -5,7 +5,7 @@ import { QUEUES, ids } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
+import { buildApp } from '../app';
 
 describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => {
   let app: FastifyInstance;

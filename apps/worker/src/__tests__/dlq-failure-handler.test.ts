@@ -9,10 +9,10 @@ import { calculateBackoffDelay, ids, stagePolicies } from '@vp/job-contracts';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFailureHandler } from '../failure-handler.js';
-import { createPackageProcessor } from '../stages/package.js';
-import { createProbeProcessor } from '../stages/probe.js';
-import { createTranscodeProcessor } from '../stages/transcode.js';
+import { createFailureHandler } from '../failure-handler';
+import { createPackageProcessor } from '../stages/package';
+import { createProbeProcessor } from '../stages/probe';
+import { createTranscodeProcessor } from '../stages/transcode';
 
 describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
   let repositories: InMemoryRepositories;

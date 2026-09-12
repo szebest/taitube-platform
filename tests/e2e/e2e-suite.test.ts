@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { E2ERunner, type E2ESuiteResult } from './e2e-runner.js';
+import { E2ERunner, type E2ESuiteResult } from './e2e-runner';
 
 describe('Phase 2 Acceptance: Pipeline E2E Suite with Hostile Set (Ticket 20)', () => {
   let suiteResult: E2ESuiteResult;

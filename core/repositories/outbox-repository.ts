@@ -1,5 +1,5 @@
-import type { FlowJobNode } from '../ports/flow-producer.js';
-import type { QueueJobOptions } from '../ports/job-queue.js';
+import type { FlowJobNode } from '../ports/flow-producer';
+import type { QueueJobOptions } from '../ports/job-queue';
 
 export interface OutboxQueueJobPayload {
   name: string;

@@ -2,7 +2,7 @@ import { InMemoryJobQueue, InMemoryMultipartStorage, InMemoryRepositories } from
 import { ids } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads.js';
+import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
 
 describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2, AC 3)', () => {
   let repositories: InMemoryRepositories;

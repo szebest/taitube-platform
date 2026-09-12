@@ -20,7 +20,7 @@ import {
   UnrecoverableError,
   Worker,
 } from 'bullmq';
-import { getRedisConnectionOptions } from './connection.js';
+import { getRedisConnectionOptions } from './connection';
 
 class CustomUnrecoverableError extends UnrecoverableError {
   code?: string;

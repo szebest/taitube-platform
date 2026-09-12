@@ -5,9 +5,9 @@ import { mintToken } from '@vp/dev-token';
 import { publishVideoEvent, videoChannel } from '@vp/events';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
-import { SseConnection } from '../services/sse-connection.js';
-import { SseHub } from '../services/sse-hub.js';
+import { buildApp } from '../app';
+import { SseConnection } from '../services/sse-connection';
+import { SseHub } from '../services/sse-hub';
 
 describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Backpressure', () => {
   let app: FastifyInstance;

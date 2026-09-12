@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createDbClient } from './client.js';
-import { renditions, users, videos } from './schema.js';
+import { createDbClient } from './client';
+import { renditions, users, videos } from './schema';
 
 export const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
 export const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';

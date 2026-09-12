@@ -1,11 +1,11 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads.js';
-import type { MultipartStorage, Repositories, StorageClient } from '../../core/ports/index.js';
-import { ErrorCodes } from '../../packages/errors/src/index.js';
-import { UploadClient } from '../../tools/upload-client/src/index.js';
-import type { VideoTestResult, VideoTestSpec } from './specs.js';
+import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
+import type { MultipartStorage, Repositories, StorageClient } from '../../core/ports/index';
+import { ErrorCodes } from '../../packages/errors/src/index';
+import { UploadClient } from '../../tools/upload-client/src/index';
+import type { VideoTestResult, VideoTestSpec } from './specs';
 
 const uuidv7 = () => crypto.randomUUID();
 

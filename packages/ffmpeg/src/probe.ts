@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
-import { selectLadder } from './ladder.js';
+import { selectLadder } from './ladder';
 
 export interface RawStream {
   codec_type?: string;

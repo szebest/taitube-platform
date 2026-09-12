@@ -5,7 +5,7 @@ import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
+import { buildApp } from '../app';
 
 describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
   let app: FastifyInstance;

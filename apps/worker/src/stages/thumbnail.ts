@@ -13,7 +13,7 @@ import {
   spriteVttKey as getSpriteVttKey,
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
-import { validateJobId } from '../registry.js';
+import { validateJobId } from '../registry';
 
 export interface ThumbnailProcessorDeps {
   repositories: Repositories;

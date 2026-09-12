@@ -5,8 +5,8 @@ import {
 } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
 import { describe, expect, it } from 'vitest';
-import { UploadService } from '../upload-service.js';
-import { VideoService } from '../video-service.js';
+import { UploadService } from '../upload-service';
+import { VideoService } from '../video-service';
 
 describe('Deep Domain Services (UploadService & VideoService)', () => {
   const repositories = new InMemoryRepositories();
@@ -164,7 +164,7 @@ describe('Deep Domain Services (UploadService & VideoService)', () => {
   });
 
   it('startSqlPoller: polls database and records videos_by_status and processing_steps_running_stale', async () => {
-    const { startSqlPoller } = await import('../sql-poller.js');
+    const { startSqlPoller } = await import('../sql-poller');
     const { createMetricsRegistry } = await import('@vp/observability');
 
     const testRepos = new InMemoryRepositories();

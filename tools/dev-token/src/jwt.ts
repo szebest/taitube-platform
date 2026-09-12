@@ -1,5 +1,5 @@
 import * as crypto from 'node:crypto';
-import { DEV_KEY_ID, getDevKeyPair } from './keys.js';
+import { DEV_KEY_ID, getDevKeyPair } from './keys';
 
 export interface MintTokenOptions {
   sub?: string;

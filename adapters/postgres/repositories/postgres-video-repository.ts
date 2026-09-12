@@ -20,7 +20,7 @@ import {
   type VideoInsert,
   type VideoStatus,
   toDbError as dbErr,
-} from './types.js';
+} from './types';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 

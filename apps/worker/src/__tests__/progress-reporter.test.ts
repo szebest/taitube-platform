@@ -2,7 +2,7 @@ import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
 import { createLogger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { TranscodeProgressReporter } from '../stages/progress-reporter.js';
+import { TranscodeProgressReporter } from '../stages/progress-reporter';
 
 describe('TranscodeProgressReporter (Ticket 15: AC 4)', () => {
   let repositories: InMemoryRepositories;

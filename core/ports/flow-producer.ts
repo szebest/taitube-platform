@@ -1,5 +1,5 @@
-import type { HealthCheckable } from './health-checkable.js';
-import type { QueueJobOptions } from './job-queue.js';
+import type { HealthCheckable } from './health-checkable';
+import type { QueueJobOptions } from './job-queue';
 
 export interface FlowJobNode<T = unknown> {
   name: string;

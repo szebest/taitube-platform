@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getWorkerStage } from '../config.js';
-import { STAGE_REGISTRY } from '../registry.js';
+import { getWorkerStage } from '../config';
+import { STAGE_REGISTRY } from '../registry';
 
 describe('@vp/worker smoke test (dual-runtime)', () => {
   it('loads worker stage configuration and defaults to probe', () => {

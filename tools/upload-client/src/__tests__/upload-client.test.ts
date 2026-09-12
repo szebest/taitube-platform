@@ -13,7 +13,7 @@ import { buildApp } from '@vp/api';
 import { mintToken } from '@vp/dev-token';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { ClientCrashedError, UploadClient } from '../client.js';
+import { ClientCrashedError, UploadClient } from '../client';
 
 describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () => {
   let app: FastifyInstance;

@@ -3,7 +3,7 @@ import { mintDevToken } from '@vp/dev-token';
 import { QUEUES } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
+import { buildApp } from '../app';
 
 class MockAdminJobQueue extends JobQueue {
   private _paused = false;

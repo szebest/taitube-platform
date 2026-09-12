@@ -1,6 +1,6 @@
 import * as path from 'node:path';
-import { checkFixture, generateAllFixtures, loadManifest } from './generator.js';
-import type { GeneratorOptions } from './types.js';
+import { checkFixture, generateAllFixtures, loadManifest } from './generator';
+import type { GeneratorOptions } from './types';
 
 function parseArgs(args: string[]): { options: GeneratorOptions; check: boolean; help: boolean } {
   let outputDir = path.resolve(process.cwd(), 'tests/fixtures');

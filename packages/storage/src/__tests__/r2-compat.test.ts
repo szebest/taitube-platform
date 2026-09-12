@@ -1,6 +1,6 @@
 import { S3MultipartStorage } from '@vp/adapters';
 import { describe, expect, it } from 'vitest';
-import { rawSourceKey } from '../index.js';
+import { rawSourceKey } from '../index';
 
 describe('packages/storage R2 Compatibility (Ticket 11: AC 22)', () => {
   const isR2Enabled = process.env.STORAGE_E2E_R2 === '1';

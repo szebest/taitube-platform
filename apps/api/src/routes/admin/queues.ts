@@ -5,7 +5,7 @@ import type { CacheClient, JobQueue } from '@vp/core/ports';
 import { ErrorCodes, PermanentError, PipelineError } from '@vp/errors';
 import { QUEUES, type QueueName } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
-import { requireAdmin } from '../../plugins/auth.js';
+import { requireAdmin } from '../../plugins/auth';
 
 export interface AdminQueuesOptions {
   cache?: CacheClient | null;

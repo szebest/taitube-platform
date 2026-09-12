@@ -28,15 +28,15 @@ import {
   initTracing,
   startMetricsServer,
 } from '@vp/observability';
-import { createFailureHandler } from './failure-handler.js';
-import { STAGE_REGISTRY, validateQueueName } from './registry.js';
-import { OutboxRelay, createHousekeepingProcessor } from './stages/housekeeping/index.js';
-import { createNotifyProcessor } from './stages/notify.js';
-import { createPackageProcessor } from './stages/package.js';
-import { createProbeProcessor } from './stages/probe.js';
-import { createThumbnailProcessor } from './stages/thumbnail.js';
-import { createTranscodeProcessor } from './stages/transcode.js';
-import { withTelemetry } from './with-telemetry.js';
+import { createFailureHandler } from './failure-handler';
+import { STAGE_REGISTRY, validateQueueName } from './registry';
+import { OutboxRelay, createHousekeepingProcessor } from './stages/housekeeping/index';
+import { createNotifyProcessor } from './stages/notify';
+import { createPackageProcessor } from './stages/package';
+import { createProbeProcessor } from './stages/probe';
+import { createThumbnailProcessor } from './stages/thumbnail';
+import { createTranscodeProcessor } from './stages/transcode';
+import { withTelemetry } from './with-telemetry';
 
 export interface WorkerRunnerOptions {
   stage?: string;

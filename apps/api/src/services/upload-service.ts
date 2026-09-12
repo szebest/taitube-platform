@@ -20,7 +20,7 @@ import {
   rawSourceKey,
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
-import type { AuthUser } from '../plugins/auth.js';
+import type { AuthUser } from '../plugins/auth';
 
 export interface InitiateUploadParams {
   filename: string;

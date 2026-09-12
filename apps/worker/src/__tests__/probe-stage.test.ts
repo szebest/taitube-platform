@@ -7,8 +7,8 @@ import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { validateJobId, validateQueueName } from '../registry.js';
-import { createProbeProcessor } from '../stages/probe.js';
+import { validateJobId, validateQueueName } from '../registry';
+import { createProbeProcessor } from '../stages/probe';
 
 describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () => {
   let repositories: InMemoryRepositories;

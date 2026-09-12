@@ -5,8 +5,8 @@ import { QUEUES } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
-import { HOUSEKEEPING_SCHEDULER_CONFIGS } from '../services/housekeeping-schedulers.js';
+import { buildApp } from '../app';
+import { HOUSEKEEPING_SCHEDULER_CONFIGS } from '../services/housekeeping-schedulers';
 
 describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC 4)', () => {
   let app: FastifyInstance;

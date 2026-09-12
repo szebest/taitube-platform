@@ -13,7 +13,7 @@ import {
 import { type Logger, getMetrics } from '@vp/observability';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
-import { validateJobId } from '../registry.js';
+import { validateJobId } from '../registry';
 
 export interface PackageProcessorDeps {
   repositories: Repositories;

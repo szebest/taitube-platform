@@ -8,7 +8,7 @@ import * as schema from '@vp/db';
 import { and, asc, eq, isNull, lt, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
-import { toDbError as dbErr } from './types.js';
+import { toDbError as dbErr } from './types';
 
 const { outbox: o } = schema;
 

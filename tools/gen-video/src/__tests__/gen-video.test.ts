@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { checkFixture, generateFixture, loadManifest, probeFile } from '../generator.js';
+import { checkFixture, generateFixture, loadManifest, probeFile } from '../generator';
 
 describe('tools/gen-video: deterministic fixture generator', () => {
   let tmpDir: string;

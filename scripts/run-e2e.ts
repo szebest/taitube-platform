@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { E2ERunner } from '../tests/e2e/e2e-runner.js';
+import { E2ERunner } from '../tests/e2e/e2e-runner';
 
 async function main() {
   const args = process.argv.slice(2);

@@ -3,7 +3,7 @@ import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
+import { buildApp } from '../app';
 
 describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)', () => {
   let app: FastifyInstance;

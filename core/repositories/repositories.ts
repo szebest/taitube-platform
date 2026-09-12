@@ -1,11 +1,11 @@
-import type { DlqRepository } from './dlq-repository.js';
-import type { EventRepository } from './event-repository.js';
-import type { OutboxRepository } from './outbox-repository.js';
-import type { RenditionRepository } from './rendition-repository.js';
-import type { StepRepository } from './step-repository.js';
-import type { UploadRepository } from './upload-repository.js';
-import type { UserRepository } from './user-repository.js';
-import type { VideoRepository } from './video-repository.js';
+import type { DlqRepository } from './dlq-repository';
+import type { EventRepository } from './event-repository';
+import type { OutboxRepository } from './outbox-repository';
+import type { RenditionRepository } from './rendition-repository';
+import type { StepRepository } from './step-repository';
+import type { UploadRepository } from './upload-repository';
+import type { UserRepository } from './user-repository';
+import type { VideoRepository } from './video-repository';
 
 export interface Repositories {
   videos: VideoRepository;

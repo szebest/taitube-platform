@@ -11,10 +11,10 @@ import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPackageProcessor } from '../stages/package.js';
-import { createProbeProcessor } from '../stages/probe.js';
-import { createThumbnailProcessor } from '../stages/thumbnail.js';
-import { createTranscodeProcessor } from '../stages/transcode.js';
+import { createPackageProcessor } from '../stages/package';
+import { createProbeProcessor } from '../stages/probe';
+import { createThumbnailProcessor } from '../stages/thumbnail';
+import { createTranscodeProcessor } from '../stages/transcode';
 
 describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', () => {
   let repositories: InMemoryRepositories;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createServiceInfo } from '../index.js';
+import { createServiceInfo } from '../index';
 
 describe('@vp/observability smoke test', () => {
   it('creates valid service info', () => {

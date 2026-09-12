@@ -13,7 +13,7 @@ import {
   getActiveTraceparent,
   injectTraceparent,
   redactCommand,
-} from '../tracing.js';
+} from '../tracing';
 
 describe('OpenTelemetry Tracing Module (packages/observability)', () => {
   it('creates valid W3C traceparent strings', () => {

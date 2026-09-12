@@ -1,4 +1,4 @@
-import type { VideoRecord } from './video-repository.js';
+import type { VideoRecord } from './video-repository';
 
 export interface UploadRecord {
   id: string;

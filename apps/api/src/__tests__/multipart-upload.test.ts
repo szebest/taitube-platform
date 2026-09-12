@@ -11,7 +11,7 @@ import { ErrorCodes } from '@vp/errors';
 import { MULTIPART_MIN_PART_SIZE } from '@vp/storage';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
+import { buildApp } from '../app';
 
 describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18, 19, 20)', () => {
   let app: FastifyInstance;

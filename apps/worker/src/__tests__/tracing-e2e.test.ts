@@ -18,11 +18,11 @@ import type { NotifyJob, ProbeJob } from '@vp/job-contracts';
 import { createLogger, getActiveSpanContext } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPackageProcessor } from '../stages/package.js';
-import { createProbeProcessor } from '../stages/probe.js';
-import { createThumbnailProcessor } from '../stages/thumbnail.js';
-import { createTranscodeProcessor } from '../stages/transcode.js';
-import { withTelemetry } from '../with-telemetry.js';
+import { createPackageProcessor } from '../stages/package';
+import { createProbeProcessor } from '../stages/probe';
+import { createThumbnailProcessor } from '../stages/thumbnail';
+import { createTranscodeProcessor } from '../stages/transcode';
+import { withTelemetry } from '../with-telemetry';
 
 describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', () => {
   let exporter: InMemorySpanExporter;

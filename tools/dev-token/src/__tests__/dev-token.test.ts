@@ -1,7 +1,7 @@
 import * as crypto from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { mintToken, parseTtlSeconds, verifyToken } from '../jwt.js';
-import { getDevJwks } from '../keys.js';
+import { mintToken, parseTtlSeconds, verifyToken } from '../jwt';
+import { getDevJwks } from '../keys';
 
 describe('tools/dev-token: EdDSA JWT mint and verify (AC 3)', () => {
   const testSub = '11111111-2222-3333-4444-555555555555';

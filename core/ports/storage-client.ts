@@ -1,4 +1,4 @@
-import type { HealthCheckable } from './health-checkable.js';
+import type { HealthCheckable } from './health-checkable';
 
 export class StorageError extends Error {
   readonly code?: string;

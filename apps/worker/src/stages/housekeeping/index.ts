@@ -7,18 +7,18 @@ import type {
 } from '@vp/core/ports';
 import { HousekeepingJob, type QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
-import { runExpireRaw } from './expire-raw.js';
-import { runPurgeDeleted } from './purge-deleted.js';
-import { runReconcileProcessing } from './reconcile-processing.js';
-import { runReconcileUploads } from './reconcile-uploads.js';
-import { runTmpSweep } from './tmp-sweep.js';
+import { runExpireRaw } from './expire-raw';
+import { runPurgeDeleted } from './purge-deleted';
+import { runReconcileProcessing } from './reconcile-processing';
+import { runReconcileUploads } from './reconcile-uploads';
+import { runTmpSweep } from './tmp-sweep';
 
-export * from './reconcile-uploads.js';
-export * from './reconcile-processing.js';
-export * from './purge-deleted.js';
-export * from './expire-raw.js';
-export * from './tmp-sweep.js';
-export * from './outbox-relay.js';
+export * from './reconcile-uploads';
+export * from './reconcile-processing';
+export * from './purge-deleted';
+export * from './expire-raw';
+export * from './tmp-sweep';
+export * from './outbox-relay';
 
 export interface HousekeepingProcessorOptions {
   repositories: Repositories;

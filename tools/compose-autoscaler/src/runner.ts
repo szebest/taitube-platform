@@ -6,7 +6,7 @@ import {
   type StageScalingState,
   computeReplicas,
   parsePrometheusQueueMetrics,
-} from './scaler.js';
+} from './scaler';
 
 const execAsync = promisify(exec);
 
