@@ -11,22 +11,13 @@ import { DEV_USER_ID, seedDatabase } from '../seed';
 describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
   let db: ReturnType<typeof createDbClient>['db'];
   let sql: ReturnType<typeof createDbClient>['sql'];
-  let postgresAvailable = false;
 
   beforeAll(async () => {
-    try {
-      const client = createDbClient(undefined, { max: 1 });
-      db = client.db;
-      sql = client.sql;
-      await sql`SELECT 1`;
-      await seedDatabase();
-      postgresAvailable = true;
-    } catch {
-      postgresAvailable = false;
-      if (sql) {
-        await sql.end({ timeout: 1 }).catch(() => {});
-      }
-    }
+    const client = createDbClient(undefined, { max: 1 });
+    db = client.db;
+    sql = client.sql;
+    await sql`SELECT 1`;
+    await seedDatabase();
   });
 
   afterAll(async () => {
@@ -39,11 +30,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
     }
   });
 
-  it('AC 1: seed inserts dev user + one READY video', async (ctx) => {
-    if (!postgresAvailable) {
-      ctx?.skip?.();
-      return;
-    }
+  it('AC 1: seed inserts dev user + one READY video', async () => {
     const user = await db.select().from(users).where(eq(users.id, DEV_USER_ID)).limit(1);
     expect(user.length).toBe(1);
     expect(user[0]?.email).toBe('dev@video-pipeline.local');
@@ -55,11 +42,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
     expect(video?.masterPlaylistKey).toContain('master.m3u8');
   });
 
-  it('AC 3: concurrency test on real Postgres — two parallel CAS transitions UPLOADED->PROBING -> exactly one succeeds', async (ctx) => {
-    if (!postgresAvailable) {
-      ctx?.skip?.();
-      return;
-    }
+  it('AC 3: concurrency test on real Postgres — two parallel CAS transitions UPLOADED->PROBING -> exactly one succeeds', async () => {
     const testVideoId = uuidv7();
 
     // Insert initial video row in UPLOADING status, then transition to UPLOADED
@@ -103,11 +86,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
     expect(current?.status).toBe('PROBING');
   });
 
-  it('AC 4: every state transition helper writes a video_events row in the same transaction (atomic guarantee)', async (ctx) => {
-    if (!postgresAvailable) {
-      ctx?.skip?.();
-      return;
-    }
+  it('AC 4: every state transition helper writes a video_events row in the same transaction (atomic guarantee)', async () => {
     const testVideoId = uuidv7();
 
     await db.insert(videos).values({
@@ -158,11 +137,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
     expect(afterFailed.length).toBe(1);
   });
 
-  it('AC 3: fenced completion with a stale token changes 0 rows and reports fenced: true', async (ctx) => {
-    if (!postgresAvailable) {
-      ctx?.skip?.();
-      return;
-    }
+  it('AC 3: fenced completion with a stale token changes 0 rows and reports fenced: true', async () => {
     const testVideoId = uuidv7();
     await db.insert(videos).values({
       id: testVideoId,
@@ -236,11 +211,7 @@ describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
     expect(reClaimFinished.lockToken).toBeNull();
   });
 
-  it('AC 3: stale version on metadata update throws VERSION_CONFLICT (409)', async (ctx) => {
-    if (!postgresAvailable) {
-      ctx?.skip?.();
-      return;
-    }
+  it('AC 3: stale version on metadata update throws VERSION_CONFLICT (409)', async () => {
     const testVideoId = uuidv7();
     await db.insert(videos).values({
       id: testVideoId,

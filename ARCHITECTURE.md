@@ -222,7 +222,10 @@ Abstracts job queuing, lifecycle, and parent-child flows:
   - **TanStack Query (`@tanstack/react-query` v5):** Server state management, SSR dehydration/hydration, optimistic mutations, and cache invalidation.
   - **TanStack Form (`@tanstack/react-form` + `@tanstack/zod-form-adapter`):** Reactive, zero-re-render forms for uploads, metadata editing, playlists, and settings.
   - **TanStack Table (`@tanstack/react-table` v8):** Headless tables for Studio video management, Admin taxonomies, and queue inspection.
-  - **TanStack Virtual (`@tanstack/react-virtual` v3):** DOM node virtualization for infinite feeds, comments, and playlist trays.
+### Rule 10: Deterministic Test Suite Parity & Zero Heuristic Skips
+- **No Heuristic Skips:** Test suites must never silently swallow connection errors or conditionally skip test assertions (e.g., catching DB connection errors and flagging `postgresAvailable = false`).
+- **1:1 Local & CI Parity:** Test suites run with strict 1:1 parity between local developer environments and remote CI pipelines. Database durability, CAS transitions, and fencing tests run against real PostgreSQL instances provided via Docker Compose (`make up`) locally and GitHub Actions service containers in CI.
+- **Port Isolation:** Domain, application service, and route handler unit tests execute deterministically against in-memory port doubles (`adapters/in-memory`), while database packages execute against real PostgreSQL to guarantee atomic durability contracts.
 
 ---
 

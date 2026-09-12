@@ -51,6 +51,20 @@ jobs:
   unit:
     name: unit
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: vp
+          POSTGRES_PASSWORD: vp
+          POSTGRES_DB: vp
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -96,12 +110,34 @@ jobs:
       - name: Generate video fixtures
         run: pnpm gen-video
 
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgres://vp:vp@localhost:5432/vp
+          DATABASE_URL_MIGRATIONS: postgres://vp:vp@localhost:5432/vp
+        run: pnpm db:migrate
+
       - name: Run unit tests (Node 24)
+        env:
+          DATABASE_URL: postgres://vp:vp@localhost:5432/vp
         run: pnpm test
 
   unit-bun:
     name: unit-bun
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: vp
+          POSTGRES_PASSWORD: vp
+          POSTGRES_DB: vp
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -147,7 +183,15 @@ jobs:
       - name: Generate video fixtures
         run: pnpm gen-video
 
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgres://vp:vp@localhost:5432/vp
+          DATABASE_URL_MIGRATIONS: postgres://vp:vp@localhost:5432/vp
+        run: pnpm db:migrate
+
       - name: Run worker & packages unit tests under Bun (runtime parity gate)
+        env:
+          DATABASE_URL: postgres://vp:vp@localhost:5432/vp
         run: pnpm test:bun
 
   integration:
@@ -217,6 +261,7 @@ jobs:
       - name: Run integration tests
         env:
           NODE_ENV: test
+          DATABASE_URL: postgres://vp:vp@localhost:5432/vp
           POSTGRES_URL: postgres://vp:vp@localhost:5432/vp
           REDIS_URL: redis://:vp@localhost:6379
           S3_ENDPOINT: http://localhost:9000
