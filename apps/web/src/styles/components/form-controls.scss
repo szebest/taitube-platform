@@ -1,0 +1,56 @@
+@import "src/styles/abstract/mixins";
+@import "src/styles/abstract/variables";
+
+.form-label {
+	@include label();
+	color: $grayscale-60;
+
+	margin-bottom: $spacing-4;
+}
+
+.form-control {
+
+	&,
+	&:focus {
+		@include paragraph-4-regular();
+		background-color: transparent;
+		color: $black;
+	}
+
+	&:focus {
+		box-shadow: 0 0 0 1px rgba(13, 110, 253, .25);
+	}
+
+	&.pill {
+		border-radius: 100000px;
+	}
+}
+
+.form-switch {
+	display: flex;
+	gap: $spacing-8;
+	align-items: center;
+
+	.form-check-input {
+		&:focus {
+			box-shadow: 0 0 0 1px rgba(13, 110, 253, .25);
+		}
+	}
+
+	.form-check-label {
+		@include label();
+		margin-top: 5.5px;
+	}
+}
+
+.input-group {
+	>* {
+
+		&,
+		&:hover,
+		&:focus-visible,
+		&:active:not(#\9) {
+			border-color: $black;
+		}
+	}
+}

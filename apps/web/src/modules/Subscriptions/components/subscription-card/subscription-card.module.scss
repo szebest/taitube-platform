@@ -1,0 +1,22 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/mixins";
+
+.container {
+	display: grid;
+	grid-template-columns: minmax($spacing-56, 1fr) 15fr;
+	gap: $spacing-16;
+
+	z-index: 1;
+
+	&__wrapper {
+		display: flex;
+		gap: $spacing-16;
+		justify-content: space-between;
+		align-items: center;
+
+		.text {
+			@include text-overflow(1);
+			@include paragraph-2-regular();
+		}
+	}
+}

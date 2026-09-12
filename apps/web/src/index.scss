@@ -1,0 +1,34 @@
+@import "styles/main";
+@import 'styles/abstract/light';
+@import 'styles/abstract/dark';
+
+body {
+	margin: 0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	color: $text-color-primary;
+	overflow-x: hidden;
+}
+
+html {
+	&:not(:has(body .modal)) {
+		scrollbar-gutter: stable;
+	}
+}
+
+* {
+	color: inherit;
+
+	transition: background-color .15s ease-in-out,
+		border-color .15s ease-in-out,
+		box-shadow .15s ease-in-out;
+}
+
+body,
+body[data-theme=light] {
+	@include light();
+}
+
+body[data-theme=dark] {
+	@include dark();
+}

@@ -1,0 +1,12 @@
+@import "src/styles/abstract/variables";
+
+.container {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+
+	button {
+		i {
+			margin-right: $spacing-12;
+		}
+	}
+}

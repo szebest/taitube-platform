@@ -1,0 +1,13 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/colors";
+
+.sidebar {
+  background-color: $white;
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    height: $spacing-72;
+    padding-left: $spacing-16;
+  }
+}

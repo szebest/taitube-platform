@@ -1,0 +1,184 @@
+@import "src/styles/abstract/mixins";
+@import "src/styles/abstract/colors";
+
+//sizes
+.btn,
+.btn-lg {
+	@include paragraph-2-regular();
+	line-height: unset;
+}
+
+.btn-lg {
+	padding-left: $spacing-16;
+	padding-right: $spacing-16;
+}
+
+.btn-sm {
+	@include paragraph-4-regular();
+}
+
+.btn-md {
+	@include paragraph-3-regular();
+}
+
+
+
+//variants
+.btn-primary {
+
+	&,
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9),
+	&:disabled {
+		color: #fff;
+	}
+}
+
+.btn-secondary {
+	background-color: $grayscale-30;
+	border-color: $grayscale-40;
+
+	&,
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9),
+	&:disabled {
+		color: #fff;
+	}
+
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9) {
+		background-color: $grayscale-40;
+		border-color: $grayscale-50;
+	}
+
+	&:disabled {
+		background-color: $grayscale-40;
+		border-color: $grayscale-50;
+	}
+}
+
+.btn-light {
+	background-color: $grayscale-15;
+	border-color: $grayscale-40;
+
+	&,
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9),
+	&:disabled {
+		color: $black;
+	}
+
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9) {
+		background-color: $grayscale-30;
+		border-color: $grayscale-60;
+	}
+
+	&:disabled {
+		background-color: $grayscale-20;
+		border-color: $grayscale-50;
+	}
+}
+
+.btn-dark {
+	background-color: $grayscale-90;
+	border-color: $grayscale-100;
+
+	&,
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9),
+	&:disabled {
+		color: $white;
+	}
+
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9) {
+		background-color: $grayscale-70;
+		border-color: $grayscale-80;
+	}
+
+	&:disabled {
+		background-color: $grayscale-80;
+		border-color: $grayscale-90;
+	}
+}
+
+.btn-danger {
+
+	&,
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9),
+	&:disabled {
+		color: #fff;
+	}
+}
+
+
+
+//modifiers
+.btn-round {
+	aspect-ratio: 1 / 1;
+	padding: $spacing-8;
+	border-radius: 50%;
+
+	&:hover,
+	&:focus-visible {
+		background-color: $grayscale-10;
+	}
+
+	&.btn-list-view {
+		width: $spacing-40;
+		padding: 0;
+	}
+}
+
+.btn-pill {
+	border-radius: 100000px;
+}
+
+.btn-transparent {
+	background-color: transparent;
+	border-color: transparent;
+
+	&,
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9) {
+		color: $black;
+	}
+
+	&:focus-visible,
+	&:hover,
+	&:active:not(#\9) {
+		background-color: $grayscale-15;
+		border-color: $grayscale-40;
+	}
+}
+
+.btn-borderless {
+	border-width: 0px;
+}
+
+.btn-initial {
+	color: inherit;
+	background-color: inherit;
+	border: unset;
+}
+
+.btn[role=separator] {
+	padding: 0;
+	max-width: 1px;
+	border: 0px;
+}
+
+.btn-white-text {
+	color: #fff;
+}

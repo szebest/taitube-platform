@@ -1,0 +1,7 @@
+@import "src/styles/abstract/mixins";
+
+.progress {
+  p {
+    @include paragraph-4-regular();
+  }
+}

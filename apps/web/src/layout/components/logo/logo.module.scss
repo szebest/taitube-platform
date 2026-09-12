@@ -1,0 +1,45 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/colors";
+
+.logo {
+	display: flex;
+	align-items: center;
+	gap: $spacing-16;
+
+	button {
+		font-size: $spacing-24;
+		width: $spacing-40;
+		height: $spacing-40;
+		padding: 0;
+	}
+
+	&__name {
+		fill: $grayscale-100;
+	}
+
+	&__toHide {
+		@media (max-width: 400px) {
+			display: none;
+		}
+	}
+
+	&__long {
+		width: 115px;
+		height: 28px;
+	}
+
+	&__short {
+		width: 115px;
+		height: 28px;
+
+		@media (max-width: 400px) {
+			width: 30.4px;
+			height: 28px;
+
+			.logo__icon {
+				transform: translateY(-40px) translateX(-11px);
+				scale: 4.735;
+			}
+		}
+	}
+}

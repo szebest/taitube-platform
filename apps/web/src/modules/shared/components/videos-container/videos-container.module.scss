@@ -1,0 +1,22 @@
+@import "src/styles/abstract/variables";
+
+.container {
+	margin-top: $spacing-16;
+
+	.gallery {
+		display: grid;
+		gap: $spacing-16;
+		grid-template-columns: repeat(auto-fill, minmax(max(13rem, 17%), 1fr));
+	}
+
+	.list {
+		display: flex;
+		gap: $spacing-16;
+		flex-direction: column;
+	}
+}
+
+.center {
+	display: flex;
+	justify-content: center;
+}

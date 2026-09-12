@@ -1,0 +1,61 @@
+@import "src/styles/abstract/variables";
+@import "src/styles/abstract/mixins";
+
+.loginWrapper {
+	&__facebookLogin {
+		>img {
+			width: $spacing-24;
+			aspect-ratio: 1 / 1;
+			object-fit: contain;
+		}
+
+		>span {
+			margin-left: $spacing-16;
+		}
+
+		.textLong {
+			@media (max-width: 600px) {
+				display: none;
+			}
+		}
+
+		@media (max-width: 400px) {
+			border-radius: $spacing-4;
+			padding: $spacing-8;
+
+			.text {
+				display: none;
+			}
+		}
+	}
+
+	&__userInfo {
+		display: flex;
+		gap: $spacing-16;
+		align-items: center;
+
+		>span {
+			@include paragraph-3-regular();
+
+			@media (max-width: 600px) {
+				display: none;
+			}
+		}
+
+		.dropdown {
+			width: $spacing-40;
+
+			&__username {
+				display: none;
+
+				span {
+					@include paragraph-2-semi-bold();
+				}
+
+				@media (max-width: 600px) {
+					display: initial;
+				}
+			}
+		}
+	}
+}
