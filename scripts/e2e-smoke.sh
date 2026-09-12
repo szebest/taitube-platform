@@ -31,8 +31,16 @@ fi
 echo "==> Using test fixture: $FIXTURE_PATH"
 
 # 3. Upload fixture via upload.sh
-UPLOAD_OUT=$(bash scripts/upload.sh "$FIXTURE_PATH")
-echo "$UPLOAD_OUT"
+UPLOAD_TMP=$(mktemp)
+if ! bash scripts/upload.sh "$FIXTURE_PATH" > "$UPLOAD_TMP" 2>&1; then
+  echo "Error: upload.sh failed. Full output:" >&2
+  cat "$UPLOAD_TMP" >&2
+  rm -f "$UPLOAD_TMP"
+  exit 1
+fi
+cat "$UPLOAD_TMP"
+UPLOAD_OUT=$(cat "$UPLOAD_TMP")
+rm -f "$UPLOAD_TMP"
 
 VIDEO_ID=$(echo "$UPLOAD_OUT" | grep -o "Video ID:  [a-f0-9-]*" | awk '{print $3}')
 if [ -z "$VIDEO_ID" ]; then
@@ -58,7 +66,7 @@ while true; do
     exit 1
   fi
 
-  VIDEO_RES=$(curl -s -f -H "Authorization: Bearer $TOKEN" "$API_URL/v1/videos/$VIDEO_ID")
+  VIDEO_RES=$(curl -sS -f --resolve minio:9000:127.0.0.1 -H "Authorization: Bearer $TOKEN" "$API_URL/v1/videos/$VIDEO_ID")
   STATUS=$(echo "$VIDEO_RES" | grep -o '"status":"[^"]*' | cut -d'"' -f4)
 
   echo "  [+${ELAPSED}s] Video status: $STATUS"
@@ -82,7 +90,7 @@ if [ -z "$PLAYBACK_URL" ]; then
 fi
 
 echo "==> Fetching master playlist: $PLAYBACK_URL"
-MASTER_CONTENT=$(curl -s -f "$PLAYBACK_URL")
+MASTER_CONTENT=$(curl -sS -f --resolve minio:9000:127.0.0.1 "$PLAYBACK_URL")
 echo "$MASTER_CONTENT"
 
 if ! echo "$MASTER_CONTENT" | grep -q "#EXTM3U"; then
@@ -101,7 +109,7 @@ RENDITION_LINE=$(echo "$MASTER_CONTENT" | grep -v "^#" | head -n 1)
 RENDITION_URL="$PLAYLIST_DIR/$RENDITION_LINE"
 
 echo "==> Fetching rendition playlist: $RENDITION_URL"
-RENDITION_CONTENT=$(curl -s -f "$RENDITION_URL")
+RENDITION_CONTENT=$(curl -sS -f --resolve minio:9000:127.0.0.1 "$RENDITION_URL")
 
 if ! echo "$RENDITION_CONTENT" | grep -q "#EXT-X-ENDLIST"; then
   echo "Error: Rendition playlist missing #EXT-X-ENDLIST"
@@ -113,7 +121,7 @@ RENDITION_DIR=$(dirname "$RENDITION_URL")
 SEGMENT_URL="$RENDITION_DIR/$SEGMENT_LINE"
 
 echo "==> Fetching first TS segment: $SEGMENT_URL"
-SEGMENT_SIZE=$(curl -s -f "$SEGMENT_URL" | wc -c)
+SEGMENT_SIZE=$(curl -sS -f --resolve minio:9000:127.0.0.1 "$SEGMENT_URL" | wc -c)
 
 if [ "$SEGMENT_SIZE" -lt 1000 ]; then
   echo "Error: Segment size unexpectedly small ($SEGMENT_SIZE bytes)"

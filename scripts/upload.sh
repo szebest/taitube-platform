@@ -45,7 +45,7 @@ TOKEN=$(pnpm --silent dev-token mint --sub "$DEV_USER_ID" --role pro --ttl 1h --
 
 # 3. Request upload URL (POST /v1/uploads)
 echo "==> Requesting upload URL from API ($API_URL/v1/uploads)..."
-INIT_RES=$(curl -s -f -X POST "$API_URL/v1/uploads" \
+INIT_RES=$(curl -sS -f --resolve minio:9000:127.0.0.1 -X POST "$API_URL/v1/uploads" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d "{\"filename\":\"$FILENAME\",\"sizeBytes\":$FILESIZE,\"contentType\":\"video/mp4\"}")
@@ -55,7 +55,7 @@ UPLOAD_ID=$(echo "$INIT_RES" | grep -o '"uploadId":"[^"]*' | cut -d'"' -f4)
 SINGLE_URL=$(echo "$INIT_RES" | grep -o '"singleUrl":"[^"]*' | cut -d'"' -f4)
 
 if [ -z "$UPLOAD_ID" ] || [ -z "$SINGLE_URL" ]; then
-  echo "Error: Failed to obtain upload URL. Response: $INIT_RES"
+  echo "Error: Failed to obtain upload URL. Response: $INIT_RES" >&2
   exit 1
 fi
 
@@ -64,7 +64,7 @@ echo "==> Upload ID: $UPLOAD_ID"
 
 # 4. Upload bytes directly to storage (MinIO / S3)
 echo "==> Uploading $FILESIZE bytes directly to storage..."
-curl -s -f -X PUT "$SINGLE_URL" \
+curl -sS -f --resolve minio:9000:127.0.0.1 -X PUT "$SINGLE_URL" \
   -H "Content-Type: video/mp4" \
   -H "Content-Length: $FILESIZE" \
   --data-binary "@$FILEPATH"
@@ -73,7 +73,7 @@ echo "==> Direct upload completed."
 
 # 5. Complete upload (POST /v1/uploads/:uploadId/complete)
 echo "==> Completing upload ($API_URL/v1/uploads/$UPLOAD_ID/complete)..."
-COMPLETE_RES=$(curl -s -f -X POST "$API_URL/v1/uploads/$UPLOAD_ID/complete" \
+COMPLETE_RES=$(curl -sS -f --resolve minio:9000:127.0.0.1 -X POST "$API_URL/v1/uploads/$UPLOAD_ID/complete" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d "{}")

@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { mintToken, verifyToken } from './jwt';
 import { getDevJwks } from './keys';
 
@@ -146,9 +147,18 @@ export async function main(): Promise<void> {
   }
 }
 
-if (process.env['NODE_ENV'] !== 'test') {
+const argv1 = process.argv[1];
+const isDirectRun =
+  Boolean(argv1) &&
+  (fileURLToPath(import.meta.url).toLowerCase() === path.resolve(argv1 as string).toLowerCase() ||
+    (argv1 as string).endsWith('dev-token') ||
+    (argv1 as string).endsWith('dev-token/src/index.ts') ||
+    (argv1 as string).endsWith('dev-token/dist/index.js'));
+
+if (isDirectRun && process.env['NODE_ENV'] !== 'test') {
   main().catch((err) => {
     console.error('Fatal dev-token error:', err);
     process.exit(1);
   });
 }
+
