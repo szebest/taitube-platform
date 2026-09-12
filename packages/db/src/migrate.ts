@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -18,7 +19,14 @@ export async function runMigrations(connectionUrl?: string): Promise<void> {
   const sql = postgres(url, { max: 1 });
   const db = drizzle(sql);
 
-  const migrationsFolder = path.resolve(__dirname, '../drizzle');
+  const candidates = [
+    path.resolve(__dirname, '../drizzle'),
+    path.resolve(__dirname, '../../packages/db/drizzle'),
+    path.resolve(process.cwd(), 'packages/db/drizzle'),
+    path.resolve(process.cwd(), 'node_modules/@vp/db/drizzle'),
+    path.resolve(process.cwd(), 'drizzle'),
+  ];
+  const migrationsFolder = candidates.find((dir) => fs.existsSync(dir)) ?? (candidates[0] as string);
   console.log(`[db:migrate] Applying migrations from ${migrationsFolder}...`);
 
   await migrate(db, { migrationsFolder });
