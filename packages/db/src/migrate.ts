@@ -17,6 +17,24 @@ export async function runMigrations(connectionUrl?: string): Promise<void> {
 
   console.log(`[db:migrate] Connecting to ${url.replace(/:[^:@]+@/, ':***@')}...`);
   const sql = postgres(url, { max: 1 });
+
+  let connected = false;
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    try {
+      await sql`SELECT 1`;
+      connected = true;
+      break;
+    } catch (err) {
+      console.warn(
+        `[db:migrate] Database connection attempt ${attempt}/15 failed (${(err as Error).message}), retrying in 1s...`
+      );
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+  if (!connected) {
+    throw new Error('[db:migrate] Failed to connect to database after 15 attempts');
+  }
+
   const db = drizzle(sql);
 
   const candidates = [

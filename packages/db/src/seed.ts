@@ -11,6 +11,23 @@ export const OTHER_PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000002';
 export async function seedDatabase(connectionUrl?: string): Promise<void> {
   const { db, sql } = createDbClient(connectionUrl);
 
+  let connected = false;
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    try {
+      await sql`SELECT 1`;
+      connected = true;
+      break;
+    } catch (err) {
+      console.warn(
+        `[db:seed] Database connection attempt ${attempt}/15 failed (${(err as Error).message}), retrying in 1s...`
+      );
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+  if (!connected) {
+    throw new Error('[db:seed] Failed to connect to database after 15 attempts');
+  }
+
   console.log('[db:seed] Seeding database...');
 
   // 1. Seed dev users
