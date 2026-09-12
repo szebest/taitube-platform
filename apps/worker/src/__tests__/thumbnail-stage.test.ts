@@ -111,14 +111,8 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
 
     // Verify VTT contents
     const vttObj = await storage.getObject('public', result.spriteVttKey);
-    const vttText = Buffer.isBuffer(vttObj)
-      ? vttObj.toString('utf-8')
-      : typeof vttObj === 'string'
-        ? vttObj
-        : Buffer.from(vttObj as Uint8Array).toString('utf-8');
+    const vttText = typeof vttObj === 'string' ? vttObj : new TextDecoder('utf-8').decode(vttObj);
     const cues = parseSpriteVtt(vttText);
-    const cueLines = vttText.split('\n').filter((l) => l.includes('-->'));
-    expect(cueLines.length).toBeGreaterThanOrEqual(11);
     expect(cues.length).toBeGreaterThanOrEqual(11);
     expect(cues.length).toBeLessThanOrEqual(13);
 
