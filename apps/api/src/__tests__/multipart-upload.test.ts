@@ -41,8 +41,8 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     getName(): string {
       return 'probe';
     }
-    async add<T = unknown>(_name: string, data: T): Promise<any> {
-      probeJobs.push(data as any);
+    async add<T = unknown>(_name: string, data: T): Promise<import('@vp/core/ports').QueueJob<T>> {
+      probeJobs.push(data as { videoId: string });
       return { id: 'job-probe', name: 'probe', data };
     }
     async process(): Promise<void> {}
@@ -51,10 +51,10 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     }
     async pause(): Promise<void> {}
     async resume(): Promise<void> {}
-    async getJobCounts(): Promise<any> {
+    async getJobCounts(): Promise<import('@vp/core/ports').QueueJobCounts> {
       return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
     }
-    async getJobs(): Promise<any[]> {
+    async getJobs(): Promise<import('@vp/core/ports').QueueJob<unknown>[]> {
       return [];
     }
     async getJobState(_jobId: string): Promise<string | undefined> {
@@ -472,7 +472,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
 
     // Invariant: video_events has upload.aborted event
     const events = await repositories.events.findByVideoId(videoId);
-    expect(events.some((e: any) => e.type === 'upload.aborted')).toBe(true);
+    expect(events.some((e) => e.type === 'upload.aborted')).toBe(true);
 
     // Subsequent GET returns 410 with UPLOAD_NOT_OPEN
     const getRes = await app.inject({

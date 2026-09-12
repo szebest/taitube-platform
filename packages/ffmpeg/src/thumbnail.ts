@@ -201,8 +201,11 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
       continue;
     }
 
-    const startTime = timeMatch[1]!;
-    const endTime = timeMatch[2]!;
+    const startTime = timeMatch[1] ?? '';
+    const endTime = timeMatch[2] ?? '';
+    if (!startTime || !endTime) {
+      continue;
+    }
 
     // Scan for the payload line with xywh coordinates
     let payloadLine = '';
