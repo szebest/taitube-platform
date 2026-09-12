@@ -14,6 +14,8 @@
 
 The generic project name `video-pipeline` and `@vp/*` package prefix served well during early architectural foundation phases. However, the platform has matured into a unified, full-stack video streaming and creator ecosystem powering the **Taitube** platform. Having backend packages named `@vp/*`, services named `video-pipeline`, and the frontend named `@taitube/web` creates namespace friction, cognitive dissonance, and fragmented developer tooling.
 
+Executing this rebrand **early** (before starting remaining Phase 5 feature tickets) ensures that all subsequent tickets, imports, schemas, and tests are built directly against clean `@taitube/*` package names without needing future refactors.
+
 This ticket delivers a **Comprehensive Monorepo Rebrand & Namespace Unification**:
 
 1. **Every Monorepo Package & App Renamed to `@taitube/*`**:
@@ -49,7 +51,7 @@ This ticket delivers a **Comprehensive Monorepo Rebrand & Namespace Unification*
 3. **Services, Infrastructure & Container Rebranding**:
    - **Docker Compose:**
      - Project prefix set to `COMPOSE_PROJECT_NAME=taitube`.
-     - Container and service names updated: `taitube-api`, `taitube-worker`, `taitube-postgres`, `taitube-redis`, `taitube-minio`.
+     - Container and service names updated with explicit suffixes: `taitube-api`, `taitube-worker`, `taitube-postgres`, `taitube-redis`, `taitube-minio`.
      - Network name updated: `taitube-network`.
    - **OpenTelemetry & Observability:**
      - Service names in traces and metrics: `service.name: taitube-api`, `service.name: taitube-worker`, `service.namespace: taitube`.
@@ -112,5 +114,6 @@ This ticket delivers a **Comprehensive Monorepo Rebrand & Namespace Unification*
 
 - [ ] All ACs green under `pnpm test` and `bun test`.
 - [ ] `pnpm typecheck && pnpm lint` pass with zero warnings or errors.
-- [ ] Architecture docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
+- [ ] All subsequent tickets (`docs/tickets/36-78`) updated to reference `@taitube/*` packages, `taitube-*` services, `taitube:` queue/Redis namespaces, and the unified `taitube` CLI.
+- [ ] Architecture docs updated (`ARCHITECTURE.md`, `AGENTS.md`, `CONTEXT.md`, `docs/SDD.md`).
 - [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
