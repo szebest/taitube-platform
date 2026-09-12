@@ -196,7 +196,9 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]?.trim() ?? '';
-    const timeMatch = line.match(/^(\d{2}:\d{2}:\d{2}\.\d{3})\s+-->\s+(\d{2}:\d{2}:\d{2}\.\d{3})/);
+    const timeMatch = line.match(
+      /((?:\d{1,2}:)?\d{2}:\d{2}(?:\.\d{1,3})?)\s*-->\s*((?:\d{1,2}:)?\d{2}:\d{2}(?:\.\d{1,3})?)/
+    );
     if (!timeMatch) {
       continue;
     }
@@ -224,7 +226,7 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
       throw new Error(`Invalid WebVTT cue payload after line ${i + 1}`);
     }
 
-    const payloadMatch = payloadLine.match(/^(.*)#xywh=(\d+),(\d+),(\d+),(\d+)$/);
+    const payloadMatch = payloadLine.match(/(.*)#xywh=(\d+),(\d+),(\d+),(\d+)/);
     if (!payloadMatch) {
       throw new Error(`Invalid WebVTT cue payload at line ${i + 1}: "${payloadLine}"`);
     }
@@ -237,8 +239,20 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
 
     const parseMs = (ts: string) => {
       const [hms = '', ms = '0'] = ts.split('.');
-      const [h = 0, m = 0, s = 0] = hms.split(':').map(Number);
-      return h * 3600000 + m * 60000 + s * 1000 + Number(ms);
+      const segments = hms.split(':').map(Number);
+      if (segments.length === 3) {
+        return (
+          (segments[0] ?? 0) * 3600000 +
+          (segments[1] ?? 0) * 60000 +
+          (segments[2] ?? 0) * 1000 +
+          Number(ms.padEnd(3, '0').slice(0, 3))
+        );
+      }
+      return (
+        (segments[0] ?? 0) * 60000 +
+        (segments[1] ?? 0) * 1000 +
+        Number(ms.padEnd(3, '0').slice(0, 3))
+      );
     };
 
     const startMs = parseMs(startTime);
