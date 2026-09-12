@@ -78,7 +78,7 @@ COMPLETE_RES=$(curl -sS -f --resolve minio:9000:127.0.0.1 -X POST "$API_URL/v1/u
   -H "Content-Type: application/json" \
   -d "{}")
 
-STATUS=$(echo "$COMPLETE_RES" | grep -o '"status":"[^"]*' | cut -d'"' -f4)
+STATUS=$(echo "$COMPLETE_RES" | grep -o '"status":"[^"]*' | head -n 1 | cut -d'"' -f4)
 
 echo "==> Success! Video $VIDEO_ID status: $STATUS"
 echo "==> Check detail: curl -H \"Authorization: Bearer $TOKEN\" $API_URL/v1/videos/$VIDEO_ID"

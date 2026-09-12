@@ -67,7 +67,7 @@ while true; do
   fi
 
   VIDEO_RES=$(curl -sS -f --resolve minio:9000:127.0.0.1 -H "Authorization: Bearer $TOKEN" "$API_URL/v1/videos/$VIDEO_ID")
-  STATUS=$(echo "$VIDEO_RES" | grep -o '"status":"[^"]*' | cut -d'"' -f4)
+  STATUS=$(echo "$VIDEO_RES" | grep -o '"status":"[^"]*' | head -n 1 | cut -d'"' -f4)
 
   echo "  [+${ELAPSED}s] Video status: $STATUS"
 

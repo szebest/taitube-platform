@@ -92,7 +92,7 @@ run_scenario() {
 
     local res
     res=$(curl -s -f -H "Authorization: Bearer $token" "$API_URL/v1/videos/$video_id" || echo "{}")
-    video_status=$(echo "$res" | grep -o '"status":"[^"]*' | cut -d'"' -f4 || echo "")
+    video_status=$(echo "$res" | grep -o '"status":"[^"]*' | head -n 1 | cut -d'"' -f4 || echo "")
 
     if [ "$video_status" = "READY" ]; then
       echo "==> Video $video_id reached READY in ${elapsed}s!"
