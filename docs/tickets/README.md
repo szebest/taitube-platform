@@ -13,7 +13,7 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
    - Tests green under Node **and** Bun where the worker or shared packages are involved.
    - No new external runtime dependency (local-first, SDD P9 / PRD G11).
    - **Documentation & Architecture in DoD:** `ARCHITECTURE.md` and `docs/SDD.md` (and relevant ADRs) MUST be updated if any boundary, contract, workspace package, schema, or architecture decision is added or changed.
-   - Ticket `**Status:**` set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+   - Ticket `**Status:**` set to `done`, `python3 docs/tickets/gen-index.py` re-run, and changes synced to GitHub Issues / Project board via CI or `pnpm sync:tickets`.
 6. Found a decision the ticket doesn't cover? Don't guess silently: pick the option most consistent with the SDD ADRs, write it into the ticket's *Open questions* as "Decided: …", and flag it in the PR.
 
 **Sizes:** S ≈ half a session · M ≈ one session · L ≈ one long session (still one context window if you follow the links only).

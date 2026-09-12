@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#73](https://github.com/szebest/taitube-platform/issues/73) |
 | Size | L |
 | Blocked by | 46 — YouTube-grade playlists · 57 — Production video player · 59 — Modern video watch page · 69 — Frontend URL-driven state |
 | Blocks | 75 |

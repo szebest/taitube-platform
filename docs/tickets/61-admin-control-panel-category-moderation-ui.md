@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#61](https://github.com/szebest/taitube-platform/issues/61) |
 | Size | M |
 | Blocked by | 37 — Admin category API · 39 — Declarative RBAC · 55 — Modern design system · 56 — Frontend auth |
 | Blocks | 62, 75 |

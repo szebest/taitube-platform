@@ -19,7 +19,7 @@ An asynchronous video ingestion and HLS transcoding backend: Fastify API (Node 2
 6. **State changes go through the CAS helper** that also appends `video_events`; worker commits use fencing tokens (`vp-postgres-cas-fencing`).
 7. **Errors are classified at the throw site** (`PermanentError` vs `TransientError`, ADR-18).
 8. **Prove, don't claim:** run typecheck/lint/tests and paste output before saying done (`verification-before-completion`).
-9. **Docs & Architecture in DoD:** Every ticket implementation that adds or alters architectural boundaries, workspace packages, schemas, or design decisions MUST update `ARCHITECTURE.md`, `docs/SDD.md` (including ADRs), and relevant ticket references as part of its Definition of Done.
+9. **Docs, Architecture & Ticket Sync in DoD:** Every ticket implementation that adds or alters architectural boundaries, workspace packages, schemas, or design decisions MUST update `ARCHITECTURE.md`, `docs/SDD.md` (including ADRs), and relevant ticket references. Ticket `**Status:**` must be updated, `python3 docs/tickets/gen-index.py` re-run, and merged changes sync to GitHub Issues / Project Board via `.github/workflows/sync-tickets.yml` (or `pnpm sync:tickets`).
 
 ## Commands
 `make up` (infra) · `make up-all` (everything) · `make smoke` · `make smoke-offline` · `pnpm dev` · `pnpm test` · `pnpm test:integration` · `bun test` (worker parity) · `pnpm lint` · `pnpm typecheck` · `make k3d-up && make k3d-deploy` (Kubernetes) · `make e2e` (Phase 2 acceptance).

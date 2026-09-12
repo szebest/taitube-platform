@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#53](https://github.com/szebest/taitube-platform/issues/53) |
 | Size | L |
 | Blocked by | 51 — Type-safe query client · 52 — Frontend monorepo integration |
 | Blocks | 54, 55, 57, 67, 68, 69, 70, 72, 75 |

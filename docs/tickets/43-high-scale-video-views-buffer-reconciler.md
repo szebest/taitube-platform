@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#43](https://github.com/szebest/taitube-platform/issues/43) |
 | Size | L |
 | Blocked by | 38 — User & channel identity |
 | Blocks | 44, 45, 65 |

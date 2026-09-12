@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 4 — Resilience & cloud (time-gated) |
+| Issue | [#34](https://github.com/szebest/taitube-platform/issues/34) |
 | Size | S |
 | Blocked by | 08 — Containerise + compose |
 | Blocks | — |

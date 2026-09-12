@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 1 — Walking skeleton |
+| Issue | [#6](https://github.com/szebest/taitube-platform/issues/6) |
 | Size | L |
 | Blocked by | 05 — Upload slice · 03 — Dev tooling (fixtures) |
 | Blocks | 07, 17 |

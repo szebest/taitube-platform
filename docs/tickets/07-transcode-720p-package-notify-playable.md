@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 1 — Walking skeleton |
+| Issue | [#7](https://github.com/szebest/taitube-platform/issues/7) |
 | Size | L |
 | Blocked by | 06 — Worker runtime + probe |
 | Blocks | 08, 09, 12, 15 |

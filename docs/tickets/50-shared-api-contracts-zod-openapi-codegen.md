@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#50](https://github.com/szebest/taitube-platform/issues/50) |
 | Size | M |
 | Blocked by | 19 — Videos API completion · 37 — Admin category API · 38 — User identity |
 | Blocks | 51, 52 |

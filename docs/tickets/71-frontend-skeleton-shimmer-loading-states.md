@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#71](https://github.com/szebest/taitube-platform/issues/71) |
 | Size | M |
 | Blocked by | 55 — Modern design system foundation · 58 — Modern browse layout · 59 — Modern video watch page |
 | Blocks | 75 |

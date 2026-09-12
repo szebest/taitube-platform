@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#66](https://github.com/szebest/taitube-platform/issues/66) |
 | Size | M |
 | Blocked by | 62 — Frontend performance · 63 — TanStack Router SSR |
 | Blocks | 67, 68, 75 |

@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#76](https://github.com/szebest/taitube-platform/issues/76) |
 | Size | L |
 | Blocked by | 38 — User identity · 40 — Reactions · 42 — Threaded comments · 57 — Production video player · 59 — Modern video watch page |
 | Blocks | 78 |

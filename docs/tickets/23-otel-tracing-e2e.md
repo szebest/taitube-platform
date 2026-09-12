@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 3 — Observe & scale |
+| Issue | [#23](https://github.com/szebest/taitube-platform/issues/23) |
 | Size | M |
 | Blocked by | 21 — Observability stack · 12 — Flows fan-out/fan-in |
 | Blocks | — |

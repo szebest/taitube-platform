@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 2 — Real pipeline |
+| Issue | [#14](https://github.com/szebest/taitube-platform/issues/14) |
 | Size | M–L |
 | Blocked by | 12 — Flows fan-out/fan-in |
 | Blocks | 20 |

@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#51](https://github.com/szebest/taitube-platform/issues/51) |
 | Size | M |
 | Blocked by | 50 — Shared API contracts |
 | Blocks | 53 |

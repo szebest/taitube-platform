@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#52](https://github.com/szebest/taitube-platform/issues/52) |
 | Size | L |
 | Blocked by | 45 — Frontend API modernization · 49 — Next-Gen frontend API gateway · 50 — Shared API contracts |
 | Blocks | 53, 54, 75 |

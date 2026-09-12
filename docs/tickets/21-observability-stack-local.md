@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 3 — Observe & scale |
+| Issue | [#21](https://github.com/szebest/taitube-platform/issues/21) |
 | Size | M |
 | Blocked by | 08 — Containerise + compose |
 | Blocks | 22, 23 |

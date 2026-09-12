@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 3 — Observe & scale |
+| Issue | [#27](https://github.com/szebest/taitube-platform/issues/27) |
 | Size | S |
 | Blocked by | 22 — Metrics catalogue |
 | Blocks | — |

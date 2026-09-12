@@ -1,4 +1,4 @@
-﻿name: Sync Tickets to GitHub Issues
+name: Sync Tickets to GitHub Issues
 
 on:
   push:
@@ -18,12 +18,14 @@ jobs:
     name: Sync Tickets to GitHub Issues
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       issues: write
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,3 +38,13 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python scripts/sync-tickets-to-github.py
+
+      - name: Commit Updated Issue Links
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add docs/tickets/
+            git commit -m "docs(tickets): sync GitHub issue links to local tickets [skip ci]"
+            git push origin main
+          fi

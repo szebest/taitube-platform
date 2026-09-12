@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 3 — Observe & scale |
+| Issue | [#26](https://github.com/szebest/taitube-platform/issues/26) |
 | Size | M–L |
 | Blocked by | 25 — Kubernetes locally · 22 — Metrics catalogue |
 | Blocks | 28 |

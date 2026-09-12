@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#45](https://github.com/szebest/taitube-platform/issues/45) |
 | Size | L |
 | Blocked by | 37 — Admin category · 38 — User identity · 39 — Declarative RBAC · 40 — Reactions · 41 — Subscriptions · 42 — Threaded comments · 43 — Views buffer · 44 — Creator studio |
 | Blocks | 49, 52 |

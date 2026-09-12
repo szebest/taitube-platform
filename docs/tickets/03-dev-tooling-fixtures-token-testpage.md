@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 0 — Bootstrap |
+| Issue | [#3](https://github.com/szebest/taitube-platform/issues/3) |
 | Size | M |
 | Blocked by | 01 — Repo skeleton + local infrastructure |
 | Blocks | 04, 06 |

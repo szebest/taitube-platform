@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#60](https://github.com/szebest/taitube-platform/issues/60) |
 | Size | L |
 | Blocked by | 44 — Creator studio backend · 55 — Modern design system · 56 — Frontend auth |
 | Blocks | 62, 75 |

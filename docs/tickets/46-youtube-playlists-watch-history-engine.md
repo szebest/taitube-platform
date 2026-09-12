@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#46](https://github.com/szebest/taitube-platform/issues/46) |
 | Size | L |
 | Blocked by | 38 — User & channel identity · 39 — Declarative RBAC & ABAC permission engine |
 | Blocks | 47, 49, 73 |

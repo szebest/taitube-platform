@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#57](https://github.com/szebest/taitube-platform/issues/57) |
 | Size | L |
 | Blocked by | 53 — Frontend architecture · 54 — Frontend testing infrastructure · 55 — Modern design system |
 | Blocks | 59, 62, 65, 73, 75, 76, 77, 78 |

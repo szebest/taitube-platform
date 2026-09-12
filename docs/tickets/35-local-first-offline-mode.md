@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 1 — Walking skeleton (exit gate; number is dependency-order, not priority — do this right after 08) |
+| Issue | [#35](https://github.com/szebest/taitube-platform/issues/35) |
 | Size | S–M |
 | Blocked by | 08 — Containerise + compose |
 | Blocks | — |

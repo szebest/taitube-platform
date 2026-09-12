@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#59](https://github.com/szebest/taitube-platform/issues/59) |
 | Size | L |
 | Blocked by | 57 — Production video player · 58 — Modern browse layout |
 | Blocks | 62, 71, 73, 75, 76 |

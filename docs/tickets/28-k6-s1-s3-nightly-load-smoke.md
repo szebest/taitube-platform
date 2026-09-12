@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 3 — Observe & scale |
+| Issue | [#28](https://github.com/szebest/taitube-platform/issues/28) |
 | Size | L |
 | Blocked by | 11 — Multipart upload · 20 — Phase 2 acceptance · 26 — KEDA autoscaling |
 | Blocks | 29 |

@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 1 — Walking skeleton |
+| Issue | [#9](https://github.com/szebest/taitube-platform/issues/9) |
 | Size | S–M |
 | Blocked by | 07 — Playable READY video |
 | Blocks | — |

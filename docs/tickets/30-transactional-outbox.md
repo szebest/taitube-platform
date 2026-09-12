@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 4 — Resilience & cloud |
+| Issue | [#30](https://github.com/szebest/taitube-platform/issues/30) |
 | Size | M |
 | Blocked by | 16 — Retries/DLQ (generations, admin) |
 | Blocks | — |

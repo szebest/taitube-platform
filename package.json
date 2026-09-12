@@ -28,6 +28,7 @@
     "db:migrate": "pnpm --filter @vp/db migrate",
     "db:seed": "pnpm --filter @vp/db seed",
     "db:check": "pnpm --filter @vp/db check",
+    "sync:tickets": "python scripts/sync-tickets-to-github.py",
     "prepare": "lefthook install || true"
   },
   "devDependencies": {

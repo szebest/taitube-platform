@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#37](https://github.com/szebest/taitube-platform/issues/37) |
 | Size | M |
 | Blocked by | 04 — API skeleton + auth + schema |
 | Blocks | 44, 45, 50, 61 |

@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#47](https://github.com/szebest/taitube-platform/issues/47) |
 | Size | L |
 | Blocked by | 38 — User & channel identity · 44 — Creator studio · 46 — YouTube-grade playlists |
 | Blocks | 49, 74 |

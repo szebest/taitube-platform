@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#65](https://github.com/szebest/taitube-platform/issues/65) |
 | Size | M |
 | Blocked by | 43 — Views buffer · 57 — Production player · 64 — Web Vitals |
 | Blocks | 75 |

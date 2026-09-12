@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#74](https://github.com/szebest/taitube-platform/issues/74) |
 | Size | M |
 | Blocked by | 47 — Multi-resource search · 58 — Modern browse layout · 69 — Frontend URL-driven state |
 | Blocks | 75 |

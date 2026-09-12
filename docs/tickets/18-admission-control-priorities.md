@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 2 — Real pipeline |
+| Issue | [#18](https://github.com/szebest/taitube-platform/issues/18) |
 | Size | S |
 | Blocked by | 17 — Housekeeping/reconciler |
 | Blocks | — |

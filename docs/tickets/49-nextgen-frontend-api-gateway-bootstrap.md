@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#49](https://github.com/szebest/taitube-platform/issues/49) |
 | Size | M |
 | Blocked by | 36 — Public feed · 38 — User identity · 45 — Frontend API modernization · 46 — YouTube playlists · 47 — Multi-resource search |
 | Blocks | 52 |

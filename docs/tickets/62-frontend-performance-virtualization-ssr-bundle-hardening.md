@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#62](https://github.com/szebest/taitube-platform/issues/62) |
 | Size | L |
 | Blocked by | 57, 58, 59, 60, 61 |
 | Blocks | 63, 64, 66, 75 |

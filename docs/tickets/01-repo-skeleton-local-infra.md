@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 0 — Bootstrap |
+| Issue | [#1](https://github.com/szebest/taitube-platform/issues/1) |
 | Size | M (one focused session) |
 | Blocked by | None (can start immediately) |
 | Blocks | 02, 03, 04, 31, 48 |

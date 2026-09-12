@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 4 — Resilience & cloud (can be done any time after 01) |
+| Issue | [#31](https://github.com/szebest/taitube-platform/issues/31) |
 | Size | M |
 | Blocked by | 01 — Repo skeleton |
 | Blocks | 32 |

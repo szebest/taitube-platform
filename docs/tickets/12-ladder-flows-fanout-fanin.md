@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 2 — Real pipeline |
+| Issue | [#12](https://github.com/szebest/taitube-platform/issues/12) |
 | Size | L |
 | Blocked by | 07 — Playable READY video |
 | Blocks | 13, 14, 16, 22, 23 |

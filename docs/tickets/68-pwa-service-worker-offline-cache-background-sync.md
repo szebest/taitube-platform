@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#68](https://github.com/szebest/taitube-platform/issues/68) |
 | Size | L |
 | Blocked by | 53 — Frontend architecture · 66 — Advanced code splitting |
 | Blocks | 75 |

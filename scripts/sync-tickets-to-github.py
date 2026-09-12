@@ -1,7 +1,9 @@
 ﻿#!/usr/bin/env python3
 """
 Sync all local markdown tickets (docs/tickets/NN-slug.md) to GitHub Issues.
-Zero external dependencies (uses standard library urllib.request).
+- Creates/updates GitHub Issues with labels and state.
+- Injects GitHub Issue link back into local markdown tickets metadata table.
+- Zero external dependencies (uses standard library urllib.request).
 """
 import os
 import re
@@ -97,7 +99,6 @@ def ensure_labels():
             except Exception as e:
                 print(f"  Failed creating label {name}: {e}")
         else:
-            # Update color/description if changed
             curr = existing_labels[name]
             if curr.get("color") != cfg["color"] or curr.get("description") != cfg["description"]:
                 try:
@@ -175,6 +176,25 @@ def build_issue_body(ticket):
     header = f"> 📄 **Local Source of Truth:** [{ticket['file']}]({blob_url})\n\n---\n\n"
     return header + ticket["content"]
 
+def update_local_ticket_issue_link(file_path, issue_num, issue_url):
+    try:
+        content = open(file_path, "r", encoding="utf-8").read()
+        # Check if Issue row already exists
+        if "| Issue |" in content:
+            new_content = re.sub(r"\| Issue \| .+? \|", f"| Issue | [#{issue_num}]({issue_url}) |", content)
+        else:
+            # Insert after Phase row
+            new_content = re.sub(
+                r"(\| Phase \| .+? \|\n)",
+                rf"\1| Issue | [#{issue_num}]({issue_url}) |\n",
+                content,
+                count=1
+            )
+        if new_content != content:
+            open(file_path, "w", encoding="utf-8").write(new_content)
+    except Exception as e:
+        print(f"  Warning updating local issue link in {file_path}: {e}")
+
 def sync():
     ensure_labels()
     existing_issues = fetch_all_issues()
@@ -191,8 +211,10 @@ def sync():
         desired_state = "closed" if t["is_done"] else "open"
         body = build_issue_body(t)
         
+        issue_data = None
         if num in existing_issues:
             curr = existing_issues[num]
+            issue_data = curr
             curr_labels = {lbl["name"] for lbl in curr.get("labels", [])}
             needed_labels = set(labels)
             
@@ -204,7 +226,7 @@ def sync():
             
             if needs_update:
                 print(f"Updating Issue #{curr['number']} ([#{num:02d}] {t['title'][:30]}...) -> state: {desired_state}")
-                gh_request(f"/issues/{curr['number']}", method="PATCH", data={
+                issue_data = gh_request(f"/issues/{curr['number']}", method="PATCH", data={
                     "title": issue_title,
                     "body": body,
                     "state": desired_state,
@@ -215,18 +237,22 @@ def sync():
                 time.sleep(0.4)
         else:
             print(f"Creating Issue: {issue_title} ({t['status']})")
-            created = gh_request("/issues", method="POST", data={
+            issue_data = gh_request("/issues", method="POST", data={
                 "title": issue_title,
                 "body": body,
                 "labels": labels
             })
-            if t["is_done"] and created:
-                gh_request(f"/issues/{created['number']}", method="PATCH", data={
+            if t["is_done"] and issue_data:
+                gh_request(f"/issues/{issue_data['number']}", method="PATCH", data={
                     "state": "closed",
                     "state_reason": "completed"
                 })
             created_count += 1
             time.sleep(0.5)
+            
+        if issue_data and "number" in issue_data:
+            issue_url = issue_data.get("html_url", f"https://github.com/{GITHUB_REPOSITORY}/issues/{issue_data['number']}")
+            update_local_ticket_issue_link(t["file"], issue_data["number"], issue_url)
             
     print(f"\n Sync Completed: {created_count} created, {updated_count} updated.")
 

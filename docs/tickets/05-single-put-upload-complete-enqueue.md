@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 1 — Walking skeleton |
+| Issue | [#5](https://github.com/szebest/taitube-platform/issues/5) |
 | Size | M |
 | Blocked by | 04 — API skeleton + schema |
 | Blocks | 06, 11 |

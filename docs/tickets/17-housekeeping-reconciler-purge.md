@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 2 — Real pipeline |
+| Issue | [#17](https://github.com/szebest/taitube-platform/issues/17) |
 | Size | M |
 | Blocked by | 11 — Multipart upload · 06 — Worker runtime |
 | Blocks | 18, 20 |

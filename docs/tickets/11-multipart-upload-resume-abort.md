@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 2 — Real pipeline |
+| Issue | [#11](https://github.com/szebest/taitube-platform/issues/11) |
 | Size | M–L |
 | Blocked by | 05 — Upload slice |
 | Blocks | 17, 28 |

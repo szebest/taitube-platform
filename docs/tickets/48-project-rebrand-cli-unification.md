@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#48](https://github.com/szebest/taitube-platform/issues/48) |
 | Size | L |
 | Blocked by | 01 — Repo skeleton |
 | Blocks | — |

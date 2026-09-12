@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 4 — Resilience & cloud |
+| Issue | [#32](https://github.com/szebest/taitube-platform/issues/32) |
 | Size | L |
 | Blocked by | 25 — Kubernetes locally · 22 — Metrics + dashboards · 31 — Cloud accounts + Terraform |
 | Blocks | 33 |

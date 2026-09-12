@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 1 — Walking skeleton |
+| Issue | [#4](https://github.com/szebest/taitube-platform/issues/4) |
 | Size | L (largest foundation slice; still one session if the DDL is copied from the SDD) |
 | Blocked by | 01 — Repo skeleton · 03 — Dev tooling (dev token) |
 | Blocks | 05, 10, 15, 19, 37, 38 |

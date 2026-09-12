@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 2 — Real pipeline (exit) |
+| Issue | [#20](https://github.com/szebest/taitube-platform/issues/20) |
 | Size | M |
 | Blocked by | 13 — Thumbnails · 14 — Segment streaming · 15 — SSE · 16 — Retries/DLQ · 17 — Housekeeping |
 | Blocks | 28 |

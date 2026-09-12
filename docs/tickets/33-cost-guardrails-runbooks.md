@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 4 — Resilience & cloud |
+| Issue | [#33](https://github.com/szebest/taitube-platform/issues/33) |
 | Size | S–M |
 | Blocked by | 32 — Cloud deployment · 24 — Alert rules |
 | Blocks | — |

@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#77](https://github.com/szebest/taitube-platform/issues/77) |
 | Size | M |
 | Blocked by | 38 — User identity · 57 — Production video player · 63 — TanStack Router SSR |
 | Blocks | 78 |

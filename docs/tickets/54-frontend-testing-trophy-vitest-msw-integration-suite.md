@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
+| Issue | [#54](https://github.com/szebest/taitube-platform/issues/54) |
 | Size | M |
 | Blocked by | 52 — Frontend monorepo integration · 53 — Frontend architecture |
 | Blocks | 55, 56, 57, 58, 70, 75 |
