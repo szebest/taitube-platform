@@ -20,13 +20,18 @@ export async function runMigrations(connectionUrl?: string): Promise<void> {
   const db = drizzle(sql);
 
   const candidates = [
-    path.resolve(__dirname, '../drizzle'),
-    path.resolve(__dirname, '../../packages/db/drizzle'),
+    path.resolve(process.cwd(), 'drizzle'),
     path.resolve(process.cwd(), 'packages/db/drizzle'),
     path.resolve(process.cwd(), 'node_modules/@vp/db/drizzle'),
-    path.resolve(process.cwd(), 'drizzle'),
+    path.resolve(__dirname, '../drizzle'),
+    path.resolve(__dirname, '../../packages/db/drizzle'),
+    path.resolve(__dirname, '../../../packages/db/drizzle'),
+    path.resolve(__dirname, '../../drizzle'),
   ];
-  const migrationsFolder = candidates.find((dir) => fs.existsSync(dir)) ?? (candidates[0] as string);
+  const migrationsFolder =
+    candidates.find((dir) => fs.existsSync(path.join(dir, 'meta', '_journal.json'))) ??
+    candidates.find((dir) => fs.existsSync(dir)) ??
+    (candidates[0] as string);
   console.log(`[db:migrate] Applying migrations from ${migrationsFolder}...`);
 
   await migrate(db, { migrationsFolder });

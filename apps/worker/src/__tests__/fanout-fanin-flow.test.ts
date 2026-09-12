@@ -10,7 +10,7 @@ import type { QueueJob } from '@vp/core/ports';
 import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
@@ -38,6 +38,10 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     storage = new InMemoryStorageClient();
     queues = new Map();
     flowProducer = new InMemoryFlowProducer(getQueue);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   async function setupUploadedVideo(sourceKey: string, title = 'Test Flow Video'): Promise<string> {

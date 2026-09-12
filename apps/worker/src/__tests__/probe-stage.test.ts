@@ -6,7 +6,7 @@ import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { validateJobId, validateQueueName } from '../registry';
 import { createProbeProcessor } from '../stages/probe';
 
@@ -29,6 +29,10 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     storage = new InMemoryStorageClient();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   // Helper to create video in UPLOADED state

@@ -8,7 +8,7 @@ import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { calculateBackoffDelay, ids, stagePolicies } from '@vp/job-contracts';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
@@ -37,6 +37,10 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     storage = new InMemoryStorageClient();
     queues = new Map();
     flowProducer = new InMemoryFlowProducer(getQueue);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   async function setupUploadedVideo(sourceKey: string, title = 'Test Video'): Promise<string> {

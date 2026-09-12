@@ -11,7 +11,7 @@ import { parseSpriteVtt } from '@vp/ffmpeg';
 import type { ProbeJob, ThumbnailJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
@@ -38,6 +38,10 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     storage = new InMemoryStorageClient();
     queues = new Map();
     flowProducer = new InMemoryFlowProducer(getQueue);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   async function setupUploadedVideo(sourceKey: string, title = 'Thumbnail Video'): Promise<string> {

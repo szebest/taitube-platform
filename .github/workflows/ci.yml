@@ -324,6 +324,10 @@ jobs:
       - name: Run offline smoke test (internal network with zero internet egress)
         run: make smoke-offline
 
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker compose -f infra/compose/docker-compose.yml logs --tail=200 || true
+
       - name: Stop stack
         if: always()
         run: docker compose -f infra/compose/docker-compose.yml down -v --remove-orphans || true

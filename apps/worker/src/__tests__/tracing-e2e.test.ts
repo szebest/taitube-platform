@@ -17,7 +17,7 @@ import type { QueueJob } from '@vp/core/ports';
 import type { NotifyJob, ProbeJob } from '@vp/job-contracts';
 import { createLogger, getActiveSpanContext } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
@@ -57,6 +57,10 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
     storage = new InMemoryStorageClient();
     queues = new Map();
     flowProducer = new InMemoryFlowProducer(getQueue);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('generates one trace from upload complete through probe, 3 transcodes (with ffmpeg child spans), thumbnail, package, and notify', async () => {

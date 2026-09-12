@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { ErrorCodes, TransientError } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTranscodeProcessor } from '../stages/transcode';
 
 describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off', () => {
@@ -89,6 +89,10 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
     repositories = new InMemoryRepositories();
     storage = new InMemoryStorageClient();
     loggedMessages.length = 0;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   async function createVideo(sourceKey: string, sizeBytes = 1000000): Promise<string> {
