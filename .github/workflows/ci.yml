@@ -197,7 +197,9 @@ jobs:
           REDIS_PASSWORD: vp
         run: |
           cp .env.example .env
-          docker compose -f infra/compose/docker-compose.yml up -d postgres redis minio minio-init --wait
+          docker compose -f infra/compose/docker-compose.yml up -d postgres redis minio --wait
+          docker compose -f infra/compose/docker-compose.yml up minio-init
+          docker compose -f infra/compose/docker-compose.yml up migrate
 
       - name: Run infrastructure smoke test (infra/compose/test.sh)
         run: bash infra/compose/test.sh

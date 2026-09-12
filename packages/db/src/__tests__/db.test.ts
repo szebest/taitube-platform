@@ -9,23 +9,33 @@ import { users, videoEvents, videos } from '../schema';
 import { DEV_USER_ID, seedDatabase } from '../seed';
 
 describe('packages/db durability and guarantees (AC 1, AC 3, AC 4)', () => {
-  const { db, sql } = createDbClient();
-  let postgresAvailable = true;
+  let db: ReturnType<typeof createDbClient>['db'];
+  let sql: ReturnType<typeof createDbClient>['sql'];
+  let postgresAvailable = false;
 
   beforeAll(async () => {
     try {
+      const client = createDbClient(undefined, { max: 1 });
+      db = client.db;
+      sql = client.sql;
       await sql`SELECT 1`;
       await seedDatabase();
+      postgresAvailable = true;
     } catch {
       postgresAvailable = false;
+      if (sql) {
+        await sql.end({ timeout: 1 }).catch(() => {});
+      }
     }
   });
 
   afterAll(async () => {
-    try {
-      await sql.end({ timeout: 1 });
-    } catch {
-      // ignore
+    if (sql) {
+      try {
+        await sql.end({ timeout: 1 });
+      } catch {
+        // ignore
+      }
     }
   });
 
