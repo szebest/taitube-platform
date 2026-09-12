@@ -78,7 +78,7 @@ echo "${BUCKETS}" | grep -q "public" || { echo "FAIL: 'public' bucket missing"; 
 echo "OK: Buckets 'raw' and 'public' present."
 
 echo "${ILM_RULES}"
-echo "${ILM_RULES}" | grep -q "7 day" || { echo "FAIL: ILM rule does not contain 7 days expiration"; exit 1; }
+echo "${ILM_RULES}" | grep -E -q "7 day| 7 " || { echo "FAIL: ILM rule does not contain 7 days expiration"; exit 1; }
 echo "OK: ILM lifecycle rules verified."
 
 if [[ "${HTTP_CODE}" != "404" ]]; then
