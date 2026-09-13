@@ -71,7 +71,7 @@ smoke-infra: ## Run infrastructure smoke tests
 smoke-offline: ## Run smoke tests in offline mode (internal network with zero internet egress)
 	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans 2>/dev/null || true
 	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) -f infra/compose/docker-compose.offline.yml up -d --build --wait --wait-timeout 180
-	bash scripts/e2e-smoke.sh
+	bash scripts/e2e-smoke-offline.sh
 
 e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostile set)
 	bash scripts/e2e-suite.sh

@@ -308,27 +308,49 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages
+        run: pnpm build
+
       - name: Generate video fixtures
         run: pnpm gen-video
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and start entire stack with Docker Compose (offline — internal network, zero internet egress)
+      - name: Build and start entire stack with Docker Compose
         env:
           REDIS_PASSWORD: vp
         run: |
           cp .env.example .env
-          docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml up -d --build --wait --wait-timeout 180
+          docker compose -f infra/compose/docker-compose.yml up -d --build --wait --wait-timeout 180
 
-      - name: Run E2E smoke test (validates both pipeline correctness and offline mode)
+      - name: Run E2E smoke test
         run: make smoke
 
-      - name: Dump container logs on failure
+      - name: Dump container logs on smoke test failure
+        if: failure()
+        run: docker compose -f infra/compose/docker-compose.yml logs --tail=200 || true
+
+      - name: Tear down non-offline stack
+        if: always()
+        run: docker compose -f infra/compose/docker-compose.yml down -v --remove-orphans || true
+
+      - name: Start stack in offline mode (internal network, zero internet egress)
+        if: success()
+        env:
+          REDIS_PASSWORD: vp
+        run: |
+          docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml up -d --build --wait --wait-timeout 180
+
+      - name: Run offline smoke test (container-side, validates zero-egress operation)
+        if: success()
+        run: bash scripts/e2e-smoke-offline.sh
+
+      - name: Dump container logs on offline test failure
         if: failure()
         run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml logs --tail=200 || true
 
-      - name: Stop stack
+      - name: Stop offline stack
         if: always()
         run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml down -v --remove-orphans || true
 

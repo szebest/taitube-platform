@@ -1,0 +1,35 @@
+# Auto-detect text files and ensure LF line endings in the repository
+* text=auto eol=lf
+
+# Shell scripts must always use LF
+*.sh text eol=lf
+
+# Makefiles must always use LF (tabs are significant, \r breaks recipes)
+Makefile text eol=lf
+
+# Docker and CI config
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Source code
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Python
+*.py text eol=lf
+
+# Binary files
+*.mp4 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
