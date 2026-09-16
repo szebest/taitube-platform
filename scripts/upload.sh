@@ -6,7 +6,8 @@ set -euo pipefail
 # Example: ./scripts/upload.sh s60
 
 FIXTURE_ARG="${1:-s60}"
-API_URL="${API_URL:-http://localhost:3000}"
+API_URL="${API_URL:-http://127.0.0.1:3000}"
+MINIO_TARGET_IP="${MINIO_TARGET_IP:-127.0.0.1}"
 
 echo "==> video-pipeline upload script"
 
@@ -45,7 +46,7 @@ TOKEN=$(pnpm --silent dev-token mint --sub "$DEV_USER_ID" --role pro --ttl 1h --
 
 # 3. Request upload URL (POST /v1/uploads)
 echo "==> Requesting upload URL from API ($API_URL/v1/uploads)..."
-INIT_RES=$(curl -sS -f --resolve minio:9000:127.0.0.1 -X POST "$API_URL/v1/uploads" \
+INIT_RES=$(curl -sS -f --resolve minio:9000:"$MINIO_TARGET_IP" -X POST "$API_URL/v1/uploads" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d "{\"filename\":\"$FILENAME\",\"sizeBytes\":$FILESIZE,\"contentType\":\"video/mp4\"}")
@@ -64,7 +65,7 @@ echo "==> Upload ID: $UPLOAD_ID"
 
 # 4. Upload bytes directly to storage (MinIO / S3)
 echo "==> Uploading $FILESIZE bytes directly to storage..."
-curl -sS -f --resolve minio:9000:127.0.0.1 -X PUT "$SINGLE_URL" \
+curl -sS -f --resolve minio:9000:"$MINIO_TARGET_IP" -X PUT "$SINGLE_URL" \
   -H "Content-Type: video/mp4" \
   -H "Content-Length: $FILESIZE" \
   --data-binary "@$FILEPATH"
@@ -73,7 +74,7 @@ echo "==> Direct upload completed."
 
 # 5. Complete upload (POST /v1/uploads/:uploadId/complete)
 echo "==> Completing upload ($API_URL/v1/uploads/$UPLOAD_ID/complete)..."
-COMPLETE_RES=$(curl -sS -f --resolve minio:9000:127.0.0.1 -X POST "$API_URL/v1/uploads/$UPLOAD_ID/complete" \
+COMPLETE_RES=$(curl -sS -f --resolve minio:9000:"$MINIO_TARGET_IP" -X POST "$API_URL/v1/uploads/$UPLOAD_ID/complete" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d "{}")
