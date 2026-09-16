@@ -4,6 +4,7 @@
 |---|---|
 | Phase | 1 — Walking skeleton (Maintenance & Hardening) |
 | Issue | [#79](https://github.com/szebest/taitube-platform/issues/79) |
+| Priority | P0 (High — Frontier Precedence: Must complete before Phase 5 Frontend tickets) |
 | Size | S |
 | Blocked by | 35 — Local-first offline mode |
 | Blocks | — |
@@ -12,6 +13,9 @@
 **Status:** ready
 
 ## What to build
+> [!IMPORTANT]
+> **Frontier Priority Notice:** This ticket has P0 frontier precedence over Phase 5 frontend feature tickets (`36`+). Resolving offline runner hardening and CI configuration cleanup is required before proceeding with frontend tracks.
+
 Audit, review, and carefully streamline the network configurations and diagnostic probing added during the offline smoke test stabilization initiative (ticket 35).
 
 During the stabilization of offline E2E testing on native Linux runners, several defensive layers were introduced across `.github/workflows/ci.yml`, `Makefile`, `scripts/e2e-smoke.sh`, and `scripts/upload.sh`:

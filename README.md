@@ -1,4 +1,4 @@
-﻿# TaiTube Platform
+# TaiTube Platform
 
 [![CI](https://github.com/szebest/taitube-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/szebest/taitube-platform/actions/workflows/ci.yml)
 
@@ -382,6 +382,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 4. **Single-Source Contracts**: Job payloads are defined in `@vp/job-contracts`, storage paths in `@vp/storage`, error codes in `@vp/errors`, and environment configuration in `@vp/config`.
 5. **State Durability**: All entity mutations execute through compare-and-set transactions that record audit events in `video_events` with fencing tokens.
 6. **Dual-Runtime Compatibility**: All worker logic and shared libraries run cleanly under both Node.js and Bun without runtime-specific proprietary APIs.
+7. **Optimal Execution & Zero-Waste Efficiency**: All developer setups, Docker builds, CI workflows, test suites, and scripts are strictly optimized for speed and caching (Buildx GHA layer caching, sub-second Biome linting, incremental TypeScript builds, fast-polling health checks, and ultra-short test fixtures). Sluggish developer feedback loops, un-cached container rebuilds, and slow test runs are treated as defects.
 
 ---
 
@@ -390,5 +391,5 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 - [System Design Document (SDD)](docs/SDD.md): System architecture, database schemas, and 18 Architecture Decision Records (ADRs).
 - [Product Requirements Document (PRD)](docs/PRD.md): Product goals, functional requirements, and service-level objectives.
 - [Local-First Guide](docs/LOCAL_FIRST.md): Guide for running and verifying offline operations.
-- [Backlog and Work Breakdown](docs/tickets/README.md): Roadmap of 78 vertical tracer-bullet work items and dependency graphs.
+- [Backlog and Work Breakdown](docs/tickets/README.md): Roadmap of 80 vertical tracer-bullet work items and dependency graphs.
 - [Agent and Contributor Guidelines](AGENTS.md): Coding conventions, Definition of Done, and architectural constraints.

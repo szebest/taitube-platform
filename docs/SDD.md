@@ -69,6 +69,7 @@ Frontend, live streaming, DRM, moderation, social features, GPU encoding, HEVC/A
 | P7 | **Measure, then believe.** | Every NFR has a metric and a load-test scenario that exercises it. |
 | P8 | **Cheap by default.** | Scale-to-zero, free tiers, zero-egress storage. Anything that bills per-command or per-GB-egress is suspect. |
 | P9 | **Local-first.** Everything runs on one machine with no external accounts and no internet; the cloud rung is optional. | Every dependency has a compose container (Postgres, Redis, MinIO, dev JWKS issuer, Prometheus/Grafana/Tempo/Loki); `.env.example` is all-local; no phone-home; `make smoke-offline` gates CI (ticket 35). |
+| P10 | **Optimal execution & zero-waste developer ergonomics.** | Sub-second feedback loops, Docker Buildx layer caching, incremental builds, fast healthcheck retries, and rapid local setup (`make up`, `make dev`). Performance or cycle-time regressions are treated as blocking defects (ticket 80). |
 
 ---
 
