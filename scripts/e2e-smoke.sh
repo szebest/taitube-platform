@@ -47,6 +47,7 @@ fi
 
 if [ "$API_HEALTHY" = "true" ]; then
   echo "API is healthy (HTTP 200)."
+  RESOLVE_ARGS=(--resolve "minio:9000:$MINIO_TARGET_IP" --resolve "localhost:9000:$MINIO_TARGET_IP" --resolve "127.0.0.1:9000:$MINIO_TARGET_IP")
 else
   echo "ERROR: API is not healthy at $API_URL/healthz after 30 attempts."
   echo "==================== FULL SYSTEM & NETWORK DIAGNOSTICS ===================="
@@ -129,7 +130,7 @@ while true; do
     exit 1
   fi
 
-  VIDEO_RES=$(curl -sS -f --resolve minio:9000:"$MINIO_TARGET_IP" -H "Authorization: Bearer $TOKEN" "$API_URL/v1/videos/$VIDEO_ID")
+  VIDEO_RES=$(curl -sS -f "${RESOLVE_ARGS[@]}" -H "Authorization: Bearer $TOKEN" "$API_URL/v1/videos/$VIDEO_ID")
   STATUS=$(echo "$VIDEO_RES" | grep -o '"status":"[^"]*' | head -n 1 | cut -d'"' -f4)
 
   echo "  [+${ELAPSED}s] Video status: $STATUS"
@@ -153,7 +154,7 @@ if [ -z "$PLAYBACK_URL" ]; then
 fi
 
 echo "==> Fetching master playlist: $PLAYBACK_URL"
-MASTER_CONTENT=$(curl -sS -f --resolve minio:9000:"$MINIO_TARGET_IP" "$PLAYBACK_URL")
+MASTER_CONTENT=$(curl -sS -f "${RESOLVE_ARGS[@]}" "$PLAYBACK_URL")
 echo "$MASTER_CONTENT"
 
 if ! echo "$MASTER_CONTENT" | grep -q "#EXTM3U"; then
@@ -172,7 +173,7 @@ RENDITION_LINE=$(echo "$MASTER_CONTENT" | grep -v "^#" | head -n 1)
 RENDITION_URL="$PLAYLIST_DIR/$RENDITION_LINE"
 
 echo "==> Fetching rendition playlist: $RENDITION_URL"
-RENDITION_CONTENT=$(curl -sS -f --resolve minio:9000:"$MINIO_TARGET_IP" "$RENDITION_URL")
+RENDITION_CONTENT=$(curl -sS -f "${RESOLVE_ARGS[@]}" "$RENDITION_URL")
 
 if ! echo "$RENDITION_CONTENT" | grep -q "#EXT-X-ENDLIST"; then
   echo "Error: Rendition playlist missing #EXT-X-ENDLIST"
@@ -184,7 +185,7 @@ RENDITION_DIR=$(dirname "$RENDITION_URL")
 SEGMENT_URL="$RENDITION_DIR/$SEGMENT_LINE"
 
 echo "==> Fetching first TS segment: $SEGMENT_URL"
-SEGMENT_SIZE=$(curl -sS -f --resolve minio:9000:"$MINIO_TARGET_IP" "$SEGMENT_URL" | wc -c)
+SEGMENT_SIZE=$(curl -sS -f "${RESOLVE_ARGS[@]}" "$SEGMENT_URL" | wc -c)
 
 if [ "$SEGMENT_SIZE" -lt 1000 ]; then
   echo "Error: Segment size unexpectedly small ($SEGMENT_SIZE bytes)"
