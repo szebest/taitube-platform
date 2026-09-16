@@ -70,7 +70,7 @@ smoke-infra: ## Run infrastructure smoke tests
 
 smoke-offline: ## Run smoke tests in offline mode (internal network with zero internet egress)
 	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans 2>/dev/null || true
-	which iptables >/dev/null 2>&1 && sudo iptables -t nat -A POSTROUTING -s 127.0.0.1 -j MASQUERADE 2>/dev/null || true
+	which iptables >/dev/null 2>&1 && sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || true
 	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) -f infra/compose/docker-compose.offline.yml up -d --build --wait --wait-timeout 180
 	bash scripts/e2e-smoke.sh
 
