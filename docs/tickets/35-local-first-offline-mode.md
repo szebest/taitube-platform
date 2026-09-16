@@ -6,7 +6,7 @@
 | Issue | [#35](https://github.com/szebest/taitube-platform/issues/35) |
 | Size | S–M |
 | Blocked by | 08 — Containerise + compose |
-| Blocks | — |
+| Blocks | 79, 80 |
 | Spec | [PRD G11 Local-first](../PRD.md#31-goals-mvp) · [PRD FR-19](../PRD.md#6-functional-requirements) · [PRD §7 Portability / Local-first](../PRD.md#7-non-functional-requirements-slos) · [SDD §1.3 P9](../SDD.md#13-design-principles-used-to-break-ties-throughout) · [SDD §12.1 Offline mode](../SDD.md#121-rung-1-docker-compose-local-dev-phase-02) · [SDD §15.3 (accounts are Phase 4 only)](../SDD.md#153-external-services-accounts-to-create-all-free-unless-noted) |
 
 **Status:** done

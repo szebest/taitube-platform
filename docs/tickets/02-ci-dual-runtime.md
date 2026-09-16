@@ -6,7 +6,7 @@
 | Issue | [#2](https://github.com/szebest/taitube-platform/issues/2) |
 | Size | M |
 | Blocked by | 01 — Repo skeleton + local infrastructure |
-| Blocks | 08 |
+| Blocks | 08, 80 |
 | Spec | [SDD §15.1 workflows](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §2.3 Runtime split guard-rail](../SDD.md#23-runtime-split-why-two-runtimes) · [SDD §11 Supply chain](../SDD.md#11-security) · [SDD §17 Fact sheet (GitHub)](../SDD.md#17-fact-sheet-verified-2026-09-03) |
 
 **Status:** done

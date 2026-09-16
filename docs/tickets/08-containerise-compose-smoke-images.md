@@ -6,7 +6,7 @@
 | Issue | [#8](https://github.com/szebest/taitube-platform/issues/8) |
 | Size | M |
 | Blocked by | 07 — Playable READY video · 02 — CI |
-| Blocks | 21, 25, 34, 35 |
+| Blocks | 21, 25, 34, 35, 80 |
 | Spec | [SDD §12.1 Compose (full outline + worker Dockerfile)](../SDD.md#121-rung-1-docker-compose-local-dev-phase-02) · [SDD §11 Containers](../SDD.md#11-security) · [SDD §2.3 `WORKER_RUNTIME` guard-rail](../SDD.md#23-runtime-split-why-two-runtimes) · [PRD §9 Success metrics](../PRD.md#9-success-metrics) · [SDD §18 Phase 1 DoD](../SDD.md#phase-1-walking-skeleton-2-weeks) |
 
 **Status:** done
