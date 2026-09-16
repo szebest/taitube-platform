@@ -1,14 +1,5 @@
 # infra/compose/docker-compose.offline.yml — offline mode override (SDD §12.1, PRD G11, Ticket 35)
-#
-# Proves the stack runs with zero internet egress.
-#
-# Strategy: Docker's `internal: true` network prevents all outbound traffic
-# from containers while allowing inter-container communication.
-#
-# Note: `internal: true` removes the network gateway, which means published
-# ports are NOT accessible from the host. Tests that need host-to-container
-# access should use `docker compose exec` instead of host-side curl.
-# See scripts/e2e-smoke-offline.sh for the container-side smoke test.
+# Enforces an internal network with zero internet egress while preserving inter-container and localhost communication.
 
 networks:
   default:
