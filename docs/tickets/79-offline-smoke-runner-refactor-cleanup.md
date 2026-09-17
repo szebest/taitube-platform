@@ -10,7 +10,7 @@
 | Blocks | — |
 | Spec | [SDD §12.1 Offline mode](../SDD.md#121-rung-1-docker-compose-local-dev-phase-02) · [PRD G11 Local-first](../PRD.md#31-goals-mvp) · [PRD FR-19](../PRD.md#6-functional-requirements) |
 
-**Status:** in-progress
+**Status:** done
 
 ## What to build
 > [!IMPORTANT]
@@ -32,10 +32,10 @@ While the pipeline is currently 100% green and fully resilient across dual runti
 > Offline networking on Linux runners with `internal: true` bridge networks is delicate due to kernel martian packet filtering, NAT boundaries, and Docker port forwarding semantics. If ANY proposed simplification or cleanup causes GitHub Actions CI checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) to fail, **immediately revert the changes to commit `239e5e3`**. Do not break working CI on `main`.
 
 ## Acceptance criteria
-- [ ] Review `.github/workflows/ci.yml` and `Makefile` for redundant `iptables` or `sysctl` invocations.
-- [ ] Confirm `scripts/e2e-smoke.sh` and `scripts/upload.sh` maintain both loopback and direct container IP fallback mechanisms without redundant logic.
-- [ ] Verify that `make smoke-offline` passes locally and in CI with zero internet egress (`curl -s --connect-timeout 2 http://1.1.1.1` must fail from inside containers).
-- [ ] Strict CI Barrier (DoD Rule 10): All workflow checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) MUST pass green on GitHub Actions before merging or marking done. If any check fails, revert immediately.
+- [x] Review `.github/workflows/ci.yml` and `Makefile` for redundant `iptables` or `sysctl` invocations.
+- [x] Confirm `scripts/e2e-smoke.sh` and `scripts/upload.sh` maintain both loopback and direct container IP fallback mechanisms without redundant logic.
+- [x] Verify that `make smoke-offline` passes locally and in CI with zero internet egress (`curl -s --connect-timeout 2 http://1.1.1.1` must fail from inside containers).
+- [x] Strict CI Barrier (DoD Rule 10): All workflow checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) MUST pass green on GitHub Actions before merging or marking done. If any check fails, revert immediately.
 
 ## Out of scope
 - Changing the canonical `infra/compose/docker-compose.offline.yml` (`internal: true`).
@@ -49,6 +49,6 @@ While the pipeline is currently 100% green and fully resilient across dual runti
 4. If ANY job fails: revert immediately to `239e5e3`.
 
 ## Definition of Done
-- [ ] All AC verified with green GitHub Actions run.
-- [ ] If any failure occurs during attempt, clean revert confirmed.
-- [ ] Ticket index regenerated via `python3 docs/tickets/gen-index.py`.
+- [x] All AC verified with green GitHub Actions run.
+- [x] If any failure occurs during attempt, clean revert confirmed.
+- [x] Ticket index regenerated via `python3 docs/tickets/gen-index.py`.
