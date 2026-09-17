@@ -52,14 +52,17 @@ export async function runMigrations(connectionUrl?: string): Promise<void> {
     (candidates[0] as string);
   console.log(`[db:migrate] Applying migrations from ${migrationsFolder}...`);
 
-  const fs = await import('node:fs');
   const crypto = await import('node:crypto');
   const hash = crypto.createHash('sha256');
   const files = fs.readdirSync(migrationsFolder).sort();
   for (const file of files) {
-    if (file.endsWith('.sql') || file === '_journal.json') {
+    if (file.endsWith('.sql')) {
       hash.update(fs.readFileSync(path.join(migrationsFolder, file)));
     }
+  }
+  const journalPath = path.join(migrationsFolder, 'meta', '_journal.json');
+  if (fs.existsSync(journalPath)) {
+    hash.update(fs.readFileSync(journalPath));
   }
   const currentHash = hash.digest('hex');
 
