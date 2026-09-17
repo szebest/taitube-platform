@@ -8,6 +8,19 @@ set -euo pipefail
 FIXTURE_ARG="${1:-s60}"
 API_URL="${API_URL:-http://127.0.0.1:3000}"
 MINIO_TARGET_IP="${MINIO_TARGET_IP:-127.0.0.1}"
+
+# Fallback to direct bridge container IP if loopback is unreachable and default API_URL is used
+if [ "$API_URL" = "http://127.0.0.1:3000" ] && ! curl -s -f -o /dev/null "$API_URL/healthz" 2>/dev/null; then
+  CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' vp-api 2>/dev/null || true)
+  if [ -n "$CONTAINER_IP" ] && [ "$(curl -s -o /dev/null -w "%{http_code}" "http://${CONTAINER_IP}:3000/healthz" 2>/dev/null || true)" = "200" ]; then
+    API_URL="http://${CONTAINER_IP}:3000"
+    MINIO_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' vp-minio 2>/dev/null || true)
+    if [ -n "$MINIO_IP" ]; then
+      MINIO_TARGET_IP="$MINIO_IP"
+    fi
+  fi
+fi
+
 RESOLVE_ARGS=(--resolve "minio:9000:$MINIO_TARGET_IP" --resolve "localhost:9000:$MINIO_TARGET_IP" --resolve "127.0.0.1:9000:$MINIO_TARGET_IP")
 
 echo "==> video-pipeline upload script"

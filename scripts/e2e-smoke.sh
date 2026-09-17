@@ -102,8 +102,8 @@ if ! bash scripts/upload.sh "$FIXTURE_PATH" > "$UPLOAD_TMP" 2>&1; then
   rm -f "$UPLOAD_TMP"
   exit 1
 fi
-cat "$UPLOAD_TMP"
 UPLOAD_OUT=$(cat "$UPLOAD_TMP")
+echo "$UPLOAD_OUT"
 rm -f "$UPLOAD_TMP"
 
 VIDEO_ID=$(echo "$UPLOAD_OUT" | grep -o "Video ID:  [a-f0-9-]*" | awk '{print $3}')
