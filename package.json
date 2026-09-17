@@ -12,9 +12,9 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "test": "turbo run test -- --pool=threads",
+    "test": "vitest run",
     "test:integration": "turbo run test:integration",
-    "test:bun": "bun test --parallel=4 apps/worker packages tools",
+    "test:bun": "bun test apps/worker packages tools",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "typecheck": "turbo run typecheck",
