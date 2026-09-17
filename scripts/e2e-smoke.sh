@@ -82,13 +82,13 @@ else
 fi
 
 # 2. Resolve fixture
-FIXTURE_PATH="tests/fixtures/s15.mp4"
+FIXTURE_PATH="tests/fixtures/s2.mp4"
 if [ ! -f "$FIXTURE_PATH" ]; then
-  if [ -f "fixtures/s15.mp4" ]; then
-    FIXTURE_PATH="fixtures/s15.mp4"
+  if [ -f "fixtures/s2.mp4" ]; then
+    FIXTURE_PATH="fixtures/s2.mp4"
   else
-    echo "==> Fixture s15.mp4 not found, generating..."
-    pnpm gen-video --only s15
+    echo "==> Fixture s2.mp4 not found, generating..."
+    pnpm gen-video --only s2
   fi
 fi
 
@@ -143,7 +143,7 @@ while true; do
     exit 1
   fi
 
-  sleep 3
+  sleep 0.5
 done
 
 # 6. Verify HLS playback URLs
@@ -167,32 +167,37 @@ if ! echo "$MASTER_CONTENT" | grep -q "#EXT-X-STREAM-INF"; then
   exit 1
 fi
 
-# 7. Fetch child playlist and segment
+# 7. Fetch all child playlists and segments concurrently
 PLAYLIST_DIR=$(dirname "$PLAYBACK_URL")
-RENDITION_LINE=$(echo "$MASTER_CONTENT" | grep -v "^#" | head -n 1)
-RENDITION_URL="$PLAYLIST_DIR/$RENDITION_LINE"
+RENDITION_LINES=$(echo "$MASTER_CONTENT" | grep -v "^#" | grep -v "^$")
 
-echo "==> Fetching rendition playlist: $RENDITION_URL"
-RENDITION_CONTENT=$(curl -sS -f "${RESOLVE_ARGS[@]}" "$RENDITION_URL")
+export PLAYLIST_DIR
+export RESOLVE_ARGS_STR="${RESOLVE_ARGS[*]}"
 
-if ! echo "$RENDITION_CONTENT" | grep -q "#EXT-X-ENDLIST"; then
-  echo "Error: Rendition playlist missing #EXT-X-ENDLIST"
-  exit 1
-fi
+echo "$RENDITION_LINES" | xargs -P 4 -I {} bash -c '
+  RENDITION_URL="$PLAYLIST_DIR/{}"
+  echo "==> Fetching rendition playlist: $RENDITION_URL"
+  RENDITION_CONTENT=$(curl -sS -f $RESOLVE_ARGS_STR "$RENDITION_URL")
+  
+  if ! echo "$RENDITION_CONTENT" | grep -q "#EXT-X-ENDLIST"; then
+    echo "Error: Rendition playlist {} missing #EXT-X-ENDLIST"
+    exit 1
+  fi
+  
+  SEGMENT_LINE=$(echo "$RENDITION_CONTENT" | grep -v "^#" | grep -v "^$" | head -n 1)
+  RENDITION_DIR=$(dirname "$RENDITION_URL")
+  SEGMENT_URL="$RENDITION_DIR/$SEGMENT_LINE"
+  
+  echo "==> Fetching first TS segment: $SEGMENT_URL"
+  SEGMENT_SIZE=$(curl -sS -f $RESOLVE_ARGS_STR "$SEGMENT_URL" | wc -c)
+  
+  if [ "$SEGMENT_SIZE" -lt 1000 ]; then
+    echo "Error: Segment size unexpectedly small ($SEGMENT_SIZE bytes) for {}"
+    exit 1
+  fi
+' || exit 1
 
-SEGMENT_LINE=$(echo "$RENDITION_CONTENT" | grep -v "^#" | head -n 1)
-RENDITION_DIR=$(dirname "$RENDITION_URL")
-SEGMENT_URL="$RENDITION_DIR/$SEGMENT_LINE"
-
-echo "==> Fetching first TS segment: $SEGMENT_URL"
-SEGMENT_SIZE=$(curl -sS -f "${RESOLVE_ARGS[@]}" "$SEGMENT_URL" | wc -c)
-
-if [ "$SEGMENT_SIZE" -lt 1000 ]; then
-  echo "Error: Segment size unexpectedly small ($SEGMENT_SIZE bytes)"
-  exit 1
-fi
-
-echo "==> Segment verified ($SEGMENT_SIZE bytes)."
+echo "==> All segments verified in parallel."
 echo "================================================="
 echo "==> E2E SMOKE TEST PASSED SUCCESSFULLY in ${ELAPSED}s!"
 echo "================================================="

@@ -13,6 +13,23 @@ help: ## Show help for each target
 up: ## Start local infrastructure (Postgres, Redis, MinIO, minio-init)
 	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --wait
 
+doctor: ## Check developer prerequisites
+	@echo "Checking prerequisites..."
+	@node -v | grep -q 'v24' || (echo "Node.js 24 required"; exit 1)
+	@bun -v | grep -q '^1.4' || (echo "Bun 1.4 required"; exit 1)
+	@pnpm -v | grep -q '10.' || (echo "pnpm 10 required"; exit 1)
+	@docker -v >/dev/null || (echo "Docker required"; exit 1)
+	@docker compose version >/dev/null || (echo "Docker Compose required"; exit 1)
+	@ffmpeg -version >/dev/null || (echo "FFmpeg required"; exit 1)
+	@echo "All prerequisites met."
+
+setup: doctor ## Fast bootstrap environment
+	@if [ ! -f .env ]; then cp .env.example .env && echo "Created .env"; fi
+	pnpm install
+	$(MAKE) up-all
+
+dev: setup ## Alias for setup
+
 up-all: ## Start full stack (infra, migrations, API, all worker stages)
 	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --build --wait
 
@@ -20,10 +37,14 @@ build-images: ## Build local Docker images for API and Worker
 	docker compose -f $(COMPOSE_FILE) build
 
 down: ## Stop local infrastructure
-	docker compose -f $(COMPOSE_FILE) down
+	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans -t 1
 
 logs: ## Follow infrastructure logs
 	docker compose -f $(COMPOSE_FILE) logs -f
+
+prune: ## Safe local pruning utility to reclaim Docker disk space
+	docker system prune -f --volumes
+	docker image prune -f
 
 psql: ## Open psql shell in Postgres container
 	docker compose -f $(COMPOSE_FILE) exec postgres psql -U vp -d vp
@@ -64,6 +85,9 @@ clean: ## Clean build artifacts and dist directories
 
 smoke: ## Run end-to-end smoke tests against running stack
 	bash scripts/e2e-smoke.sh
+
+smoke-fast: ## Run smoke tests against active containers in under 5 seconds
+	API_URL=http://127.0.0.1:3000 TIMEOUT_SEC=5 bash scripts/e2e-smoke.sh
 
 smoke-infra: ## Run infrastructure smoke tests
 	bash infra/compose/test.sh

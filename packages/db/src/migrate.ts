@@ -52,8 +52,30 @@ export async function runMigrations(connectionUrl?: string): Promise<void> {
     (candidates[0] as string);
   console.log(`[db:migrate] Applying migrations from ${migrationsFolder}...`);
 
+  const fs = await import('node:fs');
+  const crypto = await import('node:crypto');
+  const hash = crypto.createHash('sha256');
+  const files = fs.readdirSync(migrationsFolder).sort();
+  for (const file of files) {
+    if (file.endsWith('.sql') || file === '_journal.json') {
+      hash.update(fs.readFileSync(path.join(migrationsFolder, file)));
+    }
+  }
+  const currentHash = hash.digest('hex');
+
+  await sql`CREATE TABLE IF NOT EXISTS __vp_migration_hash (hash text PRIMARY KEY)`;
+  const rows = await sql`SELECT hash FROM __vp_migration_hash LIMIT 1`;
+  if (rows.length > 0 && rows[0]?.hash === currentHash) {
+    console.log('[db:migrate] Migrations unchanged (hash match). Skipping execution.');
+    await sql.end();
+    return;
+  }
+
   await migrate(db, { migrationsFolder });
   console.log('[db:migrate] Migrations applied successfully.');
+
+  await sql`DELETE FROM __vp_migration_hash`;
+  await sql`INSERT INTO __vp_migration_hash (hash) VALUES (${currentHash})`;
 
   await sql.end();
 }

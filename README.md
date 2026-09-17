@@ -346,13 +346,18 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 
 | Command | Description |
 |---|---|
+| `make doctor` | Run environment pre-flight checks (Node, Bun, Docker, FFmpeg) |
+| `make setup` | One-command fast bootstrap: creates .env, starts services, runs migrations |
+| `make dev` | Start infrastructure and run API/workers in dev mode |
 | `make up` | Start local Postgres, Redis, and MinIO containers |
 | `make up-all` | Start full stack (infrastructure, migrations, API, and all worker stages) |
-| `make down` | Stop running containers |
+| `make down` | Stop running containers instantly |
+| `make prune` | Safe local pruning utility to reclaim Docker disk space |
 | `make obs-up` | Start Prometheus, Grafana, Tempo, Loki, and Alertmanager stack |
 | `make obs-down` | Stop observability stack |
 | `make obs-check` | Verify Prometheus scraping targets and Grafana data sources |
 | `make smoke` | Run end-to-end ingestion and playback smoke tests |
+| `make smoke-fast` | Fast-path local smoke test against existing running containers |
 | `make smoke-offline` | Run smoke tests with simulated network isolation |
 | `make e2e` | Run full end-to-end integration test suite |
 | `make k3d-up` | Create local k3d Kubernetes cluster with in-cluster dependencies |

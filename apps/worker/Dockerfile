@@ -1,17 +1,22 @@
 # apps/worker/Dockerfile (SDD §12.1)
 ARG WORKER_RUNTIME=bun
 
-FROM node:24-slim AS build
+FROM node:24-slim AS base
 RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
 WORKDIR /repo
 
+FROM base AS pruner
 # Copy source trees
 COPY . .
+RUN npx turbo prune --docker @vp/worker
 
+FROM base AS build
 # Install dependencies
+COPY --from=pruner /repo/out/json/ .
 RUN pnpm install --frozen-lockfile
 
 # Build worker and dependencies, deploy production bundle
+COPY --from=pruner /repo/out/full/ .
 RUN pnpm turbo run build --filter=@vp/worker... \
  && pnpm deploy --legacy --filter=@vp/worker --prod /out \
  && cp -r packages/db/drizzle /out/drizzle \

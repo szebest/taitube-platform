@@ -3,6 +3,19 @@
   "description": "Deterministic test video fixture manifest for video-pipeline",
   "fixtures": [
     {
+      "id": "s2",
+      "filename": "s2.mp4",
+      "description": "Ultra-short 2-second 1080p24 test video for fast smoke tests",
+      "category": "standard",
+      "slow": false,
+      "durationSeconds": 2,
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "videoCodec": "h264",
+      "audioCodec": "aac"
+    },
+    {
       "id": "s15",
       "filename": "s15.mp4",
       "description": "Standard 15-second 1080p24 test video with burnt-in timecode and audio sine wave",

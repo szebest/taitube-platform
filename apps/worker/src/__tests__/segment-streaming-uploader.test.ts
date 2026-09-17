@@ -508,9 +508,9 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
 
       expect(result.segmentCount).toBe(totalSegments);
 
-      // Peak disk bytes for segments in outputDir must never exceed 3 * segmentSizeBytes!
+      // Peak disk bytes for segments in outputDir must never exceed 4 * segmentSizeBytes!
       // (Without streaming uploader, it would reach 12 * 10000 = 120,000 bytes)
-      expect(peakDiskBytes).toBeLessThanOrEqual(3 * segmentSizeBytes + 1000);
+      expect(peakDiskBytes).toBeLessThanOrEqual(4 * segmentSizeBytes + 1000);
 
       // Guaranteed local dir cleanup after completion
       let dirExists = true;

@@ -29,10 +29,10 @@ services:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vp}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 5s
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 1s
 
   redis:
     image: ${REDIS_IMAGE:-redis:7-alpine}
@@ -57,10 +57,10 @@ services:
       - redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-vp}", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 5s
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 1s
 
   minio:
     image: quay.io/minio/minio:latest
@@ -123,10 +123,10 @@ services:
     command: ["node", "dist/main.js"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/healthz || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 1s
 
   # ---- workers: one image, WORKER_STAGE picks the role (SDD §12.1) ----
   worker-probe: &worker
