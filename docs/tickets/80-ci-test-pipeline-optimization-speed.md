@@ -10,7 +10,7 @@
 | Blocks | — |
 | Spec | [PRD §7 Non-Functional Requirements & SLOs](../PRD.md#7-non-functional-requirements-slos) · [SDD §12.1 Local & CI Topology](../SDD.md#121-rung-1-docker-compose-local-dev-phase-02) · [SDD §15.2 Toolchain](../SDD.md#152-toolchain) |
 
-**Status:** in-progress
+**Status:** done
 
 ## What to build
 > [!IMPORTANT]
