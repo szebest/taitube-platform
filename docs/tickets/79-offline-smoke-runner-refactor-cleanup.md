@@ -10,7 +10,7 @@
 | Blocks | — |
 | Spec | [SDD §12.1 Offline mode](../SDD.md#121-rung-1-docker-compose-local-dev-phase-02) · [PRD G11 Local-first](../PRD.md#31-goals-mvp) · [PRD FR-19](../PRD.md#6-functional-requirements) |
 
-**Status:** ready
+**Status:** in-progress
 
 ## What to build
 > [!IMPORTANT]
