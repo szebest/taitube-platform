@@ -573,7 +573,20 @@ Decided at the throw site, never by regex on messages.
 |---|---|---|---|
 | **1** | **React 19 + TanStack Start (SSR/Streaming) + TanStack Router + Vite 6 + Tailwind CSS v4** | **Chosen** | 100% type-safe search params and route paths; streaming SSR without vendor lock-in to Vercel; perfect synergy with TanStack Query v5; client hydration and SSR play well with local-first Node/Docker deployment; no magic file conventions or Next.js server actions obfuscation. |
 | 2 | Next.js 15 (App Router) | Rejected | Explicitly rejected by user requirement. Heavy Vercel coupling, opaque server component caching bugs, proprietary cache tags, heavy server footprint for self-hosting. |
-| 3 | Pure Client-Side SPA (Vite + React Router v7 SPA mode) | Rejected | Insufficient for video SEO (needs SSR `VideoObject` JSON-LD and OpenGraph metadata for search indexing and social sharing). |
+---
+
+### ADR-22 — High-Throughput Reaction Counters & Probabilistic Cache Refresh (XFetch)
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| **1** | **Postgres normalized `video_reactions` + denormalized `videos` counter columns + Redis multi-tier cache with singleflight and XFetch probabilistic early refresh** | **Chosen** | Atomic transactions guarantee exact durability and consistency; Redis provides ultra-low latency reads for high-traffic video details; singleflight deduplicates concurrent cache misses preventing thundering herds; XFetch (`-beta * delta * ln(rand) > remaining_ttl`) smoothly refreshes popular video reaction counts asynchronously before expiration without thundering herd or cache stampede. |
+| 2 | Pure Redis hyperloglog or counter with eventual writeback | Rejected | Loss of exact per-user reaction mapping (`GET /reactions/me`), potential data loss on Redis restart without durability, complex reconciliation. |
+| 3 | Raw Postgres COUNT(*) query on every video detail view | Rejected | Catastrophic database load under peak traffic (O(N) row scanning over millions of reaction rows). |
+
+**Consequences:**
+- Mutations atomically update `video_reactions` and `videos(likes_count, dislikes_count)`.
+- Redis stores `{ likes, dislikes, cachedAt, delta }` and updates atomically via Redis transaction (`pipeline`/`multi`) or atomic memory mutexes.
+- Scheduled reconciler job `reconcile-reaction-counters` periodically detects and repairs counter drift.
 
 ---
 
@@ -589,6 +602,8 @@ erDiagram
     videos ||--o{ renditions : produces
     videos ||--o{ processing_steps : runs
     videos ||--o{ video_events : emits
+    videos ||--o{ video_reactions : receives
+    users ||--o{ video_reactions : reacts
     processing_steps ||--o{ dlq_entries : "may park in"
 
     users {
@@ -618,6 +633,16 @@ erDiagram
         text master_playlist_key
         text error_code
         int version
+        int likes_count
+        int dislikes_count
+    }
+    video_reactions {
+        uuid id PK
+        uuid video_id FK
+        uuid user_id FK
+        reaction_type type
+        timestamptz created_at
+        timestamptz updated_at
     }
     uploads {
         uuid id PK
@@ -857,7 +882,9 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
 | `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter. Cached in Redis with singleflight & ETag 304. |
 | `GET /v1/categories` | Public categories list | — | `200 [Category]` | Unauthenticated active taxonomy list sorted by sort_order, name. L1/L2 cached + ETag 304. |
-| `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `error?`) | Owner or public/unlisted. |
+| `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `likesCount`, `dislikesCount`, `error?`) | Owner or public/unlisted. |
+| `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. |
+| `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`. |
 | `DELETE /videos/:id` | Soft delete | — | `202` | Enqueues `housekeeping:purge-video`. |
 | `GET /videos/:id/events` | SSE stream | header `Last-Event-ID?` | `text/event-stream` | See §10. |
@@ -1225,6 +1252,7 @@ BullMQ 6 Job Schedulers (`queue.upsertJobScheduler(id, { pattern }, template)`) 
 | `purge-deleted` | `0 * * * *` | Delete objects for `DELETED` videos older than 1 h (paginated `DeleteObjects`), then hard-delete rows. |
 | `expire-raw` | `30 3 * * *` | Delete `raw/` sources of `READY` videos older than `RAW_RETENTION_DAYS` (lifecycle rule is the primary mechanism; this is the audit trail). |
 | `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
+| `reconcile-reaction-counters` | `0 * * * *` | Detect and repair drift between exact `video_reactions` counts and cached counter columns (`videos.likes_count`, `videos.dislikes_count`). |
 
 ---
 

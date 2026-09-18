@@ -11,7 +11,8 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 5. PR checklist & Definition of Done:
    - All AC ticked with verifiable evidence.
    - Tests green under Node **and** Bun where the worker or shared packages are involved.
-   - **Green CI in Definition of Done (Strict Barrier):** All CI workflow checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) MUST pass green on GitHub Actions before any ticket is marked `done` or merged. A PR or review may be prepared, but reviewers (or the implementing agent) MUST raise a blocking issue if any CI check fails, and strictly forbid merging or finishing any ticket with failing CI checks.
+   - **Branch Protection, PR-Only Merges with Required Approval & Green CI in DoD:** Direct push to `main` is blocked. All changes must be made on `ticket/NN-slug`, opened as a GitHub Pull Request, reviewed with comments on the PR, and merged only after receiving at least one required review approval and all CI workflow checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) pass green on GitHub Actions.
+   - **Persistent Agent Loop:** Implementor and reviewer agents remain active throughout the PR review-fix loop to evaluate feedback, push fixes or reply with rationale, and verify until approved.
    - **Optimal Execution & Zero-Waste Efficiency in DoD:** All workflows, Docker builds, CI steps, test suites, and local setup scripts MUST be optimized for speed, minimal resource consumption, and rapid feedback loops (Docker Buildx layer caching, sub-second linting, incremental typechecks, ultra-short test fixtures). Never introduce un-cached heavy operations or regressions in cycle time.
    - No new external runtime dependency (local-first, SDD P9 / PRD G11).
    - **Documentation, Architecture & README in DoD:** `README.md`, `ARCHITECTURE.md`, and `docs/SDD.md` (and relevant ADRs) MUST be updated if any feature, command, boundary, contract, workspace package, schema, or architecture decision is added or changed. Keep `README.md` accurate, professional, human-written, and continuously improved.
@@ -63,7 +64,7 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 | 37 | [Admin category management & public cached category API](37-admin-category-management-cached-api.md) | 5 | M | 04 | 44, 45, 50, 61 | done |
 | 38 | [User & channel identity profile with universal OIDC/JWKS provider](38-user-channel-identity-universal-auth.md) | 5 | L | 04 | 39, 40, 41, 42, 43, 44, 45, 46, 47, 49, 50, 56, 72, 76, 77, 78 | done |
 | 39 | [Declarative RBAC & ABAC permission engine (can(user, action, resource))](39-declarative-rbac-abac-permission-engine.md) | 5 | M | 38 | 40, 41, 42, 44, 45, 46, 61 | done |
-| 40 | [High-throughput video reactions (likes/dislikes) & counter caching](40-high-throughput-video-reactions-counter-caching.md) | 5 | M | 38, 39 | 45, 76 | ready |
+| 40 | [High-throughput video reactions (likes/dislikes) & counter caching](40-high-throughput-video-reactions-counter-caching.md) | 5 | M | 38, 39 | 45, 76 | done |
 | 41 | [Channel subscriptions & subscribed channels video feed](41-channel-subscriptions-subscriber-feed.md) | 5 | M | 38, 39 | 45, 78 | ready |
 | 42 | [Threaded video comments with keyset pagination & moderation](42-threaded-comments-keyset-pagination-moderation.md) | 5 | L | 38, 39 | 45, 76 | ready |
 | 43 | [High-scale video views buffer (Redis batch flush) & creator studio analytics](43-high-scale-video-views-buffer-reconciler.md) | 5 | L | 38 | 44, 45, 65 | ready |

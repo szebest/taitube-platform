@@ -43,8 +43,15 @@ describe('Singleflight', () => {
     const c1 = sf.do('err-key', failingTask);
     const c2 = sf.do('err-key', failingTask);
 
-    await expect(c1).rejects.toThrow('boom');
-    await expect(c2).rejects.toThrow('boom');
+    const [r1, r2] = await Promise.allSettled([c1, c2]);
+    expect(r1.status).toBe('rejected');
+    expect(r2.status).toBe('rejected');
+    if (r1.status === 'rejected') {
+      expect((r1.reason as Error).message).toBe('boom');
+    }
+    if (r2.status === 'rejected') {
+      expect((r2.reason as Error).message).toBe('boom');
+    }
     expect(sf.inFlightCount).toBe(0);
 
     // Can succeed on retry

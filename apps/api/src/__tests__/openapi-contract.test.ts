@@ -105,7 +105,7 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
 
   interface SddEndpointContract {
     path: string;
-    method: 'get' | 'post' | 'patch' | 'delete';
+    method: 'get' | 'post' | 'patch' | 'delete' | 'put';
     expectedStatuses: number[];
     expectedErrorCodes?: string[];
     hasQueryParams?: boolean;
@@ -260,6 +260,31 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
         ErrorCodes.RATE_LIMITED,
       ],
       hasBody: true,
+      hasPathParams: true,
+    },
+    // Reactions (§6.1, Ticket 40)
+    {
+      path: '/v1/videos/{id}/reactions',
+      method: 'put',
+      expectedStatuses: [200, 400, 401, 403, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.VIDEO_NOT_FOUND,
+      ],
+      hasBody: true,
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/videos/{id}/reactions/me',
+      method: 'get',
+      expectedStatuses: [200, 400, 401, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.VIDEO_NOT_FOUND,
+      ],
       hasPathParams: true,
     },
     // Feed (§6.1, Ticket 36)

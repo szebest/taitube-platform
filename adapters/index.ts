@@ -1,6 +1,7 @@
 export * from './s3/index';
 export * from './redis/redis-cache-client';
 export * from './redis/category-cache.service';
+export * from './redis/redis-reaction-cache.adapter';
 export * from './bullmq/bullmq-job-queue';
 export * from './bullmq/bullmq-flow-producer';
 export * from './postgres/index';

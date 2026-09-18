@@ -138,6 +138,8 @@ export const videos = pgTable(
     errorMessage: text('error_message'),
     generation: integer('generation').notNull().default(1),
     version: integer('version').notNull().default(0),
+    likesCount: integer('likes_count').notNull().default(0),
+    dislikesCount: integer('dislikes_count').notNull().default(0),
     readyAt: timestamptz('ready_at'),
     deletedAt: timestamptz('deleted_at'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
@@ -275,6 +277,26 @@ export const outbox = pgTable(
   (table) => [index('outbox_drain_idx').on(table.publishedAt, table.createdAt)]
 );
 
+export const videoReactions = pgTable(
+  'video_reactions',
+  {
+    id: uuid('id').primaryKey(),
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    unique('video_reactions_user_id_video_id_unique').on(table.userId, table.videoId),
+    index('video_reactions_video_id_type_idx').on(table.videoId, table.type),
+  ]
+);
+
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -294,3 +316,5 @@ export type OutboxRow = typeof outbox.$inferSelect;
 export type NewOutboxRow = typeof outbox.$inferInsert;
 export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
+export type VideoReaction = typeof videoReactions.$inferSelect;
+export type NewVideoReaction = typeof videoReactions.$inferInsert;
