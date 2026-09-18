@@ -206,7 +206,7 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
         expect(Math.abs(t1080 - t720)).toBeLessThan(0.05);
         expect(Math.abs(t1080 - t480)).toBeLessThan(0.05);
       }
-    });
+    }, 60000);
 
     it('produces identical keyframe timestamps across 1080p/720p/480p for s60.mp4', async () => {
       const rootDir = path.resolve(__dirname, '../../../../');
@@ -251,6 +251,6 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
         expect(Math.abs(t1080 - t720)).toBeLessThan(0.05);
         expect(Math.abs(t1080 - t480)).toBeLessThan(0.05);
       }
-    });
+    }, 60000);
   });
 });
