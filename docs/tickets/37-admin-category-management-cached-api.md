@@ -9,7 +9,7 @@
 | Blocks | 44, 45, 50, 61 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model-database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** in-progress
 
 ## What to build
 
