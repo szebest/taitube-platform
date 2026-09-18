@@ -35,13 +35,15 @@ export class PostgresUserRepository extends UserRepository {
         .values({
           id: user.id,
           email: user.email,
-          tier: (user.tier || 'free') as any,
+          tier: user.tier || 'free',
+          role: (user.role as (typeof schema.UserRoles)[number]) || 'USER',
         })
         .onConflictDoUpdate({
           target: schema.users.id,
           set: {
             email: user.email,
-            tier: (user.tier || 'free') as any,
+            tier: user.tier || 'free',
+            ...(user.role ? { role: user.role as (typeof schema.UserRoles)[number] } : {}),
           },
         })
         .returning();

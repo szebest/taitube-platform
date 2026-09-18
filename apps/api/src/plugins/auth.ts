@@ -106,7 +106,7 @@ export function requireAdmin(request: FastifyRequest): AuthUser {
   }
 
   // 3. Role check: non-admin JWT -> 403 Forbidden (AC 17)
-  if (request.user.role !== 'admin') {
+  if (request.user.role?.toLowerCase() !== 'admin') {
     throw new PermanentError(ErrorCodes.FORBIDDEN, 'Admin role required to access this resource');
   }
 

@@ -9,7 +9,7 @@
 | Blocks | 40, 41, 42, 44, 45, 46, 61 |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** done
 
 ## What to build
 
@@ -31,20 +31,20 @@ Inspired by clean ABAC (Attribute-Based Access Control) and WebDevSimplified per
 
 ## Acceptance criteria
 
-- [ ] Pure domain permission package/module in @taitube/core/permissions:
+- [x] Pure domain permission package/module in @taitube/core/permissions:
   - Typed definitions for Role, Action, UserContext, and Resource.
   - Pure function can(user: UserContext | null, action: Action, resource?: Resource): boolean.
   - Declarative policy rules map defining capabilities per role and dynamic predicates for ownership.
-- [ ] Roles field on User entity: 
-ole enum (USER, CREATOR, MODERATOR, ADMIN) defaulting to USER.
-- [ ] Fastify authorization helper server.authorize(action, resourceResolver):
+- [x] Roles field on User entity: 
+  - role enum (USER, CREATOR, MODERATOR, ADMIN) defaulting to USER.
+- [x] Fastify authorization helper server.authorize(action, resourceResolver):
   - Throws 403 FORBIDDEN (or 401 if anonymous) with problem+json standard error format if can(...) evaluates to false.
-- [ ] Unit tests for all combinations:
+- [x] Unit tests for all combinations:
   - Guest permissions (video:read public allowed, video:create forbidden).
   - User permissions (cannot delete other users' videos/comments).
   - Creator / Video Owner permissions (can pin comments under own video, cannot pin on foreign video).
   - Admin permissions (superuser bypass).
-- [ ] Integrated route test showing Fastify route returning 403 when forbidden and 200 when authorized.
+- [x] Integrated route test showing Fastify route returning 403 when forbidden and 200 when authorized.
 
 ## Out of scope
 
@@ -71,6 +71,6 @@ ole enum (USER, CREATOR, MODERATOR, ADMIN) defaulting to USER.
 
 ## Definition of Done
 
-- [ ] All ACs green under pnpm test and bun test.
-- [ ] pnpm typecheck && pnpm lint pass with zero warnings or errors.
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [x] All ACs green under pnpm test and bun test.
+- [x] pnpm typecheck && pnpm lint pass with zero warnings or errors.
+- [x] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.

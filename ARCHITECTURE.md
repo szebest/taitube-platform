@@ -25,6 +25,11 @@ video-pipeline/
 │   ├── domain/                     # Domain entities and value objects
 │   │   ├── category.ts             # Category domain model and input interfaces
 │   │   └── index.ts
+│   ├── permissions/                # Pure domain RBAC & ABAC permission engine (Ticket 39)
+│   │   ├── types.ts                # Role, Action, UserContext, Resource, PolicyRule
+│   │   ├── evaluator.ts            # can(user, action, resource) pure evaluator
+│   │   ├── policies/               # Declarative policy modules (video, comment, channel, admin)
+│   │   └── index.ts
 │   ├── ports/                      # Core abstract ports & domain models
 │   │   ├── health-checkable.ts     # HealthCheckable interface
 │   │   ├── database-client.ts      # Low-level DatabaseClient port (query, execute, transaction)

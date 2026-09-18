@@ -47,10 +47,13 @@ export const stepStatusEnum = pgEnum('step_status', [
   'DEAD',
 ]);
 
+export const userRoleEnum = pgEnum('user_role', ['USER', 'CREATOR', 'MODERATOR', 'ADMIN']);
+
 export const VideoStatuses = videoStatusEnum.enumValues;
 export const StepStatuses = stepStatusEnum.enumValues;
 export const UploadStatuses = uploadStatusEnum.enumValues;
 export const RenditionStatuses = renditionStatusEnum.enumValues;
+export const UserRoles = userRoleEnum.enumValues;
 
 // Helper for timestamptz in postgres
 const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
@@ -63,6 +66,7 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
   email: text('email').notNull().unique(),
   tier: text('tier').notNull().default('free'),
+  role: userRoleEnum('role').notNull().default('USER'),
   createdAt: timestamptz('created_at').notNull().defaultNow(),
 });
 

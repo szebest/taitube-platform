@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "exports": {
@@ -40,6 +41,16 @@
       "types": "./dist/domain/*.d.ts",
       "import": "./dist/domain/*.js",
       "default": "./dist/domain/*.js"
+    },
+    "./permissions": {
+      "types": "./dist/permissions/index.d.ts",
+      "import": "./dist/permissions/index.js",
+      "default": "./dist/permissions/index.js"
+    },
+    "./permissions/*": {
+      "types": "./dist/permissions/*.d.ts",
+      "import": "./dist/permissions/*.js",
+      "default": "./dist/permissions/*.js"
     }
   },
   "devDependencies": {

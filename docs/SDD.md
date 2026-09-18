@@ -674,11 +674,13 @@ CREATE TYPE video_status AS ENUM ('UPLOADING','UPLOADED','PROBING','PROCESSING',
 CREATE TYPE upload_status AS ENUM ('OPEN','COMPLETED','ABORTED');
 CREATE TYPE rendition_status AS ENUM ('PENDING','RUNNING','DONE','FAILED','SKIPPED');
 CREATE TYPE step_status AS ENUM ('QUEUED','RUNNING','DONE','FAILED','DEAD');
+CREATE TYPE user_role AS ENUM ('USER','CREATOR','MODERATOR','ADMIN');
 
 CREATE TABLE users (
   id          uuid PRIMARY KEY,
   email       text NOT NULL UNIQUE,
   tier        text NOT NULL DEFAULT 'free',           -- drives job priority & quotas
+  role        user_role NOT NULL DEFAULT 'USER',      -- RBAC/ABAC role
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 
@@ -1283,7 +1285,7 @@ flowchart LR
 | Area | Control |
 |---|---|
 | Authentication | JWT bearer verified with `@fastify/jwt` against `AUTH_JWKS_URL` (RS256/EdDSA); `sub` → `users.id` (auto-provision on first sight). Dev bypass only when `NODE_ENV=development` **and** `AUTH_DEV_USER_ID` set. Admin routes require role claim `admin` or `x-admin-token` (constant-time compare). |
-| Authorisation | Every video query scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
+| Authorisation | Declarative RBAC & ABAC permission engine (`can(user, action, resource)`) in `@vp/core/permissions`. Roles: `GUEST`, `USER`, `CREATOR`, `MODERATOR`, `ADMIN`. Route protection via Fastify decorator `server.authorize(action, resourceResolver)` returning RFC 9457 Problem Details (403 FORBIDDEN / 401 UNAUTHORIZED). Superuser bypass for ADMIN, ownership and creator video moderation predicates for resources. Video queries scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
 | Upload safety | Presigned URLs TTL 15 min; `Content-Type` and `Content-Length` are signed into the single-PUT URL; multipart verified via `HeadObject` after completion; server deletes and `REJECT`s on mismatch. Content-type allowlist (`video/mp4, video/quicktime, video/webm, video/x-matroska`). Per-user quota (`MAX_UPLOAD_BYTES`, `MAX_INFLIGHT_PER_USER`). |
 | Storage | Buckets private; CDN reads `public` via R2 custom domain (no public bucket URL exposed). Least-privilege access keys: API key may `Put/Get/Head/Multipart*` on `raw` only; worker key may `Get` on `raw` and `Put/Delete` on `public`. |
 | Command injection | FFmpeg invoked with argv arrays via `spawn` (never `exec`/shell); object keys are derived from UUIDs, never from user filenames (original filename stored as metadata only). |
