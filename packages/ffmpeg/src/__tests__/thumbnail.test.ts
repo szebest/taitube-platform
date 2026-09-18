@@ -169,7 +169,7 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     }
-  }, 30000);
+  });
 
   it('forceFailure option throws PermanentError with code FFMPEG_FAILED', async () => {
     await expect(

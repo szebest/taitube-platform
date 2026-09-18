@@ -144,7 +144,7 @@ describe("Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)", (
     expect(thumbStep?.status).toBe("DONE");
     expect(thumbStep?.lockToken).toBeDefined();
     expect(thumbStep?.finishedAt).toBeDefined();
-  }, 25000);
+  });
 
   it(
     "AC 2: Thumbnail child runs concurrently with transcodes in BullMQ Flow",
@@ -291,8 +291,7 @@ describe("Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)", (
 
       expect(hasOverlap).toBe(true);
       transcodeSpy.mockRestore();
-    },
-    25000,
+    }
   );
 
   it("AC 3: Forced thumbnail failure -> package still runs, video READY, posterKey null, step FAILED with code, renditions unaffected", async () => {

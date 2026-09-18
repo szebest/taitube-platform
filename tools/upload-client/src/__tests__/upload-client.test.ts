@@ -276,5 +276,5 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     expect(video).toBeDefined();
     expect(video?.status).toBe('UPLOADED');
     expect(video?.sourceSizeBytes).toBe(TOTAL_SIZE);
-  }, 30000);
+  });
 });

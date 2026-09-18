@@ -21,6 +21,8 @@ export function definePackageTestConfig(
     test: {
       environment: 'node',
       globals: true,
+      testTimeout: 30_000,
+      hookTimeout: 30_000,
       include: ['src/**/__tests__/**/*.test.ts'],
       ...overrides.test,
     },

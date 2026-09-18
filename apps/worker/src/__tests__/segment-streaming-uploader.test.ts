@@ -631,6 +631,6 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         `videos/${videoId}/hls/720p/index.m3u8`
       );
       expect(playlistHead).not.toBeNull();
-    }, 30000);
+    });
   });
 });
