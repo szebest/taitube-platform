@@ -6,6 +6,7 @@ import { InMemoryEventRepository } from './in-memory-event-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
+import { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
 import { InMemoryUploadRepository } from './in-memory-upload-repository';
 import { InMemoryUserRepository } from './in-memory-user-repository';
 import { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
@@ -23,6 +24,7 @@ export class InMemoryRepositories implements Repositories {
   readonly categories: InMemoryCategoryRepository;
   readonly channels: InMemoryChannelRepository;
   readonly videoReactions: InMemoryVideoReactionRepository;
+  readonly subscriptions: InMemorySubscriptionRepository;
 
   constructor() {
     this.events = new InMemoryEventRepository();
@@ -48,6 +50,10 @@ export class InMemoryRepositories implements Repositories {
     this.videoReactions = new InMemoryVideoReactionRepository({
       videosRepo: this.videos,
     });
+    this.subscriptions = new InMemorySubscriptionRepository({
+      channelsRepo: this.channels,
+      videosRepo: this.videos,
+    });
     this.videos.setUploadsRepo(this.uploads);
     this.events.setVideosRepo(this.videos);
     this.dlq.setOutboxRepo(this.outbox);
@@ -65,5 +71,7 @@ export class InMemoryRepositories implements Repositories {
     this.categories.clear();
     this.channels.clear();
     this.videoReactions.clear();
+    this.subscriptions.clear();
   }
 }
+

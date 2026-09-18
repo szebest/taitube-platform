@@ -11,6 +11,7 @@ import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
 import { PostgresUploadRepository } from './postgres-upload-repository';
+import { PostgresSubscriptionRepository } from './postgres-subscription-repository';
 import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
@@ -35,6 +36,7 @@ export class PostgresRepositories implements Repositories {
   readonly categories: PostgresCategoryRepository;
   readonly channels: PostgresChannelRepository;
   readonly videoReactions: PostgresVideoReactionRepository;
+  readonly subscriptions: PostgresSubscriptionRepository;
 
   private readonly sql?: Sql;
 
@@ -71,6 +73,7 @@ export class PostgresRepositories implements Repositories {
     this.categories = new PostgresCategoryRepository(db);
     this.channels = new PostgresChannelRepository(db);
     this.videoReactions = new PostgresVideoReactionRepository(db);
+    this.subscriptions = new PostgresSubscriptionRepository(db);
   }
 
   async close(): Promise<void> {
