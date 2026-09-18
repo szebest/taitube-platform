@@ -1,4 +1,5 @@
 import type { CategoryRepositoryPort } from './category-repository.port';
+import type { ChannelRepositoryPort } from './channel-repository.port';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
 import type { OutboxRepository } from './outbox-repository';
@@ -18,4 +19,5 @@ export interface Repositories {
   dlq: DlqRepository;
   outbox: OutboxRepository;
   categories: CategoryRepositoryPort;
+  channels: ChannelRepositoryPort;
 }

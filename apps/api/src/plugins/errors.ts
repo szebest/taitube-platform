@@ -62,6 +62,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
           case ErrorCodes.VIDEO_NOT_FOUND:
           case ErrorCodes.DLQ_ENTRY_NOT_FOUND:
           case ErrorCodes.CATEGORY_NOT_FOUND:
+          case ErrorCodes.CHANNEL_NOT_FOUND:
             statusCode = 404;
             break;
           case ErrorCodes.UNAUTHORIZED:
@@ -73,10 +74,14 @@ export function registerErrorHandler(app: FastifyInstance): void {
           case ErrorCodes.VERSION_CONFLICT:
           case ErrorCodes.CATEGORY_SLUG_CONFLICT:
           case ErrorCodes.CATEGORY_IN_USE:
+          case ErrorCodes.HANDLE_ALREADY_TAKEN:
             statusCode = 409;
             break;
           case ErrorCodes.UPLOAD_NOT_OPEN:
             statusCode = 410;
+            break;
+          case ErrorCodes.INVALID_HANDLE_FORMAT:
+            statusCode = 400;
             break;
           case ErrorCodes.RATE_LIMITED:
             statusCode = 429;

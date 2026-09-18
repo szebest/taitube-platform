@@ -5,12 +5,7 @@ import type {
   UpdateCategoryInput,
 } from '../domain/category';
 
-export type {
-  Category,
-  CreateCategoryInput,
-  ListCategoriesOptions,
-  UpdateCategoryInput,
-};
+export type { Category, CreateCategoryInput, ListCategoriesOptions, UpdateCategoryInput };
 
 export interface CategoryRepositoryPort {
   findAll(options?: ListCategoriesOptions): Promise<Category[]>;

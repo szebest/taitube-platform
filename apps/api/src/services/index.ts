@@ -6,4 +6,5 @@ export * from './category-service';
 export * from './dlq-service';
 export * from './queue-service';
 export * from './http-cache-service';
+export * from './channel-service';
 export * from './housekeeping-schedulers';

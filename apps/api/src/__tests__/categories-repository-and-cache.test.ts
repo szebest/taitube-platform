@@ -83,9 +83,7 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
       expect(updated.sortOrder).toBe(5);
 
       // Conflict when changing slug to another existing category
-      await expect(repo.update(cat1.id, { slug: 'other' })).rejects.toThrowError(
-        PermanentError
-      );
+      await expect(repo.update(cat1.id, { slug: 'other' })).rejects.toThrowError(PermanentError);
 
       // Non-existent category
       await expect(repo.update('non-existent', { name: 'Fail' })).rejects.toThrowError(

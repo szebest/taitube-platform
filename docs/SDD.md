@@ -584,6 +584,7 @@ Decided at the throw site, never by regex on messages.
 ```mermaid
 erDiagram
     users ||--o{ videos : owns
+    users ||--o| channels : has
     videos ||--o| uploads : "has one"
     videos ||--o{ renditions : produces
     videos ||--o{ processing_steps : runs
@@ -594,6 +595,18 @@ erDiagram
         uuid id PK
         text email UK
         text tier
+    }
+    channels {
+        uuid id PK
+        uuid user_id FK
+        text handle UK
+        text display_name
+        text avatar_url
+        text banner_url
+        text bio
+        int subscriber_count
+        timestamptz created_at
+        timestamptz updated_at
     }
     videos {
         uuid id PK
@@ -668,6 +681,21 @@ CREATE TABLE users (
   tier        text NOT NULL DEFAULT 'free',           -- drives job priority & quotas
   created_at  timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE TABLE channels (
+  id                uuid PRIMARY KEY,
+  user_id           uuid NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  handle            text NOT NULL UNIQUE,
+  display_name      text NOT NULL,
+  avatar_url        text,
+  banner_url        text,
+  bio               text,
+  subscriber_count  integer NOT NULL DEFAULT 0,
+  created_at        timestamptz NOT NULL DEFAULT now(),
+  updated_at        timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX channels_handle_idx ON channels (handle);
+CREATE INDEX channels_user_id_idx ON channels (user_id);
 
 CREATE TABLE videos (
   id                  uuid PRIMARY KEY,               -- UUIDv7

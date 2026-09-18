@@ -5,11 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { problemResponse } from '../schemas/problem';
-import {
-  FeedQuerySchema,
-  FeedResponseSchema,
-  type FeedResponseType,
-} from '../schemas/videos';
+import { FeedQuerySchema, FeedResponseSchema, type FeedResponseType } from '../schemas/videos';
 import { Singleflight } from '../services/singleflight';
 import type { VideoService } from '../services/video-service';
 
@@ -106,11 +102,7 @@ export function registerFeedRoutes(app: FastifyInstance, options: FeedRouteOptio
         // 4. Populate Redis cache for first page (30s TTL)
         if (isFirstPage && cache) {
           try {
-            await cache.set(
-              cacheKey,
-              JSON.stringify({ data, etag }),
-              30
-            );
+            await cache.set(cacheKey, JSON.stringify({ data, etag }), 30);
           } catch {
             // Non-blocking cache store error
           }

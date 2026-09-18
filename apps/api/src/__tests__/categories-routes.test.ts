@@ -83,9 +83,7 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
       });
 
       expect(res.statusCode).toBe(200);
-      expect(res.headers['cache-control']).toBe(
-        'public, max-age=300, stale-while-revalidate=60'
-      );
+      expect(res.headers['cache-control']).toBe('public, max-age=300, stale-while-revalidate=60');
       const etag = res.headers.etag;
       expect(etag).toBeDefined();
       expect(etag).toMatch(/^"[a-f0-9]{40}"$/);
@@ -126,9 +124,7 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
       expect(res2.statusCode).toBe(304);
       expect(res2.body).toBe('');
       expect(res2.headers.etag).toBe(etag);
-      expect(res2.headers['cache-control']).toBe(
-        'public, max-age=300, stale-while-revalidate=60'
-      );
+      expect(res2.headers['cache-control']).toBe('public, max-age=300, stale-while-revalidate=60');
     });
 
     it('supports /categories alias', async () => {
