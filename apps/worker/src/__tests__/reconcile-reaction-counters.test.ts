@@ -101,4 +101,23 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
       dislikesCount: 0,
     });
   });
+
+  it('detects and repairs drift when only Redis cache is out of sync', async () => {
+    const videoId = '33333333-3333-7333-8333-333333333333';
+    await repos.videoReactions.setReaction(videoId, 'u1', 'LIKE');
+
+    // DB denormalized counts are correct (1, 0), but Redis has stale drift (0, 0)
+    await reactionCache.setCounts(videoId, { likesCount: 0, dislikesCount: 0 });
+
+    const res = await runReconcileReactionCounters({
+      repositories: repos,
+      reactionCache,
+    });
+
+    expect(res.checkedCount).toBe(1);
+    expect(res.repairedCount).toBe(1);
+
+    const fixed = await reactionCache.getCounts(videoId, async () => ({ likesCount: 0, dislikesCount: 0 }));
+    expect(fixed).toEqual({ likesCount: 1, dislikesCount: 0 });
+  });
 });

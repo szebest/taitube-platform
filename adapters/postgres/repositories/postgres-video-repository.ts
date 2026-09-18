@@ -361,13 +361,7 @@ export class PostgresVideoRepository extends VideoRepository {
       const [res] = await this.db
         .select({ count: sql<number>`count(*)::int` })
         .from(v)
-        .where(
-          and(
-            eq(v.ownerId, ownerId),
-            inArray(v.status, ['PROBING', 'PROCESSING']),
-            sql`${v.deletedAt} IS NULL`
-          )
-        );
+        .where(and(eq(v.ownerId, ownerId), inArray(v.status, ['PROBING', 'PROCESSING']), sql`${v.deletedAt} IS NULL`));
       return res?.count ?? 0;
     } catch (err) {
       throw dbErr(`Failed to count in-flight videos for owner ${ownerId}`, err);
@@ -377,10 +371,7 @@ export class PostgresVideoRepository extends VideoRepository {
   async countByStatus(): Promise<Record<string, number>> {
     try {
       const rows = await this.db
-        .select({
-          status: v.status,
-          count: sql<number>`count(*)::int`,
-        })
+        .select({ status: v.status, count: sql<number>`count(*)::int` })
         .from(v)
         .groupBy(v.status);
       const result: Record<string, number> = {};
@@ -390,6 +381,14 @@ export class PostgresVideoRepository extends VideoRepository {
       return result;
     } catch (err) {
       throw dbErr('Failed to count videos by status', err);
+    }
+  }
+
+  async updateReactionCounters(videoId: string, likesCount: number, dislikesCount: number): Promise<void> {
+    try {
+      await this.db.update(v).set({ likesCount, dislikesCount, updatedAt: new Date() }).where(eq(v.id, videoId));
+    } catch (err) {
+      throw dbErr(`Failed to update reaction counters for video ${videoId}`, err);
     }
   }
 }

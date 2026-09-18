@@ -1,4 +1,10 @@
-import type { RenditionRecord, VideoRecord, VideoRepository, VideoStatus } from '@vp/core/ports';
+import type {
+  ReactionCachePort,
+  RenditionRecord,
+  VideoRecord,
+  VideoRepository,
+  VideoStatus,
+} from '@vp/core/ports';
 
 export type VideoVisibility = 'private' | 'unlisted' | 'public';
 
@@ -74,7 +80,7 @@ export interface VideoSummaryView {
 export interface VideoServiceDeps {
   videos: VideoRepository;
   cdnBaseUrl?: string;
-  reactionCache?: import('@vp/core/ports').ReactionCachePort;
+  reactionCache?: ReactionCachePort;
 }
 
 /**

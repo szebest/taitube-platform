@@ -38,7 +38,27 @@ export async function runReconcileReactionCounters(
     // 3. Fetch denormalized counts on videos record
     const denormalized = await repositories.videoReactions.getReactionCounts(videoId);
 
-    let hasDrift = false;
+    // 4. Fetch current cached counts from Redis (if configured)
+    let cachedDrift = false;
+    if (reactionCache) {
+      const cached = await reactionCache.getCounts(videoId, async () => denormalized);
+      if (
+        cached.likesCount !== groundTruth.likesCount ||
+        cached.dislikesCount !== groundTruth.dislikesCount
+      ) {
+        cachedDrift = true;
+        logger?.warn(
+          {
+            videoId,
+            groundTruth,
+            cached,
+          },
+          'Reaction counter drift detected in Redis cache; repairing'
+        );
+      }
+    }
+
+    let hasDrift = cachedDrift;
 
     if (
       denormalized.likesCount !== groundTruth.likesCount ||
@@ -60,8 +80,8 @@ export async function runReconcileReactionCounters(
       );
     }
 
-    // 4. Ensure Redis cache is consistent with ground-truth
-    if (reactionCache) {
+    // 5. Ensure Redis cache is repaired/consistent with ground-truth
+    if (reactionCache && hasDrift) {
       await reactionCache.setCounts(videoId, groundTruth);
     }
 

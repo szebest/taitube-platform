@@ -5,24 +5,24 @@ import type {
   SetReactionResult,
   VideoReaction,
   VideoReactionRepositoryPort,
+  VideoRepository,
 } from '@vp/core/repositories';
 import { uuidv7 } from 'uuidv7';
-import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 export interface InMemoryVideoReactionRepositoryOptions {
-  videosRepo?: InMemoryVideoRepository;
+  videosRepo?: VideoRepository;
 }
 
 export class InMemoryVideoReactionRepository implements VideoReactionRepositoryPort {
   private readonly reactions = new Map<string, VideoReaction>();
   private readonly videoCounters = new Map<string, { likesCount: number; dislikesCount: number }>();
-  private videosRepo?: InMemoryVideoRepository;
+  private videosRepo?: VideoRepository;
 
   constructor(options: InMemoryVideoReactionRepositoryOptions = {}) {
     this.videosRepo = options.videosRepo;
   }
 
-  setVideosRepo(videosRepo: InMemoryVideoRepository): void {
+  setVideosRepo(videosRepo: VideoRepository): void {
     this.videosRepo = videosRepo;
   }
 
@@ -109,11 +109,7 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
     this.videoCounters.set(videoId, { likesCount, dislikesCount });
 
     if (this.videosRepo) {
-      const video = await this.videosRepo.findById(videoId);
-      if (video) {
-        video.likesCount = likesCount;
-        video.dislikesCount = dislikesCount;
-      }
+      await this.videosRepo.updateReactionCounters(videoId, likesCount, dislikesCount);
     }
 
     return {
@@ -143,11 +139,7 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
   ): Promise<void> {
     this.videoCounters.set(videoId, { likesCount, dislikesCount });
     if (this.videosRepo) {
-      const video = await this.videosRepo.findById(videoId);
-      if (video) {
-        video.likesCount = likesCount;
-        video.dislikesCount = dislikesCount;
-      }
+      await this.videosRepo.updateReactionCounters(videoId, likesCount, dislikesCount);
     }
   }
 

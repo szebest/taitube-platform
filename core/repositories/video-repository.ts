@@ -163,4 +163,9 @@ export abstract class VideoRepository {
   abstract hardDelete(id: string): Promise<boolean>;
   abstract countByStatus(): Promise<Record<string, number>>;
   abstract countInFlightByOwner(ownerId: string): Promise<number>;
+  abstract updateReactionCounters(
+    videoId: string,
+    likesCount: number,
+    dislikesCount: number
+  ): Promise<void>;
 }

@@ -24,6 +24,7 @@ import type {
   DatabaseClient,
   JobQueue,
   MultipartStorage,
+  ReactionCachePort,
   Repositories,
   StorageClient,
 } from '@vp/core/ports';
@@ -92,7 +93,8 @@ export interface BuildAppOptions {
   queueService?: QueueService;
   httpCacheService?: HttpCacheService;
   channelService?: ChannelService;
-  reactionCacheAdapter?: RedisReactionCacheAdapter;
+  reactionCache?: ReactionCachePort;
+  reactionCacheAdapter?: ReactionCachePort;
   reactionService?: ReactionService;
   jwksUrl?: string;
 }
@@ -258,7 +260,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     maxInflightPerUser: options.maxInflightPerUser,
   });
 
-  const reactionCacheAdapter =
+  const reactionCache =
+    options.reactionCache ??
     options.reactionCacheAdapter ??
     new RedisReactionCacheAdapter({
       cache,
@@ -268,14 +271,14 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     options.reactionService ??
     new ReactionService({
       videoReactions: repositories.videoReactions,
-      reactionCache: reactionCacheAdapter,
+      reactionCache,
       videos: repositories.videos,
     });
 
   const videoService = new VideoService({
     videos: repositories.videos,
     cdnBaseUrl,
-    reactionCache: reactionCacheAdapter,
+    reactionCache,
   });
 
   registerVideosRoutes(app, {

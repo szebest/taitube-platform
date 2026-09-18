@@ -1,4 +1,4 @@
-import type { VideoRepository, VideoStatus } from '@vp/core/ports';
+import type { ReactionCachePort, VideoRepository, VideoStatus } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { AuthUser } from '../plugins/auth';
 
@@ -33,7 +33,7 @@ import {
 export class VideoService {
   private readonly videos: VideoRepository;
   private readonly cleanCdnBase: string;
-  private readonly reactionCache?: import('@vp/core/ports').ReactionCachePort;
+  private readonly reactionCache?: ReactionCachePort;
 
   constructor(deps: VideoServiceDeps) {
     this.videos = deps.videos;

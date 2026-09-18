@@ -340,6 +340,19 @@ export class InMemoryVideoRepository extends VideoRepository {
     return count;
   }
 
+  async updateReactionCounters(
+    videoId: string,
+    likesCount: number,
+    dislikesCount: number
+  ): Promise<void> {
+    const video = this.videosMap.get(videoId);
+    if (video) {
+      video.likesCount = likesCount;
+      video.dislikesCount = dislikesCount;
+      video.updatedAt = new Date();
+    }
+  }
+
   clear(): void {
     this.videosMap.clear();
   }

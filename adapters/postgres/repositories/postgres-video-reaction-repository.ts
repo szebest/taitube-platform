@@ -50,65 +50,65 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
     type: ReactionInputType
   ): Promise<SetReactionResult> {
     return await this.db.transaction(async (tx) => {
-      const [existing] = await tx
-        .select({
-          id: schema.videoReactions.id,
-          type: schema.videoReactions.type,
-        })
-        .from(schema.videoReactions)
-        .where(
-          and(
-            eq(schema.videoReactions.videoId, videoId),
-            eq(schema.videoReactions.userId, userId)
-          )
-        )
-        .for('update');
-
-      const previousType = (existing?.type as ReactionType) ?? null;
+      let previousType: ReactionType | null = null;
       let deltaLikes = 0;
       let deltaDislikes = 0;
 
       if (type === 'NONE') {
-        if (existing) {
-          await tx
-            .delete(schema.videoReactions)
-            .where(eq(schema.videoReactions.id, existing.id));
+        const [deleted] = await tx
+          .delete(schema.videoReactions)
+          .where(
+            and(
+              eq(schema.videoReactions.videoId, videoId),
+              eq(schema.videoReactions.userId, userId)
+            )
+          )
+          .returning({ type: schema.videoReactions.type });
+
+        if (deleted) {
+          previousType = (deleted.type as ReactionType) ?? null;
           if (previousType === 'LIKE') deltaLikes = -1;
           else if (previousType === 'DISLIKE') deltaDislikes = -1;
         }
-      } else if (type === 'LIKE') {
-        if (previousType === 'DISLIKE' && existing) {
-          deltaDislikes = -1;
-          deltaLikes = 1;
-          await tx
-            .update(schema.videoReactions)
-            .set({ type: 'LIKE', updatedAt: new Date() })
-            .where(eq(schema.videoReactions.id, existing.id));
-        } else if (previousType === null) {
-          deltaLikes = 1;
-          await tx.insert(schema.videoReactions).values({
+      } else {
+        const [prev] = await tx
+          .select({ type: schema.videoReactions.type })
+          .from(schema.videoReactions)
+          .where(
+            and(
+              eq(schema.videoReactions.videoId, videoId),
+              eq(schema.videoReactions.userId, userId)
+            )
+          );
+
+        previousType = (prev?.type as ReactionType) ?? null;
+
+        await tx
+          .insert(schema.videoReactions)
+          .values({
             id: uuidv7(),
             videoId,
             userId,
-            type: 'LIKE',
+            type,
+            updatedAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: [schema.videoReactions.userId, schema.videoReactions.videoId],
+            set: {
+              type,
+              updatedAt: sql`now()`,
+            },
           });
-        }
-      } else if (type === 'DISLIKE') {
-        if (previousType === 'LIKE' && existing) {
+
+        if (previousType === 'LIKE' && type === 'DISLIKE') {
           deltaLikes = -1;
           deltaDislikes = 1;
-          await tx
-            .update(schema.videoReactions)
-            .set({ type: 'DISLIKE', updatedAt: new Date() })
-            .where(eq(schema.videoReactions.id, existing.id));
+        } else if (previousType === 'DISLIKE' && type === 'LIKE') {
+          deltaLikes = 1;
+          deltaDislikes = -1;
         } else if (previousType === null) {
-          deltaDislikes = 1;
-          await tx.insert(schema.videoReactions).values({
-            id: uuidv7(),
-            videoId,
-            userId,
-            type: 'DISLIKE',
-          });
+          if (type === 'LIKE') deltaLikes = 1;
+          else if (type === 'DISLIKE') deltaDislikes = 1;
         }
       }
 
