@@ -9,7 +9,7 @@
 | Blocks | 49 |
 | Spec | [PRD US-12](../PRD.md#53-status-feedback) · [PRD FR-14](../PRD.md#6-functional-requirements) · [SDD §6.1 API contract](../SDD.md#6-api-contract) · [SDD §11 Authorisation](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** done
 
 ## What to build
 
@@ -30,19 +30,19 @@ The existing `GET /v1/videos` endpoint is **not changed** — it remains a "my v
 
 ## Acceptance criteria
 
-- [ ] `GET /v1/feed` — no `Authorization` header needed:
+- [x] `GET /v1/feed` — no `Authorization` header needed:
   - Returns `{ items: VideoSummaryView[], nextCursor, total }` containing only `visibility=public` AND `status=READY` videos.
   - Supports `sort=recent` (default, keyset `(created_at, id)`), `sort=popular` (keyset `(views_count, id)`), and `sort=trending` (gravity ranking).
   - Supports `categoryId` UUID filter.
   - Sets `ETag` header and handles `If-None-Match` returning `304 Not Modified`.
   - First-page results cached in Redis with singleflight deduplication.
-- [ ] `GET /v1/feed?limit=N` (1–100, default 20) and `GET /v1/feed?cursor=<opaque>` work correctly across sort modes.
-- [ ] `GET /v1/feed` with an optional valid `Authorization: Bearer <token>` still works (feed is always global public).
-- [ ] `GET /v1/videos/:id` with no token returns 200 for `visibility=public` and `visibility=unlisted`; returns 401 for `visibility=private`.
-- [ ] `GET /v1/videos/:id/events` with no token returns the SSE stream for `public`/`unlisted` videos; returns 401 for `private` videos.
-- [ ] `GET /v1/feed` is documented in `/docs` (OpenAPI 3.1) with full request/response schema, marked `security: []` (no auth required).
-- [ ] `VideoService.listPublic(options)` added as a new method — does **not** modify the existing `list(user, options)` method.
-- [ ] Route tests via `app.inject()`:
+- [x] `GET /v1/feed?limit=N` (1–100, default 20) and `GET /v1/feed?cursor=<opaque>` work correctly across sort modes.
+- [x] `GET /v1/feed` with an optional valid `Authorization: Bearer <token>` still works (feed is always global public).
+- [x] `GET /v1/videos/:id` with no token returns 200 for `visibility=public` and `visibility=unlisted`; returns 401 for `visibility=private`.
+- [x] `GET /v1/videos/:id/events` with no token returns the SSE stream for `public`/`unlisted` videos; returns 401 for `private` videos.
+- [x] `GET /v1/feed` is documented in `/docs` (OpenAPI 3.1) with full request/response schema, marked `security: []` (no auth required).
+- [x] `VideoService.listPublic(options)` added as a new method — does **not** modify the existing `list(user, options)` method.
+- [x] Route tests via `app.inject()`:
   - Anonymous `GET /v1/feed` returns 200 with videos, valid `ETag`, and `Cache-Control`.
   - Repeated `GET /v1/feed` with `If-None-Match` returns 304.
   - `GET /v1/feed?sort=popular` returns videos ordered by views descending.
@@ -90,7 +90,7 @@ server.get('/v1/feed', { schema: { security: [] } }, async (request, reply) => {
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm test` and `bun test`.
-- [ ] `pnpm typecheck && pnpm lint` pass with zero errors.
-- [ ] OpenAPI at `/docs` shows `/v1/feed` with `security: []`.
-- [ ] Ticket status set to `done` and `gen-index.py` re-run.
+- [x] All ACs green under `pnpm test` and `bun test`.
+- [x] `pnpm typecheck && pnpm lint` pass with zero errors.
+- [x] OpenAPI at `/docs` shows `/v1/feed` with `security: []`.
+- [x] Ticket status set to `done` and `gen-index.py` re-run.

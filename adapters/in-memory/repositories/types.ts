@@ -59,6 +59,8 @@ export const DEFAULT_VIDEO_RECORD: Omit<
   spriteVttUrl: null,
   errorCode: null,
   errorMessage: null,
+  viewsCount: 0,
+  categoryId: null,
   generation: 1,
   readyAt: null,
 };

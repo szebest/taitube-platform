@@ -10,6 +10,7 @@ export interface PublishedMessage {
 export class InMemoryCacheClient extends CacheClient {
   private readonly listeners = new Map<string, Set<MessageListener>>();
   private readonly patternListeners = new Map<string, Set<PatternMessageListener>>();
+  private readonly kv = new Map<string, { value: string; expiresAt?: number }>();
   readonly publishedMessages: PublishedMessage[] = [];
   private isHealthy = true;
 
@@ -113,8 +114,28 @@ export class InMemoryCacheClient extends CacheClient {
     }
   }
 
+  async get(key: string): Promise<string | null> {
+    const item = this.kv.get(key);
+    if (!item) return null;
+    if (item.expiresAt !== undefined && Date.now() > item.expiresAt) {
+      this.kv.delete(key);
+      return null;
+    }
+    return item.value;
+  }
+
+  async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+    const expiresAt = ttlSeconds !== undefined ? Date.now() + ttlSeconds * 1000 : undefined;
+    this.kv.set(key, { value, expiresAt });
+  }
+
+  async del(key: string): Promise<void> {
+    this.kv.delete(key);
+  }
+
   clear(): void {
     this.publishedMessages.length = 0;
+    this.kv.clear();
   }
 
   clearListeners(): void {

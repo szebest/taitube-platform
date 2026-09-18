@@ -118,6 +118,7 @@ taitube-platform/
 - **Keyframe-Aligned HLS Ladder**: Transcodes multi-bitrate video streams (1080p, 720p, 480p) with identical keyframe cadence across renditions for clean adaptive bitrate switching in video players.
 - **Real-Time Progress Tracking**: Server-Sent Events (SSE) backed by Redis Pub/Sub broadcast per-rendition percentage, ETA, and state changes with snapshot replay on reconnect.
 - **Resilient State Machine**: Optimistic concurrency control via PostgreSQL CAS transactions and worker fencing tokens to guarantee exactly-once processing outcomes.
+- **Public Video Feed & High-Performance Caching**: Unauthenticated public video browsing (`GET /v1/feed`) with multi-sort (newest, views count, trending gravity decay) and category filtering, backed by Redis caching, Singleflight promise coalescing, and HTTP ETag/304 conditional responses.
 - **Dead Letter Queue and Reprocessing**: Permanent failures route to a dedicated DLQ queue with complete error classification and administrative retry capabilities.
 - **Comprehensive Observability**: Pre-configured OpenTelemetry tracing across all API calls and worker jobs, Prometheus RED metrics, Grafana dashboards, Loki log aggregation, and Alertmanager rules.
 

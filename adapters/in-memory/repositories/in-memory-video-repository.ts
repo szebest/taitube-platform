@@ -2,6 +2,8 @@ import { trace } from '@opentelemetry/api';
 import {
   DatabaseError,
   type EventRepository,
+  type ListPublicVideosOptions,
+  type ListPublicVideosResult,
   type ListVideosOptions,
   type NewVideoInput,
   type OutboxRepository,
@@ -19,6 +21,7 @@ import {
   type VideoWithDetails,
 } from '@vp/core/ports';
 
+import { filterAndSortPublicVideos } from './feed-filter';
 import {
   DEFAULT_VIDEO_RECORD,
   type InMemoryVideoRepositoryOptions,
@@ -168,6 +171,10 @@ export class InMemoryVideoRepository extends VideoRepository {
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id)
     );
     return filtered.slice(0, limit + 1);
+  }
+
+  async listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult> {
+    return filterAndSortPublicVideos(this.videosMap.values(), options);
   }
 
   async updateMetadata(options: UpdateVideoMetadataOptions): Promise<VideoRecord> {

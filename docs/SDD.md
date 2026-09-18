@@ -825,6 +825,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /uploads/:uploadId/complete` | Finish | `{ parts:[{partNumber, etag}] }` (multipart) or `{}` (single) | `202 { videoId, status:"UPLOADED" }` or `422 { code:"UPLOAD_SIZE_MISMATCH" \| "UPLOAD_TOO_LARGE" \| "UNSUPPORTED_CONTENT_TYPE" }` | Idempotent: second call returns 202 with current status. |
 | `DELETE /uploads/:uploadId` | Abort | — | `204` | `AbortMultipartUpload`, video → `ABANDONED`. |
 | `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
+| `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter. Cached in Redis with singleflight & ETag 304. |
 | `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `error?`) | Owner or public/unlisted. |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`. |
 | `DELETE /videos/:id` | Soft delete | — | `202` | Enqueues `housekeeping:purge-video`. |

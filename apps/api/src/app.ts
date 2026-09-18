@@ -41,9 +41,11 @@ import { registerAdminDlqRoutes } from './routes/admin/dlq';
 import { registerAdminQueuesRoutes } from './routes/admin/queues';
 import { registerDevJwksRoute } from './routes/dev-jwks';
 import { registerEventsRoutes } from './routes/events';
+import { registerFeedRoutes } from './routes/feed';
 import { registerHealthRoutes } from './routes/health';
 import { registerUploadsRoutes } from './routes/uploads';
 import { registerVideosRoutes } from './routes/videos';
+import { VideoService } from './services/video-service';
 import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
 import { startQueuePoller } from './services/queue-poller';
 import { startSqlPoller } from './services/sql-poller';
@@ -227,10 +229,21 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     maxInflightPerUser: options.maxInflightPerUser,
   });
 
-  registerVideosRoutes(app, {
+  const videoService = new VideoService({
     videos: repositories.videos,
     cdnBaseUrl,
+  });
+
+  registerVideosRoutes(app, {
+    videos: repositories.videos,
+    videoService,
+    cdnBaseUrl,
     probeQueue: jobQueue,
+  });
+
+  registerFeedRoutes(app, {
+    videoService,
+    cache,
   });
 
   const sseHub =

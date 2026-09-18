@@ -34,6 +34,8 @@ export interface VideoRecord {
   spriteVttUrl?: string | null;
   errorCode?: string | null;
   errorMessage?: string | null;
+  viewsCount?: number;
+  categoryId?: string | null;
   generation: number;
   version: number;
   createdAt: Date;
@@ -63,6 +65,8 @@ export interface NewVideoInput {
   posterUrl?: string | null;
   spriteUrl?: string | null;
   spriteVttUrl?: string | null;
+  viewsCount?: number;
+  categoryId?: string | null;
   errorCode?: string | null;
   errorMessage?: string | null;
   generation?: number;
@@ -89,6 +93,23 @@ export interface ListVideosOptions {
   } | null;
   limit: number;
   status?: VideoStatus;
+}
+
+export interface ListPublicVideosOptions {
+  cursor?: {
+    createdAt?: Date;
+    viewsCount?: number;
+    score?: number;
+    id: string;
+  } | null;
+  limit: number;
+  sort?: 'recent' | 'popular' | 'trending';
+  categoryId?: string | null;
+}
+
+export interface ListPublicVideosResult {
+  items: VideoRecord[];
+  total: number;
 }
 
 import type { VideoEventRecord } from './event-repository';
@@ -123,6 +144,7 @@ export abstract class VideoRepository {
   abstract findWithDetails(id: string): Promise<VideoWithDetails | null>;
   abstract create(data: NewVideoInput): Promise<VideoRecord>;
   abstract listByOwner(options: ListVideosOptions): Promise<VideoRecord[]>;
+  abstract listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult>;
   abstract updateMetadata(options: UpdateVideoMetadataOptions): Promise<VideoRecord>;
   abstract transition(options: TransitionVideoOptions): Promise<boolean>;
   abstract findStaleUploading(thresholdMs: number, limit?: number): Promise<VideoRecord[]>;
