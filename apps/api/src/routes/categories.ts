@@ -4,25 +4,35 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { CategoriesListSchema } from '../schemas/categories';
+import { CategoryService } from '../services/category-service';
 
 export interface CategoriesRouteOptions {
-  repositories: Repositories;
-  categoryCacheService: CategoryCacheService;
+  repositories?: Repositories;
+  categoryCacheService?: CategoryCacheService;
+  categoryService?: CategoryService;
 }
 
 /**
  * Public categories endpoint (Ticket 37, SDD §6.1).
- * Features:
- * - Unauthenticated taxonomy list sorted by sort_order ASC, name ASC
- * - L1/L2 multi-tier caching (LRU + Redis)
- * - Deterministic ETag and Cache-Control (max-age=300, stale-while-revalidate=60)
- * - 304 Not Modified conditional requests with zero database round-trips
+ * Thin transport adapter delegating domain caching & queries to CategoryService.
  */
 export function registerCategoriesRoutes(
   app: FastifyInstance,
   options: CategoriesRouteOptions
 ): void {
-  const { repositories, categoryCacheService } = options;
+  const categoryService =
+    options.categoryService ??
+    (options.repositories && options.categoryCacheService
+      ? new CategoryService({
+          categories: options.repositories.categories,
+          categoryCacheService: options.categoryCacheService,
+        })
+      : undefined);
+
+  if (!categoryService) {
+    throw new Error('registerCategoriesRoutes requires either categoryService or repositories + categoryCacheService');
+  }
+
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const path of ['/v1/categories', '/categories'] as const) {
@@ -46,19 +56,12 @@ export function registerCategoriesRoutes(
       async (request, reply) => {
         const ifNoneMatch = request.headers['if-none-match'];
 
-        const { categories, etag } = await categoryCacheService.getCategories(() =>
-          repositories.categories.findAll({ activeOnly: true })
-        );
+        const { categories, etag, isNotModified } = await categoryService.listActive(ifNoneMatch);
 
         reply.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
         reply.header('ETag', etag);
 
-        if (
-          ifNoneMatch &&
-          (ifNoneMatch === etag ||
-            ifNoneMatch === etag.replace(/^W\//, '') ||
-            ifNoneMatch === `"${etag.replace(/^W\/"?|"?$/g, '')}"`)
-        ) {
+        if (isNotModified) {
           return reply.status(304).send();
         }
 

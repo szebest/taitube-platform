@@ -49,6 +49,10 @@ import { registerHealthRoutes } from './routes/health';
 import { registerUploadsRoutes } from './routes/uploads';
 import { registerVideosRoutes } from './routes/videos';
 import { VideoService } from './services/video-service';
+import { CategoryService } from './services/category-service';
+import { DlqService } from './services/dlq-service';
+import { QueueService } from './services/queue-service';
+import { HttpCacheService } from './services/http-cache-service';
 import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
 import { startQueuePoller } from './services/queue-poller';
 import { startSqlPoller } from './services/sql-poller';
@@ -76,6 +80,10 @@ export interface BuildAppOptions {
   sseHeartbeatMs?: number;
   sseIdleTimeoutMs?: number;
   categoryCacheService?: CategoryCacheService;
+  categoryService?: CategoryService;
+  dlqService?: DlqService;
+  queueService?: QueueService;
+  httpCacheService?: HttpCacheService;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -250,20 +258,28 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     cache,
   });
 
+  const httpCacheService = options.httpCacheService ?? new HttpCacheService();
+
   const categoryCacheService =
     options.categoryCacheService ??
     new CategoryCacheService({
       cache,
     });
 
+  const categoryService =
+    options.categoryService ??
+    new CategoryService({
+      categories: repositories.categories,
+      categoryCacheService,
+      httpCacheService,
+    });
+
   registerCategoriesRoutes(app, {
-    repositories,
-    categoryCacheService,
+    categoryService,
   });
 
   registerAdminCategoriesRoutes(app, {
-    repositories,
-    categoryCacheService,
+    categoryService,
   });
 
   const sseHub =
@@ -295,14 +311,28 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const queuePoller = startQueuePoller({ queues: adminQueues, metrics });
   const sqlPoller = startSqlPoller({ repositories, metrics });
 
+  const queueService =
+    options.queueService ??
+    new QueueService({
+      queues: adminQueues,
+    });
+
   await registerAdminQueuesRoutes(app, {
     cache,
     queues: adminQueues,
+    queueService,
   });
 
+  const dlqService =
+    options.dlqService ??
+    new DlqService({
+      dlq: repositories.dlq,
+      events: repositories.events,
+      queues: adminQueues,
+    });
+
   registerAdminDlqRoutes(app, {
-    repositories,
-    queues: adminQueues,
+    dlqService,
   });
 
   return app;

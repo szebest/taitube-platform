@@ -83,9 +83,7 @@ export function toVideoSummaryView(v: VideoRecord, cleanCdnBase: string): VideoS
     visibility: v.visibility as VideoVisibility,
     status: v.status,
     durationMs: v.durationMs ?? undefined,
-    posterUrl: v.posterKey
-      ? `${cleanCdnBase}/${v.posterKey.replace(/^\/+/, '')}`
-      : undefined,
+    posterUrl: v.posterKey ? `${cleanCdnBase}/${v.posterKey.replace(/^\/+/, '')}` : undefined,
     playbackUrl:
       v.status === 'READY'
         ? `${cleanCdnBase}/${(v.masterPlaylistKey || `videos/${v.id}/hls/master.m3u8`).replace(/^\/+/, '')}`
@@ -148,9 +146,7 @@ export function toVideoDetailView(
   const renditions = videoRenditions.map((r) => ({
     name: r.name,
     status: r.status,
-    playlistUrl: r.playlistKey
-      ? `${cleanCdnBase}/${r.playlistKey.replace(/^\/+/, '')}`
-      : undefined,
+    playlistUrl: r.playlistKey ? `${cleanCdnBase}/${r.playlistKey.replace(/^\/+/, '')}` : undefined,
   }));
 
   return {

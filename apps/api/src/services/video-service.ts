@@ -63,9 +63,7 @@ export class VideoService {
     const lastRow = hasMore && pageRows.length > 0 ? pageRows[pageRows.length - 1] : undefined;
     const nextCursor = lastRow ? encodeVideoCursor(lastRow) : null;
 
-    const items: VideoSummaryView[] = pageRows.map((v) =>
-      toVideoSummaryView(v, this.cleanCdnBase)
-    );
+    const items: VideoSummaryView[] = pageRows.map((v) => toVideoSummaryView(v, this.cleanCdnBase));
 
     return { items, nextCursor };
   }
@@ -105,9 +103,7 @@ export class VideoService {
       nextCursor = encodeFeedCursor(lastRow, sort, score);
     }
 
-    const items: VideoSummaryView[] = pageRows.map((v) =>
-      toVideoSummaryView(v, this.cleanCdnBase)
-    );
+    const items: VideoSummaryView[] = pageRows.map((v) => toVideoSummaryView(v, this.cleanCdnBase));
 
     return { items, nextCursor, total: result.total };
   }
