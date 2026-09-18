@@ -182,8 +182,16 @@ Both the worker and reviewer subagents **MUST REMAIN ALIVE** throughout this loo
 
 Only after the reviewer **APPROVES** the PR on GitHub and **ALL GitHub Actions CI checks are green**:
 
-1. Merge the PR into `main` via GitHub API or merge command:
-   - PR merge method: Squash and merge or rebase merge (consistent with branch protection rules).
+1. Merge the PR into `main` using **Squash and Merge**:
+   - Merge method: **Squash and Merge** (`merge_method: "squash"`). Rebase and merge commits are disabled repository-wide.
+   - **Squash commit message name**: Must always be formatted cleanly as:
+     `NN: <ticket title> (#<pr_number>)`
+     with the PR description as the commit body.
+   - Execute merge via GitHub API:
+     ```powershell
+     $body = @{ commit_title = "NN: <title> (#$prNumber)"; merge_method = "squash" } | ConvertTo-Json
+     Invoke-RestMethod -Method Put -Uri "https://api.github.com/repos/szebest/taitube-platform/pulls/$prNumber/merge" -Headers $headers -Body $body
+     ```
 2. Verify `main` is updated and clean:
    ```bash
    git checkout main && git pull origin main
