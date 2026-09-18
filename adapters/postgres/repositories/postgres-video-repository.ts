@@ -1,6 +1,8 @@
 import { trace } from '@opentelemetry/api';
 import {
   DatabaseError,
+  type ListPublicVideosOptions,
+  type ListPublicVideosResult,
   type ListVideosOptions,
   type NewVideoInput,
   type ProcessingStepRecord,
@@ -125,6 +127,46 @@ export class PostgresVideoRepository extends VideoRepository {
       return rows as VideoRecord[];
     } catch (err) {
       throw dbErr(`Failed to list videos for owner ${ownerId}`, err);
+    }
+  }
+
+  async listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult> {
+    const { cursor, limit } = options;
+    try {
+      const baseConditions = [
+        eq(v.visibility, 'public'),
+        eq(v.status, 'READY'),
+        sql`${v.deletedAt} IS NULL`,
+      ];
+
+      const [countResult] = await this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(v)
+        .where(and(...baseConditions));
+      const total = countResult?.count ?? 0;
+
+      const queryConditions = [...baseConditions];
+      if (cursor?.createdAt) {
+        const cCond = or(
+          lt(v.createdAt, cursor.createdAt),
+          and(eq(v.createdAt, cursor.createdAt), lt(v.id, cursor.id))
+        );
+        if (cCond) queryConditions.push(cCond);
+      }
+
+      const rows = await this.db
+        .select()
+        .from(v)
+        .where(and(...queryConditions))
+        .orderBy(desc(v.createdAt), desc(v.id))
+        .limit(limit + 1);
+
+      return {
+        items: rows as VideoRecord[],
+        total,
+      };
+    } catch (err) {
+      throw dbErr('Failed to list public videos', err);
     }
   }
 

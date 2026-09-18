@@ -262,6 +262,14 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
       hasBody: true,
       hasPathParams: true,
     },
+    // Feed (§6.1, Ticket 36)
+    {
+      path: '/v1/feed',
+      method: 'get',
+      expectedStatuses: [200, 304, 400],
+      expectedErrorCodes: [ErrorCodes.VALIDATION_FAILED],
+      hasQueryParams: true,
+    },
 
     // 3. Admin (§6.1)
     {
@@ -404,5 +412,15 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
         }
       }
     }
+  });
+
+  it('AC 6 (Ticket 36): GET /v1/feed has security: [] (no auth required) in OpenAPI spec', () => {
+    const paths = (swaggerSpec['paths'] || {}) as Record<
+      string,
+      Record<string, { security?: unknown[] }>
+    >;
+    const feedGet = paths['/v1/feed']?.['get'];
+    expect(feedGet).toBeDefined();
+    expect(feedGet?.security).toEqual([]);
   });
 });

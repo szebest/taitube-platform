@@ -201,6 +201,40 @@ export class RedisCacheClient extends CacheClient {
     }
   }
 
+  async get(key: string): Promise<string | null> {
+    try {
+      return await this.redis.get(key);
+    } catch (err: unknown) {
+      throw new CacheError(`Failed to get key "${key}": ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
+
+  async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+    try {
+      if (ttlSeconds !== undefined) {
+        await this.redis.set(key, value, 'EX', ttlSeconds);
+      } else {
+        await this.redis.set(key, value);
+      }
+    } catch (err: unknown) {
+      throw new CacheError(`Failed to set key "${key}": ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
+
+  async del(key: string): Promise<void> {
+    try {
+      await this.redis.del(key);
+    } catch (err: unknown) {
+      throw new CacheError(`Failed to delete key "${key}": ${(err as Error).message}`, {
+        cause: err,
+      });
+    }
+  }
+
   async close(): Promise<void> {
     try {
       const closes: Promise<unknown>[] = [this.redis.quit().catch(() => this.redis.disconnect())];

@@ -61,6 +61,8 @@ export interface VideoSummaryView {
   durationMs?: number;
   posterUrl?: string;
   playbackUrl?: string;
+  viewsCount?: number;
+  categoryId?: string | null;
   version: number;
   createdAt: string;
   updatedAt: string;
@@ -72,25 +74,21 @@ export interface VideoServiceDeps {
   cdnBaseUrl?: string;
 }
 
-export function encodeVideoCursor(v: { createdAt: Date | string; id: string }): string {
-  const d =
-    v.createdAt instanceof Date ? v.createdAt.toISOString() : new Date(v.createdAt).toISOString();
-  return Buffer.from(JSON.stringify({ createdAt: d, id: v.id })).toString('base64url');
-}
+export {
+  encodeVideoCursor,
+  decodeVideoCursor,
+  encodeFeedCursor,
+  decodeFeedCursor,
+  type FeedSort,
+} from './cursor';
 
-export function decodeVideoCursor(cursor?: string): { createdAt: Date; id: string } | null {
-  if (!cursor) return null;
-  try {
-    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
-    if (parsed && typeof parsed.createdAt === 'string' && typeof parsed.id === 'string') {
-      const date = new Date(parsed.createdAt);
-      if (!Number.isNaN(date.getTime())) return { createdAt: date, id: parsed.id };
-    }
-  } catch {
-    throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
-  }
-  throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
-}
+import {
+  decodeFeedCursor,
+  decodeVideoCursor,
+  encodeFeedCursor,
+  encodeVideoCursor,
+  type FeedSort,
+} from './cursor';
 
 /**
  * VideoService — Deep domain module for video operations and projections (SDD §6.1, §6.3).
@@ -153,6 +151,70 @@ export class VideoService {
     }));
 
     return { items, nextCursor };
+  }
+
+  /**
+   * Keyset paginated public video feed (PRD US-12, FR-14, SDD §6.1).
+   * Unauthenticated: queries visibility = 'public' AND status = 'READY'.
+   */
+  async listPublic(options: {
+    sort?: FeedSort;
+    categoryId?: string;
+    cursor?: string;
+    limit?: number;
+  }): Promise<{ items: VideoSummaryView[]; nextCursor: string | null; total: number }> {
+    const sort = options.sort ?? 'recent';
+    const decodedCursor = decodeFeedCursor(options.cursor);
+    const limit = Math.max(1, Math.min(100, options.limit ?? 20));
+
+    const result = await this.videos.listPublic({
+      sort,
+      categoryId: options.categoryId,
+      cursor: decodedCursor,
+      limit,
+    });
+
+    const hasMore = result.items.length > limit;
+    const pageRows = hasMore ? result.items.slice(0, limit) : result.items;
+    const lastRow = hasMore && pageRows.length > 0 ? pageRows[pageRows.length - 1] : undefined;
+
+    let nextCursor: string | null = null;
+    if (lastRow) {
+      let score: number | undefined;
+      if (sort === 'trending') {
+        const ageHours = Math.max(0, (Date.now() - lastRow.createdAt.getTime()) / 3600000);
+        score = ((lastRow.viewsCount ?? 0) + 1) / (ageHours + 2) ** 1.5;
+      }
+      nextCursor = encodeFeedCursor(lastRow, sort, score);
+    }
+
+    const items: VideoSummaryView[] = pageRows.map((v) => ({
+      id: v.id,
+      title: v.title,
+      description: v.description,
+      visibility: v.visibility as 'private' | 'unlisted' | 'public',
+      status: v.status,
+      durationMs: v.durationMs ?? undefined,
+      posterUrl: v.posterKey
+        ? `${this.cleanCdnBase}/${v.posterKey.replace(/^\/+/, '')}`
+        : undefined,
+      playbackUrl:
+        v.status === 'READY'
+          ? `${this.cleanCdnBase}/${(v.masterPlaylistKey || `videos/${v.id}/hls/master.m3u8`).replace(/^\/+/, '')}`
+          : undefined,
+      viewsCount: v.viewsCount ?? 0,
+      categoryId: v.categoryId ?? null,
+      version: v.version,
+      createdAt: v.createdAt instanceof Date ? v.createdAt.toISOString() : String(v.createdAt),
+      updatedAt: v.updatedAt instanceof Date ? v.updatedAt.toISOString() : String(v.updatedAt),
+      readyAt: v.readyAt
+        ? v.readyAt instanceof Date
+          ? v.readyAt.toISOString()
+          : String(v.readyAt)
+        : undefined,
+    }));
+
+    return { items, nextCursor, total: result.total };
   }
 
   /**

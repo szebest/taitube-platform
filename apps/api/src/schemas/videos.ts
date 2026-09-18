@@ -73,6 +73,8 @@ export const VideoSummarySchema = z.object({
   durationMs: z.number().optional().describe('Video duration in milliseconds'),
   posterUrl: z.string().optional().describe('Public CDN URL to poster thumbnail (PRD US-12)'),
   playbackUrl: z.string().optional().describe('Public CDN playback URL to master.m3u8 if ready'),
+  viewsCount: z.number().optional().describe('Total view count'),
+  categoryId: z.string().uuid().nullable().optional().describe('Category UUID identifier'),
   version: z.number().int().nonnegative().describe('Optimistic locking record version'),
   createdAt: z.string().describe('ISO 8601 creation timestamp'),
   updatedAt: z.string().describe('ISO 8601 last update timestamp'),
@@ -85,6 +87,33 @@ export const VideoListResponseSchema = z.object({
     .string()
     .nullable()
     .describe('Opaque base64url keyset pagination cursor for next page'),
+});
+
+export const FeedResponseSchema = z.object({
+  items: z.array(VideoSummarySchema).describe('Page of public video summary items'),
+  nextCursor: z
+    .string()
+    .nullable()
+    .describe('Opaque base64url keyset pagination cursor for next page'),
+  total: z.number().int().nonnegative().describe('Total number of matching public ready videos'),
+});
+
+export const FeedSortSchema = z
+  .enum(['recent', 'popular', 'trending'])
+  .default('recent')
+  .describe('Feed sort mode: recent (newest), popular (views count), trending (gravity ranking)');
+
+export const FeedQuerySchema = z.object({
+  sort: FeedSortSchema,
+  categoryId: z.string().uuid().optional().describe('Optional category UUID filter'),
+  cursor: z.string().optional().describe('Opaque base64url keyset pagination cursor'),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(20)
+    .describe('Page size limit (1-100, default 20)'),
 });
 
 export const ListVideosQuerySchema = z.object({
@@ -139,3 +168,6 @@ export type VideoSummaryView = VideoSummaryType;
 export type VideoListResponseType = z.infer<typeof VideoListResponseSchema>;
 export type ListVideosQueryType = z.infer<typeof ListVideosQuerySchema>;
 export type UpdateVideoMetadataType = z.infer<typeof UpdateVideoMetadataSchema>;
+export type FeedSortType = z.infer<typeof FeedSortSchema>;
+export type FeedQueryType = z.infer<typeof FeedQuerySchema>;
+export type FeedResponseType = z.infer<typeof FeedResponseSchema>;
