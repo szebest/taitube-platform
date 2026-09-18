@@ -9,7 +9,7 @@
 | Blocks | 40, 41, 42, 44, 45, 46, 61 |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** in-progress
 
 ## What to build
 
