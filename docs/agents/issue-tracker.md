@@ -15,9 +15,10 @@ Issues for this repo live as one markdown file per ticket in `docs/tickets/`, ge
 A ticket cannot be marked `done` or merged until all of the following are satisfied:
 1. **All Acceptance Criteria Pass:** Every AC is implemented with verifiable test/demo evidence.
 2. **Local Verification Clean:** `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `bun test` all pass with zero errors.
-3. **Green CI Build & Checks (Strict Barrier):** All GitHub Actions CI checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) MUST pass green. While PR preparation and code review may begin, the reviewer (or implementer) MUST raise a blocking issue if any CI check fails. Merging or finishing any ticket with failing CI checks is strictly forbidden.
-4. **Documentation, Architecture & README:** `README.md`, `ARCHITECTURE.md`, and `docs/SDD.md` (and relevant ADRs) are updated for any additions or architectural changes.
-5. **Index & Tracker Synchronized:** `**Status:**` is updated to `done`, `python3 docs/tickets/gen-index.py` is re-run, and tickets are synced.
+3. **Branch Protection & PR Approval (Strict Barrier):** Direct push or merge to `main` is blocked. Changes must be submitted via a GitHub Pull Request from `ticket/NN-slug`. The reviewer reviews the PR on GitHub, leaving line/summary comments. The implementor applies fixes or replies with technical rationale in a persistent agent loop until the reviewer submits formal PR approval (`APPROVE`).
+4. **Green CI Build & Checks:** All GitHub Actions CI checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) MUST pass green. Merging or finishing any ticket with failing CI checks is strictly forbidden.
+5. **Documentation, Architecture & README:** `README.md`, `ARCHITECTURE.md`, and `docs/SDD.md` (and relevant ADRs) are updated for any additions or architectural changes.
+6. **Index & Tracker Synchronized:** `**Status:**` is updated to `done` only after PR is merged, `python3 docs/tickets/gen-index.py` is re-run, and tickets are synced.
 
 ## When a skill says "publish to the issue tracker"
 

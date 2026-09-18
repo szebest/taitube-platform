@@ -9,7 +9,7 @@
 | Blocks | 45, 76 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model-database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** done
 
 ## What to build
 
@@ -33,21 +33,21 @@ This ticket delivers:
 
 ## Acceptance criteria
 
-- [ ] Database migration creating `video_reactions`:
+- [x] Database migration creating `video_reactions`:
   - `id UUIDv7 PK, video_id UUID FK not null, user_id UUID FK not null, type text (LIKE, DISLIKE) not null, created_at, updated_at`.
   - Unique constraint on `(user_id, video_id)`.
   - Index on `(video_id, type)`.
-- [ ] `VideoReactionRepositoryPort` in `@taitube/core/repositories/video-reaction-repository.port.ts`.
-- [ ] Modular `PostgresVideoReactionRepository` in `adapters/postgres/repositories/postgres-video-reaction-repository.ts` (<= 250 lines).
-- [ ] In-memory implementation `InMemoryVideoReactionRepository` with `.clear()`.
-- [ ] Redis reaction cache adapter with singleflight deduplication (`adapters/redis/redis-reaction-cache.adapter.ts`).
-- [ ] Route implementations:
+- [x] `VideoReactionRepositoryPort` in `@taitube/core/repositories/video-reaction-repository.port.ts`.
+- [x] Modular `PostgresVideoReactionRepository` in `adapters/postgres/repositories/postgres-video-reaction-repository.ts` (<= 250 lines).
+- [x] In-memory implementation `InMemoryVideoReactionRepository` with `.clear()`.
+- [x] Redis reaction cache adapter with singleflight deduplication (`adapters/redis/redis-reaction-cache.adapter.ts`).
+- [x] Route implementations:
   - `PUT /v1/videos/:id/reactions` (auth required): records reaction, adjusts counters atomically in Redis and Postgres.
   - `GET /v1/videos/:id/reactions/me`: returns authenticated caller reaction.
   - Video response in `GET /v1/videos/:id` enriched with `likesCount` and `dislikesCount`.
-- [ ] Scheduled reconciler job `reconcile-reaction-counters`:
+- [x] Scheduled reconciler job `reconcile-reaction-counters`:
   - Compares Redis/denormalized counters with actual count from `video_reactions` for active videos.
-- [ ] Concurrency & stampede tests:
+- [x] Concurrency & stampede tests:
   - 100 simultaneous concurrent requests on an uncached video trigger only 1 Postgres query.
   - 50 simultaneous reaction toggles from different users update the counters accurately without drift or deadlocks.
 
@@ -74,6 +74,6 @@ This ticket delivers:
 
 ## Definition of Done
 
-- [ ] All ACs green under pnpm test and bun test.
-- [ ] pnpm typecheck && pnpm lint pass with zero warnings or errors.
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [x] All ACs green under pnpm test and bun test.
+- [x] pnpm typecheck && pnpm lint pass with zero warnings or errors.
+- [x] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.

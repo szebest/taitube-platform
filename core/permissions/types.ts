@@ -5,7 +5,8 @@ export type VideoAction =
   | 'video:create'
   | 'video:update'
   | 'video:delete'
-  | 'video:publish';
+  | 'video:publish'
+  | 'video:react';
 
 export type CommentAction = 'comment:create' | 'comment:delete' | 'comment:pin';
 

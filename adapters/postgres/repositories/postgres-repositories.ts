@@ -12,6 +12,7 @@ import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
 import { PostgresUploadRepository } from './postgres-upload-repository';
 import { PostgresUserRepository } from './postgres-user-repository';
+import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
 
 export interface PostgresRepositoriesConfig {
@@ -33,6 +34,7 @@ export class PostgresRepositories implements Repositories {
   readonly outbox: PostgresOutboxRepository;
   readonly categories: PostgresCategoryRepository;
   readonly channels: PostgresChannelRepository;
+  readonly videoReactions: PostgresVideoReactionRepository;
 
   private readonly sql?: Sql;
 
@@ -68,6 +70,7 @@ export class PostgresRepositories implements Repositories {
     this.outbox = new PostgresOutboxRepository(db);
     this.categories = new PostgresCategoryRepository(db);
     this.channels = new PostgresChannelRepository(db);
+    this.videoReactions = new PostgresVideoReactionRepository(db);
   }
 
   async close(): Promise<void> {

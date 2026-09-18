@@ -15,6 +15,7 @@ import {
   PostgresDatabaseClient,
   PostgresRepositories,
   RedisCacheClient,
+  RedisReactionCacheAdapter,
   S3MultipartStorage,
   S3StorageClient,
 } from '@vp/adapters';
@@ -23,6 +24,7 @@ import type {
   DatabaseClient,
   JobQueue,
   MultipartStorage,
+  ReactionCachePort,
   Repositories,
   StorageClient,
 } from '@vp/core/ports';
@@ -49,6 +51,7 @@ import { registerEventsRoutes } from './routes/events';
 import { registerFeedRoutes } from './routes/feed';
 import { registerHealthRoutes } from './routes/health';
 import { registerMeRoutes } from './routes/me';
+import { registerReactionsRoutes } from './routes/reactions';
 import { registerUploadsRoutes } from './routes/uploads';
 import { registerVideosRoutes } from './routes/videos';
 import { VideoService } from './services/video-service';
@@ -57,6 +60,7 @@ import { DlqService } from './services/dlq-service';
 import { QueueService } from './services/queue-service';
 import { HttpCacheService } from './services/http-cache-service';
 import { ChannelService } from './services/channel-service';
+import { ReactionService } from './services/reaction-service';
 import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
 import { startQueuePoller } from './services/queue-poller';
 import { startSqlPoller } from './services/sql-poller';
@@ -89,6 +93,9 @@ export interface BuildAppOptions {
   queueService?: QueueService;
   httpCacheService?: HttpCacheService;
   channelService?: ChannelService;
+  reactionCache?: ReactionCachePort;
+  reactionCacheAdapter?: ReactionCachePort;
+  reactionService?: ReactionService;
   jwksUrl?: string;
 }
 
@@ -253,9 +260,25 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     maxInflightPerUser: options.maxInflightPerUser,
   });
 
+  const reactionCache =
+    options.reactionCache ??
+    options.reactionCacheAdapter ??
+    new RedisReactionCacheAdapter({
+      cache,
+    });
+
+  const reactionService =
+    options.reactionService ??
+    new ReactionService({
+      videoReactions: repositories.videoReactions,
+      reactionCache,
+      videos: repositories.videos,
+    });
+
   const videoService = new VideoService({
     videos: repositories.videos,
     cdnBaseUrl,
+    reactionCache,
   });
 
   registerVideosRoutes(app, {
@@ -263,6 +286,10 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     videoService,
     cdnBaseUrl,
     probeQueue: jobQueue,
+  });
+
+  registerReactionsRoutes(app, {
+    reactionService,
   });
 
   registerFeedRoutes(app, {

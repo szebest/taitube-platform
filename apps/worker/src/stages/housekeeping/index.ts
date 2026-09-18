@@ -2,6 +2,7 @@ import type {
   JobQueue,
   MultipartStorage,
   QueueJob,
+  ReactionCachePort,
   Repositories,
   StorageClient,
 } from '@vp/core/ports';
@@ -10,11 +11,13 @@ import type { Logger } from '@vp/observability';
 import { runExpireRaw } from './expire-raw';
 import { runPurgeDeleted } from './purge-deleted';
 import { runReconcileProcessing } from './reconcile-processing';
+import { runReconcileReactionCounters } from './reconcile-reaction-counters';
 import { runReconcileUploads } from './reconcile-uploads';
 import { runTmpSweep } from './tmp-sweep';
 
 export * from './reconcile-uploads';
 export * from './reconcile-processing';
+export * from './reconcile-reaction-counters';
 export * from './purge-deleted';
 export * from './expire-raw';
 export * from './tmp-sweep';
@@ -24,6 +27,7 @@ export interface HousekeepingProcessorOptions {
   repositories: Repositories;
   storage: StorageClient;
   multipart?: MultipartStorage;
+  reactionCache?: ReactionCachePort;
   getQueue?: (name: QueueName) => JobQueue;
   probeQueue?: JobQueue;
   workerId?: string;
@@ -73,6 +77,13 @@ export function createHousekeepingProcessor(
 
       case 'tmp-sweep':
         return await runTmpSweep({
+          logger,
+        });
+
+      case 'reconcile-reaction-counters':
+        return await runReconcileReactionCounters({
+          repositories,
+          reactionCache: options.reactionCache,
           logger,
         });
 

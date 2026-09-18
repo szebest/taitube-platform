@@ -35,6 +35,8 @@ export interface VideoRecord {
   errorCode?: string | null;
   errorMessage?: string | null;
   viewsCount?: number;
+  likesCount?: number;
+  dislikesCount?: number;
   categoryId?: string | null;
   generation: number;
   version: number;
@@ -66,6 +68,8 @@ export interface NewVideoInput {
   spriteUrl?: string | null;
   spriteVttUrl?: string | null;
   viewsCount?: number;
+  likesCount?: number;
+  dislikesCount?: number;
   categoryId?: string | null;
   errorCode?: string | null;
   errorMessage?: string | null;
@@ -159,4 +163,9 @@ export abstract class VideoRepository {
   abstract hardDelete(id: string): Promise<boolean>;
   abstract countByStatus(): Promise<Record<string, number>>;
   abstract countInFlightByOwner(ownerId: string): Promise<number>;
+  abstract updateReactionCounters(
+    videoId: string,
+    likesCount: number,
+    dislikesCount: number
+  ): Promise<void>;
 }

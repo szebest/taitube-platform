@@ -72,3 +72,10 @@ export const canPublishVideo: PolicyRule = (user: UserContext | null, res?: Reso
   }
   return false;
 };
+
+export const canReactVideo: PolicyRule = (user: UserContext | null): boolean => {
+  if (!user) {
+    return false;
+  }
+  return ['USER', 'CREATOR', 'MODERATOR', 'ADMIN'].includes(user.role as string);
+};

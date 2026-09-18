@@ -8,4 +8,5 @@ export * from './dlq-repository';
 export * from './outbox-repository';
 export * from './category-repository.port';
 export * from './channel-repository.port';
+export * from './video-reaction-repository.port';
 export * from './repositories';

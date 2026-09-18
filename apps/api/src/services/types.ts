@@ -1,4 +1,10 @@
-import type { RenditionRecord, VideoRecord, VideoRepository, VideoStatus } from '@vp/core/ports';
+import type {
+  ReactionCachePort,
+  RenditionRecord,
+  VideoRecord,
+  VideoRepository,
+  VideoStatus,
+} from '@vp/core/ports';
 
 export type VideoVisibility = 'private' | 'unlisted' | 'public';
 
@@ -43,6 +49,8 @@ export interface VideoDetailView {
   posterUrl?: string;
   spriteUrl?: string;
   spriteVttUrl?: string;
+  likesCount: number;
+  dislikesCount: number;
   error?: VideoErrorView;
   version: number;
   createdAt: string;
@@ -60,6 +68,8 @@ export interface VideoSummaryView {
   posterUrl?: string;
   playbackUrl?: string;
   viewsCount?: number;
+  likesCount?: number;
+  dislikesCount?: number;
   categoryId?: string | null;
   version: number;
   createdAt: string;
@@ -70,6 +80,7 @@ export interface VideoSummaryView {
 export interface VideoServiceDeps {
   videos: VideoRepository;
   cdnBaseUrl?: string;
+  reactionCache?: ReactionCachePort;
 }
 
 /**
@@ -89,6 +100,8 @@ export function toVideoSummaryView(v: VideoRecord, cleanCdnBase: string): VideoS
         ? `${cleanCdnBase}/${(v.masterPlaylistKey || `videos/${v.id}/hls/master.m3u8`).replace(/^\/+/, '')}`
         : undefined,
     viewsCount: v.viewsCount ?? 0,
+    likesCount: v.likesCount ?? 0,
+    dislikesCount: v.dislikesCount ?? 0,
     categoryId: v.categoryId ?? null,
     version: v.version,
     createdAt: v.createdAt instanceof Date ? v.createdAt.toISOString() : String(v.createdAt),
@@ -174,6 +187,8 @@ export function toVideoDetailView(
     spriteVttUrl: video.spriteKey
       ? `${cleanCdnBase}/${video.spriteKey.replace(/\.[^.]+$/, '.vtt').replace(/^\/+/, '')}`
       : undefined,
+    likesCount: video.likesCount ?? 0,
+    dislikesCount: video.dislikesCount ?? 0,
     error: video.errorCode
       ? { code: video.errorCode, message: video.errorMessage || '' }
       : undefined,

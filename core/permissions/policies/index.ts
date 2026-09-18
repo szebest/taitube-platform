@@ -7,6 +7,7 @@ import {
   canDeleteVideo,
   canPublishVideo,
   canReadVideo,
+  canReactVideo,
   canUpdateVideo,
 } from './video-policy';
 
@@ -16,6 +17,7 @@ export const POLICIES: Record<Action, PolicyRule> = {
   'video:update': canUpdateVideo,
   'video:delete': canDeleteVideo,
   'video:publish': canPublishVideo,
+  'video:react': canReactVideo,
   'comment:create': canCreateComment,
   'comment:delete': canDeleteComment,
   'comment:pin': canPinComment,
@@ -31,6 +33,7 @@ export {
   canUpdateVideo,
   canDeleteVideo,
   canPublishVideo,
+  canReactVideo,
   canCreateComment,
   canDeleteComment,
   canPinComment,

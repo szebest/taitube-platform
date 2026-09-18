@@ -1,4 +1,4 @@
-import type { VideoRepository, VideoStatus } from '@vp/core/ports';
+import type { ReactionCachePort, VideoRepository, VideoStatus } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { AuthUser } from '../plugins/auth';
 
@@ -33,9 +33,11 @@ import {
 export class VideoService {
   private readonly videos: VideoRepository;
   private readonly cleanCdnBase: string;
+  private readonly reactionCache?: ReactionCachePort;
 
   constructor(deps: VideoServiceDeps) {
     this.videos = deps.videos;
+    this.reactionCache = deps.reactionCache;
     const cdnBase =
       deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || 'http://localhost:9000/public';
     this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
@@ -129,7 +131,16 @@ export class VideoService {
       }
     }
 
-    return toVideoDetailView(video, videoRenditions, this.cleanCdnBase, details.events);
+    const view = toVideoDetailView(video, videoRenditions, this.cleanCdnBase, details.events);
+    if (this.reactionCache) {
+      const counts = await this.reactionCache.getCounts(videoId, async () => ({
+        likesCount: video.likesCount ?? 0,
+        dislikesCount: video.dislikesCount ?? 0,
+      }));
+      view.likesCount = counts.likesCount;
+      view.dislikesCount = counts.dislikesCount;
+    }
+    return view;
   }
 
   /**

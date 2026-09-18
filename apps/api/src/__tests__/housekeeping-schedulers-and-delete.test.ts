@@ -63,7 +63,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
   describe('AC 1: Schedulers exist with ids/crons from SDD §9.8 & idempotent boot', () => {
     it('initializes housekeeping schedulers with exact ids and crons from SDD §9.8', async () => {
       const schedulers = await housekeepingQueue.getJobSchedulers();
-      expect(schedulers).toHaveLength(5);
+      expect(schedulers).toHaveLength(6);
 
       const map = new Map(schedulers.map((s) => [s.id, s]));
 
@@ -72,6 +72,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       expect(map.get('purge-deleted')?.pattern).toBe('0 * * * *');
       expect(map.get('expire-raw')?.pattern).toBe('30 3 * * *');
       expect(map.get('tmp-sweep')?.pattern).toBe('*/30 * * * *');
+      expect(map.get('reconcile-reaction-counters')?.pattern).toBe('0 * * * *');
     });
 
     it.each(HOUSEKEEPING_SCHEDULER_CONFIGS)(
@@ -94,13 +95,14 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       await secondApp.ready();
 
       const schedulers = await housekeepingQueue.getJobSchedulers();
-      expect(schedulers).toHaveLength(5);
+      expect(schedulers).toHaveLength(6);
 
       const ids = schedulers.map((s) => s.id).sort();
       expect(ids).toEqual([
         'expire-raw',
         'purge-deleted',
         'reconcile-processing',
+        'reconcile-reaction-counters',
         'reconcile-uploads',
         'tmp-sweep',
       ]);

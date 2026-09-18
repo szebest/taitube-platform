@@ -43,6 +43,13 @@
       "when": 1789758544330,
       "tag": "0005_premium_goblin_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789759272194,
+      "tag": "0006_serious_silver_centurion",
+      "breakpoints": true
     }
   ]
 }

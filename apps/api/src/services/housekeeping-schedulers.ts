@@ -11,6 +11,7 @@ export const HOUSEKEEPING_SCHEDULER_CONFIGS: readonly HousekeepingSchedulerConfi
   { id: 'purge-deleted', pattern: '0 * * * *' },
   { id: 'expire-raw', pattern: '30 3 * * *' },
   { id: 'tmp-sweep', pattern: '*/30 * * * *' },
+  { id: 'reconcile-reaction-counters', pattern: '0 * * * *' },
 ] as const;
 
 /**

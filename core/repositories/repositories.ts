@@ -7,6 +7,7 @@ import type { RenditionRepository } from './rendition-repository';
 import type { StepRepository } from './step-repository';
 import type { UploadRepository } from './upload-repository';
 import type { UserRepository } from './user-repository';
+import type { VideoReactionRepositoryPort } from './video-reaction-repository.port';
 import type { VideoRepository } from './video-repository';
 
 export interface Repositories {
@@ -20,4 +21,5 @@ export interface Repositories {
   outbox: OutboxRepository;
   categories: CategoryRepositoryPort;
   channels: ChannelRepositoryPort;
+  videoReactions: VideoReactionRepositoryPort;
 }

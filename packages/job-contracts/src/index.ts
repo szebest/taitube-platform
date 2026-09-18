@@ -82,6 +82,7 @@ export const HousekeepingJob = z.object({
     'purge-deleted',
     'expire-raw',
     'tmp-sweep',
+    'reconcile-reaction-counters',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;
