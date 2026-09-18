@@ -16,6 +16,7 @@ export class InMemoryUserRepository extends UserRepository {
       id: '00000000-0000-7000-8000-000000000001',
       email: 'dev@video-pipeline.local',
       tier: 'pro',
+      role: 'CREATOR',
       maxConcurrentUploads: 10,
       maxVideoDurationSec: 3600,
       storageQuotaBytes: 100 * 1024 * 1024 * 1024,
@@ -26,6 +27,7 @@ export class InMemoryUserRepository extends UserRepository {
       id: '00000000-0000-7000-8000-000000000002',
       email: 'user@video-pipeline.local',
       tier: 'free',
+      role: 'USER',
       maxConcurrentUploads: 2,
       maxVideoDurationSec: 300,
       storageQuotaBytes: 1024 * 1024 * 1024,
@@ -36,6 +38,7 @@ export class InMemoryUserRepository extends UserRepository {
       id: '00000000-0000-7000-8000-000000000003',
       email: 'admin@video-pipeline.local',
       tier: 'enterprise',
+      role: 'ADMIN',
       maxConcurrentUploads: 50,
       maxVideoDurationSec: 14400,
       storageQuotaBytes: 1024 * 1024 * 1024 * 1024,
@@ -53,6 +56,7 @@ export class InMemoryUserRepository extends UserRepository {
     if (existing) {
       existing.email = user.email;
       if (user.tier) existing.tier = user.tier;
+      if (user.role) existing.role = user.role;
       if (user.maxConcurrentUploads !== undefined)
         existing.maxConcurrentUploads = user.maxConcurrentUploads;
       if (user.maxVideoDurationSec !== undefined)
@@ -65,6 +69,7 @@ export class InMemoryUserRepository extends UserRepository {
       id: user.id,
       email: user.email,
       tier: user.tier ?? 'free',
+      role: user.role ?? 'USER',
       maxConcurrentUploads: user.maxConcurrentUploads ?? 2,
       maxVideoDurationSec: user.maxVideoDurationSec ?? 300,
       storageQuotaBytes: user.storageQuotaBytes ?? 1024 * 1024 * 1024,

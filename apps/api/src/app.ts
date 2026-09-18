@@ -36,6 +36,7 @@ import {
   validatorCompiler,
 } from 'fastify-type-provider-zod';
 import { registerAuth } from './plugins/auth';
+import { registerAuthorization } from './plugins/authorization';
 import { registerErrorHandler } from './plugins/errors';
 import { registerHttpMetricsPlugin } from './plugins/http-metrics';
 import { registerAdminCategoriesRoutes } from './routes/admin/categories';
@@ -178,7 +179,10 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     jwksUrl: options.jwksUrl,
   });
 
-  // 5a. Register HTTP RED metrics hooks (http_request_duration_seconds, http_requests_in_flight)
+  // 5a. Register Declarative RBAC/ABAC Authorization Plugin
+  await app.register(registerAuthorization);
+
+  // 5b. Register HTTP RED metrics hooks (http_request_duration_seconds, http_requests_in_flight)
   await app.register(registerHttpMetricsPlugin);
 
   // 6. Register OpenAPI Documentation (/docs)
