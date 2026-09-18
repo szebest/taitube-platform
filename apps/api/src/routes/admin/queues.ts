@@ -1,63 +1,33 @@
-import { createBullBoard } from '@bull-board/api';
-import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import { FastifyAdapter } from '@bull-board/fastify';
 import type { CacheClient, JobQueue } from '@vp/core/ports';
 import { ErrorCodes, PermanentError, PipelineError } from '@vp/errors';
-import { QUEUES, type QueueName } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
 import { requireAdmin } from '../../plugins/auth';
+import { QueueService } from '../../services/queue-service';
 
 export interface AdminQueuesOptions {
   cache?: CacheClient | null;
   redisClient?: CacheClient | null;
   queues?: Map<string, JobQueue>;
+  queueService?: QueueService;
 }
 
+/**
+ * Admin Queues Route — Thin HTTP transport adapter providing Bull Board admin UI
+ * and queue inspection endpoints, delegating all operations to QueueService.
+ */
 export async function registerAdminQueuesRoutes(
   app: FastifyInstance,
   options: AdminQueuesOptions = {}
 ): Promise<void> {
-  const queuesMap = options.queues || new Map<string, JobQueue>();
+  const queueService =
+    options.queueService ??
+    new QueueService({
+      queues: options.queues,
+    });
 
-  // 1. Initialize BullMQAdapter for all queues in QUEUES (including 'dlq')
-  const queueAdapters = QUEUES.map((queueName: QueueName) => {
-    const q = queuesMap.get(queueName);
-    if (!q) {
-      // Create a mock/empty queue wrapper if not provided
-      const dummyQueue = {
-        name: queueName,
-        isPaused: async () => false,
-        pause: async () => {},
-        resume: async () => {},
-        getJobCounts: async () => ({
-          active: 0,
-          completed: 0,
-          failed: 0,
-          delayed: 0,
-          waiting: 0,
-          paused: 0,
-        }),
-        getJobs: async () => [],
-        opts: { prefix: 'bull' },
-        metaValues: { version: 'bullmq' },
-      };
-      return new BullMQAdapter(dummyQueue as any);
-    }
+  const boardPlugin = queueService.getBoardPlugin('/admin/queues');
 
-    // Unwrap concrete BullMQ queue if wrapped, otherwise adapt directly
-    const rawQueue = typeof (q as any).getRawQueue === 'function' ? (q as any).getRawQueue() : q;
-    return new BullMQAdapter(rawQueue);
-  });
-
-  const serverAdapter = new FastifyAdapter();
-  serverAdapter.setBasePath('/admin/queues');
-
-  createBullBoard({
-    queues: queueAdapters,
-    serverAdapter,
-  });
-
-  // 2. Encapsulated admin scope protected by requireAdmin (AC 17)
+  // Encapsulated admin scope protected by requireAdmin (Ticket 10: AC 17)
   await app.register(
     async (adminScope) => {
       adminScope.addHook('onRequest', async (request, reply) => {
@@ -82,7 +52,7 @@ export async function registerAdminQueuesRoutes(
         }
       });
 
-      adminScope.register(serverAdapter.registerPlugin());
+      adminScope.register(boardPlugin);
     },
     { prefix: '/admin/queues' }
   );

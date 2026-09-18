@@ -1,19 +1,37 @@
 import type { JobQueue, Repositories } from '@vp/core/ports';
-import { ErrorCodes, PermanentError } from '@vp/errors';
-import { defaultJobOptions, generateReplayJobId, stagePolicies } from '@vp/job-contracts';
+import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { requireAdmin } from '../../plugins/auth';
 import { problemResponse } from '../../schemas/problem';
+import { DlqService } from '../../services/dlq-service';
 
 export interface AdminDlqRouteOptions {
-  repositories: Repositories;
-  queues: Map<string, JobQueue>;
+  repositories?: Repositories;
+  queues?: Map<string, JobQueue>;
+  dlqService?: DlqService;
 }
 
+/**
+ * Fastify routes plugin for Admin DLQ inspection, replay, and discarding.
+ * Thin transport adapter delegating DLQ operations to DlqService.
+ */
 export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRouteOptions): void {
-  const { repositories, queues } = options;
+  const dlqService =
+    options.dlqService ??
+    (options.repositories && options.queues
+      ? new DlqService({
+          dlq: options.repositories.dlq,
+          events: options.repositories.events,
+          queues: options.queues,
+        })
+      : undefined);
+
+  if (!dlqService) {
+    throw new Error('registerAdminDlqRoutes requires either dlqService or repositories + queues');
+  }
+
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   const prefixes = ['/admin/dlq', '/v1/admin/dlq'] as const;
@@ -68,7 +86,7 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
       async (request, reply) => {
         requireAdmin(request);
         const { cursor, limit, status } = request.query;
-        const result = await repositories.dlq.list({ cursor, limit, status });
+        const result = await dlqService.list({ cursor, limit, status });
         return reply.status(200).send(result);
       }
     );
@@ -108,68 +126,8 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
       async (request, reply) => {
         requireAdmin(request);
         const { id } = request.params;
-        const entry = await repositories.dlq.findById(id);
-        if (!entry) {
-          throw new PermanentError(ErrorCodes.DLQ_ENTRY_NOT_FOUND, `DLQ entry "${id}" not found`);
-        }
-
-        const targetQueue = queues.get(entry.queue);
-        if (!targetQueue) {
-          throw new PermanentError(
-            ErrorCodes.INTERNAL,
-            `Target queue "${entry.queue}" is not available for replay`
-          );
-        }
-
-        const replayJobId = generateReplayJobId(entry.jobId);
-        const stageOpts =
-          entry.queue in stagePolicies
-            ? stagePolicies[entry.queue as keyof typeof stagePolicies]
-            : {};
-        const replayOpts = {
-          jobId: replayJobId,
-          ...stageOpts,
-          ...defaultJobOptions,
-        };
-
-        await repositories.dlq.updateStatus(
-          id,
-          'REPLAYED',
-          { replayedAt: new Date() },
-          {
-            kind: 'dlq_replay',
-            payload: {
-              type: 'queue',
-              queueName: entry.queue,
-              job: {
-                name: entry.queue,
-                data: entry.payload,
-                opts: replayOpts,
-              },
-            },
-          }
-        );
-
-        await targetQueue.add(entry.queue, entry.payload, replayOpts);
-
-        if (entry.videoId) {
-          await repositories.events.create({
-            videoId: entry.videoId,
-            type: 'dlq.replayed',
-            payload: {
-              dlqEntryId: id,
-              originQueue: entry.queue,
-              originalJobId: entry.jobId,
-              replayJobId,
-            },
-          });
-        }
-
-        return reply.status(202).send({
-          status: 'REPLAYED',
-          dlqEntryId: id,
-          replayJobId,
-        });
+        const result = await dlqService.replay(id);
+        return reply.status(202).send(result);
       }
     );
 
@@ -197,25 +155,7 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
       async (request, reply) => {
         requireAdmin(request);
         const { id } = request.params;
-        const entry = await repositories.dlq.findById(id);
-        if (!entry) {
-          throw new PermanentError(ErrorCodes.DLQ_ENTRY_NOT_FOUND, `DLQ entry "${id}" not found`);
-        }
-
-        await repositories.dlq.updateStatus(id, 'DISCARDED');
-
-        if (entry.videoId) {
-          await repositories.events.create({
-            videoId: entry.videoId,
-            type: 'dlq.discarded',
-            payload: {
-              dlqEntryId: id,
-              originQueue: entry.queue,
-              originalJobId: entry.jobId,
-            },
-          });
-        }
-
+        await dlqService.discard(id);
         return reply.status(204).send(null);
       }
     );

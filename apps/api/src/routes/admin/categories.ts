@@ -12,24 +12,37 @@ import {
   UpdateCategorySchema,
 } from '../../schemas/categories';
 import { problemResponse } from '../../schemas/problem';
+import { CategoryService } from '../../services/category-service';
 
 export interface AdminCategoriesRouteOptions {
-  repositories: Repositories;
-  categoryCacheService: CategoryCacheService;
+  repositories?: Repositories;
+  categoryCacheService?: CategoryCacheService;
+  categoryService?: CategoryService;
 }
 
 /**
  * Admin Category CRUD endpoints (Ticket 37, SDD §6.1).
- * Features:
- * - Restricted to administrators (role=admin or x-admin-token)
- * - Automatic multi-tier cache invalidation (L1 LRU + L2 Redis + Pub/Sub cluster broadcast)
- * - Conflict detection on slugs (409) and referenced categories (409)
+ * Thin transport adapter delegating category management and cache invalidation to CategoryService.
  */
 export function registerAdminCategoriesRoutes(
   app: FastifyInstance,
   options: AdminCategoriesRouteOptions
 ): void {
-  const { repositories, categoryCacheService } = options;
+  const categoryService =
+    options.categoryService ??
+    (options.repositories && options.categoryCacheService
+      ? new CategoryService({
+          categories: options.repositories.categories,
+          categoryCacheService: options.categoryCacheService,
+        })
+      : undefined);
+
+  if (!categoryService) {
+    throw new Error(
+      'registerAdminCategoriesRoutes requires either categoryService or repositories + categoryCacheService'
+    );
+  }
+
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   const prefixes = ['/v1/admin/categories', '/admin/categories'] as const;
@@ -59,11 +72,7 @@ export function registerAdminCategoriesRoutes(
       },
       async (request, reply) => {
         requireAdmin(request);
-        const input = request.body;
-
-        const created = await repositories.categories.create(input);
-        await categoryCacheService.invalidate();
-
+        const created = await categoryService.create(request.body);
         return reply.status(201).send(created);
       }
     );
@@ -93,11 +102,7 @@ export function registerAdminCategoriesRoutes(
       async (request, reply) => {
         requireAdmin(request);
         const { id } = request.params;
-        const input = request.body;
-
-        const updated = await repositories.categories.update(id, input);
-        await categoryCacheService.invalidate();
-
+        const updated = await categoryService.update(id, request.body);
         return reply.status(200).send(updated);
       }
     );
@@ -125,10 +130,7 @@ export function registerAdminCategoriesRoutes(
       async (request, reply) => {
         requireAdmin(request);
         const { id } = request.params;
-
-        await repositories.categories.delete(id);
-        await categoryCacheService.invalidate();
-
+        await categoryService.delete(id);
         return reply.status(204).send();
       }
     );

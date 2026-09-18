@@ -867,6 +867,19 @@ type Video = {
 };
 ```
 
+### 6.4 API Layer Architecture: Thin Transport Routes & Domain Services
+
+To maintain strict modularity, testability, and separation of concerns, the API layer enforces a strict two-tier architecture:
+
+1. **Routes (`apps/api/src/routes/`) — Thin HTTP Transport Adapters**:
+   - Sole responsibilities: Fastify route definitions, Zod schema validation (`params`, `query`, `body`), authentication/role extraction (`requireAuth`, `requireAdmin`), delegating execution directly to a domain service, and returning HTTP response codes/headers.
+   - Invariant: Route handlers MUST NEVER invoke repositories directly, perform business logic, execute transactions, or manage entity lifecycles.
+2. **Services (`apps/api/src/services/`) — Deep Domain Services & Composition**:
+   - Encapsulate business logic, domain invariants, repository coordination, cache management (e.g. L1/L2 multi-tier caching and invalidation), and error classification.
+   - Completely decoupled from Fastify; fully unit-testable in isolation using in-memory port doubles (`InMemoryRepositories`, `InMemoryCacheClient`, `InMemoryStorageClient`).
+   - Every domain resource (`videos`, `uploads`, `channels`, `categories`, `dlq`, `queues`) has its own dedicated service (`VideoService`, `UploadService`, `ChannelService`, `CategoryService`, `DlqService`, `QueueService`).
+   - Maintains a **>1:1 ratio of services to routes** by factoring out reusable utility services (`HttpCacheService` for ETag generation and conditional `If-None-Match` evaluation, `Singleflight` for query coalescing) that domain services compose.
+
 ---
 
 ## 7. Object Storage Layout

@@ -38,9 +38,9 @@ export function encodeFeedCursor(
     ).toString('base64url');
   }
   if (sort === 'trending') {
-    return Buffer.from(
-      JSON.stringify({ sort: 'trending', score: score ?? 0, id: v.id })
-    ).toString('base64url');
+    return Buffer.from(JSON.stringify({ sort: 'trending', score: score ?? 0, id: v.id })).toString(
+      'base64url'
+    );
   }
   const d =
     v.createdAt instanceof Date ? v.createdAt.toISOString() : new Date(v.createdAt).toISOString();
