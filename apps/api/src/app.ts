@@ -5,6 +5,7 @@ import swagger from '@fastify/swagger';
 import scalar from '@scalar/fastify-api-reference';
 import {
   BullMqJobQueue,
+  CategoryCacheService,
   InMemoryCacheClient,
   InMemoryDatabaseClient,
   InMemoryJobQueue,
@@ -37,8 +38,10 @@ import {
 import { registerAuth } from './plugins/auth';
 import { registerErrorHandler } from './plugins/errors';
 import { registerHttpMetricsPlugin } from './plugins/http-metrics';
+import { registerAdminCategoriesRoutes } from './routes/admin/categories';
 import { registerAdminDlqRoutes } from './routes/admin/dlq';
 import { registerAdminQueuesRoutes } from './routes/admin/queues';
+import { registerCategoriesRoutes } from './routes/categories';
 import { registerDevJwksRoute } from './routes/dev-jwks';
 import { registerEventsRoutes } from './routes/events';
 import { registerFeedRoutes } from './routes/feed';
@@ -72,6 +75,7 @@ export interface BuildAppOptions {
   sseMaxPodConnections?: number;
   sseHeartbeatMs?: number;
   sseIdleTimeoutMs?: number;
+  categoryCacheService?: CategoryCacheService;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -246,6 +250,22 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     cache,
   });
 
+  const categoryCacheService =
+    options.categoryCacheService ??
+    new CategoryCacheService({
+      cache,
+    });
+
+  registerCategoriesRoutes(app, {
+    repositories,
+    categoryCacheService,
+  });
+
+  registerAdminCategoriesRoutes(app, {
+    repositories,
+    categoryCacheService,
+  });
+
   const sseHub =
     options.sseHub ??
     new SseHub({
@@ -264,6 +284,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   });
 
   app.addHook('onClose', async () => {
+    categoryCacheService.close();
     await sseHub.close();
     queuePoller.stop();
     sqlPoller.stop();

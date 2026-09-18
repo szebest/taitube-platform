@@ -119,6 +119,7 @@ taitube-platform/
 - **Real-Time Progress Tracking**: Server-Sent Events (SSE) backed by Redis Pub/Sub broadcast per-rendition percentage, ETA, and state changes with snapshot replay on reconnect.
 - **Resilient State Machine**: Optimistic concurrency control via PostgreSQL CAS transactions and worker fencing tokens to guarantee exactly-once processing outcomes.
 - **Public Video Feed & High-Performance Caching**: Unauthenticated public video browsing (`GET /v1/feed`) with multi-sort (newest, views count, trending gravity decay) and category filtering, backed by Redis caching, Singleflight promise coalescing, and HTTP ETag/304 conditional responses.
+- **Dynamic Category Management & Multi-Tier L1/L2 Caching**: PostgreSQL-backed dynamic taxonomies (`GET /v1/categories`, `POST/PATCH/DELETE /v1/admin/categories`) with in-process LRU L1 cache (60s TTL), distributed Redis L2 cache, cluster-wide Redis Pub/Sub invalidation broadcast, and HTTP ETag/304 Not Modified conditional responses.
 - **Dead Letter Queue and Reprocessing**: Permanent failures route to a dedicated DLQ queue with complete error classification and administrative retry capabilities.
 - **Comprehensive Observability**: Pre-configured OpenTelemetry tracing across all API calls and worker jobs, Prometheus RED metrics, Grafana dashboards, Loki log aggregation, and Alertmanager rules.
 

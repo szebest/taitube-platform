@@ -271,7 +271,52 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
       hasQueryParams: true,
     },
 
+    // Categories (§6.1, Ticket 37)
+    {
+      path: '/v1/categories',
+      method: 'get',
+      expectedStatuses: [200, 304],
+    },
+
     // 3. Admin (§6.1)
+    {
+      path: '/v1/admin/categories',
+      method: 'post',
+      expectedStatuses: [201, 400, 401, 403, 409],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.CATEGORY_SLUG_CONFLICT,
+      ],
+      hasBody: true,
+    },
+    {
+      path: '/v1/admin/categories/{id}',
+      method: 'patch',
+      expectedStatuses: [200, 400, 401, 403, 404, 409],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.CATEGORY_NOT_FOUND,
+        ErrorCodes.CATEGORY_SLUG_CONFLICT,
+      ],
+      hasBody: true,
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/admin/categories/{id}',
+      method: 'delete',
+      expectedStatuses: [204, 401, 403, 404, 409],
+      expectedErrorCodes: [
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.CATEGORY_NOT_FOUND,
+        ErrorCodes.CATEGORY_IN_USE,
+      ],
+      hasPathParams: true,
+    },
     {
       path: '/v1/admin/dlq',
       method: 'get',

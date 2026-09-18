@@ -7,4 +7,5 @@ export * from './in-memory-event-repository';
 export * from './in-memory-user-repository';
 export * from './in-memory-dlq-repository';
 export * from './in-memory-outbox-repository';
+export * from './in-memory-category-repository';
 export * from './in-memory-repositories';

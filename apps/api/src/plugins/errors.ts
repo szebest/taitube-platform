@@ -61,6 +61,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
         switch (errCode) {
           case ErrorCodes.VIDEO_NOT_FOUND:
           case ErrorCodes.DLQ_ENTRY_NOT_FOUND:
+          case ErrorCodes.CATEGORY_NOT_FOUND:
             statusCode = 404;
             break;
           case ErrorCodes.UNAUTHORIZED:
@@ -70,6 +71,8 @@ export function registerErrorHandler(app: FastifyInstance): void {
             statusCode = 403;
             break;
           case ErrorCodes.VERSION_CONFLICT:
+          case ErrorCodes.CATEGORY_SLUG_CONFLICT:
+          case ErrorCodes.CATEGORY_IN_USE:
             statusCode = 409;
             break;
           case ErrorCodes.UPLOAD_NOT_OPEN:
