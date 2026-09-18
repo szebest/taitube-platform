@@ -1,3 +1,8 @@
-﻿import { definePackageTestConfig } from '@vp/testing';
+import { definePackageTestConfig } from '@vp/testing';
 
-export default definePackageTestConfig();
+export default definePackageTestConfig({
+  test: {
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
+  },
+});

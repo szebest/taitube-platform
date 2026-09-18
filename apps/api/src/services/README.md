@@ -15,9 +15,9 @@ We strictly maintain a **>1:1 ratio of services to routes**. In addition to reso
 ---
 
 ## Allowed Responsibilities in Services
-1. **Domain Logic & Invariants**: Enforce entity validation, business constraints, and state transitions.
-2. **Repository & Port Orchestration**: Invoke abstract ports (`VideoRepository`, `CategoryRepository`, `DlqRepository`, `StorageClient`, `CacheClient`, `JobQueue`).
-3. **Error Classification**: Throw `PermanentError` or `TransientError` with RFC 9457 machine-readable error codes (`ErrorCodes.CATEGORY_NOT_FOUND`, `ErrorCodes.DLQ_ENTRY_NOT_FOUND`, etc.).
+1. **Domain Logic & Invariants**: Enforce entity validation, business constraints (e.g. handle syntax, reserved checks, ownership verification).
+2. **Repository & Port Orchestration**: Invoke abstract ports (`VideoRepository`, `UserRepository`, `ChannelRepository`, `CategoryRepository`, `DlqRepository`, `StorageClient`, `CacheClient`, `JobQueue`).
+3. **Error Classification**: Throw `PermanentError` or `TransientError` with RFC 9457 machine-readable error codes (`ErrorCodes.CATEGORY_NOT_FOUND`, `ErrorCodes.CHANNEL_NOT_FOUND`, `ErrorCodes.DLQ_ENTRY_NOT_FOUND`, etc.).
 4. **Data Projection & DTO Formatting**: Transform database entities into API response views (converting `Date` to ISO string, attaching CDN URLs).
 5. **Caching & Invalidation**: Coordinate L1/L2 caches and invalidate caches upon state modifications.
 6. **Sub-service Composition**: Delegate specialized cross-cutting operations to shared services (`HttpCacheService`, `Singleflight`).
@@ -25,7 +25,7 @@ We strictly maintain a **>1:1 ratio of services to routes**. In addition to reso
 ---
 
 ## Invariants & Coding Standards
-- **Decoupled from HTTP**: Services must never take Fastify `FastifyRequest` or `FastifyReply` objects. Pass pure domain parameters (e.g. `id: string`, `input: CreateCategoryInput`).
+- **Decoupled from HTTP**: Services must never take Fastify `FastifyRequest` or `FastifyReply` objects. Pass pure domain parameters (e.g. `userId: string`, `input: UpdateChannelInput`).
 - **Testability**: Services must be 100% unit-testable using in-memory test doubles (`InMemoryRepositories`, `InMemoryCacheClient`, `InMemoryStorageClient`) without needing a live HTTP server or database.
 - **File Length Discipline**: Target <= 250 lines (strict limit: 400 lines / 10 KB per file). If a service grows large, extract sub-modules (e.g. cursor pagination, types, helpers).
 
@@ -37,10 +37,10 @@ We strictly maintain a **>1:1 ratio of services to routes**. In addition to reso
 |---|---|---|
 | `VideoService` | `video-service.ts` | Video queries, caller video listing, public feed, metadata projection |
 | `UploadService` | `upload-service.ts` | Single & multipart upload initiation, parts management, completion orchestration |
+| `ChannelService` | `channel-service.ts` | User profile & channel fetching, updates, handle uniqueness |
 | `CategoryService` | `category-service.ts` | Category taxonomy queries, caching, admin CRUD, cache invalidation |
 | `DlqService` | `dlq-service.ts` | Dead-letter queue listing, job replay with fresh suffixes, discarding |
 | `QueueService` | `queue-service.ts` | Queue inspection, metrics gathering, Bull Board UI integration, pause/resume |
 | `HttpCacheService` | `http-cache-service.ts` | Reusable ETag generation, conditional `If-None-Match` evaluation, `Cache-Control` header construction |
-| `ChannelService` | `channel-service.ts` | User profile & channel fetching, updates, handle uniqueness |
 | `SseHub` | `sse-hub.ts` | Real-time SSE connections, Redis pub/sub broadcasting, heartbeat management |
 | `Singleflight` | `singleflight.ts` | Request deduplication and stampede prevention for expensive concurrent reads |

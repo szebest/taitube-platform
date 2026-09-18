@@ -66,6 +66,29 @@ export const users = pgTable('users', {
   createdAt: timestamptz('created_at').notNull().defaultNow(),
 });
 
+export const channels = pgTable(
+  'channels',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    handle: text('handle').notNull().unique(),
+    displayName: text('display_name').notNull(),
+    avatarUrl: text('avatar_url'),
+    bannerUrl: text('banner_url'),
+    bio: text('bio'),
+    subscriberCount: integer('subscriber_count').notNull().default(0),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('channels_handle_idx').on(table.handle),
+    index('channels_user_id_idx').on(table.userId),
+  ]
+);
+
 export const categories = pgTable(
   'categories',
   {
@@ -79,9 +102,7 @@ export const categories = pgTable(
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     updatedAt: timestamptz('updated_at').notNull().defaultNow(),
   },
-  (table) => [
-    index('categories_sort_order_name_idx').on(table.sortOrder, table.name),
-  ]
+  (table) => [index('categories_sort_order_name_idx').on(table.sortOrder, table.name)]
 );
 
 export const videos = pgTable(

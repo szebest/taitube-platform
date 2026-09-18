@@ -1,12 +1,20 @@
 import * as crypto from 'node:crypto';
-import { verifyDevToken } from '@vp/dev-token';
+import type { Repositories } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
+import { ensureUserAndChannelProvisioned } from './jit-provisioner';
+import { verifyUniversalToken } from './jwks-verifier';
 
 export interface AuthUser {
   id: string;
   role: string;
+  email?: string;
+}
+
+export interface AuthPluginOptions {
+  repositories?: Repositories;
+  jwksUrl?: string;
 }
 
 declare module 'fastify' {
@@ -15,7 +23,10 @@ declare module 'fastify' {
   }
 }
 
-export async function authPlugin(app: FastifyInstance): Promise<void> {
+export async function authPlugin(
+  app: FastifyInstance,
+  options: AuthPluginOptions = {}
+): Promise<void> {
   app.decorateRequest('user', null);
 
   app.addHook('onRequest', async (request: FastifyRequest) => {
@@ -36,11 +47,16 @@ export async function authPlugin(app: FastifyInstance): Promise<void> {
     const token = authHeader.slice(7).trim();
 
     try {
-      const payload = verifyDevToken(token);
+      const payload = await verifyUniversalToken(token, options.jwksUrl);
       request.user = {
         id: payload.sub,
         role: payload.role || 'user',
+        email: payload.email,
       };
+
+      if (options.repositories) {
+        await ensureUserAndChannelProvisioned(options.repositories, payload.sub, payload.email);
+      }
     } catch (err) {
       if (err instanceof PermanentError) throw err;
       throw new PermanentError(

@@ -7,4 +7,5 @@ export * from './user-repository';
 export * from './dlq-repository';
 export * from './outbox-repository';
 export * from './category-repository.port';
+export * from './channel-repository.port';
 export * from './repositories';

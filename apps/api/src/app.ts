@@ -42,10 +42,12 @@ import { registerAdminCategoriesRoutes } from './routes/admin/categories';
 import { registerAdminDlqRoutes } from './routes/admin/dlq';
 import { registerAdminQueuesRoutes } from './routes/admin/queues';
 import { registerCategoriesRoutes } from './routes/categories';
+import { registerChannelsRoutes } from './routes/channels';
 import { registerDevJwksRoute } from './routes/dev-jwks';
 import { registerEventsRoutes } from './routes/events';
 import { registerFeedRoutes } from './routes/feed';
 import { registerHealthRoutes } from './routes/health';
+import { registerMeRoutes } from './routes/me';
 import { registerUploadsRoutes } from './routes/uploads';
 import { registerVideosRoutes } from './routes/videos';
 import { VideoService } from './services/video-service';
@@ -53,6 +55,7 @@ import { CategoryService } from './services/category-service';
 import { DlqService } from './services/dlq-service';
 import { QueueService } from './services/queue-service';
 import { HttpCacheService } from './services/http-cache-service';
+import { ChannelService } from './services/channel-service';
 import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
 import { startQueuePoller } from './services/queue-poller';
 import { startSqlPoller } from './services/sql-poller';
@@ -84,6 +87,8 @@ export interface BuildAppOptions {
   dlqService?: DlqService;
   queueService?: QueueService;
   httpCacheService?: HttpCacheService;
+  channelService?: ChannelService;
+  jwksUrl?: string;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -167,8 +172,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   // 4. Register RFC 9457 Problem+JSON Error Handler
   registerErrorHandler(app);
 
-  // 5. Register Authentication Plugin (dev token verification)
-  await app.register(registerAuth);
+  // 5. Register Authentication Plugin (dev token verification + universal JWKS + JIT provisioning)
+  await app.register(registerAuth, {
+    repositories,
+    jwksUrl: options.jwksUrl,
+  });
 
   // 5a. Register HTTP RED metrics hooks (http_request_duration_seconds, http_requests_in_flight)
   await app.register(registerHttpMetricsPlugin);
@@ -280,6 +288,21 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   registerAdminCategoriesRoutes(app, {
     categoryService,
+  });
+
+  const channelService =
+    options.channelService ??
+    new ChannelService({
+      users: repositories.users,
+      channels: repositories.channels,
+    });
+
+  registerMeRoutes(app, {
+    channelService,
+  });
+
+  registerChannelsRoutes(app, {
+    channelService,
   });
 
   const sseHub =

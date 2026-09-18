@@ -9,10 +9,10 @@ Instead, route handlers forward incoming HTTP requests directly to dedicated **D
 ---
 
 ## Allowed Responsibilities in Routes
-1. **Routing & Mounting**: Register paths and aliases (e.g. `/v1/categories`, `/categories`, `/v1/videos`, `/videos`).
+1. **Routing & Mounting**: Register paths and aliases (e.g. `/v1/categories`, `/categories`, `/v1/me/account`, `/v1/channels/:idOrHandle`).
 2. **Input Validation**: Fastify Type Provider with Zod schemas for `params`, `querystring`, `headers`, and `body`.
 3. **Authentication & Authorization Extraction**: Use `requireAuth(request)` or `requireAdmin(request)` to extract identity claims.
-4. **Service Delegation**: Pass typed arguments to the domain service (`videoService.get(...)`, `categoryService.listActive(...)`, `dlqService.replay(...)`).
+4. **Service Delegation**: Pass typed arguments to the domain service (`videoService.get(...)`, `channelService.getAccount(...)`, `categoryService.listActive(...)`, `dlqService.replay(...)`).
 5. **Transport Response Formatting**: Set HTTP status codes (200, 201, 204, 304) and transport headers (`Cache-Control`, `ETag`).
 
 ---
@@ -28,17 +28,14 @@ Instead, route handlers forward incoming HTTP requests directly to dedicated **D
 ## Pattern Example
 
 ```typescript
-// Good: Thin controller delegating to CategoryService
-export function registerCategoriesRoutes(app: FastifyInstance, options: CategoriesRouteOptions): void {
-  const categoryService = options.categoryService ?? new CategoryService({ ... });
+// Good: Thin controller delegating to ChannelService
+export function registerChannelsRoutes(app: FastifyInstance, options: ChannelsRoutesOptions): void {
+  const channelService = options.channelService ?? new ChannelService({ ... });
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  server.get('/v1/categories', { schema: { ... } }, async (request, reply) => {
-    const { categories, etag, isNotModified } = await categoryService.listActive(request.headers['if-none-match']);
-    reply.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
-    reply.header('ETag', etag);
-    if (isNotModified) return reply.status(304).send();
-    return reply.status(200).send(categories);
+  server.get('/v1/channels/:idOrHandle', { schema: { ... } }, async (request, reply) => {
+    const channel = await channelService.getPublicChannel(request.params.idOrHandle);
+    return reply.status(200).send(channel);
   });
 }
 ```

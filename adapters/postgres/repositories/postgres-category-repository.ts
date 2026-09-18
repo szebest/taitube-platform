@@ -38,7 +38,9 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
       const rows = await query.orderBy(asc(categories.sortOrder), asc(categories.name));
       return rows.map((r) => this.mapRow(r));
     } catch (err) {
-      throw new DatabaseError(`Failed to find categories: ${(err as Error).message}`, { cause: err });
+      throw new DatabaseError(`Failed to find categories: ${(err as Error).message}`, {
+        cause: err,
+      });
     }
   }
 
@@ -96,7 +98,9 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
         );
       }
       if (err instanceof PermanentError) throw err;
-      throw new DatabaseError(`Failed to create category: ${(err as Error).message}`, { cause: err });
+      throw new DatabaseError(`Failed to create category: ${(err as Error).message}`, {
+        cause: err,
+      });
     }
   }
 
@@ -145,7 +149,9 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
         );
       }
       if (err instanceof PermanentError) throw err;
-      throw new DatabaseError(`Failed to update category: ${(err as Error).message}`, { cause: err });
+      throw new DatabaseError(`Failed to update category: ${(err as Error).message}`, {
+        cause: err,
+      });
     }
   }
 
@@ -167,7 +173,9 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
       await this.db.delete(categories).where(eq(categories.id, id));
     } catch (err) {
       if (err instanceof PermanentError) throw err;
-      throw new DatabaseError(`Failed to delete category: ${(err as Error).message}`, { cause: err });
+      throw new DatabaseError(`Failed to delete category: ${(err as Error).message}`, {
+        cause: err,
+      });
     }
   }
 

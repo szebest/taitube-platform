@@ -1,5 +1,6 @@
 import type { Repositories } from '@vp/core/ports';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
+import { InMemoryChannelRepository } from './in-memory-channel-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
@@ -19,6 +20,7 @@ export class InMemoryRepositories implements Repositories {
   readonly dlq: InMemoryDlqRepository;
   readonly outbox: InMemoryOutboxRepository;
   readonly categories: InMemoryCategoryRepository;
+  readonly channels: InMemoryChannelRepository;
 
   constructor() {
     this.events = new InMemoryEventRepository();
@@ -40,6 +42,7 @@ export class InMemoryRepositories implements Repositories {
     this.categories = new InMemoryCategoryRepository({
       videosRepo: this.videos,
     });
+    this.channels = new InMemoryChannelRepository();
     this.videos.setUploadsRepo(this.uploads);
     this.events.setVideosRepo(this.videos);
     this.dlq.setOutboxRepo(this.outbox);
@@ -55,5 +58,6 @@ export class InMemoryRepositories implements Repositories {
     this.dlq.clear();
     this.outbox.clear();
     this.categories.clear();
+    this.channels.clear();
   }
 }

@@ -278,6 +278,34 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
       expectedStatuses: [200, 304],
     },
 
+    // 4. Account & Channel Identity (§6.1, Ticket 38)
+    {
+      path: '/v1/me/account',
+      method: 'get',
+      expectedStatuses: [200, 401, 404],
+      expectedErrorCodes: [ErrorCodes.UNAUTHORIZED, ErrorCodes.CHANNEL_NOT_FOUND],
+    },
+    {
+      path: '/v1/me/channel',
+      method: 'patch',
+      expectedStatuses: [200, 400, 401, 404, 409],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.CHANNEL_NOT_FOUND,
+        ErrorCodes.HANDLE_ALREADY_TAKEN,
+        ErrorCodes.INVALID_HANDLE_FORMAT,
+      ],
+      hasBody: true,
+    },
+    {
+      path: '/v1/channels/{idOrHandle}',
+      method: 'get',
+      expectedStatuses: [200, 400, 404],
+      expectedErrorCodes: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.CHANNEL_NOT_FOUND],
+      hasPathParams: true,
+    },
+
     // 3. Admin (§6.1)
     {
       path: '/v1/admin/categories',

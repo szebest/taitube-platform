@@ -161,4 +161,3 @@ if (isDirectRun && process.env['NODE_ENV'] !== 'test') {
     process.exit(1);
   });
 }
-
