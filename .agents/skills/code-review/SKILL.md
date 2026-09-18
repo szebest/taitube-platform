@@ -71,9 +71,15 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 If the spec is missing, skip the Spec sub-agent and note this in the final report.
 
-### 5. Aggregate & CI Gate
+### 5. Aggregate, Post to GitHub PR & Review-Fix Loop
 
 Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings, because the two axes are deliberately separate (see _Why two axes_).
+
+**GitHub Pull Request Review & Comments:**
+- In the ticket workflow, reviews are performed against the GitHub Pull Request.
+- Leave line-level or summary review comments directly on the PR via GitHub API / CLI (`gh pr review` or REST API `POST /repos/{owner}/{repo}/pulls/{number}/reviews`).
+- **Persistent Subagents in Loop:** The reviewer remains alive during the review-fix loop. When findings are raised, the implementor evaluates them, pushes fixes or replies with rationale, and the orchestrator notifies the reviewer to re-review.
+- When satisfied and all findings are addressed, submit formal PR approval (`APPROVE`).
 
 **CI Check & Definition of Done Gate:**
 Check the CI status on GitHub Actions (all workflow jobs: `lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`).
