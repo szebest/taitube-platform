@@ -20,12 +20,14 @@ the right subagents, pass them context, collect their results, and loop.
 ## Mental model
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    FIRSTMATE (you)                   │
-│  read board → pick ticket(s) → spawn worker(s)      │
-│  ↳ worker done → spawn reviewer → fix loop          │
-│  ↳ review clean → commit → record notes → next      │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             FIRSTMATE (you)                                 │
+│  read board → pick ticket → spawn worker on branch                          │
+│  ↳ worker implements & pushes → creates PR & shares PR link                 │
+│  ↳ spawn reviewer on PR → leaves comments on PR                             │
+│  ↳ BOTH agents stay alive in loop: worker fixes/replies ↔ reviewer re-tests │
+│  ↳ reviewer approves PR & CI green → merge PR → kill subagents → loop       │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -38,46 +40,20 @@ the right subagents, pass them context, collect their results, and loop.
 3. If the frontier is empty, report "No actionable tickets — all remaining
    tickets are blocked or done" and stop.
 
-## 1. Decide: serial or parallel?
+## 1. Branching, PRs & Main Branch Protection
 
-Look at the frontier tickets. They can run in parallel **only if** they share
-no files and no package dependencies (check their `Blocked by` and `Blocks`
-columns, and skim the "What to build" section for overlapping packages).
+The `main` branch is protected against direct pushes and unreviewed merges on GitHub. Every ticket MUST be developed on its own dedicated branch and merged to `main` ONLY via a GitHub Pull Request with at least one approval.
 
-- **Single ticket on the frontier → serial mode.** Work on `main` branch directly.
-- **Multiple independent tickets → parallel mode.** Each ticket gets its own
-  branch and git worktree.
-
-### Parallel setup (only if multiple tickets)
-
-For each ticket `NN`:
-```
-git branch ticket/NN-slug main
-git worktree add ../worktree-NN ticket/NN-slug
-```
-After each worker finishes and review passes, merge back:
-```
-git checkout main
-git merge ticket/NN-slug --no-ff -m "NN: <ticket title>"
-```
-If a merge conflict occurs, spawn a dedicated `resolving-merge-conflicts`
-subagent to handle it, then re-run verification on main.
-
-Remove worktrees after merge:
-```
-git worktree remove ../worktree-NN
-git branch -d ticket/NN-slug
-```
-
-### Serial setup (single ticket)
-
-```
-git checkout -b ticket/NN-slug main
-# ... worker does work ...
-git checkout main
-git merge ticket/NN-slug --no-ff -m "NN: <ticket title>"
-git branch -d ticket/NN-slug
-```
+- Every ticket `NN` gets its own branch:
+  ```bash
+  git checkout -b ticket/NN-slug main
+  ```
+- If running in parallel mode with multiple independent tickets:
+  ```bash
+  git branch ticket/NN-slug main
+  git worktree add ../worktree-NN ticket/NN-slug
+  ```
+- Direct commits or merges to `main` are strictly prohibited. Every merge must happen through an approved Pull Request.
 
 ---
 
@@ -154,58 +130,79 @@ Use `invoke_subagent` with type `self` (inherits full tooling). Use model
 (serial) or the worktree path (parallel).
 
 The worker's `Role` should be `Ticket NN Worker`.
+Worker instructions include:
+1. Work exclusively on branch `ticket/NN-slug`.
+2. Push the branch to GitHub remote `origin`:
+   ```bash
+   git push -u origin ticket/NN-slug
+   ```
+3. Open a Pull Request against `main` (via GitHub API or CLI) and output the PR URL:
+   `https://github.com/szebest/taitube-platform/pull/<number>`.
+4. Output its structured completion report.
 
-Wait for the worker to complete. Do NOT poll — the system notifies you.
+When the PR is created, the firstmate immediately shares the PR link with the user.
+**IMPORTANT: Do NOT kill the worker subagent when it reports completion.** It must stay alive for the review-fix loop!
 
 ---
 
-## 4. Spawn the reviewer
+## 4. Spawn the reviewer & the PR Review-Fix Loop
 
-Once the worker reports completion, spawn a **reviewer** subagent:
+Once the worker opens the PR and reports completion, spawn a **reviewer** subagent:
 
 - Type: `self`, Model: `inherit`
 - Role: `Ticket NN Reviewer`
-- Prompt: Tell it to use the `code-review` skill. Include:
-  - The diff command: `git diff main...ticket/NN-slug`
+- Prompt: Review the **Pull Request** on GitHub:
+  - PR URL: `https://github.com/szebest/taitube-platform/pull/<number>`
+  - PR Diff / Commits: Inspect the changes on GitHub or locally via `git diff main...ticket/NN-slug`.
   - The spec: `docs/tickets/NN-slug.md`
-  - Ask it to also run `pnpm typecheck && pnpm lint && pnpm test` independently
-    (verification-before-completion — don't trust the worker's claim).
-  - Ask it to inspect GitHub Actions CI status (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`).
-  - Output format: a structured review with `## Standards`, `## Spec`,
-    `## Verification`, `## CI Status`, and a final `## Verdict: PASS | FAIL` line.
-  - If any CI job is failing, the reviewer MUST issue `FAIL` and raise a blocking CI issue under DoD.
-  - If FAIL, list each finding with a fix instruction.
+  - Independently run `pnpm typecheck && pnpm lint && pnpm test` (and `bun test` where applicable).
+  - Inspect GitHub Actions CI status on the PR (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`).
+  - Leave review comments directly on the PR via GitHub API / review tool.
+  - Issue verdict: If approved, submit PR approval (`APPROVE`). If changes are needed, submit comments / review findings with fix instructions.
 
-### Review-fix loop
+### Persistent Review-Fix Loop
 
-- If the reviewer says **PASS** (and CI is fully green) → proceed to step 5.
-- If the reviewer says **FAIL** (or CI failed):
-  1. Send the reviewer's findings and CI logs to the **original worker** via `send_message`.
-     Tell the worker: "The reviewer found these issues / CI failed. Fix them and report back."
-  2. Wait for the worker to report the fixes are done.
-  3. Send a message to the **reviewer**: "The worker applied fixes. Please
-     re-review: run the diff and verification again, and check CI."
-  4. Wait for the reviewer's updated verdict.
-  5. Repeat until PASS (max 3 rounds — if still failing after 3 rounds, stop
-     the loop and report the situation to the user).
-- **Keep the reviewer alive** until it passes. Only kill it after PASS.
+Both the worker and reviewer subagents **MUST REMAIN ALIVE** throughout this loop:
+
+1. If the reviewer issues findings / requests changes:
+   - Firstmate relays the reviewer's findings and PR comments to the **original worker** via `send_message`.
+   - The worker (who already has all local context) evaluates the feedback:
+     - If the feedback is valid, the worker applies the fixes, runs verification, commits, and pushes to `ticket/NN-slug`.
+     - If a comment is invalid, misunderstands the spec, or proposes an anti-pattern, the worker replies with clear technical rationale explaining why the change is not applicable, and posts a comment/reply on the PR.
+   - Once all points are fixed or replied to, the worker messages the firstmate that it is ready for re-review.
+2. Firstmate notifies the **reviewer subagent** (still alive):
+   - "The worker has addressed the feedback / pushed updates. Please re-review the PR."
+3. Reviewer re-evaluates the PR, checks updated diff, runs verification, checks CI, and updates verdict.
+4. Repeat until the reviewer is fully satisfied and officially approves the PR (`APPROVE`).
+   (Max 3 rounds; if deadlock occurs, firstmate requests user input).
 
 ---
 
-## 5. Commit and merge
+## 5. Merge Pull Request & Teardown
 
-After review passes and all CI checks on GitHub Actions are verified GREEN:
+Only after the reviewer **APPROVES** the PR on GitHub and **ALL GitHub Actions CI checks are green**:
 
-1. Tell the worker to make a final commit:
+1. Merge the PR into `main` using **Squash and Merge**:
+   - Merge method: **Squash and Merge** (`merge_method: "squash"`). Rebase and merge commits are disabled repository-wide.
+   - **Squash commit message name**: Must always be formatted cleanly as:
+     `NN: <ticket title> (#<pr_number>)`
+     with the PR description as the commit body.
+   - Execute merge via GitHub API:
+     ```powershell
+     $body = @{ commit_title = "NN: <title> (#$prNumber)"; merge_method = "squash" } | ConvertTo-Json
+     Invoke-RestMethod -Method Put -Uri "https://api.github.com/repos/szebest/taitube-platform/pulls/$prNumber/merge" -Headers $headers -Body $body
+     ```
+2. Verify `main` is updated and clean:
+   ```bash
+   git checkout main && git pull origin main
    ```
-   git add -A && git commit -m "NN: <ticket title>"
+3. Delete the remote and local ticket branch:
+   ```bash
+   git branch -d ticket/NN-slug
+   git push origin --delete ticket/NN-slug
    ```
-2. Forbid merging or finishing if any CI check has failed or is unresolved.
-3. If on a branch (not main), merge to main (see §1 for commands).
-4. Kill both the worker and reviewer subagents.
-4. Record the worker's **completion report** — especially the
-   "Notes for the next agent" section — in your memory. You will paste this
-   into the next worker's briefing.
+4. **Now, and only now, terminate both the worker and reviewer subagents** via `manage_subagents`.
+5. Record the worker's **completion report** in memory for the next ticket briefing.
 
 ---
 
