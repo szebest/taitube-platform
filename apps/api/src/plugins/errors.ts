@@ -81,6 +81,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
             statusCode = 410;
             break;
           case ErrorCodes.INVALID_HANDLE_FORMAT:
+          case ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF:
             statusCode = 400;
             break;
           case ErrorCodes.RATE_LIMITED:

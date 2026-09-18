@@ -18,6 +18,7 @@ import {
   RedisReactionCacheAdapter,
   S3MultipartStorage,
   S3StorageClient,
+  SubscriptionCacheService,
 } from '@vp/adapters';
 import type {
   CacheClient,
@@ -27,6 +28,7 @@ import type {
   ReactionCachePort,
   Repositories,
   StorageClient,
+  SubscriptionCachePort,
 } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
@@ -52,6 +54,7 @@ import { registerFeedRoutes } from './routes/feed';
 import { registerHealthRoutes } from './routes/health';
 import { registerMeRoutes } from './routes/me';
 import { registerReactionsRoutes } from './routes/reactions';
+import { registerSubscriptionsRoutes } from './routes/subscriptions';
 import { registerUploadsRoutes } from './routes/uploads';
 import { registerVideosRoutes } from './routes/videos';
 import { VideoService } from './services/video-service';
@@ -61,6 +64,7 @@ import { QueueService } from './services/queue-service';
 import { HttpCacheService } from './services/http-cache-service';
 import { ChannelService } from './services/channel-service';
 import { ReactionService } from './services/reaction-service';
+import { SubscriptionService } from './services/subscription-service';
 import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
 import { startQueuePoller } from './services/queue-poller';
 import { startSqlPoller } from './services/sql-poller';
@@ -96,6 +100,8 @@ export interface BuildAppOptions {
   reactionCache?: ReactionCachePort;
   reactionCacheAdapter?: ReactionCachePort;
   reactionService?: ReactionService;
+  subscriptionCache?: SubscriptionCachePort;
+  subscriptionService?: SubscriptionService;
   jwksUrl?: string;
 }
 
@@ -334,6 +340,25 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   registerChannelsRoutes(app, {
     channelService,
+  });
+
+  const subscriptionCache =
+    options.subscriptionCache ??
+    new SubscriptionCacheService({
+      redis: options.cache instanceof RedisCacheClient ? options.cache.getRedis() : undefined,
+    });
+
+  const subscriptionService =
+    options.subscriptionService ??
+    new SubscriptionService({
+      subscriptions: repositories.subscriptions,
+      channels: repositories.channels,
+      subscriptionCache,
+      cdnBaseUrl,
+    });
+
+  registerSubscriptionsRoutes(app, {
+    subscriptionService,
   });
 
   const sseHub =

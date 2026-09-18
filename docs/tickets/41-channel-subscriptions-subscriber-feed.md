@@ -9,7 +9,7 @@
 | Blocks | 45, 78 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model-database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** done
 
 ## What to build
 
@@ -32,24 +32,24 @@ This ticket delivers:
 
 ## Acceptance criteria
 
-- [ ] Migration creating `channel_subscriptions`:
+- [x] Migration creating `channel_subscriptions`:
   - `id UUIDv7 PK, subscriber_id UUID not null references users.id, channel_id UUID not null references channels.id, created_at timestamptz not null`.
   - Unique constraint on `(subscriber_id, channel_id)`.
   - Composite indexes on `(subscriber_id, created_at DESC)` and `(channel_id, created_at DESC)`.
-- [ ] Self-subscription prevention: Returning 400 `CANNOT_SUBSCRIBE_TO_SELF` if `subscriber_id === channel.userId`.
-- [ ] `SubscriptionRepositoryPort` in `@taitube/core/repositories/subscription-repository.port.ts`.
-- [ ] `PostgresSubscriptionRepository` in `adapters/postgres/repositories/postgres-subscription-repository.ts` (<= 250 lines).
-- [ ] `InMemorySubscriptionRepository` with `.clear()`.
-- [ ] Redis subscription set caching service (`adapters/redis/subscription-cache.service.ts`).
-- [ ] Atomic subscription flow:
+- [x] Self-subscription prevention: Returning 400 `CANNOT_SUBSCRIBE_TO_SELF` if `subscriber_id === channel.userId`.
+- [x] `SubscriptionRepositoryPort` in `@taitube/core/repositories/subscription-repository.port.ts`.
+- [x] `PostgresSubscriptionRepository` in `adapters/postgres/repositories/postgres-subscription-repository.ts` (<= 250 lines).
+- [x] `InMemorySubscriptionRepository` with `.clear()`.
+- [x] Redis subscription set caching service (`adapters/redis/subscription-cache.service.ts`).
+- [x] Atomic subscription flow:
   - Creates/deletes subscription record in PostgreSQL.
   - Updates `channels.subscriber_count` counter.
   - Synchronously updates user's Redis subscription set (`SADD` / `SREM`).
-- [ ] `GET /v1/feed/subscriptions`:
+- [x] `GET /v1/feed/subscriptions`:
   - Requires authentication.
   - Performs indexed join on `channel_subscriptions` -> `videos` (where `visibility = 'public'` and `status = 'READY'`).
   - Cursor pagination `(created_at, id)`.
-- [ ] Integration tests verifying subscription lifecycle, count consistency, Redis cache synchronization, and feed isolation.
+- [x] Integration tests verifying subscription lifecycle, count consistency, Redis cache synchronization, and feed isolation.
 
 ## Out of scope
 
@@ -58,14 +58,14 @@ This ticket delivers:
 ## Notes for the implementer
 
 - Efficient subscription feed query:
-  `sql
+  ```sql
   SELECT v.* FROM videos v
   INNER JOIN channels c ON v.owner_id = c.user_id
   INNER JOIN channel_subscriptions s ON s.channel_id = c.id
   WHERE s.subscriber_id = :currentUserId AND v.visibility = 'public' AND v.status = 'READY'
   ORDER BY v.created_at DESC, v.id DESC
   LIMIT :limit;
-  `
+  ```
 - File discipline: Keep repository strictly under 250 lines.
 
 ## Testing plan
@@ -76,6 +76,6 @@ This ticket delivers:
 
 ## Definition of Done
 
-- [ ] All ACs green under pnpm test and bun test.
-- [ ] pnpm typecheck && pnpm lint pass with zero warnings or errors.
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [x] All ACs green under pnpm test and bun test.
+- [x] pnpm typecheck && pnpm lint pass with zero warnings or errors.
+- [x] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.

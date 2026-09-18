@@ -1,6 +1,6 @@
 import type { Action, PolicyRule } from '../types';
 import { canManageCategory, canViewAllAnalytics } from './admin-policy';
-import { canManageChannel, canUpdateChannel } from './channel-policy';
+import { canManageChannel, canSubscribeChannel, canUpdateChannel } from './channel-policy';
 import { canCreateComment, canDeleteComment, canPinComment } from './comment-policy';
 import {
   canCreateVideo,
@@ -23,6 +23,7 @@ export const POLICIES: Record<Action, PolicyRule> = {
   'comment:pin': canPinComment,
   'channel:update': canUpdateChannel,
   'channel:manage': canManageChannel,
+  'channel:subscribe': canSubscribeChannel,
   'category:manage': canManageCategory,
   'analytics:view_all': canViewAllAnalytics,
 };
@@ -39,6 +40,8 @@ export {
   canPinComment,
   canUpdateChannel,
   canManageChannel,
+  canSubscribeChannel,
   canManageCategory,
   canViewAllAnalytics,
 };
+

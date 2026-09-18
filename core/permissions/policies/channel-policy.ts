@@ -32,3 +32,7 @@ export const canManageChannel: PolicyRule = (user: UserContext | null, res?: Res
   const ownerId = resource.userId ?? resource.ownerId;
   return Boolean(ownerId && ownerId === user.id);
 };
+
+export const canSubscribeChannel: PolicyRule = (user: UserContext | null): boolean => {
+  return Boolean(user?.id);
+};

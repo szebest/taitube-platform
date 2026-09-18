@@ -10,7 +10,7 @@ export type VideoAction =
 
 export type CommentAction = 'comment:create' | 'comment:delete' | 'comment:pin';
 
-export type ChannelAction = 'channel:update' | 'channel:manage';
+export type ChannelAction = 'channel:update' | 'channel:manage' | 'channel:subscribe';
 
 export type AdminAction = 'category:manage' | 'analytics:view_all';
 

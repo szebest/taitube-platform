@@ -77,3 +77,35 @@ export function decodeFeedCursor(cursor?: string): DecodedFeedCursor | null {
   }
   throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
 }
+
+export function encodeSubscriptionCursor(item: {
+  createdAt: Date | string;
+  channelId: string;
+}): string {
+  const d =
+    item.createdAt instanceof Date
+      ? item.createdAt.toISOString()
+      : new Date(item.createdAt).toISOString();
+  return Buffer.from(JSON.stringify({ createdAt: d, channelId: item.channelId })).toString(
+    'base64url'
+  );
+}
+
+export function decodeSubscriptionCursor(
+  cursor?: string
+): { createdAt: Date; channelId: string } | null {
+  if (!cursor) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+    if (parsed && typeof parsed.createdAt === 'string' && typeof parsed.channelId === 'string') {
+      const date = new Date(parsed.createdAt);
+      if (!Number.isNaN(date.getTime())) {
+        return { createdAt: date, channelId: parsed.channelId };
+      }
+    }
+  } catch {
+    throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
+  }
+  throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
+}
+
