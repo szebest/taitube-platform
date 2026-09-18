@@ -3,6 +3,7 @@ import * as schema from '@vp/db';
 import { type PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import type { PostgresDatabaseClient } from '../postgres-database-client';
+import { PostgresCategoryRepository } from './postgres-category-repository';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
@@ -29,6 +30,7 @@ export class PostgresRepositories implements Repositories {
   readonly users: PostgresUserRepository;
   readonly dlq: PostgresDlqRepository;
   readonly outbox: PostgresOutboxRepository;
+  readonly categories: PostgresCategoryRepository;
 
   private readonly sql?: Sql;
 
@@ -62,6 +64,7 @@ export class PostgresRepositories implements Repositories {
     this.users = new PostgresUserRepository(db);
     this.dlq = new PostgresDlqRepository(db);
     this.outbox = new PostgresOutboxRepository(db);
+    this.categories = new PostgresCategoryRepository(db);
   }
 
   async close(): Promise<void> {

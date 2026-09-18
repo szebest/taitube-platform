@@ -330,6 +330,16 @@ export class InMemoryVideoRepository extends VideoRepository {
     return counts;
   }
 
+  countByCategoryId(categoryId: string): number {
+    let count = 0;
+    for (const v of this.videosMap.values()) {
+      if (v.categoryId === categoryId && !v.deletedAt) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   clear(): void {
     this.videosMap.clear();
   }

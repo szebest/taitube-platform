@@ -47,6 +47,9 @@ importers:
       '@vp/db':
         specifier: workspace:*
         version: link:../packages/db
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../packages/errors
       '@vp/observability':
         specifier: workspace:*
         version: link:../packages/observability

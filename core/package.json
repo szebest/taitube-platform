@@ -30,6 +30,16 @@
       "types": "./dist/repositories/*.d.ts",
       "import": "./dist/repositories/*.js",
       "default": "./dist/repositories/*.js"
+    },
+    "./domain": {
+      "types": "./dist/domain/index.d.ts",
+      "import": "./dist/domain/index.js",
+      "default": "./dist/domain/index.js"
+    },
+    "./domain/*": {
+      "types": "./dist/domain/*.d.ts",
+      "import": "./dist/domain/*.js",
+      "default": "./dist/domain/*.js"
     }
   },
   "devDependencies": {

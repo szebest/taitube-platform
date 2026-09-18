@@ -1,6 +1,7 @@
 import {
   bigint,
   bigserial,
+  boolean,
   index,
   integer,
   jsonb,
@@ -65,6 +66,24 @@ export const users = pgTable('users', {
   createdAt: timestamptz('created_at').notNull().defaultNow(),
 });
 
+export const categories = pgTable(
+  'categories',
+  {
+    id: uuid('id').primaryKey(),
+    slug: text('slug').notNull().unique(),
+    name: text('name').notNull(),
+    description: text('description'),
+    iconUrl: text('icon_url'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('categories_sort_order_name_idx').on(table.sortOrder, table.name),
+  ]
+);
+
 export const videos = pgTable(
   'videos',
   {
@@ -72,6 +91,7 @@ export const videos = pgTable(
     ownerId: uuid('owner_id')
       .notNull()
       .references(() => users.id),
+    categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
     title: text('title').notNull().default(''),
     description: text('description').notNull().default(''),
     visibility: text('visibility').notNull().default('private'),
@@ -101,6 +121,7 @@ export const videos = pgTable(
   (table) => [
     index('videos_owner_created_idx').on(table.ownerId, table.createdAt.desc()),
     index('videos_status_updated_idx').on(table.status, table.updatedAt),
+    index('videos_category_id_idx').on(table.categoryId),
   ]
 );
 
@@ -246,3 +267,5 @@ export type DlqEntry = typeof dlqEntries.$inferSelect;
 export type NewDlqEntry = typeof dlqEntries.$inferInsert;
 export type OutboxRow = typeof outbox.$inferSelect;
 export type NewOutboxRow = typeof outbox.$inferInsert;
+export type Category = typeof categories.$inferSelect;
+export type NewCategory = typeof categories.$inferInsert;

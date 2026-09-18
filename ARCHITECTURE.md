@@ -22,6 +22,9 @@ This document describes the architectural boundaries, ports, and adapters layer 
 ```
 video-pipeline/
 ├── core/
+│   ├── domain/                     # Domain entities and value objects
+│   │   ├── category.ts             # Category domain model and input interfaces
+│   │   └── index.ts
 │   ├── ports/                      # Core abstract ports & domain models
 │   │   ├── health-checkable.ts     # HealthCheckable interface
 │   │   ├── database-client.ts      # Low-level DatabaseClient port (query, execute, transaction)
@@ -32,6 +35,7 @@ video-pipeline/
 │   │   ├── flow-producer.ts        # FlowProducer port (flow graph additions)
 │   │   └── index.ts
 │   └── repositories/               # Domain repository interfaces
+│       ├── category-repository.port.ts # CategoryRepositoryPort
 │       ├── video-repository.ts     # VideoRepository
 │       ├── upload-repository.ts    # UploadRepository
 │       ├── step-repository.ts      # StepRepository (fencing tokens, CAS claims)
@@ -45,6 +49,7 @@ video-pipeline/
 │   ├── postgres/
 │   │   ├── postgres-database-client.ts
 │   │   ├── repositories/           # Individual Postgres repository implementations
+│   │   │   ├── postgres-category-repository.ts
 │   │   │   ├── postgres-video-repository.ts
 │   │   │   ├── postgres-upload-repository.ts
 │   │   │   ├── postgres-step-repository.ts
@@ -55,7 +60,10 @@ video-pipeline/
 │   │   │   └── index.ts
 │   │   └── index.ts
 │   ├── s3/                         # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
-│   ├── redis/                      # RedisCacheClient (ioredis)
+│   ├── redis/                      # RedisCacheClient (ioredis) & CategoryCacheService (L1 LRU + L2 Redis)
+│   │   ├── redis-cache-client.ts
+│   │   ├── category-cache.service.ts
+│   │   └── index.ts
 │   ├── bullmq/                     # BullMqJobQueue & BullMqFlowProducer (bullmq)
 │   ├── in-memory/                  # In-memory test doubles
 │   │   ├── in-memory-database-client.ts
@@ -66,6 +74,7 @@ video-pipeline/
 │   │   ├── in-memory-flow-producer.ts
 │   │   ├── repositories/           # Individual in-memory repository implementations
 │   │   │   ├── types.ts
+│   │   │   ├── in-memory-category-repository.ts
 │   │   │   ├── in-memory-video-repository.ts
 │   │   │   ├── in-memory-upload-repository.ts
 │   │   │   ├── in-memory-step-repository.ts
