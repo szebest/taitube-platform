@@ -25,22 +25,23 @@ This ticket delivers:
    - PATCH /v1/creator/videos/:id: Comprehensive metadata update (title, description, categoryId, tags, visibility, selectedThumbnail).
    - DELETE /v1/creator/videos/:id: Creator video deletion with soft-delete CAS and background asset cleanup.
 3. **Admin moderation overrides**:
-   - Admins can edit visibility or take down (visibility = 'private', status = 'REJECTED') any video violating terms.
+   - Admins can edit visibility or take down (visibility = 'private', status = 'REJECTED') any video violating terms via `@vp/permissions`.
 
 ## Acceptance criteria
 
 - [ ] Migration adding category_id (FK to categories), tags (text[] default '{}'), and custom_thumbnail_key (text) to videos table.
 - [ ] GIN index on videos.tags for tag queries.
 - [ ] GET /v1/creator/videos:
-  - Scoped to authenticated creator.
+  - Scoped via `drizzleWhere` with `videoOwnerScope(user)` and `notDeletedScope(videos)`.
   - Returns array of video items including viewsCount, likesCount, commentsCount, status, and visibility.
   - Supports filters by status, visibility, and pagination.
 - [ ] PATCH /v1/creator/videos/:id:
-  - Verifies ownership or admin via ticket 39 can(user, 'video:update', video).
+  - Verifies ownership or admin via `assertCan(canUpdateVideo({ user, video }))` from `@vp/permissions` (zero manual checks).
   - Validates tags (max 30 tags, max 30 chars each).
   - Validates categoryId exists in categories table.
   - Optimistic locking via version number (prevents concurrent overwrite conflicts).
 - [ ] DELETE /v1/creator/videos/:id:
+  - Verifies deletion authorization via `assertCan(canDeleteVideo({ user, video }))` from `@vp/permissions`.
   - Soft-deletes video (status = 'DELETED', deleted_at = NOW()).
   - Appends video.deleted audit event in video_events.
 - [ ] Integration tests verifying metadata updates, optimistic lock protection, and creator studio library query results.

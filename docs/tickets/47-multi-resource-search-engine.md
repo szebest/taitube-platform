@@ -48,6 +48,8 @@ This ticket delivers the **Multi-Resource Search & Discovery Engine**:
          | { type: 'playlist'; data: PlaylistSummaryView };
        ```
      - When `type=all`, if an exact or strong channel match occurs (e.g. searching *"fireship"*), the channel card is pinned to the top of the search feed, followed by top videos and playlists.
+   - **Row-Level Security via `drizzleWhere`:**
+     - Search queries across videos and playlists MUST compose `drizzleWhere` with `videoReadScope(user)`, `playlistReadScope(user)`, and `notDeletedScope` to guarantee that private videos and private playlists are never returned to unauthorized users.
 
 3. **Multi-Signal Relevance Scoring & Typo Fallback**:
    - **Blended Ranking:** Combines `ts_rank_cd` with logarithmic popularity metrics:

@@ -21,11 +21,12 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
    - **`playlists` table:** `id UUIDv7 PK, owner_id UUID FK to users.id, title text, description text, visibility text ('public', 'unlisted', 'private'), is_system boolean default false, custom_thumbnail_key text, created_at, updated_at`.
    - **`playlist_items` table:** `id UUIDv7 PK, playlist_id UUID FK on delete cascade, video_id UUID FK on delete cascade, position integer not null, added_at timestamptz not null`. Unique constraint on `(playlist_id, video_id)`. Index on `(playlist_id, position)`.
    - **System "Watch Later" Playlist:** Upon first user authentication (or JIT channel creation), automatically provisions a persistent, private system playlist named `"Watch Later"` (`is_system = true`, `visibility = 'private'`). System playlists cannot be deleted by users.
-   - **Privacy & Ownership Rules:**
+   - **Privacy & Ownership Enforced via `@vp/permissions` & `drizzleWhere`:**
+     - Evaluated declaratively via `@vp/permissions` (`canReadPlaylist`, `canUpdatePlaylist`, `canDeletePlaylist`, `canManagePlaylistItems`) and guarded by `assertCan(...)`.
      - `PUBLIC`: Readable by any user, indexed in search, visible on creator channel's Playlists tab.
      - `UNLISTED`: Readable by anyone with the playlist ID / direct share link, excluded from public search and channel tab.
-     - `PRIVATE`: Readable and editable ONLY by the playlist owner (`user.id === playlist.owner_id`).
-     - Only the playlist owner can add, reorder, or delete items.
+     - `PRIVATE`: Readable and editable ONLY by the playlist owner; enforced at the SQL level via `drizzleWhere(playlistReadScope(user))`.
+     - Only the playlist owner can add, reorder, or delete items. Zero manual hand-checking of user IDs in route handlers or domain services.
 
 2. **Drag-and-Drop Item Reordering**:
    - Atomic reordering endpoint `PUT /v1/playlists/:id/reorder` supporting both:

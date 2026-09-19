@@ -25,10 +25,13 @@ This ticket delivers:
    - Fastify singleflight promise coalescing on comment cache misses.
 4. **Denormalized Comment Counter**:
    - `videos.comments_count` updated transactionally on comment creation/deletion.
-5. **Moderation with RBAC/ABAC**:
-   - Comment author can edit (`PATCH`) and delete (`DELETE`) their comment.
-   - Video owner can pin/unpin comments (`POST /v1/comments/:id/pin`) and delete any comment under their video.
-   - Admin can delete any comment.
+5. **Moderation via Declarative Permissions (`@vp/permissions`) & Query Scoping**:
+   - Enforce authorization strictly via `@vp/permissions` (`canCreateComment`, `canUpdateComment`, `canDeleteComment`, `canPinComment`) using `assertCan(...)` guards.
+   - Author can edit (`PATCH`) and delete (`DELETE`) their comment.
+   - Video creator can pin/unpin comments (`POST /v1/comments/:id/pin`) and moderate/delete any comment under their video.
+   - Admin superuser bypass allows deleting any comment.
+   - Repository queries use `drizzleWhere` with `notDeletedScope` to guarantee filtered active comments.
+   - Zero manual hand-checking of `user.id === comment.authorId` in routes or services.
 
 ## Acceptance criteria
 
@@ -37,16 +40,16 @@ This ticket delivers:
   - Composite indexes: `(video_id, parent_id, is_pinned DESC, like_count DESC, created_at DESC)` and `(video_id, parent_id, is_pinned DESC, created_at DESC)`.
 - [ ] Add `comments_count integer not null default 0` to `videos` table.
 - [ ] `CommentRepositoryPort` in `@taitube/core/repositories/comment-repository.port.ts`.
-- [ ] `PostgresCommentRepository` in `adapters/postgres/repositories/postgres-comment-repository.ts` (<= 250 lines).
+- [ ] `PostgresCommentRepository` in `adapters/postgres/repositories/postgres-comment-repository.ts` (<= 250 lines) composing queries via `drizzleWhere`.
 - [ ] `InMemoryCommentRepository` in `adapters/in-memory/repositories/in-memory-comment-repository.ts`.
 - [ ] Redis hot comments cache service (`adapters/redis/comment-cache.service.ts`).
 - [ ] Endpoints:
   - `GET /v1/videos/:id/comments`: Returns top-level comments (with pinned comments first), author channel profile, and reply counts. Supports `sort=top|newest`, keyset cursor + fallback `page`/`size`.
   - `GET /v1/comments/:commentId/replies`: Returns threaded replies under a specific comment (keyset paginated).
-  - `POST /v1/videos/:id/comments`: Adds a comment or reply (validates max 2000 chars, non-empty), increments `videos.comments_count`, and purges hot comments cache.
-  - `PATCH /v1/comments/:id`: Edits comment content (`is_edited = true`, checks author permission).
-  - `DELETE /v1/comments/:id`: Deletes comment, decrements `videos.comments_count`, purges cache.
-  - `POST /v1/comments/:id/pin`: Pins comment (verifies video owner or admin; unpins existing pinned comment on video).
+  - `POST /v1/videos/:id/comments`: Adds a comment or reply (validates max 2000 chars, non-empty, checks `canCreateComment`), increments `videos.comments_count`, and purges hot comments cache.
+  - `PATCH /v1/comments/:id`: Edits comment content (`is_edited = true`, guards with `assertCan(canUpdateComment({ user, comment }))`).
+  - `DELETE /v1/comments/:id`: Deletes comment (guards with `assertCan(canDeleteComment({ user, comment, videoOwnerId }))`), decrements `videos.comments_count`, purges cache.
+  - `POST /v1/comments/:id/pin`: Pins comment (guards with `assertCan(canPinComment({ user, videoOwnerId }))`; unpins existing pinned comment on video).
 - [ ] Concurrency & route tests verifying threading, dual sorting, hot comments caching, and moderation guards.
 
 ## Out of scope

@@ -20,7 +20,7 @@ This ticket builds the dedicated **Taitube Creator Studio** (`/studio`):
    - Headless data table with sorting by date, views, likes, and comments.
    - Multi-select row actions: batch delete, batch visibility change (`Public` / `Unlisted` / `Private`).
    - Status indicators (`UPLOADING`, `PROCESSING`, `READY`, `FAILED`).
-   - Quick action controls: Edit Details, Change Visibility, View Analytics, and Delete Video (with confirmation modal).
+   - Quick action controls: Edit Details, Change Visibility, View Analytics, and Delete Video (with confirmation modal), conditionally rendered via `useCan` and typed helpers (`canUpdateVideo`, `canDeleteVideo`) from `@vp/permissions`.
 2. **Video Metadata Editor (`/studio/videos/:id/edit`) with TanStack Form (`@tanstack/react-form`)**:
    - Built on `@tanstack/react-form` + `@tanstack/zod-form-adapter` for reactive, zero-re-render form validation with `@taitube/api-contracts`.
    - Form fields: Title, Description (with markdown preview), Category dropdown (populated from dynamic Ticket 37 API), Tags input chip field.
@@ -38,7 +38,7 @@ This ticket builds the dedicated **Taitube Creator Studio** (`/studio`):
 
 ## Acceptance criteria
 
-- [ ] Route `/studio` protected by Creator / User authentication guard.
+- [ ] Route `/studio` protected by Creator / User authentication guard and `@vp/permissions` checks.
 - [ ] Headless data table built on `@tanstack/react-table` displaying video library with sorting, row selection, status badges, pagination, and search filter.
 - [ ] Full metadata editing form built on `@tanstack/react-form` + `@tanstack/zod-form-adapter` with live validation using shared Zod schemas.
 - [ ] Category selector dynamically populated from `GET /v1/categories`.
