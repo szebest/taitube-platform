@@ -56,7 +56,7 @@ echo "==> Target file: $FILEPATH ($FILESIZE bytes)"
 # 2. Mint dev JWT
 echo "==> Minting dev JWT..."
 DEV_USER_ID="00000000-0000-7000-8000-000000000001"
-TOKEN=$(pnpm --silent dev-token mint --sub "$DEV_USER_ID" --role pro --ttl 1h --raw)
+TOKEN=$(pnpm --silent dev-token mint --sub "$DEV_USER_ID" --role user --ttl 1h --raw)
 
 # 3. Request upload URL (POST /v1/uploads)
 echo "==> Requesting upload URL from API ($API_URL/v1/uploads)..."
