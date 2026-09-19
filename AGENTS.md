@@ -49,6 +49,8 @@ Agents working in a specific package or app MUST follow its dedicated `AGENTS.md
   *Postgres, Redis, S3, BullMQ concrete adapters and autonomous in-memory test doubles.*
 - **Shared Packages:**  
   [packages/config](packages/config/AGENTS.md) · [packages/db](packages/db/AGENTS.md) · [packages/errors](packages/errors/AGENTS.md) · [packages/events](packages/events/AGENTS.md) · [packages/ffmpeg](packages/ffmpeg/AGENTS.md) · [packages/job-contracts](packages/job-contracts/AGENTS.md) · [packages/observability](packages/observability/AGENTS.md) · [packages/storage](packages/storage/AGENTS.md) · [packages/testing](packages/testing/AGENTS.md) · [packages/tsconfig](packages/tsconfig/AGENTS.md)
+- **Infrastructure & Cloud Topologies (`infra`):** [infra/AGENTS.md](infra/AGENTS.md)  
+  [infra/compose](infra/compose/AGENTS.md) · [infra/k8s](infra/k8s/AGENTS.md) · [infra/terraform](infra/terraform/AGENTS.md)
 - **Developer Tools (`tools`):** [tools/AGENTS.md](tools/AGENTS.md)  
   *dev-token, gen-video, upload-client, chaos, compose-autoscaler.*
 
