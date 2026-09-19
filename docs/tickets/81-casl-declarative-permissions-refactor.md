@@ -13,14 +13,39 @@
 
 ## What to build
 
-Currently, authorization and data access control across the platform suffer from two fundamental architectural problems:
-1. **Imperative rule ladders:** Policies in `@vp/core/permissions` are implemented as hand-rolled, imperative `if/else` ladders for each individual action, making them difficult to maintain, compose, and extend.
-2. **Fragmented, ad-hoc enforcement:** Domain services like `VideoService` (`if (user.role !== 'admin' && existing.ownerId !== user.id)`) and `UploadService` (`assertOwnership`) bypass the permission engine entirely, using duplicated, hand-written equality checks.
+Currently, authorization, validation, and data access control across the platform suffer from three fundamental architectural problems:
+1. **Imperative rule ladders:** Policies in `@vp/core/permissions` are implemented as hand-rolled, imperative `if/else` ladders for each individual action, making them difficult to maintain, compose, and audit.
+2. **Fragmented, ad-hoc enforcement:** Domain services like `VideoService` (`if (user.role !== 'admin' && existing.ownerId !== user.id)`) and `UploadService` (`assertOwnership`) bypass the permission engine entirely, using duplicated, hand-written equality checks with inconsistent error structures.
 3. **Manual SQL query filtering:** Repositories construct ad-hoc SQL `where` condition arrays manually (e.g. `[eq(v.visibility, 'public'), eq(v.status, 'READY'), sql\`${v.deletedAt} IS NULL\`]`), risking security leaks if a query accidentally omits soft-delete or visibility constraints.
 
 Furthermore, as the project expands to include the React client (`apps/web`), sharing permission rules between backend and frontend requires a clean, isomorphic, zero-I/O authorization package that is decoupled from backend-specific database ports and repository interfaces.
 
-### Architectural Solution
+### Architectural Solution: Generalized Adapters & Design Patterns
+
+We will implement a clean, decoupled architecture built on Hexagonal Architecture (Ports & Adapters), Factory Methods, and Adapter Patterns. Every external or framework-specific seam is formalized as an explicit **Adapter**:
+
+```
+                                  ┌───────────────────────────┐
+                                  │   packages/permissions    │
+                                  │   (Pure Domain Core)      │
+                                  │                           │
+                                  │  - getUserPermissions     │
+                                  │  - typed canX helpers     │
+                                  │  - assertCan guard        │
+                                  └─────────────┬─────────────┘
+                                                │
+         ┌──────────────────────────────┬───────┴──────────────────────┬──────────────────────────────┐
+         ▼                              ▼                              ▼                              ▼
+┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
+│  DrizzleScoping  │          │   FastifyAuth    │          │  ProblemDetails  │          │ ReactPermissions │
+│     Adapter      │          │     Adapter      │          │   ErrorAdapter   │          │     Adapter      │
+│  (Database SQL)  │          │ (HTTP Transport) │          │(Error/Validation)│          │  (Frontend UI)   │
+│                  │          │                  │          │                  │          │                  │
+│ - drizzleWhere   │          │ - authorize()    │          │ - assertCan()    │          │ - useCan()       │
+│ - videoReadScope │          │ - preHandler     │          │ - RFC 9457 401   │          │ - pure functional│
+│ - notDeletedScope│          │ - req.authorize  │          │ - RFC 9457 403   │          │   zero bloat     │
+└──────────────────┘          └──────────────────┘          └──────────────────┘          └──────────────────┘
+```
 
 #### 1. Decoupled Isomorphic Package (`packages/permissions` / `@vp/permissions`)
 - Create a dedicated `@vp/permissions` package under `packages/permissions/`.
@@ -44,23 +69,52 @@ Furthermore, as the project expands to include the React client (`apps/web`), sh
   - `canPinComment({ user, videoOwnerId })`
   - `canUpdateChannel({ user, channel })`
   - `canManageCategory({ user })`
-- Typed assertion helper: `assertCan(allowed: boolean, message?: string)` that throws RFC 9457 `PermanentError(ErrorCodes.FORBIDDEN)`.
 
-#### 4. Backend Database Query Scoping Abstraction (`drizzleWhere` / Row-Level Scopes)
-To prevent row-level security leaks in SQL queries without loading entire collections into memory, provide a declarative Drizzle query scoping helper (`drizzleWhere` / `applyScope` in `adapters/postgres/scoping/` or `packages/db`):
-- **Global Invariants Injection:** Automatically applies standard safety filters (e.g. `notDeleted(table)`, excluding soft-deleted rows where `deletedAt IS NOT NULL` or `status = 'DELETED'`).
-- **Declarative Access Scopes:** Translates user authorization context into clean Drizzle SQL expressions:
+#### 4. Generalized Error & Validation Handling (`ProblemDetailsErrorAdapter`)
+Authorization and validation failures must be generalized and standardized across the entire application stack:
+- **Strict Distinction between 401 and 403:**
+  - **401 `UNAUTHORIZED`:** Caller is unauthenticated or anonymous (`userContext === null`), requiring authentication to proceed.
+  - **403 `FORBIDDEN`:** Caller is authenticated but lacks required role or resource ownership.
+- **Assertion Adapter (`assertCan`):**
+  - High-level assertion guard:
+    ```typescript
+    assertCan(allowed: boolean, options: {
+      action: string;
+      subject: string;
+      user: UserContext | null;
+      message?: string;
+    }): asserts allowed
+    ```
+  - Automatically throws standardized RFC 9457 `PermanentError(ErrorCodes.UNAUTHORIZED)` if unauthenticated, or `PermanentError(ErrorCodes.FORBIDDEN)` with rich contextual metadata (action, subject, required capability).
+- **Validation Adapter Integration:**
+  - Standardized validation error adapter converting Zod schema validation errors into RFC 9457 Problem Details with structured `invalidParams: [{ name: string, reason: string }]`.
+
+#### 5. Database Query Scoping Adapter (`DrizzleScopingAdapter` / `drizzleWhere`)
+To prevent row-level security leaks in SQL queries without loading entire collections into memory, provide a declarative Drizzle query scoping adapter in `adapters/postgres/scoping/` (or `packages/db`):
+- **Composable Condition Combiner (`drizzleWhere`):**
+  - Adapter function `drizzleWhere(...conditions: (SQL | undefined | null | false)[])`:
+    - Safely cleanses `undefined`, `null`, and boolean flags.
+    - Flattens nested `and(...)` / `or(...)` conditions into a single, sanitized SQL clause.
+    - Prevents empty `and()` clauses and syntax anomalies.
+- **Row-Level Domain Scopes:**
   - `videoReadScope(user: UserContext | null)` generating:
-    - Admin: unconditional pass (`sql\`1 = 1\`` or unconstrained).
+    - Admin: unconditional pass (`undefined` or `sql\`1 = 1\``).
     - Authenticated User: `or(eq(videos.visibility, 'public'), eq(videos.visibility, 'unlisted'), eq(videos.ownerId, user.id))`.
     - Anonymous Guest: `eq(videos.visibility, 'public')`.
-- **Composable Condition Combiner:** `drizzleWhere(...conditions)` safely cleanses `undefined`, `null`, or boolean flags, flattening nested `and(...)` / `or(...)` conditions into a single, sanitized SQL clause.
-- **Repository Integration:** All repository list and feed queries (`listPublic`, `listByOwner`, search queries) compose their filters using `drizzleWhere` instead of manual array mutation.
+  - `videoOwnerScope(user: UserContext)`: Restricts queries strictly to `eq(videos.ownerId, user.id)`.
+  - `notDeletedScope(table)`: Enforces soft-delete invariants (`sql\`${table.deletedAt} IS NULL\`` or `ne(table.status, 'DELETED')`).
+- **Repository Integration:** All repository list and feed queries (`listPublic`, `listByOwner`, search queries) compose their filters using the `drizzleWhere` adapter instead of manual array mutation.
 
-#### 5. Complete Elimination of Manual Checks
+#### 6. HTTP Transport Authorization Adapter (`FastifyAuthorizationAdapter`)
+- In `apps/api/src/plugins/authorization.ts`: Adapts HTTP route handling by providing `server.authorize(canXHelper, resolver)` and `request.authorize(canXHelper, resource)`.
+- Eliminates inline authorization code in route adapters, maintaining thin transport discipline.
+
+#### 7. Frontend Reactive State Adapter (`ReactPermissionsAdapter`)
+- In `apps/web`: Pure functional React hook `useCan(canXHelper, params)` that reactively evaluates permissions against the current session without external framework dependencies (`@casl/react`).
+
+#### 8. Complete Elimination of Manual Checks
 - Strictly FORBID manual hand-checks of user IDs, roles, or ownership (`if (user.id !== ownerId)`) in any service, route, or repository.
 - Refactor `VideoService`, `UploadService`, and route handlers to systematically enforce authorization through `assertCan(canX(...))`.
-- Update Fastify authorization decorators to align with the new helper layer.
 
 ## Acceptance criteria
 
@@ -73,29 +127,36 @@ To prevent row-level security leaks in SQL queries without loading entire collec
   - Global builder `getUserPermissions(user: UserContext | null)` compiles the unified ability without class inheritance.
 - [ ] **Library-Agnostic `canX` Helper API:**
   - Fully typed helper functions for all domain actions (`canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canPublishVideo`, `canAccessUpload`, `canDeleteComment`, `canPinComment`, `canUpdateChannel`, `canManageCategory`).
-  - `assertCan(condition, message)` utility throwing `PermanentError(ErrorCodes.FORBIDDEN)`.
-- [ ] **Declarative Database Query Scoper (`drizzleWhere`):**
-  - Composable Drizzle SQL scoping helper `drizzleWhere(...conditions: (SQL | undefined | null | false)[])` sanitizing and composing `and(...)` clauses.
+- [ ] **Generalized Error & Validation Adapter (`ProblemDetailsErrorAdapter`):**
+  - `assertCan(allowed, { action, subject, user, message })` guard throwing RFC 9457 `UNAUTHORIZED` (401) or `FORBIDDEN` (403) with structured error context.
+  - Generalized validation error handling formatting Zod failures into RFC 9457 `VALIDATION_FAILED` with `invalidParams`.
+- [ ] **Database Query Scoping Adapter (`DrizzleScopingAdapter` / `drizzleWhere`):**
+  - Composable condition combiner `drizzleWhere(...conditions)` sanitizing and composing `and(...)` clauses.
   - Pre-defined row-level authorization scopes (`videoReadScope`, `videoOwnerScope`, `notDeletedScope`).
   - Repositories (`PostgresVideoRepository.listPublic`, `listByOwner`) refactored to use `drizzleWhere` and query scopes, eliminating manual condition array pushing.
+- [ ] **HTTP Transport Authorization Adapter (`FastifyAuthorizationAdapter`):**
+  - Fastify decorator and preHandler adapter seamlessly bridging route schemas and `canX` helpers.
+- [ ] **Frontend Reactive Adapter (`ReactPermissionsAdapter`):**
+  - Lightweight `useCan` hook in `apps/web` consuming typed helpers with zero framework bloat.
 - [ ] **Elimination of Hand-Written Permission Checks:**
   - `VideoService`: replace manual `user.role !== 'admin' && existing.ownerId !== user.id` with `assertCan(canUpdateVideo(...))` and `assertCan(canDeleteVideo(...))`.
   - `UploadService`: replace private `assertOwnership` with `assertCan(canAccessUpload(...))`.
   - All route handlers and services across `apps/api` delegate access control exclusively to `@vp/permissions`.
 - [ ] **Governance & Documentation:**
-  - Add Rule 13 to `AGENTS.md` strictly forbidding manual hand-written permission checks in any service, route, or repository.
-  - Update `docs/SDD.md` §11 (Security / Authorization) to document the `@casl/ability` functional architecture, `packages/permissions`, and `drizzleWhere` query scoping.
+  - Rule 13 maintained in `AGENTS.md` strictly forbidding manual hand-written permission checks in any service, route, or repository.
+  - Update `docs/SDD.md` §11 (Security / Authorization) to document the adapter architecture, `@casl/ability` functional core, and `drizzleWhere` query scoping.
   - Re-run `python3 docs/tickets/gen-index.py` to keep the ticket index synchronized.
 
 ## Out of scope
 
-- `@casl/react` or UI framework integrations (React client will use the pure `canX` helper functions directly).
+- `@casl/react` or UI framework integrations (React client will use the pure `canX` helper functions directly via `useCan`).
 - Automated general-purpose AST compiler from CASL rules into SQL (domain scopes remain clean, explicit Drizzle SQL builders via `drizzleWhere`).
 
 ## Testing plan
 
 - **Unit tests:** Matrix tests in `packages/permissions` covering all action x role x ownership permutations (GUEST, USER, CREATOR, MODERATOR, ADMIN).
-- **Query Scoper tests:** Test `drizzleWhere` and query scopes (`videoReadScope`, `notDeletedScope`) asserting expected SQL output for admin, authenticated, and guest callers.
+- **Error Adapter tests:** Test `assertCan` asserting 401 when user is anonymous, 403 with structured RFC 9457 details when authenticated user is forbidden.
+- **Query Scoper tests:** Test `drizzleWhere` condition combiner with varied inputs (null, undefined, false, active SQL) and query scopes (`videoReadScope`, `notDeletedScope`).
 - **Service integration tests:** Verify that `VideoService` and `UploadService` throw RFC 9457 `FORBIDDEN` (403) when invoked by non-owners and succeed when authorized.
 - **Dual-runtime tests:** Run under `vitest` and `bun test`.
 
@@ -103,5 +164,5 @@ To prevent row-level security leaks in SQL queries without loading entire collec
 
 - [ ] All ACs satisfied with verifiable test output.
 - [ ] `pnpm test`, `bun test`, `pnpm typecheck`, and `pnpm lint` pass with zero warnings or errors.
-- [ ] Rule 13 added to `AGENTS.md` and SDD §11 updated.
+- [ ] Rule 13 maintained in `AGENTS.md` and SDD §11 updated.
 - [ ] Ticket status updated and `python3 docs/tickets/gen-index.py` re-run.
