@@ -54,11 +54,11 @@ Following the deep module principles (`codebase-design`):
 ### Dependency Inversion & Segregation
 - **Ports (`@vp/core/ports`)**: Abstract class contracts extending `HealthCheckable` (`DatabaseClient`, `StorageClient`, `MultipartStorage`, `CacheClient`, `JobQueue`, `FlowProducer`).
 - **Repositories (`@vp/core/repositories`)**: Pure domain entity contracts decoupled from the driver:
-  - `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, and the aggregating `Repositories` container.
+  - `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, `CategoryRepositoryPort`, `VideoReactionRepositoryPort`, and the aggregating `Repositories` container.
 - **Adapters (`@vp/adapters`)**: Concrete implementations (`adapters/s3/`, `adapters/redis/`, `adapters/bullmq/`, `adapters/postgres/`, `adapters/in-memory/`).
 - **Composition Roots**: Only `apps/api/src/app.ts` and `apps/worker/src/runner.ts` instantiate concrete adapters.
 
 ### Modular Repository Rules & File Limits
-1. **One file per repository:** Every repository implementation lives in its own dedicated file in `repositories/` (e.g. `postgres-video-repository.ts`, `in-memory-video-repository.ts`). Never bundle multiple repository implementations into a single file.
-2. **File length bounds:** Target <= 250 lines per file (hard limit: 400 lines / ~10 KB).
-3. **Autonomous in-memory doubles:** In-memory repositories encapsulate their state with `.clear()`, can be instantiated independently, and communicate through port interfaces.
+See [docs/standards/file-discipline.md](docs/standards/file-discipline.md) for modular single-file repository rules, size bounds (<= 250 lines target, 400 lines max), and autonomous in-memory test doubles.
+See [docs/standards/authorization.md](docs/standards/authorization.md) for declarative CASL permission rules and [docs/standards/testing.md](docs/standards/testing.md) for test execution.
+
