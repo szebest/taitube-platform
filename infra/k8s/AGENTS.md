@@ -7,6 +7,7 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
 ## 1. Scope & Topology
 
 `infra/k8s` contains the declarative Kubernetes resources organized using Kustomize:
+
 - `infra/k8s/base/`: Common manifests for API Deployments, Service definitions, Ingress, Worker Deployments (`probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`), and KEDA `ScaledObject` resources.
 - `infra/k8s/overlays/local/`: Local k3d/kind overlay with in-cluster dependencies and nodePort/hostPort mappings.
 - `infra/k8s/overlays/cloud/`: Production cloud overlay targeting external managed services (Neon PostgreSQL, Cloudflare R2, SOPS-encrypted secrets).
