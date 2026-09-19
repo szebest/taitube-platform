@@ -39,6 +39,9 @@ This ticket establishes the **Unified TanStack Architecture** across state, data
    - Headless table infrastructure providing type-safe sorting, filtering, column visibility, and row selection for tabular views.
 6. **Zustand v5 Lightweight Client UI State**:
    - Replaces convoluted Redux / Prop-drilling with a minimalist Zustand v5 store for client-only transient state: active audio volume/preferences and UI sidebar toggle.
+7. **Headless UI & Pure Presentational Views (Rule 14)**:
+   - All UI components must remain purely presentational views that consume custom headless hooks (`useQuery`, `useMutation`, `useCan`, `useForm`).
+   - Embedding complex business logic, raw API calls, inline authorization checks, or state manipulation directly inside UI components is a **STRICT ARCHITECTURAL VIOLATION**.
 
 ## Acceptance criteria
 
@@ -52,6 +55,7 @@ This ticket establishes the **Unified TanStack Architecture** across state, data
 - [ ] Reusable TanStack Form field wrappers created with accessible error messages and Zod validation.
 - [ ] Reusable headless table components configured with `@tanstack/react-table` for data grid views.
 - [ ] Toast notification system triggered by API client error interceptor whenever backend returns RFC 9457 error payload.
+- [ ] Enforce Rule 14: All view components consume headless hooks; zero inline business logic or permission calculations in component files.
 - [ ] Unit tests for API client error handling, TanStack Form validation, and TanStack Query hooks using Vitest 3 and React Testing Library.
 
 ## Out of scope

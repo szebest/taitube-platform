@@ -20,9 +20,11 @@ Currently, authorization, validation, and data access control across the platfor
 
 Furthermore, as the project expands to include the React client (`apps/web`), sharing permission rules between backend and frontend requires a clean, isomorphic, zero-I/O authorization package that is decoupled from backend-specific database ports and repository interfaces.
 
-### Architectural Solution: Generalized Adapters & Design Patterns
+### Architectural Solution: Full Monorepo Sweep, Adapters & Design Patterns
 
-We will implement a clean, decoupled architecture built on Hexagonal Architecture (Ports & Adapters), Factory Methods, and Adapter Patterns. Every external or framework-specific seam is formalized as an explicit **Adapter**:
+We will implement a clean, decoupled architecture built on Hexagonal Architecture (Ports & Adapters), Factory Methods, and Adapter Patterns. Every external or framework-specific seam is formalized as an explicit **Adapter**.
+
+**Crucially, this ticket is not merely a library integration—it is a full-system refactor, cleanup, and integration across the WHOLE current state of the application**, completely replacing every manual permission check and ad-hoc query condition in existence, while enforcing headless UI patterns on the frontend.
 
 ```
                                   ┌───────────────────────────┐
@@ -42,8 +44,8 @@ We will implement a clean, decoupled architecture built on Hexagonal Architectur
 │  (Database SQL)  │          │ (HTTP Transport) │          │(Error/Validation)│          │  (Frontend UI)   │
 │                  │          │                  │          │                  │          │                  │
 │ - drizzleWhere   │          │ - authorize()    │          │ - assertCan()    │          │ - useCan()       │
-│ - videoReadScope │          │ - preHandler     │          │ - RFC 9457 401   │          │ - pure functional│
-│ - notDeletedScope│          │ - req.authorize  │          │ - RFC 9457 403   │          │   zero bloat     │
+│ - videoReadScope │          │ - preHandler     │          │ - RFC 9457 401   │          │ - TanStack hooks │
+│ - notDeletedScope│          │ - req.authorize  │          │ - RFC 9457 403   │          │ - zero bloat     │
 └──────────────────┘          └──────────────────┘          └──────────────────┘          └──────────────────┘
 ```
 
@@ -109,12 +111,14 @@ To prevent row-level security leaks in SQL queries without loading entire collec
 - In `apps/api/src/plugins/authorization.ts`: Adapts HTTP route handling by providing `server.authorize(canXHelper, resolver)` and `request.authorize(canXHelper, resource)`.
 - Eliminates inline authorization code in route adapters, maintaining thin transport discipline.
 
-#### 7. Frontend Reactive State Adapter (`ReactPermissionsAdapter`)
+#### 7. Frontend Reactive State Adapter (`ReactPermissionsAdapter`) & Headless UI Enforcement
 - In `apps/web`: Pure functional React hook `useCan(canXHelper, params)` that reactively evaluates permissions against the current session without external framework dependencies (`@casl/react`).
+- **Strict Headless Rule:** Embedding complex logic, permission calculations, or inline authorization decisions directly inside UI components is a **STRICT ARCHITECTURAL VIOLATION**. All components must consume headless hooks (`useCan`, TanStack Query hooks).
 
-#### 8. Complete Elimination of Manual Checks
-- Strictly FORBID manual hand-checks of user IDs, roles, or ownership (`if (user.id !== ownerId)`) in any service, route, or repository.
-- Refactor `VideoService`, `UploadService`, and route handlers to systematically enforce authorization through `assertCan(canX(...))`.
+#### 8. Complete Monorepo Refactor & Current State Migration
+- Every existing service in `apps/api/src/services/` (`VideoService`, `UploadService`, `ChannelService`, `SubscriptionService`, `ReactionService`, etc.) refactored to replace ad-hoc `if (user.id !== ownerId)` with `assertCan(...)`.
+- Every existing route in `apps/api/src/routes/` verified to delegate through dedicated domain services and authorization preHandlers.
+- All repository queries in `adapters/postgres/repositories/` and in-memory test doubles refactored to use `drizzleWhere` and query scopes.
 
 ## Acceptance criteria
 
@@ -138,12 +142,13 @@ To prevent row-level security leaks in SQL queries without loading entire collec
   - Fastify decorator and preHandler adapter seamlessly bridging route schemas and `canX` helpers.
 - [ ] **Frontend Reactive Adapter (`ReactPermissionsAdapter`):**
   - Lightweight `useCan` hook in `apps/web` consuming typed helpers with zero framework bloat.
-- [ ] **Elimination of Hand-Written Permission Checks:**
+  - Strict headless UI rule enforced: zero inline permission calculations in UI components.
+- [ ] **Full Monorepo State Migration & Cleanup:**
   - `VideoService`: replace manual `user.role !== 'admin' && existing.ownerId !== user.id` with `assertCan(canUpdateVideo(...))` and `assertCan(canDeleteVideo(...))`.
   - `UploadService`: replace private `assertOwnership` with `assertCan(canAccessUpload(...))`.
-  - All route handlers and services across `apps/api` delegate access control exclusively to `@vp/permissions`.
+  - All existing route handlers, services, and repositories across `apps/api` and `adapters/` fully migrated to `@vp/permissions` and `drizzleWhere`. Zero unadapted legacy checks remaining.
 - [ ] **Governance & Documentation:**
-  - Rule 13 maintained in `AGENTS.md` strictly forbidding manual hand-written permission checks in any service, route, or repository.
+  - Rules 13 and 14 maintained in `AGENTS.md` strictly forbidding manual hand-written permission checks and complex logic in components.
   - Update `docs/SDD.md` §11 (Security / Authorization) to document the adapter architecture, `@casl/ability` functional core, and `drizzleWhere` query scoping.
   - Re-run `python3 docs/tickets/gen-index.py` to keep the ticket index synchronized.
 
@@ -163,6 +168,7 @@ To prevent row-level security leaks in SQL queries without loading entire collec
 ## Definition of Done
 
 - [ ] All ACs satisfied with verifiable test output.
+- [ ] Complete full-system refactoring across all existing services, routes, and repositories (zero legacy ad-hoc checks remaining).
 - [ ] `pnpm test`, `bun test`, `pnpm typecheck`, and `pnpm lint` pass with zero warnings or errors.
-- [ ] Rule 13 maintained in `AGENTS.md` and SDD §11 updated.
+- [ ] Rules 13 and 14 maintained in `AGENTS.md` and SDD §11 updated.
 - [ ] Ticket status updated and `python3 docs/tickets/gen-index.py` re-run.
