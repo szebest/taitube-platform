@@ -77,3 +77,14 @@ All worker stages, pipeline processors, and shared packages (`packages/*`, `core
 2. **Deterministic Assertions:** Use deterministic seeds and synthetic test fixtures (`pnpm gen-video`). Never rely on unpredictable real-time clock delays; use fake timers (`vi.useFakeTimers()`) or explicit completion signals.
 3. **Seam Isolation:** Always test domain services directly through their port interfaces rather than spinning up full HTTP servers when verifying domain invariants.
 4. **Clean Teardown:** Test files must register `afterEach` or `afterAll` hooks to reset in-memory doubles (`repositories.clear()`), close database connection pools, and remove temporary test files.
+
+---
+
+## 5. Mandatory 1:1 Test File Correspondence & Mapping
+
+Every single source file, helper, util, rule, normalizer, or adapter MUST map to at least one dedicated test file matching its name. Grouping tests for multiple separate source files into a single bundled test file is a **strict architectural violation**.
+
+### Rules:
+- **Exact File Name Alignment:** A source file named `video.normalizer.ts` must have a corresponding `video.normalizer.test.ts` (or `video-normalizer.test.ts`). A module `drizzle-where.ts` must have `drizzle-where.test.ts` (or `drizzleWhere.test.ts`).
+- **No Bundled Catch-All Suites:** Creating catch-all files such as `normalizers.test.ts` covering multiple distinct units (`video.normalizer.ts`, `comment.normalizer.ts`, `channel.normalizer.ts`) is strictly forbidden.
+- **Granular Failure Isolation:** 1:1 test correspondence ensures rapid root-cause isolation, prevents test pollution across unrelated units, and maintains zero context ambiguity for autonomous agents.

@@ -6,4 +6,5 @@ export * from './job-queue';
 export * from './flow-producer';
 export * from './database-client';
 export * from './reaction-cache.port';
+export * from './authorization.port';
 export * from '../repositories/index';

@@ -15,7 +15,7 @@ import {
   type VideoWithDetails,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
-import { type SQL, type Table, and, desc, eq, inArray, lt, ne, or, sql } from 'drizzle-orm';
+import { type SQL, type Table, and, desc, eq, inArray, lt, or, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
   type VideoEventInsert,
@@ -23,6 +23,7 @@ import {
   type VideoStatus,
   toDbError as dbErr,
 } from './types';
+import { drizzleWhere, notDeletedScope, videoOwnerScope, videoReadScope } from '../scopes/index';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 
@@ -108,20 +109,23 @@ export class PostgresVideoRepository extends VideoRepository {
   async listByOwner(options: ListVideosOptions): Promise<VideoRecord[]> {
     const { ownerId, cursor, limit, status } = options;
     try {
-      const conditions = [eq(v.ownerId, ownerId)];
-      if (status) conditions.push(eq(v.status, status as VideoStatus));
-      else conditions.push(ne(v.status, 'DELETED'));
-      if (cursor) {
-        const cCond = or(
-          lt(v.createdAt, cursor.createdAt),
-          and(eq(v.createdAt, cursor.createdAt), lt(v.id, cursor.id))
-        );
-        if (cCond) conditions.push(cCond);
-      }
+      const cursorCond = cursor
+        ? or(
+            lt(v.createdAt, cursor.createdAt),
+            and(eq(v.createdAt, cursor.createdAt), lt(v.id, cursor.id))
+          )
+        : undefined;
+
+      const whereClause = drizzleWhere(
+        videoOwnerScope(ownerId),
+        status ? eq(v.status, status as VideoStatus) : notDeletedScope(v),
+        cursorCond
+      );
+
       const rows = await this.db
         .select()
         .from(v)
-        .where(and(...conditions))
+        .where(whereClause)
         .orderBy(desc(v.createdAt), desc(v.id))
         .limit(limit + 1);
       return rows as VideoRecord[];
@@ -133,31 +137,31 @@ export class PostgresVideoRepository extends VideoRepository {
   async listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult> {
     const { cursor, limit } = options;
     try {
-      const baseConditions = [
-        eq(v.visibility, 'public'),
+      const baseWhere = drizzleWhere(
+        videoReadScope(null),
         eq(v.status, 'READY'),
-        sql`${v.deletedAt} IS NULL`,
-      ];
+        notDeletedScope(v)
+      );
 
       const [countResult] = await this.db
         .select({ count: sql<number>`count(*)::int` })
         .from(v)
-        .where(and(...baseConditions));
+        .where(baseWhere);
       const total = countResult?.count ?? 0;
 
-      const queryConditions = [...baseConditions];
-      if (cursor?.createdAt) {
-        const cCond = or(
-          lt(v.createdAt, cursor.createdAt),
-          and(eq(v.createdAt, cursor.createdAt), lt(v.id, cursor.id))
-        );
-        if (cCond) queryConditions.push(cCond);
-      }
+      const cursorCond = cursor?.createdAt
+        ? or(
+            lt(v.createdAt, cursor.createdAt),
+            and(eq(v.createdAt, cursor.createdAt), lt(v.id, cursor.id))
+          )
+        : undefined;
+
+      const queryWhere = drizzleWhere(baseWhere, cursorCond);
 
       const rows = await this.db
         .select()
         .from(v)
-        .where(and(...queryConditions))
+        .where(queryWhere)
         .orderBy(desc(v.createdAt), desc(v.id))
         .limit(limit + 1);
 
@@ -358,10 +362,15 @@ export class PostgresVideoRepository extends VideoRepository {
 
   async countInFlightByOwner(ownerId: string): Promise<number> {
     try {
+      const whereClause = drizzleWhere(
+        videoOwnerScope(ownerId),
+        inArray(v.status, ['PROBING', 'PROCESSING']),
+        notDeletedScope(v)
+      );
       const [res] = await this.db
         .select({ count: sql<number>`count(*)::int` })
         .from(v)
-        .where(and(eq(v.ownerId, ownerId), inArray(v.status, ['PROBING', 'PROCESSING']), sql`${v.deletedAt} IS NULL`));
+        .where(whereClause);
       return res?.count ?? 0;
     } catch (err) {
       throw dbErr(`Failed to count in-flight videos for owner ${ownerId}`, err);
@@ -384,9 +393,16 @@ export class PostgresVideoRepository extends VideoRepository {
     }
   }
 
-  async updateReactionCounters(videoId: string, likesCount: number, dislikesCount: number): Promise<void> {
+  async updateReactionCounters(
+    videoId: string,
+    likesCount: number,
+    dislikesCount: number
+  ): Promise<void> {
     try {
-      await this.db.update(v).set({ likesCount, dislikesCount, updatedAt: new Date() }).where(eq(v.id, videoId));
+      await this.db
+        .update(v)
+        .set({ likesCount, dislikesCount, updatedAt: new Date() })
+        .where(eq(v.id, videoId));
     } catch (err) {
       throw dbErr(`Failed to update reaction counters for video ${videoId}`, err);
     }

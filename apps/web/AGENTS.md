@@ -22,8 +22,8 @@ Instructions for any coding agent working on the Taitube frontend application (`
 
 ### Rule 2: Strict Declarative Authorization
 - Manual hand-checking of user IDs, roles, or ownership (e.g. `if (user.role !== 'admin' && resource.ownerId !== user.id)`) is strictly forbidden in UI components.
-- All authorization decisions must evaluate declaratively via pure `@casl/ability` rule builders from `@vp/core/permissions`.
-- In UI, use headless hooks (`const { canEdit } = usePermissions(...)`) or declarative authorization wrappers (`<Can I="update" this={resource}>...</Can>`).
+- All authorization decisions must evaluate declaratively via pure `@casl/ability` rule builders from `@vp/permissions`.
+- In UI, use headless hooks (`useCan`, `usePermissions`) or declarative authorization component (`<Can do="update" on={video}>...</Can>`).
 
 ### Rule 3: URL-Driven State Architecture & Modal Deep-Linking (The STS Pattern)
 - The browser URL search parameters are the canonical single source of truth for active modals (`?modal=...`), drawers, active tabs, filter chips, and search facets—NOT ephemeral component `useState`.

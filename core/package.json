@@ -53,6 +53,9 @@
       "default": "./dist/permissions/*.js"
     }
   },
+  "dependencies": {
+    "@vp/permissions": "workspace:*"
+  },
   "devDependencies": {
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",

@@ -1,3 +1,1 @@
-export * from './types';
-export * from './evaluator';
-export * from './policies';
+export * from '@vp/permissions';
