@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** in-progress
 
 ## What to build
 
