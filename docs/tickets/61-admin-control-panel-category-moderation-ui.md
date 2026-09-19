@@ -27,13 +27,15 @@ This ticket delivers the **Taitube Admin Control Panel** (`/admin`):
    - Comment moderation queue: review and delete reported comments with TanStack Table list.
 3. **Queue Health & Worker Overview (`/admin/queues`)**:
    - Embedded Bull Board link and quick metrics widget (queue depths for probe, transcode, thumbnails, DLQ poison pill count).
-4. **Security & Route Guards**:
-   - Strict frontend role gate requiring `user.role === 'ADMIN'`.
+4. **Security & Route Guards via `@vp/permissions`**:
+   - Route gate evaluating `canAccessAdminPanel({ user })` via `useCan` hook from `@vp/permissions`.
+   - Category mutations gated via `canManageCategory({ user })`.
+   - Zero hardcoded `user.role === 'ADMIN'` checks in UI components.
    - Automatic redirection with 403 error toast for unauthorized users.
 
 ## Acceptance criteria
 
-- [ ] `/admin` route tree protected by strict `ADMIN` role check.
+- [ ] `/admin` route tree protected by `@vp/permissions` declarative guard (`canAccessAdminPanel({ user })`).
 - [ ] Category Manager UI:
   - List all active and inactive categories using `@tanstack/react-table`.
   - Modal form powered by `@tanstack/react-form` for creating and editing category metadata with Zod validation.

@@ -22,9 +22,11 @@ This ticket delivers enterprise-grade frontend authentication and security:
 2. **Secure Token & Session Management**:
    - Defense-in-depth token handling: Access tokens held in memory with silent refresh via `httpOnly` secure cookies or refresh handlers.
    - Automatic 401 token refresh interceptor: transparently refreshes expired tokens before retrying queued requests.
-3. **Frontend Permission Directives (`Can`)**:
-   - Reusable React component `<Can I="video:update" a={video}>...</Can>` and hook `useCan(action, resource)`.
-   - UI seamlessly shows/hides edit, delete, pin, and moderation actions based on current user role and resource ownership.
+3. **Frontend Permission Directives & `useCan` Hook**:
+   - Import typed `canX` action helpers (`canUpdateVideo`, `canDeleteVideo`, `canPinComment`, `canManageCategory`) directly from `@vp/permissions` (`@taitube/permissions`).
+   - Pure functional integration: provide lightweight `useCan(helperFn, params)` hook without `@casl/react` or class bloat.
+   - UI seamlessly shows/hides edit, delete, pin, and moderation actions based on current user role and resource attributes.
+   - Strict ban on manual hand-checks (`if (user.role === 'admin')`) in UI components.
 4. **XSS & Content Security Hardening**:
    - Strict DOMPurify sanitization on all rendered user comments and video markdown descriptions.
    - Elimination of `dangerouslySetInnerHTML` anti-patterns.
@@ -34,10 +36,10 @@ This ticket delivers enterprise-grade frontend authentication and security:
 - [ ] Auth provider context (`AuthProvider`) supporting login, logout, user profile, and current token.
 - [ ] Dev bypass toolbar rendered only in development mode enabling instant switching between Guest, Normal User, Creator, and Admin personas.
 - [ ] Centralized Axios/fetch interceptor handling 401 expiration and refreshing without forcing full-page reloads.
-- [ ] `<Can />` component and `useCan` hook integrated with the ticket 39 declarative RBAC/ABAC rules.
-- [ ] UI action buttons (Edit Video, Delete Video, Pin Comment, Admin Panel link) conditionally render according to user permissions.
+- [ ] `useCan` hook and functional permission guards integrated with `@vp/permissions` typed helpers.
+- [ ] UI action buttons (Edit Video, Delete Video, Pin Comment, Admin Panel link) conditionally render via `useCan(canX, ...)` with zero hand-written role comparisons.
 - [ ] User input sanitization: Video descriptions and comment bodies sanitized against script injection and hostile iframe exploits.
-- [ ] Unit tests testing `<Can />` authorization rendering across all user roles.
+- [ ] Unit tests testing `useCan` authorization rendering across all user personas.
 
 ## Out of scope
 
