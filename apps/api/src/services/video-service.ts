@@ -1,5 +1,18 @@
-import type { ReactionCachePort, VideoRepository, VideoStatus } from '@vp/core/ports';
+import { CaslAuthorizationAdapter } from '@vp/adapters';
+import type {
+  AuthorizationPort,
+  ReactionCachePort,
+  VideoRepository,
+  VideoStatus,
+} from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
+import {
+  type UserContext,
+  canDeleteVideo,
+  canReadVideo,
+  canUpdateVideo,
+  parseRole,
+} from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 
 export * from './types';
@@ -34,10 +47,12 @@ export class VideoService {
   private readonly videos: VideoRepository;
   private readonly cleanCdnBase: string;
   private readonly reactionCache?: ReactionCachePort;
+  private readonly auth: AuthorizationPort;
 
   constructor(deps: VideoServiceDeps) {
     this.videos = deps.videos;
     this.reactionCache = deps.reactionCache;
+    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
     const cdnBase =
       deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || 'http://localhost:9000/public';
     this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
@@ -119,16 +134,24 @@ export class VideoService {
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
     const { video, renditions: videoRenditions } = details;
+    const userContext: UserContext | null = user
+      ? { id: user.id, role: parseRole(user.role) }
+      : null;
 
-    if (video.visibility === 'private') {
-      if (!user)
-        throw new PermanentError(
-          ErrorCodes.UNAUTHORIZED,
-          'Authentication required to view private video'
+    const canRead = this.auth.can(canReadVideo, { user: userContext, video });
+    if (!canRead) {
+      if (!userContext) {
+        this.auth.assertCan(
+          canReadVideo,
+          { user: null, video },
+          {
+            action: 'read',
+            subject: 'Video',
+            message: 'Authentication required to view private video',
+          }
         );
-      if (user.id !== video.ownerId && user.role !== 'admin') {
-        throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
       }
+      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
     }
 
     const view = toVideoDetailView(video, videoRenditions, this.cleanCdnBase, details.events);
@@ -160,15 +183,24 @@ export class VideoService {
     if (!existing)
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
-    if (user.role !== 'admin' && existing.ownerId !== user.id) {
-      if (existing.visibility === 'private') {
-        throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-      }
-      throw new PermanentError(
-        ErrorCodes.FORBIDDEN,
-        'Only the video owner or an admin may edit video metadata'
-      );
+    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
+
+    if (
+      existing.visibility === 'private' &&
+      !this.auth.can(canReadVideo, { user: userContext, video: existing })
+    ) {
+      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
     }
+
+    this.auth.assertCan(
+      canUpdateVideo,
+      { user: userContext, video: existing },
+      {
+        action: 'update',
+        subject: 'Video',
+        message: 'Only the video owner or an admin may edit video metadata',
+      }
+    );
 
     if (existing.version !== input.version) {
       throw new PermanentError(
@@ -213,12 +245,17 @@ export class VideoService {
     const video = await this.videos.findById(videoId);
     if (!video) throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
-    if (user.role !== 'admin' && video.ownerId !== user.id) {
-      throw new PermanentError(
-        ErrorCodes.FORBIDDEN,
-        'Only the video owner or an admin may delete this video'
-      );
-    }
+    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
+
+    this.auth.assertCan(
+      canDeleteVideo,
+      { user: userContext, video },
+      {
+        action: 'delete',
+        subject: 'Video',
+        message: 'Only the video owner or an admin may delete this video',
+      }
+    );
 
     if (video.status === 'DELETED') return { videoId, status: 'DELETED' };
 

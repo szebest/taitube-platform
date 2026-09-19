@@ -12,6 +12,7 @@ import {
   VideoListResponseSchema,
   VideoSchema,
 } from '../schemas/videos';
+import { canUpdateVideo } from '@vp/permissions';
 import { VideoService } from '../services/video-service';
 
 export interface VideosRouteOptions {
@@ -238,12 +239,11 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
           throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${id} not found`);
         }
 
-        if (user.role !== 'admin' && video.ownerId !== user.id) {
-          throw new PermanentError(
-            ErrorCodes.FORBIDDEN,
-            'Only the video owner or an admin may reprocess this video'
-          );
-        }
+        request.assertCan(
+          canUpdateVideo,
+          { video },
+          'Only the video owner or an admin may reprocess this video'
+        );
 
         const allowedFrom: VideoStatus[] = ['READY', 'FAILED', 'PROCESSING'];
         if (!allowedFrom.includes(video.status)) {

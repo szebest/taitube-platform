@@ -1,4 +1,5 @@
 import type {
+  AuthorizationPort,
   ReactionCachePort,
   RenditionRecord,
   VideoRecord,
@@ -81,6 +82,7 @@ export interface VideoServiceDeps {
   videos: VideoRepository;
   cdnBaseUrl?: string;
   reactionCache?: ReactionCachePort;
+  authorization?: AuthorizationPort;
 }
 
 /**

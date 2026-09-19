@@ -15,74 +15,99 @@ if (user.role !== 'admin' && video.userId !== user.id) {
 }
 ```
 
-Instead, all authorization decisions must be evaluated declaratively through `@vp/core/permissions`:
+Instead, all authorization decisions must be evaluated declaratively through `@vp/permissions`:
 
 ```typescript
-// ✅ CORRECT: Declarative evaluation via pure ability engine
-const allowed = can(user, 'update', { type: 'video', resource: video });
-if (!allowed) {
-  throw new ForbiddenError();
-}
+// ✅ CORRECT: Declarative evaluation via pure ability engine & assertion guard
+assertCan(canUpdateVideo({ user, video }), {
+  action: 'update',
+  subject: 'Video',
+  user,
+});
 ```
 
 ---
 
-## 2. Permission Engine Architecture (`@vp/core/permissions`)
+## 2. Decoupled Functional Core (`@vp/permissions`)
 
-The permission engine is a pure domain module with zero runtime dependencies on database drivers or web frameworks.
+The permission engine is a pure domain package (`packages/permissions`) with zero framework or I/O runtime dependencies, 100% dual-runtime compatible (Node 24 and Bun 1.4).
 
-### Role Hierarchy
-- **`GUEST`**: Unauthenticated caller. Can read public resources (`video:read` for public/unlisted, `category:read`, `comment:read`).
-- **`USER`**: Authenticated consumer. Can react to videos, post comments, subscribe to channels.
-- **`CREATOR`**: Content creator. Can initiate uploads, manage owned videos, moderate comments on owned videos.
-- **`MODERATOR`**: Platform moderator. Can flag, pin, or remove abusive comments, inspect reports.
-- **`ADMIN`**: Superuser. Full bypass across all actions and resources (`manage:all`).
+### Strict Typing & Boundary Role Parsing
+- **`Role`**: Strictly typed union `'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'`. Zero `any`, zero loose string fallbacks.
+- **`UserContext`**: `{ readonly id: string; readonly role: Role; readonly email?: string; }`.
+- **`parseRole(value: unknown): Role`**: Sanitizes external JWT/HTTP inputs at the boundary. Internal domain code never uses defensive role fallbacks.
 
-### Declarative Policy Modules
-Policies are grouped into cohesive pure functional rule builders:
-- `video-policy.ts`: Video creation, updates, visibility changes, deletions.
-- `comment-policy.ts`: Comment posting, editing, pinning, deletion (author + video creator moderation).
-- `channel-policy.ts`: Channel branding, profile updates, handle ownership.
-- `admin-policy.ts`: Category management, queue operations, DLQ replay.
+### Pure Functional Ability Builders
+- Rules are partitioned into modular definitions:
+  - `rules/video.rules.ts`: Video read, create, update, delete, publish, react.
+  - `rules/comment.rules.ts`: Comment create, delete (author + video owner), pin.
+  - `rules/channel.rules.ts`: Channel update and management.
+  - `rules/upload.rules.ts`: Upload access and ingestion lifecycle.
+  - `rules/admin.rules.ts`: Superuser global bypass (`can('manage', 'all')`).
+- Global builder `getUserPermissions(user: UserContext | null): AppAbility` compiles rules into an immutable `MongoAbility` with zero class inheritance.
+
+### Resource Normalizers (`packages/permissions/src/normalizers/`)
+Centralized normalizers eliminate ad-hoc object spreads and provide canonical CASL subject wrappers:
+- `video.normalizer.ts`: Maps `ownerId ?? userId`, defaults `visibility ?? 'public'`.
+- `channel.normalizer.ts`: Maps `ownerId ?? userId`.
+- `comment.normalizer.ts`: Maps `authorId ?? userId` and resolves `videoOwnerId`.
+- `upload.normalizer.ts`: Maps `ownerId` across upload and video fallbacks.
+- `subject-wrapper.ts`: Type-safe CASL `subject(name, normalized)` builders.
+- Every normalizer maps 1:1 to a dedicated test file in `__tests__/`.
 
 ---
 
-## 3. Integration Across Layers
+## 3. Hexagonal Adapter Seams
 
-### Fastify API Transport Layer (`apps/api`)
-Routes use the declarative `server.authorize(action, resourceResolver)` route decorator:
-
-```typescript
-server.patch('/v1/videos/:id', {
-  preHandler: [
-    server.requireAuth,
-    server.authorize('update', async (req) => {
-      return { type: 'video', resource: await videoService.getById(req.params.id) };
-    }),
-  ],
-}, handler);
+```
+                                  ┌───────────────────────────┐
+                                  │   packages/permissions    │
+                                  │   (Pure Domain Core)      │
+                                  │                           │
+                                  │  - getUserPermissions     │
+                                  │  - typed canX helpers     │
+                                  │  - assertCan guard        │
+                                  └─────────────┬─────────────┘
+                                                │
+         ┌──────────────────────────────┬───────┴──────────────────────┬──────────────────────────────┐
+         ▼                              ▼                              ▼                              ▼
+┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
+│  Postgres Scopes │          │   FastifyAuth    │          │  ProblemDetails  │          │ ReactPermissions │
+│     Adapter      │          │     Adapter      │          │   ErrorAdapter   │          │     Adapter      │
+│  (Database SQL)  │          │ (HTTP Transport) │          │(Error/Validation)│          │  (Frontend UI)   │
+│                  │          │                  │          │                  │          │                  │
+│ - rulesToSql     │          │ - authorize()    │          │ - assertCan()    │          │ - useCan()       │
+│ - drizzleWhere   │          │ - preHandler     │          │ - RFC 9457 401   │          │ - PermissionsCtx │
+│ - accessibleBy   │          │ - req.ability    │          │ - RFC 9457 403   │          │ - <Can /> slot   │
+│ - notDeletedScope│          │ - req.can / assert│         │ - invalidParams  │          │ - zero bloat     │
+└──────────────────┘          └──────────────────┘          └──────────────────┘          └──────────────────┘
 ```
 
-If authorization fails, the decorator automatically responds with an RFC 9457 Problem Details `FORBIDDEN` error.
+### 1. Database Query Scoping Adapter (`adapters/postgres/scopes/`)
+Row-level database security is decoupled into single-responsibility modules:
+- `traits.ts`: Generalized schema trait interfaces (`WithOwner`, `WithVisibility`, `SoftDeletable`, `OwnableAndVisible`).
+- `rules-to-sql.ts`: Compiles CASL rules directly to Drizzle SQL via `@casl/ability/extra` `rulesToAST`.
+- `where.ts`: `drizzleWhere(...conditions)` safely cleanses `undefined`/`null`/`false` and combines active conditions into `and(...)`.
+- `accessible-by.ts`: CASL database adapter providing `accessibleBy`, `accessibleVideos`, `videoReadScope`, `videoOwnerScope`.
+- `soft-delete.ts`: Generic `notDeletedScope<TTable extends SoftDeletable>(table: TTable)` soft-delete safety scope.
 
-### Repository Query Scoping (`core/repositories` & `adapters/postgres`)
-Database queries must use declarative Drizzle query scoping helpers (`drizzleWhere` / row-level scopes) rather than assembling raw ad-hoc condition arrays:
+### 2. Dependency Inversion in Domain Services (`AuthorizationPort`)
+Domain services depend on the abstract port `AuthorizationPort` (`core/ports/authorization.port.ts`).
+- Concrete implementation: `CaslAuthorizationAdapter` (`adapters/authorization/casl-authorization-adapter.ts`).
+- Holds memoized `AppAbility`, implements `can(action, subject)`, `assertCan(...)`, and `.forUser(user)`.
+- Test doubles: `PermissiveAuthorizationAdapter` and `StrictAuthorizationAdapter` in `adapters/in-memory/`.
 
-```typescript
-// Declarative scoping for caller-visible records
-const whereClause = buildVisibilityScope(user);
-const videos = await db.select().from(videosTable).where(whereClause);
-```
+### 3. HTTP Transport Authorization (`FastifyAuthorizationAdapter`)
+In `apps/api/src/plugins/authorization.ts`:
+- Fastify request decoration:
+  - `request.ability`: Lazily memoized `AppAbility` on first access.
+  - `request.can(action, subject)`: Delegates directly to `request.ability.can(...)` or permission helpers.
+  - `request.assertCan(action, subject, message)`: Throws RFC 9457 `401 UNAUTHORIZED` if anonymous or `403 FORBIDDEN` if unauthorized.
+  - `fastify.authorize(actionOrHelper, resolver)`: Declarative route preHandler.
 
-### Frontend UI Layer (`apps/web`)
-Components never perform inline permission calculations or inspect `user.role` directly. Instead, they use headless hooks and components:
-
-```tsx
-// Using headless authorization hook
-const { canEdit, canDelete } = useVideoPermissions(video);
-
-// Or declarative wrapper
-<Can I="update" this={{ type: 'video', resource: video }}>
-  <EditVideoModalButton videoId={video.id} />
-</Can>
-```
+### 4. Frontend Reactive State (`ReactPermissionsAdapter`) & Headless UI
+In `apps/web`:
+- `PermissionsProvider` (`apps/web/src/modules/shared/providers/permissions-provider.tsx`): Computes and memoizes `getUserPermissions(userContext)`.
+- `usePermissions()`: Context hook exposing `{ ability, can, cannot, assertCan }`.
+- `useCan(action, subject)`: O(1) declarative permission hook with zero rule re-evaluations.
+- `<Can do={action} on={subject} fallback={<Fallback />}>{children}</Can>`: Headless UI slot component adhering to Rule 14.

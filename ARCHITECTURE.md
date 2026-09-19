@@ -26,13 +26,10 @@ video-pipeline/
 │   │   ├── category.ts             # Category domain model and input interfaces
 │   │   ├── reaction.ts             # Video reaction entities and count models
 │   │   └── index.ts
-│   ├── permissions/                # Pure domain RBAC & ABAC permission engine (@vp/core/permissions)
-│   │   ├── types.ts                # Role, Action, UserContext, Resource, PolicyRule
-│   │   ├── evaluator.ts            # can(user, action, resource) pure evaluator
-│   │   ├── policies/               # Declarative policy modules (video, comment, channel, admin)
-│   │   └── index.ts
+│   ├── permissions/                # Pure domain RBAC & ABAC permission engine (re-exports @vp/permissions)
 │   ├── ports/                      # Core abstract ports & domain models
 │   │   ├── health-checkable.ts     # HealthCheckable interface
+│   │   ├── authorization.port.ts   # AuthorizationPort (CASL declarative authorization port)
 │   │   ├── database-client.ts      # Low-level DatabaseClient port (query, execute, transaction)
 │   │   ├── storage-client.ts       # StorageClient port (uploadObject, downloadObject, presigning)
 │   │   ├── multipart-storage.ts    # MultipartStorage port (create, presignPart, list, complete, abort)
@@ -54,8 +51,10 @@ video-pipeline/
 │       └── index.ts
 │
 ├── adapters/                       # @vp/adapters (Concrete and in-memory adapter implementations)
+│   ├── authorization/              # CaslAuthorizationAdapter (@vp/permissions bridge)
 │   ├── postgres/                   # PostgreSQL repository implementations via Drizzle ORM
 │   │   ├── postgres-database-client.ts
+│   │   ├── scopes/                 # CASL AST -> Drizzle SQL compiler, drizzleWhere & row scopes
 │   │   ├── repositories/           # Individual Postgres repository implementations
 │   │   │   ├── postgres-category-repository.ts
 │   │   │   ├── postgres-video-reaction-repository.ts
@@ -72,6 +71,7 @@ video-pipeline/
 │   ├── redis/                      # RedisCacheClient, CategoryCacheService, RedisReactionCacheAdapter
 │   ├── bullmq/                     # BullMqJobQueue & BullMqFlowProducer (bullmq)
 │   └── in-memory/                  # High-speed in-memory test doubles
+│       ├── in-memory-authorization-adapter.ts
 │       ├── in-memory-database-client.ts
 │       ├── in-memory-storage-client.ts
 │       ├── in-memory-multipart-storage.ts
@@ -94,6 +94,7 @@ video-pipeline/
     ├── ffmpeg/                     # FFmpeg argument builders, progress parsers, probe helpers
     ├── job-contracts/              # BullMQ job payload schemas and queue naming contracts
     ├── observability/              # OpenTelemetry, Prometheus metrics, and Pino logging
+    ├── permissions/                # Pure CASL declarative authorization engine (@vp/permissions)
     ├── storage/                    # S3 object key layout and presigned URL helpers
     ├── testing/                    # Shared test utilities, fixtures, and assertion helpers
     └── tsconfig/                   # Shared TypeScript presets
@@ -127,6 +128,13 @@ Low-level client for executing parameterized queries, transactions, and health c
 - **`VideoReactionRepositoryPort`**: Atomic reaction recording and counter synchronization.
 - **`Repositories`**: Aggregating container interface bundling domain repositories.
 
+### `AuthorizationPort`
+Abstracts user authorization, declarative rule evaluation, and RFC 9457 error gating:
+- `getAbility()`: returns the active `@casl/ability` instance.
+- `can(action, subject)` / `can(helper, params)`: evaluates if an action is permitted.
+- `assertCan(action, subject, message?)` / `assertCan(helper, params, options)`: throws RFC 9457 `UNAUTHORIZED` (401) or `FORBIDDEN` (403) if denied.
+- `forUser(user)`: returns a new `AuthorizationPort` instance scoped to the target user.
+
 ### `StorageClient`
 Abstracts standard S3-compatible object storage operations across local MinIO and Cloudflare R2:
 - `uploadObject(options)` / `downloadObject(bucket, key, targetFilePath)` / `headObject(bucket, key)`
@@ -158,6 +166,7 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 
 | Port / Boundary | Production Adapter | In-Memory Adapter |
 |-----------------|--------------------|-------------------|
+| `AuthorizationPort` | `CaslAuthorizationAdapter` | `PermissiveAuthorizationAdapter` / `StrictAuthorizationAdapter` |
 | `DatabaseClient` | `PostgresDatabaseClient` | `InMemoryDatabaseClient` |
 | `Repositories` | `PostgresRepositories` | `InMemoryRepositories` |
 | `StorageClient` | `S3StorageClient` | `InMemoryStorageClient` |

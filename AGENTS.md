@@ -26,10 +26,11 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 5. **Modular repositories & file length discipline:** Every repository implementation must live in its own dedicated file inside a `repositories/` subfolder. Target <= 250 lines (strict ceiling: 400 lines / 10 KB per file). In-memory test doubles encapsulate their own state with `.clear()`. See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
 6. **State durability via CAS & fencing:** State changes go through the Compare-and-Set helper that also atomically appends `video_events`; worker commits use monotonic fencing tokens (`vp-postgres-cas-fencing`).
 7. **Errors classified at throw site:** Classify errors as `PermanentError` vs `TransientError` from `@vp/errors` (ADR-18).
-8. **Declarative authorization & zero hand-checked permissions:** Centralized in `@vp/core/permissions` evaluated via CASL rules. Never hand-check user IDs or roles inline. See [docs/standards/authorization.md](docs/standards/authorization.md).
+8. **Declarative authorization & zero hand-checked permissions:** Centralized in `@vp/permissions` evaluated via CASL rules. Never hand-check user IDs or roles inline. See [docs/standards/authorization.md](docs/standards/authorization.md).
 9. **Prove, don't claim:** Run typecheck, lint, and relevant test suites and paste output before declaring work done (`verification-before-completion`). See [docs/standards/testing.md](docs/standards/testing.md).
 10. **Branch protection & squash-only PR merges:** Direct pushes to `main` are blocked. Work on `ticket/NN-slug` or `<type>/<slug>` branches, require PR approval and green CI checks, and squash merge (`NN: <ticket title> (#<pr_number>)`). See [docs/standards/git-workflow.md](docs/standards/git-workflow.md).
 11. **Enforce optimal execution & zero-waste workflows:** All developer setups, Docker builds, CI jobs, test suites, and scripts must be engineered for speed and caching. Performance or cycle-time regressions are treated as blocking defects.
+12. **Mandatory 1:1 test file correspondence:** Every single source file, helper, util, rule, normalizer, or adapter MUST map to at least one dedicated test file matching its name; grouping tests for multiple separate source files into a single bundled test file is a strict architectural violation. See [docs/standards/testing.md](docs/standards/testing.md).
 
 ---
 
