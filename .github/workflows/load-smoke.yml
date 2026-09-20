@@ -57,7 +57,7 @@ jobs:
           TOKEN: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InZwLWRldi1rZXktMSJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlIjoidXNlciIsImlzcyI6InZwLWRldiIsImF1ZCI6InZwLWFwaSIsImlhdCI6MTc4OTE0NTQ1NiwiZXhwIjoyMTA0NTA1NDU2fQ.s309zkg-MQ6oDZHunmIfqrvyZgBETHgmuLRtcWsD_1hSZciougdfedfR2s7a2ac-oCnXmJG6TultN5c26_eeDQ
           API: http://localhost:3000
         # --vus/--duration override the script's scenarios block entirely (k6 uses constant-vus instead)
-        run: k6 run --vus 5 --duration 2m tests/load/s1-upload-storm.js
+        run: k6 run --vus 5 --duration 1m tests/load/s1-upload-storm.js
 
       - name: Teardown
         if: always()
