@@ -37,14 +37,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install k6
 
+      - name: Wait for API health
+        run: |
+          echo "Waiting for API to be healthy..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3000/healthz > /dev/null 2>&1; then
+              echo "API healthy after ${i}s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "ERROR: API not healthy after 120s"
+          docker compose -f infra/compose/docker-compose.yml logs --tail=50
+          exit 1
+
       - name: Run S1 (Reduced for CI)
         env:
           # Pre-baked dev JWT: sub=00000000-0000-7000-8000-000000000001, role=user, exp=2036
-          # Avoids pnpm warn lines polluting the TOKEN subshell capture.
           TOKEN: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InZwLWRldi1rZXktMSJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlIjoidXNlciIsImlzcyI6InZwLWRldiIsImF1ZCI6InZwLWFwaSIsImlhdCI6MTc4OTE0NTQ1NiwiZXhwIjoyMTA0NTA1NDU2fQ.s309zkg-MQ6oDZHunmIfqrvyZgBETHgmuLRtcWsD_1hSZciougdfedfR2s7a2ac-oCnXmJG6TultN5c26_eeDQ
           API: http://localhost:3000
+        # --vus/--duration override the script's scenarios block entirely (k6 uses constant-vus instead)
         run: k6 run --vus 60 --duration 2m tests/load/s1-upload-storm.js
 
       - name: Teardown
         if: always()
         run: docker compose -f infra/compose/docker-compose.yml down -v
+
