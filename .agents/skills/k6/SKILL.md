@@ -178,7 +178,7 @@ If the script imports `k6/browser`, read `browser-best-practices.md` and apply a
 4. Suggested run command
 
 ```bash
-k6 run --vus 10 --duration 30s k6/scripts/api-load-test.js
+k6 run --vus 5 --duration 30s k6/scripts/api-load-test.js
 k6 run k6/scripts/browser-test.js
 k6 cloud run k6/scripts/cloud-test.js
 k6 cloud run --local-execution k6/scripts/hybrid-test.js
