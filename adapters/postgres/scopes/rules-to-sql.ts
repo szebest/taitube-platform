@@ -29,6 +29,15 @@ export interface AstFieldCondition {
 
 export type AstCondition = AstCompoundCondition | AstFieldCondition;
 
+export type Viewer = AppAbility | UserContext | null | undefined;
+
+function toAbility(viewer: Viewer): AppAbility {
+  if (viewer != null && 'can' in viewer) {
+    return viewer;
+  }
+  return getUserPermissions(viewer ?? null);
+}
+
 /**
  * Compiles CASL rules into Drizzle SQL WHERE conditions via @casl/ability/extra rulesToAST,
  * so row scoping and in-memory can() decisions derive from one rule set.
@@ -39,18 +48,10 @@ export type AstCondition = AstCompoundCondition | AstFieldCondition;
 export function rulesToSql<T extends TableConfig>(
   action: AppAction,
   subject: AppSubjects,
-  user: UserContext | null | undefined,
+  viewer: Viewer,
   table: PgTableWithColumns<T>
 ): SQL | undefined {
-  return abilityToSql(getUserPermissions(user ?? null), action, subject, table);
-}
-
-export function abilityToSql<T extends TableConfig>(
-  ability: AppAbility,
-  action: AppAction,
-  subject: AppSubjects,
-  table: PgTableWithColumns<T>
-): SQL | undefined {
+  const ability = toAbility(viewer);
   const ast = rulesToAST(ability, action, subject as Parameters<typeof rulesToAST<AppAbility>>[2]);
 
   // A null AST means no rule grants the action; returning undefined would leave the query unfiltered.

@@ -1,39 +1,35 @@
 import { videos } from '@vp/db';
-import {
-  type AppAbility,
-  type AppAction,
-  type AppSubjects,
-  type UserContext,
-  getUserPermissions,
-} from '@vp/permissions';
+import type { AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { type SQL, eq } from 'drizzle-orm';
 import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
-import { abilityToSql } from './rules-to-sql';
-
-function toAbility(abilityOrUser: AppAbility | UserContext | null): AppAbility {
-  if (abilityOrUser !== null && 'can' in abilityOrUser) {
-    return abilityOrUser;
-  }
-  return getUserPermissions(abilityOrUser);
-}
+import { type Viewer, rulesToSql } from './rules-to-sql';
+import type { WithOwner, WithVisibility } from './traits';
 
 /**
- * Row-level scope for any subject backed by a Drizzle table, compiled from the user's CASL rules.
+ * Row-level scope for any subject backed by a Drizzle table, compiled from the viewer's CASL rules.
  * Returns undefined when the rules impose no restriction.
  */
 export function accessibleBy<T extends TableConfig>(
-  abilityOrUser: AppAbility | UserContext | null,
+  viewer: Viewer,
   subject: AppSubjects,
   table: PgTableWithColumns<T>,
   action: AppAction = 'read'
 ): SQL | undefined {
-  return abilityToSql(toAbility(abilityOrUser), action, subject, table);
+  return rulesToSql(action, subject, viewer, table);
 }
 
-export function videoReadScope(userOrAbility: UserContext | AppAbility | null): SQL | undefined {
-  return accessibleBy(userOrAbility, 'Video', videos, 'read');
+export function videoReadScope(viewer: Viewer): SQL | undefined {
+  return accessibleBy(viewer, 'Video', videos, 'read');
 }
 
-export function videoOwnerScope(owner: UserContext | string): SQL {
-  return eq(videos.ownerId, typeof owner === 'string' ? owner : owner.id);
+export function ownerScope<T extends WithOwner>(table: T, owner: UserContext | string): SQL {
+  return eq(table.ownerId, typeof owner === 'string' ? owner : owner.id);
+}
+
+/**
+ * Feed policy rather than authorization: unlisted videos stay readable by link but must
+ * never surface in a listing.
+ */
+export function publicVisibilityScope<T extends WithVisibility>(table: T): SQL {
+  return eq(table.visibility, 'public');
 }

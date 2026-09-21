@@ -23,7 +23,13 @@ import {
   type VideoStatus,
   toDbError as dbErr,
 } from './types';
-import { drizzleWhere, notDeletedScope, videoOwnerScope } from '../scopes/index';
+import {
+  drizzleWhere,
+  notDeletedScope,
+  ownerScope,
+  publicVisibilityScope,
+  videoReadScope,
+} from '../scopes/index';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 
@@ -107,7 +113,7 @@ export class PostgresVideoRepository extends VideoRepository {
   }
 
   async listByOwner(options: ListVideosOptions): Promise<VideoRecord[]> {
-    const { ownerId, cursor, limit, status } = options;
+    const { ownerId, viewer, cursor, limit, status } = options;
     try {
       const cursorCond = cursor
         ? or(
@@ -117,7 +123,8 @@ export class PostgresVideoRepository extends VideoRepository {
         : undefined;
 
       const whereClause = drizzleWhere(
-        videoOwnerScope(ownerId),
+        ownerScope(v, ownerId),
+        videoReadScope(viewer ?? null),
         status ? eq(v.status, status as VideoStatus) : notDeletedScope(v),
         cursorCond
       );
@@ -138,7 +145,7 @@ export class PostgresVideoRepository extends VideoRepository {
     const { cursor, limit } = options;
     try {
       const baseWhere = drizzleWhere(
-        eq(v.visibility, 'public'),
+        publicVisibilityScope(v),
         eq(v.status, 'READY'),
         notDeletedScope(v)
       );
@@ -363,7 +370,7 @@ export class PostgresVideoRepository extends VideoRepository {
   async countInFlightByOwner(ownerId: string): Promise<number> {
     try {
       const whereClause = drizzleWhere(
-        videoOwnerScope(ownerId),
+        ownerScope(v, ownerId),
         inArray(v.status, ['PROBING', 'PROCESSING']),
         notDeletedScope(v)
       );

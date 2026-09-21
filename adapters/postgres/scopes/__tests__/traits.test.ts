@@ -1,26 +1,15 @@
 import { videos } from '@vp/db';
-import type { OwnableAndVisible, SoftDeletable, WithOwner, WithVisibility } from '../traits';
+import type { SoftDeletable, WithOwner, WithVisibility } from '../traits';
 
 describe('adapters/postgres/scoping: traits', () => {
-  it('allows tables matching WithOwner to be typechecked', () => {
-    const table: WithOwner = videos;
-    expect(table.ownerId).toBeDefined();
-  });
+  it('accepts the videos table as owned, visible and soft-deletable', () => {
+    const owned: WithOwner = videos;
+    const visible: WithVisibility = videos;
+    const soft: SoftDeletable = videos;
 
-  it('allows tables matching WithVisibility to be typechecked', () => {
-    const table: WithVisibility = videos;
-    expect(table.visibility).toBeDefined();
-  });
-
-  it('allows tables matching SoftDeletable to be typechecked', () => {
-    const table: SoftDeletable = videos;
-    expect(table.deletedAt).toBeDefined();
-    expect(table.status).toBeDefined();
-  });
-
-  it('allows tables matching OwnableAndVisible to be typechecked', () => {
-    const table: OwnableAndVisible = videos;
-    expect(table.ownerId).toBeDefined();
-    expect(table.visibility).toBeDefined();
+    expect(owned.ownerId).toBeDefined();
+    expect(visible.visibility).toBeDefined();
+    expect(soft.deletedAt).toBeDefined();
+    expect(soft.status).toBeDefined();
   });
 });

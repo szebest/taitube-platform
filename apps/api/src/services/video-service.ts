@@ -70,6 +70,7 @@ export class VideoService {
 
     const rows = await this.videos.listByOwner({
       ownerId: user.id,
+      viewer: { id: user.id, role: parseRole(user.role) },
       cursor: decodedCursor,
       limit,
       status: options.status,

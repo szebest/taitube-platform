@@ -16,5 +16,3 @@ export interface SoftDeletable {
   readonly deletedAt?: Column;
   readonly status?: Column;
 }
-
-export type OwnableAndVisible = WithOwner & WithVisibility;

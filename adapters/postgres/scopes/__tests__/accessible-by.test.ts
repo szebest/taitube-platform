@@ -1,6 +1,11 @@
 import { videos } from '@vp/db';
 import { type UserContext, getUserPermissions } from '@vp/permissions';
-import { accessibleBy, videoOwnerScope, videoReadScope } from '../accessible-by';
+import {
+  accessibleBy,
+  ownerScope,
+  publicVisibilityScope,
+  videoReadScope,
+} from '../accessible-by';
 import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: accessible-by adapter', () => {
@@ -51,14 +56,22 @@ describe('adapters/postgres/scoping: accessible-by adapter', () => {
     });
   });
 
-  describe('videoOwnerScope', () => {
+  describe('ownerScope', () => {
     it.each([
       { kind: 'UserContext', owner: standardUser as UserContext | string },
       { kind: 'owner id string', owner: 'usr-123' as UserContext | string },
     ])('filters on the owner column given a $kind', ({ owner }) => {
-      const scope = videoOwnerScope(owner);
+      const scope = ownerScope(videos, owner);
       expect(sqlText(scope)).toBe('"videos"."owner_id" = $1');
       expect(sqlParams(scope)).toEqual(['usr-123']);
+    });
+  });
+
+  describe('publicVisibilityScope', () => {
+    it('keeps unlisted videos out of listings', () => {
+      const scope = publicVisibilityScope(videos);
+      expect(sqlText(scope)).toBe('"videos"."visibility" = $1');
+      expect(sqlParams(scope)).toEqual(['public']);
     });
   });
 });
