@@ -2,7 +2,13 @@ import { CaslAuthorizationAdapter } from '@vp/adapters';
 import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import type { AuthorizationPort, JobQueue, ReactionCachePort } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
-import { type VideoStatus, publicFeedInstant, trendingScore, videoAgeHours } from '@vp/domain';
+import {
+  type VideoStatus,
+  type VideoVisibility,
+  publicFeedInstant,
+  trendingScore,
+  videoAgeHours,
+} from '@vp/domain';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type Paginator, defaultPaginator } from '@vp/pagination';
 import { canAccessAdmin, canReadVideo, canUpdateVideo } from '@vp/permissions';
@@ -170,7 +176,7 @@ export class VideoService {
     input: {
       title?: string;
       description?: string;
-      visibility?: 'private' | 'unlisted' | 'public';
+      visibility?: VideoVisibility;
       version: number;
     }
   ): Promise<VideoDetailView> {
@@ -202,7 +208,7 @@ export class VideoService {
     const patch: {
       title?: string;
       description?: string;
-      visibility?: 'private' | 'unlisted' | 'public';
+      visibility?: VideoVisibility;
     } = {};
     if (input.title !== undefined) patch.title = input.title;
     if (input.description !== undefined) patch.description = input.description;

@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 import type { StoragePresignedPartInfo } from '@vp/core/ports';
+import type { VideoVisibility } from '@vp/domain';
 import { calculatePartSize, calculateTotalParts, rawSourceKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import type { AuthUser } from '../plugins/auth';
@@ -14,7 +15,7 @@ export interface InitiateUploadParams {
   strategy?: 'single' | 'multipart';
   sha256?: string;
   title?: string;
-  visibility?: 'private' | 'unlisted' | 'public';
+  visibility?: VideoVisibility;
 }
 
 export interface InitiateUploadResult {
