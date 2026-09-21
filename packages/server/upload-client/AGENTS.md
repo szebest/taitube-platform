@@ -2,7 +2,7 @@
 
 Instructions for any coding agent working on `packages/server/upload-client`.
 
-> Tiers, layers and the import rules in full: [docs/standards/package-boundaries.md](../../../docs/standards/package-boundaries.md)
+> Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 ---
 
 ## 1. Scope

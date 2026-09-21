@@ -269,7 +269,7 @@ Three mechanisms, strongest first:
    `@types/node` back into the package's program.
 
 `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite.
-Full reference, including the per-package map and the recipes: [docs/standards/package-boundaries.md](docs/standards/package-boundaries.md).
+Full reference, including the per-package map and the recipes: [packages/AGENTS.md](packages/AGENTS.md).
 
 - `apps/web` must NEVER import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
 - The frontend talks to the backend only through `@vp/api-contracts` and `@vp/api-client`.

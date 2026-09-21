@@ -1,4 +1,8 @@
-# Package boundaries — runtime tiers and dependency layers
+# AGENTS.md — packages/ (Runtime Tiers & Dependency Layers)
+
+Instructions for any coding agent adding to or changing a workspace package. This is the authoritative
+reference for the two rules that govern every package in this repo; each tier directory has its own
+`AGENTS.md` with the specifics, and each package has one of its own.
 
 Every workspace package answers two independent questions. Both are machine-checked, and a wrong answer
 fails the build rather than a review.
@@ -11,8 +15,8 @@ fails the build rather than a review.
 They are orthogonal. A package can be `universal` and T1, or `server` and T3. Tier stops a Redis client
 reaching the browser; layer stops the dependency graph turning into a ball of mud.
 
-> Spec: [SDD ADR-24](../SDD.md#adr-24--tier-scoped-workspace-layout-the-directory-is-the-runtime-tier) ·
-> [ARCHITECTURE.md Invariant 5](../../ARCHITECTURE.md) · checker: `scripts/check-boundaries.ts`
+> Spec: [SDD ADR-24](../docs/SDD.md#adr-24--tier-scoped-workspace-layout-the-directory-is-the-runtime-tier) ·
+> [ARCHITECTURE.md Invariant 5](../ARCHITECTURE.md) · checker: `scripts/check-boundaries.ts`
 
 ---
 

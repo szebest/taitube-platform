@@ -49,8 +49,9 @@ Agents working in a specific package or app MUST follow its dedicated `AGENTS.md
 - **Adapters (`@vp/adapters`, server/T3):** [packages/server/adapters/AGENTS.md](packages/server/adapters/AGENTS.md)  
   *Postgres, Redis, S3, BullMQ concrete adapters and autonomous in-memory test doubles.*
 
-Shared packages live under `packages/<tier>/`, where the directory **is** the tier. See
-[ARCHITECTURE.md](ARCHITECTURE.md) Invariant 5 for tiers, layers and how the boundary is enforced.
+Shared packages live under `packages/<tier>/`, where the directory **is** the tier.
+**[packages/AGENTS.md](packages/AGENTS.md)** is the authoritative reference for tiers, layers and the
+import rules; each tier directory has its own: [universal](packages/universal/AGENTS.md) · [server](packages/server/AGENTS.md) · [client](packages/client/AGENTS.md).
 
 - **`packages/universal/` — runs in a browser and on a server:**  
   [api-contracts](packages/universal/api-contracts/AGENTS.md) · [errors](packages/universal/errors/AGENTS.md) · [permissions](packages/universal/permissions/AGENTS.md) · [tsconfig](packages/universal/tsconfig/AGENTS.md)
@@ -72,7 +73,7 @@ Shared packages live under `packages/<tier>/`, where the directory **is** the ti
 - **Testing Standards & Strategy:** [docs/standards/testing.md](docs/standards/testing.md)
 - **Git Workflow & Pull Requests:** [docs/standards/git-workflow.md](docs/standards/git-workflow.md)
 - **File Discipline & Sizing:** [docs/standards/file-discipline.md](docs/standards/file-discipline.md)
-- **Package Boundaries — tiers & layers:** [docs/standards/package-boundaries.md](docs/standards/package-boundaries.md)
+- **Package Boundaries — tiers & layers:** [packages/AGENTS.md](packages/AGENTS.md)
 - **Declarative Authorization:** [docs/standards/authorization.md](docs/standards/authorization.md)
 - **Domain Glossary:** [CONTEXT.md](CONTEXT.md)
 - **Local-First Guide:** [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md)
