@@ -141,6 +141,7 @@ export const videos = pgTable(
     errorMessage: text('error_message'),
     generation: integer('generation').notNull().default(1),
     version: integer('version').notNull().default(0),
+    viewsCount: integer('views_count').notNull().default(0),
     likesCount: integer('likes_count').notNull().default(0),
     dislikesCount: integer('dislikes_count').notNull().default(0),
     readyAt: timestamptz('ready_at'),

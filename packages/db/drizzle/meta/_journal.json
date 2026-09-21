@@ -64,6 +64,13 @@
       "when": 1789996636456,
       "tag": "0008_fuzzy_black_bolt",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790003208076,
+      "tag": "0009_add_video_views_count",
+      "breakpoints": true
     }
   ]
 }
