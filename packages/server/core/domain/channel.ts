@@ -30,7 +30,7 @@ export interface UpdateChannelInput {
   bio?: string | null;
 }
 
-export const HANDLE_REGEX = /^[a-zA-Z0-9_.-]{3,30}$/;
+const HANDLE_REGEX = /^[a-zA-Z0-9_.-]{3,30}$/;
 
 export const HANDLE_MIN_LENGTH = 3;
 export const HANDLE_MAX_LENGTH = 30;
@@ -38,7 +38,7 @@ export const HANDLE_MAX_LENGTH = 30;
 /** How many suffixed handles a caller may try before giving up on a collision run. */
 export const HANDLE_CANDIDATE_ATTEMPTS = 1000;
 
-export const RESERVED_HANDLES = new Set([
+const RESERVED_HANDLES = new Set([
   'admin',
   'api',
   'system',

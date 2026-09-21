@@ -1,3 +1,4 @@
+import { reactionDelta } from '@vp/core/domain';
 import type {
   ReactionCounts,
   ReactionInputType,
@@ -46,12 +47,12 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
     userId: string,
     type: ReactionInputType
   ): Promise<SetReactionResult> {
+    const newType: ReactionType | null = type === 'NONE' ? null : type;
+
     return await this.db.transaction(async (tx) => {
       let previousType: ReactionType | null = null;
-      let deltaLikes = 0;
-      let deltaDislikes = 0;
 
-      if (type === 'NONE') {
+      if (newType === null) {
         const [deleted] = await tx
           .delete(schema.videoReactions)
           .where(
@@ -62,11 +63,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
           )
           .returning({ type: schema.videoReactions.type });
 
-        if (deleted) {
-          previousType = (deleted.type as ReactionType) ?? null;
-          if (previousType === 'LIKE') deltaLikes = -1;
-          else if (previousType === 'DISLIKE') deltaDislikes = -1;
-        }
+        previousType = (deleted?.type as ReactionType) ?? null;
       } else {
         const [prev] = await tx
           .select({ type: schema.videoReactions.type })
@@ -86,28 +83,19 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
             id: uuidv7(),
             videoId,
             userId,
-            type,
+            type: newType,
             updatedAt: new Date(),
           })
           .onConflictDoUpdate({
             target: [schema.videoReactions.userId, schema.videoReactions.videoId],
             set: {
-              type,
+              type: newType,
               updatedAt: sql`now()`,
             },
           });
-
-        if (previousType === 'LIKE' && type === 'DISLIKE') {
-          deltaLikes = -1;
-          deltaDislikes = 1;
-        } else if (previousType === 'DISLIKE' && type === 'LIKE') {
-          deltaLikes = 1;
-          deltaDislikes = -1;
-        } else if (previousType === null) {
-          if (type === 'LIKE') deltaLikes = 1;
-          else if (type === 'DISLIKE') deltaDislikes = 1;
-        }
       }
+
+      const { likes: deltaLikes, dislikes: deltaDislikes } = reactionDelta(previousType, newType);
 
       let likesCount = 0;
       let dislikesCount = 0;
@@ -146,7 +134,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
 
       return {
         previousType,
-        newType: type === 'NONE' ? null : type,
+        newType,
         likesCount,
         dislikesCount,
       };

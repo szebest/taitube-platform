@@ -31,4 +31,3 @@ export interface VideoReactionRepositoryPort {
   listVideoIdsWithReactions(limit?: number, offset?: number): Promise<string[]>;
 }
 
-export type VideoReactionRepository = VideoReactionRepositoryPort;

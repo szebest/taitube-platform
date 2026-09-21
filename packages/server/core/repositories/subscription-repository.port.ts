@@ -37,4 +37,3 @@ export interface SubscriptionRepositoryPort {
   getSubscriberCount(channelId: string): Promise<number>;
 }
 
-export type SubscriptionRepository = SubscriptionRepositoryPort;

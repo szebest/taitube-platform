@@ -1,3 +1,4 @@
+import { reactionDelta } from '@vp/core/domain';
 import type {
   ReactionCounts,
   ReactionInputType,
@@ -51,61 +52,27 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
     const k = this.key(videoId, userId);
     const existing = this.reactions.get(k);
     const previousType = existing ? existing.type : null;
+    const newType: ReactionType | null = type === 'NONE' ? null : type;
 
-    let deltaLikes = 0;
-    let deltaDislikes = 0;
-
-    if (type === 'NONE') {
-      if (existing) {
-        this.reactions.delete(k);
-        if (previousType === 'LIKE') deltaLikes = -1;
-        else if (previousType === 'DISLIKE') deltaDislikes = -1;
-      }
-    } else if (type === 'LIKE') {
-      if (previousType === 'DISLIKE' && existing) {
-        deltaDislikes = -1;
-        deltaLikes = 1;
-        this.reactions.set(k, {
-          ...existing,
-          type: 'LIKE',
-          updatedAt: new Date(),
-        });
-      } else if (previousType === null) {
-        deltaLikes = 1;
-        this.reactions.set(k, {
-          id: uuidv7(),
-          videoId,
-          userId,
-          type: 'LIKE',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      }
-    } else if (type === 'DISLIKE') {
-      if (previousType === 'LIKE' && existing) {
-        deltaLikes = -1;
-        deltaDislikes = 1;
-        this.reactions.set(k, {
-          ...existing,
-          type: 'DISLIKE',
-          updatedAt: new Date(),
-        });
-      } else if (previousType === null) {
-        deltaDislikes = 1;
-        this.reactions.set(k, {
-          id: uuidv7(),
-          videoId,
-          userId,
-          type: 'DISLIKE',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      }
+    if (newType === null) {
+      this.reactions.delete(k);
+    } else if (existing) {
+      this.reactions.set(k, { ...existing, type: newType, updatedAt: new Date() });
+    } else {
+      this.reactions.set(k, {
+        id: uuidv7(),
+        videoId,
+        userId,
+        type: newType,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
 
+    const delta = reactionDelta(previousType, newType);
     const curr = this.videoCounters.get(videoId) ?? { likesCount: 0, dislikesCount: 0 };
-    const likesCount = Math.max(0, curr.likesCount + deltaLikes);
-    const dislikesCount = Math.max(0, curr.dislikesCount + deltaDislikes);
+    const likesCount = Math.max(0, curr.likesCount + delta.likes);
+    const dislikesCount = Math.max(0, curr.dislikesCount + delta.dislikes);
     this.videoCounters.set(videoId, { likesCount, dislikesCount });
 
     if (this.videosRepo) {
@@ -114,7 +81,7 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
 
     return {
       previousType,
-      newType: type === 'NONE' ? null : type,
+      newType,
       likesCount,
       dislikesCount,
     };
