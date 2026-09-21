@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { getHeartbeatPath } from '../config';
 import type {
   FlowProducerPort,
   JobQueue,
@@ -34,8 +35,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     rawBucket = process.env['STORAGE_RAW_BUCKET'] || 'raw',
     workerId = `worker-${process.pid}`,
     logger,
-    heartbeatPath = process.env['WORKER_HEARTBEAT_PATH'] ||
-      path.join(os.tmpdir(), 'worker-heartbeat'),
+    heartbeatPath = getHeartbeatPath(),
     getQueue,
     flowProducer,
   } = deps;

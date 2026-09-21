@@ -1,4 +1,5 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
+import { DEFAULT_CDN_BASE_URL } from '@vp/config';
 import type {
   AuthorizationPort,
   EventRepository,
@@ -114,8 +115,7 @@ export class SseService {
     this.renditions = deps.renditions;
     this.events = deps.events;
     this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
-    const cdnBase =
-      deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || 'http://localhost:9000/public';
+    const cdnBase = deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL;
     this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
   }
 

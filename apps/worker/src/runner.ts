@@ -29,6 +29,7 @@ import {
   startMetricsServer,
 } from '@vp/observability';
 import { createFailureHandler } from './failure-handler';
+import { getWorkerStage } from './config';
 import { STAGE_REGISTRY, validateQueueName } from './registry';
 import { OutboxRelay, createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createNotifyProcessor } from './stages/notify';
@@ -65,7 +66,7 @@ export interface WorkerRunner {
 }
 
 export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Promise<WorkerRunner> {
-  const stage = options.stage || process.env['WORKER_STAGE'] || 'probe';
+  const stage = options.stage || getWorkerStage();
   const config = STAGE_REGISTRY[stage];
   if (!config) {
     throw new Error(`Unknown WORKER_STAGE: "${stage}"`);

@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { getHeartbeatPath } from '../config';
 import type { CacheClient, JobQueue, QueueJob, Repositories, StorageClient } from '@vp/core/ports';
 import { ErrorCodes, PermanentError, PipelineError, TransientError } from '@vp/errors';
 import { computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
@@ -35,8 +36,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     workerId = `worker-${process.pid}`,
     logger,
     metrics: depsMetrics,
-    heartbeatPath = process.env['WORKER_HEARTBEAT_PATH'] ||
-      path.join(os.tmpdir(), 'worker-heartbeat'),
+    heartbeatPath = getHeartbeatPath(),
     simulateFailureRendition = process.env['SIMULATE_FAILURE_RENDITION'],
     streamingInput: depsStreamingInput,
   } = deps;

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const DEFAULT_CDN_BASE_URL = 'http://localhost:9000/public';
+
 export const CoreEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default('debug'),
@@ -41,7 +43,7 @@ export const StorageEnvSchema = z.object({
   S3_BUCKET_RAW: z.string().default('raw'),
   S3_BUCKET_PUBLIC: z.string().default('public'),
   S3_PRESIGN_TTL_SEC: z.coerce.number().int().positive().default(900),
-  CDN_BASE_URL: z.string().default('http://localhost:9000/public'),
+  CDN_BASE_URL: z.string().default(DEFAULT_CDN_BASE_URL),
   S3_MULTIPART_THRESHOLD_BYTES: z.coerce.number().int().positive().default(104857600),
   S3_PART_SIZE_MIN_BYTES: z.coerce.number().int().positive().default(8388608),
   S3_PART_SIZE_MAX_BYTES: z.coerce.number().int().positive().default(67108864),

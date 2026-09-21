@@ -1,4 +1,5 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
+import { DEFAULT_CDN_BASE_URL } from '@vp/config';
 import { publicFeedInstant, trendingScore, videoAgeHours } from '@vp/core/domain';
 import { type Paginator, defaultPaginator } from '@vp/core/pagination';
 import type {
@@ -78,8 +79,7 @@ export class VideoService {
       auth: this.auth,
       ...(deps.probeQueue ? { probeQueue: deps.probeQueue } : {}),
     };
-    const cdnBase =
-      deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || 'http://localhost:9000/public';
+    const cdnBase = deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL;
     this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
   }
 

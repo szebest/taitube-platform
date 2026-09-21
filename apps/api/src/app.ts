@@ -1,6 +1,7 @@
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import { DEFAULT_CDN_BASE_URL } from '@vp/config';
 import { getMetrics } from '@vp/observability';
 import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
@@ -46,8 +47,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   const adapters = resolveAdapterSet(options.adapters);
   const rawBucket = options.rawBucket ?? process.env['STORAGE_RAW_BUCKET'] ?? 'raw';
-  const cdnBaseUrl =
-    options.cdnBaseUrl ?? process.env['CDN_BASE_URL'] ?? 'http://localhost:9000/public';
+  const cdnBaseUrl = options.cdnBaseUrl ?? process.env['CDN_BASE_URL'] ?? DEFAULT_CDN_BASE_URL;
 
   const housekeepingQueue = adapters.queues.get('housekeeping');
   if (housekeepingQueue) {
