@@ -1,6 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
-import { beforeEach, describe, expect, it } from 'vitest';
 import { ChannelService } from '../channel-service';
 
 describe('ChannelService', () => {
@@ -123,6 +122,59 @@ describe('ChannelService', () => {
           code: ErrorCodes.CHANNEL_NOT_FOUND,
         })
       );
+    });
+  });
+
+  describe('ensureProvisioned', () => {
+    const NEW_USER_ID = '018f0000-0000-7000-8000-0000000000aa';
+
+    it('creates the user and channel a first authenticated request implies', async () => {
+      await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com');
+
+      await expect(repositories.users.findById(NEW_USER_ID)).resolves.toMatchObject({
+        email: 'ada@example.com',
+        tier: 'free',
+      });
+      await expect(repositories.channels.findByUserId(NEW_USER_ID)).resolves.toMatchObject({
+        handle: 'ada',
+        displayName: 'ada',
+      });
+    });
+
+    it('synthesises an email when the identity carries none', async () => {
+      await channelService.ensureProvisioned(NEW_USER_ID);
+
+      await expect(repositories.users.findById(NEW_USER_ID)).resolves.toMatchObject({
+        email: `${NEW_USER_ID}@taitube.local`,
+      });
+      await expect(repositories.channels.findByUserId(NEW_USER_ID)).resolves.toMatchObject({
+        displayName: 'User',
+      });
+    });
+
+    it('is a no-op for an identity that already has a channel', async () => {
+      await channelService.ensureProvisioned(USER_ID, 'creator@example.com');
+
+      await expect(repositories.channels.findByUserId(USER_ID)).resolves.toMatchObject({
+        id: CHANNEL_ID,
+        handle: 'creator',
+      });
+    });
+
+    it('steps past a handle another channel already holds', async () => {
+      await channelService.ensureProvisioned(NEW_USER_ID, 'creator@example.com');
+
+      const channel = await repositories.channels.findByUserId(NEW_USER_ID);
+      expect(channel?.handle).not.toBe('creator');
+      expect(channel?.handle).toMatch(/^creator_/);
+    });
+
+    it('never claims a reserved handle', async () => {
+      await channelService.ensureProvisioned(NEW_USER_ID, 'admin@example.com');
+
+      await expect(repositories.channels.findByUserId(NEW_USER_ID)).resolves.toMatchObject({
+        handle: 'u_admin',
+      });
     });
   });
 });

@@ -1,6 +1,7 @@
 import {
   DEFAULT_PUBLIC_FEED_SORT,
   PUBLIC_FEED_RANKINGS,
+  type PublicFeedCandidate,
   type PublicFeedSort,
   TRENDING_GRAVITY,
   comparePublicFeedRank,
@@ -8,7 +9,6 @@ import {
   isPublicFeedEligible,
   publicFeedRanking,
   trendingScore,
-  type PublicFeedCandidate,
   videoAgeHours,
 } from '../public-feed';
 
@@ -29,7 +29,11 @@ function video(overrides: Partial<PublicFeedCandidate> = {}): PublicFeedCandidat
 
 describe('core/domain: public feed rules', () => {
   describe('eligibility', () => {
-    it.each<{ scenario: string; overrides?: Partial<PublicFeedCandidate>; categoryId?: string | null }>([
+    it.each<{
+      scenario: string;
+      overrides?: Partial<PublicFeedCandidate>;
+      categoryId?: string | null;
+    }>([
       { scenario: 'a private video', overrides: { visibility: 'private' } },
       { scenario: 'an unlisted video', overrides: { visibility: 'unlisted' } },
       { scenario: 'a video still processing', overrides: { status: 'PROCESSING' } },

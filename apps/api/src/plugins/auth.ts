@@ -1,9 +1,8 @@
 import * as crypto from 'node:crypto';
-import type { Repositories } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
-import { ensureUserAndChannelProvisioned } from './jit-provisioner';
+import type { ChannelService } from '../services/channel-service';
 import { verifyUniversalToken } from './jwks-verifier';
 
 const ADMIN_TOKEN_USER: AuthUser = {
@@ -28,7 +27,7 @@ export interface AuthUser {
 }
 
 export interface AuthPluginOptions {
-  repositories?: Repositories;
+  channelService?: ChannelService;
   jwksUrl?: string;
 }
 
@@ -74,9 +73,7 @@ export async function authPlugin(
         email: payload.email,
       };
 
-      if (options.repositories) {
-        await ensureUserAndChannelProvisioned(options.repositories, payload.sub, payload.email);
-      }
+      await options.channelService?.ensureProvisioned(payload.sub, payload.email);
     } catch (err) {
       if (err instanceof PermanentError) throw err;
       throw new PermanentError(

@@ -77,7 +77,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerErrorHandler(app);
 
   await app.register(registerAuth, {
-    repositories: adapters.repositories,
+    channelService: services.channelService,
     ...(options.jwksUrl ? { jwksUrl: options.jwksUrl } : {}),
   });
   await app.register(registerHttpMetricsPlugin);
