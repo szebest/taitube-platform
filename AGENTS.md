@@ -22,7 +22,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 1. **Local-first (PRD G11, SDD P9):** No runtime dependency on any external service; `.env.example` stays all-local; nothing phones home; `make smoke-offline` must pass. See [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md).
 2. **Dual runtime parity:** Worker code and shared packages must execute interchangeably and pass tests under `vitest` and `bun test`; no `Bun.*` proprietary APIs in worker source. See [docs/standards/testing.md](docs/standards/testing.md).
 3. **Contracts are single-sourced:** Job payloads and IDs in `packages/server/job-contracts`, object keys in `packages/server/storage/keys.ts`, error codes in `packages/universal/errors` (SDD §6.2), environment config in `packages/server/config` mirrored by `.env.example`. Changing one requires updating `docs/SDD.md` in the same PR.
-4. **Dependency inversion (Hexagonal Architecture):** Concrete SDKs (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`) must never be imported outside `adapters/` and composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`). Domain logic and routes depend on abstract class ports in `@vp/core/ports` and repository interfaces in `@vp/core/repositories`. See [ARCHITECTURE.md](ARCHITECTURE.md).
+4. **Dependency inversion (Hexagonal Architecture):** Concrete SDKs (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`) are imported in exactly two places: `packages/server/adapters/**` and `packages/server/db/` (schema, client, migrations — it owns the Drizzle vocabulary the postgres adapter queries through). The composition roots `apps/api/src/app.ts` and `apps/worker/src/runner.ts` **wire adapters, they do not import SDKs**. Domain logic and routes depend on abstract class ports in `@vp/core/ports` and repository interfaces in `@vp/core/repositories`. See [ARCHITECTURE.md §6](ARCHITECTURE.md), which is the authority if this rule and it ever disagree.
 5. **Modular repositories & file length discipline:** Every repository implementation must live in its own dedicated file inside a `repositories/` subfolder. Target <= 250 lines (strict ceiling: 400 lines / 10 KB per file). In-memory test doubles encapsulate their own state with `.clear()`. See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
 6. **State durability via CAS & fencing:** State changes go through the Compare-and-Set helper that also atomically appends `video_events`; worker commits use monotonic fencing tokens (`vp-postgres-cas-fencing`).
 7. **Errors classified at throw site:** Classify errors as `PermanentError` vs `TransientError` from `@vp/errors` (ADR-18).
@@ -31,6 +31,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 10. **Branch protection & squash-only PR merges:** Direct pushes to `main` are blocked. Work on `ticket/NN-slug` or `<type>/<slug>` branches, require PR approval and green CI checks, and squash merge (`NN: <ticket title> (#<pr_number>)`). See [docs/standards/git-workflow.md](docs/standards/git-workflow.md).
 11. **Enforce optimal execution & zero-waste workflows:** All developer setups, Docker builds, CI jobs, test suites, and scripts must be engineered for speed and caching. Performance or cycle-time regressions are treated as blocking defects.
 12. **Mandatory 1:1 test file correspondence:** Every single source file, helper, util, rule, normalizer, or adapter MUST map to at least one dedicated test file matching its name; grouping tests for multiple separate source files into a single bundled test file is a strict architectural violation. See [docs/standards/testing.md](docs/standards/testing.md).
+13. **Package tiers & dependency layers:** A shared package's **directory** declares where its code may run — `packages/universal/` (browser and server), `packages/server/` (Node/Bun only), `packages/client/` (browser only) — and `vp.layer` in its `package.json` declares which way its dependencies may point (strictly down; a same-layer edge is a violation). `server` and `client` never see each other, so no path leads from `apps/web` to a server package. `pnpm boundaries` runs ahead of `pnpm build` and `pnpm typecheck` and fails on a violation. See [packages/AGENTS.md](packages/AGENTS.md).
 
 ---
 
@@ -38,8 +39,8 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 
 Agents working in a specific package or app MUST follow its dedicated `AGENTS.md`:
 
-- **Frontend Client (`apps/web`):** [apps/web/AGENTS.md](apps/web/AGENTS.md)  
-  *Headless UI, React 19, TanStack Router & Query, URL state (STS pattern), zero logic in JSX, skeleton placeholders.*
+- **Frontend Client (`apps/web`, client/T4):** [apps/web/AGENTS.md](apps/web/AGENTS.md)  
+  *React 18 + Create React App 5 + RTK Query + Bootstrap today; declarative `<Can>` authorization, all HTTP through `@vp/api-client`. The React 19 / TanStack / Tailwind stack is target state owned by tickets 49–75.*
 - **Backend API (`apps/api`):** [apps/api/AGENTS.md](apps/api/AGENTS.md)  
   *Fastify 5, thin route transport adapters, deep domain services (>1:1 ratio), HttpCacheService, Singleflight, SseHub.*
 - **Worker Runtime (`apps/worker`):** [apps/worker/AGENTS.md](apps/worker/AGENTS.md)  
@@ -83,4 +84,4 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 
 ## Global Commands Quick Reference
 
-`make up` (infra) · `make up-all` (everything) · `make smoke` · `make smoke-offline` · `pnpm dev` · `pnpm test` · `pnpm test:bun` · `pnpm lint` · `pnpm typecheck` · `make k3d-up && make k3d-deploy` (Kubernetes) · `make e2e` (acceptance suite).
+`make up` (infra) · `make up-all` (everything) · `make smoke` · `make smoke-offline` · `pnpm dev` · `pnpm test` · `pnpm test:bun` · `pnpm lint` · `pnpm typecheck` · `pnpm boundaries` (tiers, layers, `CLAUDE.md` symlinks) · `pnpm sync:claude` · `make k3d-up && make k3d-deploy` (Kubernetes) · `make e2e` (acceptance suite; `E2E_REDUCED=true` for the CI set).

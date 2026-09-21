@@ -319,14 +319,22 @@ The library is invisible to the tool it was assembled for.
   `.agents/skills/.licenses-video-pipeline-skills/ATTRIBUTION.md`.
 - **Delete the three web skills that document a stack the app does not use** — `web-tanstack-query`,
   `web-headless-ui`, `web-player-hls` describe TanStack, Radix, Tailwind and hls.js, all of which have **0
-  occurrences** in `apps/web/src`. Restore them when the W2 follow-up rewrite lands.
+  occurrences** in `apps/web/src`. **Done:** all three removed, which empties `apps/web/.agents/` entirely —
+  so `apps/web` has no `.claude/skills` link either. They come back with the frontend rewrite (tickets
+  49–75), rewritten against whatever that migration actually installs rather than against ADR-21's wishlist.
+  `apps/web/AGENTS.md` §4 records this so the next reader does not assume the skills were lost.
 - **Replace the three symlink scripts with one.** `mklinks.sh` (40), `mklinks.bat` (12) and
   `create-claude-symlinks.ps1` (60) maintain one folder list in three languages, and **all three are already
   stale** — none includes `packages/permissions`, whose `CLAUDE.md` was created by hand. Derive the list from
   `find . -name AGENTS.md` instead of hardcoding it.
 - **Create `docs/adr/`.** `docs/agents/domain.md` instructs every engineering skill to read it; it does not
-  exist. All 22 ADRs live inline in SDD §4. Either extract them or amend `domain.md` to point at SDD §4 —
+  exist. All ADRs live inline in SDD §4. Either extract them or amend `domain.md` to point at SDD §4 —
   currently the agent tooling is told to read a directory that isn't there.
+  **Decision: amend `domain.md`, do not create `docs/adr/`.** Extracting 23 ADRs into files either duplicates
+  SDD §4 or guts a document every ticket links into by anchor, and Rule 3 forbids a contract with two homes.
+  `domain.md` now says plainly that there is no `docs/adr/`, that SDD §4 is where ADRs are read *and*
+  written, and that the single-context scaffolding (`CONTEXT-MAP.md`, `src/<context>/docs/adr/`) does not
+  apply here.
 - **Fix `packages/tsconfig/AGENTS.md`:** claims NodeNext module resolution (actual: `bundler`) and lists
   `noImplicitAny` / `exactOptionalPropertyTypes` invariants that **do not exist** in `base.json`.
 - **Rewrite `apps/web/AGENTS.md`** to describe the app as it is, with the target state marked as target.
@@ -344,6 +352,32 @@ The library is invisible to the tool it was assembled for.
   no turbo cache at all and still builds. Share one cache namespace, or enable remote caching. Also:
   `load-smoke.yml:9` triggers a full k6 load test on any `apps/**` change, including frontend-only edits, and
   `:24` installs without `--frozen-lockfile` or a pnpm cache.
+
+#### Found while verifying W8 — `pnpm build` is red, and it is a tier-packaging decision (not W8)
+
+`pnpm --filter @vp/web build`, and therefore the root `pnpm build` and the four CI jobs that run it, fail:
+
+```
+Module not found: Error: Can't resolve '../types' in 'packages/universal/permissions/dist/rules'
+BREAKING CHANGE: The request '../types' failed to resolve only because it was resolved as fully specified
+```
+
+`@vp/permissions` declares `"type": "module"` and compiles with `moduleResolution: "bundler"`, so its `dist/`
+keeps extensionless relative imports. Node resolves those only under a bundler; webpack 5 — which CRA gives
+`apps/web` — applies strict ESM resolution to a `"type": "module"` dependency and refuses them. It bites
+`@vp/permissions` first only because that is the first universal package with a browser consumer;
+`@vp/api-contracts` and `@vp/api-client` have the same shape.
+
+The universal tier now has a browser consumer, so **how it emits** is part of the tier decision, not an
+`apps/web` bug, and the fix belongs with W2/W9 rather than hygiene. Three options, none free:
+
+1. `moduleResolution: "nodenext"` for the universal + client packages and `.js` on every relative import —
+   note `scripts/remove-js-extensions.py`, deleted in W8, was the codemod that took them *off*.
+2. Bundle those packages on build (tsup/esbuild), which also fixes the `"types"`/`"exports"` story.
+3. Have `apps/web` consume source rather than `dist` — impossible under CRA without ejecting.
+
+Whichever is chosen belongs in ADR-23, which the Documentation DoD calls for and which SDD §4 still lacks
+(§4 jumps ADR-22 → ADR-24).
 
 ---
 
@@ -544,14 +578,16 @@ Extend the W3 architecture suite (do not start a second one):
       `queue-service.ts` no longer duck-types past the port.
 
 ### W8 — Hygiene, docs & tooling
-- [ ] `.claude/skills` registration in place; `improve-codebase-architecture` vendored; `ATTRIBUTION.md` updated.
-- [ ] The three stale `apps/web/.agents/skills/` entries removed.
-- [ ] One symlink script, deriving its list from disk; `packages/permissions` covered.
-- [ ] `docs/adr/` exists, or `docs/agents/domain.md` points at SDD §4 instead.
-- [ ] `packages/tsconfig/AGENTS.md`, `apps/web/AGENTS.md` and root `AGENTS.md` match reality.
-- [ ] `check_ci.py` and `scripts/remove-js-extensions.py` deleted; e2e wrapper chain collapsed.
-- [ ] CI turbo caches share a namespace or remote caching is enabled; `load-smoke.yml` no longer triggers on
+- [x] `.claude/skills` registration in place; `improve-codebase-architecture` vendored; `ATTRIBUTION.md` updated.
+- [x] The three stale `apps/web/.agents/skills/` entries removed.
+- [x] One symlink script, deriving its list from disk; `packages/permissions` covered.
+- [x] `docs/adr/` exists, or `docs/agents/domain.md` points at SDD §4 instead.
+- [x] `packages/tsconfig/AGENTS.md`, `apps/web/AGENTS.md` and root `AGENTS.md` match reality.
+- [x] `check_ci.py` and `scripts/remove-js-extensions.py` deleted; e2e wrapper chain collapsed.
+- [x] CI turbo caches share a namespace or remote caching is enabled; `load-smoke.yml` no longer triggers on
       frontend-only changes and installs with `--frozen-lockfile` + cache.
+- [x] `pnpm boundaries` is a CI check: `lint-typecheck` runs it as a named fail-fast step and again inside
+      `pnpm typecheck`.
 
 ### W9 — Workspace layout & tier purity
 - [ ] `core/` and `adapters/` live under `packages/<tier>/`; root `observability/` moved next to the code that

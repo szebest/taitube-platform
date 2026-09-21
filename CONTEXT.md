@@ -27,6 +27,29 @@
   - **Error Boundary**: A hierarchical UI containment boundary isolating catastrophic route failures from non-critical widget errors (e.g. failing comments do not interrupt ongoing video playback).
   - **URL State Model**: The architectural paradigm where URL search parameters serve as the canonical single source of truth for view filters, active tabs, and modal overlays (the STS pattern), guaranteeing deep-linkability, browser back-button navigation, and refresh durability.
 
+### Architecture vocabulary
+
+Terms that name the repository's own structure rather than the product domain. Use them verbatim; they are
+defined once here and specified in full in [packages/AGENTS.md](packages/AGENTS.md).
+
+- **Package Tier**: *where a package's code may run* — `universal` (browser and server), `server` (Node/Bun
+  only) or `client` (browser only). The tier is the package's **directory** (`packages/<tier>/<name>`), not a
+  reviewer's opinion, and `server` and `client` can never see each other. This is what makes `ioredis`
+  unreachable from `apps/web`. _Avoid_: "platform", "environment", "scope".
+- **Dependency Layer**: *which way dependencies may point* — `vp.layer` in `package.json`, T1 Foundation → T2
+  Contracts & domain capability → T3 Integration → T4 Application. Dependencies point strictly down; a
+  same-layer (sibling) edge is a violation, not a shortcut. Orthogonal to the tier: a package can be
+  `universal` and T1, or `server` and T3. _Avoid_: "level", "depth" (depth is a property of a module's
+  interface, see §2).
+- **Contract Package**: a `universal` package that single-sources a shape both sides of a seam must agree on,
+  so neither can drift. `@vp/api-contracts` (HTTP request/response schemas), `@vp/permissions` (CASL rules)
+  and `@vp/errors` (error codes) are the three; `@vp/job-contracts` is the server-side equivalent for queue
+  payloads. A type copied instead of imported from one of these is the defect the package exists to prevent.
+- **Conformance Suite**: `tests/architecture/` — the tests that assert the repo's own rules against the
+  manifest graph rather than against source text. It is the enforcement half of every "documented vs actual"
+  gap: a rule stated only in prose has drifted, a rule with a conformance test has not. `pnpm boundaries`
+  runs the same assertions as a fail-fast script ahead of `pnpm build` and `pnpm typecheck`.
+
 ---
 
 ## 2. Codebase Architecture & Seam Discipline
