@@ -39,6 +39,7 @@ export interface FakeQueueInit {
 export class FakeQueue {
   readonly name: string;
   readonly opts: { connection: { host: string; port: number }; prefix: string };
+  readonly metaValues = { version: 'bullmq' };
   readonly added: Array<{ name: string; data: unknown; opts: Record<string, unknown> }> = [];
 
   paused = false;

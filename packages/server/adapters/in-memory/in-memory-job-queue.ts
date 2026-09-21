@@ -21,8 +21,6 @@ export class InMemoryJobQueue extends JobQueue {
   readonly enqueuedJobs: QueueJob<unknown>[] = [];
   readonly completedJobs: QueueJob<unknown>[] = [];
   readonly failedJobs: { job: QueueJob<unknown>; error: unknown }[] = [];
-  readonly metaValues = { version: 'bullmq' };
-  readonly opts = { prefix: 'bull' };
 
   constructor(name = 'default') {
     super();

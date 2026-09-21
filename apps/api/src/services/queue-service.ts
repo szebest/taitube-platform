@@ -1,10 +1,10 @@
 import { createBullBoard } from '@bull-board/api';
-import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { FastifyAdapter } from '@bull-board/fastify';
 import { CaslAuthorizationAdapter } from '@vp/adapters';
+import { bullBoardQueues } from '@vp/adapters/bullmq';
 import type { AuthorizationPort, JobQueue } from '@vp/core/ports';
 import { PermanentError } from '@vp/errors';
-import { QUEUES, type QueueName } from '@vp/job-contracts';
+import { QUEUES } from '@vp/job-contracts';
 import type { FastifyPluginCallback } from 'fastify';
 import type { AuthUser } from '../plugins/auth';
 import { assertAdminAccess } from './admin-access';
@@ -127,44 +127,11 @@ export class QueueService {
    * Configures and returns the Bull Board Fastify plugin mounted at the given basePath.
    */
   getBoardPlugin(basePath: string): FastifyPluginCallback {
-    const queueAdapters = QUEUES.map((queueName: QueueName) => {
-      const q = this.queuesMap.get(queueName);
-      if (!q) {
-        const dummyQueue = {
-          name: queueName,
-          isPaused: async () => false,
-          pause: async () => {},
-          resume: async () => {},
-          getJobCounts: async () => ({
-            active: 0,
-            completed: 0,
-            failed: 0,
-            delayed: 0,
-            waiting: 0,
-            paused: 0,
-          }),
-          getJobs: async () => [],
-          opts: { prefix: 'bull' },
-          metaValues: { version: 'bullmq' },
-        };
-        return new BullMQAdapter(
-          dummyQueue as unknown as ConstructorParameters<typeof BullMQAdapter>[0]
-        );
-      }
-
-      const queueWithRaw = q as { getRawQueue?: () => unknown };
-      const rawQueue =
-        typeof queueWithRaw.getRawQueue === 'function' ? queueWithRaw.getRawQueue() : q;
-      return new BullMQAdapter(
-        rawQueue as unknown as ConstructorParameters<typeof BullMQAdapter>[0]
-      );
-    });
-
     const serverAdapter = new FastifyAdapter();
     serverAdapter.setBasePath(basePath);
 
     createBullBoard({
-      queues: queueAdapters,
+      queues: bullBoardQueues(this.queuesMap.values()),
       serverAdapter,
     });
 
