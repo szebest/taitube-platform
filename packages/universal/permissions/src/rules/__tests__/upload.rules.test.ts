@@ -1,26 +1,53 @@
-import { AbilityBuilder, createMongoAbility, subject } from '@casl/ability';
-import { describe, expect, it } from 'vitest';
+import { subject } from '@casl/ability';
 import { creatorUser, foreignUpload, guestUser, sampleUpload } from '../../__mocks__/fixtures';
-import type { AppAbility, UserContext } from '../../types';
+import type { AppAction, AppSubjects, UserContext } from '../../types';
 import { defineUploadRules } from '../upload.rules';
-
-function buildUploadAbility(user: UserContext | null): AppAbility {
-  const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
-  defineUploadRules(user, builder);
-  return builder.build();
-}
+import { buildAbility } from './build-ability';
 
 describe('rules/upload.rules: Declarative Upload Ability Rules', () => {
-  it('forbids unauthenticated guest from creating or accessing uploads', () => {
-    const ability = buildUploadAbility(guestUser);
-    expect(ability.can('create', 'Upload')).toBe(false);
-    expect(ability.can('access', subject('Upload', sampleUpload))).toBe(false);
-  });
-
-  it('allows owner to access their upload', () => {
-    const ability = buildUploadAbility(creatorUser);
-    expect(ability.can('create', 'Upload')).toBe(true);
-    expect(ability.can('access', subject('Upload', sampleUpload))).toBe(true);
-    expect(ability.can('access', subject('Upload', foreignUpload))).toBe(false);
+  it.each<{
+    scenario: string;
+    user: UserContext | null;
+    action: AppAction;
+    target: AppSubjects;
+    expected: boolean;
+  }>([
+    {
+      scenario: 'a guest creates an upload',
+      user: guestUser,
+      action: 'create',
+      target: 'Upload',
+      expected: false,
+    },
+    {
+      scenario: 'a guest accesses an upload',
+      user: guestUser,
+      action: 'access',
+      target: subject('Upload', sampleUpload),
+      expected: false,
+    },
+    {
+      scenario: 'a creator creates an upload',
+      user: creatorUser,
+      action: 'create',
+      target: 'Upload',
+      expected: true,
+    },
+    {
+      scenario: 'the owner accesses their upload',
+      user: creatorUser,
+      action: 'access',
+      target: subject('Upload', sampleUpload),
+      expected: true,
+    },
+    {
+      scenario: 'the owner accesses a foreign upload',
+      user: creatorUser,
+      action: 'access',
+      target: subject('Upload', foreignUpload),
+      expected: false,
+    },
+  ])('$scenario: $expected', ({ user, action, target, expected }) => {
+    expect(buildAbility(defineUploadRules, user).can(action, target)).toBe(expected);
   });
 });

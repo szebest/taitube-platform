@@ -1,367 +1,301 @@
 import { execSync } from 'node:child_process';
 import * as path from 'node:path';
 import * as yaml from 'js-yaml';
-import { describe, expect, it } from 'vitest';
 
-describe('Kubernetes Manifests & Overlays (Ticket 25 & 26)', () => {
-  const repoRoot = path.resolve(__dirname, '../../../../../');
-  const localOverlayDir = path.join(repoRoot, 'infra/k8s/overlays/local');
-  const cloudOverlayDir = path.join(repoRoot, 'infra/k8s/overlays/cloud');
+type Manifest = Record<string, any>;
 
-  it('renders local overlay successfully using kustomize', () => {
-    const output = execSync(`kubectl kustomize "${localOverlayDir}"`, {
-      encoding: 'utf-8',
-    });
-    expect(output).toBeDefined();
-    const documents = yaml.loadAll(output) as Array<Record<string, any>>;
-    expect(documents.length).toBeGreaterThan(10);
+const repoRoot = path.resolve(__dirname, '../../../../../');
+const rendered = new Map<string, Manifest[]>();
 
-    // Verify Namespace
-    const ns = documents.find((d) => d?.kind === 'Namespace');
-    expect(ns?.metadata?.name).toBe('video-pipeline');
+function overlay(name: 'local' | 'cloud'): Manifest[] {
+  const cached = rendered.get(name);
+  if (cached) {
+    return cached;
+  }
+  const dir = path.join(repoRoot, `infra/k8s/overlays/${name}`);
+  const documents = yaml.loadAll(
+    execSync(`kubectl kustomize "${dir}"`, { encoding: 'utf-8' })
+  ) as Manifest[];
+  rendered.set(name, documents);
+  return documents;
+}
 
-    // Verify API Deployment
-    const apiDep = documents.find(
-      (d) => d?.kind === 'Deployment' && d?.metadata?.name === 'vp-api'
-    );
-    expect(apiDep).toBeDefined();
-    expect(apiDep?.spec.replicas).toBe(2);
-    expect(apiDep?.spec.template.spec.securityContext.runAsNonRoot).toBe(true);
-    expect(apiDep?.spec.template.spec.securityContext.runAsUser).toBe(10001);
+function ofKind(name: 'local' | 'cloud', kind: string): Manifest[] {
+  return overlay(name).filter((doc) => doc?.kind === kind);
+}
 
-    const apiContainer = apiDep?.spec.template.spec.containers[0];
-    expect(apiContainer.securityContext.readOnlyRootFilesystem).toBe(true);
-    expect(apiContainer.securityContext.allowPrivilegeEscalation).toBe(false);
-    expect(apiContainer.resources.requests.cpu).toBe('250m');
-    expect(apiContainer.resources.requests.memory).toBe('256Mi');
-    expect(apiContainer.resources.limits.cpu).toBe('1000m');
-    expect(apiContainer.resources.limits.memory).toBe('512Mi');
-    expect(apiContainer.livenessProbe.httpGet.path).toBe('/livez');
-    expect(apiContainer.readinessProbe.httpGet.path).toBe('/readyz');
+function named(name: 'local' | 'cloud', kind: string, metadataName: string): Manifest | undefined {
+  return ofKind(name, kind).find((doc) => doc.metadata?.name === metadataName);
+}
 
-    // Verify API HPA
-    const apiHpa = documents.find((d) => d?.kind === 'HorizontalPodAutoscaler');
-    expect(apiHpa).toBeDefined();
-    expect(apiHpa?.spec.scaleTargetRef.name).toBe('vp-api');
-    expect(apiHpa?.spec.minReplicas).toBe(2);
+const WORKER_STAGES = [
+  {
+    name: 'vp-worker-probe',
+    grace: 60,
+    requests: { cpu: '500m', memory: '512Mi' },
+    limits: { cpu: '1000m', memory: '1Gi' },
+    threads: true,
+    maxReplicas: 4,
+    redisFallback: false,
+  },
+  {
+    name: 'vp-worker-transcode-1080p',
+    grace: 900,
+    requests: { cpu: '1500m', memory: '1.5Gi' },
+    limits: { cpu: '2', memory: '2Gi' },
+    threads: true,
+    maxReplicas: 6,
+    redisFallback: false,
+  },
+  {
+    name: 'vp-worker-transcode-720p',
+    grace: 600,
+    requests: { cpu: '1000m', memory: '1Gi' },
+    limits: { cpu: '2', memory: '1.5Gi' },
+    threads: true,
+    maxReplicas: 6,
+    redisFallback: false,
+  },
+  {
+    name: 'vp-worker-transcode-480p',
+    grace: 300,
+    requests: { cpu: '500m', memory: '512Mi' },
+    limits: { cpu: '1', memory: '1Gi' },
+    threads: true,
+    maxReplicas: 6,
+    redisFallback: true,
+  },
+  {
+    name: 'vp-worker-thumbnail',
+    grace: 120,
+    requests: { cpu: '500m', memory: '512Mi' },
+    limits: { cpu: '1000m', memory: '1Gi' },
+    threads: true,
+    maxReplicas: 4,
+    redisFallback: false,
+  },
+  {
+    name: 'vp-worker-package',
+    grace: 120,
+    requests: { cpu: '500m', memory: '512Mi' },
+    limits: { cpu: '1000m', memory: '1Gi' },
+    threads: true,
+    maxReplicas: 4,
+    redisFallback: false,
+  },
+  {
+    name: 'vp-worker-notify',
+    grace: 30,
+    requests: { cpu: '100m', memory: '128Mi' },
+    limits: { cpu: '500m', memory: '256Mi' },
+    threads: false,
+    maxReplicas: 4,
+    redisFallback: false,
+  },
+  {
+    name: 'vp-worker-housekeeping',
+    grace: 60,
+    requests: { cpu: '200m', memory: '256Mi' },
+    limits: { cpu: '500m', memory: '512Mi' },
+    threads: false,
+    maxReplicas: 2,
+    redisFallback: false,
+  },
+];
 
-    // Verify Worker Deployments per stage
-    const workerStages = [
-      {
-        name: 'vp-worker-probe',
-        stage: 'probe',
-        grace: 60,
-        reqCpu: '500m',
-        reqMem: '512Mi',
-        limCpu: '1000m',
-        limMem: '1Gi',
-        threads: true,
-      },
-      {
-        name: 'vp-worker-transcode-1080p',
-        stage: 'transcode-1080p',
-        grace: 900,
-        reqCpu: '1500m',
-        reqMem: '1.5Gi',
-        limCpu: '2',
-        limMem: '2Gi',
-        threads: true,
-      },
-      {
-        name: 'vp-worker-transcode-720p',
-        stage: 'transcode-720p',
-        grace: 600,
-        reqCpu: '1000m',
-        reqMem: '1Gi',
-        limCpu: '2',
-        limMem: '1.5Gi',
-        threads: true,
-      },
-      {
-        name: 'vp-worker-transcode-480p',
-        stage: 'transcode-480p',
-        grace: 300,
-        reqCpu: '500m',
-        reqMem: '512Mi',
-        limCpu: '1',
-        limMem: '1Gi',
-        threads: true,
-      },
-      {
-        name: 'vp-worker-thumbnail',
-        stage: 'thumbnail',
-        grace: 120,
-        reqCpu: '500m',
-        reqMem: '512Mi',
-        limCpu: '1000m',
-        limMem: '1Gi',
-        threads: true,
-      },
-      {
-        name: 'vp-worker-package',
-        stage: 'package',
-        grace: 120,
-        reqCpu: '500m',
-        reqMem: '512Mi',
-        limCpu: '1000m',
-        limMem: '1Gi',
-        threads: true,
-      },
-      {
-        name: 'vp-worker-notify',
-        stage: 'notify',
-        grace: 30,
-        reqCpu: '100m',
-        reqMem: '128Mi',
-        limCpu: '500m',
-        limMem: '256Mi',
-        threads: false,
-      },
-      {
-        name: 'vp-worker-housekeeping',
-        stage: 'housekeeping',
-        grace: 60,
-        reqCpu: '200m',
-        reqMem: '256Mi',
-        limCpu: '500m',
-        limMem: '512Mi',
-        threads: false,
-      },
-    ];
+const CLOUD_REPLICA_CAPS = [
+  { name: 'vp-worker-transcode-1080p', maxReplicas: 1 },
+  { name: 'vp-worker-transcode-720p', maxReplicas: 1 },
+  { name: 'vp-worker-transcode-480p', maxReplicas: 2 },
+  { name: 'vp-worker-probe', maxReplicas: 2 },
+];
 
-    for (const ws of workerStages) {
-      const dep = documents.find((d) => d?.kind === 'Deployment' && d?.metadata?.name === ws.name);
-      expect(dep, `Deployment ${ws.name} must exist`).toBeDefined();
-      expect(dep?.spec.replicas).toBe(1);
-      expect(dep?.spec.template.spec.terminationGracePeriodSeconds).toBe(ws.grace);
-      expect(dep?.spec.template.spec.securityContext.runAsNonRoot).toBe(true);
-      expect(dep?.spec.template.spec.securityContext.runAsUser).toBe(10001);
+const stage = (name: string) => name.replace('vp-worker-', '');
+const scaledObjectOf = (name: 'local' | 'cloud', workerName: string) =>
+  named(name, 'ScaledObject', `${workerName}-scaledobject`);
 
-      const container = dep?.spec.template.spec.containers[0];
+describe('infra/k8s: local overlay', () => {
+  it('renders more than ten documents in the video-pipeline namespace', () => {
+    expect(overlay('local').length).toBeGreaterThan(10);
+    expect(named('local', 'Namespace', 'video-pipeline')).toBeDefined();
+  });
+
+  it('runs the api as a hardened non-root deployment', () => {
+    const deployment = named('local', 'Deployment', 'vp-api');
+    expect(deployment).toBeDefined();
+    expect(deployment?.spec.replicas).toBe(2);
+    expect(deployment?.spec.template.spec.securityContext.runAsNonRoot).toBe(true);
+    expect(deployment?.spec.template.spec.securityContext.runAsUser).toBe(10001);
+
+    const container = deployment?.spec.template.spec.containers[0];
+    expect(container.securityContext.readOnlyRootFilesystem).toBe(true);
+    expect(container.securityContext.allowPrivilegeEscalation).toBe(false);
+    expect(container.resources.requests).toMatchObject({ cpu: '250m', memory: '256Mi' });
+    expect(container.resources.limits).toMatchObject({ cpu: '1000m', memory: '512Mi' });
+    expect(container.livenessProbe.httpGet.path).toBe('/livez');
+    expect(container.readinessProbe.httpGet.path).toBe('/readyz');
+  });
+
+  it('scales the api from two replicas', () => {
+    const hpa = ofKind('local', 'HorizontalPodAutoscaler')[0];
+    expect(hpa).toBeDefined();
+    expect(hpa?.spec.scaleTargetRef.name).toBe('vp-api');
+    expect(hpa?.spec.minReplicas).toBe(2);
+  });
+
+  it('deploys exactly the known worker stages', () => {
+    const workers = ofKind('local', 'Deployment')
+      .map((doc) => doc.metadata?.name as string)
+      .filter((name) => name.startsWith('vp-worker-'));
+    expect(workers.sort()).toEqual(WORKER_STAGES.map((s) => s.name).sort());
+  });
+
+  it.each(WORKER_STAGES)(
+    '$name runs hardened with its own resources and heartbeat probe',
+    ({ name, grace, requests, limits }) => {
+      const deployment = named('local', 'Deployment', name);
+      expect(deployment).toBeDefined();
+      expect(deployment?.spec.replicas).toBe(1);
+      expect(deployment?.spec.template.spec.terminationGracePeriodSeconds).toBe(grace);
+      expect(deployment?.spec.template.spec.securityContext.runAsNonRoot).toBe(true);
+      expect(deployment?.spec.template.spec.securityContext.runAsUser).toBe(10001);
+
+      const container = deployment?.spec.template.spec.containers[0];
       expect(container.securityContext.readOnlyRootFilesystem).toBe(true);
       expect(container.securityContext.allowPrivilegeEscalation).toBe(false);
-      expect(container.resources.requests.cpu).toBe(ws.reqCpu);
-      expect(container.resources.requests.memory).toBe(ws.reqMem);
-      expect(container.resources.limits.cpu).toBe(ws.limCpu);
-      expect(container.resources.limits.memory).toBe(ws.limMem);
-
-      // Verify liveness probe with heartbeat
-      expect(container.livenessProbe).toBeDefined();
+      expect(container.resources.requests).toMatchObject(requests);
+      expect(container.resources.limits).toMatchObject(limits);
       expect(container.livenessProbe.exec.command[2]).toContain('/tmp/vp/heartbeat');
 
-      // Verify FFMPEG_THREADS from limits.cpu if relevant
-      if (ws.threads) {
-        const threadEnv = container.env.find((e: any) => e.name === 'FFMPEG_THREADS');
-        expect(threadEnv?.valueFrom?.resourceFieldRef?.resource).toBe('limits.cpu');
-      }
-
-      // Verify emptyDir for /tmp/vp
-      const tmpVolume = dep?.spec.template.spec.volumes.find((v: any) => v.name === 'tmp');
-      expect(tmpVolume).toBeDefined();
-      expect(tmpVolume.emptyDir).toBeDefined();
-      expect(tmpVolume.emptyDir.sizeLimit).toBeDefined();
+      const tmpVolume = deployment?.spec.template.spec.volumes.find(
+        (v: Manifest) => v.name === 'tmp'
+      );
+      expect(tmpVolume?.emptyDir?.sizeLimit).toBeDefined();
     }
+  );
 
-    // Verify Migration Job
-    const migrateJob = documents.find(
-      (d) => d?.kind === 'Job' && d?.metadata?.name === 'vp-migrate'
-    );
-    expect(migrateJob).toBeDefined();
-    expect(migrateJob?.spec.template.spec.containers[0].command).toEqual([
-      'node',
-      'dist/migrate.js',
-    ]);
+  it.each(WORKER_STAGES.filter((s) => s.threads))(
+    '$name derives FFMPEG_THREADS from its cpu limit',
+    ({ name }) => {
+      const container = named('local', 'Deployment', name)?.spec.template.spec.containers[0];
+      const threadEnv = container.env.find((e: Manifest) => e.name === 'FFMPEG_THREADS');
+      expect(threadEnv?.valueFrom?.resourceFieldRef?.resource).toBe('limits.cpu');
+    }
+  );
 
-    // Verify ServiceMonitors
-    const sm = documents.filter((d) => d?.kind === 'ServiceMonitor');
-    expect(sm.length).toBe(2);
-
-    // Verify Ingress
-    const ingress = documents.find((d) => d?.kind === 'Ingress');
-    expect(ingress).toBeDefined();
-    const paths = ingress?.spec.rules[0].http.paths.map((p: any) => p.path);
-    expect(paths).toContain('/v1');
-    expect(paths).toContain('/readyz');
-    expect(paths).toContain('/livez');
+  it('migrates the database from a job', () => {
+    const job = named('local', 'Job', 'vp-migrate');
+    expect(job).toBeDefined();
+    expect(job?.spec.template.spec.containers[0].command).toEqual(['node', 'dist/migrate.js']);
   });
 
-  it('validates KEDA ScaledObjects in local overlay (Ticket 26)', () => {
-    const output = execSync(`kubectl kustomize "${localOverlayDir}"`, {
-      encoding: 'utf-8',
-    });
-    const documents = yaml.loadAll(output) as Array<Record<string, any>>;
-    const scaledObjects = documents.filter((d) => d?.kind === 'ScaledObject');
+  it('scrapes both services', () => {
+    expect(ofKind('local', 'ServiceMonitor')).toHaveLength(2);
+  });
 
-    expect(scaledObjects.length).toBe(8);
+  it('routes the api and its probes through the ingress', () => {
+    const ingress = ofKind('local', 'Ingress')[0];
+    expect(ingress).toBeDefined();
+    const paths = ingress?.spec.rules[0].http.paths.map((p: Manifest) => p.path);
+    expect(paths).toEqual(expect.arrayContaining(['/v1', '/readyz', '/livez']));
+  });
+});
 
-    const expectedConfigs: Record<
-      string,
-      {
-        stage: string;
-        targetDep: string;
-        maxReplicas: number;
-        hasRedisFallback?: boolean;
-      }
-    > = {
-      'vp-worker-probe-scaledobject': {
-        stage: 'probe',
-        targetDep: 'vp-worker-probe',
-        maxReplicas: 4,
-      },
-      'vp-worker-transcode-1080p-scaledobject': {
-        stage: 'transcode-1080p',
-        targetDep: 'vp-worker-transcode-1080p',
-        maxReplicas: 6,
-      },
-      'vp-worker-transcode-720p-scaledobject': {
-        stage: 'transcode-720p',
-        targetDep: 'vp-worker-transcode-720p',
-        maxReplicas: 6,
-      },
-      'vp-worker-transcode-480p-scaledobject': {
-        stage: 'transcode-480p',
-        targetDep: 'vp-worker-transcode-480p',
-        maxReplicas: 6,
-        hasRedisFallback: true,
-      },
-      'vp-worker-thumbnail-scaledobject': {
-        stage: 'thumbnail',
-        targetDep: 'vp-worker-thumbnail',
-        maxReplicas: 4,
-      },
-      'vp-worker-package-scaledobject': {
-        stage: 'package',
-        targetDep: 'vp-worker-package',
-        maxReplicas: 4,
-      },
-      'vp-worker-notify-scaledobject': {
-        stage: 'notify',
-        targetDep: 'vp-worker-notify',
-        maxReplicas: 4,
-      },
-      'vp-worker-housekeeping-scaledobject': {
-        stage: 'housekeeping',
-        targetDep: 'vp-worker-housekeeping',
-        maxReplicas: 2,
-      },
-    };
+describe('infra/k8s: local KEDA autoscaling', () => {
+  it('declares exactly the known scaled objects', () => {
+    const names = ofKind('local', 'ScaledObject').map((doc) => doc.metadata?.name as string);
+    expect(names.sort()).toEqual(WORKER_STAGES.map((s) => `${s.name}-scaledobject`).sort());
+  });
 
-    for (const so of scaledObjects) {
-      const name = so.metadata?.name;
-      const expected = expectedConfigs[name];
-      expect(expected, `ScaledObject ${name} must be known`).toBeDefined();
-      if (!expected) continue;
+  it.each(WORKER_STAGES)(
+    '$name scales from zero on its own queue depth',
+    ({ name, maxReplicas }) => {
+      const scaledObject = scaledObjectOf('local', name);
+      expect(scaledObject).toBeDefined();
+      expect(scaledObject?.metadata?.namespace).toBe('video-pipeline');
+      expect(scaledObject?.spec.scaleTargetRef.name).toBe(name);
+      expect(scaledObject?.spec.minReplicaCount).toBe(0);
+      expect(scaledObject?.spec.maxReplicaCount).toBe(maxReplicas);
+      expect(scaledObject?.spec.pollingInterval).toBe(10);
+      expect(scaledObject?.spec.cooldownPeriod).toBe(300);
 
-      expect(so.metadata?.namespace).toBe('video-pipeline');
-      expect(so.spec.scaleTargetRef.name).toBe(expected.targetDep);
-      expect(so.spec.minReplicaCount).toBe(0);
-      expect(so.spec.maxReplicaCount).toBe(expected.maxReplicas);
-      expect(so.spec.pollingInterval).toBe(10);
-      expect(so.spec.cooldownPeriod).toBe(300);
+      const behavior = scaledObject?.spec.advanced?.horizontalPodAutoscalerConfig?.behavior;
+      expect(behavior).toBeDefined();
+      expect(behavior.scaleUp.stabilizationWindowSeconds).toBe(0);
+      expect(behavior.scaleDown.stabilizationWindowSeconds).toBe(300);
 
-      // HPA behavior: fast up, slow down
-      const hpaConfig = so.spec.advanced?.horizontalPodAutoscalerConfig?.behavior;
-      expect(hpaConfig).toBeDefined();
-      expect(hpaConfig.scaleUp.stabilizationWindowSeconds).toBe(0);
-      expect(hpaConfig.scaleDown.stabilizationWindowSeconds).toBe(300);
-
-      // Prometheus scaler trigger
-      const promTrigger = so.spec.triggers.find((t: any) => t.type === 'prometheus');
-      expect(promTrigger, `ScaledObject ${name} must have a Prometheus trigger`).toBeDefined();
-      expect(promTrigger.metadata.serverAddress).toBe(
+      const prometheus = scaledObject?.spec.triggers.find((t: Manifest) => t.type === 'prometheus');
+      expect(prometheus).toBeDefined();
+      expect(prometheus.metadata.serverAddress).toBe(
         'http://kube-prometheus-stack-prometheus.monitoring.svc:9090'
       );
-      expect(promTrigger.metadata.threshold).toBe('1');
-      expect(promTrigger.metadata.activationThreshold).toBe('0');
-      expect(promTrigger.metadata.query).toContain(`queue="${expected.stage}"`);
-      expect(promTrigger.metadata.query).toContain('state=~"waiting|prioritized|active"');
-      expect(promTrigger.metadata.query).toContain('or vector(0)');
-
-      // Redis fallback trigger on transcode-480p
-      if (expected.hasRedisFallback) {
-        const redisTrigger = so.spec.triggers.find((t: any) => t.type === 'redis');
-        expect(redisTrigger, 'vp-worker-transcode-480p must have a redis trigger').toBeDefined();
-        expect(redisTrigger.metadata.addressFromEnv).toBe('REDIS_ADDR');
-        expect(redisTrigger.metadata.passwordFromEnv).toBe('REDIS_PASSWORD');
-        expect(redisTrigger.metadata.listName).toBe('bull:transcode-480p:wait');
-        expect(redisTrigger.metadata.listLength).toBe('1');
-        expect(redisTrigger.metadata.activationListLength).toBe('0');
-      }
+      expect(prometheus.metadata.threshold).toBe('1');
+      expect(prometheus.metadata.activationThreshold).toBe('0');
+      expect(prometheus.metadata.query).toContain(`queue="${stage(name)}"`);
+      expect(prometheus.metadata.query).toContain('state=~"waiting|prioritized|active"');
+      expect(prometheus.metadata.query).toContain('or vector(0)');
     }
+  );
+
+  it('declares a redis fallback trigger only where a stage asks for one', () => {
+    const withRedis = WORKER_STAGES.filter((s) =>
+      scaledObjectOf('local', s.name)?.spec.triggers.some((t: Manifest) => t.type === 'redis')
+    );
+    expect(withRedis).toEqual(WORKER_STAGES.filter((s) => s.redisFallback));
   });
 
-  it('renders cloud overlay and validates overlay replica caps (Ticket 26)', () => {
-    const output = execSync(`kubectl kustomize "${cloudOverlayDir}"`, {
-      encoding: 'utf-8',
-    });
-    expect(output).toBeDefined();
-    const documents = yaml.loadAll(output) as Array<Record<string, any>>;
-    expect(documents.length).toBeGreaterThan(10);
+  it.each(WORKER_STAGES.filter((s) => s.redisFallback))(
+    '$name falls back to the redis list scaler',
+    ({ name }) => {
+      const redis = scaledObjectOf('local', name)?.spec.triggers.find(
+        (t: Manifest) => t.type === 'redis'
+      );
+      expect(redis.metadata.addressFromEnv).toBe('REDIS_ADDR');
+      expect(redis.metadata.passwordFromEnv).toBe('REDIS_PASSWORD');
+      expect(redis.metadata.listName).toBe(`bull:${stage(name)}:wait`);
+      expect(redis.metadata.listLength).toBe('1');
+      expect(redis.metadata.activationListLength).toBe('0');
+    }
+  );
+});
 
-    const scaledObjects = documents.filter((d) => d?.kind === 'ScaledObject');
-    expect(scaledObjects.length).toBe(8);
-
-    // Cloud overlay constraints per SDD §12.3: 1 for 1080p/720p, 2 for 480p/probe
-    const transcode1080p = scaledObjects.find(
-      (s) => s.metadata?.name === 'vp-worker-transcode-1080p-scaledobject'
-    );
-    expect(transcode1080p?.spec.maxReplicaCount).toBe(1);
-
-    const transcode720p = scaledObjects.find(
-      (s) => s.metadata?.name === 'vp-worker-transcode-720p-scaledobject'
-    );
-    expect(transcode720p?.spec.maxReplicaCount).toBe(1);
-
-    const transcode480p = scaledObjects.find(
-      (s) => s.metadata?.name === 'vp-worker-transcode-480p-scaledobject'
-    );
-    expect(transcode480p?.spec.maxReplicaCount).toBe(2);
-
-    const probe = scaledObjects.find((s) => s.metadata?.name === 'vp-worker-probe-scaledobject');
-    expect(probe?.spec.maxReplicaCount).toBe(2);
+describe('infra/k8s: cloud overlay', () => {
+  it('renders more than ten documents and the same eight scaled objects', () => {
+    expect(overlay('cloud').length).toBeGreaterThan(10);
+    expect(ofKind('cloud', 'ScaledObject')).toHaveLength(WORKER_STAGES.length);
   });
 
-  it('validates cloud overlay resources and configuration (Ticket 32)', () => {
-    const output = execSync(`kubectl kustomize "${cloudOverlayDir}"`, {
-      encoding: 'utf-8',
-    });
-    const documents = yaml.loadAll(output) as Array<Record<string, any>>;
+  it.each(CLOUD_REPLICA_CAPS)('caps $name at $maxReplicas replicas', ({ name, maxReplicas }) => {
+    expect(scaledObjectOf('cloud', name)?.spec.maxReplicaCount).toBe(maxReplicas);
+  });
 
-    // Cloudflare Tunnel Deployment
-    const cloudflared = documents.find(
-      (d) => d?.kind === 'Deployment' && d?.metadata?.name === 'cloudflared'
-    );
+  it('fronts the cluster with a cloudflare tunnel', () => {
+    const cloudflared = named('cloud', 'Deployment', 'cloudflared');
     expect(cloudflared).toBeDefined();
     expect(cloudflared?.spec.template.spec.containers[0].image).toContain('cloudflare/cloudflared');
+  });
 
-    // Redis StatefulSet
-    const redisSts = documents.find(
-      (d) => d?.kind === 'StatefulSet' && d?.metadata?.name === 'vp-redis-master'
-    );
-    expect(redisSts).toBeDefined();
-    expect(redisSts?.spec.volumeClaimTemplates).toHaveLength(1);
-    expect(redisSts?.spec.volumeClaimTemplates[0].metadata.name).toBe('redis-data');
+  it('persists redis through a volume claim template', () => {
+    const redis = named('cloud', 'StatefulSet', 'vp-redis-master');
+    expect(redis).toBeDefined();
+    expect(redis?.spec.volumeClaimTemplates).toHaveLength(1);
+    expect(redis?.spec.volumeClaimTemplates[0].metadata.name).toBe('redis-data');
+  });
 
-    // Alloy Deployment & ConfigMap
-    const alloyDep = documents.find(
-      (d) => d?.kind === 'Deployment' && d?.metadata?.name === 'alloy'
-    );
-    expect(alloyDep).toBeDefined();
-    const alloyCm = documents.find(
-      (d) => d?.kind === 'ConfigMap' && d?.metadata?.name === 'alloy-config'
-    );
-    expect(alloyCm).toBeDefined();
-    expect(alloyCm?.data['config.alloy']).toContain('otelcol.receiver.otlp');
+  it('ships telemetry through alloy', () => {
+    expect(named('cloud', 'Deployment', 'alloy')).toBeDefined();
+    const config = named('cloud', 'ConfigMap', 'alloy-config');
+    expect(config?.data['config.alloy']).toContain('otelcol.receiver.otlp');
+  });
 
-    // ConfigMap patches
-    const vpConfig = documents.find(
-      (d) => d?.kind === 'ConfigMap' && d?.metadata?.name === 'vp-config'
-    );
-    expect(vpConfig).toBeDefined();
-    expect(vpConfig?.data.DATABASE_POOL_MAX).toBe('5');
-    expect(vpConfig?.data.CDN_BASE_URL).toBe('https://cdn.example.com');
-    expect(vpConfig?.data.REDIS_ADDR).toBe('vp-redis-master:6379');
-    expect(vpConfig?.data.OTEL_EXPORTER_OTLP_ENDPOINT).toBe('http://alloy:4318');
-    expect(vpConfig?.data.HOUSEKEEPING_INTERVAL_MS).toBe('900000');
+  it('patches the runtime config for the cloud topology', () => {
+    const config = named('cloud', 'ConfigMap', 'vp-config');
+    expect(config?.data).toMatchObject({
+      DATABASE_POOL_MAX: '5',
+      CDN_BASE_URL: 'https://cdn.example.com',
+      REDIS_ADDR: 'vp-redis-master:6379',
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://alloy:4318',
+      HOUSEKEEPING_INTERVAL_MS: '900000',
+    });
   });
 });

@@ -1,5 +1,4 @@
-import { AbilityBuilder, createMongoAbility, subject } from '@casl/ability';
-import { describe, expect, it } from 'vitest';
+import { subject } from '@casl/ability';
 import {
   creatorUser,
   guestUser,
@@ -9,43 +8,91 @@ import {
   standardUser,
   unlistedVideo,
 } from '../../__mocks__/fixtures';
-import type { AppAbility, UserContext } from '../../types';
+import type { AppAction, AppSubjects, UserContext } from '../../types';
 import { defineVideoRules } from '../video.rules';
+import { buildAbility } from './build-ability';
 
-function buildVideoAbility(user: UserContext | null): AppAbility {
-  const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
-  defineVideoRules(user, builder);
-  return builder.build();
-}
+const ownPrivate = subject('Video', privateVideo);
 
 describe('rules/video.rules: Declarative Video Ability Rules', () => {
-  it('allows public and unlisted video read for guest', () => {
-    const ability = buildVideoAbility(guestUser);
-    expect(ability.can('read', subject('Video', publicVideo))).toBe(true);
-    expect(ability.can('read', subject('Video', unlistedVideo))).toBe(true);
-    expect(ability.can('read', subject('Video', privateVideo))).toBe(false);
-  });
-
-  it('allows owner to read, update, delete own video', () => {
-    const ability = buildVideoAbility(creatorUser);
-    expect(ability.can('read', subject('Video', privateVideo))).toBe(true);
-    expect(ability.can('update', subject('Video', privateVideo))).toBe(true);
-    expect(ability.can('delete', subject('Video', privateVideo))).toBe(true);
-  });
-
-  it('forbids non-owner from updating or deleting video', () => {
-    const ability = buildVideoAbility(standardUser);
-    expect(ability.can('update', subject('Video', privateVideo))).toBe(false);
-    expect(ability.can('delete', subject('Video', privateVideo))).toBe(false);
-  });
-
-  it('allows moderator to read any video', () => {
-    const ability = buildVideoAbility(moderatorUser);
-    expect(ability.can('read', subject('Video', privateVideo))).toBe(true);
-  });
-
-  it('allows creator to publish own video', () => {
-    const ability = buildVideoAbility(creatorUser);
-    expect(ability.can('publish', subject('Video', privateVideo))).toBe(true);
+  it.each<{
+    scenario: string;
+    user: UserContext | null;
+    action: AppAction;
+    target: AppSubjects;
+    expected: boolean;
+  }>([
+    {
+      scenario: 'a guest reads a public video',
+      user: guestUser,
+      action: 'read',
+      target: subject('Video', publicVideo),
+      expected: true,
+    },
+    {
+      scenario: 'a guest reads an unlisted video',
+      user: guestUser,
+      action: 'read',
+      target: subject('Video', unlistedVideo),
+      expected: true,
+    },
+    {
+      scenario: 'a guest reads a private video',
+      user: guestUser,
+      action: 'read',
+      target: ownPrivate,
+      expected: false,
+    },
+    {
+      scenario: 'the owner reads their private video',
+      user: creatorUser,
+      action: 'read',
+      target: ownPrivate,
+      expected: true,
+    },
+    {
+      scenario: 'the owner updates their private video',
+      user: creatorUser,
+      action: 'update',
+      target: ownPrivate,
+      expected: true,
+    },
+    {
+      scenario: 'the owner deletes their private video',
+      user: creatorUser,
+      action: 'delete',
+      target: ownPrivate,
+      expected: true,
+    },
+    {
+      scenario: 'the owner publishes their private video',
+      user: creatorUser,
+      action: 'publish',
+      target: ownPrivate,
+      expected: true,
+    },
+    {
+      scenario: 'another user updates it',
+      user: standardUser,
+      action: 'update',
+      target: ownPrivate,
+      expected: false,
+    },
+    {
+      scenario: 'another user deletes it',
+      user: standardUser,
+      action: 'delete',
+      target: ownPrivate,
+      expected: false,
+    },
+    {
+      scenario: 'a moderator reads any video',
+      user: moderatorUser,
+      action: 'read',
+      target: ownPrivate,
+      expected: true,
+    },
+  ])('$scenario: $expected', ({ user, action, target, expected }) => {
+    expect(buildAbility(defineVideoRules, user).can(action, target)).toBe(expected);
   });
 });

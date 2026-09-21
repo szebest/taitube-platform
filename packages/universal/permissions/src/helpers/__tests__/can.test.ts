@@ -36,7 +36,12 @@ const ALL_ACTIONS: Action[] = [
 
 describe('helpers/can: Unified Action Evaluator Bridge', () => {
   it.each<CanCase>([
-    { scenario: 'guest reads the video collection', user: guestUser, action: 'video:read', expected: true },
+    {
+      scenario: 'guest reads the video collection',
+      user: guestUser,
+      action: 'video:read',
+      expected: true,
+    },
     {
       scenario: 'guest reads a public video',
       user: guestUser,
@@ -80,8 +85,18 @@ describe('helpers/can: Unified Action Evaluator Bridge', () => {
       resource: { ownerId: 'usr-1' },
       expected: false,
     },
-    { scenario: 'guest reacts to a video', user: guestUser, action: 'video:react', expected: false },
-    { scenario: 'guest creates a comment', user: guestUser, action: 'comment:create', expected: false },
+    {
+      scenario: 'guest reacts to a video',
+      user: guestUser,
+      action: 'video:react',
+      expected: false,
+    },
+    {
+      scenario: 'guest creates a comment',
+      user: guestUser,
+      action: 'comment:create',
+      expected: false,
+    },
     {
       scenario: 'guest deletes a comment',
       user: guestUser,
@@ -110,15 +125,55 @@ describe('helpers/can: Unified Action Evaluator Bridge', () => {
       resource: { userId: 'usr-1' },
       expected: false,
     },
-    { scenario: 'guest subscribes to a channel', user: guestUser, action: 'channel:subscribe', expected: false },
-    { scenario: 'guest manages categories', user: guestUser, action: 'category:manage', expected: false },
-    { scenario: 'guest views all analytics', user: guestUser, action: 'analytics:view_all', expected: false },
-    { scenario: 'guest reaches the admin area', user: guestUser, action: 'admin:access', expected: false },
+    {
+      scenario: 'guest subscribes to a channel',
+      user: guestUser,
+      action: 'channel:subscribe',
+      expected: false,
+    },
+    {
+      scenario: 'guest manages categories',
+      user: guestUser,
+      action: 'category:manage',
+      expected: false,
+    },
+    {
+      scenario: 'guest views all analytics',
+      user: guestUser,
+      action: 'analytics:view_all',
+      expected: false,
+    },
+    {
+      scenario: 'guest reaches the admin area',
+      user: guestUser,
+      action: 'admin:access',
+      expected: false,
+    },
 
-    { scenario: 'user creates a video', user: standardUser, action: 'video:create', expected: true },
-    { scenario: 'user reacts to a video', user: standardUser, action: 'video:react', expected: true },
-    { scenario: 'user creates a comment', user: standardUser, action: 'comment:create', expected: true },
-    { scenario: 'user subscribes to a channel', user: standardUser, action: 'channel:subscribe', expected: true },
+    {
+      scenario: 'user creates a video',
+      user: standardUser,
+      action: 'video:create',
+      expected: true,
+    },
+    {
+      scenario: 'user reacts to a video',
+      user: standardUser,
+      action: 'video:react',
+      expected: true,
+    },
+    {
+      scenario: 'user creates a comment',
+      user: standardUser,
+      action: 'comment:create',
+      expected: true,
+    },
+    {
+      scenario: 'user subscribes to a channel',
+      user: standardUser,
+      action: 'channel:subscribe',
+      expected: true,
+    },
     {
       scenario: 'user reads a foreign public video',
       user: standardUser,
@@ -175,8 +230,18 @@ describe('helpers/can: Unified Action Evaluator Bridge', () => {
       resource: { ownerId: 'usr-2' },
       expected: false,
     },
-    { scenario: 'user updates a video with no owner in hand', user: standardUser, action: 'video:update', expected: false },
-    { scenario: 'user deletes a video with no owner in hand', user: standardUser, action: 'video:delete', expected: false },
+    {
+      scenario: 'user updates a video with no owner in hand',
+      user: standardUser,
+      action: 'video:update',
+      expected: false,
+    },
+    {
+      scenario: 'user deletes a video with no owner in hand',
+      user: standardUser,
+      action: 'video:delete',
+      expected: false,
+    },
     {
       scenario: 'user publishes their own video',
       user: standardUser,
@@ -219,7 +284,12 @@ describe('helpers/can: Unified Action Evaluator Bridge', () => {
       resource: { videoOwnerId: 'usr-2' },
       expected: false,
     },
-    { scenario: 'user pins a comment with no video owner in hand', user: standardUser, action: 'comment:pin', expected: false },
+    {
+      scenario: 'user pins a comment with no video owner in hand',
+      user: standardUser,
+      action: 'comment:pin',
+      expected: false,
+    },
     {
       scenario: 'user updates their own channel',
       user: standardUser,
@@ -241,9 +311,24 @@ describe('helpers/can: Unified Action Evaluator Bridge', () => {
       resource: { userId: 'usr-1' },
       expected: false,
     },
-    { scenario: 'user manages categories', user: standardUser, action: 'category:manage', expected: false },
-    { scenario: 'user views all analytics', user: standardUser, action: 'analytics:view_all', expected: false },
-    { scenario: 'user reaches the admin area', user: standardUser, action: 'admin:access', expected: false },
+    {
+      scenario: 'user manages categories',
+      user: standardUser,
+      action: 'category:manage',
+      expected: false,
+    },
+    {
+      scenario: 'user views all analytics',
+      user: standardUser,
+      action: 'analytics:view_all',
+      expected: false,
+    },
+    {
+      scenario: 'user reaches the admin area',
+      user: standardUser,
+      action: 'admin:access',
+      expected: false,
+    },
 
     {
       scenario: 'creator publishes their own video',
@@ -309,9 +394,24 @@ describe('helpers/can: Unified Action Evaluator Bridge', () => {
       resource: { visibility: 'private', ownerId: 'usr-2' },
       expected: true,
     },
-    { scenario: 'moderator manages categories', user: moderatorUser, action: 'category:manage', expected: false },
-    { scenario: 'moderator views all analytics', user: moderatorUser, action: 'analytics:view_all', expected: false },
-    { scenario: 'moderator reaches the admin area', user: moderatorUser, action: 'admin:access', expected: false },
+    {
+      scenario: 'moderator manages categories',
+      user: moderatorUser,
+      action: 'category:manage',
+      expected: false,
+    },
+    {
+      scenario: 'moderator views all analytics',
+      user: moderatorUser,
+      action: 'analytics:view_all',
+      expected: false,
+    },
+    {
+      scenario: 'moderator reaches the admin area',
+      user: moderatorUser,
+      action: 'admin:access',
+      expected: false,
+    },
   ])('$scenario: $expected', ({ user, action, resource, expected }) => {
     expect(can(user, action, resource)).toBe(expected);
   });

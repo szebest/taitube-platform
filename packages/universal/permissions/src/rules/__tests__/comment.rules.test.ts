@@ -1,5 +1,4 @@
-import { AbilityBuilder, createMongoAbility, subject } from '@casl/ability';
-import { describe, expect, it } from 'vitest';
+import { subject } from '@casl/ability';
 import {
   creatorUser,
   guestUser,
@@ -7,34 +6,56 @@ import {
   sampleComment,
   standardUser,
 } from '../../__mocks__/fixtures';
-import type { AppAbility, UserContext } from '../../types';
+import type { AppAction, AppSubjects, UserContext } from '../../types';
 import { defineCommentRules } from '../comment.rules';
+import { buildAbility } from './build-ability';
 
-function buildCommentAbility(user: UserContext | null): AppAbility {
-  const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
-  defineCommentRules(user, builder);
-  return builder.build();
-}
+const comment = subject('Comment', sampleComment);
 
 describe('rules/comment.rules: Declarative Comment Ability Rules', () => {
-  it('allows reading comments for anyone', () => {
-    const ability = buildCommentAbility(guestUser);
-    expect(ability.can('read', 'Comment')).toBe(true);
-  });
-
-  it('allows author to delete their own comment', () => {
-    const ability = buildCommentAbility(standardUser);
-    expect(ability.can('delete', subject('Comment', sampleComment))).toBe(true);
-  });
-
-  it('allows video owner to delete or pin comments on their video', () => {
-    const ability = buildCommentAbility(creatorUser);
-    expect(ability.can('delete', subject('Comment', sampleComment))).toBe(true);
-    expect(ability.can('pin', subject('Comment', sampleComment))).toBe(true);
-  });
-
-  it('allows moderator to delete any comment', () => {
-    const ability = buildCommentAbility(moderatorUser);
-    expect(ability.can('delete', subject('Comment', sampleComment))).toBe(true);
+  it.each<{
+    scenario: string;
+    user: UserContext | null;
+    action: AppAction;
+    target: AppSubjects;
+    expected: boolean;
+  }>([
+    {
+      scenario: 'a guest reads the comment collection',
+      user: guestUser,
+      action: 'read',
+      target: 'Comment',
+      expected: true,
+    },
+    {
+      scenario: 'the author deletes their own comment',
+      user: standardUser,
+      action: 'delete',
+      target: comment,
+      expected: true,
+    },
+    {
+      scenario: 'the video owner deletes a comment under their video',
+      user: creatorUser,
+      action: 'delete',
+      target: comment,
+      expected: true,
+    },
+    {
+      scenario: 'the video owner pins a comment under their video',
+      user: creatorUser,
+      action: 'pin',
+      target: comment,
+      expected: true,
+    },
+    {
+      scenario: 'a moderator deletes any comment',
+      user: moderatorUser,
+      action: 'delete',
+      target: comment,
+      expected: true,
+    },
+  ])('$scenario: $expected', ({ user, action, target, expected }) => {
+    expect(buildAbility(defineCommentRules, user).can(action, target)).toBe(expected);
   });
 });

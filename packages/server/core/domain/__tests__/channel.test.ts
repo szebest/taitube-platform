@@ -40,20 +40,25 @@ describe('core/domain: channel handles', () => {
   });
 
   describe('handleCandidates', () => {
-    it('offers the email local part first', () => {
-      expect(take('ada@example.com', SUB, 1)).toEqual(['ada']);
-    });
-
-    it('falls back to the subject when the email has no local part', () => {
-      expect(take('@example.com', SUB, 1)[0]).toBe('018f2c4a');
-    });
-
-    it('replaces characters a handle may not contain', () => {
-      expect(take('ada+lovelace!@example.com', SUB, 1)).toEqual(['ada_lovelace_']);
-    });
-
-    it('pads a local part that is too short to be a handle', () => {
-      expect(take('ab@example.com', SUB, 1)).toEqual(['user_ab']);
+    it.each([
+      { scenario: 'offers the email local part first', email: 'ada@example.com', first: 'ada' },
+      {
+        scenario: 'falls back to the subject when the email has no local part',
+        email: '@example.com',
+        first: '018f2c4a',
+      },
+      {
+        scenario: 'replaces characters a handle may not contain',
+        email: 'ada+lovelace!@example.com',
+        first: 'ada_lovelace_',
+      },
+      {
+        scenario: 'pads a local part that is too short to be a handle',
+        email: 'ab@example.com',
+        first: 'user_ab',
+      },
+    ])('$scenario', ({ email, first }) => {
+      expect(take(email, SUB, 1)).toEqual([first]);
     });
 
     it('never offers a reserved handle', () => {

@@ -1,28 +1,39 @@
-import { AbilityBuilder, createMongoAbility, subject } from '@casl/ability';
-import { describe, expect, it } from 'vitest';
+import { subject } from '@casl/ability';
 import { creatorUser, guestUser, sampleChannel, standardUser } from '../../__mocks__/fixtures';
-import type { AppAbility, UserContext } from '../../types';
+import type { AppAction, AppSubjects, UserContext } from '../../types';
 import { defineChannelRules } from '../channel.rules';
-
-function buildChannelAbility(user: UserContext | null): AppAbility {
-  const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
-  defineChannelRules(user, builder);
-  return builder.build();
-}
+import { buildAbility } from './build-ability';
 
 describe('rules/channel.rules: Declarative Channel Ability Rules', () => {
-  it('allows reading channels for anyone', () => {
-    const ability = buildChannelAbility(guestUser);
-    expect(ability.can('read', 'Channel')).toBe(true);
-  });
-
-  it('allows channel owner to update their channel', () => {
-    const ability = buildChannelAbility(standardUser);
-    expect(ability.can('update', subject('Channel', sampleChannel))).toBe(true);
-  });
-
-  it('forbids non-owner from updating channel', () => {
-    const ability = buildChannelAbility(creatorUser);
-    expect(ability.can('update', subject('Channel', sampleChannel))).toBe(false);
+  it.each<{
+    scenario: string;
+    user: UserContext | null;
+    action: AppAction;
+    target: AppSubjects;
+    expected: boolean;
+  }>([
+    {
+      scenario: 'a guest reads the channel collection',
+      user: guestUser,
+      action: 'read',
+      target: 'Channel',
+      expected: true,
+    },
+    {
+      scenario: 'the channel owner updates it',
+      user: standardUser,
+      action: 'update',
+      target: subject('Channel', sampleChannel),
+      expected: true,
+    },
+    {
+      scenario: 'another user updates it',
+      user: creatorUser,
+      action: 'update',
+      target: subject('Channel', sampleChannel),
+      expected: false,
+    },
+  ])('$scenario: $expected', ({ user, action, target, expected }) => {
+    expect(buildAbility(defineChannelRules, user).can(action, target)).toBe(expected);
   });
 });

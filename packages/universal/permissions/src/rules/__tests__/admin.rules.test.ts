@@ -1,28 +1,52 @@
-import { AbilityBuilder, createMongoAbility } from '@casl/ability';
-import { describe, expect, it } from 'vitest';
 import { adminUser, guestUser, standardUser } from '../../__mocks__/fixtures';
-import type { AppAbility, UserContext } from '../../types';
+import type { AppAction, AppSubjects, UserContext } from '../../types';
 import { defineAdminRules } from '../admin.rules';
-
-function buildAdminAbility(user: UserContext | null): AppAbility {
-  const builder = new AbilityBuilder<AppAbility>(createMongoAbility);
-  defineAdminRules(user, builder);
-  return builder.build();
-}
+import { buildAbility } from './build-ability';
 
 describe('rules/admin.rules: Declarative Admin Ability Rules', () => {
-  it('gives manage all to admin users', () => {
-    const ability = buildAdminAbility(adminUser);
-    expect(ability.can('manage', 'all')).toBe(true);
-    expect(ability.can('read', 'Video')).toBe(true);
-    expect(ability.can('delete', 'Comment')).toBe(true);
-  });
-
-  it('does not give superuser bypass to non-admin users', () => {
-    const ability = buildAdminAbility(standardUser);
-    expect(ability.can('manage', 'all')).toBe(false);
-
-    const guestAbility = buildAdminAbility(guestUser);
-    expect(guestAbility.can('manage', 'all')).toBe(false);
+  it.each<{
+    scenario: string;
+    user: UserContext | null;
+    action: AppAction;
+    target: AppSubjects;
+    expected: boolean;
+  }>([
+    {
+      scenario: 'an admin manages everything',
+      user: adminUser,
+      action: 'manage',
+      target: 'all',
+      expected: true,
+    },
+    {
+      scenario: 'an admin reads videos',
+      user: adminUser,
+      action: 'read',
+      target: 'Video',
+      expected: true,
+    },
+    {
+      scenario: 'an admin deletes comments',
+      user: adminUser,
+      action: 'delete',
+      target: 'Comment',
+      expected: true,
+    },
+    {
+      scenario: 'a standard user manages everything',
+      user: standardUser,
+      action: 'manage',
+      target: 'all',
+      expected: false,
+    },
+    {
+      scenario: 'a guest manages everything',
+      user: guestUser,
+      action: 'manage',
+      target: 'all',
+      expected: false,
+    },
+  ])('$scenario: $expected', ({ user, action, target, expected }) => {
+    expect(buildAbility(defineAdminRules, user).can(action, target)).toBe(expected);
   });
 });

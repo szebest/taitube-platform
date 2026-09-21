@@ -21,7 +21,9 @@ const video: VideoSummary = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
-function renderCard(userContext: Parameters<typeof PermissionsProvider>[0]['userContext']): string {
+type Viewer = Parameters<typeof PermissionsProvider>[0]['userContext'];
+
+function renderCard(userContext: Viewer): string {
   return renderToStaticMarkup(
     <ApiProvider api={baseApi}>
       <PermissionsProvider userContext={userContext}>
@@ -34,24 +36,23 @@ function renderCard(userContext: Parameters<typeof PermissionsProvider>[0]['user
 }
 
 describe('apps/web: video card', () => {
-  it('shows the owner the video actions', () => {
-    expect(renderCard({ id: OWNER_ID, role: 'USER' })).toContain('video actions');
-  });
+  it.each<{ scenario: string; userContext: Viewer; visible: boolean }>([
+    { scenario: 'the owner', userContext: { id: OWNER_ID, role: 'USER' }, visible: true },
+    {
+      scenario: 'another signed-in user',
+      userContext: { id: '00000000-0000-7000-8000-0000000000ff', role: 'USER' },
+      visible: false,
+    },
+    { scenario: 'a guest', userContext: null, visible: false },
+    {
+      scenario: 'an admin',
+      userContext: { id: '00000000-0000-7000-8000-0000000000aa', role: 'ADMIN' },
+      visible: true,
+    },
+  ])('shows the video actions to $scenario: $visible', ({ userContext, visible }) => {
+    const markup = renderCard(userContext);
 
-  it('hides the video actions from another signed-in user', () => {
-    expect(
-      renderCard({ id: '00000000-0000-7000-8000-0000000000ff', role: 'USER' })
-    ).not.toContain('video actions');
-  });
-
-  it('hides the video actions from a guest', () => {
-    expect(renderCard(null)).not.toContain('video actions');
-  });
-
-  it('shows an admin the video actions', () => {
-    expect(
-      renderCard({ id: '00000000-0000-7000-8000-0000000000aa', role: 'ADMIN' })
-    ).toContain('video actions');
+    expect(markup.includes('video actions')).toBe(visible);
   });
 
   it('renders the poster only when the API supplied one', () => {

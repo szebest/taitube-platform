@@ -1,6 +1,5 @@
 import type { UserContext } from '@vp/permissions';
 import { canUpdateVideo } from '@vp/permissions';
-import { describe, expect, it } from 'vitest';
 import {
   PermissiveAuthorizationAdapter,
   StrictAuthorizationAdapter,

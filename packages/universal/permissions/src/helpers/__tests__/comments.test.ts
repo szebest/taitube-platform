@@ -47,7 +47,12 @@ describe('helpers/comments: Comment Action Helpers', () => {
         comment: sampleComment,
         expected: true,
       },
-      { scenario: 'an unrelated user', user: standardUser, comment: sampleComment, expected: false },
+      {
+        scenario: 'an unrelated user',
+        user: standardUser,
+        comment: sampleComment,
+        expected: false,
+      },
       { scenario: 'an admin with no comment in hand', user: adminUser, expected: true },
     ])('$scenario: $expected', ({ user, comment, expected }) => {
       expect(canPinComment({ user, videoOwnerId: 'creator-1', comment })).toBe(expected);

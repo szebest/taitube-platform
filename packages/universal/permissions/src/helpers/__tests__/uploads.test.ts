@@ -34,7 +34,12 @@ describe('helpers/uploads: canAccessUpload', () => {
       video: foreignVideo,
       expected: false,
     },
-    { scenario: 'an admin on a foreign upload', user: adminUser, upload: foreignUpload, expected: true },
+    {
+      scenario: 'an admin on a foreign upload',
+      user: adminUser,
+      upload: foreignUpload,
+      expected: true,
+    },
   ])('$scenario: $expected', ({ user, upload, video, expected }) => {
     expect(canAccessUpload({ user, upload, video })).toBe(expected);
   });
