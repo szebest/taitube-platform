@@ -44,7 +44,10 @@ function parseId(value: unknown): string {
   return value;
 }
 
-export function videoCursorPayload(v: { createdAt: Date | string; id: string }): CursorPayload {
+export function createdAtCursorPayload(v: {
+  createdAt: Date | string;
+  id: string;
+}): CursorPayload {
   return { createdAt: isoOf(v.createdAt), id: v.id };
 }
 
@@ -65,27 +68,13 @@ export function feedCursorPayload(
   return { sort: 'recent', createdAt: isoOf(v.createdAt), id: v.id };
 }
 
-export function encodeVideoCursor(
-  v: { createdAt: Date | string; id: string },
-  paginator: Paginator = defaultPaginator
-): string {
-  return paginator.encodeCursor(videoCursorPayload(v));
-}
-
-export function decodeVideoCursor(
+export function decodeCreatedAtCursor(
   cursor?: string,
   paginator: Paginator = defaultPaginator
 ): { createdAt: Date; id: string } | null {
   const parsed = payloadOf(cursor, paginator);
   if (!parsed) return null;
   return { createdAt: parseDate(parsed.createdAt), id: parseId(parsed.id) };
-}
-
-export function encodeSubscriptionCursor(
-  item: { createdAt: Date | string; channelId: string },
-  paginator: Paginator = defaultPaginator
-): string {
-  return paginator.encodeCursor(subscriptionCursorPayload(item));
 }
 
 export function decodeSubscriptionCursor(

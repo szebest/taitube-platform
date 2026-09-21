@@ -1,3 +1,5 @@
+import type { NewOutboxInput } from './outbox-repository';
+
 export type DlqStatus = 'PARKED' | 'REPLAYED' | 'DISCARDED';
 
 export interface DlqEntryRecord {
@@ -31,22 +33,16 @@ export interface NewDlqEntryInput {
 }
 
 export interface ListDlqEntriesOptions {
-  cursor?: string;
-  limit?: number;
+  cursor?: { createdAt: Date; id: string } | null;
+  limit: number;
   status?: DlqStatus;
 }
-
-export interface ListDlqEntriesResult {
-  items: DlqEntryRecord[];
-  nextCursor: string | null;
-}
-
-import type { NewOutboxInput } from './outbox-repository';
 
 export abstract class DlqRepository {
   abstract create(entry: NewDlqEntryInput): Promise<DlqEntryRecord>;
   abstract findById(id: string): Promise<DlqEntryRecord | null>;
-  abstract list(options?: ListDlqEntriesOptions): Promise<ListDlqEntriesResult>;
+  /** Newest first, `limit + 1` rows so the caller can detect a further page. */
+  abstract list(options: ListDlqEntriesOptions): Promise<DlqEntryRecord[]>;
   abstract updateStatus(
     id: string,
     status: DlqStatus,

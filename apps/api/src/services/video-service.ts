@@ -44,20 +44,12 @@ export interface VideoServiceDeps {
   probeQueue?: JobQueue;
 }
 
-export {
-  encodeVideoCursor,
-  decodeVideoCursor,
-  encodeFeedCursor,
-  decodeFeedCursor,
-  type FeedSort,
-} from './cursor';
-
 import {
   type FeedSort,
+  createdAtCursorPayload,
+  decodeCreatedAtCursor,
   decodeFeedCursor,
-  decodeVideoCursor,
   feedCursorPayload,
-  videoCursorPayload,
 } from './cursor';
 
 function gravityScore(row: { createdAt: Date; viewsCount?: number }, sort: FeedSort) {
@@ -103,13 +95,13 @@ export class VideoService {
     const rows = await this.videos.listByOwner({
       ownerId: user.id,
       viewer: { id: user.id, role: parseRole(user.role) },
-      cursor: decodeVideoCursor(options.cursor, this.paginator),
+      cursor: decodeCreatedAtCursor(options.cursor, this.paginator),
       limit,
       status: options.status,
     });
 
     return this.paginator.paginate(rows, limit, {
-      cursorOf: videoCursorPayload,
+      cursorOf: createdAtCursorPayload,
       toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
     });
   }

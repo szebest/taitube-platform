@@ -1,4 +1,4 @@
-import type { NewVideoInput, Repositories, VideoRecord } from '@vp/core/ports';
+import type { NewVideoInput, Repositories } from '@vp/core/ports';
 
 export const OWNER_ID = '00000000-0000-7000-8000-000000000101';
 export const OTHER_OWNER_ID = '00000000-0000-7000-8000-000000000102';
@@ -48,6 +48,6 @@ export function publicVideo(overrides: Partial<NewVideoInput> & { id: string }):
   };
 }
 
-export function idsOf(videos: VideoRecord[]): string[] {
-  return videos.map((v) => v.id);
+export function idsOf(rows: readonly { id: string }[]): string[] {
+  return rows.map((row) => row.id);
 }

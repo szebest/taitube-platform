@@ -1,5 +1,5 @@
 import type { DlqRepository } from '@vp/core/ports';
-import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const DLQ_IDS = {
@@ -57,29 +57,30 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
     });
 
     it('lists the entries newest first', async () => {
-      const { items } = await dlq.list();
-      expect(items.map((e) => e.id)).toEqual([DLQ_IDS.second, DLQ_IDS.first]);
+      expect(idsOf(await dlq.list({ limit: 10 }))).toEqual([DLQ_IDS.second, DLQ_IDS.first]);
     });
 
-    it('filters the listing by status', async () => {
+    it.each([
+      { status: 'REPLAYED' as const, expected: [DLQ_IDS.first] },
+      { status: 'PARKED' as const, expected: [DLQ_IDS.second] },
+    ])('filters the listing down to $status entries', async ({ status, expected }) => {
       await dlq.updateStatus(DLQ_IDS.first, 'REPLAYED', { replayedAt: new Date() });
 
-      expect((await dlq.list({ status: 'REPLAYED' })).items.map((e) => e.id)).toEqual([
-        DLQ_IDS.first,
-      ]);
-      expect((await dlq.list({ status: 'PARKED' })).items.map((e) => e.id)).toEqual([
-        DLQ_IDS.second,
-      ]);
+      expect(idsOf(await dlq.list({ limit: 10, status }))).toEqual(expected);
     });
 
-    it('mints a next cursor only when a further page exists', async () => {
-      const firstPage = await dlq.list({ limit: 1 });
-      expect(firstPage.items).toHaveLength(1);
-      expect(firstPage.nextCursor).not.toBeNull();
+    it('over-fetches one row so the caller can detect a next page', async () => {
+      const window = await dlq.list({ limit: 1 });
+      expect(idsOf(window)).toEqual([DLQ_IDS.second, DLQ_IDS.first]);
 
-      const secondPage = await dlq.list({ limit: 1, cursor: firstPage.nextCursor ?? undefined });
-      expect(secondPage.items.map((e) => e.id)).toEqual([DLQ_IDS.first]);
-      expect(secondPage.nextCursor).toBeNull();
+      const page = window.slice(0, 1);
+      const last = page[page.length - 1];
+      const next = await dlq.list({
+        limit: 1,
+        ...(last ? { cursor: { createdAt: last.createdAt, id: last.id } } : {}),
+      });
+
+      expect(idsOf(next)).toEqual([DLQ_IDS.first]);
     });
 
     it('updates the status and reports an unknown entry as null', async () => {

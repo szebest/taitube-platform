@@ -1,15 +1,25 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
-import type { AuthorizationPort, DlqRepository, EventRepository, JobQueue } from '@vp/core/ports';
+import { type Paginator, defaultPaginator } from '@vp/core/pagination';
+import type {
+  AuthorizationPort,
+  DlqEntryRecord,
+  DlqRepository,
+  DlqStatus,
+  EventRepository,
+  JobQueue,
+} from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { defaultJobOptions, generateReplayJobId, stagePolicies } from '@vp/job-contracts';
 import type { AuthUser } from '../plugins/auth';
 import { assertAdminAccess } from './admin-access';
+import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface DlqServiceDeps {
   dlq: DlqRepository;
   events: EventRepository;
   queues: Map<string, JobQueue>;
   authorization?: AuthorizationPort;
+  paginator?: Paginator;
 }
 
 export interface ReplayDlqResult {
@@ -26,12 +36,14 @@ export class DlqService {
   private readonly events: EventRepository;
   private readonly queues: Map<string, JobQueue>;
   private readonly auth: AuthorizationPort;
+  private readonly paginator: Paginator;
 
   constructor(deps: DlqServiceDeps) {
     this.dlq = deps.dlq;
     this.events = deps.events;
     this.queues = deps.queues;
     this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
+    this.paginator = deps.paginator ?? defaultPaginator;
   }
 
   /**
@@ -39,14 +51,20 @@ export class DlqService {
    */
   async list(
     caller: AuthUser | null,
-    options: {
-      cursor?: string;
-      limit?: number;
-      status?: 'PARKED' | 'REPLAYED' | 'DISCARDED';
-    }
-  ) {
+    options: { cursor?: string; limit?: number; status?: DlqStatus }
+  ): Promise<{ items: DlqEntryRecord[]; nextCursor: string | null }> {
     assertAdminAccess(this.auth, caller);
-    return this.dlq.list(options);
+    const limit = this.paginator.limit(options.limit);
+    const rows = await this.dlq.list({
+      cursor: decodeCreatedAtCursor(options.cursor, this.paginator),
+      limit,
+      ...(options.status ? { status: options.status } : {}),
+    });
+
+    return this.paginator.paginate(rows, limit, {
+      cursorOf: createdAtCursorPayload,
+      toItem: (row) => row,
+    });
   }
 
   /**

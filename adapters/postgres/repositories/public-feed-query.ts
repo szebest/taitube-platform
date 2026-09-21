@@ -7,7 +7,7 @@ import {
 import type { ListPublicVideosOptions } from '@vp/core/ports';
 import { videos } from '@vp/db';
 import { type SQL, desc, eq, isNull, sql } from 'drizzle-orm';
-import { drizzleWhere, publicVisibilityScope } from '../scopes/index';
+import { drizzleWhere, keysetBefore, publicVisibilityScope } from '../scopes/index';
 
 function constant(value: number): SQL {
   return sql.raw(String(value));
@@ -48,6 +48,8 @@ export function publicFeedCursorScope(
   const bound = cursor[publicFeedRanking(options.sort).cursorField];
   if (bound === undefined || bound === null) return undefined;
 
-  const rank = publicFeedRank(options.sort, instant);
-  return sql`(${rank} < ${bound} or (${rank} = ${bound} and ${videos.id} < ${cursor.id}))`;
+  return keysetBefore(publicFeedRank(options.sort, instant), videos.id, {
+    sort: bound,
+    tie: cursor.id,
+  });
 }

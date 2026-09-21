@@ -1,5 +1,4 @@
 import { trace } from '@opentelemetry/api';
-import { canReadVideo } from '@vp/permissions';
 import {
   DatabaseError,
   type EventRepository,
@@ -21,7 +20,9 @@ import {
   VideoRepository,
   type VideoWithDetails,
 } from '@vp/core/ports';
+import { canReadVideo } from '@vp/permissions';
 
+import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { selectPublicFeed } from './public-feed-query';
 import {
   DEFAULT_VIDEO_RECORD,
@@ -163,20 +164,20 @@ export class InMemoryVideoRepository extends VideoRepository {
 
   async listByOwner(options: ListVideosOptions): Promise<VideoRecord[]> {
     const { ownerId, viewer, cursor, limit, status } = options;
-    const filtered = Array.from(this.videosMap.values()).filter((v) => {
-      if (v.ownerId !== ownerId) return false;
-      if (!canReadVideo({ user: viewer ?? null, video: v })) return false;
-      if (status ? v.status !== status : v.status === 'DELETED') return false;
-      if (cursor) {
-        const [vt, ct] = [v.createdAt.getTime(), cursor.createdAt.getTime()];
-        return vt < ct || (vt === ct && v.id < cursor.id);
-      }
-      return true;
-    });
-    filtered.sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id)
-    );
-    return filtered.slice(0, limit + 1);
+    const keyset = cursor && { sort: cursor.createdAt, tie: cursor.id };
+
+    return Array.from(this.videosMap.values())
+      .filter(
+        (v) =>
+          v.ownerId === ownerId &&
+          canReadVideo({ user: viewer ?? null, video: v }) &&
+          (status ? v.status === status : v.status !== 'DELETED') &&
+          isKeysetBefore({ sort: v.createdAt, tie: v.id }, keyset)
+      )
+      .sort((a, b) =>
+        byKeysetDesc({ sort: a.createdAt, tie: a.id }, { sort: b.createdAt, tie: b.id })
+      )
+      .slice(0, limit + 1);
   }
 
   async listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult> {

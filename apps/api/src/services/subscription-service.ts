@@ -11,10 +11,10 @@ import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type UserContext, canSubscribeChannel, parseRole } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 import {
+  createdAtCursorPayload,
+  decodeCreatedAtCursor,
   decodeSubscriptionCursor,
-  decodeVideoCursor,
   subscriptionCursorPayload,
-  videoCursorPayload,
 } from './cursor';
 import { type VideoSummaryView, toVideoSummaryView } from './video-views';
 
@@ -132,12 +132,12 @@ export class SubscriptionService {
   ): Promise<{ items: VideoSummaryView[]; nextCursor: string | null; total: number }> {
     const limit = this.paginator.limit(options.limit);
     const { items: rows, total } = await this.subscriptions.getSubscriptionFeed(user.id, {
-      cursor: decodeVideoCursor(options.cursor, this.paginator) ?? undefined,
+      cursor: decodeCreatedAtCursor(options.cursor, this.paginator) ?? undefined,
       limit,
     });
 
     const page = this.paginator.paginate(rows, limit, {
-      cursorOf: videoCursorPayload,
+      cursorOf: createdAtCursorPayload,
       toItem: (video) => toVideoSummaryView(video, this.cleanCdnBase),
     });
 

@@ -179,8 +179,7 @@ export async function auditDlqHostile(
   }
 
   if (items.length === 0 && repositories?.dlq) {
-    const dlqList = await repositories.dlq.list({ limit: 100 });
-    items = dlqList.items;
+    items = await repositories.dlq.list({ limit: 100 });
   }
 
   const hostileSpecs = specs.filter((s) => s.expectedStatus === 'FAILED');

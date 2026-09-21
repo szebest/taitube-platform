@@ -1,3 +1,4 @@
+import { CoreEnvSchema } from '@vp/config';
 import { Paginator } from '@vp/core/pagination';
 import { CategoryService } from '../services/category-service';
 import { ChannelService } from '../services/channel-service';
@@ -44,10 +45,12 @@ export interface ServiceSet {
 }
 
 function envPaginator(): Paginator {
-  return new Paginator({
-    defaultLimit: Number(process.env['PAGE_SIZE_DEFAULT']) || undefined,
-    maxLimit: Number(process.env['PAGE_SIZE_MAX']) || undefined,
-  });
+  const { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } = CoreEnvSchema.pick({
+    PAGE_SIZE_DEFAULT: true,
+    PAGE_SIZE_MAX: true,
+  }).parse(process.env);
+
+  return new Paginator({ defaultLimit: PAGE_SIZE_DEFAULT, maxLimit: PAGE_SIZE_MAX });
 }
 
 export async function createServiceSet(
@@ -127,6 +130,7 @@ export async function createServiceSet(
       events: repositories.events,
       queues: adapters.queues,
       authorization,
+      paginator,
     }),
     sseService: new SseService({
       videos: repositories.videos,

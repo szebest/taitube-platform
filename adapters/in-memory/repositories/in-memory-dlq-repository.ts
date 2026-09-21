@@ -3,30 +3,13 @@ import {
   DlqRepository,
   type DlqStatus,
   type ListDlqEntriesOptions,
-  type ListDlqEntriesResult,
   type NewDlqEntryInput,
   type NewOutboxInput,
   type OutboxRepository,
 } from '@vp/core/ports';
 
 import { uuidv7 } from 'uuidv7';
-
-function encodeCursor(createdAt: Date, id: string): string {
-  return Buffer.from(JSON.stringify({ c: createdAt.toISOString(), id })).toString('base64url');
-}
-
-function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
-  try {
-    const raw = Buffer.from(cursor, 'base64url').toString('utf8');
-    const parsed = JSON.parse(raw);
-    if (parsed.c && parsed.id) {
-      return { createdAt: new Date(parsed.c), id: parsed.id };
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 export class InMemoryDlqRepository extends DlqRepository {
   private readonly entriesMap: Map<string, DlqEntryRecord>;
@@ -46,7 +29,6 @@ export class InMemoryDlqRepository extends DlqRepository {
   }
 
   async create(entry: NewDlqEntryInput): Promise<DlqEntryRecord> {
-    // Unique check on (queue, jobId, attemptsMade)
     for (const existing of this.entriesMap.values()) {
       if (
         existing.queue === entry.queue &&
@@ -86,41 +68,21 @@ export class InMemoryDlqRepository extends DlqRepository {
     return entry ? { ...entry } : null;
   }
 
-  async list(options?: ListDlqEntriesOptions): Promise<ListDlqEntriesResult> {
-    const limit = Math.min(Math.max(options?.limit ?? 20, 1), 100);
-    let items = Array.from(this.entriesMap.values());
+  async list(options: ListDlqEntriesOptions): Promise<DlqEntryRecord[]> {
+    const { cursor, limit, status } = options;
+    const keyset = cursor && { sort: cursor.createdAt, tie: cursor.id };
 
-    if (options?.status) {
-      items = items.filter((e) => e.status === options.status);
-    }
-
-    // Sort descending by createdAt, then id
-    items.sort((a, b) => {
-      const timeDiff = b.createdAt.getTime() - a.createdAt.getTime();
-      if (timeDiff !== 0) return timeDiff;
-      return b.id.localeCompare(a.id);
-    });
-
-    if (options?.cursor) {
-      const decoded = decodeCursor(options.cursor);
-      if (decoded) {
-        items = items.filter((e) => {
-          const itemTime = e.createdAt.getTime();
-          const cursorTime = decoded.createdAt.getTime();
-          if (itemTime < cursorTime) return true;
-          if (itemTime === cursorTime && e.id.localeCompare(decoded.id) < 0) return true;
-          return false;
-        });
-      }
-    }
-
-    const hasMore = items.length > limit;
-    const pagedItems = (hasMore ? items.slice(0, limit) : items).map((e) => ({ ...e }));
-    const lastItem =
-      hasMore && pagedItems.length > 0 ? pagedItems[pagedItems.length - 1] : undefined;
-    const nextCursor = lastItem ? encodeCursor(lastItem.createdAt, lastItem.id) : null;
-
-    return { items: pagedItems, nextCursor };
+    return Array.from(this.entriesMap.values())
+      .filter(
+        (entry) =>
+          (!status || entry.status === status) &&
+          isKeysetBefore({ sort: entry.createdAt, tie: entry.id }, keyset)
+      )
+      .sort((a, b) =>
+        byKeysetDesc({ sort: a.createdAt, tie: a.id }, { sort: b.createdAt, tie: b.id })
+      )
+      .slice(0, limit + 1)
+      .map((entry) => ({ ...entry }));
   }
 
   setOutboxRepo(repo: OutboxRepository): void {

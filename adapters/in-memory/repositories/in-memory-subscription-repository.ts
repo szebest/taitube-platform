@@ -11,25 +11,11 @@ import { ErrorCodes, PermanentError } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
+import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 export interface InMemorySubscriptionRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
-}
-
-/** Descending keyset comparison matching `ORDER BY createdAt DESC, tie DESC`. */
-function isBeforeCursor(
-  row: { createdAt: Date; tie: string },
-  cursor: { createdAt: Date; tie: string }
-): boolean {
-  const delta = row.createdAt.getTime() - cursor.createdAt.getTime();
-  if (delta !== 0) return delta < 0;
-  return row.tie < cursor.tie;
-}
-
-function byCreatedAtDesc(a: { createdAt: Date; tie: string }, b: { createdAt: Date; tie: string }) {
-  const delta = b.createdAt.getTime() - a.createdAt.getTime();
-  return delta !== 0 ? delta : b.tie.localeCompare(a.tie);
 }
 
 export class InMemorySubscriptionRepository implements SubscriptionRepositoryPort {
@@ -108,14 +94,14 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     options: ListSubscriptionsOptions
   ): Promise<SubscribedChannelItem[]> {
     const cursor = options.cursor && {
-      createdAt: options.cursor.createdAt,
+      sort: options.cursor.createdAt,
       tie: options.cursor.channelId,
     };
 
     const page = this.userSubscriptions(subscriberId)
-      .map((sub) => ({ sub, createdAt: sub.createdAt, tie: sub.channelId }))
-      .sort(byCreatedAtDesc)
-      .filter((row) => !cursor || isBeforeCursor(row, cursor))
+      .map((sub) => ({ sub, sort: sub.createdAt, tie: sub.channelId }))
+      .sort(byKeysetDesc)
+      .filter((row) => isKeysetBefore(row, cursor))
       .slice(0, options.limit + 1);
 
     const items: SubscribedChannelItem[] = [];
@@ -147,16 +133,16 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
           v.status === 'READY' &&
           !v.deletedAt
       )
-      .map((video) => ({ video, createdAt: video.createdAt, tie: video.id }))
-      .sort(byCreatedAtDesc);
+      .map((video) => ({ video, sort: video.createdAt, tie: video.id }))
+      .sort(byKeysetDesc);
 
     const cursor = options.cursor && {
-      createdAt: options.cursor.createdAt,
+      sort: options.cursor.createdAt,
       tie: options.cursor.id,
     };
 
     const items = matching
-      .filter((row) => !cursor || isBeforeCursor(row, cursor))
+      .filter((row) => isKeysetBefore(row, cursor))
       .slice(0, options.limit + 1)
       .map((row) => row.video);
 

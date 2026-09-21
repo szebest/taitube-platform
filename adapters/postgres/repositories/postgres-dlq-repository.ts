@@ -4,30 +4,16 @@ import {
   DlqRepository,
   type DlqStatus,
   type ListDlqEntriesOptions,
-  type ListDlqEntriesResult,
   type NewDlqEntryInput,
   type NewOutboxInput,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
-import { and, desc, eq, lt, or, sql } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { drizzleWhere, keysetBefore } from '../scopes/index';
+import { toDbError as dbErr } from './types';
 
-function encodeCursor(createdAt: Date, id: string): string {
-  return Buffer.from(JSON.stringify({ c: createdAt.toISOString(), id })).toString('base64url');
-}
-
-function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
-  try {
-    const raw = Buffer.from(cursor, 'base64url').toString('utf8');
-    const parsed = JSON.parse(raw);
-    if (parsed.c && parsed.id) {
-      return { createdAt: new Date(parsed.c), id: parsed.id };
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+const { dlqEntries: dlq } = schema;
 
 export class PostgresDlqRepository extends DlqRepository {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {
@@ -37,7 +23,7 @@ export class PostgresDlqRepository extends DlqRepository {
   async create(entry: NewDlqEntryInput): Promise<DlqEntryRecord> {
     try {
       const rows = await this.db
-        .insert(schema.dlqEntries)
+        .insert(dlq)
         .values({
           id: entry.id,
           queue: entry.queue,
@@ -52,11 +38,7 @@ export class PostgresDlqRepository extends DlqRepository {
           status: entry.status ?? 'PARKED',
         })
         .onConflictDoUpdate({
-          target: [
-            schema.dlqEntries.queue,
-            schema.dlqEntries.jobId,
-            schema.dlqEntries.attemptsMade,
-          ],
+          target: [dlq.queue, dlq.jobId, dlq.attemptsMade],
           set: {
             errorCode: entry.errorCode ?? null,
             errorMessage: entry.errorMessage ?? null,
@@ -70,71 +52,42 @@ export class PostgresDlqRepository extends DlqRepository {
       if (!created) throw new DatabaseError('Failed to create DLQ entry: empty return');
       return created;
     } catch (err: unknown) {
-      throw new DatabaseError(
-        `Failed to create DLQ entry for job ${entry.jobId}: ${(err as Error).message}`,
-        { cause: err }
-      );
+      throw dbErr(`Failed to create DLQ entry for job ${entry.jobId}`, err);
     }
   }
 
   async findById(id: string): Promise<DlqEntryRecord | null> {
     try {
-      const rows = await this.db
-        .select()
-        .from(schema.dlqEntries)
-        .where(eq(schema.dlqEntries.id, id))
-        .limit(1);
+      const rows = await this.db.select().from(dlq).where(eq(dlq.id, id)).limit(1);
 
       return rows[0] ?? null;
     } catch (err: unknown) {
-      throw new DatabaseError(`Failed to get DLQ entry ${id}: ${(err as Error).message}`, {
-        cause: err,
-      });
+      throw dbErr(`Failed to get DLQ entry ${id}`, err);
     }
   }
 
-  async list(options?: ListDlqEntriesOptions): Promise<ListDlqEntriesResult> {
+  async list(options: ListDlqEntriesOptions): Promise<DlqEntryRecord[]> {
+    const { cursor, limit, status } = options;
     try {
-      const limit = Math.min(Math.max(options?.limit ?? 20, 1), 100);
-      const conditions = [];
-
-      if (options?.status) {
-        conditions.push(eq(schema.dlqEntries.status, options.status));
-      }
-
-      if (options?.cursor) {
-        const decoded = decodeCursor(options.cursor);
-        if (decoded) {
-          conditions.push(
-            or(
-              lt(schema.dlqEntries.createdAt, decoded.createdAt),
-              and(
-                eq(schema.dlqEntries.createdAt, decoded.createdAt),
-                lt(schema.dlqEntries.id, decoded.id)
-              )
-            )
-          );
-        }
-      }
-
-      const query = this.db
+      const rows = await this.db
         .select()
-        .from(schema.dlqEntries)
-        .orderBy(desc(schema.dlqEntries.createdAt), desc(schema.dlqEntries.id))
+        .from(dlq)
+        .where(
+          drizzleWhere(
+            status ? eq(dlq.status, status) : undefined,
+            keysetBefore(
+              dlq.createdAt,
+              dlq.id,
+              cursor && { sort: cursor.createdAt, tie: cursor.id }
+            )
+          )
+        )
+        .orderBy(desc(dlq.createdAt), desc(dlq.id))
         .limit(limit + 1);
 
-      const rows = conditions.length > 0 ? await query.where(and(...conditions)) : await query;
-
-      const hasMore = rows.length > limit;
-      const items = (hasMore ? rows.slice(0, limit) : rows) as DlqEntryRecord[];
-      const lastItem = hasMore && items.length > 0 ? items[items.length - 1] : undefined;
-      const nextCursor = lastItem ? encodeCursor(lastItem.createdAt, lastItem.id) : null;
-
-      return { items, nextCursor };
+      return rows as DlqEntryRecord[];
     } catch (err: unknown) {
-      throw new DatabaseError(`Failed to list DLQ entries: ${(err as Error).message}`, {
-        cause: err,
-      });
+      throw dbErr('Failed to list DLQ entries', err);
     }
   }
 
@@ -152,11 +105,7 @@ export class PostgresDlqRepository extends DlqRepository {
 
       if (outbox) {
         return await this.db.transaction(async (tx) => {
-          const rows = await tx
-            .update(schema.dlqEntries)
-            .set(updateData)
-            .where(eq(schema.dlqEntries.id, id))
-            .returning();
+          const rows = await tx.update(dlq).set(updateData).where(eq(dlq.id, id)).returning();
 
           await tx.insert(schema.outbox).values({
             id: outbox.id || sql`gen_random_uuid()`,
@@ -170,20 +119,11 @@ export class PostgresDlqRepository extends DlqRepository {
         });
       }
 
-      const rows = await this.db
-        .update(schema.dlqEntries)
-        .set(updateData)
-        .where(eq(schema.dlqEntries.id, id))
-        .returning();
+      const rows = await this.db.update(dlq).set(updateData).where(eq(dlq.id, id)).returning();
 
       return rows[0] ?? null;
     } catch (err: unknown) {
-      throw new DatabaseError(
-        `Failed to update DLQ entry status ${id}: ${(err as Error).message}`,
-        {
-          cause: err,
-        }
-      );
+      throw dbErr(`Failed to update DLQ entry status ${id}`, err);
     }
   }
 }

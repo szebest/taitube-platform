@@ -16,16 +16,22 @@ import {
   publicFeedInstant,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
-import { type SQL, type Table, and, desc, eq, inArray, lt, or, sql } from 'drizzle-orm';
+import { type SQL, type Table, and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import {
+  drizzleWhere,
+  keysetBefore,
+  notDeletedScope,
+  ownerScope,
+  videoReadScope,
+} from '../scopes/index';
+import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
 import {
   type VideoEventInsert,
   type VideoInsert,
   type VideoStatus,
   toDbError as dbErr,
 } from './types';
-import { drizzleWhere, notDeletedScope, ownerScope, videoReadScope } from '../scopes/index';
-import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 
@@ -111,18 +117,11 @@ export class PostgresVideoRepository extends VideoRepository {
   async listByOwner(options: ListVideosOptions): Promise<VideoRecord[]> {
     const { ownerId, viewer, cursor, limit, status } = options;
     try {
-      const cursorCond = cursor
-        ? or(
-            lt(v.createdAt, cursor.createdAt),
-            and(eq(v.createdAt, cursor.createdAt), lt(v.id, cursor.id))
-          )
-        : undefined;
-
       const whereClause = drizzleWhere(
         ownerScope(v, ownerId),
         videoReadScope(viewer ?? null),
         status ? eq(v.status, status as VideoStatus) : notDeletedScope(v),
-        cursorCond
+        keysetBefore(v.createdAt, v.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
       );
 
       const rows = await this.db

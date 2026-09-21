@@ -9,32 +9,20 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { and, desc, eq, lt, or, type SQL, sql } from 'drizzle-orm';
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
-import { drizzleWhere, notDeletedScope, publicVisibilityScope } from '../scopes/index';
+import {
+  drizzleWhere,
+  keysetBefore,
+  notDeletedScope,
+  publicVisibilityScope,
+} from '../scopes/index';
 
 const { channelSubscriptions: cs, channels: ch, videos: v } = schema;
 
 const dbErr = (msg: string, err: unknown) =>
   new DatabaseError(`${msg}: ${(err as Error).message}`, { cause: err });
-
-/**
- * `(sort, tie) < (cursor.createdAt, cursor.tie)` in descending keyset order,
- * so a row is never skipped or repeated when two rows share a timestamp.
- */
-function keysetBefore(
-  sortColumn: AnyPgColumn,
-  tieColumn: AnyPgColumn,
-  cursor?: { createdAt: Date; tie: string }
-): SQL | undefined {
-  if (!cursor) return undefined;
-  return or(
-    lt(sortColumn, cursor.createdAt),
-    and(eq(sortColumn, cursor.createdAt), lt(tieColumn, cursor.tie))
-  );
-}
 
 export class PostgresSubscriptionRepository implements SubscriptionRepositoryPort {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {}
@@ -184,7 +172,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
               cs.createdAt,
               cs.channelId,
               options.cursor && {
-                createdAt: options.cursor.createdAt,
+                sort: options.cursor.createdAt,
                 tie: options.cursor.channelId,
               }
             )
@@ -227,7 +215,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
             keysetBefore(
               v.createdAt,
               v.id,
-              options.cursor && { createdAt: options.cursor.createdAt, tie: options.cursor.id }
+              options.cursor && { sort: options.cursor.createdAt, tie: options.cursor.id }
             )
           )
         )

@@ -28,6 +28,8 @@ const FEED_SEEDS: FeedSeed[] = [
   { id: VIDEO_IDS.d, ageHours: 100, viewsCount: 1, categoryId: CATEGORY_GAMING_ID },
 ];
 
+const FEED_INSTANT_MS = Date.parse('2026-03-01T12:00:00.000Z');
+
 const EXPECTED_ORDER: Record<PublicFeedSort, string[]> = {
   recent: [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c, VIDEO_IDS.d],
   popular: [VIDEO_IDS.c, VIDEO_IDS.b, VIDEO_IDS.a, VIDEO_IDS.d],
@@ -91,7 +93,12 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
     });
 
     describe('listPublic', () => {
+      /**
+       * Trending decays against the wall clock, so a keyset cursor minted here and the rank
+       * the repository recomputes only agree while both sample the same instant.
+       */
       beforeEach(async () => {
+        vi.spyOn(Date, 'now').mockReturnValue(FEED_INSTANT_MS);
         await seedCategories(subject.repositories);
         const now = Date.now();
         for (const seed of FEED_SEEDS) {
@@ -104,6 +111,10 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
             new Date(now - seed.ageHours * HOUR_MS)
           );
         }
+      });
+
+      afterEach(() => {
+        vi.restoreAllMocks();
       });
 
       it.each<{ sort: PublicFeedSort }>([
