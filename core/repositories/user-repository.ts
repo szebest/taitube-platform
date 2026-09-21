@@ -1,10 +1,11 @@
 export type UserRole = 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN';
+export type UserTier = 'free' | 'pro' | 'enterprise';
 
 export interface UserRecord {
   id: string;
   email: string;
-  tier: 'free' | 'pro' | 'enterprise' | string;
-  role?: UserRole | string;
+  tier: UserTier;
+  role?: UserRole;
   maxConcurrentUploads?: number;
   maxVideoDurationSec?: number;
   storageQuotaBytes?: number;
@@ -15,8 +16,8 @@ export interface UserRecord {
 export interface UpsertUserInput {
   id: string;
   email: string;
-  tier?: 'free' | 'pro' | 'enterprise' | string;
-  role?: UserRole | string;
+  tier?: UserTier;
+  role?: UserRole;
   maxConcurrentUploads?: number;
   maxVideoDurationSec?: number;
   storageQuotaBytes?: number;

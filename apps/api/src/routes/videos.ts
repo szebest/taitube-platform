@@ -12,6 +12,7 @@ import {
   VideoListResponseSchema,
   VideoSchema,
 } from '../schemas/videos';
+import { canAccessAdmin, canUpdateVideo, parseRole } from '@vp/permissions';
 import { VideoService } from '../services/video-service';
 
 export interface VideosRouteOptions {
@@ -189,7 +190,10 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
             max: 5,
             timeWindow: '1 minute',
             keyGenerator: (req: FastifyRequest) => req.user?.id || req.ip,
-            skip: (req: FastifyRequest) => req.user?.role === 'admin',
+            skip: (req: FastifyRequest) =>
+              req.user
+                ? canAccessAdmin({ user: { id: req.user.id, role: parseRole(req.user.role) } })
+                : false,
           },
         },
         schema: {
@@ -238,12 +242,11 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
           throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${id} not found`);
         }
 
-        if (user.role !== 'admin' && video.ownerId !== user.id) {
-          throw new PermanentError(
-            ErrorCodes.FORBIDDEN,
-            'Only the video owner or an admin may reprocess this video'
-          );
-        }
+        request.assertCan(
+          canUpdateVideo,
+          { video },
+          'Only the video owner or an admin may reprocess this video'
+        );
 
         const allowedFrom: VideoStatus[] = ['READY', 'FAILED', 'PROCESSING'];
         if (!allowedFrom.includes(video.status)) {

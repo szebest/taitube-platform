@@ -1336,7 +1336,7 @@ flowchart LR
 | Area | Control |
 |---|---|
 | Authentication | JWT bearer verified with `@fastify/jwt` against `AUTH_JWKS_URL` (RS256/EdDSA); `sub` → `users.id` (auto-provision on first sight). Dev bypass only when `NODE_ENV=development` **and** `AUTH_DEV_USER_ID` set. Admin routes require role claim `admin` or `x-admin-token` (constant-time compare). |
-| Authorisation | Declarative RBAC & ABAC permission engine (`can(user, action, resource)`) in `@vp/core/permissions`. Roles: `GUEST`, `USER`, `CREATOR`, `MODERATOR`, `ADMIN`. Route protection via Fastify decorator `server.authorize(action, resourceResolver)` returning RFC 9457 Problem Details (403 FORBIDDEN / 401 UNAUTHORIZED). Superuser bypass for ADMIN, ownership and creator video moderation predicates for resources. Video queries scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
+| Authorisation | Declarative RBAC & ABAC permission engine powered by pure functional `@casl/ability` in `packages/permissions` (`@vp/permissions`), decoupled from backend repository/port internals for full backend (`apps/api`) and frontend (`apps/web`) sharing without framework bloat. Strictly typed `Role = 'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'` with boundary-only `parseRole` sanitization. Modular rule sets composed via global `getUserPermissions(user)` builder. Formalized through clean adapters: Postgres Scopes adapter in `adapters/postgres/scopes/` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`, `traits`) for row-level database security with CASL `rulesToAST` compilation; `FastifyAuthorizationAdapter` for HTTP preHandlers and memoized `request.ability`; `ProblemDetailsErrorAdapter` for standardized RFC 9457 (401 UNAUTHORIZED vs 403 FORBIDDEN with structured error context); and `ReactPermissionsAdapter` (`useCan`, `PermissionsProvider`, `<Can />` headless slot) for reactive frontend gating. Consumed strictly via library-agnostic `canX({ user, resource })` action helpers and `assertCan(...)` guards; manual hand-checking of roles, user IDs, or ownership in routes/services/repositories is strictly forbidden. Video queries scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
 | Upload safety | Presigned URLs TTL 15 min; `Content-Type` and `Content-Length` are signed into the single-PUT URL; multipart verified via `HeadObject` after completion; server deletes and `REJECT`s on mismatch. Content-type allowlist (`video/mp4, video/quicktime, video/webm, video/x-matroska`). Per-user quota (`MAX_UPLOAD_BYTES`, `MAX_INFLIGHT_PER_USER`). |
 | Storage | Buckets private; CDN reads `public` via R2 custom domain (no public bucket URL exposed). Least-privilege access keys: API key may `Put/Get/Head/Multipart*` on `raw` only; worker key may `Get` on `raw` and `Put/Delete` on `public`. |
 | Command injection | FFmpeg invoked with argv arrays via `spawn` (never `exec`/shell); object keys are derived from UUIDs, never from user filenames (original filename stored as metadata only). |
@@ -1817,7 +1817,6 @@ video-pipeline/
 ├── .env.example                          # §16 — the single env contract for api + worker
 ├── package.json · pnpm-workspace.yaml · turbo.json · tsconfig.base.json
 ├── biome.json                            # lint + format (Biome replaces eslint+prettier)
-├── vitest.workspace.ts
 ├── Makefile                              # make up / down / observability / k3d-up / k3d-deploy / load-s1 / chaos-s4
 └── README.md
 ```
@@ -1961,6 +1960,7 @@ Worker and API should use **different** access keys with the scoped permissions 
 | `MAX_UPLOAD_BYTES` | `4294967296` | 4 GB |
 | `MAX_DURATION_SEC` | `3600` | |
 | `MAX_INFLIGHT_PER_USER` | `3` | admission control |
+| `UPLOAD_RATE_LIMIT_MAX` | `30` | `POST /v1/uploads` per user per minute; raise for load tests |
 | `ALLOWED_CONTENT_TYPES` | `video/mp4,video/quicktime,video/webm,video/x-matroska` | |
 | `JOB_TIMEOUT_FACTOR` | `3` | hard timeout = max(factor × duration, 10 min) |
 | `TMP_DIR` | `/tmp/vp` | emptyDir/tmpfs |

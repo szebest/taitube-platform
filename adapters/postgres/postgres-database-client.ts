@@ -43,7 +43,7 @@ export class PostgresDatabaseClient extends DatabaseClient {
 
   async query<T = unknown>(queryText: string, params: unknown[] = []): Promise<T[]> {
     try {
-      return (await this.sql.unsafe(queryText, params as any[])) as unknown as T[];
+      return (await this.sql.unsafe(queryText, params as any[])) as T[];
     } catch (err: unknown) {
       throw new DatabaseError(`Database query failed: ${(err as Error).message}`, { cause: err });
     }

@@ -1,4 +1,5 @@
 import type {
+  AuthorizationPort,
   ReactionCachePort,
   RenditionRecord,
   VideoRecord,
@@ -81,6 +82,7 @@ export interface VideoServiceDeps {
   videos: VideoRepository;
   cdnBaseUrl?: string;
   reactionCache?: ReactionCachePort;
+  authorization?: AuthorizationPort;
 }
 
 /**
@@ -172,7 +174,7 @@ export function toVideoDetailView(
     durationMs: video.durationMs ?? undefined,
     width: video.width ?? undefined,
     height: video.height ?? undefined,
-    fps: video.fps ? Number(video.fps) : undefined,
+    fps: video.fps ?? undefined,
     ladder: (video.ladder as VideoDetailView['ladder']) ?? undefined,
     renditions,
     playbackUrl: isReady

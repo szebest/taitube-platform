@@ -2,6 +2,7 @@ import type { Repositories } from '@vp/core/ports';
 import { verifyDevToken } from '@vp/dev-token';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
+import { type UserContext, canReadVideo, parseRole } from '@vp/permissions';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -124,16 +125,18 @@ export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteO
           throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
         }
 
-        if (video.visibility === 'private') {
-          if (!user) {
+        const userContext: UserContext | null = user
+          ? { id: user.id, role: parseRole(user.role) }
+          : null;
+
+        if (!canReadVideo({ user: userContext, video })) {
+          if (!userContext) {
             throw new PermanentError(
               ErrorCodes.UNAUTHORIZED,
               'Authentication required to view private video'
             );
           }
-          if (user.id !== video.ownerId && user.role !== 'admin') {
-            throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-          }
+          throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
         }
 
         // 2. Subscribe FIRST before reading DB snapshot to close any gap (SDD §10.2, AC 2)

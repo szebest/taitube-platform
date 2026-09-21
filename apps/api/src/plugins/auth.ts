@@ -1,6 +1,7 @@
 import * as crypto from 'node:crypto';
 import type { Repositories } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
+import { canAccessAdmin, parseRole } from '@vp/permissions';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import { ensureUserAndChannelProvisioned } from './jit-provisioner';
@@ -106,7 +107,7 @@ export function requireAdmin(request: FastifyRequest): AuthUser {
   }
 
   // 3. Role check: non-admin JWT -> 403 Forbidden (AC 17)
-  if (request.user.role?.toLowerCase() !== 'admin') {
+  if (!canAccessAdmin({ user: { id: request.user.id, role: parseRole(request.user.role) } })) {
     throw new PermanentError(ErrorCodes.FORBIDDEN, 'Admin role required to access this resource');
   }
 

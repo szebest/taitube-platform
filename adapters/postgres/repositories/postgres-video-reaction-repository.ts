@@ -18,10 +18,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
       .select({ type: schema.videoReactions.type })
       .from(schema.videoReactions)
       .where(
-        and(
-          eq(schema.videoReactions.videoId, videoId),
-          eq(schema.videoReactions.userId, userId)
-        )
+        and(eq(schema.videoReactions.videoId, videoId), eq(schema.videoReactions.userId, userId))
       );
     return (row?.type as ReactionType) ?? null;
   }

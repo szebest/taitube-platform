@@ -5,6 +5,7 @@ import swagger from '@fastify/swagger';
 import scalar from '@scalar/fastify-api-reference';
 import {
   BullMqJobQueue,
+  CaslAuthorizationAdapter,
   CategoryCacheService,
   InMemoryCacheClient,
   InMemoryDatabaseClient,
@@ -21,6 +22,7 @@ import {
   SubscriptionCacheService,
 } from '@vp/adapters';
 import type {
+  AuthorizationPort,
   CacheClient,
   DatabaseClient,
   JobQueue,
@@ -103,6 +105,7 @@ export interface BuildAppOptions {
   subscriptionCache?: SubscriptionCachePort;
   subscriptionService?: SubscriptionService;
   jwksUrl?: string;
+  authorization?: AuthorizationPort;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -281,10 +284,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       videos: repositories.videos,
     });
 
+  const authorization = options.authorization ?? new CaslAuthorizationAdapter();
+
   const videoService = new VideoService({
     videos: repositories.videos,
     cdnBaseUrl,
     reactionCache,
+    authorization,
   });
 
   registerVideosRoutes(app, {

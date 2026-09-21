@@ -175,27 +175,28 @@ export PLAYLIST_DIR
 export RESOLVE_ARGS_STR="${RESOLVE_ARGS[*]}"
 
 echo "$RENDITION_LINES" | xargs -P 4 -I {} bash -c '
-  RENDITION_URL="$PLAYLIST_DIR/{}"
+  RENDITION="$1"
+  RENDITION_URL="$PLAYLIST_DIR/$RENDITION"
   echo "==> Fetching rendition playlist: $RENDITION_URL"
   RENDITION_CONTENT=$(curl -sS -f $RESOLVE_ARGS_STR "$RENDITION_URL")
-  
+
   if ! echo "$RENDITION_CONTENT" | grep -q "#EXT-X-ENDLIST"; then
-    echo "Error: Rendition playlist {} missing #EXT-X-ENDLIST"
+    echo "Error: Rendition playlist $RENDITION missing #EXT-X-ENDLIST"
     exit 1
   fi
-  
+
   SEGMENT_LINE=$(echo "$RENDITION_CONTENT" | grep -v "^#" | grep -v "^$" | head -n 1)
   RENDITION_DIR=$(dirname "$RENDITION_URL")
   SEGMENT_URL="$RENDITION_DIR/$SEGMENT_LINE"
-  
+
   echo "==> Fetching first TS segment: $SEGMENT_URL"
   SEGMENT_SIZE=$(curl -sS -f $RESOLVE_ARGS_STR "$SEGMENT_URL" | wc -c)
-  
+
   if [ "$SEGMENT_SIZE" -lt 1000 ]; then
-    echo "Error: Segment size unexpectedly small ($SEGMENT_SIZE bytes) for {}"
+    echo "Error: Segment size unexpectedly small ($SEGMENT_SIZE bytes) for $RENDITION"
     exit 1
   fi
-' || exit 1
+' _ {} || exit 1
 
 echo "==> All segments verified in parallel."
 echo "================================================="

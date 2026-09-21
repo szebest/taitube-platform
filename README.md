@@ -134,6 +134,35 @@ taitube-platform/
 - **pnpm**: >= 10.0.0 (`pnpm -v`)
 - **Bun**: >= 1.4.0 (`bun -v`, optional for Bun worker runtime)
 - **Docker**: Docker Engine with Docker Compose v2 (`docker compose version`)
+- **FFmpeg**: must include the `drawtext` filter (`ffmpeg -filters | grep drawtext`)
+
+`make doctor` checks all of the above except the `drawtext` filter.
+
+### FFmpeg needs drawtext
+`pnpm gen-video` burns a timecode into most fixtures, so an FFmpeg built without
+`drawtext` generates 5 of the 13 and fails the rest with `No such filter: 'drawtext'`.
+Since FFmpeg 7.1 the filter also needs libharfbuzz, and Homebrew's `ffmpeg` bottle ships
+without freetype or harfbuzz. On macOS use the full build:
+
+```bash
+brew install ffmpeg-full
+brew unlink ffmpeg && brew link --force --overwrite ffmpeg-full
+```
+
+Debian and Ubuntu `ffmpeg` packages already include it, which is why CI is unaffected.
+
+### Container runtime
+Any runtime providing the `docker` CLI and the Compose v2 plugin works; nothing in the
+Makefile depends on Docker Desktop. Colima is a free alternative:
+
+```bash
+brew install colima docker docker-compose docker-buildx
+colima start --cpu 6 --memory 12 --disk 40 --vm-type vz --mount-type virtiofs
+```
+
+Homebrew installs the Compose and buildx plugins outside Docker's search path, so add
+`/opt/homebrew/lib/docker/cli-plugins` to `cliPluginsExtraDirs` in `~/.docker/config.json`
+or `docker compose` will not be found.
 
 ---
 
@@ -398,8 +427,15 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 
 ## Documentation Index
 
-- [System Design Document (SDD)](docs/SDD.md): System architecture, database schemas, and 18 Architecture Decision Records (ADRs).
+- [Hexagonal Architecture (Ports & Adapters)](ARCHITECTURE.md): Architectural boundaries, ports, repositories, and dependency inversion rules.
+- [Agent Guidelines](AGENTS.md): Core rules, workspace directory index, and definition of done.
+- [Testing Standards & Strategy](docs/standards/testing.md): Layered test pyramid, in-memory port doubles, durability tests, and dual-runtime parity.
+- [Git Workflow & Pull Requests](docs/standards/git-workflow.md): Branch protection, squash-and-merge policy, and reviewer loops.
+- [File Discipline & Sizing](docs/standards/file-discipline.md): Modularity, <= 250 lines target, and repository file organization.
+- [Declarative Authorization](docs/standards/authorization.md): CASL ability engine, role hierarchy, and route protection.
+- [Domain Glossary & Model](CONTEXT.md): Ubiquitous domain language, entities, and seam discipline.
+- [System Design Document (SDD)](docs/SDD.md): Deep dives, database schemas, and 18 Architecture Decision Records (ADRs).
 - [Product Requirements Document (PRD)](docs/PRD.md): Product goals, functional requirements, and service-level objectives.
-- [Local-First Guide](docs/LOCAL_FIRST.md): Guide for running and verifying offline operations.
-- [Backlog and Work Breakdown](docs/tickets/README.md): Roadmap of 80 vertical tracer-bullet work items and dependency graphs.
-- [Agent and Contributor Guidelines](AGENTS.md): Coding conventions, Definition of Done, and architectural constraints.
+- [Local-First Architecture Guide](docs/LOCAL_FIRST.md): Guide for running and verifying offline operations.
+- [Backlog & Work Breakdown](docs/tickets/README.md): Roadmap of vertical tracer-bullet work items and dependency graphs.
+

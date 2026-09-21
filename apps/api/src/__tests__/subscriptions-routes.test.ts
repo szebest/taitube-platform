@@ -58,13 +58,13 @@ describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
       id: creatorUser.id,
       email: creatorUser.email,
       role: 'CREATOR',
-      tier: 'creator',
+      tier: 'pro',
     });
     await repos.users.upsert({
       id: otherCreator.id,
       email: otherCreator.email,
       role: 'CREATOR',
-      tier: 'creator',
+      tier: 'pro',
     });
     await repos.users.upsert({
       id: subscriberUser.id,

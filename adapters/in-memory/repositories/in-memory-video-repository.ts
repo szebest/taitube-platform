@@ -1,4 +1,5 @@
 import { trace } from '@opentelemetry/api';
+import { canReadVideo } from '@vp/permissions';
 import {
   DatabaseError,
   type EventRepository,
@@ -162,9 +163,10 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   async listByOwner(options: ListVideosOptions): Promise<VideoRecord[]> {
-    const { ownerId, cursor, limit, status } = options;
+    const { ownerId, viewer, cursor, limit, status } = options;
     const filtered = Array.from(this.videosMap.values()).filter((v) => {
       if (v.ownerId !== ownerId) return false;
+      if (!canReadVideo({ user: viewer ?? null, video: v })) return false;
       if (status ? v.status !== status : v.status === 'DELETED') return false;
       if (cursor) {
         const [vt, ct] = [v.createdAt.getTime(), cursor.createdAt.getTime()];

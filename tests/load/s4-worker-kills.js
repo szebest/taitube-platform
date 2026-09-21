@@ -2,7 +2,7 @@ import { check, sleep } from 'k6';
 // tests/load/s4-worker-kills.js — S4: Worker node failure recovery & effectively-once guarantees (SDD §14.2)
 import { SharedArray } from 'k6/data';
 import { Counter, Trend } from 'k6/metrics';
-import { completeUpload, getVideo, initUpload, uploadPart } from './common.js';
+import { STORAGE_HOSTS, completeUpload, getVideo, initUpload, uploadPart } from './common.js';
 
 const videoData = new SharedArray('video-s60', () => {
   return open('../fixtures/s60.mp4', 'b');
@@ -12,6 +12,7 @@ const videoReadyDuration = new Trend('video_ready_duration_seconds');
 const readyVideosCount = new Counter('ready_videos_total');
 
 export const options = {
+  hosts: STORAGE_HOSTS,
   scenarios: {
     worker_kills: {
       executor: 'shared-iterations',

@@ -1,5 +1,5 @@
 {
-  "id": "64de64b1-1420-422a-b4e0-39453a70a0e3",
+  "id": "d5e2397c-6adc-4be4-adbd-e2314d3d95bf",
   "prevId": "88d7125f-4416-4427-ab69-975af3e010df",
   "version": "7",
   "dialect": "postgresql",
@@ -98,123 +98,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.channel_subscriptions": {
-      "name": "channel_subscriptions",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "subscriber_id": {
-          "name": "subscriber_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "channel_id": {
-          "name": "channel_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "channel_subscriptions_subscriber_created_idx": {
-          "name": "channel_subscriptions_subscriber_created_idx",
-          "columns": [
-            {
-              "expression": "subscriber_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": false,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "channel_subscriptions_channel_created_idx": {
-          "name": "channel_subscriptions_channel_created_idx",
-          "columns": [
-            {
-              "expression": "channel_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": false,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "channel_subscriptions_subscriber_id_users_id_fk": {
-          "name": "channel_subscriptions_subscriber_id_users_id_fk",
-          "tableFrom": "channel_subscriptions",
-          "tableTo": "users",
-          "columnsFrom": [
-            "subscriber_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "channel_subscriptions_channel_id_channels_id_fk": {
-          "name": "channel_subscriptions_channel_id_channels_id_fk",
-          "tableFrom": "channel_subscriptions",
-          "tableTo": "channels",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "channel_subscriptions_subscriber_channel_unique": {
-          "name": "channel_subscriptions_subscriber_channel_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "subscriber_id",
-            "channel_id"
           ]
         }
       },
@@ -880,6 +763,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},

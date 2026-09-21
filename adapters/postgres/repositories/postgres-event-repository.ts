@@ -25,7 +25,8 @@ export class PostgresEventRepository extends EventRepository {
           createdAt: new Date(),
         })
         .returning();
-      return row as unknown as VideoEventRecord;
+      if (!row) throw new DatabaseError('Failed to create video event: empty return');
+      return row;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to create video event for ${data.videoId}: ${(err as Error).message}`,
@@ -41,7 +42,7 @@ export class PostgresEventRepository extends EventRepository {
         .from(schema.videoEvents)
         .where(eq(schema.videoEvents.videoId, videoId))
         .orderBy(asc(schema.videoEvents.id));
-      return rows as unknown as VideoEventRecord[];
+      return rows;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to get video events for ${videoId}: ${(err as Error).message}`,
@@ -57,7 +58,7 @@ export class PostgresEventRepository extends EventRepository {
         .from(schema.videoEvents)
         .where(and(eq(schema.videoEvents.videoId, videoId), gt(schema.videoEvents.id, afterId)))
         .orderBy(asc(schema.videoEvents.id));
-      return rows as unknown as VideoEventRecord[];
+      return rows;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to get video events after id ${afterId} for video ${videoId}: ${(err as Error).message}`,
@@ -80,7 +81,7 @@ export class PostgresEventRepository extends EventRepository {
         .innerJoin(schema.videos, eq(schema.videoEvents.videoId, schema.videos.id))
         .where(and(eq(schema.videos.ownerId, userId), gt(schema.videoEvents.id, afterId)))
         .orderBy(asc(schema.videoEvents.id));
-      return rows as unknown as VideoEventRecord[];
+      return rows;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to get user video events after id ${afterId} for user ${userId}: ${(err as Error).message}`,

@@ -10,10 +10,8 @@ export interface RenditionRecord {
   audioBitrateKbps: number;
   status: RenditionStatus;
   playlistKey?: string | null;
-  playlistUrl?: string | null;
   segmentCount?: number | null;
   bytes?: number | null;
-  durationMs?: number | null;
   processingMs?: number | null;
   createdAt: Date;
   updatedAt?: Date;
@@ -29,10 +27,8 @@ export interface NewRenditionInput {
   audioBitrateKbps: number;
   status?: RenditionStatus;
   playlistKey?: string | null;
-  playlistUrl?: string | null;
   segmentCount?: number | null;
   bytes?: number | null;
-  durationMs?: number | null;
 }
 
 export abstract class RenditionRepository {

@@ -7,6 +7,7 @@ import {
 import * as schema from '@vp/db';
 import { and, asc, eq, isNull, lt, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { toOutboxRecord } from '../mappers/index';
 import { uuidv7 } from 'uuidv7';
 import { toDbError as dbErr } from './types';
 
@@ -32,7 +33,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
         .returning();
       const row = rows[0];
       if (!row) throw new DatabaseError('Failed to insert outbox row');
-      return row as unknown as OutboxRecord;
+      return toOutboxRecord(row);
     } catch (err) {
       throw dbErr('Failed to enqueue outbox item', err);
     }
@@ -47,7 +48,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
         .orderBy(asc(o.createdAt))
         .for('update', { skipLocked: true })
         .limit(limit);
-      return rows as unknown as OutboxRecord[];
+      return rows.map(toOutboxRecord);
     } catch (err) {
       throw dbErr('Failed to claim outbox batch', err);
     }
@@ -96,7 +97,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
     try {
       const rows = await this.db.select().from(o).where(eq(o.id, id)).limit(1);
       const row = rows[0];
-      return row ? (row as unknown as OutboxRecord) : null;
+      return row ? (row as OutboxRecord) : null;
     } catch (err) {
       throw dbErr(`Failed to find outbox item ${id}`, err);
     }

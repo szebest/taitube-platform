@@ -8,7 +8,6 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "exports": {
@@ -52,6 +51,9 @@
       "import": "./dist/permissions/*.js",
       "default": "./dist/permissions/*.js"
     }
+  },
+  "dependencies": {
+    "@vp/permissions": "workspace:*"
   },
   "devDependencies": {
     "@vp/tsconfig": "workspace:*",

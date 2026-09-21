@@ -11,8 +11,8 @@ This document describes the architectural boundaries, ports, and adapters layer 
 3. **Single Injection Seam:** Concrete adapters are instantiated exclusively at composition roots (`apps/api/src/app.ts` and `apps/worker/src/runner.ts`) and injected down into domain services and worker stage processors.
 4. **Interface Segregation:** Distinct responsibilities are separated into dedicated ports rather than god-objects:
    - Standard object operations live in `StorageClient`; multi-part lifecycle operations live in `MultipartStorage`.
-   - Low-level database connection/transaction execution lives in `DatabaseClient`; domain entity data access lives in dedicated domain repositories (`VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`).
-5. **Modular Single-File Repository Design:** Each repository implementation has its own separate file in `repositories/`, adhering to single responsibility and clean file sizing.
+   - Low-level database connection/transaction execution lives in `DatabaseClient`; domain entity data access lives in dedicated domain repositories (`VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, `CategoryRepositoryPort`, `VideoReactionRepositoryPort`).
+5. **Modular Single-File Repository Design:** Each repository implementation has its own separate file in `repositories/`, adhering to single responsibility and clean file sizing (target <= 250 lines).
 6. **First-Class In-Memory Test Doubles:** Every port provides an in-memory adapter implementing realistic behavior (CAS transitions, fencing token validation, multipart chunk assembly, pub/sub simulation). All unit tests execute entirely in-memory with zero Docker, network sockets, or external dependencies.
 
 ---
@@ -21,19 +21,16 @@ This document describes the architectural boundaries, ports, and adapters layer 
 
 ```
 video-pipeline/
-├── core/
+├── core/                           # @vp/core (Pure domain models, entities, and ports)
 │   ├── domain/                     # Domain entities and value objects
 │   │   ├── category.ts             # Category domain model and input interfaces
 │   │   ├── reaction.ts             # Video reaction entities and count models
 │   │   ├── subscription.ts         # Channel subscription entities and feed models
 │   │   └── index.ts
-│   ├── permissions/                # Pure domain RBAC & ABAC permission engine (Ticket 39)
-│   │   ├── types.ts                # Role, Action, UserContext, Resource, PolicyRule
-│   │   ├── evaluator.ts            # can(user, action, resource) pure evaluator
-│   │   ├── policies/               # Declarative policy modules (video, comment, channel, admin)
-│   │   └── index.ts
+│   ├── permissions/                # Pure domain RBAC & ABAC permission engine (re-exports @vp/permissions)
 │   ├── ports/                      # Core abstract ports & domain models
 │   │   ├── health-checkable.ts     # HealthCheckable interface
+│   │   ├── authorization.port.ts   # AuthorizationPort (CASL declarative authorization port)
 │   │   ├── database-client.ts      # Low-level DatabaseClient port (query, execute, transaction)
 │   │   ├── storage-client.ts       # StorageClient port (uploadObject, downloadObject, presigning)
 │   │   ├── multipart-storage.ts    # MultipartStorage port (create, presignPart, list, complete, abort)
@@ -44,22 +41,25 @@ video-pipeline/
 │   │   ├── flow-producer.ts        # FlowProducer port (flow graph additions)
 │   │   └── index.ts
 │   └── repositories/               # Domain repository interfaces
-│       ├── category-repository.port.ts # CategoryRepositoryPort
-│       ├── channel-repository.port.ts  # ChannelRepositoryPort
-│       ├── subscription-repository.port.ts # SubscriptionRepositoryPort
-│       ├── video-reaction-repository.port.ts # VideoReactionRepositoryPort
-│       ├── video-repository.ts     # VideoRepository
-│       ├── upload-repository.ts    # UploadRepository
-│       ├── step-repository.ts      # StepRepository (fencing tokens, CAS claims)
-│       ├── rendition-repository.ts # RenditionRepository
-│       ├── event-repository.ts     # EventRepository
-│       ├── user-repository.ts      # UserRepository
-│       ├── repositories.ts         # Repositories container interface
+│       ├── category-repository.port.ts
+│       ├── channel-repository.port.ts
+│       ├── subscription-repository.port.ts
+│       ├── video-reaction-repository.port.ts
+│       ├── video-repository.ts
+│       ├── upload-repository.ts
+│       ├── step-repository.ts
+│       ├── rendition-repository.ts
+│       ├── event-repository.ts
+│       ├── user-repository.ts
+│       ├── repositories.ts         # Aggregating container interface
 │       └── index.ts
 │
-├── adapters/                       # Concrete and in-memory adapter implementations
-│   ├── postgres/
+├── adapters/                       # @vp/adapters (Concrete and in-memory adapter implementations)
+│   ├── authorization/              # CaslAuthorizationAdapter (@vp/permissions bridge)
+│   ├── postgres/                   # PostgreSQL repository implementations via Drizzle ORM
 │   │   ├── postgres-database-client.ts
+│   │   ├── scopes/                 # CASL AST -> Drizzle SQL compiler, drizzleWhere & row scopes
+│   │   ├── mappers/                # Domain input -> typed Drizzle insert and update rows
 │   │   ├── repositories/           # Individual Postgres repository implementations
 │   │   │   ├── postgres-category-repository.ts
 │   │   │   ├── postgres-channel-repository.ts
@@ -75,56 +75,36 @@ video-pipeline/
 │   │   │   └── index.ts
 │   │   └── index.ts
 │   ├── s3/                         # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
-│   ├── redis/                      # RedisCacheClient, CategoryCacheService, SubscriptionCacheService
-│   │   ├── redis-cache-client.ts
-│   │   ├── category-cache.service.ts
-│   │   ├── subscription-cache.service.ts
-│   │   ├── redis-reaction-cache.adapter.ts
-│   │   ├── singleflight.ts
-│   │   └── index.ts
+│   ├── redis/                      # RedisCacheClient, CategoryCacheService, SubscriptionCacheService, RedisReactionCacheAdapter
 │   ├── bullmq/                     # BullMqJobQueue & BullMqFlowProducer (bullmq)
-│   ├── in-memory/                  # In-memory test doubles
-│   │   ├── in-memory-database-client.ts
-│   │   ├── in-memory-storage-client.ts
-│   │   ├── in-memory-multipart-storage.ts
-│   │   ├── in-memory-cache-client.ts
-│   │   ├── in-memory-job-queue.ts
-│   │   ├── in-memory-flow-producer.ts
-│   │   ├── repositories/           # Individual in-memory repository implementations
-│   │   │   ├── types.ts
-│   │   │   ├── in-memory-category-repository.ts
-│   │   │   ├── in-memory-channel-repository.ts
-│   │   │   ├── in-memory-subscription-repository.ts
-│   │   │   ├── in-memory-video-reaction-repository.ts
-│   │   │   ├── in-memory-video-repository.ts
-│   │   │   ├── in-memory-upload-repository.ts
-│   │   │   ├── in-memory-step-repository.ts
-│   │   │   ├── in-memory-rendition-repository.ts
-│   │   │   ├── in-memory-event-repository.ts
-│   │   │   ├── in-memory-user-repository.ts
-│   │   │   ├── in-memory-repositories.ts
-│   │   │   └── index.ts
-│   │   └── index.ts
-│   └── index.ts
+│   └── in-memory/                  # High-speed in-memory test doubles
+│       ├── in-memory-authorization-adapter.ts
+│       ├── in-memory-database-client.ts
+│       ├── in-memory-storage-client.ts
+│       ├── in-memory-multipart-storage.ts
+│       ├── in-memory-cache-client.ts
+│       ├── in-memory-job-queue.ts
+│       ├── in-memory-flow-producer.ts
+│       ├── repositories/           # Individual in-memory repository implementations
+│       └── index.ts
 │
 ├── apps/
 │   ├── api/                        # Fastify API (Composition root: apps/api/src/app.ts)
 │   ├── worker/                     # BullMQ Worker (Composition root: apps/worker/src/runner.ts)
-│   └── web/                        # Taitube Frontend (React 19, TanStack Start, Router, Query, Form, Table, Virtual, Vite 6)
+│   └── web/                        # Taitube Web Frontend (React 19, TanStack Start/Router/Query)
 │
-├── packages/
-│   ├── api-contracts/              # Single-sourced Zod schemas & DTO types for BE + FE
-│   ├── api-client/                 # Type-safe client SDK + TanStack Query hooks
-│   ├── job-contracts/              # BullMQ queue names, payloads, and retry policies
-│   ├── db/                         # Drizzle schema, migrations, connection pools
-│   ├── storage/                    # S3 key conventions & presigned URL helpers
-│   ├── ffmpeg/                     # FFmpeg command builders, ladder specs, probe parser
-│   ├── observability/              # Prometheus metrics, OTel tracing & logger
-│   ├── events/                     # Redis Pub/Sub events & SSE event schemas
-│   ├── config/                     # Shared Zod environment schemas
-│   ├── errors/                     # RFC 9457 ProblemDetails & error taxonomy
-│   ├── testing/                    # Test fixtures, dev tokens, doubles
-│   └── tsconfig/                   # Shared TypeScript presets
+└── packages/                       # Shared monorepo packages
+    ├── config/                     # Centralized environment variable validation (Zod)
+    ├── db/                         # PostgreSQL schema definitions, migrations, seeds
+    ├── errors/                     # Domain and HTTP RFC 9457 error classifications
+    ├── events/                     # Event definitions and Redis pub/sub dispatcher
+    ├── ffmpeg/                     # FFmpeg argument builders, progress parsers, probe helpers
+    ├── job-contracts/              # BullMQ job payload schemas and queue naming contracts
+    ├── observability/              # OpenTelemetry, Prometheus metrics, and Pino logging
+    ├── permissions/                # Pure CASL declarative authorization engine (@vp/permissions)
+    ├── storage/                    # S3 object key layout and presigned URL helpers
+    ├── testing/                    # Shared test utilities, fixtures, and assertion helpers
+    └── tsconfig/                   # Shared TypeScript presets
 ```
 
 ---
@@ -140,7 +120,7 @@ export interface HealthCheckable {
 All ports extend `HealthCheckable` to ensure uniform liveness and readiness monitoring across all external integrations.
 
 ### `DatabaseClient`
-Low-level client for executing raw SQL, parameterized queries, transactions, and health checks:
+Low-level client for executing parameterized queries, transactions, and health checks:
 - `query<T>(queryText, params?)` / `execute(queryText, params?)`
 - `transaction(fn)` / `checkHealth()` / `close()`
 
@@ -151,7 +131,16 @@ Low-level client for executing raw SQL, parameterized queries, transactions, and
 - **`RenditionRepository`**: `create`, `findByVideoId`, `update`.
 - **`EventRepository`**: `create`, `findByVideoId`.
 - **`UserRepository`**: `findById`, `upsert`.
-- **`Repositories`**: Aggregating container interface bundling the six domain repositories.
+- **`CategoryRepositoryPort`**: Category listing, caching, admin management.
+- **`VideoReactionRepositoryPort`**: Atomic reaction recording and counter synchronization.
+- **`Repositories`**: Aggregating container interface bundling domain repositories.
+
+### `AuthorizationPort`
+Abstracts user authorization, declarative rule evaluation, and RFC 9457 error gating:
+- `getAbility()`: returns the active `@casl/ability` instance.
+- `can(action, subject)` / `can(helper, params)`: evaluates if an action is permitted.
+- `assertCan(action, subject, message?)` / `assertCan(helper, params, options)`: throws RFC 9457 `UNAUTHORIZED` (401) or `FORBIDDEN` (403) if denied.
+- `forUser(user)`: returns a new `AuthorizationPort` instance scoped to the target user.
 
 ### `StorageClient`
 Abstracts standard S3-compatible object storage operations across local MinIO and Cloudflare R2:
@@ -184,6 +173,7 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 
 | Port / Boundary | Production Adapter | In-Memory Adapter |
 |-----------------|--------------------|-------------------|
+| `AuthorizationPort` | `CaslAuthorizationAdapter` | `PermissiveAuthorizationAdapter` / `StrictAuthorizationAdapter` |
 | `DatabaseClient` | `PostgresDatabaseClient` | `InMemoryDatabaseClient` |
 | `Repositories` | `PostgresRepositories` | `InMemoryRepositories` |
 | `StorageClient` | `S3StorageClient` | `InMemoryStorageClient` |
@@ -194,68 +184,39 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 
 ---
 
-## 5. Design Patterns & Clean Architecture Rules
+## 5. Architectural Invariants
 
-### Rule 1: Single Responsibility & Dedicated Repository Files
+### Invariant 1: Dedicated Repository Files
 - Every repository implementation MUST live in its own dedicated file inside `repositories/` subfolders:
   - `adapters/postgres/repositories/postgres-<domain>-repository.ts`
   - `adapters/in-memory/repositories/in-memory-<domain>-repository.ts`
-- Never combine multiple domain repository implementations into one monolithic file.
-- The `*Repositories` container class (e.g. `PostgresRepositories`, `InMemoryRepositories`) is strictly a lightweight factory/bundle that wires the individual instances together.
+- Monolithic multi-repository files are strictly forbidden.
 
-### Rule 2: Strict File Length & Size Limits
-- Files must remain cohesive, understandable, and modular.
-- **Target size:** <= 250 lines of code per file.
-- **Strict upper limit:** 400 lines (or ~10 KB) per file.
-- Any module exceeding 300 lines must be evaluated for decomposition into submodules, domain services, or extracted helper components.
+### Invariant 2: File Length & Sizing Discipline
+- Target size: `<= 250 lines` of code per file.
+- Strict limit: `400 lines` (or `~10 KB`) per file.
+- See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
 
-### Rule 3: Interface Segregation (ISP)
-- Never create god-objects that bundle disparate responsibilities.
-- Standard storage operations (`StorageClient`) are cleanly segregated from chunk-level multipart operations (`MultipartStorage`).
-- Driver/connection primitives (`DatabaseClient`) are segregated from entity data access (`Repositories`).
+### Invariant 3: Autonomous In-Memory Test Doubles
+- In-memory test doubles manage self-contained state and expose `.clear()`.
+- Repositories interact exclusively via port interfaces, never by reaching into foreign private collections.
 
-### Rule 4: Autonomous Test Doubles
-- In-memory test doubles must be self-contained and autonomous:
-  - Private internal collections (`Map`, `Array`) initialized by default.
-  - Expose `.clear()` to allow test fixtures to reset state without recreating classes.
-  - Can be instantiated independently (`new InMemoryVideoRepository()`).
-  - Collaborate with other repositories via port interfaces (e.g., calling `uploadsRepo.findByVideoId` or `eventRepo.create`), NOT by directly manipulating private foreign data structures.
+### Invariant 4: Deep Domain Services vs Thin Transport Routes
+- Route handlers in `apps/api/src/routes/` are strictly thin HTTP transport adapters.
+- Domain workflows and invariants live in deep domain services in `apps/api/src/services/`.
+- Maintain a `>1:1` ratio of domain services to routes via composable utilities (`HttpCacheService`, `Singleflight`, `SseHub`).
+- See [apps/api/AGENTS.md](apps/api/AGENTS.md).
 
-### Rule 5: Deep Domain Services vs Thin Transport Routes
-- Route handlers in `apps/api/src/routes/` are strictly transport adapters: they validate HTTP inputs, check authorization, and format HTTP responses.
-- All orchestration, multi-system transaction coordination, and business invariants live in Deep Domain Services in `apps/api/src/services/` (`UploadService`, `VideoService`).
+### Invariant 5: Client-Server Boundary & Frontend Isolation
+- `apps/web` must NEVER import `core/ports`, `adapters/`, `packages/db`, or server-only packages.
+- Frontend communicates with the backend exclusively via HTTP API contracts and typed client packages.
+- For all frontend architectural patterns (React 19, TanStack Start/Router/Query, URL state model, headless UI hooks, layout stability), see [apps/web/AGENTS.md](apps/web/AGENTS.md).
 
-### Rule 6: Client-Server Boundary & Contract Single-Sourcing
-- **Frontend Isolation:** `apps/web` must NEVER import `core`, `adapters`, `packages/db`, or any server-only package. It interacts with the backend strictly through `@vp/api-client`.
-- **Contract Single-Sourcing:** All API DTO schemas and query parameters are authored once in `packages/api-contracts` (using Zod) and consumed by both Fastify route schemas (`apps/api`) and `@vp/api-client` (`apps/web`).
-- **Shared Declarative Permissions:** RBAC/ABAC rules are defined in `@vp/core/permissions` without driver dependencies and shared between backend route decorators and frontend `<Can />` authorization components.
-
-### Rule 7: Frontend Resilience & Presentation Invariants
-- **Classified Retry & Idempotent Mutation Policy:** Queries auto-retry at most 3 times with exponential backoff and randomized jitter on transient 5xx/network failures, and never on permanent 4xx errors. Mutations must never auto-retry on server responses to guarantee side-effect idempotency and prevent duplicate writes.
-- **Hierarchical Error Isolation:** Route-level boundaries catch critical page-level failures (`<NotFoundRoute />`, `<ForbiddenRoute />`, `<ServerErrorRoute />`, `<RootErrorPage />`), while contextual widget boundaries (`<QueryErrorCard />`) isolate non-critical failures (e.g. comments or recommendations) to ensure primary media playback is never interrupted.
-- **Layout-Stable Skeleton Placeholders:** Skeletons are strictly scoped to primary initial viewports and must strictly preserve component aspect ratios (16:9 video thumbnail, 16:3 banner) and typography heights to guarantee zero Cumulative Layout Shift (`CLS < 0.05`).
-
-### Rule 8: URL-Driven State Architecture & Modal Deep-Linking (The STS Pattern)
-- **URL as Single Source of Truth:** All active modals (`?modal=...`), drawers, active tabs, filter chips, and search facets must be reflected in the browser URL search parameters rather than ephemeral component local state (`useState`).
-- **History Discipline (Push vs Replace):** Opening dialogs and major state transitions must push history (`replace: false`) so the browser Back button closes the modal naturally. Filter toggling, sort changes, seekbar scrubbing, and search pagination must replace history (`replace: true`) to avoid polluting the browser history stack.
-- **Search Parameter Type-Safety:** Every frontend route must define a strict Zod `validateSearch` schema in TanStack Router.
-
-### Rule 9: Unified TanStack Full-Stack & Server-First SSR Architecture
-- **Server-First Fetching & Rendering Baseline:** All public and discovery pages (Home Feed `/`, Video Watch `/watch/$videoId`, Search `/search`, Channel Profile `/channels/$handle`, Playlists `/playlist`, and Categories) must be **server-rendered by default** using TanStack Start:
-  - **Server Functions (`createServerFn`):** Execute on the Node/Nitro server, querying internal backend APIs or databases directly to eliminate browser network waterfalls and TTFB lag.
-  - **Route Loaders & Query Prefetching:** Route `loader` functions prefetch server state into `QueryClient` during SSR (`await queryClient.prefetchQuery(...)`), dehydrating state directly into the streamed HTML.
-  - **Zero Client Hydration Duplication:** The client hydrates the dehydrated Query cache instantly on initial load, triggering zero duplicate HTTP calls on mount.
-  - **Streaming HTML & SEO Metadata:** Pages stream initial HTML with fully populated `<head>` (OpenGraph, Twitter Player Cards, `VideoObject` JSON-LD schema) and server-rendered layout markup so web crawlers and humans see complete content without executing client JavaScript.
-- **The TanStack Full-Stack Ecosystem:**
-  - **TanStack Start (`@tanstack/react-start`):** Nitro/Vite 6 server runtime, streaming SSR, server functions (`createServerFn`), dynamic `<head>` injection.
-  - **TanStack Router (`@tanstack/react-router`):** 100% type-safe file routes, Zod search param validation (`validateSearch`), and server-side route loaders.
-  - **TanStack Query (`@tanstack/react-query` v5):** Server state management, SSR dehydration/hydration, optimistic mutations, and cache invalidation.
-  - **TanStack Form (`@tanstack/react-form` + `@tanstack/zod-form-adapter`):** Reactive, zero-re-render forms for uploads, metadata editing, playlists, and settings.
-  - **TanStack Table (`@tanstack/react-table` v8):** Headless tables for Studio video management, Admin taxonomies, and queue inspection.
-### Rule 10: Deterministic Test Suite Parity & Zero Heuristic Skips
-- **No Heuristic Skips:** Test suites must never silently swallow connection errors or conditionally skip test assertions (e.g., catching DB connection errors and flagging `postgresAvailable = false`).
-- **1:1 Local & CI Parity:** Test suites run with strict 1:1 parity between local developer environments and remote CI pipelines. Database durability, CAS transitions, and fencing tests run against real PostgreSQL instances provided via Docker Compose (`make up`) locally and GitHub Actions service containers in CI.
-- **Port Isolation:** Domain, application service, and route handler unit tests execute deterministically against in-memory port doubles (`adapters/in-memory`), while database packages execute against real PostgreSQL to guarantee atomic durability contracts.
+### Invariant 6: Deterministic Test Suite Parity
+- No heuristic skips: test suites never swallow connection errors or skip assertions conditionally.
+- Strict 1:1 parity between local developer environments and remote CI pipelines.
+- Unit tests execute against in-memory doubles; database durability tests execute against PostgreSQL.
+- See [docs/standards/testing.md](docs/standards/testing.md).
 
 ---
 
@@ -266,7 +227,5 @@ The repository enforces architectural boundaries through static verification:
 2. `git grep "ioredis"` matches only `adapters/redis/`.
 3. `git grep "bullmq"` matches only `adapters/bullmq/`.
 4. `git grep "postgres"` and `git grep "drizzle-orm"` match only `adapters/postgres/` and `packages/db`.
-5. `apps/web` imports only from `@vp/api-client`, `@vp/api-contracts`, and pure frontend packages.
-6. Full dual-runtime test parity under `vitest` and `bun test`.
-7. Biome formatting and linting pass with zero errors (`pnpm biome check --diagnostic-level=error`).
-
+5. Full dual-runtime test parity under `vitest` and `bun test`.
+6. Biome formatting and linting pass with zero errors (`pnpm biome check --diagnostic-level=error`).

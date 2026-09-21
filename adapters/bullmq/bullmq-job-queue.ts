@@ -275,7 +275,7 @@ export class BullMqJobQueue extends JobQueue {
         'completed',
         'failed',
         'delayed',
-        'paused' as unknown as JobType
+        'paused' as JobType
       );
       return {
         waiting: counts.waiting ?? 0,
@@ -327,8 +327,8 @@ export class BullMqJobQueue extends JobQueue {
         template
           ? {
               name: template.name,
-              data: template.data as unknown as Record<string, unknown>,
-              opts: template.opts as unknown as JobsOptions,
+              data: template.data as Record<string, unknown>,
+              opts: template.opts as JobsOptions,
             }
           : undefined
       );

@@ -1,99 +1,51 @@
-# @vp/db — Persistence & Durability Layer
+# @vp/db — PostgreSQL Schema & Durability Layer
 
-Authoritative PostgreSQL database schema and repositories for `video-pipeline`, built with Drizzle ORM and `postgres.js`. Implements compare-and-set (CAS) state transitions, fencing tokens to reject zombie workers, optimistic locking, and append-only event streams as specified in `docs/SDD.md` §5 and ADR-04.
+Authoritative PostgreSQL database schema, migrations, connection pools, and atomic state-machine helpers for `video-pipeline`, built with Drizzle ORM and `postgres.js`. Implements compare-and-set (CAS) state transitions, optimistic locking, and append-only event streams as specified in `docs/SDD.md` §5 and ADR-04.
 
-## Durability Guarantees & Repository Methods
+*Note on Architecture:* Entity data-access repositories are implemented in `adapters/postgres/repositories/` adhering to the repository interfaces in `@vp/core/repositories`.
 
-PostgreSQL is the source of truth; Redis is a cache of intent (SDD P2). The following repository methods encode the core durability guarantees:
+---
 
-### 1. `transitionVideo(db, options)`
+## 1. Core Durability & State Machine Helpers
+
+PostgreSQL is the source of truth; Redis is a cache of intent (SDD P2).
+
+### `transitionVideo(db, options)`
 - **Guarantee:** Compare-And-Set (CAS) atomic transition with guaranteed audit logging.
-- **SQL:**
-  ```sql
-  UPDATE videos
-  SET status = $to, updated_at = now(), ...patch
-  WHERE id = $videoId AND status = $from
-  RETURNING id;
-  ```
 - **Durability Behavior:**
-  - Atomically validates that `videos.status == from` and sets `status = to`.
-  - In the **same database transaction**, appends an audit event to `video_events`. There is no public API to update status without appending an event.
-  - Returns `true` if this caller succeeded.
-  - Returns `false` if another concurrent worker or process already transitioned the status. Callers treat `false` as "already handled" and exit cleanly without error or duplicate downstream jobs.
+  - Atomically validates that `videos.status == from` and updates `status = to`.
+  - In the **exact same database transaction**, appends an audit event to `video_events`. There is no public API to update video status without appending an audit event.
+  - Returns `true` if this transition succeeded.
+  - Returns `false` if another concurrent worker already transitioned the status. Callers treat `false` as "already handled" and exit cleanly without duplicate downstream jobs.
 
-### 2. `claimStep(db, options)`
-- **Guarantee:** Idempotent step claim with fencing token generation (SDD §5.3, §9.5).
-- **SQL:**
-  ```sql
-  INSERT INTO processing_steps (id, video_id, step, rendition, job_id, attempt, status, worker_id, lock_token, started_at, heartbeat_at)
-  VALUES ($1, $2, $3, $4, $5, $6, 'RUNNING', $7, $8, now(), now())
-  ON CONFLICT (video_id, step, rendition) DO UPDATE
-    SET attempt = EXCLUDED.attempt, status = 'RUNNING', worker_id = EXCLUDED.worker_id,
-        lock_token = EXCLUDED.lock_token, started_at = now(), heartbeat_at = now(), error_code = NULL
-    WHERE processing_steps.status <> 'DONE'
-  RETURNING lock_token;
-  ```
-- **Durability Behavior:**
-  - First attempt inserts the step row with status `RUNNING`.
-  - Retries bump `attempt` and take a new, unique UUIDv7 `lock_token`.
-  - If the step was already completed (`status = 'DONE'`), the `WHERE` clause rejects reopening and returns no rows (`fenced: true`, `lockToken: null`).
+---
 
-### 3. `completeStep(db, options)`
-- **Guarantee:** Fenced completion rejecting zombie workers.
-- **SQL:**
-  ```sql
-  UPDATE processing_steps
-  SET status = 'DONE', finished_at = now(), result = $result
-  WHERE video_id = $videoId AND step = $step AND rendition = $rendition AND lock_token = $lockToken;
-  ```
-- **Durability Behavior:**
-  - Only the holder of the active `lockToken` can complete the step.
-  - If a worker was partitioned, delayed, or restarted such that BullMQ re-queued the job and another worker claimed a newer token, the zombie worker updates 0 rows and receives `{ completed: false, fenced: true }`. The zombie discards its work safely.
+## 2. Drizzle Schema & Tables
 
-### 4. `failStep(db, options)`
-- **Guarantee:** Fenced failure recording.
-- **Durability Behavior:**
-  - Only the worker holding the current `lockToken` can record a step as `FAILED`.
+- `videos`: Core media entity tracking lifecycle states (`UPLOADING`, `UPLOADED`, `PROBING`, `PROCESSING`, `READY`, `REJECTED`, `ABANDONED`, `FAILED`, `DELETED`), visibility, version, duration, and metadata.
+- `uploads`: Active upload sessions tracking strategy (`single` vs `multipart`), parts, and declared size.
+- `processing_steps`: Idempotent stage executions fenced by monotonic UUIDv7 `lock_token` values to reject zombie workers.
+- `renditions`: Output ladder renditions (`1080p`, `720p`, `480p`) with independent processing states (`PENDING`, `RUNNING`, `DONE`, `FAILED`).
+- `video_events`: Append-only immutable event stream driving real-time Server-Sent Events (SSE) and webhook dispatches.
+- `users`: Identity records and role permissions.
+- `channels`: Creator channel profiles, display names, and `@handles`.
+- `categories`: Taxonomy classifications for video discovery and filtering.
+- `video_reactions`: Viewer sentiments (`LIKE`, `DISLIKE`) with synchronized counter caches.
 
-### 5. `heartbeatStep(db, lockToken)`
-- **Guarantee:** Worker liveness tracking.
-- **Durability Behavior:**
-  - Periodically touches `heartbeat_at = now()` while encoding or processing, powering the `WorkerStuck` alert rule.
+---
 
-### 6. `updateVideoMetadata(db, options)`
-- **Guarantee:** Optimistic concurrency control (OCC) for video metadata edits.
-- **SQL:**
-  ```sql
-  UPDATE videos
-  SET title = COALESCE($title, title),
-      description = COALESCE($description, description),
-      visibility = COALESCE($visibility, visibility),
-      version = version + 1,
-      updated_at = now()
-  WHERE id = $videoId AND version = $version
-  RETURNING *;
-  ```
-- **Durability Behavior:**
-  - Updates title, description, and visibility only if `version` matches.
-  - Atomically increments `version = version + 1`.
-  - If `version` does not match (0 rows affected), throws `PermanentError` with code `VERSION_CONFLICT` (HTTP 409).
-
-### 7. `getVideoById(db, videoId)` & `getVideoWithDetails(db, videoId)`
-- **Guarantee:** Consistent point reads for API responses (video, renditions, uploads).
-
-## Commands
+## 3. Database Commands
 
 ```bash
-# Run migrations
+# Run pending migrations
 pnpm --filter @vp/db migrate
 
 # Verify schema drift against Drizzle schema
 pnpm --filter @vp/db check
 
-# Seed dev users and demo video
+# Seed development database with mock users and demo media
 pnpm --filter @vp/db seed
 
-# Run tests
+# Run durability tests
 pnpm --filter @vp/db test
-bun test packages/db
 ```
