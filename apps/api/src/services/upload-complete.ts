@@ -172,13 +172,14 @@ export async function completeUpload(
     return { videoId: video.id, status: 'UPLOADED' };
   }
 
-  // Fault injection hook for Ticket 30: crash right after commit before direct enqueue
+  // Deliberate crash point between the commit and the direct enqueue, so a test can
+  // prove the outbox relay still publishes the job on its own.
   if (options?.testCrashAfterCommit) {
     throw new Error('CRASH_AFTER_COMMIT');
   }
 
-  // Admission control (SDD §9.4, PRD FR-13, Ticket 18): the outbox relay still
-  // drains a held video, so holding costs latency rather than the job.
+  // Admission control (SDD §9.4, PRD FR-13): the outbox relay still drains a held
+  // video, so holding costs latency rather than the job.
   const inFlight = await ctx.videos.countInFlightByOwner(video.ownerId);
   if (inFlight >= ctx.maxInflightPerUser) {
     return { videoId: video.id, status: 'UPLOADED', admission: 'held' };
