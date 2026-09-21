@@ -190,46 +190,57 @@ export function classifyFfmpegError(
   );
 }
 
-/**
- * Runs FFmpeg to transcode one rendition to HLS TS segments with progress and error classification.
- */
-export async function runFfmpegTranscode(
-  options: TranscodeOptions
-): Promise<TranscodeExecutionResult> {
-  const args = buildTranscodeArgs(options);
-  const redactedCmd = [
+export interface FfmpegRunOptions {
+  /** Names the span and the timeout message; one word, e.g. `transcode` or `thumbnail`. */
+  stage: string;
+  args: string[];
+  timeoutMs: number;
+  attributes?: Record<string, string>;
+  /** Supplying this is what turns stdout on; ffmpeg only writes there under `-progress`. */
+  onStdoutLine?: (line: string) => void;
+}
+
+/** ffmpeg reports both of these in microseconds, whatever the suffix says. */
+const PROGRESS_TIME_KEYS = ['out_time_ms=', 'out_time_us='] as const;
+
+const STDERR_TAIL_LINES = 50;
+const KILL_GRACE_MS = 3000;
+
+function redactedCommand(args: string[]): string {
+  return [
     'ffmpeg',
-    ...args.map((a) => {
+    ...args.map((arg) => {
       try {
-        if (a.startsWith('http://') || a.startsWith('https://')) {
-          const u = new URL(a);
-          u.search = '';
-          return u.toString();
+        if (arg.startsWith('http://') || arg.startsWith('https://')) {
+          const url = new URL(arg);
+          url.search = '';
+          return url.toString();
         }
       } catch {}
-      return a;
+      return arg;
     }),
   ].join(' ');
+}
 
-  const tracer = trace.getTracer('video-pipeline');
-  const span = tracer.startSpan('ffmpeg', {
+/**
+ * Runs ffmpeg under a traced span with a hard timeout, escalating SIGTERM to
+ * SIGKILL, and rejects with the classified error built from the stderr tail.
+ */
+export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
+  const { stage, args, timeoutMs, onStdoutLine } = options;
+
+  const span = trace.getTracer('video-pipeline').startSpan('ffmpeg', {
     attributes: {
-      'ffmpeg.stage': 'transcode',
-      'ffmpeg.rendition': options.rendition.name,
-      'ffmpeg.command': redactedCmd,
-      rendition: options.rendition.name,
+      'ffmpeg.stage': stage,
+      'ffmpeg.command': redactedCommand(args),
+      ...options.attributes,
     },
   });
-
   const startTime = Date.now();
-
-  // Compute hard per-job timeout: max(3 * durationMs, 10 min) (SDD §9.5)
-  const durationMs = options.durationMs || 60000;
-  const timeoutMs = options.timeoutMs || Math.max(3 * durationMs, 10 * 60 * 1000);
 
   return new Promise((resolve, reject) => {
     const proc = spawn('ffmpeg', args, {
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ['ignore', onStdoutLine ? 'pipe' : 'ignore', 'pipe'],
     });
 
     const stderrLines: string[] = [];
@@ -240,96 +251,108 @@ export async function runFfmpegTranscode(
       proc.kill('SIGTERM');
       setTimeout(() => {
         if (!proc.killed) proc.kill('SIGKILL');
-      }, 3000);
+      }, KILL_GRACE_MS);
     }, timeoutMs);
 
-    proc.stdout.setEncoding('utf-8');
-    let buffer = '';
+    if (onStdoutLine && proc.stdout) {
+      proc.stdout.setEncoding('utf-8');
+      let buffered = '';
+      proc.stdout.on('data', (chunk: string) => {
+        buffered += chunk;
+        const lines = buffered.split('\n');
+        buffered = lines.pop() || '';
+        for (const line of lines) {
+          onStdoutLine(line.trim());
+        }
+      });
+    }
 
-    proc.stdout.on('data', (chunk: string) => {
-      buffer += chunk;
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('out_time_ms=')) {
-          const val = Number.parseInt(trimmed.slice('out_time_ms='.length), 10);
-          if (!Number.isNaN(val) && val > 0) {
-            const outMs = Math.round(val / 1000);
-            const percent = Math.min(100, Math.round((outMs / durationMs) * 100));
-            options.onProgress?.({ percent, outTimeMs: outMs });
-          }
-        } else if (trimmed.startsWith('out_time_us=')) {
-          const val = Number.parseInt(trimmed.slice('out_time_us='.length), 10);
-          if (!Number.isNaN(val) && val > 0) {
-            const outMs = Math.round(val / 1000);
-            const percent = Math.min(100, Math.round((outMs / durationMs) * 100));
-            options.onProgress?.({ percent, outTimeMs: outMs });
-          }
+    proc.stderr?.setEncoding('utf-8');
+    proc.stderr?.on('data', (chunk: string) => {
+      for (const line of chunk.split('\n')) {
+        if (!line.trim()) continue;
+        stderrLines.push(line.trim());
+        if (stderrLines.length > STDERR_TAIL_LINES) {
+          stderrLines.shift();
         }
       }
     });
 
-    proc.stderr.setEncoding('utf-8');
-    proc.stderr.on('data', (chunk: string) => {
-      const lines = chunk.split('\n');
-      for (const line of lines) {
-        if (line.trim()) {
-          stderrLines.push(line.trim());
-          if (stderrLines.length > 50) {
-            stderrLines.shift(); // Keep last 50 lines per ticket notes
-          }
-        }
-      }
-    });
+    const fail = (err: Error): void => {
+      span.recordException(err);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+      span.end();
+      reject(err);
+    };
 
     proc.on('error', (err) => {
       clearTimeout(timer);
-      span.recordException(err);
-      span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
       span.setAttribute('ffmpeg.duration_ms', Date.now() - startTime);
-      span.end();
-      reject(err);
+      fail(err);
     });
 
     proc.on('close', (code, signal) => {
       clearTimeout(timer);
-      const elapsedMs = Date.now() - startTime;
       span.setAttribute('ffmpeg.exit_code', code ?? (signal ? -1 : 0));
-      span.setAttribute('ffmpeg.duration_ms', elapsedMs);
+      span.setAttribute('ffmpeg.duration_ms', Date.now() - startTime);
       if (signal) {
         span.setAttribute('ffmpeg.signal', signal);
       }
 
       if (timedOut) {
-        span.setStatus({ code: SpanStatusCode.ERROR, message: 'FFmpeg timeout' });
-        span.end();
-        return reject(
+        return fail(
           new TransientError(
             ErrorCodes.FFMPEG_TIMEOUT,
-            `FFmpeg exceeded hard timeout of ${timeoutMs}ms`
+            `FFmpeg ${stage} exceeded hard timeout of ${timeoutMs}ms`
           )
         );
       }
 
       if (code !== 0) {
-        const stderrStr = stderrLines.join('\n');
-        const classified = classifyFfmpegError(code, signal, stderrStr);
-        span.recordException(classified);
-        span.setStatus({ code: SpanStatusCode.ERROR, message: classified.message });
-        span.end();
-        return reject(classified);
+        return fail(classifyFfmpegError(code, signal, stderrLines.join('\n')));
       }
 
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
-      resolve({
-        outputDir: options.outputDir,
-        playlistPath: path.join(options.outputDir, 'index.m3u8'),
-        segmentCount: 0,
-        durationMs,
-      });
+      resolve();
     });
   });
+}
+
+/**
+ * Runs FFmpeg to transcode one rendition to HLS TS segments with progress and error classification.
+ */
+export async function runFfmpegTranscode(
+  options: TranscodeOptions
+): Promise<TranscodeExecutionResult> {
+  const durationMs = options.durationMs || 60000;
+  const timeoutMs = options.timeoutMs || Math.max(3 * durationMs, 10 * 60 * 1000);
+
+  await runFfmpeg({
+    stage: 'transcode',
+    args: buildTranscodeArgs(options),
+    timeoutMs,
+    attributes: {
+      'ffmpeg.rendition': options.rendition.name,
+      rendition: options.rendition.name,
+    },
+    onStdoutLine: (line) => {
+      const prefix = PROGRESS_TIME_KEYS.find((key) => line.startsWith(key));
+      if (!prefix) return;
+      const microseconds = Number.parseInt(line.slice(prefix.length), 10);
+      if (Number.isNaN(microseconds) || microseconds <= 0) return;
+      const outTimeMs = Math.round(microseconds / 1000);
+      options.onProgress?.({
+        percent: Math.min(100, Math.round((outTimeMs / durationMs) * 100)),
+        outTimeMs,
+      });
+    },
+  });
+
+  return {
+    outputDir: options.outputDir,
+    playlistPath: path.join(options.outputDir, 'index.m3u8'),
+    segmentCount: 0,
+    durationMs,
+  };
 }
