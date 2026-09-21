@@ -73,8 +73,10 @@ describe('apps/api/services: UploadService', () => {
       sizeBytes: 1024,
       contentType: 'video/mp4',
     });
+    const after = Date.now();
 
-    expect(new Date(expiresAt).getTime() - before).toBeLessThanOrEqual(60_000);
-    expect(new Date(expiresAt).getTime() - before).toBeGreaterThan(50_000);
+    const expiry = new Date(expiresAt).getTime();
+    expect(expiry).toBeGreaterThanOrEqual(before + 60_000);
+    expect(expiry).toBeLessThanOrEqual(after + 60_000);
   });
 });
