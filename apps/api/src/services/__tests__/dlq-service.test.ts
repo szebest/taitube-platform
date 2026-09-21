@@ -1,8 +1,10 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
 import type { JobQueue } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
-import { beforeEach, describe, expect, it } from 'vitest';
+import type { AuthUser } from '../../plugins/auth';
 import { DlqService } from '../dlq-service';
+
+const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'admin' };
 
 describe('DlqService', () => {
   let repositories: InMemoryRepositories;
@@ -31,7 +33,7 @@ describe('DlqService', () => {
       status: 'PARKED',
     });
 
-    const result = await dlqService.list({});
+    const result = await dlqService.list(ADMIN, {});
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.jobId).toBe('job-1');
   });
@@ -47,7 +49,7 @@ describe('DlqService', () => {
       status: 'PARKED',
     });
 
-    const replayResult = await dlqService.replay(entry.id);
+    const replayResult = await dlqService.replay(ADMIN, entry.id);
     expect(replayResult.status).toBe('REPLAYED');
     expect(replayResult.dlqEntryId).toBe(entry.id);
     expect(replayResult.replayJobId).toMatch(/--r1$/);
@@ -66,16 +68,27 @@ describe('DlqService', () => {
       status: 'PARKED',
     });
 
-    await dlqService.discard(entry.id);
+    await dlqService.discard(ADMIN, entry.id);
     const updated = await repositories.dlq.findById(entry.id);
     expect(updated?.status).toBe('DISCARDED');
   });
 
   it('throws DLQ_ENTRY_NOT_FOUND when entry does not exist', async () => {
-    await expect(dlqService.replay('018f0000-0000-7000-8000-000000000999')).rejects.toThrowError(
+    await expect(
+      dlqService.replay(ADMIN, '018f0000-0000-7000-8000-000000000999')
+    ).rejects.toThrowError(
       expect.objectContaining({
         code: ErrorCodes.DLQ_ENTRY_NOT_FOUND,
       })
     );
+  });
+
+  it.each([
+    ['an anonymous caller', null, ErrorCodes.UNAUTHORIZED],
+    ['a signed-in non-admin', { id: 'user-1', role: 'user' }, ErrorCodes.FORBIDDEN],
+  ])('refuses %s', async (_label, caller, code) => {
+    await expect(dlqService.list(caller, {})).rejects.toMatchObject({ code });
+    await expect(dlqService.replay(caller, 'any')).rejects.toMatchObject({ code });
+    await expect(dlqService.discard(caller, 'any')).rejects.toMatchObject({ code });
   });
 });

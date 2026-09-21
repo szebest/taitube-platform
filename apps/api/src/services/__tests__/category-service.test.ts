@@ -1,6 +1,9 @@
 import { CategoryCacheService, InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { ErrorCodes } from '@vp/errors';
+import type { AuthUser } from '../../plugins/auth';
 import { CategoryService } from '../category-service';
+
+const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'admin' };
 
 describe('CategoryService', () => {
   let repositories: InMemoryRepositories;
@@ -50,7 +53,7 @@ describe('CategoryService', () => {
   });
 
   it('creates category and invalidates multi-tier cache', async () => {
-    const created = await categoryService.create({
+    const created = await categoryService.create(ADMIN, {
       slug: 'gaming',
       name: 'Gaming',
       sortOrder: 5,
@@ -68,7 +71,7 @@ describe('CategoryService', () => {
       sortOrder: 20,
     });
 
-    const updated = await categoryService.update(created.id, {
+    const updated = await categoryService.update(ADMIN, created.id, {
       name: 'All Music',
     });
 
@@ -82,8 +85,19 @@ describe('CategoryService', () => {
       sortOrder: 30,
     });
 
-    await categoryService.delete(created.id);
+    await categoryService.delete(ADMIN, created.id);
     const list = await categoryService.listActive();
     expect(list.categories.some((c) => c.slug === 'news')).toBe(false);
+  });
+
+  it.each([
+    ['an anonymous caller', null, ErrorCodes.UNAUTHORIZED],
+    ['a signed-in non-admin', { id: 'user-1', role: 'user' }, ErrorCodes.FORBIDDEN],
+  ])('refuses taxonomy writes from %s', async (_label, caller, code) => {
+    const input = { slug: 'blocked', name: 'Blocked' };
+
+    await expect(categoryService.create(caller, input)).rejects.toMatchObject({ code });
+    await expect(categoryService.update(caller, 'any', input)).rejects.toMatchObject({ code });
+    await expect(categoryService.delete(caller, 'any')).rejects.toMatchObject({ code });
   });
 });

@@ -4,7 +4,6 @@ import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from
 import { mintToken } from '@vp/dev-token';
 import { publishVideoEvent, videoChannel } from '@vp/events';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 import { SseConnection } from '../services/sse-connection';
 import { SseHub } from '../services/sse-hub';

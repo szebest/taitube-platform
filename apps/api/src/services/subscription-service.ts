@@ -1,11 +1,14 @@
+import { CaslAuthorizationAdapter } from '@vp/adapters';
 import type { SubscribedChannelItem } from '@vp/core/domain';
 import { type Paginator, defaultPaginator } from '@vp/core/pagination';
 import type {
+  AuthorizationPort,
   ChannelRepositoryPort,
   SubscriptionCachePort,
   SubscriptionRepositoryPort,
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
+import { type UserContext, canSubscribeChannel, parseRole } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 import {
   decodeSubscriptionCursor,
@@ -31,6 +34,7 @@ export interface SubscriptionServiceOptions {
   subscriptionCache?: SubscriptionCachePort;
   cdnBaseUrl?: string;
   paginator?: Paginator;
+  authorization?: AuthorizationPort;
 }
 
 export class SubscriptionService {
@@ -39,6 +43,7 @@ export class SubscriptionService {
   private readonly subscriptionCache?: SubscriptionCachePort;
   private readonly cleanCdnBase: string;
   private readonly paginator: Paginator;
+  private readonly auth: AuthorizationPort;
 
   constructor(options: SubscriptionServiceOptions) {
     this.subscriptions = options.subscriptions;
@@ -46,9 +51,25 @@ export class SubscriptionService {
     this.subscriptionCache = options.subscriptionCache;
     this.cleanCdnBase = (options.cdnBaseUrl ?? '').replace(/\/+$/, '');
     this.paginator = options.paginator ?? defaultPaginator;
+    this.auth = options.authorization ?? new CaslAuthorizationAdapter();
+  }
+
+  private assertMaySubscribe(user: AuthUser): void {
+    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
+    this.auth.assertCan(
+      canSubscribeChannel,
+      { user: userContext },
+      {
+        action: 'subscribe',
+        subject: 'Channel',
+        user: userContext,
+        message: 'Your role is not allowed to subscribe to channels',
+      }
+    );
   }
 
   async subscribe(user: AuthUser, channelId: string): Promise<SubscriptionStatusView> {
+    this.assertMaySubscribe(user);
     const { subscriberCount, changed } = await this.subscriptions.subscribe(user.id, channelId);
     if (changed) {
       await this.subscriptionCache?.addSubscription(user.id, channelId);
@@ -58,6 +79,7 @@ export class SubscriptionService {
   }
 
   async unsubscribe(user: AuthUser, channelId: string): Promise<SubscriptionStatusView> {
+    this.assertMaySubscribe(user);
     const { subscriberCount, changed } = await this.subscriptions.unsubscribe(user.id, channelId);
     if (changed) {
       await this.subscriptionCache?.removeSubscription(user.id, channelId);

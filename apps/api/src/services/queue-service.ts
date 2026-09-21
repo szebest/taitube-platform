@@ -1,13 +1,17 @@
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { FastifyAdapter } from '@bull-board/fastify';
-import type { JobQueue } from '@vp/core/ports';
+import { CaslAuthorizationAdapter } from '@vp/adapters';
+import type { AuthorizationPort, JobQueue } from '@vp/core/ports';
 import { PermanentError } from '@vp/errors';
 import { QUEUES, type QueueName } from '@vp/job-contracts';
 import type { FastifyPluginCallback } from 'fastify';
+import type { AuthUser } from '../plugins/auth';
+import { assertAdminAccess } from './admin-access';
 
 export interface QueueServiceDeps {
   queues?: Map<string, JobQueue>;
+  authorization?: AuthorizationPort;
 }
 
 export interface QueueCountMetrics {
@@ -31,9 +35,18 @@ export interface QueueStatus {
  */
 export class QueueService {
   private readonly queuesMap: Map<string, JobQueue>;
+  private readonly auth: AuthorizationPort;
 
   constructor(deps: QueueServiceDeps = {}) {
     this.queuesMap = deps.queues ?? new Map<string, JobQueue>();
+    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
+  }
+
+  /**
+   * Guards the Bull Board operator UI, which the board plugin serves itself.
+   */
+  assertAdmin(caller: AuthUser | null): void {
+    assertAdminAccess(this.auth, caller);
   }
 
   /**

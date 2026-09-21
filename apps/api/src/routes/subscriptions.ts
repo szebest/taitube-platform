@@ -39,7 +39,6 @@ export function registerSubscriptionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        request.assertCan('channel:subscribe');
         const result = await subscriptionService.subscribe(user, request.params.id);
         return reply.status(200).send(result);
       }
@@ -55,7 +54,6 @@ export function registerSubscriptionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        request.assertCan('channel:subscribe');
         const result = await subscriptionService.unsubscribe(user, request.params.id);
         return reply.status(200).send(result);
       }

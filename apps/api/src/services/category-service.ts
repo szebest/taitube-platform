@@ -1,16 +1,20 @@
-import type { CategoryCacheService } from '@vp/adapters';
+import { CaslAuthorizationAdapter, type CategoryCacheService } from '@vp/adapters';
 import type {
+  AuthorizationPort,
   Category,
   CategoryRepositoryPort,
   CreateCategoryInput,
   UpdateCategoryInput,
 } from '@vp/core/ports';
+import type { AuthUser } from '../plugins/auth';
+import { assertAdminAccess } from './admin-access';
 import { HttpCacheService } from './http-cache-service';
 
 export interface CategoryServiceDeps {
   categories: CategoryRepositoryPort;
   categoryCacheService: CategoryCacheService;
   httpCacheService?: HttpCacheService;
+  authorization?: AuthorizationPort;
 }
 
 export interface ListCategoriesResult {
@@ -26,11 +30,13 @@ export class CategoryService {
   private readonly categories: CategoryRepositoryPort;
   private readonly categoryCacheService: CategoryCacheService;
   private readonly httpCacheService: HttpCacheService;
+  private readonly auth: AuthorizationPort;
 
   constructor(deps: CategoryServiceDeps) {
     this.categories = deps.categories;
     this.categoryCacheService = deps.categoryCacheService;
     this.httpCacheService = deps.httpCacheService ?? new HttpCacheService();
+    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
   }
 
   /**
@@ -53,7 +59,8 @@ export class CategoryService {
   /**
    * Creates a category and invalidates L1/L2 multi-tier caches across all pods.
    */
-  async create(input: CreateCategoryInput): Promise<Category> {
+  async create(caller: AuthUser | null, input: CreateCategoryInput): Promise<Category> {
+    assertAdminAccess(this.auth, caller);
     const created = await this.categories.create(input);
     await this.categoryCacheService.invalidate();
     return created;
@@ -62,7 +69,8 @@ export class CategoryService {
   /**
    * Updates an existing category and invalidates L1/L2 multi-tier caches across all pods.
    */
-  async update(id: string, input: UpdateCategoryInput): Promise<Category> {
+  async update(caller: AuthUser | null, id: string, input: UpdateCategoryInput): Promise<Category> {
+    assertAdminAccess(this.auth, caller);
     const updated = await this.categories.update(id, input);
     await this.categoryCacheService.invalidate();
     return updated;
@@ -71,7 +79,8 @@ export class CategoryService {
   /**
    * Deletes an unused category and invalidates L1/L2 multi-tier caches across all pods.
    */
-  async delete(id: string): Promise<void> {
+  async delete(caller: AuthUser | null, id: string): Promise<void> {
+    assertAdminAccess(this.auth, caller);
     await this.categories.delete(id);
     await this.categoryCacheService.invalidate();
   }

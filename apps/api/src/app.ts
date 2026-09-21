@@ -44,7 +44,6 @@ import {
   validatorCompiler,
 } from 'fastify-type-provider-zod';
 import { registerAuth } from './plugins/auth';
-import { registerAuthorization } from './plugins/authorization';
 import { registerErrorHandler } from './plugins/errors';
 import { registerHttpMetricsPlugin } from './plugins/http-metrics';
 import { registerAdminCategoriesRoutes } from './routes/admin/categories';
@@ -64,8 +63,8 @@ import { registerVideosRoutes } from './routes/videos';
 import { CategoryService } from './services/category-service';
 import { ChannelService } from './services/channel-service';
 import { DlqService } from './services/dlq-service';
-import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
 import { FeedService } from './services/feed-service';
+import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
 import { HttpCacheService } from './services/http-cache-service';
 import { startQueuePoller } from './services/queue-poller';
 import { QueueService } from './services/queue-service';
@@ -206,9 +205,6 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     repositories,
     jwksUrl: options.jwksUrl,
   });
-
-  // 5a. Register Declarative RBAC/ABAC Authorization Plugin
-  await app.register(registerAuthorization);
 
   // 5b. Register HTTP RED metrics hooks (http_request_duration_seconds, http_requests_in_flight)
   await app.register(registerHttpMetricsPlugin);
@@ -373,6 +369,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       subscriptionCache,
       cdnBaseUrl,
       paginator,
+      authorization,
     });
 
   registerSubscriptionsRoutes(app, {

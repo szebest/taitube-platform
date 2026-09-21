@@ -6,7 +6,6 @@ import {
 } from '@vp/adapters';
 import type { Category } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
   describe('InMemoryCategoryRepository', () => {

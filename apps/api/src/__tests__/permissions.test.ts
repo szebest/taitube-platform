@@ -3,7 +3,6 @@ import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { type Action, type UserContext, can, normalizeRole, parseRole } from '@vp/permissions';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 
 describe('Ticket 39: Declarative RBAC & ABAC permission engine', () => {
@@ -221,53 +220,48 @@ describe('Ticket 39: Declarative RBAC & ABAC permission engine', () => {
     });
   });
 
-  describe('Fastify Authorization Helper: server.authorize() & request.authorize()', () => {
+  describe('Route authorization over HTTP', () => {
     let app: FastifyInstance;
     let repositories: InMemoryRepositories;
 
-    const USER_A_ID = '00000000-0000-7000-8000-000000000010';
-    const USER_B_ID = '00000000-0000-7000-8000-000000000020';
+    const VIDEO_ID = '00000000-0000-7000-8000-000000000011';
+    const OWNER_ID = '00000000-0000-7000-8000-000000000010';
+    const OTHER_ID = '00000000-0000-7000-8000-000000000020';
     const ADMIN_ID = '00000000-0000-7000-8000-000000000030';
 
-    let userAToken: string;
-    let userBToken: string;
+    let ownerToken: string;
+    let otherToken: string;
     let adminToken: string;
 
+    async function patchTitle(title: string, token?: string) {
+      const video = await repositories.videos.findById(VIDEO_ID);
+      return app.inject({
+        method: 'PATCH',
+        url: `/v1/videos/${VIDEO_ID}`,
+        ...(token ? { headers: { authorization: `Bearer ${token}` } } : {}),
+        payload: { title, version: video?.version ?? 1 },
+      });
+    }
+
     beforeAll(async () => {
-      userAToken = mintToken({ sub: USER_A_ID, role: 'user', ttl: '1h' });
-      userBToken = mintToken({ sub: USER_B_ID, role: 'user', ttl: '1h' });
+      ownerToken = mintToken({ sub: OWNER_ID, role: 'user', ttl: '1h' });
+      otherToken = mintToken({ sub: OTHER_ID, role: 'user', ttl: '1h' });
       adminToken = mintToken({ sub: ADMIN_ID, role: 'admin', ttl: '1h' });
 
       repositories = new InMemoryRepositories();
-      const cache = new InMemoryCacheClient();
-      const storage = new InMemoryStorageClient();
-
       app = await buildApp({
         repositories,
-        cache,
-        storage,
+        cache: new InMemoryCacheClient(),
+        storage: new InMemoryStorageClient(),
       });
 
-      // Register test routes exercising server.authorize decorator
-      app.get(
-        '/test/resource/:ownerId',
-        {
-          preHandler: [
-            app.authorize('video:update', (req) => ({
-              ownerId: (req.params as { ownerId: string }).ownerId,
-            })),
-          ],
-        },
-        async (_req, reply) => {
-          return reply.status(200).send({ ok: true, message: 'Resource updated' });
-        }
-      );
-
-      // Register test route exercising request.authorize()
-      app.delete('/test/comment/:authorId', async (req, reply) => {
-        const { authorId } = req.params as { authorId: string };
-        await req.authorize('comment:delete', { authorId });
-        return reply.status(200).send({ ok: true, message: 'Comment deleted' });
+      await repositories.videos.create({
+        id: VIDEO_ID,
+        ownerId: OWNER_ID,
+        title: 'Owned',
+        visibility: 'public',
+        status: 'READY',
+        sourceKey: 'raw/owned.mp4',
       });
     });
 
@@ -276,105 +270,29 @@ describe('Ticket 39: Declarative RBAC & ABAC permission engine', () => {
     });
 
     it('returns 401 UNAUTHORIZED with RFC 9457 Problem Details when anonymous', async () => {
-      const res = await app.inject({
-        method: 'GET',
-        url: `/test/resource/${USER_A_ID}`,
-      });
+      const res = await patchTitle('Anonymous edit');
 
       expect(res.statusCode).toBe(401);
       expect(res.headers['content-type']).toContain('application/problem+json');
-      const body = JSON.parse(res.body);
-      expect(body.code).toBe(ErrorCodes.UNAUTHORIZED);
-      expect(body.status).toBe(401);
+      expect(res.json()).toMatchObject({ code: ErrorCodes.UNAUTHORIZED, status: 401 });
     });
 
-    it('returns 403 FORBIDDEN with RFC 9457 Problem Details when authenticated but unauthorized', async () => {
-      const res = await app.inject({
-        method: 'GET',
-        url: `/test/resource/${USER_B_ID}`,
-        headers: {
-          authorization: `Bearer ${userAToken}`,
-        },
-      });
+    it('returns 403 FORBIDDEN with RFC 9457 Problem Details for a non-owner', async () => {
+      const res = await patchTitle('Stranger edit', otherToken);
 
       expect(res.statusCode).toBe(403);
       expect(res.headers['content-type']).toContain('application/problem+json');
-      const body = JSON.parse(res.body);
-      expect(body.code).toBe(ErrorCodes.FORBIDDEN);
-      expect(body.status).toBe(403);
-      expect(body.detail).toContain('Forbidden');
+      expect(res.json()).toMatchObject({ code: ErrorCodes.FORBIDDEN, status: 403 });
     });
 
-    it('returns 200 OK when authorized as resource owner', async () => {
-      const res = await app.inject({
-        method: 'GET',
-        url: `/test/resource/${USER_A_ID}`,
-        headers: {
-          authorization: `Bearer ${userAToken}`,
-        },
-      });
+    it.each([
+      ['the owner', () => ownerToken],
+      ['an admin on a foreign resource', () => adminToken],
+    ])('returns 200 OK for %s', async (label, token) => {
+      const res = await patchTitle(`Edited by ${label}`, token());
 
       expect(res.statusCode).toBe(200);
-      const body = JSON.parse(res.body);
-      expect(body.ok).toBe(true);
-      expect(body.message).toBe('Resource updated');
-    });
-
-    it('returns 200 OK for Admin superuser on foreign resource', async () => {
-      const res = await app.inject({
-        method: 'GET',
-        url: `/test/resource/${USER_A_ID}`,
-        headers: {
-          authorization: `Bearer ${adminToken}`,
-        },
-      });
-
-      expect(res.statusCode).toBe(200);
-      const body = JSON.parse(res.body);
-      expect(body.ok).toBe(true);
-    });
-
-    it('returns 200 OK when user B accesses own resource', async () => {
-      const res = await app.inject({
-        method: 'GET',
-        url: `/test/resource/${USER_B_ID}`,
-        headers: {
-          authorization: `Bearer ${userBToken}`,
-        },
-      });
-
-      expect(res.statusCode).toBe(200);
-      const body = JSON.parse(res.body);
-      expect(body.ok).toBe(true);
-    });
-
-    it('request.authorize() rejects unauthorized delete with 403 problem+json', async () => {
-      const res = await app.inject({
-        method: 'DELETE',
-        url: `/test/comment/${USER_B_ID}`,
-        headers: {
-          authorization: `Bearer ${userAToken}`,
-        },
-      });
-
-      expect(res.statusCode).toBe(403);
-      expect(res.headers['content-type']).toContain('application/problem+json');
-      const body = JSON.parse(res.body);
-      expect(body.code).toBe(ErrorCodes.FORBIDDEN);
-    });
-
-    it('request.authorize() allows author delete with 200 OK', async () => {
-      const res = await app.inject({
-        method: 'DELETE',
-        url: `/test/comment/${USER_A_ID}`,
-        headers: {
-          authorization: `Bearer ${userAToken}`,
-        },
-      });
-
-      expect(res.statusCode).toBe(200);
-      const body = JSON.parse(res.body);
-      expect(body.ok).toBe(true);
+      expect(res.json().title).toBe(`Edited by ${label}`);
     });
   });
 });

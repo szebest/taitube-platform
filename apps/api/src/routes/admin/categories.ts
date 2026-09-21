@@ -3,7 +3,6 @@ import { createCategory, deleteCategory, updateCategory } from '@vp/api-contract
 import type { Repositories } from '@vp/core/ports';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { requireAdmin } from '../../plugins/auth';
 import { CategoryService } from '../../services/category-service';
 import { contractSchema } from '../contract-schema';
 
@@ -52,8 +51,7 @@ export function registerAdminCategoriesRoutes(
         },
       },
       async (request, reply) => {
-        requireAdmin(request);
-        const created = await categoryService.create(request.body);
+        const created = await categoryService.create(request.user, request.body);
         return reply.status(201).send(created);
       }
     );
@@ -68,9 +66,8 @@ export function registerAdminCategoriesRoutes(
         },
       },
       async (request, reply) => {
-        requireAdmin(request);
         const { id } = request.params;
-        const updated = await categoryService.update(id, request.body);
+        const updated = await categoryService.update(request.user, id, request.body);
         return reply.status(200).send(updated);
       }
     );
@@ -84,9 +81,8 @@ export function registerAdminCategoriesRoutes(
         },
       },
       async (request, reply) => {
-        requireAdmin(request);
         const { id } = request.params;
-        await categoryService.delete(id);
+        await categoryService.delete(request.user, id);
         return reply.status(204).send();
       }
     );

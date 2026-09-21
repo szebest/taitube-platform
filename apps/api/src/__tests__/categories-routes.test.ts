@@ -7,7 +7,6 @@ import {
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 
 describe('Admin Category Management & Public Cached Category API (Ticket 37)', () => {

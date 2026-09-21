@@ -1,11 +1,15 @@
-import type { DlqRepository, EventRepository, JobQueue } from '@vp/core/ports';
+import { CaslAuthorizationAdapter } from '@vp/adapters';
+import type { AuthorizationPort, DlqRepository, EventRepository, JobQueue } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { defaultJobOptions, generateReplayJobId, stagePolicies } from '@vp/job-contracts';
+import type { AuthUser } from '../plugins/auth';
+import { assertAdminAccess } from './admin-access';
 
 export interface DlqServiceDeps {
   dlq: DlqRepository;
   events: EventRepository;
   queues: Map<string, JobQueue>;
+  authorization?: AuthorizationPort;
 }
 
 export interface ReplayDlqResult {
@@ -21,28 +25,35 @@ export class DlqService {
   private readonly dlq: DlqRepository;
   private readonly events: EventRepository;
   private readonly queues: Map<string, JobQueue>;
+  private readonly auth: AuthorizationPort;
 
   constructor(deps: DlqServiceDeps) {
     this.dlq = deps.dlq;
     this.events = deps.events;
     this.queues = deps.queues;
+    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
   }
 
   /**
    * Lists DLQ entries with cursor pagination and status filters.
    */
-  async list(options: {
-    cursor?: string;
-    limit?: number;
-    status?: 'PARKED' | 'REPLAYED' | 'DISCARDED';
-  }) {
+  async list(
+    caller: AuthUser | null,
+    options: {
+      cursor?: string;
+      limit?: number;
+      status?: 'PARKED' | 'REPLAYED' | 'DISCARDED';
+    }
+  ) {
+    assertAdminAccess(this.auth, caller);
     return this.dlq.list(options);
   }
 
   /**
    * Replays a dead-letter job into its origin queue with a fresh replay suffix and registers an audit event.
    */
-  async replay(id: string): Promise<ReplayDlqResult> {
+  async replay(caller: AuthUser | null, id: string): Promise<ReplayDlqResult> {
+    assertAdminAccess(this.auth, caller);
     const entry = await this.dlq.findById(id);
     if (!entry) {
       throw new PermanentError(ErrorCodes.DLQ_ENTRY_NOT_FOUND, `DLQ entry "${id}" not found`);
@@ -108,7 +119,8 @@ export class DlqService {
   /**
    * Marks a dead-letter queue entry as DISCARDED and records an audit event.
    */
-  async discard(id: string): Promise<void> {
+  async discard(caller: AuthUser | null, id: string): Promise<void> {
+    assertAdminAccess(this.auth, caller);
     const entry = await this.dlq.findById(id);
     if (!entry) {
       throw new PermanentError(ErrorCodes.DLQ_ENTRY_NOT_FOUND, `DLQ entry "${id}" not found`);

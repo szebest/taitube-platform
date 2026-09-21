@@ -63,9 +63,7 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     });
   }
 
-  private async readCounts(
-    videoId: string
-  ): Promise<{
+  private async readCounts(videoId: string): Promise<{
     likesCount: number;
     dislikesCount: number;
     cachedAt?: number;

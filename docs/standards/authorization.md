@@ -72,14 +72,14 @@ Centralized normalizers eliminate ad-hoc object spreads and provide canonical CA
          ┌──────────────────────────────┬───────┴──────────────────────┬──────────────────────────────┐
          ▼                              ▼                              ▼                              ▼
 ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
-│  Postgres Scopes │          │   FastifyAuth    │          │  ProblemDetails  │          │ ReactPermissions │
+│  Postgres Scopes │          │   CaslAuthz      │          │  ProblemDetails  │          │ ReactPermissions │
 │     Adapter      │          │     Adapter      │          │   ErrorAdapter   │          │     Adapter      │
-│  (Database SQL)  │          │ (HTTP Transport) │          │(Error/Validation)│          │  (Frontend UI)   │
+│  (Database SQL)  │          │ (Domain Services)│          │(Error/Validation)│          │  (Frontend UI)   │
 │                  │          │                  │          │                  │          │                  │
-│ - rulesToSql     │          │ - authorize()    │          │ - assertCan()    │          │ - useCan()       │
-│ - drizzleWhere   │          │ - preHandler     │          │ - RFC 9457 401   │          │ - PermissionsCtx │
-│ - accessibleBy   │          │ - req.ability    │          │ - RFC 9457 403   │          │ - <Can /> slot   │
-│ - notDeletedScope│          │ - req.can / assert│         │ - invalidParams  │          │ - zero bloat     │
+│ - rulesToSql     │          │ - can()          │          │ - assertCan()    │          │ - useCan()       │
+│ - drizzleWhere   │          │ - assertCan()    │          │ - RFC 9457 401   │          │ - PermissionsCtx │
+│ - accessibleBy   │          │ - forUser()      │          │ - RFC 9457 403   │          │ - <Can /> slot   │
+│ - notDeletedScope│          │ - memoized       │          │ - invalidParams  │          │ - zero bloat     │
 └──────────────────┘          └──────────────────┘          └──────────────────┘          └──────────────────┘
 ```
 
@@ -127,13 +127,14 @@ Domain services depend on the abstract port `AuthorizationPort` (`core/ports/aut
 - Holds memoized `AppAbility`, implements `can(action, subject)`, `assertCan(...)`, and `.forUser(user)`.
 - Test doubles: `PermissiveAuthorizationAdapter` and `StrictAuthorizationAdapter` in `adapters/in-memory/`.
 
-### 3. HTTP Transport Authorization (`FastifyAuthorizationAdapter`)
-In `apps/api/src/plugins/authorization.ts`:
-- Fastify request decoration:
-  - `request.ability`: Lazily memoized `AppAbility` on first access.
-  - `request.can(action, subject)`: Delegates directly to `request.ability.can(...)` or permission helpers.
-  - `request.assertCan(action, subject, message)`: Throws RFC 9457 `401 UNAUTHORIZED` if anonymous or `403 FORBIDDEN` if unauthorized.
-  - `fastify.authorize(actionOrHelper, resolver)`: Declarative route preHandler.
+### 3. HTTP Transport Carries Identity, Not Permissions
+`apps/api` has no Fastify authorization decorator. Routes resolve **who** the caller is and hand that to a
+domain service, which makes the decision through `AuthorizationPort`:
+- `plugins/auth.ts` populates `request.user` from a Bearer JWT or a valid `x-admin-token`.
+- `requireAuth(request)` throws RFC 9457 `401 UNAUTHORIZED` when an endpoint needs a caller and there is none.
+- `services/admin-access.ts` holds the one admin gate; operator services call it with the resolved caller.
+- The error handler turns the `PermanentError` a rule helper raises into `401` (anonymous) or `403`
+  (authenticated but refused).
 
 ### 4. Frontend Reactive State (`ReactPermissionsAdapter`) & Headless UI
 In `apps/web`:
