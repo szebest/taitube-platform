@@ -32,7 +32,6 @@ export function registerReactionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        request.authorize('video:react');
         const { id } = request.params;
         const result = await reactionService.setReaction(user, id, request.body.type);
         return reply.status(200).send(result);

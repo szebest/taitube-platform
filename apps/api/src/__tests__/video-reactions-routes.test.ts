@@ -7,8 +7,8 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
+import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 
 describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
@@ -29,9 +29,16 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     role: 'USER',
   };
 
+  const guestUser = {
+    id: '44444444-4444-7444-8444-444444444444',
+    email: 'guest@example.com',
+    role: 'GUEST',
+  };
+
   const testVideoId = '33333333-3333-7333-8333-333333333333';
   const testUserToken = mintToken({ sub: testUser.id, role: 'USER', ttl: '1h' });
   const otherUserToken = mintToken({ sub: otherUser.id, role: 'USER', ttl: '1h' });
+  const guestUserToken = mintToken({ sub: guestUser.id, role: 'GUEST', ttl: '1h' });
 
   beforeAll(async () => {
     repos = new InMemoryRepositories();
@@ -84,6 +91,23 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
       payload: { type: 'LIKE' },
     });
     expect(res.statusCode).toBe(401);
+  });
+
+  it('PUT /v1/videos/:id/reactions returns 403 when the caller role cannot react', async () => {
+    const res = await app.inject({
+      method: 'PUT',
+      url: `/v1/videos/${testVideoId}/reactions`,
+      headers: {
+        authorization: `Bearer ${guestUserToken}`,
+      },
+      payload: { type: 'LIKE' },
+    });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe(ErrorCodes.FORBIDDEN);
+
+    const stored = await repos.videoReactions.getUserReaction(testVideoId, guestUser.id);
+    expect(stored).toBeNull();
   });
 
   it('PUT /v1/videos/:id/reactions returns 404 for non-existent video', async () => {
