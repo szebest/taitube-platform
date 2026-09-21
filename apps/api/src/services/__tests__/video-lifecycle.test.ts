@@ -1,5 +1,5 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
-import type { VideoStatus } from '@vp/core/repositories';
+import type { VideoStatus } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { AuthUser } from '../../plugins/auth';

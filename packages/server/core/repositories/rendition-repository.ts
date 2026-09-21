@@ -1,4 +1,4 @@
-export type RenditionStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'SKIPPED';
+import type { RenditionStatus } from '@vp/domain';
 
 export interface RenditionRecord {
   id: string;

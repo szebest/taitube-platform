@@ -525,6 +525,9 @@ importers:
       '@vp/config':
         specifier: workspace:*
         version: link:../config
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
@@ -811,6 +814,9 @@ importers:
 
   packages/universal/api-contracts:
     dependencies:
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../errors

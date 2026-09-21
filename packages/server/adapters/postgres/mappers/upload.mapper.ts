@@ -1,5 +1,6 @@
-import type { NewUploadInput, UploadStatus } from '@vp/core/repositories';
+import type { NewUploadInput } from '@vp/core/repositories';
 import type { uploads } from '@vp/db';
+import type { UploadStatus } from '@vp/domain';
 
 type UploadInsert = typeof uploads.$inferInsert;
 

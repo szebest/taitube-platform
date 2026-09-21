@@ -1,4 +1,4 @@
-export type StepStatus = 'QUEUED' | 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'DEAD';
+import type { StepStatus } from '@vp/domain';
 
 export interface ProcessingStepRecord {
   id: string;

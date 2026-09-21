@@ -1,10 +1,10 @@
+import { USER_ROLES } from '@vp/domain';
 import { describe, expect, it } from 'vitest';
-import { UserRoles, userRoleEnum, users } from '../schema';
+import { userRoleEnum, users } from '../schema';
 
 describe('Users Schema (Ticket 39)', () => {
-  it('defines userRoleEnum with correct enum values', () => {
-    expect(UserRoles).toEqual(['USER', 'CREATOR', 'MODERATOR', 'ADMIN']);
-    expect(userRoleEnum.enumValues).toEqual(['USER', 'CREATOR', 'MODERATOR', 'ADMIN']);
+  it('builds userRoleEnum from the domain vocabulary', () => {
+    expect(userRoleEnum.enumValues).toEqual([...USER_ROLES]);
   });
 
   it('defines role column on users table with default USER', () => {

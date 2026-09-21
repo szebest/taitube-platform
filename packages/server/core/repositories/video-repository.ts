@@ -1,4 +1,4 @@
-import type { PublicFeedCursor, PublicFeedSort } from '@vp/domain';
+import type { PublicFeedCursor, PublicFeedSort, VideoStatus, VideoVisibility } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
 import type { VideoEventRecord } from './event-repository';
@@ -6,19 +6,6 @@ import type { NewOutboxInput } from './outbox-repository';
 import type { RenditionRecord } from './rendition-repository';
 import type { ProcessingStepRecord } from './step-repository';
 import type { UploadRecord } from './upload-repository';
-
-export type VideoStatus =
-  | 'UPLOADING'
-  | 'UPLOADED'
-  | 'PROBING'
-  | 'PROCESSING'
-  | 'READY'
-  | 'FAILED'
-  | 'REJECTED'
-  | 'ABANDONED'
-  | 'DELETED';
-
-export type VideoVisibility = 'private' | 'unlisted' | 'public';
 
 export interface VideoRecord {
   id: string;
@@ -136,9 +123,7 @@ export interface TransitionVideoOptions {
 
 export type VideoIdleClock = 'updatedAt' | 'deletedAt' | 'readyAt';
 
-export type VideoScanAbsence =
-  | { step: string }
-  | { event: string; forCurrentGeneration?: boolean };
+export type VideoScanAbsence = { step: string } | { event: string; forCurrentGeneration?: boolean };
 
 export interface VideoScan {
   status: VideoStatus;

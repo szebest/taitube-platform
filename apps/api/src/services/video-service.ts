@@ -1,10 +1,10 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
 import { DEFAULT_CDN_BASE_URL } from '@vp/config';
-import { publicFeedInstant, trendingScore, videoAgeHours } from '@vp/domain';
-import { type Paginator, defaultPaginator } from '@vp/pagination';
 import type { AuthorizationPort, JobQueue, ReactionCachePort } from '@vp/core/ports';
-import type { VideoRepository, VideoStatus } from '@vp/core/repositories';
+import type { VideoRepository } from '@vp/core/repositories';
+import { type VideoStatus, publicFeedInstant, trendingScore, videoAgeHours } from '@vp/domain';
 import { ErrorCodes, PermanentError } from '@vp/errors';
+import { type Paginator, defaultPaginator } from '@vp/pagination';
 import { canAccessAdmin, canReadVideo, canUpdateVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 import {

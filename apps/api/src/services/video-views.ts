@@ -1,7 +1,6 @@
-import type { RenditionRecord, VideoRecord, VideoStatus } from '@vp/core/repositories';
+import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
+import type { VideoStatus, VideoVisibility } from '@vp/domain';
 import { masterPlaylistKey } from '@vp/storage';
-
-export type VideoVisibility = 'private' | 'unlisted' | 'public';
 
 export interface VideoLadderEntry {
   name: string;

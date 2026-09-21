@@ -1,10 +1,4 @@
-import {
-  VIDEO_STATUSES,
-  VIDEO_VISIBILITIES,
-  VideoIdParamSchema,
-  VideoListResponseSchema,
-  VideoSummarySchema,
-} from '../video-resource';
+import { VideoIdParamSchema, VideoListResponseSchema, VideoSummarySchema } from '../video-resource';
 
 const summary = {
   id: '00000000-0000-7000-8000-000000000001',
@@ -19,21 +13,6 @@ const summary = {
 };
 
 describe('packages/api-contracts: video resource', () => {
-  it('spells the pipeline states the API exposes', () => {
-    expect(VIDEO_STATUSES).toEqual([
-      'UPLOADING',
-      'UPLOADED',
-      'PROBING',
-      'PROCESSING',
-      'READY',
-      'FAILED',
-      'REJECTED',
-      'ABANDONED',
-      'DELETED',
-    ]);
-    expect(VIDEO_VISIBILITIES).toEqual(['private', 'unlisted', 'public']);
-  });
-
   it('accepts a minimal summary and rejects an unknown status', () => {
     expect(VideoSummarySchema.parse(summary).id).toBe(summary.id);
     expect(VideoSummarySchema.safeParse({ ...summary, status: 'TRANSCODING' }).success).toBe(false);

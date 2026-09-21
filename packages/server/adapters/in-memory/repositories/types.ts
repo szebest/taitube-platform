@@ -1,3 +1,5 @@
+import type { StepStatus } from '@vp/domain';
+
 import type {
   EventRepository,
   OutboxRepository,
@@ -14,7 +16,7 @@ export interface InternalStep {
   rendition: string;
   jobId: string;
   attempt: number;
-  status: 'QUEUED' | 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'DEAD';
+  status: StepStatus;
   workerId: string | null;
   lockToken: string | null;
   startedAt: Date | null;

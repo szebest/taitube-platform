@@ -24,9 +24,13 @@ driver ports and repository contracts stayed behind as `@vp/core`; everything po
 2. **Declare the narrow structural type you read.** A policy module that needs a video declares the
    handful of fields it actually reads (`PublicFeedCandidate`), rather than importing a record shape
    from `@vp/core/repositories`. That is what keeps the dependency pointing this way and not back.
-3. **Policy constants carry domain-loaded names** — `TRENDING_GRAVITY`, `PUBLIC_FEED_VISIBILITY` — so a
+3. **The status vocabulary is declared here and nowhere else.** `VIDEO_STATUSES`, `STEP_STATUSES`,
+   `UPLOAD_STATUSES`, `RENDITION_STATUSES`, `VIDEO_VISIBILITIES` and `USER_ROLES` are the labels the
+   database enums are built from, the unions `@vp/core/repositories` types its records with, and the
+   values `@vp/api-contracts` builds its Zod enums from. Never retype one of these lists: import it.
+4. **Policy constants carry domain-loaded names** — `TRENDING_GRAVITY`, `PUBLIC_FEED_VISIBILITY` — so a
    call site reads as a rule rather than as a magic number.
-4. **Relative imports carry `.js`** (`./channel.js`), because CRA's webpack refuses extensionless ESM.
+5. **Relative imports carry `.js`** (`./channel.js`), because CRA's webpack refuses extensionless ESM.
 
 ---
 

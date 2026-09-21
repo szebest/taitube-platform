@@ -3,10 +3,10 @@ import {
   type NewUploadInput,
   type UploadRecord,
   UploadRepository,
-  type UploadStatus,
   type UploadWithVideo,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
+import type { UploadStatus } from '@vp/domain';
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { toUploadInsert, toUploadStatusUpdate } from '../mappers/index';

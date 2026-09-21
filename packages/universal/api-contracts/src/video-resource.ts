@@ -1,18 +1,7 @@
+import { VIDEO_STATUSES, VIDEO_VISIBILITIES } from '@vp/domain';
 import { z } from 'zod';
 
-export const VIDEO_STATUSES = [
-  'UPLOADING',
-  'UPLOADED',
-  'PROBING',
-  'PROCESSING',
-  'READY',
-  'FAILED',
-  'REJECTED',
-  'ABANDONED',
-  'DELETED',
-] as const;
-
-export const VIDEO_VISIBILITIES = ['private', 'unlisted', 'public'] as const;
+export { VIDEO_STATUSES, VIDEO_VISIBILITIES };
 
 export const VideoStatusSchema = z
   .enum(VIDEO_STATUSES)

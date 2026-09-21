@@ -1,4 +1,12 @@
 import {
+  RENDITION_STATUSES,
+  STEP_STATUSES,
+  UPLOAD_STATUSES,
+  USER_ROLES,
+  VIDEO_STATUSES,
+  type VideoVisibility,
+} from '@vp/domain';
+import {
   bigint,
   bigserial,
   boolean,
@@ -17,43 +25,15 @@ import {
 // ============================================================================
 // Enums (SDD §5.2)
 // ============================================================================
-export const videoStatusEnum = pgEnum('video_status', [
-  'UPLOADING',
-  'UPLOADED',
-  'PROBING',
-  'PROCESSING',
-  'READY',
-  'FAILED',
-  'REJECTED',
-  'ABANDONED',
-  'DELETED',
-]);
+export const videoStatusEnum = pgEnum('video_status', VIDEO_STATUSES);
 
-export const uploadStatusEnum = pgEnum('upload_status', ['OPEN', 'COMPLETED', 'ABORTED']);
+export const uploadStatusEnum = pgEnum('upload_status', UPLOAD_STATUSES);
 
-export const renditionStatusEnum = pgEnum('rendition_status', [
-  'PENDING',
-  'RUNNING',
-  'DONE',
-  'FAILED',
-  'SKIPPED',
-]);
+export const renditionStatusEnum = pgEnum('rendition_status', RENDITION_STATUSES);
 
-export const stepStatusEnum = pgEnum('step_status', [
-  'QUEUED',
-  'RUNNING',
-  'DONE',
-  'FAILED',
-  'DEAD',
-]);
+export const stepStatusEnum = pgEnum('step_status', STEP_STATUSES);
 
-export const userRoleEnum = pgEnum('user_role', ['USER', 'CREATOR', 'MODERATOR', 'ADMIN']);
-
-export const VideoStatuses = videoStatusEnum.enumValues;
-export const StepStatuses = stepStatusEnum.enumValues;
-export const UploadStatuses = uploadStatusEnum.enumValues;
-export const RenditionStatuses = renditionStatusEnum.enumValues;
-export const UserRoles = userRoleEnum.enumValues;
+export const userRoleEnum = pgEnum('user_role', USER_ROLES);
 
 // Helper for timestamptz in postgres
 const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
@@ -119,10 +99,7 @@ export const videos = pgTable(
     categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
     title: text('title').notNull().default(''),
     description: text('description').notNull().default(''),
-    visibility: text('visibility')
-      .$type<'private' | 'unlisted' | 'public'>()
-      .notNull()
-      .default('private'),
+    visibility: text('visibility').$type<VideoVisibility>().notNull().default('private'),
     status: videoStatusEnum('status').notNull().default('UPLOADING'),
     sourceKey: text('source_key').notNull(),
     sourceSizeBytes: bigint('source_size_bytes', { mode: 'number' }),
@@ -256,10 +233,7 @@ export const dlqEntries = pgTable(
     stack: text('stack'),
     attemptsMade: integer('attempts_made').notNull(),
     workerId: text('worker_id'),
-    status: text('status')
-      .$type<'PARKED' | 'REPLAYED' | 'DISCARDED'>()
-      .notNull()
-      .default('PARKED'),
+    status: text('status').$type<'PARKED' | 'REPLAYED' | 'DISCARDED'>().notNull().default('PARKED'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     replayedAt: timestamptz('replayed_at'),
   },
@@ -326,10 +300,7 @@ export const channelSubscriptions = pgTable(
       table.subscriberId,
       table.createdAt.desc()
     ),
-    index('channel_subscriptions_channel_created_idx').on(
-      table.channelId,
-      table.createdAt.desc()
-    ),
+    index('channel_subscriptions_channel_created_idx').on(table.channelId, table.createdAt.desc()),
   ]
 );
 

@@ -1,6 +1,6 @@
-import type { VideoRecord } from './video-repository';
+import type { UploadStatus } from '@vp/domain';
 
-export type UploadStatus = 'OPEN' | 'COMPLETED' | 'ABORTED';
+import type { VideoRecord } from './video-repository';
 
 export interface UploadRecord {
   id: string;

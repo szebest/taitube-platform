@@ -1,6 +1,5 @@
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
-import { API_ENDPOINTS, VIDEO_STATUSES, endpointKey, findEndpoint } from '@vp/api-contracts';
-import { VideoStatuses } from '@vp/db';
+import { API_ENDPOINTS, endpointKey, findEndpoint } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
 
@@ -134,9 +133,5 @@ describe('apps/api: contract drift', () => {
     }).map((endpoint) => endpointKey(endpoint.method, endpoint.path));
 
     expect(drifted).toEqual([]);
-  });
-
-  it('spells the video status enum the same way the database does', () => {
-    expect([...VIDEO_STATUSES]).toEqual([...VideoStatuses]);
   });
 });

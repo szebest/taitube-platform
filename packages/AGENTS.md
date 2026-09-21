@@ -98,10 +98,10 @@ is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@vp/api-contracts` | universal | `@vp/errors`, `@vp/pagination` |
+| `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/permissions` | universal | `@vp/errors` |
 | `@vp/core` | server | `@vp/domain` |
-| `@vp/db` | server | `@vp/config`, `@vp/errors` |
+| `@vp/db` | server | `@vp/config`, `@vp/domain`, `@vp/errors` |
 | `@vp/events` | server | `@vp/job-contracts` |
 | `@vp/ffmpeg` | server | `@vp/errors`, `@vp/job-contracts` |
 | `@vp/upload-client` | server | `@vp/errors`, `@vp/storage` |
@@ -121,7 +121,7 @@ is stale — fix it.
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/storage` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/observability`, `@vp/storage` |
 
-**Every package in `@vp/web`'s runtime closure is `universal` or `client`** — five of them, counting what
+**Every package in `@vp/web`'s runtime closure is `universal` or `client`** — six of them, counting what
 `@vp/api-contracts` and `@vp/permissions` pull in. That is the invariant the whole scheme exists to protect.
 Verify it any time with `pnpm why bullmq` from `apps/web` — it returns nothing.
 

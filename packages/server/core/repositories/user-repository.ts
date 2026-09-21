@@ -1,4 +1,5 @@
-export type UserRole = 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN';
+import type { UserRole } from '@vp/domain';
+
 export type UserTier = 'free' | 'pro' | 'enterprise';
 
 export interface UserRecord {

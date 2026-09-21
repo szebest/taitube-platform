@@ -1,5 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters';
-import type { RenditionStatus } from '@vp/core/repositories';
+import type { RenditionStatus } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
 import type { AuthUser } from '../../plugins/auth';
