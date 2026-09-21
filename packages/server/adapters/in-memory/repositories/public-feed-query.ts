@@ -4,7 +4,7 @@ import {
   isPublicFeedEligible,
   publicFeedInstant,
   publicFeedRanking,
-} from '@vp/core/domain';
+} from '@vp/domain';
 import type {
   ListPublicVideosOptions,
   ListPublicVideosResult,

@@ -1,4 +1,4 @@
-import type { ReactionCounts } from '@vp/core/domain';
+import type { ReactionCounts } from '@vp/domain';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { RedisReactionCacheAdapter } from '../redis-reaction-cache.adapter';
 import { FakeRedis } from './fake-redis';

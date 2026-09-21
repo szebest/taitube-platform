@@ -3,7 +3,7 @@ import type {
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
-} from '../domain/category';
+} from '@vp/domain';
 
 export interface CategoryRepositoryPort {
   findAll(options?: ListCategoriesOptions): Promise<Category[]>;

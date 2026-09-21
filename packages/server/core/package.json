@@ -8,8 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist tsconfig.tsbuildinfo",
-    "test": "vitest run"
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "exports": {
     "./ports": {
@@ -31,31 +30,13 @@
       "types": "./dist/repositories/*.d.ts",
       "import": "./dist/repositories/*.js",
       "default": "./dist/repositories/*.js"
-    },
-    "./domain": {
-      "types": "./dist/domain/index.d.ts",
-      "import": "./dist/domain/index.js",
-      "default": "./dist/domain/index.js"
-    },
-    "./domain/*": {
-      "types": "./dist/domain/*.d.ts",
-      "import": "./dist/domain/*.js",
-      "default": "./dist/domain/*.js"
-    },
-    "./pagination": {
-      "types": "./dist/pagination/index.d.ts",
-      "import": "./dist/pagination/index.js",
-      "default": "./dist/pagination/index.js"
-    },
-    "./pagination/*": {
-      "types": "./dist/pagination/*.d.ts",
-      "import": "./dist/pagination/*.js",
-      "default": "./dist/pagination/*.js"
     }
+  },
+  "dependencies": {
+    "@vp/domain": "workspace:*"
   },
   "devDependencies": {
     "@vp/permissions": "workspace:*",
-    "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3",
@@ -63,6 +44,6 @@
   },
   "vp": {
     "tier": "server",
-    "layer": 1
+    "layer": 2
   }
 }

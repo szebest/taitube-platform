@@ -3,7 +3,7 @@ import {
   isReservedHandle,
   isValidHandleFormat,
   normalizeHandle,
-} from '@vp/core/domain';
+} from '@vp/domain';
 import type { ChannelRepositoryPort, UserRepository } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 

@@ -1,10 +1,10 @@
-import { reactionDelta } from '@vp/core/domain';
+import { reactionDelta } from '@vp/domain';
 import type {
   ReactionCounts,
   ReactionInputType,
   ReactionType,
   SetReactionResult,
-} from '@vp/core/domain';
+} from '@vp/domain';
 import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { and, eq, sql } from 'drizzle-orm';

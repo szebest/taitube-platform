@@ -3,7 +3,7 @@ import type {
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
-} from '@vp/core/domain';
+} from '@vp/domain';
 import { DatabaseError } from '@vp/core/ports';
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import { categories, videos } from '@vp/db';

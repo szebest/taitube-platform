@@ -1,10 +1,10 @@
-import type { PublicFeedSort } from '@vp/core/domain';
+import type { PublicFeedSort } from '@vp/domain';
 import {
   type CursorPayload,
   InvalidCursorError,
   type Paginator,
   defaultPaginator,
-} from '@vp/core/pagination';
+} from '@vp/pagination';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 
 export type FeedSort = PublicFeedSort;

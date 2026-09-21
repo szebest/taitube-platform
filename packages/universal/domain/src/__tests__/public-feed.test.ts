@@ -27,7 +27,7 @@ function video(overrides: Partial<PublicFeedCandidate> = {}): PublicFeedCandidat
   };
 }
 
-describe('core/domain: public feed rules', () => {
+describe('packages/domain: public feed rules', () => {
   describe('eligibility', () => {
     it.each<{
       scenario: string;

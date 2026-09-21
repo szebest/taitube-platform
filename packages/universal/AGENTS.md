@@ -10,11 +10,15 @@
 A package belongs in `universal/` when **something client-side actually imports it**. Not when it
 *could* run in a browser — plenty of code is portable without any browser needing it.
 
-Current members: `api-contracts`, `errors`, `permissions`, `tsconfig`.
+Current members: `api-contracts`, `domain`, `errors`, `pagination`, `permissions`, `tsconfig`.
 
 `storage`, `job-contracts` and `events` were once declared universal and are now `server/`, because
 their only consumers were `apps/api` and `apps/worker`. `job-contracts` carries BullMQ queue names —
 backend vocabulary that had no business in the browser-safe tier.
+
+`domain` and `pagination` came the other way: they were 38 of the 39 files in a `server` `core/` that
+one `Buffer`-typed port pinned to the backend. `@vp/api-contracts` consumes both — the status
+vocabulary and the cursor codec — and each move deleted a copy the frontend had been keeping.
 
 **The test:** grep for importers. If none is `apps/web`, `packages/client/*` or another `universal`
 package that itself reaches the client, it is `server/`.

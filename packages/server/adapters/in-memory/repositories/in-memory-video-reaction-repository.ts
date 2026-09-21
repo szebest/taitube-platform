@@ -1,11 +1,11 @@
-import { reactionDelta } from '@vp/core/domain';
+import { reactionDelta } from '@vp/domain';
 import type {
   ReactionCounts,
   ReactionInputType,
   ReactionType,
   SetReactionResult,
   VideoReaction,
-} from '@vp/core/domain';
+} from '@vp/domain';
 import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import { uuidv7 } from 'uuidv7';
 

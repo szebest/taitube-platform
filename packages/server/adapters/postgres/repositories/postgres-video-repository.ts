@@ -1,5 +1,5 @@
 import { trace } from '@opentelemetry/api';
-import { publicFeedInstant } from '@vp/core/domain';
+import { publicFeedInstant } from '@vp/domain';
 import { DatabaseError } from '@vp/core/ports';
 import {
   DEFAULT_VIDEO_SCAN_LIMIT,

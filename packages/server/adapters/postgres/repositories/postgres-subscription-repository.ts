@@ -1,4 +1,4 @@
-import type { SubscribedChannelItem, SubscriptionChangeResult } from '@vp/core/domain';
+import type { SubscribedChannelItem, SubscriptionChangeResult } from '@vp/domain';
 import { DatabaseError } from '@vp/core/ports';
 import type {
   ListSubscriptionsOptions,

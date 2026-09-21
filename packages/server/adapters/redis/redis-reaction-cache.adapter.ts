@@ -1,4 +1,4 @@
-import type { ReactionCounts, ReactionType } from '@vp/core/domain';
+import type { ReactionCounts, ReactionType } from '@vp/domain';
 import type { CacheClient, ReactionCachePort } from '@vp/core/ports';
 import type { Redis } from 'ioredis';
 import { Singleflight } from './singleflight';

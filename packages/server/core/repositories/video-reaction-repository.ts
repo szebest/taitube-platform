@@ -3,7 +3,7 @@ import type {
   ReactionInputType,
   ReactionType,
   SetReactionResult,
-} from '../domain/reaction';
+} from '@vp/domain';
 
 export interface VideoReactionRepositoryPort {
   getUserReaction(videoId: string, userId: string): Promise<ReactionType | null>;

@@ -1,15 +1,23 @@
-# AGENTS.md — @vp/core (Domain, Ports, Repositories & Permissions)
+# AGENTS.md — @vp/core (Driver Ports & Repository Contracts)
 
-Instructions for any coding agent working on the core domain layer (`core`).
+Instructions for any coding agent working on `@vp/core`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 ---
 
 ## 1. Scope & Architecture
 
-`@vp/core` is the dependency-free domain kernel of the `video-pipeline` monorepo.
-- **Strict Dependency Inversion:** `core` must NEVER import external drivers, concrete SDKs (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`), or framework code.
-- **Zero I/O Dependencies:** The domain logic, entities, and permission evaluators are pure TypeScript modules.
+`@vp/core` is the contract kernel: the abstract driver ports every adapter implements, and the
+repository interfaces every persistence adapter satisfies. It holds no I/O, no SDK and no policy.
+
+- **Strict Dependency Inversion:** `core` must NEVER import external drivers, concrete SDKs
+  (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`), or framework code.
+- **Server tier, and deliberately so:** `ports/storage-client.ts` types `StorageBody` as
+  `Buffer | Uint8Array | NodeJS.ReadableStream | string` and `getObject()` as `Promise<Buffer>`. That
+  is what a real object store hands back, and it is why this package cannot be `universal`.
+- **The portable half already left.** Entities, value objects and policy are `@vp/domain`; the keyset
+  cursor mechanism is `@vp/pagination`. Both are `universal`. Do not add either kind of code back here
+  — a pure rule or a value object belongs in `@vp/domain`, where `apps/web` can reach it.
 
 ---
 
@@ -17,19 +25,22 @@ Instructions for any coding agent working on the core domain layer (`core`).
 
 ```
 core/
-├── domain/         # Pure domain entities, value objects, and domain types
-├── pagination/     # Shared keyset Paginator and pluggable CursorCodec (no I/O)
-├── permissions/    # Declarative CASL RBAC & ABAC authorization rules (no I/O)
 ├── ports/          # Abstract class ports extending HealthCheckable
 └── repositories/   # Domain repository interface contracts
 ```
 
 ### Invariants:
-1. **Ports as Abstract Classes:** Contracts in `packages/server/core/ports/` are abstract classes (not interfaces) to allow `instanceof` checks, centralized contract enforcement, and uniform health checks (`HealthCheckable`).
-2. **Repository Interfaces:** Repository contracts in `packages/server/core/repositories/` define data access signatures decoupled from any ORM or database driver.
-3. **Pure Permissions Engine:** All authorization logic in `packages/server/core/permissions/` consists of pure functional rule builders evaluated via `can(user, action, resource)`.
-4. **One Pagination Mechanism:** Every paginated endpoint uses `Paginator` from `packages/server/core/pagination/`. Repositories return `limit + 1` rows and never encode a cursor; the wire format lives behind `CursorCodec` and is swappable. Page bounds come from `PAGE_SIZE_DEFAULT`/`PAGE_SIZE_MAX` at the composition root — never hard-coded at a call site.
-5. **File Length Discipline:** Target <= 250 lines per file (strict maximum: 400 lines).
+1. **Ports as Abstract Classes:** Contracts in `ports/` are abstract classes (not interfaces) to allow
+   `instanceof` checks, centralized contract enforcement, and uniform health checks (`HealthCheckable`).
+2. **Repository Interfaces:** Contracts in `repositories/` define data access signatures decoupled from
+   any ORM or database driver.
+3. **Repository contracts stay with the ports.** An earlier draft split them into a universal
+   `@vp/contracts`; it would have had no client consumer, because the frontend's response types come
+   from `@vp/api-contracts` and `apps/web` does not import `@vp/core` at all.
+4. **Barrels stay inside their folder.** `ports/index.ts` re-exports only from `./`, and so does
+   `repositories/index.ts`. Import a domain symbol from `@vp/domain`, never routed through a core barrel.
+5. **No `.port.ts` suffix.** The folder already says port; every file is spelled bare.
+6. **File Length Discipline:** Target <= 250 lines per file (strict maximum: 400 lines).
 
 ---
 
@@ -46,9 +57,6 @@ core/
 ```bash
 # Typecheck core package
 pnpm --filter @vp/core typecheck
-
-# Run unit tests
-pnpm --filter @vp/core test
 
 # Build package
 pnpm --filter @vp/core build

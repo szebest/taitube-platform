@@ -32,7 +32,19 @@ CLI packages live here rather than in `tools/` because they are workspace packag
 
 ## Before adding a package here
 
-Ask whether the portable part is separable. `@vp/core` is 38 of 39 files portable — only
-`ports/storage-client.ts` needs `Buffer` and `NodeJS.ReadableStream` — which is the kind of split worth
-making when a client consumer appears for the portable half. Do not split speculatively: a universal
-package with no universal consumer is an extension point without a consumer.
+Ask whether the portable part is separable, and whether anything client-side would import it. `@vp/core`
+was 38 of 39 files portable — only `ports/storage-client.ts` needs `Buffer` and `NodeJS.ReadableStream` —
+so the entities and policy left as `@vp/domain` and the keyset cursors left as `@vp/pagination`, both
+`universal`, and each deleted a copy `@vp/api-contracts` had been keeping.
+
+Two packages were looked at and deliberately kept whole:
+
+- **`adapters`.** Only 7 of 73 files name a Node builtin, but the tier is not decided by builtins here:
+  every subfolder wraps a concrete server SDK, and even the in-memory doubles implement `Buffer`-typed
+  ports. Splitting it would produce fragments with one consumer each.
+- **`ffmpeg`.** `ladder.ts` and `master.ts` are portable, but nothing on the client renders a quality
+  selector, so the split would create a universal package with no universal consumer and collapse no
+  existing duplication. Revisit when a client first needs the ladder.
+
+Do not split speculatively: a universal package with no universal consumer is an extension point without
+a consumer. The splits above each collapsed a duplication that existed at the time.

@@ -1,4 +1,4 @@
-import { TRENDING_GRAVITY } from '@vp/core/domain';
+import { TRENDING_GRAVITY } from '@vp/domain';
 import { sqlParams, sqlText } from '../../scopes/__tests__/sql-text';
 import {
   publicFeedCursorScope,

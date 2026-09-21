@@ -1,4 +1,4 @@
-import type { Category } from '@vp/core/domain';
+import type { Category } from '@vp/domain';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import {
   CATEGORIES_CACHE_KEY,

@@ -1,4 +1,4 @@
-import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/core/domain';
+import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 import { DatabaseError } from '@vp/core/ports';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import { channels } from '@vp/db';

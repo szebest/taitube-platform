@@ -1,5 +1,5 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
-import type { ReactionCounts, ReactionInputType, ReactionType } from '@vp/core/domain';
+import type { ReactionCounts, ReactionInputType, ReactionType } from '@vp/domain';
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import type { VideoReactionRepositoryPort } from '@vp/core/repositories';

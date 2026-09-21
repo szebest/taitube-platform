@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import {
   Base64UrlCursorCodec,
   type CursorCodec,
@@ -8,7 +7,7 @@ import {
   defaultCursorCodec,
 } from '../cursor-codec';
 
-describe('cursor codecs', () => {
+describe('packages/pagination: cursor codecs', () => {
   const codecs: Array<{ name: string; codec: CursorCodec }> = [
     { name: 'Base64UrlCursorCodec', codec: new Base64UrlCursorCodec() },
     { name: 'JsonCursorCodec', codec: new JsonCursorCodec() },

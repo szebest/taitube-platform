@@ -1,4 +1,4 @@
-import type { SubscribedChannelItem, SubscriptionChangeResult } from '../domain/subscription';
+import type { SubscribedChannelItem, SubscriptionChangeResult } from '@vp/domain';
 import type { VideoRecord } from './video-repository';
 
 export interface SubscriptionFeedOptions {

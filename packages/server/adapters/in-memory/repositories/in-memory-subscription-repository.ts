@@ -2,7 +2,7 @@ import type {
   ChannelSubscription,
   SubscribedChannelItem,
   SubscriptionChangeResult,
-} from '@vp/core/domain';
+} from '@vp/domain';
 import type {
   ListSubscriptionsOptions,
   SubscriptionFeedOptions,

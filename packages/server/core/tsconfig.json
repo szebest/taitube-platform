@@ -6,8 +6,6 @@
   },
   "include": [
     "ports/**/*",
-    "repositories/**/*",
-    "domain/**/*",
-    "pagination/**/*"
+    "repositories/**/*"
   ]
 }

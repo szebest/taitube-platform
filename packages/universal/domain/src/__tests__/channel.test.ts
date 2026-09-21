@@ -18,7 +18,7 @@ function take(email: string, sub: string, count: number): string[] {
   return taken;
 }
 
-describe('core/domain: channel handles', () => {
+describe('packages/domain: channel handles', () => {
   describe('isValidHandleFormat', () => {
     it.each([['abc'], ['a_b.c-d'], ['A1'.padEnd(30, 'x')]])('accepts %s', (handle) => {
       expect(isValidHandleFormat(handle)).toBe(true);

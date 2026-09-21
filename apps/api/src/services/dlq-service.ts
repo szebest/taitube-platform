@@ -1,5 +1,5 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
-import { type Paginator, defaultPaginator } from '@vp/core/pagination';
+import { type Paginator, defaultPaginator } from '@vp/pagination';
 import type { AuthorizationPort, JobQueue } from '@vp/core/ports';
 import type {
   DlqEntryRecord,

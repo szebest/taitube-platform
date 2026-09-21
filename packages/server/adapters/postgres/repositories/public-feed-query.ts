@@ -3,7 +3,7 @@ import {
   type PublicFeedSort,
   TRENDING_GRAVITY,
   publicFeedRanking,
-} from '@vp/core/domain';
+} from '@vp/domain';
 import type { ListPublicVideosOptions } from '@vp/core/repositories';
 import { videos } from '@vp/db';
 import { type SQL, desc, eq, isNull, sql } from 'drizzle-orm';

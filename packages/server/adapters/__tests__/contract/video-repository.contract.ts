@@ -1,4 +1,4 @@
-import { type PublicFeedSort, publicFeedInstant, publicFeedRanking } from '@vp/core/domain';
+import { type PublicFeedSort, publicFeedInstant, publicFeedRanking } from '@vp/domain';
 import type { ListPublicVideosOptions, VideoRecord, VideoRepository } from '@vp/core/repositories';
 import {
   CATEGORY_GAMING_ID,

@@ -1,6 +1,6 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
-import type { SubscribedChannelItem } from '@vp/core/domain';
-import { type Paginator, defaultPaginator } from '@vp/core/pagination';
+import type { SubscribedChannelItem } from '@vp/domain';
+import { type Paginator, defaultPaginator } from '@vp/pagination';
 import type { AuthorizationPort, SubscriptionCachePort } from '@vp/core/ports';
 import type { ChannelRepositoryPort, SubscriptionRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';

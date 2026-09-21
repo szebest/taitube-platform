@@ -1,5 +1,5 @@
 import { CoreEnvSchema } from '@vp/config';
-import { Paginator } from '@vp/core/pagination';
+import { Paginator } from '@vp/pagination';
 import { CategoryService } from '../services/category-service';
 import { ChannelService } from '../services/channel-service';
 import { DlqService } from '../services/dlq-service';

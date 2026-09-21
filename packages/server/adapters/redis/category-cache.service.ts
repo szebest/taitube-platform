@@ -1,4 +1,4 @@
-import type { Category } from '@vp/core/domain';
+import type { Category } from '@vp/domain';
 import type { CacheClient } from '@vp/core/ports';
 
 export const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';

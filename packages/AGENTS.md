@@ -81,9 +81,10 @@ is stale — fix it.
 
 | Package | Tier | Location |
 |---|---|---|
+| `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
+| `@vp/pagination` | universal | `packages/universal/pagination` |
 | `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
-| `@vp/core` | server | `packages/server/core` |
 | `@vp/config` | server | `packages/server/config` |
 | `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/observability` | server | `packages/server/observability` |
@@ -99,6 +100,7 @@ is stale — fix it.
 |---|---|---|
 | `@vp/api-contracts` | universal | `@vp/errors` |
 | `@vp/permissions` | universal | `@vp/errors` |
+| `@vp/core` | server | `@vp/domain` |
 | `@vp/db` | server | `@vp/config`, `@vp/errors` |
 | `@vp/events` | server | `@vp/job-contracts` |
 | `@vp/ffmpeg` | server | `@vp/errors`, `@vp/job-contracts` |
@@ -109,14 +111,14 @@ is stale — fix it.
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
-| `@vp/adapters` | server | `@vp/core`, `@vp/db`, `@vp/errors`, `@vp/observability`, `@vp/permissions` |
+| `@vp/adapters` | server | `@vp/core`, `@vp/db`, `@vp/domain`, `@vp/errors`, `@vp/observability`, `@vp/permissions` |
 
 ### T4 — Applications
 
 | App | Tier | Depends on |
 |---|---|---|
 | `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/permissions` |
-| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/storage` |
+| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/storage` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/observability`, `@vp/storage` |
 
 **`@vp/web`'s entire runtime closure is three packages, all `universal` or `client`.** That is the invariant

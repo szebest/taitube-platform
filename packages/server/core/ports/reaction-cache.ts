@@ -1,4 +1,4 @@
-import type { ReactionCounts, ReactionType } from '../domain/reaction';
+import type { ReactionCounts, ReactionType } from '@vp/domain';
 
 export interface ReactionCachePort {
   getCounts(videoId: string, fetcher: () => Promise<ReactionCounts>): Promise<ReactionCounts>;

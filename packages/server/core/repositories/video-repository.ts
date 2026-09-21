@@ -1,8 +1,8 @@
+import type { PublicFeedCursor, PublicFeedSort } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
 import type { VideoEventRecord } from './event-repository';
 import type { NewOutboxInput } from './outbox-repository';
-import type { PublicFeedCursor, PublicFeedSort } from '../domain/public-feed';
 import type { RenditionRecord } from './rendition-repository';
 import type { ProcessingStepRecord } from './step-repository';
 import type { UploadRecord } from './upload-repository';

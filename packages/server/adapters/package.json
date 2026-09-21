@@ -62,6 +62,7 @@
     "@ucast/core": "^2.0.0",
     "@vp/core": "workspace:*",
     "@vp/db": "workspace:*",
+    "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/observability": "workspace:*",
     "@vp/permissions": "workspace:*",

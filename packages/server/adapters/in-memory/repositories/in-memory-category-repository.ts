@@ -3,7 +3,7 @@ import type {
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
-} from '@vp/core/domain';
+} from '@vp/domain';
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';

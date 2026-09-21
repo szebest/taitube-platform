@@ -1,4 +1,4 @@
-import type { Channel, CreateChannelInput, UpdateChannelInput } from '../domain/channel';
+import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 
 export interface ChannelRepositoryPort {
   findById(id: string): Promise<Channel | null>;

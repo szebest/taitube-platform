@@ -1,4 +1,4 @@
-import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/core/domain';
+import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';

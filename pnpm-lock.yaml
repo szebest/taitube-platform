@@ -83,6 +83,9 @@ importers:
       '@vp/dev-token':
         specifier: workspace:*
         version: link:../../packages/server/dev-token
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../packages/universal/domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../../packages/universal/errors
@@ -95,6 +98,9 @@ importers:
       '@vp/observability':
         specifier: workspace:*
         version: link:../../packages/server/observability
+      '@vp/pagination':
+        specifier: workspace:*
+        version: link:../../packages/universal/pagination
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../packages/universal/permissions
@@ -399,6 +405,9 @@ importers:
       '@vp/db':
         specifier: workspace:*
         version: link:../db
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
@@ -490,6 +499,10 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   packages/server/core:
+    dependencies:
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
     devDependencies:
       '@vp/permissions':
         specifier: workspace:*
@@ -824,7 +837,43 @@ importers:
         specifier: ^3.0.7
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
+  packages/universal/domain:
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
   packages/universal/errors:
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/universal/pagination:
     devDependencies:
       '@vp/testing':
         specifier: workspace:*

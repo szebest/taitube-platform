@@ -1,8 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import { JsonCursorCodec } from '../cursor-codec';
 import { DEFAULT_PAGINATION, Paginator, defaultPaginator } from '../pagination';
 
-describe('Paginator', () => {
+describe('packages/pagination: Paginator', () => {
   const jsonPaginator = new Paginator({ cursorCodec: new JsonCursorCodec() });
   const cursorOf = (row: { id: string }) => ({ id: row.id });
   const toItem = (row: { id: string }) => row.id;
