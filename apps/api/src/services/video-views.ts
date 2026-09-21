@@ -1,4 +1,4 @@
-import type { RenditionRecord, VideoRecord, VideoStatus } from '@vp/core/ports';
+import type { RenditionRecord, VideoRecord, VideoStatus } from '@vp/core/repositories';
 import { masterPlaylistKey } from '@vp/storage';
 
 export type VideoVisibility = 'private' | 'unlisted' | 'public';

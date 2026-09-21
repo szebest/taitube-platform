@@ -1,4 +1,5 @@
-import type { AuthorizationPort, JobQueue, VideoRepository, VideoStatus } from '@vp/core/ports';
+import type { AuthorizationPort, JobQueue } from '@vp/core/ports';
+import type { VideoRepository, VideoStatus } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import { canDeleteVideo, canUpdateVideo } from '@vp/permissions';

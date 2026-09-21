@@ -1,4 +1,4 @@
-import type { UploadRecord, VideoRecord } from '@vp/core/ports';
+import type { UploadRecord, VideoRecord } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
 import type { AuthUser } from '../plugins/auth';

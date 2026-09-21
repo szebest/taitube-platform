@@ -1,12 +1,12 @@
+import { DatabaseError } from '@vp/core/ports';
 import {
-  DatabaseError,
   type DlqEntryRecord,
   DlqRepository,
   type DlqStatus,
   type ListDlqEntriesOptions,
   type NewDlqEntryInput,
   type NewOutboxInput,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { desc, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';

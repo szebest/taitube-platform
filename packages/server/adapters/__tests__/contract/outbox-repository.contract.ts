@@ -1,4 +1,4 @@
-import type { OutboxPayload, OutboxRepository } from '@vp/core/ports';
+import type { OutboxPayload, OutboxRepository } from '@vp/core/repositories';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const OUTBOX_IDS = {

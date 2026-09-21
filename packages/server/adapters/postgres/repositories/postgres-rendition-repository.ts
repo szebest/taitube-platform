@@ -1,9 +1,9 @@
+import { DatabaseError } from '@vp/core/ports';
 import {
-  DatabaseError,
   type NewRenditionInput,
   type RenditionRecord,
   RenditionRepository,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { and, eq, inArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';

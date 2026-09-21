@@ -1,4 +1,5 @@
-import type { JobQueue, NewOutboxInput, QueueJobOptions } from '@vp/core/ports';
+import type { JobQueue, QueueJobOptions } from '@vp/core/ports';
+import type { NewOutboxInput } from '@vp/core/repositories';
 import { ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 
 const PROBE_QUEUE = 'probe';

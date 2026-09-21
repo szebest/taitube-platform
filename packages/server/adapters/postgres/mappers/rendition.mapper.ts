@@ -1,4 +1,4 @@
-import type { NewRenditionInput, RenditionRecord } from '@vp/core/ports';
+import type { NewRenditionInput, RenditionRecord } from '@vp/core/repositories';
 import type { renditions } from '@vp/db';
 import { uuidv7 } from 'uuidv7';
 

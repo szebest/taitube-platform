@@ -1,14 +1,10 @@
-import {
-  DatabaseError,
-  type NewOutboxInput,
-  type OutboxRecord,
-  OutboxRepository,
-} from '@vp/core/ports';
+import { DatabaseError } from '@vp/core/ports';
+import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { and, asc, eq, isNull, lt, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { toOutboxRecord } from '../mappers/index';
 import { uuidv7 } from 'uuidv7';
+import { toOutboxRecord } from '../mappers/index';
 import { toDbError as dbErr } from './types';
 
 const { outbox: o } = schema;

@@ -1,4 +1,4 @@
-import type { NewUploadInput } from '@vp/core/ports';
+import type { NewUploadInput } from '@vp/core/repositories';
 import { toUploadInsert, toUploadStatusUpdate } from '../upload.mapper';
 
 describe('adapters/postgres/mappers: upload', () => {

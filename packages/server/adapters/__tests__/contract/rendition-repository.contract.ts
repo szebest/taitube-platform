@@ -1,4 +1,4 @@
-import type { RenditionRepository } from '@vp/core/ports';
+import type { RenditionRepository } from '@vp/core/repositories';
 import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

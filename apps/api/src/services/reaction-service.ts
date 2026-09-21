@@ -1,11 +1,8 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
-import type { AuthorizationPort, ReactionCachePort, VideoRepository } from '@vp/core/ports';
-import type {
-  ReactionCounts,
-  ReactionInputType,
-  ReactionType,
-  VideoReactionRepositoryPort,
-} from '@vp/core/repositories';
+import type { ReactionCounts, ReactionInputType, ReactionType } from '@vp/core/domain';
+import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
+import type { VideoRepository } from '@vp/core/repositories';
+import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { canReactVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';

@@ -24,10 +24,10 @@ import type {
   JobQueue,
   MultipartStorage,
   ReactionCachePort,
-  Repositories,
   StorageClient,
   SubscriptionCachePort,
 } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { QUEUES } from '@vp/job-contracts';
 
 /**

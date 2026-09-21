@@ -1,8 +1,7 @@
+import type { SubscribedChannelItem, SubscriptionChangeResult } from '@vp/core/domain';
 import { DatabaseError } from '@vp/core/ports';
 import type {
   ListSubscriptionsOptions,
-  SubscribedChannelItem,
-  SubscriptionChangeResult,
   SubscriptionFeedOptions,
   SubscriptionRepositoryPort,
   VideoRecord,

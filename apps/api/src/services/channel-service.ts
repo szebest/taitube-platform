@@ -4,12 +4,12 @@ import {
   isValidHandleFormat,
   normalizeHandle,
 } from '@vp/core/domain';
-import type { ChannelRepository, UserRepository } from '@vp/core/ports';
+import type { ChannelRepositoryPort, UserRepository } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 
 export interface ChannelServiceDeps {
   users: UserRepository;
-  channels: ChannelRepository;
+  channels: ChannelRepositoryPort;
 }
 
 export interface ChannelView {
@@ -54,7 +54,7 @@ const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}
  */
 export class ChannelService {
   private readonly users: UserRepository;
-  private readonly channels: ChannelRepository;
+  private readonly channels: ChannelRepositoryPort;
 
   constructor(deps: ChannelServiceDeps) {
     this.users = deps.users;

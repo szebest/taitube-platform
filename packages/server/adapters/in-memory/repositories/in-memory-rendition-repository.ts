@@ -1,4 +1,8 @@
-import { type NewRenditionInput, type RenditionRecord, RenditionRepository } from '@vp/core/ports';
+import {
+  type NewRenditionInput,
+  type RenditionRecord,
+  RenditionRepository,
+} from '@vp/core/repositories';
 
 export class InMemoryRenditionRepository extends RenditionRepository {
   private readonly renditionsMap: Map<string, RenditionRecord>;

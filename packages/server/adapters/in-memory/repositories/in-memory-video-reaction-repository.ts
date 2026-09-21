@@ -5,9 +5,8 @@ import type {
   ReactionType,
   SetReactionResult,
   VideoReaction,
-  VideoReactionRepositoryPort,
-  VideoRepository,
-} from '@vp/core/repositories';
+} from '@vp/core/domain';
+import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import { uuidv7 } from 'uuidv7';
 
 export interface InMemoryVideoReactionRepositoryOptions {

@@ -1,5 +1,6 @@
 import { DEFAULT_CDN_BASE_URL } from '@vp/config';
-import type { JobQueue, QueueJob, Repositories, StorageClient } from '@vp/core/ports';
+import type { JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { generateMasterPlaylist } from '@vp/ffmpeg';
 import {

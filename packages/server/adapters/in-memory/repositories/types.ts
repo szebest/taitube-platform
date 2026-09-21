@@ -5,7 +5,7 @@ import type {
   StepRepository,
   UploadRepository,
   VideoRecord,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 
 export interface InternalStep {
   id: string;

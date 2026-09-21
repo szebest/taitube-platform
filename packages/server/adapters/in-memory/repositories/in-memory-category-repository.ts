@@ -1,10 +1,10 @@
 import type {
   Category,
-  CategoryRepositoryPort,
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
-} from '@vp/core/repositories';
+} from '@vp/core/domain';
+import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';

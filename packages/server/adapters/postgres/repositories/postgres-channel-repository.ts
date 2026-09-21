@@ -1,10 +1,6 @@
+import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/core/domain';
 import { DatabaseError } from '@vp/core/ports';
-import type {
-  Channel,
-  ChannelRepositoryPort,
-  CreateChannelInput,
-  UpdateChannelInput,
-} from '@vp/core/repositories';
+import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import { channels } from '@vp/db';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { and, eq, ne } from 'drizzle-orm';

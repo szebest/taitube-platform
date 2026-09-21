@@ -1,7 +1,7 @@
 import { trace } from '@opentelemetry/api';
+import { DatabaseError } from '@vp/core/ports';
 import {
   DEFAULT_VIDEO_SCAN_LIMIT,
-  DatabaseError,
   type EventRepository,
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
@@ -22,7 +22,7 @@ import {
   type VideoScan,
   type VideoScanAbsence,
   type VideoWithDetails,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import { canReadVideo } from '@vp/permissions';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';

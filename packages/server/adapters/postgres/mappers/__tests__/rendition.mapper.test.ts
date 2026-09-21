@@ -1,4 +1,4 @@
-import type { RenditionRecord } from '@vp/core/ports';
+import type { RenditionRecord } from '@vp/core/repositories';
 import { toRenditionInsert, toRenditionUpdate } from '../rendition.mapper';
 
 describe('adapters/postgres/mappers: rendition', () => {

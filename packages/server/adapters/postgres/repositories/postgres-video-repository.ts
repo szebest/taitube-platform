@@ -1,7 +1,8 @@
 import { trace } from '@opentelemetry/api';
+import { publicFeedInstant } from '@vp/core/domain';
+import { DatabaseError } from '@vp/core/ports';
 import {
   DEFAULT_VIDEO_SCAN_LIMIT,
-  DatabaseError,
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
   type ListVideosOptions,
@@ -16,8 +17,7 @@ import {
   type VideoScan,
   type VideoScanAbsence,
   type VideoWithDetails,
-  publicFeedInstant,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type SQL, and, desc, eq, inArray, notExists, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';

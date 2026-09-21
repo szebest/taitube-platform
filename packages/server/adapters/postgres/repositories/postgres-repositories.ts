@@ -1,4 +1,4 @@
-import type { Repositories } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
@@ -10,8 +10,8 @@ import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
-import { PostgresUploadRepository } from './postgres-upload-repository';
 import { PostgresSubscriptionRepository } from './postgres-subscription-repository';
+import { PostgresUploadRepository } from './postgres-upload-repository';
 import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';

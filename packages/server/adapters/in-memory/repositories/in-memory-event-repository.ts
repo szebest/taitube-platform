@@ -1,4 +1,8 @@
-import { EventRepository, type NewVideoEventInput, type VideoEventRecord } from '@vp/core/ports';
+import {
+  EventRepository,
+  type NewVideoEventInput,
+  type VideoEventRecord,
+} from '@vp/core/repositories';
 
 export class InMemoryEventRepository extends EventRepository {
   private readonly eventsList: VideoEventRecord[];

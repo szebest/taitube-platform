@@ -1,5 +1,5 @@
 import { type PublicFeedSort, publicFeedInstant, publicFeedRanking } from '@vp/core/domain';
-import type { ListPublicVideosOptions, VideoRecord, VideoRepository } from '@vp/core/ports';
+import type { ListPublicVideosOptions, VideoRecord, VideoRepository } from '@vp/core/repositories';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
@@ -13,7 +13,7 @@ import {
   seedOwners,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
-import { type ScanCase, SCAN_CASES } from './video-scan-cases';
+import { SCAN_CASES, type ScanCase } from './video-scan-cases';
 
 interface FeedSeed {
   id: string;

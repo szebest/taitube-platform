@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PGlite } from '@electric-sql/pglite';
-import type { NewVideoInput, Repositories, VideoRecord } from '@vp/core/ports';
+import type { NewVideoInput, Repositories, VideoRecord } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type SQL, eq, sql } from 'drizzle-orm';
 import { type PgliteDatabase, drizzle } from 'drizzle-orm/pglite';

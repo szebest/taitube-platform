@@ -1,4 +1,5 @@
-import type { JobQueue, QueueJob, Repositories } from '@vp/core/ports';
+import type { JobQueue, QueueJob } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import {
   DlqJob,
   NotifyJob,

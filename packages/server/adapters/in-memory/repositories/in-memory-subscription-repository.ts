@@ -1,8 +1,10 @@
 import type {
   ChannelSubscription,
-  ListSubscriptionsOptions,
   SubscribedChannelItem,
   SubscriptionChangeResult,
+} from '@vp/core/domain';
+import type {
+  ListSubscriptionsOptions,
   SubscriptionFeedOptions,
   SubscriptionRepositoryPort,
   VideoRecord,

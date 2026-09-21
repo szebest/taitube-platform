@@ -4,7 +4,7 @@ import {
   InMemoryCategoryRepository,
   InMemoryVideoRepository,
 } from '@vp/adapters';
-import type { Category } from '@vp/core/repositories';
+import type { Category } from '@vp/core/domain';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 
 describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {

@@ -5,7 +5,7 @@ import {
   type UploadWithVideo,
   type VideoRecord,
   type VideoRepository,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 
 export interface InMemoryUploadRepositoryOptions {
   uploadsMap?: Map<string, UploadRecord>;

@@ -1,4 +1,4 @@
-import type { RenditionRecord, VideoRecord } from '@vp/core/ports';
+import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import { playbackUrl, toVideoDetailView, toVideoSummaryView } from '../video-views';
 
 const CDN = 'http://localhost:9000/public';

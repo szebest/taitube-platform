@@ -1,11 +1,7 @@
 import { CaslAuthorizationAdapter, type CategoryCacheService } from '@vp/adapters';
-import type {
-  AuthorizationPort,
-  Category,
-  CategoryRepositoryPort,
-  CreateCategoryInput,
-  UpdateCategoryInput,
-} from '@vp/core/ports';
+import type { Category, CreateCategoryInput, UpdateCategoryInput } from '@vp/core/domain';
+import type { AuthorizationPort } from '@vp/core/ports';
+import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import type { AuthUser } from '../plugins/auth';
 import { assertAdminAccess } from './admin-access';
 import { HttpCacheService } from './http-cache-service';

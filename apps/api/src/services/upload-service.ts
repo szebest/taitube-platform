@@ -1,15 +1,17 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
 import type {
   AuthorizationPort,
-  EventRepository,
   JobQueue,
   MultipartStorage,
   StorageClient,
   StoragePresignedPartInfo,
+} from '@vp/core/ports';
+import type {
+  EventRepository,
   UploadRepository,
   UserRepository,
   VideoRepository,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import { MULTIPART_THRESHOLD_BYTES } from '@vp/storage';
 import type { AuthUser } from '../plugins/auth';
 import { abortUpload } from './upload-abort';

@@ -6,7 +6,7 @@ import {
   type NewDlqEntryInput,
   type NewOutboxInput,
   type OutboxRepository,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 
 import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';

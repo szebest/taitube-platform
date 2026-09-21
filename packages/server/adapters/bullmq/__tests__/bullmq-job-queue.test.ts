@@ -1,4 +1,4 @@
-import { type QueueJob, QueueError } from '@vp/core/ports';
+import { QueueError, type QueueJob } from '@vp/core/ports';
 import { UnrecoverableError } from 'bullmq';
 import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue, fakeJob } from './fake-queue';

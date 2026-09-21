@@ -1,4 +1,4 @@
-import { type UpsertUserInput, type UserRecord, UserRepository } from '@vp/core/ports';
+import { type UpsertUserInput, type UserRecord, UserRepository } from '@vp/core/repositories';
 
 export class InMemoryUserRepository extends UserRepository {
   private readonly usersMap: Map<string, UserRecord>;

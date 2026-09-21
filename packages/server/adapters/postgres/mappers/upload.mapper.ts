@@ -1,4 +1,4 @@
-import type { NewUploadInput, UploadStatus } from '@vp/core/ports';
+import type { NewUploadInput, UploadStatus } from '@vp/core/repositories';
 import type { uploads } from '@vp/db';
 
 type UploadInsert = typeof uploads.$inferInsert;

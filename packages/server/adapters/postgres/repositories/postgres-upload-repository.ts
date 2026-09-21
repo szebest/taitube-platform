@@ -1,15 +1,15 @@
+import { DatabaseError } from '@vp/core/ports';
 import {
-  DatabaseError,
   type NewUploadInput,
   type UploadRecord,
   UploadRepository,
   type UploadStatus,
   type UploadWithVideo,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { eq } from 'drizzle-orm';
-import { toUploadInsert, toUploadStatusUpdate } from '../mappers/index';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { toUploadInsert, toUploadStatusUpdate } from '../mappers/index';
 
 export class PostgresUploadRepository extends UploadRepository {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {

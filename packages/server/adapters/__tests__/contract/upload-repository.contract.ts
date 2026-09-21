@@ -1,4 +1,4 @@
-import type { UploadRepository } from '@vp/core/ports';
+import type { UploadRepository } from '@vp/core/repositories';
 import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

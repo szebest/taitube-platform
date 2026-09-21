@@ -1,4 +1,4 @@
-import type { UserRepository } from '@vp/core/ports';
+import type { UserRepository } from '@vp/core/repositories';
 import { OWNER_ID } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

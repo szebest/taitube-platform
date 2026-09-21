@@ -4,8 +4,8 @@ import type {
   ReactionInputType,
   ReactionType,
   SetReactionResult,
-  VideoReactionRepositoryPort,
-} from '@vp/core/repositories';
+} from '@vp/core/domain';
+import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { and, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';

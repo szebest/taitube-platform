@@ -30,22 +30,22 @@ video-pipeline/
 │   ├── permissions/                # Pure domain RBAC & ABAC permission engine (re-exports @vp/permissions)
 │   ├── ports/                      # Core abstract ports & domain models
 │   │   ├── health-checkable.ts     # HealthCheckable interface
-│   │   ├── authorization.port.ts   # AuthorizationPort (CASL declarative authorization port)
+│   │   ├── authorization.ts        # AuthorizationPort (CASL declarative authorization port)
 │   │   ├── database-client.ts      # Low-level DatabaseClient port (query, execute, transaction)
 │   │   ├── storage-client.ts       # StorageClient port (uploadObject, downloadObject, presigning)
 │   │   ├── multipart-storage.ts    # MultipartStorage port (create, presignPart, list, complete, abort)
 │   │   ├── cache-client.ts         # CacheClient port (key-value, pub/sub)
-│   │   ├── reaction-cache.port.ts  # ReactionCachePort (singleflight & XFetch caching)
-│   │   ├── subscription-cache.port.ts # SubscriptionCachePort (Redis set & subscriber counter)
+│   │   ├── reaction-cache.ts       # ReactionCachePort (singleflight & XFetch caching)
+│   │   ├── subscription-cache.ts   # SubscriptionCachePort (Redis set & subscriber counter)
 │   │   ├── job-queue.ts            # JobQueue port (enqueue, counts, pause, resume)
 │   │   ├── flow-producer.ts        # FlowProducer port (flow graph additions)
 │   │   └── index.ts
 │   ├── pagination/                 # Shared keyset Paginator & pluggable CursorCodec
 │   └── repositories/               # Domain repository interfaces
-│       ├── category-repository.port.ts
-│       ├── channel-repository.port.ts
-│       ├── subscription-repository.port.ts
-│       ├── video-reaction-repository.port.ts
+│       ├── category-repository.ts
+│       ├── channel-repository.ts
+│       ├── subscription-repository.ts
+│       ├── video-reaction-repository.ts
 │       ├── video-repository.ts
 │       ├── upload-repository.ts
 │       ├── step-repository.ts

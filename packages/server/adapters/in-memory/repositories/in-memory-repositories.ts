@@ -1,4 +1,4 @@
-import type { Repositories } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
@@ -74,4 +74,3 @@ export class InMemoryRepositories implements Repositories {
     this.subscriptions.clear();
   }
 }
-

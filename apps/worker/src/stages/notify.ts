@@ -1,4 +1,5 @@
-import type { CacheClient, QueueJob, Repositories } from '@vp/core/ports';
+import type { CacheClient, QueueJob } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { publishVideoEvent, userChannel, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';

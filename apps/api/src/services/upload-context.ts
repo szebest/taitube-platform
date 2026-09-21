@@ -1,15 +1,12 @@
+import type { AuthorizationPort, JobQueue, MultipartStorage, StorageClient } from '@vp/core/ports';
 import type {
-  AuthorizationPort,
   EventRepository,
-  JobQueue,
-  MultipartStorage,
-  StorageClient,
   UploadRecord,
   UploadRepository,
   UserRepository,
   VideoRecord,
   VideoRepository,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { canAccessUpload } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';

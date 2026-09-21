@@ -1,4 +1,4 @@
-import type { NewVideoInput, Repositories } from '@vp/core/ports';
+import type { NewVideoInput, Repositories } from '@vp/core/repositories';
 
 export const OWNER_ID = '00000000-0000-7000-8000-000000000101';
 export const OTHER_OWNER_ID = '00000000-0000-7000-8000-000000000102';

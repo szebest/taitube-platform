@@ -1,4 +1,5 @@
-import type { ReactionCachePort, Repositories } from '@vp/core/ports';
+import type { ReactionCachePort } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import type { Logger } from '@vp/observability';
 
 export interface ReconcileReactionCountersOptions {
@@ -90,10 +91,7 @@ export async function runReconcileReactionCounters(
     }
   }
 
-  logger?.info(
-    { checkedCount, repairedCount },
-    'Completed video reaction counter reconciliation'
-  );
+  logger?.info({ checkedCount, repairedCount }, 'Completed video reaction counter reconciliation');
 
   return {
     checkedCount,

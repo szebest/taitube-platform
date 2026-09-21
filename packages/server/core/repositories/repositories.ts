@@ -1,14 +1,14 @@
-import type { CategoryRepositoryPort } from './category-repository.port';
-import type { ChannelRepositoryPort } from './channel-repository.port';
+import type { CategoryRepositoryPort } from './category-repository';
+import type { ChannelRepositoryPort } from './channel-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
 import type { OutboxRepository } from './outbox-repository';
 import type { RenditionRepository } from './rendition-repository';
 import type { StepRepository } from './step-repository';
+import type { SubscriptionRepositoryPort } from './subscription-repository';
 import type { UploadRepository } from './upload-repository';
-import type { SubscriptionRepositoryPort } from './subscription-repository.port';
 import type { UserRepository } from './user-repository';
-import type { VideoReactionRepositoryPort } from './video-reaction-repository.port';
+import type { VideoReactionRepositoryPort } from './video-reaction-repository';
 import type { VideoRepository } from './video-repository';
 
 export interface Repositories {

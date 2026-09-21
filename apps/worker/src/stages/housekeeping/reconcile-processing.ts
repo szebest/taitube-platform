@@ -1,4 +1,5 @@
-import type { JobQueue, Repositories } from '@vp/core/ports';
+import type { JobQueue } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import type { QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';

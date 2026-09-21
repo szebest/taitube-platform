@@ -1,4 +1,4 @@
-import type { Repositories } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import type { PipelineMetrics } from '@vp/observability';
 
 export interface SqlPollerOptions {

@@ -8,7 +8,7 @@ import {
   type MarkDeadOptions,
   type ProcessingStepRecord,
   StepRepository,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import type { InternalStep } from './types';
 
 export class InMemoryStepRepository extends StepRepository {

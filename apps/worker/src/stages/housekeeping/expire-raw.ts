@@ -1,4 +1,5 @@
-import type { Repositories, StorageClient } from '@vp/core/ports';
+import type { StorageClient } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import type { Logger } from '@vp/observability';
 
 export interface ExpireRawOptions {

@@ -4,7 +4,7 @@ import {
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters';
-import type { UploadRecord } from '@vp/core/ports';
+import type { UploadRecord } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
 import type { AuthUser } from '../../plugins/auth';
 import { type UploadContext, assertUploadOpen, loadOwnedUpload } from '../upload-context';

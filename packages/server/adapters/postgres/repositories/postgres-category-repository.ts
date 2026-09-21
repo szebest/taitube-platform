@@ -1,12 +1,12 @@
 import type {
   Category,
-  CategoryRepositoryPort,
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
-} from '@vp/core/repositories';
-import { categories, videos } from '@vp/db';
+} from '@vp/core/domain';
 import { DatabaseError } from '@vp/core/ports';
+import type { CategoryRepositoryPort } from '@vp/core/repositories';
+import { categories, videos } from '@vp/db';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';

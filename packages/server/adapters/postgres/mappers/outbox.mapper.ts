@@ -1,4 +1,4 @@
-import type { OutboxPayload, OutboxRecord } from '@vp/core/ports';
+import type { OutboxPayload, OutboxRecord } from '@vp/core/repositories';
 import type { outbox } from '@vp/db';
 
 type OutboxRow = typeof outbox.$inferSelect;

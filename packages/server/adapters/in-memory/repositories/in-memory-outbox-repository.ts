@@ -1,4 +1,4 @@
-import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/ports';
+import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/repositories';
 import { uuidv7 } from 'uuidv7';
 
 export class InMemoryOutboxRepository extends OutboxRepository {

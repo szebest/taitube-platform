@@ -1,4 +1,4 @@
-import type { EventRepository } from '@vp/core/ports';
+import type { EventRepository } from '@vp/core/repositories';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

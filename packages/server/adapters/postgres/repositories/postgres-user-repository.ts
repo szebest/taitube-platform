@@ -1,9 +1,5 @@
-import {
-  DatabaseError,
-  type UpsertUserInput,
-  type UserRecord,
-  UserRepository,
-} from '@vp/core/ports';
+import { DatabaseError } from '@vp/core/ports';
+import { type UpsertUserInput, type UserRecord, UserRepository } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';

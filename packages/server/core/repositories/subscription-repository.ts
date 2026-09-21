@@ -1,11 +1,5 @@
-import type {
-  ChannelSubscription,
-  SubscribedChannelItem,
-  SubscriptionChangeResult,
-} from '../domain/subscription';
+import type { SubscribedChannelItem, SubscriptionChangeResult } from '../domain/subscription';
 import type { VideoRecord } from './video-repository';
-
-export type { ChannelSubscription, SubscribedChannelItem, SubscriptionChangeResult };
 
 export interface SubscriptionFeedOptions {
   cursor?: { createdAt: Date; id: string };
@@ -36,4 +30,3 @@ export interface SubscriptionRepositoryPort {
   ): Promise<{ items: VideoRecord[]; total: number }>;
   getSubscriberCount(channelId: string): Promise<number>;
 }
-

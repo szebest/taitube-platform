@@ -1,5 +1,5 @@
+import type { Category } from '@vp/core/domain';
 import type { CacheClient } from '@vp/core/ports';
-import type { Category } from '@vp/core/repositories';
 
 export const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';
 export const CATEGORIES_INVALIDATION_CHANNEL = 'taitube:events:cache:categories:invalidated';

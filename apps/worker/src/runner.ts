@@ -17,9 +17,9 @@ import type {
   FlowProducerPort,
   JobQueue,
   MultipartStorage,
-  Repositories,
   StorageClient,
 } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import {
   type Logger,
   type PipelineMetrics,
@@ -28,8 +28,8 @@ import {
   initTracing,
   startMetricsServer,
 } from '@vp/observability';
-import { createFailureHandler } from './failure-handler';
 import { getWorkerStage } from './config';
+import { createFailureHandler } from './failure-handler';
 import { STAGE_REGISTRY, validateQueueName } from './registry';
 import { OutboxRelay, createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createNotifyProcessor } from './stages/notify';

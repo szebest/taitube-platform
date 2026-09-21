@@ -1,13 +1,14 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { getHeartbeatPath } from '../config';
-import type { CacheClient, JobQueue, QueueJob, Repositories, StorageClient } from '@vp/core/ports';
+import type { CacheClient, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError, PipelineError, TransientError } from '@vp/errors';
 import { computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
 import type { TranscodeJob } from '@vp/job-contracts';
 import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
+import { getHeartbeatPath } from '../config';
 import { validateJobId } from '../registry';
 import { TranscodeProgressReporter } from './progress-reporter';
 import { StreamingSegmentUploader } from './segment-uploader';

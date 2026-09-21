@@ -1,12 +1,12 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
 import { DEFAULT_CDN_BASE_URL } from '@vp/config';
+import type { AuthorizationPort } from '@vp/core/ports';
 import type {
-  AuthorizationPort,
   EventRepository,
   RenditionRecord,
   RenditionRepository,
   VideoRepository,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
 import { canReadVideo } from '@vp/permissions';

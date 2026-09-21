@@ -3,9 +3,9 @@ import type {
   MultipartStorage,
   QueueJob,
   ReactionCachePort,
-  Repositories,
   StorageClient,
 } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { HousekeepingJob, type QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
 import { runExpireRaw } from './expire-raw';

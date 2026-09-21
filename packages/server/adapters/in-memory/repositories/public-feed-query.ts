@@ -5,7 +5,11 @@ import {
   publicFeedInstant,
   publicFeedRanking,
 } from '@vp/core/domain';
-import type { ListPublicVideosOptions, ListPublicVideosResult, VideoRecord } from '@vp/core/ports';
+import type {
+  ListPublicVideosOptions,
+  ListPublicVideosResult,
+  VideoRecord,
+} from '@vp/core/repositories';
 
 interface RankedVideo {
   rank: number;

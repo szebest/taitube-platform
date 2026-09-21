@@ -1,15 +1,15 @@
+import { DatabaseError } from '@vp/core/ports';
 import {
   type ClaimStepOptions,
   type ClaimStepResult,
   type CompleteStepOptions,
   type CompleteStepResult,
-  DatabaseError,
   type FailStepOptions,
   type FailStepResult,
   type MarkDeadOptions,
   type ProcessingStepRecord,
   StepRepository,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { and, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';

@@ -1,4 +1,5 @@
-import type { CacheClient, Repositories } from '@vp/core/ports';
+import type { CacheClient } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { publishVideoEvent } from '@vp/events';
 import { type Logger, getMetrics } from '@vp/observability';
 

@@ -1,13 +1,12 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
 import { type Paginator, defaultPaginator } from '@vp/core/pagination';
+import type { AuthorizationPort, JobQueue } from '@vp/core/ports';
 import type {
-  AuthorizationPort,
   DlqEntryRecord,
   DlqRepository,
   DlqStatus,
   EventRepository,
-  JobQueue,
-} from '@vp/core/ports';
+} from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { defaultJobOptions, generateReplayJobId, stagePolicies } from '@vp/job-contracts';
 import type { AuthUser } from '../plugins/auth';
