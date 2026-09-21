@@ -65,51 +65,10 @@ export interface E2ESuiteResult {
   markdownReport: string;
 }
 
-export function getSpecs(reduced = false, user2Id?: string): VideoTestSpec[] {
-  if (reduced) {
-    return [
-      {
-        name: 's15-single',
-        fixtureFile: 's15.mp4',
-        durationSec: 15,
-        expectedLadder: ['1080p', '720p', '480p'],
-        expectedSegments: 3,
-        strategy: 'single',
-        expectedStatus: 'READY',
-      },
-      {
-        name: 'p720-multi',
-        fixtureFile: 'p720.mp4',
-        durationSec: 15,
-        expectedLadder: ['720p', '480p'],
-        expectedSegments: 3,
-        strategy: 'multipart',
-        expectedStatus: 'READY',
-      },
-      {
-        name: 'hostile-truncated',
-        fixtureFile: 'truncated.mp4',
-        durationSec: 5,
-        expectedLadder: [],
-        expectedSegments: 0,
-        strategy: 'single',
-        expectedStatus: 'FAILED',
-        expectedErrorCode: ErrorCodes.CORRUPT_CONTAINER,
-      },
-      {
-        name: 'hostile-bad-codec',
-        fixtureFile: 'bad-codec.mov',
-        durationSec: 1,
-        expectedLadder: [],
-        expectedSegments: 0,
-        strategy: 'single',
-        expectedStatus: 'FAILED',
-        expectedErrorCode: ErrorCodes.UNSUPPORTED_CODEC,
-      },
-    ];
-  }
+const REDUCED_SPEC_NAMES = ['s15-single', 'p720-multi', 'hostile-truncated', 'hostile-bad-codec'];
 
-  return [
+export function getSpecs(reduced = false, user2Id?: string): VideoTestSpec[] {
+  const specs: VideoTestSpec[] = [
     {
       name: 's15-single',
       fixtureFile: 's15.mp4',
@@ -298,4 +257,6 @@ export function getSpecs(reduced = false, user2Id?: string): VideoTestSpec[] {
       expectedErrorCode: ErrorCodes.UNSUPPORTED_CODEC,
     },
   ];
+
+  return reduced ? specs.filter((spec) => REDUCED_SPEC_NAMES.includes(spec.name)) : specs;
 }

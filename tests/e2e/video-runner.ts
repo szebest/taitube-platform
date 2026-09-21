@@ -26,6 +26,7 @@ export async function runSingleVideo(
   if (!fs.existsSync(filePath)) throw new Error(`Fixture not found: ${filePath}`);
 
   const token = spec.userId === user2Id ? user2Token : user1Token;
+  const contentType = spec.fixtureFile.endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
   const client = new UploadClient({ apiBaseUrl: apiUrl, token });
   const sseEvents: string[] = [];
   let videoId = '';
@@ -39,7 +40,7 @@ export async function runSingleVideo(
     const init = await client.initUpload({
       filename: spec.fixtureFile,
       sizeBytes: stats.size,
-      contentType: spec.fixtureFile.endsWith('.mov') ? 'video/quicktime' : 'video/mp4',
+      contentType: contentType,
       title: spec.name,
       strategy: spec.strategy,
     });
@@ -76,7 +77,7 @@ export async function runSingleVideo(
       const putRes = await fetch(init.singleUrl, {
         method: 'PUT',
         headers: init.headers || {
-          'content-type': spec.fixtureFile.endsWith('.mov') ? 'video/quicktime' : 'video/mp4',
+          'content-type': contentType,
         },
         body: fs.readFileSync(filePath),
       });
@@ -85,7 +86,7 @@ export async function runSingleVideo(
     } else {
       await client.uploadFile({
         filePath,
-        contentType: spec.fixtureFile.endsWith('.mov') ? 'video/quicktime' : 'video/mp4',
+        contentType: contentType,
         title: spec.name,
         existingUploadId: uploadId,
         strategy: spec.strategy,
