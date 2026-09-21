@@ -100,8 +100,8 @@ smoke-offline: ## Run smoke tests in offline mode (internal network with zero in
 	docker compose -f $(COMPOSE_FILE) -f infra/compose/docker-compose.offline.yml exec -T api curl -s --connect-timeout 2 http://1.1.1.1 >/dev/null 2>&1 && { echo "ERROR: Container reached the internet!"; exit 1; } || echo "Verified: Containers have zero internet egress."
 	API_URL=http://127.0.0.1:3000 bash scripts/e2e-smoke.sh
 
-e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostile set)
-	bash scripts/e2e-suite.sh
+e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostile set; E2E_REDUCED=true for the CI set)
+	bun scripts/run-e2e.ts
 
 chaos-kill: ## Run crash-safety chaos test (kill worker mid-transcode, assert effectively-once READY)
 	bash scripts/chaos-kill.sh 5
