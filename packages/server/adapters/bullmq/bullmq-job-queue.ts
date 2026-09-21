@@ -19,6 +19,7 @@ import {
   type QueueOptions,
   UnrecoverableError,
   Worker,
+  type WorkerOptions,
 } from 'bullmq';
 import { getRedisConnectionOptions } from './connection';
 
@@ -33,32 +34,38 @@ interface ErrorWithDetails {
   message: string;
 }
 
+export type WorkerFactory = (
+  name: string,
+  processor: (job: Job) => Promise<unknown>,
+  options: WorkerOptions
+) => Worker;
+
 export interface BullMqJobQueueConfig {
   name: string;
   connection?: ConnectionOptions;
   options?: Omit<QueueOptions, 'connection'>;
   queue?: Queue;
+  createWorker?: WorkerFactory;
 }
 
 export class BullMqJobQueue extends JobQueue {
   private readonly queue: Queue;
+  private readonly createWorker: WorkerFactory;
   private worker?: Worker;
   private failedHandler?: (job: QueueJob<unknown>, err: Error) => Promise<void> | void;
 
   constructor(config: BullMqJobQueueConfig) {
     super();
-    if (config.queue) {
-      this.queue = config.queue;
-      return;
-    }
-
-    const connection = getRedisConnectionOptions(config.connection);
-
-    this.queue = new Queue(config.name, {
-      connection,
-      prefix: 'bull',
-      ...config.options,
-    });
+    this.createWorker =
+      config.createWorker ??
+      ((name, processor, options) => new Worker(name, processor, options));
+    this.queue =
+      config.queue ??
+      new Queue(config.name, {
+        connection: getRedisConnectionOptions(config.connection),
+        prefix: 'bull',
+        ...config.options,
+      });
   }
 
   async checkHealth(): Promise<boolean> {
@@ -152,7 +159,7 @@ export class BullMqJobQueue extends JobQueue {
         (this.queue.opts.connection as ConnectionOptions | undefined) ??
         getRedisConnectionOptions();
 
-      this.worker = new Worker(
+      this.worker = this.createWorker(
         this.queue.name,
         async (job: Job) => {
           try {

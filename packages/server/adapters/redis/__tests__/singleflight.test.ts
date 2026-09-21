@@ -67,13 +67,14 @@ describe('Singleflight', () => {
     const run = () => singleflight.do('key', () => gate.promise);
 
     const [a, b] = [run(), run()];
-    const rejected = Promise.all([
-      expect(a).rejects.toThrow('boom'),
-      expect(b).rejects.toThrow('boom'),
-    ]);
+    // `expect().rejects` has to be given an already-settled promise: bun's matcher never
+    // resolves when the rejection arrives after it, and the whole test process hangs.
+    const settled = Promise.allSettled([a, b]);
     gate.reject(new Error('boom'));
+    await settled;
 
-    await rejected;
+    await expect(a).rejects.toThrow('boom');
+    await expect(b).rejects.toThrow('boom');
     expect(singleflight.inFlightCount).toBe(0);
   });
 

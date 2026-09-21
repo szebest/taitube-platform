@@ -1,4 +1,4 @@
-import type { Job } from 'bullmq';
+import type { Job, Worker, WorkerOptions } from 'bullmq';
 
 export type WorkerHandler = (job: Job) => Promise<unknown>;
 export type FailedListener = (job: Job | undefined, err: Error) => void;
@@ -12,7 +12,7 @@ export class FakeWorker {
   constructor(
     readonly queueName: string,
     readonly handler: WorkerHandler,
-    readonly options: Record<string, unknown>
+    readonly options: WorkerOptions
   ) {
     workers.push(this);
   }
@@ -31,4 +31,16 @@ export class FakeWorker {
   async close(waitForActive?: boolean): Promise<void> {
     this.closedWaiting = waitForActive;
   }
+
+  asWorker(): Worker {
+    return this as unknown as Worker;
+  }
+}
+
+export function fakeWorkerFactory(
+  name: string,
+  handler: WorkerHandler,
+  options: WorkerOptions
+): Worker {
+  return new FakeWorker(name, handler, options).asWorker();
 }

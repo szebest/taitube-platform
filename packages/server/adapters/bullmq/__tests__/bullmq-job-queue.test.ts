@@ -2,12 +2,7 @@ import { QueueError, type QueueJob } from '@vp/core/ports';
 import { UnrecoverableError } from 'bullmq';
 import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue, fakeJob } from './fake-queue';
-import { type WorkerHandler, workers } from './fake-worker';
-
-vi.mock('bullmq', async (importOriginal) => {
-  const { FakeWorker } = await import('./fake-worker');
-  return { ...(await importOriginal<typeof import('bullmq')>()), Worker: FakeWorker };
-});
+import { type WorkerHandler, fakeWorkerFactory, workers } from './fake-worker';
 
 describe('BullMqJobQueue', () => {
   let queue: FakeQueue;
@@ -16,7 +11,11 @@ describe('BullMqJobQueue', () => {
   beforeEach(() => {
     workers.length = 0;
     queue = new FakeQueue();
-    jobQueue = new BullMqJobQueue({ name: 'probe', queue: queue.asQueue() });
+    jobQueue = new BullMqJobQueue({
+      name: 'probe',
+      queue: queue.asQueue(),
+      createWorker: fakeWorkerFactory,
+    });
   });
 
   describe('identity and health', () => {
