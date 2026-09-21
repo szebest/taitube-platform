@@ -22,7 +22,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "typeRoots": ["node_modules/@types"],
+    "types": ["node", "vitest/globals"],
   },
   "include": [
     "src"

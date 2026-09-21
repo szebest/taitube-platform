@@ -1,4 +1,4 @@
-import type { Account, Channel, UpdateChannel } from "@vp/api-contracts";
+import type { Account, Channel } from "@vp/api-contracts";
 
 import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
@@ -13,11 +13,7 @@ export const accountApi = baseApi.injectEndpoints({
 			queryFn: (idOrHandle) =>
 				runApiQuery(() => apiClient.channels.getChannel({ params: { idOrHandle } })),
 		}),
-		updateMyChannel: builder.mutation<Channel, UpdateChannel>({
-			invalidatesTags: ['ACCOUNT', 'CHANNEL'],
-			queryFn: (body) => runApiQuery(() => apiClient.me.updateMyChannel({ body })),
-		}),
 	}),
 });
 
-export const { useAccountQuery, useChannelQuery, useUpdateMyChannelMutation } = accountApi;
+export const { useAccountQuery, useChannelQuery } = accountApi;

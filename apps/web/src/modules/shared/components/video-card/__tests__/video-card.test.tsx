@@ -1,5 +1,4 @@
 import type { VideoSummary } from '@vp/api-contracts';
-import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { ApiProvider } from '@reduxjs/toolkit/dist/query/react';

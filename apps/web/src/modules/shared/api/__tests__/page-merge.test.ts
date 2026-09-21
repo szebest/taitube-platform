@@ -2,7 +2,7 @@ import { appendPage } from '../page-merge';
 
 describe('apps/web: keyset page merge', () => {
   it('appends the next page and carries its cursor forward', () => {
-    const cache = { items: ['a'], nextCursor: 'c1' };
+    const cache: { items: string[]; nextCursor: string | null } = { items: ['a'], nextCursor: 'c1' };
 
     appendPage(cache, { items: ['b', 'c'], nextCursor: 'c2' });
 
@@ -10,7 +10,7 @@ describe('apps/web: keyset page merge', () => {
   });
 
   it('clears the cursor once the last page arrives', () => {
-    const cache = { items: ['a'], nextCursor: 'c1' };
+    const cache: { items: string[]; nextCursor: string | null } = { items: ['a'], nextCursor: 'c1' };
 
     appendPage(cache, { items: [], nextCursor: null });
 
@@ -18,7 +18,11 @@ describe('apps/web: keyset page merge', () => {
   });
 
   it('refreshes the total when the payload carries one', () => {
-    const cache = { items: [], nextCursor: 'c1', total: 1 };
+    const cache: { items: string[]; nextCursor: string | null; total: number } = {
+      items: [],
+      nextCursor: 'c1',
+      total: 1,
+    };
 
     appendPage(cache, { items: ['a'], nextCursor: null, total: 9 });
 
