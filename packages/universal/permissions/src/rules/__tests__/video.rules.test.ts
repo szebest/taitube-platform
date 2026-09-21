@@ -7,10 +7,10 @@ import {
   publicVideo,
   standardUser,
   unlistedVideo,
-} from '../../__mocks__/fixtures';
-import type { AppAction, AppSubjects, UserContext } from '../../types';
+} from '../../__mocks__/fixtures.js';
+import type { AppAction, AppSubjects, UserContext } from '../../types/index.js';
 import { defineVideoRules } from '../video.rules';
-import { buildAbility } from './build-ability';
+import { buildAbility } from './build-ability.js';
 
 const ownPrivate = subject('Video', privateVideo);
 

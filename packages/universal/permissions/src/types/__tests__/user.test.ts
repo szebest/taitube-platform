@@ -1,4 +1,4 @@
-import { type Role, VALID_ROLES, isSignedInRole, parseRole } from '../user';
+import { type Role, VALID_ROLES, isSignedInRole, parseRole } from '../user.js';
 
 describe('types/user: parseRole', () => {
   it.each<{ input: unknown }>([

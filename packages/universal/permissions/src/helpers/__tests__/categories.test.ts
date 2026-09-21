@@ -1,5 +1,5 @@
-import type { Role } from '../../types';
-import { canManageCategory } from '../categories';
+import type { Role } from '../../types/index.js';
+import { canManageCategory } from '../categories.js';
 
 describe('helpers/categories: canManageCategory', () => {
   it('grants an admin', () => {

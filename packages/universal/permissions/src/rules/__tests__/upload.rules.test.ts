@@ -1,8 +1,8 @@
 import { subject } from '@casl/ability';
-import { creatorUser, foreignUpload, guestUser, sampleUpload } from '../../__mocks__/fixtures';
-import type { AppAction, AppSubjects, UserContext } from '../../types';
+import { creatorUser, foreignUpload, guestUser, sampleUpload } from '../../__mocks__/fixtures.js';
+import type { AppAction, AppSubjects, UserContext } from '../../types/index.js';
 import { defineUploadRules } from '../upload.rules';
-import { buildAbility } from './build-ability';
+import { buildAbility } from './build-ability.js';
 
 describe('rules/upload.rules: Declarative Upload Ability Rules', () => {
   it.each<{

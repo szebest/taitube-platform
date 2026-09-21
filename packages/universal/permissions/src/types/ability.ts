@@ -1,9 +1,9 @@
 import type { ForcedSubject, InferSubjects, MongoAbility } from '@casl/ability';
-import type { CategoryResource } from './category';
-import type { ChannelResource } from './channel';
-import type { CommentResource } from './comment';
-import type { UploadResource } from './upload';
-import type { VideoResource } from './video';
+import type { CategoryResource } from './category.js';
+import type { ChannelResource } from './channel.js';
+import type { CommentResource } from './comment.js';
+import type { UploadResource } from './upload.js';
+import type { VideoResource } from './video.js';
 
 export type AppAction =
   | 'manage'

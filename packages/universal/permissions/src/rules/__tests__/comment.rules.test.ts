@@ -5,10 +5,10 @@ import {
   moderatorUser,
   sampleComment,
   standardUser,
-} from '../../__mocks__/fixtures';
-import type { AppAction, AppSubjects, UserContext } from '../../types';
+} from '../../__mocks__/fixtures.js';
+import type { AppAction, AppSubjects, UserContext } from '../../types/index.js';
 import { defineCommentRules } from '../comment.rules';
-import { buildAbility } from './build-ability';
+import { buildAbility } from './build-ability.js';
 
 const comment = subject('Comment', sampleComment);
 

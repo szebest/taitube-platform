@@ -1,5 +1,5 @@
 import { subject } from '@casl/ability';
-import type { ChannelResource, CommentResource, UploadResource, VideoResource } from '../types';
+import type { ChannelResource, CommentResource, UploadResource, VideoResource } from '../types/index.js';
 import { normalizeChannelResource } from './channel.normalizer.js';
 import { normalizeCommentResource } from './comment.normalizer.js';
 import { normalizeUploadResource } from './upload.normalizer.js';

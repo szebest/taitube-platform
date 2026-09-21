@@ -1,4 +1,4 @@
-import type { CommentResource } from '../types';
+import type { CommentResource } from '../types/index.js';
 
 /**
  * Normalizes any comment-like input into a canonical CommentResource.

@@ -5,9 +5,9 @@ import {
   moderatorUser,
   sampleComment,
   standardUser,
-} from '../../__mocks__/fixtures';
-import type { CommentResource, UserContext } from '../../types';
-import { canCreateComment, canDeleteComment, canPinComment } from '../comments';
+} from '../../__mocks__/fixtures.js';
+import type { CommentResource, UserContext } from '../../types/index.js';
+import { canCreateComment, canDeleteComment, canPinComment } from '../comments.js';
 
 const strangerUser: UserContext = { id: 'usr-999', role: 'USER' };
 

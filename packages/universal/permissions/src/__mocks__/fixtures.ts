@@ -5,7 +5,7 @@ import type {
   UploadResource,
   UserContext,
   VideoResource,
-} from '../types';
+} from '../types/index.js';
 
 export const guestUser: UserContext | null = null;
 export const standardUser: UserContext = { id: 'usr-1', role: 'USER', email: 'user@test.local' };

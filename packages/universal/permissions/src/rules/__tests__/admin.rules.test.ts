@@ -1,7 +1,7 @@
-import { adminUser, guestUser, standardUser } from '../../__mocks__/fixtures';
-import type { AppAction, AppSubjects, UserContext } from '../../types';
+import { adminUser, guestUser, standardUser } from '../../__mocks__/fixtures.js';
+import type { AppAction, AppSubjects, UserContext } from '../../types/index.js';
 import { defineAdminRules } from '../admin.rules';
-import { buildAbility } from './build-ability';
+import { buildAbility } from './build-ability.js';
 
 describe('rules/admin.rules: Declarative Admin Ability Rules', () => {
   it.each<{

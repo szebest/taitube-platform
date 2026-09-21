@@ -1,5 +1,5 @@
-import type { Role } from '../../types';
-import { canViewAllAnalytics } from '../analytics';
+import type { Role } from '../../types/index.js';
+import { canViewAllAnalytics } from '../analytics.js';
 
 describe('helpers/analytics: canViewAllAnalytics', () => {
   it('grants an admin', () => {

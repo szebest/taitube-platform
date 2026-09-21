@@ -1,7 +1,7 @@
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { createValidationError, formatZodError, zodValidationAdapter } from '../validation-adapter';
+import { createValidationError, formatZodError, zodValidationAdapter } from '../validation-adapter.js';
 
 describe('errors/validation: Zod Schema RFC 9457 Validation Adapter', () => {
   const schema = z.object({

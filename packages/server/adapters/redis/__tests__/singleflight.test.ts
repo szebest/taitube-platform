@@ -67,10 +67,13 @@ describe('Singleflight', () => {
     const run = () => singleflight.do('key', () => gate.promise);
 
     const [a, b] = [run(), run()];
+    const rejected = Promise.all([
+      expect(a).rejects.toThrow('boom'),
+      expect(b).rejects.toThrow('boom'),
+    ]);
     gate.reject(new Error('boom'));
 
-    await expect(a).rejects.toThrow('boom');
-    await expect(b).rejects.toThrow('boom');
+    await rejected;
     expect(singleflight.inFlightCount).toBe(0);
   });
 

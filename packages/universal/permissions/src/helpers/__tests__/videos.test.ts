@@ -8,8 +8,8 @@ import {
   publicVideo,
   standardUser,
   unlistedVideo,
-} from '../../__mocks__/fixtures';
-import type { UserContext, VideoResource } from '../../types';
+} from '../../__mocks__/fixtures.js';
+import type { UserContext, VideoResource } from '../../types/index.js';
 import {
   canCreateVideo,
   canDeleteVideo,
@@ -17,7 +17,7 @@ import {
   canReactVideo,
   canReadVideo,
   canUpdateVideo,
-} from '../videos';
+} from '../videos.js';
 
 type VideoCase = {
   scenario: string;

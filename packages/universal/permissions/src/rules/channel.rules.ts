@@ -1,5 +1,5 @@
 import type { AbilityBuilder } from '@casl/ability';
-import { type AppAbility, type UserContext, isSignedInRole } from '../types';
+import { type AppAbility, type UserContext, isSignedInRole } from '../types/index.js';
 
 export function defineChannelRules(
   user: UserContext | null,

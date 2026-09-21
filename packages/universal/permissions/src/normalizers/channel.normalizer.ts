@@ -1,4 +1,4 @@
-import type { ChannelResource } from '../types';
+import type { ChannelResource } from '../types/index.js';
 
 /**
  * Normalizes any channel-like input into a canonical ChannelResource.

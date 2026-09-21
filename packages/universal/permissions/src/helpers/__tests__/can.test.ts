@@ -4,9 +4,9 @@ import {
   guestUser,
   moderatorUser,
   standardUser,
-} from '../../__mocks__/fixtures';
-import type { Action, Resource, UserContext } from '../../types';
-import { can } from '../can';
+} from '../../__mocks__/fixtures.js';
+import type { Action, Resource, UserContext } from '../../types/index.js';
+import { can } from '../can.js';
 
 type CanCase = {
   scenario: string;

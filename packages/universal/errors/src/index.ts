@@ -1,8 +1,8 @@
-import { type ApiErrorCode, ApiErrorCodes } from './api-error-codes';
-import { type PipelineErrorCode, PipelineErrorCodes } from './pipeline-error-codes';
+import { type ApiErrorCode, ApiErrorCodes } from './api-error-codes.js';
+import { type PipelineErrorCode, PipelineErrorCodes } from './pipeline-error-codes.js';
 
-export * from './api-error-codes';
-export * from './pipeline-error-codes';
+export * from './api-error-codes.js';
+export * from './pipeline-error-codes.js';
 
 export const ErrorCodes = { ...ApiErrorCodes, ...PipelineErrorCodes } as const;
 

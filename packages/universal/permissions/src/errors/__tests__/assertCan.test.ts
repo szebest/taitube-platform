@@ -1,7 +1,7 @@
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { describe, expect, it } from 'vitest';
-import { standardUser } from '../../__mocks__/fixtures';
-import { assertCan } from '../assert-can';
+import { standardUser } from '../../__mocks__/fixtures.js';
+import { assertCan } from '../assert-can.js';
 
 describe('errors/assertCan: RFC 9457 Permission Guard', () => {
   it('does nothing when allowed is true', () => {
