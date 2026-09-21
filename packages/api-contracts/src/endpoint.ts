@@ -32,11 +32,12 @@ export type ContractBody<T extends EndpointContract> = T['body'] extends z.ZodTy
 export type ContractResult<T extends EndpointContract> = z.infer<T['result']>;
 
 /**
- * `const` is what keeps `contract.params` a concrete Zod schema rather than
- * `ZodTypeAny | undefined`; without it the Fastify type provider widens every
- * derived handler's `request.params` to `unknown`.
+ * The generic is what keeps `contract.params` a concrete Zod schema rather than
+ * `ZodTypeAny | undefined`; annotate a contract as `EndpointContract` instead and
+ * the Fastify type provider widens every derived handler's `request.params` to
+ * `unknown`.
  */
-export function defineEndpoint<const T extends EndpointContract>(contract: T): T {
+export function defineEndpoint<T extends EndpointContract>(contract: T): T {
   return contract;
 }
 

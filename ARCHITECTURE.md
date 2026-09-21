@@ -209,9 +209,27 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 - Maintain a `>1:1` ratio of domain services to routes via composable utilities (`HttpCacheService`, `Singleflight`, `SseHub`).
 - See [apps/api/AGENTS.md](apps/api/AGENTS.md).
 
-### Invariant 5: Client-Server Boundary & Frontend Isolation
-- `apps/web` must NEVER import `core/ports`, `adapters/`, `packages/db`, or server-only packages.
-- Frontend communicates with the backend exclusively via HTTP API contracts and typed client packages.
+### Invariant 5: Package Runtime Tiers & the Client-Server Boundary
+Every workspace `package.json` declares the runtime it is allowed to execute in:
+
+```json
+"vp": { "tier": "universal" | "server" | "client" }
+```
+
+| Tier | Packages | May import |
+|---|---|---|
+| `universal` | `api-contracts`, `errors`, `events`, `job-contracts`, `permissions`, `storage`, `tsconfig` | `universal` only — no `node:*`, no server SDK |
+| `server` | `adapters`, `core`, `config`, `db`, `ffmpeg`, `observability`, `testing`, `apps/api`, `apps/worker`, `tools/*` | `universal` + `server` |
+| `client` | `api-client`, `apps/web` | `universal` + `client` |
+
+The tier is enforced at compile time by the matching `@vp/tsconfig` preset: `universal.json` and
+`client.json` set `lib` to include `DOM` and `types` to `[]`, so a Node builtin or global in a
+`universal` package is a type error. Specs run under `@vp/tsconfig/spec.json`, which a universal
+package typechecks through its own `tsconfig.spec.json` so that importing `vitest` cannot leak
+`@types/node` back into the package's own program.
+
+- `apps/web` must NEVER import `core/ports`, `adapters/`, `packages/db`, or any `server` package.
+- The frontend talks to the backend only through `@vp/api-contracts` and `@vp/api-client`.
 - For all frontend architectural patterns (React 19, TanStack Start/Router/Query, URL state model, headless UI hooks, layout stability), see [apps/web/AGENTS.md](apps/web/AGENTS.md).
 
 ### Invariant 6: Deterministic Test Suite Parity

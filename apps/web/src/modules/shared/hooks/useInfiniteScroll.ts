@@ -1,35 +1,42 @@
-import { UseQuery } from "@reduxjs/toolkit/dist/query/react/buildHooks";
-import { BaseQueryFn, FetchArgs, FetchBaseQueryError, FetchBaseQueryMeta, QueryDefinition } from "@reduxjs/toolkit/query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
-import { PaginatedQueryParams, PaginatedResponse } from "src/models";
+export type KeysetPage = {
+	nextCursor: string | null;
+};
 
-export type InfiniteDataType<T, U> = 
-	UseQuery<QueryDefinition<U, BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError, {}, FetchBaseQueryMeta>, never, PaginatedResponse<T>, never>>;
+export type KeysetArgs = {
+	cursor?: string | undefined;
+	limit?: number | undefined;
+};
 
-export const useInfiniteScroll = <T, U extends PaginatedQueryParams>(useInfiniteData: InfiniteDataType<T, U>, initialQuery: U) => {
-	const [blockInit, setBlockInit] = useState(true);
-	const [query, setQuery] = useState<U>(initialQuery);
-	const queryData = useInfiniteData(query);
+export type KeysetQueryHook<TPage extends KeysetPage, TArgs extends KeysetArgs> = (args: TArgs) => {
+	data?: TPage | undefined;
+	currentData?: TPage | undefined;
+	isFetching: boolean;
+	isLoading: boolean;
+	isError: boolean;
+	refetch: () => unknown;
+};
 
-	const { isFetching, currentData } = queryData;
+/**
+ * Advances a keyset feed by asking for the cursor the previous page returned.
+ * The query hook caches every page under one key, so `data` is the whole list.
+ */
+export const useInfiniteScroll = <TPage extends KeysetPage, TArgs extends KeysetArgs>(
+	useKeysetQuery: KeysetQueryHook<TPage, TArgs>,
+	initialQuery: TArgs
+) => {
+	const [query, setQuery] = useState<TArgs>(initialQuery);
+	const queryData = useKeysetQuery(query);
+
+	const { isFetching, data } = queryData;
+	const nextCursor = data?.nextCursor ?? null;
 
 	const loadMore = useCallback(() => {
-		if (isFetching) return;
+		if (isFetching || !nextCursor) return;
 
-		setQuery(prev => ({ ...prev, pageNumber: (currentData?.pageNumber ?? 0) + 1 }));
-	}, [isFetching, currentData]);
-
-	useEffect(() => {
-		if (isFetching) return;
-
-		if (blockInit) {
-			setBlockInit(true);
-			return;
-		}
-
-		queryData.refetch();
-	}, [query]);
+		setQuery(prev => ({ ...prev, cursor: nextCursor }));
+	}, [isFetching, nextCursor]);
 
 	return { loadMore, queryData, query, setQuery };
 };

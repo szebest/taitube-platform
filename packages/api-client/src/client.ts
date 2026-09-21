@@ -1,6 +1,6 @@
 import { type EndpointContract, contracts } from '@vp/api-contracts';
 import type { z } from 'zod';
-import { type ApiClientOptions, type RequestOptions, sendRequest } from './request';
+import { type ApiClientOptions, type RequestOptions, sendRequest } from './request.js';
 
 type ContractGroups = typeof contracts;
 

@@ -1,29 +1,20 @@
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
-import { useEditVideoMutation, useVideoInfoQuery } from 'src/modules/shared/api';
-
-import { useAuth } from 'src/modules/shared/providers';
+import { useUpdateVideoMutation, useVideoQuery } from 'src/modules/shared/api';
 
 import { EditVideoFormModel } from 'src/modules/shared/models';
 
 import { EditVideoForm } from '../../components';
 import { LoadingSpinner } from 'src/modules/shared/components';
 
-export type EditPageProps = {
-	videoId?: number;
-}
+export function EditPage() {
+	const { videoId } = useParams();
 
-export function EditPage({ videoId }: EditPageProps) {
-	const { data, isFetching, isError } = useVideoInfoQuery(videoId ?? -1, {
-		skip: videoId === undefined
-	});
+	const { data: video, isFetching, isError } = useVideoQuery(videoId ?? '', { skip: !videoId });
 
-	const { user, isLoading } = useAuth();
-
-	const [edit, state] = useEditVideoMutation();
+	const [edit, state] = useUpdateVideoMutation();
 
 	const navigate = useNavigate();
 
@@ -32,42 +23,42 @@ export function EditPage({ videoId }: EditPageProps) {
 
 		toast("No video with given id exists!");
 		navigate("/");
-	}, [isError])
+	}, [isError, navigate])
 
-	useEffect(() => {
-		if (!data || isLoading) return;
-		if (data.userId !== user?.id) {
-			toast("This is not yours video!");
-			navigate("/");
-		}
-	}, [data, isLoading, user])
-
-	if (videoId === undefined) return <Navigate to="/" replace />
+	if (!videoId) return <Navigate to="/" replace />
 
 	const submit = async (form: EditVideoFormModel) => {
-		const response = await edit({ ...form, videoId });
+		if (!video) return;
+
+		const response = await edit({ ...form, id: video.id, version: video.version });
 
 		if ("data" in response) {
 			toast(`Successfully edited the video`);
 
 			navigate(-1);
+			return;
 		}
-		else {
-			if ((response.error as FetchBaseQueryError)?.status === 404) {
-				toast(`Video does not exist`);
 
-				navigate(-1);
-			}
+		if ("status" in response.error && response.error.status === 409) {
+			toast(`The video changed while you were editing it`);
 		}
 	}
 
 	return (
 		<>
-			{data === undefined || isFetching ?
+			{video === undefined || isFetching ?
 				<LoadingSpinner /> :
 				<>
-					<h3>Editing video: {data.title}</h3>
-					<EditVideoForm submit={submit} defaultValues={data} {...state} />
+					<h3>Editing video: {video.title}</h3>
+					<EditVideoForm
+						submit={submit}
+						defaultValues={{
+							title: video.title ?? '',
+							description: video.description ?? '',
+							visibility: video.visibility,
+						}}
+						{...state}
+					/>
 				</>
 			}
 		</>

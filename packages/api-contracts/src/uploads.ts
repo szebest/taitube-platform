@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint';
-import { VideoVisibilitySchema } from './video-resource';
+import { defineEndpoint } from './endpoint.js';
+import { VideoVisibilitySchema } from './video-resource.js';
 
 export const UPLOAD_STRATEGIES = ['single', 'multipart'] as const;
 

@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { CategoryIdParamSchema, CategorySchema } from './categories';
-import { defineEndpoint } from './endpoint';
+import { CategoryIdParamSchema, CategorySchema } from './categories.js';
+import { defineEndpoint } from './endpoint.js';
 
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
 const SLUG_MESSAGE = 'Slug must consist of lowercase alphanumeric characters and hyphens';

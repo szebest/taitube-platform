@@ -247,6 +247,12 @@ importers:
       '@uidotdev/usehooks':
         specifier: ^2.4.1
         version: 2.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@vp/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
+      '@vp/api-contracts':
+        specifier: workspace:*
+        version: link:../../packages/api-contracts
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../packages/permissions

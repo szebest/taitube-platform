@@ -15,7 +15,7 @@ import { Logo, SidebarSubscriptions } from "..";
 
 export function Sidebar() {
 	const { collapsed, isBelowBreakpoint, breakpointChanged, toggle, close } = useSidebar();
-	const { user, isLoading } = useAuth();
+	const { account, isLoading } = useAuth();
 
 	const width = '220px';
 
@@ -38,16 +38,16 @@ export function Sidebar() {
 					<i className="bi bi-house-door-fill"></i>
 					<span>Home</span>
 				</MenuItem>
-				{user && <MenuItem component={<Link to='/subscriptions/videos' onClick={close} />}>
+				{account && <MenuItem component={<Link to='/subscriptions/videos' onClick={close} />}>
 					<i className="bi bi-play-btn-fill"></i>
 					<span>Subscription videos</span>
 				</MenuItem>}
 
 				<Dropdown.Divider></Dropdown.Divider>
 
-				{user &&
+				{account &&
 					<>
-						<MenuItem component={<Link to={`/user/${user.id}`} onClick={close} />}>
+						<MenuItem component={<Link to={`/channel/${account.channel.id}`} onClick={close} />}>
 							<i className="bi bi-person-fill"></i>
 							<span>Your channel</span>
 						</MenuItem>
@@ -56,7 +56,7 @@ export function Sidebar() {
 				}
 
 				{
-					user && <SidebarSubscriptions close={close} />
+					account && <SidebarSubscriptions close={close} />
 				}
 
 				<MenuItem component={<Link to='/trending' onClick={close} />}>

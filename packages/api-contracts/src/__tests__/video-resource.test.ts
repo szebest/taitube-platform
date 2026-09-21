@@ -8,6 +8,7 @@ import {
 
 const summary = {
   id: '00000000-0000-7000-8000-000000000001',
+  ownerId: '00000000-0000-7000-8000-000000000002',
   title: 'A video',
   description: null,
   visibility: 'public',

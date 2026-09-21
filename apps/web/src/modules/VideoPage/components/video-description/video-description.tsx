@@ -2,30 +2,27 @@ import { useState } from 'react';
 
 import styles from './video-description.module.scss';
 
+import type { Video } from '@vp/api-contracts';
+
 import { timeAgo } from 'src/lib';
 
-import { formatNumbers, mapCategory } from 'src/modules/shared/helpers';
-
-import { VideoDetails } from '../../models';
-
 export type VideoDescriptionProps = {
-	data: VideoDetails;
+	video: Video;
 }
 
-export const VideoDescription = ({ data }: VideoDescriptionProps) => {
+export const VideoDescription = ({ video }: VideoDescriptionProps) => {
 	const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
-	const descriptionSubstring = data.description.substring(0, 255);
+	const description = video.description ?? '';
+	const descriptionSubstring = description.substring(0, 255);
 
 	return (
 		<div className={styles.wrapper}>
 			<div className={styles.details}>
-				<span>{formatNumbers(data.views, data.views >= 10000 ? 0 : 1)} views</span>
-				<span title={new Date(data.createdAt).toLocaleString()}>{timeAgo.format(new Date(data.createdAt).getTime() - 10000)}</span>
-				<span className="chip">{mapCategory(data.category)}</span>
+				<span title={new Date(video.createdAt).toLocaleString()}>{timeAgo.format(new Date(video.createdAt).getTime() - 10000)}</span>
 			</div>
-			<span className={styles.description}>{descriptionExpanded ? data.description : descriptionSubstring}</span>
-			<button className={`${styles.descriptionExpandBtn} ${descriptionSubstring.length === data.description.length ? styles.hide : ''} ${descriptionExpanded ? styles.expanded : ''} btn`} onClick={() => setDescriptionExpanded(prev => !prev)}>
+			<span className={styles.description}>{descriptionExpanded ? description : descriptionSubstring}</span>
+			<button className={`${styles.descriptionExpandBtn} ${descriptionSubstring.length === description.length ? styles.hide : ''} ${descriptionExpanded ? styles.expanded : ''} btn`} onClick={() => setDescriptionExpanded(prev => !prev)}>
 				{descriptionExpanded ? 'Show less' : 'Show more'}
 			</button>
 		</div>

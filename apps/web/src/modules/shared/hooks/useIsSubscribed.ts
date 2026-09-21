@@ -1,13 +1,9 @@
-import { useMemo } from "react";
+import { useIsSubscribedQuery } from "../api";
 
-import { useGetUserSubscriptionsQuery } from "../api";
+export const useIsSubscribed = (channelId: string | undefined, isLoggedIn: boolean) => {
+	const { data, isLoading } = useIsSubscribedQuery(channelId ?? '', {
+		skip: !isLoggedIn || !channelId,
+	});
 
-export const useIsSubscribed = (userId: number, isLoggedIn: boolean) => {
-	const { data: subscriptionsArray, isLoading } = useGetUserSubscriptionsQuery({}, { skip: !isLoggedIn });
-
-	const data = useMemo(() => {
-		return subscriptionsArray?.find(x => x.userId === userId);
-	}, [subscriptionsArray, userId]);
-
-	return { isSubscribed: data?.isSubscribed, isLoading };
+	return { isSubscribed: data?.subscribed ?? false, isLoading };
 };

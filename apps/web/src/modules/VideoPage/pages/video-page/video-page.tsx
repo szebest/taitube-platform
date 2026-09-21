@@ -1,23 +1,25 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 
 import styles from './video-page.module.scss';
 
-import { VideoPlayer } from "src/modules/shared/components";
-import { CommentsSection, VideoDetails } from "../../components";
+import { useVideoQuery } from 'src/modules/shared/api';
 
-export type VideoPageProps = {
-	videoId?: number;
-}
+import { LoadingSpinner, VideoPlayer } from "src/modules/shared/components";
+import { VideoDetails } from "../../components";
 
-export function VideoPage({ videoId }: VideoPageProps) {
-	if (videoId === undefined) return <Navigate to="/" />
+export function VideoPage() {
+	const { videoId } = useParams();
+	const { data: video, isLoading } = useVideoQuery(videoId ?? '', { skip: !videoId });
+
+	if (!videoId) return <Navigate to="/" />
+	if (isLoading) return <LoadingSpinner />
+	if (!video) return null;
 
 	return (
 		<div className={styles.container}>
 			<div className={styles.container__wrapper}>
-				<VideoPlayer videoId={videoId} />
-				<VideoDetails videoId={videoId} />
-				<CommentsSection videoId={videoId} />
+				<VideoPlayer playbackUrl={video.playbackUrl} />
+				<VideoDetails video={video} />
 			</div>
 		</div>
 	)

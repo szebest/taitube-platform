@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint';
+import { defineEndpoint } from './endpoint.js';
 
 export const LivenessSchema = z.object({
   status: z.literal('ok'),

@@ -54,6 +54,7 @@ export const RenditionViewSchema = z.object({
 
 export const VideoSchema = z.object({
   id: z.string().uuid().describe('Video UUIDv7 identifier'),
+  ownerId: z.string().uuid().describe('Owning user UUID, for client-side ownership rules'),
   title: z.string().nullable().describe('Video title'),
   description: z.string().nullable().describe('Video description'),
   visibility: VideoVisibilitySchema,
@@ -88,6 +89,7 @@ export const VideoSchema = z.object({
 
 export const VideoSummarySchema = z.object({
   id: z.string().uuid().describe('Video UUIDv7 identifier'),
+  ownerId: z.string().uuid().describe('Owning user UUID, for client-side ownership rules'),
   title: z.string().nullable().describe('Video title'),
   description: z.string().nullable().describe('Video description'),
   visibility: VideoVisibilitySchema,

@@ -5,7 +5,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../providers';
 
 export function AuthorizedContainer({ children }: PropsWithChildren) {
-  const { user, isLoading } = useAuth();
+  const { account, isLoading } = useAuth();
 
   if (isLoading)
     return null;
@@ -13,7 +13,7 @@ export function AuthorizedContainer({ children }: PropsWithChildren) {
   return (
     <>
       {
-        user ?
+        account ?
           children :
           <Navigate to="/" replace />
       }

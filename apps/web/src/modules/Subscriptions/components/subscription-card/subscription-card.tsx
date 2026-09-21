@@ -2,27 +2,28 @@ import { Link } from "react-router-dom";
 
 import styles from "./subscription-card.module.scss";
 
-import { Subscription } from "src/modules/shared/models";
+import type { SubscribedChannel } from "@vp/api-contracts";
+
 import { ProfilePicture, SubscribeButton } from "src/modules/shared/components";
 
 export type SubscriptionCardProps = {
-	subscription: Subscription
+	channel: SubscribedChannel;
 }
 
-export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
-	const userProfileRoute = `/user/${subscription.userId}`;
+export function SubscriptionCard({ channel }: SubscriptionCardProps) {
+	const channelRoute = `/channel/${channel.id}`;
 
 	return (
 		<div className={styles.container}>
-			<Link to={userProfileRoute}>
-				<ProfilePicture src={subscription.profilePictureSrc} />
+			<Link to={channelRoute}>
+				<ProfilePicture src={channel.avatarUrl} />
 			</Link>
 			<div className={styles.container__wrapper}>
-				<Link to={userProfileRoute} title={subscription.userFullName}>
-					<p className={styles.text}>{subscription.userFullName}</p>
+				<Link to={channelRoute} title={channel.displayName}>
+					<p className={styles.text}>{channel.displayName}</p>
 				</Link>
 
-				<SubscribeButton {...subscription} />
+				<SubscribeButton channelId={channel.id} />
 			</div>
 		</div>
 	);

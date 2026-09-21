@@ -1,30 +1,30 @@
 import { memo } from "react";
+import { Dropdown } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import styles from './video-settings-dropdown.module.scss';
 
-import { Video } from "../../models";
+import type { VideoSummary } from "@vp/api-contracts";
 
-import { Dropdown } from "react-bootstrap";
 import { useDeleteVideoMutation } from "../../api";
 
 export type VideoSettingsDropdownProps = {
-	video: Omit<Video, 'thumbnailSrc'>;
+	video: Pick<VideoSummary, 'id'>;
 	shouldRedirectOnDelete?: boolean;
 }
 
 export const VideoSettingsDropdown = memo(({ video, shouldRedirectOnDelete }: VideoSettingsDropdownProps) => {
 	const navigate = useNavigate();
 
-	const [deleteVideoComment, { isLoading: isDeleteLoading }] = useDeleteVideoMutation();
+	const [deleteVideo, { isLoading: isDeleteLoading }] = useDeleteVideoMutation();
 
 	const handleEdit = () => {
 		navigate(`/upload/edit/${video.id}`);
 	}
 
 	const handleDelete = async () => {
-		const result = await deleteVideoComment(video.id);
+		const result = await deleteVideo(video.id);
 
 		if ("data" in result) {
 			toast(`Successfully deleted the video`);

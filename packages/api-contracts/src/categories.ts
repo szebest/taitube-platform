@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint';
+import { defineEndpoint } from './endpoint.js';
 
 export const CategorySchema = z.object({
   id: z.string().uuid().describe('Category unique identifier (UUID)'),

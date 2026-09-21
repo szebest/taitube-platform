@@ -3,63 +3,44 @@ import { toast } from "react-toastify";
 
 import styles from "./video-likes.module.scss";
 
+import type { Video } from "@vp/api-contracts";
+
 import { formatNumbers } from "src/modules/shared/helpers";
 
-import { useDeleteLikeFromVideoMutation, useLikeVideoMutation } from "../../api/videoApiSlice";
+import { useMyReactionQuery, useSetReactionMutation } from "src/modules/shared/api";
 import { useAuth } from "src/modules/shared/providers";
 
-import { VideoDetails } from "../../models";
-
 export type VideoLikesProps = {
-	data: VideoDetails;
-	videoId: number;
+	video: Video;
 };
 
-export const VideoLikes = ({ data, videoId }: VideoLikesProps) => {
-	const { user } = useAuth();
+export const VideoLikes = ({ video }: VideoLikesProps) => {
+	const { account } = useAuth();
 
-	const [likeVideo, { isLoading: isLikeVideoLoading }] = useLikeVideoMutation();
-	const [deleteLikeFromVideo, { isLoading: isDeleteLikeLoading }] = useDeleteLikeFromVideoMutation();
+	const { data: myReaction } = useMyReactionQuery(video.id, { skip: account === undefined });
+	const [setReaction, { isLoading }] = useSetReactionMutation();
 
-	const handleLike = () => {
-		if (!checkLoggedInStatus()) return;
+	const liked = myReaction?.reaction === 'LIKE';
+	const disliked = myReaction?.reaction === 'DISLIKE';
 
-		likeVideo({ videoId, value: 1 });
-	}
-
-	const handleDislike = () => {
-		if (!checkLoggedInStatus()) return;
-
-		likeVideo({ videoId, value: -1 });
-	}
-
-	const handleRemoveLikeOrDislike = () => {
-		if (!checkLoggedInStatus()) return;
-
-		deleteLikeFromVideo({ videoId, isLike: data.isLiked });
-	}
-
-	const checkLoggedInStatus = () => {
-		if (user === undefined) {
-			toast("You must be logged in to like a video")
-
-			return false;
+	const react = (type: 'LIKE' | 'DISLIKE' | 'NONE') => {
+		if (account === undefined) {
+			toast("You must be logged in to like a video");
+			return;
 		}
 
-		return true;
+		setReaction({ id: video.id, type });
 	}
-
-	const isDisabled = isLikeVideoLoading || isDeleteLikeLoading
 
 	return (
 		<ButtonGroup className={styles.container}>
 			<Button
-				className={`${data.isLiked ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
-				onClick={data.isLiked ? handleRemoveLikeOrDislike : handleLike}
-				disabled={isDisabled}
+				className={`${liked ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
+				onClick={() => react(liked ? 'NONE' : 'LIKE')}
+				disabled={isLoading}
 			>
-				<i className={`bi bi-hand-thumbs-up${data.isLiked ? '-fill' : ''}`}></i>
-				{formatNumbers(data.likes, data.likes >= 10000 ? 0 : 1)}
+				<i className={`bi bi-hand-thumbs-up${liked ? '-fill' : ''}`}></i>
+				{formatNumbers(video.likesCount, video.likesCount >= 10000 ? 0 : 1)}
 			</Button>
 
 			<button
@@ -69,12 +50,12 @@ export const VideoLikes = ({ data, videoId }: VideoLikesProps) => {
 			></button>
 
 			<Button
-				className={`${data.isDisliked ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
-				onClick={data.isDisliked ? handleRemoveLikeOrDislike : handleDislike}
-				disabled={isDisabled}
+				className={`${disliked ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
+				onClick={() => react(disliked ? 'NONE' : 'DISLIKE')}
+				disabled={isLoading}
 			>
-				<i className={`bi bi-hand-thumbs-down${data.isDisliked ? '-fill' : ''}`}></i>
-				{formatNumbers(data.dislikes, data.dislikes >= 10000 ? 0 : 1)}
+				<i className={`bi bi-hand-thumbs-down${disliked ? '-fill' : ''}`}></i>
+				{formatNumbers(video.dislikesCount, video.dislikesCount >= 10000 ? 0 : 1)}
 			</Button>
 		</ButtonGroup>
 	);

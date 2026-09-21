@@ -1,10 +1,9 @@
-import { useMemo } from "react";
 import { Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
 import styles from '../video-form.module.scss';
 
-import { getCategories } from "src/modules/shared/helpers";
+import { VIDEO_VISIBILITIES } from "@vp/api-contracts";
 
 import { EditVideoFormModel } from "src/modules/shared/models";
 
@@ -16,10 +15,6 @@ export type EditVideoFormProps = {
 }
 
 export const EditVideoForm = ({ isError, isLoading, defaultValues, submit }: EditVideoFormProps) => {
-	const categories = useMemo(() => {
-		return getCategories();
-	}, []);
-
 	const {
 		register,
 		handleSubmit,
@@ -38,11 +33,11 @@ export const EditVideoForm = ({ isError, isLoading, defaultValues, submit }: Edi
 				<Form.Control as="textarea" type="text" {...register('description', { required: true })} className={styles.form__textarea} />
 			</Form.Group>
 
-			<Form.Group controlId="category">
-				<Form.Label>Category</Form.Label>
-				<Form.Select defaultValue={-1} aria-label="Video category" {...register('category', { required: true })}>
-					{categories.map((category) => (
-						<option key={category.id} value={category.id}>{category.value}</option>
+			<Form.Group controlId="visibility">
+				<Form.Label>Visibility</Form.Label>
+				<Form.Select aria-label="Video visibility" {...register('visibility', { required: true })}>
+					{VIDEO_VISIBILITIES.map((visibility) => (
+						<option key={visibility} value={visibility}>{visibility}</option>
 					))}
 				</Form.Select>
 			</Form.Group>

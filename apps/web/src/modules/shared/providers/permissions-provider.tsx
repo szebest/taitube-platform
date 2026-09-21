@@ -32,12 +32,12 @@ const PermissionsContext = createContext<PermissionsContextValue | undefined>(un
 
 function useSafeAuthUser(): UserContext | null {
   try {
-    const { user } = useAuth();
-    if (!user) return null;
+    const { account } = useAuth();
+    if (!account) return null;
     return {
-      id: String(user.id),
-      role: parseRole((user as { role?: unknown }).role),
-      email: user.email,
+      id: account.user.id,
+      role: parseRole((account as { role?: unknown }).role),
+      email: account.user.email,
     };
   } catch {
     return null;

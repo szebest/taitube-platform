@@ -1,14 +1,16 @@
 import styles from './trending-page.module.scss';
 
-import { useTrendingVideosQuery } from '../../api';
+import type { PublicFeedQuery } from 'src/modules/shared/api';
+import { usePublicFeedQuery } from 'src/modules/shared/api';
 
-import { useIsView, useInfiniteScroll } from 'src/modules/shared/hooks';
+import { useInfiniteScroll, useIsView } from 'src/modules/shared/hooks';
 
 import { VideosContainer } from "src/modules/shared/components";
 
 export function TrendingPage() {
 	const [isListView, setIsListView] = useIsView();
-	const { loadMore, queryData } = useInfiniteScroll(useTrendingVideosQuery, { pageNumber: 0, pageSize: 30 });
+	const initialQuery: PublicFeedQuery = { sort: 'trending', limit: 30 };
+	const { loadMore, queryData } = useInfiniteScroll(usePublicFeedQuery, initialQuery);
 
 	return (
 		<div className={styles.container}>

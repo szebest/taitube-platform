@@ -4,22 +4,22 @@ import { useLocalStorage } from '@uidotdev/usehooks';
 
 import styles from './video-player.module.scss';
 
-import { API_BASE_URL } from 'src/config';
-
 export type VideoPlayerProps = {
-	videoId: number;
+	playbackUrl?: string;
 }
 
 const VOLUME_KEY = "VOLUME";
 
-export function VideoPlayer({ videoId }: VideoPlayerProps) {
+export function VideoPlayer({ playbackUrl }: VideoPlayerProps) {
 	const [volume, setVolume] = useLocalStorage(VOLUME_KEY, 1);
 	const [seeking, setSeeking] = useState(false);
+
+	if (!playbackUrl) return null;
 
 	return (
 		<div className={styles.container}>
 			<ReactPlayer
-				url={`${API_BASE_URL}/videos/${videoId}/manifest.mpd`}
+				url={playbackUrl}
 				playing={!seeking}
 				volume={volume}
 				controls

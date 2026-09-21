@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint';
-import { VideoIdParamSchema } from './video-resource';
+import { defineEndpoint } from './endpoint.js';
+import { VideoIdParamSchema } from './video-resource.js';
 
 export const EventStreamQuerySchema = z
   .object({

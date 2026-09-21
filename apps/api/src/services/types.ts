@@ -36,6 +36,7 @@ export interface VideoRenditionView {
 
 export interface VideoDetailView {
   id: string;
+  ownerId: string;
   title: string | null;
   description: string | null;
   visibility: VideoVisibility;
@@ -62,6 +63,7 @@ export interface VideoDetailView {
 
 export interface VideoSummaryView {
   id: string;
+  ownerId: string;
   title: string | null;
   description: string | null;
   visibility: VideoVisibility;
@@ -93,6 +95,7 @@ export interface VideoServiceDeps {
 export function toVideoSummaryView(v: VideoRecord, cleanCdnBase: string): VideoSummaryView {
   return {
     id: v.id,
+    ownerId: v.ownerId,
     title: v.title,
     description: v.description,
     visibility: v.visibility as VideoVisibility,
@@ -168,6 +171,7 @@ export function toVideoDetailView(
 
   return {
     id: video.id,
+    ownerId: video.ownerId,
     title: video.title,
     description: video.description,
     visibility: video.visibility as VideoVisibility,

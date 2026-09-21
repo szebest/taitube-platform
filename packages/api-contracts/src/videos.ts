@@ -1,14 +1,14 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint';
-import { CursorSchema, PageLimitSchema, decodeCursorPayload } from './pagination';
+import { defineEndpoint } from './endpoint.js';
+import { CursorSchema, PageLimitSchema, decodeCursorPayload } from './pagination.js';
 import {
   VideoIdParamSchema,
   VideoListResponseSchema,
   VideoSchema,
   VideoStatusSchema,
   VideoVisibilitySchema,
-} from './video-resource';
+} from './video-resource.js';
 
 function isKeysetCursor(cursor: string): boolean {
   const payload = decodeCursorPayload(cursor);
