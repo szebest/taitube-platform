@@ -1,0 +1,217 @@
+import {
+  InMemoryChannelRepository,
+  InMemoryEventRepository,
+  InMemoryOutboxRepository,
+  InMemoryRenditionRepository,
+  InMemoryStepRepository,
+  InMemorySubscriptionCache,
+  InMemorySubscriptionRepository,
+  InMemoryVideoRepository,
+} from '@vp/adapters';
+import { ErrorCodes } from '@vp/errors';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { AuthUser } from '../../plugins/auth';
+import { SubscriptionService } from '../subscription-service';
+
+describe('SubscriptionService', () => {
+  let channels: InMemoryChannelRepository;
+  let videos: InMemoryVideoRepository;
+  let subscriptions: InMemorySubscriptionRepository;
+  let cache: InMemorySubscriptionCache;
+  let service: SubscriptionService;
+
+  const creator = {
+    userId: '11111111-1111-7111-8111-111111111111',
+    channelId: '22222222-2222-7222-8222-222222222222',
+  };
+  const otherCreator = {
+    userId: '33333333-3333-7333-8333-333333333333',
+    channelId: '44444444-4444-7444-8444-444444444444',
+  };
+  const subscriber: AuthUser = {
+    id: '55555555-5555-7555-8555-555555555555',
+    email: 'subscriber@example.com',
+    role: 'USER',
+  };
+  const missingChannelId = '00000000-0000-0000-0000-000000000000';
+
+  beforeEach(async () => {
+    channels = new InMemoryChannelRepository();
+    videos = new InMemoryVideoRepository({
+      eventsRepo: new InMemoryEventRepository(),
+      outboxRepo: new InMemoryOutboxRepository(),
+      renditionsRepo: new InMemoryRenditionRepository(),
+      stepsRepo: new InMemoryStepRepository(),
+    });
+    subscriptions = new InMemorySubscriptionRepository({
+      channelsRepo: channels,
+      videosRepo: videos,
+    });
+    cache = new InMemorySubscriptionCache();
+    service = new SubscriptionService({ subscriptions, channels, subscriptionCache: cache });
+
+    await channels.create({
+      id: creator.channelId,
+      userId: creator.userId,
+      handle: 'creator_one',
+      displayName: 'Creator One',
+    });
+    await channels.create({
+      id: otherCreator.channelId,
+      userId: otherCreator.userId,
+      handle: 'creator_two',
+      displayName: 'Creator Two',
+    });
+  });
+
+  describe('subscribe / unsubscribe', () => {
+    it('reports the new state and count', async () => {
+      const result = await service.subscribe(subscriber, creator.channelId);
+
+      expect(result).toEqual({
+        channelId: creator.channelId,
+        subscribed: true,
+        subscriberCount: 1,
+      });
+    });
+
+    it('primes the cache so the next status check needs no query', async () => {
+      await service.subscribe(subscriber, creator.channelId);
+
+      expect(await cache.isSubscribed(subscriber.id, creator.channelId)).toBe(true);
+      expect(await cache.getSubscriberCount(creator.channelId)).toBe(1);
+    });
+
+    it('evicts the membership from the cache on unsubscribe', async () => {
+      await service.subscribe(subscriber, creator.channelId);
+      const result = await service.unsubscribe(subscriber, creator.channelId);
+
+      expect(result).toEqual({
+        channelId: creator.channelId,
+        subscribed: false,
+        subscriberCount: 0,
+      });
+      expect(await cache.isSubscribed(subscriber.id, creator.channelId)).toBe(false);
+    });
+
+    it('skips cache writes when the call changed nothing', async () => {
+      await service.subscribe(subscriber, creator.channelId);
+      const addSubscription = vi.spyOn(cache, 'addSubscription');
+
+      await service.subscribe(subscriber, creator.channelId);
+
+      expect(addSubscription).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { action: 'subscribe' as const },
+      { action: 'unsubscribe' as const },
+    ])('surfaces CHANNEL_NOT_FOUND from $action', async ({ action }) => {
+      await expect(service[action](subscriber, missingChannelId)).rejects.toThrowError(
+        expect.objectContaining({ code: ErrorCodes.CHANNEL_NOT_FOUND })
+      );
+    });
+  });
+
+  describe('isSubscribed', () => {
+    it('rejects an unknown channel before consulting the cache', async () => {
+      await expect(service.isSubscribed(subscriber, missingChannelId)).rejects.toThrowError(
+        expect.objectContaining({ code: ErrorCodes.CHANNEL_NOT_FOUND })
+      );
+    });
+
+    it('primes the full subscription set on a cache miss', async () => {
+      await subscriptions.subscribe(subscriber.id, creator.channelId);
+      await subscriptions.subscribe(subscriber.id, otherCreator.channelId);
+
+      const result = await service.isSubscribed(subscriber, creator.channelId);
+
+      expect(result).toEqual({ channelId: creator.channelId, subscribed: true });
+      expect(await cache.isSubscribed(subscriber.id, otherCreator.channelId)).toBe(true);
+    });
+
+    it('answers a primed miss without re-reading the repository', async () => {
+      await service.isSubscribed(subscriber, creator.channelId);
+      const getChannelIds = vi.spyOn(subscriptions, 'getUserSubscriptionChannelIds');
+
+      const result = await service.isSubscribed(subscriber, creator.channelId);
+
+      expect(result).toEqual({ channelId: creator.channelId, subscribed: false });
+      expect(getChannelIds).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('listSubscriptions', () => {
+    it('serialises the subscription timestamp and mints a cursor for the next page', async () => {
+      await service.subscribe(subscriber, creator.channelId);
+      await service.subscribe(subscriber, otherCreator.channelId);
+
+      const page = await service.listSubscriptions(subscriber, { limit: 1 });
+
+      expect(page.items).toHaveLength(1);
+      expect(page.items[0]?.subscribedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(page.nextCursor).toEqual(expect.any(String));
+    });
+
+    it('walks its own cursor to the second page without repeating a channel', async () => {
+      await service.subscribe(subscriber, creator.channelId);
+      await service.subscribe(subscriber, otherCreator.channelId);
+
+      const first = await service.listSubscriptions(subscriber, { limit: 1 });
+      const second = await service.listSubscriptions(subscriber, {
+        limit: 1,
+        cursor: first.nextCursor ?? undefined,
+      });
+
+      expect(second.items).toHaveLength(1);
+      expect(second.items[0]?.id).not.toBe(first.items[0]?.id);
+      expect(second.nextCursor).toBeNull();
+    });
+
+    it('returns no cursor when the last page fits', async () => {
+      await service.subscribe(subscriber, creator.channelId);
+
+      const page = await service.listSubscriptions(subscriber, { limit: 10 });
+
+      expect(page.items).toHaveLength(1);
+      expect(page.nextCursor).toBeNull();
+    });
+  });
+
+  describe('getFeed', () => {
+    beforeEach(async () => {
+      for (const [index, ownerId] of [creator.userId, creator.userId].entries()) {
+        await videos.create({
+          id: `66666666-6666-7666-8666-66666666666${index}`,
+          ownerId,
+          title: `Video ${index}`,
+          visibility: 'public',
+          status: 'READY',
+          sourceKey: `raw/v${index}.mp4`,
+        });
+      }
+    });
+
+    it('reports the unpaginated total alongside the page', async () => {
+      await service.subscribe(subscriber, creator.channelId);
+
+      const feed = await service.getFeed(subscriber, { limit: 1 });
+
+      expect(feed.items).toHaveLength(1);
+      expect(feed.total).toBe(2);
+      expect(feed.nextCursor).toEqual(expect.any(String));
+    });
+
+    it('is empty for a user who subscribes to nobody', async () => {
+      const feed = await service.getFeed(subscriber, { limit: 10 });
+
+      expect(feed).toEqual({ items: [], nextCursor: null, total: 0 });
+    });
+
+    it('rejects a malformed cursor', async () => {
+      await expect(service.getFeed(subscriber, { cursor: 'not-a-cursor' })).rejects.toThrowError(
+        expect.objectContaining({ code: ErrorCodes.VALIDATION_FAILED })
+      );
+    });
+  });
+});

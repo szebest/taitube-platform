@@ -49,6 +49,7 @@ export function registerSubscriptionsRoutes(
               'Bad request or cannot subscribe to own channel'
             ),
             401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
+            403: problemResponse([ErrorCodes.FORBIDDEN], 'Forbidden action'),
             404: problemResponse([ErrorCodes.CHANNEL_NOT_FOUND], 'Channel not found'),
           },
           ...(isAlias ? { hide: true } : {}),
@@ -56,7 +57,7 @@ export function registerSubscriptionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        request.authorize('channel:subscribe');
+        request.assertCan('channel:subscribe');
         const result = await subscriptionService.subscribe(user, request.params.id);
         return reply.status(200).send(result);
       }
@@ -79,6 +80,7 @@ export function registerSubscriptionsRoutes(
             200: UnsubscribeResponseSchema,
             400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
             401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
+            403: problemResponse([ErrorCodes.FORBIDDEN], 'Forbidden action'),
             404: problemResponse([ErrorCodes.CHANNEL_NOT_FOUND], 'Channel not found'),
           },
           ...(isAlias ? { hide: true } : {}),
@@ -86,6 +88,7 @@ export function registerSubscriptionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
+        request.assertCan('channel:subscribe');
         const result = await subscriptionService.unsubscribe(user, request.params.id);
         return reply.status(200).send(result);
       }

@@ -8,6 +8,8 @@ export const CoreEnvSchema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:8080'),
   PORT: z.coerce.number().int().positive().default(3000),
   METRICS_PORT: z.coerce.number().int().positive().default(9464),
+  PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(20),
+  PAGE_SIZE_MAX: z.coerce.number().int().positive().default(100),
   TURBO_TELEMETRY_DISABLED: z.string().default('1'),
   DO_NOT_TRACK: z.string().default('1'),
 });

@@ -903,11 +903,11 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `likesCount`, `dislikesCount`, `error?`) | Owner or public/unlisted. |
 | `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. |
 | `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
-| `POST /v1/channels/:id/subscribers` | Subscribe | — | `201 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
-| `DELETE /v1/channels/:id/subscribers` | Unsubscribe | — | `200 { channelId, subscriberCount, subscribed: false }` | Authenticated caller. Atomic DB mutation + Redis set sync. |
-| `GET /v1/channels/:id/subscribers/me` | Check subscription | — | `200 { channelId, subscribed: boolean }` | Authenticated caller. Served from Redis O(1) set. |
-| `GET /v1/me/subscriptions?cursor=&limit=` | Subscribed channels | — | `200 { items:[SubscribedChannelItem], nextCursor }` | Authenticated caller. Keyset pagination on `(created_at, channel_id)`. |
-| `GET /v1/feed/subscriptions?cursor=&limit=` | Subscribed video feed | — | `200 { items:[VideoRecord], nextCursor, total }` | Authenticated caller. Keyset pagination on `(created_at, id)` for `READY` + `public` videos. |
+| `POST /channels/:id/subscribers` | Subscribe | — | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
+| `DELETE /channels/:id/subscribers` | Unsubscribe | — | `200 { channelId, subscriberCount, subscribed: false }` | Authenticated caller (`channel:subscribe`). Idempotent. Atomic DB mutation + Redis set sync. |
+| `GET /channels/:id/subscribers/me` | Check subscription | — | `200 { channelId, subscribed: boolean }` | Authenticated caller. Served from the Redis O(1) set; a miss primes the whole set from Postgres. |
+| `GET /me/subscriptions?cursor=&limit=` | Subscribed channels | — | `200 { items:[SubscribedChannelItem], nextCursor }` | Authenticated caller. Keyset pagination on `(created_at, channel_id)`. |
+| `GET /feed/subscriptions?cursor=&limit=` | Subscribed video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Authenticated caller. Keyset pagination on `(created_at, id)` for `READY` + `public` videos. |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`. |
 | `DELETE /videos/:id` | Soft delete | — | `202` | Enqueues `housekeeping:purge-video`. |
 | `GET /videos/:id/events` | SSE stream | header `Last-Event-ID?` | `text/event-stream` | See §10. |
@@ -926,6 +926,28 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /readyz` | Readiness | — | `200/503` | Postgres `SELECT 1`, Redis `PING`, S3 `HeadBucket` (cached 10 s). |
 | `GET /metrics` | Prometheus | — | text | Bound to a separate port (`METRICS_PORT`) so it is never public. |
 | `GET /docs` | OpenAPI UI | — | HTML | Generated from zod schemas via `@fastify/swagger`. |
+
+### 6.1.1 Keyset pagination & cursors
+
+Every paginated endpoint shares one mechanism, in `@vp/core/pagination`, rather than
+re-deriving page maths per service:
+
+- **`Paginator`** owns the page bounds and the cursor codec. `limit(requested)` clamps a
+  request into `[1, maxLimit]`; `paginate(rows, limit, { cursorOf, toItem })` trims the
+  window and mints the next cursor.
+- **Repositories return `limit + 1` rows.** That extra row is the only evidence a further
+  page exists; it is trimmed before the response and never reaches the client. Repositories
+  never encode a cursor — the wire format is a transport concern.
+- **`CursorCodec` is pluggable.** `Base64UrlCursorCodec` (default) renders the keyset as an
+  opaque URL-safe token; `JsonCursorCodec` renders it readable for tests and debugging.
+  Swapping the codec changes no call site. It uses `btoa`/`atob` rather than `Buffer`, so the
+  same code runs under Node, Bun and the browser.
+- **Bounds are configuration, not constants.** `PAGE_SIZE_DEFAULT` (20) and `PAGE_SIZE_MAX`
+  (100) are read once in the composition root (`apps/api/src/app.ts`) and injected; tests and
+  callers override by passing their own `Paginator`.
+
+A malformed cursor raises `InvalidCursorError` in core, which the API layer translates into
+`400 VALIDATION_FAILED`.
 
 ### 6.2 Error codes (stable, machine-readable)
 

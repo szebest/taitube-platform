@@ -17,14 +17,11 @@ export interface SubscribedChannelItem {
   subscribedAt: Date;
 }
 
-export interface SubscribeResult {
-  subscribed: boolean;
+/**
+ * Outcome of an idempotent subscribe/unsubscribe. `changed` is false when the
+ * call was a no-op, which lets callers skip redundant cache writes.
+ */
+export interface SubscriptionChangeResult {
   subscriberCount: number;
-  isNew: boolean;
-}
-
-export interface UnsubscribeResult {
-  subscribed: boolean;
-  subscriberCount: number;
-  wasSubscribed: boolean;
+  changed: boolean;
 }

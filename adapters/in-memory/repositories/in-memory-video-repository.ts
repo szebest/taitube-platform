@@ -88,7 +88,6 @@ export class InMemoryVideoRepository extends VideoRepository {
     return Array.from(this.videosMap.values());
   }
 
-
   private async getEvents(id: string): Promise<VideoEventRecord[]> {
     if (this.eventsRepo) return this.eventsRepo.findByVideoId(id);
     return this.eventsList ? this.eventsList.filter((e) => e.videoId === id) : [];

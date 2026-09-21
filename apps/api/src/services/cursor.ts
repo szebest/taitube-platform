@@ -1,3 +1,9 @@
+import {
+  type CursorPayload,
+  InvalidCursorError,
+  defaultPaginator,
+  type Paginator,
+} from '@vp/core/pagination';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 
 export type FeedSort = 'recent' | 'popular' | 'trending';
@@ -7,105 +13,114 @@ export type DecodedFeedCursor =
   | { sort: 'popular'; viewsCount: number; id: string }
   | { sort: 'trending'; score: number; id: string };
 
-export function encodeVideoCursor(v: { createdAt: Date | string; id: string }): string {
-  const d =
-    v.createdAt instanceof Date ? v.createdAt.toISOString() : new Date(v.createdAt).toISOString();
-  return Buffer.from(JSON.stringify({ createdAt: d, id: v.id })).toString('base64url');
+function invalidCursor(): never {
+  throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
 }
 
-export function decodeVideoCursor(cursor?: string): { createdAt: Date; id: string } | null {
-  if (!cursor) return null;
+/** Translates the codec's failure into the transport error the API reports. */
+function payloadOf(cursor: string | undefined, paginator: Paginator): CursorPayload | null {
   try {
-    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
-    if (parsed && typeof parsed.createdAt === 'string' && typeof parsed.id === 'string') {
-      const date = new Date(parsed.createdAt);
-      if (!Number.isNaN(date.getTime())) return { createdAt: date, id: parsed.id };
-    }
-  } catch {
-    throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
+    return paginator.decodeCursor(cursor);
+  } catch (err) {
+    if (err instanceof InvalidCursorError) invalidCursor();
+    throw err;
   }
-  throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
+}
+
+function isoOf(value: Date | string): string {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
+function parseDate(value: unknown): Date {
+  if (typeof value !== 'string') invalidCursor();
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) invalidCursor();
+  return date;
+}
+
+function parseId(value: unknown): string {
+  if (typeof value !== 'string') invalidCursor();
+  return value;
+}
+
+export function videoCursorPayload(v: { createdAt: Date | string; id: string }): CursorPayload {
+  return { createdAt: isoOf(v.createdAt), id: v.id };
+}
+
+export function subscriptionCursorPayload(item: {
+  createdAt: Date | string;
+  channelId: string;
+}): CursorPayload {
+  return { createdAt: isoOf(item.createdAt), channelId: item.channelId };
+}
+
+export function feedCursorPayload(
+  v: { createdAt: Date | string; id: string; viewsCount?: number },
+  sort: FeedSort,
+  score?: number
+): CursorPayload {
+  if (sort === 'popular') return { sort, viewsCount: v.viewsCount ?? 0, id: v.id };
+  if (sort === 'trending') return { sort, score: score ?? 0, id: v.id };
+  return { sort: 'recent', createdAt: isoOf(v.createdAt), id: v.id };
+}
+
+export function encodeVideoCursor(
+  v: { createdAt: Date | string; id: string },
+  paginator: Paginator = defaultPaginator
+): string {
+  return paginator.encodeCursor(videoCursorPayload(v));
+}
+
+export function decodeVideoCursor(
+  cursor?: string,
+  paginator: Paginator = defaultPaginator
+): { createdAt: Date; id: string } | null {
+  const parsed = payloadOf(cursor, paginator);
+  if (!parsed) return null;
+  return { createdAt: parseDate(parsed.createdAt), id: parseId(parsed.id) };
+}
+
+export function encodeSubscriptionCursor(
+  item: { createdAt: Date | string; channelId: string },
+  paginator: Paginator = defaultPaginator
+): string {
+  return paginator.encodeCursor(subscriptionCursorPayload(item));
+}
+
+export function decodeSubscriptionCursor(
+  cursor?: string,
+  paginator: Paginator = defaultPaginator
+): { createdAt: Date; channelId: string } | null {
+  const parsed = payloadOf(cursor, paginator);
+  if (!parsed) return null;
+  return { createdAt: parseDate(parsed.createdAt), channelId: parseId(parsed.channelId) };
 }
 
 export function encodeFeedCursor(
   v: { createdAt: Date | string; id: string; viewsCount?: number },
   sort: FeedSort,
-  score?: number
+  score?: number,
+  paginator: Paginator = defaultPaginator
 ): string {
-  if (sort === 'popular') {
-    return Buffer.from(
-      JSON.stringify({ sort: 'popular', viewsCount: v.viewsCount ?? 0, id: v.id })
-    ).toString('base64url');
-  }
-  if (sort === 'trending') {
-    return Buffer.from(JSON.stringify({ sort: 'trending', score: score ?? 0, id: v.id })).toString(
-      'base64url'
-    );
-  }
-  const d =
-    v.createdAt instanceof Date ? v.createdAt.toISOString() : new Date(v.createdAt).toISOString();
-  return Buffer.from(JSON.stringify({ sort: 'recent', createdAt: d, id: v.id })).toString(
-    'base64url'
-  );
+  return paginator.encodeCursor(feedCursorPayload(v, sort, score));
 }
 
-export function decodeFeedCursor(cursor?: string): DecodedFeedCursor | null {
-  if (!cursor) return null;
-  try {
-    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
-    if (!parsed || typeof parsed !== 'object' || typeof parsed.id !== 'string') {
-      throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
-    }
+export function decodeFeedCursor(
+  cursor?: string,
+  paginator: Paginator = defaultPaginator
+): DecodedFeedCursor | null {
+  const parsed = payloadOf(cursor, paginator);
+  if (!parsed) return null;
 
-    if (parsed.sort === 'popular') {
-      if (typeof parsed.viewsCount === 'number') {
-        return { sort: 'popular', viewsCount: parsed.viewsCount, id: parsed.id };
-      }
-    } else if (parsed.sort === 'trending') {
-      if (typeof parsed.score === 'number') {
-        return { sort: 'trending', score: parsed.score, id: parsed.id };
-      }
-    } else if (parsed.sort === 'recent' || typeof parsed.createdAt === 'string') {
-      const date = new Date(parsed.createdAt);
-      if (!Number.isNaN(date.getTime())) {
-        return { sort: 'recent', createdAt: date, id: parsed.id };
-      }
-    }
-  } catch (err) {
-    if (err instanceof PermanentError) throw err;
-    throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
+  const id = parseId(parsed.id);
+  if (parsed.sort === 'popular' && typeof parsed.viewsCount === 'number') {
+    return { sort: 'popular', viewsCount: parsed.viewsCount, id };
   }
-  throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
-}
-
-export function encodeSubscriptionCursor(item: {
-  createdAt: Date | string;
-  channelId: string;
-}): string {
-  const d =
-    item.createdAt instanceof Date
-      ? item.createdAt.toISOString()
-      : new Date(item.createdAt).toISOString();
-  return Buffer.from(JSON.stringify({ createdAt: d, channelId: item.channelId })).toString(
-    'base64url'
-  );
-}
-
-export function decodeSubscriptionCursor(
-  cursor?: string
-): { createdAt: Date; channelId: string } | null {
-  if (!cursor) return null;
-  try {
-    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
-    if (parsed && typeof parsed.createdAt === 'string' && typeof parsed.channelId === 'string') {
-      const date = new Date(parsed.createdAt);
-      if (!Number.isNaN(date.getTime())) {
-        return { createdAt: date, channelId: parsed.channelId };
-      }
-    }
-  } catch {
-    throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
+  if (parsed.sort === 'trending' && typeof parsed.score === 'number') {
+    return { sort: 'trending', score: parsed.score, id };
   }
-  throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
+  if (parsed.sort === 'recent' || typeof parsed.createdAt === 'string') {
+    return { sort: 'recent', createdAt: parseDate(parsed.createdAt), id };
+  }
+  invalidCursor();
 }
-

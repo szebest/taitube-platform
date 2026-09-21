@@ -3,7 +3,7 @@ import {
   InMemoryDatabaseClient,
   InMemoryRepositories,
   InMemoryStorageClient,
-  SubscriptionCacheService,
+  InMemorySubscriptionCache,
 } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
@@ -14,7 +14,7 @@ import { buildApp } from '../app';
 describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
   let app: FastifyInstance;
   let repos: InMemoryRepositories;
-  let cacheService: SubscriptionCacheService;
+  let cacheService: InMemorySubscriptionCache;
 
   const creatorUser = {
     id: '11111111-1111-7111-8111-111111111111',
@@ -51,7 +51,7 @@ describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
 
   beforeAll(async () => {
     repos = new InMemoryRepositories();
-    cacheService = new SubscriptionCacheService();
+    cacheService = new InMemorySubscriptionCache();
 
     // Seed users
     await repos.users.upsert({

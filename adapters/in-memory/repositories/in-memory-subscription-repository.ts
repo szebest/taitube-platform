@@ -1,101 +1,93 @@
 import type {
-  ChannelRepositoryPort,
   ChannelSubscription,
   ListSubscriptionsOptions,
   SubscribedChannelItem,
-  SubscribeResult,
+  SubscriptionChangeResult,
   SubscriptionFeedOptions,
   SubscriptionRepositoryPort,
-  UnsubscribeResult,
   VideoRecord,
-  VideoRepository,
 } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { uuidv7 } from 'uuidv7';
-
-const toCursor = (d: unknown) => Buffer.from(JSON.stringify(d)).toString('base64url');
+import type { InMemoryChannelRepository } from './in-memory-channel-repository';
+import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 export interface InMemorySubscriptionRepositoryOptions {
-  channelsRepo?: ChannelRepositoryPort;
-  videosRepo?: VideoRepository;
+  channelsRepo: InMemoryChannelRepository;
+  videosRepo: InMemoryVideoRepository;
+}
+
+/** Descending keyset comparison matching `ORDER BY createdAt DESC, tie DESC`. */
+function isBeforeCursor(
+  row: { createdAt: Date; tie: string },
+  cursor: { createdAt: Date; tie: string }
+): boolean {
+  const delta = row.createdAt.getTime() - cursor.createdAt.getTime();
+  if (delta !== 0) return delta < 0;
+  return row.tie < cursor.tie;
+}
+
+function byCreatedAtDesc(a: { createdAt: Date; tie: string }, b: { createdAt: Date; tie: string }) {
+  const delta = b.createdAt.getTime() - a.createdAt.getTime();
+  return delta !== 0 ? delta : b.tie.localeCompare(a.tie);
 }
 
 export class InMemorySubscriptionRepository implements SubscriptionRepositoryPort {
   private readonly subscriptions = new Map<string, ChannelSubscription>();
-  private channelsRepo?: ChannelRepositoryPort;
-  private videosRepo?: VideoRepository;
+  private readonly channelsRepo: InMemoryChannelRepository;
+  private readonly videosRepo: InMemoryVideoRepository;
 
-  constructor(options: InMemorySubscriptionRepositoryOptions = {}) {
+  constructor(options: InMemorySubscriptionRepositoryOptions) {
     this.channelsRepo = options.channelsRepo;
     this.videosRepo = options.videosRepo;
-  }
-
-  setChannelsRepo(repo: ChannelRepositoryPort): void {
-    this.channelsRepo = repo;
-  }
-
-  setVideosRepo(repo: VideoRepository): void {
-    this.videosRepo = repo;
   }
 
   private key(subscriberId: string, channelId: string): string {
     return `${subscriberId}:${channelId}`;
   }
 
-  async subscribe(subscriberId: string, channelId: string): Promise<SubscribeResult> {
-    const channel = this.channelsRepo ? await this.channelsRepo.findById(channelId) : null;
-    if (!channel && this.channelsRepo) {
+  private async requireChannel(channelId: string) {
+    const channel = await this.channelsRepo.findById(channelId);
+    if (!channel) {
       throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, 'Channel not found');
     }
-    if (channel && channel.userId === subscriberId) {
+    return channel;
+  }
+
+  async subscribe(subscriberId: string, channelId: string): Promise<SubscriptionChangeResult> {
+    const channel = await this.requireChannel(channelId);
+    if (channel.userId === subscriberId) {
       throw new PermanentError(
         ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF,
         'Cannot subscribe to your own channel'
       );
     }
 
-    const k = this.key(subscriberId, channelId);
-    const existing = this.subscriptions.get(k);
-    let subscriberCount = channel?.subscriberCount ?? 0;
-
-    if (!existing) {
-      const sub: ChannelSubscription = {
-        id: uuidv7(),
-        subscriberId,
-        channelId,
-        createdAt: new Date(),
-      };
-      this.subscriptions.set(k, sub);
-      subscriberCount += 1;
-      if (channel && this.channelsRepo) {
-        channel.subscriberCount = subscriberCount;
-      }
-      return { subscribed: true, subscriberCount, isNew: true };
+    const key = this.key(subscriberId, channelId);
+    if (this.subscriptions.has(key)) {
+      return { subscriberCount: channel.subscriberCount, changed: false };
     }
 
-    return { subscribed: true, subscriberCount, isNew: false };
+    this.subscriptions.set(key, {
+      id: uuidv7(),
+      subscriberId,
+      channelId,
+      createdAt: new Date(),
+    });
+    const subscriberCount = await this.channelsRepo.adjustSubscriberCount(channelId, 1);
+    return { subscriberCount, changed: true };
   }
 
-  async unsubscribe(subscriberId: string, channelId: string): Promise<UnsubscribeResult> {
-    const channel = this.channelsRepo ? await this.channelsRepo.findById(channelId) : null;
-    if (!channel && this.channelsRepo) {
-      throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, 'Channel not found');
+  async unsubscribe(subscriberId: string, channelId: string): Promise<SubscriptionChangeResult> {
+    const channel = await this.requireChannel(channelId);
+
+    const key = this.key(subscriberId, channelId);
+    if (!this.subscriptions.delete(key)) {
+      return { subscriberCount: channel.subscriberCount, changed: false };
     }
 
-    const k = this.key(subscriberId, channelId);
-    const existing = this.subscriptions.get(k);
-    let subscriberCount = channel?.subscriberCount ?? 0;
-
-    if (existing) {
-      this.subscriptions.delete(k);
-      subscriberCount = Math.max(0, subscriberCount - 1);
-      if (channel && this.channelsRepo) {
-        channel.subscriberCount = subscriberCount;
-      }
-      return { subscribed: false, subscriberCount, wasSubscribed: true };
-    }
-
-    return { subscribed: false, subscriberCount, wasSubscribed: false };
+    const subscriberCount = await this.channelsRepo.adjustSubscriberCount(channelId, -1);
+    return { subscriberCount, changed: true };
   }
 
   async isSubscribed(subscriberId: string, channelId: string): Promise<boolean> {
@@ -103,160 +95,78 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   async getUserSubscriptionChannelIds(subscriberId: string): Promise<string[]> {
-    const result: string[] = [];
-    for (const sub of this.subscriptions.values()) {
-      if (sub.subscriberId === subscriberId) {
-        result.push(sub.channelId);
-      }
-    }
-    return result;
+    return this.userSubscriptions(subscriberId).map((s) => s.channelId);
   }
 
   async getSubscriberCount(channelId: string): Promise<number> {
-    if (this.channelsRepo) {
-      const ch = await this.channelsRepo.findById(channelId);
-      if (ch) return ch.subscriberCount;
-    }
-    let count = 0;
-    for (const sub of this.subscriptions.values()) {
-      if (sub.channelId === channelId) count++;
-    }
-    return count;
+    const channel = await this.channelsRepo.findById(channelId);
+    return channel?.subscriberCount ?? 0;
   }
 
   async listUserSubscriptions(
     subscriberId: string,
     options: ListSubscriptionsOptions
-  ): Promise<{ items: SubscribedChannelItem[]; nextCursor: string | null }> {
-    const userSubs: ChannelSubscription[] = [];
-    for (const sub of this.subscriptions.values()) {
-      if (sub.subscriberId === subscriberId) {
-        userSubs.push(sub);
-      }
-    }
+  ): Promise<SubscribedChannelItem[]> {
+    const cursor = options.cursor && {
+      createdAt: options.cursor.createdAt,
+      tie: options.cursor.channelId,
+    };
 
-    userSubs.sort((a, b) => {
-      const diff = b.createdAt.getTime() - a.createdAt.getTime();
-      return diff !== 0 ? diff : b.channelId.localeCompare(a.channelId);
-    });
-
-    const cursor = options.cursor;
-    const filtered = cursor
-      ? userSubs.filter((s) => {
-          const cursorDate =
-            cursor.createdAt instanceof Date
-              ? cursor.createdAt
-              : new Date(cursor.createdAt);
-          const sDate = s.createdAt instanceof Date ? s.createdAt : new Date(s.createdAt);
-          const timeDiff = sDate.getTime() - cursorDate.getTime();
-          if (timeDiff < 0) return true;
-          if (timeDiff === 0) return s.channelId < cursor.channelId;
-          return false;
-        })
-      : userSubs;
-
-    const hasMore = filtered.length > options.limit;
-    const page = hasMore ? filtered.slice(0, options.limit) : filtered;
+    const page = this.userSubscriptions(subscriberId)
+      .map((sub) => ({ sub, createdAt: sub.createdAt, tie: sub.channelId }))
+      .sort(byCreatedAtDesc)
+      .filter((row) => !cursor || isBeforeCursor(row, cursor))
+      .slice(0, options.limit + 1);
 
     const items: SubscribedChannelItem[] = [];
-    for (const sub of page) {
-      const ch = this.channelsRepo ? await this.channelsRepo.findById(sub.channelId) : null;
-      if (ch) {
-        items.push({
-          id: ch.id,
-          userId: ch.userId,
-          handle: ch.handle,
-          displayName: ch.displayName,
-          avatarUrl: ch.avatarUrl,
-          bannerUrl: ch.bannerUrl,
-          bio: ch.bio,
-          subscriberCount: ch.subscriberCount,
-          subscribedAt: sub.createdAt,
-        });
-      }
+    for (const { sub } of page) {
+      const channel = await this.channelsRepo.findById(sub.channelId);
+      if (!channel) continue;
+      const { createdAt: _createdAt, updatedAt: _updatedAt, ...profile } = channel;
+      items.push({ ...profile, subscribedAt: sub.createdAt });
     }
-
-    const lastSub = items[items.length - 1];
-    const nextCursor =
-      hasMore && lastSub
-        ? toCursor({
-            createdAt: lastSub.subscribedAt.toISOString(),
-            channelId: lastSub.id,
-          })
-        : null;
-
-    return { items, nextCursor };
+    return items;
   }
 
   async getSubscriptionFeed(
     subscriberId: string,
     options: SubscriptionFeedOptions
-  ): Promise<{ items: VideoRecord[]; nextCursor: string | null; total: number }> {
-    const channelIds = await this.getUserSubscriptionChannelIds(subscriberId);
-    const creatorUserIds = new Set<string>();
-
-    if (this.channelsRepo) {
-      for (const chId of channelIds) {
-        const ch = await this.channelsRepo.findById(chId);
-        if (ch) creatorUserIds.add(ch.userId);
-      }
+  ): Promise<{ items: VideoRecord[]; total: number }> {
+    const ownerIds = new Set<string>();
+    for (const channelId of await this.getUserSubscriptionChannelIds(subscriberId)) {
+      const channel = await this.channelsRepo.findById(channelId);
+      if (channel) ownerIds.add(channel.userId);
     }
 
-    const allMatching: VideoRecord[] = [];
-    if (this.videosRepo) {
-      const allVideos =
-        typeof (this.videosRepo as unknown as { getAllVideos?: () => VideoRecord[] }).getAllVideos === 'function'
-          ? (this.videosRepo as unknown as { getAllVideos: () => VideoRecord[] }).getAllVideos()
-          : 'videosMap' in (this.videosRepo as unknown as Record<string, unknown>)
-            ? Array.from((this.videosRepo as unknown as { videosMap: Map<string, VideoRecord> }).videosMap.values())
-            : [];
-      for (const v of allVideos) {
-        if (
-          creatorUserIds.has(v.ownerId) &&
+    const matching = this.videosRepo
+      .getAllVideos()
+      .filter(
+        (v) =>
+          ownerIds.has(v.ownerId) &&
           v.visibility === 'public' &&
           v.status === 'READY' &&
           !v.deletedAt
-        ) {
-          allMatching.push(v);
-        }
-      }
-    }
+      )
+      .map((video) => ({ video, createdAt: video.createdAt, tie: video.id }))
+      .sort(byCreatedAtDesc);
 
-    allMatching.sort((a, b) => {
-      const diff = b.createdAt.getTime() - a.createdAt.getTime();
-      return diff !== 0 ? diff : b.id.localeCompare(a.id);
-    });
+    const cursor = options.cursor && {
+      createdAt: options.cursor.createdAt,
+      tie: options.cursor.id,
+    };
 
-    const total = allMatching.length;
+    const items = matching
+      .filter((row) => !cursor || isBeforeCursor(row, cursor))
+      .slice(0, options.limit + 1)
+      .map((row) => row.video);
 
-    const cursor = options.cursor;
-    const filtered = cursor
-      ? allMatching.filter((v) => {
-          const cursorDate =
-            cursor.createdAt instanceof Date
-              ? cursor.createdAt
-              : new Date(cursor.createdAt);
-          const vDate = v.createdAt instanceof Date ? v.createdAt : new Date(v.createdAt);
-          const timeDiff = vDate.getTime() - cursorDate.getTime();
-          if (timeDiff < 0) return true;
-          if (timeDiff === 0) return v.id < cursor.id;
-          return false;
-        })
-      : allMatching;
+    return { items, total: matching.length };
+  }
 
-    const hasMore = filtered.length > options.limit;
-    const items = hasMore ? filtered.slice(0, options.limit) : filtered;
-
-    const lastVideo = items[items.length - 1];
-    const nextCursor =
-      hasMore && lastVideo
-        ? toCursor({
-            createdAt: lastVideo.createdAt.toISOString(),
-            id: lastVideo.id,
-          })
-        : null;
-
-    return { items, nextCursor, total };
+  private userSubscriptions(subscriberId: string): ChannelSubscription[] {
+    return Array.from(this.subscriptions.values()).filter(
+      (sub) => sub.subscriberId === subscriberId
+    );
   }
 
   clear(): void {

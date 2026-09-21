@@ -19,7 +19,8 @@ import {
   RedisReactionCacheAdapter,
   S3MultipartStorage,
   S3StorageClient,
-  SubscriptionCacheService,
+  RedisSubscriptionCacheAdapter,
+  InMemorySubscriptionCache,
 } from '@vp/adapters';
 import type {
   AuthorizationPort,
@@ -32,6 +33,7 @@ import type {
   StorageClient,
   SubscriptionCachePort,
 } from '@vp/core/ports';
+import { Paginator } from '@vp/core/pagination';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import { getMetrics } from '@vp/observability';
@@ -83,6 +85,7 @@ export interface BuildAppOptions {
   jobQueue?: JobQueue;
   rawBucket?: string;
   cdnBaseUrl?: string;
+  paginator?: Paginator;
   rateLimitMax?: number;
   maxUploadBytes?: number;
   multipartThresholdBytes?: number;
@@ -159,6 +162,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const rawBucket = options.rawBucket ?? process.env['STORAGE_RAW_BUCKET'] ?? 'raw';
   const cdnBaseUrl =
     options.cdnBaseUrl ?? process.env['CDN_BASE_URL'] ?? 'http://localhost:9000/public';
+
+  const paginator =
+    options.paginator ??
+    new Paginator({
+      defaultLimit: Number(process.env['PAGE_SIZE_DEFAULT']) || undefined,
+      maxLimit: Number(process.env['PAGE_SIZE_MAX']) || undefined,
+    });
 
   // 1. Configure Zod Type Provider
   app.setValidatorCompiler(validatorCompiler);
@@ -291,6 +301,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     cdnBaseUrl,
     reactionCache,
     authorization,
+    paginator,
   });
 
   registerVideosRoutes(app, {
@@ -350,9 +361,9 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   const subscriptionCache =
     options.subscriptionCache ??
-    new SubscriptionCacheService({
-      redis: options.cache instanceof RedisCacheClient ? options.cache.getRedis() : undefined,
-    });
+    (cache instanceof RedisCacheClient
+      ? new RedisSubscriptionCacheAdapter({ redis: cache.getRedis() })
+      : new InMemorySubscriptionCache());
 
   const subscriptionService =
     options.subscriptionService ??
@@ -361,6 +372,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       channels: repositories.channels,
       subscriptionCache,
       cdnBaseUrl,
+      paginator,
     });
 
   registerSubscriptionsRoutes(app, {

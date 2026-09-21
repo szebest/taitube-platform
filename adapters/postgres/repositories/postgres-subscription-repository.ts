@@ -2,31 +2,48 @@ import { DatabaseError } from '@vp/core/ports';
 import type {
   ListSubscriptionsOptions,
   SubscribedChannelItem,
-  SubscribeResult,
+  SubscriptionChangeResult,
   SubscriptionFeedOptions,
   SubscriptionRepositoryPort,
-  UnsubscribeResult,
   VideoRecord,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { and, desc, eq, lt, or, sql } from 'drizzle-orm';
+import { and, desc, eq, lt, or, type SQL, sql } from 'drizzle-orm';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
+import { drizzleWhere, notDeletedScope, publicVisibilityScope } from '../scopes/index';
 
 const { channelSubscriptions: cs, channels: ch, videos: v } = schema;
-const toCursor = (d: unknown) => Buffer.from(JSON.stringify(d)).toString('base64url');
+
 const dbErr = (msg: string, err: unknown) =>
   new DatabaseError(`${msg}: ${(err as Error).message}`, { cause: err });
+
+/**
+ * `(sort, tie) < (cursor.createdAt, cursor.tie)` in descending keyset order,
+ * so a row is never skipped or repeated when two rows share a timestamp.
+ */
+function keysetBefore(
+  sortColumn: AnyPgColumn,
+  tieColumn: AnyPgColumn,
+  cursor?: { createdAt: Date; tie: string }
+): SQL | undefined {
+  if (!cursor) return undefined;
+  return or(
+    lt(sortColumn, cursor.createdAt),
+    and(eq(sortColumn, cursor.createdAt), lt(tieColumn, cursor.tie))
+  );
+}
 
 export class PostgresSubscriptionRepository implements SubscriptionRepositoryPort {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {}
 
-  async subscribe(subscriberId: string, channelId: string): Promise<SubscribeResult> {
+  async subscribe(subscriberId: string, channelId: string): Promise<SubscriptionChangeResult> {
     try {
       return await this.db.transaction(async (tx) => {
         const [channel] = await tx
-          .select({ id: ch.id, userId: ch.userId, subscriberCount: ch.subscriberCount })
+          .select({ userId: ch.userId, subscriberCount: ch.subscriberCount })
           .from(ch)
           .where(eq(ch.id, channelId));
 
@@ -42,19 +59,22 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           .insert(cs)
           .values({ id: uuidv7(), subscriberId, channelId, createdAt: new Date() })
           .onConflictDoNothing()
-          .returning();
+          .returning({ id: cs.id });
 
-        let subscriberCount = channel.subscriberCount;
-        if (inserted) {
-          const [updated] = await tx
-            .update(ch)
-            .set({ subscriberCount: sql`${ch.subscriberCount} + 1`, updatedAt: new Date() })
-            .where(eq(ch.id, channelId))
-            .returning({ subscriberCount: ch.subscriberCount });
-          if (updated) subscriberCount = updated.subscriberCount;
+        if (!inserted) {
+          return { subscriberCount: channel.subscriberCount, changed: false };
         }
 
-        return { subscribed: true, subscriberCount, isNew: Boolean(inserted) };
+        const [updated] = await tx
+          .update(ch)
+          .set({ subscriberCount: sql`${ch.subscriberCount} + 1`, updatedAt: new Date() })
+          .where(eq(ch.id, channelId))
+          .returning({ subscriberCount: ch.subscriberCount });
+
+        return {
+          subscriberCount: updated?.subscriberCount ?? channel.subscriberCount + 1,
+          changed: true,
+        };
       });
     } catch (err) {
       if (err instanceof PermanentError) throw err;
@@ -62,11 +82,11 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     }
   }
 
-  async unsubscribe(subscriberId: string, channelId: string): Promise<UnsubscribeResult> {
+  async unsubscribe(subscriberId: string, channelId: string): Promise<SubscriptionChangeResult> {
     try {
       return await this.db.transaction(async (tx) => {
         const [channel] = await tx
-          .select({ id: ch.id, subscriberCount: ch.subscriberCount })
+          .select({ subscriberCount: ch.subscriberCount })
           .from(ch)
           .where(eq(ch.id, channelId));
 
@@ -75,22 +95,25 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
         const [deleted] = await tx
           .delete(cs)
           .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
-          .returning();
+          .returning({ id: cs.id });
 
-        let subscriberCount = channel.subscriberCount;
-        if (deleted) {
-          const [updated] = await tx
-            .update(ch)
-            .set({
-              subscriberCount: sql`GREATEST(0, ${ch.subscriberCount} - 1)`,
-              updatedAt: new Date(),
-            })
-            .where(eq(ch.id, channelId))
-            .returning({ subscriberCount: ch.subscriberCount });
-          if (updated) subscriberCount = updated.subscriberCount;
+        if (!deleted) {
+          return { subscriberCount: channel.subscriberCount, changed: false };
         }
 
-        return { subscribed: false, subscriberCount, wasSubscribed: Boolean(deleted) };
+        const [updated] = await tx
+          .update(ch)
+          .set({
+            subscriberCount: sql`GREATEST(0, ${ch.subscriberCount} - 1)`,
+            updatedAt: new Date(),
+          })
+          .where(eq(ch.id, channelId))
+          .returning({ subscriberCount: ch.subscriberCount });
+
+        return {
+          subscriberCount: updated?.subscriberCount ?? Math.max(0, channel.subscriberCount - 1),
+          changed: true,
+        };
       });
     } catch (err) {
       if (err instanceof PermanentError) throw err;
@@ -138,20 +161,9 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
   async listUserSubscriptions(
     subscriberId: string,
     options: ListSubscriptionsOptions
-  ): Promise<{ items: SubscribedChannelItem[]; nextCursor: string | null }> {
+  ): Promise<SubscribedChannelItem[]> {
     try {
-      const cursorCond = options.cursor
-        ? or(
-            lt(cs.createdAt, options.cursor.createdAt),
-            and(eq(cs.createdAt, options.cursor.createdAt), lt(cs.channelId, options.cursor.channelId))
-          )
-        : undefined;
-
-      const whereClause = cursorCond
-        ? and(eq(cs.subscriberId, subscriberId), cursorCond)
-        : eq(cs.subscriberId, subscriberId);
-
-      const rows = await this.db
+      return await this.db
         .select({
           id: ch.id,
           userId: ch.userId,
@@ -165,22 +177,21 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
         })
         .from(cs)
         .innerJoin(ch, eq(cs.channelId, ch.id))
-        .where(whereClause)
+        .where(
+          drizzleWhere(
+            eq(cs.subscriberId, subscriberId),
+            keysetBefore(
+              cs.createdAt,
+              cs.channelId,
+              options.cursor && {
+                createdAt: options.cursor.createdAt,
+                tie: options.cursor.channelId,
+              }
+            )
+          )
+        )
         .orderBy(desc(cs.createdAt), desc(cs.channelId))
         .limit(options.limit + 1);
-
-      const hasMore = rows.length > options.limit;
-      const items = hasMore ? rows.slice(0, options.limit) : rows;
-      const last = items[items.length - 1];
-      const nextCursor =
-        hasMore && last
-          ? toCursor({
-              createdAt: last.subscribedAt.toISOString(),
-              channelId: last.id,
-            })
-          : null;
-
-      return { items, nextCursor };
     } catch (err) {
       throw dbErr('Failed to list user subscriptions', err);
     }
@@ -189,54 +200,41 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
   async getSubscriptionFeed(
     subscriberId: string,
     options: SubscriptionFeedOptions
-  ): Promise<{ items: VideoRecord[]; nextCursor: string | null; total: number }> {
+  ): Promise<{ items: VideoRecord[]; total: number }> {
     try {
-      const baseConditions = [
+      const baseWhere = drizzleWhere(
         eq(cs.subscriberId, subscriberId),
-        eq(v.visibility, 'public'),
+        publicVisibilityScope(v),
         eq(v.status, 'READY'),
-        sql`${v.deletedAt} IS NULL`,
-      ];
+        notDeletedScope(v)
+      );
 
       const [countResult] = await this.db
         .select({ count: sql<number>`count(*)::int` })
         .from(v)
         .innerJoin(ch, eq(v.ownerId, ch.userId))
         .innerJoin(cs, eq(cs.channelId, ch.id))
-        .where(and(...baseConditions));
-
-      const total = countResult?.count ?? 0;
-
-      const cursorCond = options.cursor
-        ? or(
-            lt(v.createdAt, options.cursor.createdAt),
-            and(eq(v.createdAt, options.cursor.createdAt), lt(v.id, options.cursor.id))
-          )
-        : undefined;
-
-      const queryConditions = cursorCond ? [...baseConditions, cursorCond] : baseConditions;
+        .where(baseWhere);
 
       const rows = await this.db
         .select({ video: v })
         .from(v)
         .innerJoin(ch, eq(v.ownerId, ch.userId))
         .innerJoin(cs, eq(cs.channelId, ch.id))
-        .where(and(...queryConditions))
+        .where(
+          drizzleWhere(
+            baseWhere,
+            keysetBefore(
+              v.createdAt,
+              v.id,
+              options.cursor && { createdAt: options.cursor.createdAt, tie: options.cursor.id }
+            )
+          )
+        )
         .orderBy(desc(v.createdAt), desc(v.id))
         .limit(options.limit + 1);
 
-      const hasMore = rows.length > options.limit;
-      const items = (hasMore ? rows.slice(0, options.limit) : rows).map((r) => r.video as VideoRecord);
-      const last = items[items.length - 1];
-      const nextCursor =
-        hasMore && last
-          ? toCursor({
-              createdAt: last.createdAt.toISOString(),
-              id: last.id,
-            })
-          : null;
-
-      return { items, nextCursor, total };
+      return { items: rows.map((r) => r.video), total: countResult?.count ?? 0 };
     } catch (err) {
       throw dbErr('Failed to get subscription feed', err);
     }

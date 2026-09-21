@@ -1,3 +1,4 @@
+import type { Paginator } from '@vp/core/pagination';
 import type {
   AuthorizationPort,
   ReactionCachePort,
@@ -83,6 +84,7 @@ export interface VideoServiceDeps {
   cdnBaseUrl?: string;
   reactionCache?: ReactionCachePort;
   authorization?: AuthorizationPort;
+  paginator?: Paginator;
 }
 
 /**

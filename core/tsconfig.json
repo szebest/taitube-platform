@@ -4,5 +4,5 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["ports/**/*", "repositories/**/*", "domain/**/*", "permissions/**/*"]
+  "include": ["ports/**/*", "repositories/**/*", "domain/**/*", "permissions/**/*", "pagination/**/*"]
 }

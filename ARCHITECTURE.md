@@ -40,6 +40,7 @@ video-pipeline/
 │   │   ├── job-queue.ts            # JobQueue port (enqueue, counts, pause, resume)
 │   │   ├── flow-producer.ts        # FlowProducer port (flow graph additions)
 │   │   └── index.ts
+│   ├── pagination/                 # Shared keyset Paginator & pluggable CursorCodec
 │   └── repositories/               # Domain repository interfaces
 │       ├── category-repository.port.ts
 │       ├── channel-repository.port.ts
@@ -75,10 +76,11 @@ video-pipeline/
 │   │   │   └── index.ts
 │   │   └── index.ts
 │   ├── s3/                         # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
-│   ├── redis/                      # RedisCacheClient, CategoryCacheService, SubscriptionCacheService, RedisReactionCacheAdapter
+│   ├── redis/                      # RedisCacheClient, CategoryCacheService, RedisReactionCacheAdapter, RedisSubscriptionCacheAdapter
 │   ├── bullmq/                     # BullMqJobQueue & BullMqFlowProducer (bullmq)
 │   └── in-memory/                  # High-speed in-memory test doubles
 │       ├── in-memory-authorization-adapter.ts
+│       ├── in-memory-subscription-cache.ts
 │       ├── in-memory-database-client.ts
 │       ├── in-memory-storage-client.ts
 │       ├── in-memory-multipart-storage.ts
