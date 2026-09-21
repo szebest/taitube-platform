@@ -641,6 +641,7 @@ erDiagram
         text master_playlist_key
         text error_code
         int version
+        int views_count
         int likes_count
         int dislikes_count
     }
@@ -898,7 +899,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /uploads/:uploadId/complete` | Finish | `{ parts:[{partNumber, etag}] }` (multipart) or `{}` (single) | `202 { videoId, status:"UPLOADED" }` or `422 { code:"UPLOAD_SIZE_MISMATCH" \| "UPLOAD_TOO_LARGE" \| "UNSUPPORTED_CONTENT_TYPE" }` | Idempotent: second call returns 202 with current status. |
 | `DELETE /uploads/:uploadId` | Abort | — | `204` | `AbortMultipartUpload`, video → `ABANDONED`. |
 | `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
-| `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter. Cached in Redis with singleflight & ETag 304. |
+| `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter, single-sourced in `core/repositories/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis with singleflight & ETag 304. |
 | `GET /v1/categories` | Public categories list | — | `200 [Category]` | Unauthenticated active taxonomy list sorted by sort_order, name. L1/L2 cached + ETag 304. |
 | `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `likesCount`, `dislikesCount`, `error?`) | Owner or public/unlisted. |
 | `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. |

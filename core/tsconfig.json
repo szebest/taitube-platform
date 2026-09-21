@@ -2,7 +2,8 @@
   "extends": "@vp/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["node", "vitest/globals"]
   },
   "include": ["ports/**/*", "repositories/**/*", "domain/**/*", "permissions/**/*", "pagination/**/*"]
 }

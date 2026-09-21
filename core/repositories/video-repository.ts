@@ -1,5 +1,12 @@
 import type { UserContext } from '@vp/permissions';
 
+import type { VideoEventRecord } from './event-repository';
+import type { NewOutboxInput } from './outbox-repository';
+import type { PublicFeedSort } from './public-feed';
+import type { RenditionRecord } from './rendition-repository';
+import type { ProcessingStepRecord } from './step-repository';
+import type { UploadRecord } from './upload-repository';
+
 export type VideoStatus =
   | 'UPLOADING'
   | 'UPLOADED'
@@ -110,7 +117,7 @@ export interface ListPublicVideosOptions {
     id: string;
   } | null;
   limit: number;
-  sort?: 'recent' | 'popular' | 'trending';
+  sort?: PublicFeedSort;
   categoryId?: string | null;
 }
 
@@ -118,12 +125,6 @@ export interface ListPublicVideosResult {
   items: VideoRecord[];
   total: number;
 }
-
-import type { VideoEventRecord } from './event-repository';
-import type { NewOutboxInput } from './outbox-repository';
-import type { RenditionRecord } from './rendition-repository';
-import type { ProcessingStepRecord } from './step-repository';
-import type { UploadRecord } from './upload-repository';
 
 export interface TransitionVideoOptions {
   videoId: string;
