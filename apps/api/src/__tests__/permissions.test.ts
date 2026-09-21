@@ -1,5 +1,5 @@
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
-import { type Action, can, normalizeRole, parseRole, type UserContext } from '@vp/core/permissions';
+import { type Action, can, normalizeRole, parseRole, type UserContext } from '@vp/permissions';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';

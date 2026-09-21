@@ -407,11 +407,10 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
 
   core:
-    dependencies:
+    devDependencies:
       '@vp/permissions':
         specifier: workspace:*
         version: link:../packages/permissions
-    devDependencies:
       '@vp/testing':
         specifier: workspace:*
         version: link:../packages/testing
@@ -497,10 +496,6 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
 
   packages/errors:
-    dependencies:
-      bullmq:
-        specifier: ^6.3.4
-        version: 6.3.4(ioredis@5.11.1)
     devDependencies:
       '@vp/testing':
         specifier: workspace:*
@@ -675,9 +670,6 @@ importers:
 
   packages/storage:
     devDependencies:
-      '@vp/adapters':
-        specifier: workspace:*
-        version: link:../../adapters
       '@vp/testing':
         specifier: workspace:*
         version: link:../testing

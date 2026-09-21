@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
     "test": "vitest run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
@@ -25,7 +25,7 @@
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
   },
-  "dependencies": {
-    "bullmq": "^6.3.4"
+  "vp": {
+    "tier": "universal"
   }
 }

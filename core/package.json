@@ -51,26 +51,17 @@
       "types": "./dist/pagination/*.d.ts",
       "import": "./dist/pagination/*.js",
       "default": "./dist/pagination/*.js"
-    },
-    "./permissions": {
-      "types": "./dist/permissions/index.d.ts",
-      "import": "./dist/permissions/index.js",
-      "default": "./dist/permissions/index.js"
-    },
-    "./permissions/*": {
-      "types": "./dist/permissions/*.d.ts",
-      "import": "./dist/permissions/*.js",
-      "default": "./dist/permissions/*.js"
     }
   },
-  "dependencies": {
-    "@vp/permissions": "workspace:*"
-  },
   "devDependencies": {
+    "@vp/permissions": "workspace:*",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
+  },
+  "vp": {
+    "tier": "server"
   }
 }

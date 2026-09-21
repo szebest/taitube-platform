@@ -156,4 +156,28 @@ describe('S3MultipartStorage', () => {
       ).rejects.toThrow(StorageError);
     });
   });
+
+  describe('cloudflare r2 compatibility', () => {
+    const r2Enabled = process.env['STORAGE_E2E_R2'] === '1';
+
+    it.skipIf(!r2Enabled)('drives a real R2 bucket through the same calls', async () => {
+      const bucket = process.env['STORAGE_RAW_BUCKET'] || BUCKET;
+      const multipart = new S3MultipartStorage();
+
+      const uploadId = await multipart.createMultipartUpload(bucket, KEY, 'video/mp4');
+      expect(uploadId).toBeDefined();
+
+      const part = await multipart.createPresignedPartUrl({
+        bucket,
+        key: KEY,
+        uploadId,
+        partNumber: 1,
+        expiresInSeconds: 600,
+      });
+      expect(part.url).toContain('partNumber=1');
+      expect(part.url).toContain('uploadId=');
+
+      await multipart.abortMultipartUpload(bucket, KEY, uploadId);
+    });
+  });
 });
