@@ -11,22 +11,18 @@ export interface RedisCacheClientConfig {
 export class RedisCacheClient extends CacheClient {
   private readonly redis: Redis;
   private subRedis?: Redis;
-  private readonly url: string;
-  private readonly options?: RedisOptions;
   private readonly channelListeners = new Map<string, Set<MessageListener>>();
   private readonly patternListeners = new Map<string, Set<PatternMessageListener>>();
 
   constructor(config: RedisCacheClientConfig = {}) {
     super();
-    this.url = config.url ?? process.env['REDIS_URL'] ?? 'redis://127.0.0.1:6379';
-    this.options = config.options;
 
     if (config.client) {
       this.redis = config.client;
       return;
     }
 
-    this.redis = new Redis(this.url, {
+    this.redis = new Redis(config.url ?? process.env['REDIS_URL'] ?? 'redis://127.0.0.1:6379', {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
       lazyConnect: true,
@@ -38,14 +34,10 @@ export class RedisCacheClient extends CacheClient {
     return this.redis;
   }
 
+  /** A connection in subscriber mode accepts no other command, so pub/sub gets its own. */
   private getSubRedis(): Redis {
     if (!this.subRedis) {
-      this.subRedis = new Redis(this.url, {
-        maxRetriesPerRequest: null,
-        enableReadyCheck: false,
-        lazyConnect: true,
-        ...this.options,
-      });
+      this.subRedis = this.redis.duplicate();
 
       this.subRedis.on('message', (channel: string, message: string) => {
         const listeners = this.channelListeners.get(channel);
