@@ -1,15 +1,6 @@
-import { type ErrorCode, ErrorCodes, PermanentError, PipelineError } from '@vp/errors';
+import { type Problem, problemDetails, problemStatus } from '@vp/api-contracts';
+import { ErrorCodes, PipelineError } from '@vp/errors';
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-
-export interface ProblemDetails {
-  type: string;
-  title: string;
-  status: number;
-  detail: string;
-  code: ErrorCode | string;
-  instance: string;
-  errors?: unknown[];
-}
 
 interface ErrorWithCode {
   code: string;
@@ -24,12 +15,37 @@ interface ErrorWithStatusCode {
   statusCode?: number;
 }
 
+export const PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
+
+export function rateLimitProblem(instance: string, detail = 'Rate limit exceeded'): Problem {
+  return problemDetails({
+    code: ErrorCodes.RATE_LIMITED,
+    title: 'Too Many Requests',
+    status: 429,
+    detail,
+    instance,
+  });
+}
+
+/**
+ * Renders a thrown domain error. Scopes whose own plugin installs an error handler —
+ * Bull Board does — call this so they answer with the same body as every other route.
+ */
+export function domainProblem(code: string, message: string, instance: string): Problem {
+  return problemDetails({
+    code,
+    title: message || 'Domain Error',
+    status: problemStatus(code),
+    detail: message,
+    instance,
+  });
+}
+
 export function registerErrorHandler(app: FastifyInstance): void {
   app.setErrorHandler(
     (error: FastifyError | Error, request: FastifyRequest, reply: FastifyReply) => {
-      reply.header('content-type', 'application/problem+json; charset=utf-8');
+      reply.header('content-type', PROBLEM_CONTENT_TYPE);
 
-      // 1. Rate-limit error (HTTP 429)
       const errorStatusCode = (error as ErrorWithStatusCode).statusCode;
       const errorCode = (error as ErrorWithCode).code;
 
@@ -38,109 +54,47 @@ export function registerErrorHandler(app: FastifyInstance): void {
         errorCode === ErrorCodes.RATE_LIMITED ||
         errorCode === 'FST_ERR_RATE_LIMIT'
       ) {
-        const problem: ProblemDetails = {
-          type: `https://errors.video-pipeline.local/${ErrorCodes.RATE_LIMITED}`,
-          title: 'Too Many Requests',
-          status: 429,
-          detail: error.message || 'Rate limit exceeded',
-          code: ErrorCodes.RATE_LIMITED,
-          instance: request.url,
-        };
-        return reply.status(429).send(problem);
+        return reply
+          .status(429)
+          .send(rateLimitProblem(request.url, error.message || 'Rate limit exceeded'));
       }
 
-      // 2. Domain / Pipeline Errors (@vp/errors)
       if (
         error instanceof PipelineError ||
-        error instanceof PermanentError ||
-        (typeof errorCode === 'string' &&
-          Object.values(ErrorCodes).includes(errorCode as ErrorCode))
+        (typeof errorCode === 'string' && Object.hasOwn(ErrorCodes, errorCode))
       ) {
-        const errCode = errorCode;
-        let statusCode = 422;
-        switch (errCode) {
-          case ErrorCodes.VIDEO_NOT_FOUND:
-          case ErrorCodes.DLQ_ENTRY_NOT_FOUND:
-          case ErrorCodes.CATEGORY_NOT_FOUND:
-          case ErrorCodes.CHANNEL_NOT_FOUND:
-            statusCode = 404;
-            break;
-          case ErrorCodes.UNAUTHORIZED:
-            statusCode = 401;
-            break;
-          case ErrorCodes.FORBIDDEN:
-            statusCode = 403;
-            break;
-          case ErrorCodes.VERSION_CONFLICT:
-          case ErrorCodes.CATEGORY_SLUG_CONFLICT:
-          case ErrorCodes.CATEGORY_IN_USE:
-          case ErrorCodes.HANDLE_ALREADY_TAKEN:
-            statusCode = 409;
-            break;
-          case ErrorCodes.UPLOAD_NOT_OPEN:
-            statusCode = 410;
-            break;
-          case ErrorCodes.INVALID_HANDLE_FORMAT:
-          case ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF:
-            statusCode = 400;
-            break;
-          case ErrorCodes.RATE_LIMITED:
-            statusCode = 429;
-            break;
-          case ErrorCodes.STORAGE_UNAVAILABLE:
-            statusCode = 503;
-            break;
-          case ErrorCodes.INTERNAL:
-            statusCode = 500;
-            break;
-          case ErrorCodes.VALIDATION_FAILED:
-            statusCode = 422;
-            break;
-          default:
-            statusCode = 422;
-            break;
-        }
-
-        const problem: ProblemDetails = {
-          type: `https://errors.video-pipeline.local/${errCode}`,
-          title: error.message || 'Domain Error',
-          status: statusCode,
-          detail: error.message,
-          code: errCode,
-          instance: request.url,
-        };
-
-        return reply.status(statusCode).send(problem);
+        const problem = domainProblem(errorCode, error.message, request.url);
+        return reply.status(problem.status).send(problem);
       }
 
-      // 3. Fastify / Zod validation error
       const validationError = error as ErrorWithValidation;
-      if (validationError.validation || validationError.issues) {
-        const problem: ProblemDetails = {
-          type: `https://errors.video-pipeline.local/${ErrorCodes.VALIDATION_FAILED}`,
-          title: 'Validation Failed',
-          status: 400,
-          detail: error.message,
-          code: ErrorCodes.VALIDATION_FAILED,
-          instance: request.url,
-          errors: validationError.validation || validationError.issues,
-        };
-        return reply.status(400).send(problem);
+      const issues = validationError.validation ?? validationError.issues;
+      if (issues) {
+        return reply.status(400).send(
+          problemDetails({
+            code: ErrorCodes.VALIDATION_FAILED,
+            title: 'Validation Failed',
+            status: 400,
+            detail: error.message,
+            instance: request.url,
+            errors: issues,
+          })
+        );
       }
 
-      // 4. Default unexpected error (Internal Server Error)
-      const requestId = request.id || 'req-unknown';
-      request.log.error({ err: error, requestId }, 'Unhandled exception');
-      const problem: ProblemDetails = {
-        type: `https://errors.video-pipeline.local/${ErrorCodes.INTERNAL}`,
-        title: 'Internal Server Error',
-        status: 500,
-        detail: 'An unexpected internal error occurred',
-        code: ErrorCodes.INTERNAL,
-        instance: request.url,
-      };
-
-      return reply.status(500).send(problem);
+      request.log.error(
+        { err: error, requestId: request.id || 'req-unknown' },
+        'Unhandled exception'
+      );
+      return reply.status(500).send(
+        problemDetails({
+          code: ErrorCodes.INTERNAL,
+          title: 'Internal Server Error',
+          status: 500,
+          detail: 'An unexpected internal error occurred',
+          instance: request.url,
+        })
+      );
     }
   );
 }

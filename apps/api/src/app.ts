@@ -1,7 +1,6 @@
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
-import { ErrorCodes } from '@vp/errors';
 import { getMetrics } from '@vp/observability';
 import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
@@ -9,7 +8,7 @@ import { type AdapterOverrides, resolveAdapterSet } from './composition/adapter-
 import { registerOpenApi } from './composition/openapi';
 import { type AppLimits, createServiceSet } from './composition/service-set';
 import { registerAuth } from './plugins/auth';
-import { registerErrorHandler } from './plugins/errors';
+import { rateLimitProblem, registerErrorHandler } from './plugins/errors';
 import { registerHttpMetricsPlugin } from './plugins/http-metrics';
 import { registerAdminCategoriesRoutes } from './routes/admin/categories';
 import { registerAdminDlqRoutes } from './routes/admin/dlq';
@@ -64,14 +63,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(rateLimit, {
     global: false,
-    errorResponseBuilder: (req) => ({
-      type: `https://errors.video-pipeline.local/${ErrorCodes.RATE_LIMITED}`,
-      title: 'Too Many Requests',
-      status: 429,
-      detail: 'Rate limit exceeded',
-      code: ErrorCodes.RATE_LIMITED,
-      instance: req.url,
-    }),
+    errorResponseBuilder: (req) => rateLimitProblem(req.url),
   });
 
   registerErrorHandler(app);
