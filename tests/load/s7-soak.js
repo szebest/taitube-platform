@@ -2,7 +2,7 @@ import { check, sleep } from 'k6';
 // tests/load/s7-soak.js — S7: Extended soak test for memory leaks, disk hygiene & scheduler drift (SDD §14.2)
 import { SharedArray } from 'k6/data';
 import { Counter, Trend } from 'k6/metrics';
-import { completeUpload, getVideo, initUpload, uploadPart } from './common.js';
+import { STORAGE_HOSTS, completeUpload, getVideo, initUpload, uploadPart } from './common.js';
 
 const videoData = new SharedArray('video-s60', () => {
   return open('../fixtures/s60.mp4', 'b');
@@ -15,6 +15,7 @@ const completedVideos = new Counter('soak_completed_videos_total');
 const SOAK_DURATION = __ENV.SOAK_DURATION || '4h';
 
 export const options = {
+  hosts: STORAGE_HOSTS,
   scenarios: {
     soak_steady: {
       executor: 'constant-arrival-rate',

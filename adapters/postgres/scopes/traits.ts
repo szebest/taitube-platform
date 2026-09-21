@@ -18,4 +18,3 @@ export interface SoftDeletable {
 }
 
 export type OwnableAndVisible = WithOwner & WithVisibility;
-export type ColumnRecord = Record<string, Column>;

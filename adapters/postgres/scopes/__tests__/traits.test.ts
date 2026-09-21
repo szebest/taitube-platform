@@ -1,5 +1,4 @@
 import { videos } from '@vp/db';
-import { describe, expect, it } from 'vitest';
 import type { OwnableAndVisible, SoftDeletable, WithOwner, WithVisibility } from '../traits';
 
 describe('adapters/postgres/scoping: traits', () => {

@@ -2,7 +2,18 @@ import { rulesToAST } from '@casl/ability/extra';
 import type { Condition } from '@ucast/core';
 import type { AppAbility, AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { getUserPermissions } from '@vp/permissions';
-import { type Column, type SQL, and, eq, inArray, isNotNull, isNull, ne, or } from 'drizzle-orm';
+import {
+  type Column,
+  type SQL,
+  and,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  ne,
+  or,
+  sql,
+} from 'drizzle-orm';
 import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
 
 export interface AstCompoundCondition {
@@ -19,8 +30,11 @@ export interface AstFieldCondition {
 export type AstCondition = AstCompoundCondition | AstFieldCondition;
 
 /**
- * Compiles CASL rules directly into Drizzle SQL WHERE conditions via @casl/ability/extra rulesToAST.
- * Single source of truth: CASL rules automatically translate to PostgreSQL query clauses!
+ * Compiles CASL rules into Drizzle SQL WHERE conditions via @casl/ability/extra rulesToAST,
+ * so row scoping and in-memory can() decisions derive from one rule set.
+ *
+ * Three outcomes: `undefined` imposes no restriction (rule grants the action unconditionally),
+ * a condition restricts the rows, and a forbidden action yields a predicate matching no rows.
  */
 export function rulesToSql<T extends TableConfig>(
   action: AppAction,
@@ -28,10 +42,21 @@ export function rulesToSql<T extends TableConfig>(
   user: UserContext | null | undefined,
   table: PgTableWithColumns<T>
 ): SQL | undefined {
-  const ability = getUserPermissions(user ?? null);
+  return abilityToSql(getUserPermissions(user ?? null), action, subject, table);
+}
+
+export function abilityToSql<T extends TableConfig>(
+  ability: AppAbility,
+  action: AppAction,
+  subject: AppSubjects,
+  table: PgTableWithColumns<T>
+): SQL | undefined {
   const ast = rulesToAST(ability, action, subject as Parameters<typeof rulesToAST<AppAbility>>[2]);
 
-  if (ast == null) return undefined;
+  // A null AST means no rule grants the action; returning undefined would leave the query unfiltered.
+  if (ast == null) {
+    return sql`false`;
+  }
 
   return getConditionSql(ast as unknown as AstCondition, table);
 }
@@ -40,97 +65,58 @@ export function getConditionSql<T extends TableConfig>(
   condition: AstCondition | Condition,
   table: PgTableWithColumns<T>
 ): SQL | undefined {
-  if (Array.isArray(condition.value)) {
-    const compound = condition as AstCompoundCondition;
-    switch (compound.operator) {
-      case 'and':
-        return drizzleAnd(compound, table);
-      case 'or':
-        return drizzleOr(compound, table);
-      default: {
-        throw new Error(`Unsupported compound condition operator: ${compound.operator}`);
-      }
+  // Field conditions are tested first: an `in` condition also carries an array value.
+  if ('field' in condition) {
+    const fieldCond = condition as AstFieldCondition;
+    const column = resolveColumn(fieldCond.field, table);
+
+    switch (fieldCond.operator) {
+      case 'eq':
+        return eq(column, fieldCond.value);
+      case 'ne':
+        return ne(column, fieldCond.value);
+      case 'in':
+        return inArray(column, fieldCond.value as unknown[]);
+      case 'exists':
+        return fieldCond.value === false ? isNull(column) : isNotNull(column);
+      default:
+        throw new Error(`Unsupported field condition operator: ${fieldCond.operator}`);
     }
   }
 
-  if ('field' in condition) {
-    const fieldCond = condition as AstFieldCondition;
-    switch (fieldCond.operator) {
-      case 'eq': {
-        return drizzleEq(fieldCond, table);
-      }
-      case 'ne': {
-        return drizzleNe(fieldCond, table);
-      }
-      case 'in': {
-        return drizzleIn(fieldCond, table);
-      }
-      case 'exists': {
-        return drizzleExists(fieldCond, table);
-      }
-      default: {
-        throw new Error(`Unsupported field condition operator: ${fieldCond.operator}`);
-      }
+  if (Array.isArray(condition.value)) {
+    const compound = condition as AstCompoundCondition;
+    const parts = compileParts(compound, table);
+
+    switch (compound.operator) {
+      case 'and':
+        return parts.length > 0 ? and(...parts) : undefined;
+      case 'or':
+        return parts.length > 0 ? or(...parts) : undefined;
+      default:
+        throw new Error(`Unsupported compound condition operator: ${compound.operator}`);
     }
   }
 
   return undefined;
 }
 
-function drizzleEq<T extends TableConfig>(
-  condition: AstFieldCondition,
-  table: PgTableWithColumns<T>
-): SQL | undefined {
-  const column = (table as unknown as Record<string, Column>)[condition.field];
-  if (!column) return undefined;
-  return eq(column, condition.value);
+function resolveColumn<T extends TableConfig>(field: string, table: PgTableWithColumns<T>): Column {
+  const column = (table as unknown as Record<string, Column>)[field];
+
+  // Skipping an unmappable field would widen an `and` branch into an unintended grant.
+  if (!column) {
+    throw new Error(`Cannot compile permission condition: unknown column "${field}"`);
+  }
+
+  return column;
 }
 
-function drizzleNe<T extends TableConfig>(
-  condition: AstFieldCondition,
-  table: PgTableWithColumns<T>
-): SQL | undefined {
-  const column = (table as unknown as Record<string, Column>)[condition.field];
-  if (!column) return undefined;
-  return ne(column, condition.value);
-}
-
-function drizzleIn<T extends TableConfig>(
-  condition: AstFieldCondition,
-  table: PgTableWithColumns<T>
-): SQL | undefined {
-  const column = (table as unknown as Record<string, Column>)[condition.field];
-  if (!column) return undefined;
-  return inArray(column, condition.value as unknown[]);
-}
-
-function drizzleExists<T extends TableConfig>(
-  condition: AstFieldCondition,
-  table: PgTableWithColumns<T>
-): SQL | undefined {
-  const column = (table as unknown as Record<string, Column>)[condition.field];
-  if (!column) return undefined;
-  return condition.value === false ? isNull(column) : isNotNull(column);
-}
-
-function drizzleAnd<T extends TableConfig>(
+function compileParts<T extends TableConfig>(
   condition: AstCompoundCondition,
   table: PgTableWithColumns<T>
-): SQL | undefined {
-  const conditions = condition.value
+): SQL[] {
+  return condition.value
     .map((cond) => getConditionSql(cond, table))
     .filter((c): c is SQL => c !== undefined);
-  if (conditions.length === 0) return undefined;
-  return and(...conditions);
-}
-
-function drizzleOr<T extends TableConfig>(
-  condition: AstCompoundCondition,
-  table: PgTableWithColumns<T>
-): SQL | undefined {
-  const conditions = condition.value
-    .map((cond) => getConditionSql(cond, table))
-    .filter((c): c is SQL => c !== undefined);
-  if (conditions.length === 0) return undefined;
-  return or(...conditions);
 }

@@ -26,8 +26,9 @@ jobs:
       - name: Start Docker Compose Stack
         run: |
           cp .env.example .env
+          # The load profile drives far more uploads per user than the production limit allows.
+          echo "UPLOAD_RATE_LIMIT_MAX=100000" >> .env
           make up-all
-          sleep 15 # wait for services to be ready
 
       - name: Install k6
         run: |

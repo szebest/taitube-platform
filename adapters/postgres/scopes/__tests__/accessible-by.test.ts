@@ -1,61 +1,64 @@
+import { videos } from '@vp/db';
 import { type UserContext, getUserPermissions } from '@vp/permissions';
-import { describe, expect, it } from 'vitest';
-import { accessibleBy, accessibleVideos, videoOwnerScope, videoReadScope } from '../accessible-by';
+import { accessibleBy, videoOwnerScope, videoReadScope } from '../accessible-by';
+import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: accessible-by adapter', () => {
-  const guestUser: UserContext | null = null;
+  const guest: UserContext | null = null;
   const standardUser: UserContext = { id: 'usr-123', role: 'USER' };
-  const moderatorUser: UserContext = { id: 'mod-456', role: 'MODERATOR' };
-  const adminUser: UserContext = { id: 'adm-789', role: 'ADMIN' };
+  const moderator: UserContext = { id: 'mod-456', role: 'MODERATOR' };
+  const admin: UserContext = { id: 'adm-789', role: 'ADMIN' };
 
-  describe('accessibleVideos', () => {
-    it('returns public visibility filter for guest / unauthenticated', () => {
-      const scope = accessibleVideos(guestUser);
-      expect(scope).toBeDefined();
-    });
-
-    it('returns undefined (unconditional pass) for admin user', () => {
-      expect(accessibleVideos(adminUser)).toBeUndefined();
-    });
-
-    it('returns undefined (unconditional pass) for moderator user', () => {
-      expect(accessibleVideos(moderatorUser)).toBeUndefined();
-    });
-
-    it('returns undefined when passed AppAbility with manage all', () => {
-      const adminAbility = getUserPermissions(adminUser);
-      expect(accessibleVideos(adminAbility)).toBeUndefined();
-    });
-
-    it('returns public filter when passed AppAbility for guest', () => {
-      const guestAbility = getUserPermissions(guestUser);
-      expect(accessibleVideos(guestAbility)).toBeDefined();
-    });
-
-    it('returns or() filter for standard authenticated user', () => {
-      const scope = accessibleVideos(standardUser);
-      expect(scope).toBeDefined();
-    });
-  });
-
-  describe('accessibleBy entrypoint', () => {
-    it('delegates to accessibleVideos for Video subject', () => {
-      expect(accessibleBy(adminUser, 'Video', 'read')).toBeUndefined();
-      expect(accessibleBy(guestUser, 'Video', 'read')).toBeDefined();
-    });
-  });
+  const GUEST_READ_SQL = '("videos"."visibility" = $1 or "videos"."visibility" = $2)';
 
   describe('videoReadScope', () => {
-    it('delegates to accessibleVideos correctly', () => {
-      expect(videoReadScope(guestUser)).toBeDefined();
-      expect(videoReadScope(adminUser)).toBeUndefined();
+    it('restricts a guest to publicly readable videos', () => {
+      const scope = videoReadScope(guest);
+      expect(sqlText(scope)).toBe(GUEST_READ_SQL);
+      expect(sqlParams(scope)).toEqual(['unlisted', 'public']);
+    });
+
+    it('widens the scope to videos owned by the authenticated user', () => {
+      const scope = videoReadScope(standardUser);
+      expect(sqlText(scope)).toBe(
+        '("videos"."owner_id" = $1 or "videos"."visibility" = $2 or "videos"."visibility" = $3)'
+      );
+      expect(sqlParams(scope)).toEqual(['usr-123', 'unlisted', 'public']);
+    });
+
+    it.each([
+      { name: 'moderator', user: moderator },
+      { name: 'admin', user: admin },
+    ])('imposes no restriction for a $name', ({ user }) => {
+      expect(videoReadScope(user)).toBeUndefined();
+    });
+
+    it('accepts a prebuilt ability and yields the same scope as its user', () => {
+      expect(sqlText(videoReadScope(getUserPermissions(guest)))).toBe(GUEST_READ_SQL);
+      expect(videoReadScope(getUserPermissions(admin))).toBeUndefined();
+    });
+  });
+
+  describe('accessibleBy', () => {
+    it('compiles a non-default action against the given table', () => {
+      const scope = accessibleBy(standardUser, 'Video', videos, 'update');
+      expect(sqlText(scope)).toBe('"videos"."owner_id" = $1');
+      expect(sqlParams(scope)).toEqual(['usr-123']);
+    });
+
+    it('matches no rows when the action is forbidden', () => {
+      expect(sqlText(accessibleBy(guest, 'Video', videos, 'delete'))).toBe('false');
     });
   });
 
   describe('videoOwnerScope', () => {
-    it('generates owner filter from UserContext or string ID', () => {
-      expect(videoOwnerScope(standardUser)).toBeDefined();
-      expect(videoOwnerScope('usr-123')).toBeDefined();
+    it.each([
+      { kind: 'UserContext', owner: standardUser as UserContext | string },
+      { kind: 'owner id string', owner: 'usr-123' as UserContext | string },
+    ])('filters on the owner column given a $kind', ({ owner }) => {
+      const scope = videoOwnerScope(owner);
+      expect(sqlText(scope)).toBe('"videos"."owner_id" = $1');
+      expect(sqlParams(scope)).toEqual(['usr-123']);
     });
   });
 });

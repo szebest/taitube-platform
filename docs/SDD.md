@@ -1938,6 +1938,7 @@ Worker and API should use **different** access keys with the scoped permissions 
 | `MAX_UPLOAD_BYTES` | `4294967296` | 4 GB |
 | `MAX_DURATION_SEC` | `3600` | |
 | `MAX_INFLIGHT_PER_USER` | `3` | admission control |
+| `UPLOAD_RATE_LIMIT_MAX` | `30` | `POST /v1/uploads` per user per minute; raise for load tests |
 | `ALLOWED_CONTENT_TYPES` | `video/mp4,video/quicktime,video/webm,video/x-matroska` | |
 | `JOB_TIMEOUT_FACTOR` | `3` | hard timeout = max(factor × duration, 10 min) |
 | `TMP_DIR` | `/tmp/vp` | emptyDir/tmpfs |

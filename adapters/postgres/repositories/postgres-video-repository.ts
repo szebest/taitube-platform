@@ -23,7 +23,7 @@ import {
   type VideoStatus,
   toDbError as dbErr,
 } from './types';
-import { drizzleWhere, notDeletedScope, videoOwnerScope, videoReadScope } from '../scopes/index';
+import { drizzleWhere, notDeletedScope, videoOwnerScope } from '../scopes/index';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 
@@ -138,7 +138,7 @@ export class PostgresVideoRepository extends VideoRepository {
     const { cursor, limit } = options;
     try {
       const baseWhere = drizzleWhere(
-        videoReadScope(null),
+        eq(v.visibility, 'public'),
         eq(v.status, 'READY'),
         notDeletedScope(v)
       );
