@@ -7,7 +7,7 @@ import { MULTIPART_THRESHOLD_BYTES } from '@vp/storage';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService, type UploadServiceDeps } from '../upload-service';
 
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000e001', role: 'creator' };
+const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000e001', role: 'CREATOR' };
 
 describe('apps/api/services: UploadService', () => {
   let repositories: InMemoryRepositories;

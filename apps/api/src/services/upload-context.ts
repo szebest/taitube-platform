@@ -11,7 +11,7 @@ import type {
   VideoRepository,
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { type UserContext, canAccessUpload, parseRole } from '@vp/permissions';
+import { canAccessUpload } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 
 export interface UploadContext {
@@ -45,18 +45,17 @@ export async function loadOwnedUpload(
     throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Upload ${uploadId} not found`);
   }
 
-  const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
   ctx.auth.assertCan(
     canAccessUpload,
     {
-      user: userContext,
+      user: user,
       upload: { ownerId: record.video.ownerId },
       video: { ownerId: record.video.ownerId },
     },
     {
       action: 'access',
       subject: 'Upload',
-      user: userContext,
+      user: user,
       message: `Not authorized to ${action}`,
     }
   );

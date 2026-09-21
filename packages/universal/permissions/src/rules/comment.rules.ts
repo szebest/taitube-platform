@@ -1,5 +1,5 @@
 import type { AbilityBuilder } from '@casl/ability';
-import type { AppAbility, UserContext } from '../types';
+import { type AppAbility, type UserContext, isSignedInRole } from '../types';
 
 export function defineCommentRules(
   user: UserContext | null,
@@ -15,7 +15,7 @@ export function defineCommentRules(
 
   const role = user.role;
 
-  if (role === 'USER' || role === 'CREATOR' || role === 'MODERATOR' || role === 'ADMIN') {
+  if (isSignedInRole(role)) {
     can('create', 'Comment');
     can('delete', 'Comment', { authorId: user.id });
     can('delete', 'Comment', { videoOwnerId: user.id });

@@ -39,11 +39,8 @@ describe('apps/api/services: ReactionService', () => {
     expect(result).toMatchObject({ videoId: VIDEO_ID, reaction: 'LIKE', likesCount: 1 });
   });
 
-  it.each([
-    ['GUEST', 'guest'],
-    ['unrecognised', 'definitely-not-a-role'],
-  ])('refuses a %s caller with FORBIDDEN and writes nothing', async (_label, role) => {
-    const caller = { id: OWNER_ID, role };
+  it('refuses a guest caller with FORBIDDEN and writes nothing', async () => {
+    const caller = { id: OWNER_ID, role: 'GUEST' } as const;
 
     await expect(service.setReaction(caller, VIDEO_ID, 'LIKE')).rejects.toMatchObject({
       code: ErrorCodes.FORBIDDEN,

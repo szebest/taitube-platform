@@ -1,5 +1,6 @@
 import * as crypto from 'node:crypto';
 import { ErrorCodes, PermanentError } from '@vp/errors';
+import { type UserContext, parseRole } from '@vp/permissions';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { ChannelService } from '../services/channel-service';
@@ -7,7 +8,7 @@ import { verifyUniversalToken } from './jwks-verifier';
 
 const ADMIN_TOKEN_USER: AuthUser = {
   id: '00000000-0000-7000-8000-000000000003',
-  role: 'admin',
+  role: 'ADMIN',
 };
 
 function matchesAdminToken(header: unknown): boolean {
@@ -20,11 +21,7 @@ function matchesAdminToken(header: unknown): boolean {
   );
 }
 
-export interface AuthUser {
-  id: string;
-  role: string;
-  email?: string;
-}
+export type AuthUser = UserContext;
 
 export interface AuthPluginOptions {
   channelService?: ChannelService;
@@ -69,7 +66,7 @@ export async function authPlugin(
       const payload = await verifyUniversalToken(token, options.jwksUrl);
       request.user = {
         id: payload.sub,
-        role: payload.role || 'user',
+        role: parseRole(payload.role || 'user'),
         email: payload.email,
       };
 

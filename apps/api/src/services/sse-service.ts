@@ -9,7 +9,7 @@ import type {
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
-import { type UserContext, canReadVideo, parseRole } from '@vp/permissions';
+import { canReadVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 import { playbackUrl } from './video-views';
 
@@ -128,12 +128,8 @@ export class SseService {
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
     }
 
-    const userContext: UserContext | null = user
-      ? { id: user.id, role: parseRole(user.role) }
-      : null;
-
-    if (!this.auth.can(canReadVideo, { user: userContext, video })) {
-      if (!userContext) {
+    if (!this.auth.can(canReadVideo, { user: user, video })) {
+      if (!user) {
         throw new PermanentError(
           ErrorCodes.UNAUTHORIZED,
           'Authentication required to view private video'

@@ -6,7 +6,7 @@ import {
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-000000000001', role: 'creator' };
+const OWNER: AuthUser = { id: '00000000-0000-7000-8000-000000000001', role: 'CREATOR' };
 const MB = 1024 * 1024;
 
 describe('apps/api/services: initiate upload', () => {

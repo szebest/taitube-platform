@@ -7,7 +7,7 @@ import type {
   VideoReactionRepositoryPort,
 } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { type UserContext, canReactVideo, parseRole } from '@vp/permissions';
+import { canReactVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 
 export interface ReactionServiceDeps {
@@ -53,14 +53,13 @@ export class ReactionService {
     videoId: string,
     type: ReactionInputType
   ): Promise<SetReactionOutput> {
-    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
     this.auth.assertCan(
       canReactVideo,
-      { user: userContext },
+      { user: user },
       {
         action: 'react',
         subject: 'Video',
-        user: userContext,
+        user: user,
         message: 'Your role is not allowed to react to videos',
       }
     );

@@ -8,7 +8,7 @@ import type {
   SubscriptionRepositoryPort,
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { type UserContext, canSubscribeChannel, parseRole } from '@vp/permissions';
+import { canSubscribeChannel } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 import {
   createdAtCursorPayload,
@@ -55,14 +55,13 @@ export class SubscriptionService {
   }
 
   private assertMaySubscribe(user: AuthUser): void {
-    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
     this.auth.assertCan(
       canSubscribeChannel,
-      { user: userContext },
+      { user: user },
       {
         action: 'subscribe',
         subject: 'Channel',
-        user: userContext,
+        user: user,
         message: 'Your role is not allowed to subscribe to channels',
       }
     );

@@ -52,7 +52,7 @@ describe('apps/api/composition: service set', () => {
 
     const services = await createServiceSet(adapters, CONFIG);
     const started = await services.uploadService.initiate(
-      { id: '00000000-0000-7000-8000-00000000f001', role: 'creator' },
+      { id: '00000000-0000-7000-8000-00000000f001', role: 'CREATOR' },
       { filename: 'clip.mp4', sizeBytes: 1024, contentType: 'video/mp4' }
     );
 

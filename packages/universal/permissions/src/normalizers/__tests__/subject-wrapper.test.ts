@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import {
   createSubject,
   toChannelSubject,
@@ -9,33 +8,36 @@ import {
 import { normalizeVideoResource } from '../video.normalizer';
 
 describe('normalizers/subject-wrapper: CASL Subject Wrappers', () => {
-  it('toVideoSubject wraps with CASL subject and Video tag', () => {
-    const subj = toVideoSubject({ id: 'v1', userId: 'u1' });
-    expect(subj).toBeDefined();
-    expect((subj as unknown as Record<string, unknown>).ownerId).toBe('u1');
-    expect((subj as unknown as Record<string, unknown>).visibility).toBe('public');
+  it.each<{
+    scenario: string;
+    build: () => object | undefined;
+    expected: Record<string, unknown>;
+  }>([
+    {
+      scenario: 'toVideoSubject resolves ownerId from userId and defaults visibility',
+      build: () => toVideoSubject({ id: 'v1', userId: 'u1' }),
+      expected: { ownerId: 'u1', visibility: 'public' },
+    },
+    {
+      scenario: 'toChannelSubject resolves ownerId from userId',
+      build: () => toChannelSubject({ id: 'c1', userId: 'u1' }),
+      expected: { ownerId: 'u1' },
+    },
+    {
+      scenario: 'toCommentSubject takes the video owner passed alongside',
+      build: () => toCommentSubject({ id: 'cm1' }, 'video-owner'),
+      expected: { videoOwnerId: 'video-owner' },
+    },
+    {
+      scenario: 'toUploadSubject falls back to the owner of the video',
+      build: () => toUploadSubject(null, { ownerId: 'owner-1' }),
+      expected: { ownerId: 'owner-1' },
+    },
+  ])('$scenario', ({ build, expected }) => {
+    expect(build()).toMatchObject(expected);
   });
 
-  it('toChannelSubject wraps with CASL subject and Channel tag', () => {
-    const subj = toChannelSubject({ id: 'c1', userId: 'u1' });
-    expect(subj).toBeDefined();
-    expect((subj as unknown as Record<string, unknown>).ownerId).toBe('u1');
-  });
-
-  it('toCommentSubject wraps with CASL subject and Comment tag', () => {
-    const subj = toCommentSubject({ id: 'cm1' }, 'video-owner');
-    expect(subj).toBeDefined();
-    expect((subj as unknown as Record<string, unknown>).videoOwnerId).toBe('video-owner');
-  });
-
-  it('toUploadSubject wraps with CASL subject and Upload tag', () => {
-    const subj = toUploadSubject(null, { ownerId: 'owner-1' });
-    expect(subj).toBeDefined();
-    expect((subj as unknown as Record<string, unknown>).ownerId).toBe('owner-1');
-  });
-
-  it('createSubject returns undefined if normalizer returns undefined', () => {
-    const subj = createSubject('Video', null, normalizeVideoResource);
-    expect(subj).toBeUndefined();
+  it('createSubject returns undefined when the resource normalized away', () => {
+    expect(createSubject('Video', normalizeVideoResource(null))).toBeUndefined();
   });
 });

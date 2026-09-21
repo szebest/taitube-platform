@@ -3,7 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import type { AuthUser } from '../../plugins/auth';
 import { CategoryService } from '../category-service';
 
-const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'admin' };
+const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };
 
 describe('CategoryService', () => {
   let repositories: InMemoryRepositories;
@@ -94,9 +94,13 @@ describe('CategoryService', () => {
   });
 
   it.each([
-    ['an anonymous caller', null, ErrorCodes.UNAUTHORIZED],
-    ['a signed-in non-admin', { id: 'user-1', role: 'user' }, ErrorCodes.FORBIDDEN],
-  ])('refuses taxonomy writes from %s', async (_label, caller, code) => {
+    { scenario: 'an anonymous caller', caller: null, code: ErrorCodes.UNAUTHORIZED },
+    {
+      scenario: 'a signed-in non-admin',
+      caller: { id: 'user-1', role: 'USER' } as AuthUser,
+      code: ErrorCodes.FORBIDDEN,
+    },
+  ])('refuses taxonomy writes from $scenario', async ({ caller, code }) => {
     const input = { slug: 'blocked', name: 'Blocked' };
 
     await expect(categoryService.create(caller, input)).rejects.toMatchObject({ code });

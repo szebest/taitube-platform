@@ -2,7 +2,7 @@ import * as adminCategories from './admin-categories.js';
 import * as adminDlq from './admin-dlq.js';
 import * as categories from './categories.js';
 import * as channels from './channels.js';
-import type { EndpointContract } from './endpoint.js';
+import { type EndpointContract, isEndpoint } from './endpoint.js';
 import * as events from './events.js';
 import * as feed from './feed.js';
 import * as health from './health.js';
@@ -43,16 +43,6 @@ export const contracts = {
   uploads,
   videos,
 } as const;
-
-function isEndpoint(value: unknown): value is EndpointContract {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'method' in value &&
-    'path' in value &&
-    'result' in value
-  );
-}
 
 /** Every endpoint this API promises, flattened. The drift test walks this. */
 export const API_ENDPOINTS: readonly EndpointContract[] = Object.values(contracts).flatMap(

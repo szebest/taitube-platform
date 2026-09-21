@@ -9,8 +9,8 @@ import { ids } from '@vp/job-contracts';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000d001', role: 'creator' };
-const STRANGER: AuthUser = { id: '00000000-0000-7000-8000-00000000d002', role: 'creator' };
+const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000d001', role: 'CREATOR' };
+const STRANGER: AuthUser = { id: '00000000-0000-7000-8000-00000000d002', role: 'CREATOR' };
 const MB = 1024 * 1024;
 const SIZE = 3;
 

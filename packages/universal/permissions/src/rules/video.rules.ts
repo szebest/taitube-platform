@@ -1,5 +1,5 @@
 import type { AbilityBuilder } from '@casl/ability';
-import type { AppAbility, UserContext } from '../types';
+import { type AppAbility, type UserContext, isSignedInRole } from '../types';
 
 export function defineVideoRules(
   user: UserContext | null,
@@ -20,7 +20,7 @@ export function defineVideoRules(
     can('read', 'Video');
   }
 
-  if (role === 'USER' || role === 'CREATOR' || role === 'MODERATOR' || role === 'ADMIN') {
+  if (isSignedInRole(role)) {
     can('read', 'Video', { ownerId: user.id });
 
     can('create', 'Video');

@@ -1,5 +1,5 @@
 import type { AuthorizationPort } from '@vp/core/ports';
-import { type UserContext, canAccessAdmin, parseRole } from '@vp/permissions';
+import { canAccessAdmin } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 
 /**
@@ -7,16 +7,14 @@ import type { AuthUser } from '../plugins/auth';
  * the caller the transport resolved; no route decides admin access for itself.
  */
 export function assertAdminAccess(auth: AuthorizationPort, user: AuthUser | null): void {
-  const userContext: UserContext | null = user ? { id: user.id, role: parseRole(user.role) } : null;
-
   auth.assertCan(
     canAccessAdmin,
-    { user: userContext },
+    { user },
     {
       action: 'access',
       subject: 'Admin',
-      user: userContext,
-      message: userContext
+      user,
+      message: user
         ? 'Admin role required to access this resource'
         : 'Authentication required: provide an admin Bearer token or valid x-admin-token header',
     }

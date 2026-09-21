@@ -7,18 +7,26 @@ export function rawSourceKey(videoId: string, ext = 'mp4'): string {
   return `raw/${videoId}/source.${cleanExt}`;
 }
 
+function hlsPrefix(videoId: string, generation: number): string {
+  return generation > 1 ? `videos/${videoId}/hls/g${generation}` : `videos/${videoId}/hls`;
+}
+
 export function masterPlaylistKey(videoId: string, generation = 1): string {
-  if (generation > 1) {
-    return `videos/${videoId}/hls/g${generation}/master.m3u8`;
-  }
-  return `videos/${videoId}/hls/master.m3u8`;
+  return `${hlsPrefix(videoId, generation)}/master.m3u8`;
+}
+
+/** Any object ffmpeg writes into a rendition directory, addressed by its file name. */
+export function renditionObjectKey(
+  videoId: string,
+  rendition: string,
+  filename: string,
+  generation = 1
+): string {
+  return `${hlsPrefix(videoId, generation)}/${rendition}/${filename}`;
 }
 
 export function renditionPlaylistKey(videoId: string, rendition: string, generation = 1): string {
-  if (generation > 1) {
-    return `videos/${videoId}/hls/g${generation}/${rendition}/index.m3u8`;
-  }
-  return `videos/${videoId}/hls/${rendition}/index.m3u8`;
+  return renditionObjectKey(videoId, rendition, 'index.m3u8', generation);
 }
 
 export function segmentKey(
@@ -27,11 +35,12 @@ export function segmentKey(
   segmentIndex: number,
   generation = 1
 ): string {
-  const paddedIndex = String(segmentIndex).padStart(5, '0');
-  if (generation > 1) {
-    return `videos/${videoId}/hls/g${generation}/${rendition}/seg_${paddedIndex}.ts`;
-  }
-  return `videos/${videoId}/hls/${rendition}/seg_${paddedIndex}.ts`;
+  return renditionObjectKey(
+    videoId,
+    rendition,
+    `seg_${String(segmentIndex).padStart(5, '0')}.ts`,
+    generation
+  );
 }
 
 export function posterKey(videoId: string): string {

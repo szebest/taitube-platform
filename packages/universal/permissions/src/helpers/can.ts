@@ -13,39 +13,26 @@ import {
   canUpdateVideo,
 } from './videos.js';
 
+type ActionCheck = (user: UserContext | null, resource?: Resource) => boolean;
+
+const ACTION_CHECKS: Record<Action, ActionCheck> = {
+  'video:read': (user, video) => canReadVideo({ user, video }),
+  'video:create': (user) => canCreateVideo({ user }),
+  'video:update': (user, video) => canUpdateVideo({ user, video }),
+  'video:delete': (user, video) => canDeleteVideo({ user, video }),
+  'video:publish': (user, video) => canPublishVideo({ user, video }),
+  'video:react': (user) => canReactVideo({ user }),
+  'comment:create': (user) => canCreateComment({ user }),
+  'comment:delete': (user, comment) => canDeleteComment({ user, comment }),
+  'comment:pin': (user, comment) => canPinComment({ user, comment }),
+  'channel:update': (user, channel) => canUpdateChannel({ user, channel }),
+  'channel:manage': (user, channel) => canManageChannel({ user, channel }),
+  'channel:subscribe': (user) => canSubscribeChannel({ user }),
+  'category:manage': (user) => canManageCategory({ user }),
+  'analytics:view_all': (user) => canViewAllAnalytics({ user }),
+  'admin:access': (user) => canAccessAdmin({ user }),
+};
+
 export function can(user: UserContext | null, action: Action, resource?: Resource): boolean {
-  switch (action) {
-    case 'video:read':
-      return canReadVideo({ user, video: resource });
-    case 'video:create':
-      return canCreateVideo({ user });
-    case 'video:update':
-      return canUpdateVideo({ user, video: resource });
-    case 'video:delete':
-      return canDeleteVideo({ user, video: resource });
-    case 'video:publish':
-      return canPublishVideo({ user, video: resource });
-    case 'video:react':
-      return canReactVideo({ user });
-    case 'comment:create':
-      return canCreateComment({ user });
-    case 'comment:delete':
-      return canDeleteComment({ user, comment: resource });
-    case 'comment:pin':
-      return canPinComment({ user, comment: resource });
-    case 'channel:update':
-      return canUpdateChannel({ user, channel: resource });
-    case 'channel:manage':
-      return canManageChannel({ user, channel: resource });
-    case 'channel:subscribe':
-      return canSubscribeChannel({ user });
-    case 'category:manage':
-      return canManageCategory({ user });
-    case 'analytics:view_all':
-      return canViewAllAnalytics({ user });
-    case 'admin:access':
-      return canAccessAdmin({ user });
-    default:
-      return false;
-  }
+  return ACTION_CHECKS[action]?.(user, resource) ?? false;
 }

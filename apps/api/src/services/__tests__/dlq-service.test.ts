@@ -4,7 +4,7 @@ import { ErrorCodes } from '@vp/errors';
 import type { AuthUser } from '../../plugins/auth';
 import { DlqService } from '../dlq-service';
 
-const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'admin' };
+const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };
 
 describe('DlqService', () => {
   let repositories: InMemoryRepositories;
@@ -84,9 +84,13 @@ describe('DlqService', () => {
   });
 
   it.each([
-    ['an anonymous caller', null, ErrorCodes.UNAUTHORIZED],
-    ['a signed-in non-admin', { id: 'user-1', role: 'user' }, ErrorCodes.FORBIDDEN],
-  ])('refuses %s', async (_label, caller, code) => {
+    { scenario: 'an anonymous caller', caller: null, code: ErrorCodes.UNAUTHORIZED },
+    {
+      scenario: 'a signed-in non-admin',
+      caller: { id: 'user-1', role: 'USER' } as AuthUser,
+      code: ErrorCodes.FORBIDDEN,
+    },
+  ])('refuses $scenario', async ({ caller, code }) => {
     await expect(dlqService.list(caller, {})).rejects.toMatchObject({ code });
     await expect(dlqService.replay(caller, 'any')).rejects.toMatchObject({ code });
     await expect(dlqService.discard(caller, 'any')).rejects.toMatchObject({ code });

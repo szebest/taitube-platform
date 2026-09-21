@@ -4,12 +4,7 @@ import { defineChannelRules } from './rules/channel.rules.js';
 import { defineCommentRules } from './rules/comment.rules.js';
 import { defineUploadRules } from './rules/upload.rules.js';
 import { defineVideoRules } from './rules/video.rules.js';
-import { type AppAbility, type UserContext, parseRole } from './types/index.js';
-
-/**
- * Backward compatibility alias for boundary callers.
- */
-export const normalizeRole = parseRole;
+import type { AppAbility, UserContext } from './types/index.js';
 
 export function getUserPermissions(user: UserContext | null): AppAbility {
   const builder = new AbilityBuilder<AppAbility>(createMongoAbility);

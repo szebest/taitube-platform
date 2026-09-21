@@ -10,13 +10,7 @@ import type {
   VideoStatus,
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import {
-  type UserContext,
-  canAccessAdmin,
-  canReadVideo,
-  canUpdateVideo,
-  parseRole,
-} from '@vp/permissions';
+import { canAccessAdmin, canReadVideo, canUpdateVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 import {
   type ReprocessResult,
@@ -94,7 +88,7 @@ export class VideoService {
 
     const rows = await this.videos.listByOwner({
       ownerId: user.id,
-      viewer: { id: user.id, role: parseRole(user.role) },
+      viewer: user,
       cursor: decodeCreatedAtCursor(options.cursor, this.paginator),
       limit,
       status: options.status,
@@ -143,13 +137,10 @@ export class VideoService {
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
     const { video, renditions: videoRenditions } = details;
-    const userContext: UserContext | null = user
-      ? { id: user.id, role: parseRole(user.role) }
-      : null;
 
-    const canRead = this.auth.can(canReadVideo, { user: userContext, video });
+    const canRead = this.auth.can(canReadVideo, { user: user, video });
     if (!canRead) {
-      if (!userContext) {
+      if (!user) {
         this.auth.assertCan(
           canReadVideo,
           { user: null, video },
@@ -192,15 +183,13 @@ export class VideoService {
     if (!existing)
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
-    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
-
-    if (!this.auth.can(canReadVideo, { user: userContext, video: existing })) {
+    if (!this.auth.can(canReadVideo, { user: user, video: existing })) {
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
     }
 
     this.auth.assertCan(
       canUpdateVideo,
-      { user: userContext, video: existing },
+      { user: user, video: existing },
       {
         action: 'update',
         subject: 'Video',
@@ -245,7 +234,7 @@ export class VideoService {
    * Admins are not throttled on reprocess; the route only asks, it does not decide.
    */
   isRateLimitExempt(user: AuthUser): boolean {
-    return this.auth.can(canAccessAdmin, { user: { id: user.id, role: parseRole(user.role) } });
+    return this.auth.can(canAccessAdmin, { user });
   }
 
   reprocess(

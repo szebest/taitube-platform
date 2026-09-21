@@ -9,9 +9,9 @@ import { ErrorCodes } from '@vp/errors';
 import type { AuthUser } from '../../plugins/auth';
 import { type UploadContext, assertUploadOpen, loadOwnedUpload } from '../upload-context';
 
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000a001', role: 'creator' };
-const STRANGER: AuthUser = { id: '00000000-0000-7000-8000-00000000a002', role: 'creator' };
-const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-00000000a003', role: 'admin' };
+const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000a001', role: 'CREATOR' };
+const STRANGER: AuthUser = { id: '00000000-0000-7000-8000-00000000a002', role: 'CREATOR' };
+const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-00000000a003', role: 'ADMIN' };
 const VIDEO_ID = '00000000-0000-7000-8000-00000000a004';
 const UPLOAD_ID = '00000000-0000-7000-8000-00000000a005';
 

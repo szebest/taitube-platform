@@ -54,3 +54,14 @@ export function buildPath(path: string, params: Record<string, string | number> 
     return encodeURIComponent(String(value));
   });
 }
+
+/** Whether an exported member of a contract group is an endpoint rather than a schema or type. */
+export function isEndpoint(value: unknown): value is EndpointContract {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'method' in value &&
+    'path' in value &&
+    'result' in value
+  );
+}

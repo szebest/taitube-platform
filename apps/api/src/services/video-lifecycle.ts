@@ -1,7 +1,7 @@
 import type { AuthorizationPort, JobQueue, VideoRepository, VideoStatus } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
-import { type UserContext, canDeleteVideo, canUpdateVideo, parseRole } from '@vp/permissions';
+import { canDeleteVideo, canUpdateVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
@@ -49,10 +49,9 @@ export async function reprocessVideo(
   const video = await deps.videos.findById(videoId);
   if (!video) throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
-  const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
   deps.auth.assertCan(
     canUpdateVideo,
-    { user: userContext, video },
+    { user: user, video },
     {
       action: 'update',
       subject: 'Video',
@@ -108,10 +107,9 @@ export async function softDeleteVideo(
   const video = await deps.videos.findById(videoId);
   if (!video) throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
-  const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
   deps.auth.assertCan(
     canDeleteVideo,
-    { user: userContext, video },
+    { user: user, video },
     {
       action: 'delete',
       subject: 'Video',

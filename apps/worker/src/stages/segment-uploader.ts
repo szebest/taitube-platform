@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import type { StorageClient } from '@vp/core/ports';
 import { ErrorCodes, TransientError } from '@vp/errors';
 import type { Logger } from '@vp/observability';
-import { getHeaderMapping, renditionPlaylistKey } from '@vp/storage';
+import { getHeaderMapping, renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
 
 export interface SegmentUploaderOptions {
   outputDir: string;
@@ -113,10 +113,7 @@ export class StreamingSegmentUploader {
 
   private async uploadSegment(filename: string): Promise<void> {
     const filePath = path.join(this.outputDir, filename);
-    const key =
-      this.generation > 1
-        ? `videos/${this.videoId}/hls/g${this.generation}/${this.rendition}/${filename}`
-        : `videos/${this.videoId}/hls/${this.rendition}/${filename}`;
+    const key = renditionObjectKey(this.videoId, this.rendition, filename, this.generation);
     const headers = getHeaderMapping(filename);
 
     let attempts = 0;

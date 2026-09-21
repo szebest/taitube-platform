@@ -1,4 +1,5 @@
 import type { RenditionRecord, VideoRecord, VideoStatus } from '@vp/core/ports';
+import { masterPlaylistKey } from '@vp/storage';
 
 export type VideoVisibility = 'private' | 'unlisted' | 'public';
 
@@ -73,6 +74,14 @@ export interface VideoSummaryView {
   readyAt?: string;
 }
 
+function cdnUrl(cleanCdnBase: string, key: string): string {
+  return `${cleanCdnBase}/${key.replace(/^\/+/, '')}`;
+}
+
+function isoOf(value: Date | string): string {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
 export interface PlayableVideo {
   id: string;
   status: VideoStatus;
@@ -85,13 +94,9 @@ export interface PlayableVideo {
  */
 export function playbackUrl(video: PlayableVideo, cleanCdnBase: string): string | undefined {
   if (video.status !== 'READY') return undefined;
-  const key = video.masterPlaylistKey || `videos/${video.id}/hls/master.m3u8`;
-  return `${cleanCdnBase}/${key.replace(/^\/+/, '')}`;
+  return cdnUrl(cleanCdnBase, video.masterPlaylistKey || masterPlaylistKey(video.id));
 }
 
-/**
- * Maps a core VideoRecord domain model into a client-facing VideoSummaryView.
- */
 export function toVideoSummaryView(v: VideoRecord, cleanCdnBase: string): VideoSummaryView {
   return {
     id: v.id,
@@ -101,26 +106,19 @@ export function toVideoSummaryView(v: VideoRecord, cleanCdnBase: string): VideoS
     visibility: v.visibility as VideoVisibility,
     status: v.status,
     durationMs: v.durationMs ?? undefined,
-    posterUrl: v.posterKey ? `${cleanCdnBase}/${v.posterKey.replace(/^\/+/, '')}` : undefined,
+    posterUrl: v.posterKey ? cdnUrl(cleanCdnBase, v.posterKey) : undefined,
     playbackUrl: playbackUrl(v, cleanCdnBase),
     viewsCount: v.viewsCount ?? 0,
     likesCount: v.likesCount ?? 0,
     dislikesCount: v.dislikesCount ?? 0,
     categoryId: v.categoryId ?? null,
     version: v.version,
-    createdAt: v.createdAt instanceof Date ? v.createdAt.toISOString() : String(v.createdAt),
-    updatedAt: v.updatedAt instanceof Date ? v.updatedAt.toISOString() : String(v.updatedAt),
-    readyAt: v.readyAt
-      ? v.readyAt instanceof Date
-        ? v.readyAt.toISOString()
-        : String(v.readyAt)
-      : undefined,
+    createdAt: isoOf(v.createdAt),
+    updatedAt: isoOf(v.updatedAt),
+    readyAt: v.readyAt ? isoOf(v.readyAt) : undefined,
   };
 }
 
-/**
- * Maps a core VideoRecord and renditions into a client-facing VideoDetailView.
- */
 export function toVideoDetailView(
   video: VideoRecord,
   videoRenditions: RenditionRecord[],
@@ -163,7 +161,7 @@ export function toVideoDetailView(
   const renditions = videoRenditions.map((r) => ({
     name: r.name,
     status: r.status,
-    playlistUrl: r.playlistKey ? `${cleanCdnBase}/${r.playlistKey.replace(/^\/+/, '')}` : undefined,
+    playlistUrl: r.playlistKey ? cdnUrl(cleanCdnBase, r.playlistKey) : undefined,
   }));
 
   return {
@@ -181,14 +179,10 @@ export function toVideoDetailView(
     ladder: (video.ladder as VideoDetailView['ladder']) ?? undefined,
     renditions,
     playbackUrl: playbackUrl(video, cleanCdnBase),
-    posterUrl: video.posterKey
-      ? `${cleanCdnBase}/${video.posterKey.replace(/^\/+/, '')}`
-      : undefined,
-    spriteUrl: video.spriteKey
-      ? `${cleanCdnBase}/${video.spriteKey.replace(/^\/+/, '')}`
-      : undefined,
+    posterUrl: video.posterKey ? cdnUrl(cleanCdnBase, video.posterKey) : undefined,
+    spriteUrl: video.spriteKey ? cdnUrl(cleanCdnBase, video.spriteKey) : undefined,
     spriteVttUrl: video.spriteKey
-      ? `${cleanCdnBase}/${video.spriteKey.replace(/\.[^.]+$/, '.vtt').replace(/^\/+/, '')}`
+      ? cdnUrl(cleanCdnBase, video.spriteKey.replace(/\.[^.]+$/, '.vtt'))
       : undefined,
     likesCount: video.likesCount ?? 0,
     dislikesCount: video.dislikesCount ?? 0,
@@ -196,14 +190,8 @@ export function toVideoDetailView(
       ? { code: video.errorCode, message: video.errorMessage || '' }
       : undefined,
     version: video.version,
-    createdAt:
-      video.createdAt instanceof Date ? video.createdAt.toISOString() : String(video.createdAt),
-    updatedAt:
-      video.updatedAt instanceof Date ? video.updatedAt.toISOString() : String(video.updatedAt),
-    readyAt: video.readyAt
-      ? video.readyAt instanceof Date
-        ? video.readyAt.toISOString()
-        : String(video.readyAt)
-      : undefined,
+    createdAt: isoOf(video.createdAt),
+    updatedAt: isoOf(video.updatedAt),
+    readyAt: video.readyAt ? isoOf(video.readyAt) : undefined,
   };
 }

@@ -1,5 +1,5 @@
 import type { AbilityBuilder } from '@casl/ability';
-import type { AppAbility, UserContext } from '../types';
+import { type AppAbility, type UserContext, isSignedInRole } from '../types';
 
 export function defineUploadRules(
   user: UserContext | null,
@@ -13,7 +13,7 @@ export function defineUploadRules(
 
   const role = user.role;
 
-  if (role === 'USER' || role === 'CREATOR' || role === 'MODERATOR' || role === 'ADMIN') {
+  if (isSignedInRole(role)) {
     can('create', 'Upload');
     can('access', 'Upload', { ownerId: user.id });
   }

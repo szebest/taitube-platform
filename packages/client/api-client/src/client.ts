@@ -1,4 +1,12 @@
-import { type EndpointContract, contracts } from '@vp/api-contracts';
+import {
+  type ContractBody,
+  type ContractParams,
+  type ContractQuery,
+  type ContractResult,
+  type EndpointContract,
+  contracts,
+  isEndpoint,
+} from '@vp/api-contracts';
 import type { z } from 'zod';
 import { type ApiClientOptions, type RequestOptions, sendRequest } from './request.js';
 
@@ -9,17 +17,17 @@ type EndpointNames<G> = {
 }[keyof G];
 
 type CallArgs<T extends EndpointContract> = (T['params'] extends z.ZodTypeAny
-  ? { params: z.infer<T['params']> }
+  ? { params: ContractParams<T> }
   : { params?: never }) &
-  (T['query'] extends z.ZodTypeAny ? { query?: z.input<T['query']> } : { query?: never }) &
-  (T['body'] extends z.ZodTypeAny ? { body: z.infer<T['body']> } : { body?: never }) & {
+  (T['query'] extends z.ZodTypeAny ? { query?: ContractQuery<T> } : { query?: never }) &
+  (T['body'] extends z.ZodTypeAny ? { body: ContractBody<T> } : { body?: never }) & {
     signal?: AbortSignal;
     headers?: Record<string, string>;
   };
 
 type Call<T extends EndpointContract> = Record<string, never> extends CallArgs<T>
-  ? (args?: CallArgs<T>) => Promise<z.infer<T['result']>>
-  : (args: CallArgs<T>) => Promise<z.infer<T['result']>>;
+  ? (args?: CallArgs<T>) => Promise<ContractResult<T>>
+  : (args: CallArgs<T>) => Promise<ContractResult<T>>;
 
 export type ApiClient = {
   [G in keyof ContractGroups]: {
@@ -28,16 +36,6 @@ export type ApiClient = {
       : never;
   };
 };
-
-function isEndpoint(value: unknown): value is EndpointContract {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'method' in value &&
-    'path' in value &&
-    'result' in value
-  );
-}
 
 /**
  * Builds one typed fetcher per `@vp/api-contracts` entry. Nothing is generated
