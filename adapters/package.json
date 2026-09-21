@@ -71,6 +71,7 @@
     "uuidv7": "^1.2.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^24.0.0",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
