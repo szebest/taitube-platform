@@ -63,7 +63,7 @@ export class PostgresStepRepository extends StepRepository {
           status: 'DONE',
           completedAt: new Date(),
           result,
-        } as unknown as Partial<typeof schema.processingSteps.$inferInsert>)
+        } as Partial<typeof schema.processingSteps.$inferInsert>)
         .where(
           and(
             eq(schema.processingSteps.videoId, videoId),
@@ -96,7 +96,7 @@ export class PostgresStepRepository extends StepRepository {
           completedAt: new Date(),
           errorCode,
           errorMessage: errorMessage || null,
-        } as unknown as Partial<typeof schema.processingSteps.$inferInsert>)
+        } as Partial<typeof schema.processingSteps.$inferInsert>)
         .where(
           and(
             eq(schema.processingSteps.videoId, videoId),
@@ -129,7 +129,7 @@ export class PostgresStepRepository extends StepRepository {
           completedAt: new Date(),
           errorCode: errorCode || null,
           errorMessage: errorMessage || null,
-        } as unknown as Partial<typeof schema.processingSteps.$inferInsert>)
+        } as Partial<typeof schema.processingSteps.$inferInsert>)
         .where(
           and(
             eq(schema.processingSteps.videoId, videoId),
@@ -171,7 +171,7 @@ export class PostgresStepRepository extends StepRepository {
         .select()
         .from(schema.processingSteps)
         .where(eq(schema.processingSteps.videoId, videoId));
-      return rows as unknown as ProcessingStepRecord[];
+      return rows as ProcessingStepRecord[];
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to get steps for video ${videoId}: ${(err as Error).message}`,

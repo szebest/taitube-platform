@@ -31,13 +31,13 @@ export class PostgresRenditionRepository extends RenditionRepository {
           playlistKey: data.playlistKey ?? null,
           segmentCount: data.segmentCount ?? null,
           bytes: data.bytes ?? null,
-        } as unknown as typeof schema.renditions.$inferInsert)
+        } as typeof schema.renditions.$inferInsert)
         .returning();
 
       if (!created) {
         throw new DatabaseError('Failed to create rendition: empty return');
       }
-      return created as unknown as RenditionRecord;
+      return created as RenditionRecord;
     } catch (err: unknown) {
       if (err instanceof DatabaseError) throw err;
       throw new DatabaseError(`Failed to create rendition: ${(err as Error).message}`, {
@@ -52,7 +52,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
         .select()
         .from(schema.renditions)
         .where(eq(schema.renditions.videoId, videoId));
-      return rows as unknown as RenditionRecord[];
+      return rows as RenditionRecord[];
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to get renditions for video ${videoId}: ${(err as Error).message}`,
@@ -68,7 +68,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
         .select()
         .from(schema.renditions)
         .where(inArray(schema.renditions.videoId, videoIds));
-      return rows as unknown as RenditionRecord[];
+      return rows as RenditionRecord[];
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to get renditions for videos: ${(err as Error).message}`, {
         cause: err,
@@ -85,7 +85,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
       const setPayload: Record<string, unknown> = {
         updatedAt: new Date(),
       };
-      if (patch.status !== undefined) setPayload['status'] = patch.status as any;
+      if (patch.status !== undefined) setPayload['status'] = patch.status;
       if (patch.playlistKey !== undefined) setPayload['playlistKey'] = patch.playlistKey;
       if (patch.segmentCount !== undefined) setPayload['segmentCount'] = patch.segmentCount;
       if (patch.bytes !== undefined) setPayload['bytes'] = patch.bytes;
@@ -96,7 +96,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
         .set(setPayload)
         .where(and(eq(schema.renditions.videoId, videoId), eq(schema.renditions.name, name)))
         .returning();
-      return (updated as unknown as RenditionRecord) || null;
+      return (updated as RenditionRecord) || null;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to update rendition ${name}: ${(err as Error).message}`, {
         cause: err,

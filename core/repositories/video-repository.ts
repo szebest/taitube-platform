@@ -84,8 +84,8 @@ export interface UpdateVideoMetadataOptions {
   videoId: string;
   expectedVersion: number;
   patch: {
-    title?: string | null;
-    description?: string | null;
+    title?: string;
+    description?: string;
     visibility?: VideoVisibility;
   };
   userId?: string;

@@ -237,6 +237,32 @@ describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)
     expect(resInvalidCursor.json().code).toBe(ErrorCodes.VALIDATION_FAILED);
   });
 
+  it.each([{ field: 'title' }, { field: 'description' }])(
+    'rejects a null $field instead of reaching the NOT NULL column',
+    async ({ field }) => {
+      const videoId = '018f0000-0000-7000-8000-000000000041';
+      await repositories.videos.create({
+        id: videoId,
+        ownerId: USER_A,
+        title: 'Initial Title',
+        description: 'Initial Description',
+        visibility: 'private',
+        status: 'READY',
+        sourceKey: `raw/${videoId}/source.mp4`,
+      });
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/v1/videos/${videoId}`,
+        headers: { authorization: `Bearer ${tokenA}` },
+        payload: { [field]: null, version: 1 },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.json().code).toBe(ErrorCodes.VALIDATION_FAILED);
+    }
+  );
+
   it('AC 2: PATCH /v1/videos/:id optimistic locking (stale version -> 409 VERSION_CONFLICT)', async () => {
     const videoId = '018f0000-0000-7000-8000-000000000031';
     await repositories.videos.create({

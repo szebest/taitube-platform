@@ -174,8 +174,8 @@ export class VideoService {
     user: AuthUser,
     videoId: string,
     input: {
-      title?: string | null;
-      description?: string | null;
+      title?: string;
+      description?: string;
       visibility?: 'private' | 'unlisted' | 'public';
       version: number;
     }
@@ -208,8 +208,8 @@ export class VideoService {
     }
 
     const patch: {
-      title?: string | null;
-      description?: string | null;
+      title?: string;
+      description?: string;
       visibility?: 'private' | 'unlisted' | 'public';
     } = {};
     if (input.title !== undefined) patch.title = input.title;

@@ -66,7 +66,7 @@ export class PostgresDlqRepository extends DlqRepository {
         })
         .returning();
 
-      return rows[0] as unknown as DlqEntryRecord;
+      return rows[0] as DlqEntryRecord;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to create DLQ entry for job ${entry.jobId}: ${(err as Error).message}`,
@@ -83,7 +83,7 @@ export class PostgresDlqRepository extends DlqRepository {
         .where(eq(schema.dlqEntries.id, id))
         .limit(1);
 
-      return (rows[0] as unknown as DlqEntryRecord) || null;
+      return (rows[0] as DlqEntryRecord) || null;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to get DLQ entry ${id}: ${(err as Error).message}`, {
         cause: err,
@@ -124,7 +124,7 @@ export class PostgresDlqRepository extends DlqRepository {
       const rows = conditions.length > 0 ? await query.where(and(...conditions)) : await query;
 
       const hasMore = rows.length > limit;
-      const items = (hasMore ? rows.slice(0, limit) : rows) as unknown as DlqEntryRecord[];
+      const items = (hasMore ? rows.slice(0, limit) : rows) as DlqEntryRecord[];
       const lastItem = hasMore && items.length > 0 ? items[items.length - 1] : undefined;
       const nextCursor = lastItem ? encodeCursor(lastItem.createdAt, lastItem.id) : null;
 
@@ -164,7 +164,7 @@ export class PostgresDlqRepository extends DlqRepository {
             attempts: 0,
           });
 
-          return (rows[0] as unknown as DlqEntryRecord) || null;
+          return (rows[0] as DlqEntryRecord) || null;
         });
       }
 
@@ -174,7 +174,7 @@ export class PostgresDlqRepository extends DlqRepository {
         .where(eq(schema.dlqEntries.id, id))
         .returning();
 
-      return (rows[0] as unknown as DlqEntryRecord) || null;
+      return (rows[0] as DlqEntryRecord) || null;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to update DLQ entry status ${id}: ${(err as Error).message}`,

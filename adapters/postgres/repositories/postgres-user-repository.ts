@@ -20,7 +20,7 @@ export class PostgresUserRepository extends UserRepository {
         .from(schema.users)
         .where(eq(schema.users.id, id))
         .limit(1);
-      return (rows[0] as unknown as UserRecord) || null;
+      return (rows[0] as UserRecord) || null;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to get user ${id}: ${(err as Error).message}`, {
         cause: err,
@@ -48,7 +48,7 @@ export class PostgresUserRepository extends UserRepository {
         })
         .returning();
 
-      return upserted as unknown as UserRecord;
+      return upserted as UserRecord;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to upsert user ${user.id}: ${(err as Error).message}`, {
         cause: err,

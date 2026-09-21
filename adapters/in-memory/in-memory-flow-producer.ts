@@ -43,7 +43,7 @@ export class InMemoryFlowProducer extends FlowProducerPort {
 
     // Provide getChildrenValues to parent
     parentJob.getChildrenValues = async <R = Record<string, unknown>>() =>
-      childrenValues as unknown as R;
+      childrenValues as R;
 
     if (children.length === 0) {
       return { job: parentJob, children: [] };

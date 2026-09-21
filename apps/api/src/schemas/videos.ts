@@ -152,8 +152,8 @@ export const ListVideosQuerySchema = z.object({
 });
 
 export const UpdateVideoMetadataSchema = z.object({
-  title: z.string().max(255).nullish().describe('Updated video title'),
-  description: z.string().max(4000).nullish().describe('Updated video description'),
+  title: z.string().max(255).optional().describe('Updated video title'),
+  description: z.string().max(4000).optional().describe('Updated video description'),
   visibility: VideoVisibilitySchema.optional().describe(
     'Updated visibility: private, unlisted, or public'
   ),

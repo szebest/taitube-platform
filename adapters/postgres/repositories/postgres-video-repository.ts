@@ -191,7 +191,7 @@ export class PostgresVideoRepository extends VideoRepository {
             version: sql`${v.version} + 1`,
             updatedAt: new Date(),
             ...patch,
-          } as unknown as VideoInsert)
+          })
           .where(and(eq(v.id, videoId), eq(v.version, expectedVersion)))
           .returning();
         if (!updated) {
@@ -238,7 +238,7 @@ export class PostgresVideoRepository extends VideoRepository {
             status: to,
             updatedAt: new Date(),
             ...(to === 'READY' ? { readyAt: new Date() } : {}),
-          } as unknown as VideoInsert)
+          } as VideoInsert)
           .where(and(eq(v.id, videoId), statusCond))
           .returning({ id: v.id });
 
