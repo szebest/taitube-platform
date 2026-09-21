@@ -17,6 +17,7 @@ Instructions for any coding agent working on the core domain layer (`core`).
 ```
 core/
 ├── domain/         # Pure domain entities, value objects, and domain types
+├── pagination/     # Shared keyset Paginator and pluggable CursorCodec (no I/O)
 ├── permissions/    # Declarative CASL RBAC & ABAC authorization rules (no I/O)
 ├── ports/          # Abstract class ports extending HealthCheckable
 └── repositories/   # Domain repository interface contracts
@@ -26,7 +27,8 @@ core/
 1. **Ports as Abstract Classes:** Contracts in `core/ports/` are abstract classes (not interfaces) to allow `instanceof` checks, centralized contract enforcement, and uniform health checks (`HealthCheckable`).
 2. **Repository Interfaces:** Repository contracts in `core/repositories/` define data access signatures decoupled from any ORM or database driver.
 3. **Pure Permissions Engine:** All authorization logic in `core/permissions/` consists of pure functional rule builders evaluated via `can(user, action, resource)`.
-4. **File Length Discipline:** Target <= 250 lines per file (strict maximum: 400 lines).
+4. **One Pagination Mechanism:** Every paginated endpoint uses `Paginator` from `core/pagination/`. Repositories return `limit + 1` rows and never encode a cursor; the wire format lives behind `CursorCodec` and is swappable. Page bounds come from `PAGE_SIZE_DEFAULT`/`PAGE_SIZE_MAX` at the composition root — never hard-coded at a call site.
+5. **File Length Discipline:** Target <= 250 lines per file (strict maximum: 400 lines).
 
 ---
 

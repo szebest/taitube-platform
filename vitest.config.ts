@@ -6,6 +6,7 @@ export default defineConfig({
     hookTimeout: 30_000,
     projects: [
       'adapters/vitest.config.ts',
+      'core/vitest.config.ts',
       'apps/*/vitest.config.ts',
       'packages/*/vitest.config.ts',
       'tools/*/vitest.config.ts',

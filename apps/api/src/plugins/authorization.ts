@@ -118,6 +118,7 @@ function evaluateCan(
       actionStr === 'publish' ||
       actionStr === 'react' ||
       actionStr === 'pin' ||
+      actionStr === 'subscribe' ||
       actionStr === 'access') &&
     (typeof subjectOrParams === 'string' || !actionStr.includes(':'))
   ) {

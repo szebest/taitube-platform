@@ -1,4 +1,5 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
+import { defaultPaginator, type Paginator } from '@vp/core/pagination';
 import type {
   AuthorizationPort,
   ReactionCachePort,
@@ -35,10 +36,17 @@ export {
 import {
   decodeFeedCursor,
   decodeVideoCursor,
-  encodeFeedCursor,
-  encodeVideoCursor,
+  feedCursorPayload,
   type FeedSort,
+  videoCursorPayload,
 } from './cursor';
+
+/** Hacker-News style gravity decay; only the trending sort keys on it. */
+function gravityScore(row: { createdAt: Date; viewsCount?: number }, sort: FeedSort) {
+  if (sort !== 'trending') return undefined;
+  const ageHours = Math.max(0, (Date.now() - row.createdAt.getTime()) / 3600000);
+  return ((row.viewsCount ?? 0) + 1) / (ageHours + 2) ** 1.5;
+}
 
 /**
  * VideoService — Deep domain module for video operations and projections (SDD §6.1, §6.3).
@@ -48,11 +56,13 @@ export class VideoService {
   private readonly cleanCdnBase: string;
   private readonly reactionCache?: ReactionCachePort;
   private readonly auth: AuthorizationPort;
+  private readonly paginator: Paginator;
 
   constructor(deps: VideoServiceDeps) {
     this.videos = deps.videos;
     this.reactionCache = deps.reactionCache;
     this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
+    this.paginator = deps.paginator ?? defaultPaginator;
     const cdnBase =
       deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || 'http://localhost:9000/public';
     this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
@@ -65,25 +75,20 @@ export class VideoService {
     user: AuthUser,
     options: { cursor?: string; limit?: number; status?: VideoStatus }
   ): Promise<{ items: VideoSummaryView[]; nextCursor: string | null }> {
-    const decodedCursor = decodeVideoCursor(options.cursor);
-    const limit = Math.max(1, Math.min(100, options.limit ?? 20));
+    const limit = this.paginator.limit(options.limit);
 
     const rows = await this.videos.listByOwner({
       ownerId: user.id,
       viewer: { id: user.id, role: parseRole(user.role) },
-      cursor: decodedCursor,
+      cursor: decodeVideoCursor(options.cursor, this.paginator),
       limit,
       status: options.status,
     });
 
-    const hasMore = rows.length > limit;
-    const pageRows = hasMore ? rows.slice(0, limit) : rows;
-    const lastRow = hasMore && pageRows.length > 0 ? pageRows[pageRows.length - 1] : undefined;
-    const nextCursor = lastRow ? encodeVideoCursor(lastRow) : null;
-
-    const items: VideoSummaryView[] = pageRows.map((v) => toVideoSummaryView(v, this.cleanCdnBase));
-
-    return { items, nextCursor };
+    return this.paginator.paginate(rows, limit, {
+      cursorOf: videoCursorPayload,
+      toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
+    });
   }
 
   /**
@@ -97,33 +102,21 @@ export class VideoService {
     limit?: number;
   }): Promise<{ items: VideoSummaryView[]; nextCursor: string | null; total: number }> {
     const sort = options.sort ?? 'recent';
-    const decodedCursor = decodeFeedCursor(options.cursor);
-    const limit = Math.max(1, Math.min(100, options.limit ?? 20));
+    const limit = this.paginator.limit(options.limit);
 
     const result = await this.videos.listPublic({
       sort,
       categoryId: options.categoryId,
-      cursor: decodedCursor,
+      cursor: decodeFeedCursor(options.cursor, this.paginator),
       limit,
     });
 
-    const hasMore = result.items.length > limit;
-    const pageRows = hasMore ? result.items.slice(0, limit) : result.items;
-    const lastRow = hasMore && pageRows.length > 0 ? pageRows[pageRows.length - 1] : undefined;
+    const page = this.paginator.paginate(result.items, limit, {
+      cursorOf: (row) => feedCursorPayload(row, sort, gravityScore(row, sort)),
+      toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
+    });
 
-    let nextCursor: string | null = null;
-    if (lastRow) {
-      let score: number | undefined;
-      if (sort === 'trending') {
-        const ageHours = Math.max(0, (Date.now() - lastRow.createdAt.getTime()) / 3600000);
-        score = ((lastRow.viewsCount ?? 0) + 1) / (ageHours + 2) ** 1.5;
-      }
-      nextCursor = encodeFeedCursor(lastRow, sort, score);
-    }
-
-    const items: VideoSummaryView[] = pageRows.map((v) => toVideoSummaryView(v, this.cleanCdnBase));
-
-    return { items, nextCursor, total: result.total };
+    return { ...page, total: result.total };
   }
 
   /**

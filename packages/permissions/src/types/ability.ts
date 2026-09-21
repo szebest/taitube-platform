@@ -14,6 +14,7 @@ export type AppAction =
   | 'publish'
   | 'react'
   | 'pin'
+  | 'subscribe'
   | 'access';
 
 export type AppSubjects =

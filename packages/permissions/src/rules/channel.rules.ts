@@ -16,6 +16,8 @@ export function defineChannelRules(
   const role = user.role;
 
   if (role === 'USER' || role === 'CREATOR' || role === 'MODERATOR' || role === 'ADMIN') {
+    can('subscribe', 'Channel');
+
     can('update', 'Channel', { ownerId: user.id });
     can('update', 'Channel', { userId: user.id });
   }

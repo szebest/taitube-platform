@@ -34,6 +34,10 @@ export class RedisCacheClient extends CacheClient {
     });
   }
 
+  getRedis(): Redis {
+    return this.redis;
+  }
+
   private getSubRedis(): Redis {
     if (!this.subRedis) {
       this.subRedis = new Redis(this.url, {

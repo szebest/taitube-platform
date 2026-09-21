@@ -116,6 +116,20 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     return channel;
   }
 
+  /**
+   * Moves the subscriber count, which `update` deliberately does not expose
+   * because it is owned by the subscription repository, not by the channel owner.
+   */
+  async adjustSubscriberCount(id: string, delta: number): Promise<number> {
+    const channel = this.channels.get(id);
+    if (!channel) {
+      throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, `Channel ${id} not found`);
+    }
+    channel.subscriberCount = Math.max(0, channel.subscriberCount + delta);
+    channel.updatedAt = new Date();
+    return channel.subscriberCount;
+  }
+
   async update(id: string, input: UpdateChannelInput): Promise<Channel> {
     const channel = this.channels.get(id);
     if (!channel) {

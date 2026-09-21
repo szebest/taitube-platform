@@ -3,6 +3,8 @@ export * from './redis/redis-cache-client';
 export * from './redis/category-cache.service';
 export * from './redis/singleflight';
 export * from './redis/redis-reaction-cache.adapter';
+export * from './redis/redis-subscription-cache.adapter';
+export * from './in-memory/in-memory-subscription-cache';
 export * from './bullmq/bullmq-job-queue';
 export * from './bullmq/bullmq-flow-producer';
 export * from './postgres/index';

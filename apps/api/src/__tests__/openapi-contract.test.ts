@@ -330,6 +330,54 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
       expectedErrorCodes: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.CHANNEL_NOT_FOUND],
       hasPathParams: true,
     },
+    {
+      path: '/v1/channels/{id}/subscribers',
+      method: 'post',
+      expectedStatuses: [200, 400, 401, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.CHANNEL_NOT_FOUND,
+      ],
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/channels/{id}/subscribers',
+      method: 'delete',
+      expectedStatuses: [200, 400, 401, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.CHANNEL_NOT_FOUND,
+      ],
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/channels/{id}/subscribers/me',
+      method: 'get',
+      expectedStatuses: [200, 400, 401, 404],
+      expectedErrorCodes: [
+        ErrorCodes.VALIDATION_FAILED,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.CHANNEL_NOT_FOUND,
+      ],
+      hasPathParams: true,
+    },
+    {
+      path: '/v1/me/subscriptions',
+      method: 'get',
+      expectedStatuses: [200, 400, 401],
+      expectedErrorCodes: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.UNAUTHORIZED],
+      hasQueryParams: true,
+    },
+    {
+      path: '/v1/feed/subscriptions',
+      method: 'get',
+      expectedStatuses: [200, 400, 401],
+      expectedErrorCodes: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.UNAUTHORIZED],
+      hasQueryParams: true,
+    },
 
     // 3. Admin (§6.1)
     {

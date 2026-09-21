@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist tsconfig.tsbuildinfo"
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
+    "test": "vitest run"
   },
   "exports": {
     "./ports": {
@@ -41,6 +42,16 @@
       "import": "./dist/domain/*.js",
       "default": "./dist/domain/*.js"
     },
+    "./pagination": {
+      "types": "./dist/pagination/index.d.ts",
+      "import": "./dist/pagination/index.js",
+      "default": "./dist/pagination/index.js"
+    },
+    "./pagination/*": {
+      "types": "./dist/pagination/*.d.ts",
+      "import": "./dist/pagination/*.js",
+      "default": "./dist/pagination/*.js"
+    },
     "./permissions": {
       "types": "./dist/permissions/index.d.ts",
       "import": "./dist/permissions/index.js",
@@ -56,8 +67,10 @@
     "@vp/permissions": "workspace:*"
   },
   "devDependencies": {
+    "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
   }
 }

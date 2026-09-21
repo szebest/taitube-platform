@@ -4,4 +4,4 @@ export interface ChannelResource {
   readonly ownerId?: string;
 }
 
-export type ChannelAction = 'channel:update' | 'channel:manage';
+export type ChannelAction = 'channel:update' | 'channel:manage' | 'channel:subscribe';

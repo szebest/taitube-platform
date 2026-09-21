@@ -25,6 +25,7 @@ video-pipeline/
 │   ├── domain/                     # Domain entities and value objects
 │   │   ├── category.ts             # Category domain model and input interfaces
 │   │   ├── reaction.ts             # Video reaction entities and count models
+│   │   ├── subscription.ts         # Channel subscription entities and feed models
 │   │   └── index.ts
 │   ├── permissions/                # Pure domain RBAC & ABAC permission engine (re-exports @vp/permissions)
 │   ├── ports/                      # Core abstract ports & domain models
@@ -35,11 +36,15 @@ video-pipeline/
 │   │   ├── multipart-storage.ts    # MultipartStorage port (create, presignPart, list, complete, abort)
 │   │   ├── cache-client.ts         # CacheClient port (key-value, pub/sub)
 │   │   ├── reaction-cache.port.ts  # ReactionCachePort (singleflight & XFetch caching)
+│   │   ├── subscription-cache.port.ts # SubscriptionCachePort (Redis set & subscriber counter)
 │   │   ├── job-queue.ts            # JobQueue port (enqueue, counts, pause, resume)
 │   │   ├── flow-producer.ts        # FlowProducer port (flow graph additions)
 │   │   └── index.ts
+│   ├── pagination/                 # Shared keyset Paginator & pluggable CursorCodec
 │   └── repositories/               # Domain repository interfaces
 │       ├── category-repository.port.ts
+│       ├── channel-repository.port.ts
+│       ├── subscription-repository.port.ts
 │       ├── video-reaction-repository.port.ts
 │       ├── video-repository.ts
 │       ├── upload-repository.ts
@@ -58,6 +63,8 @@ video-pipeline/
 │   │   ├── mappers/                # Domain input -> typed Drizzle insert and update rows
 │   │   ├── repositories/           # Individual Postgres repository implementations
 │   │   │   ├── postgres-category-repository.ts
+│   │   │   ├── postgres-channel-repository.ts
+│   │   │   ├── postgres-subscription-repository.ts
 │   │   │   ├── postgres-video-reaction-repository.ts
 │   │   │   ├── postgres-video-repository.ts
 │   │   │   ├── postgres-upload-repository.ts
@@ -69,10 +76,11 @@ video-pipeline/
 │   │   │   └── index.ts
 │   │   └── index.ts
 │   ├── s3/                         # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
-│   ├── redis/                      # RedisCacheClient, CategoryCacheService, RedisReactionCacheAdapter
+│   ├── redis/                      # RedisCacheClient, CategoryCacheService, RedisReactionCacheAdapter, RedisSubscriptionCacheAdapter
 │   ├── bullmq/                     # BullMqJobQueue & BullMqFlowProducer (bullmq)
 │   └── in-memory/                  # High-speed in-memory test doubles
 │       ├── in-memory-authorization-adapter.ts
+│       ├── in-memory-subscription-cache.ts
 │       ├── in-memory-database-client.ts
 │       ├── in-memory-storage-client.ts
 │       ├── in-memory-multipart-storage.ts

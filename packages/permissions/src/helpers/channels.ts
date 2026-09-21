@@ -19,6 +19,12 @@ export function canUpdateChannel({
   return ability.can('update', channelSubject);
 }
 
+export function canSubscribeChannel({ user }: { user: UserContext | null }): boolean {
+  if (!user) return false;
+  const ability = getUserPermissions(user);
+  return ability.can('subscribe', 'Channel');
+}
+
 export function canManageChannel({
   user,
   channel,

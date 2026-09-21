@@ -19,6 +19,8 @@ import {
   RedisReactionCacheAdapter,
   S3MultipartStorage,
   S3StorageClient,
+  RedisSubscriptionCacheAdapter,
+  InMemorySubscriptionCache,
 } from '@vp/adapters';
 import type {
   AuthorizationPort,
@@ -29,7 +31,9 @@ import type {
   ReactionCachePort,
   Repositories,
   StorageClient,
+  SubscriptionCachePort,
 } from '@vp/core/ports';
+import { Paginator } from '@vp/core/pagination';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import { getMetrics } from '@vp/observability';
@@ -54,6 +58,7 @@ import { registerFeedRoutes } from './routes/feed';
 import { registerHealthRoutes } from './routes/health';
 import { registerMeRoutes } from './routes/me';
 import { registerReactionsRoutes } from './routes/reactions';
+import { registerSubscriptionsRoutes } from './routes/subscriptions';
 import { registerUploadsRoutes } from './routes/uploads';
 import { registerVideosRoutes } from './routes/videos';
 import { VideoService } from './services/video-service';
@@ -63,6 +68,7 @@ import { QueueService } from './services/queue-service';
 import { HttpCacheService } from './services/http-cache-service';
 import { ChannelService } from './services/channel-service';
 import { ReactionService } from './services/reaction-service';
+import { SubscriptionService } from './services/subscription-service';
 import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
 import { startQueuePoller } from './services/queue-poller';
 import { startSqlPoller } from './services/sql-poller';
@@ -79,6 +85,7 @@ export interface BuildAppOptions {
   jobQueue?: JobQueue;
   rawBucket?: string;
   cdnBaseUrl?: string;
+  paginator?: Paginator;
   rateLimitMax?: number;
   maxUploadBytes?: number;
   multipartThresholdBytes?: number;
@@ -98,6 +105,8 @@ export interface BuildAppOptions {
   reactionCache?: ReactionCachePort;
   reactionCacheAdapter?: ReactionCachePort;
   reactionService?: ReactionService;
+  subscriptionCache?: SubscriptionCachePort;
+  subscriptionService?: SubscriptionService;
   jwksUrl?: string;
   authorization?: AuthorizationPort;
 }
@@ -153,6 +162,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const rawBucket = options.rawBucket ?? process.env['STORAGE_RAW_BUCKET'] ?? 'raw';
   const cdnBaseUrl =
     options.cdnBaseUrl ?? process.env['CDN_BASE_URL'] ?? 'http://localhost:9000/public';
+
+  const paginator =
+    options.paginator ??
+    new Paginator({
+      defaultLimit: Number(process.env['PAGE_SIZE_DEFAULT']) || undefined,
+      maxLimit: Number(process.env['PAGE_SIZE_MAX']) || undefined,
+    });
 
   // 1. Configure Zod Type Provider
   app.setValidatorCompiler(validatorCompiler);
@@ -285,6 +301,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     cdnBaseUrl,
     reactionCache,
     authorization,
+    paginator,
   });
 
   registerVideosRoutes(app, {
@@ -340,6 +357,26 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   registerChannelsRoutes(app, {
     channelService,
+  });
+
+  const subscriptionCache =
+    options.subscriptionCache ??
+    (cache instanceof RedisCacheClient
+      ? new RedisSubscriptionCacheAdapter({ redis: cache.getRedis() })
+      : new InMemorySubscriptionCache());
+
+  const subscriptionService =
+    options.subscriptionService ??
+    new SubscriptionService({
+      subscriptions: repositories.subscriptions,
+      channels: repositories.channels,
+      subscriptionCache,
+      cdnBaseUrl,
+      paginator,
+    });
+
+  registerSubscriptionsRoutes(app, {
+    subscriptionService,
   });
 
   const sseHub =

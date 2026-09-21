@@ -2,7 +2,7 @@ import type { Action, Resource, UserContext } from '../types/index.js';
 import { canAccessAdmin } from './admin.js';
 import { canViewAllAnalytics } from './analytics.js';
 import { canManageCategory } from './categories.js';
-import { canManageChannel, canUpdateChannel } from './channels.js';
+import { canManageChannel, canSubscribeChannel, canUpdateChannel } from './channels.js';
 import { canCreateComment, canDeleteComment, canPinComment } from './comments.js';
 import {
   canCreateVideo,
@@ -37,6 +37,8 @@ export function can(user: UserContext | null, action: Action, resource?: Resourc
       return canUpdateChannel({ user, channel: resource });
     case 'channel:manage':
       return canManageChannel({ user, channel: resource });
+    case 'channel:subscribe':
+      return canSubscribeChannel({ user });
     case 'category:manage':
       return canManageCategory({ user });
     case 'analytics:view_all':

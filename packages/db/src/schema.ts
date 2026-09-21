@@ -304,6 +304,34 @@ export const videoReactions = pgTable(
   ]
 );
 
+export const channelSubscriptions = pgTable(
+  'channel_subscriptions',
+  {
+    id: uuid('id').primaryKey(),
+    subscriberId: uuid('subscriber_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    channelId: uuid('channel_id')
+      .notNull()
+      .references(() => channels.id, { onDelete: 'cascade' }),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    unique('channel_subscriptions_subscriber_channel_unique').on(
+      table.subscriberId,
+      table.channelId
+    ),
+    index('channel_subscriptions_subscriber_created_idx').on(
+      table.subscriberId,
+      table.createdAt.desc()
+    ),
+    index('channel_subscriptions_channel_created_idx').on(
+      table.channelId,
+      table.createdAt.desc()
+    ),
+  ]
+);
+
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -325,3 +353,5 @@ export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
 export type VideoReaction = typeof videoReactions.$inferSelect;
 export type NewVideoReaction = typeof videoReactions.$inferInsert;
+export type ChannelSubscription = typeof channelSubscriptions.$inferSelect;
+export type NewChannelSubscription = typeof channelSubscriptions.$inferInsert;
