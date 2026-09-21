@@ -84,7 +84,10 @@ describe('RedisReactionCacheAdapter (Ticket 40 AC 43, 50-52)', () => {
     await adapter.setCounts(videoId, { likesCount: 10, dislikesCount: 2 });
 
     await adapter.adjustCounters(videoId, 1, 0); // +1 like
-    let counts = await adapter.getCounts(videoId, async () => ({ likesCount: 0, dislikesCount: 0 }));
+    let counts = await adapter.getCounts(videoId, async () => ({
+      likesCount: 0,
+      dislikesCount: 0,
+    }));
     expect(counts).toEqual({ likesCount: 11, dislikesCount: 2 });
 
     await adapter.adjustCounters(videoId, -1, 1); // -1 like, +1 dislike

@@ -1,5 +1,6 @@
 export * from './sse-connection';
 export * from './sse-hub';
+export * from './sse-service';
 export * from './upload-service';
 export * from './video-service';
 export * from './category-service';

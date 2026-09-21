@@ -13,15 +13,16 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
+  InMemorySubscriptionCache,
   PostgresDatabaseClient,
   PostgresRepositories,
   RedisCacheClient,
   RedisReactionCacheAdapter,
+  RedisSubscriptionCacheAdapter,
   S3MultipartStorage,
   S3StorageClient,
-  RedisSubscriptionCacheAdapter,
-  InMemorySubscriptionCache,
 } from '@vp/adapters';
+import { Paginator } from '@vp/core/pagination';
 import type {
   AuthorizationPort,
   CacheClient,
@@ -33,7 +34,6 @@ import type {
   StorageClient,
   SubscriptionCachePort,
 } from '@vp/core/ports';
-import { Paginator } from '@vp/core/pagination';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import { getMetrics } from '@vp/observability';
@@ -61,18 +61,19 @@ import { registerReactionsRoutes } from './routes/reactions';
 import { registerSubscriptionsRoutes } from './routes/subscriptions';
 import { registerUploadsRoutes } from './routes/uploads';
 import { registerVideosRoutes } from './routes/videos';
-import { VideoService } from './services/video-service';
 import { CategoryService } from './services/category-service';
-import { DlqService } from './services/dlq-service';
-import { QueueService } from './services/queue-service';
-import { HttpCacheService } from './services/http-cache-service';
 import { ChannelService } from './services/channel-service';
-import { ReactionService } from './services/reaction-service';
-import { SubscriptionService } from './services/subscription-service';
+import { DlqService } from './services/dlq-service';
 import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
+import { HttpCacheService } from './services/http-cache-service';
 import { startQueuePoller } from './services/queue-poller';
+import { QueueService } from './services/queue-service';
+import { ReactionService } from './services/reaction-service';
 import { startSqlPoller } from './services/sql-poller';
 import { SseHub } from './services/sse-hub';
+import { SseService } from './services/sse-service';
+import { SubscriptionService } from './services/subscription-service';
+import { VideoService } from './services/video-service';
 
 export * from './services/index';
 
@@ -391,8 +392,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   registerEventsRoutes(app, {
     sseHub,
-    repositories,
-    cdnBaseUrl,
+    sseService: new SseService({
+      videos: repositories.videos,
+      renditions: repositories.renditions,
+      events: repositories.events,
+      cdnBaseUrl,
+      authorization,
+    }),
   });
 
   app.addHook('onClose', async () => {

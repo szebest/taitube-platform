@@ -21,14 +21,22 @@ import {
 import type { AuthUser } from '../plugins/auth';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
-export * from './types';
+export * from './video-views';
 import {
   type VideoDetailView,
-  type VideoServiceDeps,
   type VideoSummaryView,
   toVideoDetailView,
   toVideoSummaryView,
-} from './types';
+} from './video-views';
+
+export interface VideoServiceDeps {
+  videos: VideoRepository;
+  cdnBaseUrl?: string;
+  reactionCache?: ReactionCachePort;
+  authorization?: AuthorizationPort;
+  paginator?: Paginator;
+  probeQueue?: JobQueue;
+}
 
 export {
   encodeVideoCursor,

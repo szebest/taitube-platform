@@ -3,12 +3,12 @@ import {
   type AppAbility,
   type AppAction,
   type AppSubjects,
+  type Resource,
+  type UserContext,
   assertCan,
   can,
   getUserPermissions,
   parseRole,
-  type Resource,
-  type UserContext,
 } from '@vp/permissions';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
@@ -72,11 +72,7 @@ declare module 'fastify' {
     ): boolean;
 
     assertCan(action: AppAction, subject: AppSubjects, message?: string): void;
-    assertCan<R extends Resource = Resource>(
-      action: Action,
-      resource?: R,
-      message?: string
-    ): void;
+    assertCan<R extends Resource = Resource>(action: Action, resource?: R, message?: string): void;
     assertCan<P extends { user: UserContext | null }>(
       helper: (params: P) => boolean,
       params?: Omit<P, 'user'>,
@@ -146,7 +142,7 @@ function evaluateAssertCan(
     typeof subjectOrParams === 'string'
       ? subjectOrParams
       : typeof subjectOrParams === 'object' && subjectOrParams !== null
-        ? (subjectOrParams as { constructor?: { name?: string } }).constructor?.name ?? 'Resource'
+        ? ((subjectOrParams as { constructor?: { name?: string } }).constructor?.name ?? 'Resource')
         : 'Resource';
 
   assertCan(allowed, {
@@ -177,11 +173,7 @@ export async function authorizationPlugin(app: FastifyInstance): Promise<void> {
 
   app.decorateRequest(
     'can',
-    function (
-      this: FastifyRequest,
-      actionOrHelper: unknown,
-      subjectOrParams?: unknown
-    ): boolean {
+    function (this: FastifyRequest, actionOrHelper: unknown, subjectOrParams?: unknown): boolean {
       return evaluateCan(this, actionOrHelper, subjectOrParams);
     }
   );

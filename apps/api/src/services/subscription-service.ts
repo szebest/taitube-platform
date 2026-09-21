@@ -13,7 +13,7 @@ import {
   subscriptionCursorPayload,
   videoCursorPayload,
 } from './cursor';
-import { type VideoSummaryView, toVideoSummaryView } from './types';
+import { type VideoSummaryView, toVideoSummaryView } from './video-views';
 
 export type SubscribedChannelView = Omit<SubscribedChannelItem, 'subscribedAt'> & {
   subscribedAt: string;

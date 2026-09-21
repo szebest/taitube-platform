@@ -465,4 +465,3 @@ describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
     });
   });
 });
-

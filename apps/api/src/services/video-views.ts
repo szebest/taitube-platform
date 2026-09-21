@@ -1,13 +1,4 @@
-import type { Paginator } from '@vp/core/pagination';
-import type {
-  AuthorizationPort,
-  JobQueue,
-  ReactionCachePort,
-  RenditionRecord,
-  VideoRecord,
-  VideoRepository,
-  VideoStatus,
-} from '@vp/core/ports';
+import type { RenditionRecord, VideoRecord, VideoStatus } from '@vp/core/ports';
 
 export type VideoVisibility = 'private' | 'unlisted' | 'public';
 
@@ -82,13 +73,20 @@ export interface VideoSummaryView {
   readyAt?: string;
 }
 
-export interface VideoServiceDeps {
-  videos: VideoRepository;
-  cdnBaseUrl?: string;
-  reactionCache?: ReactionCachePort;
-  authorization?: AuthorizationPort;
-  paginator?: Paginator;
-  probeQueue?: JobQueue;
+export interface PlayableVideo {
+  id: string;
+  status: VideoStatus;
+  masterPlaylistKey?: string | null;
+}
+
+/**
+ * The HLS entry point a player is handed. Only a READY video has one, and the
+ * key is a fallback for rows written before the packager recorded it.
+ */
+export function playbackUrl(video: PlayableVideo, cleanCdnBase: string): string | undefined {
+  if (video.status !== 'READY') return undefined;
+  const key = video.masterPlaylistKey || `videos/${video.id}/hls/master.m3u8`;
+  return `${cleanCdnBase}/${key.replace(/^\/+/, '')}`;
 }
 
 /**
@@ -104,10 +102,7 @@ export function toVideoSummaryView(v: VideoRecord, cleanCdnBase: string): VideoS
     status: v.status,
     durationMs: v.durationMs ?? undefined,
     posterUrl: v.posterKey ? `${cleanCdnBase}/${v.posterKey.replace(/^\/+/, '')}` : undefined,
-    playbackUrl:
-      v.status === 'READY'
-        ? `${cleanCdnBase}/${(v.masterPlaylistKey || `videos/${v.id}/hls/master.m3u8`).replace(/^\/+/, '')}`
-        : undefined,
+    playbackUrl: playbackUrl(v, cleanCdnBase),
     viewsCount: v.viewsCount ?? 0,
     likesCount: v.likesCount ?? 0,
     dislikesCount: v.dislikesCount ?? 0,
@@ -185,9 +180,7 @@ export function toVideoDetailView(
     fps: video.fps ?? undefined,
     ladder: (video.ladder as VideoDetailView['ladder']) ?? undefined,
     renditions,
-    playbackUrl: isReady
-      ? `${cleanCdnBase}/${(video.masterPlaylistKey || `videos/${video.id}/hls/master.m3u8`).replace(/^\/+/, '')}`
-      : undefined,
+    playbackUrl: playbackUrl(video, cleanCdnBase),
     posterUrl: video.posterKey
       ? `${cleanCdnBase}/${video.posterKey.replace(/^\/+/, '')}`
       : undefined,

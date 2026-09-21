@@ -609,7 +609,8 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
 
     await new Promise<void>((resolve, reject) => {
       const req = http.get(
-        `${baseUrl}/v1/me/events?token=${encodeURIComponent(ownerToken)}`,
+        `${baseUrl}/v1/me/events`,
+        { headers: { authorization: `Bearer ${ownerToken}` } },
         (res) => {
           expect(res.statusCode).toBe(200);
 

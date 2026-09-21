@@ -5,7 +5,6 @@ import { VideoIdParamSchema } from './video-resource.js';
 
 export const EventStreamQuerySchema = z
   .object({
-    token: z.string().optional().describe('JWT token for query-string auth bypass in EventSource'),
     'last-event-id': z.string().optional().describe('Replay events after this ID'),
   })
   .optional();

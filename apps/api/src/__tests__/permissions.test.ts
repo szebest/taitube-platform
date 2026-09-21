@@ -1,7 +1,7 @@
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
-import { type Action, can, normalizeRole, parseRole, type UserContext } from '@vp/permissions';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { type Action, type UserContext, can, normalizeRole, parseRole } from '@vp/permissions';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
