@@ -302,7 +302,7 @@ Every record lists the candidates **ranked** (1 = chosen), the reason the winner
 | 3 | .NET 8/9 (C#) | 4 | 3 | 4 | 4 | Excellent async I/O, MassTransit/Hangfire mature; heavier images, less natural for R2/MinIO tooling, weaker fit with the frontend stack. |
 | 4 | Java / Spring Boot | 4 | 2 | 3 | 4 | Enterprise-standard but slowest cold start (kills scale-to-zero economics), heaviest memory footprint on 4 GB nodes, slowest solo iteration. |
 
-**Why it won.** The hot path is `ffmpeg` as a subprocess; the application layer moves bytes between S3 and a child process and updates state. That is exactly what Node/Bun's event loop is good at, and it is where BullMQ — the most complete Redis job library in any language (flows, stalled-job detection, rate limiting, priorities, job schedulers, custom backoff) — lives. TypeScript also lets `packages/job-contracts` be consumed by the frontend later for SSE event types.
+**Why it won.** The hot path is `ffmpeg` as a subprocess; the application layer moves bytes between S3 and a child process and updates state. That is exactly what Node/Bun's event loop is good at, and it is where BullMQ — the most complete Redis job library in any language (flows, stalled-job detection, rate limiting, priorities, job schedulers, custom backoff) — lives. TypeScript also lets `packages/server/job-contracts` be consumed by the frontend later for SSE event types.
 
 **Why the runtime split.** Cold start matters only where we scale from zero (workers); ecosystem stability matters most where we accumulate features (API). Bun runs `bullmq`/`ioredis`/`@aws-sdk/client-s3` (all pure JS). Bun's native `Bun.redis` client is *not* usable by BullMQ (open issue) — we use `ioredis` on both runtimes. Bun 1.4 (Aug 2026) is the current stable line; the Anthropic acquisition (Dec 2025) removed the "single small startup" risk.
 
@@ -390,7 +390,7 @@ The brief asked explicitly: transient task queue vs event-streaming log vs hybri
 | 4 | AWS S3 | 5 GB / 12 months | $0.09/GB | Egress pricing is the exact thing we must avoid. |
 | Local | **MinIO** (`minio/minio`) | — | — | Faithful S3 emulation incl. multipart, presigned URLs, lifecycle rules, bucket notifications (webhook) for dev. |
 
-**Consequences.** One `packages/storage` module over `@aws-sdk/client-s3` v3 with `forcePathStyle` for MinIO and `region: 'auto'` for R2. Two buckets: `raw` (private) and `public` (CDN-fronted). Object keys are deterministic (§7).
+**Consequences.** One `packages/server/storage` module over `@aws-sdk/client-s3` v3 with `forcePathStyle` for MinIO and `region: 'auto'` for R2. Two buckets: `raw` (private) and `public` (CDN-fronted). Object keys are deterministic (§7).
 
 ---
 
@@ -519,7 +519,7 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 ### ADR-17 — Schema/validation & IDs
 
-- **zod** (chosen) over TypeBox/ajv-only: one schema language for API bodies (`fastify-type-provider-zod`), job payloads (`packages/job-contracts`) and env parsing (`packages/config`), with inferred TS types. TypeBox is faster at validation but the payloads are tiny.
+- **zod** (chosen) over TypeBox/ajv-only: one schema language for API bodies (`fastify-type-provider-zod`), job payloads (`packages/server/job-contracts`) and env parsing (`packages/server/config`), with inferred TS types. TypeBox is faster at validation but the payloads are tiny.
 - **UUIDv7** for `videoId`/`jobId` roots: time-ordered (index-friendly), unguessable enough for public playback paths, native `gen_uuid_v7()` in Postgres 17 / `uuidv7` package until then.
 
 ---
@@ -536,7 +536,7 @@ Decided at the throw site, never by regex on messages.
 
 ### ADR-19 — Hexagonal Architecture, Interface Segregation, and Modular Repository Boundaries
 
-- **Ports as Abstract Classes (`core/ports/`, `core/repositories/`)**:
+- **Ports as Abstract Classes (`packages/server/core/ports/`, `packages/server/core/repositories/`)**:
   - Abstract classes extending `HealthCheckable` allow uniform `instanceof` checks, exception wrapping, and liveness contracts.
   - Driver/connection primitives (`DatabaseClient`) are segregated from domain entities (`Repositories`: `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`).
   - Standard object storage (`StorageClient`) is segregated from multipart chunk lifecycle (`MultipartStorage`).
@@ -544,9 +544,9 @@ Decided at the throw site, never by regex on messages.
   - `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, and `drizzle-orm` are strictly forbidden outside `adapters/` and composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`).
   - Domain services, controllers, and worker stages depend purely on injected port interfaces.
 - **Single Responsibility & File Length Discipline**:
-  - Every repository implementation resides in its own dedicated file under `repositories/` (e.g. `adapters/postgres/repositories/postgres-video-repository.ts`).
+  - Every repository implementation resides in its own dedicated file under `repositories/` (e.g. `packages/server/adapters/postgres/repositories/postgres-video-repository.ts`).
   - Monolithic multi-repository files are forbidden. Target file length: <= 250 lines (strict max 400 lines / ~10 KB).
-- **Autonomous In-Memory Test Doubles (`adapters/in-memory/`)**:
+- **Autonomous In-Memory Test Doubles (`packages/server/adapters/in-memory/`)**:
   - In-memory repositories encapsulate their state internally, provide a `.clear()` method, and communicate through port interfaces.
   - Enables in-process unit and end-to-end integration tests without Docker, real databases, or network sockets.
 
@@ -561,9 +561,9 @@ Decided at the throw site, never by regex on messages.
 | 3 | Backend-only monorepo with tRPC for client-server RPC | Rejected | Couples API transport to tRPC runtime; prevents clean REST/OpenAPI standard documentation for public consumers, third-party integrations, and standard load testing tools (k6). |
 
 **Consequences:**
-- `apps/web` must **never** import `core`, `adapters`, `packages/db`, or server runtimes. Enforced via ESLint/Biome import boundaries and CI build checks.
-- API endpoints are authored once in `packages/api-contracts` (Zod) and compiled to OpenAPI schemas.
-- `packages/api-client` generates TanStack React Query hooks and type-safe fetchers from `@vp/api-contracts`.
+- `apps/web` must **never** import `core`, `adapters`, `packages/server/db`, or server runtimes. Enforced via ESLint/Biome import boundaries and CI build checks.
+- API endpoints are authored once in `packages/universal/api-contracts` (Zod) and compiled to OpenAPI schemas.
+- `packages/client/api-client` generates TanStack React Query hooks and type-safe fetchers from `@vp/api-contracts`.
 
 ---
 
@@ -587,6 +587,46 @@ Decided at the throw site, never by regex on messages.
 - Mutations atomically update `video_reactions` and `videos(likes_count, dislikes_count)`.
 - Redis stores `{ likes, dislikes, cachedAt, delta }` and updates atomically via Redis transaction (`pipeline`/`multi`) or atomic memory mutexes.
 - Scheduled reconciler job `reconcile-reaction-counters` periodically detects and repairs counter drift.
+
+
+### ADR-24 — Tier-Scoped Workspace Layout: the Directory Is the Runtime Tier
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| 1 | `packages/<tier>/<name>` — tier is the directory | **Accepted** | Unforgeable, readable by every tool, and a new package cannot be untiered |
+| 2 | Flat `packages/*` with a `vp.tier` manifest field | Superseded | A field can be typo'd, copy-pasted or forgotten; nothing outside a bespoke script reads it |
+| 3 | Convention and code review only | Rejected | This is what ADR-20 assumed, and `@vp/errors` still shipped a `bullmq` dependency to the browser |
+
+**Context.** The repo began as API + worker, so every shared package was implicitly server-side. `apps/web`
+arrived later by `git subtree` and nothing in the workspace recorded which packages a browser may import.
+ADR-20 said boundaries were "enforced via ESLint/Biome import boundaries and CI build checks"; no such rule
+and no such job existed. The result: `apps/web → @vp/permissions → @vp/errors → bullmq → ioredis`.
+
+**Decision.** Two orthogonal, machine-checked properties per package.
+
+*Tier* answers **where may this code run**, and it is the package's location: `packages/universal/`,
+`packages/server/`, `packages/client/`. Apps sit outside `packages/` and declare their tier. A package is
+`universal` only when something client-side actually consumes it — `storage`, `job-contracts` and `events`
+were once declared universal with no client consumer, which put BullMQ queue names in the browser-safe tier.
+
+*Layer* answers **which way may dependencies point**, declared as `vp.layer`: T1 foundation, T2 contracts and
+domain capability, T3 integration, T4 applications. Dependencies point **strictly down** — a T2 package may
+not depend on another T2. Sibling imports are forbidden because they are how a layer quietly becomes a cycle.
+The layer is *declared* rather than derived from the graph: a derived depth cannot contradict itself, which
+would make the check vacuous.
+
+**Consequences:**
+- An undeclared import does not resolve. pnpm links only declared dependencies, so a server import inside a
+  universal package is `error TS2307` at compile time — impossible, not discouraged.
+- `pnpm boundaries` validates tier compatibility, layer direction, tier-vs-directory agreement and
+  `CLAUDE.md` symlink drift. `pnpm build` and `pnpm typecheck` run it first, so a bad *declaration* — the one
+  thing TypeScript cannot catch — fails the build.
+- `@vp/tsconfig` presets give `universal`/`client` packages `lib` with `DOM` and `types: []`, so a Node
+  builtin is a type error.
+- `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite.
+- Package **names** are unchanged by the move, so no source import specifier changed; only `package.json`
+  paths, tsconfig `extends`, turbo globs, Docker contexts and CI paths did.
+- Changing a package's tier means moving it, which is a deliberate act rather than a one-word edit.
 
 ---
 
@@ -899,7 +939,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /uploads/:uploadId/complete` | Finish | `{ parts:[{partNumber, etag}] }` (multipart) or `{}` (single) | `202 { videoId, status:"UPLOADED" }` or `422 { code:"UPLOAD_SIZE_MISMATCH" \| "UPLOAD_TOO_LARGE" \| "UNSUPPORTED_CONTENT_TYPE" }` | Idempotent: second call returns 202 with current status. |
 | `DELETE /uploads/:uploadId` | Abort | — | `204` | `AbortMultipartUpload`, video → `ABANDONED`. |
 | `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
-| `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter, single-sourced in `core/repositories/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis with singleflight & ETag 304. |
+| `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter, single-sourced in `packages/server/core/repositories/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis with singleflight & ETag 304. |
 | `GET /v1/categories` | Public categories list | — | `200 [Category]` | Unauthenticated active taxonomy list sorted by sort_order, name. L1/L2 cached + ETag 304. |
 | `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `likesCount`, `dislikesCount`, `error?`) | Owner or public/unlisted. |
 | `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. |
@@ -1021,7 +1061,7 @@ Rules:
 
 ## 8. Media Processing (FFmpeg) Specification
 
-FFmpeg 7.x static build inside the worker image (`jrottenberg/ffmpeg:7-ubuntu` layer or `apt install ffmpeg` on Debian 13; multi-arch). Everything below is wrapped by `packages/ffmpeg` which builds argv arrays (never shell strings) and parses `-progress pipe:1`.
+FFmpeg 7.x static build inside the worker image (`jrottenberg/ffmpeg:7-ubuntu` layer or `apt install ffmpeg` on Debian 13; multi-arch). Everything below is wrapped by `packages/server/ffmpeg` which builds argv arrays (never shell strings) and parses `-progress pipe:1`.
 
 ### 8.1 Probe
 
@@ -1062,7 +1102,7 @@ ffmpeg -hide_banner -nostdin -loglevel error -progress pipe:1 \
 
 Notes that matter for correctness at scale:
 
-- **Keyframe alignment across renditions** (`-force_key_frames expr:gte(t,n_forced*2)` + `-sc_threshold 0` + `-g` = 2 s × fps) is what makes ABR switching seamless; `-g 48` assumes 24 fps — `packages/ffmpeg` computes `g = round(2 * fps)` from probe.
+- **Keyframe alignment across renditions** (`-force_key_frames expr:gte(t,n_forced*2)` + `-sc_threshold 0` + `-g` = 2 s × fps) is what makes ABR switching seamless; `-g 48` assumes 24 fps — `packages/server/ffmpeg` computes `g = round(2 * fps)` from probe.
 - `independent_segments` + `temp_file` guarantee each `.ts` starts with an IDR and is only renamed into place when complete → the uploader can safely tail the directory and upload segments as they close (`chokidar`/`fs.watch` on rename), keeping local disk usage bounded (delete after successful upload).
 - `-preset veryfast` is the MVP quality/speed point; expose as `X264_PRESET` for the load tests (measure `veryfast` vs `fast`).
 - `FFMPEG_THREADS` = container CPU limit (K8s `resources.limits.cpu`), so one job saturates its pod and concurrency stays 1 per pod (§9.4).
@@ -1125,10 +1165,10 @@ BullMQ has no exchanges; a *queue* is the routing unit and Redis key prefix. One
 
 Redis key shape: `bull:{queue}:wait` (LIST), `:prioritized` (ZSET), `:active`, `:delayed` (ZSET), `:completed`, `:failed`, `:events` (STREAM), `:meta`, plus `:{jobId}` hashes. Queue names must not contain `:`.
 
-Job options applied by `packages/job-contracts` factory functions (never hand-written at call sites):
+Job options applied by `packages/server/job-contracts` factory functions (never hand-written at call sites):
 
 ```ts
-// packages/job-contracts/src/options.ts
+// packages/server/job-contracts/src/options.ts
 export const defaultJobOptions = {
   removeOnComplete: { age: 24 * 3600, count: 5000 },     // keep for Bull Board, cap memory
   removeOnFail:     { age: 7 * 24 * 3600 },              // failed jobs stay a week (DLQ mirror in Postgres anyway)
@@ -1243,7 +1283,7 @@ Concurrency rules:
 | Storage down > 10 min (Systemic failure) | 4 attempts exhausted → DLQ | `SystemicFailure` alert fires; runbook pauses queue; recovery + replay succeeds. | **Validated in S5:** `dlq_entries` populated; `SystemicFailure` alert fired; `POST /admin/dlq/:id/replay` re-enqueued jobs with `--r1` to `READY`. |
 | API node crash with 5 000 SSE clients | Socket disconnect / EOF | Clients reconnect with `Last-Event-ID`; API responds with snapshot and replays backlog from `video_events`. | **Validated in S6:** 5 000 VUs reconnected cleanly; 0 missed terminal events; publish-to-receive p95 = 412 ms; RSS remained < 320 MB. |
 | Worker temporary storage full (`ENOSPC`) | File write error / disk threshold | Throws `TransientError('DISK_FULL')`; triggers cleanup; `WorkerTmpDiskHigh` alert fires if usage > 80%. | **Validated via `disk-fill.sh`:** Alert fires on Prometheus threshold; cleaner sweeps orphaned partials. |
-| Postgres unavailable | `TransientError` from `packages/db` | Backoff; readiness probe fails → KEDA/HPA hold. | Database client retry strategy catches transient disconnects. |
+| Postgres unavailable | `TransientError` from `packages/server/db` | Backoff; readiness probe fails → KEDA/HPA hold. | Database client retry strategy catches transient disconnects. |
 
 **Preventing double *effects* rather than double *execution*.** Under at-least-once delivery we do not try to prevent two executions — that would require a distributed lock stronger than the queue's own. We make executions idempotent (deterministic keys; overwrite-safe) and make the *commit* exclusive (fencing token + CAS). This is the standard "effectively-once" pattern and is cheaper and more robust than exactly-once machinery.
 
@@ -1359,7 +1399,7 @@ flowchart LR
 | Area | Control |
 |---|---|
 | Authentication | JWT bearer verified with `@fastify/jwt` against `AUTH_JWKS_URL` (RS256/EdDSA); `sub` → `users.id` (auto-provision on first sight). Dev bypass only when `NODE_ENV=development` **and** `AUTH_DEV_USER_ID` set. Admin routes require role claim `admin` or `x-admin-token` (constant-time compare). |
-| Authorisation | Declarative RBAC & ABAC permission engine powered by pure functional `@casl/ability` in `packages/permissions` (`@vp/permissions`), decoupled from backend repository/port internals for full backend (`apps/api`) and frontend (`apps/web`) sharing without framework bloat. Strictly typed `Role = 'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'` with boundary-only `parseRole` sanitization. Modular rule sets composed via global `getUserPermissions(user)` builder. Formalized through clean adapters: Postgres Scopes adapter in `adapters/postgres/scopes/` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`, `traits`) for row-level database security with CASL `rulesToAST` compilation; `FastifyAuthorizationAdapter` for HTTP preHandlers and memoized `request.ability`; `ProblemDetailsErrorAdapter` for standardized RFC 9457 (401 UNAUTHORIZED vs 403 FORBIDDEN with structured error context); and `ReactPermissionsAdapter` (`useCan`, `PermissionsProvider`, `<Can />` headless slot) for reactive frontend gating. Consumed strictly via library-agnostic `canX({ user, resource })` action helpers and `assertCan(...)` guards; manual hand-checking of roles, user IDs, or ownership in routes/services/repositories is strictly forbidden. Video queries scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
+| Authorisation | Declarative RBAC & ABAC permission engine powered by pure functional `@casl/ability` in `packages/universal/permissions` (`@vp/permissions`), decoupled from backend repository/port internals for full backend (`apps/api`) and frontend (`apps/web`) sharing without framework bloat. Strictly typed `Role = 'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'` with boundary-only `parseRole` sanitization. Modular rule sets composed via global `getUserPermissions(user)` builder. Formalized through clean adapters: Postgres Scopes adapter in `packages/server/adapters/postgres/scopes/` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`, `traits`) for row-level database security with CASL `rulesToAST` compilation; `FastifyAuthorizationAdapter` for HTTP preHandlers and memoized `request.ability`; `ProblemDetailsErrorAdapter` for standardized RFC 9457 (401 UNAUTHORIZED vs 403 FORBIDDEN with structured error context); and `ReactPermissionsAdapter` (`useCan`, `PermissionsProvider`, `<Can />` headless slot) for reactive frontend gating. Consumed strictly via library-agnostic `canX({ user, resource })` action helpers and `assertCan(...)` guards; manual hand-checking of roles, user IDs, or ownership in routes/services/repositories is strictly forbidden. Video queries scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
 | Upload safety | Presigned URLs TTL 15 min; `Content-Type` and `Content-Length` are signed into the single-PUT URL; multipart verified via `HeadObject` after completion; server deletes and `REJECT`s on mismatch. Content-type allowlist (`video/mp4, video/quicktime, video/webm, video/x-matroska`). Per-user quota (`MAX_UPLOAD_BYTES`, `MAX_INFLIGHT_PER_USER`). |
 | Storage | Buckets private; CDN reads `public` via R2 custom domain (no public bucket URL exposed). Least-privilege access keys: API key may `Put/Get/Head/Multipart*` on `raw` only; worker key may `Get` on `raw` and `Put/Delete` on `public`. |
 | Command injection | FFmpeg invoked with argv arrays via `spawn` (never `exec`/shell); object keys are derived from UUIDs, never from user filenames (original filename stored as metadata only). |
@@ -1463,7 +1503,7 @@ volumes: { pgdata: {}, redisdata: {}, miniodata: {} }
 
 Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`docker compose up postgres redis minio minio-init`); `docker compose --profile observability up` adds the monitoring stack; `pnpm compose:scale transcode-1080p 3` is the Phase-3-lite scaler wrapper.
 
-**Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `tools/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
+**Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
 
 **Worker Dockerfile (runtime-switchable, multi-arch):**
 
@@ -1569,7 +1609,7 @@ Guardrails: R2 Class A ops are the metric to watch (every segment upload is one 
 
 ### 13.1 Metrics catalogue
 
-Exposed by `packages/observability` (`prom-client` registry; API on `:9464/metrics`, workers likewise; scraped by Prometheus/Alloy).
+Exposed by `packages/server/observability` (`prom-client` registry; API on `:9464/metrics`, workers likewise; scraped by Prometheus/Alloy).
 
 | Metric | Type | Labels | Source | Used for |
 |---|---|---|---|---|
@@ -1637,11 +1677,11 @@ Fallback trigger (no Prometheus dependency):
 
 Why `waiting + active` and threshold 1: with concurrency 1 per pod, `desired = ceil(outstanding / 1)` means every queued job gets a pod and no busy pod is counted as free capacity. KEDA scales the Deployment; the HPA behaviour block prevents flapping and the long `terminationGracePeriodSeconds` plus `worker.close()` makes scale-in safe. Because the queue is *pulled*, over-provisioning during a burst is harmless — surplus pods idle and are removed after cooldown.
 
-**Compose-level scaler (Phase 3-lite, no Kubernetes):** `tools/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose up -d --scale worker-transcode-1080p=N --no-recreate` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
+**Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose up -d --scale worker-transcode-1080p=N --no-recreate` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
 
 ### 13.3 Tracing (OpenTelemetry)
 
-- `packages/observability/otel.ts` bootstraps `@opentelemetry/sdk-node` with OTLP/HTTP exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`), auto-instrumentation for Fastify, `pg`/`postgres`, `ioredis`, `http`, plus a manual BullMQ instrumentation: producers inject `traceparent` into `job.data` (`packages/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. `ffmpeg` runs are child spans with argv (redacted URLs) and exit code.
+- `packages/server/observability/otel.ts` bootstraps `@opentelemetry/sdk-node` with OTLP/HTTP exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`), auto-instrumentation for Fastify, `pg`/`postgres`, `ioredis`, `http`, plus a manual BullMQ instrumentation: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. `ffmpeg` runs are child spans with argv (redacted URLs) and exit code.
 - Result: one trace = `POST /uploads/:id/complete` → `probe` → three `transcode-*` → `thumbnail` → `package` → `notify`, viewable in Tempo; `trace_id` is also written to `video_events` so an operator can go from a video row to its trace.
 - Sampling: parent-based, 100 % in dev, 20 % in cloud (Grafana Cloud 50 GB/month is generous, but transcode spans are long-lived).
 
@@ -1676,7 +1716,7 @@ Alertmanager → Discord/Telegram webhook (free) locally; Grafana Cloud IRM (3 f
 
 ### 14.1 Principles
 
-- **Synthetic media only.** `tools/gen-video` produces deterministic sources with `ffmpeg -f lavfi -i testsrc2=size=1920x1080:rate=24 -f lavfi -i sine=frequency=440 -t {sec}` at 15 s / 60 s / 10 min / 30 min and a "hostile" set (truncated file, audio-only, 4K/60fps, rotated portrait, HEVC-in-MKV). Checked into `tools/gen-video/manifest.json`, generated on demand (never committed as binaries).
+- **Synthetic media only.** `packages/server/gen-video` produces deterministic sources with `ffmpeg -f lavfi -i testsrc2=size=1920x1080:rate=24 -f lavfi -i sine=frequency=440 -t {sec}` at 15 s / 60 s / 10 min / 30 min and a "hostile" set (truncated file, audio-only, 4K/60fps, rotated portrait, HEVC-in-MKV). Checked into `packages/server/gen-video/manifest.json`, generated on demand (never committed as binaries).
 - **Every scenario has a threshold** (k6 `thresholds`) so it can fail CI, and a **Grafana snapshot** committed under `docs/load-tests/results/{date}-{scenario}/`.
 - **Two execution modes:** `k6 run` from the laptop against compose (Phases 2–3), and **k6-operator** `TestRun` CRDs inside the k3d/k3s cluster with `parallelism: N` for distributed runs (Phase 3–4). Optional: Grafana Cloud k6 (500 VU-h/month free) for a cloud-sourced run against the reference deployment.
 - k6 outputs to Prometheus remote-write (`K6_PROMETHEUS_RW_SERVER_URL`) so load-generator metrics and system metrics sit on the same dashboard timeline.
@@ -1741,15 +1781,36 @@ export default function () {
 
 ```
 video-pipeline/
-├── core/                                   # Abstract ports & domain models (@vp/core)
-│   ├── ports/                              # DatabaseClient, StorageClient, MultipartStorage, CacheClient, JobQueue, FlowProducer
-│   └── repositories/                       # VideoRepository, UploadRepository, StepRepository, RenditionRepository, EventRepository, UserRepository
-├── adapters/                               # Isolated concrete & in-memory implementations (@vp/adapters)
-│   ├── postgres/                           # PostgresDatabaseClient & modular repositories/ (drizzle-orm + postgres.js)
-│   ├── s3/                                 # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
-│   ├── redis/                              # RedisCacheClient (ioredis)
-│   ├── bullmq/                             # BullMqJobQueue & BullMqFlowProducer (bullmq)
-│   └── in-memory/                          # Autonomous test doubles with encapsulated state & modular repositories/
+├── packages/                               # every workspace library; the directory IS the runtime tier (ADR-24)
+│   ├── universal/                          # runs in a browser AND on a server — no node:*, no server SDK
+│   │   ├── api-contracts/                  # zod schema per endpoint: params, query, body, response, error codes (single source)
+│   │   ├── errors/                          # ApiErrorCodes + PipelineErrorCodes, ErrorCode union, Permanent/TransientError
+│   │   ├── permissions/                     # declarative CASL rules, normalizers, helpers — the one isomorphic rule engine
+│   │   └── tsconfig/                        # base + server/universal/client/spec presets
+│   ├── client/                             # browser only
+│   │   └── api-client/                      # typed fetchers mapped from @vp/api-contracts; base URL injected
+│   └── server/                             # Node/Bun only
+│       ├── core/                            # @vp/core — abstract ports, repository interfaces, domain policy, pagination
+│       │   ├── domain/                      # entities, value objects, ranking & eligibility policy (public-feed, channel)
+│       │   ├── pagination/                  # CursorCodec, Paginator, the limit+1 sentinel protocol
+│       │   ├── ports/                       # DatabaseClient, StorageClient, MultipartStorage, CacheClient, JobQueue, FlowProducer
+│       │   └── repositories/                # VideoRepository, UploadRepository, StepRepository, RenditionRepository, …
+│       ├── adapters/                        # @vp/adapters — concrete & in-memory implementations
+│       │   ├── postgres/                    # PostgresDatabaseClient & modular repositories/ (drizzle-orm + postgres.js)
+│       │   ├── s3/                          # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
+│       │   ├── redis/                       # RedisCacheClient (ioredis)
+│       │   ├── bullmq/                      # BullMqJobQueue & BullMqFlowProducer (bullmq)
+│       │   ├── in-memory/                   # autonomous test doubles with encapsulated state
+│       │   └── __tests__/contract/          # one conformance suite per port, run against BOTH adapters (PGLite)
+│       ├── config/                          # shared zod env fragments + loadEnv()
+│       ├── db/                               # drizzle schema, migrations/, client, seed
+│       ├── events/                           # Redis Pub/Sub channels + SSE envelope schemas
+│       ├── ffmpeg/                           # probe(), transcode/thumbnail args, progress parser, ladder, master playlist
+│       ├── job-contracts/                    # job payload schemas, jobId builders, stagePolicies, BullMQ queue names
+│       ├── observability/                    # prom-client registry, otel bootstrap, pino logger factory
+│       ├── storage/                          # keys.ts, mime.ts, multipart.ts (part math/constants)
+│       ├── testing/                          # vitest config factory + shared fixtures
+│       └── dev-token/ gen-video/ upload-client/ compose-autoscaler/   # CLI packages
 ├── apps/
 │   ├── api/                              # Node 24 LTS · Fastify 5
 │   │   ├── src/
@@ -1793,19 +1854,6 @@ video-pipeline/
 │       │   ├── components/               # Radix UI primitives, player, drawer, studio
 │       │   └── hooks/                    # TanStack Query hooks from @vp/api-client
 │       └── package.json
-├── packages/
-│   ├── api-contracts/                    # zod schemas + DTO types for all HTTP endpoints & query params (single-sourced)
-│   ├── api-client/                       # type-safe fetch client SDK + auto-generated TanStack React Query hooks
-│   ├── job-contracts/                    # zod schemas + types for every job payload, jobId builders, stagePolicies, queue names
-│   ├── db/                               # drizzle schema, migrations/, repositories (videos, steps, events, dlq), CAS helpers
-│   ├── storage/                          # keys.ts (deterministic key builders), mime.ts, multipart.ts (part math/constants)
-│   ├── ffmpeg/                           # probe(), buildTranscodeArgs(), buildThumbnailArgs(), progress parser, ladder.ts, master-playlist.ts, error classification
-│   ├── observability/                    # prom-client registry + metric definitions, otel bootstrap, pino logger factory
-│   ├── events/                           # Redis Pub/Sub publisher/subscriber, channel names, SSE event schemas (shared with frontend later)
-│   ├── config/                           # shared zod env fragments (redis, postgres, storage, otel) + loadEnv()
-│   ├── errors/                           # TransientError, UnrecoverableError re-export, error codes enum, problem+json mapper
-│   ├── testing/                          # test fixtures, dev tokens, doubles
-│   └── tsconfig/                         # base tsconfig presets
 ├── infra/
 │   ├── compose/                          # docker-compose.yml, minio-init.sh, prometheus.yml, tempo.yml, otel-collector.yml, grafana/provisioning, toxiproxy profile
 │   ├── k8s/
@@ -1813,20 +1861,17 @@ video-pipeline/
 │   │   ├── overlays/local/               # k3d/kind: MinIO + Postgres + Redis in-cluster, maxReplicaCount 6
 │   │   └── overlays/cloud/               # Neon + R2, cloudflared, Alloy → Grafana Cloud, maxReplicaCount 1–2
 │   ├── helm-values/                      # keda, kube-prometheus-stack, redis, minio
-│   └── terraform/                        # cloudflare (R2 buckets, custom domain, tunnel, DNS), hetzner (server, firewall) — optional, small
-├── observability/
-│   ├── dashboards/                       # pipeline-overview.json, queues.json, workers.json, api.json, storage-cost.json
-│   └── alerts/                           # prometheus rules yaml
+│   ├── terraform/                        # cloudflare (R2 buckets, custom domain, tunnel, DNS), hetzner (server, firewall) — optional, small
+│   └── observability/
+│       ├── dashboards/                   # pipeline.json, queues.json, workers.json, api.json, storage-cost.json
+│       └── alerts/                       # prometheus rules yaml
 ├── load-tests/
 │   ├── k6/scenarios/                     # s1-upload-storm.js … s7-soak.js, lib/ (auth, upload helpers, sse client)
 │   ├── k6-operator/                      # TestRun CRDs
 │   └── results/                          # committed snapshots + README template
-├── tools/
-│   ├── gen-video/                        # synthetic source generator (ffmpeg lavfi) + manifest.json
+├── tools/                                # non-package assets only (no package.json, no tier)
 │   ├── hls-test-page/                    # index.html with hls.js, paste a videoId → plays master.m3u8 + shows SSE log
-│   ├── compose-autoscaler/               # Phase-3-lite scaler script
-│   ├── chaos/                            # kill-worker.sh, redis-restart.sh, disk-fill.sh
-│   └── dev-token/                        # mint dev JWTs (local JWKS) for curl/k6
+│   └── chaos/                            # kill-worker.sh, redis-restart.sh, disk-fill.sh
 ├── docs/
 │   ├── PRD.md
 │   ├── SDD.md                            # this document
@@ -1859,7 +1904,7 @@ Package naming: `@vp/api`, `@vp/worker`, `@vp/job-contracts`, `@vp/db`, … Depe
 | Queue | BullMQ 6 + ioredis 5 | | `@bull-board/api` + `@bull-board/fastify` |
 | DB | PostgreSQL 16, Drizzle ORM 0.45 (1.0 when GA) + drizzle-kit, `postgres` (postgres.js) driver | | |
 | Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `@aws-sdk/lib-storage` | 3.x | |
-| Media | FFmpeg 7.x (system package in image), `packages/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
+| Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
 | Validation | zod 4 | | |
 | IDs | `uuidv7` | | |
 | Logging | pino 9 + pino-pretty (dev) | | |
@@ -1899,7 +1944,7 @@ Package naming: `@vp/api`, `@vp/worker`, `@vp/job-contracts`, `@vp/db`, … Depe
 | **Renovate** GitHub app | Dependency updates | github.com/apps/renovate | free | Phase 0 |
 | **Vercel** (optional) | Turborepo remote cache | vercel.com | free hobby | optional |
 
-Local tools to install: Docker Desktop/Engine + Compose, Node 24 (via `fnm`/`volta`), Bun 1.4, pnpm 10 (`corepack enable`), `ffmpeg`/`ffprobe` (for `tools/gen-video` and local unit tests), `k3d` or `kind`, `kubectl`, `helm`, `kustomize`, `k6`, `mc` (MinIO client, optional), `cloudflared` (Phase 4), `terraform` (optional), `sops` + `age` (Phase 4).
+Local tools to install: Docker Desktop/Engine + Compose, Node 24 (via `fnm`/`volta`), Bun 1.4, pnpm 10 (`corepack enable`), `ffmpeg`/`ffprobe` (for `packages/server/gen-video` and local unit tests), `k3d` or `kind`, `kubectl`, `helm`, `kustomize`, `k6`, `mc` (MinIO client, optional), `cloudflared` (Phase 4), `terraform` (optional), `sops` + `age` (Phase 4).
 
 Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Going to production, Job Schedulers) · keda.sh/docs (Prometheus & Redis scalers, ScaledObject spec) · developers.cloudflare.com/r2 (S3 API compatibility, presigned URLs, event notifications) · developer.apple.com HLS Authoring Specification · ffmpeg.org/ffmpeg-formats.html#hls-2 · orm.drizzle.team · fastify.dev · opentelemetry.io/docs/languages/js · grafana.com/docs/k6 · neon.com/docs · bun.com/docs.
 
@@ -1907,7 +1952,7 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 ## 16. Environment Variables
 
-One contract for both apps, parsed with zod in `packages/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒.
+One contract for both apps, parsed with zod in `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒.
 
 ### 16.1 Core
 
@@ -1961,7 +2006,7 @@ Worker and API should use **different** access keys with the scoped permissions 
 
 | Variable | Example | Notes |
 |---|---|---|
-| `AUTH_JWKS_URL` | `http://localhost:3000/.well-known/jwks.json` (dev issuer from `tools/dev-token`) or your IdP (`https://<clerk|supabase|auth0>/.well-known/jwks.json`) | RS256/EdDSA verification |
+| `AUTH_JWKS_URL` | `http://localhost:3000/.well-known/jwks.json` (dev issuer from `packages/server/dev-token`) or your IdP (`https://<clerk|supabase|auth0>/.well-known/jwks.json`) | RS256/EdDSA verification |
 | `AUTH_ISSUER` / `AUTH_AUDIENCE` | `vp-dev` / `vp-api` | claim checks |
 | `AUTH_DEV_USER_ID` | `00000000-0000-7000-8000-000000000001` | development only |
 | `ADMIN_TOKEN` 🔒 | random 32 bytes | `x-admin-token` for admin routes / Bull Board (or role claim) |
@@ -2050,7 +2095,7 @@ Each phase ends with a demo and a **Definition of Done** that is binary. Estimat
 
 ### Phase 0 — Bootstrap (≈ 1 week)
 
-Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/{config,errors,job-contracts,db,storage,ffmpeg,observability,events}` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `tools/gen-video`, `tools/dev-token`, `tools/hls-test-page`.
+Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/{config,errors,job-contracts,db,storage,ffmpeg,observability,events}` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `packages/server/gen-video`, `packages/server/dev-token`, `tools/hls-test-page`.
 
 **DoD:** `git clone && make up && pnpm test` green on a fresh machine; `pnpm gen-video 60s` produces a playable synthetic MP4; images published for `amd64`+`arm64`.
 
@@ -2068,7 +2113,7 @@ Build: multipart uploads with resume + sweeper + lifecycle rules; ladder selecti
 
 ### Phase 3 — Observe & scale (≈ 3 weeks)
 
-Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler + Redis fallback), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `tools/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
+Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler + Redis fallback), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
 
 **DoD:** On k3d: backlog of 1 000 probe jobs → KEDA scales `probe` and `transcode-*` to max within 60 s, drains, returns to 0 after cooldown — captured as a Grafana panel PNG in `docs/load-tests/results/`. One trace shows the full journey of a video. S1–S3 pass thresholds; results table committed.
 
@@ -2080,7 +2125,7 @@ Build: chaos scenarios S4–S7 with toxiproxy and kill scripts; transactional ou
 
 ### Phase 5 — Stretch backlog (unscheduled)
 
-Chunked parallel transcoding (§8.5) · CMAF/fMP4 + DASH manifest · `apps/worker-go` sibling consuming the same queues (proves the contract boundary) · BullMQ Pro groups or RabbitMQ implementation of the same topology as a comparative write-up · signed playback URLs · Redpanda tail of `video_events` for a search indexer · frontend integration with `youtube-frontend` (upload widget, SSE progress, hls.js player using `packages/events` types).
+Chunked parallel transcoding (§8.5) · CMAF/fMP4 + DASH manifest · `apps/worker-go` sibling consuming the same queues (proves the contract boundary) · BullMQ Pro groups or RabbitMQ implementation of the same topology as a comparative write-up · signed playback URLs · Redpanda tail of `video_events` for a search indexer · frontend integration with `youtube-frontend` (upload widget, SSE progress, hls.js player using `packages/server/events` types).
 
 ---
 
@@ -2089,7 +2134,7 @@ Chunked parallel transcoding (§8.5) · CMAF/fMP4 + DASH manifest · `apps/worke
 | Risk / issue | Mitigation in this design | Owner / when |
 |---|---|---|
 | Free-tier volatility (Oracle, Hetzner, Fly changes in 2026) | Provider-agnostic edges; fallback ladder (§12.3); fact sheet re-verified before Phase 4 | Phase 4 |
-| BullMQ 6 API drift (young major) | Pin minor; `packages/job-contracts` isolates option shapes; changelog watch via Renovate | continuous |
+| BullMQ 6 API drift (young major) | Pin minor; `packages/server/job-contracts` isolates option shapes; changelog watch via Renovate | continuous |
 | Bun regressions | Runtime-neutral worker code, dual-runtime CI, `WORKER_RUNTIME` switch | continuous |
 | 2-vCPU cloud node can only run one 1080p job | Accepted: scale-to-zero is the cost lever; parallelism demos run locally / burst instance | Phase 4 |
 | Disk pressure on large sources | Segment streaming uploader, `emptyDir.sizeLimit`, `worker_tmp_bytes` alert, S2 test | Phase 2–3 |
@@ -2106,7 +2151,7 @@ Open issues carried from PRD §12: auth provider, public vs signed playback, sou
 ## 20. Appendix — Job Contracts (code)
 
 ```ts
-// packages/job-contracts/src/index.ts
+// packages/server/job-contracts/src/index.ts
 import { z } from 'zod';
 
 export const QUEUES = ['probe', 'transcode-1080p', 'transcode-720p', 'transcode-480p',
@@ -2177,7 +2222,7 @@ export type SseEvent = z.infer<typeof SseEvent>;
 ```
 
 ```ts
-// packages/job-contracts/src/policies.ts — see §9.1 for the table these encode
+// packages/server/job-contracts/src/policies.ts — see §9.1 for the table these encode
 export { defaultJobOptions, stagePolicies } from './options';
 ```
 

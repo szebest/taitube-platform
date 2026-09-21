@@ -1,29 +1,21 @@
-import { describe, expect, it } from 'vitest';
-import {
-  adminUser,
-  creatorUser,
-  guestUser,
-  moderatorUser,
-  standardUser,
-} from '../../__mocks__/fixtures';
+import type { Role } from '../../types';
 import { canViewAllAnalytics } from '../analytics';
 
 describe('helpers/analytics: canViewAllAnalytics', () => {
-  it('returns false when user is null or anonymous', () => {
+  it('grants an admin', () => {
+    expect(canViewAllAnalytics({ user: { id: 'adm-1', role: 'ADMIN' } })).toBe(true);
+  });
+
+  it.each<{ role: Role }>([
+    { role: 'GUEST' },
+    { role: 'USER' },
+    { role: 'CREATOR' },
+    { role: 'MODERATOR' },
+  ])('denies a $role', ({ role }) => {
+    expect(canViewAllAnalytics({ user: { id: 'usr-1', role } })).toBe(false);
+  });
+
+  it('denies an unauthenticated caller', () => {
     expect(canViewAllAnalytics({ user: null })).toBe(false);
-  });
-
-  it('returns false for GUEST, USER, and CREATOR', () => {
-    expect(canViewAllAnalytics({ user: guestUser })).toBe(false);
-    expect(canViewAllAnalytics({ user: standardUser })).toBe(false);
-    expect(canViewAllAnalytics({ user: creatorUser })).toBe(false);
-  });
-
-  it('returns false for MODERATOR (unless admin/moderator analytics rule configured)', () => {
-    expect(canViewAllAnalytics({ user: moderatorUser })).toBe(false);
-  });
-
-  it('returns true for ADMIN', () => {
-    expect(canViewAllAnalytics({ user: adminUser })).toBe(true);
   });
 });

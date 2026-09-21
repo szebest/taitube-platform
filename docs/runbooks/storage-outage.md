@@ -147,4 +147,4 @@ curl -X POST \
 ## 7. Prevention
 1. **Exponential Backoff**: Stage policies specify exponential backoff with full jitter (e.g. 5s -> 10s -> 20s -> 40s) so transient storage blips resolve without operator intervention.
 2. **Deterministic Object Keys**: Segment and playlist keys are deterministic (`videos/{id}/hls/{generation}/{rendition}/seg_{n}.ts`). A restarted transcode safely overwrites identical keys without producing orphan fragments.
-3. **Multi-Cloud Storage Port**: The storage layer is written against the generic `@aws-sdk/client-s3` API port (`packages/storage`), allowing instant fallback from R2 to B2 or MinIO via configuration only.
+3. **Multi-Cloud Storage Port**: The storage layer is written against the generic `@aws-sdk/client-s3` API port (`packages/server/storage`), allowing instant fallback from R2 to B2 or MinIO via configuration only.

@@ -1,44 +1,35 @@
-import { describe, expect, it } from 'vitest';
-import {
-  adminUser,
-  creatorUser,
-  guestUser,
-  sampleChannel,
-  standardUser,
-} from '../../__mocks__/fixtures';
+import { adminUser, creatorUser, guestUser, sampleChannel, standardUser } from '../../__mocks__/fixtures';
+import type { ChannelResource, UserContext } from '../../types';
 import { canManageChannel, canUpdateChannel } from '../channels';
+
+type ChannelCase = {
+  scenario: string;
+  user: UserContext | null;
+  channel: ChannelResource;
+  expected: boolean;
+};
+
+const creatorChannel: ChannelResource = { id: 'chan-c', ownerId: 'creator-1' };
 
 describe('helpers/channels: Channel Action Helpers', () => {
   describe('canUpdateChannel', () => {
-    it('forbids unauthenticated guest', () => {
-      expect(canUpdateChannel({ user: guestUser, channel: sampleChannel })).toBe(false);
-    });
-
-    it('allows channel owner to update their channel', () => {
-      expect(canUpdateChannel({ user: standardUser, channel: sampleChannel })).toBe(true);
-    });
-
-    it('forbids other users from updating channel', () => {
-      expect(canUpdateChannel({ user: creatorUser, channel: sampleChannel })).toBe(false);
-    });
-
-    it('allows admin to update any channel', () => {
-      expect(canUpdateChannel({ user: adminUser, channel: sampleChannel })).toBe(true);
+    it.each<ChannelCase>([
+      { scenario: 'a guest', user: guestUser, channel: sampleChannel, expected: false },
+      { scenario: 'the channel owner', user: standardUser, channel: sampleChannel, expected: true },
+      { scenario: 'another user', user: creatorUser, channel: sampleChannel, expected: false },
+      { scenario: 'an admin on a foreign channel', user: adminUser, channel: sampleChannel, expected: true },
+    ])('$scenario: $expected', ({ user, channel, expected }) => {
+      expect(canUpdateChannel({ user, channel })).toBe(expected);
     });
   });
 
   describe('canManageChannel', () => {
-    it('forbids standard USER role from manage actions', () => {
-      expect(canManageChannel({ user: standardUser, channel: sampleChannel })).toBe(false);
-    });
-
-    it('allows channel owner with CREATOR role to manage channel', () => {
-      const creatorChannel = { id: 'chan-c', ownerId: 'creator-1' };
-      expect(canManageChannel({ user: creatorUser, channel: creatorChannel })).toBe(true);
-    });
-
-    it('allows admin to manage any channel', () => {
-      expect(canManageChannel({ user: adminUser, channel: sampleChannel })).toBe(true);
+    it.each<ChannelCase>([
+      { scenario: 'a standard user on their own channel', user: standardUser, channel: sampleChannel, expected: false },
+      { scenario: 'a creator on their own channel', user: creatorUser, channel: creatorChannel, expected: true },
+      { scenario: 'an admin on a foreign channel', user: adminUser, channel: sampleChannel, expected: true },
+    ])('$scenario: $expected', ({ user, channel, expected }) => {
+      expect(canManageChannel({ user, channel })).toBe(expected);
     });
   });
 });

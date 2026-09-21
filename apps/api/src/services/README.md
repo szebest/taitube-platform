@@ -9,7 +9,7 @@ Services are deep modules that encapsulate business rules, domain invariants, re
 ### More than 1:1 Ratio: Service Composition & Reusability
 We strictly maintain a **>1:1 ratio of services to routes**. In addition to resource-level domain services, we maintain smaller, generalized utility services that higher-level domain services compose. For example:
 - `CategoryService` and `FeedService` depend on `HttpCacheService` for deterministic ETag generation, conditional evaluation (`If-None-Match`), and `Cache-Control` header assembly. It is the **only** ETag implementation in the repository.
-- `FeedService` composes `Singleflight` (from `adapters/redis`) to coalesce concurrent misses on the same feed page.
+- `FeedService` composes `Singleflight` (from `packages/server/adapters/redis`) to coalesce concurrent misses on the same feed page.
 - `QueueService` abstracts BullMQ queue inspection, Bull Board integration, and operational queue control (pause/resume).
 - `VideoService` and `UploadService` share `probe-dispatch.ts`, so the probe job the CAS transition writes to the outbox is byte-for-byte the job the fast path enqueues.
 
@@ -56,5 +56,5 @@ We strictly maintain a **>1:1 ratio of services to routes**. In addition to reso
 | `SseHub` | `sse-hub.ts` | Real-time SSE connections, Redis pub/sub broadcasting, heartbeat management |
 | — | `admin-access.ts` | The single admin gate every operator service calls |
 
-`Singleflight` is not an `apps/api` service: it lives in `adapters/redis/singleflight.ts` and is imported
+`Singleflight` is not an `apps/api` service: it lives in `packages/server/adapters/redis/singleflight.ts` and is imported
 from `@vp/adapters`.

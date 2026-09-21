@@ -30,7 +30,7 @@ assertCan(canUpdateVideo({ user, video }), {
 
 ## 2. Decoupled Functional Core (`@vp/permissions`)
 
-The permission engine is a pure domain package (`packages/permissions`) with zero framework or I/O runtime dependencies, 100% dual-runtime compatible (Node 24 and Bun 1.4).
+The permission engine is a pure domain package (`packages/universal/permissions`) with zero framework or I/O runtime dependencies, 100% dual-runtime compatible (Node 24 and Bun 1.4).
 
 ### Strict Typing & Boundary Role Parsing
 - **`Role`**: Strictly typed union `'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'`. Zero `any`, zero loose string fallbacks.
@@ -46,7 +46,7 @@ The permission engine is a pure domain package (`packages/permissions`) with zer
   - `rules/admin.rules.ts`: Superuser global bypass (`can('manage', 'all')`).
 - Global builder `getUserPermissions(user: UserContext | null): AppAbility` compiles rules into an immutable `MongoAbility` with zero class inheritance.
 
-### Resource Normalizers (`packages/permissions/src/normalizers/`)
+### Resource Normalizers (`packages/universal/permissions/src/normalizers/`)
 Centralized normalizers eliminate ad-hoc object spreads and provide canonical CASL subject wrappers:
 - `video.normalizer.ts`: Maps `ownerId ?? userId`, defaults `visibility ?? 'public'`.
 - `channel.normalizer.ts`: Maps `ownerId ?? userId`.
@@ -61,7 +61,7 @@ Centralized normalizers eliminate ad-hoc object spreads and provide canonical CA
 
 ```
                                   ┌───────────────────────────┐
-                                  │   packages/permissions    │
+                                  │   packages/universal/permissions    │
                                   │   (Pure Domain Core)      │
                                   │                           │
                                   │  - getUserPermissions     │
@@ -83,7 +83,7 @@ Centralized normalizers eliminate ad-hoc object spreads and provide canonical CA
 └──────────────────┘          └──────────────────┘          └──────────────────┘          └──────────────────┘
 ```
 
-### 1. Database Query Scoping Adapter (`adapters/postgres/scopes/`)
+### 1. Database Query Scoping Adapter (`packages/server/adapters/postgres/scopes/`)
 Row-level database security is decoupled into single-responsibility modules:
 - `traits.ts`: Schema trait interfaces constraining the tables a scope accepts (`WithOwner`, `WithVisibility`, `SoftDeletable`).
 - `rules-to-sql.ts`: Compiles CASL rules to Drizzle SQL via `@casl/ability/extra` `rulesToAST`.
@@ -113,7 +113,7 @@ skipped, because dropping a term from an `and` widens it into an unintended gran
 are different questions. Unlisted videos are readable by link and must never appear in a
 feed, so `listPublic` states that policy directly instead of borrowing the guest read scope.
 
-### 1a. Row Mapping (`adapters/postgres/mappers/`)
+### 1a. Row Mapping (`packages/server/adapters/postgres/mappers/`)
 Writes go through mappers that declare the Drizzle row type as their return type
 (`toRenditionInsert`, `toRenditionUpdate`, `toUploadInsert`, `toUploadStatusUpdate`). The
 return type is what forces the mapping to stay complete, so a renamed or retyped column
@@ -122,10 +122,10 @@ the compiler proves it, so an identity function would only create a place for th
 drift. `toOutboxRecord` is the exception, confining the one assertion that jsonb requires.
 
 ### 2. Dependency Inversion in Domain Services (`AuthorizationPort`)
-Domain services depend on the abstract port `AuthorizationPort` (`core/ports/authorization.port.ts`).
-- Concrete implementation: `CaslAuthorizationAdapter` (`adapters/authorization/casl-authorization-adapter.ts`).
+Domain services depend on the abstract port `AuthorizationPort` (`packages/server/core/ports/authorization.port.ts`).
+- Concrete implementation: `CaslAuthorizationAdapter` (`packages/server/adapters/authorization/casl-authorization-adapter.ts`).
 - Holds memoized `AppAbility`, implements `can(action, subject)`, `assertCan(...)`, and `.forUser(user)`.
-- Test doubles: `PermissiveAuthorizationAdapter` and `StrictAuthorizationAdapter` in `adapters/in-memory/`.
+- Test doubles: `PermissiveAuthorizationAdapter` and `StrictAuthorizationAdapter` in `packages/server/adapters/in-memory/`.
 
 ### 3. HTTP Transport Carries Identity, Not Permissions
 `apps/api` has no Fastify authorization decorator. Routes resolve **who** the caller is and hand that to a

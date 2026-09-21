@@ -2,6 +2,7 @@
 
 Instructions for any coding agent working on `@vp/tsconfig`.
 
+> Tiers, layers and the import rules in full: [docs/standards/package-boundaries.md](../../../docs/standards/package-boundaries.md)
 ---
 
 ## 1. Scope & Purpose

@@ -8,7 +8,7 @@ Instructions for any coding agent working on the Taitube frontend application (`
 
 `apps/web` is the web client for the Taitube video ingestion and streaming platform.
 - **Modern Architecture Target:** React 19, TanStack Start (Nitro/Vite 6 server runtime, streaming SSR), TanStack Router (100% type-safe file-based routing), TanStack Query v5, TanStack Form, TanStack Table, Tailwind CSS, Radix UI primitives.
-- **Client-Server Boundary:** `apps/web` must NEVER import `adapters/`, `core/ports`, `packages/db`, or server-only packages. It consumes backend services strictly through `@vp/api-client` and `@vp/api-contracts`.
+- **Client-Server Boundary:** `apps/web` must NEVER import `adapters/`, `packages/server/core/ports`, `packages/server/db`, or server-only packages. It consumes backend services strictly through `@vp/api-client` and `@vp/api-contracts`.
 
 ---
 

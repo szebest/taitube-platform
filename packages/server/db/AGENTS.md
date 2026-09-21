@@ -2,6 +2,7 @@
 
 Instructions for any coding agent working on `@vp/db`.
 
+> Tiers, layers and the import rules in full: [docs/standards/package-boundaries.md](../../../docs/standards/package-boundaries.md)
 ---
 
 ## 1. Scope & Purpose
@@ -13,7 +14,7 @@ Instructions for any coding agent working on `@vp/db`.
 - **Development Seeds:** Deterministic mock users, channels, and videos for local dev (`seed.ts`).
 - **Connection Client:** Low-level `postgres.js` pool setup (`client.ts`).
 
-*Note:* Domain repositories are implemented in `adapters/postgres/repositories/` implementing interfaces in `core/repositories/`.
+*Note:* Domain repositories are implemented in `packages/server/adapters/postgres/repositories/` implementing interfaces in `packages/server/core/repositories/`.
 
 ---
 

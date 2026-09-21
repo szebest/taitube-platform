@@ -18,9 +18,9 @@ Instructions for any coding agent working on Terraform infrastructure-as-code (`
 
 ## 2. Invariants & Rules
 
-1. **Parity with Local MinIO:** Cloudflare R2 bucket configurations (naming, CORS, public policies) must strictly match local MinIO conventions defined in `packages/storage/src/keys.ts` and `infra/compose/minio-init.sh`.
+1. **Parity with Local MinIO:** Cloudflare R2 bucket configurations (naming, CORS, public policies) must strictly match local MinIO conventions defined in `packages/server/storage/src/keys.ts` and `infra/compose/minio-init.sh`.
 2. **Deterministic Inputs:** Variables are declared in `variables.tf` with defaults; sensitive variables are passed via `.env` or CI secrets.
-3. **Automated Verification:** Any changes to Terraform definitions must pass the syntax and structure tests in `packages/testing/src/__tests__/cloud-terraform.test.ts`.
+3. **Automated Verification:** Any changes to Terraform definitions must pass the syntax and structure tests in `packages/server/testing/src/__tests__/cloud-terraform.test.ts`.
 
 ---
 

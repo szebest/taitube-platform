@@ -55,7 +55,7 @@ Following the deep module principles (`codebase-design`):
 - **Ports (`@vp/core/ports`)**: Abstract class contracts extending `HealthCheckable` (`DatabaseClient`, `StorageClient`, `MultipartStorage`, `CacheClient`, `JobQueue`, `FlowProducer`).
 - **Repositories (`@vp/core/repositories`)**: Pure domain entity contracts decoupled from the driver:
   - `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, `CategoryRepositoryPort`, `VideoReactionRepositoryPort`, and the aggregating `Repositories` container.
-- **Adapters (`@vp/adapters`)**: Concrete implementations (`adapters/s3/`, `adapters/redis/`, `adapters/bullmq/`, `adapters/postgres/`, `adapters/in-memory/`).
+- **Adapters (`@vp/adapters`)**: Concrete implementations (`packages/server/adapters/s3/`, `packages/server/adapters/redis/`, `packages/server/adapters/bullmq/`, `packages/server/adapters/postgres/`, `packages/server/adapters/in-memory/`).
 - **Composition Roots**: Only `apps/api/src/app.ts` and `apps/worker/src/runner.ts` instantiate concrete adapters.
 
 ### Modular Repository Rules & File Limits

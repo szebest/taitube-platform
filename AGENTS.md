@@ -21,7 +21,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 
 1. **Local-first (PRD G11, SDD P9):** No runtime dependency on any external service; `.env.example` stays all-local; nothing phones home; `make smoke-offline` must pass. See [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md).
 2. **Dual runtime parity:** Worker code and shared packages must execute interchangeably and pass tests under `vitest` and `bun test`; no `Bun.*` proprietary APIs in worker source. See [docs/standards/testing.md](docs/standards/testing.md).
-3. **Contracts are single-sourced:** Job payloads and IDs in `packages/job-contracts`, object keys in `packages/storage/keys.ts`, error codes in `packages/errors` (SDD §6.2), environment config in `packages/config` mirrored by `.env.example`. Changing one requires updating `docs/SDD.md` in the same PR.
+3. **Contracts are single-sourced:** Job payloads and IDs in `packages/server/job-contracts`, object keys in `packages/server/storage/keys.ts`, error codes in `packages/universal/errors` (SDD §6.2), environment config in `packages/server/config` mirrored by `.env.example`. Changing one requires updating `docs/SDD.md` in the same PR.
 4. **Dependency inversion (Hexagonal Architecture):** Concrete SDKs (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`) must never be imported outside `adapters/` and composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`). Domain logic and routes depend on abstract class ports in `@vp/core/ports` and repository interfaces in `@vp/core/repositories`. See [ARCHITECTURE.md](ARCHITECTURE.md).
 5. **Modular repositories & file length discipline:** Every repository implementation must live in its own dedicated file inside a `repositories/` subfolder. Target <= 250 lines (strict ceiling: 400 lines / 10 KB per file). In-memory test doubles encapsulate their own state with `.clear()`. See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
 6. **State durability via CAS & fencing:** State changes go through the Compare-and-Set helper that also atomically appends `video_events`; worker commits use monotonic fencing tokens (`vp-postgres-cas-fencing`).
@@ -44,16 +44,25 @@ Agents working in a specific package or app MUST follow its dedicated `AGENTS.md
   *Fastify 5, thin route transport adapters, deep domain services (>1:1 ratio), HttpCacheService, Singleflight, SseHub.*
 - **Worker Runtime (`apps/worker`):** [apps/worker/AGENTS.md](apps/worker/AGENTS.md)  
   *BullMQ pipeline stages, FFmpeg transcoding, dual-runtime Node/Bun, fencing tokens, temp dir cleanup.*
-- **Core Domain (`core`):** [core/AGENTS.md](core/AGENTS.md)  
-  *Zero-dependency abstract ports, repository interfaces, domain entities, pure CASL authorization engine.*
-- **Adapters (`adapters`):** [adapters/AGENTS.md](adapters/AGENTS.md)  
+- **Core Domain (`@vp/core`, server/T1):** [packages/server/core/AGENTS.md](packages/server/core/AGENTS.md)  
+  *Zero-dependency abstract ports, repository interfaces, domain entities and policy.*
+- **Adapters (`@vp/adapters`, server/T3):** [packages/server/adapters/AGENTS.md](packages/server/adapters/AGENTS.md)  
   *Postgres, Redis, S3, BullMQ concrete adapters and autonomous in-memory test doubles.*
-- **Shared Packages:**  
-  [packages/config](packages/config/AGENTS.md) · [packages/db](packages/db/AGENTS.md) · [packages/errors](packages/errors/AGENTS.md) · [packages/events](packages/events/AGENTS.md) · [packages/ffmpeg](packages/ffmpeg/AGENTS.md) · [packages/job-contracts](packages/job-contracts/AGENTS.md) · [packages/observability](packages/observability/AGENTS.md) · [packages/storage](packages/storage/AGENTS.md) · [packages/testing](packages/testing/AGENTS.md) · [packages/tsconfig](packages/tsconfig/AGENTS.md)
+
+Shared packages live under `packages/<tier>/`, where the directory **is** the tier. See
+[ARCHITECTURE.md](ARCHITECTURE.md) Invariant 5 for tiers, layers and how the boundary is enforced.
+
+- **`packages/universal/` — runs in a browser and on a server:**  
+  [api-contracts](packages/universal/api-contracts/AGENTS.md) · [errors](packages/universal/errors/AGENTS.md) · [permissions](packages/universal/permissions/AGENTS.md) · [tsconfig](packages/universal/tsconfig/AGENTS.md)
+- **`packages/client/` — browser only:**  
+  [api-client](packages/client/api-client/AGENTS.md)
+- **`packages/server/` — Node/Bun only:**  
+  [adapters](packages/server/adapters/AGENTS.md) · [config](packages/server/config/AGENTS.md) · [core](packages/server/core/AGENTS.md) · [db](packages/server/db/AGENTS.md) · [events](packages/server/events/AGENTS.md) · [ffmpeg](packages/server/ffmpeg/AGENTS.md) · [job-contracts](packages/server/job-contracts/AGENTS.md) · [observability](packages/server/observability/AGENTS.md) · [storage](packages/server/storage/AGENTS.md) · [testing](packages/server/testing/AGENTS.md)  
+  CLI packages: [compose-autoscaler](packages/server/compose-autoscaler/AGENTS.md) · [dev-token](packages/server/dev-token/AGENTS.md) · [gen-video](packages/server/gen-video/AGENTS.md) · [upload-client](packages/server/upload-client/AGENTS.md)
 - **Infrastructure & Cloud Topologies (`infra`):** [infra/AGENTS.md](infra/AGENTS.md)  
-  [infra/compose](infra/compose/AGENTS.md) · [infra/k8s](infra/k8s/AGENTS.md) · [infra/terraform](infra/terraform/AGENTS.md)
-- **Developer Tools (`tools`):** [tools/AGENTS.md](tools/AGENTS.md)  
-  *dev-token, gen-video, upload-client, chaos, compose-autoscaler.*
+  [infra/compose](infra/compose/AGENTS.md) · [infra/k8s](infra/k8s/AGENTS.md) · [infra/terraform](infra/terraform/AGENTS.md) · `infra/observability/` (Grafana dashboards, Prometheus alert rules)
+- **Developer assets (`tools`):** [tools/AGENTS.md](tools/AGENTS.md)  
+  *`chaos/` and `hls-test-page/` only — anything with a `package.json` is a package under `packages/<tier>/`.*
 
 ---
 
@@ -63,6 +72,7 @@ Agents working in a specific package or app MUST follow its dedicated `AGENTS.md
 - **Testing Standards & Strategy:** [docs/standards/testing.md](docs/standards/testing.md)
 - **Git Workflow & Pull Requests:** [docs/standards/git-workflow.md](docs/standards/git-workflow.md)
 - **File Discipline & Sizing:** [docs/standards/file-discipline.md](docs/standards/file-discipline.md)
+- **Package Boundaries — tiers & layers:** [docs/standards/package-boundaries.md](docs/standards/package-boundaries.md)
 - **Declarative Authorization:** [docs/standards/authorization.md](docs/standards/authorization.md)
 - **Domain Glossary:** [CONTEXT.md](CONTEXT.md)
 - **Local-First Guide:** [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md)

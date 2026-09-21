@@ -190,8 +190,8 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 
 ### Invariant 1: Dedicated Repository Files
 - Every repository implementation MUST live in its own dedicated file inside `repositories/` subfolders:
-  - `adapters/postgres/repositories/postgres-<domain>-repository.ts`
-  - `adapters/in-memory/repositories/in-memory-<domain>-repository.ts`
+  - `packages/server/adapters/postgres/repositories/postgres-<domain>-repository.ts`
+  - `packages/server/adapters/in-memory/repositories/in-memory-<domain>-repository.ts`
 - Monolithic multi-repository files are strictly forbidden.
 
 ### Invariant 2: File Length & Sizing Discipline
@@ -269,6 +269,7 @@ Three mechanisms, strongest first:
    `@types/node` back into the package's program.
 
 `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite.
+Full reference, including the per-package map and the recipes: [docs/standards/package-boundaries.md](docs/standards/package-boundaries.md).
 
 - `apps/web` must NEVER import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
 - The frontend talks to the backend only through `@vp/api-contracts` and `@vp/api-client`.
@@ -285,9 +286,9 @@ Three mechanisms, strongest first:
 ## 6. Verification & Enforcement
 
 The repository enforces architectural boundaries through static verification:
-1. `git grep "@aws-sdk/client-s3"` matches only `adapters/s3/`.
-2. `git grep "ioredis"` matches only `adapters/redis/`.
-3. `git grep "bullmq"` matches only `adapters/bullmq/`.
-4. `git grep "postgres"` and `git grep "drizzle-orm"` match only `adapters/postgres/` and `packages/db`.
+1. `git grep "@aws-sdk/client-s3"` matches only `packages/server/adapters/s3/`.
+2. `git grep "ioredis"` matches only `packages/server/adapters/redis/`.
+3. `git grep "bullmq"` matches only `packages/server/adapters/bullmq/`.
+4. `git grep "postgres"` and `git grep "drizzle-orm"` match only `packages/server/adapters/postgres/` and `packages/server/db`.
 5. Full dual-runtime test parity under `vitest` and `bun test`.
 6. Biome formatting and linting pass with zero errors (`pnpm biome check --diagnostic-level=error`).

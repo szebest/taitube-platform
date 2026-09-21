@@ -2,6 +2,7 @@
 
 Instructions for any coding agent working on `@vp/storage`.
 
+> Tiers, layers and the import rules in full: [docs/standards/package-boundaries.md](../../../docs/standards/package-boundaries.md)
 ---
 
 ## 1. Scope & Purpose
@@ -10,7 +11,7 @@ Instructions for any coding agent working on `@vp/storage`.
 - **Bucket Topologies:**
   - `raw`: Private bucket for unprocessed uploads (`raw/<videoId>/<uploadId>/source.<ext>`).
   - `public`: Public bucket for finished HLS playlists, video segments, posters, and WebVTT scrub thumbnails (`videos/<videoId>/...`).
-- **Single Source of Truth:** Key formats are defined exclusively in `packages/storage/src/keys.ts`.
+- **Single Source of Truth:** Key formats are defined exclusively in `packages/server/storage/src/keys.ts`.
 - **MIME Types:** Validation and mapping for video files (`video/mp4`, `video/quicktime`, `video/webm`).
 
 ---

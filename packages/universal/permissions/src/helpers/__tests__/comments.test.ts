@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import {
   adminUser,
   creatorUser,
@@ -7,72 +6,51 @@ import {
   sampleComment,
   standardUser,
 } from '../../__mocks__/fixtures';
+import type { CommentResource, UserContext } from '../../types';
 import { canCreateComment, canDeleteComment, canPinComment } from '../comments';
+
+const strangerUser: UserContext = { id: 'usr-999', role: 'USER' };
 
 describe('helpers/comments: Comment Action Helpers', () => {
   describe('canCreateComment', () => {
-    it('forbids unauthenticated guest', () => {
-      expect(canCreateComment({ user: guestUser })).toBe(false);
-    });
-
-    it('allows authenticated users to create comments', () => {
-      expect(canCreateComment({ user: standardUser })).toBe(true);
-      expect(canCreateComment({ user: creatorUser })).toBe(true);
+    it.each<{ scenario: string; user: UserContext | null; expected: boolean }>([
+      { scenario: 'a guest', user: guestUser, expected: false },
+      { scenario: 'a standard user', user: standardUser, expected: true },
+      { scenario: 'a creator', user: creatorUser, expected: true },
+    ])('$scenario: $expected', ({ user, expected }) => {
+      expect(canCreateComment({ user })).toBe(expected);
     });
   });
 
   describe('canDeleteComment', () => {
-    it('allows author to delete their own comment', () => {
-      expect(canDeleteComment({ user: standardUser, comment: sampleComment })).toBe(true);
-    });
-
-    it('forbids other users from deleting authors comment', () => {
-      expect(
-        canDeleteComment({
-          user: { id: 'usr-999', role: 'USER' },
-          comment: sampleComment,
-        })
-      ).toBe(false);
-    });
-
-    it('allows video owner to delete comments on their video', () => {
-      expect(canDeleteComment({ user: creatorUser, comment: sampleComment })).toBe(true);
-    });
-
-    it('allows moderator and admin to delete any comment', () => {
-      expect(canDeleteComment({ user: moderatorUser, comment: sampleComment })).toBe(true);
-      expect(canDeleteComment({ user: adminUser, comment: sampleComment })).toBe(true);
+    it.each<{ scenario: string; user: UserContext | null; expected: boolean }>([
+      { scenario: 'the comment author', user: standardUser, expected: true },
+      { scenario: 'an unrelated user', user: strangerUser, expected: false },
+      { scenario: 'the owner of the video it sits under', user: creatorUser, expected: true },
+      { scenario: 'a moderator', user: moderatorUser, expected: true },
+      { scenario: 'an admin', user: adminUser, expected: true },
+    ])('$scenario: $expected', ({ user, expected }) => {
+      expect(canDeleteComment({ user, comment: sampleComment })).toBe(expected);
     });
   });
 
   describe('canPinComment', () => {
-    it('allows video owner to pin comment on their video', () => {
-      expect(
-        canPinComment({
-          user: creatorUser,
-          videoOwnerId: 'creator-1',
-          comment: sampleComment,
-        })
-      ).toBe(true);
-    });
-
-    it('forbids other users from pinning comments', () => {
-      expect(
-        canPinComment({
-          user: standardUser,
-          videoOwnerId: 'creator-1',
-          comment: sampleComment,
-        })
-      ).toBe(false);
-    });
-
-    it('allows admin to pin any comment', () => {
-      expect(
-        canPinComment({
-          user: adminUser,
-          videoOwnerId: 'creator-1',
-        })
-      ).toBe(true);
+    it.each<{
+      scenario: string;
+      user: UserContext | null;
+      comment?: CommentResource;
+      expected: boolean;
+    }>([
+      {
+        scenario: 'the owner of the video it sits under',
+        user: creatorUser,
+        comment: sampleComment,
+        expected: true,
+      },
+      { scenario: 'an unrelated user', user: standardUser, comment: sampleComment, expected: false },
+      { scenario: 'an admin with no comment in hand', user: adminUser, expected: true },
+    ])('$scenario: $expected', ({ user, comment, expected }) => {
+      expect(canPinComment({ user, videoOwnerId: 'creator-1', comment })).toBe(expected);
     });
   });
 });

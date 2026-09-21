@@ -2,6 +2,7 @@
 
 Instructions for any coding agent working on `@vp/permissions`.
 
+> Tiers, layers and the import rules in full: [docs/standards/package-boundaries.md](../../../docs/standards/package-boundaries.md)
 ---
 
 ## 1. Scope & Purpose
@@ -29,5 +30,5 @@ Instructions for any coding agent working on `@vp/permissions`.
 ```bash
 pnpm --filter @vp/permissions typecheck
 pnpm --filter @vp/permissions test
-bun test packages/permissions
+bun test packages/universal/permissions
 ```

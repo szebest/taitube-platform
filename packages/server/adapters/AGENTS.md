@@ -2,6 +2,7 @@
 
 Instructions for any coding agent working on adapter drivers (`adapters`).
 
+> Tiers, layers and the import rules in full: [docs/standards/package-boundaries.md](../../../docs/standards/package-boundaries.md)
 ---
 
 ## 1. Scope & Architecture
@@ -23,8 +24,8 @@ adapters/
 
 ### Rule 1: Modular Single-File Repositories
 - Every repository implementation MUST live in its own dedicated file inside `repositories/` subfolders:
-  - `adapters/postgres/repositories/postgres-<domain>-repository.ts`
-  - `adapters/in-memory/repositories/in-memory-<domain>-repository.ts`
+  - `packages/server/adapters/postgres/repositories/postgres-<domain>-repository.ts`
+  - `packages/server/adapters/in-memory/repositories/in-memory-<domain>-repository.ts`
 - Never combine multiple domain repository implementations into one file.
 - The `*Repositories` container class is strictly a lightweight factory/bundle.
 

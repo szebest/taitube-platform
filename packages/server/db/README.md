@@ -2,7 +2,7 @@
 
 Authoritative PostgreSQL database schema, migrations, connection pools, and atomic state-machine helpers for `video-pipeline`, built with Drizzle ORM and `postgres.js`. Implements compare-and-set (CAS) state transitions, optimistic locking, and append-only event streams as specified in `docs/SDD.md` §5 and ADR-04.
 
-*Note on Architecture:* Entity data-access repositories are implemented in `adapters/postgres/repositories/` adhering to the repository interfaces in `@vp/core/repositories`.
+*Note on Architecture:* Entity data-access repositories are implemented in `packages/server/adapters/postgres/repositories/` adhering to the repository interfaces in `@vp/core/repositories`.
 
 ---
 

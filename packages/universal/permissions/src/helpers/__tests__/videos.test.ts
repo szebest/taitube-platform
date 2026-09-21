@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import {
   adminUser,
   creatorUser,
@@ -10,6 +9,7 @@ import {
   standardUser,
   unlistedVideo,
 } from '../../__mocks__/fixtures';
+import type { UserContext, VideoResource } from '../../types';
 import {
   canCreateVideo,
   canDeleteVideo,
@@ -19,81 +19,117 @@ import {
   canUpdateVideo,
 } from '../videos';
 
+type VideoCase = {
+  scenario: string;
+  user: UserContext | null;
+  video?: VideoResource;
+  expected: boolean;
+};
+
+type ViewerCase = {
+  scenario: string;
+  user: UserContext | null;
+  expected: boolean;
+};
+
 describe('helpers/videos: Video Action Helpers', () => {
   describe('canReadVideo', () => {
-    it('allows guest to read public and unlisted videos', () => {
-      expect(canReadVideo({ user: guestUser })).toBe(true);
-      expect(canReadVideo({ user: guestUser, video: publicVideo })).toBe(true);
-      expect(canReadVideo({ user: guestUser, video: unlistedVideo })).toBe(true);
-    });
-
-    it('forbids guest from reading private videos', () => {
-      expect(canReadVideo({ user: guestUser, video: privateVideo })).toBe(false);
-    });
-
-    it('allows creator to read their own private video', () => {
-      expect(canReadVideo({ user: creatorUser, video: privateVideo })).toBe(true);
-    });
-
-    it('forbids standard user from reading someone elses private video', () => {
-      expect(canReadVideo({ user: standardUser, video: privateVideo })).toBe(false);
-    });
-
-    it('allows moderator and admin to read any private video', () => {
-      expect(canReadVideo({ user: moderatorUser, video: privateVideo })).toBe(true);
-      expect(canReadVideo({ user: adminUser, video: privateVideo })).toBe(true);
+    it.each<VideoCase>([
+      { scenario: 'a guest reading the video collection', user: guestUser, expected: true },
+      {
+        scenario: 'a guest reading a public video',
+        user: guestUser,
+        video: publicVideo,
+        expected: true,
+      },
+      {
+        scenario: 'a guest reading an unlisted video',
+        user: guestUser,
+        video: unlistedVideo,
+        expected: true,
+      },
+      {
+        scenario: 'a guest reading a private video',
+        user: guestUser,
+        video: privateVideo,
+        expected: false,
+      },
+      {
+        scenario: 'the owner reading their own private video',
+        user: creatorUser,
+        video: privateVideo,
+        expected: true,
+      },
+      {
+        scenario: 'another user reading a private video',
+        user: standardUser,
+        video: privateVideo,
+        expected: false,
+      },
+      {
+        scenario: 'a moderator reading a private video',
+        user: moderatorUser,
+        video: privateVideo,
+        expected: true,
+      },
+      {
+        scenario: 'an admin reading a private video',
+        user: adminUser,
+        video: privateVideo,
+        expected: true,
+      },
+    ])('$scenario: $expected', ({ user, video, expected }) => {
+      expect(canReadVideo({ user, video })).toBe(expected);
     });
   });
 
-  describe('canCreateVideo & canReactVideo', () => {
-    it('forbids unauthenticated guest', () => {
-      expect(canCreateVideo({ user: guestUser })).toBe(false);
-      expect(canReactVideo({ user: guestUser })).toBe(false);
-    });
-
-    it('allows authenticated users to create and react', () => {
-      expect(canCreateVideo({ user: standardUser })).toBe(true);
-      expect(canReactVideo({ user: standardUser })).toBe(true);
-      expect(canCreateVideo({ user: creatorUser })).toBe(true);
-      expect(canCreateVideo({ user: adminUser })).toBe(true);
+  describe.each([
+    { helper: 'canCreateVideo', check: canCreateVideo },
+    { helper: 'canReactVideo', check: canReactVideo },
+  ])('$helper', ({ check }) => {
+    it.each<ViewerCase>([
+      { scenario: 'a guest', user: guestUser, expected: false },
+      { scenario: 'a standard user', user: standardUser, expected: true },
+      { scenario: 'a creator', user: creatorUser, expected: true },
+      { scenario: 'an admin', user: adminUser, expected: true },
+    ])('$scenario: $expected', ({ user, expected }) => {
+      expect(check({ user })).toBe(expected);
     });
   });
 
-  describe('canUpdateVideo & canDeleteVideo', () => {
-    it('forbids unauthenticated guest', () => {
-      expect(canUpdateVideo({ user: guestUser, video: publicVideo })).toBe(false);
-      expect(canDeleteVideo({ user: guestUser, video: publicVideo })).toBe(false);
-    });
-
-    it('allows video owner to update and delete', () => {
-      expect(canUpdateVideo({ user: creatorUser, video: publicVideo })).toBe(true);
-      expect(canDeleteVideo({ user: creatorUser, video: publicVideo })).toBe(true);
-    });
-
-    it('forbids non-owner from updating or deleting', () => {
-      expect(canUpdateVideo({ user: standardUser, video: publicVideo })).toBe(false);
-      expect(canDeleteVideo({ user: standardUser, video: publicVideo })).toBe(false);
-    });
-
-    it('allows admin to update and delete any video', () => {
-      expect(canUpdateVideo({ user: adminUser, video: foreignVideo })).toBe(true);
-      expect(canDeleteVideo({ user: adminUser, video: foreignVideo })).toBe(true);
+  describe.each([
+    { helper: 'canUpdateVideo', check: canUpdateVideo },
+    { helper: 'canDeleteVideo', check: canDeleteVideo },
+  ])('$helper', ({ check }) => {
+    it.each<VideoCase>([
+      { scenario: 'a guest', user: guestUser, video: publicVideo, expected: false },
+      { scenario: 'the video owner', user: creatorUser, video: publicVideo, expected: true },
+      { scenario: 'another user', user: standardUser, video: publicVideo, expected: false },
+      {
+        scenario: 'an admin on a foreign video',
+        user: adminUser,
+        video: foreignVideo,
+        expected: true,
+      },
+    ])('$scenario: $expected', ({ user, video, expected }) => {
+      expect(check({ user, video })).toBe(expected);
     });
   });
 
   describe('canPublishVideo', () => {
-    it('forbids guest and standard user from publishing', () => {
-      expect(canPublishVideo({ user: guestUser })).toBe(false);
-      expect(canPublishVideo({ user: standardUser, video: publicVideo })).toBe(false);
-    });
-
-    it('allows creator to publish own video but not foreign video', () => {
-      expect(canPublishVideo({ user: creatorUser, video: publicVideo })).toBe(true);
-      expect(canPublishVideo({ user: creatorUser, video: foreignVideo })).toBe(false);
-    });
-
-    it('allows admin to publish any video', () => {
-      expect(canPublishVideo({ user: adminUser, video: foreignVideo })).toBe(true);
+    it.each<VideoCase>([
+      { scenario: 'a guest', user: guestUser, expected: false },
+      { scenario: 'a standard user', user: standardUser, video: publicVideo, expected: false },
+      { scenario: 'a creator on their own video', user: creatorUser, video: publicVideo, expected: true },
+      {
+        scenario: 'a creator on a foreign video',
+        user: creatorUser,
+        video: foreignVideo,
+        expected: false,
+      },
+      { scenario: 'an admin on a foreign video', user: adminUser, video: foreignVideo, expected: true },
+    ])('$scenario: $expected', ({ user, video, expected }) => {
+      expect(canPublishVideo({ user, video })).toBe(expected);
     });
   });
 });

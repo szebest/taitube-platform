@@ -1,26 +1,21 @@
-import { describe, expect, it } from 'vitest';
-import {
-  adminUser,
-  creatorUser,
-  guestUser,
-  moderatorUser,
-  standardUser,
-} from '../../__mocks__/fixtures';
+import type { Role } from '../../types';
 import { canManageCategory } from '../categories';
 
 describe('helpers/categories: canManageCategory', () => {
-  it('returns false when user is null or anonymous', () => {
+  it('grants an admin', () => {
+    expect(canManageCategory({ user: { id: 'adm-1', role: 'ADMIN' } })).toBe(true);
+  });
+
+  it.each<{ role: Role }>([
+    { role: 'GUEST' },
+    { role: 'USER' },
+    { role: 'CREATOR' },
+    { role: 'MODERATOR' },
+  ])('denies a $role', ({ role }) => {
+    expect(canManageCategory({ user: { id: 'usr-1', role } })).toBe(false);
+  });
+
+  it('denies an unauthenticated caller', () => {
     expect(canManageCategory({ user: null })).toBe(false);
-  });
-
-  it('forbids guest, user, creator, and moderator', () => {
-    expect(canManageCategory({ user: guestUser })).toBe(false);
-    expect(canManageCategory({ user: standardUser })).toBe(false);
-    expect(canManageCategory({ user: creatorUser })).toBe(false);
-    expect(canManageCategory({ user: moderatorUser })).toBe(false);
-  });
-
-  it('allows admin', () => {
-    expect(canManageCategory({ user: adminUser })).toBe(true);
   });
 });

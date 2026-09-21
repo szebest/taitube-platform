@@ -31,7 +31,8 @@
     "db:check": "pnpm --filter @vp/db check",
     "sync:tickets": "python scripts/sync-tickets-to-github.py",
     "prepare": "lefthook install || true",
-    "boundaries": "tsx scripts/check-boundaries.ts"
+    "boundaries": "tsx scripts/check-boundaries.ts && tsx scripts/sync-claude-symlinks.ts --check",
+    "sync:claude": "tsx scripts/sync-claude-symlinks.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

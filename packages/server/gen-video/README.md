@@ -1,4 +1,4 @@
-# tools/gen-video — Deterministic Video Fixture Generator
+# packages/server/gen-video — Deterministic Video Fixture Generator
 
 `gen-video` produces synthetic, copyright-free, deterministic test video fixtures for `video-pipeline` using FFmpeg's `testsrc2` and `sine` filters with burnt-in timecode.
 
