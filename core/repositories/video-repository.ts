@@ -1,3 +1,5 @@
+import type { UserContext } from '@vp/permissions';
+
 export type VideoStatus =
   | 'UPLOADING'
   | 'UPLOADED'
@@ -82,8 +84,8 @@ export interface UpdateVideoMetadataOptions {
   videoId: string;
   expectedVersion: number;
   patch: {
-    title?: string | null;
-    description?: string | null;
+    title?: string;
+    description?: string;
     visibility?: VideoVisibility;
   };
   userId?: string;
@@ -91,6 +93,7 @@ export interface UpdateVideoMetadataOptions {
 
 export interface ListVideosOptions {
   ownerId: string;
+  viewer?: UserContext | null;
   cursor?: {
     createdAt: Date;
     id: string;

@@ -2,7 +2,7 @@ import { check, sleep } from 'k6';
 // tests/load/s5-dependency-outage.js — S5: Dependency outage & recovery (SDD §14.2, §9.5, §9.6)
 import { SharedArray } from 'k6/data';
 import { Counter, Trend } from 'k6/metrics';
-import { completeUpload, getVideo, initUpload, uploadPart } from './common.js';
+import { STORAGE_HOSTS, completeUpload, getVideo, initUpload, uploadPart } from './common.js';
 
 const videoData = new SharedArray('video-s15', () => {
   return open('../fixtures/s15.mp4', 'b');
@@ -12,6 +12,7 @@ const recoveryDuration = new Trend('outage_recovery_duration_seconds');
 const retryObservedCount = new Counter('retries_observed_total');
 
 export const options = {
+  hosts: STORAGE_HOSTS,
   scenarios: {
     dependency_outage: {
       executor: 'shared-iterations',

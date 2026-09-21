@@ -63,11 +63,28 @@ All worker stages, pipeline processors, and shared packages (`packages/*`, `core
 | **API Unit Tests** | `pnpm --filter @vp/api test` | Run API route and service tests using Vitest |
 | **Database Durability** | `pnpm --filter @vp/db test` | Run migration and database schema tests |
 | **Adapters Suite** | `pnpm --filter @vp/adapters test` | Run adapter in-memory and concrete unit tests |
-| **Core Suite** | `pnpm --filter @vp/core test` | Run domain and declarative permission engine tests |
+| **Permissions Suite** | `pnpm --filter @vp/permissions test` | Run the declarative permission engine tests |
 | **Fast Smoke Test** | `make smoke-fast` | Fast smoke test against currently running containers |
 | **Full Smoke Test** | `make smoke` | Stand up fresh containers and run end-to-end smoke verification |
 | **Offline Smoke Test** | `make smoke-offline` | Run smoke test with simulated zero network egress |
 | **Acceptance Suite** | `make e2e` | Run comprehensive end-to-end acceptance test suite |
+
+### A package's tests only run if `vitest.config.ts` lists it
+Root `pnpm test` runs Vitest with the `projects` array in `vitest.config.ts`. A package
+absent from that array is silently skipped: no error, no empty-suite warning, just a lower
+file count. `projects` supersedes the old `vitest.workspace.ts`, which is why that file no longer exists:
+two lists meant a package could appear in one and be skipped by the other. After adding a package that owns tests, confirm the file
+count in the `pnpm test` summary actually went up.
+
+`core` has no suite of its own. It holds abstract ports, repository interfaces and domain
+types with no runtime behaviour, so it is exercised through the adapter and app suites.
+
+### Turbo task inputs must cover where the code lives
+`turbo.json` tasks hash the whole package by default. Do not narrow them to `src/**`:
+`adapters/` and `core/` keep their source in `postgres/`, `ports/`, `repositories/` and
+similar, so a `src/**` filter matches nothing for them and every run replays a cached pass
+regardless of what changed. A green `pnpm typecheck` then means nothing. If you suspect a
+stale result, `pnpm typecheck --force` bypasses the cache.
 
 ---
 
@@ -77,3 +94,14 @@ All worker stages, pipeline processors, and shared packages (`packages/*`, `core
 2. **Deterministic Assertions:** Use deterministic seeds and synthetic test fixtures (`pnpm gen-video`). Never rely on unpredictable real-time clock delays; use fake timers (`vi.useFakeTimers()`) or explicit completion signals.
 3. **Seam Isolation:** Always test domain services directly through their port interfaces rather than spinning up full HTTP servers when verifying domain invariants.
 4. **Clean Teardown:** Test files must register `afterEach` or `afterAll` hooks to reset in-memory doubles (`repositories.clear()`), close database connection pools, and remove temporary test files.
+
+---
+
+## 5. Mandatory 1:1 Test File Correspondence & Mapping
+
+Every single source file, helper, util, rule, normalizer, or adapter MUST map to at least one dedicated test file matching its name. Grouping tests for multiple separate source files into a single bundled test file is a **strict architectural violation**.
+
+### Rules:
+- **Exact File Name Alignment:** A source file named `video.normalizer.ts` must have a corresponding `video.normalizer.test.ts` (or `video-normalizer.test.ts`). A module `drizzle-where.ts` must have `drizzle-where.test.ts` (or `drizzleWhere.test.ts`).
+- **No Bundled Catch-All Suites:** Creating catch-all files such as `normalizers.test.ts` covering multiple distinct units (`video.normalizer.ts`, `comment.normalizer.ts`, `channel.normalizer.ts`) is strictly forbidden.
+- **Granular Failure Isolation:** 1:1 test correspondence ensures rapid root-cause isolation, prevents test pollution across unrelated units, and maintains zero context ambiguity for autonomous agents.

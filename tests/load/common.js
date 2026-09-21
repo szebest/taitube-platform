@@ -3,6 +3,10 @@ import { check } from 'k6';
 import http from 'k6/http';
 
 const API_BASE = __ENV.API || 'http://localhost:3000';
+const STORAGE_TARGET = __ENV.STORAGE_TARGET || '127.0.0.1:9000';
+
+// Presigned URLs carry the compose-internal storage host, unresolvable from the test runner.
+export const STORAGE_HOSTS = { 'minio:9000': STORAGE_TARGET };
 
 export function getAuthHeaders() {
   const token =

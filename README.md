@@ -133,6 +133,35 @@ taitube-platform/
 - **pnpm**: >= 10.0.0 (`pnpm -v`)
 - **Bun**: >= 1.4.0 (`bun -v`, optional for Bun worker runtime)
 - **Docker**: Docker Engine with Docker Compose v2 (`docker compose version`)
+- **FFmpeg**: must include the `drawtext` filter (`ffmpeg -filters | grep drawtext`)
+
+`make doctor` checks all of the above except the `drawtext` filter.
+
+### FFmpeg needs drawtext
+`pnpm gen-video` burns a timecode into most fixtures, so an FFmpeg built without
+`drawtext` generates 5 of the 13 and fails the rest with `No such filter: 'drawtext'`.
+Since FFmpeg 7.1 the filter also needs libharfbuzz, and Homebrew's `ffmpeg` bottle ships
+without freetype or harfbuzz. On macOS use the full build:
+
+```bash
+brew install ffmpeg-full
+brew unlink ffmpeg && brew link --force --overwrite ffmpeg-full
+```
+
+Debian and Ubuntu `ffmpeg` packages already include it, which is why CI is unaffected.
+
+### Container runtime
+Any runtime providing the `docker` CLI and the Compose v2 plugin works; nothing in the
+Makefile depends on Docker Desktop. Colima is a free alternative:
+
+```bash
+brew install colima docker docker-compose docker-buildx
+colima start --cpu 6 --memory 12 --disk 40 --vm-type vz --mount-type virtiofs
+```
+
+Homebrew installs the Compose and buildx plugins outside Docker's search path, so add
+`/opt/homebrew/lib/docker/cli-plugins` to `cliPluginsExtraDirs` in `~/.docker/config.json`
+or `docker compose` will not be found.
 
 ---
 

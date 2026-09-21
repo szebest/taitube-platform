@@ -1,5 +1,7 @@
 import * as path from 'node:path';
+import { CaslAuthorizationAdapter } from '@vp/adapters';
 import type {
+  AuthorizationPort,
   EventRepository,
   JobQueue,
   MultipartStorage,
@@ -13,6 +15,11 @@ import type {
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
+import {
+  type UserContext,
+  canAccessUpload,
+  parseRole,
+} from '@vp/permissions';
 import {
   MULTIPART_THRESHOLD_BYTES,
   calculatePartSize,
@@ -74,6 +81,7 @@ export interface UploadServiceDeps {
   multipartThresholdBytes?: number;
   presignedUrlTtlSeconds?: number;
   maxInflightPerUser?: number;
+  authorization?: AuthorizationPort;
 }
 
 /**
@@ -98,6 +106,7 @@ export class UploadService {
   private readonly multipartThresholdBytes: number;
   private readonly presignedUrlTtlSeconds: number;
   private readonly maxInflightPerUser: number;
+  private readonly auth: AuthorizationPort;
 
   constructor(deps: UploadServiceDeps) {
     this.uploads = deps.uploads;
@@ -115,6 +124,7 @@ export class UploadService {
       (process.env['MAX_INFLIGHT_PER_USER']
         ? Number.parseInt(process.env['MAX_INFLIGHT_PER_USER'], 10)
         : 3);
+    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
   }
 
   /**
@@ -596,8 +606,20 @@ export class UploadService {
   }
 
   private assertOwnership(user: AuthUser, ownerId: string, actionDesc: string): void {
-    if (user.id !== ownerId && user.role !== 'admin') {
-      throw new PermanentError(ErrorCodes.FORBIDDEN, `Not authorized to ${actionDesc}`);
-    }
+    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
+    this.auth.assertCan(
+      canAccessUpload,
+      {
+        user: userContext,
+        upload: { ownerId },
+        video: { ownerId },
+      },
+      {
+        action: 'access',
+        subject: 'Upload',
+        user: userContext,
+        message: `Not authorized to ${actionDesc}`,
+      }
+    );
   }
 }

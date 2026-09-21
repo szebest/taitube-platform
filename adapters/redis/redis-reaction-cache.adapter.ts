@@ -65,7 +65,12 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
 
   private async readCounts(
     videoId: string
-  ): Promise<{ likesCount: number; dislikesCount: number; cachedAt?: number; delta?: number } | null> {
+  ): Promise<{
+    likesCount: number;
+    dislikesCount: number;
+    cachedAt?: number;
+    delta?: number;
+  } | null> {
     const key = this.videoKey(videoId);
     try {
       if (this.redis) {
@@ -111,13 +116,15 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
       const rand = Math.max(0.0001, Math.random());
       const xfetch = -cached.delta * this.beta * Math.log(rand);
       if (xfetch > remaining) {
-        void this.singleflight.do(`counts:${videoId}`, async () => {
-          const start = Date.now();
-          const fresh = await fetcher();
-          const computeTimeMs = Math.max(1, Date.now() - start);
-          await this.setCountsWithDelta(videoId, fresh, computeTimeMs);
-          return fresh;
-        }).catch(() => {});
+        void this.singleflight
+          .do(`counts:${videoId}`, async () => {
+            const start = Date.now();
+            const fresh = await fetcher();
+            const computeTimeMs = Math.max(1, Date.now() - start);
+            await this.setCountsWithDelta(videoId, fresh, computeTimeMs);
+            return fresh;
+          })
+          .catch(() => {});
       }
     }
   }
@@ -214,11 +221,7 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     }
   }
 
-  async adjustCounters(
-    videoId: string,
-    deltaLikes: number,
-    deltaDislikes: number
-  ): Promise<void> {
+  async adjustCounters(videoId: string, deltaLikes: number, deltaDislikes: number): Promise<void> {
     const key = this.videoKey(videoId);
     try {
       if (this.redis) {
@@ -235,23 +238,25 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
       const cache = this.cache;
       if (cache) {
         const prev = this.adjustMutexes.get(key) ?? Promise.resolve();
-        const next = prev.then(async () => {
-          const json = await cache.get(key);
-          if (json) {
-            const parsed = JSON.parse(json);
-            const likes = Math.max(0, Number(parsed.likes ?? 0) + deltaLikes);
-            const dislikes = Math.max(0, Number(parsed.dislikes ?? 0) + deltaDislikes);
-            await cache.set(
-              key,
-              JSON.stringify({ ...parsed, likes, dislikes, cachedAt: Date.now() }),
-              this.ttlSeconds
-            );
-          }
-        }).finally(() => {
-          if (this.adjustMutexes.get(key) === next) {
-            this.adjustMutexes.delete(key);
-          }
-        });
+        const next = prev
+          .then(async () => {
+            const json = await cache.get(key);
+            if (json) {
+              const parsed = JSON.parse(json);
+              const likes = Math.max(0, Number(parsed.likes ?? 0) + deltaLikes);
+              const dislikes = Math.max(0, Number(parsed.dislikes ?? 0) + deltaDislikes);
+              await cache.set(
+                key,
+                JSON.stringify({ ...parsed, likes, dislikes, cachedAt: Date.now() }),
+                this.ttlSeconds
+              );
+            }
+          })
+          .finally(() => {
+            if (this.adjustMutexes.get(key) === next) {
+              this.adjustMutexes.delete(key);
+            }
+          });
         this.adjustMutexes.set(key, next);
         await next;
       }

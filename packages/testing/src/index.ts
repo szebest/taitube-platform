@@ -17,16 +17,18 @@ export const FIXTURES = {
 export function definePackageTestConfig(
   overrides: ViteUserConfig = {}
 ): ReturnType<typeof defineConfig> {
+  const { test: testOverrides, ...rootOverrides } = overrides;
+
   return defineConfig({
+    ...rootOverrides,
     test: {
       environment: 'node',
       globals: true,
       testTimeout: 30_000,
       hookTimeout: 30_000,
       include: ['src/**/__tests__/**/*.test.ts'],
-      ...overrides.test,
+      ...testOverrides,
     },
-    ...overrides,
   });
 }
 

@@ -5,3 +5,4 @@ export * from './in-memory-job-queue';
 export * from './in-memory-database-client';
 export * from './repositories/index';
 export * from './in-memory-flow-producer';
+export * from './in-memory-authorization-adapter';

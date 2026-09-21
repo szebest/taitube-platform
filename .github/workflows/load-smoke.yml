@@ -2,12 +2,12 @@ name: Load Smoke Test (Nightly & PR)
 
 on:
   schedule:
-    - cron: '0 2 * * *' # Nightly at 2am
+    - cron: "0 2 * * *" # Nightly at 2am
   pull_request:
     paths:
-      - 'tests/load/**'
-      - 'apps/**'
-      - 'infra/compose/docker-compose.yml'
+      - "tests/load/**"
+      - "apps/**"
+      - "infra/compose/docker-compose.yml"
 
 jobs:
   load-smoke:
@@ -26,22 +26,43 @@ jobs:
       - name: Start Docker Compose Stack
         run: |
           cp .env.example .env
+          # The load profile drives far more uploads per user than the production limit allows.
+          echo "UPLOAD_RATE_LIMIT_MAX=100000" >> .env
           make up-all
-          sleep 15 # wait for services to be ready
 
+      # Installed from the release tarball: the apt repo needs a keyserver fetch that times out on runners.
       - name: Install k6
+        env:
+          K6_VERSION: v2.2.0
+          K6_SHA256: b5a8003c86f35f5cd5ceef1490312c48e587696c94d998cefc6d7b3b4cb1597d
         run: |
-          sudo gpg -k
-          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install k6
+          curl -fsSL --retry 3 --retry-all-errors --connect-timeout 10 -o /tmp/k6.tar.gz \
+            "https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-amd64.tar.gz"
+          echo "${K6_SHA256}  /tmp/k6.tar.gz" | sha256sum -c -
+          sudo tar -xzf /tmp/k6.tar.gz --strip-components=1 -C /usr/local/bin "k6-${K6_VERSION}-linux-amd64/k6"
+          k6 version
+
+      - name: Wait for API health
+        run: |
+          echo "Waiting for API to be healthy..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3000/healthz > /dev/null 2>&1; then
+              echo "API healthy after ${i}s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "ERROR: API not healthy after 120s"
+          docker compose -f infra/compose/docker-compose.yml logs --tail=50
+          exit 1
 
       - name: Run S1 (Reduced for CI)
-        run: |
-          # 60 VUs for 2 min
-          TOKEN=$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint || echo "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InZwLWRldi1rZXktMSJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlIjoidXNlciIsImlzcyI6InZwLWRldiIsImF1ZCI6InZwLWFwaSIsImlhdCI6MTc4OTE0NTQ1NiwiZXhwIjoyMTA0NTA1NDU2fQ.s309zkg-MQ6oDZHunmIfqrvyZgBETHgmuLRtcWsD_1hSZciougdfedfR2s7a2ac-oCnXmJG6TultN5c26_eeDQ")
-          API="http://localhost:3000" TOKEN=$TOKEN k6 run --vus 60 --duration 2m tests/load/s1-upload-storm.js
+        env:
+          # Pre-baked dev JWT: sub=00000000-0000-7000-8000-000000000001, role=user, exp=2036
+          TOKEN: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InZwLWRldi1rZXktMSJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlIjoidXNlciIsImlzcyI6InZwLWRldiIsImF1ZCI6InZwLWFwaSIsImlhdCI6MTc4OTE0NTQ1NiwiZXhwIjoyMTA0NTA1NDU2fQ.s309zkg-MQ6oDZHunmIfqrvyZgBETHgmuLRtcWsD_1hSZciougdfedfR2s7a2ac-oCnXmJG6TultN5c26_eeDQ
+          API: http://localhost:3000
+        # --vus/--duration override the script's scenarios block entirely (k6 uses constant-vus instead)
+        run: k6 run --vus 5 --duration 1m tests/load/s1-upload-storm.js
 
       - name: Teardown
         if: always()

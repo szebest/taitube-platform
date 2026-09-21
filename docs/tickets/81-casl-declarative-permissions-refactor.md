@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** done
 
 ## What to build
 
@@ -122,32 +122,32 @@ To prevent row-level security leaks in SQL queries without loading entire collec
 
 ## Acceptance criteria
 
-- [ ] **Decoupled Package (`packages/permissions`):**
+- [x] **Decoupled Package (`packages/permissions`):**
   - Configured as `@vp/permissions` in `packages/permissions/package.json` with workspace references.
   - Depends only on `@casl/ability` and `@vp/errors`.
   - Zero I/O and zero Node-specific runtime bindings (100% dual-runtime compatible with Node 24 and Bun 1.4).
-- [ ] **Pure Functional Ability Builders:**
+- [x] **Pure Functional Ability Builders:**
   - Resource rules partitioned into modular files (`video.rules.ts`, `comment.rules.ts`, `channel.rules.ts`, `upload.rules.ts`, `admin.rules.ts`).
   - Global builder `getUserPermissions(user: UserContext | null)` compiles the unified ability without class inheritance.
-- [ ] **Library-Agnostic `canX` Helper API:**
+- [x] **Library-Agnostic `canX` Helper API:**
   - Fully typed helper functions for all domain actions (`canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canPublishVideo`, `canAccessUpload`, `canDeleteComment`, `canPinComment`, `canUpdateChannel`, `canManageCategory`).
-- [ ] **Generalized Error & Validation Adapter (`ProblemDetailsErrorAdapter`):**
+- [x] **Generalized Error & Validation Adapter (`ProblemDetailsErrorAdapter`):**
   - `assertCan(allowed, { action, subject, user, message })` guard throwing RFC 9457 `UNAUTHORIZED` (401) or `FORBIDDEN` (403) with structured error context.
   - Generalized validation error handling formatting Zod failures into RFC 9457 `VALIDATION_FAILED` with `invalidParams`.
-- [ ] **Database Query Scoping Adapter (`DrizzleScopingAdapter` / `drizzleWhere`):**
+- [x] **Database Query Scoping Adapter (`DrizzleScopingAdapter` / `drizzleWhere`):**
   - Composable condition combiner `drizzleWhere(...conditions)` sanitizing and composing `and(...)` clauses.
   - Pre-defined row-level authorization scopes (`videoReadScope`, `videoOwnerScope`, `notDeletedScope`).
   - Repositories (`PostgresVideoRepository.listPublic`, `listByOwner`) refactored to use `drizzleWhere` and query scopes, eliminating manual condition array pushing.
-- [ ] **HTTP Transport Authorization Adapter (`FastifyAuthorizationAdapter`):**
+- [x] **HTTP Transport Authorization Adapter (`FastifyAuthorizationAdapter`):**
   - Fastify decorator and preHandler adapter seamlessly bridging route schemas and `canX` helpers.
-- [ ] **Frontend Reactive Adapter (`ReactPermissionsAdapter`):**
+- [x] **Frontend Reactive Adapter (`ReactPermissionsAdapter`):**
   - Lightweight `useCan` hook in `apps/web` consuming typed helpers with zero framework bloat.
   - Strict headless UI rule enforced: zero inline permission calculations in UI components.
-- [ ] **Full Monorepo State Migration & Cleanup:**
+- [x] **Full Monorepo State Migration & Cleanup:**
   - `VideoService`: replace manual `user.role !== 'admin' && existing.ownerId !== user.id` with `assertCan(canUpdateVideo(...))` and `assertCan(canDeleteVideo(...))`.
   - `UploadService`: replace private `assertOwnership` with `assertCan(canAccessUpload(...))`.
   - All existing route handlers, services, and repositories across `apps/api` and `adapters/` fully migrated to `@vp/permissions` and `drizzleWhere`. Zero unadapted legacy checks remaining.
-- [ ] **Governance & Documentation:**
+- [x] **Governance & Documentation:**
   - Rules 13 and 14 maintained in `AGENTS.md` strictly forbidding manual hand-written permission checks and complex logic in components.
   - Update `docs/SDD.md` §11 (Security / Authorization) to document the adapter architecture, `@casl/ability` functional core, and `drizzleWhere` query scoping.
   - Re-run `python3 docs/tickets/gen-index.py` to keep the ticket index synchronized.
@@ -167,8 +167,8 @@ To prevent row-level security leaks in SQL queries without loading entire collec
 
 ## Definition of Done
 
-- [ ] All ACs satisfied with verifiable test output.
-- [ ] Complete full-system refactoring across all existing services, routes, and repositories (zero legacy ad-hoc checks remaining).
-- [ ] `pnpm test`, `bun test`, `pnpm typecheck`, and `pnpm lint` pass with zero warnings or errors.
-- [ ] Rules 13 and 14 maintained in `AGENTS.md` and SDD §11 updated.
-- [ ] Ticket status updated and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All ACs satisfied with verifiable test output.
+- [x] Complete full-system refactoring across all existing services, routes, and repositories (zero legacy ad-hoc checks remaining).
+- [x] `pnpm test`, `bun test`, `pnpm typecheck`, and `pnpm lint` pass with zero warnings or errors.
+- [x] Rules 13 and 14 maintained in `AGENTS.md` and SDD §11 updated.
+- [x] Ticket status updated and `python3 docs/tickets/gen-index.py` re-run.

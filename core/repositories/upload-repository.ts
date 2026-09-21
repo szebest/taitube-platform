@@ -1,10 +1,12 @@
 import type { VideoRecord } from './video-repository';
 
+export type UploadStatus = 'OPEN' | 'COMPLETED' | 'ABORTED';
+
 export interface UploadRecord {
   id: string;
   videoId: string;
   strategy: 'single' | 'multipart';
-  status: 'OPEN' | 'COMPLETED' | 'ABORTED' | 'EXPIRED';
+  status: UploadStatus;
   partSizeBytes: number | null;
   partsExpected: number | null;
   declaredSizeBytes: number;
@@ -20,7 +22,7 @@ export interface NewUploadInput {
   id: string;
   videoId: string;
   strategy: 'single' | 'multipart';
-  status?: 'OPEN' | 'COMPLETED' | 'ABORTED' | 'EXPIRED';
+  status?: UploadStatus;
   partSizeBytes?: number | null;
   partsExpected?: number | null;
   declaredSizeBytes: number;
@@ -40,5 +42,5 @@ export abstract class UploadRepository {
   abstract findByVideoId(videoId: string): Promise<UploadRecord | null>;
   abstract findWithVideo(uploadId: string): Promise<UploadWithVideo | null>;
   abstract create(data: NewUploadInput): Promise<UploadRecord>;
-  abstract updateStatus(uploadId: string, status: string): Promise<UploadRecord | null>;
+  abstract updateStatus(uploadId: string, status: UploadStatus): Promise<UploadRecord | null>;
 }

@@ -1,5 +1,5 @@
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
-import { type Action, can, normalizeRole, type UserContext } from '@vp/core/permissions';
+import { type Action, can, normalizeRole, parseRole, type UserContext } from '@vp/core/permissions';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
@@ -212,8 +212,8 @@ describe('Ticket 39: Declarative RBAC & ABAC permission engine', () => {
         }
       });
 
-      it('works with lowercase role string (admin)', () => {
-        const lowerAdmin: UserContext = { id: 'admin-lower', role: 'admin' };
+      it('works with lowercase role string parsed via parseRole (admin)', () => {
+        const lowerAdmin: UserContext = { id: 'admin-lower', role: parseRole('admin') };
         for (const action of allActions) {
           expect(can(lowerAdmin, action)).toBe(true);
         }

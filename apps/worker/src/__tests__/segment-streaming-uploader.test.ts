@@ -550,7 +550,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       await expect(processor(makeJob(videoId, '720p'))).rejects.toThrow();
     });
 
-    it('AC 1: real FFmpeg transcode on s60 runs with bounded disk (source + <= 3 x maxSegmentBytes) and cleans temp dir', async () => {
+    it('AC 1: real FFmpeg transcode on s60 streams every segment and its playlist to storage', async () => {
       const rootDir = path.resolve(__dirname, '../../../../');
       const s60Path = path.join(rootDir, 'tests/fixtures/s60.mp4');
       if (
