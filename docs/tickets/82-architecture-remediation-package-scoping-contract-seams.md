@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | L |
 | Blocked by | 81 — Declarative permissions refactor with @casl/ability |
-| Blocks | — |
+| Blocks | 83 |
 | Spec | [SDD ADR-20 Monorepo topology](../SDD.md#adr-20-monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes-domain-services) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** ready-for-agent
@@ -13,7 +13,9 @@
 > **Visual review report:** [`docs/reviews/82-architecture-remediation-review.html`](../reviews/82-architecture-remediation-review.html)
 > — open it in a browser. Eight candidates with before/after seam diagrams, the documented-vs-actual table,
 > and the reasoning behind the workstream ordering below. The workstreams in this ticket map to the report's
-> candidates as: W1→1, W2→2+3, W3→4, W4→5, W5→6, W6→7, W8→(hygiene), and report candidate 8 is *Out of scope*.
+> candidates as: W1→1, W2→2+3, W3→4, W4→5, W5→6, W6→7, W8→(hygiene), W9→8. The report calls candidate 8
+> *speculative* and says it is "worth doing only alongside candidate 3, which has to touch package configs
+> anyway" — candidate 3 is W2, so that condition is now met and candidate 8 is **in scope as W9**.
 
 ---
 
@@ -75,11 +77,13 @@ import. That gap is the root cause of workstream **W2**.
 
 ## What to build
 
-Eight workstreams. **Each lands as its own PR** on a shared `ticket/82-*` branch prefix; the ticket is done
-when all eight are merged. W1 and W2 carry the defects and go first; the rest can run in parallel.
+Nine workstreams. **Each lands as its own PR** on a shared `ticket/82-*` branch prefix; the ticket is done
+when all nine are merged. W1 and W2 carry the defects and go first; the rest can run in parallel.
 
 Ordering rationale: W1 fixes a user-visible bug, W2 fixes a Rule 1 violation, W3 makes the previous two
-impossible to regress, and W4–W8 are cleanups that ride on the structure W3 establishes.
+impossible to regress, W4–W8 are cleanups that ride on the structure W3 establishes, and **W9 goes last** —
+it is the largest mechanical diff in the ticket and rebasing the other eight on top of it would cost more
+than rebasing it on top of them.
 
 ---
 
@@ -343,6 +347,100 @@ The library is invisible to the tool it was assembled for.
 
 ---
 
+---
+
+### W9 — Flatten the workspace and make the tier a physical boundary
+
+W2 made the tier a **declaration** (`vp.tier` in `package.json`). A declaration can be typo'd, copy-pasted or
+simply forgotten on a new package. W9 makes it a **location**, so an untiered package cannot exist and a
+browser bundle cannot reach a server package by accident rather than by decision.
+
+**Why now.** The review report marked this *speculative* and said it is "worth doing only alongside
+candidate 3, which has to touch package configs anyway". Candidate 3 is W2. That condition is met, so the
+per-package config churn is already paid for and the remaining diff is import paths.
+
+#### W9a — One layout, tier-scoped
+
+`core/` and `adapters/` sit at the repository root for historical reasons only, and that inconsistency has
+already propagated: `pnpm-workspace.yaml:5-6` carries two one-off literal entries, which forced two more in
+`vitest.config.ts:8-9`. Root `observability/` is config-only and is read by `packages/observability`'s tests
+through a repo-root path walk.
+
+```
+packages/
+├── universal/   # runs in a browser AND on a server. No node:*, no server SDK.
+├── server/      # Node/Bun only
+└── client/      # browser only
+apps/            # deployables, not shared libraries — stays flat
+├── api/         # server
+├── worker/      # server
+└── web/         # client
+tools/           # server-side dev CLIs
+```
+
+- `pnpm-workspace.yaml` becomes globs only: `apps/*`, `packages/*/*`, `tools/*`. No literal package entries.
+  Delete the matching one-off entries in `vitest.config.ts`.
+- Move root `observability/` (Grafana/Prometheus artifacts) next to the code that validates it.
+- Package **names** stay flat (`@vp/core`, `@vp/errors`) — only directories move. Import specifiers in source
+  do not change; `package.json` paths, tsconfig `extends`, turbo globs, Docker build contexts and CI paths do.
+- `vp.tier` stays, and the architecture suite asserts **tier === parent directory**. Two sources that must
+  agree is a drift bug waiting to happen, so the assertion is what makes keeping both safe.
+
+**The win over metadata alone:** `apps/web`'s permitted import set becomes one glob
+(`packages/universal/*` + `packages/client/*`), readable by tools that will never parse `vp.tier` — biome,
+tsconfig project references, `turbo run --filter`, and a Dockerfile's `COPY` list.
+
+#### W9b — Split the packages whose tier is decided by one file
+
+The point of the tiers is **maximum reuse without leakage**. A package that is 95% portable but carries one
+server-only module currently has to be declared `server` wholesale, which puts the portable 95% out of the
+frontend's reach. Two confirmed cases, both verified by grep rather than assumed:
+
+**`core` is portable except one file.** With `@vp/core` at zero runtime dependencies after W2, the only
+non-portable source in the whole package is `core/ports/storage-client.ts`, which types
+`StorageBody = Buffer | Uint8Array | NodeJS.ReadableStream | string` and `getObject(): Promise<Buffer>`.
+That single file is what pins `domain/` (pure policy), `pagination/` (deliberately isomorphic — it uses
+`btoa`/`atob` specifically so it runs in a browser), `repositories/` (types only) and the rest of `ports/`
+to the server tier. Split it:
+
+| New package | Tier | Holds |
+|---|---|---|
+| `@vp/domain` | universal | `core/domain/` — entities, value objects, ranking and eligibility policy |
+| `@vp/pagination` | universal | `core/pagination/` — `CursorCodec`, `Paginator`, the `limit + 1` protocol |
+| `@vp/contracts` | universal | `core/repositories/` — repository interfaces and record shapes |
+| `@vp/ports` | server | `core/ports/` — the driver ports that genuinely need `Buffer`/streams |
+
+This directly retires a duplication W2 had to leave behind: `packages/api-contracts/src/pagination.ts` carries
+a browser-safe `decodeCursorPayload` that duplicates `Base64UrlCursorCodec`'s decode, **only** because a
+universal package could not import server-tier `core`. Once `@vp/pagination` is universal, delete the copy.
+It also lets `apps/web` share `VideoStatus`, `PublicFeedSort` and the ranking rules instead of re-declaring
+them — the exact failure mode W2 found 17 times in `apps/web/src/**/models/`.
+
+**`packages/config` is a universal schema behind a server loader.** `src/index.ts:131` and `:147-148` guard
+`process.env` and `process.exit` with `typeof process !== 'undefined'` — a runtime feature-detect standing in
+for a boundary the type system should draw. Split the Zod schema and the derived types (universal) from the
+loader that reads `process.env`, applies dotenv and exits on failure (server). `apps/web` then consumes the
+schema without a `typeof process` guard, and `REACT_APP_API_BASE_URL` stops being a server-schema key that a
+browser happens to read.
+
+**Rule for the split, not just these two:** a package is `server` only if code that *must* run on a server
+lives in it. If the server-only part is separable, separate it. Apply the ticket's own deletion test first —
+if splitting produces a package with one consumer and no distinct reason to exist, do not split it.
+
+#### W9c — Enforce it
+
+Extend the W3 architecture suite (do not start a second one):
+
+- `vp.tier` equals the package's parent directory under `packages/`.
+- No `packages/universal/*` or `packages/client/*` package declares a `packages/server/*` package as a
+  `dependency` or `peerDependency` — checked from the dependency graph, not only from import statements, so
+  the `packages/errors` → `bullmq` class of defect is caught at the manifest.
+- `apps/web`'s transitive runtime closure contains **no** `server`-tier package. Assert it from the resolved
+  lockfile, so it holds for transitive edges no import scan would see.
+- A deliberately-violating fixture proves each assertion fires, as with every other invariant in W3.
+
+---
+
 ## Acceptance criteria
 
 ### W1 — Contract conformance
@@ -421,8 +519,27 @@ The library is invisible to the tool it was assembled for.
 - [ ] CI turbo caches share a namespace or remote caching is enabled; `load-smoke.yml` no longer triggers on
       frontend-only changes and installs with `--frozen-lockfile` + cache.
 
+### W9 — Workspace layout & tier purity
+- [ ] `core/` and `adapters/` live under `packages/<tier>/`; root `observability/` moved next to the code that
+      validates it; `pnpm-workspace.yaml` contains globs only and `vitest.config.ts` has no one-off entries.
+- [ ] Every shared package sits under `packages/universal/`, `packages/server/` or `packages/client/`, and the
+      architecture suite asserts `vp.tier` equals the parent directory.
+- [ ] `core` is split so the portable majority is `universal`: `@vp/domain`, `@vp/pagination` and
+      `@vp/contracts` are universal; only the `Buffer`/stream-typed driver ports remain `server`.
+- [ ] `packages/api-contracts`' duplicate `decodeCursorPayload` is deleted and the one codec in
+      `@vp/pagination` serves both sides.
+- [ ] `packages/config` is split into a universal schema and a server loader; no `typeof process` guard
+      remains in the universal half.
+- [ ] No `universal` or `client` package declares a `server` package as a dependency — asserted from the
+      manifest graph, not only from import statements.
+- [ ] `apps/web`'s resolved runtime closure contains zero `server`-tier packages — asserted from the lockfile.
+- [ ] Package **names** are unchanged; no source import specifier changed, only package locations.
+- [ ] `pnpm test`, `pnpm test:bun`, `pnpm typecheck`, `pnpm lint`, `pnpm build` and `make smoke-offline` green.
+
 ### Documentation (required by DoD)
-- [ ] **`docs/SDD.md`**: §15.1 updated with `api-contracts` / `api-client` and the tier column; ADR-20
+- [ ] **`docs/SDD.md`**: §15.1 updated with the tier-scoped layout (W9), `api-contracts` / `api-client` and
+      the tier column; **new ADR-24 "Tier-scoped workspace layout"** recording why the tier is a directory and
+      not only a manifest field; ADR-20
       Consequences updated to name the enforcement suite; **new ADR-23 "Package runtime tiers"** recording the
       universal/server/client split; ADR-21 annotated to state that `apps/web` is pre-migration.
 - [ ] **`ARCHITECTURE.md`**: §6 rewritten to reference `tests/architecture/`; the tier table added; Invariant 5
@@ -441,10 +558,13 @@ The library is invisible to the tool it was assembled for.
   SSR, skeletons). Tickets 49–75 own that. This ticket makes the existing app talk to the real API over a
   single-sourced contract, under lint and typecheck. Swapping the framework on top of a correct contract is a
   smaller, safer change than doing both at once.
-- Deploying `apps/web` (Dockerfile, compose service, k8s manifest). It has none today; adding them belongs
-  with the rewrite. **W3's local-first assertion must therefore check source, not runtime.**
-- Moving `core/` and `adapters/` under `packages/` (report candidate 8). Large mechanical diff, no behaviour
-  change, and SDD §15.1 documents the current layout deliberately. Revisit if W2's config changes make it cheap.
+- Deploying `apps/web` (Dockerfile, compose service, k8s manifest). It has none today, and no other ticket
+  covered it either — that gap is now [ticket 83](83-granular-container-topology-full-stack-deployment.md),
+  which owns per-app images, a one-app-at-a-time dev loop and the orchestrated full-stack launch.
+  **W3's local-first assertion must therefore check source, not runtime.**
+- ~~Moving `core/` and `adapters/` under `packages/` (report candidate 8).~~ **Now in scope as W9.** W2's
+  config changes made it cheap, which was the report's own stated condition. SDD §15.1 documents the current
+  layout deliberately, so W9 updates §15.1 rather than contradicting it.
 - Raising overall test coverage to the full 1:1 mandate. W3 lands the assertion; bringing 34% → 100% across
   169 source files is its own ticket. **Scope here: the assertion plus the files W1–W7 touch.**
 - Reworking `packages/db/src/schema.ts` or any migration.
@@ -484,7 +604,7 @@ The library is invisible to the tool it was assembled for.
 
 ## Definition of Done
 
-- [ ] All eight workstreams merged, each as its own reviewed PR with green CI.
+- [ ] All nine workstreams merged, each as its own reviewed PR with green CI.
 - [ ] The three live defects fixed, each with a test that was watched failing first.
 - [ ] `pnpm test`, `pnpm test:bun`, `pnpm typecheck`, `pnpm lint` green with zero warnings — `apps/web` included.
 - [ ] `make smoke-offline` passes; nothing phones home.
