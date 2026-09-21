@@ -1,10 +1,10 @@
 # Attribution
 
-This bundle redistributes skills from the open-source repositories below, unmodified unless stated. Full license texts (and NOTICE files where the upstream ships one) are in `LICENSES/<owner>__<repo>/`. Modifications are listed per skill in `manifest.json` (`modified`, `modification`).
+This bundle redistributes skills from the open-source repositories below, unmodified unless stated. Full license texts (and NOTICE files where the upstream ships one) sit beside this file in `<owner>__<repo>/`. Skills carrying local edits are marked *(modified)* in the table.
 
 | Source repository | License | Commit | Skills |
 |---|---|---|---|
-| https://github.com/mattpocock/skills | MIT | `6654f6b60c` | `code-review`, `codebase-design`, `diagnosing-bugs`, `domain-modeling`, `grill-with-docs`, `grilling`, `handoff`, `implement`, `resolving-merge-conflicts`, `setup-matt-pocock-skills`, `tdd`, `to-spec`, `to-tickets`, `wizard`, `writing-for-agents` |
+| https://github.com/mattpocock/skills | MIT | `6654f6b60c` | `code-review`, `codebase-design`, `diagnosing-bugs`, `domain-modeling`, `grill-with-docs`, `grilling`, `handoff`, `implement`, `improve-codebase-architecture`, `resolving-merge-conflicts`, `setup-matt-pocock-skills`, `tdd`, `to-spec`, `to-tickets`, `wizard`, `writing-for-agents` |
 | https://github.com/obra/superpowers | MIT | `b36e0829c6` | `systematic-debugging`, `verification-before-completion` |
 | https://github.com/jgamaraalv/ts-dev-kit | MIT | `d4a6870312` | `bullmq`, `fastify-best-practices` |
 | https://github.com/oakoss/agent-skills | MIT | `85e3a3919d` | `pino-logging`, `zod-validation`, `bun-runtime`, `docker`, `github-actions`, `pnpm-workspace`, `vitest-testing` |
