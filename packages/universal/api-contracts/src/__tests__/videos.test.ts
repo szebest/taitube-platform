@@ -1,3 +1,4 @@
+import { defaultCursorCodec } from '@vp/pagination';
 import {
   ListVideosQuerySchema,
   UpdateVideoMetadataSchema,
@@ -7,11 +8,6 @@ import {
   reprocessVideo,
   updateVideo,
 } from '../videos';
-
-function cursor(payload: unknown): string {
-  const binary = String.fromCharCode(...new TextEncoder().encode(JSON.stringify(payload)));
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
 
 describe('packages/api-contracts: videos', () => {
   it.each([
@@ -27,11 +23,13 @@ describe('packages/api-contracts: videos', () => {
   });
 
   it('accepts a keyset cursor and rejects anything else', () => {
-    const valid = cursor({ id: 'v1', createdAt: '2026-01-01T00:00:00.000Z' });
+    const valid = defaultCursorCodec.encode({ id: 'v1', createdAt: '2026-01-01T00:00:00.000Z' });
 
     expect(ListVideosQuerySchema.parse({ cursor: valid }).cursor).toBe(valid);
     expect(ListVideosQuerySchema.safeParse({ cursor: 'nonsense' }).success).toBe(false);
-    expect(ListVideosQuerySchema.safeParse({ cursor: cursor({ id: 'v1' }) }).success).toBe(false);
+    expect(
+      ListVideosQuerySchema.safeParse({ cursor: defaultCursorCodec.encode({ id: 'v1' }) }).success
+    ).toBe(false);
   });
 
   it('requires the expected version on a metadata edit', () => {

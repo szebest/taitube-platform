@@ -507,9 +507,6 @@ importers:
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../universal/permissions
-      '@vp/testing':
-        specifier: workspace:*
-        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../../universal/tsconfig
@@ -817,6 +814,9 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../errors
+      '@vp/pagination':
+        specifier: workspace:*
+        version: link:../pagination
       zod:
         specifier: ^3.24.2
         version: 3.25.76
