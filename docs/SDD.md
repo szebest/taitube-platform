@@ -975,7 +975,7 @@ type Video = {
 To maintain strict modularity, testability, and separation of concerns, the API layer enforces a strict two-tier architecture:
 
 1. **Routes (`apps/api/src/routes/`) — Thin HTTP Transport Adapters**:
-   - Sole responsibilities: Fastify route definitions, Zod schema validation (`params`, `query`, `body`), authentication/role extraction (`requireAuth`, `requireAdmin`), delegating execution directly to a domain service, and returning HTTP response codes/headers.
+   - Sole responsibilities: Fastify route definitions, Zod schema validation (`params`, `query`, `body`), authentication extraction (`requireAuth`, or `request.user` on endpoints that also serve anonymous callers), delegating execution directly to a domain service that decides authorization through `AuthorizationPort`, and returning HTTP response codes/headers.
    - Invariant: Route handlers MUST NEVER invoke repositories directly, perform business logic, execute transactions, or manage entity lifecycles.
 2. **Services (`apps/api/src/services/`) — Deep Domain Services & Composition**:
    - Encapsulate business logic, domain invariants, repository coordination, cache management (e.g. L1/L2 multi-tier caching and invalidation), and error classification.

@@ -26,7 +26,7 @@ describe('CategoryService', () => {
     });
   });
 
-  it('lists active categories with ETag calculation', async () => {
+  it('lists active categories with cache headers built by HttpCacheService', async () => {
     await repositories.categories.create({
       slug: 'tech',
       name: 'Technology',
@@ -36,8 +36,11 @@ describe('CategoryService', () => {
     const result = await categoryService.listActive();
     expect(result.categories).toHaveLength(1);
     expect(result.categories[0]?.slug).toBe('tech');
-    expect(result.etag).toMatch(/^W\/"[a-f0-9]{16}"$/);
-    expect(result.isNotModified).toBe(false);
+    expect(result.headers).toEqual({
+      'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+      ETag: expect.stringMatching(/^W\/"[a-f0-9]{16}"$/),
+    });
+    expect(result.notModified).toBe(false);
   });
 
   it('evaluates If-None-Match correctly for 304 not modified', async () => {
@@ -48,8 +51,8 @@ describe('CategoryService', () => {
     });
 
     const first = await categoryService.listActive();
-    const second = await categoryService.listActive(first.etag);
-    expect(second.isNotModified).toBe(true);
+    const second = await categoryService.listActive(first.headers['ETag']);
+    expect(second.notModified).toBe(true);
   });
 
   it('creates category and invalidates multi-tier cache', async () => {

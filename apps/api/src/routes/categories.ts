@@ -31,18 +31,11 @@ export function registerCategoriesRoutes(
         }),
       },
       async (request, reply) => {
-        const ifNoneMatch = request.headers['if-none-match'];
-
-        const { categories, etag, isNotModified } = await categoryService.listActive(ifNoneMatch);
-
-        reply.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
-        reply.header('ETag', etag);
-
-        if (isNotModified) {
-          return reply.status(304).send();
-        }
-
-        return reply.status(200).send(categories);
+        const page = await categoryService.listActive(request.headers['if-none-match']);
+        reply.headers(page.headers);
+        return page.notModified
+          ? reply.status(304).send()
+          : reply.status(200).send(page.categories);
       }
     );
   }

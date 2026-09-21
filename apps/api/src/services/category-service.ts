@@ -17,10 +17,13 @@ export interface CategoryServiceDeps {
   authorization?: AuthorizationPort;
 }
 
+const CATEGORIES_MAX_AGE_SECONDS = 300;
+const CATEGORIES_STALE_WHILE_REVALIDATE_SECONDS = 60;
+
 export interface ListCategoriesResult {
   categories: Category[];
-  etag: string;
-  isNotModified: boolean;
+  headers: Record<string, string>;
+  notModified: boolean;
 }
 
 /**
@@ -51,8 +54,12 @@ export class CategoryService {
 
     return {
       categories,
-      etag,
-      isNotModified: this.httpCacheService.isNotModified(ifNoneMatch, etag),
+      notModified: this.httpCacheService.isNotModified(ifNoneMatch, etag),
+      headers: this.httpCacheService.buildCacheHeaders({
+        etag,
+        maxAgeSeconds: CATEGORIES_MAX_AGE_SECONDS,
+        staleWhileRevalidateSeconds: CATEGORIES_STALE_WHILE_REVALIDATE_SECONDS,
+      }),
     };
   }
 
