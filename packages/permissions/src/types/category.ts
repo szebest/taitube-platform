@@ -3,4 +3,4 @@ export interface CategoryResource {
   readonly slug?: string;
 }
 
-export type AdminAction = 'category:manage' | 'analytics:view_all';
+export type AdminAction = 'category:manage' | 'analytics:view_all' | 'admin:access';

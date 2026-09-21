@@ -12,7 +12,7 @@ import {
   VideoListResponseSchema,
   VideoSchema,
 } from '../schemas/videos';
-import { canUpdateVideo } from '@vp/permissions';
+import { canAccessAdmin, canUpdateVideo, parseRole } from '@vp/permissions';
 import { VideoService } from '../services/video-service';
 
 export interface VideosRouteOptions {
@@ -190,7 +190,10 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
             max: 5,
             timeWindow: '1 minute',
             keyGenerator: (req: FastifyRequest) => req.user?.id || req.ip,
-            skip: (req: FastifyRequest) => req.user?.role === 'admin',
+            skip: (req: FastifyRequest) =>
+              req.user
+                ? canAccessAdmin({ user: { id: req.user.id, role: parseRole(req.user.role) } })
+                : false,
           },
         },
         schema: {

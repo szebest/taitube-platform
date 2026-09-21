@@ -186,10 +186,7 @@ export class VideoService {
 
     const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
 
-    if (
-      existing.visibility === 'private' &&
-      !this.auth.can(canReadVideo, { user: userContext, video: existing })
-    ) {
+    if (!this.auth.can(canReadVideo, { user: userContext, video: existing })) {
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
     }
 

@@ -1,4 +1,5 @@
 import type { Action, Resource, UserContext } from '../types/index.js';
+import { canAccessAdmin } from './admin.js';
 import { canViewAllAnalytics } from './analytics.js';
 import { canManageCategory } from './categories.js';
 import { canManageChannel, canUpdateChannel } from './channels.js';
@@ -40,6 +41,8 @@ export function can(user: UserContext | null, action: Action, resource?: Resourc
       return canManageCategory({ user });
     case 'analytics:view_all':
       return canViewAllAnalytics({ user });
+    case 'admin:access':
+      return canAccessAdmin({ user });
     default:
       return false;
   }

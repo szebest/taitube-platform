@@ -4,4 +4,5 @@ export * from './channels.js';
 export * from './uploads.js';
 export * from './categories.js';
 export * from './analytics.js';
+export * from './admin.js';
 export * from './can.js';
