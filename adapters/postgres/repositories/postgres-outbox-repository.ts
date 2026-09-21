@@ -1,24 +1,17 @@
 import {
   DatabaseError,
   type NewOutboxInput,
-  type OutboxPayload,
   type OutboxRecord,
   OutboxRepository,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
 import { and, asc, eq, isNull, lt, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { toOutboxRecord } from '../mappers/index';
 import { uuidv7 } from 'uuidv7';
 import { toDbError as dbErr } from './types';
 
 const { outbox: o } = schema;
-
-type OutboxRow = typeof o.$inferSelect;
-
-// jsonb is untyped on read; the writer side is what constrains the payload shape.
-function toOutboxRecord(row: OutboxRow): OutboxRecord {
-  return { ...row, payload: row.payload as OutboxPayload };
-}
 
 export class PostgresOutboxRepository extends OutboxRepository {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {

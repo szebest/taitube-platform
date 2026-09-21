@@ -3,10 +3,12 @@ import {
   type NewUploadInput,
   type UploadRecord,
   UploadRepository,
+  type UploadStatus,
   type UploadWithVideo,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
 import { eq } from 'drizzle-orm';
+import { toUploadInsert, toUploadStatusUpdate } from '../mappers/index';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 export class PostgresUploadRepository extends UploadRepository {
@@ -77,19 +79,7 @@ export class PostgresUploadRepository extends UploadRepository {
     try {
       const [created] = await this.db
         .insert(schema.uploads)
-        .values({
-          id: data.id,
-          videoId: data.videoId,
-          strategy: data.strategy,
-          status: (data.status as any) || 'OPEN',
-          partSizeBytes: data.partSizeBytes ?? null,
-          partsExpected: data.partsExpected ?? null,
-          declaredSizeBytes: data.declaredSizeBytes,
-          declaredContentType: data.declaredContentType,
-          sha256: data.sha256 ?? null,
-          multipartUploadId: data.multipartUploadId ?? null,
-          expiresAt: data.expiresAt,
-        })
+        .values(toUploadInsert(data))
         .returning();
 
       if (!created) {
@@ -102,18 +92,11 @@ export class PostgresUploadRepository extends UploadRepository {
     }
   }
 
-  async updateStatus(uploadId: string, status: string): Promise<UploadRecord | null> {
+  async updateStatus(uploadId: string, status: UploadStatus): Promise<UploadRecord | null> {
     try {
-      const setPayload: Record<string, unknown> = {
-        status,
-      };
-      if (status === 'COMPLETED') {
-        setPayload['completedAt'] = new Date();
-      }
-
       const [updated] = await this.db
         .update(schema.uploads)
-        .set(setPayload)
+        .set(toUploadStatusUpdate(status))
         .where(eq(schema.uploads.id, uploadId))
         .returning();
       return updated ?? null;
