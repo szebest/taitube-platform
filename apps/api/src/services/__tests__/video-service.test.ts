@@ -118,6 +118,69 @@ describe('apps/api/services: VideoService', () => {
     });
   });
 
+  describe('get', () => {
+    it('hides a private video from a stranger behind VIDEO_NOT_FOUND', async () => {
+      await repositories.videos.create({
+        id: VIDEO_ID,
+        ownerId: OWNER.id,
+        title: 'Private',
+        visibility: 'private',
+        status: 'READY',
+        sourceKey: 'raw/private.mp4',
+      });
+
+      await expect(service.get(STRANGER, VIDEO_ID)).rejects.toMatchObject({
+        code: ErrorCodes.VIDEO_NOT_FOUND,
+      });
+    });
+
+    it('exposes the thumbnail assets a packaged video carries', async () => {
+      await repositories.videos.create({
+        id: VIDEO_ID,
+        ownerId: OWNER.id,
+        title: 'Thumbnails',
+        visibility: 'public',
+        status: 'READY',
+        sourceKey: 'raw/thumbs.mp4',
+        posterKey: `videos/${VIDEO_ID}/thumbs/poster.jpg`,
+        spriteKey: `videos/${VIDEO_ID}/thumbs/sprite.jpg`,
+      });
+
+      await expect(service.get(null, VIDEO_ID)).resolves.toMatchObject({
+        posterUrl: `http://localhost:9000/public/videos/${VIDEO_ID}/thumbs/poster.jpg`,
+        spriteUrl: `http://localhost:9000/public/videos/${VIDEO_ID}/thumbs/sprite.jpg`,
+        spriteVttUrl: `http://localhost:9000/public/videos/${VIDEO_ID}/thumbs/sprite.vtt`,
+      });
+    });
+  });
+
+  describe('softDelete', () => {
+    it('marks the video DELETED, stamps deletedAt and stays idempotent', async () => {
+      await seed();
+
+      await expect(service.softDelete(OWNER, VIDEO_ID)).resolves.toEqual({
+        videoId: VIDEO_ID,
+        status: 'DELETED',
+      });
+      await expect(repositories.videos.findById(VIDEO_ID)).resolves.toMatchObject({
+        status: 'DELETED',
+        deletedAt: expect.any(Date),
+      });
+      await expect(service.softDelete(OWNER, VIDEO_ID)).resolves.toEqual({
+        videoId: VIDEO_ID,
+        status: 'DELETED',
+      });
+    });
+
+    it('refuses a caller who is neither owner nor admin', async () => {
+      await seed();
+
+      await expect(service.softDelete(STRANGER, VIDEO_ID)).rejects.toThrow(
+        'Only the video owner or an admin may delete this video'
+      );
+    });
+  });
+
   describe('isRateLimitExempt', () => {
     it.each([
       ['ADMIN', ADMIN, true],
