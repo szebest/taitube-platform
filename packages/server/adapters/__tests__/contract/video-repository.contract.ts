@@ -13,6 +13,7 @@ import {
   seedOwners,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+import { type ScanCase, SCAN_CASES } from './video-scan-cases';
 
 interface FeedSeed {
   id: string;
@@ -340,10 +341,25 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
     });
 
     describe('housekeeping scans', () => {
-      it('finds videos stuck in UPLOADING past the threshold', async () => {
+      it.each<ScanCase>(SCAN_CASES)('$scenario', async ({ seed, filter }) => {
+        await seed(subject.repositories);
+        expect(idsOf(await videos.scan(filter))).toEqual([VIDEO_IDS.a]);
+      });
+
+      it('leaves rows alone until they have been idle for the whole threshold', async () => {
         await videos.create(publicVideo({ id: VIDEO_IDS.a, status: 'UPLOADING' }));
-        expect(idsOf(await videos.findStaleUploading(-1))).toEqual([VIDEO_IDS.a]);
-        expect(await videos.findStaleUploading(HOUR_MS)).toEqual([]);
+        expect(
+          await videos.scan({
+            status: 'UPLOADING',
+            idleFor: { since: 'updatedAt', ms: HOUR_MS },
+          })
+        ).toEqual([]);
+      });
+
+      it('returns no more rows than the limit', async () => {
+        await videos.create(publicVideo({ id: VIDEO_IDS.a, status: 'UPLOADING' }));
+        await videos.create(publicVideo({ id: VIDEO_IDS.b, status: 'UPLOADING' }));
+        expect(await videos.scan({ status: 'UPLOADING', limit: 1 })).toHaveLength(1);
       });
 
       it('hard-deletes only a soft-deleted video', async () => {

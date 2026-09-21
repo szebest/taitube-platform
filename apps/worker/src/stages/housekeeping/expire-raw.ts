@@ -13,6 +13,8 @@ export interface ExpireRawResult {
   expiredCount: number;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /**
  * Expire raw sources past retention period (SDD §9.8, §7):
  * Delete raw/ sources of READY videos older than RAW_RETENTION_DAYS
@@ -31,7 +33,11 @@ export async function runExpireRaw(options: ExpireRawOptions): Promise<ExpireRaw
 
   let expiredCount = 0;
 
-  const expiredVideos = await repositories.videos.findExpiredRaw(retentionDays);
+  const expiredVideos = await repositories.videos.scan({
+    status: 'READY',
+    idleFor: { since: 'readyAt', ms: retentionDays * DAY_MS },
+    without: { event: 'video.raw_expired' },
+  });
   for (const video of expiredVideos) {
     if (video.sourceKey) {
       logger?.info(

@@ -1,7 +1,6 @@
 import { InMemoryJobQueue, InMemoryMultipartStorage, InMemoryRepositories } from '@vp/adapters';
 import { ids } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it } from 'vitest';
 import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
 
 describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2, AC 3)', () => {
@@ -31,7 +30,7 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
       sourceKey: `raw/${videoId}/source.mp4`,
       sourceSizeBytes: 1000,
     });
-    // Set updatedAt in past so findStaleUploadedWithoutProbe(0) detects it
+    // A zero-threshold scan only matches rows whose clock is already in the past.
     video.updatedAt = new Date(Date.now() - 5000);
     return video;
   }
@@ -120,7 +119,7 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     expect(result2.reenqueuedCount).toBe(0);
 
     // Now complete one video (PROBING -> READY)
-    const activeVideo = (await repositories.videos.findStaleProcessing(0))[0];
+    const activeVideo = (await repositories.videos.scan({ status: 'PROCESSING' }))[0];
     if (activeVideo) {
       await repositories.videos.transition({
         videoId: activeVideo.id,

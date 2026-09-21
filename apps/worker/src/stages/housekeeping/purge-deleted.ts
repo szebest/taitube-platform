@@ -37,7 +37,10 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
   let purgedGenerationsCount = 0;
 
   // 1. Soft-deleted videos purge (AC 4)
-  const softDeletedVideos = await repositories.videos.findSoftDeleted(thresholdMs);
+  const softDeletedVideos = await repositories.videos.scan({
+    status: 'DELETED',
+    idleFor: { since: 'deletedAt', ms: thresholdMs },
+  });
   for (const video of softDeletedVideos) {
     logger?.info({ videoId: video.id }, 'Purging objects and hard-deleting soft-deleted video');
 
@@ -66,10 +69,13 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
   }
 
   // 2. Old generations purge for reprocessed videos (AC 5)
-  const readyVideosWithOldGen = await repositories.videos.findReadyWithOldGenerations();
+  const readyVideosWithOldGen = await repositories.videos.scan({
+    status: 'READY',
+    minGeneration: 2,
+    without: { event: 'video.generation_purged', forCurrentGeneration: true },
+  });
   for (const video of readyVideosWithOldGen) {
-    const currentGen = video.generation || 1;
-    if (currentGen <= 1) continue;
+    const currentGen = video.generation;
 
     for (let oldGen = 1; oldGen < currentGen; oldGen += 1) {
       const oldGenPrefix = `videos/${video.id}/hls/g${oldGen}/`;

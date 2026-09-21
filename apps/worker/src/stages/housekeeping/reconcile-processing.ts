@@ -44,7 +44,10 @@ export async function runReconcileProcessing(
 
   let orphanedCount = 0;
 
-  const staleProcessing = await repositories.videos.findStaleProcessing(thresholdMs);
+  const staleProcessing = await repositories.videos.scan({
+    status: 'PROCESSING',
+    idleFor: { since: 'updatedAt', ms: thresholdMs },
+  });
   for (const video of staleProcessing) {
     // 1. Check if any step is currently RUNNING
     const steps = await repositories.steps.findByVideoId(video.id);

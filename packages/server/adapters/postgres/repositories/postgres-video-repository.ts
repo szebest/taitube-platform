@@ -1,5 +1,6 @@
 import { trace } from '@opentelemetry/api';
 import {
+  DEFAULT_VIDEO_SCAN_LIMIT,
   DatabaseError,
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
@@ -12,11 +13,13 @@ import {
   type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
+  type VideoScan,
+  type VideoScanAbsence,
   type VideoWithDetails,
   publicFeedInstant,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
-import { type SQL, type Table, and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { type SQL, and, desc, eq, inArray, notExists, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
   drizzleWhere,
@@ -38,31 +41,6 @@ const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = sche
 export class PostgresVideoRepository extends VideoRepository {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {
     super();
-  }
-
-  private findLocked(where: SQL | undefined, limit: number): Promise<VideoRecord[]> {
-    return this.db
-      .select()
-      .from(v)
-      .where(where)
-      .for('update', { skipLocked: true })
-      .limit(limit) as Promise<VideoRecord[]>;
-  }
-
-  private async findJoinedLocked(
-    where: SQL | undefined,
-    joinTbl: Table,
-    joinOn: SQL | undefined,
-    limit: number
-  ): Promise<VideoRecord[]> {
-    const rows = await this.db
-      .select({ video: v })
-      .from(v)
-      .leftJoin(joinTbl, joinOn)
-      .where(where)
-      .for('update', { skipLocked: true })
-      .limit(limit);
-    return rows.map((r) => r.video as VideoRecord);
   }
 
   async findById(id: string): Promise<VideoRecord | null> {
@@ -250,89 +228,51 @@ export class PostgresVideoRepository extends VideoRepository {
     }
   }
 
-  async findStaleUploading(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
-    try {
-      const cutoff = new Date(Date.now() - thresholdMs);
-      return await this.findLocked(
-        and(eq(v.status, 'UPLOADING'), sql`${v.updatedAt} < ${cutoff}`),
-        limit
+  private absenceScope(absence: VideoScanAbsence): SQL {
+    if ('step' in absence) {
+      return notExists(
+        this.db
+          .select({ present: sql`1` })
+          .from(ps)
+          .where(and(eq(ps.videoId, v.id), eq(ps.step, absence.step)))
       );
-    } catch (err) {
-      throw dbErr('Failed to find stale uploading videos', err);
     }
+    return notExists(
+      this.db
+        .select({ present: sql`1` })
+        .from(ve)
+        .where(
+          drizzleWhere(
+            eq(ve.videoId, v.id),
+            eq(ve.type, absence.event),
+            absence.forCurrentGeneration
+              ? sql`(${ve.payload}->>'generation')::int >= ${v.generation}`
+              : undefined
+          )
+        )
+    );
   }
 
-  async findStaleUploadedWithoutProbe(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
+  async scan(filter: VideoScan): Promise<VideoRecord[]> {
+    const { status, idleFor, minGeneration, without, limit = DEFAULT_VIDEO_SCAN_LIMIT } = filter;
     try {
-      const cutoff = new Date(Date.now() - thresholdMs);
-      return await this.findJoinedLocked(
-        and(eq(v.status, 'UPLOADED'), sql`${v.updatedAt} < ${cutoff}`, sql`${ps.id} IS NULL`),
-        ps,
-        and(eq(ps.videoId, v.id), eq(ps.step, 'probe')),
-        limit
+      const whereClause = drizzleWhere(
+        eq(v.status, status as VideoStatus),
+        idleFor &&
+          sql`COALESCE(${v[idleFor.since]}, ${v.updatedAt}) < ${new Date(Date.now() - idleFor.ms)}`,
+        minGeneration !== undefined ? sql`${v.generation} >= ${minGeneration}` : undefined,
+        without && this.absenceScope(without)
       );
-    } catch (err) {
-      throw dbErr('Failed to find stale uploaded videos', err);
-    }
-  }
 
-  async findStaleProcessing(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
-    try {
-      const cutoff = new Date(Date.now() - thresholdMs);
-      return await this.findLocked(
-        and(eq(v.status, 'PROCESSING'), sql`${v.updatedAt} < ${cutoff}`),
-        limit
-      );
+      const rows = await this.db
+        .select()
+        .from(v)
+        .where(whereClause)
+        .for('update', { skipLocked: true })
+        .limit(limit);
+      return rows as VideoRecord[];
     } catch (err) {
-      throw dbErr('Failed to find stale processing videos', err);
-    }
-  }
-
-  async findSoftDeleted(thresholdMs: number, limit = 50): Promise<VideoRecord[]> {
-    try {
-      const cutoff = new Date(Date.now() - thresholdMs);
-      return await this.findLocked(
-        and(eq(v.status, 'DELETED'), sql`COALESCE(${v.deletedAt}, ${v.updatedAt}) < ${cutoff}`),
-        limit
-      );
-    } catch (err) {
-      throw dbErr('Failed to find soft deleted videos', err);
-    }
-  }
-
-  async findExpiredRaw(retentionDays: number, limit = 50): Promise<VideoRecord[]> {
-    try {
-      const cutoff = new Date(Date.now() - retentionDays * 86400000);
-      return await this.findJoinedLocked(
-        and(
-          eq(v.status, 'READY'),
-          sql`COALESCE(${v.readyAt}, ${v.updatedAt}) < ${cutoff}`,
-          sql`${ve.id} IS NULL`
-        ),
-        ve,
-        and(eq(ve.videoId, v.id), eq(ve.type, 'video.raw_expired')),
-        limit
-      );
-    } catch (err) {
-      throw dbErr('Failed to find expired raw videos', err);
-    }
-  }
-
-  async findReadyWithOldGenerations(limit = 50): Promise<VideoRecord[]> {
-    try {
-      const gen = v.generation;
-      return await this.findJoinedLocked(
-        and(eq(v.status, 'READY'), sql`${gen} > 1`, sql`${ve.id} IS NULL`),
-        ve,
-        and(
-          eq(ve.videoId, v.id),
-          eq(ve.type, 'video.generation_purged'),
-          sql`(${ve.payload}->>'generation')::int >= ${gen}`
-        ),
-        limit
-      );
-    } catch (err) {
-      throw dbErr('Failed to find ready videos with old generations', err);
+      throw dbErr(`Failed to scan ${status} videos`, err);
     }
   }
 

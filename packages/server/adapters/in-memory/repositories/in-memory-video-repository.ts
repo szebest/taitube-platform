@@ -1,5 +1,6 @@
 import { trace } from '@opentelemetry/api';
 import {
+  DEFAULT_VIDEO_SCAN_LIMIT,
   DatabaseError,
   type EventRepository,
   type ListPublicVideosOptions,
@@ -18,6 +19,8 @@ import {
   type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
+  type VideoScan,
+  type VideoScanAbsence,
   type VideoWithDetails,
 } from '@vp/core/ports';
 import { canReadVideo } from '@vp/permissions';
@@ -239,77 +242,37 @@ export class InMemoryVideoRepository extends VideoRepository {
     return true;
   }
 
-  async findStaleUploading(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
-    const cutoff = new Date(Date.now() - thresholdMs);
-    return Array.from(this.videosMap.values())
-      .filter((v) => v.status === 'UPLOADING' && v.updatedAt < cutoff)
-      .slice(0, limit);
-  }
-
-  async findStaleUploadedWithoutProbe(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
-    const cutoff = new Date(Date.now() - thresholdMs);
-    const results: VideoRecord[] = [];
-    for (const v of this.videosMap.values()) {
-      if (v.status === 'UPLOADED' && v.updatedAt < cutoff) {
-        const steps = await this.getSteps(v.id);
-        if (!steps.some((s) => s.step === 'probe')) {
-          results.push({ ...v });
-          if (results.length >= limit) break;
-        }
-      }
+  private async isAbsent(video: VideoRecord, absence: VideoScanAbsence): Promise<boolean> {
+    if ('step' in absence) {
+      const steps = await this.getSteps(video.id);
+      return !steps.some((s) => s.step === absence.step);
     }
-    return results;
+    const events = await this.getEvents(video.id);
+    return !events.some(
+      (e) =>
+        e.type === absence.event &&
+        (!absence.forCurrentGeneration ||
+          Number((e.payload as { generation?: number })?.generation ?? 0) >= video.generation)
+    );
   }
 
-  async findStaleProcessing(thresholdMs: number, limit = 100): Promise<VideoRecord[]> {
-    const cutoff = new Date(Date.now() - thresholdMs);
-    return Array.from(this.videosMap.values())
-      .filter((v) => v.status === 'PROCESSING' && v.updatedAt < cutoff)
-      .slice(0, limit);
-  }
-
-  async findSoftDeleted(thresholdMs: number, limit = 50): Promise<VideoRecord[]> {
-    const cutoff = new Date(Date.now() - thresholdMs);
-    return Array.from(this.videosMap.values())
-      .filter((v) => {
-        if (v.status !== 'DELETED') return false;
-        return ((v as { deletedAt?: Date }).deletedAt ?? v.updatedAt) < cutoff;
-      })
-      .slice(0, limit);
-  }
-
-  async findExpiredRaw(retentionDays: number, limit = 50): Promise<VideoRecord[]> {
-    const cutoff = new Date(Date.now() - retentionDays * 86400000);
+  async scan(filter: VideoScan): Promise<VideoRecord[]> {
+    const { status, minGeneration, without, limit = DEFAULT_VIDEO_SCAN_LIMIT } = filter;
+    const idle = filter.idleFor && {
+      since: filter.idleFor.since,
+      before: new Date(Date.now() - filter.idleFor.ms),
+    };
     const results: VideoRecord[] = [];
-    for (const v of this.videosMap.values()) {
-      if (v.status === 'READY' && (v.readyAt ?? v.updatedAt) < cutoff) {
-        const events = await this.getEvents(v.id);
-        if (!events.some((e) => e.type === 'video.raw_expired')) {
-          results.push({ ...v });
-          if (results.length >= limit) break;
-        }
-      }
-    }
-    return results;
-  }
 
-  async findReadyWithOldGenerations(limit = 50): Promise<VideoRecord[]> {
-    const results: VideoRecord[] = [];
-    for (const v of this.videosMap.values()) {
-      const curGen = v.generation || 1;
-      if (v.status === 'READY' && curGen > 1) {
-        const events = await this.getEvents(v.id);
-        const purged = events.some(
-          (e) =>
-            e.type === 'video.generation_purged' &&
-            Number((e.payload as { generation?: number })?.generation ?? 0) >= curGen
-        );
-        if (!purged) {
-          results.push({ ...v });
-          if (results.length >= limit) break;
-        }
-      }
+    for (const video of this.videosMap.values()) {
+      if (results.length >= limit) break;
+      if (video.status !== status) continue;
+      if (idle && (video[idle.since] ?? video.updatedAt) >= idle.before) continue;
+      if (minGeneration !== undefined && video.generation < minGeneration) continue;
+      if (without && !(await this.isAbsent(video, without))) continue;
+      results.push({ ...video });
     }
+
     return results;
   }
 

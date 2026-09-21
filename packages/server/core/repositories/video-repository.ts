@@ -134,6 +134,22 @@ export interface TransitionVideoOptions {
   outbox?: NewOutboxInput;
 }
 
+export type VideoIdleClock = 'updatedAt' | 'deletedAt' | 'readyAt';
+
+export type VideoScanAbsence =
+  | { step: string }
+  | { event: string; forCurrentGeneration?: boolean };
+
+export interface VideoScan {
+  status: VideoStatus;
+  idleFor?: { since: VideoIdleClock; ms: number };
+  minGeneration?: number;
+  without?: VideoScanAbsence;
+  limit?: number;
+}
+
+export const DEFAULT_VIDEO_SCAN_LIMIT = 100;
+
 export interface VideoWithDetails {
   video: VideoRecord;
   renditions: RenditionRecord[];
@@ -150,15 +166,11 @@ export abstract class VideoRepository {
   abstract listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult>;
   abstract updateMetadata(options: UpdateVideoMetadataOptions): Promise<VideoRecord>;
   abstract transition(options: TransitionVideoOptions): Promise<boolean>;
-  abstract findStaleUploading(thresholdMs: number, limit?: number): Promise<VideoRecord[]>;
-  abstract findStaleUploadedWithoutProbe(
-    thresholdMs: number,
-    limit?: number
-  ): Promise<VideoRecord[]>;
-  abstract findStaleProcessing(thresholdMs: number, limit?: number): Promise<VideoRecord[]>;
-  abstract findSoftDeleted(thresholdMs: number, limit?: number): Promise<VideoRecord[]>;
-  abstract findExpiredRaw(retentionDays: number, limit?: number): Promise<VideoRecord[]>;
-  abstract findReadyWithOldGenerations(limit?: number): Promise<VideoRecord[]>;
+  /**
+   * Housekeeping sweep. `idleFor` measures from `COALESCE(since, updatedAt)`, and a row a
+   * concurrent scan already holds is skipped, so two housekeeping runs never pick the same one.
+   */
+  abstract scan(filter: VideoScan): Promise<VideoRecord[]>;
   abstract hardDelete(id: string): Promise<boolean>;
   abstract countByStatus(): Promise<Record<string, number>>;
   abstract countInFlightByOwner(ownerId: string): Promise<number>;
