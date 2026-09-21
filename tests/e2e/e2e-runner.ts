@@ -7,7 +7,7 @@ import {
   PostgresRepositories,
   S3MultipartStorage,
   S3StorageClient,
-} from '../../adapters/index';
+} from '../../packages/server/adapters/index';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -15,7 +15,7 @@ import type {
   MultipartStorage,
   Repositories,
   StorageClient,
-} from '../../core/ports/index';
+} from '../../packages/server/core/ports/index';
 import { mintToken } from '../../packages/server/dev-token/src/index';
 import {
   type DlqCheckContext,

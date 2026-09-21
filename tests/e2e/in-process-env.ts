@@ -6,7 +6,7 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '../../adapters/index';
+} from '../../packages/server/adapters/index';
 import { buildApp } from '../../apps/api/src/app';
 import { createWorkerRunner } from '../../apps/worker/src/runner';
 import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
@@ -17,8 +17,8 @@ import type {
   MultipartStorage,
   Repositories,
   StorageClient,
-} from '../../core/ports/index';
-import { createLogger, createMetricsRegistry } from '../../packages/observability/src/index';
+} from '../../packages/server/core/ports/index';
+import { createLogger, createMetricsRegistry } from '../../packages/server/observability/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
 export interface InProcessEnv {

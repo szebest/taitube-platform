@@ -1,4 +1,4 @@
-import { ErrorCodes } from '../../packages/errors/src/index';
+import { ErrorCodes } from '../../packages/universal/errors/src/index';
 
 export interface VideoTestSpec {
   name: string;
