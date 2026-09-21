@@ -13,13 +13,8 @@ import type {
   VideoRepository,
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
-import {
-  type UserContext,
-  canAccessUpload,
-  parseRole,
-} from '@vp/permissions';
+import { type UserContext, canAccessUpload, parseRole } from '@vp/permissions';
 import {
   MULTIPART_THRESHOLD_BYTES,
   calculatePartSize,
@@ -28,6 +23,7 @@ import {
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import type { AuthUser } from '../plugins/auth';
+import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
 export interface InitiateUploadParams {
   filename: string;
@@ -484,20 +480,13 @@ export class UploadService {
       priority = 1;
     }
 
-    // Prepare probe job payload
-    const probeJobId = ids.probe(video.id, 1);
-    const probeJobData = ProbeJob.parse({
+    const dispatch = buildProbeDispatch({
       videoId: video.id,
       sourceKey: video.sourceKey,
       generation: 1,
       traceparent,
-    });
-    const probeJobOpts = {
-      jobId: probeJobId,
-      ...stagePolicies.probe,
-      ...defaultJobOptions,
       priority,
-    };
+    });
 
     // CAS transition: UPLOADING -> UPLOADED, atomically writing to outbox
     const transitioned = await this.videos.transition({
@@ -510,18 +499,7 @@ export class UploadService {
         sizeBytes: head.contentLength,
       },
       traceId,
-      outbox: {
-        kind: 'probe',
-        payload: {
-          type: 'queue',
-          queueName: 'probe',
-          job: {
-            name: 'probe',
-            data: probeJobData,
-            opts: probeJobOpts,
-          },
-        },
-      },
+      outbox: dispatch.outbox,
     });
 
     if (!transitioned) {
@@ -549,9 +527,7 @@ export class UploadService {
     }
 
     // Direct enqueue for sub-second fast path (relay serves as reliable fallback / primary drainer)
-    if (this.probeQueue) {
-      await this.probeQueue.add('probe', probeJobData, probeJobOpts);
-    }
+    await enqueueProbe(this.probeQueue, dispatch);
 
     return {
       videoId: video.id,

@@ -292,6 +292,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       videoReactions: repositories.videoReactions,
       reactionCache,
       videos: repositories.videos,
+      authorization: options.authorization ?? new CaslAuthorizationAdapter(),
     });
 
   const authorization = options.authorization ?? new CaslAuthorizationAdapter();
@@ -302,13 +303,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     reactionCache,
     authorization,
     paginator,
+    probeQueue: jobQueue,
   });
 
   registerVideosRoutes(app, {
-    videos: repositories.videos,
     videoService,
-    cdnBaseUrl,
-    probeQueue: jobQueue,
   });
 
   registerReactionsRoutes(app, {

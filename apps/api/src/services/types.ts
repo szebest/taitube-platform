@@ -1,6 +1,7 @@
 import type { Paginator } from '@vp/core/pagination';
 import type {
   AuthorizationPort,
+  JobQueue,
   ReactionCachePort,
   RenditionRecord,
   VideoRecord,
@@ -87,6 +88,7 @@ export interface VideoServiceDeps {
   reactionCache?: ReactionCachePort;
   authorization?: AuthorizationPort;
   paginator?: Paginator;
+  probeQueue?: JobQueue;
 }
 
 /**

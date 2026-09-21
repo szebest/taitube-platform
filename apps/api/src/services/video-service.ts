@@ -3,19 +3,23 @@ import { publicFeedInstant, trendingScore, videoAgeHours } from '@vp/core/domain
 import { type Paginator, defaultPaginator } from '@vp/core/pagination';
 import type {
   AuthorizationPort,
+  JobQueue,
   ReactionCachePort,
   VideoRepository,
   VideoStatus,
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
+import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import {
   type UserContext,
+  canAccessAdmin,
   canDeleteVideo,
   canReadVideo,
   canUpdateVideo,
   parseRole,
 } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
+import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
 export * from './types';
 import {
@@ -42,6 +46,14 @@ import {
   videoCursorPayload,
 } from './cursor';
 
+export const REPROCESSABLE_STATUSES: VideoStatus[] = ['READY', 'FAILED', 'PROCESSING'];
+
+export interface ReprocessResult {
+  videoId: string;
+  status: 'PROBING';
+  generation: number;
+}
+
 function gravityScore(row: { createdAt: Date; viewsCount?: number }, sort: FeedSort) {
   if (sort !== 'trending') return undefined;
   return trendingScore(row.viewsCount ?? 0, videoAgeHours(row.createdAt, publicFeedInstant()));
@@ -56,12 +68,14 @@ export class VideoService {
   private readonly reactionCache?: ReactionCachePort;
   private readonly auth: AuthorizationPort;
   private readonly paginator: Paginator;
+  private readonly probeQueue?: JobQueue;
 
   constructor(deps: VideoServiceDeps) {
     this.videos = deps.videos;
     this.reactionCache = deps.reactionCache;
     this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
     this.paginator = deps.paginator ?? defaultPaginator;
+    this.probeQueue = deps.probeQueue;
     const cdnBase =
       deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || 'http://localhost:9000/public';
     this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
@@ -223,6 +237,73 @@ export class VideoService {
     }
 
     return this.get(user, videoId);
+  }
+
+  /**
+   * Admins are not throttled on reprocess; the route only asks, it does not decide.
+   */
+  isRateLimitExempt(user: AuthUser): boolean {
+    return this.auth.can(canAccessAdmin, { user: { id: user.id, role: parseRole(user.role) } });
+  }
+
+  /**
+   * Re-runs the pipeline for an existing source under a fresh generation (SDD §6.3).
+   */
+  async reprocess(
+    user: AuthUser,
+    videoId: string,
+    options: { traceparent?: string } = {}
+  ): Promise<ReprocessResult> {
+    const video = await this.videos.findById(videoId);
+    if (!video) throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+
+    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
+
+    this.auth.assertCan(
+      canUpdateVideo,
+      { user: userContext, video },
+      {
+        action: 'update',
+        subject: 'Video',
+        message: 'Only the video owner or an admin may reprocess this video',
+      }
+    );
+
+    if (!REPROCESSABLE_STATUSES.includes(video.status)) {
+      throw new PermanentError(
+        ErrorCodes.VALIDATION_FAILED,
+        `Cannot reprocess video with status ${video.status}. Must be ${REPROCESSABLE_STATUSES.join(', ')}.`
+      );
+    }
+
+    const generation = (video.generation || 1) + 1;
+    const dispatch = buildProbeDispatch({
+      videoId,
+      sourceKey: video.sourceKey,
+      generation,
+      traceparent: options.traceparent || getActiveTraceparent() || createTraceparent(),
+    });
+
+    const transitioned = await this.videos.transition({
+      videoId,
+      from: REPROCESSABLE_STATUSES,
+      to: 'PROBING',
+      eventType: 'video.reprocessing',
+      eventPayload: { generation, requestedBy: user.id },
+      patch: { generation, errorCode: null, errorMessage: null },
+      outbox: dispatch.outbox,
+    });
+
+    if (!transitioned) {
+      throw new PermanentError(
+        ErrorCodes.VERSION_CONFLICT,
+        'State conflict while transitioning video to PROBING for reprocess'
+      );
+    }
+
+    await enqueueProbe(this.probeQueue, dispatch);
+
+    return { videoId, status: 'PROBING', generation };
   }
 
   /**

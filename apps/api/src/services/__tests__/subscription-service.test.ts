@@ -103,14 +103,14 @@ describe('SubscriptionService', () => {
       expect(addSubscription).not.toHaveBeenCalled();
     });
 
-    it.each([
-      { action: 'subscribe' as const },
-      { action: 'unsubscribe' as const },
-    ])('surfaces CHANNEL_NOT_FOUND from $action', async ({ action }) => {
-      await expect(service[action](subscriber, missingChannelId)).rejects.toThrowError(
-        expect.objectContaining({ code: ErrorCodes.CHANNEL_NOT_FOUND })
-      );
-    });
+    it.each([{ action: 'subscribe' as const }, { action: 'unsubscribe' as const }])(
+      'surfaces CHANNEL_NOT_FOUND from $action',
+      async ({ action }) => {
+        await expect(service[action](subscriber, missingChannelId)).rejects.toThrowError(
+          expect.objectContaining({ code: ErrorCodes.CHANNEL_NOT_FOUND })
+        );
+      }
+    );
   });
 
   describe('isSubscribed', () => {

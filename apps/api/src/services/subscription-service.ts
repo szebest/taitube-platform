@@ -1,10 +1,10 @@
 import type { SubscribedChannelItem } from '@vp/core/domain';
+import { type Paginator, defaultPaginator } from '@vp/core/pagination';
 import type {
   ChannelRepositoryPort,
   SubscriptionCachePort,
   SubscriptionRepositoryPort,
 } from '@vp/core/ports';
-import { defaultPaginator, type Paginator } from '@vp/core/pagination';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { AuthUser } from '../plugins/auth';
 import {
