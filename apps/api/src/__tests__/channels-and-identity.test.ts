@@ -24,9 +24,11 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
     storage = new InMemoryStorageClient();
 
     app = await buildApp({
-      repositories,
-      cache,
-      storage,
+      adapters: {
+        repositories,
+        cache,
+        storage,
+      },
     });
   });
 

@@ -98,17 +98,21 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
   }
 
   const app = await buildApp({
-    repositories,
-    storage,
-    multipart,
-    cache,
-    jobQueue: queuesMap.get('probe'),
-    adminQueues: queuesMap,
+    adapters: {
+      repositories,
+      storage,
+      multipart,
+      cache,
+      probeQueue: queuesMap.get('probe'),
+      queues: queuesMap,
+    },
+    limits: {
+      multipartThresholdBytes: 8 * 1024 * 1024,
+      sseHeartbeatMs: 2000,
+      maxInflightPerUser: 100,
+    },
     rawBucket: 'raw',
     cdnBaseUrl: `${s3Instance.baseUrl}/public`,
-    multipartThresholdBytes: 8 * 1024 * 1024,
-    sseHeartbeatMs: 2000,
-    maxInflightPerUser: 100,
   });
 
   const reconcilerTimer = setInterval(() => {

@@ -32,14 +32,18 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
     adminQueues.set('probe', probeQueue);
 
     app = await buildApp({
-      repositories,
-      storage,
-      multipart,
-      cache,
-      jobQueue: probeQueue,
-      adminQueues,
+      adapters: {
+        repositories,
+        storage,
+        multipart,
+        cache,
+        probeQueue,
+        queues: adminQueues,
+      },
+      limits: {
+        multipartThresholdBytes: 5 * 1024 * 1024,
+      },
       rawBucket: 'raw-bucket',
-      multipartThresholdBytes: 5 * 1024 * 1024, // 5 MB threshold
     });
 
     await app.ready();

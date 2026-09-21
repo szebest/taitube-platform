@@ -1,14 +1,11 @@
 import { discardDlqEntry, listDlq, replayDlqEntry } from '@vp/api-contracts';
-import type { JobQueue, Repositories } from '@vp/core/ports';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { DlqService } from '../../services/dlq-service';
+import type { DlqService } from '../../services/dlq-service';
 import { contractSchema } from '../contract-schema';
 
 export interface AdminDlqRouteOptions {
-  repositories?: Repositories;
-  queues?: Map<string, JobQueue>;
-  dlqService?: DlqService;
+  dlqService: DlqService;
 }
 
 /**
@@ -16,19 +13,7 @@ export interface AdminDlqRouteOptions {
  * Thin transport adapter delegating DLQ operations to DlqService.
  */
 export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRouteOptions): void {
-  const dlqService =
-    options.dlqService ??
-    (options.repositories && options.queues
-      ? new DlqService({
-          dlq: options.repositories.dlq,
-          events: options.repositories.events,
-          queues: options.queues,
-        })
-      : undefined);
-
-  if (!dlqService) {
-    throw new Error('registerAdminDlqRoutes requires either dlqService or repositories + queues');
-  }
+  const { dlqService } = options;
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 

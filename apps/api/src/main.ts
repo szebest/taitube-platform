@@ -9,11 +9,13 @@ export async function main(): Promise<void> {
     serviceName: 'vp-api',
   });
   const app = await buildApp({
+    limits: {
+      multipartThresholdBytes: env.S3_MULTIPART_THRESHOLD_BYTES,
+      maxUploadBytes: env.MAX_UPLOAD_BYTES,
+      maxInflightPerUser: env.MAX_INFLIGHT_PER_USER,
+      rateLimitMax: env.UPLOAD_RATE_LIMIT_MAX,
+    },
     cdnBaseUrl: env.CDN_BASE_URL,
-    multipartThresholdBytes: env.S3_MULTIPART_THRESHOLD_BYTES,
-    maxUploadBytes: env.MAX_UPLOAD_BYTES,
-    maxInflightPerUser: env.MAX_INFLIGHT_PER_USER,
-    rateLimitMax: env.UPLOAD_RATE_LIMIT_MAX,
   });
 
   const apiAddress = await app.listen({

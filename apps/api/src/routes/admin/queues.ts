@@ -1,13 +1,9 @@
-import type { CacheClient, JobQueue } from '@vp/core/ports';
 import { ErrorCodes, PermanentError, PipelineError } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { QueueService } from '../../services/queue-service';
+import type { QueueService } from '../../services/queue-service';
 
 export interface AdminQueuesOptions {
-  cache?: CacheClient | null;
-  redisClient?: CacheClient | null;
-  queues?: Map<string, JobQueue>;
-  queueService?: QueueService;
+  queueService: QueueService;
 }
 
 /**
@@ -16,13 +12,9 @@ export interface AdminQueuesOptions {
  */
 export async function registerAdminQueuesRoutes(
   app: FastifyInstance,
-  options: AdminQueuesOptions = {}
+  options: AdminQueuesOptions
 ): Promise<void> {
-  const queueService =
-    options.queueService ??
-    new QueueService({
-      queues: options.queues,
-    });
+  const { queueService } = options;
 
   const boardPlugin = queueService.getBoardPlugin('/admin/queues');
 

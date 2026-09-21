@@ -32,10 +32,12 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
     categoryCacheService = new CategoryCacheService({ cache });
 
     app = await buildApp({
-      repositories,
-      cache,
-      storage,
-      categoryCacheService,
+      adapters: {
+        repositories,
+        cache,
+        storage,
+        categoryCache: categoryCacheService,
+      },
     });
   });
 
@@ -377,10 +379,12 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
       // Setup second app instance (Pod B) connected to the same shared cache & repo
       const podBCacheService = new CategoryCacheService({ cache });
       const podBApp = await buildApp({
-        repositories,
-        cache,
-        storage,
-        categoryCacheService: podBCacheService,
+        adapters: {
+          repositories,
+          cache,
+          storage,
+          categoryCache: podBCacheService,
+        },
       });
 
       try {

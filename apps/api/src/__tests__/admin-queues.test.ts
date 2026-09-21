@@ -97,7 +97,9 @@ describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
     }
 
     app = await buildApp({
-      adminQueues: queuesMap,
+      adapters: {
+        queues: queuesMap,
+      },
     });
     await app.ready();
 

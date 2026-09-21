@@ -32,8 +32,10 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
     housekeepingQueue = hkQ;
 
     app = await buildApp({
-      repositories,
-      adminQueues: queuesMap,
+      adapters: {
+        repositories,
+        queues: queuesMap,
+      },
     });
     await app.ready();
 
@@ -89,8 +91,10 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
     it('restarting the API twice leaves exactly one of each scheduler', async () => {
       // Boot a second API instance on the same queues
       const secondApp = await buildApp({
-        repositories,
-        adminQueues: queuesMap,
+        adapters: {
+          repositories,
+          queues: queuesMap,
+        },
       });
       await secondApp.ready();
 

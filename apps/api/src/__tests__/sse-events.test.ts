@@ -32,12 +32,16 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     storage = new InMemoryStorageClient();
 
     app = await buildApp({
-      repositories,
-      cache,
-      storage,
-      sseHeartbeatMs: 100, // fast heartbeat for tests
-      sseIdleTimeoutMs: 500, // fast idle timeout for tests
-      sseMaxPerUser: 20,
+      adapters: {
+        repositories,
+        cache,
+        storage,
+      },
+      limits: {
+        sseHeartbeatMs: 100,
+        sseIdleTimeoutMs: 500,
+        sseMaxPerUser: 20,
+      },
     });
 
     const address = await app.listen({ port: 0, host: '127.0.0.1' });
@@ -545,16 +549,20 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     const sharedCache = new InMemoryCacheClient();
 
     const app1 = await buildApp({
-      repositories,
-      cache: sharedCache,
-      storage,
+      adapters: {
+        repositories,
+        cache: sharedCache,
+        storage,
+      },
     });
     const addr1 = await app1.listen({ port: 0, host: '127.0.0.1' });
 
     const app2 = await buildApp({
-      repositories,
-      cache: sharedCache,
-      storage,
+      adapters: {
+        repositories,
+        cache: sharedCache,
+        storage,
+      },
     });
     const addr2 = await app2.listen({ port: 0, host: '127.0.0.1' });
 

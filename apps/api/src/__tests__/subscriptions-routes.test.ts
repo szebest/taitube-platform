@@ -89,11 +89,13 @@ describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
 
     // Build app
     app = await buildApp({
-      repositories: repos,
-      storage: new InMemoryStorageClient(),
-      cache: new InMemoryCacheClient(),
-      dbClient: new InMemoryDatabaseClient(),
-      subscriptionCache: cacheService,
+      adapters: {
+        repositories: repos,
+        storage: new InMemoryStorageClient(),
+        cache: new InMemoryCacheClient(),
+        dbClient: new InMemoryDatabaseClient(),
+        subscriptionCache: cacheService,
+      },
       cdnBaseUrl: 'http://cdn.videopipeline.local',
     });
     await app.ready();

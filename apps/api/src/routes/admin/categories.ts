@@ -1,15 +1,11 @@
-import type { CategoryCacheService } from '@vp/adapters';
 import { createCategory, deleteCategory, updateCategory } from '@vp/api-contracts';
-import type { Repositories } from '@vp/core/ports';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { CategoryService } from '../../services/category-service';
+import type { CategoryService } from '../../services/category-service';
 import { contractSchema } from '../contract-schema';
 
 export interface AdminCategoriesRouteOptions {
-  repositories?: Repositories;
-  categoryCacheService?: CategoryCacheService;
-  categoryService?: CategoryService;
+  categoryService: CategoryService;
 }
 
 /**
@@ -20,20 +16,7 @@ export function registerAdminCategoriesRoutes(
   app: FastifyInstance,
   options: AdminCategoriesRouteOptions
 ): void {
-  const categoryService =
-    options.categoryService ??
-    (options.repositories && options.categoryCacheService
-      ? new CategoryService({
-          categories: options.repositories.categories,
-          categoryCacheService: options.categoryCacheService,
-        })
-      : undefined);
-
-  if (!categoryService) {
-    throw new Error(
-      'registerAdminCategoriesRoutes requires either categoryService or repositories + categoryCacheService'
-    );
-  }
+  const { categoryService } = options;
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 

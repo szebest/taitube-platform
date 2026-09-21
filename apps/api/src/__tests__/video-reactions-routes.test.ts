@@ -70,12 +70,14 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     });
 
     app = await buildApp({
-      repositories: repos,
-      storage,
-      cache,
-      dbClient: new InMemoryDatabaseClient(),
-      multipart: new InMemoryMultipartStorage(storage),
-      jobQueue: new InMemoryJobQueue('probe'),
+      adapters: {
+        repositories: repos,
+        storage,
+        cache,
+        dbClient: new InMemoryDatabaseClient(),
+        multipart: new InMemoryMultipartStorage(storage),
+        probeQueue: new InMemoryJobQueue('probe'),
+      },
     });
     await app.ready();
   });

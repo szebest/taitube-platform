@@ -27,9 +27,11 @@ describe('Public Video Feed API & Anonymous Access (Ticket 36)', () => {
     storage = new InMemoryStorageClient();
 
     app = await buildApp({
-      repositories,
-      cache,
-      storage,
+      adapters: {
+        repositories,
+        cache,
+        storage,
+      },
       cdnBaseUrl: 'http://localhost:9000/public',
     });
     baseUrl = await app.listen({ port: 0, host: '127.0.0.1' });

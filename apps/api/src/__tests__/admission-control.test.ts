@@ -29,11 +29,15 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     probeQueue = new InMemoryJobQueue('probe');
 
     app = await buildApp({
-      repositories,
-      storage,
-      multipart,
-      jobQueue: probeQueue,
-      maxInflightPerUser: 3,
+      adapters: {
+        repositories,
+        storage,
+        multipart,
+        probeQueue,
+      },
+      limits: {
+        maxInflightPerUser: 3,
+      },
     });
     await app.ready();
 

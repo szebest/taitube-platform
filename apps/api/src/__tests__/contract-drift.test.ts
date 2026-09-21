@@ -79,9 +79,11 @@ describe('apps/api: contract drift', () => {
 
   beforeAll(async () => {
     app = await buildApp({
-      repositories: new InMemoryRepositories(),
-      cache: new InMemoryCacheClient(),
-      storage: new InMemoryStorageClient(),
+      adapters: {
+        repositories: new InMemoryRepositories(),
+        cache: new InMemoryCacheClient(),
+        storage: new InMemoryStorageClient(),
+      },
       cdnBaseUrl: 'http://localhost:9000/public',
     });
     await app.ready();

@@ -190,13 +190,17 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     });
 
     app = await buildApp({
-      repositories,
-      dbClient,
-      cache,
-      storage,
-      multipart,
+      adapters: {
+        repositories,
+        dbClient,
+        cache,
+        storage,
+        multipart,
+      },
+      limits: {
+        multipartThresholdBytes: 8 * 1024 * 1024,
+      },
       rawBucket: 'raw',
-      multipartThresholdBytes: 8 * 1024 * 1024, // 8 MB threshold so 32 MB triggers multipart
     });
 
     const address = await app.listen({ port: 0, host: '127.0.0.1' });

@@ -5,26 +5,17 @@ import {
   issueUploadParts,
   startUpload,
 } from '@vp/api-contracts';
-import type { JobQueue, MultipartStorage, Repositories, StorageClient } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { MULTIPART_THRESHOLD_BYTES } from '@vp/storage';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
-import { UploadService } from '../services/upload-service';
+import type { UploadService } from '../services/upload-service';
 import { contractSchema } from './contract-schema';
 
 export interface UploadsRouteOptions {
-  repositories?: Repositories;
-  storage?: StorageClient;
-  multipart?: MultipartStorage;
-  rawBucket?: string;
-  probeQueue?: JobQueue;
+  uploadService: UploadService;
   maxUploadBytes?: number;
   rateLimitMax?: number;
-  multipartThresholdBytes?: number;
-  uploadService?: UploadService;
-  maxInflightPerUser?: number;
 }
 
 const ALLOWED_CONTENT_TYPES = new Set([
@@ -40,37 +31,10 @@ const ALLOWED_CONTENT_TYPES = new Set([
  */
 export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRouteOptions): void {
   const {
-    repositories,
-    storage,
-    multipart,
-    rawBucket = process.env['STORAGE_RAW_BUCKET'] || 'raw',
-    probeQueue,
+    uploadService,
     maxUploadBytes = 5 * 1024 * 1024 * 1024, // 5 GB default cap
     rateLimitMax = 30,
-    multipartThresholdBytes = MULTIPART_THRESHOLD_BYTES,
-    maxInflightPerUser = options.maxInflightPerUser,
-    uploadService = options.uploadService ??
-      (repositories && storage && multipart
-        ? new UploadService({
-            uploads: repositories.uploads,
-            videos: repositories.videos,
-            events: repositories.events,
-            users: repositories.users,
-            storage,
-            multipart,
-            rawBucket,
-            probeQueue,
-            multipartThresholdBytes,
-            maxInflightPerUser,
-          })
-        : undefined),
   } = options;
-
-  if (!uploadService) {
-    throw new Error(
-      'registerUploadsRoutes requires either uploadService or repositories + storage + multipart'
-    );
-  }
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 

@@ -250,9 +250,11 @@ describe('Ticket 39: Declarative RBAC & ABAC permission engine', () => {
 
       repositories = new InMemoryRepositories();
       app = await buildApp({
-        repositories,
-        cache: new InMemoryCacheClient(),
-        storage: new InMemoryStorageClient(),
+        adapters: {
+          repositories,
+          cache: new InMemoryCacheClient(),
+          storage: new InMemoryStorageClient(),
+        },
       });
 
       await repositories.videos.create({
