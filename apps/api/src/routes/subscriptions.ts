@@ -1,19 +1,15 @@
-import { ErrorCodes } from '@vp/errors';
+import {
+  getSubscriptionFeed,
+  isSubscribedToChannel,
+  listMySubscriptions,
+  subscribeToChannel,
+  unsubscribeFromChannel,
+} from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
-import { problemResponse } from '../schemas/problem';
-import {
-  ChannelSubscriberParamsSchema,
-  IsSubscribedResponseSchema,
-  ListSubscriptionsQuerySchema,
-  ListSubscriptionsResponseSchema,
-  SubscribeResponseSchema,
-  SubscriptionFeedQuerySchema,
-  UnsubscribeResponseSchema,
-} from '../schemas/subscriptions';
-import { FeedResponseSchema } from '../schemas/videos';
 import type { SubscriptionService } from '../services/subscription-service';
+import { contractSchema } from './contract-schema';
 
 export interface SubscriptionsRouteOptions {
   subscriptionService: SubscriptionService;
@@ -30,29 +26,15 @@ export function registerSubscriptionsRoutes(
   const { subscriptionService } = options;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  // 1. POST /v1/channels/:id/subscribers (subscribe to channel)
   for (const path of ['/v1/channels/:id/subscribers', '/channels/:id/subscribers'] as const) {
-    const isAlias = path === '/channels/:id/subscribers';
+    const hide = path === '/channels/:id/subscribers';
+
     server.post(
       path,
       {
         schema: {
-          tags: ['Subscriptions'],
-          summary: 'Subscribe to channel',
-          description:
-            'Idempotently subscribes the authenticated caller to the channel. Increments subscriber count and updates Redis cache.',
-          params: ChannelSubscriberParamsSchema,
-          response: {
-            200: SubscribeResponseSchema,
-            400: problemResponse(
-              [ErrorCodes.VALIDATION_FAILED, ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF],
-              'Bad request or cannot subscribe to own channel'
-            ),
-            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
-            403: problemResponse([ErrorCodes.FORBIDDEN], 'Forbidden action'),
-            404: problemResponse([ErrorCodes.CHANNEL_NOT_FOUND], 'Channel not found'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(subscribeToChannel, { hide }),
+          params: subscribeToChannel.params,
         },
       },
       async (request, reply) => {
@@ -62,28 +44,13 @@ export function registerSubscriptionsRoutes(
         return reply.status(200).send(result);
       }
     );
-  }
 
-  // 2. DELETE /v1/channels/:id/subscribers (unsubscribe from channel)
-  for (const path of ['/v1/channels/:id/subscribers', '/channels/:id/subscribers'] as const) {
-    const isAlias = path === '/channels/:id/subscribers';
     server.delete(
       path,
       {
         schema: {
-          tags: ['Subscriptions'],
-          summary: 'Unsubscribe from channel',
-          description:
-            'Idempotently unsubscribes the authenticated caller from the channel. Decrements subscriber count and updates Redis cache.',
-          params: ChannelSubscriberParamsSchema,
-          response: {
-            200: UnsubscribeResponseSchema,
-            400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
-            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
-            403: problemResponse([ErrorCodes.FORBIDDEN], 'Forbidden action'),
-            404: problemResponse([ErrorCodes.CHANNEL_NOT_FOUND], 'Channel not found'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(unsubscribeFromChannel, { hide }),
+          params: unsubscribeFromChannel.params,
         },
       },
       async (request, reply) => {
@@ -95,28 +62,15 @@ export function registerSubscriptionsRoutes(
     );
   }
 
-  // 3. GET /v1/channels/:id/subscribers/me (check subscription status)
-  for (const path of [
-    '/v1/channels/:id/subscribers/me',
-    '/channels/:id/subscribers/me',
-  ] as const) {
-    const isAlias = path === '/channels/:id/subscribers/me';
+  for (const path of ['/v1/channels/:id/subscribers/me', '/channels/:id/subscribers/me'] as const) {
     server.get(
       path,
       {
         schema: {
-          tags: ['Subscriptions'],
-          summary: 'Check if authenticated caller is subscribed to channel',
-          description:
-            'Checks whether the caller subscribes to the channel. Served with sub-millisecond latency via Redis set.',
-          params: ChannelSubscriberParamsSchema,
-          response: {
-            200: IsSubscribedResponseSchema,
-            400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
-            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
-            404: problemResponse([ErrorCodes.CHANNEL_NOT_FOUND], 'Channel not found'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(isSubscribedToChannel, {
+            hide: path === '/channels/:id/subscribers/me',
+          }),
+          params: isSubscribedToChannel.params,
         },
       },
       async (request, reply) => {
@@ -127,24 +81,13 @@ export function registerSubscriptionsRoutes(
     );
   }
 
-  // 4. GET /v1/me/subscriptions (list subscribed channels)
   for (const path of ['/v1/me/subscriptions', '/me/subscriptions'] as const) {
-    const isAlias = path === '/me/subscriptions';
     server.get(
       path,
       {
         schema: {
-          tags: ['Subscriptions'],
-          summary: 'List channels current user is subscribed to',
-          description:
-            'Returns keyset-paginated list of channels the current authenticated user subscribes to, newest first.',
-          querystring: ListSubscriptionsQuerySchema,
-          response: {
-            200: ListSubscriptionsResponseSchema,
-            400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
-            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(listMySubscriptions, { hide: path === '/me/subscriptions' }),
+          querystring: listMySubscriptions.query,
         },
       },
       async (request, reply) => {
@@ -155,24 +98,13 @@ export function registerSubscriptionsRoutes(
     );
   }
 
-  // 5. GET /v1/feed/subscriptions (subscribed channels video feed)
   for (const path of ['/v1/feed/subscriptions', '/feed/subscriptions'] as const) {
-    const isAlias = path === '/feed/subscriptions';
     server.get(
       path,
       {
         schema: {
-          tags: ['Subscriptions'],
-          summary: 'Subscribed channels video feed',
-          description:
-            'Keyset-paginated list of READY and public videos published by channels the user subscribes to, sorted newest first.',
-          querystring: SubscriptionFeedQuerySchema,
-          response: {
-            200: FeedResponseSchema,
-            400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
-            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(getSubscriptionFeed, { hide: path === '/feed/subscriptions' }),
+          querystring: getSubscriptionFeed.query,
         },
       },
       async (request, reply) => {

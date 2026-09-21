@@ -1,3 +1,4 @@
+import { streamMyEvents, streamVideoEvents } from '@vp/api-contracts';
 import type { Repositories } from '@vp/core/ports';
 import { verifyDevToken } from '@vp/dev-token';
 import { ErrorCodes, PermanentError } from '@vp/errors';
@@ -5,10 +6,9 @@ import { userChannel, videoChannel } from '@vp/events';
 import { type UserContext, canReadVideo, parseRole } from '@vp/permissions';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { z } from 'zod';
 import type { AuthUser } from '../plugins/auth';
-import { problemResponse } from '../schemas/problem';
 import type { SseHub } from '../services/sse-hub';
+import { contractSchema } from './contract-schema';
 
 export interface EventsRouteOptions {
   sseHub: SseHub;
@@ -81,38 +81,13 @@ export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteO
 
   // GET /v1/videos/:id/events (and /videos/:id/events) (SDD §10.1, §10.2, AC 1-6)
   for (const path of ['/v1/videos/:id/events', '/videos/:id/events'] as const) {
-    const isAlias = path === '/videos/:id/events';
     server.get(
       path,
       {
         schema: {
-          tags: ['Events'],
-          summary: 'SSE stream for single video',
-          description:
-            'Streams realtime video progress and status events over Server-Sent Events with snapshot and replay.',
-          params: z.object({
-            id: z.string().uuid({ message: 'Invalid video ID format' }),
-          }),
-          querystring: z
-            .object({
-              token: z
-                .string()
-                .optional()
-                .describe('JWT token for query-string auth bypass in EventSource'),
-              'last-event-id': z.string().optional().describe('Replay events after this ID'),
-            })
-            .optional(),
-          response: {
-            200: z.string().describe('text/event-stream Server-Sent Events stream'),
-            400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
-            401: problemResponse(
-              [ErrorCodes.UNAUTHORIZED],
-              'Authentication required for private video'
-            ),
-            404: problemResponse([ErrorCodes.VIDEO_NOT_FOUND], 'Video not found'),
-            429: problemResponse([ErrorCodes.RATE_LIMITED], 'SSE connection limit exceeded'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(streamVideoEvents, { hide: path === '/videos/:id/events' }),
+          params: streamVideoEvents.params,
+          querystring: streamVideoEvents.query,
         },
       },
       async (request, reply) => {
@@ -214,30 +189,12 @@ export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteO
 
   // GET /v1/me/events (and /me/events) (SDD §10.1, AC 5)
   for (const path of ['/v1/me/events', '/me/events'] as const) {
-    const isAlias = path === '/me/events';
     server.get(
       path,
       {
         schema: {
-          tags: ['Events'],
-          summary: 'SSE stream for all user videos',
-          description:
-            'Streams realtime video events for all videos owned by the authenticated caller.',
-          querystring: z
-            .object({
-              token: z
-                .string()
-                .optional()
-                .describe('JWT token for query-string auth bypass in EventSource'),
-              'last-event-id': z.string().optional().describe('Replay events after this ID'),
-            })
-            .optional(),
-          response: {
-            200: z.string().describe('text/event-stream Server-Sent Events stream'),
-            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
-            429: problemResponse([ErrorCodes.RATE_LIMITED], 'SSE connection limit exceeded'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(streamMyEvents, { hide: path === '/me/events' }),
+          querystring: streamMyEvents.query,
         },
       },
       async (request, reply) => {

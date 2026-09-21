@@ -1,0 +1,50 @@
+import {
+  VIDEO_STATUSES,
+  VIDEO_VISIBILITIES,
+  VideoIdParamSchema,
+  VideoListResponseSchema,
+  VideoSummarySchema,
+} from '../video-resource';
+
+const summary = {
+  id: '00000000-0000-7000-8000-000000000001',
+  title: 'A video',
+  description: null,
+  visibility: 'public',
+  status: 'READY',
+  version: 0,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
+describe('packages/api-contracts: video resource', () => {
+  it('spells the pipeline states the API exposes', () => {
+    expect(VIDEO_STATUSES).toEqual([
+      'UPLOADING',
+      'UPLOADED',
+      'PROBING',
+      'PROCESSING',
+      'READY',
+      'FAILED',
+      'REJECTED',
+      'ABANDONED',
+      'DELETED',
+    ]);
+    expect(VIDEO_VISIBILITIES).toEqual(['private', 'unlisted', 'public']);
+  });
+
+  it('accepts a minimal summary and rejects an unknown status', () => {
+    expect(VideoSummarySchema.parse(summary).id).toBe(summary.id);
+    expect(VideoSummarySchema.safeParse({ ...summary, status: 'TRANSCODING' }).success).toBe(false);
+  });
+
+  it('carries a nullable cursor on a page of summaries', () => {
+    expect(VideoListResponseSchema.parse({ items: [summary], nextCursor: null })).toMatchObject({
+      nextCursor: null,
+    });
+  });
+
+  it('rejects a non-uuid video id', () => {
+    expect(VideoIdParamSchema.safeParse({ id: '42' }).success).toBe(false);
+  });
+});

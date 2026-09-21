@@ -1,13 +1,12 @@
 import crypto from 'node:crypto';
+import { type FeedResponse, getFeed } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
-import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { problemResponse } from '../schemas/problem';
-import { FeedQuerySchema, FeedResponseSchema, type FeedResponseType } from '../schemas/videos';
 import { Singleflight } from '../services/singleflight';
 import type { VideoService } from '../services/video-service';
+import { contractSchema } from './contract-schema';
 
 export interface FeedRouteOptions {
   videoService: VideoService;
@@ -30,23 +29,15 @@ export function registerFeedRoutes(app: FastifyInstance, options: FeedRouteOptio
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const path of ['/v1/feed', '/feed'] as const) {
-    const isAlias = path === '/feed';
     server.get(
       path,
       {
         schema: {
-          tags: ['Feed'],
-          summary: 'Public video feed',
-          description:
-            'Browse public ready videos with multi-sort (recent, popular, trending) and category filtering. Anonymous access permitted.',
-          security: [],
-          querystring: FeedQuerySchema,
-          response: {
-            200: FeedResponseSchema,
-            304: z.undefined().describe('Not Modified'),
-            400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(getFeed, {
+            hide: path === '/feed',
+            responses: { 304: z.undefined().describe('Not Modified') },
+          }),
+          querystring: getFeed.query,
         },
       },
       async (request, reply) => {
@@ -55,13 +46,12 @@ export function registerFeedRoutes(app: FastifyInstance, options: FeedRouteOptio
         const isFirstPage = !cursor;
         const cacheKey = `taitube:feed:public:${sort}:${categoryId || 'all'}`;
 
-        // 1. Check Redis cache for first page
         if (isFirstPage && cache) {
           try {
             const cachedJson = await cache.get(cacheKey);
             if (cachedJson) {
               const cached = JSON.parse(cachedJson) as {
-                data: FeedResponseType;
+                data: FeedResponse;
                 etag: string;
               };
 
@@ -83,7 +73,6 @@ export function registerFeedRoutes(app: FastifyInstance, options: FeedRouteOptio
           }
         }
 
-        // 2. Singleflight promise coalescing
         const sfKey = `feed:${sort}:${categoryId || 'all'}:${cursor || 'first'}:${limit}`;
         const data = await singleflight.do(sfKey, () =>
           videoService.listPublic({
@@ -94,12 +83,10 @@ export function registerFeedRoutes(app: FastifyInstance, options: FeedRouteOptio
           })
         );
 
-        // 3. Compute ETag
         const serialized = JSON.stringify(data);
         const hash = crypto.createHash('sha1').update(serialized).digest('hex');
         const etag = `W/"${hash}"`;
 
-        // 4. Populate Redis cache for first page (30s TTL)
         if (isFirstPage && cache) {
           try {
             await cache.set(cacheKey, JSON.stringify({ data, etag }), 30);
@@ -108,7 +95,6 @@ export function registerFeedRoutes(app: FastifyInstance, options: FeedRouteOptio
           }
         }
 
-        // 5. Handle If-None-Match conditional request
         if (ifNoneMatch && (ifNoneMatch === etag || ifNoneMatch === hash)) {
           reply.header('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
           reply.header('ETag', etag);

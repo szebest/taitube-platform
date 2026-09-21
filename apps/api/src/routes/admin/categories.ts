@@ -1,18 +1,11 @@
 import type { CategoryCacheService } from '@vp/adapters';
+import { createCategory, deleteCategory, updateCategory } from '@vp/api-contracts';
 import type { Repositories } from '@vp/core/ports';
-import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { z } from 'zod';
 import { requireAdmin } from '../../plugins/auth';
-import {
-  CategoryIdParamSchema,
-  CategorySchema,
-  CreateCategorySchema,
-  UpdateCategorySchema,
-} from '../../schemas/categories';
-import { problemResponse } from '../../schemas/problem';
 import { CategoryService } from '../../services/category-service';
+import { contractSchema } from '../contract-schema';
 
 export interface AdminCategoriesRouteOptions {
   repositories?: Repositories;
@@ -50,24 +43,12 @@ export function registerAdminCategoriesRoutes(
   for (const prefix of prefixes) {
     const isAlias = prefix === '/admin/categories';
 
-    // 1. POST /v1/admin/categories
     server.post(
       prefix,
       {
         schema: {
-          tags: ['Admin'],
-          summary: 'Create category',
-          description:
-            'Creates a new taxonomy category. Automatically invalidates L1/L2 category caches across all pods.',
-          body: CreateCategorySchema,
-          response: {
-            201: CategorySchema,
-            400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
-            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
-            403: problemResponse([ErrorCodes.FORBIDDEN], 'Admin role or token required'),
-            409: problemResponse([ErrorCodes.CATEGORY_SLUG_CONFLICT], 'Slug conflict'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(createCategory, { hide: isAlias }),
+          body: createCategory.body,
         },
       },
       async (request, reply) => {
@@ -77,26 +58,13 @@ export function registerAdminCategoriesRoutes(
       }
     );
 
-    // 2. PATCH /v1/admin/categories/:id
     server.patch(
       `${prefix}/:id`,
       {
         schema: {
-          tags: ['Admin'],
-          summary: 'Update category',
-          description:
-            'Updates existing taxonomy category. Automatically invalidates L1/L2 category caches across all pods.',
-          params: CategoryIdParamSchema,
-          body: UpdateCategorySchema,
-          response: {
-            200: CategorySchema,
-            400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
-            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
-            403: problemResponse([ErrorCodes.FORBIDDEN], 'Admin role or token required'),
-            404: problemResponse([ErrorCodes.CATEGORY_NOT_FOUND], 'Category not found'),
-            409: problemResponse([ErrorCodes.CATEGORY_SLUG_CONFLICT], 'Slug conflict'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(updateCategory, { hide: isAlias }),
+          params: updateCategory.params,
+          body: updateCategory.body,
         },
       },
       async (request, reply) => {
@@ -107,24 +75,12 @@ export function registerAdminCategoriesRoutes(
       }
     );
 
-    // 3. DELETE /v1/admin/categories/:id
     server.delete(
       `${prefix}/:id`,
       {
         schema: {
-          tags: ['Admin'],
-          summary: 'Delete category',
-          description:
-            'Deletes an unused taxonomy category. Fails with 409 if any videos are associated with it.',
-          params: CategoryIdParamSchema,
-          response: {
-            204: z.undefined().describe('Deleted successfully'),
-            401: problemResponse([ErrorCodes.UNAUTHORIZED], 'Authentication required'),
-            403: problemResponse([ErrorCodes.FORBIDDEN], 'Admin role or token required'),
-            404: problemResponse([ErrorCodes.CATEGORY_NOT_FOUND], 'Category not found'),
-            409: problemResponse([ErrorCodes.CATEGORY_IN_USE], 'Category in use by videos'),
-          },
-          ...(isAlias ? { hide: true } : {}),
+          ...contractSchema(deleteCategory, { hide: isAlias }),
+          params: deleteCategory.params,
         },
       },
       async (request, reply) => {

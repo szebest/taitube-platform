@@ -1,32 +1,14 @@
+import { getChannel } from '@vp/api-contracts';
 import type { Repositories } from '@vp/core/ports';
-import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { z } from 'zod';
-import { problemResponse } from '../schemas/problem';
 import { ChannelService } from '../services/channel-service';
+import { contractSchema } from './contract-schema';
 
 export interface ChannelsRoutesOptions {
   repositories?: Repositories;
   channelService?: ChannelService;
 }
-
-const channelResponseSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
-  handle: z.string(),
-  displayName: z.string(),
-  avatarUrl: z.string().nullable(),
-  bannerUrl: z.string().nullable(),
-  bio: z.string().nullable(),
-  subscriberCount: z.number().int(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-const channelParamsSchema = z.object({
-  idOrHandle: z.string().min(1),
-});
 
 /**
  * Fastify routes plugin for public creator channel profiles (Ticket 38, SDD §6.1).
@@ -48,21 +30,12 @@ export function registerChannelsRoutes(app: FastifyInstance, options: ChannelsRo
 
   const typedApp = app.withTypeProvider<ZodTypeProvider>();
 
-  // GET /v1/channels/:idOrHandle
   typedApp.get(
-    '/v1/channels/:idOrHandle',
+    getChannel.path,
     {
       schema: {
-        tags: ['Channels'],
-        summary: 'Get public creator channel profile',
-        description:
-          'Returns public channel details, subscriber count, avatar, banner, and bio by channel UUID or @handle.',
-        params: channelParamsSchema,
-        response: {
-          200: channelResponseSchema,
-          400: problemResponse([ErrorCodes.VALIDATION_FAILED], 'Validation error'),
-          404: problemResponse([ErrorCodes.CHANNEL_NOT_FOUND], 'Channel not found'),
-        },
+        ...contractSchema(getChannel),
+        params: getChannel.params,
       },
     },
     async (request, reply) => {

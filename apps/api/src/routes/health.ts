@@ -1,7 +1,8 @@
+import { DegradedSchema, liveness, livenessAlias, readiness } from '@vp/api-contracts';
 import type { CacheClient, DatabaseClient, StorageClient } from '@vp/core/ports';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { z } from 'zod';
+import { contractSchema } from './contract-schema';
 
 export interface HealthRouteOptions {
   dbClient?: DatabaseClient | null;
@@ -18,61 +19,14 @@ export function registerHealthRoutes(app: FastifyInstance, options: HealthRouteO
     return { status: 'ok' as const };
   };
 
-  server.get(
-    '/healthz',
-    {
-      schema: {
-        tags: ['Ops'],
-        summary: 'Liveness probe',
-        description: 'Returns 200 if API server process is alive.',
-        response: {
-          200: z.object({
-            status: z.literal('ok'),
-          }),
-        },
-      },
-    },
-    livenessHandler
-  );
+  server.get(liveness.path, { schema: contractSchema(liveness) }, livenessHandler);
 
-  server.get(
-    '/livez',
-    {
-      schema: {
-        tags: ['Ops'],
-        summary: 'Liveness probe (K8s alias)',
-        description: 'Returns 200 if API server process is alive.',
-        response: {
-          200: z.object({
-            status: z.literal('ok'),
-          }),
-        },
-      },
-    },
-    livenessHandler
-  );
+  server.get(livenessAlias.path, { schema: contractSchema(livenessAlias) }, livenessHandler);
 
   // Readiness probe: checks Postgres, Redis, S3 (SDD §6.1, AC 6)
   server.get(
-    '/readyz',
-    {
-      schema: {
-        tags: ['Ops'],
-        summary: 'Readiness probe',
-        description:
-          'Checks Postgres, Redis, and S3 connectivity. Returns 200 when all healthy, 503 if degraded.',
-        response: {
-          200: z.object({
-            status: z.literal('ok'),
-            checks: z.record(z.enum(['ok', 'failed'])),
-          }),
-          503: z.object({
-            status: z.literal('degraded'),
-            checks: z.record(z.enum(['ok', 'failed'])),
-          }),
-        },
-      },
-    },
+    readiness.path,
+    { schema: contractSchema(readiness, { responses: { 503: DegradedSchema } }) },
     async (_request, reply) => {
       const checks: Record<string, 'ok' | 'failed'> = {
         postgres: 'ok',

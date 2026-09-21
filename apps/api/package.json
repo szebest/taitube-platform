@@ -32,6 +32,7 @@
     "@fastify/under-pressure": "^9.1.0",
     "@scalar/fastify-api-reference": "^1.67.0",
     "@vp/adapters": "workspace:*",
+    "@vp/api-contracts": "workspace:*",
     "@vp/config": "workspace:*",
     "@vp/core": "workspace:*",
     "@vp/db": "workspace:*",

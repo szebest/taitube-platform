@@ -1,10 +1,11 @@
 import type { CategoryCacheService } from '@vp/adapters';
+import { listCategories } from '@vp/api-contracts';
 import type { Repositories } from '@vp/core/ports';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { CategoriesListSchema } from '../schemas/categories';
 import { CategoryService } from '../services/category-service';
+import { contractSchema } from './contract-schema';
 
 export interface CategoriesRouteOptions {
   repositories?: Repositories;
@@ -30,28 +31,21 @@ export function registerCategoriesRoutes(
       : undefined);
 
   if (!categoryService) {
-    throw new Error('registerCategoriesRoutes requires either categoryService or repositories + categoryCacheService');
+    throw new Error(
+      'registerCategoriesRoutes requires either categoryService or repositories + categoryCacheService'
+    );
   }
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const path of ['/v1/categories', '/categories'] as const) {
-    const isAlias = path === '/categories';
     server.get(
       path,
       {
-        schema: {
-          tags: ['Categories'],
-          summary: 'List active categories',
-          description:
-            'Public active taxonomy categories list sorted by display sort order and name. Cached with L1/L2 and supports 304 ETag caching.',
-          security: [],
-          response: {
-            200: CategoriesListSchema,
-            304: z.undefined().describe('Not Modified'),
-          },
-          ...(isAlias ? { hide: true } : {}),
-        },
+        schema: contractSchema(listCategories, {
+          hide: path === '/categories',
+          responses: { 304: z.undefined().describe('Not Modified') },
+        }),
       },
       async (request, reply) => {
         const ifNoneMatch = request.headers['if-none-match'];
