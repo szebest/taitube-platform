@@ -519,7 +519,7 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 ### ADR-17 — Schema/validation & IDs
 
-- **zod** (chosen) over TypeBox/ajv-only: one schema language for API bodies (`fastify-type-provider-zod`), job payloads (`packages/server/job-contracts`) and env parsing (`packages/server/config`), with inferred TS types. TypeBox is faster at validation but the payloads are tiny.
+- **zod** (chosen) over TypeBox/ajv-only: one schema language for API bodies (`fastify-type-provider-zod`), job payloads (`packages/server/job-contracts`) and env parsing (`packages/universal/env-schema`), with inferred TS types. TypeBox is faster at validation but the payloads are tiny.
 - **UUIDv7** for `videoId`/`jobId` roots: time-ordered (index-friendly), unguessable enough for public playback paths, native `gen_uuid_v7()` in Postgres 17 / `uuidv7` package until then.
 
 ---
@@ -939,7 +939,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /uploads/:uploadId/complete` | Finish | `{ parts:[{partNumber, etag}] }` (multipart) or `{}` (single) | `202 { videoId, status:"UPLOADED" }` or `422 { code:"UPLOAD_SIZE_MISMATCH" \| "UPLOAD_TOO_LARGE" \| "UNSUPPORTED_CONTENT_TYPE" }` | Idempotent: second call returns 202 with current status. |
 | `DELETE /uploads/:uploadId` | Abort | — | `204` | `AbortMultipartUpload`, video → `ABANDONED`. |
 | `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
-| `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter, single-sourced in `packages/server/core/repositories/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis with singleflight & ETag 304. |
+| `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter, single-sourced in `packages/universal/domain/src/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis with singleflight & ETag 304. |
 | `GET /v1/categories` | Public categories list | — | `200 [Category]` | Unauthenticated active taxonomy list sorted by sort_order, name. L1/L2 cached + ETag 304. |
 | `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `likesCount`, `dislikesCount`, `error?`) | Owner or public/unlisted. |
 | `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. |
@@ -970,7 +970,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 
 ### 6.1.1 Keyset pagination & cursors
 
-Every paginated endpoint shares one mechanism, in `@vp/core/pagination`, rather than
+Every paginated endpoint shares one mechanism, in `@vp/pagination`, rather than
 re-deriving page maths per service:
 
 - **`Paginator`** owns the page bounds and the cursor codec. `limit(requested)` clamps a
@@ -1784,15 +1784,16 @@ video-pipeline/
 ├── packages/                               # every workspace library; the directory IS the runtime tier (ADR-24)
 │   ├── universal/                          # runs in a browser AND on a server — no node:*, no server SDK
 │   │   ├── api-contracts/                  # zod schema per endpoint: params, query, body, response, error codes (single source)
+│   │   ├── domain/                          # entities, value objects, ranking & eligibility policy, the status vocabulary
+│   │   ├── env-schema/                      # zod env fragments + inferred types; the one .env contract, no runtime access
 │   │   ├── errors/                          # ApiErrorCodes + PipelineErrorCodes, ErrorCode union, Permanent/TransientError
+│   │   ├── pagination/                      # CursorCodec, Paginator, the limit+1 sentinel protocol
 │   │   ├── permissions/                     # declarative CASL rules, normalizers, helpers — the one isomorphic rule engine
 │   │   └── tsconfig/                        # base + server/universal/client/spec presets
 │   ├── client/                             # browser only
 │   │   └── api-client/                      # typed fetchers mapped from @vp/api-contracts; base URL injected
 │   └── server/                             # Node/Bun only
-│       ├── core/                            # @vp/core — abstract ports, repository interfaces, domain policy, pagination
-│       │   ├── domain/                      # entities, value objects, ranking & eligibility policy (public-feed, channel)
-│       │   ├── pagination/                  # CursorCodec, Paginator, the limit+1 sentinel protocol
+│       ├── core/                            # @vp/core — abstract driver ports and repository interfaces
 │       │   ├── ports/                       # DatabaseClient, StorageClient, MultipartStorage, CacheClient, JobQueue, FlowProducer
 │       │   └── repositories/                # VideoRepository, UploadRepository, StepRepository, RenditionRepository, …
 │       ├── adapters/                        # @vp/adapters — concrete & in-memory implementations
@@ -1802,7 +1803,7 @@ video-pipeline/
 │       │   ├── bullmq/                      # BullMqJobQueue & BullMqFlowProducer (bullmq)
 │       │   ├── in-memory/                   # autonomous test doubles with encapsulated state
 │       │   └── __tests__/contract/          # one conformance suite per port, run against BOTH adapters (PGLite)
-│       ├── config/                          # shared zod env fragments + loadEnv()
+│       ├── config/                          # loadEnv(): reads process.env against @vp/env-schema, exits 1 on failure
 │       ├── db/                               # drizzle schema, migrations/, client, seed
 │       ├── events/                           # Redis Pub/Sub channels + SSE envelope schemas
 │       ├── ffmpeg/                           # probe(), transcode/thumbnail args, progress parser, ladder, master playlist
@@ -1952,7 +1953,7 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 ## 16. Environment Variables
 
-One contract for both apps, parsed with zod in `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒.
+One contract for both apps, declared with zod in `packages/universal/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒.
 
 ### 16.1 Core
 
