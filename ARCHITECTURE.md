@@ -55,6 +55,7 @@ video-pipeline/
 │   ├── postgres/                   # PostgreSQL repository implementations via Drizzle ORM
 │   │   ├── postgres-database-client.ts
 │   │   ├── scopes/                 # CASL AST -> Drizzle SQL compiler, drizzleWhere & row scopes
+│   │   ├── mappers/                # Domain input -> typed Drizzle insert and update rows
 │   │   ├── repositories/           # Individual Postgres repository implementations
 │   │   │   ├── postgres-category-repository.ts
 │   │   │   ├── postgres-video-reaction-repository.ts

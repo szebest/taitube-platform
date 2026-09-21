@@ -1794,7 +1794,6 @@ video-pipeline/
 ├── .env.example                          # §16 — the single env contract for api + worker
 ├── package.json · pnpm-workspace.yaml · turbo.json · tsconfig.base.json
 ├── biome.json                            # lint + format (Biome replaces eslint+prettier)
-├── vitest.workspace.ts
 ├── Makefile                              # make up / down / observability / k3d-up / k3d-deploy / load-s1 / chaos-s4
 └── README.md
 ```

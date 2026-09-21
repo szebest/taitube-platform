@@ -4,27 +4,16 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"],
-      "inputs": [
-        "src/**",
-        "ports/**",
-        "repositories/**",
-        "tsconfig.json",
-        "tsconfig.build.json",
-        "package.json"
-      ]
+      "outputs": ["dist/**"]
     },
     "typecheck": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**", "tsconfig.json", "package.json"]
+      "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["build"],
-      "inputs": ["src/**", "tsconfig.json", "package.json"]
+      "dependsOn": ["build"]
     },
     "test:integration": {
-      "dependsOn": ["build"],
-      "inputs": ["src/**", "tsconfig.json", "package.json"]
+      "dependsOn": ["build"]
     },
     "dev": {
       "cache": false,

@@ -85,11 +85,41 @@ Centralized normalizers eliminate ad-hoc object spreads and provide canonical CA
 
 ### 1. Database Query Scoping Adapter (`adapters/postgres/scopes/`)
 Row-level database security is decoupled into single-responsibility modules:
-- `traits.ts`: Generalized schema trait interfaces (`WithOwner`, `WithVisibility`, `SoftDeletable`, `OwnableAndVisible`).
-- `rules-to-sql.ts`: Compiles CASL rules directly to Drizzle SQL via `@casl/ability/extra` `rulesToAST`.
-- `where.ts`: `drizzleWhere(...conditions)` safely cleanses `undefined`/`null`/`false` and combines active conditions into `and(...)`.
-- `accessible-by.ts`: CASL database adapter providing `accessibleBy`, `accessibleVideos`, `videoReadScope`, `videoOwnerScope`.
+- `traits.ts`: Schema trait interfaces constraining the tables a scope accepts (`WithOwner`, `WithVisibility`, `SoftDeletable`).
+- `rules-to-sql.ts`: Compiles CASL rules to Drizzle SQL via `@casl/ability/extra` `rulesToAST`.
+- `where.ts`: `drizzleWhere(...conditions)` cleanses `undefined`/`null`/`false` and combines the rest into `and(...)`.
+- `accessible-by.ts`: `accessibleBy` plus the bound scopes `videoReadScope`, `ownerScope`, `publicVisibilityScope`.
 - `soft-delete.ts`: Generic `notDeletedScope<TTable extends SoftDeletable>(table: TTable)` soft-delete safety scope.
+
+Every scope reaches SQL through one chain, so no query can be scoped by logic that
+disagrees with the rules: `repository -> videoReadScope -> accessibleBy -> rulesToSql`.
+
+#### The compiler has three outcomes, and they are not interchangeable
+`rulesToSql(action, subject, viewer, table)` returns:
+
+| Rules say | Returns | Meaning |
+| --- | --- | --- |
+| Granted unconditionally | `undefined` | No restriction; the caller adds no clause |
+| Granted with conditions | An `SQL` condition | Restrict to the matching rows |
+| Not granted at all | ``sql`false` `` | Match no rows |
+
+`rulesToAST` returns `null` for the third case. Mapping that to `undefined` alongside the
+first case turns a denied action into an unfiltered query, which is why the two are kept
+apart. A condition naming a column the table does not have throws rather than being
+skipped, because dropping a term from an `and` widens it into an unintended grant.
+
+#### Feed policy is not authorization
+`publicVisibilityScope` exists because "what a viewer may read" and "what a listing shows"
+are different questions. Unlisted videos are readable by link and must never appear in a
+feed, so `listPublic` states that policy directly instead of borrowing the guest read scope.
+
+### 1a. Row Mapping (`adapters/postgres/mappers/`)
+Writes go through mappers that declare the Drizzle row type as their return type
+(`toRenditionInsert`, `toRenditionUpdate`, `toUploadInsert`, `toUploadStatusUpdate`). The
+return type is what forces the mapping to stay complete, so a renamed or retyped column
+fails at compile time. Reads take no mapper: row and record are structurally identical and
+the compiler proves it, so an identity function would only create a place for them to
+drift. `toOutboxRecord` is the exception, confining the one assertion that jsonb requires.
 
 ### 2. Dependency Inversion in Domain Services (`AuthorizationPort`)
 Domain services depend on the abstract port `AuthorizationPort` (`core/ports/authorization.port.ts`).
