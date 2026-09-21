@@ -65,6 +65,7 @@ import { CategoryService } from './services/category-service';
 import { ChannelService } from './services/channel-service';
 import { DlqService } from './services/dlq-service';
 import { registerHousekeepingSchedulers } from './services/housekeeping-schedulers';
+import { FeedService } from './services/feed-service';
 import { HttpCacheService } from './services/http-cache-service';
 import { startQueuePoller } from './services/queue-poller';
 import { QueueService } from './services/queue-service';
@@ -315,12 +316,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     reactionService,
   });
 
-  registerFeedRoutes(app, {
-    videoService,
-    cache,
-  });
-
   const httpCacheService = options.httpCacheService ?? new HttpCacheService();
+
+  registerFeedRoutes(app, {
+    feedService: new FeedService({ videoService, cache, httpCacheService }),
+  });
 
   const categoryCacheService =
     options.categoryCacheService ??

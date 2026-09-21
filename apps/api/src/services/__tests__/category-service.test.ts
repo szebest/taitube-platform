@@ -33,7 +33,7 @@ describe('CategoryService', () => {
     const result = await categoryService.listActive();
     expect(result.categories).toHaveLength(1);
     expect(result.categories[0]?.slug).toBe('tech');
-    expect(result.etag).toMatch(/^"?[a-f0-9]{40}"?$/);
+    expect(result.etag).toMatch(/^W\/"[a-f0-9]{16}"$/);
     expect(result.isNotModified).toBe(false);
   });
 

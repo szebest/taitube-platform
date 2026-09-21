@@ -86,7 +86,7 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
       expect(res.headers['cache-control']).toBe('public, max-age=300, stale-while-revalidate=60');
       const etag = res.headers.etag;
       expect(etag).toBeDefined();
-      expect(etag).toMatch(/^"[a-f0-9]{40}"$/);
+      expect(etag).toMatch(/^W\/"[a-f0-9]{16}"$/);
 
       const items = res.json();
       expect(Array.isArray(items)).toBe(true);

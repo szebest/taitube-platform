@@ -1,18 +1,11 @@
-import * as crypto from 'node:crypto';
 import type { CacheClient } from '@vp/core/ports';
 import type { Category } from '@vp/core/repositories';
 
 export const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';
 export const CATEGORIES_INVALIDATION_CHANNEL = 'taitube:events:cache:categories:invalidated';
 
-export interface CategoryCacheResult {
-  categories: Category[];
-  etag: string;
-}
-
 interface L1CacheEntry {
   value: Category[];
-  etag: string;
   expiresAt: number;
 }
 
@@ -50,7 +43,7 @@ export class CategoryCacheService {
     }
   }
 
-  private setL1(key: string, value: Category[], etag: string, ttlMs: number): void {
+  private setL1(key: string, value: Category[], ttlMs: number): void {
     if (this.l1Cache.size >= this.maxL1Entries && !this.l1Cache.has(key)) {
       const oldestKey = this.l1Cache.keys().next().value;
       if (oldestKey !== undefined) {
@@ -61,7 +54,6 @@ export class CategoryCacheService {
     this.l1Cache.delete(key);
     this.l1Cache.set(key, {
       value,
-      etag,
       expiresAt: Date.now() + ttlMs,
     });
   }
@@ -89,20 +81,11 @@ export class CategoryCacheService {
     return this.l1Cache.size;
   }
 
-  computeEtag(categories: Category[]): string {
-    const serialized = JSON.stringify(categories);
-    const hash = crypto.createHash('sha1').update(serialized).digest('hex');
-    return `"${hash}"`;
-  }
-
-  async getCategories(fetcher: () => Promise<Category[]>): Promise<CategoryCacheResult> {
+  async getCategories(fetcher: () => Promise<Category[]>): Promise<Category[]> {
     // 1. Check L1 In-Memory LRU Cache
     const l1 = this.getL1(CATEGORIES_CACHE_KEY);
     if (l1) {
-      return {
-        categories: l1.value,
-        etag: l1.etag,
-      };
+      return l1.value;
     }
 
     // 2. Check L2 Distributed Redis Cache
@@ -112,7 +95,6 @@ export class CategoryCacheService {
         if (cachedJson) {
           const parsed = JSON.parse(cachedJson) as {
             categories: Array<Category & { createdAt: string; updatedAt: string }>;
-            etag: string;
           };
 
           const categories: Category[] = parsed.categories.map((c) => ({
@@ -121,11 +103,8 @@ export class CategoryCacheService {
             updatedAt: new Date(c.updatedAt),
           }));
 
-          this.setL1(CATEGORIES_CACHE_KEY, categories, parsed.etag, this.l1TtlMs);
-          return {
-            categories,
-            etag: parsed.etag,
-          };
+          this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
+          return categories;
         }
       } catch {
         // Fallback to fetcher on Redis error
@@ -141,14 +120,12 @@ export class CategoryCacheService {
       return a.name.localeCompare(b.name);
     });
 
-    const etag = this.computeEtag(categories);
-
     // 4. Populate L2 Distributed Redis Cache
     if (this.cache) {
       try {
         await this.cache.set(
           CATEGORIES_CACHE_KEY,
-          JSON.stringify({ categories, etag }),
+          JSON.stringify({ categories }),
           this.l2TtlSeconds
         );
       } catch {
@@ -157,12 +134,9 @@ export class CategoryCacheService {
     }
 
     // 5. Populate L1 In-Memory LRU Cache
-    this.setL1(CATEGORIES_CACHE_KEY, categories, etag, this.l1TtlMs);
+    this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
 
-    return {
-      categories,
-      etag,
-    };
+    return categories;
   }
 
   async invalidate(): Promise<void> {

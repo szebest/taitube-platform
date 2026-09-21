@@ -6,6 +6,7 @@ export * from './video-service';
 export * from './category-service';
 export * from './dlq-service';
 export * from './queue-service';
+export * from './feed-service';
 export * from './http-cache-service';
 export * from './channel-service';
 export * from './reaction-service';

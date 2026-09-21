@@ -45,7 +45,7 @@ describe('CategoryCacheService', () => {
   });
 
   it('sorts the fetched categories by sort order then name', async () => {
-    const { categories } = await service.getCategories(fetcher);
+    const categories = await service.getCategories(fetcher);
     expect(categories.map((c) => c.id)).toEqual(['art', 'gaming', 'music']);
   });
 
@@ -64,8 +64,8 @@ describe('CategoryCacheService', () => {
     const second = await replica.getCategories(fetcher);
 
     expect(fetches).toBe(1);
-    expect(second.etag).toBe(first.etag);
-    expect(second.categories.map((c) => c.id)).toEqual(['art', 'gaming', 'music']);
+    expect(second).toEqual(first);
+    expect(second.map((c) => c.id)).toEqual(['art', 'gaming', 'music']);
     replica.close();
   });
 
@@ -73,7 +73,7 @@ describe('CategoryCacheService', () => {
     await service.getCategories(fetcher);
 
     const replica = new CategoryCacheService({ cache });
-    const { categories } = await replica.getCategories(fetcher);
+    const categories = await replica.getCategories(fetcher);
 
     expect(categories[0]?.createdAt).toBeInstanceOf(Date);
     expect(categories[0]?.updatedAt).toBeInstanceOf(Date);
@@ -83,14 +83,6 @@ describe('CategoryCacheService', () => {
   it('writes L2 under the shared key with the configured ttl', async () => {
     await service.getCategories(fetcher);
     expect(await cache.get(CATEGORIES_CACHE_KEY)).not.toBeNull();
-  });
-
-  it('gives the same payload the same etag and a changed payload a new one', async () => {
-    const etag = service.computeEtag([MUSIC, GAMING]);
-
-    expect(service.computeEtag([MUSIC, GAMING])).toBe(etag);
-    expect(service.computeEtag([GAMING, MUSIC])).not.toBe(etag);
-    expect(etag.startsWith('"')).toBe(true);
   });
 
   it('expires an L1 entry once its ttl has passed', async () => {
@@ -153,7 +145,7 @@ describe('CategoryCacheService', () => {
       }),
     });
 
-    const { categories } = await broken.getCategories(fetcher);
+    const categories = await broken.getCategories(fetcher);
     expect(categories.map((c) => c.id)).toEqual(['art', 'gaming', 'music']);
     expect(fetches).toBe(1);
     broken.close();
@@ -162,9 +154,8 @@ describe('CategoryCacheService', () => {
   it('works with no distributed cache at all', async () => {
     const local = new CategoryCacheService({ cache: null });
 
-    const { categories, etag } = await local.getCategories(fetcher);
+    const categories = await local.getCategories(fetcher);
     expect(categories).toHaveLength(3);
-    expect(etag).toBe(local.computeEtag(categories));
 
     await local.invalidate();
     expect(local.getL1Size()).toBe(0);

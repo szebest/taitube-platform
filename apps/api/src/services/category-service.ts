@@ -37,13 +37,17 @@ export class CategoryService {
    * Retrieves active categories using L1/L2 multi-tier caching and evaluates HTTP conditional ETag.
    */
   async listActive(ifNoneMatch?: string): Promise<ListCategoriesResult> {
-    const { categories, etag } = await this.categoryCacheService.getCategories(() =>
+    const categories = await this.categoryCacheService.getCategories(() =>
       this.categories.findAll({ activeOnly: true })
     );
 
-    const isNotModified = this.httpCacheService.isNotModified(ifNoneMatch, etag);
+    const etag = this.httpCacheService.generateEtag(categories);
 
-    return { categories, etag, isNotModified };
+    return {
+      categories,
+      etag,
+      isNotModified: this.httpCacheService.isNotModified(ifNoneMatch, etag),
+    };
   }
 
   /**
