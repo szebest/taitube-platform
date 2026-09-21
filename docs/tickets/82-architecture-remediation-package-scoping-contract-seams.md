@@ -393,39 +393,73 @@ tsconfig project references, `turbo run --filter`, and a Dockerfile's `COPY` lis
 #### W9b — Split the packages whose tier is decided by one file
 
 The point of the tiers is **maximum reuse without leakage**. A package that is 95% portable but carries one
-server-only module currently has to be declared `server` wholesale, which puts the portable 95% out of the
-frontend's reach. Two confirmed cases, both verified by grep rather than assumed:
+server-only module has to be declared `server` wholesale, which puts the portable 95% out of the frontend's
+reach — and the frontend then re-declares what it cannot import. Every row below was produced by sweeping
+each package for `node:*`, `process.*`, `Buffer`, `NodeJS.*` and `__dirname` outside tests, not assumed.
 
-**`core` is portable except one file.** With `@vp/core` at zero runtime dependencies after W2, the only
-non-portable source in the whole package is `core/ports/storage-client.ts`, which types
+| Package | Tier today | Non-portable files | Verdict |
+|---|---|---|---|
+| `core` | server | **1 of 39** | **split** |
+| `packages/ffmpeg` | server | 3 of 7 | **considered, deferred** — no consumer today |
+| `packages/db` | server | 3 of 7 | **split the vocabulary only** |
+| `packages/config` | server | 1 of 2 | **split** |
+| `adapters` | server | 7 of 73 | keep whole — see below |
+| `packages/observability` | server | 4 of 6 | keep whole — `prom-client`, `pino`, otel-sdk-node, `http` |
+| `packages/testing` | server | 1 of 2 | keep whole — it is a vitest config factory |
+| `permissions`, `errors`, `events`, `job-contracts`, `storage`, `api-contracts`, `api-client` | universal/client | 0 | already correct |
+
+**`core` — one file pins thirty-eight.** With `@vp/core` at zero runtime dependencies after W2, the only
+non-portable source in the package is `core/ports/storage-client.ts`, which types
 `StorageBody = Buffer | Uint8Array | NodeJS.ReadableStream | string` and `getObject(): Promise<Buffer>`.
-That single file is what pins `domain/` (pure policy), `pagination/` (deliberately isomorphic — it uses
-`btoa`/`atob` specifically so it runs in a browser), `repositories/` (types only) and the rest of `ports/`
-to the server tier. Split it:
+That single file pins `domain/` (pure policy), `pagination/` (deliberately isomorphic — `cursor-codec.ts`
+uses `btoa`/`atob` specifically so it runs in a browser, and only *mentions* `Buffer` in a comment),
+`repositories/` (types only) and the rest of `ports/` to the server tier.
 
 | New package | Tier | Holds |
 |---|---|---|
 | `@vp/domain` | universal | `core/domain/` — entities, value objects, ranking and eligibility policy |
 | `@vp/pagination` | universal | `core/pagination/` — `CursorCodec`, `Paginator`, the `limit + 1` protocol |
-| `@vp/contracts` | universal | `core/repositories/` — repository interfaces and record shapes |
-| `@vp/ports` | server | `core/ports/` — the driver ports that genuinely need `Buffer`/streams |
+| `@vp/core` | server | `core/ports/` + `core/repositories/` — keeps its name, so 140 imports do not move |
 
-This directly retires a duplication W2 had to leave behind: `packages/api-contracts/src/pagination.ts` carries
-a browser-safe `decodeCursorPayload` that duplicates `Base64UrlCursorCodec`'s decode, **only** because a
-universal package could not import server-tier `core`. Once `@vp/pagination` is universal, delete the copy.
-It also lets `apps/web` share `VideoStatus`, `PublicFeedSort` and the ranking rules instead of re-declaring
-them — the exact failure mode W2 found 17 times in `apps/web/src/**/models/`.
+**Three packages, not four.** An earlier draft also split `core/repositories/` into a universal
+`@vp/contracts`. It has no client consumer and cannot acquire one: `apps/web` does not import `@vp/core` at
+all, and all 16 importers of `@vp/core/repositories` are server-side — the frontend's response types come
+from `@vp/api-contracts`. A universal package nothing universal consumes is an extension point without a
+consumer, so repository interfaces stay with the ports they serve.
 
-**`packages/config` is a universal schema behind a server loader.** `src/index.ts:131` and `:147-148` guard
+**`adapters` is the counter-example and stays whole.** Only 7 of 73 files name a Node builtin, but the tier
+is not decided by builtins here: every subfolder wraps a concrete server SDK (`@aws-sdk`, `ioredis`,
+`bullmq`, `postgres`, `drizzle-orm`), and even the in-memory doubles implement ports typed with `Buffer`.
+Splitting it would produce fragments with one consumer each. **Do not split it.** The rule is "is there
+portable logic trapped in here", not "count the imports".
+
+**`packages/ffmpeg` — split considered and deferred.** `ladder.ts` (`CANONICAL_LADDER`, `selectLadder`) and
+`master.ts` (HLS master-playlist text) import nothing but types from `@vp/job-contracts` and would be
+portable; `probe.ts`, `transcode.ts` and `thumbnail.ts` spawn child processes. But nothing on the client
+consumes a rendition ladder today — the player renders no quality selector — so the split would create a
+universal package with no universal consumer and collapse no existing duplication. **Revisit when a client
+first needs the ladder**; at that point it is a split, not a second hardcoded list. Every other split in this
+table collapses a duplication that exists right now.
+
+**`packages/db` — the status vocabulary is declared three times.** `videoStatusEnum` and its siblings are
+drizzle `pgEnum` calls, but `VideoStatuses` / `StepStatuses` / `UploadStatuses` / `RenditionStatuses` are
+plain string arrays. The same video status list exists at `packages/db/src/schema.ts:21`,
+`core/repositories/video-repository.ts:11` and `packages/api-contracts/src/video-resource.ts:4` — three
+copies held together only by W2's drift test, and they exist *because* a universal package cannot import a
+server package. Move the vocabulary to a universal package and have the drizzle `pgEnum` and both other
+consumers derive from it. Delete the drift test that was compensating for the missing seam. The rest of
+`packages/db` (schema, client, migrate, seed) stays server.
+
+**`packages/config` — a universal schema behind a server loader.** `src/index.ts:131` and `:147-148` guard
 `process.env` and `process.exit` with `typeof process !== 'undefined'` — a runtime feature-detect standing in
-for a boundary the type system should draw. Split the Zod schema and the derived types (universal) from the
+for a boundary the type system should draw. Split the Zod schema and derived types (universal) from the
 loader that reads `process.env`, applies dotenv and exits on failure (server). `apps/web` then consumes the
 schema without a `typeof process` guard, and `REACT_APP_API_BASE_URL` stops being a server-schema key that a
 browser happens to read.
 
-**Rule for the split, not just these two:** a package is `server` only if code that *must* run on a server
-lives in it. If the server-only part is separable, separate it. Apply the ticket's own deletion test first —
-if splitting produces a package with one consumer and no distinct reason to exist, do not split it.
+**The rule, not just these cases:** a package is `server` only if code that *must* run on a server lives in
+it. If the server-only part is separable, separate it. Apply the ticket's own deletion test first — if a
+split produces a package with one consumer and no distinct reason to exist, do not split it.
 
 #### W9c — Enforce it
 
@@ -526,6 +560,15 @@ Extend the W3 architecture suite (do not start a second one):
       architecture suite asserts `vp.tier` equals the parent directory.
 - [ ] `core` is split so the portable majority is `universal`: `@vp/domain`, `@vp/pagination` and
       `@vp/contracts` are universal; only the `Buffer`/stream-typed driver ports remain `server`.
+- [ ] The video/step/upload/rendition status vocabulary is declared **once**, in a universal package; the
+      drizzle `pgEnum`, `core`'s unions and `@vp/api-contracts` all derive from it, and the drift test that
+      was compensating for the missing seam is deleted.
+- [ ] `adapters` and `packages/ffmpeg` are **not** split — each recorded as a deliberate decision with its
+      reason, so the next reader does not re-litigate it.
+- [ ] The tier has **one** source of truth: the directory. `vp.tier` survives only on `apps/*`, which sit
+      outside `packages/<tier>/`; no package declares a tier its location contradicts.
+- [ ] Importing a server package from `apps/web` **fails to resolve**, not merely fails a lint rule —
+      demonstrated by adding such an import and pasting the error.
 - [ ] `packages/api-contracts`' duplicate `decodeCursorPayload` is deleted and the one codec in
       `@vp/pagination` serves both sides.
 - [ ] `packages/config` is split into a universal schema and a server loader; no `typeof process` guard
