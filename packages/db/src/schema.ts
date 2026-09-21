@@ -65,7 +65,7 @@ const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
   email: text('email').notNull().unique(),
-  tier: text('tier').notNull().default('free'),
+  tier: text('tier').$type<'free' | 'pro' | 'enterprise'>().notNull().default('free'),
   role: userRoleEnum('role').notNull().default('USER'),
   createdAt: timestamptz('created_at').notNull().defaultNow(),
 });
@@ -119,7 +119,10 @@ export const videos = pgTable(
     categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
     title: text('title').notNull().default(''),
     description: text('description').notNull().default(''),
-    visibility: text('visibility').notNull().default('private'),
+    visibility: text('visibility')
+      .$type<'private' | 'unlisted' | 'public'>()
+      .notNull()
+      .default('private'),
     status: videoStatusEnum('status').notNull().default('UPLOADING'),
     sourceKey: text('source_key').notNull(),
     sourceSizeBytes: bigint('source_size_bytes', { mode: 'number' }),
@@ -127,7 +130,7 @@ export const videos = pgTable(
     durationMs: integer('duration_ms'),
     width: integer('width'),
     height: integer('height'),
-    fps: numeric('fps', { precision: 6, scale: 3 }),
+    fps: numeric('fps', { precision: 6, scale: 3, mode: 'number' }),
     videoCodec: text('video_codec'),
     audioCodec: text('audio_codec'),
     ladder: jsonb('ladder'),
@@ -158,7 +161,7 @@ export const uploads = pgTable('uploads', {
     .notNull()
     .unique()
     .references(() => videos.id, { onDelete: 'cascade' }),
-  strategy: text('strategy').notNull(),
+  strategy: text('strategy').$type<'single' | 'multipart'>().notNull(),
   multipartUploadId: text('multipart_upload_id'),
   partSizeBytes: integer('part_size_bytes'),
   partsExpected: integer('parts_expected'),
@@ -168,6 +171,7 @@ export const uploads = pgTable('uploads', {
   status: uploadStatusEnum('status').notNull().default('OPEN'),
   expiresAt: timestamptz('expires_at').notNull(),
   completedAt: timestamptz('completed_at'),
+  createdAt: timestamptz('created_at').notNull().defaultNow(),
 });
 
 export const renditions = pgTable(
@@ -251,7 +255,10 @@ export const dlqEntries = pgTable(
     stack: text('stack'),
     attemptsMade: integer('attempts_made').notNull(),
     workerId: text('worker_id'),
-    status: text('status').notNull().default('PARKED'),
+    status: text('status')
+      .$type<'PARKED' | 'REPLAYED' | 'DISCARDED'>()
+      .notNull()
+      .default('PARKED'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     replayedAt: timestamptz('replayed_at'),
   },

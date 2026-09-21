@@ -66,7 +66,7 @@ export class PostgresVideoRepository extends VideoRepository {
   async findById(id: string): Promise<VideoRecord | null> {
     try {
       const [r] = await this.db.select().from(v).where(eq(v.id, id)).limit(1);
-      return (r as VideoRecord) || null;
+      return r ?? null;
     } catch (err) {
       throw dbErr(`Failed to get video ${id}`, err);
     }
@@ -106,7 +106,7 @@ export class PostgresVideoRepository extends VideoRepository {
         .values(vals as VideoInsert)
         .returning();
       if (!created) throw new DatabaseError('Failed to insert video record: empty return');
-      return created as VideoRecord;
+      return created;
     } catch (err) {
       throw dbErr('Failed to create video', err);
     }
@@ -135,7 +135,7 @@ export class PostgresVideoRepository extends VideoRepository {
         .where(whereClause)
         .orderBy(desc(v.createdAt), desc(v.id))
         .limit(limit + 1);
-      return rows as VideoRecord[];
+      return rows;
     } catch (err) {
       throw dbErr(`Failed to list videos for owner ${ownerId}`, err);
     }
@@ -213,7 +213,7 @@ export class PostgresVideoRepository extends VideoRepository {
           },
           createdAt: new Date(),
         });
-        return updated as VideoRecord;
+        return updated;
       });
     } catch (err) {
       throw dbErr(`Failed to update video metadata for ${videoId}`, err);

@@ -21,10 +21,8 @@ export class InMemoryRenditionRepository extends RenditionRepository {
       audioBitrateKbps: data.audioBitrateKbps,
       status: data.status ?? 'PENDING',
       playlistKey: data.playlistKey ?? null,
-      playlistUrl: data.playlistUrl ?? null,
       segmentCount: data.segmentCount ?? null,
       bytes: data.bytes ?? null,
-      durationMs: data.durationMs ?? null,
       processingMs: null,
       createdAt: now,
     };

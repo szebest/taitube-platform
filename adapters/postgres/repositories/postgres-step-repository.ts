@@ -171,7 +171,7 @@ export class PostgresStepRepository extends StepRepository {
         .select()
         .from(schema.processingSteps)
         .where(eq(schema.processingSteps.videoId, videoId));
-      return rows as ProcessingStepRecord[];
+      return rows;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to get steps for video ${videoId}: ${(err as Error).message}`,

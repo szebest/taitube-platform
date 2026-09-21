@@ -66,7 +66,9 @@ export class PostgresDlqRepository extends DlqRepository {
         })
         .returning();
 
-      return rows[0] as DlqEntryRecord;
+      const created = rows[0];
+      if (!created) throw new DatabaseError('Failed to create DLQ entry: empty return');
+      return created;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to create DLQ entry for job ${entry.jobId}: ${(err as Error).message}`,
@@ -83,7 +85,7 @@ export class PostgresDlqRepository extends DlqRepository {
         .where(eq(schema.dlqEntries.id, id))
         .limit(1);
 
-      return (rows[0] as DlqEntryRecord) || null;
+      return rows[0] ?? null;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to get DLQ entry ${id}: ${(err as Error).message}`, {
         cause: err,
@@ -143,7 +145,7 @@ export class PostgresDlqRepository extends DlqRepository {
     outbox?: NewOutboxInput
   ): Promise<DlqEntryRecord | null> {
     try {
-      const updateData: { status: string; replayedAt?: Date } = { status };
+      const updateData: { status: DlqStatus; replayedAt?: Date } = { status };
       if (patch?.replayedAt !== undefined) {
         updateData.replayedAt = patch.replayedAt;
       }
@@ -164,7 +166,7 @@ export class PostgresDlqRepository extends DlqRepository {
             attempts: 0,
           });
 
-          return (rows[0] as DlqEntryRecord) || null;
+          return rows[0] ?? null;
         });
       }
 
@@ -174,7 +176,7 @@ export class PostgresDlqRepository extends DlqRepository {
         .where(eq(schema.dlqEntries.id, id))
         .returning();
 
-      return (rows[0] as DlqEntryRecord) || null;
+      return rows[0] ?? null;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to update DLQ entry status ${id}: ${(err as Error).message}`,

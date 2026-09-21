@@ -37,7 +37,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
       if (!created) {
         throw new DatabaseError('Failed to create rendition: empty return');
       }
-      return created as RenditionRecord;
+      return created;
     } catch (err: unknown) {
       if (err instanceof DatabaseError) throw err;
       throw new DatabaseError(`Failed to create rendition: ${(err as Error).message}`, {
@@ -52,7 +52,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
         .select()
         .from(schema.renditions)
         .where(eq(schema.renditions.videoId, videoId));
-      return rows as RenditionRecord[];
+      return rows;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to get renditions for video ${videoId}: ${(err as Error).message}`,
@@ -68,7 +68,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
         .select()
         .from(schema.renditions)
         .where(inArray(schema.renditions.videoId, videoIds));
-      return rows as RenditionRecord[];
+      return rows;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to get renditions for videos: ${(err as Error).message}`, {
         cause: err,
@@ -96,7 +96,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
         .set(setPayload)
         .where(and(eq(schema.renditions.videoId, videoId), eq(schema.renditions.name, name)))
         .returning();
-      return (updated as RenditionRecord) || null;
+      return updated ?? null;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to update rendition ${name}: ${(err as Error).message}`, {
         cause: err,

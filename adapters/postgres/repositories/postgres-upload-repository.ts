@@ -4,7 +4,6 @@ import {
   type UploadRecord,
   UploadRepository,
   type UploadWithVideo,
-  type VideoRecord,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
 import { eq } from 'drizzle-orm';
@@ -22,7 +21,7 @@ export class PostgresUploadRepository extends UploadRepository {
         .from(schema.uploads)
         .where(eq(schema.uploads.id, id))
         .limit(1);
-      return (rows[0] as UploadRecord) || null;
+      return rows[0] ?? null;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to get upload ${id}: ${(err as Error).message}`, {
         cause: err,
@@ -37,7 +36,7 @@ export class PostgresUploadRepository extends UploadRepository {
         .from(schema.uploads)
         .where(eq(schema.uploads.videoId, videoId))
         .limit(1);
-      return (rows[0] as UploadRecord) || null;
+      return rows[0] ?? null;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to get upload for video ${videoId}: ${(err as Error).message}`,
@@ -63,8 +62,8 @@ export class PostgresUploadRepository extends UploadRepository {
       const res = rows[0];
       if (!res) return null;
       return {
-        upload: res.upload as UploadRecord,
-        video: res.video as VideoRecord,
+        upload: res.upload,
+        video: res.video,
       };
     } catch (err: unknown) {
       throw new DatabaseError(
@@ -96,7 +95,7 @@ export class PostgresUploadRepository extends UploadRepository {
       if (!created) {
         throw new DatabaseError('Failed to create upload record: empty return');
       }
-      return created as UploadRecord;
+      return created;
     } catch (err: unknown) {
       if (err instanceof DatabaseError) throw err;
       throw new DatabaseError(`Failed to create upload: ${(err as Error).message}`, { cause: err });
@@ -117,7 +116,7 @@ export class PostgresUploadRepository extends UploadRepository {
         .set(setPayload)
         .where(eq(schema.uploads.id, uploadId))
         .returning();
-      return (updated as UploadRecord) || null;
+      return updated ?? null;
     } catch (err: unknown) {
       throw new DatabaseError(
         `Failed to update upload status for ${uploadId}: ${(err as Error).message}`,

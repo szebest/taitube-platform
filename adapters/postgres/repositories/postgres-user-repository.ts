@@ -20,7 +20,7 @@ export class PostgresUserRepository extends UserRepository {
         .from(schema.users)
         .where(eq(schema.users.id, id))
         .limit(1);
-      return (rows[0] as UserRecord) || null;
+      return rows[0] ?? null;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to get user ${id}: ${(err as Error).message}`, {
         cause: err,
@@ -35,20 +35,21 @@ export class PostgresUserRepository extends UserRepository {
         .values({
           id: user.id,
           email: user.email,
-          tier: user.tier || 'free',
-          role: (user.role as (typeof schema.UserRoles)[number]) || 'USER',
+          tier: user.tier ?? 'free',
+          role: user.role ?? 'USER',
         })
         .onConflictDoUpdate({
           target: schema.users.id,
           set: {
             email: user.email,
-            tier: user.tier || 'free',
-            ...(user.role ? { role: user.role as (typeof schema.UserRoles)[number] } : {}),
+            tier: user.tier ?? 'free',
+            ...(user.role ? { role: user.role } : {}),
           },
         })
         .returning();
 
-      return upserted as UserRecord;
+      if (!upserted) throw new DatabaseError('Failed to upsert user: empty return');
+      return upserted;
     } catch (err: unknown) {
       throw new DatabaseError(`Failed to upsert user ${user.id}: ${(err as Error).message}`, {
         cause: err,

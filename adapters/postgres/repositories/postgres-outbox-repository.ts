@@ -1,6 +1,7 @@
 import {
   DatabaseError,
   type NewOutboxInput,
+  type OutboxPayload,
   type OutboxRecord,
   OutboxRepository,
 } from '@vp/core/ports';
@@ -11,6 +12,13 @@ import { uuidv7 } from 'uuidv7';
 import { toDbError as dbErr } from './types';
 
 const { outbox: o } = schema;
+
+type OutboxRow = typeof o.$inferSelect;
+
+// jsonb is untyped on read; the writer side is what constrains the payload shape.
+function toOutboxRecord(row: OutboxRow): OutboxRecord {
+  return { ...row, payload: row.payload as OutboxPayload };
+}
 
 export class PostgresOutboxRepository extends OutboxRepository {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {
@@ -32,7 +40,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
         .returning();
       const row = rows[0];
       if (!row) throw new DatabaseError('Failed to insert outbox row');
-      return row as OutboxRecord;
+      return toOutboxRecord(row);
     } catch (err) {
       throw dbErr('Failed to enqueue outbox item', err);
     }
@@ -47,7 +55,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
         .orderBy(asc(o.createdAt))
         .for('update', { skipLocked: true })
         .limit(limit);
-      return rows as OutboxRecord[];
+      return rows.map(toOutboxRecord);
     } catch (err) {
       throw dbErr('Failed to claim outbox batch', err);
     }
