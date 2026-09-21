@@ -1,6 +1,0 @@
-{
-  "extends": "@vp/tsconfig/spec.json",
-  "include": [
-    "src/**/*"
-  ]
-}

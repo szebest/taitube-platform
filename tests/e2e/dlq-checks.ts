@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import type { MultipartStorage, Repositories, StorageClient } from '../../core/ports/index';
 import { ErrorCodes } from '../../packages/errors/src/index';
-import { UploadClient } from '../../tools/upload-client/src/index';
+import { UploadClient } from '../../packages/server/upload-client/src/index';
 import type { VideoTestResult, VideoTestSpec } from './specs';
 
 const uuidv7 = () => crypto.randomUUID();

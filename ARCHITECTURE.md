@@ -209,28 +209,70 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 - Maintain a `>1:1` ratio of domain services to routes via composable utilities (`HttpCacheService`, `Singleflight`, `SseHub`).
 - See [apps/api/AGENTS.md](apps/api/AGENTS.md).
 
-### Invariant 5: Package Runtime Tiers & the Client-Server Boundary
-Every workspace `package.json` declares the runtime it is allowed to execute in:
+### Invariant 5: Package Runtime Tiers & Dependency Layers
 
-```json
-"vp": { "tier": "universal" | "server" | "client" }
+Every workspace package answers two independent questions, and both are machine-checked.
+
+**Where may this code run?** That is the *tier*, and it is the package's location on disk:
+
+```
+packages/universal/   runs in a browser AND on a server
+packages/server/      Node/Bun only
+packages/client/      browser only
 ```
 
-| Tier | Packages | May import |
+| Tier | Packages | May depend on |
 |---|---|---|
-| `universal` | `api-contracts`, `errors`, `events`, `job-contracts`, `permissions`, `storage`, `tsconfig` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `core`, `config`, `db`, `ffmpeg`, `observability`, `testing`, `apps/api`, `apps/worker`, `tools/*` | `universal` + `server` |
-| `client` | `api-client`, `apps/web` | `universal` + `client` |
+| `universal` | `api-contracts`, `errors`, `permissions`, `tsconfig` | `universal` only — no `node:*`, no server SDK |
+| `server` | `adapters`, `core`, `config`, `db`, `events`, `ffmpeg`, `job-contracts`, `observability`, `storage`, `testing`, `dev-token`, `gen-video`, `upload-client`, `compose-autoscaler` | `universal` + `server` |
+| `client` | `api-client` | `universal` + `client` |
 
-The tier is enforced at compile time by the matching `@vp/tsconfig` preset: `universal.json` and
-`client.json` set `lib` to include `DOM` and `types` to `[]`, so a Node builtin or global in a
-`universal` package is a type error. Specs run under `@vp/tsconfig/spec.json`, which a universal
-package typechecks through its own `tsconfig.spec.json` so that importing `vitest` cannot leak
-`@types/node` back into the package's own program.
+Apps sit outside `packages/` and declare their tier in `package.json`: `apps/api` and `apps/worker` are
+`server`, `apps/web` is `client`.
 
-- `apps/web` must NEVER import `core/ports`, `adapters/`, `packages/db`, or any `server` package.
+A package is `universal` only when something client-side actually consumes it. `storage`, `job-contracts`
+and `events` were once declared universal despite having no client consumer — `job-contracts` carries BullMQ
+queue names, which is backend vocabulary sitting in the browser-safe tier. Tier follows consumers, not
+portability.
+
+**Which way may dependencies point?** That is the *layer*, declared as `vp.layer`:
+
+```json
+"vp": { "tier": "server", "layer": 2 }
+```
+
+| Layer | Meaning | Packages |
+|---|---|---|
+| T1 | Foundation — no `@vp/*` runtime dependency | `errors`, `tsconfig`, `config`, `core`, `job-contracts`, `observability`, `storage`, `testing`, `dev-token`, `gen-video`, `compose-autoscaler` |
+| T2 | Contracts & domain capability | `api-contracts`, `permissions`, `db`, `events`, `ffmpeg`, `upload-client` |
+| T3 | Integration — concrete drivers and generated clients | `adapters`, `api-client` |
+| T4 | Applications | `apps/api`, `apps/worker`, `apps/web` |
+
+**Dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and never
+upward. Sibling imports are forbidden because they are how a layer quietly becomes a cycle. The layer is
+*declared*, not derived from the graph: a derived depth can never contradict itself, which would make the
+check vacuous.
+
+#### How the boundary is enforced
+
+Three mechanisms, strongest first:
+
+1. **It does not resolve.** pnpm links only declared dependencies, so importing a package you did not declare
+   is `error TS2307: Cannot find module '@vp/adapters'` at compile time. This is what makes a server import in
+   the frontend impossible rather than merely discouraged.
+2. **The build fails.** `pnpm boundaries` (`scripts/check-boundaries.ts`) validates tier compatibility, layer
+   direction and tier-vs-directory agreement across every manifest. Both `pnpm build` and `pnpm typecheck` run
+   it first, so a bad *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
+3. **The type system.** The matching `@vp/tsconfig` preset gives `universal` and `client` packages `lib` with
+   `DOM` and `types: []`, so a Node builtin or global is a type error. Specs run under
+   `@vp/tsconfig/spec.json` via a package's own `tsconfig.spec.json`, so importing `vitest` cannot leak
+   `@types/node` back into the package's program.
+
+`tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite.
+
+- `apps/web` must NEVER import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
 - The frontend talks to the backend only through `@vp/api-contracts` and `@vp/api-client`.
-- For all frontend architectural patterns (React 19, TanStack Start/Router/Query, URL state model, headless UI hooks, layout stability), see [apps/web/AGENTS.md](apps/web/AGENTS.md).
+- For all frontend architectural patterns, see [apps/web/AGENTS.md](apps/web/AGENTS.md).
 
 ### Invariant 6: Deterministic Test Suite Parity
 - No heuristic skips: test suites never swallow connection errors or skip assertions conditionally.

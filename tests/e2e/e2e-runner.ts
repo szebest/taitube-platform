@@ -16,7 +16,7 @@ import type {
   Repositories,
   StorageClient,
 } from '../../core/ports/index';
-import { mintToken } from '../../tools/dev-token/src/index';
+import { mintToken } from '../../packages/server/dev-token/src/index';
 import {
   type DlqCheckContext,
   auditDlqHostile,

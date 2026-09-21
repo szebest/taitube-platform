@@ -1,0 +1,36 @@
+{
+  "name": "@vp/testing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "vitest": "^3.0.7"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^24.0.0",
+    "@vp/tsconfig": "workspace:*",
+    "js-yaml": "^5.4.1",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3"
+  },
+  "vp": {
+    "tier": "server",
+    "layer": 1
+  }
+}

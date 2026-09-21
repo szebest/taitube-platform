@@ -17,7 +17,7 @@ import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
-} from '../adapters/index';
+} from '@vp/adapters';
 import { runReconcileUploads } from '../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import { ids } from '../packages/job-contracts/src/index';
 

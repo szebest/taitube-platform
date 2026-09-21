@@ -1,0 +1,86 @@
+{
+  "name": "@vp/adapters",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./s3": {
+      "types": "./dist/s3/index.d.ts",
+      "import": "./dist/s3/index.js",
+      "default": "./dist/s3/index.js"
+    },
+    "./redis": {
+      "types": "./dist/redis/index.d.ts",
+      "import": "./dist/redis/index.js",
+      "default": "./dist/redis/index.js"
+    },
+    "./bullmq": {
+      "types": "./dist/bullmq/index.d.ts",
+      "import": "./dist/bullmq/index.js",
+      "default": "./dist/bullmq/index.js"
+    },
+    "./postgres": {
+      "types": "./dist/postgres/index.d.ts",
+      "import": "./dist/postgres/index.js",
+      "default": "./dist/postgres/index.js"
+    },
+    "./in-memory": {
+      "types": "./dist/in-memory/index.d.ts",
+      "import": "./dist/in-memory/index.js",
+      "default": "./dist/in-memory/index.js"
+    },
+    "./in-memory/*": {
+      "types": "./dist/in-memory/*.d.ts",
+      "import": "./dist/in-memory/*.js",
+      "default": "./dist/in-memory/*.js"
+    },
+    "./authorization": {
+      "types": "./dist/authorization/index.d.ts",
+      "import": "./dist/authorization/index.js",
+      "default": "./dist/authorization/index.js"
+    }
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1125.0",
+    "@aws-sdk/s3-request-presigner": "^3.1125.0",
+    "@casl/ability": "^6.8.1",
+    "@opentelemetry/api": "^1.9.1",
+    "@ucast/core": "^2.0.0",
+    "@vp/core": "workspace:*",
+    "@vp/db": "workspace:*",
+    "@vp/errors": "workspace:*",
+    "@vp/observability": "workspace:*",
+    "@vp/permissions": "workspace:*",
+    "bullmq": "^6.3.4",
+    "drizzle-orm": "^0.45.2",
+    "ioredis": "^5.11.1",
+    "postgres": "^3.4.9",
+    "uuidv7": "^1.2.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@types/node": "^24.0.0",
+    "@vp/testing": "workspace:*",
+    "@vp/tsconfig": "workspace:*",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  },
+  "vp": {
+    "tier": "server",
+    "layer": 3
+  }
+}

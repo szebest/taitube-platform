@@ -1,0 +1,16 @@
+{
+  "name": "@vp/tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "base.json",
+    "client.json",
+    "server.json",
+    "spec.json",
+    "universal.json"
+  ],
+  "vp": {
+    "tier": "universal",
+    "layer": 1
+  }
+}

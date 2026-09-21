@@ -71,6 +71,7 @@
     "cross-env": "^7.0.3"
   },
   "vp": {
-    "tier": "client"
+    "tier": "client",
+    "layer": 4
   }
 }
