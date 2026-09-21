@@ -13,6 +13,7 @@ import {
   type VideoRecord,
   VideoRepository,
   type VideoWithDetails,
+  publicFeedInstant,
 } from '@vp/core/ports';
 import * as schema from '@vp/db';
 import { type SQL, type Table, and, desc, eq, inArray, lt, or, sql } from 'drizzle-orm';
@@ -23,13 +24,8 @@ import {
   type VideoStatus,
   toDbError as dbErr,
 } from './types';
-import {
-  drizzleWhere,
-  notDeletedScope,
-  ownerScope,
-  publicVisibilityScope,
-  videoReadScope,
-} from '../scopes/index';
+import { drizzleWhere, notDeletedScope, ownerScope, videoReadScope } from '../scopes/index';
+import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 
@@ -142,39 +138,25 @@ export class PostgresVideoRepository extends VideoRepository {
   }
 
   async listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult> {
-    const { cursor, limit } = options;
     try {
-      const baseWhere = drizzleWhere(
-        publicVisibilityScope(v),
-        eq(v.status, 'READY'),
-        notDeletedScope(v)
-      );
+      const scope = publicFeedScope(options.categoryId);
+      const instant = new Date(publicFeedInstant());
 
       const [countResult] = await this.db
         .select({ count: sql<number>`count(*)::int` })
         .from(v)
-        .where(baseWhere);
-      const total = countResult?.count ?? 0;
-
-      const cursorCond = cursor?.createdAt
-        ? or(
-            lt(v.createdAt, cursor.createdAt),
-            and(eq(v.createdAt, cursor.createdAt), lt(v.id, cursor.id))
-          )
-        : undefined;
-
-      const queryWhere = drizzleWhere(baseWhere, cursorCond);
+        .where(scope);
 
       const rows = await this.db
         .select()
         .from(v)
-        .where(queryWhere)
-        .orderBy(desc(v.createdAt), desc(v.id))
-        .limit(limit + 1);
+        .where(drizzleWhere(scope, publicFeedCursorScope(options, instant)))
+        .orderBy(...publicFeedOrderBy(options, instant))
+        .limit(options.limit + 1);
 
       return {
         items: rows as VideoRecord[],
-        total,
+        total: countResult?.count ?? 0,
       };
     } catch (err) {
       throw dbErr('Failed to list public videos', err);

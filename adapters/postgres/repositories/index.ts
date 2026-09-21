@@ -1,3 +1,4 @@
+export * from './public-feed-query';
 export * from './postgres-video-repository';
 export * from './postgres-upload-repository';
 export * from './postgres-step-repository';

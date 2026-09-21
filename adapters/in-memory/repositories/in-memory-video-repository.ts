@@ -22,7 +22,7 @@ import {
   type VideoWithDetails,
 } from '@vp/core/ports';
 
-import { filterAndSortPublicVideos } from './feed-filter';
+import { selectPublicFeed } from './public-feed-query';
 import {
   DEFAULT_VIDEO_RECORD,
   type InMemoryVideoRepositoryOptions,
@@ -180,7 +180,7 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   async listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult> {
-    return filterAndSortPublicVideos(this.videosMap.values(), options);
+    return selectPublicFeed(this.videosMap.values(), options);
   }
 
   async updateMetadata(options: UpdateVideoMetadataOptions): Promise<VideoRecord> {

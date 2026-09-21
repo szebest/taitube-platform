@@ -4,9 +4,10 @@ import {
   defaultPaginator,
   type Paginator,
 } from '@vp/core/pagination';
+import type { PublicFeedSort } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 
-export type FeedSort = 'recent' | 'popular' | 'trending';
+export type FeedSort = PublicFeedSort;
 
 export type DecodedFeedCursor =
   | { sort: 'recent'; createdAt: Date; id: string }

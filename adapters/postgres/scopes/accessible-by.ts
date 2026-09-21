@@ -1,3 +1,4 @@
+import { PUBLIC_FEED_VISIBILITY } from '@vp/core/repositories';
 import { videos } from '@vp/db';
 import type { AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { type SQL, eq } from 'drizzle-orm';
@@ -31,5 +32,5 @@ export function ownerScope<T extends WithOwner>(table: T, owner: UserContext | s
  * never surface in a listing.
  */
 export function publicVisibilityScope<T extends WithVisibility>(table: T): SQL {
-  return eq(table.visibility, 'public');
+  return eq(table.visibility, PUBLIC_FEED_VISIBILITY);
 }

@@ -1,10 +1,13 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
 import { defaultPaginator, type Paginator } from '@vp/core/pagination';
-import type {
-  AuthorizationPort,
-  ReactionCachePort,
-  VideoRepository,
-  VideoStatus,
+import {
+  type AuthorizationPort,
+  type ReactionCachePort,
+  type VideoRepository,
+  type VideoStatus,
+  publicFeedInstant,
+  trendingScore,
+  videoAgeHours,
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import {
@@ -41,11 +44,9 @@ import {
   videoCursorPayload,
 } from './cursor';
 
-/** Hacker-News style gravity decay; only the trending sort keys on it. */
 function gravityScore(row: { createdAt: Date; viewsCount?: number }, sort: FeedSort) {
   if (sort !== 'trending') return undefined;
-  const ageHours = Math.max(0, (Date.now() - row.createdAt.getTime()) / 3600000);
-  return ((row.viewsCount ?? 0) + 1) / (ageHours + 2) ** 1.5;
+  return trendingScore(row.viewsCount ?? 0, videoAgeHours(row.createdAt, publicFeedInstant()));
 }
 
 /**

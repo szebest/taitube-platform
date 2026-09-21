@@ -1,4 +1,5 @@
 export * from './types';
+export * from './public-feed-query';
 export * from './in-memory-video-repository';
 export * from './in-memory-upload-repository';
 export * from './in-memory-step-repository';
