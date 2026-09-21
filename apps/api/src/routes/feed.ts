@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { FeedService } from '../services/feed-service';
-import { contractSchema } from './contract-schema';
+import { contractPaths, contractSchema } from './contract-schema';
 
 export interface FeedRouteOptions {
   feedService: FeedService;
@@ -17,13 +17,13 @@ export function registerFeedRoutes(app: FastifyInstance, options: FeedRouteOptio
   const { feedService } = options;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  for (const path of ['/v1/feed', '/feed'] as const) {
+  for (const { path, hide } of contractPaths(getFeed)) {
     server.get(
       path,
       {
         schema: {
           ...contractSchema(getFeed, {
-            hide: path === '/feed',
+            hide,
             responses: { 304: z.undefined().describe('Not Modified') },
           }),
           querystring: getFeed.query,

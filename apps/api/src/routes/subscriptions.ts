@@ -9,7 +9,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { SubscriptionService } from '../services/subscription-service';
-import { contractSchema } from './contract-schema';
+import { contractPaths, contractSchema } from './contract-schema';
 
 export interface SubscriptionsRouteOptions {
   subscriptionService: SubscriptionService;
@@ -26,9 +26,7 @@ export function registerSubscriptionsRoutes(
   const { subscriptionService } = options;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  for (const path of ['/v1/channels/:id/subscribers', '/channels/:id/subscribers'] as const) {
-    const hide = path === '/channels/:id/subscribers';
-
+  for (const { path, hide } of contractPaths(subscribeToChannel)) {
     server.post(
       path,
       {
@@ -60,14 +58,12 @@ export function registerSubscriptionsRoutes(
     );
   }
 
-  for (const path of ['/v1/channels/:id/subscribers/me', '/channels/:id/subscribers/me'] as const) {
+  for (const { path, hide } of contractPaths(isSubscribedToChannel)) {
     server.get(
       path,
       {
         schema: {
-          ...contractSchema(isSubscribedToChannel, {
-            hide: path === '/channels/:id/subscribers/me',
-          }),
+          ...contractSchema(isSubscribedToChannel, { hide }),
           params: isSubscribedToChannel.params,
         },
       },
@@ -79,12 +75,12 @@ export function registerSubscriptionsRoutes(
     );
   }
 
-  for (const path of ['/v1/me/subscriptions', '/me/subscriptions'] as const) {
+  for (const { path, hide } of contractPaths(listMySubscriptions)) {
     server.get(
       path,
       {
         schema: {
-          ...contractSchema(listMySubscriptions, { hide: path === '/me/subscriptions' }),
+          ...contractSchema(listMySubscriptions, { hide }),
           querystring: listMySubscriptions.query,
         },
       },
@@ -96,12 +92,12 @@ export function registerSubscriptionsRoutes(
     );
   }
 
-  for (const path of ['/v1/feed/subscriptions', '/feed/subscriptions'] as const) {
+  for (const { path, hide } of contractPaths(getSubscriptionFeed)) {
     server.get(
       path,
       {
         schema: {
-          ...contractSchema(getSubscriptionFeed, { hide: path === '/feed/subscriptions' }),
+          ...contractSchema(getSubscriptionFeed, { hide }),
           querystring: getSubscriptionFeed.query,
         },
       },

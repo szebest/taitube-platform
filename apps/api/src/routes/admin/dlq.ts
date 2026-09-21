@@ -2,7 +2,7 @@ import { discardDlqEntry, listDlq, replayDlqEntry } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { DlqService } from '../../services/dlq-service';
-import { contractSchema } from '../contract-schema';
+import { contractPaths, contractSchema } from '../contract-schema';
 
 export interface AdminDlqRouteOptions {
   dlqService: DlqService;
@@ -17,16 +17,12 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  const prefixes = ['/admin/dlq', '/v1/admin/dlq'] as const;
-
-  for (const prefix of prefixes) {
-    const isAlias = prefix === '/admin/dlq';
-
+  for (const { path, hide } of contractPaths(listDlq)) {
     server.get(
-      prefix,
+      path,
       {
         schema: {
-          ...contractSchema(listDlq, { hide: isAlias }),
+          ...contractSchema(listDlq, { hide }),
           querystring: listDlq.query,
         },
       },
@@ -36,12 +32,14 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
         return reply.status(200).send(result);
       }
     );
+  }
 
+  for (const { path, hide } of contractPaths(replayDlqEntry)) {
     server.post(
-      `${prefix}/:id/replay`,
+      path,
       {
         schema: {
-          ...contractSchema(replayDlqEntry, { hide: isAlias }),
+          ...contractSchema(replayDlqEntry, { hide }),
           params: replayDlqEntry.params,
           body: replayDlqEntry.body,
         },
@@ -52,12 +50,14 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
         return reply.status(202).send(result);
       }
     );
+  }
 
+  for (const { path, hide } of contractPaths(discardDlqEntry)) {
     server.delete(
-      `${prefix}/:id`,
+      path,
       {
         schema: {
-          ...contractSchema(discardDlqEntry, { hide: isAlias }),
+          ...contractSchema(discardDlqEntry, { hide }),
           params: discardDlqEntry.params,
         },
       },

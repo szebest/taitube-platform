@@ -43,3 +43,25 @@ export function contractSchema(
     ...(options.hide ? { hide: true } : {}),
   };
 }
+
+export interface ContractPath {
+  path: string;
+  hide: boolean;
+}
+
+/**
+ * Every path a contract is served on: the versioned one it declares plus the
+ * unprefixed alias kept for older clients. The alias is the only thing hidden
+ * from the OpenAPI document, so its `hide` flag travels with the path instead of
+ * being re-derived from a repeated string literal at each registration.
+ */
+export function contractPaths(contract: EndpointContract): readonly ContractPath[] {
+  const alias = contract.path.replace(/^\/v1(?=\/)/, '');
+  if (alias === contract.path) {
+    return [{ path: contract.path, hide: false }];
+  }
+  return [
+    { path: contract.path, hide: false },
+    { path: alias, hide: true },
+  ];
+}

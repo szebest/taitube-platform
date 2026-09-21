@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { VideoService } from '../services/video-service';
-import { contractSchema } from './contract-schema';
+import { contractPaths, contractSchema } from './contract-schema';
 
 export interface VideosRouteOptions {
   videoService: VideoService;
@@ -17,12 +17,12 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
   const { videoService } = options;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  for (const path of ['/v1/videos', '/videos'] as const) {
+  for (const { path, hide } of contractPaths(listVideos)) {
     server.get(
       path,
       {
         schema: {
-          ...contractSchema(listVideos, { hide: path === '/videos' }),
+          ...contractSchema(listVideos, { hide }),
           querystring: listVideos.query,
         },
       },
@@ -34,12 +34,12 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
     );
   }
 
-  for (const path of ['/v1/videos/:id', '/videos/:id'] as const) {
+  for (const { path, hide } of contractPaths(getVideo)) {
     server.get(
       path,
       {
         schema: {
-          ...contractSchema(getVideo, { hide: path === '/videos/:id' }),
+          ...contractSchema(getVideo, { hide }),
           params: getVideo.params,
         },
       },
@@ -51,12 +51,12 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
     );
   }
 
-  for (const path of ['/v1/videos/:id', '/videos/:id'] as const) {
+  for (const { path, hide } of contractPaths(updateVideo)) {
     server.patch(
       path,
       {
         schema: {
-          ...contractSchema(updateVideo, { hide: path === '/videos/:id' }),
+          ...contractSchema(updateVideo, { hide }),
           params: updateVideo.params,
           body: updateVideo.body,
         },
@@ -70,12 +70,12 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
     );
   }
 
-  for (const path of ['/v1/videos/:id', '/videos/:id'] as const) {
+  for (const { path, hide } of contractPaths(deleteVideo)) {
     server.delete(
       path,
       {
         schema: {
-          ...contractSchema(deleteVideo, { hide: path === '/videos/:id' }),
+          ...contractSchema(deleteVideo, { hide }),
           params: deleteVideo.params,
         },
       },
@@ -88,7 +88,7 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
     );
   }
 
-  for (const path of ['/v1/videos/:id/reprocess', '/videos/:id/reprocess'] as const) {
+  for (const { path, hide } of contractPaths(reprocessVideo)) {
     server.post(
       path,
       {
@@ -102,7 +102,7 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
           },
         },
         schema: {
-          ...contractSchema(reprocessVideo, { hide: path === '/videos/:id/reprocess' }),
+          ...contractSchema(reprocessVideo, { hide }),
           params: reprocessVideo.params,
           body: reprocessVideo.body,
         },

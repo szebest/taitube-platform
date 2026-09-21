@@ -2,7 +2,7 @@ import { createCategory, deleteCategory, updateCategory } from '@vp/api-contract
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { CategoryService } from '../../services/category-service';
-import { contractSchema } from '../contract-schema';
+import { contractPaths, contractSchema } from '../contract-schema';
 
 export interface AdminCategoriesRouteOptions {
   categoryService: CategoryService;
@@ -20,16 +20,12 @@ export function registerAdminCategoriesRoutes(
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  const prefixes = ['/v1/admin/categories', '/admin/categories'] as const;
-
-  for (const prefix of prefixes) {
-    const isAlias = prefix === '/admin/categories';
-
+  for (const { path, hide } of contractPaths(createCategory)) {
     server.post(
-      prefix,
+      path,
       {
         schema: {
-          ...contractSchema(createCategory, { hide: isAlias }),
+          ...contractSchema(createCategory, { hide }),
           body: createCategory.body,
         },
       },
@@ -38,12 +34,14 @@ export function registerAdminCategoriesRoutes(
         return reply.status(201).send(created);
       }
     );
+  }
 
+  for (const { path, hide } of contractPaths(updateCategory)) {
     server.patch(
-      `${prefix}/:id`,
+      path,
       {
         schema: {
-          ...contractSchema(updateCategory, { hide: isAlias }),
+          ...contractSchema(updateCategory, { hide }),
           params: updateCategory.params,
           body: updateCategory.body,
         },
@@ -54,12 +52,14 @@ export function registerAdminCategoriesRoutes(
         return reply.status(200).send(updated);
       }
     );
+  }
 
+  for (const { path, hide } of contractPaths(deleteCategory)) {
     server.delete(
-      `${prefix}/:id`,
+      path,
       {
         schema: {
-          ...contractSchema(deleteCategory, { hide: isAlias }),
+          ...contractSchema(deleteCategory, { hide }),
           params: deleteCategory.params,
         },
       },

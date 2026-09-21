@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { CategoryService } from '../services/category-service';
-import { contractSchema } from './contract-schema';
+import { contractPaths, contractSchema } from './contract-schema';
 
 export interface CategoriesRouteOptions {
   categoryService: CategoryService;
@@ -21,12 +21,12 @@ export function registerCategoriesRoutes(
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  for (const path of ['/v1/categories', '/categories'] as const) {
+  for (const { path, hide } of contractPaths(listCategories)) {
     server.get(
       path,
       {
         schema: contractSchema(listCategories, {
-          hide: path === '/categories',
+          hide,
           responses: { 304: z.undefined().describe('Not Modified') },
         }),
       },

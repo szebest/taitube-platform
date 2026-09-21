@@ -10,7 +10,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { UploadService } from '../services/upload-service';
-import { contractSchema } from './contract-schema';
+import { contractPaths, contractSchema } from './contract-schema';
 
 export interface UploadsRouteOptions {
   uploadService: UploadService;
@@ -38,7 +38,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  for (const path of ['/v1/uploads', '/uploads'] as const) {
+  for (const { path, hide } of contractPaths(startUpload)) {
     server.post(
       path,
       {
@@ -50,7 +50,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
           },
         },
         schema: {
-          ...contractSchema(startUpload, { hide: path === '/uploads' }),
+          ...contractSchema(startUpload, { hide }),
           body: startUpload.body,
         },
       },
@@ -88,12 +88,12 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
     );
   }
 
-  for (const path of ['/v1/uploads/:uploadId', '/uploads/:uploadId'] as const) {
+  for (const { path, hide } of contractPaths(getUpload)) {
     server.get(
       path,
       {
         schema: {
-          ...contractSchema(getUpload, { hide: path === '/uploads/:uploadId' }),
+          ...contractSchema(getUpload, { hide }),
           params: getUpload.params,
         },
       },
@@ -106,12 +106,12 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
     );
   }
 
-  for (const path of ['/v1/uploads/:uploadId/parts', '/uploads/:uploadId/parts'] as const) {
+  for (const { path, hide } of contractPaths(issueUploadParts)) {
     server.post(
       path,
       {
         schema: {
-          ...contractSchema(issueUploadParts, { hide: path === '/uploads/:uploadId/parts' }),
+          ...contractSchema(issueUploadParts, { hide }),
           params: issueUploadParts.params,
           querystring: issueUploadParts.query,
         },
@@ -126,12 +126,12 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
     );
   }
 
-  for (const path of ['/v1/uploads/:uploadId/complete', '/uploads/:uploadId/complete'] as const) {
+  for (const { path, hide } of contractPaths(completeUpload)) {
     server.post(
       path,
       {
         schema: {
-          ...contractSchema(completeUpload, { hide: path === '/uploads/:uploadId/complete' }),
+          ...contractSchema(completeUpload, { hide }),
           params: completeUpload.params,
           body: completeUpload.body,
         },
@@ -148,12 +148,12 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
     );
   }
 
-  for (const path of ['/v1/uploads/:uploadId', '/uploads/:uploadId'] as const) {
+  for (const { path, hide } of contractPaths(abortUpload)) {
     server.delete(
       path,
       {
         schema: {
-          ...contractSchema(abortUpload, { hide: path === '/uploads/:uploadId' }),
+          ...contractSchema(abortUpload, { hide }),
           params: abortUpload.params,
         },
       },

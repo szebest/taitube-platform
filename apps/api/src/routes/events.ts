@@ -4,7 +4,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { SseHub } from '../services/sse-hub';
 import type { SseService, SseSession } from '../services/sse-service';
-import { contractSchema } from './contract-schema';
+import { contractPaths, contractSchema } from './contract-schema';
 
 export interface EventsRouteOptions {
   sseHub: SseHub;
@@ -62,12 +62,12 @@ export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteO
   const { sseHub, sseService } = options;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  for (const path of ['/v1/videos/:id/events', '/videos/:id/events'] as const) {
+  for (const { path, hide } of contractPaths(streamVideoEvents)) {
     server.get(
       path,
       {
         schema: {
-          ...contractSchema(streamVideoEvents, { hide: path === '/videos/:id/events' }),
+          ...contractSchema(streamVideoEvents, { hide }),
           params: streamVideoEvents.params,
           querystring: streamVideoEvents.query,
         },
@@ -79,12 +79,12 @@ export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteO
     );
   }
 
-  for (const path of ['/v1/me/events', '/me/events'] as const) {
+  for (const { path, hide } of contractPaths(streamMyEvents)) {
     server.get(
       path,
       {
         schema: {
-          ...contractSchema(streamMyEvents, { hide: path === '/me/events' }),
+          ...contractSchema(streamMyEvents, { hide }),
           querystring: streamMyEvents.query,
         },
       },
