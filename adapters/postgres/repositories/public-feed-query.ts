@@ -1,10 +1,10 @@
 import {
-  type ListPublicVideosOptions,
   PUBLIC_FEED_STATUS,
   type PublicFeedSort,
   TRENDING_GRAVITY,
   publicFeedRanking,
-} from '@vp/core/ports';
+} from '@vp/core/domain';
+import type { ListPublicVideosOptions } from '@vp/core/ports';
 import { videos } from '@vp/db';
 import { type SQL, desc, eq, isNull, sql } from 'drizzle-orm';
 import { drizzleWhere, publicVisibilityScope } from '../scopes/index';

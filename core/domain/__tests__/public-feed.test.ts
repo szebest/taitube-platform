@@ -8,41 +8,28 @@ import {
   isPublicFeedEligible,
   publicFeedRanking,
   trendingScore,
+  type PublicFeedCandidate,
   videoAgeHours,
 } from '../public-feed';
-import type { VideoRecord } from '../video-repository';
 
 const NOW = Date.parse('2026-01-01T00:00:00.000Z');
 
-function video(overrides: Partial<VideoRecord> = {}): VideoRecord {
+function video(overrides: Partial<PublicFeedCandidate> = {}): PublicFeedCandidate {
   return {
     id: 'video-1',
-    ownerId: 'owner-1',
-    title: null,
-    description: null,
     visibility: 'public',
     status: 'READY',
-    sourceKey: 'raw/video-1/source.mp4',
-    sourceSizeBytes: null,
-    durationMs: null,
-    width: null,
-    height: null,
-    ladder: null,
-    viewsCount: 0,
     categoryId: null,
-    generation: 1,
-    version: 0,
+    viewsCount: 0,
     createdAt: new Date(NOW),
-    updatedAt: new Date(NOW),
-    readyAt: new Date(NOW),
     deletedAt: null,
     ...overrides,
   };
 }
 
-describe('core/repositories: public feed rules', () => {
+describe('core/domain: public feed rules', () => {
   describe('eligibility', () => {
-    it.each<{ scenario: string; overrides?: Partial<VideoRecord>; categoryId?: string | null }>([
+    it.each<{ scenario: string; overrides?: Partial<PublicFeedCandidate>; categoryId?: string | null }>([
       { scenario: 'a private video', overrides: { visibility: 'private' } },
       { scenario: 'an unlisted video', overrides: { visibility: 'unlisted' } },
       { scenario: 'a video still processing', overrides: { status: 'PROCESSING' } },

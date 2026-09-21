@@ -9,3 +9,4 @@ export * from './reaction-cache.port';
 export * from './subscription-cache.port';
 export * from './authorization.port';
 export * from '../repositories/index';
+export * from '../domain/index';

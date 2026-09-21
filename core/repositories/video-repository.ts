@@ -2,7 +2,7 @@ import type { UserContext } from '@vp/permissions';
 
 import type { VideoEventRecord } from './event-repository';
 import type { NewOutboxInput } from './outbox-repository';
-import type { PublicFeedSort } from './public-feed';
+import type { PublicFeedCursor, PublicFeedSort } from '../domain/public-feed';
 import type { RenditionRecord } from './rendition-repository';
 import type { ProcessingStepRecord } from './step-repository';
 import type { UploadRecord } from './upload-repository';
@@ -110,12 +110,7 @@ export interface ListVideosOptions {
 }
 
 export interface ListPublicVideosOptions {
-  cursor?: {
-    createdAt?: Date;
-    viewsCount?: number;
-    score?: number;
-    id: string;
-  } | null;
+  cursor?: PublicFeedCursor | null;
   limit: number;
   sort?: PublicFeedSort;
   categoryId?: string | null;

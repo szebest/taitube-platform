@@ -1,11 +1,5 @@
-import {
-  type ListPublicVideosOptions,
-  type PublicFeedSort,
-  type VideoRecord,
-  type VideoRepository,
-  publicFeedInstant,
-  publicFeedRanking,
-} from '@vp/core/ports';
+import { type PublicFeedSort, publicFeedInstant, publicFeedRanking } from '@vp/core/domain';
+import type { ListPublicVideosOptions, VideoRecord, VideoRepository } from '@vp/core/ports';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,

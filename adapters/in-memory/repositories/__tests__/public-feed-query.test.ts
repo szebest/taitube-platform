@@ -1,9 +1,5 @@
-import {
-  type PublicFeedSort,
-  type VideoRecord,
-  publicFeedInstant,
-  publicFeedRanking,
-} from '@vp/core/ports';
+import { type PublicFeedSort, publicFeedInstant, publicFeedRanking } from '@vp/core/domain';
+import type { VideoRecord } from '@vp/core/ports';
 import { selectPublicFeed } from '../public-feed-query';
 
 const HOUR_MS = 3_600_000;

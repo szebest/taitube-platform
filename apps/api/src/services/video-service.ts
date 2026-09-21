@@ -1,13 +1,11 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
-import { defaultPaginator, type Paginator } from '@vp/core/pagination';
-import {
-  type AuthorizationPort,
-  type ReactionCachePort,
-  type VideoRepository,
-  type VideoStatus,
-  publicFeedInstant,
-  trendingScore,
-  videoAgeHours,
+import { publicFeedInstant, trendingScore, videoAgeHours } from '@vp/core/domain';
+import { type Paginator, defaultPaginator } from '@vp/core/pagination';
+import type {
+  AuthorizationPort,
+  ReactionCachePort,
+  VideoRepository,
+  VideoStatus,
 } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import {
@@ -37,10 +35,10 @@ export {
 } from './cursor';
 
 import {
+  type FeedSort,
   decodeFeedCursor,
   decodeVideoCursor,
   feedCursorPayload,
-  type FeedSort,
   videoCursorPayload,
 } from './cursor';
 

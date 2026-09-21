@@ -1,5 +1,4 @@
 export * from './video-repository';
-export * from './public-feed';
 export * from './upload-repository';
 export * from './step-repository';
 export * from './rendition-repository';

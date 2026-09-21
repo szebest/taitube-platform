@@ -1,4 +1,4 @@
-import { PUBLIC_FEED_VISIBILITY } from '@vp/core/repositories';
+import { PUBLIC_FEED_VISIBILITY } from '@vp/core/domain';
 import { videos } from '@vp/db';
 import type { AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { type SQL, eq } from 'drizzle-orm';

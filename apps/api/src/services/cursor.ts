@@ -4,7 +4,7 @@ import {
   defaultPaginator,
   type Paginator,
 } from '@vp/core/pagination';
-import type { PublicFeedSort } from '@vp/core/ports';
+import type { PublicFeedSort } from '@vp/core/domain';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 
 export type FeedSort = PublicFeedSort;

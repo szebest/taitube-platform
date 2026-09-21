@@ -1,13 +1,11 @@
 import {
-  type ListPublicVideosOptions,
-  type ListPublicVideosResult,
-  type VideoRecord,
   comparePublicFeedRank,
   isAfterPublicFeedCursor,
   isPublicFeedEligible,
   publicFeedInstant,
   publicFeedRanking,
-} from '@vp/core/ports';
+} from '@vp/core/domain';
+import type { ListPublicVideosOptions, ListPublicVideosResult, VideoRecord } from '@vp/core/ports';
 
 interface RankedVideo {
   rank: number;

@@ -1,5 +1,3 @@
-import type { ListPublicVideosOptions, VideoRecord } from './video-repository';
-
 export type PublicFeedSort = 'recent' | 'popular' | 'trending';
 
 export const DEFAULT_PUBLIC_FEED_SORT: PublicFeedSort = 'recent';
@@ -39,13 +37,28 @@ export function trendingScore(viewsCount: number, ageHours: number): number {
   );
 }
 
-export type PublicFeedCursor = NonNullable<ListPublicVideosOptions['cursor']>;
+export interface PublicFeedCandidate {
+  id: string;
+  visibility: string;
+  status: string;
+  deletedAt?: Date | null;
+  categoryId?: string | null;
+  createdAt: Date;
+  viewsCount?: number | null;
+}
+
+export interface PublicFeedCursor {
+  createdAt?: Date;
+  viewsCount?: number;
+  score?: number;
+  id: string;
+}
 
 export type PublicFeedCursorField = 'createdAt' | 'viewsCount' | 'score';
 
 export interface PublicFeedRanking {
   readonly cursorField: PublicFeedCursorField;
-  rankOf(video: VideoRecord, nowMs: number): number;
+  rankOf(video: PublicFeedCandidate, nowMs: number): number;
   cursorRankOf(cursor: PublicFeedCursor): number | undefined;
 }
 
@@ -72,7 +85,10 @@ export function publicFeedRanking(sort?: PublicFeedSort | null): PublicFeedRanki
   return PUBLIC_FEED_RANKINGS[sort ?? DEFAULT_PUBLIC_FEED_SORT] ?? PUBLIC_FEED_RANKINGS.recent;
 }
 
-export function isPublicFeedEligible(video: VideoRecord, categoryId?: string | null): boolean {
+export function isPublicFeedEligible(
+  video: PublicFeedCandidate,
+  categoryId?: string | null
+): boolean {
   if (video.visibility !== PUBLIC_FEED_VISIBILITY) return false;
   if (video.status !== PUBLIC_FEED_STATUS) return false;
   if (video.deletedAt) return false;
