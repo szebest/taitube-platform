@@ -16,6 +16,10 @@ permissions:
   contents: read
   packages: write
 
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  DO_NOT_TRACK: 1
+
 jobs:
   lint-typecheck:
     name: lint-typecheck
@@ -37,12 +41,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: turbo-lint-typecheck-${{ runner.os }}-${{ github.sha }}
+          key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            turbo-lint-typecheck-${{ runner.os }}-
+            turbo-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Check package boundaries (tiers, layers, CLAUDE.md symlinks)
+        run: pnpm boundaries
 
       - name: Run Biome lint
         run: pnpm lint
@@ -97,9 +104,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: turbo-unit-${{ runner.os }}-${{ github.sha }}
+          key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            turbo-unit-${{ runner.os }}-
+            turbo-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -167,9 +174,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: turbo-unit-bun-${{ runner.os }}-${{ github.sha }}
+          key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            turbo-unit-bun-${{ runner.os }}-
+            turbo-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -221,9 +228,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .turbo
-          key: turbo-integration-${{ runner.os }}-${{ github.sha }}
+          key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            turbo-integration-${{ runner.os }}-
+            turbo-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -294,6 +301,14 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.0
+
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
