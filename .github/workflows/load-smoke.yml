@@ -30,13 +30,17 @@ jobs:
           echo "UPLOAD_RATE_LIMIT_MAX=100000" >> .env
           make up-all
 
+      # Installed from the release tarball: the apt repo needs a keyserver fetch that times out on runners.
       - name: Install k6
+        env:
+          K6_VERSION: v2.2.0
+          K6_SHA256: b5a8003c86f35f5cd5ceef1490312c48e587696c94d998cefc6d7b3b4cb1597d
         run: |
-          sudo gpg -k
-          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install k6
+          curl -fsSL --retry 3 --retry-all-errors --connect-timeout 10 -o /tmp/k6.tar.gz \
+            "https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-amd64.tar.gz"
+          echo "${K6_SHA256}  /tmp/k6.tar.gz" | sha256sum -c -
+          sudo tar -xzf /tmp/k6.tar.gz --strip-components=1 -C /usr/local/bin "k6-${K6_VERSION}-linux-amd64/k6"
+          k6 version
 
       - name: Wait for API health
         run: |
