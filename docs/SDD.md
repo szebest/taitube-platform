@@ -556,7 +556,7 @@ Decided at the throw site, never by regex on messages.
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| **1** | **Single Monorepo (`video-pipeline`) with strict pnpm workspace boundaries (`apps/*`, `packages/*`, `core`, `adapters`) + single-sourced Zod contracts (`@vp/api-contracts`)** | **Chosen** | Direct type-safety without build-time sync rituals or schema drift; `apps/web` consumes `@vp/api-client` with inferred route types; zero SDK leaks into frontend; backend route definitions share the identical schema; permissions (`@vp/core/permissions`) shared between backend Fastify hooks and frontend UI guard components. |
+| **1** | **Single Monorepo (`video-pipeline`) with strict pnpm workspace boundaries (`apps/*`, `packages/<tier>/*`) + single-sourced Zod contracts (`@vp/api-contracts`)** | **Chosen** | Direct type-safety without build-time sync rituals or schema drift; `apps/web` consumes `@vp/api-client` with inferred route types; zero SDK leaks into frontend; backend route definitions share the identical schema; permissions (`@vp/permissions`, `universal` tier) shared between backend Fastify hooks and frontend UI guard components. |
 | 2 | Separate Git repositories (backend repo vs frontend repo) with published NPM packages | Rejected | High ceremony, slow solo iteration, version mismatch risk, tedious local package linking (`pnpm link`) during rapid API feature evolution. |
 | 3 | Backend-only monorepo with tRPC for client-server RPC | Rejected | Couples API transport to tRPC runtime; prevents clean REST/OpenAPI standard documentation for public consumers, third-party integrations, and standard load testing tools (k6). |
 

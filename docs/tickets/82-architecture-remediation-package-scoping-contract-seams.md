@@ -594,8 +594,9 @@ Extend the W3 architecture suite (do not start a second one):
       validates it; `pnpm-workspace.yaml` contains globs only and `vitest.config.ts` has no one-off entries.
 - [ ] Every shared package sits under `packages/universal/`, `packages/server/` or `packages/client/`, and the
       architecture suite asserts `vp.tier` equals the parent directory.
-- [ ] `core` is split so the portable majority is `universal`: `@vp/domain`, `@vp/pagination` and
-      `@vp/contracts` are universal; only the `Buffer`/stream-typed driver ports remain `server`.
+- [ ] `core` is split so the portable majority is `universal`: `@vp/domain` and `@vp/pagination` are
+      universal; the driver ports and the repository interfaces they serve stay in a `server`-tier
+      `@vp/core`, which keeps its name. No universal `@vp/contracts` — it would have no client consumer.
 - [ ] The video/step/upload/rendition status vocabulary is declared **once**, in a universal package; the
       drizzle `pgEnum`, `core`'s unions and `@vp/api-contracts` all derive from it, and the drift test that
       was compensating for the missing seam is deleted.
