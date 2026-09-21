@@ -7,7 +7,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ## 1. Scope & Architecture
 
 `apps/api` is the Fastify 5 REST API and real-time Server-Sent Events (SSE) server running on Node.js 24.
-- **Composition Root:** `apps/api/src/app.ts` instantiates concrete adapters (`adapters/postgres`, `adapters/redis`, `adapters/s3`, `adapters/bullmq`) and injects them into domain services.
+- **Composition Root:** `apps/api/src/composition/` resolves the adapter set (`adapter-set.ts`) and builds the services over it (`service-set.ts`); `app.ts` wires the two together with the Fastify plugins and routes. Nothing else constructs a concrete adapter or a domain service.
 - **Zero Concrete Driver Imports:** Route handlers and domain services must NEVER import `@aws-sdk/client-s3`, `ioredis`, `bullmq`, or Postgres/Drizzle directly.
 
 ---
@@ -23,8 +23,8 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 - **Strictly Forbidden:** Calling repositories directly, executing database transactions, or orchestrating domain state inside route handlers.
 
 ### Rule 2: Deep Domain Services (>1:1 Ratio)
-- Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`, `UploadService`, `ChannelService`, `CategoryService`, `DlqService`, `QueueService`).
-- Extract smaller, reusable domain services (`HttpCacheService`, `Singleflight`, `SseHub`) that higher-level services compose.
+- Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`, `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`, `SubscriptionService`, `SseService`, `DlqService`, `QueueService`).
+- Extract smaller, reusable domain services (`HttpCacheService`, `SseHub`) that higher-level services compose; `Singleflight` comes from `@vp/adapters`.
 - Services must remain completely decoupled from Fastify transport objects (`FastifyRequest`, `FastifyReply`).
 
 ### Rule 3: One Authorization Mechanism — `AuthorizationPort` Inside Services
