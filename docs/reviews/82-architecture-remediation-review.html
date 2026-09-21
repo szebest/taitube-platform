@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review for taitube-platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { curve: "basis" } });
+    </script>
+    <style>
+      .seam { stroke-dasharray: 5 4; }
+      .deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .lbl { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+      .hatch {
+        background-image: repeating-linear-gradient(45deg, #fecaca 0 6px, #fee2e2 6px 12px);
+      }
+      .pre-wrap { white-space: pre-wrap; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans antialiased">
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+
+      <!-- ─────────────────────────── HEADER ─────────────────────────── -->
+      <header class="border-b border-slate-300 pb-8">
+        <div class="flex items-baseline justify-between flex-wrap gap-3">
+          <h1 class="font-serif text-4xl tracking-tight">Architecture review</h1>
+          <p class="mono text-sm text-slate-500">taitube-platform @ <span class="text-slate-700">d14e18e</span> &middot; 2026-09-21</p>
+        </div>
+        <p class="mt-3 text-slate-600 max-w-3xl">
+          Deepening opportunities across <span class="mono text-sm">apps/</span>, <span class="mono text-sm">core/</span>,
+          <span class="mono text-sm">adapters/</span> and <span class="mono text-sm">packages/</span>. Every claim below was read from source and re-verified.
+        </p>
+
+        <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="rounded-lg border border-slate-200 bg-white p-3">
+            <div class="lbl text-slate-400">Source</div>
+            <div class="text-2xl font-serif">18,345</div>
+            <div class="text-xs text-slate-500">lines in core + adapters + packages</div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-3">
+            <div class="lbl text-slate-400">Test correspondence</div>
+            <div class="text-2xl font-serif text-amber-700">34%</div>
+            <div class="text-xs text-slate-500">vs a mandated 1:1 rule</div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-3">
+            <div class="lbl text-slate-400">Boundary checks</div>
+            <div class="text-2xl font-serif text-red-700">0</div>
+            <div class="text-xs text-slate-500">automated; 4 documented as manual greps</div>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-white p-3">
+            <div class="lbl text-slate-400">Adapters w/ zero tests</div>
+            <div class="text-2xl font-serif text-red-700">2,074</div>
+            <div class="text-xs text-slate-500">lines across s3 + redis + bullmq</div>
+          </div>
+        </div>
+
+        <!-- legend -->
+        <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-500 items-center">
+          <span class="flex items-center gap-2"><span class="inline-block w-5 h-3 border border-slate-400 bg-white"></span> module</span>
+          <span class="flex items-center gap-2"><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#64748b" stroke-width="2" class="seam"/></svg> seam</span>
+          <span class="flex items-center gap-2"><svg width="24" height="8"><line x1="0" y1="4" x2="20" y2="4" stroke="#dc2626" stroke-width="2"/><path d="M20 1 L24 4 L20 7 Z" fill="#dc2626"/></svg> leakage</span>
+          <span class="flex items-center gap-2"><span class="inline-block w-5 h-3 deep"></span> deep module</span>
+          <span class="flex items-center gap-2"><span class="inline-block w-5 h-3 hatch border border-red-300"></span> behaviour that exists on one side only</span>
+        </div>
+      </header>
+
+      <!-- ─────────────────────── FRAMING ─────────────────────── -->
+      <section class="rounded-xl border-2 border-slate-900 bg-white p-6">
+        <div class="lbl text-slate-400">The through-line</div>
+        <p class="mt-2 font-serif text-2xl leading-snug">
+          Nearly every defect found is something the repo already forbids in writing.
+        </p>
+        <p class="mt-3 text-slate-600">
+          The rules are unusually good. The enforcement is prose. <span class="mono text-sm">ARCHITECTURE.md &sect;6</span> titles itself
+          &ldquo;Verification &amp; Enforcement&rdquo; and then lists four <span class="mono text-sm">git grep</span> commands a human is expected to type.
+          Where a rule is machine-checked, it holds. Where it is written down, it drifts.
+        </p>
+        <div class="mt-5 overflow-x-auto">
+          <table class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="text-left lbl text-slate-400 border-b border-slate-200">
+                <th class="py-2 pr-4">Documented</th><th class="py-2 pr-4">Reality</th><th class="py-2">Checked by</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr><td class="py-2 pr-4">ADR-20: <span class="mono text-xs">packages/api-contracts</span> single-sources the HTTP contract</td><td class="py-2 pr-4 text-red-700">does not exist</td><td class="py-2 text-slate-400">nothing</td></tr>
+              <tr><td class="py-2 pr-4">ADR-20: <span class="mono text-xs">packages/api-client</span> generates typed hooks</td><td class="py-2 pr-4 text-red-700">does not exist</td><td class="py-2 text-slate-400">nothing</td></tr>
+              <tr><td class="py-2 pr-4">ADR-20: boundaries &ldquo;enforced via Biome import boundaries and CI build checks&rdquo;</td><td class="py-2 pr-4 text-red-700">no such rule or job</td><td class="py-2 text-slate-400">nothing</td></tr>
+              <tr><td class="py-2 pr-4">SDD &sect;15.1: <span class="mono text-xs">errors</span>/<span class="mono text-xs">config</span>/<span class="mono text-xs">job-contracts</span> have &ldquo;zero runtime deps beyond zod&rdquo;</td><td class="py-2 pr-4 text-red-700"><span class="mono text-xs">errors</span> declares <span class="mono text-xs">bullmq</span></td><td class="py-2 text-slate-400">nothing</td></tr>
+              <tr><td class="py-2 pr-4">ADR-21: <span class="mono text-xs">apps/web</span> is React 19 + TanStack Start + Vite 6 + Tailwind v4</td><td class="py-2 pr-4 text-red-700">React 18.3.1 + CRA + Redux + Bootstrap</td><td class="py-2 text-slate-400">nothing</td></tr>
+              <tr><td class="py-2 pr-4">Rule 1: local-first, &ldquo;nothing phones home&rdquo;</td><td class="py-2 pr-4 text-red-700">frontend hardcodes an external host</td><td class="py-2 text-slate-400">manual PR checklist</td></tr>
+              <tr><td class="py-2 pr-4">Rule 12: 1:1 test file correspondence</td><td class="py-2 pr-4 text-amber-700">34% repo-wide; 83% of <span class="mono text-xs">apps/api</span> files unmatched</td><td class="py-2 text-slate-400">nothing</td></tr>
+              <tr><td class="py-2 pr-4">Rule 4: concrete SDKs confined to <span class="mono text-xs">adapters/</span></td><td class="py-2 pr-4 text-emerald-700">holds in source</td><td class="py-2 text-emerald-600">&mdash; but only by luck</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ─────────────────────── CANDIDATES ─────────────────────── -->
+      <section id="candidates" class="space-y-12">
+        <h2 class="font-serif text-3xl tracking-tight border-b border-slate-300 pb-3">Candidates</h2>
+
+        <!-- ══════════════ C1 ══════════════ -->
+        <article id="c1" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h3 class="font-serif text-2xl">1. Make the repository seam self-enforcing</h3>
+            <div class="flex gap-2 shrink-0">
+              <span class="px-2 py-1 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Strong</span>
+              <span class="px-2 py-1 rounded text-xs bg-slate-100 text-slate-600">local-substitutable</span>
+            </div>
+          </div>
+
+          <div class="mono text-sm text-slate-600 space-y-0.5">
+            <div>core/repositories/video-repository.ts:105</div>
+            <div>adapters/postgres/repositories/postgres-video-repository.ts:145</div>
+            <div>adapters/in-memory/repositories/feed-filter.ts:10</div>
+          </div>
+
+          <div class="rounded-lg bg-red-50 border border-red-200 p-4">
+            <div class="lbl text-red-700">Live defect</div>
+            <p class="text-sm text-slate-800 mt-1">
+              The interface declares <span class="mono text-xs">sort</span> and <span class="mono text-xs">categoryId</span>.
+              The in-memory adapter implements both. The Postgres adapter destructures
+              <span class="mono text-xs">{ cursor, limit }</span> and silently drops them, ordering unconditionally by
+              <span class="mono text-xs">createdAt DESC</span>.
+            </p>
+            <p class="text-sm text-slate-800 mt-2">
+              In production <span class="mono text-xs">?sort=trending</span> returns recency order and
+              <span class="mono text-xs">?categoryId=X</span> returns every category &mdash; while
+              <span class="mono text-xs">routes/feed.ts:56</span> caches per sort+category, storing identical payloads under N distinct Redis keys.
+              Every test passes, because tests run against the double.
+            </p>
+          </div>
+
+          <!-- before / after -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-3">Before &mdash; two adapters, no conformance</div>
+              <svg viewBox="0 0 320 250" class="w-full" style="height:250px">
+                <rect x="70" y="8" width="180" height="34" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+                <text x="160" y="24" text-anchor="middle" class="lbl" fill="#334155">VideoRepository</text>
+                <text x="160" y="36" text-anchor="middle" font-size="9" fill="#64748b" class="mono">sort · categoryId · cursor</text>
+                <line x1="20" y1="60" x2="300" y2="60" stroke="#64748b" stroke-width="1.5" class="seam"/>
+                <text x="20" y="55" font-size="9" fill="#94a3b8" class="lbl">seam</text>
+                <line x1="110" y1="42" x2="75" y2="82" stroke="#334155" stroke-width="1.2"/>
+                <line x1="210" y1="42" x2="245" y2="82" stroke="#334155" stroke-width="1.2"/>
+                <!-- postgres -->
+                <rect x="10" y="84" width="130" height="96" fill="#fff" stroke="#dc2626" stroke-width="2"/>
+                <text x="75" y="100" text-anchor="middle" class="lbl" fill="#334155">Postgres</text>
+                <rect x="20" y="110" width="110" height="18" fill="#dcfce7" stroke="#86efac"/>
+                <text x="75" y="123" text-anchor="middle" font-size="9" fill="#166534" class="mono">cursor + limit</text>
+                <rect x="20" y="132" width="110" height="18" class="hatch" stroke="#fca5a5"/>
+                <text x="75" y="145" text-anchor="middle" font-size="9" fill="#991b1b" class="mono">sort — dropped</text>
+                <rect x="20" y="154" width="110" height="18" class="hatch" stroke="#fca5a5"/>
+                <text x="75" y="167" text-anchor="middle" font-size="9" fill="#991b1b" class="mono">category — dropped</text>
+                <!-- in-memory -->
+                <rect x="180" y="84" width="130" height="96" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+                <text x="245" y="100" text-anchor="middle" class="lbl" fill="#334155">In-memory</text>
+                <rect x="190" y="110" width="110" height="18" fill="#dcfce7" stroke="#86efac"/>
+                <text x="245" y="123" text-anchor="middle" font-size="9" fill="#166534" class="mono">cursor + limit</text>
+                <rect x="190" y="132" width="110" height="18" fill="#dcfce7" stroke="#86efac"/>
+                <text x="245" y="145" text-anchor="middle" font-size="9" fill="#166534" class="mono">3 sort modes</text>
+                <rect x="190" y="154" width="110" height="18" fill="#dcfce7" stroke="#86efac"/>
+                <text x="245" y="167" text-anchor="middle" font-size="9" fill="#166534" class="mono">category filter</text>
+                <!-- tests -->
+                <rect x="180" y="196" width="130" height="30" fill="#f8fafc" stroke="#cbd5e1"/>
+                <text x="245" y="215" text-anchor="middle" font-size="10" fill="#475569">all tests point here</text>
+                <line x1="245" y1="196" x2="245" y2="182" stroke="#334155" stroke-width="1.2"/>
+                <text x="75" y="215" text-anchor="middle" font-size="10" fill="#dc2626">0 tests</text>
+              </svg>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-3">After &mdash; one suite, both adapters</div>
+              <svg viewBox="0 0 320 250" class="w-full" style="height:250px">
+                <rect x="70" y="8" width="180" height="34" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+                <text x="160" y="24" text-anchor="middle" class="lbl" fill="#334155">VideoRepository</text>
+                <text x="160" y="36" text-anchor="middle" font-size="9" fill="#64748b" class="mono">sort · categoryId · cursor</text>
+                <line x1="20" y1="60" x2="300" y2="60" stroke="#64748b" stroke-width="1.5" class="seam"/>
+                <text x="20" y="55" font-size="9" fill="#94a3b8" class="lbl">seam</text>
+                <line x1="110" y1="42" x2="75" y2="82" stroke="#334155" stroke-width="1.2"/>
+                <line x1="210" y1="42" x2="245" y2="82" stroke="#334155" stroke-width="1.2"/>
+                <rect x="10" y="84" width="130" height="96" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+                <text x="75" y="100" text-anchor="middle" class="lbl" fill="#334155">Postgres</text>
+                <rect x="20" y="110" width="110" height="62" fill="#dcfce7" stroke="#86efac"/>
+                <text x="75" y="136" text-anchor="middle" font-size="9" fill="#166534" class="mono">full interface</text>
+                <text x="75" y="150" text-anchor="middle" font-size="9" fill="#166534" class="mono">honoured</text>
+                <rect x="180" y="84" width="130" height="96" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+                <text x="245" y="100" text-anchor="middle" class="lbl" fill="#334155">In-memory</text>
+                <rect x="190" y="110" width="110" height="62" fill="#dcfce7" stroke="#86efac"/>
+                <text x="245" y="136" text-anchor="middle" font-size="9" fill="#166534" class="mono">full interface</text>
+                <text x="245" y="150" text-anchor="middle" font-size="9" fill="#166534" class="mono">honoured</text>
+                <!-- shared suite -->
+                <rect x="40" y="196" width="240" height="40" class="deep" stroke="#0f172a" stroke-width="2"/>
+                <text x="160" y="212" text-anchor="middle" class="lbl" fill="#e2e8f0">contract suite</text>
+                <text x="160" y="227" text-anchor="middle" font-size="9" fill="#94a3b8" class="mono">runs once per adapter</text>
+                <line x1="75" y1="182" x2="90" y2="194" stroke="#0f172a" stroke-width="1.5"/>
+                <line x1="245" y1="182" x2="230" y2="194" stroke="#0f172a" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span class="lbl text-slate-400 block">Problem</span>
+              Two adapters at one seam drift silently; the double is more capable than production.</div>
+            <div><span class="lbl text-slate-400 block">Solution</span>
+              One parameterised contract suite executed against every adapter at the seam, with Postgres on PGLite.</div>
+          </div>
+
+          <div>
+            <span class="lbl text-slate-400 block mb-2">Wins</span>
+            <ul class="grid sm:grid-cols-2 gap-y-1 text-sm text-slate-700 list-disc list-inside">
+              <li>The interface becomes the test surface</li>
+              <li>Locality: divergence fails in one place</li>
+              <li>Leverage: one suite, N adapters</li>
+              <li>Closes a live production defect</li>
+              <li>Covers 2,074 untested adapter lines</li>
+              <li>New adapters inherit the suite free</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ══════════════ C2 ══════════════ -->
+        <article id="c2" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h3 class="font-serif text-2xl">2. Give the client&ndash;server contract a seam</h3>
+            <div class="flex gap-2 shrink-0">
+              <span class="px-2 py-1 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Strong</span>
+              <span class="px-2 py-1 rounded text-xs bg-slate-100 text-slate-600">ports &amp; adapters</span>
+            </div>
+          </div>
+
+          <div class="mono text-sm text-slate-600 space-y-0.5">
+            <div>apps/web/src/config/index.ts:1</div>
+            <div>apps/web/src/modules/**/api/*ApiSlice.ts &nbsp;<span class="text-slate-400">(22 endpoints)</span></div>
+            <div>apps/api/src/schemas/*.ts</div>
+            <div class="text-red-600">packages/api-contracts &mdash; missing</div>
+          </div>
+
+          <div class="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-slate-800 space-y-2">
+            <div class="lbl text-red-700">What the frontend actually is</div>
+            <p><span class="mono text-xs">apps/web</span> is a git-subtree import of an unrelated SPA. It talks to
+              <span class="mono text-xs">https://taitube-backend.onrender.com</span> &mdash; a third-party host, not this monorepo&rsquo;s API.
+              <strong>0 of its 22 endpoints match <span class="mono text-xs">apps/api</span>.</strong> None use the <span class="mono text-xs">/v1</span> prefix every real route carries.</p>
+            <p>The hardcoded host breaks Core Rule 1. The repo&rsquo;s own local-first grep catches it on the first try &mdash; it has simply never been run, because it lives in a manual checklist.</p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-3">Before &mdash; two contracts, never compared</div>
+              <pre class="mermaid">
+flowchart TB
+  W["apps/web<br/>22 hand-written endpoints"]
+  X(["onrender.com<br/>external host"])
+  A["apps/api<br/>34 routes under /v1"]
+  Z["Zod schemas<br/>apps/api/src/schemas"]
+  W -->|"phones home"| X
+  A --- Z
+  W -.->|"never connected"| A
+  classDef leak stroke:#dc2626,stroke-width:2px,fill:#fef2f2;
+  classDef ext stroke:#dc2626,stroke-width:2px,fill:#fee2e2,stroke-dasharray: 4 4;
+  class W leak
+  class X ext
+              </pre>
+              <p class="text-xs text-slate-500 mt-2">Category ids: frontend <span class="mono">Map&lt;number,string&gt;</span> 0&ndash;6 &middot; backend UUID + slug.</p>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-3">After &mdash; one contract, two consumers</div>
+              <pre class="mermaid">
+flowchart TB
+  C["@vp/api-contracts<br/>Zod · the single interface"]
+  A["apps/api<br/>routes derive schemas"]
+  K["@vp/api-client<br/>typed fetchers"]
+  W["apps/web"]
+  C --> A
+  C --> K
+  K --> W
+  A -->|"HTTP · localhost"| W
+  classDef deep fill:#0f172a,color:#e2e8f0,stroke:#0f172a,stroke-width:2px;
+  class C deep
+              </pre>
+              <p class="text-xs text-slate-500 mt-2">A drift test fails the build when a route and its contract disagree.</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span class="lbl text-slate-400 block">Problem</span>
+              The HTTP contract is written twice, in two repos&rsquo; worth of code, and the two copies have never agreed.</div>
+            <div><span class="lbl text-slate-400 block">Solution</span>
+              Author each endpoint&rsquo;s schema once in <span class="mono text-xs">@vp/api-contracts</span>; the API derives its
+              route schemas from it and the client derives its fetchers from it.</div>
+          </div>
+
+          <div>
+            <span class="lbl text-slate-400 block mb-2">Wins</span>
+            <ul class="grid sm:grid-cols-2 gap-y-1 text-sm text-slate-700 list-disc list-inside">
+              <li>Leverage: one schema, both sides</li>
+              <li>Contract drift becomes a type error</li>
+              <li>Restores local-first (Rule 1)</li>
+              <li>Deletes 13 hand-copied model files</li>
+              <li>Satisfies ADR-20 as written</li>
+              <li>Frontend becomes testable against real shapes</li>
+            </ul>
+          </div>
+
+          <div class="rounded-lg bg-amber-50 border border-amber-300 p-3 text-sm">
+            <span class="font-semibold text-amber-900">Scope note.</span>
+            This does not require the React 19 / TanStack rewrite that tickets 49&ndash;75 describe. Point the existing app at
+            a configurable local base URL and have it consume the contract package. The rewrite stays a separate decision.
+          </div>
+        </article>
+
+        <!-- ══════════════ C3 ══════════════ -->
+        <article id="c3" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h3 class="font-serif text-2xl">3. Give packages an explicit runtime tier</h3>
+            <div class="flex gap-2 shrink-0">
+              <span class="px-2 py-1 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Strong</span>
+              <span class="px-2 py-1 rounded text-xs bg-slate-100 text-slate-600">in-process</span>
+            </div>
+          </div>
+
+          <div class="mono text-sm text-slate-600 space-y-0.5">
+            <div>packages/errors/package.json:29</div>
+            <div>core/permissions/index.ts &nbsp;<span class="text-slate-400">(1 line)</span></div>
+            <div>packages/storage/src/__tests__/storage.test.ts:1</div>
+            <div>packages/tsconfig/base.json</div>
+          </div>
+
+          <p class="text-sm text-slate-700">
+            This is the scoping problem directly. Nothing in the repo records whether a package is safe to import from a browser,
+            so the one genuinely isomorphic module &mdash; the CASL rule engine &mdash; drags a Redis job queue into the frontend&rsquo;s install graph.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-3">Before &mdash; one flat tier</div>
+              <pre class="mermaid">
+flowchart LR
+  W["apps/web"] --> P["@vp/permissions<br/>pure CASL"]
+  P --> E["@vp/errors<br/>75 lines, pure"]
+  E -.->|"phantom dep<br/>0 imports · 5.4 MB"| B["bullmq"]
+  B --> I["ioredis"]
+  classDef leak stroke:#dc2626,stroke-width:2px,fill:#fef2f2;
+  class E,B,I leak
+              </pre>
+              <p class="text-xs text-slate-500 mt-2">
+                Left behind by commit <span class="mono">3bcf093</span>, which removed the import but not the dependency.
+              </p>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-3">After &mdash; three declared tiers</div>
+              <div class="space-y-2">
+                <div class="rounded border-l-4 border-emerald-500 bg-emerald-50 p-2">
+                  <div class="lbl text-emerald-800">universal &mdash; browser + server</div>
+                  <div class="mono text-xs text-slate-600 mt-1">errors · permissions · job-contracts · events · storage · api-contracts</div>
+                </div>
+                <div class="rounded border-l-4 border-slate-700 bg-slate-50 p-2">
+                  <div class="lbl text-slate-700">server &mdash; api + worker only</div>
+                  <div class="mono text-xs text-slate-600 mt-1">config · db · ffmpeg · observability · testing · core · adapters</div>
+                </div>
+                <div class="rounded border-l-4 border-indigo-500 bg-indigo-50 p-2">
+                  <div class="lbl text-indigo-800">client &mdash; web only</div>
+                  <div class="mono text-xs text-slate-600 mt-1">api-client · ui</div>
+                </div>
+                <div class="rounded bg-white border border-slate-200 p-2 text-xs text-slate-600">
+                  Each tier gets its own tsconfig preset. <span class="mono">universal</span> and <span class="mono">client</span> get
+                  <span class="mono">lib: DOM</span> and no <span class="mono">@types/node</span>, so a Node builtin in a universal package
+                  becomes a compile error rather than a runtime surprise.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span class="lbl text-slate-400 block">Problem</span>
+              No package declares where it may run, so contamination is invisible and accidental.</div>
+            <div><span class="lbl text-slate-400 block">Solution</span>
+              Tier each package, back the tiers with distinct tsconfig presets, and enforce the allowed edges in CI.</div>
+          </div>
+
+          <div>
+            <span class="lbl text-slate-400 block mb-2">Wins</span>
+            <ul class="grid sm:grid-cols-2 gap-y-1 text-sm text-slate-700 list-disc list-inside">
+              <li>Locality: tier is declared, not inferred</li>
+              <li>Node globals stop leaking into shared code</li>
+              <li>Drops 6.5 MB from the web install graph</li>
+              <li>Deletes a 1-line barrel with 1 importer</li>
+              <li>Makes ADR-20&rsquo;s Invariant 5 checkable</li>
+              <li>A frontend package can finally live in <span class="mono text-xs">packages/</span></li>
+            </ul>
+          </div>
+
+          <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 text-sm">
+            <span class="font-semibold">Deletion test.</span>
+            <span class="mono text-xs">core/permissions/</span> is <span class="mono text-xs">export * from '@vp/permissions'</span> &mdash; one line,
+            one importer, and that importer is a test. 19 files already import <span class="mono text-xs">@vp/permissions</span> directly,
+            including two files inside <span class="mono text-xs">core/</span> itself. Deleting it concentrates nothing. It is indirection, not a seam.
+          </div>
+        </article>
+
+        <!-- ══════════════ C4 ══════════════ -->
+        <article id="c4" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h3 class="font-serif text-2xl">4. Turn the written rules into checks</h3>
+            <div class="flex gap-2 shrink-0">
+              <span class="px-2 py-1 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Strong</span>
+              <span class="px-2 py-1 rounded text-xs bg-slate-100 text-slate-600">in-process</span>
+            </div>
+          </div>
+
+          <div class="mono text-sm text-slate-600 space-y-0.5">
+            <div>ARCHITECTURE.md:225-233 &nbsp;<span class="text-slate-400">(&ldquo;Verification &amp; Enforcement&rdquo;)</span></div>
+            <div>biome.json:56 &nbsp;<span class="text-slate-400">(ignores apps/web)</span></div>
+            <div>turbo.json:6-9 &nbsp;<span class="text-slate-400">(outputs dist/**)</span></div>
+            <div>.github/workflows/ci.yml</div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 p-4">
+            <div class="lbl text-slate-400 mb-3">Cross-section &mdash; what a change passes through today</div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-3">
+                <div class="w-32 lbl text-slate-500 text-right">biome lint</div>
+                <div class="flex-1 h-9 border-l-4 border-emerald-500 bg-emerald-50 flex items-center px-3 text-xs">api · worker · core · adapters · packages</div>
+                <div class="w-28 h-9 border-l-4 border-red-400 hatch flex items-center px-2 text-xs text-red-800">apps/web</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-32 lbl text-slate-500 text-right">typecheck</div>
+                <div class="flex-1 h-9 border-l-4 border-emerald-500 bg-emerald-50 flex items-center px-3 text-xs">19 packages</div>
+                <div class="w-28 h-9 border-l-4 border-red-400 hatch flex items-center px-2 text-xs text-red-800">apps/web</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-32 lbl text-slate-500 text-right">import boundaries</div>
+                <div class="flex-1 h-9 border-l-4 border-red-400 hatch flex items-center px-3 text-xs text-red-800">nothing &mdash; 4 manual greps in a markdown file</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-32 lbl text-slate-500 text-right">local-first</div>
+                <div class="flex-1 h-9 border-l-4 border-red-400 hatch flex items-center px-3 text-xs text-red-800">nothing &mdash; a checklist item in a skill</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-32 lbl text-slate-500 text-right">file ceiling</div>
+                <div class="flex-1 h-9 border-l-4 border-red-400 hatch flex items-center px-3 text-xs text-red-800">nothing &mdash; 4 files already over 400 lines</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-32 lbl text-slate-500 text-right">1:1 tests</div>
+                <div class="flex-1 h-9 border-l-4 border-red-400 hatch flex items-center px-3 text-xs text-red-800">nothing &mdash; 34% compliance</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span class="lbl text-slate-400 block">Problem</span>
+              Six invariants the repo treats as non-negotiable have zero machine enforcement, and five are already violated.</div>
+            <div><span class="lbl text-slate-400 block">Solution</span>
+              One <span class="mono text-xs">architecture</span> test suite asserting each invariant, wired into CI as a required check.
+              Rules that cannot be enforced get deleted from the docs rather than left as decoration.</div>
+          </div>
+
+          <div>
+            <span class="lbl text-slate-400 block mb-2">Wins</span>
+            <ul class="grid sm:grid-cols-2 gap-y-1 text-sm text-slate-700 list-disc list-inside">
+              <li>Locality: one place defines &ldquo;legal&rdquo;</li>
+              <li>Docs stop drifting from code by construction</li>
+              <li>Brings 6,295 unchecked lines into CI</li>
+              <li>Violations fail on the PR, not in review</li>
+            </ul>
+          </div>
+
+          <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600 space-y-1">
+            <div><span class="font-semibold text-slate-800">Cheap wins found alongside:</span></div>
+            <div>&bull; <span class="mono">turbo.json</span> caches <span class="mono">dist/**</span>; CRA writes <span class="mono">build/</span> &mdash; <span class="mono">@vp/web</span> is uncacheable and a cache hit restores nothing.</div>
+            <div>&bull; Four CI jobs each run a full <span class="mono">pnpm build</span> against four private <span class="mono">.turbo</span> caches keyed by <span class="mono">github.sha</span>, so the exact key never hits. No remote cache.</div>
+            <div>&bull; <span class="mono">check_ci.py</span> sits at the repo root hardcoded to a merged ticket branch.</div>
+            <div>&bull; Three symlink scripts maintain one folder list in three languages; all three omit <span class="mono">packages/permissions</span>.</div>
+          </div>
+        </article>
+
+        <!-- ══════════════ C5 ══════════════ -->
+        <article id="c5" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h3 class="font-serif text-2xl">5. Pull the escaped use cases back behind the service seam</h3>
+            <div class="flex gap-2 shrink-0">
+              <span class="px-2 py-1 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Strong</span>
+              <span class="px-2 py-1 rounded text-xs bg-slate-100 text-slate-600">in-process</span>
+            </div>
+          </div>
+
+          <div class="mono text-sm text-slate-600 space-y-0.5">
+            <div>apps/api/src/routes/videos.ts:232-316</div>
+            <div>apps/api/src/routes/events.ts &nbsp;<span class="text-slate-400">(293 lines, no service)</span></div>
+            <div>apps/api/src/routes/feed.ts:52-121</div>
+            <div>apps/api/src/routes/reactions.ts:56</div>
+          </div>
+
+          <div class="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-slate-800">
+            <div class="lbl text-red-700">Live defect</div>
+            <p class="mt-1">
+              <span class="mono text-xs">request.authorize</span> is decorated as an <span class="mono text-xs">async function</span>.
+              At <span class="mono text-xs">reactions.ts:56</span> it is called without <span class="mono text-xs">await</span>, so the throw becomes
+              an unobserved rejected promise and the handler proceeds. The route advertises a <span class="mono text-xs">403</span> that can never fire.
+              It is the only route using <span class="mono text-xs">.authorize()</span>; the other three use the synchronous
+              <span class="mono text-xs">.assertCan()</span> correctly. No test asserts a 403 on it.
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-3">Before &mdash; transport reaching past the seam</div>
+              <pre class="mermaid">
+flowchart TB
+  R["routes/videos.ts<br/>reprocess handler"]
+  E["routes/events.ts<br/>SSE snapshot"]
+  F["routes/feed.ts<br/>cache + ETag"]
+  Rep[("repositories")]
+  Q[("queue")]
+  Ca[("redis")]
+  S["UploadService<br/>same logic, already here"]
+  R -->|"CAS + outbox"| Rep
+  R -->|"enqueue"| Q
+  E -->|"5 direct reads"| Rep
+  F -->|"sha1 ETag"| Ca
+  R -.->|"duplicates"| S
+  classDef leak stroke:#dc2626,stroke-width:2px,fill:#fef2f2;
+  class R,E,F leak
+              </pre>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-3">After &mdash; one interface per use case</div>
+              <pre class="mermaid">
+flowchart TB
+  R["routes/*<br/>schema + status codes only"]
+  V["VideoService.reprocess"]
+  Sse["SseService.snapshot"]
+  Fd["FeedService.list"]
+  Rep[("repositories")]
+  Q[("queue")]
+  Ca[("redis")]
+  R --> V
+  R --> Sse
+  R --> Fd
+  V --> Rep
+  V --> Q
+  Sse --> Rep
+  Fd --> Ca
+  classDef deep fill:#0f172a,color:#e2e8f0,stroke:#0f172a,stroke-width:2px;
+  class V,Sse,Fd deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span class="lbl text-slate-400 block">Problem</span>
+              Three route files hold complete use cases &mdash; CAS with transactional outbox, SSE snapshot assembly, cache orchestration &mdash;
+              so the logic is only reachable over HTTP and one copy has already diverged.</div>
+            <div><span class="lbl text-slate-400 block">Solution</span>
+              Move each use case behind the service interface the repo already defines, and use the one authorization
+              mechanism instead of the four in play.</div>
+          </div>
+
+          <div>
+            <span class="lbl text-slate-400 block mb-2">Wins</span>
+            <ul class="grid sm:grid-cols-2 gap-y-1 text-sm text-slate-700 list-disc list-inside">
+              <li>Fixes a live authorization bypass</li>
+              <li>Ends two ETag implementations (sha1 vs sha256)</li>
+              <li>Use cases testable without an HTTP server</li>
+              <li>Locality: one reprocess path, not two</li>
+              <li>Removes query-string token auth from SSE</li>
+              <li>Retires 3 unused cross-cutting methods</li>
+            </ul>
+          </div>
+
+          <div class="rounded-lg bg-amber-50 border border-amber-300 p-3 text-sm">
+            <span class="font-semibold text-amber-900">Note on authorization.</span>
+            <span class="mono text-xs">server.authorize(action, resolver)</span> &mdash; the seam
+            <span class="mono text-xs">apps/api/AGENTS.md</span> Rule 3 mandates &mdash; has <strong>zero production callers</strong>, and its alias
+            <span class="mono text-xs">verifyPermission</span> has none at all. Pick the mechanism that is actually used and delete the rest,
+            or adopt the mandated one properly. Four overlapping entry points is what produced the bug above.
+          </div>
+        </article>
+
+        <!-- ══════════════ C6 ══════════════ -->
+        <article id="c6" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h3 class="font-serif text-2xl">6. Delete the second persistence layer</h3>
+            <div class="flex gap-2 shrink-0">
+              <span class="px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-800">Worth exploring</span>
+              <span class="px-2 py-1 rounded text-xs bg-slate-100 text-slate-600">in-process</span>
+            </div>
+          </div>
+
+          <div class="mono text-sm text-slate-600 space-y-0.5">
+            <div>packages/db/src/repository/{videos,steps,uploads}.ts &nbsp;<span class="text-slate-400">(371 lines)</span></div>
+            <div>packages/db/src/__tests__/db.test.ts &nbsp;<span class="text-slate-400">(257 lines)</span></div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 p-4">
+            <div class="lbl text-slate-400 mb-3">Mass diagram &mdash; the same operations, implemented twice</div>
+            <div class="grid grid-cols-2 gap-6 items-end" style="min-height:170px">
+              <div class="text-center">
+                <div class="mx-auto bg-slate-800 rounded-t" style="width:80%;height:120px"></div>
+                <div class="mx-auto bg-slate-200 border-x border-b border-slate-300 text-xs py-1" style="width:80%">used by 14 modules</div>
+                <div class="lbl text-slate-500 mt-2">adapters/postgres</div>
+              </div>
+              <div class="text-center">
+                <div class="mx-auto hatch border-t border-x border-red-300 rounded-t" style="width:80%;height:96px"></div>
+                <div class="mx-auto bg-red-100 border-x border-b border-red-300 text-xs py-1 text-red-800" style="width:80%">used by its own test only</div>
+                <div class="lbl text-slate-500 mt-2">packages/db/src/repository</div>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">
+              The raw <span class="mono">claimStep</span> SQL is byte-identical across both. The return shapes have already drifted:
+              <span class="mono">{ lockToken: null, fenced: true }</span> vs <span class="mono">{ stepId, lockToken: '', fenced: true }</span>.
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span class="lbl text-slate-400 block">Problem</span>
+              371 lines of exported-but-unused persistence shadow the real adapter, and the copies have diverged where it matters most &mdash; fencing.</div>
+            <div><span class="lbl text-slate-400 block">Solution</span>
+              Delete it and its test. Keep <span class="mono text-xs">packages/db</span> as schema, client, migrate and seed.</div>
+          </div>
+
+          <div>
+            <span class="lbl text-slate-400 block mb-2">Wins</span>
+            <ul class="grid sm:grid-cols-2 gap-y-1 text-sm text-slate-700 list-disc list-inside">
+              <li>Removes a false second source of truth</li>
+              <li>Shrinks every <span class="mono text-xs">@vp/db</span> import graph</li>
+              <li>Locality: one fencing implementation</li>
+              <li>&minus;628 lines, no behaviour lost</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ══════════════ C7 ══════════════ -->
+        <article id="c7" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h3 class="font-serif text-2xl">7. Spend the pagination module you already built</h3>
+            <div class="flex gap-2 shrink-0">
+              <span class="px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-800">Worth exploring</span>
+              <span class="px-2 py-1 rounded text-xs bg-slate-100 text-slate-600">in-process</span>
+            </div>
+          </div>
+
+          <div class="mono text-sm text-slate-600 space-y-0.5">
+            <div>core/pagination/{pagination,cursor-codec}.ts</div>
+            <div>adapters/postgres/repositories/postgres-dlq-repository.ts:15-30</div>
+            <div>adapters/in-memory/repositories/in-memory-dlq-repository.ts:14-29</div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 p-4">
+            <div class="lbl text-slate-400 mb-3">Call-graph collapse</div>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <div class="text-xs lbl text-slate-400">Before &mdash; 3 implementations</div>
+                <div class="border border-slate-300 rounded p-2 bg-white text-xs mono">core/pagination <span class="text-slate-400">&mdash; apps/api only</span></div>
+                <div class="border border-red-300 rounded p-2 hatch text-xs mono">postgres-dlq &mdash; own codec</div>
+                <div class="border border-red-300 rounded p-2 hatch text-xs mono">in-memory-dlq &mdash; byte-identical copy</div>
+                <div class="text-xs text-slate-500">Both hardcode 20/100, ignoring <span class="mono">PAGE_SIZE_DEFAULT</span>/<span class="mono">PAGE_SIZE_MAX</span>. Both use <span class="mono">Buffer</span>, defeating the codec&rsquo;s deliberate isomorphism.</div>
+              </div>
+              <div class="space-y-2">
+                <div class="text-xs lbl text-slate-400">After &mdash; 1 module, faded internals</div>
+                <div class="deep rounded p-3 text-xs">
+                  <div class="mono text-slate-100">core/pagination</div>
+                  <div class="mt-2 space-y-1 opacity-50">
+                    <div class="mono text-slate-300 text-[10px]">&middot; cursor codec (2 adapters)</div>
+                    <div class="mono text-slate-300 text-[10px]">&middot; limit clamp from config</div>
+                    <div class="mono text-slate-300 text-[10px]">&middot; limit+1 sentinel protocol</div>
+                  </div>
+                </div>
+                <div class="text-xs text-slate-500">Adapters call <span class="mono">paginate()</span>. Wire format stays swappable.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span class="lbl text-slate-400 block">Problem</span>
+              The deepest small module in <span class="mono text-xs">core/</span> is used only by <span class="mono text-xs">apps/api</span>;
+              the adapters that actually produce paginated rows each reinvented it, with different payloads and error behaviour.</div>
+            <div><span class="lbl text-slate-400 block">Solution</span>
+              Route every cursor through <span class="mono text-xs">core/pagination</span>, and lift <span class="mono text-xs">keysetBefore</span>
+              into <span class="mono text-xs">adapters/postgres/scopes/</span> where the other four call sites can reach it.</div>
+          </div>
+
+          <div>
+            <span class="lbl text-slate-400 block mb-2">Wins</span>
+            <ul class="grid sm:grid-cols-2 gap-y-1 text-sm text-slate-700 list-disc list-inside">
+              <li>Leverage: one codec, every list endpoint</li>
+              <li>Page bounds honour config again</li>
+              <li>One cursor wire format, not three</li>
+              <li>Locality: keyset logic in one module</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ══════════════ C8 ══════════════ -->
+        <article id="c8" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <h3 class="font-serif text-2xl">8. Flatten the workspace layout</h3>
+            <div class="flex gap-2 shrink-0">
+              <span class="px-2 py-1 rounded text-xs font-semibold bg-slate-200 text-slate-700">Speculative</span>
+              <span class="px-2 py-1 rounded text-xs bg-slate-100 text-slate-600">in-process</span>
+            </div>
+          </div>
+
+          <div class="mono text-sm text-slate-600 space-y-0.5">
+            <div>pnpm-workspace.yaml:5-6 &middot; vitest.config.ts:8-9</div>
+            <div>core/ &middot; adapters/ &middot; observability/ &middot; tests/</div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-2">Before</div>
+              <pre class="mono text-xs text-slate-700 pre-wrap">packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'tools/*'
+  - 'core'        <span class="text-red-600">← one-off</span>
+  - 'adapters'    <span class="text-red-600">← one-off</span></pre>
+              <p class="text-xs text-slate-500 mt-3">
+                Two literal entries here force two more in <span class="mono">vitest.config.ts</span>.
+                <span class="mono">tools/*</span> matches two folders that aren&rsquo;t packages, so pnpm skips them silently.
+                Root <span class="mono">observability/</span> is config-only and is read by
+                <span class="mono">packages/observability</span>&rsquo;s tests via a repo-root path walk.
+              </p>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-4">
+              <div class="lbl text-slate-400 mb-2">After</div>
+              <pre class="mono text-xs text-slate-700 pre-wrap">packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'tools/*'</pre>
+              <p class="text-xs text-slate-500 mt-3">
+                <span class="mono">core</span> and <span class="mono">adapters</span> become ordinary members under
+                <span class="mono">packages/</span>. Grafana artifacts move next to the code that validates them.
+                Globs mean one thing everywhere.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><span class="lbl text-slate-400 block">Problem</span>
+              Two packages sit at the root for historical reasons, and the inconsistency has already propagated into a second config file.</div>
+            <div><span class="lbl text-slate-400 block">Solution</span>
+              Move them under <span class="mono text-xs">packages/</span> and let the globs do the work.</div>
+          </div>
+
+          <div class="rounded-lg bg-amber-50 border border-amber-300 p-3 text-sm">
+            <span class="font-semibold text-amber-900">Why speculative.</span>
+            This is a large, mechanical diff touching every import path for no behaviour change, and
+            <span class="mono text-xs">SDD &sect;15.1</span> documents the current layout deliberately. Worth doing only
+            alongside candidate 3, which has to touch package configs anyway. On its own the churn outweighs the gain.
+          </div>
+        </article>
+
+      </section>
+
+      <!-- ─────────────────────── TOP RECOMMENDATION ─────────────────────── -->
+      <section id="top-recommendation" class="rounded-xl deep text-slate-100 p-8">
+        <div class="lbl text-slate-400">Top recommendation</div>
+        <h2 class="font-serif text-3xl mt-2">Start with candidate 1 &mdash; make the repository seam self-enforcing</h2>
+        <p class="mt-4 text-slate-300 max-w-3xl">
+          It is the only candidate that closes a defect users can see today: the public feed ignores
+          <span class="mono text-sm text-slate-100">sort</span> and <span class="mono text-sm text-slate-100">categoryId</span> in production while
+          every test passes. That gap exists because the seam has two adapters and no shared test, which is precisely the
+          condition a contract suite removes.
+        </p>
+        <p class="mt-3 text-slate-300 max-w-3xl">
+          It also pays for itself twice. The suite covers the 2,074 untested lines in
+          <span class="mono text-sm text-slate-100">s3</span>, <span class="mono text-sm text-slate-100">redis</span> and
+          <span class="mono text-sm text-slate-100">bullmq</span>, and it establishes the pattern candidate 4 then enforces everywhere else.
+          Candidates 3 and 6 are near-free cleanups that can ride along in the same change.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="#c1" class="px-4 py-2 rounded bg-slate-100 text-slate-900 text-sm font-medium hover:bg-white">Candidate 1</a>
+          <a href="#c3" class="px-4 py-2 rounded border border-slate-600 text-sm hover:bg-slate-800">Candidate 3 &mdash; package tiers</a>
+          <a href="#c4" class="px-4 py-2 rounded border border-slate-600 text-sm hover:bg-slate-800">Candidate 4 &mdash; enforcement</a>
+        </div>
+      </section>
+
+      <footer class="text-xs text-slate-400 pt-4 border-t border-slate-200">
+        Vocabulary: module &middot; interface &middot; implementation &middot; depth &middot; deep &middot; shallow &middot; seam &middot; adapter &middot; leverage &middot; locality.
+      </footer>
+    </main>
+  </body>
+</html>

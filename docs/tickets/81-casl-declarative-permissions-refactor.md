@@ -6,7 +6,7 @@
 | Issue | [#81](https://github.com/szebest/taitube-platform/issues/81) |
 | Size | M |
 | Blocked by | 39 — Declarative RBAC & ABAC permission engine (can(user, action, resource)) |
-| Blocks | — |
+| Blocks | 82 |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done
