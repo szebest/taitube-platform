@@ -1,5 +1,3 @@
-import * as path from 'node:path';
-
 export interface HeaderMapping {
   contentType: string;
   cacheControl: string;
@@ -40,7 +38,9 @@ export const HEADER_MAPPINGS: Record<string, HeaderMapping> = {
  * Returns the authoritative Content-Type and Cache-Control headers for a given file path or key (SDD §7).
  */
 export function getHeaderMapping(filenameOrKey: string): HeaderMapping {
-  const ext = path.extname(filenameOrKey).toLowerCase();
+  const basename = filenameOrKey.slice(filenameOrKey.lastIndexOf('/') + 1);
+  const dot = basename.lastIndexOf('.');
+  const ext = dot > 0 ? basename.slice(dot).toLowerCase() : '';
   return (
     HEADER_MAPPINGS[ext] ?? {
       contentType: 'application/octet-stream',

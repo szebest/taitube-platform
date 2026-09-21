@@ -1,9 +1,13 @@
 {
-  "extends": "@vp/tsconfig/base.json",
+  "extends": "@vp/tsconfig/server.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist",
-    "types": ["node", "vitest/globals"]
+    "outDir": "dist"
   },
-  "include": ["ports/**/*", "repositories/**/*", "domain/**/*", "permissions/**/*", "pagination/**/*"]
+  "include": [
+    "ports/**/*",
+    "repositories/**/*",
+    "domain/**/*",
+    "pagination/**/*"
+  ]
 }

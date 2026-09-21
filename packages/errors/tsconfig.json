@@ -1,8 +1,15 @@
 {
-  "extends": "@vp/tsconfig/base.json",
+  "extends": "@vp/tsconfig/universal.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "src/**/__tests__/**",
+    "src/**/__mocks__/**",
+    "src/**/*.test.ts"
+  ]
 }
