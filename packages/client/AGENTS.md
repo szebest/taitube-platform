@@ -29,4 +29,4 @@ Current member: `api-client`.
 
 Everything here ships to a user's browser. Prefer a platform API over a dependency, and check what a
 package pulls in transitively before adding it — `pnpm why <pkg>` from `apps/web` is the quick check.
-`apps/web`'s runtime closure is six packages today, every one of them `universal` or `client`; keep it small.
+`apps/web`'s runtime closure is seven packages today, every one of them `universal` or `client`; keep it small.

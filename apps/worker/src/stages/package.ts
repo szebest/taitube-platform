@@ -1,4 +1,4 @@
-import { DEFAULT_CDN_BASE_URL } from '@vp/config';
+import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import type { JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';

@@ -1,5 +1,5 @@
 {
-  "name": "@vp/config",
+  "name": "@vp/env-schema",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,21 +10,18 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./register": "./src/register.js",
-    "./loader": "./src/loader.mjs"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
     "test": "vitest run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@vp/env-schema": "workspace:*"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
@@ -32,7 +29,7 @@
     "vitest": "^3.0.7"
   },
   "vp": {
-    "tier": "server",
-    "layer": 2
+    "tier": "universal",
+    "layer": 1
   }
 }

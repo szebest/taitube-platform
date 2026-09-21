@@ -1,7 +1,7 @@
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
-import { DEFAULT_CDN_BASE_URL } from '@vp/config';
+import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import { getMetrics } from '@vp/observability';
 import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';

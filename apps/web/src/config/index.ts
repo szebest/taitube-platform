@@ -1,4 +1,4 @@
-export const DEFAULT_API_BASE_URL = 'http://localhost:3000';
+import { DEFAULT_API_BASE_URL } from '@vp/env-schema';
 
 export const AUTH_TOKEN_LOCAL_STORAGE_KEY = 'AUTH_TOKEN';
 

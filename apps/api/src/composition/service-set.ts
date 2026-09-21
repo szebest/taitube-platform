@@ -1,4 +1,4 @@
-import { CoreEnvSchema } from '@vp/config';
+import { CoreEnvSchema } from '@vp/env-schema';
 import { Paginator } from '@vp/pagination';
 import { CategoryService } from '../services/category-service';
 import { ChannelService } from '../services/channel-service';

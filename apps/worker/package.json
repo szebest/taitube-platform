@@ -17,6 +17,7 @@
     "@vp/config": "workspace:*",
     "@vp/core": "workspace:*",
     "@vp/db": "workspace:*",
+    "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/events": "workspace:*",
     "@vp/ffmpeg": "workspace:*",

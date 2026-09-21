@@ -38,6 +38,7 @@
     "@vp/db": "workspace:*",
     "@vp/dev-token": "workspace:*",
     "@vp/domain": "workspace:*",
+    "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/events": "workspace:*",
     "@vp/job-contracts": "workspace:*",

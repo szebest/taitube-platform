@@ -82,10 +82,10 @@ is stale — fix it.
 | Package | Tier | Location |
 |---|---|---|
 | `@vp/domain` | universal | `packages/universal/domain` |
+| `@vp/env-schema` | universal | `packages/universal/env-schema` |
 | `@vp/errors` | universal | `packages/universal/errors` |
 | `@vp/pagination` | universal | `packages/universal/pagination` |
 | `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
-| `@vp/config` | server | `packages/server/config` |
 | `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/observability` | server | `packages/server/observability` |
 | `@vp/storage` | server | `packages/server/storage` |
@@ -100,8 +100,9 @@ is stale — fix it.
 |---|---|---|
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/permissions` | universal | `@vp/errors` |
+| `@vp/config` | server | `@vp/env-schema` |
 | `@vp/core` | server | `@vp/domain` |
-| `@vp/db` | server | `@vp/config`, `@vp/domain`, `@vp/errors` |
+| `@vp/db` | server | `@vp/domain`, `@vp/errors` |
 | `@vp/events` | server | `@vp/job-contracts` |
 | `@vp/ffmpeg` | server | `@vp/errors`, `@vp/job-contracts` |
 | `@vp/upload-client` | server | `@vp/errors`, `@vp/storage` |
@@ -117,11 +118,11 @@ is stale — fix it.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/permissions` |
-| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/storage` |
-| `@vp/worker` | server | `@vp/adapters`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/observability`, `@vp/storage` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/env-schema`, `@vp/permissions` |
+| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/storage` |
+| `@vp/worker` | server | `@vp/adapters`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/observability`, `@vp/storage` |
 
-**Every package in `@vp/web`'s runtime closure is `universal` or `client`** — six of them, counting what
+**Every package in `@vp/web`'s runtime closure is `universal` or `client`** — seven of them, counting what
 `@vp/api-contracts` and `@vp/permissions` pull in. That is the invariant the whole scheme exists to protect.
 Verify it any time with `pnpm why bullmq` from `apps/web` — it returns nothing.
 

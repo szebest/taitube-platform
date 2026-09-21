@@ -1,5 +1,5 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
-import { DEFAULT_CDN_BASE_URL } from '@vp/config';
+import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import type { AuthorizationPort } from '@vp/core/ports';
 import type {
   EventRepository,

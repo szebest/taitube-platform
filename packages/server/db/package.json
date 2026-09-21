@@ -44,7 +44,6 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@vp/config": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
     "drizzle-orm": "^0.45.2",
