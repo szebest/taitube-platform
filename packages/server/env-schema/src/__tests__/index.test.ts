@@ -44,6 +44,14 @@ describe('packages/env-schema: the environment contract', () => {
     expect(String(AppEnvSchema.parse(example)[key])).toContain(expected);
   });
 
+  it('declares no browser build variable', () => {
+    const browserKeys = Object.keys(AppEnvSchema.shape).filter((key) =>
+      key.startsWith('REACT_APP_')
+    );
+
+    expect(browserKeys).toEqual([]);
+  });
+
   it('names no cloud host anywhere in the example', () => {
     const offenders = Object.entries(example).filter(([, value]) =>
       CLOUD_HOSTS.some((host) => host.test(value))
