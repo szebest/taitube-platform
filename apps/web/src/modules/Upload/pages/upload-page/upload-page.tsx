@@ -1,6 +1,6 @@
 import { useUploadVideoMutation } from '../../api';
 
-import { UploadFormModel } from '../../models';
+import type { UploadFormModel } from '../../models';
 
 import { VideoForm } from '../../components';
 

@@ -1,5 +1,5 @@
 import { useLocalStorage } from "@uidotdev/usehooks";
-import { PropsWithChildren, createContext, useContext, useMemo, useState } from "react"
+import { type PropsWithChildren, createContext, useContext, useMemo, useState } from "react"
 
 type SidebarContextValue = {
 	collapsed: boolean;

@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Button } from "react-bootstrap";
 import { toast } from 'react-toastify';
-import { animate, stagger, useAnimate } from "framer-motion";
+import { type animate, useAnimate } from "framer-motion";
 
 import styles from "./subscribe-button.module.scss";
 
@@ -116,10 +116,11 @@ export const SubscribeButton = memo(({ channelId }: SubscribeButtonProps) => {
 					aria-hidden
 					className={styles.stars}
 				>
-					{Array.from({ length: 20 }).map((_, index) => (
+					{Array.from({ length: 20 }, (_, index) => `sparkle-${index}`).map((sparkle) => (
 						<svg
-							className={`${styles.stars__star} sparkle-${index}`}
-							key={index}
+							className={`${styles.stars__star} ${sparkle}`}
+							key={sparkle}
+							aria-hidden="true"
 							viewBox="0 0 122 117"
 							width="10"
 							height="10"

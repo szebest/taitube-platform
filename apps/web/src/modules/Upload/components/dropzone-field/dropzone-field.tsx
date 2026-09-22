@@ -1,22 +1,28 @@
-import Dropzone, { DropzoneProps } from "react-dropzone";
-import { Control, Controller, FieldValues, RegisterOptions } from "react-hook-form";
+import Dropzone, { type DropzoneProps } from "react-dropzone";
+import {
+	type Control,
+	Controller,
+	type FieldPath,
+	type FieldValues,
+	type RegisterOptions,
+} from "react-hook-form";
 
 import styles from './dropzone-field.module.scss';
 
-export type DropzoneFieldProps = {
-	name: string,
-	control: Control<FieldValues> | undefined,
+export type DropzoneFieldProps<T extends FieldValues> = {
+	name: FieldPath<T>,
+	control: Control<T> | undefined,
 	placeholderText?: string,
-	validation?: Omit<RegisterOptions<FieldValues, string>, "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate">
+	validation?: Omit<RegisterOptions<T, FieldPath<T>>, "disabled" | "setValueAs" | "valueAsNumber" | "valueAsDate">
 } & DropzoneProps;
 
-export const DropzoneField = ({
+export const DropzoneField = <T extends FieldValues>({
 	name,
 	control,
 	validation,
 	placeholderText = "Drag 'n' drop some files here, or click to select files",
 	...rest
-}: DropzoneFieldProps) => {
+}: DropzoneFieldProps<T>) => {
 	return (
 		<Controller
 			rules={validation}
@@ -33,8 +39,8 @@ export const DropzoneField = ({
 									<p>{placeholderText}</p> :
 									<>
 										<p>Selected file{value.length > 1 ? 's' : ''}:</p>
-										{value.map((v: File, i: number) =>
-											<p key={i}>{v.name}</p>
+										{value.map((v: File) =>
+											<p key={v.name}>{v.name}</p>
 										)}
 									</>
 							}
@@ -44,7 +50,7 @@ export const DropzoneField = ({
 			)}
 			name={name}
 			control={control}
-			defaultValue={[]}
+			defaultValue={[] as never}
 		/>
 	)
 }

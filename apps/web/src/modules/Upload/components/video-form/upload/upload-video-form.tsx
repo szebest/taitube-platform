@@ -8,7 +8,7 @@ import styles from '../video-form.module.scss';
 import { VIDEO_VISIBILITIES } from "@vp/api-contracts";
 
 import type { CompletedUpload } from "../../../api";
-import { UploadFormModel } from "../../../models";
+import type { UploadFormModel } from "../../../models";
 import { DropzoneField, UploadProgress } from "../..";
 
 export type VideoFormProps = {
@@ -41,7 +41,7 @@ export const VideoForm = ({ isError, isSuccess, reset: resetMutation, data, subm
 		<Form onSubmit={handleSubmit((form) => submit(form))} className={styles.form}>
 			<DropzoneField
 				name='file'
-				control={control as any}
+				control={control}
 				validation={{ required: true }}
 				accept={acceptFileTypes}
 				multiple={false}

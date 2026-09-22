@@ -1,4 +1,4 @@
-import { PropsWithChildren, createContext, useContext, useMemo } from "react"
+import { type PropsWithChildren, createContext, useContext, useMemo } from "react"
 
 import type { Account } from "@vp/api-contracts"
 

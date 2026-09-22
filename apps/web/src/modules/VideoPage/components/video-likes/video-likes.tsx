@@ -39,22 +39,22 @@ export const VideoLikes = ({ video }: VideoLikesProps) => {
 				onClick={() => react(liked ? 'NONE' : 'LIKE')}
 				disabled={isLoading}
 			>
-				<i className={`bi bi-hand-thumbs-up${liked ? '-fill' : ''}`}></i>
+				<i className={`bi bi-hand-thumbs-up${liked ? '-fill' : ''}`} />
 				{formatNumbers(video.likesCount, video.likesCount >= 10000 ? 0 : 1)}
 			</Button>
 
-			<button
+			<button type="button"
 				role="separator"
 				className="btn btn-secondary mr-0 ml-0 pr-0 pl-0"
 				disabled
-			></button>
+			/>
 
 			<Button
 				className={`${disliked ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
 				onClick={() => react(disliked ? 'NONE' : 'DISLIKE')}
 				disabled={isLoading}
 			>
-				<i className={`bi bi-hand-thumbs-down${disliked ? '-fill' : ''}`}></i>
+				<i className={`bi bi-hand-thumbs-down${disliked ? '-fill' : ''}`} />
 				{formatNumbers(video.dislikesCount, video.dislikesCount >= 10000 ? 0 : 1)}
 			</Button>
 		</ButtonGroup>

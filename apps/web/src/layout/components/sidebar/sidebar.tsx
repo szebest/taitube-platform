@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+
 import {
 	Sidebar as ReactSidebar,
 	Menu,
@@ -19,7 +19,7 @@ export function Sidebar() {
 
 	const width = '220px';
 
-	if (isLoading) return <div style={{ width }}></div>;
+	if (isLoading) return <div style={{ width }} />;
 
 	return (
 		<ReactSidebar
@@ -35,23 +35,23 @@ export function Sidebar() {
 			{isBelowBreakpoint && <div className={styles.sidebar__logo}><Logo hideLogoPart={false} /></div>}
 			<Menu>
 				<MenuItem component={<Link to='/' onClick={close} />}>
-					<i className="bi bi-house-door-fill"></i>
+					<i className="bi bi-house-door-fill" />
 					<span>Home</span>
 				</MenuItem>
 				{account && <MenuItem component={<Link to='/subscriptions/videos' onClick={close} />}>
-					<i className="bi bi-play-btn-fill"></i>
+					<i className="bi bi-play-btn-fill" />
 					<span>Subscription videos</span>
 				</MenuItem>}
 
-				<Dropdown.Divider></Dropdown.Divider>
+				<Dropdown.Divider />
 
 				{account &&
 					<>
 						<MenuItem component={<Link to={`/channel/${account.channel.id}`} onClick={close} />}>
-							<i className="bi bi-person-fill"></i>
+							<i className="bi bi-person-fill" />
 							<span>Your channel</span>
 						</MenuItem>
-						<Dropdown.Divider></Dropdown.Divider>
+						<Dropdown.Divider />
 					</>
 				}
 
@@ -60,7 +60,7 @@ export function Sidebar() {
 				}
 
 				<MenuItem component={<Link to='/trending' onClick={close} />}>
-					<i className="bi bi-fire"></i>
+					<i className="bi bi-fire" />
 					<span>Trending</span>
 				</MenuItem>
 			</Menu>

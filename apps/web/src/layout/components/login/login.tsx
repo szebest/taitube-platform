@@ -36,16 +36,16 @@ export function Login() {
 
 						<Dropdown.Item as='div'>
 							<Link to='/upload'>
-								<i className="bi bi-cloud-arrow-up-fill"></i>
+								<i className="bi bi-cloud-arrow-up-fill" />
 								<span>Upload</span>
 							</Link>
 						</Dropdown.Item>
 
-						<Dropdown.Divider></Dropdown.Divider>
+						<Dropdown.Divider />
 
 						<Dropdown.Item as='div'>
 							<button type="button" aria-label="sign out" className='btn-initial' onClick={handleSignOut}>
-								<i className="bi bi-door-closed-fill"></i>
+								<i className="bi bi-door-closed-fill" />
 								<span>Sign out</span>
 							</button>
 						</Dropdown.Item>

@@ -16,7 +16,7 @@ function Arrow({
 }) {
 	return (
 		<div className={`${styles.container} ${className} ${disabled ? styles.disabled : ''}`}>
-			<button
+			<button type="button"
 				disabled={disabled}
 				onClick={onClick}
 				className={`btn btn-transparent btn-round ${styles.arrow}`}
@@ -48,7 +48,7 @@ export function LeftArrow() {
 	const clickHandler = () => scrollToItem(getPrevElement(), "smooth", "start");
 	return (
 		<Arrow disabled={disabled} onClick={clickHandler} className={styles.left}>
-			<i className="bi bi-arrow-left"></i>
+			<i className="bi bi-arrow-left" />
 		</Arrow>
 	);
 }
@@ -73,7 +73,7 @@ export function RightArrow() {
 	const clickHandler = () => scrollToItem(getNextElement(), "smooth", "end");
 	return (
 		<Arrow disabled={disabled} onClick={clickHandler} className={styles.right}>
-			<i className="bi bi-arrow-right"></i>
+			<i className="bi bi-arrow-right" />
 		</Arrow>
 	);
 }

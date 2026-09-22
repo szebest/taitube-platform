@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { useCan, type CanHelper } from '../hooks/use-can';
 

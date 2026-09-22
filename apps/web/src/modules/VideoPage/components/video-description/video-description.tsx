@@ -22,7 +22,7 @@ export const VideoDescription = ({ video }: VideoDescriptionProps) => {
 				<span title={new Date(video.createdAt).toLocaleString()}>{timeAgo.format(new Date(video.createdAt).getTime() - 10000)}</span>
 			</div>
 			<span className={styles.description}>{descriptionExpanded ? description : descriptionSubstring}</span>
-			<button className={`${styles.descriptionExpandBtn} ${descriptionSubstring.length === description.length ? styles.hide : ''} ${descriptionExpanded ? styles.expanded : ''} btn`} onClick={() => setDescriptionExpanded(prev => !prev)}>
+			<button type="button" className={`${styles.descriptionExpandBtn} ${descriptionSubstring.length === description.length ? styles.hide : ''} ${descriptionExpanded ? styles.expanded : ''} btn`} onClick={() => setDescriptionExpanded(prev => !prev)}>
 				{descriptionExpanded ? 'Show less' : 'Show more'}
 			</button>
 		</div>

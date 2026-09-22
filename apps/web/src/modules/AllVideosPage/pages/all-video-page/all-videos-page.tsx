@@ -26,11 +26,11 @@ export function AllVideosPage() {
 			<div className={styles.container__header}>
 				<h3>All videos:</h3>
 				<div className={styles.container__header__settings}>
-					<button className='btn btn-transparent btn-round btn-list-view' onClick={() => setIsListView(false)} aria-label="grid view">
-						<i className={`bi bi-grid-3x2-gap${!isListView ? '-fill' : ''}`}></i>
+					<button type="button" className='btn btn-transparent btn-round btn-list-view' onClick={() => setIsListView(false)} aria-label="grid view">
+						<i className={`bi bi-grid-3x2-gap${!isListView ? '-fill' : ''}`} />
 					</button>
-					<button className='btn btn-transparent btn-round btn-list-view' onClick={() => setIsListView(true)} aria-label="list view">
-						<i className={`bi bi-list ${isListView ? styles.selected : ''}`}></i>
+					<button type="button" className='btn btn-transparent btn-round btn-list-view' onClick={() => setIsListView(true)} aria-label="list view">
+						<i className={`bi bi-list ${isListView ? styles.selected : ''}`} />
 					</button>
 				</div>
 			</div>

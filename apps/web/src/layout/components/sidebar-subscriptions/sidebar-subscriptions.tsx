@@ -31,12 +31,11 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 	return (
 		<>
 			<MenuItem component={<Link to="/subscriptions" onClick={close} />}>
-				<i className="bi bi-people-fill"></i>
+				<i className="bi bi-people-fill" />
 				<span>Subscriptions: {subscriptions?.length}</span>
 			</MenuItem>
 
-			{subscriptions &&
-				subscriptions.map((channel) => (
+			{subscriptions?.map((channel) => (
 					<MenuItem key={channel.id} className={styles.item} component={<Link className="ps-menu-img" to={`/channel/${channel.id}`} onClick={close} />}>
 						<span className={styles.item__avatar}>
 							<ProfilePicture src={channel.avatarUrl} />
@@ -51,19 +50,19 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 				<MenuItem onClick={() => setSubscriptionsCollapsed((prev) => !prev)}>
 					{subscriptionsCollapsed ? (
 						<>
-							<i className="bi bi-arrow-down"></i>
+							<i className="bi bi-arrow-down" />
 							<span>Show more</span>
 						</>
 					) : (
 						<>
-							<i className="bi bi-arrow-up"></i>
+							<i className="bi bi-arrow-up" />
 							<span>Show less</span>
 						</>
 					)}
 				</MenuItem>
 			}
 
-			<Dropdown.Divider></Dropdown.Divider>
+			<Dropdown.Divider />
 		</>
 	);
 }

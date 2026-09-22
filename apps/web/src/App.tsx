@@ -65,11 +65,11 @@ export function App() {
 							<BrowserRouter>
 									<Routes>
 										<Route path="" element={<DefaultLayout />}>
-											<Route path="" element={<AllVideosPage />}></Route>
+											<Route path="" element={<AllVideosPage />} />
 											<Route path="*" element={<Navigate to="" replace />} />
 										</Route>
 										<Route path="/trending" element={<DefaultLayout />}>
-											<Route path="" element={<TrendingPage />}></Route>
+											<Route path="" element={<TrendingPage />} />
 											<Route path="*" element={<Navigate to="/trending" replace />} />
 										</Route>
 										<Route
@@ -80,23 +80,23 @@ export function App() {
 												</AuthorizedContainer>
 											}
 										>
-											<Route path="" element={<SubscriptionPage />}></Route>
+											<Route path="" element={<SubscriptionPage />} />
 											<Route
 												path="videos"
 												element={<SubscriptionVideosPage />}
-											></Route>
+											/>
 											<Route
 												path="*"
 												element={<Navigate to="/subscriptions/videos" replace />}
 											/>
 										</Route>
 										<Route path="/watch" element={<DefaultLayout />}>
-											<Route path=":videoId" element={<VideoPage />}></Route>
+											<Route path=":videoId" element={<VideoPage />} />
 											<Route path="" element={<Navigate to="/" replace />} />
 											<Route path="*" element={<Navigate to="/" replace />} />
 										</Route>
 										<Route path="/channel" element={<DefaultLayout />}>
-											<Route path=":channelId" element={<UserPage />}></Route>
+											<Route path=":channelId" element={<UserPage />} />
 											<Route path="" element={<Navigate to="/" replace />} />
 											<Route path="*" element={<Navigate to="/" replace />} />
 										</Route>
@@ -108,12 +108,12 @@ export function App() {
 												</AuthorizedContainer>
 											}
 										>
-											<Route path="" element={<UploadPage />}></Route>
-											<Route path="edit/:videoId" element={<EditPage />}></Route>
+											<Route path="" element={<UploadPage />} />
+											<Route path="edit/:videoId" element={<EditPage />} />
 											<Route path="*" element={<Navigate to="/upload" replace />} />
 										</Route>
 
-										<Route path="*" element={<Navigate to=""></Navigate>}></Route>
+										<Route path="*" element={<Navigate to="" />} />
 									</Routes>
 
 									<ToastContainer limit={3} />

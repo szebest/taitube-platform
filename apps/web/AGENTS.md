@@ -115,27 +115,25 @@ All verified from the repo root against the current tree.
 # Dev server — serves on http://localhost:3000 (PORT=… to move it)
 pnpm --filter @vp/web start
 
-# Unit and component tests (8 files, 28 tests)
+# Unit and component tests
 pnpm --filter @vp/web test
 
-# Typecheck — must use the ROOT TypeScript, see the caveat below
-pnpm exec tsc --noEmit -p apps/web/tsconfig.json
+# Typecheck
+pnpm --filter @vp/web typecheck
+
+# Production bundle — CRA writes to apps/web/build/, which apps/web/turbo.json declares as the cache output
+pnpm --filter @vp/web build
 ```
 
-There is no `dev` and no `typecheck` script in `apps/web/package.json`; `start` and the root `tsc` invocation
-above are the real commands. `pnpm test` at the repo root also picks this package up, through the
-`apps/*/vitest.config.ts` glob in the root `vitest.config.ts`.
+There is no `dev` script; `start` is it. The root `pnpm test`, `pnpm typecheck`, `pnpm lint` and `pnpm build`
+all cover this package — it is no longer excluded from `biome.json`, and `tsconfig.json` is the program both
+`typecheck` and the editor read.
 
-**Two caveats you will hit, both real, neither yours to hide:**
-
-1. **`pnpm --filter @vp/web build` currently fails.** webpack 5 resolves a `"type": "module"` dependency
-   under strict ESM rules, and `@vp/permissions`' emitted `dist/` uses extensionless relative imports
-   (`moduleResolution: "bundler"`), so `Can't resolve '../types'`. This also fails the root `pnpm build`.
-   It is a packaging decision for the universal tier, not an `apps/web` bug — do not work around it here.
-2. **`start`'s type-check overlay reports `TS2786: 'Can' cannot be used as a JSX component`.** The dev server
-   boots and serves correctly; the overlay is `react-scripts` running the TypeScript **4.9.5** that this
-   package pins, which predates React 18's `JSX.ElementType`. Under the repo's TypeScript 5 the same code
-   typechecks clean, which is why the command above is the one to trust.
+**One caveat you will hit:** `start`'s type-check overlay can report
+`TS2786: 'Can' cannot be used as a JSX component`. The dev server boots and serves correctly; the overlay is
+`react-scripts` resolving its own pinned TypeScript, which predates React 18's `JSX.ElementType`. Under the
+repo's TypeScript 5.7 the same code typechecks clean, which is why `pnpm --filter @vp/web typecheck` is the
+command to trust.
 
 ---
 

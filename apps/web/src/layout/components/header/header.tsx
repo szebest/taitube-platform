@@ -12,7 +12,7 @@ export const Header = memo(() => {
 	const { theme, changeTheme } = useTheme();
 
 	if (isLoading)
-		return <div className={styles.header}></div>;
+		return <div className={styles.header} />;
 
 	return (
 		<header className={styles.header}>

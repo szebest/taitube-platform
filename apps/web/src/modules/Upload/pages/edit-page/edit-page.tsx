@@ -4,7 +4,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { useUpdateVideoMutation, useVideoQuery } from 'src/modules/shared/api';
 
-import { EditVideoFormModel } from 'src/modules/shared/models';
+import type { EditVideoFormModel } from 'src/modules/shared/models';
 
 import { EditVideoForm } from '../../components';
 import { LoadingSpinner } from 'src/modules/shared/components';
@@ -33,14 +33,14 @@ export function EditPage() {
 		const response = await edit({ ...form, id: video.id, version: video.version });
 
 		if ("data" in response) {
-			toast(`Successfully edited the video`);
+			toast('Successfully edited the video');
 
 			navigate(-1);
 			return;
 		}
 
 		if ("status" in response.error && response.error.status === 409) {
-			toast(`The video changed while you were editing it`);
+			toast('The video changed while you were editing it');
 		}
 	}
 

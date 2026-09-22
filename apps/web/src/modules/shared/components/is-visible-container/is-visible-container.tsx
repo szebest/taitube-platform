@@ -1,5 +1,5 @@
 import debounce from 'lodash.debounce';
-import { PropsWithChildren, useCallback, useEffect, useRef } from 'react';
+import { type PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 
 export type IsVisibleContainerProps = PropsWithChildren<{
 	inView?: VoidFunction;
@@ -42,7 +42,7 @@ export function IsVisibleContainer({ children, inView, rootMargin = '100px' }: I
 		observer.observe(target);
 
 		return () => observer.unobserve(target);
-	}, [ref, rootMargin, createCb]);
+	}, [rootMargin, createCb]);
 
 	return (
 		<div ref={ref}>

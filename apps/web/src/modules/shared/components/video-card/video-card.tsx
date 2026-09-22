@@ -36,7 +36,7 @@ export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
 							<div className={styles.container__meta}>
 								<div className={styles.container__meta__stats}>
 									<span className={styles.text}>{formatNumbers(video.viewsCount ?? 0)} views</span>
-									<span className={styles.seperator}></span>
+									<span className={styles.seperator} />
 									<span className={styles.text}>{timeAgo.format(new Date(video.createdAt))}</span>
 								</div>
 							</div>
