@@ -8,7 +8,7 @@
 | Blocks | 85 |
 | Spec | [SDD ADR-18 Error taxonomy](../SDD.md#adr-18-error-taxonomy-decides-retry-policy) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes-domain-services) · [SDD ADR-19 Hexagonal architecture](../SDD.md#adr-19-hexagonal-architecture-interface-segregation-and-modular-repository-boundaries) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23-package-runtime-tiers-the-directory-is-the-tier) |
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 > **Priority:** this ticket takes precedence over every other frontier ticket, including 83 and the Phase 5
 > frontend work. Every ticket from 42 onward adds a domain service, and each one added before this lands is
