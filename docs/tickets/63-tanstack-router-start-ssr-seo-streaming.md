@@ -6,10 +6,15 @@
 | Issue | [#63](https://github.com/szebest/taitube-platform/issues/63) |
 | Size | L |
 | Blocked by | 62 — Frontend performance & virtualization |
-| Blocks | 64, 66, 75, 77 |
+| Blocks | 64, 66, 75, 77, 86 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
+
+> **Ticket 85 note — SSR correctness depends on this.** Any formatter reading an ambient locale produces
+> different bytes in the Node render and the browser hydration. `@vp/intl` takes the locale and the reference
+> instant as arguments for exactly this reason; pass the negotiated locale into `IntlProvider` rather than
+> letting it read `navigator`. Locale negotiation, `<html lang>` and `hreflang` are [86](86-localisation-rollout-locale-negotiation-rtl.md).
 
 ## What to build
 

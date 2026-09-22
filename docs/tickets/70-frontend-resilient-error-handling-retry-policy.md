@@ -11,6 +11,16 @@
 
 **Status:** blocked
 
+> **Ticket 85 note:** the user-facing copy for every `ErrorCode` lives in `@vp/messages` as an exhaustive
+> `Record<ErrorCode, MessageKey>` — the gap ticket 84 deferred. This ticket renders that copy; it does not
+> author error strings inline. See [85](85-universal-intl-formatting-message-core.md).
+
+> **Ticket 84 note — scope reduced.** The failure taxonomy this ticket was going to derive from the wire
+> format is now an import: `@vp/validation` and `@vp/domain-rules` expose the discriminated failure
+> unions and `@vp/errors`
+> exposes `RETRY_CLASS`, so retry policy is read from the shared vocabulary rather than re-classified in the
+> browser. What remains here is presentation: error pages, toasts, inline messages, view fallbacks. See [84](84-result-typed-error-handling-shared-domain-rules.md).
+
 ## What to build
 
 A resilient, production-grade video platform must handle failures with precision, clarity, and grace. Unhandled exceptions, infinite query retries on permanent errors, or catastrophic page crashes due to a secondary widget failure destroy trust.

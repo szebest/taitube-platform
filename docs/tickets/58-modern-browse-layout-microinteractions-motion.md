@@ -11,6 +11,10 @@
 
 **Status:** blocked
 
+> **Ticket 85 note:** the `Intl.RelativeTimeFormat` / `Intl.NumberFormat` guidance in *Notes* below is now
+> owned by a package: use `relative`, `compact`, `views` and `duration` from `@vp/intl` rather than building
+> formatters in this ticket. The duration badge (`12:45`) is `duration`. See [85](85-universal-intl-formatting-message-core.md).
+
 ## What to build
 
 The home browse experience is the front door to Taitube. The original layout suffered from rigid Bootstrap grid alignment, cut-off titles, static image cards without video previews, and a clunky category filter.
@@ -48,7 +52,7 @@ This ticket redesigns the Browse & Feed experience:
 
 ## Notes for the implementer
 
-- Use `Intl.RelativeTimeFormat` and `Intl.NumberFormat` with `notation: 'compact'` for formatters (e.g. `1.2M views`, `2 days ago`) without bulky external libraries like moment.js.
+- Formatting is not built here. `@vp/intl` owns `relative` (`2 days ago`), `compact`/`views` (`1.2M views`) and `duration` (`12:45`), all on native `Intl` with no external date or number library. If a formatter this ticket needs is missing, add it to `@vp/intl` with its test — not to a component.
 - Ensure video card hover listeners clean up timers to prevent memory leaks when rapidly moving mouse across the grid.
 
 ## Testing plan

@@ -11,6 +11,10 @@
 
 **Status:** blocked
 
+> **Ticket 84 note:** `problemFor(failure, instance, overrides?)` in `@vp/api-contracts` is the single
+> `Problem` renderer — both `sendResult` and the Fastify backstop call it. The contracts package carries no
+> second error taxonomy: the discriminant of every failure is the existing `ErrorCode`. See [84](84-result-typed-error-handling-shared-domain-rules.md).
+
 ## What to build
 
 In many full-stack applications, frontend developers manually write and maintain duplicate TypeScript interfaces for backend responses. Over time, when a backend engineer renames a field, changes an enum, or makes a property optional, the frontend experiences silent runtime errors and broken UI rendering.

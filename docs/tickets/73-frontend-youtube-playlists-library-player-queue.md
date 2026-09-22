@@ -11,6 +11,11 @@
 
 **Status:** blocked
 
+> **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
+> (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
+> Components never call `Intl.*`, `toLocaleString` or `toFixed`, and never hold a copy literal — an
+> architecture test enforces both. See [85](85-universal-intl-formatting-message-core.md).
+
 ## What to build
 
 Playlists and watch history are the two pillars of personal viewing libraries, binge-watching, and user retention. Viewers expect to resume watching videos exactly where they stopped, review past watched videos, clear history, and organize playlists.

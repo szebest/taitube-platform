@@ -11,6 +11,12 @@
 
 **Status:** ready
 
+> **Ticket 85 note:** the rename sweep must also cover `@vp/intl`, `@vp/messages` and `@vp/intl-react`,
+> introduced by [85](85-universal-intl-formatting-message-core.md).
+
+> **Ticket 84 note:** the rename sweep must cover `@vp/result`, `@vp/validation` and `@vp/domain-rules`
+> (all under `packages/universal/`), introduced by [84](84-result-typed-error-handling-shared-domain-rules.md).
+
 ## What to build
 
 The generic project name `video-pipeline` and `@vp/*` package prefix served well during early architectural foundation phases. However, the platform has matured into a unified, full-stack video streaming and creator ecosystem powering the **Taitube** platform. Having backend packages named `@vp/*`, services named `video-pipeline`, and the frontend named `@taitube/web` creates namespace friction, cognitive dissonance, and fragmented developer tooling.

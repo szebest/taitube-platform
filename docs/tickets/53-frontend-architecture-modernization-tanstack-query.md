@@ -11,6 +11,10 @@
 
 **Status:** blocked
 
+> **Ticket 84 note:** the consumption seam is fixed by ticket 84: a `Result` is unwrapped inline in a
+> component (simple, local) or in a hook/presenter (reusable, complex). Two components consuming the same
+> `@vp/validation` or `@vp/domain-rules` function may render success and handle failure differently. See [84](84-result-typed-error-handling-shared-domain-rules.md).
+
 ## What to build
 
 The imported legacy frontend code suffered from several classic frontend anti-patterns:

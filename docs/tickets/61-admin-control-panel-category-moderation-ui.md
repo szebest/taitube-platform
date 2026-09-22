@@ -11,6 +11,11 @@
 
 **Status:** blocked
 
+> **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
+> (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
+> Components never call `Intl.*`, `toLocaleString` or `toFixed`, and never hold a copy literal — an
+> architecture test enforces both. See [85](85-universal-intl-formatting-message-core.md).
+
 ## What to build
 
 A real production video platform requires administrative control to manage global content taxonomy, review flagged or problematic videos, and inspect the operational health of background queues.
