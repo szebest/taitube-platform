@@ -9,6 +9,7 @@ on:
       - "apps/api/**"
       - "apps/worker/**"
       - "packages/server/**"
+      - "packages/universal/**"
       - "infra/compose/docker-compose.yml"
       - ".github/workflows/load-smoke.yml"
 
