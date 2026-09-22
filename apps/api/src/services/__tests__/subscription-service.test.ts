@@ -8,7 +8,9 @@ import {
   InMemorySubscriptionRepository,
   InMemoryVideoRepository,
 } from '@vp/adapters';
-import { ErrorCodes } from '@vp/errors';
+import { ErrorCodes, cacheUnavailable } from '@vp/errors';
+import { err } from '@vp/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthUser } from '../../plugins/auth';
 import { SubscriptionService } from '../subscription-service';
@@ -66,7 +68,7 @@ describe('SubscriptionService', () => {
 
   describe('subscribe / unsubscribe', () => {
     it('reports the new state and count', async () => {
-      const result = await service.subscribe(subscriber, creator.channelId);
+      const result = expectOk(await service.subscribe(subscriber, creator.channelId));
 
       expect(result).toEqual({
         channelId: creator.channelId,
@@ -78,20 +80,20 @@ describe('SubscriptionService', () => {
     it('primes the cache so the next status check needs no query', async () => {
       await service.subscribe(subscriber, creator.channelId);
 
-      expect(await cache.isSubscribed(subscriber.id, creator.channelId)).toBe(true);
-      expect(await cache.getSubscriberCount(creator.channelId)).toBe(1);
+      expect(expectOk(await cache.isSubscribed(subscriber.id, creator.channelId))).toBe(true);
+      expect(expectOk(await cache.getSubscriberCount(creator.channelId))).toBe(1);
     });
 
     it('evicts the membership from the cache on unsubscribe', async () => {
       await service.subscribe(subscriber, creator.channelId);
-      const result = await service.unsubscribe(subscriber, creator.channelId);
+      const result = expectOk(await service.unsubscribe(subscriber, creator.channelId));
 
       expect(result).toEqual({
         channelId: creator.channelId,
         subscribed: false,
         subscriberCount: 0,
       });
-      expect(await cache.isSubscribed(subscriber.id, creator.channelId)).toBe(false);
+      expect(expectOk(await cache.isSubscribed(subscriber.id, creator.channelId))).toBe(false);
     });
 
     it('skips cache writes when the call changed nothing', async () => {
@@ -104,19 +106,27 @@ describe('SubscriptionService', () => {
     });
 
     it.each([{ action: 'subscribe' as const }, { action: 'unsubscribe' as const }])(
-      'surfaces CHANNEL_NOT_FOUND from $action',
+      'returns CHANNEL_NOT_FOUND from $action',
       async ({ action }) => {
-        await expect(service[action](subscriber, missingChannelId)).rejects.toThrowError(
-          expect.objectContaining({ code: ErrorCodes.CHANNEL_NOT_FOUND })
+        expect(expectErr(await service[action](subscriber, missingChannelId)).code).toBe(
+          ErrorCodes.CHANNEL_NOT_FOUND
         );
       }
     );
+
+    it('returns CANNOT_SUBSCRIBE_TO_SELF, which the repositories no longer decide', async () => {
+      const owner: AuthUser = { id: creator.userId, role: 'USER' };
+
+      expect(expectErr(await service.subscribe(owner, creator.channelId)).code).toBe(
+        ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF
+      );
+    });
   });
 
   describe('isSubscribed', () => {
-    it('rejects an unknown channel before consulting the cache', async () => {
-      await expect(service.isSubscribed(subscriber, missingChannelId)).rejects.toThrowError(
-        expect.objectContaining({ code: ErrorCodes.CHANNEL_NOT_FOUND })
+    it('reports an unknown channel before consulting the cache', async () => {
+      expect(expectErr(await service.isSubscribed(subscriber, missingChannelId)).code).toBe(
+        ErrorCodes.CHANNEL_NOT_FOUND
       );
     });
 
@@ -124,17 +134,17 @@ describe('SubscriptionService', () => {
       await subscriptions.subscribe(subscriber.id, creator.channelId);
       await subscriptions.subscribe(subscriber.id, otherCreator.channelId);
 
-      const result = await service.isSubscribed(subscriber, creator.channelId);
+      const result = expectOk(await service.isSubscribed(subscriber, creator.channelId));
 
       expect(result).toEqual({ channelId: creator.channelId, subscribed: true });
-      expect(await cache.isSubscribed(subscriber.id, otherCreator.channelId)).toBe(true);
+      expect(expectOk(await cache.isSubscribed(subscriber.id, otherCreator.channelId))).toBe(true);
     });
 
     it('answers a primed miss without re-reading the repository', async () => {
       await service.isSubscribed(subscriber, creator.channelId);
       const getChannelIds = vi.spyOn(subscriptions, 'getUserSubscriptionChannelIds');
 
-      const result = await service.isSubscribed(subscriber, creator.channelId);
+      const result = expectOk(await service.isSubscribed(subscriber, creator.channelId));
 
       expect(result).toEqual({ channelId: creator.channelId, subscribed: false });
       expect(getChannelIds).not.toHaveBeenCalled();
@@ -146,7 +156,7 @@ describe('SubscriptionService', () => {
       await service.subscribe(subscriber, creator.channelId);
       await service.subscribe(subscriber, otherCreator.channelId);
 
-      const page = await service.listSubscriptions(subscriber, { limit: 1 });
+      const page = expectOk(await service.listSubscriptions(subscriber, { limit: 1 }));
 
       expect(page.items).toHaveLength(1);
       expect(page.items[0]?.subscribedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
@@ -157,11 +167,13 @@ describe('SubscriptionService', () => {
       await service.subscribe(subscriber, creator.channelId);
       await service.subscribe(subscriber, otherCreator.channelId);
 
-      const first = await service.listSubscriptions(subscriber, { limit: 1 });
-      const second = await service.listSubscriptions(subscriber, {
-        limit: 1,
-        cursor: first.nextCursor ?? undefined,
-      });
+      const first = expectOk(await service.listSubscriptions(subscriber, { limit: 1 }));
+      const second = expectOk(
+        await service.listSubscriptions(subscriber, {
+          limit: 1,
+          cursor: first.nextCursor ?? undefined,
+        })
+      );
 
       expect(second.items).toHaveLength(1);
       expect(second.items[0]?.id).not.toBe(first.items[0]?.id);
@@ -171,7 +183,7 @@ describe('SubscriptionService', () => {
     it('returns no cursor when the last page fits', async () => {
       await service.subscribe(subscriber, creator.channelId);
 
-      const page = await service.listSubscriptions(subscriber, { limit: 10 });
+      const page = expectOk(await service.listSubscriptions(subscriber, { limit: 10 }));
 
       expect(page.items).toHaveLength(1);
       expect(page.nextCursor).toBeNull();
@@ -195,7 +207,7 @@ describe('SubscriptionService', () => {
     it('reports the unpaginated total alongside the page', async () => {
       await service.subscribe(subscriber, creator.channelId);
 
-      const feed = await service.getFeed(subscriber, { limit: 1 });
+      const feed = expectOk(await service.getFeed(subscriber, { limit: 1 }));
 
       expect(feed.items).toHaveLength(1);
       expect(feed.total).toBe(2);
@@ -203,7 +215,7 @@ describe('SubscriptionService', () => {
     });
 
     it('is empty for a user who subscribes to nobody', async () => {
-      const feed = await service.getFeed(subscriber, { limit: 10 });
+      const feed = expectOk(await service.getFeed(subscriber, { limit: 10 }));
 
       expect(feed).toEqual({ items: [], nextCursor: null, total: 0 });
     });
@@ -211,6 +223,20 @@ describe('SubscriptionService', () => {
     it('rejects a malformed cursor', async () => {
       await expect(service.getFeed(subscriber, { cursor: 'not-a-cursor' })).rejects.toThrowError(
         expect.objectContaining({ code: ErrorCodes.VALIDATION_FAILED })
+      );
+    });
+
+    it('still serves the feed when the cache is down, which is why the union has no CacheUnavailable', async () => {
+      const broken = new SubscriptionService({
+        subscriptions,
+        channels,
+        subscriptionCache: Object.assign(new InMemorySubscriptionCache(), {
+          isSubscribed: async () => err(cacheUnavailable('isSubscribed')),
+        }),
+      });
+
+      expect(expectOk(await broken.isSubscribed(subscriber, creator.channelId)).channelId).toBe(
+        creator.channelId
       );
     });
   });

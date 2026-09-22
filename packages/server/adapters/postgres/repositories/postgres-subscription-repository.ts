@@ -1,5 +1,4 @@
 import type { SubscribedChannelItem, SubscriptionChangeResult } from '@vp/domain';
-import { DatabaseError } from '@vp/core/ports';
 import type {
   ListSubscriptionsOptions,
   SubscriptionFeedOptions,
@@ -7,7 +6,8 @@ import type {
   VideoRecord,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
+import { type Result, fromPromise, isErr, map } from '@vp/result';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
@@ -20,27 +20,30 @@ import {
 
 const { channelSubscriptions: cs, channels: ch, videos: v } = schema;
 
-const dbErr = (msg: string, err: unknown) =>
-  new DatabaseError(`${msg}: ${(err as Error).message}`, { cause: err });
-
 export class PostgresSubscriptionRepository implements SubscriptionRepositoryPort {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {}
 
-  async subscribe(subscriberId: string, channelId: string): Promise<SubscriptionChangeResult> {
-    try {
-      return await this.db.transaction(async (tx) => {
+  private unavailable(operation: string) {
+    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
+  }
+
+  /**
+   * Pure I/O. Whether an absent channel or a self-subscribe is an error is `decideSubscribe`'s
+   * call, made before this runs; a channel that vanished in between changed nothing and has no
+   * subscribers to report.
+   */
+  async subscribe(
+    subscriberId: string,
+    channelId: string
+  ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
+    return await fromPromise(
+      this.db.transaction(async (tx) => {
         const [channel] = await tx
           .select({ userId: ch.userId, subscriberCount: ch.subscriberCount })
           .from(ch)
           .where(eq(ch.id, channelId));
 
-        if (!channel) throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, 'Channel not found');
-        if (channel.userId === subscriberId) {
-          throw new PermanentError(
-            ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF,
-            'Cannot subscribe to your own channel'
-          );
-        }
+        if (!channel) return { subscriberCount: 0, changed: false };
 
         const [inserted] = await tx
           .insert(cs)
@@ -62,22 +65,23 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           subscriberCount: updated?.subscriberCount ?? channel.subscriberCount + 1,
           changed: true,
         };
-      });
-    } catch (err) {
-      if (err instanceof PermanentError) throw err;
-      throw dbErr('Failed to subscribe', err);
-    }
+      }),
+      this.unavailable('subscribe')
+    );
   }
 
-  async unsubscribe(subscriberId: string, channelId: string): Promise<SubscriptionChangeResult> {
-    try {
-      return await this.db.transaction(async (tx) => {
+  async unsubscribe(
+    subscriberId: string,
+    channelId: string
+  ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
+    return await fromPromise(
+      this.db.transaction(async (tx) => {
         const [channel] = await tx
           .select({ subscriberCount: ch.subscriberCount })
           .from(ch)
           .where(eq(ch.id, channelId));
 
-        if (!channel) throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, 'Channel not found');
+        if (!channel) return { subscriberCount: 0, changed: false };
 
         const [deleted] = await tx
           .delete(cs)
@@ -101,56 +105,53 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           subscriberCount: updated?.subscriberCount ?? Math.max(0, channel.subscriberCount - 1),
           changed: true,
         };
-      });
-    } catch (err) {
-      if (err instanceof PermanentError) throw err;
-      throw dbErr('Failed to unsubscribe', err);
-    }
+      }),
+      this.unavailable('unsubscribe')
+    );
   }
 
-  async isSubscribed(subscriberId: string, channelId: string): Promise<boolean> {
-    try {
-      const [row] = await this.db
+  async isSubscribed(
+    subscriberId: string,
+    channelId: string
+  ): Promise<Result<boolean, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      this.db
         .select({ id: cs.id })
         .from(cs)
         .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
-        .limit(1);
-      return Boolean(row);
-    } catch (err) {
-      throw dbErr('Failed to check subscription', err);
-    }
+        .limit(1),
+      this.unavailable('isSubscribed')
+    );
+
+    return map(rows, ([row]) => Boolean(row));
   }
 
-  async getUserSubscriptionChannelIds(subscriberId: string): Promise<string[]> {
-    try {
-      const rows = await this.db
-        .select({ channelId: cs.channelId })
-        .from(cs)
-        .where(eq(cs.subscriberId, subscriberId));
-      return rows.map((r) => r.channelId);
-    } catch (err) {
-      throw dbErr('Failed to get user subscriptions', err);
-    }
+  async getUserSubscriptionChannelIds(
+    subscriberId: string
+  ): Promise<Result<string[], DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      this.db.select({ channelId: cs.channelId }).from(cs).where(eq(cs.subscriberId, subscriberId)),
+      this.unavailable('getUserSubscriptionChannelIds')
+    );
+
+    return map(rows, (found) => found.map((r) => r.channelId));
   }
 
-  async getSubscriberCount(channelId: string): Promise<number> {
-    try {
-      const [channel] = await this.db
-        .select({ subscriberCount: ch.subscriberCount })
-        .from(ch)
-        .where(eq(ch.id, channelId));
-      return channel?.subscriberCount ?? 0;
-    } catch (err) {
-      throw dbErr('Failed to get subscriber count', err);
-    }
+  async getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      this.db.select({ subscriberCount: ch.subscriberCount }).from(ch).where(eq(ch.id, channelId)),
+      this.unavailable('getSubscriberCount')
+    );
+
+    return map(rows, ([channel]) => channel?.subscriberCount ?? 0);
   }
 
   async listUserSubscriptions(
     subscriberId: string,
     options: ListSubscriptionsOptions
-  ): Promise<SubscribedChannelItem[]> {
-    try {
-      return await this.db
+  ): Promise<Result<SubscribedChannelItem[], DatabaseUnavailable>> {
+    return await fromPromise(
+      this.db
         .select({
           id: ch.id,
           userId: ch.userId,
@@ -178,32 +179,35 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           )
         )
         .orderBy(desc(cs.createdAt), desc(cs.channelId))
-        .limit(options.limit + 1);
-    } catch (err) {
-      throw dbErr('Failed to list user subscriptions', err);
-    }
+        .limit(options.limit + 1),
+      this.unavailable('listUserSubscriptions')
+    );
   }
 
   async getSubscriptionFeed(
     subscriberId: string,
     options: SubscriptionFeedOptions
-  ): Promise<{ items: VideoRecord[]; total: number }> {
-    try {
-      const baseWhere = drizzleWhere(
-        eq(cs.subscriberId, subscriberId),
-        publicVisibilityScope(v),
-        eq(v.status, 'READY'),
-        notDeletedScope(v)
-      );
+  ): Promise<Result<{ items: VideoRecord[]; total: number }, DatabaseUnavailable>> {
+    const baseWhere = drizzleWhere(
+      eq(cs.subscriberId, subscriberId),
+      publicVisibilityScope(v),
+      eq(v.status, 'READY'),
+      notDeletedScope(v)
+    );
 
-      const [countResult] = await this.db
+    const counted = await fromPromise(
+      this.db
         .select({ count: sql<number>`count(*)::int` })
         .from(v)
         .innerJoin(ch, eq(v.ownerId, ch.userId))
         .innerJoin(cs, eq(cs.channelId, ch.id))
-        .where(baseWhere);
+        .where(baseWhere),
+      this.unavailable('getSubscriptionFeed')
+    );
+    if (isErr(counted)) return counted;
 
-      const rows = await this.db
+    const rows = await fromPromise(
+      this.db
         .select({ video: v })
         .from(v)
         .innerJoin(ch, eq(v.ownerId, ch.userId))
@@ -219,11 +223,13 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           )
         )
         .orderBy(desc(v.createdAt), desc(v.id))
-        .limit(options.limit + 1);
+        .limit(options.limit + 1),
+      this.unavailable('getSubscriptionFeed')
+    );
 
-      return { items: rows.map((r) => r.video), total: countResult?.count ?? 0 };
-    } catch (err) {
-      throw dbErr('Failed to get subscription feed', err);
-    }
+    return map(rows, (found) => ({
+      items: found.map((r) => r.video),
+      total: counted.value[0]?.count ?? 0,
+    }));
   }
 }

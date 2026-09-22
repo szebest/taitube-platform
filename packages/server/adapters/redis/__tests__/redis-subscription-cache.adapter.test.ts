@@ -1,4 +1,5 @@
 import { RedisSubscriptionCacheAdapter } from '../redis-subscription-cache.adapter';
+import { expectOk } from '@vp/testing/result';
 import { FakeRedis } from './fake-redis';
 
 const USER_ID = 'user-1';
@@ -17,20 +18,20 @@ describe('RedisSubscriptionCacheAdapter', () => {
 
   describe('isSubscribed', () => {
     it('reports a miss as null rather than false', async () => {
-      expect(await cache.isSubscribed(USER_ID, CHANNEL_ID)).toBeNull();
+      expect(expectOk(await cache.isSubscribed(USER_ID, CHANNEL_ID))).toBeNull();
     });
 
     it('answers from a warmed set', async () => {
       await cache.setUserSubscriptions(USER_ID, [CHANNEL_ID]);
 
-      expect(await cache.isSubscribed(USER_ID, CHANNEL_ID)).toBe(true);
-      expect(await cache.isSubscribed(USER_ID, 'other-channel')).toBe(false);
+      expect(expectOk(await cache.isSubscribed(USER_ID, CHANNEL_ID))).toBe(true);
+      expect(expectOk(await cache.isSubscribed(USER_ID, 'other-channel'))).toBe(false);
     });
 
     it('keeps a subscription-free user cached rather than re-reading the database', async () => {
       await cache.setUserSubscriptions(USER_ID, []);
 
-      expect(await cache.isSubscribed(USER_ID, CHANNEL_ID)).toBe(false);
+      expect(expectOk(await cache.isSubscribed(USER_ID, CHANNEL_ID))).toBe(false);
       expect(redis.sets.get(USER_KEY)?.size).toBe(1);
     });
   });
@@ -61,19 +62,19 @@ describe('RedisSubscriptionCacheAdapter', () => {
 
   describe('subscriber count', () => {
     it('reports a miss as null', async () => {
-      expect(await cache.getSubscriberCount(CHANNEL_ID)).toBeNull();
+      expect(expectOk(await cache.getSubscriberCount(CHANNEL_ID))).toBeNull();
     });
 
     it('round-trips a count with its ttl', async () => {
       await cache.setSubscriberCount(CHANNEL_ID, 42);
 
-      expect(await cache.getSubscriberCount(CHANNEL_ID)).toBe(42);
+      expect(expectOk(await cache.getSubscriberCount(CHANNEL_ID))).toBe(42);
       expect(redis.ttls.get(COUNT_KEY)).toBe(3600);
     });
 
     it('treats an unparseable count as a miss', async () => {
       redis.strings.set(COUNT_KEY, 'not-a-number');
-      expect(await cache.getSubscriberCount(CHANNEL_ID)).toBeNull();
+      expect(expectOk(await cache.getSubscriberCount(CHANNEL_ID))).toBeNull();
     });
   });
 

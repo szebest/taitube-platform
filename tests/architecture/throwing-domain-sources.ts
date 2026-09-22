@@ -12,7 +12,6 @@ export const THROWING_DOMAIN_SOURCES: readonly string[] = [
   'apps/api/src/services/reaction-service.ts',
   'apps/api/src/services/sse-hub.ts',
   'apps/api/src/services/sse-service.ts',
-  'apps/api/src/services/subscription-service.ts',
   'apps/api/src/services/upload-abort.ts',
   'apps/api/src/services/upload-complete.ts',
   'apps/api/src/services/upload-context.ts',

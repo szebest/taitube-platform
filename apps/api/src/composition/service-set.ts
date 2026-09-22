@@ -121,7 +121,6 @@ export async function createServiceSet(
       subscriptionCache: adapters.subscriptionCache,
       cdnBaseUrl,
       paginator,
-      authorization,
     }),
     queueService: new QueueService({ queues: adapters.queues, authorization }),
     dlqService: new DlqService({

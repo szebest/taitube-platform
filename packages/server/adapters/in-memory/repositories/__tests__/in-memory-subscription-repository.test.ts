@@ -1,5 +1,6 @@
-import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
+
+const ABSENT_CHANNEL_ID = '00000000-0000-0000-0000-000000000000';
 import { InMemoryChannelRepository } from '../in-memory-channel-repository';
 import { InMemoryEventRepository } from '../in-memory-event-repository';
 import { InMemoryOutboxRepository } from '../in-memory-outbox-repository';
@@ -67,54 +68,56 @@ describe('InMemorySubscriptionRepository', () => {
 
   describe('subscription lifecycle & counts', () => {
     it('subscribes and increments the channel subscriber count', async () => {
-      const res = await subRepo.subscribe(subscriber.userId, creator1.channelId);
+      const res = expectOk(await subRepo.subscribe(subscriber.userId, creator1.channelId));
 
       expect(res).toEqual({ subscriberCount: 1, changed: true });
-      expect(await subRepo.isSubscribed(subscriber.userId, creator1.channelId)).toBe(true);
-      expect(await subRepo.getSubscriberCount(creator1.channelId)).toBe(1);
+      expect(expectOk(await subRepo.isSubscribed(subscriber.userId, creator1.channelId))).toBe(
+        true
+      );
+      expect(expectOk(await subRepo.getSubscriberCount(creator1.channelId))).toBe(1);
     });
 
     it('is idempotent: subscribing twice does not double-count', async () => {
       await subRepo.subscribe(subscriber.userId, creator1.channelId);
-      const second = await subRepo.subscribe(subscriber.userId, creator1.channelId);
+      const second = expectOk(await subRepo.subscribe(subscriber.userId, creator1.channelId));
 
       expect(second).toEqual({ subscriberCount: 1, changed: false });
-      expect(await subRepo.getSubscriberCount(creator1.channelId)).toBe(1);
+      expect(expectOk(await subRepo.getSubscriberCount(creator1.channelId))).toBe(1);
     });
 
     it('unsubscribes and decrements the channel subscriber count', async () => {
       await subRepo.subscribe(subscriber.userId, creator1.channelId);
 
-      const unsub = await subRepo.unsubscribe(subscriber.userId, creator1.channelId);
+      const unsub = expectOk(await subRepo.unsubscribe(subscriber.userId, creator1.channelId));
 
       expect(unsub).toEqual({ subscriberCount: 0, changed: true });
-      expect(await subRepo.isSubscribed(subscriber.userId, creator1.channelId)).toBe(false);
+      expect(expectOk(await subRepo.isSubscribed(subscriber.userId, creator1.channelId))).toBe(
+        false
+      );
     });
 
     it('is idempotent: unsubscribing when not subscribed is a no-op', async () => {
-      const unsub = await subRepo.unsubscribe(subscriber.userId, creator1.channelId);
+      const unsub = expectOk(await subRepo.unsubscribe(subscriber.userId, creator1.channelId));
 
       expect(unsub).toEqual({ subscriberCount: 0, changed: false });
     });
 
+    /**
+     * Self-subscribe and an absent channel are `decideSubscribe`'s call, not this double's. What a
+     * repository owes the caller is what the write did, and against a channel that is not there
+     * the answer is: nothing, to nobody.
+     */
     it.each([
       {
-        scenario: 'subscribing to your own channel',
-        act: () => subRepo.subscribe(creator1.userId, creator1.channelId),
-        code: ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF,
-      },
-      {
         scenario: 'subscribing to a channel that does not exist',
-        act: () => subRepo.subscribe(subscriber.userId, '00000000-0000-0000-0000-000000000000'),
-        code: ErrorCodes.CHANNEL_NOT_FOUND,
+        act: () => subRepo.subscribe(subscriber.userId, ABSENT_CHANNEL_ID),
       },
       {
         scenario: 'unsubscribing from a channel that does not exist',
-        act: () => subRepo.unsubscribe(subscriber.userId, '00000000-0000-0000-0000-000000000000'),
-        code: ErrorCodes.CHANNEL_NOT_FOUND,
+        act: () => subRepo.unsubscribe(subscriber.userId, ABSENT_CHANNEL_ID),
       },
-    ])('rejects $scenario', async ({ act, code }) => {
-      await expect(act()).rejects.toThrowError(expect.objectContaining({ code }));
+    ])('reports $scenario as a write that changed nothing', async ({ act }) => {
+      expect(expectOk(await act())).toEqual({ subscriberCount: 0, changed: false });
     });
   });
 
@@ -123,7 +126,7 @@ describe('InMemorySubscriptionRepository', () => {
       await subRepo.subscribe(subscriber.userId, creator1.channelId);
       await subRepo.subscribe(subscriber.userId, creator2.channelId);
 
-      const rows = await subRepo.listUserSubscriptions(subscriber.userId, { limit: 1 });
+      const rows = expectOk(await subRepo.listUserSubscriptions(subscriber.userId, { limit: 1 }));
 
       expect(rows).toHaveLength(2);
     });
@@ -132,13 +135,17 @@ describe('InMemorySubscriptionRepository', () => {
       await subRepo.subscribe(subscriber.userId, creator1.channelId);
       await subRepo.subscribe(subscriber.userId, creator2.channelId);
 
-      const [first] = await subRepo.listUserSubscriptions(subscriber.userId, { limit: 1 });
+      const [first] = expectOk(
+        await subRepo.listUserSubscriptions(subscriber.userId, { limit: 1 })
+      );
       if (!first) throw new Error('expected a first page');
 
-      const next = await subRepo.listUserSubscriptions(subscriber.userId, {
-        limit: 1,
-        cursor: { createdAt: first.subscribedAt, channelId: first.id },
-      });
+      const next = expectOk(
+        await subRepo.listUserSubscriptions(subscriber.userId, {
+          limit: 1,
+          cursor: { createdAt: first.subscribedAt, channelId: first.id },
+        })
+      );
 
       expect(next).toHaveLength(1);
       expect(next[0]?.id).not.toBe(first.id);
@@ -147,7 +154,7 @@ describe('InMemorySubscriptionRepository', () => {
     it('exposes the channel profile alongside the subscription timestamp', async () => {
       await subRepo.subscribe(subscriber.userId, creator1.channelId);
 
-      const [row] = await subRepo.listUserSubscriptions(subscriber.userId, { limit: 10 });
+      const [row] = expectOk(await subRepo.listUserSubscriptions(subscriber.userId, { limit: 10 }));
 
       expect(row).toMatchObject({
         id: creator1.channelId,
@@ -194,7 +201,7 @@ describe('InMemorySubscriptionRepository', () => {
 
       await subRepo.subscribe(subscriber.userId, creator1.channelId);
 
-      const feed = await subRepo.getSubscriptionFeed(subscriber.userId, { limit: 10 });
+      const feed = expectOk(await subRepo.getSubscriptionFeed(subscriber.userId, { limit: 10 }));
       expect(feed.total).toBe(1);
       expect(feed.items).toHaveLength(1);
       expect(feed.items[0]?.id).toBe(v1.id);
@@ -202,7 +209,7 @@ describe('InMemorySubscriptionRepository', () => {
 
       await subRepo.subscribe(subscriber.userId, creator2.channelId);
 
-      const feed2 = await subRepo.getSubscriptionFeed(subscriber.userId, { limit: 10 });
+      const feed2 = expectOk(await subRepo.getSubscriptionFeed(subscriber.userId, { limit: 10 }));
       expect(feed2.total).toBe(2);
       expect(feed2.items.map((i) => i.id)).toContain(v1.id);
       expect(feed2.items.map((i) => i.id)).toContain(v3.id);

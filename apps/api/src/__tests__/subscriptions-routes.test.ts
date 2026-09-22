@@ -150,11 +150,11 @@ describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
       expect(data.subscriberCount).toBe(1);
 
       // Verify Redis cache set has the subscription
-      const cached = await cacheService.isSubscribed(subscriberUser.id, channel1.id);
+      const cached = expectOk(await cacheService.isSubscribed(subscriberUser.id, channel1.id));
       expect(cached).toBe(true);
 
       // Verify Redis cache counter
-      const cachedCount = await cacheService.getSubscriberCount(channel1.id);
+      const cachedCount = expectOk(await cacheService.getSubscriberCount(channel1.id));
       expect(cachedCount).toBe(1);
     });
 
@@ -402,7 +402,7 @@ describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
       expect(data.subscriberCount).toBe(0);
 
       // Verify Redis cache set is updated
-      const isSub = await cacheService.isSubscribed(subscriberUser.id, channel1.id);
+      const isSub = expectOk(await cacheService.isSubscribed(subscriberUser.id, channel1.id));
       expect(isSub).toBe(false);
     });
 

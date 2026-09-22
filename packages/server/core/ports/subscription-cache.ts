@@ -1,12 +1,22 @@
+import type { CacheUnavailable } from '@vp/errors';
+import type { Result } from '@vp/result';
+
 /**
  * Caches a user's subscribed-channel set and per-channel subscriber counts.
- * Reads return null on a miss so callers can fall back and prime.
+ * Reads answer `ok(null)` on a miss, so a caller can fall back and prime; a dead cache is a
+ * failure the caller may deliberately narrow away, which is what makes that fallback visible.
  */
 export interface SubscriptionCachePort {
-  isSubscribed(userId: string, channelId: string): Promise<boolean | null>;
-  addSubscription(userId: string, channelId: string): Promise<void>;
-  removeSubscription(userId: string, channelId: string): Promise<void>;
-  setUserSubscriptions(userId: string, channelIds: string[]): Promise<void>;
-  getSubscriberCount(channelId: string): Promise<number | null>;
-  setSubscriberCount(channelId: string, count: number): Promise<void>;
+  isSubscribed(
+    userId: string,
+    channelId: string
+  ): Promise<Result<boolean | null, CacheUnavailable>>;
+  addSubscription(userId: string, channelId: string): Promise<Result<void, CacheUnavailable>>;
+  removeSubscription(userId: string, channelId: string): Promise<Result<void, CacheUnavailable>>;
+  setUserSubscriptions(
+    userId: string,
+    channelIds: string[]
+  ): Promise<Result<void, CacheUnavailable>>;
+  getSubscriberCount(channelId: string): Promise<Result<number | null, CacheUnavailable>>;
+  setSubscriberCount(channelId: string, count: number): Promise<Result<void, CacheUnavailable>>;
 }

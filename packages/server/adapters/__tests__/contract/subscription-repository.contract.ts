@@ -8,6 +8,7 @@ import {
   publicVideo,
   seedOwners,
 } from './fixtures';
+import { expectOk } from '@vp/testing/result';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const SUBSCRIBER_ID = '00000000-0000-7000-8000-000000000103';
@@ -47,44 +48,44 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
     });
 
     it('subscribes idempotently and keeps the count in step', async () => {
-      const first = await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+      const first = expectOk(await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID));
       expect(first).toEqual({ changed: true, subscriberCount: 1 });
 
-      const repeat = await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+      const repeat = expectOk(await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID));
       expect(repeat).toEqual({ changed: false, subscriberCount: 1 });
 
-      expect(await subscriptions.isSubscribed(SUBSCRIBER_ID, CHANNEL_ID)).toBe(true);
-      expect(await subscriptions.getSubscriberCount(CHANNEL_ID)).toBe(1);
+      expect(expectOk(await subscriptions.isSubscribed(SUBSCRIBER_ID, CHANNEL_ID))).toBe(true);
+      expect(expectOk(await subscriptions.getSubscriberCount(CHANNEL_ID))).toBe(1);
     });
 
     it('unsubscribes idempotently', async () => {
       await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
 
-      expect(await subscriptions.unsubscribe(SUBSCRIBER_ID, CHANNEL_ID)).toEqual({
+      expect(expectOk(await subscriptions.unsubscribe(SUBSCRIBER_ID, CHANNEL_ID))).toEqual({
         changed: true,
         subscriberCount: 0,
       });
-      expect(await subscriptions.unsubscribe(SUBSCRIBER_ID, CHANNEL_ID)).toEqual({
+      expect(expectOk(await subscriptions.unsubscribe(SUBSCRIBER_ID, CHANNEL_ID))).toEqual({
         changed: false,
         subscriberCount: 0,
       });
-      expect(await subscriptions.isSubscribed(SUBSCRIBER_ID, CHANNEL_ID)).toBe(false);
+      expect(expectOk(await subscriptions.isSubscribed(SUBSCRIBER_ID, CHANNEL_ID))).toBe(false);
     });
 
     it('lists the channel ids a user follows', async () => {
       await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
       await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
 
-      const ids = await subscriptions.getUserSubscriptionChannelIds(SUBSCRIBER_ID);
+      const ids = expectOk(await subscriptions.getUserSubscriptionChannelIds(SUBSCRIBER_ID));
       expect([...ids].sort()).toEqual([CHANNEL_ID, OTHER_CHANNEL_ID].sort());
-      expect(await subscriptions.getUserSubscriptionChannelIds(OWNER_ID)).toEqual([]);
+      expect(expectOk(await subscriptions.getUserSubscriptionChannelIds(OWNER_ID))).toEqual([]);
     });
 
     it('lists the subscribed channels newest first, over-fetching one row', async () => {
       await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
       await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
 
-      const page = await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 1 });
+      const page = expectOk(await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 1 }));
       expect(page).toHaveLength(2);
       expect(page[0]?.id).toBe(OTHER_CHANNEL_ID);
       expect(page[0]?.handle).toBe('other-channel');
@@ -104,14 +105,14 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
       );
 
       await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
-      const feed = await subscriptions.getSubscriptionFeed(SUBSCRIBER_ID, { limit: 10 });
+      const feed = expectOk(await subscriptions.getSubscriptionFeed(SUBSCRIBER_ID, { limit: 10 }));
 
       expect(idsOf(feed.items)).toEqual([VIDEO_IDS.a]);
       expect(feed.total).toBe(1);
     });
 
     it('returns an empty feed for a user with no subscriptions', async () => {
-      const feed = await subscriptions.getSubscriptionFeed(OWNER_ID, { limit: 10 });
+      const feed = expectOk(await subscriptions.getSubscriptionFeed(OWNER_ID, { limit: 10 }));
       expect(feed.items).toEqual([]);
       expect(feed.total).toBe(0);
     });

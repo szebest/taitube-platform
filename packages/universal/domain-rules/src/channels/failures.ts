@@ -2,10 +2,7 @@ import { ErrorCodes, type Failure } from '@vp/errors';
 
 export { type HandleTaken, handleTaken } from '@vp/errors';
 
-export type ChannelNotFound = Failure<
-  typeof ErrorCodes.CHANNEL_NOT_FOUND,
-  { idOrHandle: string }
->;
+export type ChannelNotFound = Failure<typeof ErrorCodes.CHANNEL_NOT_FOUND, { idOrHandle: string }>;
 
 export type CannotSubscribeToSelf = Failure<
   typeof ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF,
@@ -14,7 +11,8 @@ export type CannotSubscribeToSelf = Failure<
 
 export type ChannelForbidden = Failure<typeof ErrorCodes.FORBIDDEN, { channelId: string }>;
 
-export type SubscribeFailure = CannotSubscribeToSelf | ChannelForbidden;
+export type UnsubscribeFailure = ChannelNotFound | ChannelForbidden;
+export type SubscribeFailure = UnsubscribeFailure | CannotSubscribeToSelf;
 
 export function channelNotFound(idOrHandle: string): ChannelNotFound {
   return { code: ErrorCodes.CHANNEL_NOT_FOUND, message: 'Channel not found', idOrHandle };

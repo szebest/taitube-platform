@@ -1,4 +1,6 @@
 import type { SubscriptionCachePort } from '@vp/core/ports';
+import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
+import { type Result, andThenAsync, fromPromise, map, ok } from '@vp/result';
 import type { Redis } from 'ioredis';
 
 export interface RedisSubscriptionCacheAdapterConfig {
@@ -32,49 +34,106 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
     return `taitube:channel:${channelId}:subscriber_count`;
   }
 
-  async isSubscribed(userId: string, channelId: string): Promise<boolean | null> {
+  private unavailable(operation: string) {
+    return (cause: unknown): CacheUnavailable => cacheUnavailable(operation, cause);
+  }
+
+  async isSubscribed(
+    userId: string,
+    channelId: string
+  ): Promise<Result<boolean | null, CacheUnavailable>> {
     const key = this.userKey(userId);
-    if ((await this.redis.exists(key)) === 0) return null;
-    return (await this.redis.sismember(key, channelId)) === 1;
-  }
 
-  async addSubscription(userId: string, channelId: string): Promise<void> {
-    const key = this.userKey(userId);
-    await this.redis
-      .pipeline()
-      .srem(key, EMPTY_SENTINEL)
-      .sadd(key, channelId)
-      .expire(key, this.userSubscriptionsTtlSeconds)
-      .exec();
-  }
+    const exists = await fromPromise(this.redis.exists(key), this.unavailable('isSubscribed'));
 
-  async removeSubscription(userId: string, channelId: string): Promise<void> {
-    await this.redis.srem(this.userKey(userId), channelId);
-  }
-
-  async setUserSubscriptions(userId: string, channelIds: string[]): Promise<void> {
-    const key = this.userKey(userId);
-    await this.redis
-      .pipeline()
-      .del(key)
-      .sadd(key, ...(channelIds.length > 0 ? channelIds : [EMPTY_SENTINEL]))
-      .expire(key, this.userSubscriptionsTtlSeconds)
-      .exec();
-  }
-
-  async getSubscriberCount(channelId: string): Promise<number | null> {
-    const raw = await this.redis.get(this.channelCountKey(channelId));
-    if (raw === null) return null;
-    const parsed = Number.parseInt(raw, 10);
-    return Number.isNaN(parsed) ? null : parsed;
-  }
-
-  async setSubscriberCount(channelId: string, count: number): Promise<void> {
-    await this.redis.set(
-      this.channelCountKey(channelId),
-      String(count),
-      'EX',
-      this.subscriberCountTtlSeconds
+    return await andThenAsync(
+      exists,
+      async (present): Promise<Result<boolean | null, CacheUnavailable>> => {
+        if (present === 0) return ok(null);
+        const member = await fromPromise(
+          this.redis.sismember(key, channelId),
+          this.unavailable('isSubscribed')
+        );
+        return map(member, (hit) => hit === 1);
+      }
     );
+  }
+
+  async addSubscription(
+    userId: string,
+    channelId: string
+  ): Promise<Result<void, CacheUnavailable>> {
+    const key = this.userKey(userId);
+    const done = await fromPromise(
+      this.redis
+        .pipeline()
+        .srem(key, EMPTY_SENTINEL)
+        .sadd(key, channelId)
+        .expire(key, this.userSubscriptionsTtlSeconds)
+        .exec(),
+      this.unavailable('addSubscription')
+    );
+
+    return map(done, () => undefined);
+  }
+
+  async removeSubscription(
+    userId: string,
+    channelId: string
+  ): Promise<Result<void, CacheUnavailable>> {
+    const done = await fromPromise(
+      this.redis.srem(this.userKey(userId), channelId),
+      this.unavailable('removeSubscription')
+    );
+
+    return map(done, () => undefined);
+  }
+
+  async setUserSubscriptions(
+    userId: string,
+    channelIds: string[]
+  ): Promise<Result<void, CacheUnavailable>> {
+    const key = this.userKey(userId);
+    const done = await fromPromise(
+      this.redis
+        .pipeline()
+        .del(key)
+        .sadd(key, ...(channelIds.length > 0 ? channelIds : [EMPTY_SENTINEL]))
+        .expire(key, this.userSubscriptionsTtlSeconds)
+        .exec(),
+      this.unavailable('setUserSubscriptions')
+    );
+
+    return map(done, () => undefined);
+  }
+
+  async getSubscriberCount(channelId: string): Promise<Result<number | null, CacheUnavailable>> {
+    const raw = await fromPromise(
+      this.redis.get(this.channelCountKey(channelId)),
+      this.unavailable('getSubscriberCount')
+    );
+
+    return map(raw, (value) => {
+      if (value === null) return null;
+      const parsed = Number.parseInt(value, 10);
+      return Number.isNaN(parsed) ? null : parsed;
+    });
+  }
+
+  async setSubscriberCount(
+    channelId: string,
+    count: number
+  ): Promise<Result<void, CacheUnavailable>> {
+    const done = await fromPromise(
+      this.redis.set(
+        this.channelCountKey(channelId),
+        String(count),
+        'EX',
+        this.subscriberCountTtlSeconds
+      ),
+      this.unavailable('setSubscriberCount')
+    );
+
+    return map(done, () => undefined);
   }
 }

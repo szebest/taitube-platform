@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { expectOk } from '@vp/testing/result';
 import { InMemorySubscriptionCache } from '../in-memory-subscription-cache';
 
 describe('InMemorySubscriptionCache', () => {
@@ -14,54 +15,54 @@ describe('InMemorySubscriptionCache', () => {
 
   describe('user subscription set', () => {
     it('returns null when the user has no cached set', async () => {
-      expect(await cache.isSubscribed(userId, channelId1)).toBeNull();
+      expect(expectOk(await cache.isSubscribed(userId, channelId1))).toBeNull();
     });
 
     it('distinguishes a cached membership from a cached absence', async () => {
       await cache.addSubscription(userId, channelId1);
 
-      expect(await cache.isSubscribed(userId, channelId1)).toBe(true);
-      expect(await cache.isSubscribed(userId, channelId2)).toBe(false);
+      expect(expectOk(await cache.isSubscribed(userId, channelId1))).toBe(true);
+      expect(expectOk(await cache.isSubscribed(userId, channelId2))).toBe(false);
     });
 
     it('drops a membership on remove without invalidating the set', async () => {
       await cache.addSubscription(userId, channelId1);
       await cache.removeSubscription(userId, channelId1);
 
-      expect(await cache.isSubscribed(userId, channelId1)).toBe(false);
+      expect(expectOk(await cache.isSubscribed(userId, channelId1))).toBe(false);
     });
 
     it('replaces the whole set when primed', async () => {
       await cache.addSubscription(userId, unknownChannelId);
       await cache.setUserSubscriptions(userId, [channelId1, channelId2]);
 
-      expect(await cache.isSubscribed(userId, channelId1)).toBe(true);
-      expect(await cache.isSubscribed(userId, channelId2)).toBe(true);
-      expect(await cache.isSubscribed(userId, unknownChannelId)).toBe(false);
+      expect(expectOk(await cache.isSubscribed(userId, channelId1))).toBe(true);
+      expect(expectOk(await cache.isSubscribed(userId, channelId2))).toBe(true);
+      expect(expectOk(await cache.isSubscribed(userId, unknownChannelId))).toBe(false);
     });
 
     it('treats a primed empty set as a hit, not a miss', async () => {
       await cache.setUserSubscriptions(userId, []);
 
-      expect(await cache.isSubscribed(userId, channelId1)).toBe(false);
+      expect(expectOk(await cache.isSubscribed(userId, channelId1))).toBe(false);
     });
   });
 
   describe('channel subscriber count', () => {
     it('returns null when the count was never cached', async () => {
-      expect(await cache.getSubscriberCount(channelId1)).toBeNull();
+      expect(expectOk(await cache.getSubscriberCount(channelId1))).toBeNull();
     });
 
     it('round-trips a cached count', async () => {
       await cache.setSubscriberCount(channelId1, 42);
 
-      expect(await cache.getSubscriberCount(channelId1)).toBe(42);
+      expect(expectOk(await cache.getSubscriberCount(channelId1))).toBe(42);
     });
 
     it('caches zero as a value rather than a miss', async () => {
       await cache.setSubscriberCount(channelId1, 0);
 
-      expect(await cache.getSubscriberCount(channelId1)).toBe(0);
+      expect(expectOk(await cache.getSubscriberCount(channelId1))).toBe(0);
     });
   });
 
@@ -71,7 +72,7 @@ describe('InMemorySubscriptionCache', () => {
 
     cache.clear();
 
-    expect(await cache.isSubscribed(userId, channelId1)).toBeNull();
-    expect(await cache.getSubscriberCount(channelId1)).toBeNull();
+    expect(expectOk(await cache.isSubscribed(userId, channelId1))).toBeNull();
+    expect(expectOk(await cache.getSubscriberCount(channelId1))).toBeNull();
   });
 });

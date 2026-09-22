@@ -10,6 +10,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { SubscriptionService } from '../services/subscription-service';
 import { contractPaths, contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
 
 export interface SubscriptionsRouteOptions {
   subscriptionService: SubscriptionService;
@@ -37,8 +38,11 @@ export function registerSubscriptionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        const result = await subscriptionService.subscribe(user, request.params.id);
-        return reply.status(200).send(result);
+        return sendResult(
+          reply,
+          request,
+          await subscriptionService.subscribe(user, request.params.id)
+        );
       }
     );
 
@@ -52,8 +56,11 @@ export function registerSubscriptionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        const result = await subscriptionService.unsubscribe(user, request.params.id);
-        return reply.status(200).send(result);
+        return sendResult(
+          reply,
+          request,
+          await subscriptionService.unsubscribe(user, request.params.id)
+        );
       }
     );
   }
@@ -69,8 +76,11 @@ export function registerSubscriptionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        const result = await subscriptionService.isSubscribed(user, request.params.id);
-        return reply.status(200).send(result);
+        return sendResult(
+          reply,
+          request,
+          await subscriptionService.isSubscribed(user, request.params.id)
+        );
       }
     );
   }
@@ -86,8 +96,11 @@ export function registerSubscriptionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        const result = await subscriptionService.listSubscriptions(user, request.query);
-        return reply.status(200).send(result);
+        return sendResult(
+          reply,
+          request,
+          await subscriptionService.listSubscriptions(user, request.query)
+        );
       }
     );
   }
@@ -103,8 +116,7 @@ export function registerSubscriptionsRoutes(
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        const result = await subscriptionService.getFeed(user, request.query);
-        return reply.status(200).send(result);
+        return sendResult(reply, request, await subscriptionService.getFeed(user, request.query));
       }
     );
   }
