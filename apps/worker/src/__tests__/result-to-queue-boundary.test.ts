@@ -1,10 +1,10 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
-import { ErrorCodes, storageUnavailable } from '@vp/errors';
+import { ErrorCodes, storageUnavailable, toPipelineError } from '@vp/errors';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
 import { err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
-import { failedResult, toQueueError } from '../queue-error';
+import { failedResult } from '../queue-error';
 
 const logger = createLogger({ service: 'queue-boundary-test', level: 'error' });
 const metrics = createMetricsRegistry({ env: 'test' });
@@ -16,7 +16,7 @@ const corruptContainer = {
 
 /** The exact line `runner.ts` runs on every job outcome. */
 function runnerOutcome(outcome: unknown): Error | null {
-  return failedResult(outcome) ? toQueueError(outcome.error) : null;
+  return failedResult(outcome) ? toPipelineError(outcome.error) : null;
 }
 
 describe('the worker edge: a stage Result becomes the queue throw', () => {
@@ -97,7 +97,7 @@ describe('the worker edge: a stage Result becomes the queue throw', () => {
   );
 
   it('keeps the failure payload on the DLQ row without leaking the cause', () => {
-    const thrown = toQueueError(storageUnavailable('putObject', new Error('ECONNRESET')));
+    const thrown = toPipelineError(storageUnavailable('putObject', new Error('ECONNRESET')));
 
     expect(thrown.details).toEqual({ operation: 'putObject' });
   });

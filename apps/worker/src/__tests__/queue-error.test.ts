@@ -1,39 +1,15 @@
-import { ErrorCodes, PermanentError, TransientError, databaseUnavailable } from '@vp/errors';
+import { databaseUnavailable } from '@vp/errors';
 import { err, ok } from '@vp/result';
-import { failedResult, toQueueError } from '../queue-error';
+import { failedResult, unwrapOrThrow } from '../queue-error';
 
-describe('toQueueError', () => {
-  it.each([
-    { code: ErrorCodes.CORRUPT_CONTAINER, Expected: PermanentError, retryable: false },
-    { code: ErrorCodes.UNSUPPORTED_CODEC, Expected: PermanentError, retryable: false },
-    { code: ErrorCodes.SOURCE_MISSING, Expected: PermanentError, retryable: false },
-    { code: ErrorCodes.STORAGE_UNAVAILABLE, Expected: TransientError, retryable: true },
-    { code: ErrorCodes.FFMPEG_OOM, Expected: TransientError, retryable: true },
-    { code: ErrorCodes.DISK_FULL, Expected: TransientError, retryable: true },
-  ])('turns $code into the class RETRY_CLASS names', ({ code, Expected, retryable }) => {
-    const queued = toQueueError({ code, message: 'boom' });
-
-    expect(queued).toBeInstanceOf(Expected);
-    expect(queued.isRetryable).toBe(retryable);
-    expect(queued.code).toBe(code);
-    expect(queued.message).toBe('boom');
+describe('unwrapOrThrow', () => {
+  it('hands back the value of a successful Result', () => {
+    expect(unwrapOrThrow(ok({ videoId: 'v1' }))).toEqual({ videoId: 'v1' });
   });
 
-  it('carries the failure payload into the DLQ details', () => {
-    const queued = toQueueError(databaseUnavailable('findById'));
-
-    expect(queued.details).toEqual({ operation: 'findById' });
-  });
-
-  it('keeps the cause out of the details, which are serialised into the DLQ row', () => {
-    const queued = toQueueError(databaseUnavailable('findById', new Error('ECONNREFUSED')));
-
-    expect(queued.details).not.toHaveProperty('cause');
-  });
-
-  it('defaults an unknown code to transient, as ADR-18 says', () => {
-    expect(toQueueError({ code: 'SOMETHING_NEW' as never, message: 'x' })).toBeInstanceOf(
-      TransientError
+  it('throws the class @vp/errors picks for the code, so the stage does not choose', () => {
+    expect(() => unwrapOrThrow(err(databaseUnavailable('findById')))).toThrow(
+      'Database unavailable'
     );
   });
 });

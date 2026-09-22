@@ -29,8 +29,22 @@ export function isInputFailure(failure: AnyFailure): failure is AnyInputFailure 
 
 const OFF_THE_WIRE = new Set(['code', 'message', 'cause']);
 
-export function failurePayload<F extends AnyInputFailure>(failure: F): Record<string, unknown> {
+/**
+ * Everything a failure carries beyond the three fields every failure has. Widely typed because
+ * the throw boundary attaches it to an `Error` for diagnosis; `failurePayload` is the narrow door
+ * that decides what reaches a client.
+ */
+export function failureDetails(failure: AnyFailure): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(failure).filter(([key, value]) => !OFF_THE_WIRE.has(key) && value !== undefined)
   );
+}
+
+/**
+ * The wire projection. It takes an `AnyInputFailure` and nothing else, so a state-rule or infra
+ * payload cannot reach a response body by mistake - the compiler refuses it rather than a
+ * reviewer having to notice.
+ */
+export function failurePayload<F extends AnyInputFailure>(failure: F): Record<string, unknown> {
+  return failureDetails(failure);
 }

@@ -1,6 +1,7 @@
 import type { ErrorCode } from './error-codes.js';
-import { PipelineError } from './pipeline-error.js';
-import { RETRY_CLASS, type RetryClass } from './retry-class.js';
+import { type AnyFailure, failureDetails } from './failure.js';
+import { PermanentError, PipelineError, TransientError } from './pipeline-error.js';
+import { RETRY_CLASS, type RetryClass, retryClass } from './retry-class.js';
 
 /**
  * `unknown` is a third answer on purpose: ADR-18 retries an unrecognised error a little and then
@@ -41,4 +42,15 @@ export function isPermanentError(error: unknown): boolean {
 
 export function isTransientError(error: unknown): boolean {
   return classifyError(error) === 'transient';
+}
+
+/**
+ * The reverse direction, in the same file for the same reason: a boundary that still signals
+ * failure by throwing - BullMQ's retry contract, a route handler that has not been converted -
+ * turns a `Result` failure into an `Error` here, and `RETRY_CLASS` picks the class. No call site
+ * gets to hand-pick `PermanentError` and quietly disagree with the taxonomy.
+ */
+export function toPipelineError(failure: AnyFailure): PermanentError | TransientError {
+  const Thrown = retryClass(failure.code) === 'permanent' ? PermanentError : TransientError;
+  return new Thrown(failure.code, failure.message, failureDetails(failure));
 }
