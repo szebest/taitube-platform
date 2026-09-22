@@ -72,7 +72,6 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     throw new Error(`Unknown WORKER_STAGE: "${stage}"`);
   }
 
-  // Validate queue name (AC 22)
   validateQueueName(config.queue);
 
   initTracing({ serviceName: `vp-worker-${stage}` });
@@ -86,9 +85,7 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
 
   const isInMemory =
     options.jobQueue instanceof InMemoryJobQueue ||
-    options.jobQueue?.constructor.name === 'InMemoryJobQueue' ||
     options.repositories instanceof InMemoryRepositories ||
-    options.repositories?.constructor.name === 'InMemoryRepositories' ||
     process.env['NODE_ENV'] === 'test';
 
   const metrics = options.metrics || getMetrics();
@@ -121,7 +118,6 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     options.flowProducer ||
     (isInMemory ? new InMemoryFlowProducer(getQueue) : new BullMqFlowProducer());
 
-  // Processor selection based on stage
   let processor: Parameters<JobQueue['process']>[0];
   if (stage === 'probe') {
     processor = createProbeProcessor({
@@ -198,7 +194,6 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     const startTime = Date.now();
     metrics.bullmqQueueJobs.set({ queue: config.queue, state: 'active' }, 1);
 
-    // Observe how long the job waited in the queue before being picked up
     const enqueuedAt =
       (job as unknown as { timestamp?: number }).timestamp ??
       (job.opts as { timestamp?: number } | undefined)?.timestamp;
@@ -277,13 +272,11 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     }
   };
 
-  const returnedRunner: WorkerRunner = {
+  return {
     queue,
     worker: { name: config.queue },
     metricsServer,
     outboxRelay,
     close,
   };
-
-  return returnedRunner;
 }
