@@ -72,3 +72,7 @@ The offline smoke test executes inside a Docker network with `internal: true`, m
    - Container startup scripts never invoke `apt-get`, `npm install`, or `curl` to fetch assets at runtime. Fonts (such as `fonts-dejavu-core` for FFmpeg subtitle/text filters) are pre-baked at build time.
 4. **Offline CI Verification**:
    - CI runs `make smoke-offline` on an internal Docker bridge network without external gateway access, preventing regression against external dependencies.
+5. **Machine-Enforced in Source**:
+   - `tests/architecture/local-first.test.ts` fails the build when any production source names an off-machine
+     host, or when an uncommented `.env.example` default points off the machine. The cloud rung stays behind
+     commented-out keys and the `infra/` overlays, which the assertion deliberately does not scan.

@@ -19,94 +19,53 @@ This document describes the architectural boundaries, ports, and adapters layer 
 
 ## 2. Directory Layout
 
+Shared code sits under `packages/<tier>/`, where the directory **is** the runtime tier (Invariant 5).
+
 ```
 video-pipeline/
-├── core/                           # @vp/core (Pure domain models, entities, and ports)
-│   ├── domain/                     # Domain entities and value objects
-│   │   ├── category.ts             # Category domain model and input interfaces
-│   │   ├── reaction.ts             # Video reaction entities and count models
-│   │   ├── subscription.ts         # Channel subscription entities and feed models
-│   │   └── index.ts
-│   ├── permissions/                # Pure domain RBAC & ABAC permission engine (re-exports @vp/permissions)
-│   ├── ports/                      # Core abstract ports & domain models
-│   │   ├── health-checkable.ts     # HealthCheckable interface
-│   │   ├── authorization.ts        # AuthorizationPort (CASL declarative authorization port)
-│   │   ├── database-client.ts      # Low-level DatabaseClient port (query, execute, transaction)
-│   │   ├── storage-client.ts       # StorageClient port (uploadObject, downloadObject, presigning)
-│   │   ├── multipart-storage.ts    # MultipartStorage port (create, presignPart, list, complete, abort)
-│   │   ├── cache-client.ts         # CacheClient port (key-value, pub/sub)
-│   │   ├── reaction-cache.ts       # ReactionCachePort (singleflight & XFetch caching)
-│   │   ├── subscription-cache.ts   # SubscriptionCachePort (Redis set & subscriber counter)
-│   │   ├── job-queue.ts            # JobQueue port (enqueue, counts, pause, resume)
-│   │   ├── flow-producer.ts        # FlowProducer port (flow graph additions)
-│   │   └── index.ts
-│   ├── pagination/                 # Shared keyset Paginator & pluggable CursorCodec
-│   └── repositories/               # Domain repository interfaces
-│       ├── category-repository.ts
-│       ├── channel-repository.ts
-│       ├── subscription-repository.ts
-│       ├── video-reaction-repository.ts
-│       ├── video-repository.ts
-│       ├── upload-repository.ts
-│       ├── step-repository.ts
-│       ├── rendition-repository.ts
-│       ├── event-repository.ts
-│       ├── user-repository.ts
-│       ├── repositories.ts         # Aggregating container interface
-│       └── index.ts
-│
-├── adapters/                       # @vp/adapters (Concrete and in-memory adapter implementations)
-│   ├── authorization/              # CaslAuthorizationAdapter (@vp/permissions bridge)
-│   ├── postgres/                   # PostgreSQL repository implementations via Drizzle ORM
-│   │   ├── postgres-database-client.ts
-│   │   ├── scopes/                 # CASL AST -> Drizzle SQL compiler, drizzleWhere & row scopes
-│   │   ├── mappers/                # Domain input -> typed Drizzle insert and update rows
-│   │   ├── repositories/           # Individual Postgres repository implementations
-│   │   │   ├── postgres-category-repository.ts
-│   │   │   ├── postgres-channel-repository.ts
-│   │   │   ├── postgres-subscription-repository.ts
-│   │   │   ├── postgres-video-reaction-repository.ts
-│   │   │   ├── postgres-video-repository.ts
-│   │   │   ├── postgres-upload-repository.ts
-│   │   │   ├── postgres-step-repository.ts
-│   │   │   ├── postgres-rendition-repository.ts
-│   │   │   ├── postgres-event-repository.ts
-│   │   │   ├── postgres-user-repository.ts
-│   │   │   ├── postgres-repositories.ts
-│   │   │   └── index.ts
-│   │   └── index.ts
-│   ├── s3/                         # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
-│   ├── redis/                      # RedisCacheClient, CategoryCacheService, RedisReactionCacheAdapter, RedisSubscriptionCacheAdapter
-│   ├── bullmq/                     # BullMqJobQueue & BullMqFlowProducer (bullmq)
-│   └── in-memory/                  # High-speed in-memory test doubles
-│       ├── in-memory-authorization-adapter.ts
-│       ├── in-memory-subscription-cache.ts
-│       ├── in-memory-database-client.ts
-│       ├── in-memory-storage-client.ts
-│       ├── in-memory-multipart-storage.ts
-│       ├── in-memory-cache-client.ts
-│       ├── in-memory-job-queue.ts
-│       ├── in-memory-flow-producer.ts
-│       ├── repositories/           # Individual in-memory repository implementations
-│       └── index.ts
-│
 ├── apps/
-│   ├── api/                        # Fastify API (Composition root: apps/api/src/app.ts)
-│   ├── worker/                     # BullMQ Worker (Composition root: apps/worker/src/runner.ts)
-│   └── web/                        # Taitube Web Frontend (React 19, TanStack Start/Router/Query)
+│   ├── api/                        # Fastify API — composition root apps/api/src/app.ts
+│   ├── worker/                     # BullMQ worker — composition root apps/worker/src/runner.ts
+│   └── web/                        # Taitube web client (React 18 + CRA today; tickets 49-75 own the rewrite)
 │
-└── packages/                       # Shared monorepo packages
-    ├── config/                     # Centralized environment variable validation (Zod)
-    ├── db/                         # PostgreSQL schema definitions, migrations, seeds
-    ├── errors/                     # Domain and HTTP RFC 9457 error classifications
-    ├── events/                     # Event definitions and Redis pub/sub dispatcher
-    ├── ffmpeg/                     # FFmpeg argument builders, progress parsers, probe helpers
-    ├── job-contracts/              # BullMQ job payload schemas and queue naming contracts
-    ├── observability/              # OpenTelemetry, Prometheus metrics, and Pino logging
-    ├── permissions/                # Pure CASL declarative authorization engine (@vp/permissions)
-    ├── storage/                    # S3 object key layout and presigned URL helpers
-    ├── testing/                    # Shared test utilities, fixtures, and assertion helpers
-    └── tsconfig/                   # Shared TypeScript presets
+├── packages/universal/             # runs in a browser AND on a server
+│   ├── api-contracts/              # @vp/api-contracts — every endpoint schema, one entry per route
+│   ├── domain/                     # @vp/domain — entities, value objects, status vocabulary, ranking policy
+│   ├── env-schema/                 # @vp/env-schema — the zod environment schema, no process access
+│   ├── errors/                     # @vp/errors — domain and RFC 9457 error classifications
+│   ├── pagination/                 # @vp/pagination — the one keyset Paginator and cursor codec
+│   ├── permissions/                # @vp/permissions — the pure CASL authorization engine
+│   └── tsconfig/                   # @vp/tsconfig — base / server / universal / client / spec presets
+│
+├── packages/client/                # browser only
+│   └── api-client/                 # @vp/api-client — typed client generated from @vp/api-contracts
+│
+├── packages/server/                # Node/Bun only
+│   ├── core/                       # @vp/core — abstract driver ports and repository interfaces
+│   │   ├── ports/                  # authorization, cache-client, database-client, flow-producer,
+│   │   │                           #   health-checkable, job-queue, multipart-storage, reaction-cache,
+│   │   │                           #   storage-client, subscription-cache
+│   │   └── repositories/           # one interface per domain entity + the aggregating container
+│   ├── adapters/                   # @vp/adapters — the only home of concrete driver SDKs
+│   │   ├── authorization/          # CaslAuthorizationAdapter (@vp/permissions bridge)
+│   │   ├── postgres/               # Drizzle repositories, mappers/, scopes/ (CASL AST -> SQL, keyset)
+│   │   ├── s3/                     # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
+│   │   ├── redis/                  # RedisCacheClient, category/reaction/subscription caches, singleflight
+│   │   ├── bullmq/                 # BullMqJobQueue, BullMqFlowProducer, Bull Board wiring
+│   │   └── in-memory/              # autonomous test doubles for every port
+│   ├── config/                     # @vp/config — the server loader over @vp/env-schema
+│   ├── db/                         # @vp/db — Drizzle schema, client, migrations, seeds
+│   ├── events/                     # @vp/events — event definitions and the Redis pub/sub dispatcher
+│   ├── ffmpeg/                     # @vp/ffmpeg — argument builders, progress parsers, probe helpers
+│   ├── job-contracts/              # @vp/job-contracts — BullMQ payload schemas and queue names
+│   ├── observability/              # @vp/observability — OpenTelemetry, Prometheus, Pino
+│   ├── storage/                    # @vp/storage — S3 object key layout
+│   ├── testing/                    # @vp/testing — shared vitest config, fixtures, assertion helpers
+│   └── dev-token/ gen-video/ upload-client/ compose-autoscaler/   # developer CLIs
+│
+└── tests/
+    ├── architecture/               # the executable form of section 5 — see section 6
+    └── e2e/                        # the acceptance runner
 ```
 
 ---
@@ -196,7 +155,8 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 
 ### Invariant 2: File Length & Sizing Discipline
 - Target size: `<= 250 lines` of code per file.
-- Strict limit: `400 lines` (or `~10 KB`) per file.
+- Strict limit: `400 lines` or `10 KB` per file, asserted by `tests/architecture/file-ceiling.test.ts`
+  against a shrink-only exception list (section 6).
 - See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
 
 ### Invariant 3: Autonomous In-Memory Test Doubles
@@ -223,8 +183,8 @@ packages/client/      browser only
 
 | Tier | Packages | May depend on |
 |---|---|---|
-| `universal` | `api-contracts`, `errors`, `permissions`, `tsconfig` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `core`, `config`, `db`, `events`, `ffmpeg`, `job-contracts`, `observability`, `storage`, `testing`, `dev-token`, `gen-video`, `upload-client`, `compose-autoscaler` | `universal` + `server` |
+| `universal` | `api-contracts`, `domain`, `env-schema`, `errors`, `pagination`, `permissions`, `tsconfig` | `universal` only — no `node:*`, no server SDK |
+| `server` | `adapters`, `compose-autoscaler`, `config`, `core`, `db`, `dev-token`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
 | `client` | `api-client` | `universal` + `client` |
 
 Apps sit outside `packages/` and declare their tier in `package.json`: `apps/api` and `apps/worker` are
@@ -243,8 +203,8 @@ portability.
 
 | Layer | Meaning | Packages |
 |---|---|---|
-| T1 | Foundation — no `@vp/*` runtime dependency | `errors`, `tsconfig`, `config`, `core`, `job-contracts`, `observability`, `storage`, `testing`, `dev-token`, `gen-video`, `compose-autoscaler` |
-| T2 | Contracts & domain capability | `api-contracts`, `permissions`, `db`, `events`, `ffmpeg`, `upload-client` |
+| T1 | Foundation — no `@vp/*` runtime dependency | `domain`, `env-schema`, `errors`, `pagination`, `tsconfig`, `compose-autoscaler`, `dev-token`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing` |
+| T2 | Contracts & domain capability | `api-contracts`, `permissions`, `config`, `core`, `db`, `events`, `ffmpeg`, `upload-client` |
 | T3 | Integration — concrete drivers and generated clients | `adapters`, `api-client` |
 | T4 | Applications | `apps/api`, `apps/worker`, `apps/web` |
 
@@ -268,7 +228,7 @@ Three mechanisms, strongest first:
    `@vp/tsconfig/spec.json` via a package's own `tsconfig.spec.json`, so importing `vitest` cannot leak
    `@types/node` back into the package's program.
 
-`tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite.
+`tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite — see section 6.
 Full reference, including the per-package map and the recipes: [packages/AGENTS.md](packages/AGENTS.md).
 
 - `apps/web` must NEVER import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
@@ -276,6 +236,8 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 - For all frontend architectural patterns, see [apps/web/AGENTS.md](apps/web/AGENTS.md).
 
 ### Invariant 6: Deterministic Test Suite Parity
+- Every production source has a spec of the same name beside it in `__tests__/`, asserted by
+  `tests/architecture/test-correspondence.test.ts` against a shrink-only exception list (section 6).
 - No heuristic skips: test suites never swallow connection errors or skip assertions conditionally.
 - Strict 1:1 parity between local developer environments and remote CI pipelines.
 - Unit tests execute against in-memory doubles; database durability tests execute against PostgreSQL.
@@ -285,10 +247,36 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 
 ## 6. Verification & Enforcement
 
-The repository enforces architectural boundaries through static verification:
-1. `git grep "@aws-sdk/client-s3"` matches only `packages/server/adapters/s3/`.
-2. `git grep "ioredis"` matches only `packages/server/adapters/redis/`.
-3. `git grep "bullmq"` matches only `packages/server/adapters/bullmq/`.
-4. `git grep "postgres"` and `git grep "drizzle-orm"` match only `packages/server/adapters/postgres/` and `packages/server/db`.
-5. Full dual-runtime test parity under `vitest` and `bun test`.
-6. Biome formatting and linting pass with zero errors (`pnpm biome check --diagnostic-level=error`).
+Every invariant in section 5 is an assertion in `tests/architecture/`, run by `pnpm test:architecture`
+(≈0.5 s, no build) and again inside `pnpm test`. CI runs it as a named fail-fast step in `lint-typecheck`,
+before lint and typecheck. **An invariant that cannot be asserted is deleted from this document rather than
+left as decoration** — a rule a human has to remember to check is a rule that has already drifted.
+
+| Assertion | Holds | Fixture that proves it fires |
+|---|---|---|
+| `package-boundaries.test.ts` | every package declares a tier and a layer; `vp.tier` matches its directory under `packages/`; `universal` never depends on `server`; dependencies point strictly down | a manifest whose tier contradicts its directory |
+| `sdk-confinement.test.ts` | `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are imported only under `packages/server/adapters/` and `packages/server/db/`, and **declared** in no other manifest | `import { Queue } from 'bullmq'` in `apps/api/src/app.ts` |
+| `local-first.test.ts` | no production source names an off-machine host; every uncommented `.env.example` default is local | a hardcoded `https://…onrender.com` |
+| `file-ceiling.test.ts` | no production source over 400 lines or 10 KB | 450 lines appended to a domain module |
+| `test-correspondence.test.ts` | every production source has `__tests__/<name>.test.ts` beside it | a new source file with no spec |
+| `esm-specifiers.test.ts` | relative imports in `universal` and `client` packages carry an explicit extension | an extensionless relative import |
+| `core-barrels.test.ts` | each `@vp/core` barrel re-exports only its own folder; no `*.port.ts` anywhere | a barrel re-exporting a sibling folder |
+| `apps/api/src/__tests__/contract-drift.test.ts` | every registered Fastify route has an `@vp/api-contracts` entry, and every contract entry is routed | a route registered with no contract entry |
+
+The contract-drift assertion stays in `apps/api` because it has to boot the app: it builds a real Fastify
+instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
+depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/api` can answer.
+
+**Two exception lists, both shrink-only.** `tests/architecture/oversized-sources.ts` and
+`tests/architecture/untested-sources.ts` record the files that already breached the ceiling and the 1:1 test
+mandate when those rules became executable. Each assertion fails on a *new* breach **and** on a listed entry
+that no longer breaches, so the lists can only get shorter. Neither may be appended to.
+
+Three further mechanisms sit outside the suite:
+
+1. **It does not resolve.** pnpm links only declared dependencies, so a server import in `apps/web` — or an
+   SDK import in either composition root — is `error TS2307: Cannot find module`, not a lint warning.
+2. **`pnpm boundaries`** runs `scripts/check-boundaries.ts` plus the `CLAUDE.md` symlink check ahead of both
+   `pnpm build` and `pnpm typecheck`, so a bad manifest fails before turbo starts.
+3. **Dual-runtime parity.** `pnpm test` (vitest) and `pnpm test:bun` (bun) must both pass; Biome lint reports
+   zero errors.
