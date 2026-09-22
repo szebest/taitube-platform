@@ -45,10 +45,16 @@ defined once here and specified in full in [packages/AGENTS.md](packages/AGENTS.
   so neither can drift. `@vp/api-contracts` (HTTP request/response schemas), `@vp/permissions` (CASL rules)
   and `@vp/errors` (error codes) are the three; `@vp/job-contracts` is the server-side equivalent for queue
   payloads. A type copied instead of imported from one of these is the defect the package exists to prevent.
-- **Conformance Suite**: `tests/architecture/` — the tests that assert the repo's own rules against the
-  manifest graph rather than against source text. It is the enforcement half of every "documented vs actual"
-  gap: a rule stated only in prose has drifted, a rule with a conformance test has not. `pnpm boundaries`
-  runs the same assertions as a fail-fast script ahead of `pnpm build` and `pnpm typecheck`.
+- **Conformance Suite**: one suite run against every implementation of a seam, so a double cannot be more
+  capable than production. `packages/server/adapters/__tests__/contract/` exports one factory per repository
+  port and executes it against both `InMemoryRepositories` and `PostgresRepositories`. _Avoid_ using the term
+  for a suite that exercises a single implementation.
+- **Invariant Suite**: `tests/architecture/` — the tests that assert the repo's own rules, over the manifest
+  graph and over source text, each proven against a deliberately violating fixture. It is the enforcement
+  half of every "documented vs actual" gap: a rule stated only in prose has drifted, a rule with an assertion
+  has not. `pnpm test:architecture` runs it in under a second, CI runs it ahead of lint and typecheck, and
+  `pnpm boundaries` runs the manifest half as a fail-fast script before `pnpm build` and `pnpm typecheck`.
+  See [ARCHITECTURE.md §6](ARCHITECTURE.md).
 
 ---
 
