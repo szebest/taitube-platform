@@ -11,6 +11,13 @@
 
 **Status:** blocked
 
+> **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
+> `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
+> checks belong in `@vp/validation`, entity-dependent decisions in `@vp/domain-rules`, and routes hand the
+> `Result` to `sendResult`. A new error code must land in `ApiErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS` and
+> SDD §6.2 together, or it does not compile. Authority:
+> [docs/standards/error-handling.md](../standards/error-handling.md).
+
 > **Ticket 84 note:** `problemFor(failure, instance, overrides?)` in `@vp/api-contracts` is the single
 > `Problem` renderer — both `sendResult` and the Fastify backstop call it. The contracts package carries no
 > second error taxonomy: the discriminant of every failure is the existing `ErrorCode`. See [84](84-result-typed-error-handling-shared-domain-rules.md).

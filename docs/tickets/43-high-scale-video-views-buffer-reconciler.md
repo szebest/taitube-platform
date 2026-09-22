@@ -11,6 +11,13 @@
 
 **Status:** blocked
 
+> **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
+> `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
+> checks belong in `@vp/validation`, entity-dependent decisions in `@vp/domain-rules`, and routes hand the
+> `Result` to `sendResult`. A new error code must land in `ApiErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS` and
+> SDD §6.2 together, or it does not compile. Authority:
+> [docs/standards/error-handling.md](../standards/error-handling.md).
+
 > **Ticket 84 note:** every service this ticket adds returns `Result<T, …>` from `@vp/result` and throws
 > nothing. Its pure checks split by what they need: input-only predicates go to `@vp/validation`,
 > entity-dependent decisions to `@vp/domain-rules` — both `universal`, so the frontend runs the identical

@@ -11,6 +11,19 @@
 
 **Status:** blocked
 
+> **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
+> `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
+> checks belong in `@vp/validation`, entity-dependent decisions in `@vp/domain-rules`, and routes hand the
+> `Result` to `sendResult`. A new error code must land in `ApiErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS` and
+> SDD §6.2 together, or it does not compile. Authority:
+> [docs/standards/error-handling.md](../standards/error-handling.md).
+
+> **Scope reduced by ticket 84.** The frontend error taxonomy this ticket was going to derive by reading the
+> wire format is now an import: `@vp/errors` exports the `Failure` vocabulary and `@vp/validation` /
+> `@vp/domain-rules` export the failure unions themselves, both universal. What is left here is the
+> *presentation* - `present(failure)` as a total `switch` with `assertNever`, the retry policy, and the
+> `ViewState` plumbing. Do not build a second taxonomy.
+
 > **Ticket 85 note:** the user-facing copy for every `ErrorCode` lives in `@vp/messages` as an exhaustive
 > `Record<ErrorCode, MessageKey>` — the gap ticket 84 deferred. This ticket renders that copy; it does not
 > author error strings inline. See [85](85-universal-intl-formatting-message-core.md).

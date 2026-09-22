@@ -89,6 +89,7 @@ is stale — fix it.
 |---|---|---|
 | `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
+| `@vp/result` | universal | `packages/universal/result` |
 | `@vp/pagination` | universal | `packages/universal/pagination` |
 | `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
 | `@vp/job-contracts` | server | `packages/server/job-contracts` |
@@ -105,6 +106,7 @@ is stale — fix it.
 |---|---|---|
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/permissions` | universal | `@vp/errors` |
+| `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/errors` |
 | `@vp/env-schema` | server | `@vp/pagination` |
 | `@vp/events` | server | `@vp/job-contracts` |
@@ -115,7 +117,8 @@ is stale — fix it.
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/config` | server | `@vp/env-schema` |
-| `@vp/core` | server | `@vp/domain`, `@vp/permissions` |
+| `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
+| `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 
 ### T4 — Integration
 
@@ -230,10 +233,24 @@ shows up as a failing test.
 
 ### "I need a server package from the frontend"
 
-You do not. That dependency is the frontend needing **data or a contract**, and both already have a home:
-`@vp/api-contracts` for the shape and `@vp/api-client` for the call. If the thing you want is a *rule* rather
-than data — a validation, a policy, an enum — move that rule into a `universal` package and let both sides
-import it. That is how `@vp/permissions` came to be shared.
+You do not. That dependency is the frontend needing **data, a contract, or a rule**, and each already has a
+home: `@vp/api-contracts` for the shape, `@vp/api-client` for the call, and one of the two rule packages for
+the rule.
+
+**Which rule package is decided by what the function needs to be callable at all:**
+
+| It needs | Package | Layer | Runs |
+|---|---|---|---|
+| the submitted input and nothing else | `@vp/validation` | T2 | in a form, before any network call |
+| input **plus** an entity (`Video`, `Upload`, `UserContext`) | `@vp/domain-rules` | T3 | after a read, or against a cached entity |
+
+There is no third answer, and `tests/architecture/validation-is-input-only.test.ts` tells you when you got it
+wrong. The form layer depends on `@vp/validation` alone, which is what makes it *impossible* for a form to
+reach a rule that needs a fetch - the reason these are two packages and not two folders.
+
+`@vp/domain-rules` is **T3, not T2**, because it composes `@vp/permissions` and `@vp/validation`, which are
+both T2, and a sibling edge is the violation §2 forbids. The layer is a design statement: rules sit above the
+policy and the validation they compose.
 
 ### "Two packages need each other"
 

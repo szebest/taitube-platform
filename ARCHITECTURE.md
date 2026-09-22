@@ -253,6 +253,24 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 
 ---
 
+### Invariant 7: Results at the Domain Seam
+
+A failure is part of every signature below the edge. Domain code returns `Result<T, E>` from `@vp/result`
+instead of throwing it (SDD ADR-24), and only two places unwrap one: `sendResult` in `apps/api/src/routes/`
+and `runner.ts` in `apps/worker`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
+the exception.
+
+- **Rules are pure and universal.** `@vp/validation` (T2) sees the submitted input and nothing else;
+  `@vp/domain-rules` (T3) sees input plus an entity plus policy. Neither awaits, logs, formats or throws.
+- **Absence is not a failure.** `findById` answers `ok(null)`. Whether a missing row is an error belongs to
+  the rule that asked, not the store that looked.
+- **`catch` is confined to the boundary that converts a throw** - `tryCatch` / `fromPromise` in `@vp/result`
+  and the adapters that call them at the exact line the SDK is called.
+- **The discriminant is the existing `ErrorCode`**, so no second error vocabulary appears. `PROBLEM_STATUS`
+  and `RETRY_CLASS` are both total over it.
+
+Authority: [docs/standards/error-handling.md](docs/standards/error-handling.md).
+
 ## 6. Verification & Enforcement
 
 Every invariant in section 5 is an assertion in `tests/architecture/`, run by `pnpm test:architecture`
@@ -270,16 +288,22 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 | `test-correspondence.test.ts` | every production source has `__tests__/<name>.test.ts` beside it | a new source file with no spec |
 | `esm-specifiers.test.ts` | relative imports in `universal` and `client` packages carry an explicit extension | an extensionless relative import |
 | `core-barrels.test.ts` | each `@vp/core` barrel re-exports only its own folder; no `*.port.ts` anywhere | a barrel re-exporting a sibling folder |
+| `no-domain-throw.test.ts` | no `throw` in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` or `apps/worker/src/stages/`, except a `throw assertNever` | `throw new Error` added to a rule |
+| `validation-is-input-only.test.ts` | `@vp/validation` imports no `@vp/domain` or `@vp/core`, in source **and** in its manifest | a predicate taking a `Video` added to `@vp/validation` |
+| `catch-confinement.test.ts` | `catch` appears only in `@vp/result`, `packages/server/adapters/`, the two composition roots and the two edges | a `try/catch` added to a service |
+| `result-returning-ports.test.ts` | every I/O method on a `@vp/core` port or repository returns `Promise<Result<…>>` | a port method returning a bare `Promise<T>` |
+| `error-code-drift.test.ts` | every `ErrorCode` has a `PROBLEM_STATUS` entry, a `RETRY_CLASS` entry and a line in SDD §6.2 | a code added to `ApiErrorCodes` only |
 | `apps/api/src/__tests__/contract-drift.test.ts` | every registered Fastify route has an `@vp/api-contracts` entry, and every contract entry is routed | a route registered with no contract entry |
 
 The contract-drift assertion stays in `apps/api` because it has to boot the app: it builds a real Fastify
 instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
 depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/api` can answer.
 
-**Two exception lists, both shrink-only.** `tests/architecture/oversized-sources.ts` and
-`tests/architecture/untested-sources.ts` record the files that already breached the ceiling and the 1:1 test
-mandate when those rules became executable. Each assertion fails on a *new* breach **and** on a listed entry
-that no longer breaches, so the lists can only get shorter. Neither may be appended to.
+**Five exception lists, all shrink-only.** `tests/architecture/oversized-sources.ts` and
+`untested-sources.ts` record the files that already breached the ceiling and the 1:1 test mandate when those
+rules became executable; `throwing-domain-sources.ts`, `legacy-catch-sites.ts` and `non-result-port-methods.ts`
+record what ADR-24 has not converted yet. Each assertion fails on a *new* breach **and** on a listed entry
+that no longer breaches, so the lists can only get shorter. None may be appended to.
 
 Three further mechanisms sit outside the suite:
 

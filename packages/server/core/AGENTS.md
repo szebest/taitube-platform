@@ -41,6 +41,15 @@ core/
    `repositories/index.ts`. Import a domain symbol from `@vp/domain`, never routed through a core barrel.
 5. **No `.port.ts` suffix.** The folder already says port; every file is spelled bare.
 6. **File Length Discipline:** Target <= 250 lines per file (strict maximum: 400 lines).
+7. **Every I/O method returns `Promise<Result<T, InfraFailure>>`** (SDD ADR-24), where `InfraFailure` is the
+   narrow union for that port: `DatabaseUnavailable` for repositories, `StorageUnavailable` for
+   `StorageClient`/`MultipartStorage`, `CacheUnavailable` for `CacheClient`, `QueueUnavailable` for
+   `JobQueue`/`FlowProducer`. `tests/architecture/result-returning-ports.test.ts` enforces it, with a
+   shrink-only list of what is not converted yet.
+8. **Absence is not a failure.** `findById` returns `Result<T | null, DatabaseUnavailable>`. Whether a missing
+   row is an error is a *domain* decision and belongs to the rule that asks, never to the contract that looked.
+9. **No `throw` anywhere in this package.** A contract that cannot fail cannot throw; a contract that can says
+   so in its return type.
 
 ---
 

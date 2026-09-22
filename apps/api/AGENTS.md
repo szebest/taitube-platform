@@ -21,6 +21,9 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
   - Delegate immediately to dedicated domain services in `apps/api/src/services/`.
   - Format HTTP status codes (`200`, `201`, `204`, `304`) and transport headers (`Cache-Control`, `ETag`).
 - **Strictly Forbidden:** Calling repositories directly, executing database transactions, or orchestrating domain state inside route handlers.
+- **Validation belongs in `@vp/validation`, not in a route.** The size cap and `ALLOWED_CONTENT_TYPES` used to
+  sit inline in `routes/uploads.ts`, which is how the browser ended up enforcing a narrower list and no size
+  check at all. A route calls the shared rule; it does not hold one.
 
 ### Rule 2: Deep Domain Services (>1:1 Ratio)
 - Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`, `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`, `SubscriptionService`, `SseService`, `DlqService`, `QueueService`).
@@ -34,17 +37,34 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 - Routes carry **authentication** only: `requireAuth(request)` for a caller that must be signed in, or
   `request.user` when the endpoint also serves anonymous callers. They never check a role, an ownership
   field or a permission themselves, and they never resolve a resource in order to authorize it.
-- Admin endpoints pass `request.user` to their service, which calls `assertAdminAccess`
-  (`services/admin-access.ts`) — the single admin gate. The `x-admin-token` credential is resolved into
-  `request.user` by `plugins/auth.ts`, because it is an identity, not a permission.
+- Admin endpoints pass `request.user` to their service, which composes `decideAdminAccess` from
+  `@vp/domain-rules` - the single admin gate, returning its verdict instead of throwing it. The
+  `x-admin-token` credential is resolved into `request.user` by `plugins/auth.ts`, because it is an identity,
+  not a permission.
+- Authorization stays inside the domain; it just returns now. `authorize(actor, allowed, context)` in
+  `@vp/domain-rules` is the one owner of the 401-vs-403 distinction: not signed in is `UNAUTHORIZED`, signed
+  in without the permission is `FORBIDDEN`. `AuthorizationPort.assertCan` is being removed as each service
+  converts; `can` stays.
 - There are no Fastify authorization decorators. `server.authorize`, `verifyPermission`, `request.authorize`,
   `request.assertCan` and `request.can` existed as four overlapping entry points; the async `request.authorize`
   was called without `await` on the reactions route and silently let every unauthorized write through. Do not
   reintroduce them.
 
-### Rule 4: Standardized Error Handling
-- Throw `PermanentError` or `TransientError` from `@vp/errors` at the error origin.
-- The Fastify error handler serializes all errors to RFC 9457 Problem Details format.
+### Rule 4: Services Return Their Failures, Routes Render Them
+- A service returns `Promise<Result<T, E>>` where `E` is **inferred** from what it composes - the union of the
+  rule failures it evaluates and the infra failures of the ports it calls. Never widened to `Error`, `unknown`
+  or a hand-written `DomainFailure`: a widened union is the same information loss as `throw`, one indirection
+  later.
+- A service contains no `throw`, no `try`, no `catch`, no logging of a failure and no HTTP vocabulary. It may
+  **narrow** a union deliberately - `CategoryService.listActive` drops `CacheUnavailable` because the cache
+  service falls through to the repository - and that narrowing is now visible in the signature.
+- A route hands the `Result` to `sendResult`, the only unwrap point in `apps/api`. Default mapping, a
+  per-code `options.on`, or a total `*.presenter.ts` module with `assertNever`; when to use which is in
+  [docs/standards/error-handling.md](../../docs/standards/error-handling.md).
+- `setErrorHandler` stays, narrowed to a backstop: transport validation, rate limiting, auth pre-handler
+  rejections and genuine bugs. Both paths call the same `problemFor`, so the body is identical either way.
+- `PermanentError` / `TransientError` are the BullMQ queue-boundary representation only (ADR-18). Domain code
+  in this app does not throw them.
 
 ---
 

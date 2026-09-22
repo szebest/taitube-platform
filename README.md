@@ -440,6 +440,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 - [Git Workflow & Pull Requests](docs/standards/git-workflow.md): Branch protection, squash-and-merge policy, and reviewer loops.
 - [File Discipline & Sizing](docs/standards/file-discipline.md): Modularity, <= 250 lines target, and repository file organization.
 - [Declarative Authorization](docs/standards/authorization.md): CASL ability engine, role hierarchy, and route protection.
+- [Error Handling](docs/standards/error-handling.md): `Result` at the domain seam - rules return, services compose, the edge decides (SDD ADR-24).
 - [Domain Glossary & Model](CONTEXT.md): Ubiquitous domain language, entities, and seam discipline.
 - [Package Tiers & Dependency Layers](packages/AGENTS.md): Where each package may run, which way dependencies point, and how both are enforced.
 - [System Design Document (SDD)](docs/SDD.md): Deep dives, database schemas, and §4 — the Architecture Decision Records. There is no `docs/adr/`; every ADR lives in SDD §4.
