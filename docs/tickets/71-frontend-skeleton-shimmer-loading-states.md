@@ -11,6 +11,11 @@
 
 **Status:** blocked
 
+> **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
+> (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
+> Components never call `Intl.*`, `toLocaleString` or `toFixed`, and never hold a copy literal — an
+> architecture test enforces both. See [85](85-universal-intl-formatting-message-core.md).
+
 ## What to build
 
 Content loading should feel instant, calm, and seamless. Without loading placeholders, pages jump violently as video thumbnails, player elements, and comments mount, triggering severe Cumulative Layout Shift (CLS) that damages user experience and Core Web Vitals rankings. Conversely, overusing skeletons on every tiny badge or button creates visual jitter and skeleton fatigue.

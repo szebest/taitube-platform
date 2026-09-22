@@ -11,6 +11,12 @@
 
 **Status:** blocked
 
+> **Ticket 84 note:** every service this ticket adds returns `Result<T, …>` from `@vp/result` and throws
+> nothing. Its pure checks split by what they need: input-only predicates go to `@vp/validation`,
+> entity-dependent decisions to `@vp/domain-rules` — both `universal`, so the frontend runs the identical
+> function. Routes unwrap with `sendResult`, and any new error code lands in `ErrorCodes`,
+> `PROBLEM_STATUS` **and** `RETRY_CLASS`. See [84](84-result-typed-error-handling-shared-domain-rules.md).
+
 ## What to build
 
 Creators need full management over their video library equivalent to YouTube Studio: assigning categories, managing tags, switching visibility (public, unlisted, private), choosing custom thumbnails from generated sprite/posters or uploading custom ones, and viewing their video library with performance summaries.

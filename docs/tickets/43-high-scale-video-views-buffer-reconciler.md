@@ -11,6 +11,12 @@
 
 **Status:** blocked
 
+> **Ticket 84 note:** every service this ticket adds returns `Result<T, …>` from `@vp/result` and throws
+> nothing. Its pure checks split by what they need: input-only predicates go to `@vp/validation`,
+> entity-dependent decisions to `@vp/domain-rules` — both `universal`, so the frontend runs the identical
+> function. Routes unwrap with `sendResult`, and any new error code lands in `ErrorCodes`,
+> `PROBLEM_STATUS` **and** `RETRY_CLASS`. See [84](84-result-typed-error-handling-shared-domain-rules.md).
+
 ## What to build
 
 Directly incrementing a video's view counter in PostgreSQL (UPDATE videos SET views = views + 1 WHERE id = ) on every playback event saturates database locks and crashes the DB under heavy traffic.

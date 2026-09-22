@@ -4,7 +4,7 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 
 ## How to work a ticket (humans and agents)
 
-1. Pick any ticket whose blockers are all `done` (the **frontier**). Prefer the lowest number in the current phase; parallel work is fine across lanes. **Frontier Priority Policy:** Tickets 79 and 80 take strict precedence over Phase 5 frontend tickets (36+). Complete operational hardening (Ticket 79) and developer experience / test pipeline acceleration (Ticket 80) before picking up frontend feature tickets.
+1. Pick any ticket whose blockers are all `done` (the **frontier**). Prefer the lowest number in the current phase; parallel work is fine across lanes. **Frontier Priority Policy:** Ticket **84** (Result-typed error handling) takes absolute precedence over every other frontier ticket, including 83 and the Phase 5 frontend work (36+): every ticket from 42 onward adds a domain service, and each one written before 84 lands is another service written in the pattern 84 replaces. Tickets 79 and 80 (operational hardening, developer experience / test pipeline acceleration) are done; take 84, then 82's outstanding workstreams and 83.
 2. Read the ticket, then **only** the PRD/SDD sections it links. Do not read the whole SDD — the links are the context budget.
 3. Create a branch `ticket/NN-slug`. Implement the *whole* slice: schema → code → tests → docs. Keep `.env.example`, `packages/job-contracts` and the SDD in sync if you touch them (the drift tests will tell you).
 4. Every acceptance criterion becomes a test or a recorded demo (screenshot/GIF/result table in the PR).
@@ -87,7 +87,7 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 | 60 | [Creator studio dashboard — video library, analytics charts & upload modal](60-creator-studio-dashboard-video-management-ui.md) | 5 | L | 44, 55, 56 | 62, 75 | blocked |
 | 61 | [Administrator control panel — dynamic category manager, queue health & moderation UI](61-admin-control-panel-category-moderation-ui.md) | 5 | M | 37, 39, 55, 56 | 62, 75 | blocked |
 | 62 | [Frontend performance, list virtualization & production bundle hardening](62-frontend-performance-virtualization-ssr-bundle-hardening.md) | 5 | L | 57, 58, 59, 60, 61 | 63, 64, 66, 75 | blocked |
-| 63 | [TanStack Router & TanStack Start SSR — SEO, dynamic OpenGraph & video streaming metadata](63-tanstack-router-start-ssr-seo-streaming.md) | 5 | L | 62 | 64, 66, 75, 77 | blocked |
+| 63 | [TanStack Router & TanStack Start SSR — SEO, dynamic OpenGraph & video streaming metadata](63-tanstack-router-start-ssr-seo-streaming.md) | 5 | L | 62 | 64, 66, 75, 77, 86 | blocked |
 | 64 | [Core Web Vitals optimization & real-user measurement (LCP, INP, CLS & OpenTelemetry web traces)](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) | 5 | M | 62, 63 | 65, 75 | blocked |
 | 65 | [First-party video playback telemetry, QoS & creator audience analytics beacon](65-first-party-video-playback-telemetry-analytics-beacon.md) | 5 | M | 43, 57, 64 | 75 | blocked |
 | 66 | [Advanced code splitting, granular chunking & asset lazy loading](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) | 5 | M | 62, 63 | 67, 68, 75 | blocked |
@@ -96,7 +96,7 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 | 69 | [Frontend URL-driven state architecture — search params sync, modal deep-linking (STS pattern) & typesafe routing](69-frontend-url-state-search-params-modal-routing.md) | 5 | M | 53, 55 | 72, 73, 74, 75 | blocked |
 | 70 | [Frontend resilient error handling — RFC 9457 error pages, classified query retry policies & contextual view fallbacks](70-frontend-resilient-error-handling-retry-policy.md) | 5 | M | 53, 54, 55 | 75 | blocked |
 | 71 | [Frontend skeleton shimmer loading states — layout-stable placeholders for primary views (CLS < 0.05)](71-frontend-skeleton-shimmer-loading-states.md) | 5 | M | 55, 58, 59 | 75 | blocked |
-| 72 | [Extensive settings & customization system — themes, playback preferences, privacy toggles & channel branding](72-frontend-settings-customization-system.md) | 5 | M | 38, 53, 55, 69 | 75 | blocked |
+| 72 | [Extensive settings & customization system — themes, playback preferences, privacy toggles & channel branding](72-frontend-settings-customization-system.md) | 5 | M | 38, 53, 55, 69 | 75, 86 | blocked |
 | 73 | [Frontend YouTube-grade playlist & watch history library — watch history feed, playlist manager & player queue tray](73-frontend-youtube-playlists-library-player-queue.md) | 5 | L | 46, 57, 59, 69 | 75 | blocked |
 | 74 | [Frontend multi-resource search & discovery UI — polymorphic results, filter chips & auto-complete suggestions](74-frontend-multi-resource-search-discovery-ui.md) | 5 | M | 47, 58, 69 | 75 | blocked |
 | 75 | [Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md) | 5 | L | 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74 | — | blocked |
@@ -106,8 +106,11 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 | 79 | [Offline smoke test runner refactor & CI configuration cleanup](79-offline-smoke-runner-refactor-cleanup.md) | 1 | S | 35 | — | done |
 | 80 | [Full-spectrum developer experience, local environment setup & CI/CD pipeline acceleration](80-ci-test-pipeline-optimization-speed.md) | 3 | L | 02, 08, 35 | — | done |
 | 81 | [Declarative permissions refactor with @casl/ability & elimination of ad-hoc checks](81-casl-declarative-permissions-refactor.md) | 5 | M | 39 | 82 | done |
-| 82 | [Architecture remediation — package runtime tiers, contract seams & machine-enforced boundaries](82-architecture-remediation-package-scoping-contract-seams.md) | 5 | L | 81 | 83 | ready |
+| 82 | [Architecture remediation — package runtime tiers, contract seams & machine-enforced boundaries](82-architecture-remediation-package-scoping-contract-seams.md) | 5 | L | 81 | 83, 84 | ready |
 | 83 | [Granular container topology — per-app images, a one-app dev loop and a single orchestrated launch](83-granular-container-topology-full-stack-deployment.md) | 5 | L | 82 | — | blocked |
+| 84 | [Result-typed error handling — domain code returns, the edge decides](84-result-typed-error-handling-shared-domain-rules.md) | 5 | L | 82 | 85 | blocked |
+| 85 | [Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md) | 5 | L | 84 | 86 | blocked |
+| 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85 | — | blocked |
 
 > Board statuses derive from each ticket's `**Status:**` line: `ready` = all blockers done (the frontier) · `blocked` · `in-progress` · `done` · `blocked-by-date` (34 waits for Node 26 LTS on 2026-10-28).
 
@@ -208,6 +211,9 @@ flowchart LR
         T81["81 Declarative permissions refactor"]
         T82["82 Architecture remediation"]
         T83["83 Granular container topology"]
+        T84["84 Result-typed error handling"]
+        T85["85 Universal Intl formatting core"]
+        T86["86 Localisation rollout"]
     end
     subgraph 3_Developer_Velocity_Operational_Excellence["3 — Developer Velocity & Operational Excellence"]
         T80["80 Full-spectrum developer experience"]
@@ -409,6 +415,11 @@ flowchart LR
     T39 --> T81
     T81 --> T82
     T82 --> T83
+    T82 --> T84
+    T84 --> T85
+    T63 --> T86
+    T72 --> T86
+    T85 --> T86
 ```
 
 ## Parallel lanes (frontier levels)
@@ -424,8 +435,8 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 4 | [06](06-worker-runtime-probe-stage.md) Worker runtime + probe stage · [11](11-multipart-upload-resume-abort.md) Multipart upload · [39](39-declarative-rbac-abac-permission-engine.md) Declarative RBAC & ABAC permission engine · [43](43-high-scale-video-views-buffer-reconciler.md) High-scale video views buffer · [50](50-shared-api-contracts-zod-openapi-codegen.md) Shared API contracts package |
 | 5 | [07](07-transcode-720p-package-notify-playable.md) transcode-720p + package + notify · [17](17-housekeeping-reconciler-purge.md) Housekeeping stage · [40](40-high-throughput-video-reactions-counter-caching.md) High-throughput video reactions · [41](41-channel-subscriptions-subscriber-feed.md) Channel subscriptions & subscribed chann… · [42](42-threaded-comments-keyset-pagination-moderation.md) Threaded video comments · [44](44-creator-studio-video-management-visibility.md) Creator studio video management · [46](46-youtube-playlists-watch-history-engine.md) YouTube-grade playlists & watch history … · [51](51-type-safe-query-client-tanstack-react-hooks.md) Type-safe API client SDK · [81](81-casl-declarative-permissions-refactor.md) Declarative permissions refactor |
 | 6 | [08](08-containerise-compose-smoke-images.md) Containerise everything · [09](09-crash-safety-effectively-once.md) Crash safety · [12](12-ladder-flows-fanout-fanin.md) Fan-out / fan-in · [15](15-sse-progress-events.md) Live status · [18](18-admission-control-priorities.md) Admission control · [45](45-legacy-frontend-compatibility-adapter-layer.md) Frontend API modernization & contract al… · [47](47-multi-resource-search-engine.md) Multi-resource search engine · [82](82-architecture-remediation-package-scoping-contract-seams.md) Architecture remediation |
-| 7 | [13](13-thumbnails-flow-child.md) Thumbnails as a non-blocking Flow child · [14](14-segment-streaming-uploader-disk-bounds.md) Stream segments to storage while encoding · [16](16-retries-dlq-admin-replay-reprocess.md) Retries · [21](21-observability-stack-local.md) Local observability stack · [25](25-kubernetes-local-k3d.md) Kubernetes locally · [34](34-node26-upgrade-deps.md) Node 26 LTS upgrade · [35](35-local-first-offline-mode.md) Local-first proof · [36](36-public-video-feed-api.md) Public video feed · [83](83-granular-container-topology-full-stack-deployment.md) Granular container topology |
-| 8 | [20](20-phase2-acceptance-e2e-suite.md) Phase 2 acceptance · [22](22-metrics-catalogue-dashboards.md) Metrics catalogue populated + queue poll… · [23](23-otel-tracing-e2e.md) OpenTelemetry tracing end-to-end · [30](30-transactional-outbox.md) Transactional outbox · [49](49-nextgen-frontend-api-gateway-bootstrap.md) Next-Gen frontend direct API gateway & C… · [79](79-offline-smoke-runner-refactor-cleanup.md) Offline smoke test runner refactor & CI … · [80](80-ci-test-pipeline-optimization-speed.md) Full-spectrum developer experience |
+| 7 | [13](13-thumbnails-flow-child.md) Thumbnails as a non-blocking Flow child · [14](14-segment-streaming-uploader-disk-bounds.md) Stream segments to storage while encoding · [16](16-retries-dlq-admin-replay-reprocess.md) Retries · [21](21-observability-stack-local.md) Local observability stack · [25](25-kubernetes-local-k3d.md) Kubernetes locally · [34](34-node26-upgrade-deps.md) Node 26 LTS upgrade · [35](35-local-first-offline-mode.md) Local-first proof · [36](36-public-video-feed-api.md) Public video feed · [83](83-granular-container-topology-full-stack-deployment.md) Granular container topology · [84](84-result-typed-error-handling-shared-domain-rules.md) Result-typed error handling |
+| 8 | [20](20-phase2-acceptance-e2e-suite.md) Phase 2 acceptance · [22](22-metrics-catalogue-dashboards.md) Metrics catalogue populated + queue poll… · [23](23-otel-tracing-e2e.md) OpenTelemetry tracing end-to-end · [30](30-transactional-outbox.md) Transactional outbox · [49](49-nextgen-frontend-api-gateway-bootstrap.md) Next-Gen frontend direct API gateway & C… · [79](79-offline-smoke-runner-refactor-cleanup.md) Offline smoke test runner refactor & CI … · [80](80-ci-test-pipeline-optimization-speed.md) Full-spectrum developer experience · [85](85-universal-intl-formatting-message-core.md) Universal Intl formatting core |
 | 9 | [24](24-alert-rules-alertmanager.md) Alert rules + Alertmanager · [26](26-keda-autoscaling-graceful-shutdown.md) KEDA autoscaling on queue depth · [27](27-compose-autoscaler.md) Compose-level autoscaler · [32](32-cloud-overlay-deploy.md) Cloud reference deployment · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app |
 | 10 | [28](28-k6-s1-s3-nightly-load-smoke.md) Load tests S1–S3 · [33](33-cost-guardrails-runbooks.md) Cost guardrails · [53](53-frontend-architecture-modernization-tanstack-query.md) Frontend architecture modernization |
 | 11 | [29](29-chaos-tooling-k6-s4-s7.md) Chaos tooling · [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) Frontend testing infrastructure & integr… |
@@ -434,7 +445,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 14 | [59](59-video-watch-page-responsive-layout-enhancements.md) Modern video watch page · [60](60-creator-studio-dashboard-video-management-ui.md) Creator studio dashboard · [61](61-admin-control-panel-category-moderation-ui.md) Administrator control panel · [72](72-frontend-settings-customization-system.md) Extensive settings & customization system · [74](74-frontend-multi-resource-search-discovery-ui.md) Frontend multi-resource search & discove… |
 | 15 | [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md) Frontend performance · [71](71-frontend-skeleton-shimmer-loading-states.md) Frontend skeleton shimmer loading states · [73](73-frontend-youtube-playlists-library-player-queue.md) Frontend YouTube-grade playlist & watch … · [76](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) Live streaming architecture |
 | 16 | [63](63-tanstack-router-start-ssr-seo-streaming.md) TanStack Router & TanStack Start SSR |
-| 17 | [64](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) Core Web Vitals optimization & real-user… · [66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) Advanced code splitting · [77](77-platform-integrations-oembed-embed-player-webhooks.md) Platform integrations ecosystem |
+| 17 | [64](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) Core Web Vitals optimization & real-user… · [66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) Advanced code splitting · [77](77-platform-integrations-oembed-embed-player-webhooks.md) Platform integrations ecosystem · [86](86-localisation-rollout-locale-negotiation-rtl.md) Localisation rollout |
 | 18 | [65](65-first-party-video-playback-telemetry-analytics-beacon.md) First-party video playback telemetry · [67](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) Intelligent pre-fetching · [68](68-pwa-service-worker-offline-cache-background-sync.md) Progressive Web App · [78](78-discord-integration-bot-watch-together-activity-creator-alerts.md) Discord integration ecosystem |
 | 19 | [75](75-fullstack-e2e-playwright-security-perf-validation.md) Full-stack Playwright E2E suite |
 

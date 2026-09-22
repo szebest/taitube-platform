@@ -11,6 +11,11 @@
 
 **Status:** blocked
 
+> **Ticket 84 note:** `apps/web` imports its validation from `@vp/validation` and its entity-dependent
+> decisions and failure vocabulary from `@vp/domain-rules`
+> instead of re-implementing it. A `Result` is unwrapped inline in a component for one-off cases, or in a
+> hook/presenter that maps it to `{ status, data?, failure? }` — never inside a rule. See [84](84-result-typed-error-handling-shared-domain-rules.md).
+
 ## What to build
 
 ### Architectural Decision: Clean Modern Backend vs Legacy Backend Shims

@@ -11,6 +11,9 @@
 
 **Status:** blocked
 
+> **Ticket 84 note:** this is where `toViewState(result)` lands — the `Result` → `{ status, data?, failure? }`
+> mapping that [84](84-result-typed-error-handling-shared-domain-rules.md) specifies but deliberately does not implement. Hooks unwrap; rules never do.
+
 ## What to build
 
 Consuming REST APIs on the frontend is traditionally plagued by repetitive boilerplate: creating fetch wrappers, manually typing query params, managing URL templates (`/v1/videos/${id}`), and synchronizing TanStack Query key arrays.

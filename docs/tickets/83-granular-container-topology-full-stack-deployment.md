@@ -10,6 +10,14 @@
 
 **Status:** ready-for-agent
 
+> **Ticket 85 note:** `@vp/intl`, `@vp/messages` (both `universal`) and `@vp/intl-react` (`client`) are new
+> packages in the build graph — include them in the per-app Docker build contexts, the `pnpm deploy --prod`
+> prune and the turbo cache keys. See [85](85-universal-intl-formatting-message-core.md).
+
+> **Ticket 84 note:** `@vp/result`, `@vp/validation` and `@vp/domain-rules` are three new `universal`
+> packages in the build graph — include them in the per-app Docker build contexts, the `pnpm deploy --prod` prune and the turbo
+> cache keys. See [84](84-result-typed-error-handling-shared-domain-rules.md).
+
 ---
 
 ## Why this ticket exists

@@ -6,10 +6,14 @@
 | Issue | [#72](https://github.com/szebest/taitube-platform/issues/72) |
 | Size | M |
 | Blocked by | 38 — User identity · 53 — Frontend architecture · 55 — Modern design system · 69 — Frontend URL-driven state |
-| Blocks | 75 |
+| Blocks | 75, 86 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** blocked
+
+> **Ticket 85/86 note:** the locale and time-zone preferences belong in this settings surface and this
+> preference store — not a bespoke key. The selector itself and the negotiation chain are [86](86-localisation-rollout-locale-negotiation-rtl.md), built on
+> the formatting core in [85](85-universal-intl-formatting-message-core.md).
 
 ## What to build
 
