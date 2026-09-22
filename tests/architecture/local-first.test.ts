@@ -6,10 +6,9 @@ const LOOPBACK = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]']);
 const XML_NAMESPACE = 'www.w3.org';
 
 function isLocal(url: string): boolean {
-  if (url.includes('${')) return true;
-
   const host = HOST.exec(url)?.[1];
   if (!host) return false;
+  if (host.includes('${')) return true;
 
   return (
     LOOPBACK.has(host) ||
@@ -36,6 +35,9 @@ describe('architecture: local-first', () => {
       'https://taitube-backend.onrender.com',
     ]);
     expect(externalHosts("fetch('http://localhost:3000/v1/feed')")).toEqual([]);
+    expect(externalHosts('fetch(`https://cdn.example.com/${key}`)')).toEqual([
+      'https://cdn.example.com/${key}',
+    ]);
   });
 
   it('names no external host in production source', () => {
