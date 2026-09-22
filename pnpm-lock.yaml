@@ -935,6 +935,24 @@ importers:
         specifier: ^3.0.7
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
+  packages/universal/result:
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
   packages/universal/tsconfig: {}
 
 packages:

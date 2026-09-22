@@ -1,0 +1,51 @@
+import { err, ok } from '../result';
+import { fromPromise, fromThrowable, tryCatch } from '../try-catch';
+
+const describeCause = (cause: unknown) => ({ code: 'WRAPPED' as const, cause });
+
+describe('@vp/result: tryCatch', () => {
+  it('returns the value when nothing throws', () => {
+    expect(tryCatch(() => 'fine', describeCause)).toEqual(ok('fine'));
+  });
+
+  it.each([
+    { name: 'an Error', thrown: new Error('bang') },
+    { name: 'a string', thrown: 'bang' },
+    { name: 'undefined', thrown: undefined },
+  ])('converts $name into a failure carrying the cause', ({ thrown }) => {
+    const result = tryCatch(() => {
+      throw thrown;
+    }, describeCause);
+
+    expect(result).toEqual(err({ code: 'WRAPPED', cause: thrown }));
+  });
+});
+
+describe('@vp/result: fromThrowable', () => {
+  it('wraps a function once and forwards its arguments', () => {
+    const parse = fromThrowable(JSON.parse, describeCause);
+
+    expect(parse('{"a":1}')).toEqual(ok({ a: 1 }));
+  });
+
+  it('returns a failure from the wrapped function instead of throwing', () => {
+    const parse = fromThrowable(JSON.parse, () => 'INVALID_JSON');
+
+    expect(parse('{')).toEqual(err('INVALID_JSON'));
+  });
+});
+
+describe('@vp/result: fromPromise', () => {
+  it('returns the resolved value', async () => {
+    await expect(fromPromise(Promise.resolve(5), describeCause)).resolves.toEqual(ok(5));
+  });
+
+  it.each([
+    { name: 'an Error', thrown: new Error('bang') },
+    { name: 'a non-Error value', thrown: 'bang' },
+  ])('converts a rejection with $name into a failure', async ({ thrown }) => {
+    await expect(fromPromise(Promise.reject(thrown), describeCause)).resolves.toEqual(
+      err({ code: 'WRAPPED', cause: thrown })
+    );
+  });
+});
