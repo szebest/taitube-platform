@@ -215,14 +215,18 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     const multipart = new S3MultipartStorage({ storageClient: s3Client });
 
     app = await buildApp({
-      repositories,
-      cache,
-      storage: s3Client,
-      multipart,
+      adapters: {
+        repositories,
+        cache,
+        storage: s3Client,
+        multipart,
+        probeQueue: mockProbeQueue,
+        queues: new Map(),
+      },
+      limits: {
+        multipartThresholdBytes: 10 * 1024 * 1024,
+      },
       rawBucket: 'raw',
-      jobQueue: mockProbeQueue,
-      adminQueues: new Map(),
-      multipartThresholdBytes: 10 * 1024 * 1024, // 10 MB threshold for tests
     });
     await app.ready();
   });

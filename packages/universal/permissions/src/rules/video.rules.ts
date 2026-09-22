@@ -1,0 +1,36 @@
+import type { AbilityBuilder } from '@casl/ability';
+import { type AppAbility, type UserContext, isSignedInRole } from '../types/index.js';
+
+export function defineVideoRules(
+  user: UserContext | null,
+  builder: AbilityBuilder<AppAbility>
+): void {
+  const { can } = builder;
+
+  can('read', 'Video', { visibility: 'public' });
+  can('read', 'Video', { visibility: 'unlisted' });
+
+  if (!user) {
+    return;
+  }
+
+  const role = user.role;
+
+  if (role === 'MODERATOR') {
+    can('read', 'Video');
+  }
+
+  if (isSignedInRole(role)) {
+    can('read', 'Video', { ownerId: user.id });
+
+    can('create', 'Video');
+    can('react', 'Video');
+
+    can('update', 'Video', { ownerId: user.id });
+    can('delete', 'Video', { ownerId: user.id });
+  }
+
+  if (role === 'CREATOR' || role === 'MODERATOR') {
+    can('publish', 'Video', { ownerId: user.id });
+  }
+}

@@ -1,3 +1,4 @@
+import { getHeartbeatPath } from './config';
 import { createWorkerRunner } from './runner';
 
 export async function main(): Promise<() => Promise<void>> {
@@ -15,7 +16,7 @@ export async function main(): Promise<() => Promise<void>> {
     );
   }
 
-  const heartbeatPath = process.env['WORKER_HEARTBEAT_PATH'] || '/tmp/vp/heartbeat';
+  const heartbeatPath = getHeartbeatPath();
   const writeHeartbeat = async () => {
     try {
       const fs = await import('node:fs/promises');

@@ -1,4 +1,6 @@
-import type { JobQueue, QueueJob, Repositories, StorageClient } from '@vp/core/ports';
+import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
+import type { JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { generateMasterPlaylist } from '@vp/ffmpeg';
 import {
@@ -30,7 +32,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
     repositories,
     storage,
     publicBucket = process.env['STORAGE_PUBLIC_BUCKET'] || 'public',
-    cdnBaseUrl = process.env['CDN_BASE_URL'] || 'http://localhost:9000/public',
+    cdnBaseUrl = process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL,
     workerId = `worker-${process.pid}`,
     logger,
     getQueue,

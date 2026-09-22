@@ -1,10 +1,15 @@
-import { isReservedHandle, isValidHandleFormat, normalizeHandle } from '@vp/core/domain';
-import type { ChannelRepository, UserRepository } from '@vp/core/ports';
+import {
+  handleCandidates,
+  isReservedHandle,
+  isValidHandleFormat,
+  normalizeHandle,
+} from '@vp/domain';
+import type { ChannelRepositoryPort, UserRepository } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 
 export interface ChannelServiceDeps {
   users: UserRepository;
-  channels: ChannelRepository;
+  channels: ChannelRepositoryPort;
 }
 
 export interface ChannelView {
@@ -49,7 +54,7 @@ const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}
  */
 export class ChannelService {
   private readonly users: UserRepository;
-  private readonly channels: ChannelRepository;
+  private readonly channels: ChannelRepositoryPort;
 
   constructor(deps: ChannelServiceDeps) {
     this.users = deps.users;
@@ -155,5 +160,49 @@ export class ChannelService {
       createdAt: channel.createdAt.toISOString(),
       updatedAt: channel.updatedAt.toISOString(),
     };
+  }
+
+  /**
+   * Creates the user and channel rows a verified identity implies, on its first
+   * authenticated request. Both writes tolerate losing a race with a concurrent
+   * request for the same identity.
+   */
+  async ensureProvisioned(userId: string, email?: string): Promise<void> {
+    const userEmail = email || `${userId}@taitube.local`;
+
+    if (!(await this.users.findById(userId))) {
+      try {
+        await this.users.upsert({ id: userId, email: userEmail, tier: 'free' });
+      } catch {
+        // A concurrent request for the same identity already inserted it.
+      }
+    }
+
+    if (await this.channels.findByUserId(userId)) {
+      return;
+    }
+
+    try {
+      await this.channels.create({
+        userId,
+        handle: await this.claimHandle(userEmail, userId),
+        displayName: email ? email.split('@')[0] || 'User' : 'User',
+      });
+    } catch {
+      // A concurrent request for the same identity already created the channel.
+    }
+  }
+
+  private async claimHandle(email: string, userId: string): Promise<string> {
+    for (const candidate of handleCandidates(email, userId)) {
+      if (!(await this.channels.findByHandle(candidate))) {
+        return candidate;
+      }
+    }
+
+    throw new PermanentError(
+      ErrorCodes.HANDLE_ALREADY_TAKEN,
+      `Could not derive a free handle for user ${userId}`
+    );
   }
 }

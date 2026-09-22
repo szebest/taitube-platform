@@ -17,9 +17,9 @@ import type {
   FlowProducerPort,
   JobQueue,
   MultipartStorage,
-  Repositories,
   StorageClient,
 } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import {
   type Logger,
   type PipelineMetrics,
@@ -28,6 +28,7 @@ import {
   initTracing,
   startMetricsServer,
 } from '@vp/observability';
+import { getWorkerStage } from './config';
 import { createFailureHandler } from './failure-handler';
 import { STAGE_REGISTRY, validateQueueName } from './registry';
 import { OutboxRelay, createHousekeepingProcessor } from './stages/housekeeping/index';
@@ -65,13 +66,12 @@ export interface WorkerRunner {
 }
 
 export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Promise<WorkerRunner> {
-  const stage = options.stage || process.env['WORKER_STAGE'] || 'probe';
+  const stage = options.stage || getWorkerStage();
   const config = STAGE_REGISTRY[stage];
   if (!config) {
     throw new Error(`Unknown WORKER_STAGE: "${stage}"`);
   }
 
-  // Validate queue name (AC 22)
   validateQueueName(config.queue);
 
   initTracing({ serviceName: `vp-worker-${stage}` });
@@ -85,9 +85,7 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
 
   const isInMemory =
     options.jobQueue instanceof InMemoryJobQueue ||
-    options.jobQueue?.constructor.name === 'InMemoryJobQueue' ||
     options.repositories instanceof InMemoryRepositories ||
-    options.repositories?.constructor.name === 'InMemoryRepositories' ||
     process.env['NODE_ENV'] === 'test';
 
   const metrics = options.metrics || getMetrics();
@@ -120,7 +118,6 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     options.flowProducer ||
     (isInMemory ? new InMemoryFlowProducer(getQueue) : new BullMqFlowProducer());
 
-  // Processor selection based on stage
   let processor: Parameters<JobQueue['process']>[0];
   if (stage === 'probe') {
     processor = createProbeProcessor({
@@ -197,7 +194,6 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     const startTime = Date.now();
     metrics.bullmqQueueJobs.set({ queue: config.queue, state: 'active' }, 1);
 
-    // Observe how long the job waited in the queue before being picked up
     const enqueuedAt =
       (job as unknown as { timestamp?: number }).timestamp ??
       (job.opts as { timestamp?: number } | undefined)?.timestamp;
@@ -276,13 +272,11 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     }
   };
 
-  const returnedRunner: WorkerRunner = {
+  return {
     queue,
     worker: { name: config.queue },
     metricsServer,
     outboxRelay,
     close,
   };
-
-  return returnedRunner;
 }

@@ -17,9 +17,9 @@ RUN pnpm install --frozen-lockfile
 COPY --from=pruner /repo/out/full/ .
 RUN pnpm turbo run build --filter=@vp/api... \
  && pnpm deploy --legacy --filter=@vp/api --prod /out \
- && cp -r packages/db/drizzle /out/drizzle \
+ && cp -r packages/server/db/drizzle /out/drizzle \
  && mkdir -p /out/node_modules/@vp/db \
- && cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle
+ && cp -r packages/server/db/drizzle /out/node_modules/@vp/db/drizzle
 
 # Production runtime image
 FROM node:24-slim AS runtime

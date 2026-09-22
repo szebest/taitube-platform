@@ -1,6 +1,4 @@
-import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
 import { PermissionsProvider, usePermissions } from '../permissions-provider';
 
 function TestConsumer() {

@@ -1,4 +1,4 @@
-import { PropsWithChildren, createContext, useContext, useLayoutEffect, useMemo } from "react";
+import { type PropsWithChildren, createContext, useContext, useLayoutEffect, useMemo } from "react";
 import { useLocalStorage } from "@uidotdev/usehooks";
 
 export type Theme = "light" | "dark";
@@ -17,8 +17,8 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
 	const ctx = useMemo(() => ({
 		theme,
-		changeTheme: (newTheme: Theme) => setTheme(newTheme)
-	}), [theme]);
+		changeTheme: setTheme
+	}), [theme, setTheme]);
 
 	useLayoutEffect(() => {
 		document.body.dataset.theme = theme;
@@ -27,7 +27,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 	function getUsersPreferredTheme() {
 		if (window.matchMedia) {
 			if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
-			else return 'light';
+			return 'light';
 		}
 
 		return 'light';

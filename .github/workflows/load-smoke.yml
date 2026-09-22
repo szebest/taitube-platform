@@ -6,8 +6,20 @@ on:
   pull_request:
     paths:
       - "tests/load/**"
-      - "apps/**"
+      - "apps/api/**"
+      - "apps/worker/**"
+      - "packages/server/**"
+      - "packages/universal/**"
       - "infra/compose/docker-compose.yml"
+      - ".github/workflows/load-smoke.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  DO_NOT_TRACK: 1
 
 jobs:
   load-smoke:
@@ -20,8 +32,17 @@ jobs:
         with:
           bun-version: 1.4.0
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
       - name: Install dependencies
-        run: npm i -g pnpm && pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Start Docker Compose Stack
         run: |

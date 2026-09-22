@@ -1,17 +1,17 @@
-import type {
-  ReactionCounts,
-  ReactionInputType,
-  ReactionType,
-  VideoReactionRepositoryPort,
-} from '@vp/core/repositories';
-import type { ReactionCachePort, VideoRepository } from '@vp/core/ports';
+import { CaslAuthorizationAdapter } from '@vp/adapters';
+import type { ReactionCounts, ReactionInputType, ReactionType } from '@vp/domain';
+import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
+import type { VideoRepository } from '@vp/core/repositories';
+import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
+import { canReactVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 
 export interface ReactionServiceDeps {
   videoReactions: VideoReactionRepositoryPort;
   reactionCache?: ReactionCachePort;
   videos: VideoRepository;
+  authorization?: AuthorizationPort;
 }
 
 export interface SetReactionOutput {
@@ -33,11 +33,13 @@ export class ReactionService {
   private readonly videoReactions: VideoReactionRepositoryPort;
   private readonly reactionCache?: ReactionCachePort;
   private readonly videos: VideoRepository;
+  private readonly auth: AuthorizationPort;
 
   constructor(deps: ReactionServiceDeps) {
     this.videoReactions = deps.videoReactions;
     this.reactionCache = deps.reactionCache;
     this.videos = deps.videos;
+    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
   }
 
   /**
@@ -48,6 +50,17 @@ export class ReactionService {
     videoId: string,
     type: ReactionInputType
   ): Promise<SetReactionOutput> {
+    this.auth.assertCan(
+      canReactVideo,
+      { user: user },
+      {
+        action: 'react',
+        subject: 'Video',
+        user: user,
+        message: 'Your role is not allowed to react to videos',
+      }
+    );
+
     const video = await this.videos.findById(videoId);
     if (!video) {
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);

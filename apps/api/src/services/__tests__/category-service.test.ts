@@ -1,6 +1,9 @@
 import { CategoryCacheService, InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { ErrorCodes } from '@vp/errors';
+import type { AuthUser } from '../../plugins/auth';
 import { CategoryService } from '../category-service';
+
+const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };
 
 describe('CategoryService', () => {
   let repositories: InMemoryRepositories;
@@ -23,7 +26,7 @@ describe('CategoryService', () => {
     });
   });
 
-  it('lists active categories with ETag calculation', async () => {
+  it('lists active categories with cache headers built by HttpCacheService', async () => {
     await repositories.categories.create({
       slug: 'tech',
       name: 'Technology',
@@ -33,8 +36,11 @@ describe('CategoryService', () => {
     const result = await categoryService.listActive();
     expect(result.categories).toHaveLength(1);
     expect(result.categories[0]?.slug).toBe('tech');
-    expect(result.etag).toMatch(/^"?[a-f0-9]{40}"?$/);
-    expect(result.isNotModified).toBe(false);
+    expect(result.headers).toEqual({
+      'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+      ETag: expect.stringMatching(/^W\/"[a-f0-9]{16}"$/),
+    });
+    expect(result.notModified).toBe(false);
   });
 
   it('evaluates If-None-Match correctly for 304 not modified', async () => {
@@ -45,12 +51,12 @@ describe('CategoryService', () => {
     });
 
     const first = await categoryService.listActive();
-    const second = await categoryService.listActive(first.etag);
-    expect(second.isNotModified).toBe(true);
+    const second = await categoryService.listActive(first.headers['ETag']);
+    expect(second.notModified).toBe(true);
   });
 
   it('creates category and invalidates multi-tier cache', async () => {
-    const created = await categoryService.create({
+    const created = await categoryService.create(ADMIN, {
       slug: 'gaming',
       name: 'Gaming',
       sortOrder: 5,
@@ -68,7 +74,7 @@ describe('CategoryService', () => {
       sortOrder: 20,
     });
 
-    const updated = await categoryService.update(created.id, {
+    const updated = await categoryService.update(ADMIN, created.id, {
       name: 'All Music',
     });
 
@@ -82,8 +88,23 @@ describe('CategoryService', () => {
       sortOrder: 30,
     });
 
-    await categoryService.delete(created.id);
+    await categoryService.delete(ADMIN, created.id);
     const list = await categoryService.listActive();
     expect(list.categories.some((c) => c.slug === 'news')).toBe(false);
+  });
+
+  it.each([
+    { scenario: 'an anonymous caller', caller: null, code: ErrorCodes.UNAUTHORIZED },
+    {
+      scenario: 'a signed-in non-admin',
+      caller: { id: 'user-1', role: 'USER' } as AuthUser,
+      code: ErrorCodes.FORBIDDEN,
+    },
+  ])('refuses taxonomy writes from $scenario', async ({ caller, code }) => {
+    const input = { slug: 'blocked', name: 'Blocked' };
+
+    await expect(categoryService.create(caller, input)).rejects.toMatchObject({ code });
+    await expect(categoryService.update(caller, 'any', input)).rejects.toMatchObject({ code });
+    await expect(categoryService.delete(caller, 'any')).rejects.toMatchObject({ code });
   });
 });

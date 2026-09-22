@@ -1,18 +1,14 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import type {
-  FlowProducerPort,
-  JobQueue,
-  QueueJob,
-  Repositories,
-  StorageClient,
-} from '@vp/core/ports';
+import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
 import { NotifyJob, type ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
+import { getHeartbeatPath } from '../config';
 import { validateJobId } from '../registry';
 import { enqueueFollowUpJobs } from './probe-enqueue';
 
@@ -34,8 +30,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     rawBucket = process.env['STORAGE_RAW_BUCKET'] || 'raw',
     workerId = `worker-${process.pid}`,
     logger,
-    heartbeatPath = process.env['WORKER_HEARTBEAT_PATH'] ||
-      path.join(os.tmpdir(), 'worker-heartbeat'),
+    heartbeatPath = getHeartbeatPath(),
     getQueue,
     flowProducer,
   } = deps;

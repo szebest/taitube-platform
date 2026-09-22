@@ -1,11 +1,11 @@
 import { memo } from "react";
 import { Button } from "react-bootstrap";
 import { toast } from 'react-toastify';
-import { animate, stagger, useAnimate } from "framer-motion";
+import { type animate, useAnimate } from "framer-motion";
 
 import styles from "./subscribe-button.module.scss";
 
-import { useDeleteSubscriptionMutation, usePostSubscriptionMutation } from "../../api";
+import { useSubscribeMutation, useUnsubscribeMutation } from "../../api";
 
 import { useAuth } from "../../providers";
 import { useIsSubscribed } from "../../hooks";
@@ -17,20 +17,18 @@ const randomNumberBetween = (min: number, max: number) => {
 type AnimationSequence = Parameters<typeof animate>[0];
 
 export type SubscribeButtonProps = {
-	userId: number;
-	userFullName: string;
-	videoId?: number;
+	channelId: string;
 };
 
-export const SubscribeButton = memo(({ userId, userFullName, videoId }: SubscribeButtonProps) => {
+export const SubscribeButton = memo(({ channelId }: SubscribeButtonProps) => {
 	const [scope, animate] = useAnimate();
 
-	const { user, isLoading: isLoadingUser } = useAuth();
+	const { account, isLoading: isLoadingUser } = useAuth();
 
-	const { isSubscribed, isLoading: isIssubscribedLoading } = useIsSubscribed(userId, user !== undefined);
+	const { isSubscribed, isLoading: isIssubscribedLoading } = useIsSubscribed(channelId, account !== undefined);
 
-	const [subscribe, { isLoading: isSubscribeLoading }] = usePostSubscriptionMutation();
-	const [unsubscribe, { isLoading: isUnsubscribeLoading }] = useDeleteSubscriptionMutation();
+	const [subscribe, { isLoading: isSubscribeLoading }] = useSubscribeMutation();
+	const [unsubscribe, { isLoading: isUnsubscribeLoading }] = useUnsubscribeMutation();
 
 	const isLoading = isLoadingUser || isSubscribeLoading || isUnsubscribeLoading || isIssubscribedLoading;
 
@@ -84,24 +82,17 @@ export const SubscribeButton = memo(({ userId, userFullName, videoId }: Subscrib
 			...sparklesFadeOut
 		]);
 
-		subscribe({
-			userId,
-			userFullName,
-			videoId
-		});
+		subscribe(channelId);
 	}
 
 	const handleUnsubscribe = () => {
 		if (!checkLoggedInStatus()) return;
 
-		unsubscribe({
-			userId,
-			videoId
-		});
+		unsubscribe(channelId);
 	}
 
 	const checkLoggedInStatus = () => {
-		if (user === undefined) {
+		if (account === undefined) {
 			toast("You must be logged in to subscribe to a channel")
 
 			return false;
@@ -125,10 +116,11 @@ export const SubscribeButton = memo(({ userId, userFullName, videoId }: Subscrib
 					aria-hidden
 					className={styles.stars}
 				>
-					{Array.from({ length: 20 }).map((_, index) => (
+					{Array.from({ length: 20 }, (_, index) => `sparkle-${index}`).map((sparkle) => (
 						<svg
-							className={`${styles.stars__star} sparkle-${index}`}
-							key={index}
+							className={`${styles.stars__star} ${sparkle}`}
+							key={sparkle}
+							aria-hidden="true"
 							viewBox="0 0 122 117"
 							width="10"
 							height="10"

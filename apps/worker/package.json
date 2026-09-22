@@ -17,18 +17,17 @@
     "@vp/config": "workspace:*",
     "@vp/core": "workspace:*",
     "@vp/db": "workspace:*",
+    "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/events": "workspace:*",
     "@vp/ffmpeg": "workspace:*",
     "@vp/job-contracts": "workspace:*",
     "@vp/observability": "workspace:*",
     "@vp/storage": "workspace:*",
-    "bullmq": "^6.3.4",
-    "drizzle-orm": "^0.45.2",
-    "ioredis": "^5.11.1",
     "uuidv7": "^1.2.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@opentelemetry/context-async-hooks": "^2.11.0",
     "@opentelemetry/sdk-trace-base": "^2.11.0",
     "@types/node": "^24.0.0",
@@ -37,5 +36,9 @@
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
+  },
+  "vp": {
+    "tier": "server",
+    "layer": 5
   }
 }

@@ -4,56 +4,40 @@ How the engineering skills should consume this repo's domain documentation when 
 
 ## Before exploring, read these
 
-- **`CONTEXT.md`** at the repo root, or
-- **`CONTEXT-MAP.md`** at the repo root if it exists: it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
-- **`docs/adr/`**: read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
+- **[`CONTEXT.md`](../../CONTEXT.md)** at the repo root — the glossary and the seam discipline.
+- **[`docs/SDD.md` §4 — Architecture Decision Records](../SDD.md#4-architecture-decision-records)** — read the
+  ADRs that touch the area you are about to work in.
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
+**This repo has no `docs/adr/` directory and is not getting one.** Every ADR lives inline in SDD §4 as
+`### ADR-NN — <title>`, numbered sequentially. Wherever a skill tells you to read `docs/adr/`, read SDD §4
+instead; wherever one tells you to *write* an ADR, append a new `### ADR-NN` section there. One file keeps
+the decisions next to the design they constrain, and the tickets already link into it by anchor.
 
-## File structure
-
-Single-context repo (most repos):
-
-```
-/
-├── CONTEXT.md
-├── docs/adr/
-│   ├── 0001-event-sourced-orders.md
-│   └── 0002-postgres-for-write-model.md
-└── src/
-```
-
-Multi-context repo (presence of `CONTEXT-MAP.md` at the root):
-
-```
-/
-├── CONTEXT-MAP.md
-├── docs/adr/                          ← system-wide decisions
-└── src/
-    ├── ordering/
-    │   ├── CONTEXT.md
-    │   └── docs/adr/                  ← context-specific decisions
-    └── billing/
-        ├── CONTEXT.md
-        └── docs/adr/
-```
+There is one context, so there is no `CONTEXT-MAP.md` and no per-context ADR directory. If a skill looks for
+either, proceed silently — do not flag the absence and do not create them.
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
+When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name),
+use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
 
-If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
+If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the
+project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
 
 ## Flag ADR conflicts
 
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
 
-> _Contradicts ADR-0007 (event-sourced orders), but worth reopening because…_
+> _Contradicts ADR-19 (hexagonal architecture), but worth reopening because…_
 
 ---
 
 ## video-pipeline specifics
 
-- ADRs currently live in `docs/SDD.md` §4 (ADR-01 … ADR-18). Treat them as `docs/adr/`; when an ADR changes, add a dated file under `docs/adr/` and update the SDD section.
-- Glossary terms to use verbatim (from PRD §13): *rendition*, *ladder*, *generation*, *stage*, *fan-out/fan-in*, *DLQ*, *stalled job*, *fencing token*, *effectively-once*, *local-first*.
-- If `CONTEXT.md` does not exist yet, `domain-modeling` creates it lazily from these terms.
+- Glossary terms to use verbatim (from PRD §13 and `CONTEXT.md`): *rendition*, *ladder*, *generation*,
+  *stage*, *fan-out/fan-in*, *DLQ*, *stalled job*, *fencing token*, *effectively-once*, *local-first*,
+  *package tier*, *dependency layer*, *contract package*, *conformance suite*.
+- The vocabulary for package structure is in [`packages/AGENTS.md`](../../packages/AGENTS.md), which SDD
+  ADR-23 is the decision record for.
+- An ADR that changes must be edited in place in SDD §4; a superseded one keeps its number and says which
+  ADR replaced it.

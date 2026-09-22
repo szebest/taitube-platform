@@ -1,81 +1,9 @@
-import { JobQueue } from '@vp/core/ports';
+import { InMemoryJobQueue } from '@vp/adapters';
+import type { JobQueue } from '@vp/core/ports';
 import { mintDevToken } from '@vp/dev-token';
 import { QUEUES } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
-
-class MockAdminJobQueue extends JobQueue {
-  private _paused = false;
-  readonly name: string;
-  readonly metaValues = { version: 'bullmq' };
-  readonly opts = { prefix: 'bull' };
-  readonly backend = {
-    getQueueMetaField: async () => null,
-    getQueueMetaFields: async () => [null, null],
-    on: () => {},
-  };
-
-  constructor(name: string) {
-    super();
-    this.name = name;
-  }
-
-  async getJobState(_jobId: string): Promise<string | undefined> {
-    return 'completed';
-  }
-
-  async checkHealth(): Promise<boolean> {
-    return true;
-  }
-
-  getName(): string {
-    return this.name;
-  }
-
-  async add<_T = unknown>(): Promise<any> {
-    return { id: '1', name: this.name, data: {} };
-  }
-
-  async process(): Promise<void> {}
-
-  async isPaused(): Promise<boolean> {
-    return this._paused;
-  }
-
-  async pause(): Promise<void> {
-    this._paused = true;
-  }
-
-  async resume(): Promise<void> {
-    this._paused = false;
-  }
-
-  async getJobCounts(): Promise<any> {
-    return {
-      active: 0,
-      completed: 0,
-      failed: 0,
-      delayed: 0,
-      waiting: 0,
-      paused: 0,
-    };
-  }
-
-  async getJobs(): Promise<any[]> {
-    return [];
-  }
-
-  async getWorkers(): Promise<any[]> {
-    return [];
-  }
-
-  async getJobSchedulersCount(): Promise<number> {
-    return 0;
-  }
-
-  async close(): Promise<void> {}
-}
 
 describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
   let app: FastifyInstance;
@@ -91,13 +19,14 @@ describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
   beforeAll(async () => {
     process.env.ADMIN_TOKEN = VALID_ADMIN_TOKEN;
 
-    // Create mock queue instances for all queues in QUEUES
-    for (const qName of QUEUES) {
-      queuesMap.set(qName, new MockAdminJobQueue(qName));
+    for (const name of QUEUES) {
+      queuesMap.set(name, new InMemoryJobQueue(name));
     }
 
     app = await buildApp({
-      adminQueues: queuesMap,
+      adapters: {
+        queues: queuesMap,
+      },
     });
     await app.ready();
 

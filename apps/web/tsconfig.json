@@ -6,8 +6,7 @@
     "lib": [
       "dom",
       "dom.iterable",
-      "esnext",
-      "lib.esnext"
+      "esnext"
     ],
     "allowJs": true,
     "skipLibCheck": true,
@@ -22,9 +21,14 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "typeRoots": ["node_modules/@types"],
+    "types": [],
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "src/**/__tests__/**",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
   ]
 }

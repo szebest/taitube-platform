@@ -2,9 +2,9 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
-import type { MultipartStorage, Repositories, StorageClient } from '../../core/ports/index';
-import { ErrorCodes } from '../../packages/errors/src/index';
-import { UploadClient } from '../../tools/upload-client/src/index';
+import type { MultipartStorage, Repositories, StorageClient } from '../../packages/server/core/ports/index';
+import { ErrorCodes } from '../../packages/universal/errors/src/index';
+import { UploadClient } from '../../packages/server/upload-client/src/index';
 import type { VideoTestResult, VideoTestSpec } from './specs';
 
 const uuidv7 = () => crypto.randomUUID();
@@ -179,8 +179,7 @@ export async function auditDlqHostile(
   }
 
   if (items.length === 0 && repositories?.dlq) {
-    const dlqList = await repositories.dlq.list({ limit: 100 });
-    items = dlqList.items;
+    items = await repositories.dlq.list({ limit: 100 });
   }
 
   const hostileSpecs = specs.filter((s) => s.expectedStatus === 'FAILED');

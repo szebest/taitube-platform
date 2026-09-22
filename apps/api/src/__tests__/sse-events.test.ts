@@ -4,7 +4,6 @@ import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from
 import { mintToken } from '@vp/dev-token';
 import { publishVideoEvent, videoChannel } from '@vp/events';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 import { SseConnection } from '../services/sse-connection';
 import { SseHub } from '../services/sse-hub';
@@ -33,12 +32,16 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     storage = new InMemoryStorageClient();
 
     app = await buildApp({
-      repositories,
-      cache,
-      storage,
-      sseHeartbeatMs: 100, // fast heartbeat for tests
-      sseIdleTimeoutMs: 500, // fast idle timeout for tests
-      sseMaxPerUser: 20,
+      adapters: {
+        repositories,
+        cache,
+        storage,
+      },
+      limits: {
+        sseHeartbeatMs: 100,
+        sseIdleTimeoutMs: 500,
+        sseMaxPerUser: 20,
+      },
     });
 
     const address = await app.listen({ port: 0, host: '127.0.0.1' });
@@ -546,16 +549,20 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     const sharedCache = new InMemoryCacheClient();
 
     const app1 = await buildApp({
-      repositories,
-      cache: sharedCache,
-      storage,
+      adapters: {
+        repositories,
+        cache: sharedCache,
+        storage,
+      },
     });
     const addr1 = await app1.listen({ port: 0, host: '127.0.0.1' });
 
     const app2 = await buildApp({
-      repositories,
-      cache: sharedCache,
-      storage,
+      adapters: {
+        repositories,
+        cache: sharedCache,
+        storage,
+      },
     });
     const addr2 = await app2.listen({ port: 0, host: '127.0.0.1' });
 
@@ -609,7 +616,8 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
 
     await new Promise<void>((resolve, reject) => {
       const req = http.get(
-        `${baseUrl}/v1/me/events?token=${encodeURIComponent(ownerToken)}`,
+        `${baseUrl}/v1/me/events`,
+        { headers: { authorization: `Bearer ${ownerToken}` } },
         (res) => {
           expect(res.statusCode).toBe(200);
 

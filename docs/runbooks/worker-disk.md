@@ -5,7 +5,7 @@ Transcode and thumbnail workers write intermediate media files (temporary raw do
 
 Per SDD §12.2:
 - 1080p workers have an 8 GiB emptyDir volume limit (`8e9` bytes).
-- The streaming segment uploader (`packages/ffmpeg/src/segment-uploader.ts`) uploads segments to S3/R2 as they finish encoding and removes them immediately, keeping local disk usage strictly bounded to `sourceSize + 3 * maxSegmentBytes`.
+- The streaming segment uploader (`packages/server/ffmpeg/src/segment-uploader.ts`) uploads segments to S3/R2 as they finish encoding and removes them immediately, keeping local disk usage strictly bounded to `sourceSize + 3 * maxSegmentBytes`.
 
 If `worker_tmp_bytes` exceeds 80% of the 8 GB limit (`6.4 GB`) for > 5 minutes, the `WorkerTmpDiskHigh` alert fires. This prevents worker pods from crashing with `ENOSPC` or Kubernetes eviction.
 

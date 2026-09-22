@@ -1,0 +1,42 @@
+{
+  "name": "@vp/upload-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "vp-upload": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vp/errors": "workspace:*",
+    "@vp/storage": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@vp/adapters": "workspace:*",
+    "@vp/api": "workspace:*",
+    "@vp/core": "workspace:*",
+    "@vp/dev-token": "workspace:*",
+    "@vp/testing": "workspace:*",
+    "@vp/tsconfig": "workspace:*",
+    "fastify": "^5.2.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  },
+  "vp": {
+    "layer": 6
+  }
+}

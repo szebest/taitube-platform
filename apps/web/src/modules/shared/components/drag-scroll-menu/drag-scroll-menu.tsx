@@ -1,5 +1,5 @@
-import { PropsWithChildren, useEffect } from 'react';
-import { ScrollMenu, VisibilityContext } from 'react-horizontal-scrolling-menu';
+import { type PropsWithChildren, useEffect } from 'react';
+import { ScrollMenu, type VisibilityContext } from 'react-horizontal-scrolling-menu';
 
 import styles from './drag-scroll-menu.module.scss';
 
@@ -26,7 +26,7 @@ export function DragScrollMenu({ children, onDraggingChange }: DragScrollMenuPro
 		});
 
 	useEffect(() => {
-		onDraggingChange && onDraggingChange(dragging)
+		onDraggingChange?.(dragging)
 	}, [dragging, onDraggingChange]);
 
 	return (

@@ -225,7 +225,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ../../observability/alerts:/etc/prometheus/rules:ro
+      - ../observability/alerts:/etc/prometheus/rules:ro
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -259,7 +259,7 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ../../observability/dashboards:/var/lib/grafana/dashboards:ro
+      - ../observability/dashboards:/var/lib/grafana/dashboards:ro
     restart: on-failure
 
   tempo:

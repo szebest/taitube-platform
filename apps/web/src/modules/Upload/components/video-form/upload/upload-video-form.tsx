@@ -5,28 +5,24 @@ import { useForm } from "react-hook-form";
 
 import styles from '../video-form.module.scss';
 
-import { getCategories } from "src/modules/shared/helpers";
+import { VIDEO_VISIBILITIES } from "@vp/api-contracts";
 
-import { UploadFormModel, UploadResponse } from "../../../models";
+import type { CompletedUpload } from "../../../api";
+import type { UploadFormModel } from "../../../models";
 import { DropzoneField, UploadProgress } from "../..";
 
 export type VideoFormProps = {
-	isEdit: boolean;
 	isError: boolean;
 	isSuccess: boolean;
 	reset: VoidFunction;
-	data?: UploadResponse;
+	data?: CompletedUpload;
 	submit: (form: UploadFormModel) => void;
 }
 
-export const VideoForm = ({ isEdit, isError, isSuccess, reset: resetMutation, data, submit }: VideoFormProps) => {
+export const VideoForm = ({ isError, isSuccess, reset: resetMutation, data, submit }: VideoFormProps) => {
 	const acceptFileTypes = useMemo(() => ({
 		'video/mp4': ['.mp4']
 	}), []);
-
-	const categories = useMemo(() => {
-		return getCategories();
-	}, []);
 
 	const {
 		register,
@@ -34,7 +30,7 @@ export const VideoForm = ({ isEdit, isError, isSuccess, reset: resetMutation, da
 		control,
 		reset,
 		formState: { isSubmitted, isValid }
-	} = useForm<UploadFormModel>();
+	} = useForm<UploadFormModel>({ defaultValues: { visibility: 'private' } });
 
 	const clearForm = () => {
 		reset();
@@ -43,31 +39,24 @@ export const VideoForm = ({ isEdit, isError, isSuccess, reset: resetMutation, da
 
 	return (
 		<Form onSubmit={handleSubmit((form) => submit(form))} className={styles.form}>
-			{!isEdit &&
-				<DropzoneField
-					name='file'
-					control={control as any}
-					validation={{ required: true }}
-					accept={acceptFileTypes}
-					multiple={false}
-					placeholderText="Drag 'n' drop, or click to select video file" />
-			}
+			<DropzoneField
+				name='file'
+				control={control}
+				validation={{ required: true }}
+				accept={acceptFileTypes}
+				multiple={false}
+				placeholderText="Drag 'n' drop, or click to select video file" />
 
 			<Form.Group controlId="title">
 				<Form.Label>Video title</Form.Label>
 				<Form.Control type="text" {...register('title', { required: true })} />
 			</Form.Group>
 
-			<Form.Group controlId="description">
-				<Form.Label>Video description</Form.Label>
-				<Form.Control as="textarea" type="text" {...register('description', { required: true })} className={styles.form__textarea} />
-			</Form.Group>
-
-			<Form.Group controlId="category">
-				<Form.Label>Category</Form.Label>
-				<Form.Select defaultValue={-1} aria-label="Video category" {...register('category', { required: true })}>
-					{categories.map((category) => (
-						<option key={category.id} value={category.id}>{category.value}</option>
+			<Form.Group controlId="visibility">
+				<Form.Label>Visibility</Form.Label>
+				<Form.Select aria-label="Video visibility" {...register('visibility', { required: true })}>
+					{VIDEO_VISIBILITIES.map((visibility) => (
+						<option key={visibility} value={visibility}>{visibility}</option>
 					))}
 				</Form.Select>
 			</Form.Group>
@@ -89,7 +78,7 @@ export const VideoForm = ({ isEdit, isError, isSuccess, reset: resetMutation, da
 			}
 
 			{isSuccess && data &&
-				<Link to={`/watch/${data.id}`} className="btn btn-primary">Go to the uploaded video page</Link>
+				<Link to={`/watch/${data.videoId}`} className="btn btn-primary">Go to the uploaded video page</Link>
 			}
 
 			{isSubmitted && !isError &&

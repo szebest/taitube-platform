@@ -1,52 +1,46 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
-import { defaultPaginator, type Paginator } from '@vp/core/pagination';
-import type {
-  AuthorizationPort,
-  ReactionCachePort,
-  VideoRepository,
-  VideoStatus,
-} from '@vp/core/ports';
+import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
+import type { AuthorizationPort, JobQueue, ReactionCachePort } from '@vp/core/ports';
+import type { VideoRepository } from '@vp/core/repositories';
+import type { VideoStatus, VideoVisibility } from '@vp/domain';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import {
-  type UserContext,
-  canDeleteVideo,
-  canReadVideo,
-  canUpdateVideo,
-  parseRole,
-} from '@vp/permissions';
+import { type Paginator, defaultPaginator } from '@vp/pagination';
+import { canAccessAdmin, canReadVideo, canUpdateVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
+import {
+  type ReprocessResult,
+  type SoftDeleteResult,
+  type VideoLifecycleDeps,
+  reprocessVideo,
+  softDeleteVideo,
+} from './video-lifecycle';
 
-export * from './types';
+export * from './video-lifecycle';
+
+export * from './video-views';
 import {
   type VideoDetailView,
-  type VideoServiceDeps,
   type VideoSummaryView,
   toVideoDetailView,
   toVideoSummaryView,
-} from './types';
+} from './video-views';
 
-export {
-  encodeVideoCursor,
-  decodeVideoCursor,
-  encodeFeedCursor,
-  decodeFeedCursor,
-  type FeedSort,
-} from './cursor';
+export interface VideoServiceDeps {
+  videos: VideoRepository;
+  cdnBaseUrl?: string;
+  reactionCache?: ReactionCachePort;
+  authorization?: AuthorizationPort;
+  paginator?: Paginator;
+  probeQueue?: JobQueue;
+}
 
 import {
-  decodeFeedCursor,
-  decodeVideoCursor,
-  feedCursorPayload,
   type FeedSort,
-  videoCursorPayload,
+  createdAtCursorPayload,
+  decodeCreatedAtCursor,
+  decodeFeedCursor,
+  feedCursorPayload,
 } from './cursor';
-
-/** Hacker-News style gravity decay; only the trending sort keys on it. */
-function gravityScore(row: { createdAt: Date; viewsCount?: number }, sort: FeedSort) {
-  if (sort !== 'trending') return undefined;
-  const ageHours = Math.max(0, (Date.now() - row.createdAt.getTime()) / 3600000);
-  return ((row.viewsCount ?? 0) + 1) / (ageHours + 2) ** 1.5;
-}
 
 /**
  * VideoService — Deep domain module for video operations and projections (SDD §6.1, §6.3).
@@ -57,14 +51,19 @@ export class VideoService {
   private readonly reactionCache?: ReactionCachePort;
   private readonly auth: AuthorizationPort;
   private readonly paginator: Paginator;
+  private readonly lifecycle: VideoLifecycleDeps;
 
   constructor(deps: VideoServiceDeps) {
     this.videos = deps.videos;
     this.reactionCache = deps.reactionCache;
     this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
     this.paginator = deps.paginator ?? defaultPaginator;
-    const cdnBase =
-      deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || 'http://localhost:9000/public';
+    this.lifecycle = {
+      videos: this.videos,
+      auth: this.auth,
+      ...(deps.probeQueue ? { probeQueue: deps.probeQueue } : {}),
+    };
+    const cdnBase = deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL;
     this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
   }
 
@@ -79,14 +78,14 @@ export class VideoService {
 
     const rows = await this.videos.listByOwner({
       ownerId: user.id,
-      viewer: { id: user.id, role: parseRole(user.role) },
-      cursor: decodeVideoCursor(options.cursor, this.paginator),
+      viewer: user,
+      cursor: decodeCreatedAtCursor(options.cursor, this.paginator),
       limit,
       status: options.status,
     });
 
     return this.paginator.paginate(rows, limit, {
-      cursorOf: videoCursorPayload,
+      cursorOf: createdAtCursorPayload,
       toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
     });
   }
@@ -112,7 +111,7 @@ export class VideoService {
     });
 
     const page = this.paginator.paginate(result.items, limit, {
-      cursorOf: (row) => feedCursorPayload(row, sort, gravityScore(row, sort)),
+      cursorOf: (row) => feedCursorPayload(row, result.instant),
       toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
     });
 
@@ -128,13 +127,10 @@ export class VideoService {
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
     const { video, renditions: videoRenditions } = details;
-    const userContext: UserContext | null = user
-      ? { id: user.id, role: parseRole(user.role) }
-      : null;
 
-    const canRead = this.auth.can(canReadVideo, { user: userContext, video });
+    const canRead = this.auth.can(canReadVideo, { user: user, video });
     if (!canRead) {
-      if (!userContext) {
+      if (!user) {
         this.auth.assertCan(
           canReadVideo,
           { user: null, video },
@@ -169,7 +165,7 @@ export class VideoService {
     input: {
       title?: string;
       description?: string;
-      visibility?: 'private' | 'unlisted' | 'public';
+      visibility?: VideoVisibility;
       version: number;
     }
   ): Promise<VideoDetailView> {
@@ -177,15 +173,13 @@ export class VideoService {
     if (!existing)
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
 
-    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
-
-    if (!this.auth.can(canReadVideo, { user: userContext, video: existing })) {
+    if (!this.auth.can(canReadVideo, { user: user, video: existing })) {
       throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
     }
 
     this.auth.assertCan(
       canUpdateVideo,
-      { user: userContext, video: existing },
+      { user: user, video: existing },
       {
         action: 'update',
         subject: 'Video',
@@ -203,7 +197,7 @@ export class VideoService {
     const patch: {
       title?: string;
       description?: string;
-      visibility?: 'private' | 'unlisted' | 'public';
+      visibility?: VideoVisibility;
     } = {};
     if (input.title !== undefined) patch.title = input.title;
     if (input.description !== undefined) patch.description = input.description;
@@ -227,56 +221,21 @@ export class VideoService {
   }
 
   /**
-   * Soft deletes a video (SDD §6.1, §9.8, Ticket 17 AC 4).
+   * Admins are not throttled on reprocess; the route only asks, it does not decide.
    */
-  async softDelete(
+  isRateLimitExempt(user: AuthUser): boolean {
+    return this.auth.can(canAccessAdmin, { user });
+  }
+
+  reprocess(
     user: AuthUser,
-    videoId: string
-  ): Promise<{ videoId: string; status: 'DELETED' }> {
-    const video = await this.videos.findById(videoId);
-    if (!video) throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+    videoId: string,
+    options: { traceparent?: string } = {}
+  ): Promise<ReprocessResult> {
+    return reprocessVideo(this.lifecycle, user, videoId, options);
+  }
 
-    const userContext: UserContext = { id: user.id, role: parseRole(user.role) };
-
-    this.auth.assertCan(
-      canDeleteVideo,
-      { user: userContext, video },
-      {
-        action: 'delete',
-        subject: 'Video',
-        message: 'Only the video owner or an admin may delete this video',
-      }
-    );
-
-    if (video.status === 'DELETED') return { videoId, status: 'DELETED' };
-
-    const allowedFrom: VideoStatus[] = [
-      'UPLOADING',
-      'UPLOADED',
-      'PROBING',
-      'PROCESSING',
-      'READY',
-      'FAILED',
-      'REJECTED',
-      'ABANDONED',
-    ];
-
-    const transitioned = await this.videos.transition({
-      videoId,
-      from: allowedFrom,
-      to: 'DELETED',
-      eventType: 'video.deleted',
-      eventPayload: { requestedBy: user.id },
-      patch: { deletedAt: new Date() },
-    });
-
-    if (!transitioned) {
-      throw new PermanentError(
-        ErrorCodes.VERSION_CONFLICT,
-        'State conflict while transitioning video to DELETED'
-      );
-    }
-
-    return { videoId, status: 'DELETED' };
+  softDelete(user: AuthUser, videoId: string): Promise<SoftDeleteResult> {
+    return softDeleteVideo(this.lifecycle, user, videoId);
   }
 }

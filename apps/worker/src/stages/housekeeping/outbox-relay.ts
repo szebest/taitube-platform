@@ -1,4 +1,5 @@
-import type { FlowProducerPort, JobQueue, Repositories } from '@vp/core/ports';
+import type { FlowProducerPort, JobQueue } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
 
 export interface OutboxRelayOptions {

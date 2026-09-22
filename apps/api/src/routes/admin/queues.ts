@@ -1,14 +1,10 @@
-import type { CacheClient, JobQueue } from '@vp/core/ports';
-import { ErrorCodes, PermanentError, PipelineError } from '@vp/errors';
+import { PipelineError } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { requireAdmin } from '../../plugins/auth';
-import { QueueService } from '../../services/queue-service';
+import { PROBLEM_CONTENT_TYPE, domainProblem } from '../../plugins/errors';
+import type { QueueService } from '../../services/queue-service';
 
 export interface AdminQueuesOptions {
-  cache?: CacheClient | null;
-  redisClient?: CacheClient | null;
-  queues?: Map<string, JobQueue>;
-  queueService?: QueueService;
+  queueService: QueueService;
 }
 
 /**
@@ -17,38 +13,24 @@ export interface AdminQueuesOptions {
  */
 export async function registerAdminQueuesRoutes(
   app: FastifyInstance,
-  options: AdminQueuesOptions = {}
+  options: AdminQueuesOptions
 ): Promise<void> {
-  const queueService =
-    options.queueService ??
-    new QueueService({
-      queues: options.queues,
-    });
+  const { queueService } = options;
 
   const boardPlugin = queueService.getBoardPlugin('/admin/queues');
 
-  // Encapsulated admin scope protected by requireAdmin (Ticket 10: AC 17)
   await app.register(
     async (adminScope) => {
       adminScope.addHook('onRequest', async (request, reply) => {
         try {
-          requireAdmin(request);
+          queueService.assertAdmin(request.user);
         } catch (err) {
-          if (err instanceof PermanentError || err instanceof PipelineError) {
-            const statusCode = err.code === ErrorCodes.UNAUTHORIZED ? 401 : 403;
-            return reply
-              .status(statusCode)
-              .header('content-type', 'application/problem+json; charset=utf-8')
-              .send({
-                type: `https://errors.video-pipeline.local/${err.code}`,
-                title: err.code === ErrorCodes.UNAUTHORIZED ? 'Unauthorized' : 'Forbidden',
-                status: statusCode,
-                detail: err.message,
-                code: err.code,
-                instance: request.url,
-              });
-          }
-          throw err;
+          if (!(err instanceof PipelineError)) throw err;
+          const problem = domainProblem(err.code, err.message, request.url);
+          return reply
+            .status(problem.status)
+            .header('content-type', PROBLEM_CONTENT_TYPE)
+            .send(problem);
         }
       });
 

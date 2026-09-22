@@ -1,11 +1,24 @@
-import type { DlqRepository, EventRepository, JobQueue } from '@vp/core/ports';
+import { CaslAuthorizationAdapter } from '@vp/adapters';
+import { type Paginator, defaultPaginator } from '@vp/pagination';
+import type { AuthorizationPort, JobQueue } from '@vp/core/ports';
+import type {
+  DlqEntryRecord,
+  DlqRepository,
+  DlqStatus,
+  EventRepository,
+} from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { defaultJobOptions, generateReplayJobId, stagePolicies } from '@vp/job-contracts';
+import type { AuthUser } from '../plugins/auth';
+import { assertAdminAccess } from './admin-access';
+import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface DlqServiceDeps {
   dlq: DlqRepository;
   events: EventRepository;
   queues: Map<string, JobQueue>;
+  authorization?: AuthorizationPort;
+  paginator?: Paginator;
 }
 
 export interface ReplayDlqResult {
@@ -21,28 +34,43 @@ export class DlqService {
   private readonly dlq: DlqRepository;
   private readonly events: EventRepository;
   private readonly queues: Map<string, JobQueue>;
+  private readonly auth: AuthorizationPort;
+  private readonly paginator: Paginator;
 
   constructor(deps: DlqServiceDeps) {
     this.dlq = deps.dlq;
     this.events = deps.events;
     this.queues = deps.queues;
+    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
+    this.paginator = deps.paginator ?? defaultPaginator;
   }
 
   /**
    * Lists DLQ entries with cursor pagination and status filters.
    */
-  async list(options: {
-    cursor?: string;
-    limit?: number;
-    status?: 'PARKED' | 'REPLAYED' | 'DISCARDED';
-  }) {
-    return this.dlq.list(options);
+  async list(
+    caller: AuthUser | null,
+    options: { cursor?: string; limit?: number; status?: DlqStatus }
+  ): Promise<{ items: DlqEntryRecord[]; nextCursor: string | null }> {
+    assertAdminAccess(this.auth, caller);
+    const limit = this.paginator.limit(options.limit);
+    const rows = await this.dlq.list({
+      cursor: decodeCreatedAtCursor(options.cursor, this.paginator),
+      limit,
+      ...(options.status ? { status: options.status } : {}),
+    });
+
+    return this.paginator.paginate(rows, limit, {
+      cursorOf: createdAtCursorPayload,
+      toItem: (row) => row,
+    });
   }
 
   /**
    * Replays a dead-letter job into its origin queue with a fresh replay suffix and registers an audit event.
    */
-  async replay(id: string): Promise<ReplayDlqResult> {
+  async replay(caller: AuthUser | null, id: string): Promise<ReplayDlqResult> {
+    assertAdminAccess(this.auth, caller);
     const entry = await this.dlq.findById(id);
     if (!entry) {
       throw new PermanentError(ErrorCodes.DLQ_ENTRY_NOT_FOUND, `DLQ entry "${id}" not found`);
@@ -108,7 +136,8 @@ export class DlqService {
   /**
    * Marks a dead-letter queue entry as DISCARDED and records an audit event.
    */
-  async discard(id: string): Promise<void> {
+  async discard(caller: AuthUser | null, id: string): Promise<void> {
+    assertAdminAccess(this.auth, caller);
     const entry = await this.dlq.findById(id);
     if (!entry) {
       throw new PermanentError(ErrorCodes.DLQ_ENTRY_NOT_FOUND, `DLQ entry "${id}" not found`);

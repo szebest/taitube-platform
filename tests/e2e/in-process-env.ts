@@ -6,7 +6,7 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '../../adapters/index';
+} from '../../packages/server/adapters/index';
 import { buildApp } from '../../apps/api/src/app';
 import { createWorkerRunner } from '../../apps/worker/src/runner';
 import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
@@ -17,8 +17,8 @@ import type {
   MultipartStorage,
   Repositories,
   StorageClient,
-} from '../../core/ports/index';
-import { createLogger, createMetricsRegistry } from '../../packages/observability/src/index';
+} from '../../packages/server/core/ports/index';
+import { createLogger, createMetricsRegistry } from '../../packages/server/observability/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
 export interface InProcessEnv {
@@ -98,17 +98,21 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
   }
 
   const app = await buildApp({
-    repositories,
-    storage,
-    multipart,
-    cache,
-    jobQueue: queuesMap.get('probe'),
-    adminQueues: queuesMap,
+    adapters: {
+      repositories,
+      storage,
+      multipart,
+      cache,
+      probeQueue: queuesMap.get('probe'),
+      queues: queuesMap,
+    },
+    limits: {
+      multipartThresholdBytes: 8 * 1024 * 1024,
+      sseHeartbeatMs: 2000,
+      maxInflightPerUser: 100,
+    },
     rawBucket: 'raw',
     cdnBaseUrl: `${s3Instance.baseUrl}/public`,
-    multipartThresholdBytes: 8 * 1024 * 1024,
-    sseHeartbeatMs: 2000,
-    maxInflightPerUser: 100,
   });
 
   const reconcilerTimer = setInterval(() => {

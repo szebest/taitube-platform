@@ -228,9 +228,9 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(updatedVideo?.errorCode).toBe('ORPHANED');
 
       // dlq_entries must have a row
-      const dlqList = await repositories.dlq.list();
-      expect(dlqList.items).toHaveLength(1);
-      const dlqEntry = dlqList.items[0];
+      const dlqEntries = await repositories.dlq.list({ limit: 100 });
+      expect(dlqEntries).toHaveLength(1);
+      const dlqEntry = dlqEntries[0];
       expect(dlqEntry?.videoId).toBe(videoId);
       expect(dlqEntry?.errorCode).toBe('ORPHANED');
       expect(dlqEntry?.status).toBe('PARKED');

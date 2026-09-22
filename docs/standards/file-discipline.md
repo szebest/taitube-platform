@@ -11,6 +11,9 @@ To ensure high readability, ease of maintenance, and optimal context management 
 - **Target File Size:** `<= 250 lines` of code per file.
 - **Strict Upper Ceiling:** `400 lines` (or approximately `10 KB`) per file.
 - **Trigger for Decomposition:** Any file exceeding 300 lines must be reviewed for extraction of submodules, utility helpers, type definitions, or sub-services.
+- **Machine-enforced:** `tests/architecture/file-ceiling.test.ts` fails on any production source over 400
+  lines or 10 KB. The files that predate the rule are listed in `tests/architecture/oversized-sources.ts`;
+  that list may only shrink.
 
 ---
 
@@ -20,7 +23,7 @@ Every domain entity data access layer must be structured as dedicated single-fil
 
 ### Directory Structure
 ```
-adapters/
+packages/server/adapters/
 ├── postgres/
 │   ├── postgres-database-client.ts
 │   ├── repositories/

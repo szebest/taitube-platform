@@ -1,70 +1,66 @@
 import { InMemoryJobQueue } from '@vp/adapters';
 import type { JobQueue } from '@vp/core/ports';
 import { QUEUES } from '@vp/job-contracts';
-import { describe, expect, it } from 'vitest';
 import { QueueService } from '../queue-service';
 
-describe('QueueService', () => {
-  it('returns undefined when queue does not exist', () => {
-    const service = new QueueService();
-    expect(service.getQueue('nonexistent')).toBeUndefined();
+function serviceWith(...names: string[]): { service: QueueService; queues: InMemoryJobQueue[] } {
+  const queues = names.map((name) => new InMemoryJobQueue(name));
+  const registry = new Map<string, JobQueue>(queues.map((queue, i) => [names[i] as string, queue]));
+  return { service: new QueueService({ queues: registry }), queues };
+}
+
+describe('apps/api: QueueService', () => {
+  it.each([
+    { scenario: 'a registered queue', name: 'probe', found: true },
+    { scenario: 'an unknown queue', name: 'nonexistent', found: false },
+  ])('looks up $scenario', ({ name, found }) => {
+    const { service, queues } = serviceWith('probe');
+
+    expect(service.getQueue(name)).toBe(found ? queues[0] : undefined);
   });
 
-  it('retrieves registered queue instance', () => {
-    const queues = new Map<string, JobQueue>();
-    const mock = new InMemoryJobQueue('probe');
-    queues.set('probe', mock);
+  it('reports counts for every known queue, zeroed for the ones not registered', async () => {
+    const { service, queues } = serviceWith('transcode-1080p');
+    await queues[0]?.add('test-job', { foo: 'bar' });
 
-    const service = new QueueService({ queues });
-    expect(service.getQueue('probe')).toBe(mock);
-  });
-
-  it('collects metrics across all known queues', async () => {
-    const queues = new Map<string, JobQueue>();
-    const q1080 = new InMemoryJobQueue('transcode-1080p');
-    await q1080.add('test-job', { foo: 'bar' });
-    queues.set('transcode-1080p', q1080);
-
-    const service = new QueueService({ queues });
     const metrics = await service.getQueueMetrics();
 
-    expect(metrics.length).toBe(QUEUES.length);
-    const item1080 = metrics.find((m) => m.name === 'transcode-1080p');
-    expect(item1080).toBeDefined();
-    expect(item1080?.counts.waiting).toBe(1);
-
-    const emptyQueue = metrics.find((m) => m.name === 'probe');
-    expect(emptyQueue?.counts.active).toBe(0);
+    expect(metrics).toHaveLength(QUEUES.length);
+    expect(metrics.find((m) => m.name === 'transcode-1080p')?.counts.waiting).toBe(1);
+    expect(metrics.find((m) => m.name === 'probe')?.counts.active).toBe(0);
   });
 
-  it('pauses and resumes registered queue', async () => {
-    const queues = new Map<string, JobQueue>();
-    const mock = new InMemoryJobQueue('package');
-    queues.set('package', mock);
+  it('never reports zeroes for a registered queue whose port cannot answer', async () => {
+    const stub = { getName: () => 'probe' } as unknown as JobQueue;
+    const service = new QueueService({ queues: new Map<string, JobQueue>([['probe', stub]]) });
 
-    const service = new QueueService({ queues });
+    await expect(service.getQueueMetrics()).rejects.toThrow(TypeError);
+  });
+
+  it('pauses and resumes a registered queue', async () => {
+    const { service, queues } = serviceWith('package');
 
     await service.pauseQueue('package');
-    expect(await mock.isPaused()).toBe(true);
+    expect(await queues[0]?.isPaused()).toBe(true);
 
     await service.resumeQueue('package');
-    expect(await mock.isPaused()).toBe(false);
+    expect(await queues[0]?.isPaused()).toBe(false);
   });
 
-  it('throws PermanentError when pausing non-existent queue', async () => {
-    const service = new QueueService();
-    await expect(service.pauseQueue('invalid-queue')).rejects.toThrow(
-      'Queue "invalid-queue" not found'
-    );
-  });
+  it.each([{ method: 'pauseQueue' as const }, { method: 'resumeQueue' as const }])(
+    '$method rejects an unknown queue',
+    async ({ method }) => {
+      const { service } = serviceWith();
 
-  it('creates Bull Board Fastify plugin without error', () => {
-    const queues = new Map<string, JobQueue>();
-    queues.set('probe', new InMemoryJobQueue('probe'));
+      await expect(service[method]('invalid-queue')).rejects.toThrow(
+        'Queue "invalid-queue" not found'
+      );
+    }
+  );
 
-    const service = new QueueService({ queues });
-    const plugin = service.getBoardPlugin('/admin/queues');
-    expect(plugin).toBeDefined();
-    expect(typeof plugin).toBe('function');
+  it('builds the Bull Board plugin over whatever queues are registered', () => {
+    const { service } = serviceWith('probe');
+
+    expect(typeof service.getBoardPlugin('/admin/queues')).toBe('function');
   });
 });

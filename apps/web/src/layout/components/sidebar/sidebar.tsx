@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+
 import {
 	Sidebar as ReactSidebar,
 	Menu,
@@ -15,11 +15,11 @@ import { Logo, SidebarSubscriptions } from "..";
 
 export function Sidebar() {
 	const { collapsed, isBelowBreakpoint, breakpointChanged, toggle, close } = useSidebar();
-	const { user, isLoading } = useAuth();
+	const { account, isLoading } = useAuth();
 
 	const width = '220px';
 
-	if (isLoading) return <div style={{ width }}></div>;
+	if (isLoading) return <div style={{ width }} />;
 
 	return (
 		<ReactSidebar
@@ -35,32 +35,32 @@ export function Sidebar() {
 			{isBelowBreakpoint && <div className={styles.sidebar__logo}><Logo hideLogoPart={false} /></div>}
 			<Menu>
 				<MenuItem component={<Link to='/' onClick={close} />}>
-					<i className="bi bi-house-door-fill"></i>
+					<i className="bi bi-house-door-fill" />
 					<span>Home</span>
 				</MenuItem>
-				{user && <MenuItem component={<Link to='/subscriptions/videos' onClick={close} />}>
-					<i className="bi bi-play-btn-fill"></i>
+				{account && <MenuItem component={<Link to='/subscriptions/videos' onClick={close} />}>
+					<i className="bi bi-play-btn-fill" />
 					<span>Subscription videos</span>
 				</MenuItem>}
 
-				<Dropdown.Divider></Dropdown.Divider>
+				<Dropdown.Divider />
 
-				{user &&
+				{account &&
 					<>
-						<MenuItem component={<Link to={`/user/${user.id}`} onClick={close} />}>
-							<i className="bi bi-person-fill"></i>
+						<MenuItem component={<Link to={`/channel/${account.channel.id}`} onClick={close} />}>
+							<i className="bi bi-person-fill" />
 							<span>Your channel</span>
 						</MenuItem>
-						<Dropdown.Divider></Dropdown.Divider>
+						<Dropdown.Divider />
 					</>
 				}
 
 				{
-					user && <SidebarSubscriptions close={close} />
+					account && <SidebarSubscriptions close={close} />
 				}
 
 				<MenuItem component={<Link to='/trending' onClick={close} />}>
-					<i className="bi bi-fire"></i>
+					<i className="bi bi-fire" />
 					<span>Trending</span>
 				</MenuItem>
 			</Menu>

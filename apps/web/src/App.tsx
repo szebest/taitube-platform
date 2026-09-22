@@ -6,7 +6,7 @@ import { ToastContainer } from "react-toastify";
 // providers
 import { ApiProvider } from "@reduxjs/toolkit/dist/query/react";
 
-import { AuthProvider, SearchBarProvider, SidebarProvider, ThemeProvider } from "./modules/shared/providers";
+import { AuthProvider, PermissionsProvider, SidebarProvider, ThemeProvider } from "./modules/shared/providers";
 
 // layouts
 import { DefaultLayout } from "./layout/containers";
@@ -15,7 +15,7 @@ import { DefaultLayout } from "./layout/containers";
 import { baseApi } from "./base-api";
 
 // components
-import { AuthorizedContainer, NumberParamContainer } from "./modules/shared/components";
+import { AuthorizedContainer } from "./modules/shared/components";
 
 // pages
 const VideoPage = lazy(() =>
@@ -59,69 +59,69 @@ export function App() {
 	return (
 		<ApiProvider api={baseApi}>
 			<AuthProvider>
-				<SidebarProvider>
-					<ThemeProvider>
-						<BrowserRouter>
-							<SearchBarProvider>
-								<Routes>
-									<Route path="" element={<DefaultLayout />}>
-										<Route path="" element={<AllVideosPage />}></Route>
-										<Route path="*" element={<Navigate to="" replace />} />
-									</Route>
-									<Route path="/trending" element={<DefaultLayout />}>
-										<Route path="" element={<TrendingPage />}></Route>
-										<Route path="*" element={<Navigate to="/trending" replace />} />
-									</Route>
-									<Route
-										path="/subscriptions"
-										element={
-											<AuthorizedContainer>
-												<DefaultLayout />
-											</AuthorizedContainer>
-										}
-									>
-										<Route path="" element={<SubscriptionPage />}></Route>
+				<PermissionsProvider>
+					<SidebarProvider>
+						<ThemeProvider>
+							<BrowserRouter>
+									<Routes>
+										<Route path="" element={<DefaultLayout />}>
+											<Route path="" element={<AllVideosPage />} />
+											<Route path="*" element={<Navigate to="" replace />} />
+										</Route>
+										<Route path="/trending" element={<DefaultLayout />}>
+											<Route path="" element={<TrendingPage />} />
+											<Route path="*" element={<Navigate to="/trending" replace />} />
+										</Route>
 										<Route
-											path="videos"
-											element={<SubscriptionVideosPage />}
-										></Route>
+											path="/subscriptions"
+											element={
+												<AuthorizedContainer>
+													<DefaultLayout />
+												</AuthorizedContainer>
+											}
+										>
+											<Route path="" element={<SubscriptionPage />} />
+											<Route
+												path="videos"
+												element={<SubscriptionVideosPage />}
+											/>
+											<Route
+												path="*"
+												element={<Navigate to="/subscriptions/videos" replace />}
+											/>
+										</Route>
+										<Route path="/watch" element={<DefaultLayout />}>
+											<Route path=":videoId" element={<VideoPage />} />
+											<Route path="" element={<Navigate to="/" replace />} />
+											<Route path="*" element={<Navigate to="/" replace />} />
+										</Route>
+										<Route path="/channel" element={<DefaultLayout />}>
+											<Route path=":channelId" element={<UserPage />} />
+											<Route path="" element={<Navigate to="/" replace />} />
+											<Route path="*" element={<Navigate to="/" replace />} />
+										</Route>
 										<Route
-											path="*"
-											element={<Navigate to="/subscriptions/videos" replace />}
-										/>
-									</Route>
-									<Route path="/watch" element={<DefaultLayout />}>
-										<Route path=":videoId" element={<NumberParamContainer paramName="videoId"><VideoPage /></NumberParamContainer>}></Route>
-										<Route path="" element={<Navigate to="/" replace />} />
-										<Route path="*" element={<Navigate to="/" replace />} />
-									</Route>
-									<Route path="/user" element={<DefaultLayout />}>
-										<Route path=":userId" element={<NumberParamContainer paramName="userId"><UserPage /></NumberParamContainer>}></Route>
-										<Route path="" element={<Navigate to="/" replace />} />
-										<Route path="*" element={<Navigate to="/" replace />} />
-									</Route>
-									<Route
-										path="/upload"
-										element={
-											<AuthorizedContainer>
-												<DefaultLayout maxWidth="1280px" />
-											</AuthorizedContainer>
-										}
-									>
-										<Route path="" element={<UploadPage />}></Route>
-										<Route path="edit/:videoId" element={<NumberParamContainer paramName="videoId"><EditPage /></NumberParamContainer>}></Route>
-										<Route path="*" element={<Navigate to="/upload" replace />} />
-									</Route>
+											path="/upload"
+											element={
+												<AuthorizedContainer>
+													<DefaultLayout maxWidth="1280px" />
+												</AuthorizedContainer>
+											}
+										>
+											<Route path="" element={<UploadPage />} />
+											<Route path="edit/:videoId" element={<EditPage />} />
+											<Route path="*" element={<Navigate to="/upload" replace />} />
+										</Route>
 
-									<Route path="*" element={<Navigate to=""></Navigate>}></Route>
-								</Routes>
+										<Route path="*" element={<Navigate to="" />} />
+									</Routes>
 
-								<ToastContainer limit={3} />
+									<ToastContainer limit={3} />
 
-							</SearchBarProvider>
-						</BrowserRouter>
-					</ThemeProvider>
-				</SidebarProvider>
+							</BrowserRouter>
+						</ThemeProvider>
+					</SidebarProvider>
+				</PermissionsProvider>
 			</AuthProvider>
 		</ApiProvider>
 	);

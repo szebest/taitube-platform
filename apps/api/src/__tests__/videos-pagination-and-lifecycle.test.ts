@@ -29,9 +29,11 @@ describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)
     storage = new InMemoryStorageClient();
 
     app = await buildApp({
-      repositories,
-      cache,
-      storage,
+      adapters: {
+        repositories,
+        cache,
+        storage,
+      },
       cdnBaseUrl: 'http://localhost:9000/public',
     });
     await app.ready();

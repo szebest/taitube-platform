@@ -74,38 +74,42 @@ The monorepo is organized using `pnpm` workspaces and `Turborepo`:
 
 ```
 taitube-platform/
-├── apps/
-│   ├── api/                 # Fastify REST API, SSE streaming, authentication, admin
-│   ├── web/                 # React frontend application
-│   └── worker/              # BullMQ distributed queue workers (switchable Node/Bun)
-├── core/                    # Pure domain models, entities, and port interfaces
-├── adapters/                # Concrete drivers for external systems
-│   ├── postgres/            # PostgreSQL repository implementations via Drizzle ORM
-│   ├── redis/               # Redis connection pools and pub/sub client
-│   ├── bullmq/              # BullMQ queue and worker adapter implementations
-│   ├── s3/                  # S3 and MinIO storage client adapter
-│   └── in-memory/           # High-speed in-memory test doubles for unit and integration suites
-├── packages/                # Shared internal libraries
-│   ├── config/              # Centralized environment variable validation (Zod)
-│   ├── db/                  # PostgreSQL schema definitions, migrations, and seeds
-│   ├── errors/              # Domain and HTTP error classifications (RFC 9457)
-│   ├── events/              # Event definitions and Redis pub/sub dispatcher
-│   ├── ffmpeg/              # FFmpeg argument builders, progress parsers, probe helpers
-│   ├── job-contracts/       # BullMQ job payload schemas and queue naming contracts
-│   ├── observability/       # OpenTelemetry, Prometheus metrics, and Pino logging
-│   ├── storage/             # S3 object key layout and presigned URL helpers
-│   └── testing/             # Shared test utilities, fixtures, and assertion helpers
+├── apps/                        # Deployables. Nothing may depend on these.
+│   ├── api/                     # Fastify REST API, SSE streaming, authentication, admin
+│   ├── web/                     # React SPA (Create React App 5) — see apps/web/AGENTS.md
+│   └── worker/                  # BullMQ distributed queue workers (switchable Node/Bun)
+├── packages/                    # Shared libraries. The directory IS the runtime tier.
+│   ├── universal/               # Runs in a browser AND on a server
+│   │   ├── api-contracts/       # Zod request/response schemas for every HTTP endpoint
+│   │   ├── errors/              # Domain and HTTP error classifications (RFC 9457)
+│   │   ├── permissions/         # CASL ability rules shared by the API and the frontend
+│   │   └── tsconfig/            # Shared TypeScript presets, one per tier
+│   ├── client/                  # Browser only
+│   │   └── api-client/          # Typed HTTP client generated against api-contracts
+│   └── server/                  # Node / Bun only
+│       ├── core/                # Pure domain models, entities, ports, repository interfaces
+│       ├── adapters/            # Concrete drivers: postgres/, redis/, bullmq/, s3/, in-memory/
+│       ├── config/              # Centralized environment variable validation (Zod)
+│       ├── db/                  # PostgreSQL schema definitions, migrations, and seeds
+│       ├── events/              # Event definitions and Redis pub/sub dispatcher
+│       ├── ffmpeg/              # FFmpeg argument builders, progress parsers, probe helpers
+│       ├── job-contracts/       # BullMQ job payload schemas and queue naming contracts
+│       ├── observability/       # OpenTelemetry, Prometheus metrics, and Pino logging
+│       ├── storage/             # S3 object key layout and presigned URL helpers
+│       ├── testing/             # Shared test utilities, fixtures, and assertion helpers
+│       └── …                    # CLIs: compose-autoscaler, dev-token, gen-video, upload-client
 ├── infra/
-│   ├── compose/             # Docker Compose manifests (local infra, full stack, observability)
-│   ├── k8s/                 # Kubernetes manifests (Kustomize base, local k3d, and cloud overlays)
-│   └── terraform/           # Cloud infrastructure definitions (Cloudflare R2, DNS, compute)
-├── tools/
-│   ├── compose-autoscaler/  # Queue-depth based autoscaler for Docker Compose
-│   ├── dev-token/           # Ed25519 JWT generator and local JWKS mock server
-│   ├── gen-video/           # Deterministic synthetic video fixture generator
-│   └── upload-client/       # Reference CLI for resumable multipart uploads
-├── docs/                    # Architecture documentation, PRD, SDD, ADRs, runbooks, and tickets
-└── scripts/                 # Development, build, and ticket synchronization scripts
+│   ├── compose/                 # Docker Compose manifests (local infra, full stack, observability)
+│   ├── k8s/                     # Kubernetes manifests (Kustomize base, local k3d, cloud overlays)
+│   ├── observability/           # Grafana dashboards and Prometheus alert rules
+│   └── terraform/               # Cloud infrastructure definitions (Cloudflare R2, DNS, compute)
+├── tests/
+│   ├── architecture/            # The conformance suite: tier, layer and boundary assertions
+│   ├── e2e/                     # Phase 2 acceptance suite (20 concurrent videos + hostile set)
+│   └── load/                    # k6 scenarios
+├── tools/                       # Developer assets with no package.json (chaos/, hls-test-page/)
+├── docs/                        # PRD, SDD (with the ADRs), standards, runbooks, and tickets
+└── scripts/                     # Development, build, boundary, and ticket synchronization scripts
 ```
 
 ---
@@ -117,7 +121,7 @@ taitube-platform/
 - **Direct Multipart Storage Uploads**: S3-compatible chunked uploads with automatic part sizing (8 MiB to 64 MiB), concurrency control, checksum verification, resume from stored parts, and abort cleanup.
 - **Keyframe-Aligned HLS Ladder**: Transcodes multi-bitrate video streams (1080p, 720p, 480p) with identical keyframe cadence across renditions for clean adaptive bitrate switching in video players.
 - **Real-Time Progress Tracking**: Server-Sent Events (SSE) backed by Redis Pub/Sub broadcast per-rendition percentage, ETA, and state changes with snapshot replay on reconnect.
-- **Declarative RBAC & ABAC Permission Engine**: Pure domain authorization engine (`can(user, action, resource)`) evaluating role capabilities (`GUEST`, `USER`, `CREATOR`, `MODERATOR`, `ADMIN`) and dynamic attribute predicates (resource ownership, creator video comment moderation, superuser bypass). Integrated Fastify route decorator `server.authorize(action, resourceResolver)` enforces policies with RFC 9457 Problem Details errors.
+- **Declarative RBAC & ABAC Permission Engine**: Pure domain authorization engine (`can(user, action, resource)`) evaluating role capabilities (`GUEST`, `USER`, `CREATOR`, `MODERATOR`, `ADMIN`) and dynamic attribute predicates (resource ownership, creator video comment moderation, superuser bypass). Domain services enforce the policies through `AuthorizationPort`, surfacing refusals as RFC 9457 Problem Details errors.
 - **Resilient State Machine**: Optimistic concurrency control via PostgreSQL CAS transactions and worker fencing tokens to guarantee exactly-once processing outcomes.
 - **Public Video Feed & High-Performance Caching**: Unauthenticated public video browsing (`GET /v1/feed`) with multi-sort (newest, views count, trending gravity decay) and category filtering, backed by Redis caching, Singleflight promise coalescing, and HTTP ETag/304 conditional responses.
 - **Dynamic Category Management & Multi-Tier L1/L2 Caching**: PostgreSQL-backed dynamic taxonomies (`GET /v1/categories`, `POST/PATCH/DELETE /v1/admin/categories`) with in-process LRU L1 cache (60s TTL), distributed Redis L2 cache, cluster-wide Redis Pub/Sub invalidation broadcast, and HTTP ETag/304 Not Modified conditional responses.
@@ -393,7 +397,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | `make smoke` | Run end-to-end ingestion and playback smoke tests |
 | `make smoke-fast` | Fast-path local smoke test against existing running containers |
 | `make smoke-offline` | Run smoke tests with simulated network isolation |
-| `make e2e` | Run full end-to-end integration test suite |
+| `make e2e` | Run the Phase 2 acceptance suite (`E2E_REDUCED=true` for the smaller CI set) |
 | `make k3d-up` | Create local k3d Kubernetes cluster with in-cluster dependencies |
 | `make k3d-deploy` | Deploy API and worker stages to Kubernetes via Kustomize |
 | `make k3d-down` | Tear down local k3d Kubernetes cluster |
@@ -402,6 +406,8 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | `pnpm build` | Build all workspace packages and applications |
 | `pnpm typecheck` | Run TypeScript compiler checks across all workspaces |
 | `pnpm lint` | Run Biome linter across the repository |
+| `pnpm boundaries` | Check package tiers, dependency layers, and `CLAUDE.md` symlinks (runs first inside `build` and `typecheck`) |
+| `pnpm sync:claude` | Create the `CLAUDE.md` symlink beside every `AGENTS.md` |
 | `pnpm format` | Format repository code using Biome |
 | `pnpm test` | Run Vitest test suites across all packages |
 | `pnpm test:bun` | Run worker and shared package test suites using Bun test runner |
@@ -416,12 +422,13 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 ## Engineering Standards
 
 1. **Local-First Guarantees**: All core services function without internet access or third-party cloud accounts.
-2. **Dependency Inversion (Hexagonal Architecture)**: Domain business logic in `core/` depends only on abstract port interfaces. Concrete adapters (`postgres`, `redis`, `s3`, `bullmq`) are isolated in `adapters/` and wired at composition roots (`apps/api`, `apps/worker`).
-3. **Modular Repository Discipline**: Every repository implementation resides in its own dedicated file under `adapters/*/repositories/` with strict modularity (<= 250 lines target).
+2. **Dependency Inversion (Hexagonal Architecture)**: Domain business logic in `packages/server/core` depends only on abstract port interfaces. Concrete adapters (`postgres`, `redis`, `s3`, `bullmq`) are isolated in `packages/server/adapters` and wired at composition roots (`apps/api`, `apps/worker`).
+3. **Modular Repository Discipline**: Every repository implementation resides in its own dedicated file under `packages/server/adapters/*/repositories/` with strict modularity (<= 250 lines target).
 4. **Single-Source Contracts**: Job payloads are defined in `@vp/job-contracts`, storage paths in `@vp/storage`, error codes in `@vp/errors`, and environment configuration in `@vp/config`.
 5. **State Durability**: All entity mutations execute through compare-and-set transactions that record audit events in `video_events` with fencing tokens.
 6. **Dual-Runtime Compatibility**: All worker logic and shared libraries run cleanly under both Node.js and Bun without runtime-specific proprietary APIs.
-7. **Optimal Execution & Zero-Waste Efficiency**: All developer setups, Docker builds, CI workflows, test suites, and scripts are strictly optimized for speed and caching (Buildx GHA layer caching, sub-second Biome linting, incremental TypeScript builds, fast-polling health checks, and ultra-short test fixtures). Sluggish developer feedback loops, un-cached container rebuilds, and slow test runs are treated as defects.
+7. **Package Runtime Tiers**: A package's directory under `packages/universal|server|client` declares where its code may run, and `vp.layer` declares which way its dependencies may point. `pnpm boundaries` fails the build on a violation. See [packages/AGENTS.md](packages/AGENTS.md).
+8. **Optimal Execution & Zero-Waste Efficiency**: All developer setups, Docker builds, CI workflows, test suites, and scripts are strictly optimized for speed and caching (Buildx GHA layer caching, sub-second Biome linting, incremental TypeScript builds, fast-polling health checks, and ultra-short test fixtures). Sluggish developer feedback loops, un-cached container rebuilds, and slow test runs are treated as defects.
 
 ---
 
@@ -434,7 +441,8 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 - [File Discipline & Sizing](docs/standards/file-discipline.md): Modularity, <= 250 lines target, and repository file organization.
 - [Declarative Authorization](docs/standards/authorization.md): CASL ability engine, role hierarchy, and route protection.
 - [Domain Glossary & Model](CONTEXT.md): Ubiquitous domain language, entities, and seam discipline.
-- [System Design Document (SDD)](docs/SDD.md): Deep dives, database schemas, and 18 Architecture Decision Records (ADRs).
+- [Package Tiers & Dependency Layers](packages/AGENTS.md): Where each package may run, which way dependencies point, and how both are enforced.
+- [System Design Document (SDD)](docs/SDD.md): Deep dives, database schemas, and §4 — the Architecture Decision Records. There is no `docs/adr/`; every ADR lives in SDD §4.
 - [Product Requirements Document (PRD)](docs/PRD.md): Product goals, functional requirements, and service-level objectives.
 - [Local-First Architecture Guide](docs/LOCAL_FIRST.md): Guide for running and verifying offline operations.
 - [Backlog & Work Breakdown](docs/tickets/README.md): Roadmap of vertical tracer-bullet work items and dependency graphs.

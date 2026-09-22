@@ -2,10 +2,9 @@ import { memo } from 'react';
 
 import styles from './videos-container.module.scss';
 
-import { LoadingSpinner, IsVisibleContainer, VideoCard } from '..';
+import type { VideoSummary } from "@vp/api-contracts";
 
-import { Video } from "../../models";
-import { PaginatedResponse } from 'src/models';
+import { IsVisibleContainer, LoadingSpinner, VideoCard } from '..';
 
 export type VideosContainerProps = {
 	inView?: VoidFunction;
@@ -13,7 +12,7 @@ export type VideosContainerProps = {
 	isError?: boolean;
 	isListView?: boolean;
 	refetch?: () => unknown;
-	currentData?: PaginatedResponse<Video> | undefined;
+	data?: { items: VideoSummary[]; nextCursor: string | null } | undefined;
 }
 
 export const VideosContainer = memo(({
@@ -22,21 +21,19 @@ export const VideosContainer = memo(({
 	isFetching = false,
 	isError = false,
 	isListView = false,
-	currentData
+	data
 }: VideosContainerProps) => {
 	return (
 		<>
 			<div className={styles.container}>
-				{currentData &&
-					<>
-						<div className={`${isListView ? styles.list : styles.gallery}`}>
-							{
-								currentData.data.map((video, index, arr) => (
-									<VideoCard key={video.id ?? index} video={video} zIndex={arr.length - index} />
-								))
-							}
-						</div>
-					</>
+				{data &&
+					<div className={`${isListView ? styles.list : styles.gallery}`}>
+						{
+							data.items.map((video, index, arr) => (
+								<VideoCard key={video.id} video={video} zIndex={arr.length - index} />
+							))
+						}
+					</div>
 				}
 				{isFetching && <LoadingSpinner />}
 				{isError &&
@@ -45,7 +42,7 @@ export const VideosContainer = memo(({
 					</div>
 				}
 			</div>
-			{!isFetching && currentData && currentData.data.length < currentData.count && <IsVisibleContainer inView={inView} />}
+			{!isFetching && data?.nextCursor && <IsVisibleContainer inView={inView} />}
 		</>
 	)
 });

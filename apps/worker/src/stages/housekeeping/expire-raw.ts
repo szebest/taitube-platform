@@ -1,4 +1,5 @@
-import type { Repositories, StorageClient } from '@vp/core/ports';
+import type { StorageClient } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import type { Logger } from '@vp/observability';
 
 export interface ExpireRawOptions {
@@ -12,6 +13,8 @@ export interface ExpireRawOptions {
 export interface ExpireRawResult {
   expiredCount: number;
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Expire raw sources past retention period (SDD §9.8, §7):
@@ -31,7 +34,11 @@ export async function runExpireRaw(options: ExpireRawOptions): Promise<ExpireRaw
 
   let expiredCount = 0;
 
-  const expiredVideos = await repositories.videos.findExpiredRaw(retentionDays);
+  const expiredVideos = await repositories.videos.scan({
+    status: 'READY',
+    idleFor: { since: 'readyAt', ms: retentionDays * DAY_MS },
+    without: { event: 'video.raw_expired' },
+  });
   for (const video of expiredVideos) {
     if (video.sourceKey) {
       logger?.info(

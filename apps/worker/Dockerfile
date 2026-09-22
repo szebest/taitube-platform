@@ -19,9 +19,9 @@ RUN pnpm install --frozen-lockfile
 COPY --from=pruner /repo/out/full/ .
 RUN pnpm turbo run build --filter=@vp/worker... \
  && pnpm deploy --legacy --filter=@vp/worker --prod /out \
- && cp -r packages/db/drizzle /out/drizzle \
+ && cp -r packages/server/db/drizzle /out/drizzle \
  && mkdir -p /out/node_modules/@vp/db \
- && cp -r packages/db/drizzle /out/node_modules/@vp/db/drizzle
+ && cp -r packages/server/db/drizzle /out/node_modules/@vp/db/drizzle
 
 # Base runtime choices
 FROM oven/bun:1.4-slim AS runtime-bun

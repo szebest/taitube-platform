@@ -1,7 +1,8 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import type { QueueJob, Repositories, StorageClient } from '@vp/core/ports';
+import type { QueueJob, StorageClient } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { runFfmpegThumbnail } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
@@ -13,6 +14,7 @@ import {
   spriteVttKey as getSpriteVttKey,
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
+import { getHeartbeatPath } from '../config';
 import { validateJobId } from '../registry';
 
 export interface ThumbnailProcessorDeps {
@@ -34,8 +36,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     publicBucket = process.env['STORAGE_PUBLIC_BUCKET'] || 'public',
     workerId = `worker-${process.pid}`,
     logger,
-    heartbeatPath = process.env['WORKER_HEARTBEAT_PATH'] ||
-      path.join(os.tmpdir(), 'worker-heartbeat'),
+    heartbeatPath = getHeartbeatPath(),
     spriteIntervalSec,
   } = deps;
 

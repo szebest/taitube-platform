@@ -155,9 +155,9 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     expect(executionCount).toBe(1);
 
     // Verify entry in Postgres/InMemory mirror (AC 3)
-    const dlqList = await repositories.dlq.list();
-    expect(dlqList.items).toHaveLength(1);
-    const entry = dlqList.items[0];
+    const dlqEntries = await repositories.dlq.list({ limit: 100 });
+    expect(dlqEntries).toHaveLength(1);
+    const entry = dlqEntries[0];
     expect(entry).toBeDefined();
     expect(entry?.queue).toBe(queueName);
     expect(entry?.jobId).toBe(jobId);
@@ -219,9 +219,9 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     // Verify retried 4 times before failing
     expect(executionCount).toBe(4);
 
-    const dlqList = await repositories.dlq.list();
-    expect(dlqList.items).toHaveLength(1);
-    const entry = dlqList.items[0];
+    const dlqEntries = await repositories.dlq.list({ limit: 100 });
+    expect(dlqEntries).toHaveLength(1);
+    const entry = dlqEntries[0];
     expect(entry).toBeDefined();
     expect(entry?.attemptsMade).toBe(4);
     expect(entry?.errorCode).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
@@ -264,9 +264,9 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
 
     expect(executionCount).toBe(3);
 
-    const dlqList = await repositories.dlq.list();
-    expect(dlqList.items).toHaveLength(1);
-    const entry = dlqList.items[0];
+    const dlqEntries = await repositories.dlq.list({ limit: 100 });
+    expect(dlqEntries).toHaveLength(1);
+    const entry = dlqEntries[0];
     expect(entry).toBeDefined();
     expect(entry?.attemptsMade).toBe(3);
   });
@@ -403,8 +403,8 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     expect(notifyData?.payload?.errorCode).toBe(ErrorCodes.FFMPEG_FAILED);
 
     // Verify DLQ entries exist for both child and parent (AC 3)
-    const dlqList = await repositories.dlq.list();
-    expect(dlqList.items.length).toBeGreaterThanOrEqual(1);
+    const dlqEntries = await repositories.dlq.list({ limit: 100 });
+    expect(dlqEntries.length).toBeGreaterThanOrEqual(1);
 
     // Verify metrics counter incremented (AC 6)
     const metricOutput = await metrics.registry.metrics();
@@ -480,8 +480,8 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       await expect(probeQueue.process(probeProcessor)).rejects.toThrow(fixture.errorMsg);
 
       // Verify each hostile file ends in DLQ with expected code and attemptsMade = 1
-      const dlqList = await repositories.dlq.list();
-      const entry = dlqList.items.find((i) => i.jobId === jobId);
+      const dlqEntries = await repositories.dlq.list({ limit: 100 });
+      const entry = dlqEntries.find((i) => i.jobId === jobId);
       expect(entry).toBeDefined();
       expect(entry?.errorCode).toBe(fixture.expectedCode);
       expect(entry?.attemptsMade).toBe(1);

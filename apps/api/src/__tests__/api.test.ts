@@ -84,9 +84,11 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     });
 
     app = await buildApp({
-      repositories,
-      cache,
-      storage,
+      adapters: {
+        repositories,
+        cache,
+        storage,
+      },
       cdnBaseUrl: cdnBase,
     });
     await app.ready();

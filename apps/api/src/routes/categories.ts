@@ -1,15 +1,12 @@
-import type { CategoryCacheService } from '@vp/adapters';
-import type { Repositories } from '@vp/core/ports';
+import { listCategories } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { CategoriesListSchema } from '../schemas/categories';
-import { CategoryService } from '../services/category-service';
+import type { CategoryService } from '../services/category-service';
+import { contractPaths, contractSchema } from './contract-schema';
 
 export interface CategoriesRouteOptions {
-  repositories?: Repositories;
-  categoryCacheService?: CategoryCacheService;
-  categoryService?: CategoryService;
+  categoryService: CategoryService;
 }
 
 /**
@@ -20,52 +17,25 @@ export function registerCategoriesRoutes(
   app: FastifyInstance,
   options: CategoriesRouteOptions
 ): void {
-  const categoryService =
-    options.categoryService ??
-    (options.repositories && options.categoryCacheService
-      ? new CategoryService({
-          categories: options.repositories.categories,
-          categoryCacheService: options.categoryCacheService,
-        })
-      : undefined);
-
-  if (!categoryService) {
-    throw new Error('registerCategoriesRoutes requires either categoryService or repositories + categoryCacheService');
-  }
+  const { categoryService } = options;
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  for (const path of ['/v1/categories', '/categories'] as const) {
-    const isAlias = path === '/categories';
+  for (const { path, hide } of contractPaths(listCategories)) {
     server.get(
       path,
       {
-        schema: {
-          tags: ['Categories'],
-          summary: 'List active categories',
-          description:
-            'Public active taxonomy categories list sorted by display sort order and name. Cached with L1/L2 and supports 304 ETag caching.',
-          security: [],
-          response: {
-            200: CategoriesListSchema,
-            304: z.undefined().describe('Not Modified'),
-          },
-          ...(isAlias ? { hide: true } : {}),
-        },
+        schema: contractSchema(listCategories, {
+          hide,
+          responses: { 304: z.undefined().describe('Not Modified') },
+        }),
       },
       async (request, reply) => {
-        const ifNoneMatch = request.headers['if-none-match'];
-
-        const { categories, etag, isNotModified } = await categoryService.listActive(ifNoneMatch);
-
-        reply.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
-        reply.header('ETag', etag);
-
-        if (isNotModified) {
-          return reply.status(304).send();
-        }
-
-        return reply.status(200).send(categories);
+        const page = await categoryService.listActive(request.headers['if-none-match']);
+        reply.headers(page.headers);
+        return page.notModified
+          ? reply.status(304).send()
+          : reply.status(200).send(page.categories);
       }
     );
   }

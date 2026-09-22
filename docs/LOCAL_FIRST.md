@@ -13,7 +13,7 @@ The `video-pipeline` system is engineered from the ground up to be **local-first
 | **Database** | PostgreSQL 16 (local or compose) | Drizzle ORM, atomic migrations |
 | **Queue & Pub/Sub** | Redis 7 (`noeviction` + AOF) | Local BullMQ and SSE fanout |
 | **Object Storage** | MinIO (`raw` and `public` buckets) | Full S3 API parity with presigned PUT |
-| **Authentication** | Ed25519 JWT issuer (`tools/dev-token`) | Deterministic offline dev keypair & JWKS |
+| **Authentication** | Ed25519 JWT issuer (`packages/server/dev-token`) | Deterministic offline dev keypair & JWKS |
 | **Video Processing** | Local FFmpeg 6/7 binary | Bundled inside worker Docker image |
 | **HLS Player** | Vendored `hls.js` (`tools/hls-test-page`) | Zero CDN scripts or remote fonts |
 | **Metrics & Logs** | Local Prometheus, Grafana, Tempo, Loki | Docker compose `observability` profile |
@@ -72,3 +72,7 @@ The offline smoke test executes inside a Docker network with `internal: true`, m
    - Container startup scripts never invoke `apt-get`, `npm install`, or `curl` to fetch assets at runtime. Fonts (such as `fonts-dejavu-core` for FFmpeg subtitle/text filters) are pre-baked at build time.
 4. **Offline CI Verification**:
    - CI runs `make smoke-offline` on an internal Docker bridge network without external gateway access, preventing regression against external dependencies.
+5. **Machine-Enforced in Source**:
+   - `tests/architecture/local-first.test.ts` fails the build when any production source names an off-machine
+     host, or when an uncommented `.env.example` default points off the machine. The cloud rung stays behind
+     commented-out keys and the `infra/` overlays, which the assertion deliberately does not scan.

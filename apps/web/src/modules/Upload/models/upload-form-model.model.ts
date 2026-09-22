@@ -1,5 +1,5 @@
-import { EditVideoFormModel } from "src/modules/shared/models";
+import type { StartUpload } from "@vp/api-contracts";
 
-export type UploadFormModel = {
+export type UploadFormModel = Pick<StartUpload, 'title' | 'visibility'> & {
   file: [File];
-} & EditVideoFormModel;
+};

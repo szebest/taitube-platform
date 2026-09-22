@@ -1,31 +1,28 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { getCategories } from 'src/modules/shared/helpers';
+import { useCategoriesQuery } from 'src/modules/shared/api';
 import { DragScrollMenu } from 'src/modules/shared/components';
 
 export type CategoryListProps = {
-	onCategoryChange: (categoryId: number | undefined) => void;
-	selectedCategoryId: number | undefined;
+	onCategoryChange: (categoryId: string | undefined) => void;
+	selectedCategoryId: string | undefined;
 }
 
 export function CategoryList({ onCategoryChange, selectedCategoryId }: CategoryListProps) {
 	const [dragging, setDragging] = useState(false);
 
-	const categories = useMemo(() => {
-		const categories: { id: number | undefined, value: string }[] = getCategories();
-		categories.unshift({
-			id: undefined,
-			value: 'All'
-		});
+	const { data } = useCategoriesQuery();
 
-		return categories;
-	}, []);
+	const categories = useMemo(
+		() => [{ id: undefined, name: 'All' }, ...(data ?? [])],
+		[data]
+	);
 
 	const onDraggingChange = useCallback((dragging: boolean) => {
 		setDragging(dragging);
 	}, []);
 
-	const handleCategoryChange = (categoryId: number | undefined) => {
+	const handleCategoryChange = (categoryId: string | undefined) => {
 		if (dragging) return;
 
 		onCategoryChange(categoryId);
@@ -35,7 +32,7 @@ export function CategoryList({ onCategoryChange, selectedCategoryId }: CategoryL
 		<DragScrollMenu onDraggingChange={onDraggingChange}>
 			{
 				categories.map(x => (
-					<button key={x.id} className={`btn ${selectedCategoryId === x.id ? 'btn-dark' : 'btn-light'}`} onClick={() => handleCategoryChange(x.id)}>{x.value}</button>
+					<button type="button" key={x.id ?? 'all'} className={`btn ${selectedCategoryId === x.id ? 'btn-dark' : 'btn-light'}`} onClick={() => handleCategoryChange(x.id)}>{x.name}</button>
 				))
 			}
 		</DragScrollMenu>

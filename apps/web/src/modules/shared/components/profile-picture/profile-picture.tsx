@@ -1,4 +1,4 @@
-import { SyntheticEvent, memo } from 'react';
+import { type SyntheticEvent, memo } from 'react';
 
 import styles from './profile-picture.module.scss';
 
@@ -14,7 +14,9 @@ export const ProfilePicture = memo(({ src }: ProfilePictureProps) => {
 					className={styles["profile-picture-img"]}
 					src={src}
 					alt="profile"
-					onError={(e: SyntheticEvent) => (e.target as HTMLImageElement).style.display = 'none'}
+					onError={(e: SyntheticEvent) => {
+						(e.target as HTMLImageElement).style.display = 'none';
+					}}
 				/>
 			}
 		</div>

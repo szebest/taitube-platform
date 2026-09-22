@@ -7,7 +7,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ## 1. Scope & Architecture
 
 `apps/api` is the Fastify 5 REST API and real-time Server-Sent Events (SSE) server running on Node.js 24.
-- **Composition Root:** `apps/api/src/app.ts` instantiates concrete adapters (`adapters/postgres`, `adapters/redis`, `adapters/s3`, `adapters/bullmq`) and injects them into domain services.
+- **Composition Root:** `apps/api/src/composition/` resolves the adapter set (`adapter-set.ts`) and builds the services over it (`service-set.ts`); `app.ts` wires the two together with the Fastify plugins and routes. Nothing else constructs a concrete adapter or a domain service.
 - **Zero Concrete Driver Imports:** Route handlers and domain services must NEVER import `@aws-sdk/client-s3`, `ioredis`, `bullmq`, or Postgres/Drizzle directly.
 
 ---
@@ -17,19 +17,30 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ### Rule 1: Thin Route Transport Adapters
 - Route definitions in `apps/api/src/routes/` are strictly transport adapters:
   - Validate parameters, querystrings, and request bodies using Zod via Fastify Type Provider.
-  - Extract authentication context using `requireAuth(request)` or `requireAdmin(request)`.
+  - Extract authentication context using `requireAuth(request)`, or read `request.user` on endpoints that also serve anonymous callers.
   - Delegate immediately to dedicated domain services in `apps/api/src/services/`.
   - Format HTTP status codes (`200`, `201`, `204`, `304`) and transport headers (`Cache-Control`, `ETag`).
 - **Strictly Forbidden:** Calling repositories directly, executing database transactions, or orchestrating domain state inside route handlers.
 
 ### Rule 2: Deep Domain Services (>1:1 Ratio)
-- Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`, `UploadService`, `ChannelService`, `CategoryService`, `DlqService`, `QueueService`).
-- Extract smaller, reusable domain services (`HttpCacheService`, `Singleflight`, `SseHub`) that higher-level services compose.
+- Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`, `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`, `SubscriptionService`, `SseService`, `DlqService`, `QueueService`).
+- Extract smaller, reusable domain services (`HttpCacheService`, `SseHub`) that higher-level services compose; `Singleflight` comes from `@vp/adapters`.
 - Services must remain completely decoupled from Fastify transport objects (`FastifyRequest`, `FastifyReply`).
 
-### Rule 3: Declarative Route Authorization
-- Never manually check user roles or ownership inside route handlers.
-- Use `server.authorize(action, resourceResolver)` backed by `@vp/core/permissions`.
+### Rule 3: One Authorization Mechanism — `AuthorizationPort` Inside Services
+- There is exactly one place an authorization decision is made: a domain service calling
+  `AuthorizationPort.can(...)` / `.assertCan(...)` with a `@vp/permissions` rule helper. The concrete
+  implementation (`CaslAuthorizationAdapter`) is injected from the composition root.
+- Routes carry **authentication** only: `requireAuth(request)` for a caller that must be signed in, or
+  `request.user` when the endpoint also serves anonymous callers. They never check a role, an ownership
+  field or a permission themselves, and they never resolve a resource in order to authorize it.
+- Admin endpoints pass `request.user` to their service, which calls `assertAdminAccess`
+  (`services/admin-access.ts`) — the single admin gate. The `x-admin-token` credential is resolved into
+  `request.user` by `plugins/auth.ts`, because it is an identity, not a permission.
+- There are no Fastify authorization decorators. `server.authorize`, `verifyPermission`, `request.authorize`,
+  `request.assertCan` and `request.can` existed as four overlapping entry points; the async `request.authorize`
+  was called without `await` on the reactions route and silently let every unauthorized write through. Do not
+  reintroduce them.
 
 ### Rule 4: Standardized Error Handling
 - Throw `PermanentError` or `TransientError` from `@vp/errors` at the error origin.

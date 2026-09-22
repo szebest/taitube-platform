@@ -1,4 +1,5 @@
-import type { JobQueue, MultipartStorage, Repositories } from '@vp/core/ports';
+import type { JobQueue, MultipartStorage } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 
@@ -49,7 +50,10 @@ export async function runReconcileUploads(
   let reenqueuedCount = 0;
 
   // 1. Stale UPLOADING -> ABANDONED
-  const staleUploading = await repositories.videos.findStaleUploading(uploadingThresholdMs);
+  const staleUploading = await repositories.videos.scan({
+    status: 'UPLOADING',
+    idleFor: { since: 'updatedAt', ms: uploadingThresholdMs },
+  });
   for (const video of staleUploading) {
     const transitioned = await repositories.videos.transition({
       videoId: video.id,
@@ -90,8 +94,11 @@ export async function runReconcileUploads(
   }
 
   // 2. Stale UPLOADED without probe step -> re-enqueue probe if under in-flight limit
-  const staleUploaded =
-    await repositories.videos.findStaleUploadedWithoutProbe(uploadedThresholdMs);
+  const staleUploaded = await repositories.videos.scan({
+    status: 'UPLOADED',
+    idleFor: { since: 'updatedAt', ms: uploadedThresholdMs },
+    without: { step: 'probe' },
+  });
   const ownerInflightCounts = new Map<string, number>();
 
   for (const video of staleUploaded) {

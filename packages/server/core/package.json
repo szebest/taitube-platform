@@ -1,0 +1,48 @@
+{
+  "name": "@vp/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/ports/index.js",
+  "types": "./dist/ports/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
+  "exports": {
+    "./ports": {
+      "types": "./dist/ports/index.d.ts",
+      "import": "./dist/ports/index.js",
+      "default": "./dist/ports/index.js"
+    },
+    "./ports/*": {
+      "types": "./dist/ports/*.d.ts",
+      "import": "./dist/ports/*.js",
+      "default": "./dist/ports/*.js"
+    },
+    "./repositories": {
+      "types": "./dist/repositories/index.d.ts",
+      "import": "./dist/repositories/index.js",
+      "default": "./dist/repositories/index.js"
+    },
+    "./repositories/*": {
+      "types": "./dist/repositories/*.d.ts",
+      "import": "./dist/repositories/*.js",
+      "default": "./dist/repositories/*.js"
+    }
+  },
+  "dependencies": {
+    "@vp/domain": "workspace:*",
+    "@vp/permissions": "workspace:*"
+  },
+  "devDependencies": {
+    "@vp/tsconfig": "workspace:*",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  },
+  "vp": {
+    "layer": 3
+  }
+}

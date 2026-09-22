@@ -32,32 +32,38 @@
     "@fastify/under-pressure": "^9.1.0",
     "@scalar/fastify-api-reference": "^1.67.0",
     "@vp/adapters": "workspace:*",
+    "@vp/api-contracts": "workspace:*",
     "@vp/config": "workspace:*",
     "@vp/core": "workspace:*",
     "@vp/db": "workspace:*",
     "@vp/dev-token": "workspace:*",
+    "@vp/domain": "workspace:*",
+    "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/events": "workspace:*",
     "@vp/job-contracts": "workspace:*",
     "@vp/observability": "workspace:*",
+    "@vp/pagination": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/storage": "workspace:*",
-    "bullmq": "^6.3.4",
-    "drizzle-orm": "^0.45.2",
     "fastify": "^5.2.0",
     "fastify-plugin": "^6.0.0",
     "fastify-type-provider-zod": "^4.0.2",
-    "ioredis": "^5.4.2",
     "prom-client": "^15.1.3",
     "uuidv7": "^1.2.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^24.0.0",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
+  },
+  "vp": {
+    "tier": "server",
+    "layer": 5
   }
 }

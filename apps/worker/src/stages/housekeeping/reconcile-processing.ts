@@ -1,4 +1,5 @@
-import type { JobQueue, Repositories } from '@vp/core/ports';
+import type { JobQueue } from '@vp/core/ports';
+import type { Repositories } from '@vp/core/repositories';
 import type { QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
@@ -44,7 +45,10 @@ export async function runReconcileProcessing(
 
   let orphanedCount = 0;
 
-  const staleProcessing = await repositories.videos.findStaleProcessing(thresholdMs);
+  const staleProcessing = await repositories.videos.scan({
+    status: 'PROCESSING',
+    idleFor: { since: 'updatedAt', ms: thresholdMs },
+  });
   for (const video of staleProcessing) {
     // 1. Check if any step is currently RUNNING
     const steps = await repositories.steps.findByVideoId(video.id);

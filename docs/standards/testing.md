@@ -21,11 +21,11 @@ The repository strictly enforces a layered testing model designed for speed, iso
 ### Layer 1: Deterministic Unit Tests (In-Memory Doubles)
 - **Target:** Domain services (`apps/api/src/services/`), route handlers (`apps/api/src/routes/`), worker pipeline stages (`apps/worker/src/stages/`), and core domain logic (`core/`).
 - **Isolation:** Never spin up Docker containers, network sockets, or external databases for unit tests.
-- **Port Doubles:** Depend exclusively on autonomous in-memory test doubles from `adapters/in-memory` (`InMemoryDatabaseClient`, `InMemoryStorageClient`, `InMemoryCacheClient`, `InMemoryJobQueue`, `InMemoryRepositories`).
+- **Port Doubles:** Depend exclusively on autonomous in-memory test doubles from `packages/server/adapters/in-memory` (`InMemoryDatabaseClient`, `InMemoryStorageClient`, `InMemoryCacheClient`, `InMemoryJobQueue`, `InMemoryRepositories`).
 - **Autonomous State:** Every in-memory double manages its own state and exposes `.clear()` to allow fast test teardown without recreating class instances.
 
 ### Layer 2: Durability & Integration Tests (Real PostgreSQL)
-- **Target:** Concrete database repositories (`adapters/postgres/repositories/`), schema migrations (`packages/db/`), and state machine transitions.
+- **Target:** Concrete database repositories (`packages/server/adapters/postgres/repositories/`), schema migrations (`packages/server/db/`), and state machine transitions.
 - **Contract Verification:** Proves compare-and-set (CAS) state transitions, atomic append of `video_events`, and fencing token validations (`lock_token` UUIDs) against an authoritative PostgreSQL instance.
 - **Execution Parity:** Runs against PostgreSQL 16 provided via Docker Compose (`make up`) locally and GitHub Actions service containers in CI.
 
@@ -105,3 +105,7 @@ Every single source file, helper, util, rule, normalizer, or adapter MUST map to
 - **Exact File Name Alignment:** A source file named `video.normalizer.ts` must have a corresponding `video.normalizer.test.ts` (or `video-normalizer.test.ts`). A module `drizzle-where.ts` must have `drizzle-where.test.ts` (or `drizzleWhere.test.ts`).
 - **No Bundled Catch-All Suites:** Creating catch-all files such as `normalizers.test.ts` covering multiple distinct units (`video.normalizer.ts`, `comment.normalizer.ts`, `channel.normalizer.ts`) is strictly forbidden.
 - **Granular Failure Isolation:** 1:1 test correspondence ensures rapid root-cause isolation, prevents test pollution across unrelated units, and maintains zero context ambiguity for autonomous agents.
+- **Machine-enforced:** `tests/architecture/test-correspondence.test.ts` requires `__tests__/<name>.test.ts`
+  beside every production source. The sources that predate the rule are listed in
+  `tests/architecture/untested-sources.ts`; that list may only shrink — an entry that gains a spec must be
+  removed, and a new source may not be added to it.

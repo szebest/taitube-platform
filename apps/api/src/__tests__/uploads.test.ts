@@ -146,12 +146,16 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     const multipart = new S3MultipartStorage({ storageClient: s3Client });
 
     app = await buildApp({
-      repositories,
-      storage: s3Client,
-      multipart,
+      adapters: {
+        repositories,
+        storage: s3Client,
+        multipart,
+        probeQueue: mockProbeQueue,
+      },
+      limits: {
+        maxUploadBytes: 100 * 1024 * 1024,
+      },
       rawBucket: 'raw',
-      jobQueue: mockProbeQueue,
-      maxUploadBytes: 100 * 1024 * 1024, // 100 MB max for test
     });
     await app.ready();
   });
@@ -408,9 +412,13 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     // App rate limit configured with 30/min
     // We create an app instance with rateLimitMax: 3 to quickly trigger 429
     const limitedApp = await buildApp({
-      repositories,
+      adapters: {
+        repositories,
+      },
+      limits: {
+        rateLimitMax: 3,
+      },
       rawBucket: 'raw',
-      rateLimitMax: 3,
     });
     await limitedApp.ready();
 

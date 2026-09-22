@@ -7,7 +7,6 @@ import {
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 
 describe('Admin Category Management & Public Cached Category API (Ticket 37)', () => {
@@ -33,10 +32,12 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
     categoryCacheService = new CategoryCacheService({ cache });
 
     app = await buildApp({
-      repositories,
-      cache,
-      storage,
-      categoryCacheService,
+      adapters: {
+        repositories,
+        cache,
+        storage,
+        categoryCache: categoryCacheService,
+      },
     });
   });
 
@@ -86,7 +87,7 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
       expect(res.headers['cache-control']).toBe('public, max-age=300, stale-while-revalidate=60');
       const etag = res.headers.etag;
       expect(etag).toBeDefined();
-      expect(etag).toMatch(/^"[a-f0-9]{40}"$/);
+      expect(etag).toMatch(/^W\/"[a-f0-9]{16}"$/);
 
       const items = res.json();
       expect(Array.isArray(items)).toBe(true);
@@ -378,10 +379,12 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
       // Setup second app instance (Pod B) connected to the same shared cache & repo
       const podBCacheService = new CategoryCacheService({ cache });
       const podBApp = await buildApp({
-        repositories,
-        cache,
-        storage,
-        categoryCacheService: podBCacheService,
+        adapters: {
+          repositories,
+          cache,
+          storage,
+          categoryCache: podBCacheService,
+        },
       });
 
       try {

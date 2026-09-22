@@ -20,6 +20,9 @@ importers:
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
       turbo:
         specifier: ^2.4.4
         version: 2.10.12
@@ -28,74 +31,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
-
-  adapters:
-    dependencies:
-      '@aws-sdk/client-s3':
-        specifier: ^3.1125.0
-        version: 3.1125.0
-      '@aws-sdk/s3-request-presigner':
-        specifier: ^3.1125.0
-        version: 3.1125.0
-      '@casl/ability':
-        specifier: ^6.8.1
-        version: 6.8.1
-      '@opentelemetry/api':
-        specifier: ^1.9.1
-        version: 1.9.1
-      '@ucast/core':
-        specifier: ^2.0.0
-        version: 2.0.0
-      '@vp/core':
-        specifier: workspace:*
-        version: link:../core
-      '@vp/db':
-        specifier: workspace:*
-        version: link:../packages/db
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../packages/errors
-      '@vp/observability':
-        specifier: workspace:*
-        version: link:../packages/observability
-      '@vp/permissions':
-        specifier: workspace:*
-        version: link:../packages/permissions
-      bullmq:
-        specifier: ^6.3.4
-        version: 6.3.4(ioredis@5.11.1)
-      drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)
-      ioredis:
-        specifier: ^5.11.1
-        version: 5.11.1
-      postgres:
-        specifier: ^3.4.9
-        version: 3.4.9
-      uuidv7:
-        specifier: ^1.2.1
-        version: 1.2.1
-    devDependencies:
-      '@types/node':
-        specifier: ^24.0.0
-        version: 24.13.3
-      '@vp/testing':
-        specifier: workspace:*
-        version: link:../packages/testing
-      '@vp/tsconfig':
-        specifier: workspace:*
-        version: link:../packages/tsconfig
-      rimraf:
-        specifier: ^6.0.1
-        version: 6.1.3
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   apps/api:
     dependencies:
@@ -131,43 +67,49 @@ importers:
         version: 1.67.0
       '@vp/adapters':
         specifier: workspace:*
-        version: link:../../adapters
+        version: link:../../packages/server/adapters
+      '@vp/api-contracts':
+        specifier: workspace:*
+        version: link:../../packages/universal/api-contracts
       '@vp/config':
         specifier: workspace:*
-        version: link:../../packages/config
+        version: link:../../packages/server/config
       '@vp/core':
         specifier: workspace:*
-        version: link:../../core
+        version: link:../../packages/server/core
       '@vp/db':
         specifier: workspace:*
-        version: link:../../packages/db
+        version: link:../../packages/server/db
       '@vp/dev-token':
         specifier: workspace:*
-        version: link:../../tools/dev-token
+        version: link:../../packages/server/dev-token
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../packages/universal/domain
+      '@vp/env-schema':
+        specifier: workspace:*
+        version: link:../../packages/server/env-schema
       '@vp/errors':
         specifier: workspace:*
-        version: link:../../packages/errors
+        version: link:../../packages/universal/errors
       '@vp/events':
         specifier: workspace:*
-        version: link:../../packages/events
+        version: link:../../packages/server/events
       '@vp/job-contracts':
         specifier: workspace:*
-        version: link:../../packages/job-contracts
+        version: link:../../packages/server/job-contracts
       '@vp/observability':
         specifier: workspace:*
-        version: link:../../packages/observability
+        version: link:../../packages/server/observability
+      '@vp/pagination':
+        specifier: workspace:*
+        version: link:../../packages/universal/pagination
       '@vp/permissions':
         specifier: workspace:*
-        version: link:../../packages/permissions
+        version: link:../../packages/universal/permissions
       '@vp/storage':
         specifier: workspace:*
-        version: link:../../packages/storage
-      bullmq:
-        specifier: ^6.3.4
-        version: 6.3.4(ioredis@5.11.1)
-      drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)
+        version: link:../../packages/server/storage
       fastify:
         specifier: ^5.2.0
         version: 5.12.1
@@ -177,9 +119,6 @@ importers:
       fastify-type-provider-zod:
         specifier: ^4.0.2
         version: 4.0.2(fastify@5.12.1)(zod@3.25.76)
-      ioredis:
-        specifier: ^5.4.2
-        version: 5.11.1
       prom-client:
         specifier: ^15.1.3
         version: 15.1.3
@@ -190,15 +129,18 @@ importers:
         specifier: ^3.24.2
         version: 3.25.76
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.8
+        version: 0.5.8
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
       '@vp/testing':
         specifier: workspace:*
-        version: link:../../packages/testing
+        version: link:../../packages/server/testing
       '@vp/tsconfig':
         specifier: workspace:*
-        version: link:../../packages/tsconfig
+        version: link:../../packages/universal/tsconfig
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -207,40 +149,25 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   apps/web:
     dependencies:
       '@reduxjs/toolkit':
         specifier: ^1.9.7
         version: 1.9.7(react-redux@8.1.3(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(redux@4.2.1))(react@18.3.1)
-      '@testing-library/jest-dom':
-        specifier: ^5.16.5
-        version: 5.17.0
-      '@testing-library/react':
-        specifier: ^13.4.0
-        version: 13.4.0(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@testing-library/user-event':
-        specifier: ^14.4.3
-        version: 14.6.7(@testing-library/dom@8.20.1)
-      '@types/jest':
-        specifier: ^27.5.2
-        version: 27.5.2
-      '@types/node':
-        specifier: ^17.0.45
-        version: 17.0.45
-      '@types/react':
-        specifier: ^18.0.28
-        version: 18.3.31
-      '@types/react-dom':
-        specifier: ^18.0.11
-        version: 18.3.7(@types/react@18.3.31)
       '@uidotdev/usehooks':
         specifier: ^2.4.1
         version: 2.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@vp/api-client':
+        specifier: workspace:*
+        version: link:../../packages/client/api-client
+      '@vp/api-contracts':
+        specifier: workspace:*
+        version: link:../../packages/universal/api-contracts
       '@vp/permissions':
         specifier: workspace:*
-        version: link:../../packages/permissions
+        version: link:../../packages/universal/permissions
       axios:
         specifier: ^1.6.2
         version: 1.20.0
@@ -300,29 +227,50 @@ importers:
         version: 6.30.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-scripts:
         specifier: 5.0.1
-        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.104.1)(tsx@4.23.13)(type-fest@0.21.3)(typescript@4.9.5)(yaml@2.9.0)
+        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.104.1)(tsx@4.23.15)(type-fest@0.21.3)(typescript@5.9.3)(yaml@2.9.0)
       react-toastify:
         specifier: ^9.1.3
         version: 9.1.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       sass:
         specifier: ^1.59.3
         version: 1.104.1
-      typescript:
-        specifier: ^4.9.5
-        version: 4.9.5
       web-vitals:
         specifier: ^2.1.4
         version: 2.1.4
     devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^5.16.5
+        version: 5.17.0
+      '@testing-library/react':
+        specifier: ^13.4.0
+        version: 13.4.0(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@testing-library/user-event':
+        specifier: ^14.4.3
+        version: 14.6.7(@testing-library/dom@8.20.1)
+      '@types/jest':
+        specifier: ^27.5.2
+        version: 27.5.2
       '@types/lodash':
         specifier: ^4.14.202
         version: 4.17.25
       '@types/lodash.debounce':
         specifier: ^4.0.7
         version: 4.0.9
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@types/react':
+        specifier: ^18.0.28
+        version: 18.3.31
+      '@types/react-dom':
+        specifier: ^18.0.11
+        version: 18.3.7(@types/react@18.3.31)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
 
   apps/worker:
     dependencies:
@@ -331,47 +279,44 @@ importers:
         version: 1.9.1
       '@vp/adapters':
         specifier: workspace:*
-        version: link:../../adapters
+        version: link:../../packages/server/adapters
       '@vp/config':
         specifier: workspace:*
-        version: link:../../packages/config
+        version: link:../../packages/server/config
       '@vp/core':
         specifier: workspace:*
-        version: link:../../core
+        version: link:../../packages/server/core
       '@vp/db':
         specifier: workspace:*
-        version: link:../../packages/db
+        version: link:../../packages/server/db
+      '@vp/env-schema':
+        specifier: workspace:*
+        version: link:../../packages/server/env-schema
       '@vp/errors':
         specifier: workspace:*
-        version: link:../../packages/errors
+        version: link:../../packages/universal/errors
       '@vp/events':
         specifier: workspace:*
-        version: link:../../packages/events
+        version: link:../../packages/server/events
       '@vp/ffmpeg':
         specifier: workspace:*
-        version: link:../../packages/ffmpeg
+        version: link:../../packages/server/ffmpeg
       '@vp/job-contracts':
         specifier: workspace:*
-        version: link:../../packages/job-contracts
+        version: link:../../packages/server/job-contracts
       '@vp/observability':
         specifier: workspace:*
-        version: link:../../packages/observability
+        version: link:../../packages/server/observability
       '@vp/storage':
         specifier: workspace:*
-        version: link:../../packages/storage
-      bullmq:
-        specifier: ^6.3.4
-        version: 6.3.4(ioredis@5.11.1)
-      drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)
-      ioredis:
-        specifier: ^5.11.1
-        version: 5.11.1
+        version: link:../../packages/server/storage
       uuidv7:
         specifier: ^1.2.1
         version: 1.2.1
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.8
+        version: 0.5.8
       '@opentelemetry/context-async-hooks':
         specifier: ^2.11.0
         version: 2.11.0(@opentelemetry/api@1.9.1)
@@ -383,10 +328,10 @@ importers:
         version: 24.13.3
       '@vp/testing':
         specifier: workspace:*
-        version: link:../../packages/testing
+        version: link:../../packages/server/testing
       '@vp/tsconfig':
         specifier: workspace:*
-        version: link:../../packages/tsconfig
+        version: link:../../packages/universal/tsconfig
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -395,35 +340,110 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  core:
+  packages/client/api-client:
     dependencies:
-      '@vp/permissions':
+      '@vp/api-contracts':
         specifier: workspace:*
-        version: link:../packages/permissions
-    devDependencies:
-      '@vp/testing':
-        specifier: workspace:*
-        version: link:../packages/testing
-      '@vp/tsconfig':
-        specifier: workspace:*
-        version: link:../packages/tsconfig
-      rimraf:
-        specifier: ^6.0.1
-        version: 6.1.3
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
-
-  packages/config:
-    dependencies:
+        version: link:../../universal/api-contracts
       zod:
         specifier: ^3.24.2
         version: 3.25.76
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/adapters:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.1125.0
+        version: 3.1125.0
+      '@aws-sdk/s3-request-presigner':
+        specifier: ^3.1125.0
+        version: 3.1125.0
+      '@bull-board/api':
+        specifier: ^9.8.0
+        version: 9.8.0(@bull-board/ui@9.8.0(bullmq@6.3.4(ioredis@5.11.1)))(bullmq@6.3.4(ioredis@5.11.1))
+      '@casl/ability':
+        specifier: ^6.8.1
+        version: 6.8.1
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
+      '@ucast/core':
+        specifier: ^2.0.0
+        version: 2.0.0
+      '@vp/core':
+        specifier: workspace:*
+        version: link:../core
+      '@vp/db':
+        specifier: workspace:*
+        version: link:../db
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../../universal/errors
+      '@vp/observability':
+        specifier: workspace:*
+        version: link:../observability
+      '@vp/permissions':
+        specifier: workspace:*
+        version: link:../../universal/permissions
+      bullmq:
+        specifier: ^6.3.4
+        version: 6.3.4(ioredis@5.11.1)
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)
+      ioredis:
+        specifier: ^5.11.1
+        version: 5.11.1
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
+      uuidv7:
+        specifier: ^1.2.1
+        version: 1.2.1
+    devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.8
+        version: 0.5.8
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/compose-autoscaler:
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -433,7 +453,29 @@ importers:
         version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
-        version: link:../tsconfig
+        version: link:../../universal/tsconfig
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/config:
+    dependencies:
+      '@vp/env-schema':
+        specifier: workspace:*
+        version: link:../env-schema
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -442,19 +484,41 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  packages/db:
+  packages/server/core:
     dependencies:
-      '@vp/config':
+      '@vp/domain':
         specifier: workspace:*
-        version: link:../config
+        version: link:../../universal/domain
+      '@vp/permissions':
+        specifier: workspace:*
+        version: link:../../universal/permissions
+    devDependencies:
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/db:
+    dependencies:
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
       '@vp/errors':
         specifier: workspace:*
-        version: link:../errors
+        version: link:../../universal/errors
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)
+        version: 0.45.2(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
@@ -462,6 +526,9 @@ importers:
         specifier: ^1.2.1
         version: 1.2.1
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.8
+        version: 0.5.8
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -470,7 +537,7 @@ importers:
         version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
-        version: link:../tsconfig
+        version: link:../../universal/tsconfig
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
@@ -482,20 +549,41 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  packages/errors:
+  packages/server/dev-token:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/env-schema:
     dependencies:
-      bullmq:
-        specifier: ^6.3.4
-        version: 6.3.4(ioredis@5.11.1)
+      '@vp/pagination':
+        specifier: workspace:*
+        version: link:../../universal/pagination
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@vp/testing':
         specifier: workspace:*
         version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
-        version: link:../tsconfig
+        version: link:../../universal/tsconfig
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -504,9 +592,9 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  packages/events:
+  packages/server/events:
     dependencies:
       '@vp/job-contracts':
         specifier: workspace:*
@@ -520,7 +608,7 @@ importers:
         version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
-        version: link:../tsconfig
+        version: link:../../universal/tsconfig
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -529,16 +617,16 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  packages/ffmpeg:
+  packages/server/ffmpeg:
     dependencies:
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
       '@vp/errors':
         specifier: workspace:*
-        version: link:../errors
+        version: link:../../universal/errors
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../job-contracts
@@ -548,7 +636,7 @@ importers:
         version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
-        version: link:../tsconfig
+        version: link:../../universal/tsconfig
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -557,9 +645,27 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  packages/job-contracts:
+  packages/server/gen-video:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/job-contracts:
     dependencies:
       zod:
         specifier: ^3.24.2
@@ -570,7 +676,7 @@ importers:
         version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
-        version: link:../tsconfig
+        version: link:../../universal/tsconfig
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -579,9 +685,9 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  packages/observability:
+  packages/server/observability:
     dependencies:
       '@opentelemetry/api':
         specifier: ^1.9.1
@@ -622,6 +728,120 @@ importers:
         version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
+        version: link:../../universal/tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/storage:
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/testing:
+    dependencies:
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+    devDependencies:
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      js-yaml:
+        specifier: ^5.4.1
+        version: 5.4.1
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  packages/server/upload-client:
+    dependencies:
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../../universal/errors
+      '@vp/storage':
+        specifier: workspace:*
+        version: link:../storage
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@vp/adapters':
+        specifier: workspace:*
+        version: link:../adapters
+      '@vp/api':
+        specifier: workspace:*
+        version: link:../../../apps/api
+      '@vp/core':
+        specifier: workspace:*
+        version: link:../core
+      '@vp/dev-token':
+        specifier: workspace:*
+        version: link:../dev-token
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      fastify:
+        specifier: ^5.2.1
+        version: 5.12.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/universal/api-contracts:
+    dependencies:
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@vp/pagination':
+        specifier: workspace:*
+        version: link:../pagination
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
         version: link:../tsconfig
       rimraf:
         specifier: ^6.0.1
@@ -631,9 +851,63 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  packages/permissions:
+  packages/universal/domain:
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/universal/errors:
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/universal/pagination:
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/universal/permissions:
     dependencies:
       '@casl/ability':
         specifier: ^6.7.3
@@ -647,7 +921,7 @@ importers:
     devDependencies:
       '@vp/testing':
         specifier: workspace:*
-        version: link:../testing
+        version: link:../../server/testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -659,149 +933,9 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
-  packages/storage:
-    devDependencies:
-      '@vp/adapters':
-        specifier: workspace:*
-        version: link:../../adapters
-      '@vp/testing':
-        specifier: workspace:*
-        version: link:../testing
-      '@vp/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      rimraf:
-        specifier: ^6.0.1
-        version: 6.1.3
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
-
-  packages/testing:
-    dependencies:
-      vitest:
-        specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
-    devDependencies:
-      '@types/js-yaml':
-        specifier: ^4.0.9
-        version: 4.0.9
-      '@types/node':
-        specifier: ^24.0.0
-        version: 24.13.3
-      '@vp/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      js-yaml:
-        specifier: ^5.4.1
-        version: 5.4.1
-      rimraf:
-        specifier: ^6.0.1
-        version: 6.1.3
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-
-  packages/tsconfig: {}
-
-  tools/compose-autoscaler:
-    devDependencies:
-      '@types/node':
-        specifier: ^24.0.0
-        version: 24.13.3
-      '@vp/testing':
-        specifier: workspace:*
-        version: link:../../packages/testing
-      '@vp/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
-
-  tools/dev-token:
-    devDependencies:
-      '@types/node':
-        specifier: ^24.0.0
-        version: 24.13.3
-      '@vp/testing':
-        specifier: workspace:*
-        version: link:../../packages/testing
-      '@vp/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
-
-  tools/gen-video:
-    devDependencies:
-      '@types/node':
-        specifier: ^24.0.0
-        version: 24.13.3
-      '@vp/testing':
-        specifier: workspace:*
-        version: link:../../packages/testing
-      '@vp/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
-
-  tools/upload-client:
-    dependencies:
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../packages/errors
-      '@vp/storage':
-        specifier: workspace:*
-        version: link:../../packages/storage
-    devDependencies:
-      '@types/node':
-        specifier: ^24.0.0
-        version: 24.13.3
-      '@vp/adapters':
-        specifier: workspace:*
-        version: link:../../adapters
-      '@vp/api':
-        specifier: workspace:*
-        version: link:../../apps/api
-      '@vp/core':
-        specifier: workspace:*
-        version: link:../../core
-      '@vp/dev-token':
-        specifier: workspace:*
-        version: link:../dev-token
-      '@vp/testing':
-        specifier: workspace:*
-        version: link:../../packages/testing
-      '@vp/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
-      fastify:
-        specifier: ^5.2.1
-        version: 5.12.1
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      vitest:
-        specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+  packages/universal/tsconfig: {}
 
 packages:
 
@@ -1779,6 +1913,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite@0.5.8':
+    resolution: {integrity: sha512-n9tsbUOhwx2epK1V0ZG9Ar4SHWUju04dhmzZXiSBXwBoleOvIfals33NAaWgagQVAL4Rbvx/Ptsu3P+pA09f6Q==}
 
   '@emotion/babel-plugin@11.13.5':
     resolution: {integrity: sha512-pxHCpT2ex+0q+HH91/zsdHkw/lXd468DIN2zvfvLtPKLLMo6gQj7oLObq8PhkrxOZb/gGCq03S3Z7PDhS8pduQ==}
@@ -3443,6 +3580,7 @@ packages:
   '@smithy/node-http-handler@4.12.0':
     resolution: {integrity: sha512-0mq1pHadfyXCYCqm2cNpbjNIT+fbaUpNxewZb/YNr2L0IrEVMOb8gM/Fl4K6XvHCW3uSNDFwPl/+iKm0bx9jYg==}
     engines: {node: '>=18.0.0'}
+    deprecated: Depreacted due to a memory leak issue https://github.com/smithy-lang/smithy-typescript/issues/2258
 
   '@smithy/signature-v4@5.7.3':
     resolution: {integrity: sha512-7ImGm+FkHRLcBaRttIAMZ6bzJZWb2cJGoYjq46F2UjycujWzrL9GEN9h4w7eQyXJYnltrUhxbbieBAIRrdqpow==}
@@ -3675,9 +3813,6 @@ packages:
 
   '@types/node-forge@1.3.14':
     resolution: {integrity: sha512-mhVF2BnD4BO+jtOp7z1CdzaK4mbuK0LLQYAvdOLqHTavxFNq4zA1EmYkpnFjP8HOUzedfQkRnp0E2ulSAYSzAw==}
-
-  '@types/node@17.0.45':
-    resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
 
   '@types/node@24.13.3':
     resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
@@ -8660,6 +8795,11 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
+  tsx@4.23.15:
+    resolution: {integrity: sha512-Yiex1Ovn8z2xPpOWckIiysV1SSyRMY9BkLF++q0yKiDxCqRhosKfMg3janKkiLBwZ5c/YryloKwGZcrEmtwxKw==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   turbo@2.10.12:
     resolution: {integrity: sha512-AswgMPnpOoaVZHrrSBejETzEbuIA69OVGwfkHwfrY0A23VjWXBANzgq9+OymWOHAIArB7D1+1z498WY8fGg1Jw==}
     hasBin: true
@@ -8710,11 +8850,6 @@ packages:
 
   typedarray-to-buffer@3.1.5:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
-
-  typescript@4.9.5:
-    resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
@@ -10426,6 +10561,8 @@ snapshots:
       postcss-selector-parser: 6.1.4
 
   '@drizzle-team/brocli@0.10.2': {}
+
+  '@electric-sql/pglite@0.5.8': {}
 
   '@emotion/babel-plugin@11.13.5':
     dependencies:
@@ -12485,8 +12622,6 @@ snapshots:
     dependencies:
       '@types/node': 24.13.3
 
-  '@types/node@17.0.45': {}
-
   '@types/node@24.13.3':
     dependencies:
       undici-types: 7.18.2
@@ -12583,42 +12718,42 @@ snapshots:
     dependencies:
       '@types/yargs-parser': 21.0.3
 
-  '@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       '@typescript-eslint/scope-manager': 5.62.0
-      '@typescript-eslint/type-utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
-      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/type-utils': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       debug: 4.4.3
       eslint: 8.57.1
       graphemer: 1.4.0
       ignore: 5.3.2
       natural-compare-lite: 1.4.1
       semver: 7.8.5
-      tsutils: 3.21.0(typescript@4.9.5)
+      tsutils: 3.21.0(typescript@5.9.3)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/experimental-utils@5.62.0(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/experimental-utils@5.62.0(eslint@8.57.1)(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       eslint: 8.57.1
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  '@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 5.62.0
       '@typescript-eslint/types': 5.62.0
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.9.5)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.9.3)
       debug: 4.4.3
       eslint: 8.57.1
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -12627,21 +12762,21 @@ snapshots:
       '@typescript-eslint/types': 5.62.0
       '@typescript-eslint/visitor-keys': 5.62.0
 
-  '@typescript-eslint/type-utils@5.62.0(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/type-utils@5.62.0(eslint@8.57.1)(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.9.5)
-      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.9.3)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       debug: 4.4.3
       eslint: 8.57.1
-      tsutils: 3.21.0(typescript@4.9.5)
+      tsutils: 3.21.0(typescript@5.9.3)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
   '@typescript-eslint/types@5.62.0': {}
 
-  '@typescript-eslint/typescript-estree@5.62.0(typescript@4.9.5)':
+  '@typescript-eslint/typescript-estree@5.62.0(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/types': 5.62.0
       '@typescript-eslint/visitor-keys': 5.62.0
@@ -12649,20 +12784,20 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.8.5
-      tsutils: 3.21.0(typescript@4.9.5)
+      tsutils: 3.21.0(typescript@5.9.3)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@5.62.0(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/utils@5.62.0(eslint@8.57.1)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.10.1(eslint@8.57.1)
       '@types/json-schema': 7.0.15
       '@types/semver': 7.8.0
       '@typescript-eslint/scope-manager': 5.62.0
       '@typescript-eslint/types': 5.62.0
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.9.5)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.9.3)
       eslint: 8.57.1
       eslint-scope: 5.1.1
       semver: 7.8.5
@@ -12708,13 +12843,13 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.7(vite@7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))':
+  '@vitest/mocker@3.2.7(vite@7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0))':
     dependencies:
       '@vitest/spy': 3.2.7
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+      vite: 7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   '@vitest/pretty-format@3.2.7':
     dependencies:
@@ -13900,8 +14035,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.13
 
-  drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9):
+  drizzle-orm@0.45.2(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9):
     optionalDependencies:
+      '@electric-sql/pglite': 0.5.8
       '@opentelemetry/api': 1.9.1
       '@types/pg': 8.15.6
       postgres: 3.4.9
@@ -14189,25 +14325,25 @@ snapshots:
     optionalDependencies:
       source-map: 0.6.1
 
-  eslint-config-react-app@7.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(eslint@8.57.1)(jest@27.5.1)(typescript@4.9.5):
+  eslint-config-react-app@7.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(eslint@8.57.1)(jest@27.5.1)(typescript@5.9.3):
     dependencies:
       '@babel/core': 7.29.7
       '@babel/eslint-parser': 7.29.7(@babel/core@7.29.7)(eslint@8.57.1)
       '@rushstack/eslint-patch': 1.16.1
-      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5)
-      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       babel-preset-react-app: 10.1.0
       confusing-browser-globals: 1.0.11
       eslint: 8.57.1
       eslint-plugin-flowtype: 8.0.3(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(eslint@8.57.1)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)
-      eslint-plugin-jest: 25.7.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(jest@27.5.1)(typescript@4.9.5)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)
+      eslint-plugin-jest: 25.7.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(jest@27.5.1)(typescript@5.9.3)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
       eslint-plugin-react: 7.37.5(eslint@8.57.1)
       eslint-plugin-react-hooks: 4.6.2(eslint@8.57.1)
-      eslint-plugin-testing-library: 5.11.1(eslint@8.57.1)(typescript@4.9.5)
+      eslint-plugin-testing-library: 5.11.1(eslint@8.57.1)(typescript@5.9.3)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.3
     transitivePeerDependencies:
       - '@babel/plugin-syntax-flow'
       - '@babel/plugin-transform-react-jsx'
@@ -14224,11 +14360,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.14.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint-import-resolver-node@0.3.10)(eslint@8.57.1):
+  eslint-module-utils@2.14.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
-      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.10
     transitivePeerDependencies:
@@ -14242,7 +14378,7 @@ snapshots:
       lodash: 4.18.1
       string-natural-compare: 3.0.1
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.2.0
@@ -14253,7 +14389,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.14.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint-import-resolver-node@0.3.10)(eslint@8.57.1)
+      eslint-module-utils: 2.14.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@8.57.1)
       hasown: 2.0.4
       is-core-module: 2.16.2
       is-glob: 4.0.3
@@ -14265,18 +14401,18 @@ snapshots:
       string.prototype.trimend: 1.0.10
       tsconfig-paths: 3.15.0
     optionalDependencies:
-      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-jest@25.7.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(jest@27.5.1)(typescript@4.9.5):
+  eslint-plugin-jest@25.7.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(jest@27.5.1)(typescript@5.9.3):
     dependencies:
-      '@typescript-eslint/experimental-utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/experimental-utils': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       eslint: 8.57.1
     optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
       jest: 27.5.1
     transitivePeerDependencies:
       - supports-color
@@ -14327,9 +14463,9 @@ snapshots:
       string.prototype.matchall: 4.1.0
       string.prototype.repeat: 1.0.0
 
-  eslint-plugin-testing-library@5.11.1(eslint@8.57.1)(typescript@4.9.5):
+  eslint-plugin-testing-library@5.11.1(eslint@8.57.1)(typescript@5.9.3):
     dependencies:
-      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       eslint: 8.57.1
     transitivePeerDependencies:
       - supports-color
@@ -14689,7 +14825,7 @@ snapshots:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
 
-  fork-ts-checker-webpack-plugin@6.5.3(eslint@8.57.1)(typescript@4.9.5)(webpack@5.110.3(postcss@8.5.27)):
+  fork-ts-checker-webpack-plugin@6.5.3(eslint@8.57.1)(typescript@5.9.3)(webpack@5.110.3(postcss@8.5.27)):
     dependencies:
       '@babel/code-frame': 7.29.7
       '@types/json-schema': 7.0.15
@@ -14704,7 +14840,7 @@ snapshots:
       schema-utils: 2.7.0
       semver: 7.8.5
       tapable: 1.1.3
-      typescript: 4.9.5
+      typescript: 5.9.3
       webpack: 5.110.3(postcss@8.5.27)
     optionalDependencies:
       eslint: 8.57.1
@@ -16609,13 +16745,13 @@ snapshots:
       postcss: 8.5.27
       postcss-value-parser: 4.2.0
 
-  postcss-load-config@6.0.1(jiti@1.21.7)(postcss@8.5.27)(tsx@4.23.13)(yaml@2.9.0):
+  postcss-load-config@6.0.1(jiti@1.21.7)(postcss@8.5.27)(tsx@4.23.15)(yaml@2.9.0):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
       jiti: 1.21.7
       postcss: 8.5.27
-      tsx: 4.23.13
+      tsx: 4.23.15
       yaml: 2.9.0
 
   postcss-loader@6.2.1(postcss@8.5.27)(webpack@5.110.3(postcss@8.5.27)):
@@ -17072,7 +17208,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.31
 
-  react-dev-utils@12.0.1(eslint@8.57.1)(typescript@4.9.5)(webpack@5.110.3(postcss@8.5.27)):
+  react-dev-utils@12.0.1(eslint@8.57.1)(typescript@5.9.3)(webpack@5.110.3(postcss@8.5.27)):
     dependencies:
       '@babel/code-frame': 7.29.7
       address: 1.2.2
@@ -17083,7 +17219,7 @@ snapshots:
       escape-string-regexp: 4.0.0
       filesize: 8.0.7
       find-up: 5.0.0
-      fork-ts-checker-webpack-plugin: 6.5.3(eslint@8.57.1)(typescript@4.9.5)(webpack@5.110.3(postcss@8.5.27))
+      fork-ts-checker-webpack-plugin: 6.5.3(eslint@8.57.1)(typescript@5.9.3)(webpack@5.110.3(postcss@8.5.27))
       global-modules: 2.0.0
       globby: 11.1.0
       gzip-size: 6.0.0
@@ -17100,7 +17236,7 @@ snapshots:
       text-table: 0.2.0
       webpack: 5.110.3(postcss@8.5.27)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.3
     transitivePeerDependencies:
       - eslint
       - supports-color
@@ -17196,7 +17332,7 @@ snapshots:
       '@remix-run/router': 1.23.4
       react: 18.3.1
 
-  react-scripts@5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.104.1)(tsx@4.23.13)(type-fest@0.21.3)(typescript@4.9.5)(yaml@2.9.0):
+  react-scripts@5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.104.1)(tsx@4.23.15)(type-fest@0.21.3)(typescript@5.9.3)(yaml@2.9.0):
     dependencies:
       '@babel/core': 7.29.7
       '@pmmmwh/react-refresh-webpack-plugin': 0.5.17(react-refresh@0.11.0)(type-fest@0.21.3)(webpack-dev-server@4.15.2(webpack@5.110.3(postcss@8.5.27)))(webpack@5.110.3(postcss@8.5.27))
@@ -17214,7 +17350,7 @@ snapshots:
       dotenv: 10.0.0
       dotenv-expand: 5.1.0
       eslint: 8.57.1
-      eslint-config-react-app: 7.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(eslint@8.57.1)(jest@27.5.1)(typescript@4.9.5)
+      eslint-config-react-app: 7.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(eslint@8.57.1)(jest@27.5.1)(typescript@5.9.3)
       eslint-webpack-plugin: 3.2.0(eslint@8.57.1)(webpack@5.110.3(postcss@8.5.27))
       file-loader: 6.2.0(webpack@5.110.3(postcss@8.5.27))
       fs-extra: 10.1.0
@@ -17232,7 +17368,7 @@ snapshots:
       prompts: 2.4.2
       react: 18.3.1
       react-app-polyfill: 3.0.0
-      react-dev-utils: 12.0.1(eslint@8.57.1)(typescript@4.9.5)(webpack@5.110.3(postcss@8.5.27))
+      react-dev-utils: 12.0.1(eslint@8.57.1)(typescript@5.9.3)(webpack@5.110.3(postcss@8.5.27))
       react-refresh: 0.11.0
       resolve: 1.22.12
       resolve-url-loader: 4.0.0
@@ -17240,7 +17376,7 @@ snapshots:
       semver: 7.8.5
       source-map-loader: 3.0.2(webpack@5.110.3(postcss@8.5.27))
       style-loader: 3.3.4(webpack@5.110.3(postcss@8.5.27))
-      tailwindcss: 3.4.19(tsx@4.23.13)(yaml@2.9.0)
+      tailwindcss: 3.4.19(tsx@4.23.15)(yaml@2.9.0)
       terser-webpack-plugin: 5.6.1(postcss@8.5.27)(webpack@5.110.3(postcss@8.5.27))
       webpack: 5.110.3(postcss@8.5.27)
       webpack-dev-server: 4.15.2(webpack@5.110.3(postcss@8.5.27))
@@ -17248,7 +17384,7 @@ snapshots:
       workbox-webpack-plugin: 6.6.0(@types/babel__core@7.20.5)(webpack@5.110.3(postcss@8.5.27))
     optionalDependencies:
       fsevents: 2.3.3
-      typescript: 4.9.5
+      typescript: 5.9.3
     transitivePeerDependencies:
       - '@babel/plugin-syntax-flow'
       - '@babel/plugin-transform-react-jsx'
@@ -18070,7 +18206,7 @@ snapshots:
 
   tagged-tag@1.0.0: {}
 
-  tailwindcss@3.4.19(tsx@4.23.13)(yaml@2.9.0):
+  tailwindcss@3.4.19(tsx@4.23.15)(yaml@2.9.0):
     dependencies:
       '@alloc/quick-lru': 5.3.0
       arg: 5.0.2
@@ -18089,7 +18225,7 @@ snapshots:
       postcss: 8.5.27
       postcss-import: 15.1.0(postcss@8.5.27)
       postcss-js: 4.1.0(postcss@8.5.27)
-      postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.27)(tsx@4.23.13)(yaml@2.9.0)
+      postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.27)(tsx@4.23.15)(yaml@2.9.0)
       postcss-nested: 6.2.0(postcss@8.5.27)
       postcss-selector-parser: 6.1.4
       resolve: 1.22.12
@@ -18212,12 +18348,18 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsutils@3.21.0(typescript@4.9.5):
+  tsutils@3.21.0(typescript@5.9.3):
     dependencies:
       tslib: 1.14.1
-      typescript: 4.9.5
+      typescript: 5.9.3
 
   tsx@4.23.13:
+    dependencies:
+      esbuild: 0.28.2
+    optionalDependencies:
+      fsevents: 2.3.3
+
+  tsx@4.23.15:
     dependencies:
       esbuild: 0.28.2
     optionalDependencies:
@@ -18289,8 +18431,6 @@ snapshots:
   typedarray-to-buffer@3.1.5:
     dependencies:
       is-typedarray: 1.0.0
-
-  typescript@4.9.5: {}
 
   typescript@5.9.3: {}
 
@@ -18386,13 +18526,13 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-node@3.2.4(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0):
+  vite-node@3.2.4(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+      vite: 7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -18407,7 +18547,7 @@ snapshots:
       - tsx
       - yaml
 
-  vite@7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0):
+  vite@7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0):
     dependencies:
       esbuild: 0.28.2
       fdir: 6.5.0(picomatch@4.0.7)
@@ -18421,14 +18561,14 @@ snapshots:
       jiti: 1.21.7
       sass: 1.104.1
       terser: 5.51.2
-      tsx: 4.23.13
+      tsx: 4.23.15
       yaml: 2.9.0
 
-  vitest@3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0):
+  vitest@3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@16.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.7
-      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
+      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0))
       '@vitest/pretty-format': 3.2.7
       '@vitest/runner': 3.2.7
       '@vitest/snapshot': 3.2.7
@@ -18446,8 +18586,8 @@ snapshots:
       tinyglobby: 0.2.17
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
-      vite-node: 3.2.4(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
+      vite: 7.3.6(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+      vite-node: 3.2.4(@types/node@24.13.3)(jiti@1.21.7)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.13.3

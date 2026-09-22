@@ -1,0 +1,11 @@
+{
+  "extends": "@vp/tsconfig/server.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": [
+    "ports/**/*",
+    "repositories/**/*"
+  ]
+}

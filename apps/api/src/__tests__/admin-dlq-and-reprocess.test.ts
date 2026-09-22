@@ -35,9 +35,11 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
     probeQueue = q;
 
     app = await buildApp({
-      repositories,
-      adminQueues: new Map(queuesMap),
-      jobQueue: probeQueue,
+      adapters: {
+        repositories,
+        queues: new Map(queuesMap),
+        probeQueue,
+      },
     });
     await app.ready();
 

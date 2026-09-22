@@ -4,9 +4,8 @@ import {
   InMemoryCategoryRepository,
   InMemoryVideoRepository,
 } from '@vp/adapters';
-import type { Category } from '@vp/core/repositories';
+import type { Category } from '@vp/domain';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
   describe('InMemoryCategoryRepository', () => {
@@ -135,7 +134,7 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
       service = new CategoryCacheService({ cache, l1TtlMs: 1000, l2TtlSeconds: 10 });
     });
 
-    it('misses cache on first call, populates L1 and L2, and returns ETag', async () => {
+    it('misses cache on first call, then serves the same rows from L1', async () => {
       const fetcher = vi.fn().mockResolvedValue([
         {
           id: '1',
@@ -152,13 +151,12 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
 
       const result = await service.getCategories(fetcher);
       expect(fetcher).toHaveBeenCalledTimes(1);
-      expect(result.categories).toHaveLength(1);
-      expect(result.etag).toMatch(/^"[a-f0-9]{40}"$/);
+      expect(result).toHaveLength(1);
 
       // L1 hit on subsequent call
       const l1Result = await service.getCategories(fetcher);
       expect(fetcher).toHaveBeenCalledTimes(1); // Not called again
-      expect(l1Result.etag).toBe(result.etag);
+      expect(l1Result).toEqual(result);
       expect(service.getL1Size()).toBe(1);
     });
 
@@ -187,8 +185,8 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
       // Call again: should hit L2 Redis cache and re-populate L1 without calling fetcher
       const res2 = await service.getCategories(fetcher);
       expect(fetcher).toHaveBeenCalledTimes(1);
-      expect(res2.etag).toBe(res1.etag);
-      expect(res2.categories[0]?.name).toBe('Music');
+      expect(res2).toEqual(res1);
+      expect(res2[0]?.name).toBe('Music');
       expect(service.getL1Size()).toBe(1);
     });
 

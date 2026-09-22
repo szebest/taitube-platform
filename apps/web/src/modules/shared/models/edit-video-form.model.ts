@@ -1,5 +1,3 @@
-export type EditVideoFormModel = {
-  title: string;
-  description: string;
-  category: number;
-}
+import type { UpdateVideoMetadata } from "@vp/api-contracts";
+
+export type EditVideoFormModel = Pick<UpdateVideoMetadata, 'title' | 'description' | 'visibility'>;
