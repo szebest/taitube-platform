@@ -661,8 +661,12 @@ one and no second consumer could choose differently.
   `RETRY_CLASS` are both `Readonly<Record<ErrorCode, ...>>`, so a new code is a compile error until both edges
   have been told what it means.
 - **Two edges.** `sendResult` in `apps/api/src/routes/` renders a `Problem`; `runner.ts` converts to the BullMQ
-  throw via `RETRY_CLASS`. `PermanentError` / `TransientError` remain, as the queue-boundary representation
-  only (ADR-18).
+  throw via `toPipelineError`, which reads `RETRY_CLASS`. `PermanentError` / `TransientError` remain, as the
+  queue-boundary representation only (ADR-18).
+- **A disguise is a rule, not a rendering.** The public route answers "you may not read this" with the same
+  404 as "it does not exist", so the 403 cannot confirm the id. Which refusals get that treatment is a domain
+  decision - a refusal to *edit* a video the caller can already see hides nothing - so `VideoForbidden` carries
+  `readable` and `publicReadFailure` owns the disguise. Presenters call it; they do not re-derive it.
 
 **Rejected alternatives.**
 
@@ -677,8 +681,8 @@ one and no second consumer could choose differently.
 - **Go-style `[value, error]` tuples.** They do not narrow: nothing stops a caller reading `value` after a
   non-null `error`, and the union has no discriminant for a `switch` to be exhaustive over.
 
-**Consequences.** The largest diff is mechanical and is being landed resource by resource; the categories
-slice is converted and is the reference. Three shrink-only allowlists in `tests/architecture/` record what is
+**Consequences.** The largest diff is mechanical and is being landed resource by resource; the categories,
+channels and videos slices are converted and are the reference. Three shrink-only allowlists in `tests/architecture/` record what is
 left and may only get shorter. Wire format is unchanged: a client cannot tell that the server stopped
 throwing, apart from four additive codes.
 

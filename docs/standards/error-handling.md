@@ -156,6 +156,16 @@ rather than an inline lambda. **A presenter is not a domain service**: it import
 no rule. If it starts calling a repository it is a service; if it starts branching on a business
 condition, that branch is a rule.
 
+`videos.presenter.ts` is the worked example of that last sentence. The public route hides a video
+the caller may not read behind a 404, because a 403 would confirm the id exists. But a refusal to
+*edit* a video they can already see hides nothing and stays a 403 - and telling those two apart is a
+business condition, so it is not the presenter's to make. `VideoForbidden` carries `readable`, the
+rule sets it, and `publicReadFailure` in `@vp/domain-rules` owns the disguise for the public route,
+the PATCH route and the SSE stream alike. The presenter calls it and decides nothing.
+
+`UNAUTHORIZED` survives the disguise, because a caller with no token can act on a 401 and can do
+nothing with a 404.
+
 ### The global handler stays, narrowed to a backstop
 
 | Reaches the global handler | Reaches `sendResult` |
@@ -177,10 +187,10 @@ runner converts, and it is the only place in `apps/worker` that throws.
 
 ```ts
 const outcome = await stage(job);
-if (isErr(outcome)) throw toQueueError(outcome.error);   // RETRY_CLASS -> Permanent | Transient
+if (isErr(outcome)) throw toPipelineError(outcome.error); // RETRY_CLASS -> Permanent | Transient
 ```
 
-`toQueueError` reads `RETRY_CLASS`, so ADR-18's "decided at the throw site, never by regex on
+`toPipelineError` reads `RETRY_CLASS`, so ADR-18's "decided at the throw site, never by regex on
 messages" becomes "decided once per code, in the vocabulary, and the throw site has no judgement
 left to make". The unknown-error default - transient, attempt cap 3 - still applies to anything that
 escapes as a raw throw.
@@ -289,8 +299,8 @@ call. What is decided here: **the limit is supplied to the rule, never baked int
 
 ## What is still being converted
 
-The categories resource is converted end to end and is the reference every other resource copies.
-The rest is carried by three shrink-only allowlists in `tests/architecture/` -
+The categories, channels and videos resources are converted end to end and are the reference every
+other resource copies. The rest is carried by three shrink-only allowlists in `tests/architecture/` -
 `throwing-domain-sources.ts`, `legacy-catch-sites.ts` and `non-result-port-methods.ts`. Each fails
 on a new breach **and** on a listed entry that no longer breaches, so they can only get shorter and
 may not be appended to. Converting a resource means deleting its lines from all three.

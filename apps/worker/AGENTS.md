@@ -27,10 +27,12 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 
 ### Rule 3: The Runner Is the Only Throw
 - A stage returns `Result<T, E>` and decides nothing about retries (SDD ADR-24). `runner.ts` converts:
-  `if (isErr(outcome)) throw toQueueError(outcome.error)`, because BullMQ's retry contract *is* the exception
+  `if (isErr(outcome)) throw toPipelineError(outcome.error)`, because BullMQ's retry contract *is* the exception
   - a stage that returns normally is a completed job.
-- `toQueueError` reads `RETRY_CLASS` from `@vp/errors`, so ADR-18's classification is decided once per code in
-  the vocabulary and the throw site has no judgement left to make. Never classify by inspecting a message.
+- `toPipelineError` lives in `@vp/errors` and reads `RETRY_CLASS`, so ADR-18's classification is decided once
+  per code in the vocabulary and the throw site has no judgement left to make. `unwrapOrThrow` in
+  `queue-error.ts` is the same conversion applied to a repository `Result` a stage cannot act on. Never
+  classify by inspecting a message or a class name.
 - The unknown-error default is unchanged: anything that escapes a stage as a raw throw is transient with an
   attempt cap of 3.
 - Dual-runtime parity is unaffected: `@vp/result` is plain TypeScript with no `Bun.*` and no `node:*`.
