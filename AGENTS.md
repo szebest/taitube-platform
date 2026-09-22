@@ -55,7 +55,7 @@ Shared packages live under `packages/<tier>/`, where the directory **is** the ti
 import rules; each tier directory has its own: [universal](packages/universal/AGENTS.md) · [server](packages/server/AGENTS.md) · [client](packages/client/AGENTS.md).
 
 - **`packages/universal/` — runs in a browser and on a server:**  
-  [api-contracts](packages/universal/api-contracts/AGENTS.md) · [domain](packages/universal/domain/AGENTS.md) · [env-schema](packages/universal/env-schema/AGENTS.md) · [errors](packages/universal/errors/AGENTS.md) · [pagination](packages/universal/pagination/AGENTS.md) · [permissions](packages/universal/permissions/AGENTS.md) · [tsconfig](packages/universal/tsconfig/AGENTS.md)
+  [api-contracts](packages/universal/api-contracts/AGENTS.md) · [domain](packages/universal/domain/AGENTS.md) · [errors](packages/universal/errors/AGENTS.md) · [pagination](packages/universal/pagination/AGENTS.md) · [permissions](packages/universal/permissions/AGENTS.md) · [tsconfig](packages/universal/tsconfig/AGENTS.md)
 - **`packages/client/` — browser only:**  
   [api-client](packages/client/api-client/AGENTS.md)
 - **`packages/server/` — Node/Bun only:**  

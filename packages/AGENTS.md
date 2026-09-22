@@ -44,6 +44,10 @@ queue names, which is backend vocabulary sitting in the browser-safe tier.
 Ask: *does something client-side import this today?* If not, it is `server`. Declaring it `universal` "just in
 case" weakens the signal and costs a real constraint (no `node:*`, no `@types/node`) for nothing.
 
+And ask it of the *whole* package, not the one export the browser wants. `@vp/env-schema` was `universal`
+because `apps/web` read `DEFAULT_API_BASE_URL` from it; `apps/web` now declares that default itself and the
+package is `server`, where its Postgres, Redis, S3 and auth vocabulary belongs.
+
 ---
 
 ## 2. Layers — which way dependencies point
@@ -84,10 +88,10 @@ is stale — fix it.
 | Package | Tier | Location |
 |---|---|---|
 | `@vp/domain` | universal | `packages/universal/domain` |
-| `@vp/env-schema` | universal | `packages/universal/env-schema` |
 | `@vp/errors` | universal | `packages/universal/errors` |
 | `@vp/pagination` | universal | `packages/universal/pagination` |
 | `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
+| `@vp/env-schema` | server | `packages/server/env-schema` |
 | `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/observability` | server | `packages/server/observability` |
 | `@vp/storage` | server | `packages/server/storage` |
@@ -124,7 +128,7 @@ is stale — fix it.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/env-schema`, `@vp/permissions` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/permissions` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/storage` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/observability`, `@vp/storage` |
 
@@ -137,10 +141,16 @@ is stale — fix it.
 Its acceptance suite boots `apps/api` and a stub S3, so the package sits above the application it drives.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
-**Every package in `@vp/web`'s closure is `universal` or `client`** — seven of them, counting what
-`@vp/api-contracts` and `@vp/permissions` pull in, and it stays seven once devDependencies count too. That is
+**Every package in `@vp/web`'s closure is `universal` or `client`** — six of them, counting what
+`@vp/api-contracts` and `@vp/permissions` pull in, and it stays six once devDependencies count too. That is
 the invariant the whole scheme exists to protect.
 Verify it any time with `pnpm why bullmq` from `apps/web` — it returns nothing.
+
+Membership is necessary and not sufficient: `@vp/env-schema` was `universal` while the browser imported one
+constant from it, and the rest of the module — `DATABASE_URL`, `S3_SECRET_ACCESS_KEY`, `ADMIN_TOKEN`, the
+BullMQ queue names — came along into `main.*.js`, because a tier rule cannot see inside a package it has
+already allowed. It is `server` now, and `tests/architecture/frontend-vocabulary.test.ts` reads every source
+the frontend can resolve for the same vocabulary.
 
 ---
 
@@ -247,5 +257,9 @@ Stated plainly so nobody assumes more coverage than exists:
   ships code, so neither can reach a runtime bundle. Every other devDependency is checked like a dependency —
   it resolves in CI, and a type it carries lands in the emitted `.d.ts` where `pnpm deploy --prod` cannot
   resolve it.
+- **Bundler dead-code elimination is a declaration, not a guarantee.** Every browser-tier package that ships
+  code sets `"sideEffects": false`, which is what lets webpack drop an unused export instead of keeping the
+  whole module; `frontend-vocabulary.test.ts` asserts the declaration is there. It does not assert the
+  bundler acted on it — grep the built `apps/web/build/static/js/main.*.js` if that is the question.
 - **`tools/` has no tier**, because nothing in it is a package. Anything there that grows a `package.json`
   must move under `packages/<tier>/`.

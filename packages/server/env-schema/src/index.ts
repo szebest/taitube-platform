@@ -8,7 +8,7 @@ export const CoreEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default('debug'),
   SERVICE_VERSION: z.string().default('dev'),
-  PUBLIC_API_URL: z.string().url().default('http://localhost:3000'),
+  PUBLIC_API_URL: z.string().url().default(DEFAULT_API_BASE_URL),
   CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:8080'),
   REACT_APP_API_BASE_URL: z.string().url().default(DEFAULT_API_BASE_URL),
   PORT: z.coerce.number().int().positive().default(3000),

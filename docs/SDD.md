@@ -519,7 +519,7 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 ### ADR-17 — Schema/validation & IDs
 
-- **zod** (chosen) over TypeBox/ajv-only: one schema language for API bodies (`fastify-type-provider-zod`), job payloads (`packages/server/job-contracts`) and env parsing (`packages/universal/env-schema`), with inferred TS types. TypeBox is faster at validation but the payloads are tiny.
+- **zod** (chosen) over TypeBox/ajv-only: one schema language for API bodies (`fastify-type-provider-zod`), job payloads (`packages/server/job-contracts`) and env parsing (`packages/server/env-schema`), with inferred TS types. TypeBox is faster at validation but the payloads are tiny.
 - **UUIDv7** for `videoId`/`jobId` roots: time-ordered (index-friendly), unguessable enough for public playback paths, native `gen_uuid_v7()` in Postgres 17 / `uuidv7` package until then.
 
 ---
@@ -1968,7 +1968,7 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 ## 16. Environment Variables
 
-One contract for both apps, declared with zod in `packages/universal/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒.
+One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒.
 
 ### 16.1 Core
 
