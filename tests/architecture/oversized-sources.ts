@@ -10,6 +10,5 @@ export const OVERSIZED_SOURCES: readonly string[] = [
   'packages/server/adapters/postgres/repositories/postgres-video-repository.ts',
   'packages/server/adapters/s3/s3-storage-client.ts',
   'packages/server/db/src/schema.ts',
-  'packages/server/gen-video/src/generator.ts',
   'packages/server/upload-client/src/client.ts',
 ];

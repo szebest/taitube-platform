@@ -30,7 +30,6 @@
     "vitest": "^3.0.7"
   },
   "vp": {
-    "tier": "client",
     "layer": 3
   }
 }

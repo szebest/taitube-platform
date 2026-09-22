@@ -38,6 +38,6 @@ If your output contradicts an existing ADR, surface it explicitly rather than si
   *stage*, *fan-out/fan-in*, *DLQ*, *stalled job*, *fencing token*, *effectively-once*, *local-first*,
   *package tier*, *dependency layer*, *contract package*, *conformance suite*.
 - The vocabulary for package structure is in [`packages/AGENTS.md`](../../packages/AGENTS.md), which SDD
-  ADR-24 is the decision record for.
+  ADR-23 is the decision record for.
 - An ADR that changes must be edited in place in SDD §4; a superseded one keeps its number and says which
   ADR replaced it.

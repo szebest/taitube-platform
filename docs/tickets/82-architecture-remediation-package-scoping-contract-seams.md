@@ -377,7 +377,7 @@ The universal tier now has a browser consumer, so **how it emits** is part of th
 3. Have `apps/web` consume source rather than `dist` — impossible under CRA without ejecting.
 
 Whichever is chosen belongs in ADR-23, which the Documentation DoD calls for and which SDD §4 still lacks
-(§4 jumps ADR-22 → ADR-24).
+(ADR-23 records it).
 
 ---
 
@@ -621,7 +621,7 @@ Extend the W3 architecture suite (do not start a second one):
 
 ### Documentation (required by DoD)
 - [ ] **`docs/SDD.md`**: §15.1 updated with the tier-scoped layout (W9), `api-contracts` / `api-client` and
-      the tier column; **new ADR-24 "Tier-scoped workspace layout"** recording why the tier is a directory and
+      the tier column; **new ADR-23 "Package runtime tiers"** recording why the tier is a directory and
       not only a manifest field; ADR-20
       Consequences updated to name the enforcement suite; **new ADR-23 "Package runtime tiers"** recording the
       universal/server/client split; ADR-21 annotated to state that `apps/web` is pre-migration.

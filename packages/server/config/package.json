@@ -32,7 +32,6 @@
     "vitest": "^3.0.7"
   },
   "vp": {
-    "tier": "server",
     "layer": 2
   }
 }

@@ -594,7 +594,7 @@ Decided at the throw site, never by regex on messages.
 - Scheduled reconciler job `reconcile-reaction-counters` periodically detects and repairs counter drift.
 
 
-### ADR-24 — Tier-Scoped Workspace Layout: the Directory Is the Runtime Tier
+### ADR-23 — Package Runtime Tiers: the Directory Is the Tier
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
@@ -1786,7 +1786,7 @@ export default function () {
 
 ```
 video-pipeline/
-├── packages/                               # every workspace library; the directory IS the runtime tier (ADR-24)
+├── packages/                               # every workspace library; the directory IS the runtime tier (ADR-23)
 │   ├── universal/                          # runs in a browser AND on a server — no node:*, no server SDK
 │   │   ├── api-contracts/                  # zod schema per endpoint: params, query, body, response, error codes (single source)
 │   │   ├── domain/                          # entities, value objects, ranking & eligibility policy, the status vocabulary

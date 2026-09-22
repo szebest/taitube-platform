@@ -139,7 +139,7 @@ command to trust.
 
 ## 4. Target state — not yet true
 
-[SDD ADR-21](../../docs/SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs)
+[SDD ADR-21](../../docs/SDD.md#adr-21-modern-frontend-framework-react-19-tanstack-start-ssr-tanstack-router-no-nextjs)
 chose **React 19 + TanStack Start + TanStack Router + TanStack Query v5 + Vite 6 + Tailwind CSS + Radix +
 hls.js**. None of it is installed. Tickets **49–75** carry out that migration; until they land, treat every
 TanStack / Tailwind / Radix / hls.js instruction anywhere in the repo as a description of the destination.

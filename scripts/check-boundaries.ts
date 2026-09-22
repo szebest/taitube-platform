@@ -7,6 +7,7 @@ interface Pkg {
   name: string;
   dir: string;
   tier: Tier;
+  declaredTier?: Tier;
   layer: number;
   deps: string[];
 }
@@ -42,7 +43,8 @@ function load(): Pkg[] {
     return {
       name: raw.name,
       dir: dir.slice(ROOT.length + 1),
-      tier: vp.tier,
+      tier: directoryTier(dir.slice(ROOT.length + 1)) ?? vp.tier,
+      declaredTier: vp.tier,
       layer: vp.layer,
       deps: [
         ...Object.keys(raw.dependencies ?? {}),
@@ -73,8 +75,13 @@ export function checkBoundaries(): string[] {
     }
 
     const onDisk = directoryTier(pkg.dir);
-    if (onDisk && onDisk !== pkg.tier) {
-      errors.push(`${pkg.name}: declares tier "${pkg.tier}" but lives in packages/${onDisk}/`);
+    if (onDisk && pkg.declaredTier) {
+      errors.push(
+        `${pkg.name}: declares vp.tier "${pkg.declaredTier}", but its directory packages/${onDisk}/ is the tier. Remove the field.`
+      );
+    }
+    if (!onDisk && !pkg.declaredTier) {
+      errors.push(`${pkg.name}: lives outside packages/<tier>/ and must declare vp.tier`);
     }
 
     for (const depName of pkg.deps) {
