@@ -1,3 +1,4 @@
+import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
 import { z } from 'zod';
 
 export const DEFAULT_CDN_BASE_URL = 'http://localhost:9000/public';
@@ -13,8 +14,8 @@ export const CoreEnvSchema = z.object({
   REACT_APP_API_BASE_URL: z.string().url().default(DEFAULT_API_BASE_URL),
   PORT: z.coerce.number().int().positive().default(3000),
   METRICS_PORT: z.coerce.number().int().positive().default(9464),
-  PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(20),
-  PAGE_SIZE_MAX: z.coerce.number().int().positive().default(100),
+  PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(PAGE_SIZE_DEFAULT),
+  PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
   TURBO_TELEMETRY_DISABLED: z.string().default('1'),
   DO_NOT_TRACK: z.string().default('1'),
 });

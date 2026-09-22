@@ -25,9 +25,15 @@ inbound cursor with it and the API mints one with it; before the split, a server
    reimplement base64url decoding anywhere else — that duplication is exactly what this package deleted.
 3. **Runtime-agnostic by construction.** `btoa`/`atob` and `TextEncoder`, never `Buffer`, so the codec
    runs unchanged under Node, Bun and the browser.
-4. **Page bounds are injected.** `PAGE_SIZE_DEFAULT` / `PAGE_SIZE_MAX` are resolved once at the
-   composition root and handed to `Paginator`; no call site hard-codes a page size.
-5. **Relative imports carry `.js`** (`./cursor-codec.js`), because CRA's webpack refuses extensionless ESM.
+4. **Page bounds are injected, and this package owns the default.** `PAGE_SIZE_DEFAULT` /
+   `PAGE_SIZE_MAX` are exported here and nowhere else: `@vp/api-contracts` builds `PageLimitSchema`
+   from them and `@vp/env-schema` uses them as the defaults of the env keys of the same name, which
+   the composition root resolves once and hands to `Paginator`. No call site hard-codes a page size.
+5. **A configured maximum clamps, it does not reject.** `Paginator.limit()` trims a request into
+   `[1, maxLimit]`, so a deployment running below the advertised maximum serves a shorter page and
+   keeps walking with `nextCursor`. That is deliberate — the maximum protects the database, and the
+   published contract is not a per-deployment document. `PageLimitSchema`'s description says so.
+6. **Relative imports carry `.js`** (`./cursor-codec.js`), because CRA's webpack refuses extensionless ESM.
 
 ---
 

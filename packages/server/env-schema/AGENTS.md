@@ -34,6 +34,9 @@ declares its own default now.
 4. **A default two server packages need is a named constant** — `DEFAULT_CDN_BASE_URL`,
    `DEFAULT_API_BASE_URL` — so the schema and the consumer cannot drift apart. A browser default is not
    one of those: exporting it from here is what put the whole schema in the frontend bundle.
+5. **A default the wire contract also states comes from the package that owns it.** `PAGE_SIZE_DEFAULT`
+   and `PAGE_SIZE_MAX` are imported from `@vp/pagination`, which `@vp/api-contracts` reads too, so the
+   env default and the advertised page bound cannot drift. That edge is why this package is T2, not T1.
 
 ---
 

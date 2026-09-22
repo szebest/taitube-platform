@@ -571,6 +571,9 @@ importers:
 
   packages/server/env-schema:
     dependencies:
+      '@vp/pagination':
+        specifier: workspace:*
+        version: link:../../universal/pagination
       zod:
         specifier: ^3.24.2
         version: 3.25.76

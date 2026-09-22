@@ -91,7 +91,6 @@ is stale — fix it.
 | `@vp/errors` | universal | `packages/universal/errors` |
 | `@vp/pagination` | universal | `packages/universal/pagination` |
 | `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
-| `@vp/env-schema` | server | `packages/server/env-schema` |
 | `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/observability` | server | `packages/server/observability` |
 | `@vp/storage` | server | `packages/server/storage` |
@@ -106,8 +105,8 @@ is stale — fix it.
 |---|---|---|
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/permissions` | universal | `@vp/errors` |
-| `@vp/config` | server | `@vp/env-schema` |
 | `@vp/db` | server | `@vp/domain`, `@vp/errors` |
+| `@vp/env-schema` | server | `@vp/pagination` |
 | `@vp/events` | server | `@vp/job-contracts` |
 | `@vp/ffmpeg` | server | `@vp/errors`, `@vp/job-contracts` |
 
@@ -115,6 +114,7 @@ is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
+| `@vp/config` | server | `@vp/env-schema` |
 | `@vp/core` | server | `@vp/domain`, `@vp/permissions` |
 
 ### T4 — Integration

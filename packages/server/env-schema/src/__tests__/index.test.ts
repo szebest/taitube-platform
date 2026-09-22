@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { AppEnvSchema, PostgresEnvSchema } from '../index';
+import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
+import { AppEnvSchema, CoreEnvSchema, PostgresEnvSchema } from '../index';
 
 const CLOUD_HOSTS = [/r2\.cloudflarestorage\.com/, /neon\.tech/, /grafana\.net/];
 
@@ -49,6 +50,13 @@ describe('packages/env-schema: the environment contract', () => {
     );
 
     expect(offenders).toEqual([]);
+  });
+
+  it('takes its page bounds from the shared page-size constants', () => {
+    const core = CoreEnvSchema.parse({});
+
+    expect(core.PAGE_SIZE_DEFAULT).toBe(PAGE_SIZE_DEFAULT);
+    expect(core.PAGE_SIZE_MAX).toBe(PAGE_SIZE_MAX);
   });
 
   it('defaults the connection pool without being told', () => {

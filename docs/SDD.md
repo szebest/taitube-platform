@@ -990,9 +990,16 @@ re-deriving page maths per service:
   opaque URL-safe token; `JsonCursorCodec` renders it readable for tests and debugging.
   Swapping the codec changes no call site. It uses `btoa`/`atob` rather than `Buffer`, so the
   same code runs under Node, Bun and the browser.
-- **Bounds are configuration, not constants.** `PAGE_SIZE_DEFAULT` (20) and `PAGE_SIZE_MAX`
-  (100) are read once in the composition root (`apps/api/src/app.ts`) and injected; tests and
-  callers override by passing their own `Paginator`.
+- **Bounds are configuration over one shared default.** `@vp/pagination` exports
+  `PAGE_SIZE_DEFAULT` (20) and `PAGE_SIZE_MAX` (100); `@vp/api-contracts` builds
+  `PageLimitSchema` from them and `@vp/env-schema` uses them as the defaults of the env keys of
+  the same name, which the composition root (`apps/api/src/app.ts`) reads once and injects.
+  Tests and callers override by passing their own `Paginator`.
+- **A lower configured maximum clamps, it does not reject.** `PAGE_SIZE_MAX=50` leaves the
+  published contract advertising 100 and a request for 100 still succeeds — the page simply
+  comes back with 50 items and `nextCursor` walks the remainder. The maximum is an operational
+  valve protecting the database, not part of the wire contract, so turning it down is not a
+  breaking API change. `PageLimitSchema`'s OpenAPI description says so where a client reads it.
 
 - **A feed cursor carries rank inputs, never a rank.** The public feed payload is
   `{ createdAt, viewsCount, instant, id }` for every sort: each adapter recomputes the

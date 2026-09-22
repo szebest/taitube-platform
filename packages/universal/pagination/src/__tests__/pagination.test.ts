@@ -1,11 +1,24 @@
 import { JsonCursorCodec } from '../cursor-codec';
-import { DEFAULT_PAGINATION, Paginator, defaultPaginator } from '../pagination';
+import {
+  DEFAULT_PAGINATION,
+  PAGE_SIZE_DEFAULT,
+  PAGE_SIZE_MAX,
+  Paginator,
+  defaultPaginator,
+} from '../pagination';
 
 describe('packages/pagination: Paginator', () => {
   const jsonPaginator = new Paginator({ cursorCodec: new JsonCursorCodec() });
   const cursorOf = (row: { id: string }) => ({ id: row.id });
   const toItem = (row: { id: string }) => row.id;
   const rows = (count: number) => Array.from({ length: count }, (_, i) => ({ id: `r${i}` }));
+
+  it('builds its unconfigured bounds from the shared page-size constants', () => {
+    expect(DEFAULT_PAGINATION).toEqual({
+      defaultLimit: PAGE_SIZE_DEFAULT,
+      maxLimit: PAGE_SIZE_MAX,
+    });
+  });
 
   describe('limit', () => {
     it.each([

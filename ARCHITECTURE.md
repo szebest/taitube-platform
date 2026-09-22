@@ -203,9 +203,9 @@ portability.
 
 | Layer | Meaning | Packages |
 |---|---|---|
-| T1 | Foundation — no `@vp/*` dependency | `domain`, `env-schema`, `errors`, `pagination`, `tsconfig`, `compose-autoscaler`, `dev-token`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing` |
-| T2 | Contracts and policy | `api-contracts`, `config`, `db`, `events`, `ffmpeg`, `permissions` |
-| T3 | Domain capability — ports and repository contracts | `core` |
+| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `pagination`, `tsconfig`, `compose-autoscaler`, `dev-token`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing` |
+| T2 | Contracts and policy | `api-contracts`, `db`, `env-schema`, `events`, `ffmpeg`, `permissions` |
+| T3 | Domain capability — ports and repository contracts | `config`, `core` |
 | T4 | Integration — concrete drivers and generated clients | `adapters`, `api-client` |
 | T5 | Applications | `apps/api`, `apps/worker`, `apps/web` |
 | T6 | Reference tools whose acceptance suite drives a running application | `upload-client` |

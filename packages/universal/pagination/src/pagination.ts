@@ -14,9 +14,16 @@ export interface PaginationDefaults {
   readonly maxLimit: number;
 }
 
+/**
+ * `@vp/api-contracts` advertises these on the wire; a deployment configuring `PAGE_SIZE_MAX`
+ * lower clamps a request rather than rejecting it.
+ */
+export const PAGE_SIZE_DEFAULT = 20;
+export const PAGE_SIZE_MAX = 100;
+
 export const DEFAULT_PAGINATION: PaginationDefaults = {
-  defaultLimit: 20,
-  maxLimit: 100,
+  defaultLimit: PAGE_SIZE_DEFAULT,
+  maxLimit: PAGE_SIZE_MAX,
 };
 
 export interface PaginatorOptions extends Partial<PaginationDefaults> {

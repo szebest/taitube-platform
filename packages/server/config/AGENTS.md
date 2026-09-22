@@ -10,9 +10,8 @@ Instructions for any coding agent working on `@vp/config`.
 `@vp/config` reads `process.env`, validates it against `@vp/env-schema`, prints a redacted report of
 every invalid key and exits 1 before a process can boot half-configured. That is all it does.
 
-The schema itself is **not** here. It is `@vp/env-schema`, which is `universal`, so `apps/web` can read
-the same contract without reaching into the server tier. Anything that names an environment key belongs
-there; anything that touches a runtime belongs here.
+The schema itself is **not** here. It is `@vp/env-schema`, one layer down. Anything that names an
+environment key belongs there; anything that touches a runtime belongs here.
 
 It also ships the Node module-resolution hook the apps load with `node --import @vp/config/register`,
 which resolves extensionless relative specifiers in compiled output.
