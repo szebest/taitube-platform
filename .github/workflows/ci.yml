@@ -51,6 +51,9 @@ jobs:
       - name: Check package boundaries (tiers, layers, CLAUDE.md symlinks)
         run: pnpm boundaries
 
+      - name: Check architectural invariants (tiers, SDK confinement, local-first, ceilings)
+        run: pnpm test:architecture
+
       - name: Run Biome lint
         run: pnpm lint
 
