@@ -15,15 +15,19 @@ const HOUR_MS = 3_600_000;
 
 export const PUBLIC_FEED_INSTANT_GRANULARITY_MS = 60_000;
 
-/**
- * Trending decays with wall-clock time, so a keyset walk only stays consistent while every page
- * scores against the same instant. Both adapters sample the clock in buckets, from the process
- * clock rather than the database clock.
- */
 export function publicFeedInstant(nowMs: number = Date.now()): number {
   return (
     Math.floor(nowMs / PUBLIC_FEED_INSTANT_GRANULARITY_MS) * PUBLIC_FEED_INSTANT_GRANULARITY_MS
   );
+}
+
+/**
+ * Trending decays with wall-clock time, so a keyset walk only stays consistent while every
+ * page scores against one instant. The first page samples the process clock; every later
+ * page takes the instant back off the cursor rather than sampling again.
+ */
+export function publicFeedWalkInstant(cursor?: PublicFeedCursor | null): number {
+  return cursor ? cursor.instant : publicFeedInstant();
 }
 
 export function videoAgeHours(createdAt: Date, nowMs: number): number {
@@ -37,51 +41,41 @@ export function trendingScore(viewsCount: number, ageHours: number): number {
   );
 }
 
-export interface PublicFeedCandidate {
+/** Everything a rank is derived from, whether it is read off a row or off a cursor. */
+export interface PublicFeedRankInput {
+  createdAt: Date;
+  viewsCount?: number | null;
+}
+
+export interface PublicFeedCandidate extends PublicFeedRankInput {
   id: string;
   visibility: string;
   status: string;
   deletedAt?: Date | null;
   categoryId?: string | null;
-  createdAt: Date;
-  viewsCount?: number | null;
 }
 
-export interface PublicFeedCursor {
-  createdAt?: Date;
-  viewsCount?: number;
-  score?: number;
+/**
+ * A cursor names the row it resumes after by that row's rank inputs, never by a rank. Each
+ * adapter recomputes the bound in its own arithmetic, so a double Postgres produced is never
+ * compared against one JavaScript produced — the two disagree by an ULP often enough to
+ * repeat a row at every page boundary.
+ */
+export interface PublicFeedCursor extends PublicFeedRankInput {
   id: string;
+  instant: number;
 }
 
-export type PublicFeedCursorField = 'createdAt' | 'viewsCount' | 'score';
+export type PublicFeedRank = (input: PublicFeedRankInput, nowMs: number) => number;
 
-export interface PublicFeedRanking {
-  readonly cursorField: PublicFeedCursorField;
-  rankOf(video: PublicFeedCandidate, nowMs: number): number;
-  cursorRankOf(cursor: PublicFeedCursor): number | undefined;
-}
-
-export const PUBLIC_FEED_RANKINGS: Record<PublicFeedSort, PublicFeedRanking> = {
-  recent: {
-    cursorField: 'createdAt',
-    rankOf: (video) => video.createdAt.getTime(),
-    cursorRankOf: (cursor) => cursor.createdAt?.getTime(),
-  },
-  popular: {
-    cursorField: 'viewsCount',
-    rankOf: (video) => video.viewsCount ?? 0,
-    cursorRankOf: (cursor) => cursor.viewsCount,
-  },
-  trending: {
-    cursorField: 'score',
-    rankOf: (video, nowMs) =>
-      trendingScore(video.viewsCount ?? 0, videoAgeHours(video.createdAt, nowMs)),
-    cursorRankOf: (cursor) => cursor.score,
-  },
+export const PUBLIC_FEED_RANKINGS: Record<PublicFeedSort, PublicFeedRank> = {
+  recent: (input) => input.createdAt.getTime(),
+  popular: (input) => input.viewsCount ?? 0,
+  trending: (input, nowMs) =>
+    trendingScore(input.viewsCount ?? 0, videoAgeHours(input.createdAt, nowMs)),
 };
 
-export function publicFeedRanking(sort?: PublicFeedSort | null): PublicFeedRanking {
+export function publicFeedRanking(sort?: PublicFeedSort | null): PublicFeedRank {
   return PUBLIC_FEED_RANKINGS[sort ?? DEFAULT_PUBLIC_FEED_SORT] ?? PUBLIC_FEED_RANKINGS.recent;
 }
 

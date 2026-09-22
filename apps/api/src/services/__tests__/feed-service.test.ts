@@ -1,4 +1,5 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
+import { publicFeedInstant } from '@vp/domain';
 import { encodeFeedCursor } from '../cursor';
 import { FeedService } from '../feed-service';
 import { HttpCacheService } from '../http-cache-service';
@@ -106,8 +107,39 @@ describe('apps/api/services: FeedService', () => {
     await expect(cache.get(key)).resolves.not.toBeNull();
   });
 
+  it('resumes a trending walk from a cursor minted before the ranking shifted', async () => {
+    const seeds = [
+      { id: '00000000-0000-7000-8000-0000000000e1', ageHours: 0.5, viewsCount: 0 },
+      { id: '00000000-0000-7000-8000-0000000000e2', ageHours: 6, viewsCount: 3 },
+      { id: '00000000-0000-7000-8000-0000000000e3', ageHours: 40, viewsCount: 0 },
+    ];
+    for (const seed of seeds) {
+      await publish(seed.id);
+      const row = await repositories.videos.findById(seed.id);
+      if (!row) continue;
+      row.createdAt = new Date(Date.now() - seed.ageHours * 3_600_000);
+      row.viewsCount = seed.viewsCount;
+    }
+
+    const first = await service.getFeed({ sort: 'trending', limit: 1 });
+
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 2 * 3_600_000);
+    const second = await service.getFeed({
+      sort: 'trending',
+      limit: 1,
+      cursor: first.data.nextCursor ?? undefined,
+    });
+    vi.restoreAllMocks();
+
+    expect(first.data.items.map((item) => item.id)).toEqual([seeds[0]?.id]);
+    expect(second.data.items.map((item) => item.id)).toEqual([seeds[1]?.id]);
+  });
+
   it('never caches a cursored page', async () => {
-    const cursor = encodeFeedCursor({ createdAt: new Date(), id: OWNER_ID }, 'recent');
+    const cursor = encodeFeedCursor(
+      { createdAt: new Date(), id: OWNER_ID, viewsCount: 0 },
+      publicFeedInstant()
+    );
 
     await service.getFeed({ sort: 'recent', cursor });
 

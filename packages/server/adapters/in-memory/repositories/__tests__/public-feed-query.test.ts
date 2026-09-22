@@ -1,4 +1,8 @@
-import { type PublicFeedSort, publicFeedInstant, publicFeedRanking } from '@vp/domain';
+import {
+  PUBLIC_FEED_INSTANT_GRANULARITY_MS,
+  type PublicFeedSort,
+  publicFeedInstant,
+} from '@vp/domain';
 import type { VideoRecord } from '@vp/core/repositories';
 import { selectPublicFeed } from '../public-feed-query';
 
@@ -37,6 +41,10 @@ const FEED = [
   video('c', { createdAt: new Date(NOW - 50 * HOUR_MS), viewsCount: 5000, categoryId: 'music' }),
   video('d', { createdAt: new Date(NOW - 100 * HOUR_MS), viewsCount: 1, categoryId: 'gaming' }),
 ];
+
+function cursorFor(video: VideoRecord, instant: number) {
+  return { id: video.id, createdAt: video.createdAt, viewsCount: video.viewsCount, instant };
+}
 
 describe('adapters/in-memory: public feed array query', () => {
   it.each<{ sort: PublicFeedSort | undefined; expected: string[] }>([
@@ -84,22 +92,34 @@ describe('adapters/in-memory: public feed array query', () => {
     { sort: 'popular', expected: ['b', 'a', 'd'] },
     { sort: 'trending', expected: ['c', 'a', 'd'] },
   ])('resumes $sort after the cursor row', ({ sort, expected }) => {
-    const ranking = publicFeedRanking(sort);
-    const first = selectPublicFeed(FEED, { limit: 1, sort }).items[0] as VideoRecord;
-    const cursor = {
-      id: first.id,
-      createdAt: first.createdAt,
-      viewsCount: first.viewsCount,
-      score: ranking.rankOf(first, NOW),
-    };
+    const firstPage = selectPublicFeed(FEED, { limit: 1, sort });
+    const first = firstPage.items[0] as VideoRecord;
 
-    const page = selectPublicFeed(FEED, { limit: 10, sort, cursor });
+    const page = selectPublicFeed(FEED, {
+      limit: 10,
+      sort,
+      cursor: cursorFor(first, firstPage.instant),
+    });
     expect(page.items.map((v) => v.id)).toEqual(expected);
     expect(page.total).toBe(4);
   });
 
-  it('ignores a cursor that carries no key for the requested sort', () => {
-    const page = selectPublicFeed(FEED, { limit: 10, sort: 'popular', cursor: { id: 'a' } });
-    expect(page.items.map((v) => v.id)).toEqual(['c', 'b', 'a', 'd']);
+  it('reports the instant it ranked the page against', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(NOW + 17);
+    expect(selectPublicFeed(FEED, { limit: 10, sort: 'trending' }).instant).toBe(NOW);
+    vi.restoreAllMocks();
+  });
+
+  it('scores a resumed page against the cursor instant, not the clock it resumes at', () => {
+    const firstPage = selectPublicFeed(FEED, { limit: 1, sort: 'trending' });
+    const first = firstPage.items[0] as VideoRecord;
+    const cursor = cursorFor(first, firstPage.instant);
+
+    vi.spyOn(Date, 'now').mockReturnValue(NOW + 40 * PUBLIC_FEED_INSTANT_GRANULARITY_MS);
+    const page = selectPublicFeed(FEED, { limit: 10, sort: 'trending', cursor });
+    vi.restoreAllMocks();
+
+    expect(page.instant).toBe(firstPage.instant);
+    expect(page.items.map((v) => v.id)).toEqual(['c', 'a', 'd']);
   });
 });

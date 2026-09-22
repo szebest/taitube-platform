@@ -1,4 +1,4 @@
-import { type PublicFeedSort, publicFeedInstant, publicFeedRanking } from '@vp/domain';
+import type { PublicFeedSort } from '@vp/domain';
 import type { ListPublicVideosOptions, VideoRecord, VideoRepository } from '@vp/core/repositories';
 import {
   CATEGORY_GAMING_ID,
@@ -25,7 +25,7 @@ interface FeedSeed {
 const FEED_SEEDS: FeedSeed[] = [
   { id: VIDEO_IDS.a, ageHours: 1, viewsCount: 10, categoryId: CATEGORY_MUSIC_ID },
   { id: VIDEO_IDS.b, ageHours: 5, viewsCount: 500, categoryId: CATEGORY_GAMING_ID },
-  { id: VIDEO_IDS.c, ageHours: 50, viewsCount: 5000, categoryId: CATEGORY_MUSIC_ID },
+  { id: VIDEO_IDS.c, ageHours: 61.625, viewsCount: 5000, categoryId: CATEGORY_MUSIC_ID },
   { id: VIDEO_IDS.d, ageHours: 100, viewsCount: 1, categoryId: CATEGORY_GAMING_ID },
 ];
 
@@ -37,15 +37,13 @@ const EXPECTED_ORDER: Record<PublicFeedSort, string[]> = {
   trending: [VIDEO_IDS.b, VIDEO_IDS.c, VIDEO_IDS.a, VIDEO_IDS.d],
 };
 
-function cursorFor(sort: PublicFeedSort, video: VideoRecord): ListPublicVideosOptions['cursor'] {
-  const ranking = publicFeedRanking(sort);
-  if (ranking.cursorField === 'viewsCount') {
-    return { id: video.id, viewsCount: video.viewsCount ?? 0 };
-  }
-  if (ranking.cursorField === 'score') {
-    return { id: video.id, score: ranking.rankOf(video, publicFeedInstant()) };
-  }
-  return { id: video.id, createdAt: video.createdAt };
+function cursorFor(video: VideoRecord, instant: number): ListPublicVideosOptions['cursor'] {
+  return {
+    id: video.id,
+    createdAt: video.createdAt,
+    viewsCount: video.viewsCount ?? 0,
+    instant,
+  };
 }
 
 export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
@@ -180,11 +178,31 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
         const secondPage = await videos.listPublic({
           limit: 10,
           sort,
-          cursor: cursorFor(sort, last),
+          cursor: cursorFor(last, firstPage.instant),
         });
 
         expect(idsOf(secondPage.items)).toEqual(EXPECTED_ORDER[sort].slice(1));
         expect(secondPage.total).toBe(4);
+      });
+
+      it.each<{ sort: PublicFeedSort }>([
+        { sort: 'recent' },
+        { sort: 'popular' },
+        { sort: 'trending' },
+      ])('walks the whole $sort feed one row per page without repeating', async ({ sort }) => {
+        const walked: string[] = [];
+        let cursor: ListPublicVideosOptions['cursor'];
+
+        for (let page = 0; page <= FEED_SEEDS.length; page += 1) {
+          const result = await videos.listPublic({ limit: 1, sort, cursor });
+          const row = result.items[0];
+          if (!row) break;
+          walked.push(row.id);
+          if (result.items.length === 1) break;
+          cursor = cursorFor(row, result.instant);
+        }
+
+        expect(walked).toEqual(EXPECTED_ORDER[sort]);
       });
 
       it('returns an empty page for a category with no public videos', async () => {

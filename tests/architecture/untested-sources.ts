@@ -27,7 +27,6 @@ export const UNTESTED_SOURCES: readonly string[] = [
   'apps/api/src/routes/subscriptions.ts',
   'apps/api/src/routes/uploads.ts',
   'apps/api/src/routes/videos.ts',
-  'apps/api/src/services/cursor.ts',
   'apps/api/src/services/housekeeping-schedulers.ts',
   'apps/api/src/services/queue-poller.ts',
   'apps/api/src/services/sse-connection.ts',

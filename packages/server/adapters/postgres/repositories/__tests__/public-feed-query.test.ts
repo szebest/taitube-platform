@@ -59,36 +59,64 @@ describe('adapters/postgres: public feed SQL query', () => {
   });
 
   describe('keyset cursor', () => {
+    const CURSOR_CREATED_AT = new Date('2025-06-01T12:00:00.000Z');
+    const CURSOR = {
+      id: 'v1',
+      createdAt: CURSOR_CREATED_AT,
+      viewsCount: 42,
+      instant: INSTANT.getTime(),
+    };
+
     it('is absent without a cursor', () => {
       expect(publicFeedCursorScope({ limit: 10 }, INSTANT)).toBeUndefined();
     });
 
     it.each([
-      { sort: 'recent' as const, cursor: { id: 'v1' } },
-      { sort: 'popular' as const, cursor: { id: 'v1', createdAt: new Date() } },
-      { sort: 'trending' as const, cursor: { id: 'v1', viewsCount: 3 } },
-    ])('is absent when the cursor carries no $sort key', ({ sort, cursor }) => {
-      expect(publicFeedCursorScope({ limit: 10, sort, cursor }, INSTANT)).toBeUndefined();
+      { sort: 'recent' as const, key: '"videos"."created_at"', cast: '::timestamptz' },
+      { sort: 'popular' as const, key: '"videos"."views_count"', cast: '::integer' },
+    ])(
+      'takes the rows strictly after the $sort cursor, breaking ties on the id',
+      ({ sort, key, cast }) => {
+        const scope = publicFeedCursorScope({ limit: 10, sort, cursor: CURSOR }, INSTANT);
+        expect(sqlText(scope)).toBe(
+          `(${key} < $1${cast} or (${key} = $2${cast} and "videos"."id" < $3))`
+        );
+      }
+    );
+
+    it.each([
+      { sort: 'recent' as const, key: CURSOR_CREATED_AT },
+      { sort: 'popular' as const, key: 42 },
+    ])('binds the $sort keyset off the cursor row', ({ sort, key }) => {
+      const scope = publicFeedCursorScope({ limit: 10, sort, cursor: CURSOR }, INSTANT);
+      expect(sqlParams(scope)).toEqual([key, key, 'v1']);
     });
 
-    it('takes the rows strictly after the cursor, breaking ties on the id', () => {
-      const scope = publicFeedCursorScope(
-        { limit: 10, sort: 'popular', cursor: { id: 'v1', viewsCount: 42 } },
-        INSTANT
-      );
-      expect(sqlText(scope)).toBe(
-        '("videos"."views_count" < $1 or ("videos"."views_count" = $2 and "videos"."id" < $3))'
-      );
-      expect(sqlParams(scope)).toEqual([42, 42, 'v1']);
+    it('respells the gravity curve over the cursor row instead of carrying its score', () => {
+      const scope = publicFeedCursorScope({ limit: 10, sort: 'trending', cursor: CURSOR }, INSTANT);
+      const age = 'greatest(0, extract(epoch from ($3::timestamptz - $4::timestamptz)) / 3600.0)';
+      const bound = `($2::integer::double precision + ${TRENDING_GRAVITY.viewsOffset}) / power(${age} + ${TRENDING_GRAVITY.ageOffsetHours}, ${TRENDING_GRAVITY.exponent})`;
+
+      expect(sqlText(scope)).toContain(`< ${bound}`);
+      expect(sqlParams(scope)).toEqual([
+        INSTANT,
+        42,
+        INSTANT,
+        CURSOR_CREATED_AT,
+        INSTANT,
+        42,
+        INSTANT,
+        CURSOR_CREATED_AT,
+        'v1',
+      ]);
     });
 
-    it('bounds the recent feed on the cursor timestamp', () => {
-      const createdAt = new Date('2025-06-01T12:00:00.000Z');
-      const scope = publicFeedCursorScope(
-        { limit: 10, sort: 'recent', cursor: { id: 'v1', createdAt } },
-        INSTANT
+    it('never binds a score Postgres did not compute itself', () => {
+      const scope = publicFeedCursorScope({ limit: 10, sort: 'trending', cursor: CURSOR }, INSTANT);
+      const floats = sqlParams(scope).filter(
+        (param) => typeof param === 'number' && !Number.isInteger(param)
       );
-      expect(sqlParams(scope)).toEqual([createdAt, createdAt, 'v1']);
+      expect(floats).toEqual([]);
     });
   });
 });

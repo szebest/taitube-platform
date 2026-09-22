@@ -106,6 +106,8 @@ export interface ListPublicVideosOptions {
 export interface ListPublicVideosResult {
   items: VideoRecord[];
   total: number;
+  /** The instant every row on this page was ranked against; the next cursor carries it on. */
+  instant: number;
 }
 
 export interface TransitionVideoOptions {

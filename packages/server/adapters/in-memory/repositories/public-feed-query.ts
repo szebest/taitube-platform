@@ -2,8 +2,8 @@ import {
   comparePublicFeedRank,
   isAfterPublicFeedCursor,
   isPublicFeedEligible,
-  publicFeedInstant,
   publicFeedRanking,
+  publicFeedWalkInstant,
 } from '@vp/domain';
 import type {
   ListPublicVideosOptions,
@@ -22,26 +22,22 @@ export function selectPublicFeed(
   options: ListPublicVideosOptions
 ): ListPublicVideosResult {
   const { cursor, limit } = options;
-  const ranking = publicFeedRanking(options.sort);
-  const nowMs = publicFeedInstant();
+  const rankOf = publicFeedRanking(options.sort);
+  const nowMs = publicFeedWalkInstant(cursor);
 
   const eligible: RankedVideo[] = [];
   for (const video of videos) {
     if (!isPublicFeedEligible(video, options.categoryId)) continue;
-    eligible.push({ rank: ranking.rankOf(video, nowMs), id: video.id, video });
+    eligible.push({ rank: rankOf(video, nowMs), id: video.id, video });
   }
   eligible.sort(comparePublicFeedRank);
 
-  const cursorRank = cursor ? ranking.cursorRankOf(cursor) : undefined;
-  const page =
-    cursor && cursorRank !== undefined
-      ? eligible.filter((entry) =>
-          isAfterPublicFeedCursor(entry, { rank: cursorRank, id: cursor.id })
-        )
-      : eligible;
+  const bound = cursor ? { rank: rankOf(cursor, nowMs), id: cursor.id } : undefined;
+  const page = bound ? eligible.filter((entry) => isAfterPublicFeedCursor(entry, bound)) : eligible;
 
   return {
     items: page.slice(0, limit + 1).map((entry) => entry.video),
     total: eligible.length,
+    instant: nowMs,
   };
 }

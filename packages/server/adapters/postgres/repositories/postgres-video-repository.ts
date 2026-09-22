@@ -18,7 +18,7 @@ import {
   type VideoWithDetails,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { type VideoStatus, publicFeedInstant } from '@vp/domain';
+import { type VideoStatus, publicFeedWalkInstant } from '@vp/domain';
 import { type SQL, and, desc, eq, inArray, notExists, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
@@ -112,7 +112,8 @@ export class PostgresVideoRepository extends VideoRepository {
   async listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult> {
     try {
       const scope = publicFeedScope(options.categoryId);
-      const instant = new Date(publicFeedInstant());
+      const instantMs = publicFeedWalkInstant(options.cursor);
+      const instant = new Date(instantMs);
 
       const [countResult] = await this.db
         .select({ count: sql<number>`count(*)::int` })
@@ -129,6 +130,7 @@ export class PostgresVideoRepository extends VideoRepository {
       return {
         items: rows as VideoRecord[],
         total: countResult?.count ?? 0,
+        instant: instantMs,
       };
     } catch (err) {
       throw dbErr('Failed to list public videos', err);

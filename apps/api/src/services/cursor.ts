@@ -1,4 +1,4 @@
-import type { PublicFeedSort } from '@vp/domain';
+import type { PublicFeedCursor, PublicFeedSort } from '@vp/domain';
 import {
   type CursorPayload,
   InvalidCursorError,
@@ -9,10 +9,14 @@ import { ErrorCodes, PermanentError } from '@vp/errors';
 
 export type FeedSort = PublicFeedSort;
 
-export type DecodedFeedCursor =
-  | { sort: 'recent'; createdAt: Date; id: string }
-  | { sort: 'popular'; viewsCount: number; id: string }
-  | { sort: 'trending'; score: number; id: string };
+/** The row a feed page resumes after, plus the instant the walk ranks everything against. */
+export type FeedCursor = PublicFeedCursor;
+
+export interface FeedCursorRow {
+  createdAt: Date | string;
+  id: string;
+  viewsCount?: number | null;
+}
 
 function invalidCursor(): never {
   throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
@@ -44,6 +48,11 @@ function parseId(value: unknown): string {
   return value;
 }
 
+function parseNumber(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) invalidCursor();
+  return value;
+}
+
 export function createdAtCursorPayload(v: {
   createdAt: Date | string;
   id: string;
@@ -58,14 +67,12 @@ export function subscriptionCursorPayload(item: {
   return { createdAt: isoOf(item.createdAt), channelId: item.channelId };
 }
 
-export function feedCursorPayload(
-  v: { createdAt: Date | string; id: string; viewsCount?: number },
-  sort: FeedSort,
-  score?: number
-): CursorPayload {
-  if (sort === 'popular') return { sort, viewsCount: v.viewsCount ?? 0, id: v.id };
-  if (sort === 'trending') return { sort, score: score ?? 0, id: v.id };
-  return { sort: 'recent', createdAt: isoOf(v.createdAt), id: v.id };
+/**
+ * One payload for every sort: the rank inputs, not a rank. Which sort reads which of them is
+ * the repository's business, so replaying a cursor under a different sort stays meaningful.
+ */
+export function feedCursorPayload(v: FeedCursorRow, instant: number): CursorPayload {
+  return { createdAt: isoOf(v.createdAt), viewsCount: v.viewsCount ?? 0, instant, id: v.id };
 }
 
 export function decodeCreatedAtCursor(
@@ -87,30 +94,24 @@ export function decodeSubscriptionCursor(
 }
 
 export function encodeFeedCursor(
-  v: { createdAt: Date | string; id: string; viewsCount?: number },
-  sort: FeedSort,
-  score?: number,
+  v: FeedCursorRow,
+  instant: number,
   paginator: Paginator = defaultPaginator
 ): string {
-  return paginator.encodeCursor(feedCursorPayload(v, sort, score));
+  return paginator.encodeCursor(feedCursorPayload(v, instant));
 }
 
 export function decodeFeedCursor(
   cursor?: string,
   paginator: Paginator = defaultPaginator
-): DecodedFeedCursor | null {
+): FeedCursor | null {
   const parsed = payloadOf(cursor, paginator);
   if (!parsed) return null;
 
-  const id = parseId(parsed.id);
-  if (parsed.sort === 'popular' && typeof parsed.viewsCount === 'number') {
-    return { sort: 'popular', viewsCount: parsed.viewsCount, id };
-  }
-  if (parsed.sort === 'trending' && typeof parsed.score === 'number') {
-    return { sort: 'trending', score: parsed.score, id };
-  }
-  if (parsed.sort === 'recent' || typeof parsed.createdAt === 'string') {
-    return { sort: 'recent', createdAt: parseDate(parsed.createdAt), id };
-  }
-  invalidCursor();
+  return {
+    createdAt: parseDate(parsed.createdAt),
+    viewsCount: parseNumber(parsed.viewsCount),
+    instant: parseNumber(parsed.instant),
+    id: parseId(parsed.id),
+  };
 }

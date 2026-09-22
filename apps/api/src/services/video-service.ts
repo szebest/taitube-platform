@@ -2,13 +2,7 @@ import { CaslAuthorizationAdapter } from '@vp/adapters';
 import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import type { AuthorizationPort, JobQueue, ReactionCachePort } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
-import {
-  type VideoStatus,
-  type VideoVisibility,
-  publicFeedInstant,
-  trendingScore,
-  videoAgeHours,
-} from '@vp/domain';
+import type { VideoStatus, VideoVisibility } from '@vp/domain';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type Paginator, defaultPaginator } from '@vp/pagination';
 import { canAccessAdmin, canReadVideo, canUpdateVideo } from '@vp/permissions';
@@ -47,11 +41,6 @@ import {
   decodeFeedCursor,
   feedCursorPayload,
 } from './cursor';
-
-function gravityScore(row: { createdAt: Date; viewsCount?: number }, sort: FeedSort) {
-  if (sort !== 'trending') return undefined;
-  return trendingScore(row.viewsCount ?? 0, videoAgeHours(row.createdAt, publicFeedInstant()));
-}
 
 /**
  * VideoService — Deep domain module for video operations and projections (SDD §6.1, §6.3).
@@ -122,7 +111,7 @@ export class VideoService {
     });
 
     const page = this.paginator.paginate(result.items, limit, {
-      cursorOf: (row) => feedCursorPayload(row, sort, gravityScore(row, sort)),
+      cursorOf: (row) => feedCursorPayload(row, result.instant),
       toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
     });
 

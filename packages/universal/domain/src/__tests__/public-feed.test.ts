@@ -1,5 +1,6 @@
 import {
   DEFAULT_PUBLIC_FEED_SORT,
+  PUBLIC_FEED_INSTANT_GRANULARITY_MS,
   PUBLIC_FEED_RANKINGS,
   type PublicFeedCandidate,
   type PublicFeedSort,
@@ -7,7 +8,9 @@ import {
   comparePublicFeedRank,
   isAfterPublicFeedCursor,
   isPublicFeedEligible,
+  publicFeedInstant,
   publicFeedRanking,
+  publicFeedWalkInstant,
   trendingScore,
   videoAgeHours,
 } from '../public-feed';
@@ -80,36 +83,59 @@ describe('packages/domain: public feed rules', () => {
       expect(publicFeedRanking(null)).toBe(PUBLIC_FEED_RANKINGS.recent);
     });
 
-    it.each<{ sort: PublicFeedSort; cursorField: string }>([
-      { sort: 'recent', cursorField: 'createdAt' },
-      { sort: 'popular', cursorField: 'viewsCount' },
-      { sort: 'trending', cursorField: 'score' },
-    ])('$sort keys its cursor on $cursorField', ({ sort, cursorField }) => {
-      expect(publicFeedRanking(sort).cursorField).toBe(cursorField);
-    });
-
     it('ranks recent on creation time', () => {
-      const ranking = publicFeedRanking('recent');
-      expect(ranking.rankOf(video({ createdAt: new Date(NOW) }), NOW)).toBe(NOW);
-      expect(ranking.cursorRankOf({ id: 'video-1', createdAt: new Date(NOW) })).toBe(NOW);
-      expect(ranking.cursorRankOf({ id: 'video-1' })).toBeUndefined();
+      expect(publicFeedRanking('recent')(video({ createdAt: new Date(NOW) }), NOW)).toBe(NOW);
     });
 
     it('ranks popular on the view count, treating an absent count as zero', () => {
-      const ranking = publicFeedRanking('popular');
-      expect(ranking.rankOf(video({ viewsCount: 12 }), NOW)).toBe(12);
-      expect(ranking.rankOf(video({ viewsCount: undefined }), NOW)).toBe(0);
-      expect(ranking.cursorRankOf({ id: 'video-1', viewsCount: 12 })).toBe(12);
+      const rankOf = publicFeedRanking('popular');
+      expect(rankOf(video({ viewsCount: 12 }), NOW)).toBe(12);
+      expect(rankOf(video({ viewsCount: undefined }), NOW)).toBe(0);
+      expect(rankOf(video({ viewsCount: null }), NOW)).toBe(0);
     });
 
     it('ranks trending on the gravity score', () => {
-      const ranking = publicFeedRanking('trending');
       const created = new Date(NOW - 2 * 3_600_000);
-      expect(ranking.rankOf(video({ viewsCount: 9, createdAt: created }), NOW)).toBeCloseTo(
-        trendingScore(9, 2),
-        10
+      expect(
+        publicFeedRanking('trending')(video({ viewsCount: 9, createdAt: created }), NOW)
+      ).toBeCloseTo(trendingScore(9, 2), 10);
+    });
+
+    it.each<{ sort: PublicFeedSort }>([
+      { sort: 'recent' },
+      { sort: 'popular' },
+      { sort: 'trending' },
+    ])('ranks a $sort cursor by the same function as a row', ({ sort }) => {
+      const row = video({ viewsCount: 9, createdAt: new Date(NOW - 2 * 3_600_000) });
+      const rankOf = publicFeedRanking(sort);
+
+      expect(rankOf({ createdAt: row.createdAt, viewsCount: row.viewsCount }, NOW)).toBe(
+        rankOf(row, NOW)
       );
-      expect(ranking.cursorRankOf({ id: 'video-1', score: 1.5 })).toBe(1.5);
+    });
+  });
+
+  describe('walk instant', () => {
+    it('buckets a fresh walk so every page of it samples one instant', () => {
+      const inside = NOW + PUBLIC_FEED_INSTANT_GRANULARITY_MS - 1;
+      expect(publicFeedInstant(inside)).toBe(NOW);
+      expect(publicFeedInstant(NOW + PUBLIC_FEED_INSTANT_GRANULARITY_MS)).toBe(
+        NOW + PUBLIC_FEED_INSTANT_GRANULARITY_MS
+      );
+    });
+
+    it('takes a resumed walk back off the cursor rather than re-sampling the clock', () => {
+      const minted = NOW - 10 * PUBLIC_FEED_INSTANT_GRANULARITY_MS;
+      expect(
+        publicFeedWalkInstant({ id: 'video-1', createdAt: new Date(NOW), instant: minted })
+      ).toBe(minted);
+    });
+
+    it('samples the clock only when there is no cursor', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(NOW + 17);
+      expect(publicFeedWalkInstant()).toBe(NOW);
+      expect(publicFeedWalkInstant(null)).toBe(NOW);
+      vi.restoreAllMocks();
     });
   });
 

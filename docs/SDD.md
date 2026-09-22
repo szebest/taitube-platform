@@ -992,6 +992,14 @@ re-deriving page maths per service:
   (100) are read once in the composition root (`apps/api/src/app.ts`) and injected; tests and
   callers override by passing their own `Paginator`.
 
+- **A feed cursor carries rank inputs, never a rank.** The public feed payload is
+  `{ createdAt, viewsCount, instant, id }` for every sort: each adapter recomputes the
+  cursor row's rank in its own arithmetic, so a Postgres `double precision` is never
+  compared against one JavaScript produced — the two disagree by an ULP often enough to
+  repeat the cursor row at every page boundary. `instant` is the bucketed clock sample the
+  first page ranked against; later pages take it back off the cursor instead of re-sampling,
+  which keeps a trending walk consistent across the 30 s feed cache.
+
 A malformed cursor raises `InvalidCursorError` in core, which the API layer translates into
 `400 VALIDATION_FAILED`.
 
