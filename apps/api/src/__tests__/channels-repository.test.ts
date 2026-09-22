@@ -1,5 +1,5 @@
 import { InMemoryChannelRepository } from '@vp/adapters';
-import { isReservedHandle, isValidHandleFormat, normalizeHandle } from '@vp/domain';
+import { isReservedHandle, isValidHandleFormat, normalizeHandle } from '@vp/validation';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { beforeEach, describe, expect, it } from 'vitest';
 

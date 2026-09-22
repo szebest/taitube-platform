@@ -1,4 +1,4 @@
-import type { PublicFeedCursor, PublicFeedSort, VideoStatus, VideoVisibility } from '@vp/domain';
+import type { PublicFeedCursor, PublicFeedSort, Video, VideoStatus, VideoVisibility } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
 import type { VideoEventRecord } from './event-repository';
@@ -7,40 +7,7 @@ import type { RenditionRecord } from './rendition-repository';
 import type { ProcessingStepRecord } from './step-repository';
 import type { UploadRecord } from './upload-repository';
 
-export interface VideoRecord {
-  id: string;
-  ownerId: string;
-  title: string | null;
-  description: string | null;
-  visibility: VideoVisibility;
-  status: VideoStatus;
-  sourceKey: string;
-  sourceSizeBytes: number | null;
-  durationMs: number | null;
-  width: number | null;
-  height: number | null;
-  fps?: number | null;
-  ladder: unknown;
-  masterPlaylistKey?: string | null;
-  posterKey?: string | null;
-  spriteKey?: string | null;
-  playbackUrl?: string | null;
-  posterUrl?: string | null;
-  spriteUrl?: string | null;
-  spriteVttUrl?: string | null;
-  errorCode?: string | null;
-  errorMessage?: string | null;
-  viewsCount?: number;
-  likesCount?: number;
-  dislikesCount?: number;
-  categoryId?: string | null;
-  generation: number;
-  version: number;
-  createdAt: Date;
-  updatedAt: Date;
-  readyAt: Date | null;
-  deletedAt?: Date | null;
-}
+export type VideoRecord = Video;
 
 export interface NewVideoInput {
   id: string;

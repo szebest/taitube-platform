@@ -5,7 +5,9 @@ import {
   issueUploadParts,
   startUpload,
 } from '@vp/api-contracts';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { PermanentError } from '@vp/errors';
+import { isErr } from '@vp/result';
+import { ALLOWED_CONTENT_TYPES, type UploadLimits, validateStartUpload } from '@vp/validation';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
@@ -18,13 +20,6 @@ export interface UploadsRouteOptions {
   rateLimitMax?: number;
 }
 
-const ALLOWED_CONTENT_TYPES = new Set([
-  'video/mp4',
-  'video/webm',
-  'video/quicktime',
-  'video/x-matroska',
-]);
-
 /**
  * Fastify routes plugin for video uploads (SDD §3.1, §6.1).
  * Thin transport adapter delegating domain orchestration to UploadService.
@@ -35,6 +30,11 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
     maxUploadBytes = 5 * 1024 * 1024 * 1024, // 5 GB default cap
     rateLimitMax = 30,
   } = options;
+
+  const limits: UploadLimits = {
+    maxBytes: maxUploadBytes,
+    allowedContentTypes: ALLOWED_CONTENT_TYPES,
+  };
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 
@@ -59,18 +59,9 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
         const { filename, sizeBytes, contentType, strategy, sha256, title, visibility } =
           request.body;
 
-        if (sizeBytes > maxUploadBytes) {
-          throw new PermanentError(
-            ErrorCodes.UPLOAD_TOO_LARGE,
-            `File exceeds maximum upload size of ${maxUploadBytes} bytes`
-          );
-        }
-
-        if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
-          throw new PermanentError(
-            ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
-            `Content type ${contentType} is not supported. Allowed: ${Array.from(ALLOWED_CONTENT_TYPES).join(', ')}`
-          );
+        const validated = validateStartUpload({ filename, sizeBytes, contentType, title }, limits);
+        if (isErr(validated)) {
+          throw new PermanentError(validated.error.code, validated.error.message);
         }
 
         const result = await uploadService.initiate(user, {
