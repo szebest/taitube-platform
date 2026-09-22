@@ -29,6 +29,7 @@ export function problemType(code: ErrorCode | string): string {
  */
 export const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.INVALID_HANDLE_FORMAT]: 400,
+  [ErrorCodes.INVALID_CURSOR]: 400,
   [ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF]: 400,
   [ErrorCodes.UNAUTHORIZED]: 401,
   [ErrorCodes.FORBIDDEN]: 403,
@@ -59,6 +60,9 @@ export const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.FFMPEG_TIMEOUT]: 500,
   [ErrorCodes.DISK_FULL]: 500,
   [ErrorCodes.STORAGE_UNAVAILABLE]: 503,
+  [ErrorCodes.DATABASE_UNAVAILABLE]: 503,
+  [ErrorCodes.CACHE_UNAVAILABLE]: 503,
+  [ErrorCodes.QUEUE_UNAVAILABLE]: 503,
 };
 
 const UNCLASSIFIED_STATUS = 422;

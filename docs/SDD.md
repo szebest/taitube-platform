@@ -1014,7 +1014,16 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CANNOT_SUBSCRIBE_TO_SELF` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL` (pipeline).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL` (pipeline).
+
+A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
+
+| Property | Map | Lives in |
+|---|---|---|
+| the HTTP status it is reported as | `PROBLEM_STATUS` | `@vp/api-contracts/src/problem.ts` |
+| `'permanent'` or `'transient'` (ADR-18) | `RETRY_CLASS` | `@vp/errors/src/retry-class.ts` |
+
+Those two maps are the authority; this list is the enumeration, and `tests/architecture/error-code-drift.test.ts` fails if they disagree.
 
 ### 6.3 Video resource (response shape)
 

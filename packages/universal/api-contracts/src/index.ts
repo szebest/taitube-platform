@@ -23,6 +23,7 @@ export * from './health.js';
 export * from './me.js';
 export * from './pagination.js';
 export * from './problem.js';
+export * from './problem-for.js';
 export * from './reactions.js';
 export * from './subscriptions.js';
 export * from './uploads.js';

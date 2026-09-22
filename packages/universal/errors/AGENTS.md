@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/errors (RFC 9457 Problem Details & Taxonomy)
+# AGENTS.md - @vp/errors (error taxonomy, failure variants & retry class)
 
 Instructions for any coding agent working on `@vp/errors`.
 
@@ -7,18 +7,35 @@ Instructions for any coding agent working on `@vp/errors`.
 
 ## 1. Scope & Purpose
 
-`@vp/errors` defines the single-sourced error taxonomy, domain error classes, and RFC 9457 Problem Details serialisation format.
-- Error taxonomy is classified at the throw site:
-  - `PermanentError`: Bad input, authentication/authorization failures, not found, conflicts. Never automatically retried.
-  - `TransientError`: Network glitches, rate limits, temporary unavailability. Retryable with exponential backoff and jitter.
-- Machine-readable error codes (`ErrorCodes`) are enumerated here and must match `docs/SDD.md` §6.2.
+`@vp/errors` is the single-sourced error vocabulary. It owns three things:
+
+- **`ErrorCodes`** - the machine-readable codes, which must match `docs/SDD.md` §6.2.
+- **`Failure<C, D>`** - how domain code *returns* a failure (SDD ADR-24). The discriminant is `code`,
+  whose type is a literal member of `ErrorCode`, so there is no second taxonomy. `InputFailure<C, D>`
+  is the wire-safe kind: it names the field it rejected and repeats only what the caller sent.
+- **`RETRY_CLASS`** - ADR-18's `'permanent' | 'transient'`, declared once per code.
+
+`PermanentError` / `TransientError` stay, and they are now **only** the BullMQ queue-boundary
+representation. `apps/worker/src/runner.ts` builds one from `RETRY_CLASS` at the moment a stage's
+`Result` has to become a throw, because BullMQ's retry contract is the exception. Nothing else in the
+repo throws them, and domain code never does.
 
 ---
 
 ## 2. Invariants
 
-- Every domain and adapter error must inherit from `DomainError` (`PermanentError` or `TransientError`).
-- Never introduce new error codes without updating the enumeration in this package and SDD §6.2.
+- **T1 universal, zero dependencies.** No `@vp/*` dependency, no runtime dependency, no `node:*`.
+- **`Failure` is how a rule, a service, a port and an adapter report a failure.** Not a class, not a
+  bare `Error`, not a `string`. `tests/architecture/no-domain-throw.test.ts` enforces it.
+- **A new code lands in four places or not at all:** `ApiErrorCodes` (or `PipelineErrorCodes`),
+  `PROBLEM_STATUS` in `@vp/api-contracts`, `RETRY_CLASS` here, and SDD §6.2. The first three are
+  `Readonly<Record<ErrorCode, ...>>`, so omitting one is a compile error;
+  `tests/architecture/error-code-drift.test.ts` catches the fourth.
+- **An infra failure's payload never reaches a client.** `operation` and `cause` are for the server
+  log. Keep them out of `message` too - `message` is what `problemFor` puts in `detail`.
+- **Wire safety is a type, not a list.** Only `InputFailure` names a `field`, and only a failure that
+  names a field is projected into `Problem.errors`. If you find yourself adding a per-field allowlist,
+  the failure is in the wrong package.
 
 ---
 
