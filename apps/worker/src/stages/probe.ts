@@ -5,7 +5,7 @@ import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/co
 import type { Repositories } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
-import { NotifyJob, type ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
+import type { ProbeJob } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
@@ -13,6 +13,7 @@ import { getHeartbeatPath } from '../config';
 import { unwrapOrThrow } from '../queue-error';
 import { validateJobId } from '../registry';
 import { enqueueFollowUpJobs } from './probe-enqueue';
+import { recordProbeFailure } from './probe-failure';
 
 export interface ProbeProcessorDeps {
   repositories: Repositories;
@@ -110,54 +111,8 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     // 4. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `vp-probe-${videoId}-`));
 
-    // Helper for recording failure on processing_steps & videos before throwing
     const failProbe = async (code: string, msg: string): Promise<never> => {
-      await repositories.steps.fail({
-        videoId,
-        step: 'probe',
-        rendition: '-',
-        lockToken,
-        errorCode: code,
-        errorMessage: msg,
-      });
-
-      const transitioned = unwrapOrThrow(
-        await repositories.videos.transition({
-          videoId,
-          from: 'PROBING',
-          to: 'FAILED',
-          eventType: 'video.failed',
-          eventPayload: { errorCode: code, errorMessage: msg },
-          patch: { errorCode: code, errorMessage: msg },
-        })
-      );
-
-      if (transitioned && getQueue) {
-        const video = unwrapOr(await repositories.videos.findById(videoId), null);
-        if (video) {
-          const notifyQueue = getQueue('notify');
-          const notifyJobId = ids.notify(videoId, 'video.failed', 1);
-          await notifyQueue
-            .add(
-              'notify',
-              NotifyJob.parse({
-                videoId,
-                userId: video.ownerId,
-                event: 'video.failed',
-                eventSeq: 1,
-                payload: { status: 'FAILED', errorCode: code, errorMessage: msg },
-                traceparent: job.data.traceparent || '',
-              }),
-              {
-                jobId: notifyJobId,
-                ...stagePolicies.notify,
-                ...defaultJobOptions,
-              }
-            )
-            .catch(() => {});
-        }
-      }
-
+      await recordProbeFailure({ repositories, job, lockToken, getQueue }, code, msg);
       throw new PermanentError(code, msg);
     };
 
