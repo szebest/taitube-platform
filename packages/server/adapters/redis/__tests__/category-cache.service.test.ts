@@ -40,8 +40,8 @@ describe('CategoryCacheService', () => {
     service = new CategoryCacheService({ cache });
   });
 
-  afterEach(() => {
-    service.close();
+  afterEach(async () => {
+    await service.close();
   });
 
   it('sorts the fetched categories by sort order then name', async () => {
@@ -66,7 +66,7 @@ describe('CategoryCacheService', () => {
     expect(fetches).toBe(1);
     expect(second).toEqual(first);
     expect(second.map((c) => c.id)).toEqual(['art', 'gaming', 'music']);
-    replica.close();
+    await replica.close();
   });
 
   it('revives the dates that a JSON round trip flattened', async () => {
@@ -77,7 +77,7 @@ describe('CategoryCacheService', () => {
 
     expect(categories[0]?.createdAt).toBeInstanceOf(Date);
     expect(categories[0]?.updatedAt).toBeInstanceOf(Date);
-    replica.close();
+    await replica.close();
   });
 
   it('writes L2 under the shared key with the configured ttl', async () => {
@@ -92,7 +92,7 @@ describe('CategoryCacheService', () => {
     await shortLived.getCategories(fetcher);
 
     expect(fetches).toBe(2);
-    shortLived.close();
+    await shortLived.close();
   });
 
   it('evicts the oldest entry once L1 is full', async () => {
@@ -100,7 +100,7 @@ describe('CategoryCacheService', () => {
     await tiny.getCategories(fetcher);
 
     expect(tiny.getL1Size()).toBe(1);
-    tiny.close();
+    await tiny.close();
   });
 
   it('clears L2 and announces the invalidation to the other replicas', async () => {
@@ -120,13 +120,13 @@ describe('CategoryCacheService', () => {
     await cache.publish(CATEGORIES_INVALIDATION_CHANNEL, JSON.stringify({ invalidatedAt: 1 }));
 
     expect(replica.getL1Size()).toBe(0);
-    replica.close();
+    await replica.close();
   });
 
   it('stops listening for invalidations once closed', async () => {
     const replica = new CategoryCacheService({ cache });
     await replica.getCategories(fetcher);
-    replica.close();
+    await replica.close();
     await replica.getCategories(fetcher);
 
     await cache.publish(CATEGORIES_INVALIDATION_CHANNEL, JSON.stringify({ invalidatedAt: 1 }));
@@ -148,7 +148,7 @@ describe('CategoryCacheService', () => {
     const categories = await broken.getCategories(fetcher);
     expect(categories.map((c) => c.id)).toEqual(['art', 'gaming', 'music']);
     expect(fetches).toBe(1);
-    broken.close();
+    await broken.close();
   });
 
   it('survives a subscribe that rejects instead of leaking an unhandled rejection', async () => {
@@ -169,7 +169,28 @@ describe('CategoryCacheService', () => {
 
     expect(rejections).toEqual([]);
     expect(await unreachable.getCategories(fetcher)).toHaveLength(3);
-    unreachable.close();
+    await unreachable.close();
+  });
+
+  it('survives an unsubscribe that rejects instead of leaking an unhandled rejection', async () => {
+    const rejections: unknown[] = [];
+    const record = (reason: unknown) => rejections.push(reason);
+    process.on('unhandledRejection', record);
+
+    const unreachable = new CategoryCacheService({
+      cache: Object.assign(new InMemoryCacheClient(), {
+        unsubscribe: async () => {
+          throw new Error('NOAUTH Authentication required.');
+        },
+      }),
+    });
+
+    await unreachable.close();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    process.off('unhandledRejection', record);
+
+    expect(rejections).toEqual([]);
+    expect(unreachable.getL1Size()).toBe(0);
   });
 
   it('works with no distributed cache at all', async () => {
@@ -180,6 +201,6 @@ describe('CategoryCacheService', () => {
 
     await local.invalidate();
     expect(local.getL1Size()).toBe(0);
-    local.close();
+    await local.close();
   });
 });

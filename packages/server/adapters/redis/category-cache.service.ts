@@ -4,6 +4,20 @@ import type { CacheClient } from '@vp/core/ports';
 export const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';
 export const CATEGORIES_INVALIDATION_CHANNEL = 'taitube:events:cache:categories:invalidated';
 
+/**
+ * Pub/sub on the `CacheClient` port may return a promise or nothing, so a try/catch alone
+ * cannot see an adapter that rejects and a `.catch` alone cannot see one that throws. This
+ * runs the call synchronously, so a sync adapter still subscribes before the next statement,
+ * and swallows either failure.
+ */
+function settled(run: () => Promise<void> | void): Promise<void> {
+  try {
+    return Promise.resolve(run()).catch(() => undefined);
+  } catch {
+    return Promise.resolve();
+  }
+}
+
 interface L1CacheEntry {
   value: Category[];
   expiresAt: number;
@@ -34,19 +48,13 @@ export class CategoryCacheService {
       this.clearL1();
     };
 
-    if (this.cache) {
+    const cache = this.cache;
+    if (cache) {
       // A pod that cannot subscribe still serves reads; it only stops hearing peers, so its L1
-      // entries expire on their own TTL instead of being cleared early. `subscribe` is async on
-      // the Redis adapter, so a sync try/catch alone leaves the rejection unhandled.
-      try {
-        const subscribed = this.cache.subscribe(
-          CATEGORIES_INVALIDATION_CHANNEL,
-          this.onInvalidateMessage
-        );
-        if (subscribed instanceof Promise) subscribed.catch(() => undefined);
-      } catch {
-        // no listener was registered, so there is nothing to undo
-      }
+      // entries expire on their own TTL instead of being cleared early.
+      void settled(() =>
+        cache.subscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage)
+      );
     }
   }
 
@@ -170,13 +178,12 @@ export class CategoryCacheService {
     }
   }
 
-  close(): void {
-    if (this.cache) {
-      try {
-        this.cache.unsubscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage);
-      } catch {
-        // Safe unsubscribe
-      }
+  async close(): Promise<void> {
+    const cache = this.cache;
+    if (cache) {
+      await settled(() =>
+        cache.unsubscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage)
+      );
     }
     this.clearL1();
   }

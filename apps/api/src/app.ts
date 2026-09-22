@@ -103,7 +103,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const sqlPoller = startSqlPoller({ repositories: adapters.repositories, metrics });
 
   app.addHook('onClose', async () => {
-    adapters.categoryCache.close();
+    await adapters.categoryCache.close();
     await services.sseHub.close();
     queuePoller.stop();
     sqlPoller.stop();
