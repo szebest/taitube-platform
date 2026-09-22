@@ -9,6 +9,7 @@ import {
 } from '@vp/adapters';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { ids } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createWorkerRunner } from '../runner';
@@ -50,12 +51,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       // Create video in UPLOADING state with old updatedAt (2 hours ago)
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey,
-        status: 'UPLOADING',
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey,
+          status: 'UPLOADING',
+        })
+      );
       // Force old timestamp
       video.updatedAt = twoHoursAgo;
 
@@ -89,7 +92,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(result.abandonedCount).toBe(1);
 
       // Video must be ABANDONED
-      const updatedVideo = await repositories.videos.findById(videoId);
+      const updatedVideo = expectOk(await repositories.videos.findById(videoId));
       expect(updatedVideo?.status).toBe('ABANDONED');
 
       // Upload record must be ABORTED
@@ -121,7 +124,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       expect(result.abandonedCount).toBe(0);
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('UPLOADING');
     });
 
@@ -131,13 +134,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       // Upload completed 10 minutes ago, but Redis probe job was lost
       const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey,
-        status: 'UPLOADED',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey,
+          status: 'UPLOADED',
+          generation: 1,
+        })
+      );
       video.updatedAt = tenMinutesAgo;
 
       // Seed a test video file into storage so probe can actually download it
@@ -176,7 +181,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         eventType: 'video.ready',
       });
 
-      const readyVideo = await repositories.videos.findById(videoId);
+      const readyVideo = expectOk(await repositories.videos.findById(videoId));
       expect(readyVideo?.status).toBe('READY');
     });
   });
@@ -186,13 +191,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'PROCESSING',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'PROCESSING',
+          generation: 1,
+        })
+      );
       video.updatedAt = fourHoursAgo;
 
       const token = uuidv7();
@@ -223,7 +230,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(result.orphanedCount).toBe(1);
 
       // Video must be FAILED with ORPHANED
-      const updatedVideo = await repositories.videos.findById(videoId);
+      const updatedVideo = expectOk(await repositories.videos.findById(videoId));
       expect(updatedVideo?.status).toBe('FAILED');
       expect(updatedVideo?.errorCode).toBe('ORPHANED');
 
@@ -241,13 +248,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'PROCESSING',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'PROCESSING',
+          generation: 1,
+        })
+      );
       video.updatedAt = fourHoursAgo;
 
       // Active RUNNING step
@@ -269,7 +278,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       expect(result.orphanedCount).toBe(0);
-      const checkVideo = await repositories.videos.findById(videoId);
+      const checkVideo = expectOk(await repositories.videos.findById(videoId));
       expect(checkVideo?.status).toBe('PROCESSING');
     });
 
@@ -277,13 +286,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'PROCESSING',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'PROCESSING',
+          generation: 1,
+        })
+      );
       video.updatedAt = fourHoursAgo;
 
       // Add a waiting job to transcode-720p
@@ -297,7 +308,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       expect(result.orphanedCount).toBe(0);
-      const checkVideo = await repositories.videos.findById(videoId);
+      const checkVideo = expectOk(await repositories.videos.findById(videoId));
       expect(checkVideo?.status).toBe('PROCESSING');
     });
 
@@ -305,13 +316,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'PROCESSING',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'PROCESSING',
+          generation: 1,
+        })
+      );
       video.updatedAt = fourHoursAgo;
 
       // Add a prioritized job to probe queue
@@ -325,7 +338,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       expect(result.orphanedCount).toBe(0);
-      const checkVideo = await repositories.videos.findById(videoId);
+      const checkVideo = expectOk(await repositories.videos.findById(videoId));
       expect(checkVideo?.status).toBe('PROCESSING');
     });
   });
@@ -336,14 +349,16 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
       // Create video soft-deleted 2h ago
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'DELETED',
-        readyAt: twoHoursAgo,
-        deletedAt: twoHoursAgo,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'DELETED',
+          readyAt: twoHoursAgo,
+          deletedAt: twoHoursAgo,
+        })
+      );
       video.updatedAt = twoHoursAgo;
 
       // Seed raw object
@@ -404,7 +419,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(remainingPublic.keys).toHaveLength(0);
 
       // Verify video row is hard-deleted from database
-      const hardDeletedVideo = await repositories.videos.findById(videoId);
+      const hardDeletedVideo = expectOk(await repositories.videos.findById(videoId));
       expect(hardDeletedVideo).toBeNull();
     });
 
@@ -440,7 +455,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(result.purgedVideosCount).toBe(0);
 
       // Video row MUST remain in database so it can be retried without leaking storage objects!
-      const stillExistingVideo = await repositories.videos.findById(videoId);
+      const stillExistingVideo = expectOk(await repositories.videos.findById(videoId));
       expect(stillExistingVideo).not.toBeNull();
       expect(stillExistingVideo?.status).toBe('DELETED');
     });
@@ -538,12 +553,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const sourceKey = `raw/${videoId}/source.mp4`;
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey,
-        status: 'UPLOADING',
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey,
+          status: 'UPLOADING',
+        })
+      );
       video.updatedAt = twoHoursAgo;
 
       const uploadId = await multipart.createMultipartUpload('raw', sourceKey, 'video/mp4');
@@ -577,7 +594,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(totalAbandoned).toBe(1);
 
       // Final video status is ABANDONED
-      const updatedVideo = await repositories.videos.findById(videoId);
+      const updatedVideo = expectOk(await repositories.videos.findById(videoId));
       expect(updatedVideo?.status).toBe('ABANDONED');
 
       // Only one video.abandoned event recorded
@@ -590,13 +607,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'DELETED',
-        deletedAt: twoHoursAgo,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'DELETED',
+          deletedAt: twoHoursAgo,
+        })
+      );
       video.updatedAt = twoHoursAgo;
 
       await storage.uploadObject({
@@ -622,7 +641,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       // Exactly one worker performed the hard-delete
       expect(w1.purgedVideosCount + w2.purgedVideosCount).toBe(1);
-      const checkVideo = await repositories.videos.findById(videoId);
+      const checkVideo = expectOk(await repositories.videos.findById(videoId));
       expect(checkVideo).toBeNull();
     });
   });
@@ -633,13 +652,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const sourceKey = `raw/${videoId}/source.mp4`;
       const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey,
-        status: 'READY',
-        readyAt: tenDaysAgo,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey,
+          status: 'READY',
+          readyAt: tenDaysAgo,
+        })
+      );
       video.updatedAt = tenDaysAgo;
 
       await storage.uploadObject({

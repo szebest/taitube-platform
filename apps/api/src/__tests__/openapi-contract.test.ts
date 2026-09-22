@@ -383,6 +383,17 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
 
     // 3. Admin (§6.1)
     {
+      path: '/v1/admin/videos/{id}',
+      method: 'get',
+      expectedStatuses: [200, 401, 403, 404],
+      expectedErrorCodes: [
+        ErrorCodes.UNAUTHORIZED,
+        ErrorCodes.FORBIDDEN,
+        ErrorCodes.VIDEO_NOT_FOUND,
+      ],
+      hasPathParams: true,
+    },
+    {
       path: '/v1/admin/categories',
       method: 'post',
       expectedStatuses: [201, 400, 401, 403, 409],

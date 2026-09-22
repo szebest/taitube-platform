@@ -2,6 +2,7 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { JobQueue, type QueueJob } from '@vp/core/ports';
 import type { PackageJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
@@ -186,7 +187,7 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     await processor(job);
 
     // Verify video is READY and exactly one video.ready event exists
-    const v1 = await repositories.videos.findById(videoId);
+    const v1 = expectOk(await repositories.videos.findById(videoId));
     expect(v1?.status).toBe('READY');
 
     const events1 = await repositories.events.findByVideoId(videoId);

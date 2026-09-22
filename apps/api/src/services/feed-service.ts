@@ -1,6 +1,8 @@
 import { Singleflight } from '@vp/adapters';
 import type { FeedQuery, FeedResponse } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, map, ok } from '@vp/result';
 import { HttpCacheService } from './http-cache-service';
 import type { VideoService } from './video-service';
 
@@ -48,17 +50,26 @@ export class FeedService {
       deps.staleWhileRevalidateSeconds ?? FEED_STALE_WHILE_REVALIDATE_SECONDS;
   }
 
-  async getFeed(query: FeedQuery, ifNoneMatch?: string): Promise<FeedPage> {
+  /**
+   * `CacheUnavailable` is absent from the return type on purpose: a cold or dead page cache falls
+   * through to the repository, so it costs latency and never correctness. That narrowing used to be
+   * an invisible `catch {}`; it is in the signature now, and only the repository's own failure
+   * reaches the caller.
+   */
+  async getFeed(
+    query: FeedQuery,
+    ifNoneMatch?: string
+  ): Promise<Result<FeedPage, DatabaseUnavailable>> {
     const sort = query.sort ?? 'recent';
     const limit = query.limit ?? undefined;
     const variant = `${sort}:${query.categoryId || 'all'}`;
 
     const cached = query.cursor ? undefined : await this.readCache(variant);
     if (cached) {
-      return this.page(cached, ifNoneMatch);
+      return ok(this.page(cached, ifNoneMatch));
     }
 
-    const data = await this.singleflight.do(
+    const listed = await this.singleflight.do(
       `feed:${variant}:${query.cursor || 'first'}:${limit ?? 'default'}`,
       () =>
         this.videoService.listPublic({
@@ -69,12 +80,27 @@ export class FeedService {
         })
     );
 
-    const fresh: CachedFeedPage = { data, etag: this.httpCache.generateEtag(data) };
-    if (!query.cursor) {
+    return await this.pageOf(listed, variant, Boolean(query.cursor), ifNoneMatch);
+  }
+
+  /** Only a page that was actually read is cached; a failure is never written under the key. */
+  private async pageOf(
+    listed: Result<FeedResponse, DatabaseUnavailable>,
+    variant: string,
+    hasCursor: boolean,
+    ifNoneMatch?: string
+  ): Promise<Result<FeedPage, DatabaseUnavailable>> {
+    if (!listed.ok) return listed;
+
+    const fresh: CachedFeedPage = {
+      data: listed.value,
+      etag: this.httpCache.generateEtag(listed.value),
+    };
+    if (!hasCursor) {
       await this.writeCache(variant, fresh);
     }
 
-    return this.page(fresh, ifNoneMatch);
+    return map(listed, () => this.page(fresh, ifNoneMatch));
   }
 
   private page(cached: CachedFeedPage, ifNoneMatch?: string): FeedPage {

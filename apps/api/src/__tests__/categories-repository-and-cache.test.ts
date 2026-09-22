@@ -70,11 +70,12 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
     it.each([
       { name: 'findById', read: (r: InMemoryCategoryRepository) => r.findById('non-existent') },
       { name: 'findBySlug', read: (r: InMemoryCategoryRepository) => r.findBySlug('non-existent') },
-    ])('$name answers ok(null) for an absent row, because absence is not a failure', async ({
-      read,
-    }) => {
-      expect(expectOk(await read(repo))).toBeNull();
-    });
+    ])(
+      '$name answers ok(null) for an absent row, because absence is not a failure',
+      async ({ read }) => {
+        expect(expectOk(await read(repo))).toBeNull();
+      }
+    );
 
     it('sorts by sortOrder then name, and filters activeOnly', async () => {
       expectOk(await repo.create({ name: 'Zebra', slug: 'zebra', sortOrder: 1, isActive: true }));
@@ -191,7 +192,11 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
     });
 
     it('passes the source failure through without caching it', async () => {
-      const failure = { code: ErrorCodes.DATABASE_UNAVAILABLE, message: 'down', operation: 'findAll' };
+      const failure = {
+        code: ErrorCodes.DATABASE_UNAVAILABLE,
+        message: 'down',
+        operation: 'findAll',
+      };
       const fetcher = vi.fn().mockResolvedValue({ ok: false, error: failure });
 
       expect(expectErr(await service.getCategories(fetcher))).toBe(failure);

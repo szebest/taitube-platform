@@ -4,6 +4,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import { MULTIPART_THRESHOLD_BYTES } from '@vp/storage';
+import { expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService, type UploadServiceDeps } from '../upload-service';
 
@@ -49,7 +50,7 @@ describe('apps/api/services: UploadService', () => {
       sizeBytes: 1024,
       contentType: 'video/mp4',
     });
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     await storage.uploadObject({
       bucket: 'custom-raw',
       key: video?.sourceKey ?? '',

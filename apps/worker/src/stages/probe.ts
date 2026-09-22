@@ -7,11 +7,12 @@ import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
 import { NotifyJob, type ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
+import { unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { getHeartbeatPath } from '../config';
+import { unwrapOrThrow } from '../queue-error';
 import { validateJobId } from '../registry';
 import { enqueueFollowUpJobs } from './probe-enqueue';
-import { unwrapOr } from '@vp/result';
 
 export interface ProbeProcessorDeps {
   repositories: Repositories;
@@ -56,20 +57,22 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     await fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
 
     // 2. CAS Transition: UPLOADED -> PROBING (AC 17)
-    const started = await repositories.videos.transition({
-      videoId,
-      from: 'UPLOADED',
-      to: 'PROBING',
-      eventType: 'probe.started',
-      eventPayload: {
-        jobId: job.id,
-        attempt: (job.attemptsMade ?? 0) + 1,
-      },
-    });
+    const started = unwrapOrThrow(
+      await repositories.videos.transition({
+        videoId,
+        from: 'UPLOADED',
+        to: 'PROBING',
+        eventType: 'probe.started',
+        eventPayload: {
+          jobId: job.id,
+          attempt: (job.attemptsMade ?? 0) + 1,
+        },
+      })
+    );
 
     if (!started) {
       // Check current video state
-      const current = await repositories.videos.findById(videoId);
+      const current = unwrapOrThrow(await repositories.videos.findById(videoId));
       if (current && ['PROCESSING', 'READY', 'FAILED', 'DELETED'].includes(current.status)) {
         log.info(
           { status: current.status },
@@ -118,17 +121,19 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         errorMessage: msg,
       });
 
-      const transitioned = await repositories.videos.transition({
-        videoId,
-        from: 'PROBING',
-        to: 'FAILED',
-        eventType: 'video.failed',
-        eventPayload: { errorCode: code, errorMessage: msg },
-        patch: { errorCode: code, errorMessage: msg },
-      });
+      const transitioned = unwrapOrThrow(
+        await repositories.videos.transition({
+          videoId,
+          from: 'PROBING',
+          to: 'FAILED',
+          eventType: 'video.failed',
+          eventPayload: { errorCode: code, errorMessage: msg },
+          patch: { errorCode: code, errorMessage: msg },
+        })
+      );
 
       if (transitioned && getQueue) {
-        const video = await repositories.videos.findById(videoId).catch(() => null);
+        const video = unwrapOr(await repositories.videos.findById(videoId), null);
         if (video) {
           const notifyQueue = getQueue('notify');
           const notifyJobId = ids.notify(videoId, 'video.failed', 1);
@@ -247,29 +252,31 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       }
 
       // 9. CAS transition: PROBING -> PROCESSING with metadata patch (AC 17)
-      await repositories.videos.transition({
-        videoId,
-        from: 'PROBING',
-        to: 'PROCESSING',
-        eventType: 'probe.completed',
-        eventPayload: {
-          durationMs: metadata.durationMs,
-          ladder: metadata.ladder.map((r) => r.name),
-        },
-        patch: {
-          durationMs: metadata.durationMs,
-          width: metadata.effectiveWidth,
-          height: metadata.effectiveHeight,
-          fps: metadata.fps,
-          ladder: metadata.ladder,
-        },
-      });
+      unwrapOrThrow(
+        await repositories.videos.transition({
+          videoId,
+          from: 'PROBING',
+          to: 'PROCESSING',
+          eventType: 'probe.completed',
+          eventPayload: {
+            durationMs: metadata.durationMs,
+            ladder: metadata.ladder.map((r) => r.name),
+          },
+          patch: {
+            durationMs: metadata.durationMs,
+            width: metadata.effectiveWidth,
+            height: metadata.effectiveHeight,
+            fps: metadata.fps,
+            ladder: metadata.ladder,
+          },
+        })
+      );
 
       // Determine priority from job opts or user tier (SDD §9.4, AC 3)
       let priority = job.opts?.priority;
       if (priority === undefined && repositories.users) {
         try {
-          const videoRec = await repositories.videos.findById(videoId);
+          const videoRec = unwrapOr(await repositories.videos.findById(videoId), null);
           if (videoRec?.ownerId) {
             const userRec = unwrapOr(await repositories.users.findById(videoRec.ownerId), null);
             if (userRec?.tier === 'pro' || userRec?.tier === 'enterprise') {

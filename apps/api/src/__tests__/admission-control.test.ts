@@ -5,6 +5,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import { mintDevToken } from '@vp/dev-token';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
@@ -58,7 +59,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     });
     expect(initRes.statusCode).toBe(201);
     const { videoId, uploadId } = initRes.json();
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     if (!video) {
       throw new Error('Video not found');
     }
@@ -145,7 +146,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     });
 
     // Verify active in-flight count is 3
-    const inflight = await repositories.videos.countInFlightByOwner(FREE_USER_ID);
+    const inflight = expectOk(await repositories.videos.countInFlightByOwner(FREE_USER_ID));
     expect(inflight).toBe(3);
 
     // Initial probe jobs count is 3
@@ -164,7 +165,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     });
 
     // Video 4 in DB is UPLOADED
-    const v4Db = await repositories.videos.findById(v4.videoId);
+    const v4Db = expectOk(await repositories.videos.findById(v4.videoId));
     expect(v4Db?.status).toBe('UPLOADED');
 
     // No new probe job enqueued for v4!

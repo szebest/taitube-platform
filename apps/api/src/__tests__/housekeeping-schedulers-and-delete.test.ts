@@ -2,6 +2,7 @@ import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
 import { mintDevToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -184,7 +185,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
         status: 'DELETED',
       });
 
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('DELETED');
       expect((video as unknown as { deletedAt?: Date })?.deletedAt).toBeDefined();
 
@@ -210,7 +211,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       });
 
       expect(res.statusCode).toBe(202);
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('DELETED');
     });
 
@@ -266,7 +267,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       });
 
       expect(res.statusCode).toBe(202);
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('DELETED');
     });
   });

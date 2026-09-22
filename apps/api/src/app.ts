@@ -12,6 +12,7 @@ import { registerAuth } from './plugins/auth';
 import { rateLimitProblem, registerErrorHandler } from './plugins/errors';
 import { registerHttpMetricsPlugin } from './plugins/http-metrics';
 import { registerAdminCategoriesRoutes } from './routes/admin/categories';
+import { registerAdminVideosRoutes } from './routes/admin/videos';
 import { registerAdminDlqRoutes } from './routes/admin/dlq';
 import { registerAdminQueuesRoutes } from './routes/admin/queues';
 import { registerCategoriesRoutes } from './routes/categories';
@@ -91,6 +92,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerFeedRoutes(app, { feedService: services.feedService });
   registerCategoriesRoutes(app, { categoryService: services.categoryService });
   registerAdminCategoriesRoutes(app, { categoryService: services.categoryService });
+  registerAdminVideosRoutes(app, { videoService: services.videoService });
   registerMeRoutes(app, { channelService: services.channelService });
   registerChannelsRoutes(app, { channelService: services.channelService });
   registerSubscriptionsRoutes(app, { subscriptionService: services.subscriptionService });

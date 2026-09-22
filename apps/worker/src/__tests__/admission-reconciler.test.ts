@@ -1,5 +1,6 @@
 import { InMemoryJobQueue, InMemoryMultipartStorage, InMemoryRepositories } from '@vp/adapters';
 import { ids } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
 
@@ -22,14 +23,16 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     status: 'UPLOADED' | 'PROBING' | 'PROCESSING' | 'READY'
   ) {
     const videoId = uuidv7();
-    const video = await repositories.videos.create({
-      id: videoId,
-      ownerId,
-      title: `video-${videoId}`,
-      status,
-      sourceKey: `raw/${videoId}/source.mp4`,
-      sourceSizeBytes: 1000,
-    });
+    const video = expectOk(
+      await repositories.videos.create({
+        id: videoId,
+        ownerId,
+        title: `video-${videoId}`,
+        status,
+        sourceKey: `raw/${videoId}/source.mp4`,
+        sourceSizeBytes: 1000,
+      })
+    );
     // A zero-threshold scan only matches rows whose clock is already in the past.
     video.updatedAt = new Date(Date.now() - 5000);
     return video;
@@ -57,7 +60,7 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     expect(result.reenqueuedCount).toBe(0);
     expect(probeQueue.enqueuedJobs).toHaveLength(0);
 
-    const heldDb = await repositories.videos.findById(heldVideo.id);
+    const heldDb = expectOk(await repositories.videos.findById(heldVideo.id));
     expect(heldDb?.status).toBe('UPLOADED');
   });
 
@@ -119,7 +122,7 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     expect(result2.reenqueuedCount).toBe(0);
 
     // Now complete one video (PROBING -> READY)
-    const activeVideo = (await repositories.videos.scan({ status: 'PROCESSING' }))[0];
+    const activeVideo = expectOk(await repositories.videos.scan({ status: 'PROCESSING' }))[0];
     if (activeVideo) {
       await repositories.videos.transition({
         videoId: activeVideo.id,

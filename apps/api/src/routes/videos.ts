@@ -4,6 +4,8 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { VideoService } from '../services/video-service';
 import { contractPaths, contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
+import { presentPublicVideoFailure } from './videos.presenter';
 
 export interface VideosRouteOptions {
   videoService: VideoService;
@@ -28,8 +30,7 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
       },
       async (request, reply) => {
         const user = requireAuth(request);
-        const result = await videoService.list(user, request.query);
-        return reply.status(200).send(result);
+        return sendResult(reply, request, await videoService.list(user, request.query));
       }
     );
   }
@@ -45,8 +46,9 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
       },
       async (request, reply) => {
         const { id } = request.params;
-        const videoResponse = await videoService.get(request.user ?? null, id);
-        return reply.status(200).send(videoResponse);
+        return sendResult(reply, request, await videoService.get(request.user ?? null, id), {
+          present: (failure) => presentPublicVideoFailure(failure, request.url),
+        });
       }
     );
   }
@@ -64,8 +66,9 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
       async (request, reply) => {
         const user = requireAuth(request);
         const { id } = request.params;
-        const updated = await videoService.updateMetadata(user, id, request.body);
-        return reply.status(200).send(updated);
+        return sendResult(reply, request, await videoService.updateMetadata(user, id, request.body), {
+          present: (failure) => presentPublicVideoFailure(failure, request.url),
+        });
       }
     );
   }
@@ -82,8 +85,7 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
       async (request, reply) => {
         const user = requireAuth(request);
         const { id } = request.params;
-        const result = await videoService.softDelete(user, id);
-        return reply.status(202).send(result);
+        return sendResult(reply, request, await videoService.softDelete(user, id), { status: 202 });
       }
     );
   }
@@ -110,10 +112,10 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
       async (request, reply) => {
         const user = requireAuth(request);
         const { id } = request.params;
-        const result = await videoService.reprocess(user, id, {
+        const reprocessed = await videoService.reprocess(user, id, {
           traceparent: request.headers['traceparent'] as string | undefined,
         });
-        return reply.status(202).send(result);
+        return sendResult(reply, request, reprocessed, { status: 202 });
       }
     );
   }

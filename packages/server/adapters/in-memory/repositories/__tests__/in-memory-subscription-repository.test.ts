@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { expectOk } from '@vp/testing/result';
 import { InMemoryChannelRepository } from '../in-memory-channel-repository';
 import { InMemoryEventRepository } from '../in-memory-event-repository';
 import { InMemoryOutboxRepository } from '../in-memory-outbox-repository';
@@ -46,19 +46,23 @@ describe('InMemorySubscriptionRepository', () => {
       videosRepo: videoRepo,
     });
 
-    await channelRepo.create({
-      id: creator1.channelId,
-      userId: creator1.userId,
-      handle: 'creator_one',
-      displayName: 'Creator One',
-    });
+    expectOk(
+      await channelRepo.create({
+        id: creator1.channelId,
+        userId: creator1.userId,
+        handle: 'creator_one',
+        displayName: 'Creator One',
+      })
+    );
 
-    await channelRepo.create({
-      id: creator2.channelId,
-      userId: creator2.userId,
-      handle: 'creator_two',
-      displayName: 'Creator Two',
-    });
+    expectOk(
+      await channelRepo.create({
+        id: creator2.channelId,
+        userId: creator2.userId,
+        handle: 'creator_two',
+        displayName: 'Creator Two',
+      })
+    );
   });
 
   describe('subscription lifecycle & counts', () => {
@@ -156,31 +160,37 @@ describe('InMemorySubscriptionRepository', () => {
     });
 
     it('returns public READY videos in subscription feed from subscribed channels only', async () => {
-      const v1 = await videoRepo.create({
-        id: '66666666-6666-7666-8666-666666666661',
-        ownerId: creator1.userId,
-        title: 'Creator 1 Public Video',
-        visibility: 'public',
-        status: 'READY',
-        sourceKey: 'raw/v1.mp4',
-      });
-      await videoRepo.create({
-        id: '66666666-6666-7666-8666-666666666662',
-        ownerId: creator1.userId,
-        title: 'Creator 1 Private Video',
-        visibility: 'private',
-        status: 'READY',
-        sourceKey: 'raw/v2.mp4',
-      });
+      const v1 = expectOk(
+        await videoRepo.create({
+          id: '66666666-6666-7666-8666-666666666661',
+          ownerId: creator1.userId,
+          title: 'Creator 1 Public Video',
+          visibility: 'public',
+          status: 'READY',
+          sourceKey: 'raw/v1.mp4',
+        })
+      );
+      expectOk(
+        await videoRepo.create({
+          id: '66666666-6666-7666-8666-666666666662',
+          ownerId: creator1.userId,
+          title: 'Creator 1 Private Video',
+          visibility: 'private',
+          status: 'READY',
+          sourceKey: 'raw/v2.mp4',
+        })
+      );
 
-      const v3 = await videoRepo.create({
-        id: '66666666-6666-7666-8666-666666666663',
-        ownerId: creator2.userId,
-        title: 'Creator 2 Public Video',
-        visibility: 'public',
-        status: 'READY',
-        sourceKey: 'raw/v3.mp4',
-      });
+      const v3 = expectOk(
+        await videoRepo.create({
+          id: '66666666-6666-7666-8666-666666666663',
+          ownerId: creator2.userId,
+          title: 'Creator 2 Public Video',
+          visibility: 'public',
+          status: 'READY',
+          sourceKey: 'raw/v3.mp4',
+        })
+      );
 
       await subRepo.subscribe(subscriber.userId, creator1.channelId);
 

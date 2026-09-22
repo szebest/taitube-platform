@@ -1,6 +1,7 @@
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
 
@@ -18,7 +19,7 @@ describe('apps/api: route authorization', () => {
   let adminToken: string;
 
   async function patchTitle(title: string, token?: string) {
-    const video = await repositories.videos.findById(VIDEO_ID);
+    const video = expectOk(await repositories.videos.findById(VIDEO_ID));
     return app.inject({
       method: 'PATCH',
       url: `/v1/videos/${VIDEO_ID}`,

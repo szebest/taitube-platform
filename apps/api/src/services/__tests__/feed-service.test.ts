@@ -1,5 +1,6 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
 import { publicFeedInstant } from '@vp/domain';
+import { expectOk } from '@vp/testing/result';
 import { encodeFeedCursor } from '../cursor';
 import { FeedService } from '../feed-service';
 import { HttpCacheService } from '../http-cache-service';
@@ -39,14 +40,14 @@ describe('apps/api/services: FeedService', () => {
   it('serves a weak sha256 ETag from the one HttpCacheService implementation', async () => {
     await publish('00000000-0000-7000-8000-0000000000f3');
 
-    const page = await service.getFeed({ sort: 'recent' });
+    const page = expectOk(await service.getFeed({ sort: 'recent' }));
 
     expect(page.etag).toBe(new HttpCacheService().generateEtag(page.data));
     expect(page.etag).toMatch(/^W\/"[a-f0-9]{16}"$/);
   });
 
   it('builds its Cache-Control through buildCacheHeaders', async () => {
-    const page = await service.getFeed({ sort: 'recent' });
+    const page = expectOk(await service.getFeed({ sort: 'recent' }));
 
     expect(page.headers).toEqual({
       'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
@@ -62,7 +63,7 @@ describe('apps/api/services: FeedService', () => {
       staleWhileRevalidateSeconds: 10,
     });
 
-    const page = await tuned.getFeed({ sort: 'recent' });
+    const page = expectOk(await tuned.getFeed({ sort: 'recent' }));
 
     expect(page.headers['Cache-Control']).toBe('public, max-age=5, stale-while-revalidate=10');
   });
@@ -71,16 +72,16 @@ describe('apps/api/services: FeedService', () => {
     ['the exact tag', (etag: string) => etag],
     ['the tag without its weak marker', (etag: string) => etag.replace(/^W\//, '')],
   ])('reports not modified for %s', async (_label, present) => {
-    const first = await service.getFeed({ sort: 'recent' });
+    const first = expectOk(await service.getFeed({ sort: 'recent' }));
 
-    const second = await service.getFeed({ sort: 'recent' }, present(first.etag));
+    const second = expectOk(await service.getFeed({ sort: 'recent' }, present(first.etag)));
 
     expect(second.notModified).toBe(true);
     expect(second.etag).toBe(first.etag);
   });
 
   it('reports modified for an unrelated tag', async () => {
-    const page = await service.getFeed({ sort: 'recent' }, 'W/"0000000000000000"');
+    const page = expectOk(await service.getFeed({ sort: 'recent' }, 'W/"0000000000000000"'));
 
     expect(page.notModified).toBe(false);
   });
@@ -90,7 +91,7 @@ describe('apps/api/services: FeedService', () => {
     await service.getFeed({ sort: 'recent' });
 
     await publish('00000000-0000-7000-8000-0000000000f5');
-    const cached = await service.getFeed({ sort: 'recent' });
+    const cached = expectOk(await service.getFeed({ sort: 'recent' }));
 
     expect(cached.data.items).toHaveLength(1);
   });
@@ -115,20 +116,22 @@ describe('apps/api/services: FeedService', () => {
     ];
     for (const seed of seeds) {
       await publish(seed.id);
-      const row = await repositories.videos.findById(seed.id);
+      const row = expectOk(await repositories.videos.findById(seed.id));
       if (!row) continue;
       row.createdAt = new Date(Date.now() - seed.ageHours * 3_600_000);
       row.viewsCount = seed.viewsCount;
     }
 
-    const first = await service.getFeed({ sort: 'trending', limit: 1 });
+    const first = expectOk(await service.getFeed({ sort: 'trending', limit: 1 }));
 
     vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 2 * 3_600_000);
-    const second = await service.getFeed({
-      sort: 'trending',
-      limit: 1,
-      cursor: first.data.nextCursor ?? undefined,
-    });
+    const second = expectOk(
+      await service.getFeed({
+        sort: 'trending',
+        limit: 1,
+        cursor: first.data.nextCursor ?? undefined,
+      })
+    );
     vi.restoreAllMocks();
 
     expect(first.data.items.map((item) => item.id)).toEqual([seeds[0]?.id]);
@@ -159,13 +162,15 @@ describe('apps/api/services: FeedService', () => {
       }),
     });
 
-    await expect(broken.getFeed({ sort: 'recent' })).resolves.toMatchObject({ notModified: false });
+    expect(expectOk(await broken.getFeed({ sort: 'recent' }))).toMatchObject({
+      notModified: false,
+    });
   });
 
   it('works with no cache wired at all', async () => {
     const uncached = new FeedService({ videoService });
 
-    await expect(uncached.getFeed({ sort: 'recent' })).resolves.toMatchObject({
+    expect(expectOk(await uncached.getFeed({ sort: 'recent' }))).toMatchObject({
       data: { items: [], total: 0 },
     });
   });

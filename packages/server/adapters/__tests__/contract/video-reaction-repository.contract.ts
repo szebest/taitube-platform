@@ -1,6 +1,7 @@
 import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
+import { expectOk } from '@vp/testing/result';
 
 export function describeVideoReactionRepositoryContract(
   makeSubject: MakeRepositoriesSubject
@@ -79,7 +80,7 @@ export function describeVideoReactionRepositoryContract(
     it('writes the reconciled counters back onto the video', async () => {
       await reactions.updateVideoCounters(VIDEO_IDS.a, 11, 4);
 
-      const video = await subject.repositories.videos.findById(VIDEO_IDS.a);
+      const video = expectOk(await subject.repositories.videos.findById(VIDEO_IDS.a));
       expect(video).toMatchObject({ likesCount: 11, dislikesCount: 4 });
     });
 

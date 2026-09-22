@@ -3,6 +3,7 @@ import {
   InMemoryVideoReactionRepository,
   InMemoryVideoRepository,
 } from '@vp/adapters';
+import { expectOk } from '@vp/testing/result';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 describe('Video Reaction Repositories (Ticket 40)', () => {
@@ -107,17 +108,19 @@ describe('Video Reaction Repositories (Ticket 40)', () => {
   });
 
   it('updates denormalized counters on InMemoryVideoRepository when video exists', async () => {
-    const video = await videoRepo.create({
-      id: '22222222-2222-7222-8222-222222222222',
-      ownerId: 'owner-1',
-      sourceKey: 'raw/video.mp4',
-    });
+    const video = expectOk(
+      await videoRepo.create({
+        id: '22222222-2222-7222-8222-222222222222',
+        ownerId: 'owner-1',
+        sourceKey: 'raw/video.mp4',
+      })
+    );
 
     await reactionRepo.setReaction(video.id, 'user-1', 'LIKE');
     await reactionRepo.setReaction(video.id, 'user-2', 'LIKE');
     await reactionRepo.setReaction(video.id, 'user-3', 'DISLIKE');
 
-    const updated = await videoRepo.findById(video.id);
+    const updated = expectOk(await videoRepo.findById(video.id));
     expect(updated?.likesCount).toBe(2);
     expect(updated?.dislikesCount).toBe(1);
   });

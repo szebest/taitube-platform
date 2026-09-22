@@ -51,3 +51,32 @@ describe('@vp/domain-rules: decideVideoMetadataUpdate', () => {
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.VALIDATION_FAILED);
   });
 });
+
+describe('@vp/domain-rules: decideVideoMetadataUpdate — which forbidden it is', () => {
+  it.each([
+    {
+      name: 'a private video the editor cannot even see',
+      visibility: 'private' as const,
+      readable: false,
+    },
+    {
+      name: 'an unlisted video the editor can see but not edit',
+      visibility: 'unlisted' as const,
+      readable: true,
+    },
+  ])('marks $name as readable=$readable, so the edge knows whether to disguise it', ({
+    visibility,
+    readable,
+  }) => {
+    const video = aVideo({ visibility });
+    const result = decideVideoMetadataUpdate({
+      editor: STRANGER,
+      video,
+      videoId: video.id,
+      patch: { title: 'Hack' },
+    });
+
+    expect(isErr(result) && result.error.code).toBe(ErrorCodes.FORBIDDEN);
+    expect(isErr(result) && 'readable' in result.error && result.error.readable).toBe(readable);
+  });
+});

@@ -17,8 +17,6 @@ export const THROWING_DOMAIN_SOURCES: readonly string[] = [
   'apps/api/src/services/upload-complete.ts',
   'apps/api/src/services/upload-context.ts',
   'apps/api/src/services/upload-parts.ts',
-  'apps/api/src/services/video-lifecycle.ts',
-  'apps/api/src/services/video-service.ts',
   'apps/worker/src/stages/housekeeping/index.ts',
   'apps/worker/src/stages/housekeeping/outbox-relay.ts',
   'apps/worker/src/stages/notify.ts',

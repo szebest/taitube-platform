@@ -1,7 +1,7 @@
 import type { UploadRecord, VideoRecord } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, toPipelineError } from '@vp/errors';
 import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
-import { unwrapOr } from '@vp/result';
+import { isErr, unwrapOr } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 import { type UploadContext, loadOwnedUpload } from './upload-context';
@@ -170,7 +170,8 @@ export async function completeUpload(
     outbox: dispatch.outbox,
   });
 
-  if (!transitioned) {
+  if (isErr(transitioned)) throw toPipelineError(transitioned.error);
+  if (!transitioned.value) {
     return { videoId: video.id, status: 'UPLOADED' };
   }
 
@@ -180,9 +181,13 @@ export async function completeUpload(
     throw new Error('CRASH_AFTER_COMMIT');
   }
 
-  // Admission control (SDD §9.4, PRD FR-13): the outbox relay still drains a held
-  // video, so holding costs latency rather than the job.
-  const inFlight = await ctx.videos.countInFlightByOwner(video.ownerId);
+  // Admission cannot be decided without the count, so a failed count holds the video rather than
+  // admitting it (SDD §9.4, PRD FR-13): the outbox relay drains a held video anyway, so holding
+  // costs latency, not a job.
+  const inFlight = unwrapOr(
+    await ctx.videos.countInFlightByOwner(video.ownerId),
+    Number.MAX_SAFE_INTEGER
+  );
   if (inFlight >= ctx.maxInflightPerUser) {
     return { videoId: video.id, status: 'UPLOADED', admission: 'held' };
   }

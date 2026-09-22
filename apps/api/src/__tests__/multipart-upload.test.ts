@@ -9,6 +9,7 @@ import { JobQueue } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { MULTIPART_MIN_PART_SIZE } from '@vp/storage';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
@@ -268,7 +269,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(firstPart.expiresAt).toBeDefined();
 
     // Verify video in DB is UPLOADING
-    const video = await repositories.videos.findById(data.videoId);
+    const video = expectOk(await repositories.videos.findById(data.videoId));
     expect(video?.status).toBe('UPLOADING');
     expect(video?.sourceSizeBytes).toBe(fourGb);
   });
@@ -437,7 +438,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(body.code).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
 
     // Verify video is marked REJECTED in database
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('REJECTED');
     expect(video?.errorCode).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
   });
@@ -471,7 +472,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(multipartUploads.has(s3UploadId)).toBe(false);
 
     // Invariant: Video status marked ABANDONED in DB
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('ABANDONED');
 
     // Invariant: video_events has upload.aborted event

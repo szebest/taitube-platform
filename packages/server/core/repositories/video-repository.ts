@@ -1,5 +1,13 @@
-import type { PublicFeedCursor, PublicFeedSort, Video, VideoStatus, VideoVisibility } from '@vp/domain';
+import type {
+  PublicFeedCursor,
+  PublicFeedSort,
+  Video,
+  VideoStatus,
+  VideoVisibility,
+} from '@vp/domain';
+import type { DatabaseUnavailable, VersionConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
+import type { Result } from '@vp/result';
 
 import type { VideoEventRecord } from './event-repository';
 import type { NewOutboxInput } from './outbox-repository';
@@ -112,25 +120,39 @@ export interface VideoWithDetails {
   upload?: UploadRecord | null;
 }
 
+/**
+ * Absence is not a failure: `findById`, `findWithDetails` and `updateMetadata` answer `ok(null)` for
+ * a row that is not there, and the rule that asked decides whether that is an error.
+ */
 export abstract class VideoRepository {
-  abstract findById(id: string): Promise<VideoRecord | null>;
-  abstract findWithDetails(id: string): Promise<VideoWithDetails | null>;
-  abstract create(data: NewVideoInput): Promise<VideoRecord>;
-  abstract listByOwner(options: ListVideosOptions): Promise<VideoRecord[]>;
-  abstract listPublic(options: ListPublicVideosOptions): Promise<ListPublicVideosResult>;
-  abstract updateMetadata(options: UpdateVideoMetadataOptions): Promise<VideoRecord>;
-  abstract transition(options: TransitionVideoOptions): Promise<boolean>;
+  abstract findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>>;
+  abstract findWithDetails(
+    id: string
+  ): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>>;
+  abstract create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>>;
+  abstract listByOwner(
+    options: ListVideosOptions
+  ): Promise<Result<VideoRecord[], DatabaseUnavailable>>;
+  abstract listPublic(
+    options: ListPublicVideosOptions
+  ): Promise<Result<ListPublicVideosResult, DatabaseUnavailable>>;
+  abstract updateMetadata(
+    options: UpdateVideoMetadataOptions
+  ): Promise<Result<VideoRecord | null, DatabaseUnavailable | VersionConflict>>;
+  abstract transition(
+    options: TransitionVideoOptions
+  ): Promise<Result<boolean, DatabaseUnavailable>>;
   /**
    * Housekeeping sweep. `idleFor` measures from `COALESCE(since, updatedAt)`, and a row a
    * concurrent scan already holds is skipped, so two housekeeping runs never pick the same one.
    */
-  abstract scan(filter: VideoScan): Promise<VideoRecord[]>;
-  abstract hardDelete(id: string): Promise<boolean>;
-  abstract countByStatus(): Promise<Record<string, number>>;
-  abstract countInFlightByOwner(ownerId: string): Promise<number>;
+  abstract scan(filter: VideoScan): Promise<Result<VideoRecord[], DatabaseUnavailable>>;
+  abstract hardDelete(id: string): Promise<Result<boolean, DatabaseUnavailable>>;
+  abstract countByStatus(): Promise<Result<Record<string, number>, DatabaseUnavailable>>;
+  abstract countInFlightByOwner(ownerId: string): Promise<Result<number, DatabaseUnavailable>>;
   abstract updateReactionCounters(
     videoId: string,
     likesCount: number,
     dislikesCount: number
-  ): Promise<void>;
+  ): Promise<Result<void, DatabaseUnavailable>>;
 }

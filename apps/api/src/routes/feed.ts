@@ -1,9 +1,11 @@
 import { getFeed } from '@vp/api-contracts';
+import { isErr } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { FeedService } from '../services/feed-service';
 import { contractPaths, contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
 
 export interface FeedRouteOptions {
   feedService: FeedService;
@@ -31,8 +33,12 @@ export function registerFeedRoutes(app: FastifyInstance, options: FeedRouteOptio
       },
       async (request, reply) => {
         const page = await feedService.getFeed(request.query, request.headers['if-none-match']);
-        reply.headers(page.headers);
-        return page.notModified ? reply.status(304).send() : reply.status(200).send(page.data);
+        if (isErr(page)) return sendResult(reply, request, page);
+
+        reply.headers(page.value.headers);
+        return page.value.notModified
+          ? reply.status(304).send()
+          : reply.status(200).send(page.value.data);
       }
     );
   }

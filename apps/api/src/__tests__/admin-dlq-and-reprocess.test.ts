@@ -2,6 +2,7 @@ import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
 import { mintDevToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES, ids } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -393,7 +394,7 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
       expect(data.generation).toBe(2);
 
       // Verify video record in repository
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.generation).toBe(2);
       expect(video?.status).toBe('PROBING');
 

@@ -1,6 +1,6 @@
-import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import type { JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { generateMasterPlaylist } from '@vp/ffmpeg';
 import {
@@ -15,6 +15,7 @@ import {
 import { type Logger, getMetrics } from '@vp/observability';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
+import { unwrapOrThrow } from '../queue-error';
 import { validateJobId } from '../registry';
 
 export interface PackageProcessorDeps {
@@ -125,7 +126,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       }
 
       // Query video metadata for fps
-      const video = await repositories.videos.findById(videoId);
+      const video = unwrapOrThrow(await repositories.videos.findById(videoId));
       const rawFps = video?.fps;
       const fps =
         typeof rawFps === 'number'
@@ -197,28 +198,30 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
         ...defaultJobOptions,
       };
 
-      const transitioned = await repositories.videos.transition({
-        videoId,
-        from: 'PROCESSING',
-        to: 'READY',
-        eventType: 'video.ready',
-        eventPayload: { playbackUrl, masterKey },
-        patch,
-        outbox: notifyJobData
-          ? {
-              kind: 'notify',
-              payload: {
-                type: 'queue',
-                queueName: 'notify',
-                job: {
-                  name: 'notify',
-                  data: notifyJobData,
-                  opts: notifyJobOpts,
+      const transitioned = unwrapOrThrow(
+        await repositories.videos.transition({
+          videoId,
+          from: 'PROCESSING',
+          to: 'READY',
+          eventType: 'video.ready',
+          eventPayload: { playbackUrl, masterKey },
+          patch,
+          outbox: notifyJobData
+            ? {
+                kind: 'notify',
+                payload: {
+                  type: 'queue',
+                  queueName: 'notify',
+                  job: {
+                    name: 'notify',
+                    data: notifyJobData,
+                    opts: notifyJobOpts,
+                  },
                 },
-              },
-            }
-          : undefined,
-      });
+              }
+            : undefined,
+        })
+      );
 
       log.info({ videoId, playbackUrl, transitioned }, 'Video transitioned to READY');
 

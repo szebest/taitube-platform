@@ -7,6 +7,7 @@ import {
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { calculateBackoffDelay, ids, stagePolicies } from '@vp/job-contracts';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFailureHandler } from '../failure-handler';
@@ -384,7 +385,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     await new Promise((r) => setTimeout(r, 50));
 
     // Verify video transitioned to FAILED with the child's error code (FFMPEG_FAILED)
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('FAILED');
     expect(video?.errorCode).toBe(ErrorCodes.FFMPEG_FAILED);
 
@@ -488,7 +489,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       expect(entry?.status).toBe('PARKED');
 
       // Verify video is FAILED
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('FAILED');
       expect(video?.errorCode).toBe(fixture.expectedCode);
     }

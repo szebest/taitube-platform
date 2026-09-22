@@ -3,6 +3,7 @@ import {
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters';
+import { expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
@@ -38,7 +39,7 @@ describe('apps/api/services: initiate upload', () => {
     expect(result).toMatchObject({ strategy: 'single' });
     expect(result.singleUrl).toBeDefined();
     expect(result.parts).toBeUndefined();
-    await expect(repositories.videos.findById(result.videoId)).resolves.toMatchObject({
+    expect(expectOk(await repositories.videos.findById(result.videoId))).toMatchObject({
       ownerId: OWNER.id,
       title: 'Service Direct Test',
       status: 'UPLOADING',
@@ -83,7 +84,7 @@ describe('apps/api/services: initiate upload', () => {
       ...(visibility ? { visibility } : {}),
     });
 
-    await expect(repositories.videos.findById(result.videoId)).resolves.toMatchObject({
+    expect(expectOk(await repositories.videos.findById(result.videoId))).toMatchObject({
       visibility: expected,
     });
   });
@@ -95,7 +96,7 @@ describe('apps/api/services: initiate upload', () => {
       contentType: 'video/quicktime',
     });
 
-    await expect(repositories.videos.findById(result.videoId)).resolves.toMatchObject({
+    expect(expectOk(await repositories.videos.findById(result.videoId))).toMatchObject({
       title: 'holiday.mov',
       sourceKey: expect.stringContaining('.mov'),
     });

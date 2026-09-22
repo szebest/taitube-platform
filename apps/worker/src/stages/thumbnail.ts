@@ -15,6 +15,7 @@ import {
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { getHeartbeatPath } from '../config';
+import { unwrapOrThrow } from '../queue-error';
 import { validateJobId } from '../registry';
 
 export interface ThumbnailProcessorDeps {
@@ -204,14 +205,16 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       }
 
       // 5. Update video row with posterKey and spriteKey (AC 1, AC 3) only if not fenced out
-      await repositories.videos.transition({
-        videoId,
-        from: 'PROCESSING',
-        to: 'PROCESSING',
-        eventType: 'thumbnail.completed',
-        eventPayload: { posterKey, spriteKey, spriteVttKey },
-        patch: { posterKey, spriteKey },
-      });
+      unwrapOrThrow(
+        await repositories.videos.transition({
+          videoId,
+          from: 'PROCESSING',
+          to: 'PROCESSING',
+          eventType: 'thumbnail.completed',
+          eventPayload: { posterKey, spriteKey, spriteVttKey },
+          patch: { posterKey, spriteKey },
+        })
+      );
 
       return {
         posterKey,

@@ -3,6 +3,7 @@ import type { Repositories } from '@vp/core/repositories';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { unwrapOr } from '@vp/result';
+import { unwrapOrThrow } from '../../queue-error';
 
 export interface ReconcileUploadsOptions {
   repositories: Repositories;
@@ -51,18 +52,22 @@ export async function runReconcileUploads(
   let reenqueuedCount = 0;
 
   // 1. Stale UPLOADING -> ABANDONED
-  const staleUploading = await repositories.videos.scan({
-    status: 'UPLOADING',
-    idleFor: { since: 'updatedAt', ms: uploadingThresholdMs },
-  });
+  const staleUploading = unwrapOrThrow(
+    await repositories.videos.scan({
+      status: 'UPLOADING',
+      idleFor: { since: 'updatedAt', ms: uploadingThresholdMs },
+    })
+  );
   for (const video of staleUploading) {
-    const transitioned = await repositories.videos.transition({
-      videoId: video.id,
-      from: 'UPLOADING',
-      to: 'ABANDONED',
-      eventType: 'video.abandoned',
-      eventPayload: { reason: 'stale_upload_timeout', thresholdMs: uploadingThresholdMs },
-    });
+    const transitioned = unwrapOrThrow(
+      await repositories.videos.transition({
+        videoId: video.id,
+        from: 'UPLOADING',
+        to: 'ABANDONED',
+        eventType: 'video.abandoned',
+        eventPayload: { reason: 'stale_upload_timeout', thresholdMs: uploadingThresholdMs },
+      })
+    );
 
     if (transitioned) {
       abandonedCount += 1;
@@ -95,18 +100,22 @@ export async function runReconcileUploads(
   }
 
   // 2. Stale UPLOADED without probe step -> re-enqueue probe if under in-flight limit
-  const staleUploaded = await repositories.videos.scan({
-    status: 'UPLOADED',
-    idleFor: { since: 'updatedAt', ms: uploadedThresholdMs },
-    without: { step: 'probe' },
-  });
+  const staleUploaded = unwrapOrThrow(
+    await repositories.videos.scan({
+      status: 'UPLOADED',
+      idleFor: { since: 'updatedAt', ms: uploadedThresholdMs },
+      without: { step: 'probe' },
+    })
+  );
   const ownerInflightCounts = new Map<string, number>();
 
   for (const video of staleUploaded) {
     if (probeQueue) {
       let currentInflight = ownerInflightCounts.get(video.ownerId);
       if (currentInflight === undefined) {
-        currentInflight = await repositories.videos.countInFlightByOwner(video.ownerId);
+        currentInflight = unwrapOrThrow(
+          await repositories.videos.countInFlightByOwner(video.ownerId)
+        );
         ownerInflightCounts.set(video.ownerId, currentInflight);
       }
 

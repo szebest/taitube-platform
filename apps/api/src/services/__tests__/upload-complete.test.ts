@@ -6,6 +6,7 @@ import {
 } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
@@ -41,7 +42,7 @@ describe('apps/api/services: complete upload', () => {
       sizeBytes,
       contentType: 'video/mp4',
     });
-    const video = await repositories.videos.findById(started.videoId);
+    const video = expectOk(await repositories.videos.findById(started.videoId));
     return { ...started, sourceKey: video?.sourceKey ?? '' };
   }
 
@@ -112,7 +113,7 @@ describe('apps/api/services: complete upload', () => {
     await expect(service.complete(OWNER, started.uploadId)).rejects.toMatchObject({
       code: ErrorCodes.UPLOAD_SIZE_MISMATCH,
     });
-    await expect(repositories.videos.findById(started.videoId)).resolves.toMatchObject({
+    expect(expectOk(await repositories.videos.findById(started.videoId))).toMatchObject({
       status: 'REJECTED',
       errorCode: ErrorCodes.UPLOAD_SIZE_MISMATCH,
     });

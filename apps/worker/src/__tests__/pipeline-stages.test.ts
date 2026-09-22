@@ -5,6 +5,7 @@ import { JobQueue, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import type { NotifyJob, PackageJob, TranscodeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createNotifyProcessor } from '../stages/notify';
@@ -286,7 +287,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     expect(uploadedObjects).toContain(`videos/${videoId}/hls/master.m3u8`);
 
     // 1. Verify video transitioned to READY (AC 19)
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('READY');
     expect(video?.masterPlaylistKey).toBe(`videos/${videoId}/hls/master.m3u8`);
     expect(video?.readyAt).toBeDefined();

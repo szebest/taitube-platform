@@ -4,6 +4,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
@@ -41,7 +42,7 @@ describe('apps/api/services: abort upload', () => {
 
     await service.abort(OWNER, uploadId);
 
-    await expect(repositories.videos.findById(videoId)).resolves.toMatchObject({
+    expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
       status: 'ABANDONED',
     });
     await expect(repositories.uploads.findById(uploadId)).resolves.toMatchObject({
@@ -65,7 +66,7 @@ describe('apps/api/services: abort upload', () => {
     const { uploadId, videoId } = await start(MB);
 
     await expect(service.abort(STRANGER, uploadId)).rejects.toThrow('Not authorized');
-    await expect(repositories.videos.findById(videoId)).resolves.toMatchObject({
+    expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
       status: 'UPLOADING',
     });
   });

@@ -3,21 +3,24 @@ import {
   type NewVideoEventInput,
   type VideoEventRecord,
 } from '@vp/core/repositories';
+import { type Result, unwrapOr } from '@vp/result';
+
+/** The one thing this repository needs from a video: who owns it. */
+interface VideoOwnerLookup {
+  findById(id: string): Promise<Result<{ ownerId: string } | null, unknown>>;
+}
 
 export class InMemoryEventRepository extends EventRepository {
   private readonly eventsList: VideoEventRecord[];
-  private videosRepo?: { findById(id: string): Promise<{ ownerId: string } | null> };
+  private videosRepo?: VideoOwnerLookup;
 
-  constructor(
-    eventsList: VideoEventRecord[] = [],
-    videosRepo?: { findById(id: string): Promise<{ ownerId: string } | null> }
-  ) {
+  constructor(eventsList: VideoEventRecord[] = [], videosRepo?: VideoOwnerLookup) {
     super();
     this.eventsList = eventsList;
     this.videosRepo = videosRepo;
   }
 
-  setVideosRepo(repo: { findById(id: string): Promise<{ ownerId: string } | null> }): void {
+  setVideosRepo(repo: VideoOwnerLookup): void {
     this.videosRepo = repo;
   }
 
@@ -51,7 +54,7 @@ export class InMemoryEventRepository extends EventRepository {
     const matching: VideoEventRecord[] = [];
     for (const event of this.eventsList) {
       if (event.id > afterId) {
-        const video = await this.videosRepo.findById(event.videoId);
+        const video = unwrapOr(await this.videosRepo.findById(event.videoId), null);
         if (video && video.ownerId === userId) {
           matching.push(event);
         }

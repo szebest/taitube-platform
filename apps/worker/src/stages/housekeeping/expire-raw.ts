@@ -1,6 +1,7 @@
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { Logger } from '@vp/observability';
+import { unwrapOrThrow } from '../../queue-error';
 
 export interface ExpireRawOptions {
   repositories: Repositories;
@@ -34,11 +35,13 @@ export async function runExpireRaw(options: ExpireRawOptions): Promise<ExpireRaw
 
   let expiredCount = 0;
 
-  const expiredVideos = await repositories.videos.scan({
-    status: 'READY',
-    idleFor: { since: 'readyAt', ms: retentionDays * DAY_MS },
-    without: { event: 'video.raw_expired' },
-  });
+  const expiredVideos = unwrapOrThrow(
+    await repositories.videos.scan({
+      status: 'READY',
+      idleFor: { since: 'readyAt', ms: retentionDays * DAY_MS },
+      without: { event: 'video.raw_expired' },
+    })
+  );
   for (const video of expiredVideos) {
     if (video.sourceKey) {
       logger?.info(

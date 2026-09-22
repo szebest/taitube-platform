@@ -9,6 +9,7 @@ import {
 import type { QueueJob } from '@vp/core/ports';
 import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
@@ -197,7 +198,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
 
     // Verify package has NOT executed yet (still in waiting-children)
     expect(await packageQueue.getJobState(packageJobId)).toBe('waiting-children');
-    const videoBeforeTranscode = await repositories.videos.findById(videoId);
+    const videoBeforeTranscode = expectOk(await repositories.videos.findById(videoId));
     expect(videoBeforeTranscode?.status).toBe('PROCESSING');
 
     // 2. Process transcode children on queues transcode-1080p, transcode-720p, transcode-480p and thumbnail
@@ -232,7 +233,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     expect(await packageQueue.getJobState(packageJobId)).toBe('completed');
 
     // 3. Verify video is now READY (AC 1)
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('READY');
     expect(video?.masterPlaylistKey).toBe(`videos/${videoId}/hls/master.m3u8`);
     expect(video?.readyAt).toBeDefined();
@@ -353,7 +354,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     });
 
     // 1. Verify p720 has ladder with 2 variants stored on video row (AC 2)
-    const p720Video = await repositories.videos.findById(p720Id);
+    const p720Video = expectOk(await repositories.videos.findById(p720Id));
     expect(p720Video?.ladder as any[]).toHaveLength(2);
     expect((p720Video?.ladder as any[])?.map((r: any) => r.name)).toEqual(['720p', '480p']);
 
@@ -395,7 +396,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     });
 
     // 3. Verify sd360 has ladder with 1 variant (480p) stored on video row (AC 2)
-    const sd360Video = await repositories.videos.findById(sd360Id);
+    const sd360Video = expectOk(await repositories.videos.findById(sd360Id));
     expect(sd360Video?.ladder as any[]).toHaveLength(1);
     expect((sd360Video?.ladder as any[])?.[0]?.name).toBe('480p');
 
@@ -643,7 +644,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     );
 
     // 3. Verify parent failed and video transitioned to FAILED with child's error code (AC 5)
-    const failedVideo = await repositories.videos.findById(videoId);
+    const failedVideo = expectOk(await repositories.videos.findById(videoId));
     expect(failedVideo?.status).toBe('FAILED');
     expect(failedVideo?.errorCode).toBe('FFMPEG_FAILED');
 

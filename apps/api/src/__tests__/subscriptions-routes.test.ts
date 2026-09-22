@@ -7,6 +7,7 @@ import {
 } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
@@ -273,16 +274,18 @@ describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
 
     beforeAll(async () => {
       // Creator 1 uploads 1 public ready video, 1 private video
-      const v1 = await repos.videos.create({
-        id: '77777777-7777-7777-8777-777777777771',
-        ownerId: creatorUser.id,
-        title: 'Creator 1 Public Video',
-        visibility: 'public',
-        status: 'READY',
-        sourceKey: 'raw/c1v1.mp4',
-        posterKey: 'posters/c1v1.jpg',
-        masterPlaylistKey: 'videos/c1v1/hls/master.m3u8',
-      });
+      const v1 = expectOk(
+        await repos.videos.create({
+          id: '77777777-7777-7777-8777-777777777771',
+          ownerId: creatorUser.id,
+          title: 'Creator 1 Public Video',
+          visibility: 'public',
+          status: 'READY',
+          sourceKey: 'raw/c1v1.mp4',
+          posterKey: 'posters/c1v1.jpg',
+          masterPlaylistKey: 'videos/c1v1/hls/master.m3u8',
+        })
+      );
       publicVideo1Id = v1.id;
 
       await repos.videos.create({
@@ -295,14 +298,16 @@ describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
       });
 
       // Creator 2 uploads 1 public ready video, 1 uploading video
-      const v3 = await repos.videos.create({
-        id: '77777777-7777-7777-8777-777777777773',
-        ownerId: otherCreator.id,
-        title: 'Creator 2 Public Video',
-        visibility: 'public',
-        status: 'READY',
-        sourceKey: 'raw/c2v1.mp4',
-      });
+      const v3 = expectOk(
+        await repos.videos.create({
+          id: '77777777-7777-7777-8777-777777777773',
+          ownerId: otherCreator.id,
+          title: 'Creator 2 Public Video',
+          visibility: 'public',
+          status: 'READY',
+          sourceKey: 'raw/c2v1.mp4',
+        })
+      );
       publicVideo2Id = v3.id;
 
       await repos.videos.create({

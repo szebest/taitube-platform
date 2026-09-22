@@ -5,6 +5,7 @@ import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { validateJobId, validateQueueName } from '../registry';
@@ -76,7 +77,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     await expect(processor(job)).rejects.toThrow();
 
     // Verify video in DB became FAILED with SOURCE_MISSING
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('FAILED');
     expect(video?.errorCode).toBe(ErrorCodes.SOURCE_MISSING);
   });
@@ -167,7 +168,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     await expect(processor(job)).rejects.toThrow();
 
     // Verify video in DB became FAILED with CORRUPT_CONTAINER
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('FAILED');
     expect(video?.errorCode).toBe(ErrorCodes.CORRUPT_CONTAINER);
 
@@ -251,7 +252,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     expect(result.durationMs).toBe(60000);
 
     // 1. Verify video in DB is PROCESSING with duration and ladder
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('PROCESSING');
     expect(video?.durationMs).toBe(60000);
     expect(video?.width).toBe(1920);
@@ -453,7 +454,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       })
     );
 
-    const portraitVideo = await repositories.videos.findById(portraitId);
+    const portraitVideo = expectOk(await repositories.videos.findById(portraitId));
     expect(portraitVideo?.width).toBe(1080); // rotation-aware effective dimensions
     expect(portraitVideo?.height).toBe(1920);
   });
@@ -505,7 +506,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       )
     ).rejects.toThrow();
 
-    const audioVideo = await repositories.videos.findById(audioOnlyId);
+    const audioVideo = expectOk(await repositories.videos.findById(audioOnlyId));
     expect(audioVideo?.status).toBe('FAILED');
     expect(audioVideo?.errorCode).toBe(ErrorCodes.CORRUPT_CONTAINER);
 
@@ -524,7 +525,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       )
     ).rejects.toThrow();
 
-    const codecVideo = await repositories.videos.findById(badCodecId);
+    const codecVideo = expectOk(await repositories.videos.findById(badCodecId));
     expect(codecVideo?.status).toBe('FAILED');
     expect(codecVideo?.errorCode).toBe(ErrorCodes.UNSUPPORTED_CODEC);
 
@@ -543,7 +544,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       )
     ).rejects.toThrow();
 
-    const durVideo = await repositories.videos.findById(overDurationId);
+    const durVideo = expectOk(await repositories.videos.findById(overDurationId));
     expect(durVideo?.status).toBe('FAILED');
     expect(durVideo?.errorCode).toBe(ErrorCodes.DURATION_EXCEEDED);
   });

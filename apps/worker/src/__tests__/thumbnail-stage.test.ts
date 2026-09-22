@@ -10,6 +10,7 @@ import type { QueueJob } from '@vp/core/ports';
 import { parseSpriteVtt } from '@vp/ffmpeg';
 import type { ProbeJob, ThumbnailJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
@@ -121,7 +122,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     expect(cues.length).toBeLessThanOrEqual(13);
 
     // Verify video record has posterKey and spriteKey
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.posterKey).toBe(result.posterKey);
     expect(video?.spriteKey).toBe(result.spriteKey);
 
@@ -245,7 +246,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Verify video is READY
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('READY');
     expect(video?.posterKey).toBe(`videos/${videoId}/thumbs/poster.jpg`);
     expect(video?.spriteKey).toBe(`videos/${videoId}/thumbs/sprite.jpg`);
@@ -389,7 +390,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
 
     // Verify AC 3:
     // - package still runs and video becomes READY
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('READY');
 
     // - poster_key and sprite_key are null

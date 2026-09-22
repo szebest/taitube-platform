@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { PGlite } from '@electric-sql/pglite';
 import type { NewVideoInput, Repositories, VideoRecord } from '@vp/core/repositories';
 import * as schema from '@vp/db';
+import { expectOk } from '@vp/testing/result';
 import { type SQL, eq, sql } from 'drizzle-orm';
 import { type PgliteDatabase, drizzle } from 'drizzle-orm/pglite';
 import { migrate } from 'drizzle-orm/pglite/migrator';
@@ -25,7 +26,7 @@ export async function inMemorySubject(): Promise<RepositoriesSubject> {
   return {
     repositories,
     seedVideo: async (input, createdAt) => {
-      const record = await repositories.videos.create(input);
+      const record = expectOk(await repositories.videos.create(input));
       if (createdAt) record.createdAt = createdAt;
       return record;
     },
@@ -88,7 +89,7 @@ export async function pgliteSubject(): Promise<RepositoriesSubject> {
   return {
     repositories,
     seedVideo: async (input, createdAt) => {
-      const created = await repositories.videos.create(input);
+      const created = expectOk(await repositories.videos.create(input));
       if (!createdAt) return created;
       const [updated] = await db
         .update(schema.videos)

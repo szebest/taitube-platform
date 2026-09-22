@@ -20,7 +20,6 @@ export const LEGACY_CATCH_SITES: readonly string[] = [
   'apps/api/src/services/sse-connection.ts',
   'apps/api/src/services/sse-hub.ts',
   'apps/api/src/services/upload-complete.ts',
-  'apps/api/src/services/video-service.ts',
   'apps/web/src/auth-token.ts',
   'apps/web/src/base-api.ts',
   'apps/web/src/modules/shared/providers/permissions-provider.tsx',

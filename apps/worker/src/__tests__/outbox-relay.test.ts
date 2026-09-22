@@ -2,6 +2,7 @@ import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
 import type { JobQueue } from '@vp/core/ports';
 import { ids } from '@vp/job-contracts';
 import { getMetrics } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { OutboxRelay, drainOutboxOnce } from '../stages/housekeeping/outbox-relay';
@@ -104,30 +105,32 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       });
 
       // Simulate state transition with outbox write (as done in upload complete)
-      const transitioned = await repositories.videos.transition({
-        videoId,
-        from: 'UPLOADING',
-        to: 'UPLOADED',
-        eventType: 'upload.completed',
-        eventPayload: { sizeBytes: 1024 },
-        outbox: {
-          kind: 'probe',
-          payload: {
-            type: 'queue',
-            queueName: 'probe',
-            job: {
-              name: 'probe',
-              data: {
-                videoId,
-                sourceKey: `raw/${videoId}/source.mp4`,
-                generation: 1,
-                traceparent: 'tp',
+      const transitioned = expectOk(
+        await repositories.videos.transition({
+          videoId,
+          from: 'UPLOADING',
+          to: 'UPLOADED',
+          eventType: 'upload.completed',
+          eventPayload: { sizeBytes: 1024 },
+          outbox: {
+            kind: 'probe',
+            payload: {
+              type: 'queue',
+              queueName: 'probe',
+              job: {
+                name: 'probe',
+                data: {
+                  videoId,
+                  sourceKey: `raw/${videoId}/source.mp4`,
+                  generation: 1,
+                  traceparent: 'tp',
+                },
+                opts: { jobId: probeJobId, priority: 5 },
               },
-              opts: { jobId: probeJobId, priority: 5 },
             },
           },
-        },
-      });
+        })
+      );
       expect(transitioned).toBe(true);
 
       // Direct enqueue was NOT called (simulating process crash immediately after DB commit)
@@ -150,7 +153,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
         eventType: 'video.ready',
       });
 
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('READY');
     });
   });
@@ -315,27 +318,29 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       });
 
       const notifyJobId = ids.notify(videoId, 'video.ready', 1);
-      const transitioned = await repositories.videos.transition({
-        videoId,
-        from: 'PROCESSING',
-        to: 'READY',
-        eventType: 'video.ready',
-        outbox: {
-          kind: 'notify',
-          payload: {
-            type: 'queue',
-            queueName: 'notify',
-            job: {
-              name: 'notify',
-              data: { videoId, event: 'video.ready' },
-              opts: { jobId: notifyJobId },
+      const transitioned = expectOk(
+        await repositories.videos.transition({
+          videoId,
+          from: 'PROCESSING',
+          to: 'READY',
+          eventType: 'video.ready',
+          outbox: {
+            kind: 'notify',
+            payload: {
+              type: 'queue',
+              queueName: 'notify',
+              job: {
+                name: 'notify',
+                data: { videoId, event: 'video.ready' },
+                opts: { jobId: notifyJobId },
+              },
             },
           },
-        },
-      });
+        })
+      );
 
       expect(transitioned).toBe(true);
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('READY');
 
       const pending = await repositories.outbox.claimBatch(10);

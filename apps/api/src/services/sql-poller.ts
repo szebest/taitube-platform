@@ -1,5 +1,6 @@
 import type { Repositories } from '@vp/core/repositories';
 import type { PipelineMetrics } from '@vp/observability';
+import { isOk } from '@vp/result';
 
 export interface SqlPollerOptions {
   repositories: Repositories;
@@ -26,13 +27,11 @@ export function startSqlPoller(options: SqlPollerOptions): SqlPoller {
   let stopped = false;
 
   async function poll(): Promise<void> {
-    try {
-      const counts = await repositories.videos.countByStatus();
-      for (const [status, count] of Object.entries(counts)) {
+    const counts = await repositories.videos.countByStatus();
+    if (isOk(counts)) {
+      for (const [status, count] of Object.entries(counts.value)) {
         metrics.videosByStatus.set({ status }, count);
       }
-    } catch {
-      // DB unavailable — skip silently
     }
 
     try {

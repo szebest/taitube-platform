@@ -7,9 +7,10 @@ import type {
   RenditionRepository,
   VideoRepository,
 } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
+import { toPipelineError } from '@vp/errors';
+import { isErr } from '@vp/result';
 import { userChannel, videoChannel } from '@vp/events';
-import { canReadVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 import { playbackUrl } from './video-views';
 
@@ -123,20 +124,12 @@ export class SseService {
    * Authorises a single-video stream exactly as GET /v1/videos/:id does.
    */
   async openVideoStream(user: AuthUser | null, videoId: string): Promise<SseSession> {
-    const video = await this.videos.findById(videoId);
-    if (!video) {
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-    }
+    const found = await this.videos.findById(videoId);
+    if (isErr(found)) throw toPipelineError(found.error);
 
-    if (!this.auth.can(canReadVideo, { user: user, video })) {
-      if (!user) {
-        throw new PermanentError(
-          ErrorCodes.UNAUTHORIZED,
-          'Authentication required to view private video'
-        );
-      }
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-    }
+    const decided = decideVideoRead({ viewer: user, video: found.value, videoId });
+    if (isErr(decided)) throw toPipelineError(publicReadFailure(decided.error));
+    const video = decided.value;
 
     return {
       channel: videoChannel(videoId),

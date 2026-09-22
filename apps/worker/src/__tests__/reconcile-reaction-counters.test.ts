@@ -5,10 +5,7 @@ import {
   RedisReactionCacheAdapter,
 } from '@vp/adapters';
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  createHousekeepingProcessor,
-  runReconcileReactionCounters,
-} from '../stages/housekeeping';
+import { createHousekeepingProcessor, runReconcileReactionCounters } from '../stages/housekeeping';
 
 describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () => {
   let repos: InMemoryRepositories;
@@ -117,7 +114,10 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
     expect(res.checkedCount).toBe(1);
     expect(res.repairedCount).toBe(1);
 
-    const fixed = await reactionCache.getCounts(videoId, async () => ({ likesCount: 0, dislikesCount: 0 }));
+    const fixed = await reactionCache.getCounts(videoId, async () => ({
+      likesCount: 0,
+      dislikesCount: 0,
+    }));
     expect(fixed).toEqual({ likesCount: 1, dislikesCount: 0 });
   });
 });

@@ -3,8 +3,9 @@ import type { ReactionCounts, ReactionInputType, ReactionType } from '@vp/domain
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, toPipelineError } from '@vp/errors';
 import { canReactVideo } from '@vp/permissions';
+import { isErr } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 
 export interface ReactionServiceDeps {
@@ -43,6 +44,19 @@ export class ReactionService {
   }
 
   /**
+   * `findById` returns a `Result`, so a dead database is a value here, not an exception. Reading it
+   * as truthy is the one `Result` misuse the compiler cannot see, and it silently deleted this
+   * not-found guard once already.
+   */
+  private async requireVideo(videoId: string): Promise<void> {
+    const found = await this.videos.findById(videoId);
+    if (isErr(found)) throw toPipelineError(found.error);
+    if (found.value === null) {
+      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+    }
+  }
+
+  /**
    * Sets or clears a reaction on a video for the authenticated caller.
    */
   async setReaction(
@@ -61,10 +75,7 @@ export class ReactionService {
       }
     );
 
-    const video = await this.videos.findById(videoId);
-    if (!video) {
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-    }
+    await this.requireVideo(videoId);
 
     const result = await this.videoReactions.setReaction(videoId, user.id, type);
 
@@ -88,10 +99,7 @@ export class ReactionService {
    * Retrieves the reaction for the authenticated caller on a given video.
    */
   async getUserReaction(user: AuthUser, videoId: string): Promise<GetUserReactionOutput> {
-    const video = await this.videos.findById(videoId);
-    if (!video) {
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-    }
+    await this.requireVideo(videoId);
 
     let reaction: ReactionType | null = null;
     if (this.reactionCache) {

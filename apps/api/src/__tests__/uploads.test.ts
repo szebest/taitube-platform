@@ -3,6 +3,7 @@ import { InMemoryRepositories, S3MultipartStorage, S3StorageClient } from '@vp/a
 import { JobQueue, type QueueJob, type QueueJobCounts, type QueueJobOptions } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
@@ -288,7 +289,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     });
 
     // Verify video in DB is UPLOADED
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('UPLOADED');
 
     // Verify upload.completed event written to video_events
@@ -365,7 +366,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     expect(storageMap.has(sourceKey)).toBe(false);
 
     // Verify video status became REJECTED in DB
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('REJECTED');
     expect(video?.errorCode).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
   });
@@ -508,7 +509,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     expect(crashRes.statusCode).toBe(500);
 
     // But DB commit succeeded! Video is UPLOADED in DB
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('UPLOADED');
 
     // And direct enqueue was NOT executed due to crash

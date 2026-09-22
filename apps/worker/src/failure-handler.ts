@@ -1,5 +1,6 @@
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { classifyError } from '@vp/errors';
 import {
   DlqJob,
   NotifyJob,
@@ -8,8 +9,8 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import { classifyError } from '@vp/errors';
 import type { Logger, PipelineMetrics } from '@vp/observability';
+import { unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface FailureHandlerDeps {
@@ -171,7 +172,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         }
       } catch {}
 
-      const video = await repositories.videos.findById(videoId).catch(() => null);
+      const video = unwrapOr(await repositories.videos.findById(videoId), null);
       const notifyJobId = ids.notify(videoId, 'video.failed', 1);
       const notifyJobData = video
         ? NotifyJob.parse({
@@ -189,8 +190,8 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         ...defaultJobOptions,
       };
 
-      const transitioned = await repositories.videos
-        .transition({
+      const transitioned = unwrapOr(
+        await repositories.videos.transition({
           videoId,
           from: ['PROCESSING', 'PROBING'],
           to: 'FAILED',
@@ -211,8 +212,9 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
                 },
               }
             : undefined,
-        })
-        .catch(() => false);
+        }),
+        false
+      );
 
       if (transitioned) {
         logger.error(

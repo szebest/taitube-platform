@@ -1012,6 +1012,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /v1/admin/categories` | Create category | `{ name, slug, description?, iconUrl?, sortOrder?, isActive? }` | `201 Category` / `409 CATEGORY_SLUG_CONFLICT` | Invalidates L1/L2 category cache across pods. |
 | `PATCH /v1/admin/categories/:id` | Update category | `{ name?, slug?, description?, iconUrl?, sortOrder?, isActive? }` | `200 Category` / `404` / `409` | Invalidates L1/L2 category cache across pods. |
 | `DELETE /v1/admin/categories/:id` | Delete category | — | `204` / `404` / `409 CATEGORY_IN_USE` | Checks video usage. Invalidates L1/L2 cache. |
+| `GET /v1/admin/videos/:id` | Read a video as an operator | — | `200 Video` / `403 FORBIDDEN` / `404` | Same `VideoService.get` call as `GET /videos/:id`; renders `FORBIDDEN` as a detailed 403 where the public route disguises it as 404 (ADR-24). |
 | `GET /admin/queues/*` | Bull Board UI | — | HTML | `@bull-board/fastify`. |
 | `GET /admin/dlq?cursor=` | List DLQ | — | `200 { items:[DlqEntry] }` | From Postgres mirror. |
 | `POST /admin/dlq/:id/replay` | Replay | `{ resetAttempts?: true }` | `202` | Re-adds to origin queue with fresh `jobId` suffix `--r{n}`; audit event. |

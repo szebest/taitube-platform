@@ -6,6 +6,7 @@ import {
   type VideoRecord,
   type VideoRepository,
 } from '@vp/core/repositories';
+import { unwrapOr } from '@vp/result';
 
 export interface InMemoryUploadRepositoryOptions {
   uploadsMap?: Map<string, UploadRecord>;
@@ -56,7 +57,7 @@ export class InMemoryUploadRepository extends UploadRepository {
 
     let video: VideoRecord | null = null;
     if (this.videosRepo) {
-      video = await this.videosRepo.findById(upload.videoId);
+      video = unwrapOr(await this.videosRepo.findById(upload.videoId), null);
     } else if (this.videosMap) {
       video = this.videosMap.get(upload.videoId) ?? null;
     }

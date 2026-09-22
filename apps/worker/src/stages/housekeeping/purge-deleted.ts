@@ -1,6 +1,7 @@
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { Logger } from '@vp/observability';
+import { unwrapOrThrow } from '../../queue-error';
 
 export interface PurgeDeletedOptions {
   repositories: Repositories;
@@ -38,10 +39,12 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
   let purgedGenerationsCount = 0;
 
   // 1. Soft-deleted videos purge (AC 4)
-  const softDeletedVideos = await repositories.videos.scan({
-    status: 'DELETED',
-    idleFor: { since: 'deletedAt', ms: thresholdMs },
-  });
+  const softDeletedVideos = unwrapOrThrow(
+    await repositories.videos.scan({
+      status: 'DELETED',
+      idleFor: { since: 'deletedAt', ms: thresholdMs },
+    })
+  );
   for (const video of softDeletedVideos) {
     logger?.info({ videoId: video.id }, 'Purging objects and hard-deleting soft-deleted video');
 
@@ -56,7 +59,7 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
       await storage.purgePrefix(publicBucket, `videos/${video.id}/`);
 
       // (c) Hard-delete video row only if storage purge succeeded
-      const deleted = await repositories.videos.hardDelete(video.id);
+      const deleted = unwrapOrThrow(await repositories.videos.hardDelete(video.id));
       if (deleted) {
         purgedVideosCount += 1;
         logger?.info({ videoId: video.id }, 'Hard-deleted video row from database');
@@ -70,11 +73,13 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
   }
 
   // 2. Old generations purge for reprocessed videos (AC 5)
-  const readyVideosWithOldGen = await repositories.videos.scan({
-    status: 'READY',
-    minGeneration: 2,
-    without: { event: 'video.generation_purged', forCurrentGeneration: true },
-  });
+  const readyVideosWithOldGen = unwrapOrThrow(
+    await repositories.videos.scan({
+      status: 'READY',
+      minGeneration: 2,
+      without: { event: 'video.generation_purged', forCurrentGeneration: true },
+    })
+  );
   for (const video of readyVideosWithOldGen) {
     const currentGen = video.generation;
 

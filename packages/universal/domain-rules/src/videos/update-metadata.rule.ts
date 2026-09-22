@@ -1,8 +1,9 @@
 import type { Video, VideoVisibility } from '@vp/domain';
 import { type UserContext, canUpdateVideo } from '@vp/permissions';
-import { type Result, err, map } from '@vp/result';
+import { type Result, err, isErr, map } from '@vp/result';
 import { type VideoMetadataFailure, validateVideoMetadata } from '@vp/validation';
-import { type ReadVideoFailure, videoForbidden, videoNotFound } from './failures.js';
+import { type ReadVideoFailure, videoEditForbidden } from './failures.js';
+import { decideVideoRead } from './read-video.rule.js';
 
 export interface VideoMetadataPatch {
   readonly title?: string | null;
@@ -19,14 +20,24 @@ export interface UpdateVideoMetadataInput {
 
 export type UpdateVideoMetadataFailure = ReadVideoFailure | VideoMetadataFailure;
 
+/**
+ * Composes the read rather than restating it, so an editor who cannot even see the video gets the
+ * read's verdict - which the public edge disguises - and one who can see it but may not edit gets a
+ * refusal that hides nothing.
+ */
 export function decideVideoMetadataUpdate(
   input: UpdateVideoMetadataInput
 ): Result<VideoMetadataPatch, UpdateVideoMetadataFailure> {
-  if (!input.video) return err(videoNotFound(input.videoId));
+  const readable = decideVideoRead({
+    viewer: input.editor,
+    video: input.video,
+    videoId: input.videoId,
+  });
+  if (isErr(readable)) return readable;
 
   const fields = Object.keys(input.patch);
-  if (!canUpdateVideo({ user: input.editor, video: input.video, fields })) {
-    return err(videoForbidden(input.videoId));
+  if (!canUpdateVideo({ user: input.editor, video: readable.value, fields })) {
+    return err(videoEditForbidden(input.videoId));
   }
 
   return map(validateVideoMetadata(input.patch), () => input.patch);

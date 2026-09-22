@@ -75,7 +75,9 @@ describe('CategoryService', () => {
   it('updates a category and invalidates the cache', async () => {
     const created = await seed('music', 'Music', 20);
 
-    const updated = expectOk(await categoryService.update(ADMIN, created.id, { name: 'All Music' }));
+    const updated = expectOk(
+      await categoryService.update(ADMIN, created.id, { name: 'All Music' })
+    );
 
     expect(updated.name).toBe('All Music');
   });

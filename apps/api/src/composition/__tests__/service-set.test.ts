@@ -1,3 +1,4 @@
+import { expectOk } from '@vp/testing/result';
 import { resolveAdapterSet } from '../adapter-set';
 import { createServiceSet } from '../service-set';
 
@@ -56,7 +57,7 @@ describe('apps/api/composition: service set', () => {
       { filename: 'clip.mp4', sizeBytes: 1024, contentType: 'video/mp4' }
     );
 
-    await expect(adapters.repositories.videos.findById(started.videoId)).resolves.toMatchObject({
+    expect(expectOk(await adapters.repositories.videos.findById(started.videoId))).toMatchObject({
       status: 'UPLOADING',
     });
     await services.sseHub.close();

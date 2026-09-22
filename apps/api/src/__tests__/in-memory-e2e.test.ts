@@ -6,6 +6,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
@@ -89,7 +90,7 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
     expect(initData.singleUrl).toBeDefined();
 
     // Verify DB state
-    const videoBefore = await repositories.videos.findById(initData.videoId);
+    const videoBefore = expectOk(await repositories.videos.findById(initData.videoId));
     expect(videoBefore?.status).toBe('UPLOADING');
     expect(videoBefore?.title).toBe('Single Upload Test');
 
@@ -115,7 +116,7 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
     expect(completeData.status).toBe('UPLOADED');
 
     // Verify video transitioned to UPLOADED in DB
-    const videoAfter = await repositories.videos.findById(initData.videoId);
+    const videoAfter = expectOk(await repositories.videos.findById(initData.videoId));
     expect(videoAfter?.status).toBe('UPLOADED');
 
     // Verify probe job was enqueued in InMemoryJobQueue
@@ -195,7 +196,7 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
     });
 
     expect(completeRes.statusCode).toBe(202);
-    const video = await repositories.videos.findById(initData.videoId);
+    const video = expectOk(await repositories.videos.findById(initData.videoId));
     expect(video?.status).toBe('UPLOADED');
   });
 });
