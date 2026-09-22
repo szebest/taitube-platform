@@ -539,14 +539,17 @@ Extend the W3 architecture suite (do not start a second one):
       by `<Can>`; a test renders `<Can>` inside the real provider tree.
 
 ### W3 — Enforcement
-- [ ] `tests/architecture/` asserts all six invariants in the table above and runs in CI as a required check.
-- [ ] Each assertion is proven by a deliberately-violating fixture that makes it fail.
-- [ ] `apps/web` removed from `biome.json` ignore list, lint clean.
-- [ ] `apps/web` has a `typecheck` script; `pnpm typecheck` covers every workspace package.
-- [ ] `apps/web` uses TypeScript 5.7.3 and `@types/node@24`; `typescript`, `@types/*` and `@testing-library/*`
+- [x] `tests/architecture/` asserts all six invariants in the table above and runs in CI as a named fail-fast
+      step in `lint-typecheck` (`pnpm test:architecture`) and again inside `pnpm test`. Marking that check
+      *required* is a GitHub branch-protection setting, not a repository file — `main` currently has no
+      protection rule, so that half is outstanding.
+- [x] Each assertion is proven by a deliberately-violating fixture that makes it fail.
+- [x] `apps/web` removed from `biome.json` ignore list, lint clean.
+- [x] `apps/web` has a `typecheck` script; `pnpm typecheck` covers every workspace package.
+- [x] `apps/web` uses TypeScript 5.7.3 and `@types/node@24`; `typescript`, `@types/*` and `@testing-library/*`
       moved to `devDependencies`.
-- [ ] `turbo.json` outputs match each package's real build directory; `@vp/web` is cacheable.
-- [ ] `AGENTS.md` Rule 4 and `ARCHITECTURE.md` §6 agree on `packages/db`; §6 points at the suite, not at greps.
+- [x] `turbo.json` outputs match each package's real build directory; `@vp/web` is cacheable.
+- [x] `AGENTS.md` Rule 4 and `ARCHITECTURE.md` §6 agree on `packages/db`; §6 points at the suite, not at greps.
 
 ### W4 — Service seam
 - [ ] `routes/reactions.ts:56` fixed; a test asserts a real `403` for an unauthorized reaction.
@@ -691,3 +694,52 @@ Extend the W3 architecture suite (do not start a second one):
 - [ ] `tests/architecture/` is a required CI check and every invariant it asserts is true.
 - [ ] Documentation ACs above satisfied, including ADR-23.
 - [ ] Ticket `**Status:**` set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+
+---
+
+### Outstanding at the end of W3 — why this ticket is not `done`
+
+W3 (the last workstream) landed, and every workstream's implementation is on
+`ticket/82-architecture-remediation`. An audit of every AC found the following still open. They are listed
+so the next reader does not have to re-derive them; nothing here is blocked on W3.
+
+**Needs a decision, not just work**
+
+1. **ADR-23 does not exist.** `docs/SDD.md` runs ADR-22 → ADR-24. The universal/server/client split *is*
+   recorded, but inside ADR-24. Either split it out or amend this ticket and its DoD line.
+2. **`vp.tier` still on all 22 package manifests**, which contradicts W9's "the tier has one source of truth:
+   the directory; `vp.tier` survives only on `apps/*`". `scripts/check-boundaries.ts` currently *requires* the
+   field — `TIER_MAY_IMPORT[pkg.tier]` keys the whole dependency check off it — so removing it is a change to
+   the checker, not a manifest edit. ADR-24's "Superseded" row reads as though the field were already gone.
+   Decide whether the AC or the implementation is wrong.
+3. **File ceiling.** Eight production files still exceed 400 lines / 10 KB, so the W4 AC is unmet. Seven breach
+   only the 10 KB half; `packages/server/gen-video/src/generator.ts` (447 lines) breaches both.
+   `packages/server/db/src/schema.ts` cannot be split under this ticket — reworking it is explicitly out of
+   scope. The ceiling is now machine-enforced against
+   `tests/architecture/oversized-sources.ts`, a shrink-only list holding exactly those eight, so the number
+   cannot grow; bringing it to zero wants its own ticket alongside the 1:1 test backlog.
+
+**Straightforward work**
+
+4. **ADR-21 has no pre-migration annotation**, and SDD §15.1 still describes `apps/web` as React 19 +
+   TanStack Start + Vite 6 + Tailwind v4 while the app is CRA 5 + React 18. The honest note exists in
+   `AGENTS.md` but not in the SDD.
+5. **SDD §15.1 has no tier column** — it carries the tier *directories* in its tree, but no table.
+6. **`@vp/core` has one runtime dependency** (`@vp/domain`, from the W9 split), so W2's "zero runtime
+   dependencies" clause is unmet.
+7. **`PageLimitSchema` in `@vp/api-contracts` hardcodes `.min(1).max(100).default(20)`** independently of
+   `PAGE_SIZE_DEFAULT` / `PAGE_SIZE_MAX`, so raising the env value leaves the wire contract rejecting at 100.
+   The runtime `Paginator` does derive from the env; the contract does not.
+8. **`apps/worker/src/runner.ts:89,91` still compares `constructor.name`** against `'InMemoryJobQueue'` /
+   `'InMemoryRepositories'` — the same defect W4 removed from `apps/api`, in the file the AC did not name.
+
+**Process, not code**
+
+9. **Nothing is pushed or merged.** All 69 commits sit on one local branch; the DoD asks for nine reviewed
+   PRs with green CI.
+10. **`pnpm lint` reports 69 warnings** (67 `noExplicitAny`, 2 `useSimplifiedLogicExpression`), against a DoD
+    of zero. 68 predate this ticket; `apps/web` contributes one, a third-party children type in
+    `drag-scroll-menu.tsx`.
+11. **`make smoke-offline` has not been run** in this workstream — it needs Docker and the image set.
+12. **The architecture suite is a CI step, not a *required* check.** `main` has no branch-protection rule, and
+    that is a GitHub setting, not a file in this repository.
