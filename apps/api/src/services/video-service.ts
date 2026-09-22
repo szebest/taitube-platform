@@ -3,7 +3,7 @@ import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import type { AuthorizationPort, JobQueue, ReactionCachePort } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import type { VideoStatus, VideoVisibility } from '@vp/domain';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, PipelineError } from '@vp/errors';
 import { type Paginator, defaultPaginator } from '@vp/pagination';
 import { canAccessAdmin, canReadVideo, canUpdateVideo } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
@@ -211,8 +211,8 @@ export class VideoService {
         userId: user.id,
       });
     } catch (err: unknown) {
-      if ((err as { code?: string })?.code === 'VERSION_CONFLICT') {
-        throw new PermanentError(ErrorCodes.VERSION_CONFLICT, (err as Error).message);
+      if (err instanceof PipelineError && err.code === ErrorCodes.VERSION_CONFLICT) {
+        throw new PermanentError(ErrorCodes.VERSION_CONFLICT, err.message);
       }
       throw err;
     }

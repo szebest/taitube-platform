@@ -6,3 +6,4 @@ export * from './failure.js';
 export * from './infra-failures.js';
 export * from './conflict-failures.js';
 export * from './retry-class.js';
+export * from './classify.js';

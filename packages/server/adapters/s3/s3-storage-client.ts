@@ -134,6 +134,8 @@ export class S3StorageClient extends StorageClient {
         };
       } catch (err: unknown) {
         const error = err as { name?: string; $metadata?: { httpStatusCode?: number } };
+        // AWS SDK v3 generates a service-exception class per command, so `instanceof` is unreliable
+        // across sub-package versions; `name` is what the SDK documents for discriminating them.
         if (
           error.name === 'NotFound' ||
           error.name === 'NoSuchKey' ||
@@ -190,6 +192,8 @@ export class S3StorageClient extends StorageClient {
         return true;
       } catch (err: unknown) {
         const error = err as { name?: string; $metadata?: { httpStatusCode?: number } };
+        // AWS SDK v3 generates a service-exception class per command, so `instanceof` is unreliable
+        // across sub-package versions; `name` is what the SDK documents for discriminating them.
         if (
           error.name === 'NotFound' ||
           error.name === 'NoSuchKey' ||

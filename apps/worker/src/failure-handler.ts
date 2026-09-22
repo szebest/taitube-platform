@@ -8,6 +8,7 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
+import { classifyError } from '@vp/errors';
 import type { Logger, PipelineMetrics } from '@vp/observability';
 import { uuidv7 } from 'uuidv7';
 
@@ -56,11 +57,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       '';
 
     if (!errorCode) {
-      if (err.name === 'UnrecoverableError') {
-        errorCode = 'UNRECOVERABLE_ERROR';
-      } else {
-        errorCode = 'INTERNAL';
-      }
+      errorCode = classifyError(err) === 'permanent' ? 'UNRECOVERABLE_ERROR' : 'INTERNAL';
     }
 
     const errorMessage = err.message || 'Job failed';
@@ -111,9 +108,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
             code: errorCode,
             message: errorMessage,
             stack: stack ?? undefined,
-            unrecoverable:
-              (err as { isRetryable?: boolean }).isRetryable === false ||
-              err.name === 'UnrecoverableError',
+            unrecoverable: classifyError(err) === 'permanent',
           },
           attemptsMade,
           workerId,

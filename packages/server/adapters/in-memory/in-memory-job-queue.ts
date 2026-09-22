@@ -8,6 +8,7 @@ import {
   type QueueWorkerOptions,
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
+import { classifyError } from '@vp/errors';
 
 export class InMemoryJobQueue extends JobQueue {
   private readonly name: string;
@@ -146,16 +147,13 @@ export class InMemoryJobQueue extends JobQueue {
       }
       return;
     } catch (err: unknown) {
-      const isPermanent =
-        (err as { isRetryable?: boolean }).isRetryable === false ||
-        (err as Error).name === 'UnrecoverableError';
-      const isTransient = (err as { isRetryable?: boolean }).isRetryable === true;
+      const classification = classifyError(err);
       const opts = (job as QueueJob<unknown> & { opts?: QueueJobOptions }).opts;
       let maxAttempts = opts?.attempts ?? 1;
-      if (isPermanent) {
+      if (classification === 'permanent') {
         maxAttempts = 1;
-      } else if (!isTransient) {
-        // Unknown errors treated as transient with cap 3 (AC 2)
+      } else if (classification === 'unknown') {
+        // ADR-18: retry an unrecognised error a little, then park it.
         maxAttempts = Math.min(maxAttempts, 3);
       }
 

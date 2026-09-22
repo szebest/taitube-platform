@@ -30,6 +30,7 @@ import {
 } from '@vp/observability';
 import { getWorkerStage } from './config';
 import { createFailureHandler } from './failure-handler';
+import { failedResult, toQueueError } from './queue-error';
 import { STAGE_REGISTRY, validateQueueName } from './registry';
 import { OutboxRelay, createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createNotifyProcessor } from './stages/notify';
@@ -204,6 +205,10 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
 
     try {
       const result = await processor(job);
+      // The one place in apps/worker a Result becomes a throw: BullMQ reads a normal return as a
+      // completed job, so a stage that returned a failure has to raise one here (ADR-24).
+      if (failedResult(result)) throw toQueueError(result.error);
+
       const durationSec = (Date.now() - startTime) / 1000;
       metrics.jobDuration.observe({ queue: config.queue }, durationSec);
       metrics.jobsProcessed.inc({ queue: config.queue, result: 'completed' });

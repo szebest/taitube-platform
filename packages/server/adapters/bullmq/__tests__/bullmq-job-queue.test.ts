@@ -1,4 +1,5 @@
 import { QueueError, type QueueJob } from '@vp/core/ports';
+import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { UnrecoverableError } from 'bullmq';
 import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue, fakeJob } from './fake-queue';
@@ -205,10 +206,7 @@ describe('BullMqJobQueue', () => {
       );
 
     it('marks a permanent failure unrecoverable so bullmq stops retrying', async () => {
-      const cause = Object.assign(new Error('bad codec'), {
-        isRetryable: false,
-        code: 'UNSUPPORTED_CODEC',
-      });
+      const cause = new PermanentError(ErrorCodes.UNSUPPORTED_CODEC, 'bad codec');
       const handler = await handlerFor(async () => {
         throw cause;
       });
@@ -220,7 +218,7 @@ describe('BullMqJobQueue', () => {
 
     it('lets a transient failure through so bullmq retries it', async () => {
       const handler = await handlerFor(async () => {
-        throw Object.assign(new Error('s3 timeout'), { isRetryable: true });
+        throw new TransientError(ErrorCodes.STORAGE_UNAVAILABLE, 's3 timeout');
       });
 
       const error = await rejection(handler(fakeJob({ attemptsMade: 9 })));

@@ -185,6 +185,30 @@ messages" becomes "decided once per code, in the vocabulary, and the throw site 
 left to make". The unknown-error default - transient, attempt cap 3 - still applies to anything that
 escapes as a raw throw.
 
+### Classifying something that is already an exception
+
+`classifyError(error)` in `@vp/errors` is the one place that answers "is this permanent". It returns
+`'permanent' | 'transient' | 'unknown'`, and **`unknown` is a third answer on purpose**: ADR-18
+retries an unrecognised error a little and then parks it, which needs a lower attempt cap than a
+failure positively classified as transient. Collapsing the two silently gives every unrecognised
+error the full retry budget.
+
+It decides in this order:
+
+1. `instanceof PipelineError` - our own classes answer for themselves.
+2. `name === 'UnrecoverableError'` - the one foreign class recognised structurally. `bullmq` is
+   confined to `packages/server/adapters/**`, so `apps/worker` and the in-memory queue double
+   *cannot* import it. The BullMQ adapter, which may, uses a real `instanceof`.
+3. `RETRY_CLASS[code]` for anything carrying a code.
+4. Otherwise `unknown`.
+
+**Never read a class name, a message or an `isRetryable` field yourself.**
+`tests/architecture/class-name-inference.test.ts` fails on `.name === 'SomethingError'`, on
+`.isRetryable ===`, and on comparing `.code` to a bare string that is an `ErrorCodes` member instead
+of the member itself. The one allowlisted exception is `packages/server/adapters/s3/`: AWS SDK v3
+generates a service-exception class per command, so `instanceof` is unreliable across sub-package
+versions and `name` is what the SDK documents.
+
 ## The frontend contract
 
 Not implemented yet. Tickets 53, 70 and 71 build against this; what is decided here is the shape.

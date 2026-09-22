@@ -22,6 +22,7 @@ import {
   type WorkerOptions,
 } from 'bullmq';
 import { getRedisConnectionOptions } from './connection';
+import { classifyError } from '@vp/errors';
 
 class CustomUnrecoverableError extends UnrecoverableError {
   code?: string;
@@ -186,23 +187,22 @@ export class BullMqJobQueue extends JobQueue {
             });
           } catch (err: unknown) {
             const errObj = err as ErrorWithDetails;
-            // If the error is marked permanent (non-retryable), signal BullMQ via UnrecoverableError
-            if (errObj.isRetryable === false) {
+            const unrecoverable = (): never => {
               const unrec = new CustomUnrecoverableError(errObj.message);
               if (errObj.code) unrec.code = errObj.code;
               unrec.cause = err;
               throw unrec;
-            }
-            // Unknown errors treated as transient with cap 3 (AC 2)
-            const isTransient = errObj.isRetryable === true;
-            if (!isTransient) {
-              if ((job.attemptsMade ?? 0) + 1 >= 3) {
-                const unrec = new CustomUnrecoverableError(errObj.message);
-                if (errObj.code) unrec.code = errObj.code;
-                unrec.cause = err;
-                throw unrec;
-              }
-            }
+            };
+
+            // This is the one place allowed to import `bullmq`, so a foreign UnrecoverableError is
+            // recognised by `instanceof` here rather than by name.
+            if (err instanceof UnrecoverableError) throw err;
+
+            const classification = classifyError(err);
+            if (classification === 'permanent') unrecoverable();
+            // ADR-18: retry an unrecognised error a little, then park it.
+            if (classification === 'unknown' && (job.attemptsMade ?? 0) + 1 >= 3) unrecoverable();
+
             throw err;
           }
         },

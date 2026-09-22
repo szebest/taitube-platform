@@ -33,6 +33,11 @@ repo throws them, and domain code never does.
   `tests/architecture/error-code-drift.test.ts` catches the fourth.
 - **An infra failure's payload never reaches a client.** `operation` and `cause` are for the server
   log. Keep them out of `message` too - `message` is what `problemFor` puts in `detail`.
+- **`classifyError` is the only answer to "is this permanent".** Not a class name, not a message,
+  not an `isRetryable` field read off a shape. It returns `'permanent' | 'transient' | 'unknown'`,
+  and `unknown` stays distinct because ADR-18 gives an unrecognised error a lower attempt cap.
+  `tests/architecture/class-name-inference.test.ts` enforces it; `packages/server/adapters/s3/` is
+  the one allowlisted exception, and its comment says why.
 - **Wire safety is a type, not a list.** Only `InputFailure` names a `field`, and only a failure that
   names a field is projected into `Problem.errors`. If you find yourself adding a per-field allowlist,
   the failure is in the wrong package.
