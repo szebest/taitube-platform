@@ -151,6 +151,27 @@ describe('CategoryCacheService', () => {
     broken.close();
   });
 
+  it('survives a subscribe that rejects instead of leaking an unhandled rejection', async () => {
+    const rejections: unknown[] = [];
+    const record = (reason: unknown) => rejections.push(reason);
+    process.on('unhandledRejection', record);
+
+    const unreachable = new CategoryCacheService({
+      cache: Object.assign(new InMemoryCacheClient(), {
+        subscribe: async () => {
+          throw new Error('NOAUTH Authentication required.');
+        },
+      }),
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    process.off('unhandledRejection', record);
+
+    expect(rejections).toEqual([]);
+    expect(await unreachable.getCategories(fetcher)).toHaveLength(3);
+    unreachable.close();
+  });
+
   it('works with no distributed cache at all', async () => {
     const local = new CategoryCacheService({ cache: null });
 

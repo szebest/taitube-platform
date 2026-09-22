@@ -35,10 +35,17 @@ export class CategoryCacheService {
     };
 
     if (this.cache) {
+      // A pod that cannot subscribe still serves reads; it only stops hearing peers, so its L1
+      // entries expire on their own TTL instead of being cleared early. `subscribe` is async on
+      // the Redis adapter, so a sync try/catch alone leaves the rejection unhandled.
       try {
-        this.cache.subscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage);
+        const subscribed = this.cache.subscribe(
+          CATEGORIES_INVALIDATION_CHANNEL,
+          this.onInvalidateMessage
+        );
+        if (subscribed instanceof Promise) subscribed.catch(() => undefined);
       } catch {
-        // Safe subscription initialization
+        // no listener was registered, so there is nothing to undo
       }
     }
   }
