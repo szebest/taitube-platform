@@ -1,3 +1,4 @@
+export * from './authorize.js';
 export * from './videos/index.js';
 export * from './uploads/index.js';
 export * from './channels/index.js';

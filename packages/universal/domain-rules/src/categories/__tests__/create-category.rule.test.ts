@@ -10,14 +10,14 @@ describe('@vp/domain-rules: decideCategoryCreate', () => {
     expect(isOk(decideCategoryCreate({ actor: ADMIN, form, slugHeldBy: null }))).toBe(true);
   });
 
-  it.each([{ name: 'a signed-in user', actor: STRANGER }, { name: 'an anonymous caller', actor: null }])(
-    'refuses $name before looking at the form',
-    ({ actor }) => {
-      const result = decideCategoryCreate({ actor, form: { ...form, slug: '' }, slugHeldBy: null });
+  it.each([
+    { name: 'a signed-in user without the role', actor: STRANGER, code: ErrorCodes.FORBIDDEN },
+    { name: 'an anonymous caller', actor: null, code: ErrorCodes.UNAUTHORIZED },
+  ])('refuses $name before looking at the form, with $code', ({ actor, code }) => {
+    const result = decideCategoryCreate({ actor, form: { ...form, slug: '' }, slugHeldBy: null });
 
-      expect(isErr(result) && result.error.code).toBe(ErrorCodes.FORBIDDEN);
-    }
-  );
+    expect(isErr(result) && result.error.code).toBe(code);
+  });
 
   it('rejects a malformed slug before checking for a conflict', () => {
     const result = decideCategoryCreate({

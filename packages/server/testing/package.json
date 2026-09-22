@@ -10,6 +10,11 @@
       "types": "./dist/index.d.ts",
       "import": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./result": {
+      "types": "./dist/result.d.ts",
+      "import": "./src/result.ts",
+      "default": "./dist/result.js"
     }
   },
   "scripts": {
@@ -19,7 +24,8 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "vitest": "^3.0.7"
+    "vitest": "^3.0.7",
+    "@vp/result": "workspace:*"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
@@ -30,6 +36,6 @@
     "typescript": "^5.7.3"
   },
   "vp": {
-    "layer": 1
+    "layer": 2
   }
 }

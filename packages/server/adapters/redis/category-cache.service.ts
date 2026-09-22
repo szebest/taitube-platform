@@ -1,4 +1,5 @@
 import type { Category } from '@vp/domain';
+import { type Result, isOk, ok } from '@vp/result';
 import type { CacheClient } from '@vp/core/ports';
 
 export const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';
@@ -96,11 +97,18 @@ export class CategoryCacheService {
     return this.l1Cache.size;
   }
 
-  async getCategories(fetcher: () => Promise<Category[]>): Promise<Category[]> {
+  /**
+   * A cache miss or a dead Redis is not a failure of this call: it falls through to the source and
+   * the cache failure is dropped, which is the deliberate narrowing ADR-24 allows. Only the
+   * source's own failure reaches the caller, and it is the one in the signature.
+   */
+  async getCategories<E>(
+    fetcher: () => Promise<Result<Category[], E>>
+  ): Promise<Result<Category[], E>> {
     // 1. Check L1 In-Memory LRU Cache
     const l1 = this.getL1(CATEGORIES_CACHE_KEY);
     if (l1) {
-      return l1.value;
+      return ok(l1.value);
     }
 
     // 2. Check L2 Distributed Redis Cache
@@ -119,7 +127,7 @@ export class CategoryCacheService {
           }));
 
           this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
-          return categories;
+          return ok(categories);
         }
       } catch {
         // Fallback to fetcher on Redis error
@@ -127,8 +135,10 @@ export class CategoryCacheService {
     }
 
     // 3. Cache Miss: Fetch from source
-    const rawCategories = await fetcher();
-    const categories = [...rawCategories].sort((a, b) => {
+    const fetched = await fetcher();
+    if (!isOk(fetched)) return fetched;
+
+    const categories = [...fetched.value].sort((a, b) => {
       if (a.sortOrder !== b.sortOrder) {
         return a.sortOrder - b.sortOrder;
       }
@@ -151,7 +161,7 @@ export class CategoryCacheService {
     // 5. Populate L1 In-Memory LRU Cache
     this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
 
-    return categories;
+    return ok(categories);
   }
 
   async invalidate(): Promise<void> {

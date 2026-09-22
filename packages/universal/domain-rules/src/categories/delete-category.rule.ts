@@ -1,11 +1,10 @@
 import type { Category } from '@vp/domain';
 import { type UserContext, canManageCategory } from '@vp/permissions';
-import { type Result, err, ok } from '@vp/result';
+import { type Result, andThen, err, ok } from '@vp/result';
+import { type AuthorizationFailure, authorize } from '../authorize.js';
 import {
-  type CategoryForbidden,
   type CategoryInUse,
   type CategoryNotFound,
-  categoryForbidden,
   categoryInUse,
   categoryNotFound,
 } from './failures.js';
@@ -17,13 +16,20 @@ export interface DeleteCategoryInput {
   readonly videoCount: number;
 }
 
-export type DeleteCategoryFailure = CategoryForbidden | CategoryNotFound | CategoryInUse;
+export type DeleteCategoryFailure = AuthorizationFailure | CategoryNotFound | CategoryInUse;
 
 export function decideCategoryDelete(
   input: DeleteCategoryInput
 ): Result<Category, DeleteCategoryFailure> {
-  if (!canManageCategory({ user: input.actor })) return err(categoryForbidden('delete'));
-  if (!input.category) return err(categoryNotFound(input.categoryId));
-  if (input.videoCount > 0) return err(categoryInUse(input.categoryId, input.videoCount));
-  return ok(input.category);
+  return andThen(
+    authorize(input.actor, canManageCategory({ user: input.actor }), {
+      action: 'delete',
+      subject: 'Category',
+    }),
+    (): Result<Category, CategoryNotFound | CategoryInUse> => {
+      if (!input.category) return err(categoryNotFound(input.categoryId));
+      if (input.videoCount > 0) return err(categoryInUse(input.categoryId, input.videoCount));
+      return ok(input.category);
+    }
+  );
 }

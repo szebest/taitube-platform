@@ -16,4 +16,10 @@ describe('@vp/domain-rules: decideAdminAccess', () => {
 
     expect(isErr(result) && result.error.code).toBe(code);
   });
+
+  it('keeps the operator-facing wording an anonymous caller needs', () => {
+    const result = decideAdminAccess(null);
+
+    expect(isErr(result) && result.error.message).toContain('x-admin-token');
+  });
 });

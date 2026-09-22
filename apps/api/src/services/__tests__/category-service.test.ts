@@ -1,5 +1,6 @@
 import { CategoryCacheService, InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { CategoryService } from '../category-service';
 
@@ -7,16 +8,14 @@ const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'ADM
 
 describe('CategoryService', () => {
   let repositories: InMemoryRepositories;
-  let cacheClient: InMemoryCacheClient;
   let cacheService: CategoryCacheService;
   let categoryService: CategoryService;
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     repositories.clear();
-    cacheClient = new InMemoryCacheClient();
     cacheService = new CategoryCacheService({
-      cache: cacheClient,
+      cache: new InMemoryCacheClient(),
       l1TtlMs: 5000,
       l2TtlSeconds: 300,
     });
@@ -26,71 +25,85 @@ describe('CategoryService', () => {
     });
   });
 
-  it('lists active categories with cache headers built by HttpCacheService', async () => {
-    await repositories.categories.create({
-      slug: 'tech',
-      name: 'Technology',
-      sortOrder: 10,
-    });
+  async function seed(slug: string, name: string, sortOrder: number) {
+    return expectOk(await repositories.categories.create({ slug, name, sortOrder }));
+  }
 
-    const result = await categoryService.listActive();
-    expect(result.categories).toHaveLength(1);
-    expect(result.categories[0]?.slug).toBe('tech');
-    expect(result.headers).toEqual({
+  it('lists active categories with cache headers built by HttpCacheService', async () => {
+    await seed('tech', 'Technology', 10);
+
+    const page = expectOk(await categoryService.listActive());
+
+    expect(page.categories).toHaveLength(1);
+    expect(page.categories[0]?.slug).toBe('tech');
+    expect(page.headers).toEqual({
       'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
       ETag: expect.stringMatching(/^W\/"[a-f0-9]{16}"$/),
     });
-    expect(result.notModified).toBe(false);
+    expect(page.notModified).toBe(false);
   });
 
   it('evaluates If-None-Match correctly for 304 not modified', async () => {
-    await repositories.categories.create({
-      slug: 'tech',
-      name: 'Technology',
-      sortOrder: 10,
-    });
+    await seed('tech', 'Technology', 10);
 
-    const first = await categoryService.listActive();
-    const second = await categoryService.listActive(first.headers['ETag']);
+    const first = expectOk(await categoryService.listActive());
+    const second = expectOk(await categoryService.listActive(first.headers['ETag']));
+
     expect(second.notModified).toBe(true);
   });
 
-  it('creates category and invalidates multi-tier cache', async () => {
-    const created = await categoryService.create(ADMIN, {
-      slug: 'gaming',
-      name: 'Gaming',
-      sortOrder: 5,
-    });
+  it('creates a category and invalidates the multi-tier cache', async () => {
+    const created = expectOk(
+      await categoryService.create(ADMIN, { slug: 'gaming', name: 'Gaming', sortOrder: 5 })
+    );
 
     expect(created.slug).toBe('gaming');
-    const list = await categoryService.listActive();
-    expect(list.categories.some((c) => c.slug === 'gaming')).toBe(true);
+    const page = expectOk(await categoryService.listActive());
+    expect(page.categories.some((c) => c.slug === 'gaming')).toBe(true);
   });
 
-  it('updates category and invalidates cache', async () => {
-    const created = await repositories.categories.create({
-      slug: 'music',
-      name: 'Music',
-      sortOrder: 20,
-    });
+  it('reports a duplicate slug rather than throwing', async () => {
+    await seed('gaming', 'Gaming', 5);
 
-    const updated = await categoryService.update(ADMIN, created.id, {
-      name: 'All Music',
-    });
+    const failure = expectErr(
+      await categoryService.create(ADMIN, { slug: 'gaming', name: 'Gaming Again' })
+    );
+
+    expect(failure.code).toBe(ErrorCodes.CATEGORY_SLUG_CONFLICT);
+  });
+
+  it('updates a category and invalidates the cache', async () => {
+    const created = await seed('music', 'Music', 20);
+
+    const updated = expectOk(await categoryService.update(ADMIN, created.id, { name: 'All Music' }));
 
     expect(updated.name).toBe('All Music');
   });
 
-  it('deletes category and invalidates cache', async () => {
-    const created = await repositories.categories.create({
-      slug: 'news',
-      name: 'News',
-      sortOrder: 30,
-    });
+  it('reports an update of a category that is not there', async () => {
+    const failure = expectErr(
+      await categoryService.update(ADMIN, '00000000-0000-7000-8000-00000000dead', { name: 'Ghost' })
+    );
 
-    await categoryService.delete(ADMIN, created.id);
-    const list = await categoryService.listActive();
-    expect(list.categories.some((c) => c.slug === 'news')).toBe(false);
+    expect(failure.code).toBe(ErrorCodes.CATEGORY_NOT_FOUND);
+  });
+
+  it('deletes a category and invalidates the cache', async () => {
+    const created = await seed('news', 'News', 30);
+
+    expectOk(await categoryService.delete(ADMIN, created.id));
+
+    const page = expectOk(await categoryService.listActive());
+    expect(page.categories.some((c) => c.slug === 'news')).toBe(false);
+  });
+
+  it('refuses to delete a category videos still hold', async () => {
+    const created = await seed('news', 'News', 30);
+    vi.spyOn(repositories.categories, 'countVideos').mockResolvedValue({ ok: true, value: 2 });
+
+    const failure = expectErr(await categoryService.delete(ADMIN, created.id));
+
+    expect(failure.code).toBe(ErrorCodes.CATEGORY_IN_USE);
   });
 
   it.each([
@@ -103,8 +116,8 @@ describe('CategoryService', () => {
   ])('refuses taxonomy writes from $scenario', async ({ caller, code }) => {
     const input = { slug: 'blocked', name: 'Blocked' };
 
-    await expect(categoryService.create(caller, input)).rejects.toMatchObject({ code });
-    await expect(categoryService.update(caller, 'any', input)).rejects.toMatchObject({ code });
-    await expect(categoryService.delete(caller, 'any')).rejects.toMatchObject({ code });
+    expect(expectErr(await categoryService.create(caller, input)).code).toBe(code);
+    expect(expectErr(await categoryService.update(caller, 'any', input)).code).toBe(code);
+    expect(expectErr(await categoryService.delete(caller, 'any')).code).toBe(code);
   });
 });

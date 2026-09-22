@@ -1,11 +1,11 @@
 import { ErrorCodes, type Failure } from '@vp/errors';
 
+export { type HandleTaken, handleTaken } from '@vp/errors';
+
 export type ChannelNotFound = Failure<
   typeof ErrorCodes.CHANNEL_NOT_FOUND,
   { idOrHandle: string }
 >;
-
-export type HandleTaken = Failure<typeof ErrorCodes.HANDLE_ALREADY_TAKEN, { handle: string }>;
 
 export type CannotSubscribeToSelf = Failure<
   typeof ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF,
@@ -18,14 +18,6 @@ export type SubscribeFailure = CannotSubscribeToSelf | ChannelForbidden;
 
 export function channelNotFound(idOrHandle: string): ChannelNotFound {
   return { code: ErrorCodes.CHANNEL_NOT_FOUND, message: 'Channel not found', idOrHandle };
-}
-
-export function handleTaken(handle: string): HandleTaken {
-  return {
-    code: ErrorCodes.HANDLE_ALREADY_TAKEN,
-    message: `Handle "${handle}" is already taken`,
-    handle,
-  };
 }
 
 export function cannotSubscribeToSelf(channelId: string): CannotSubscribeToSelf {

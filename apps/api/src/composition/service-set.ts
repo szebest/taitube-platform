@@ -104,7 +104,6 @@ export async function createServiceSet(
       categories: repositories.categories,
       categoryCacheService: adapters.categoryCache,
       httpCacheService,
-      authorization,
     }),
     channelService: new ChannelService({
       users: repositories.users,

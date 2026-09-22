@@ -1,10 +1,5 @@
 import { ErrorCodes, isInputFailure } from '@vp/errors';
-import {
-  categoryForbidden,
-  categoryInUse,
-  categoryNotFound,
-  categorySlugConflict,
-} from '../failures';
+import { categoryInUse, categoryNotFound, categorySlugConflict } from '../failures';
 
 describe('@vp/domain-rules: category failures', () => {
   it.each([
@@ -15,7 +10,6 @@ describe('@vp/domain-rules: category failures', () => {
       code: ErrorCodes.CATEGORY_SLUG_CONFLICT,
     },
     { name: 'categoryInUse', failure: categoryInUse('c1', 3), code: ErrorCodes.CATEGORY_IN_USE },
-    { name: 'categoryForbidden', failure: categoryForbidden('create'), code: ErrorCodes.FORBIDDEN },
   ])('$name carries $code and stays off the wire', ({ failure, code }) => {
     expect(failure.code).toBe(code);
     expect(isInputFailure(failure)).toBe(false);

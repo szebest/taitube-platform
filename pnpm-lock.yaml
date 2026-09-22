@@ -423,6 +423,9 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
+      '@vp/domain-rules':
+        specifier: workspace:*
+        version: link:../../universal/domain-rules
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
@@ -432,6 +435,9 @@ importers:
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../universal/permissions
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       bullmq:
         specifier: ^6.3.4
         version: 6.3.4(ioredis@5.11.1)
@@ -518,9 +524,15 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../../universal/errors
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../universal/permissions
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
     devDependencies:
       '@vp/tsconfig':
         specifier: workspace:*
@@ -786,6 +798,9 @@ importers:
 
   packages/server/testing:
     dependencies:
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       vitest:
         specifier: ^3.0.7
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
@@ -1001,9 +1016,6 @@ importers:
 
   packages/universal/result:
     devDependencies:
-      '@vp/testing':
-        specifier: workspace:*
-        version: link:../../server/testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
