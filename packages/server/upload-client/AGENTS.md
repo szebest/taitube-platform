@@ -13,7 +13,9 @@ This is a **workspace package with a CLI**, not a loose script — which is why 
 `packages/server/` rather than `tools/`. `tools/` is for assets with no `package.json`.
 
 - **Tier `server`** — Node/Bun only.
-- Its `vp.layer` in `package.json` is authoritative; dependencies must point strictly down.
+- **Layer T6** — above the applications, because the acceptance suite boots `apps/api` and a stub S3 to
+  drive a real resumable upload end to end. What the package *ships* is `@vp/errors` and `@vp/storage`;
+  the layer records the whole manifest, devDependencies included.
 
 ---
 

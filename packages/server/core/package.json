@@ -33,16 +33,16 @@
     }
   },
   "dependencies": {
-    "@vp/domain": "workspace:*"
+    "@vp/domain": "workspace:*",
+    "@vp/permissions": "workspace:*"
   },
   "devDependencies": {
-    "@vp/permissions": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
   },
   "vp": {
-    "layer": 2
+    "layer": 3
   }
 }

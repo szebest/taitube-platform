@@ -615,10 +615,12 @@ and no such job existed. The result: `apps/web → @vp/permissions → @vp/error
 were once declared universal with no client consumer, which put BullMQ queue names in the browser-safe tier.
 
 *Layer* answers **which way may dependencies point**, declared as `vp.layer`: T1 foundation, T2 contracts and
-domain capability, T3 integration, T4 applications. Dependencies point **strictly down** — a T2 package may
-not depend on another T2. Sibling imports are forbidden because they are how a layer quietly becomes a cycle.
-The layer is *declared* rather than derived from the graph: a derived depth cannot contradict itself, which
-would make the check vacuous.
+policy, T3 domain capability, T4 integration, T5 applications, T6 reference tools that drive one. Dependencies
+point **strictly down** — a T2 package may not depend on another T2. Sibling imports are forbidden because
+they are how a layer quietly becomes a cycle. The layer is *declared* rather than derived from the graph: a
+derived depth cannot contradict itself, which would make the check vacuous. `devDependencies` count: a
+test-only edge resolves in CI and its types land in the emitted `.d.ts`, so only `@vp/tsconfig` and
+`@vp/testing` — neither of which ships code — are exempt.
 
 **Consequences:**
 - An undeclared import does not resolve. pnpm links only declared dependencies, so a server import inside a

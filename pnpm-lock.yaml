@@ -494,10 +494,10 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
-    devDependencies:
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../universal/permissions
+    devDependencies:
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../../universal/tsconfig

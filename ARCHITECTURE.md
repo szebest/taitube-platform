@@ -203,15 +203,22 @@ portability.
 
 | Layer | Meaning | Packages |
 |---|---|---|
-| T1 | Foundation — no `@vp/*` runtime dependency | `domain`, `env-schema`, `errors`, `pagination`, `tsconfig`, `compose-autoscaler`, `dev-token`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing` |
-| T2 | Contracts & domain capability | `api-contracts`, `permissions`, `config`, `core`, `db`, `events`, `ffmpeg`, `upload-client` |
-| T3 | Integration — concrete drivers and generated clients | `adapters`, `api-client` |
-| T4 | Applications | `apps/api`, `apps/worker`, `apps/web` |
+| T1 | Foundation — no `@vp/*` dependency | `domain`, `env-schema`, `errors`, `pagination`, `tsconfig`, `compose-autoscaler`, `dev-token`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing` |
+| T2 | Contracts and policy | `api-contracts`, `config`, `db`, `events`, `ffmpeg`, `permissions` |
+| T3 | Domain capability — ports and repository contracts | `core` |
+| T4 | Integration — concrete drivers and generated clients | `adapters`, `api-client` |
+| T5 | Applications | `apps/api`, `apps/worker`, `apps/web` |
+| T6 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
 **Dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and never
 upward. Sibling imports are forbidden because they are how a layer quietly becomes a cycle. The layer is
 *declared*, not derived from the graph: a derived depth can never contradict itself, which would make the
 check vacuous.
+
+**`devDependencies` count.** A test-only edge still resolves in CI, and a type it carries still lands in the
+emitted `.d.ts`, where `pnpm deploy --prod` will not be able to resolve it. The two exceptions are named in
+`scripts/check-boundaries.ts`: `@vp/tsconfig` (JSON presets) and `@vp/testing` (a vitest config factory and
+fixtures) ship no code, so nothing they are named by can reach a runtime bundle.
 
 #### How the boundary is enforced
 
@@ -221,7 +228,8 @@ Three mechanisms, strongest first:
    is `error TS2307: Cannot find module '@vp/adapters'` at compile time. This is what makes a server import in
    the frontend impossible rather than merely discouraged.
 2. **The build fails.** `pnpm boundaries` (`scripts/check-boundaries.ts`) validates tier compatibility, layer
-   direction and tier-vs-directory agreement across every manifest. Both `pnpm build` and `pnpm typecheck` run
+   direction and tier-vs-directory agreement across every manifest, over dependencies, peerDependencies and
+   devDependencies alike. Both `pnpm build` and `pnpm typecheck` run
    it first, so a bad *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
 3. **The type system.** The matching `@vp/tsconfig` preset gives `universal` and `client` packages `lib` with
    `DOM` and `types: []`, so a Node builtin or global is a type error. Specs run under

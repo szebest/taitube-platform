@@ -6,10 +6,18 @@ const GROUP = / {4}(dependencies|optionalDependencies|devDependencies):$/;
 const LINK = /^ {8}version: link:(\S+)$/;
 const SERVER_TIER = 'packages/server/';
 
-function runtimeLinks(): Map<string, string[]> {
+/**
+ * Mirrors `BUILD_TOOLING` in `scripts/check-boundaries.ts`: neither ships code, so a
+ * devDependency on them is not a path into the frontend bundle.
+ */
+const BUILD_TOOLING = ['packages/server/testing', 'packages/universal/tsconfig'];
+
+type Group = 'runtime' | 'dev';
+
+function workspaceLinks(group: Group): Map<string, string[]> {
   const links = new Map<string, string[]>();
   let importer: string | null = null;
-  let runtime = false;
+  let inGroup = false;
 
   for (const line of read('pnpm-lock.yaml').split('\n')) {
     if (/^\S/.test(line)) {
@@ -25,11 +33,14 @@ function runtimeLinks(): Map<string, string[]> {
     }
     if (importer === null) continue;
 
-    const group = GROUP.exec(line);
-    if (group) runtime = group[1] !== 'devDependencies';
+    const heading = GROUP.exec(line);
+    if (heading) {
+      const isDev = heading[1] === 'devDependencies';
+      inGroup = group === 'dev' ? true : !isDev;
+    }
 
     const link = LINK.exec(line);
-    if (link && runtime) {
+    if (link && inGroup) {
       links.get(importer)?.push(normalize(`${importer}/${link[1]}`));
     }
   }
@@ -37,14 +48,14 @@ function runtimeLinks(): Map<string, string[]> {
   return links;
 }
 
-function runtimeClosure(entry: string): string[] {
-  const links = runtimeLinks();
+function closure(entry: string, group: Group): string[] {
+  const links = workspaceLinks(group);
   const seen = new Set<string>();
   const queue = [entry];
 
   while (queue.length > 0) {
     for (const dep of links.get(queue.pop() as string) ?? []) {
-      if (seen.has(dep)) continue;
+      if (seen.has(dep) || BUILD_TOOLING.includes(dep)) continue;
       seen.add(dep);
       queue.push(dep);
     }
@@ -55,13 +66,23 @@ function runtimeClosure(entry: string): string[] {
 
 describe('architecture: resolved workspace closures', () => {
   it('still reads the workspace links the lockfile records', () => {
-    expect(runtimeClosure('apps/web')).toContain('packages/universal/api-contracts');
-    expect(runtimeClosure('apps/api')).toContain('packages/server/adapters');
+    expect(closure('apps/web', 'runtime')).toContain('packages/universal/api-contracts');
+    expect(closure('apps/api', 'runtime')).toContain('packages/server/adapters');
   });
 
   it('keeps every server-tier package out of the frontend closure', () => {
-    const server = runtimeClosure('apps/web').filter((dep) => dep.startsWith(SERVER_TIER));
+    const server = closure('apps/web', 'runtime').filter((dep) => dep.startsWith(SERVER_TIER));
 
     expect(server).toEqual([]);
+  });
+
+  it('keeps them out once devDependencies count too, build tooling aside', () => {
+    const server = closure('apps/web', 'dev').filter((dep) => dep.startsWith(SERVER_TIER));
+
+    expect(server).toEqual([]);
+  });
+
+  it('exempts nothing but the two packages that ship no code', () => {
+    expect(closure('packages/universal/domain', 'dev')).toEqual([]);
   });
 });

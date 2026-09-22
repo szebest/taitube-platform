@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/api-client (Typed API Client, client tier / T3)
+# AGENTS.md — @vp/api-client (Typed API Client, client tier / T4)
 
 Instructions for any coding agent working on `packages/client/api-client`.
 
@@ -12,7 +12,7 @@ registry at runtime and `ApiClient` is a mapped type over it, so **an endpoint c
 client without existing in the contract**. Base URL, credentials and bearer token are injected.
 
 - **Tier `client`** — browser only. May depend on `universal` and `client` packages, never `server`.
-- **Layer T3** — may depend on T1 and T2 (`@vp/api-contracts`).
+- **Layer T4** — may depend on T1 through T3 (`@vp/api-contracts`).
 
 ---
 

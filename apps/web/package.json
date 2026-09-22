@@ -74,6 +74,6 @@
   },
   "vp": {
     "tier": "client",
-    "layer": 4
+    "layer": 5
   }
 }

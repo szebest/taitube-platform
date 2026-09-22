@@ -32,10 +32,10 @@ provider under `src/modules/shared/providers/`, or in the query cache.
 
 ### The one seam that matters
 
-`apps/web` is **tier `client`, layer T4**. Its entire runtime closure is three packages:
+`apps/web` is **tier `client`, layer T5**. Its entire runtime closure is three packages:
 
 ```
-@vp/api-client      (client, T3) — the typed HTTP client
+@vp/api-client      (client, T4) — the typed HTTP client
 @vp/api-contracts   (universal, T2) — request/response shapes
 @vp/permissions     (universal, T2) — CASL rules
 ```

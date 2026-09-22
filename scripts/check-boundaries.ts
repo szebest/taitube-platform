@@ -3,13 +3,18 @@ import { join, resolve } from 'node:path';
 
 type Tier = 'universal' | 'server' | 'client';
 
-interface Pkg {
+export interface PkgDep {
+  name: string;
+  dev: boolean;
+}
+
+export interface Pkg {
   name: string;
   dir: string;
   tier: Tier;
   declaredTier?: Tier;
   layer: number;
-  deps: string[];
+  deps: PkgDep[];
 }
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -18,6 +23,15 @@ const TIER_MAY_IMPORT: Record<Tier, Tier[]> = {
   server: ['universal', 'server'],
   client: ['universal', 'client'],
 };
+
+/**
+ * The only two packages a manifest may name as a devDependency regardless of tier and layer:
+ * neither ships code, so neither can reach a runtime bundle or a `pnpm deploy --prod` tree.
+ * `@vp/tsconfig` is a set of JSON presets and `@vp/testing` is a vitest config factory plus
+ * fixtures. Every other devDependency is a real edge — it resolves in CI and it lands in the
+ * emitted `.d.ts` — so it is checked exactly like a dependency.
+ */
+const BUILD_TOOLING = new Set(['@vp/tsconfig', '@vp/testing']);
 
 function manifestDirs(): string[] {
   const dirs: string[] = [];
@@ -46,12 +60,28 @@ function load(): Pkg[] {
       tier: directoryTier(dir.slice(ROOT.length + 1)) ?? vp.tier,
       declaredTier: vp.tier,
       layer: vp.layer,
-      deps: [
-        ...Object.keys(raw.dependencies ?? {}),
-        ...Object.keys(raw.peerDependencies ?? {}),
-      ].filter((d) => d.startsWith('@vp/')),
+      deps: declaredDeps(raw),
     };
   });
+}
+
+function declaredDeps(raw: {
+  dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+}): PkgDep[] {
+  const runtime = [
+    ...Object.keys(raw.dependencies ?? {}),
+    ...Object.keys(raw.peerDependencies ?? {}),
+  ].filter((d) => d.startsWith('@vp/'));
+  const dev = Object.keys(raw.devDependencies ?? {}).filter(
+    (d) => d.startsWith('@vp/') && !runtime.includes(d)
+  );
+
+  return [
+    ...runtime.map((name) => ({ name, dev: false })),
+    ...dev.map((name) => ({ name, dev: true })),
+  ];
 }
 
 function directoryTier(dir: string): Tier | null {
@@ -59,8 +89,7 @@ function directoryTier(dir: string): Tier | null {
   return m ? (m[1] as Tier) : null;
 }
 
-export function checkBoundaries(): string[] {
-  const packages = load();
+export function checkBoundaries(packages: Pkg[] = load()): string[] {
   const byName = new Map(packages.map((p) => [p.name, p]));
   const errors: string[] = [];
 
@@ -84,20 +113,22 @@ export function checkBoundaries(): string[] {
       errors.push(`${pkg.name}: lives outside packages/<tier>/ and must declare vp.tier`);
     }
 
-    for (const depName of pkg.deps) {
+    for (const { name: depName, dev } of pkg.deps) {
+      if (dev && BUILD_TOOLING.has(depName)) continue;
       const dep = byName.get(depName);
       if (!dep) continue;
+      const how = dev ? 'dev-depends on' : 'depends on';
 
       if (!TIER_MAY_IMPORT[pkg.tier].includes(dep.tier)) {
         errors.push(
-          `${pkg.name} (${pkg.tier}) depends on ${dep.name} (${dep.tier}) — a ${pkg.tier} package may only depend on ${TIER_MAY_IMPORT[pkg.tier].join(' or ')}`
+          `${pkg.name} (${pkg.tier}) ${how} ${dep.name} (${dep.tier}) — a ${pkg.tier} package may only depend on ${TIER_MAY_IMPORT[pkg.tier].join(' or ')}`
         );
       }
 
       if (dep.layer >= pkg.layer) {
-        const how = dep.layer === pkg.layer ? 'the same layer' : 'a higher layer';
+        const direction = dep.layer === pkg.layer ? 'the same layer' : 'a higher layer';
         errors.push(
-          `${pkg.name} (T${pkg.layer}) depends on ${dep.name} (T${dep.layer}) — ${how}. Dependencies must point strictly down.`
+          `${pkg.name} (T${pkg.layer}) ${how} ${dep.name} (T${dep.layer}) — ${direction}. Dependencies must point strictly down.`
         );
       }
     }

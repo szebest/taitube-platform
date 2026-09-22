@@ -50,10 +50,12 @@ case" weakens the signal and costs a real constraint (no `node:*`, no `@types/no
 
 | Layer | Meaning |
 |---|---|
-| **T1** Foundation | No `@vp/*` runtime dependency. The vocabulary everything else speaks. |
-| **T2** Contracts & domain capability | Schemas, rules, and capabilities built on the foundation. |
-| **T3** Integration | Concrete drivers and generated clients. |
-| **T4** Application | Deployables. Nothing may depend on these. |
+| **T1** Foundation | No `@vp/*` dependency at all. The vocabulary everything else speaks. |
+| **T2** Contracts and policy | Schemas and rules built on the foundation. |
+| **T3** Domain capability | Ports and repository contracts, and the policy they lean on. |
+| **T4** Integration | Concrete drivers and generated clients. |
+| **T5** Application | Deployables. No library may depend on these. |
+| **T6** Reference tool | Drives a running application from its acceptance suite. |
 
 **The rule: dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and
 never upward.
@@ -101,20 +103,24 @@ is stale — fix it.
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/permissions` | universal | `@vp/errors` |
 | `@vp/config` | server | `@vp/env-schema` |
-| `@vp/core` | server | `@vp/domain` |
 | `@vp/db` | server | `@vp/domain`, `@vp/errors` |
 | `@vp/events` | server | `@vp/job-contracts` |
 | `@vp/ffmpeg` | server | `@vp/errors`, `@vp/job-contracts` |
-| `@vp/upload-client` | server | `@vp/errors`, `@vp/storage` |
 
-### T3 — Integration
+### T3 — Domain capability
+
+| Package | Tier | Depends on |
+|---|---|---|
+| `@vp/core` | server | `@vp/domain`, `@vp/permissions` |
+
+### T4 — Integration
 
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
 | `@vp/adapters` | server | `@vp/core`, `@vp/db`, `@vp/domain`, `@vp/errors`, `@vp/observability`, `@vp/permissions` |
 
-### T4 — Applications
+### T5 — Applications
 
 | App | Tier | Depends on |
 |---|---|---|
@@ -122,8 +128,18 @@ is stale — fix it.
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/storage` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/observability`, `@vp/storage` |
 
-**Every package in `@vp/web`'s runtime closure is `universal` or `client`** — seven of them, counting what
-`@vp/api-contracts` and `@vp/permissions` pull in. That is the invariant the whole scheme exists to protect.
+### T6 — Reference tools
+
+| Package | Tier | Depends on | Dev-depends on |
+|---|---|---|---|
+| `@vp/upload-client` | server | `@vp/errors`, `@vp/storage` | `@vp/adapters`, `@vp/api`, `@vp/core`, `@vp/dev-token` |
+
+Its acceptance suite boots `apps/api` and a stub S3, so the package sits above the application it drives.
+What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
+
+**Every package in `@vp/web`'s closure is `universal` or `client`** — seven of them, counting what
+`@vp/api-contracts` and `@vp/permissions` pull in, and it stays seven once devDependencies count too. That is
+the invariant the whole scheme exists to protect.
 Verify it any time with `pnpm why bullmq` from `apps/web` — it returns nothing.
 
 ---
@@ -150,8 +166,8 @@ No lint rule, no plugin, no allowlist. The module is not there.
 The remaining hole is someone *adding the declaration* to `package.json`. TypeScript cannot catch that, so
 `scripts/check-boundaries.ts` does. It validates:
 
-- tier compatibility of every `@vp/*` dependency and peerDependency
-- layer direction (strictly down; same-layer is a violation)
+- tier compatibility of every `@vp/*` dependency, peerDependency and devDependency
+- layer direction (strictly down; same-layer is a violation), over the same three groups
 - the declared tier matches the directory the package lives in
 - every `AGENTS.md` has its `CLAUDE.md` symlink
 
@@ -226,7 +242,10 @@ Stated plainly so nobody assumes more coverage than exists:
 
 - **Deep relative imports across package roots** (`../../other-package/src/thing`) bypass the manifest.
   Nothing in the repo does this today; it is not currently asserted.
-- **`devDependencies` are not tier-checked.** A server package may be a universal package's devDependency —
-  test doubles and build tooling legitimately need this, and devDependencies never reach a runtime bundle.
+- **Two packages are exempt from both rules as devDependencies**, named in `scripts/check-boundaries.ts`:
+  `@vp/tsconfig` is a set of JSON presets and `@vp/testing` is a vitest config factory plus fixtures. Neither
+  ships code, so neither can reach a runtime bundle. Every other devDependency is checked like a dependency —
+  it resolves in CI, and a type it carries lands in the emitted `.d.ts` where `pnpm deploy --prod` cannot
+  resolve it.
 - **`tools/` has no tier**, because nothing in it is a package. Anything there that grows a `package.json`
   must move under `packages/<tier>/`.
