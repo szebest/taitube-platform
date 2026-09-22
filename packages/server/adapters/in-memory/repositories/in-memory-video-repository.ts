@@ -24,7 +24,7 @@ import {
 } from '@vp/core/repositories';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { canReadVideo } from '@vp/permissions';
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err, ok, unwrapOr } from '@vp/result';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { selectPublicFeed } from './public-feed-query';
@@ -111,7 +111,7 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   private async getUpload(id: string): Promise<UploadRecord | null> {
-    if (this.uploadsRepo) return this.uploadsRepo.findByVideoId(id);
+    if (this.uploadsRepo) return unwrapOr(await this.uploadsRepo.findByVideoId(id), null);
     return this.uploadsMap
       ? (Array.from(this.uploadsMap.values()).find((u) => u.videoId === id) ?? null)
       : null;

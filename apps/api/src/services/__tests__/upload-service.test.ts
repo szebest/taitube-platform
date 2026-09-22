@@ -59,7 +59,7 @@ describe('apps/api/services: UploadService', () => {
     });
 
     await expect(
-      service.complete(OWNER, (await repositories.uploads.findByVideoId(videoId))?.id ?? '')
+      service.complete(OWNER, expectOk(await repositories.uploads.findByVideoId(videoId))?.id ?? '')
     ).resolves.toMatchObject({
       status: 'UPLOADED',
     });

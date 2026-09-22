@@ -74,7 +74,7 @@ export async function runReconcileUploads(
       logger?.info({ videoId: video.id }, 'Reconciler abandoned stale UPLOADING video');
 
       // Check upload record to abort multipart if active
-      const upload = await repositories.uploads.findByVideoId(video.id);
+      const upload = unwrapOr(await repositories.uploads.findByVideoId(video.id), null);
       if (upload) {
         await repositories.uploads.updateStatus(upload.id, 'ABORTED');
         if (upload.multipartUploadId && multipart) {

@@ -1,4 +1,3 @@
-import { DatabaseError } from '@vp/core/ports';
 import {
   type NewUploadInput,
   type UploadRecord,
@@ -7,6 +6,8 @@ import {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import type { UploadStatus } from '@vp/domain';
+import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
+import { type Result, andThen, err, fromPromise, map, ok } from '@vp/result';
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { toUploadInsert, toUploadStatusUpdate } from '../mappers/index';
@@ -16,95 +17,72 @@ export class PostgresUploadRepository extends UploadRepository {
     super();
   }
 
-  async findById(id: string): Promise<UploadRecord | null> {
-    try {
-      const rows = await this.db
-        .select()
-        .from(schema.uploads)
-        .where(eq(schema.uploads.id, id))
-        .limit(1);
-      return rows[0] ?? null;
-    } catch (err: unknown) {
-      throw new DatabaseError(`Failed to get upload ${id}: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+  private unavailable(operation: string) {
+    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
   }
 
-  async findByVideoId(videoId: string): Promise<UploadRecord | null> {
-    try {
-      const rows = await this.db
-        .select()
-        .from(schema.uploads)
-        .where(eq(schema.uploads.videoId, videoId))
-        .limit(1);
-      return rows[0] ?? null;
-    } catch (err: unknown) {
-      throw new DatabaseError(
-        `Failed to get upload for video ${videoId}: ${(err as Error).message}`,
-        {
-          cause: err,
-        }
-      );
-    }
+  async findById(id: string): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      this.db.select().from(schema.uploads).where(eq(schema.uploads.id, id)).limit(1),
+      this.unavailable('findById')
+    );
+
+    return map(rows, ([row]) => row ?? null);
   }
 
-  async findWithVideo(uploadId: string): Promise<UploadWithVideo | null> {
-    try {
-      const rows = await this.db
-        .select({
-          upload: schema.uploads,
-          video: schema.videos,
-        })
+  async findByVideoId(videoId: string): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      this.db.select().from(schema.uploads).where(eq(schema.uploads.videoId, videoId)).limit(1),
+      this.unavailable('findByVideoId')
+    );
+
+    return map(rows, ([row]) => row ?? null);
+  }
+
+  async findWithVideo(
+    uploadId: string
+  ): Promise<Result<UploadWithVideo | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      this.db
+        .select({ upload: schema.uploads, video: schema.videos })
         .from(schema.uploads)
         .innerJoin(schema.videos, eq(schema.uploads.videoId, schema.videos.id))
         .where(eq(schema.uploads.id, uploadId))
-        .limit(1);
+        .limit(1),
+      this.unavailable('findWithVideo')
+    );
 
-      const res = rows[0];
-      if (!res) return null;
-      return {
-        upload: res.upload,
-        video: res.video,
-      };
-    } catch (err: unknown) {
-      throw new DatabaseError(
-        `Failed to get upload with video for ${uploadId}: ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+    return map(rows, ([row]) => row ?? null);
   }
 
-  async create(data: NewUploadInput): Promise<UploadRecord> {
-    try {
-      const [created] = await this.db
-        .insert(schema.uploads)
-        .values(toUploadInsert(data))
-        .returning();
+  async create(data: NewUploadInput): Promise<Result<UploadRecord, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      this.db.insert(schema.uploads).values(toUploadInsert(data)).returning(),
+      this.unavailable('create')
+    );
 
-      if (!created) {
-        throw new DatabaseError('Failed to create upload record: empty return');
-      }
-      return created;
-    } catch (err: unknown) {
-      if (err instanceof DatabaseError) throw err;
-      throw new DatabaseError(`Failed to create upload: ${(err as Error).message}`, { cause: err });
-    }
+    /**
+     * An insert that returns no row is the database refusing the write without raising, so it is a
+     * failure of the same kind rather than an absent upload the caller could act on.
+     */
+    return andThen(rows, ([row]) =>
+      row ? ok(row) : err(databaseUnavailable('create', 'insert returned no row'))
+    );
   }
 
-  async updateStatus(uploadId: string, status: UploadStatus): Promise<UploadRecord | null> {
-    try {
-      const [updated] = await this.db
+  async updateStatus(
+    uploadId: string,
+    status: UploadStatus
+  ): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      this.db
         .update(schema.uploads)
         .set(toUploadStatusUpdate(status))
         .where(eq(schema.uploads.id, uploadId))
-        .returning();
-      return updated ?? null;
-    } catch (err: unknown) {
-      throw new DatabaseError(
-        `Failed to update upload status for ${uploadId}: ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+        .returning(),
+      this.unavailable('updateStatus')
+    );
+
+    return map(rows, ([row]) => row ?? null);
   }
 }

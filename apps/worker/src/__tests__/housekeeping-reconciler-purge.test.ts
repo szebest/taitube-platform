@@ -96,7 +96,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(updatedVideo?.status).toBe('ABANDONED');
 
       // Upload record must be ABORTED
-      const uploadRecord = await repositories.uploads.findByVideoId(videoId);
+      const uploadRecord = expectOk(await repositories.uploads.findByVideoId(videoId));
       expect(uploadRecord?.status).toBe('ABORTED');
 
       // Multipart upload on storage must be aborted (listMultipartUploads empty)

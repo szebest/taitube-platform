@@ -7,8 +7,9 @@ import type {
   VideoRecord,
   VideoRepository,
 } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, toPipelineError } from '@vp/errors';
 import { canAccessUpload } from '@vp/permissions';
+import { isErr } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 
 export interface UploadContext {
@@ -37,8 +38,11 @@ export async function loadOwnedUpload(
   uploadId: string,
   action: string
 ): Promise<{ upload: UploadRecord; video: VideoRecord }> {
-  const record = await ctx.uploads.findWithVideo(uploadId);
-  if (!record) {
+  const found = await ctx.uploads.findWithVideo(uploadId);
+  if (isErr(found)) throw toPipelineError(found.error);
+
+  const record = found.value;
+  if (record === null) {
     throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Upload ${uploadId} not found`);
   }
 

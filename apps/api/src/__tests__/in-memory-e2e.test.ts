@@ -161,7 +161,7 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
     expect(initData.partsExpected).toBe(2);
     expect(initData.parts.length).toBe(2);
 
-    const uploadRecord = await repositories.uploads.findById(initData.uploadId);
+    const uploadRecord = expectOk(await repositories.uploads.findById(initData.uploadId));
     expect(uploadRecord?.multipartUploadId).toBeDefined();
     const s3MultipartUploadId = uploadRecord?.multipartUploadId ?? '';
 

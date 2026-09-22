@@ -45,7 +45,7 @@ describe('apps/api/services: abort upload', () => {
     expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
       status: 'ABANDONED',
     });
-    await expect(repositories.uploads.findById(uploadId)).resolves.toMatchObject({
+    expect(expectOk(await repositories.uploads.findById(uploadId))).toMatchObject({
       status: 'ABORTED',
     });
   });
