@@ -1,6 +1,6 @@
 import type { Channel } from '@vp/domain';
 import { type Result, andThen, err, ok } from '@vp/result';
-import { type InvalidHandleFormat, validateHandle } from '@vp/validation';
+import { type InvalidHandleFormat, isReservedHandle, validateHandle } from '@vp/validation';
 import { type HandleTaken, handleTaken } from './failures.js';
 
 export interface ClaimHandleInput {
@@ -13,8 +13,15 @@ export interface ClaimHandleInput {
 
 export type ClaimHandleFailure = InvalidHandleFormat | HandleTaken;
 
+/**
+ * A reserved handle is reported as taken rather than malformed: it is well-formed, somebody just
+ * cannot have it. That is also what the API has always answered, and it is the answer a form can
+ * act on - suggest another handle, rather than re-check the characters.
+ */
 export function decideHandleClaim(input: ClaimHandleInput): Result<string, ClaimHandleFailure> {
   return andThen(validateHandle(input.handle), (normalized) => {
+    if (isReservedHandle(normalized)) return err(handleTaken(normalized));
+
     const takenByAnother = input.heldBy !== null && input.heldBy.id !== input.claimantChannelId;
     return takenByAnother ? err(handleTaken(normalized)) : ok(normalized);
   });

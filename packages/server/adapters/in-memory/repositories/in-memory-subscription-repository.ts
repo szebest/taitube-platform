@@ -10,6 +10,7 @@ import type {
   VideoRecord,
 } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
+import { unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
@@ -35,7 +36,7 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   private async requireChannel(channelId: string) {
-    const channel = await this.channelsRepo.findById(channelId);
+    const channel = unwrapOr(await this.channelsRepo.findById(channelId), null);
     if (!channel) {
       throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, 'Channel not found');
     }
@@ -87,7 +88,7 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   }
 
   async getSubscriberCount(channelId: string): Promise<number> {
-    const channel = await this.channelsRepo.findById(channelId);
+    const channel = unwrapOr(await this.channelsRepo.findById(channelId), null);
     return channel?.subscriberCount ?? 0;
   }
 
@@ -108,7 +109,7 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
 
     const items: SubscribedChannelItem[] = [];
     for (const { sub } of page) {
-      const channel = await this.channelsRepo.findById(sub.channelId);
+      const channel = unwrapOr(await this.channelsRepo.findById(sub.channelId), null);
       if (!channel) continue;
       const { createdAt: _createdAt, updatedAt: _updatedAt, ...profile } = channel;
       items.push({ ...profile, subscribedAt: sub.createdAt });
@@ -122,7 +123,7 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
   ): Promise<{ items: VideoRecord[]; total: number }> {
     const ownerIds = new Set<string>();
     for (const channelId of await this.getUserSubscriptionChannelIds(subscriberId)) {
-      const channel = await this.channelsRepo.findById(channelId);
+      const channel = unwrapOr(await this.channelsRepo.findById(channelId), null);
       if (channel) ownerIds.add(channel.userId);
     }
 

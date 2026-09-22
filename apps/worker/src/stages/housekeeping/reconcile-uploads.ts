@@ -2,6 +2,7 @@ import type { JobQueue, MultipartStorage } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
+import { unwrapOr } from '@vp/result';
 
 export interface ReconcileUploadsOptions {
   repositories: Repositories;
@@ -119,7 +120,8 @@ export async function runReconcileUploads(
 
       let priority = 5;
       if (repositories.users) {
-        const user = await repositories.users.findById(video.ownerId);
+        // A tier lookup that cannot answer costs the job its priority, not its admission.
+        const user = unwrapOr(await repositories.users.findById(video.ownerId), null);
         if (user?.tier === 'pro' || user?.tier === 'enterprise') {
           priority = 1;
         }

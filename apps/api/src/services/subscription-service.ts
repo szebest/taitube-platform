@@ -3,7 +3,8 @@ import type { SubscribedChannelItem } from '@vp/domain';
 import { type Paginator, defaultPaginator } from '@vp/pagination';
 import type { AuthorizationPort, SubscriptionCachePort } from '@vp/core/ports';
 import type { ChannelRepositoryPort, SubscriptionRepositoryPort } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
+import { isErr } from '@vp/result';
 import { canSubscribeChannel } from '@vp/permissions';
 import type { AuthUser } from '../plugins/auth';
 import {
@@ -88,7 +89,8 @@ export class SubscriptionService {
     channelId: string
   ): Promise<{ channelId: string; subscribed: boolean }> {
     const channel = await this.channels.findById(channelId);
-    if (!channel) {
+    if (isErr(channel)) throw new TransientError(channel.error.code, channel.error.message);
+    if (!channel.value) {
       throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, 'Channel not found');
     }
 

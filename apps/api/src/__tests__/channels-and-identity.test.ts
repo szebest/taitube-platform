@@ -2,8 +2,8 @@ import * as crypto from 'node:crypto';
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 import { type JwksKey, clearJwksCache, setCachedJwks } from '../plugins/jwks-verifier';
 
@@ -51,11 +51,9 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
         ttl: '1h',
       });
 
-      // Verify user and channel do not exist yet in DB
-      expect(await repositories.users.findById(NEW_USER_ID)).toBeNull();
-      expect(await repositories.channels.findByUserId(NEW_USER_ID)).toBeNull();
+      expect(expectOk(await repositories.users.findById(NEW_USER_ID))).toBeNull();
+      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toBeNull();
 
-      // First authenticated request
       const response = await app.inject({
         method: 'GET',
         url: '/v1/me/account',
@@ -67,23 +65,20 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
 
-      // Verify returned user structure
       expect(body.user).toBeDefined();
       expect(body.user.id).toBe(NEW_USER_ID);
       expect(body.user.email).toBe(`${NEW_USER_ID}@taitube.local`);
       expect(body.email).toBe(body.user.email);
 
-      // Verify returned channel structure
       expect(body.channel).toBeDefined();
       expect(body.channel.userId).toBe(NEW_USER_ID);
       expect(body.channel.handle).toBeDefined();
       expect(body.channel.displayName).toBeDefined();
       expect(body.channel.subscriberCount).toBe(0);
 
-      // Verify persistent in repositories
-      const dbUser = await repositories.users.findById(NEW_USER_ID);
+      const dbUser = expectOk(await repositories.users.findById(NEW_USER_ID));
       expect(dbUser).not.toBeNull();
-      const dbChannel = await repositories.channels.findByUserId(NEW_USER_ID);
+      const dbChannel = expectOk(await repositories.channels.findByUserId(NEW_USER_ID));
       expect(dbChannel).not.toBeNull();
       expect(dbChannel?.handle).toBe(body.channel.handle);
     });
@@ -149,8 +144,7 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
       expect(body.bannerUrl).toBe('https://example.com/banner.jpg');
       expect(body.handle).toBe('dev');
 
-      // Verify in DB
-      const inDb = await repositories.channels.findByUserId(DEV_USER_ID);
+      const inDb = expectOk(await repositories.channels.findByUserId(DEV_USER_ID));
       expect(inDb?.displayName).toBe('Updated Dev Name');
       expect(inDb?.bio).toBe('Updated channel bio description');
     });
@@ -172,7 +166,6 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
       const body = JSON.parse(response.body);
       expect(body.handle).toBe('dev_channel_new');
 
-      // Public lookup with new handle
       const publicRes = await app.inject({
         method: 'GET',
         url: '/v1/channels/@dev_channel_new',
@@ -182,7 +175,26 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
       expect(publicBody.userId).toBe(DEV_USER_ID);
     });
 
-    it('rejects invalid handle format with 400 INVALID_HANDLE_FORMAT', async () => {
+    it.each([
+      {
+        name: 'a handle under the minimum length',
+        handle: 'ab',
+        status: 400,
+        code: ErrorCodes.INVALID_HANDLE_FORMAT,
+      },
+      {
+        name: 'a reserved handle',
+        handle: 'studio',
+        status: 409,
+        code: ErrorCodes.HANDLE_ALREADY_TAKEN,
+      },
+      {
+        name: 'a handle another channel already holds',
+        handle: 'user',
+        status: 409,
+        code: ErrorCodes.HANDLE_ALREADY_TAKEN,
+      },
+    ])('rejects $name with $status $code', async ({ handle, status, code }) => {
       const response = await app.inject({
         method: 'PATCH',
         url: '/v1/me/channel',
@@ -190,82 +202,34 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
           authorization: `Bearer ${devToken}`,
           'content-type': 'application/json',
         },
-        payload: {
-          handle: 'ab', // < 3 characters
-        },
+        payload: { handle },
       });
 
-      expect(response.statusCode).toBe(400);
+      expect(response.statusCode).toBe(status);
       const body = JSON.parse(response.body);
-      expect(body.code).toBe(ErrorCodes.INVALID_HANDLE_FORMAT);
-    });
-
-    it('rejects reserved handles with 409 HANDLE_ALREADY_TAKEN', async () => {
-      const response = await app.inject({
-        method: 'PATCH',
-        url: '/v1/me/channel',
-        headers: {
-          authorization: `Bearer ${devToken}`,
-          'content-type': 'application/json',
-        },
-        payload: {
-          handle: 'studio',
-        },
-      });
-
-      expect(response.statusCode).toBe(409);
-      const body = JSON.parse(response.body);
-      expect(body.code).toBe(ErrorCodes.HANDLE_ALREADY_TAKEN);
-    });
-
-    it('rejects conflicting existing handle with 409 HANDLE_ALREADY_TAKEN', async () => {
-      // User 2 has handle 'user'
-      const response = await app.inject({
-        method: 'PATCH',
-        url: '/v1/me/channel',
-        headers: {
-          authorization: `Bearer ${devToken}`,
-          'content-type': 'application/json',
-        },
-        payload: {
-          handle: 'user',
-        },
-      });
-
-      expect(response.statusCode).toBe(409);
-      const body = JSON.parse(response.body);
-      expect(body.code).toBe(ErrorCodes.HANDLE_ALREADY_TAKEN);
+      expect(body.code).toBe(code);
     });
   });
 
   describe('GET /v1/channels/:idOrHandle', () => {
-    it('retrieves creator profile by handle without authentication', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/v1/channels/dev',
-      });
+    it.each([{ idOrHandle: 'dev' }, { idOrHandle: '@dev' }])(
+      'retrieves creator profile by $idOrHandle without authentication',
+      async ({ idOrHandle }) => {
+        const response = await app.inject({
+          method: 'GET',
+          url: `/v1/channels/${idOrHandle}`,
+        });
 
-      expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
-      expect(body.userId).toBe(DEV_USER_ID);
-      expect(body.handle).toBe('dev');
-      expect(body.subscriberCount).toBe(42);
-    });
-
-    it('retrieves creator profile by @handle prefix without authentication', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/v1/channels/@dev',
-      });
-
-      expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
-      expect(body.userId).toBe(DEV_USER_ID);
-      expect(body.handle).toBe('dev');
-    });
+        expect(response.statusCode).toBe(200);
+        const body = JSON.parse(response.body);
+        expect(body.userId).toBe(DEV_USER_ID);
+        expect(body.handle).toBe('dev');
+        expect(body.subscriberCount).toBe(42);
+      }
+    );
 
     it('retrieves creator profile by channel UUID without authentication', async () => {
-      const devChannel = await repositories.channels.findByUserId(DEV_USER_ID);
+      const devChannel = expectOk(await repositories.channels.findByUserId(DEV_USER_ID));
       expect(devChannel).not.toBeNull();
 
       const response = await app.inject({
@@ -293,7 +257,6 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
 
   describe('Universal OIDC / JWKS Verification', () => {
     it('verifies standard RS256 token against JWKS', async () => {
-      // Generate standard RSA keypair
       const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
         modulusLength: 2048,
       });
@@ -328,7 +291,6 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
       const sig = crypto.sign('RSA-SHA256', Buffer.from(data), privateKey).toString('base64url');
       const rsaJwt = `${data}.${sig}`;
 
-      // Call /v1/me/account with RS256 JWT
       const response = await app.inject({
         method: 'GET',
         url: '/v1/me/account',
@@ -362,7 +324,7 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
       const payload = {
         sub: '00000000-0000-7000-8000-000000000077',
         iat: now - 7200,
-        exp: now - 3600, // Expired 1 hour ago
+        exp: now - 3600,
       };
 
       const encHeader = Buffer.from(JSON.stringify(header)).toString('base64url');

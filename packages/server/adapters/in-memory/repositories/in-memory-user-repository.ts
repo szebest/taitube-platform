@@ -1,4 +1,6 @@
 import { type UpsertUserInput, type UserRecord, UserRepository } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, ok } from '@vp/result';
 
 export class InMemoryUserRepository extends UserRepository {
   private readonly usersMap: Map<string, UserRecord>;
@@ -47,11 +49,11 @@ export class InMemoryUserRepository extends UserRepository {
     });
   }
 
-  async findById(id: string): Promise<UserRecord | null> {
-    return this.usersMap.get(id) ?? null;
+  async findById(id: string): Promise<Result<UserRecord | null, DatabaseUnavailable>> {
+    return ok(this.usersMap.get(id) ?? null);
   }
 
-  async upsert(user: UpsertUserInput): Promise<UserRecord> {
+  async upsert(user: UpsertUserInput): Promise<Result<UserRecord, DatabaseUnavailable>> {
     const existing = this.usersMap.get(user.id);
     if (existing) {
       existing.email = user.email;
@@ -63,7 +65,7 @@ export class InMemoryUserRepository extends UserRepository {
         existing.maxVideoDurationSec = user.maxVideoDurationSec;
       if (user.storageQuotaBytes !== undefined) existing.storageQuotaBytes = user.storageQuotaBytes;
       if (user.webhookUrl !== undefined) existing.webhookUrl = user.webhookUrl;
-      return existing;
+      return ok(existing);
     }
     const record: UserRecord = {
       id: user.id,
@@ -77,7 +79,7 @@ export class InMemoryUserRepository extends UserRepository {
       createdAt: new Date(),
     };
     this.usersMap.set(user.id, record);
-    return record;
+    return ok(record);
   }
 
   clear(): void {

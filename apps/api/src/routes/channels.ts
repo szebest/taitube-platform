@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { ChannelService } from '../services/channel-service';
 import { contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
 
 export interface ChannelsRoutesOptions {
   channelService: ChannelService;
@@ -26,8 +27,11 @@ export function registerChannelsRoutes(app: FastifyInstance, options: ChannelsRo
       },
     },
     async (request, reply) => {
-      const channel = await channelService.getPublicChannel(request.params.idOrHandle);
-      return reply.status(200).send(channel);
+      return sendResult(
+        reply,
+        request,
+        await channelService.getPublicChannel(request.params.idOrHandle)
+      );
     }
   );
 }

@@ -1,6 +1,7 @@
 import type { UploadRecord, VideoRecord } from '@vp/core/repositories';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
+import { unwrapOr } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 import { type UploadContext, loadOwnedUpload } from './upload-context';
@@ -102,7 +103,8 @@ async function rejectSizeMismatch(
 
 async function probePriority(ctx: UploadContext, user: AuthUser, ownerId: string): Promise<number> {
   if (ctx.users) {
-    const record = await ctx.users.findById(ownerId);
+    // A tier lookup that cannot answer costs the job its priority, not its admission.
+    const record = unwrapOr(await ctx.users.findById(ownerId), null);
     return record?.tier === 'pro' || record?.tier === 'enterprise' ? PRIORITY_PAID : PRIORITY_FREE;
   }
   return (user as { tier?: string }).tier === 'pro' ? PRIORITY_PAID : PRIORITY_FREE;

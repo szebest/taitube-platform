@@ -11,6 +11,7 @@ import { uuidv7 } from 'uuidv7';
 import { getHeartbeatPath } from '../config';
 import { validateJobId } from '../registry';
 import { enqueueFollowUpJobs } from './probe-enqueue';
+import { unwrapOr } from '@vp/result';
 
 export interface ProbeProcessorDeps {
   repositories: Repositories;
@@ -270,7 +271,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         try {
           const videoRec = await repositories.videos.findById(videoId);
           if (videoRec?.ownerId) {
-            const userRec = await repositories.users.findById(videoRec.ownerId);
+            const userRec = unwrapOr(await repositories.users.findById(videoRec.ownerId), null);
             if (userRec?.tier === 'pro' || userRec?.tier === 'enterprise') {
               priority = 1;
             }

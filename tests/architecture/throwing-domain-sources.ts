@@ -6,7 +6,6 @@
  */
 
 export const THROWING_DOMAIN_SOURCES: readonly string[] = [
-  'apps/api/src/services/channel-service.ts',
   'apps/api/src/services/cursor.ts',
   'apps/api/src/services/dlq-service.ts',
   'apps/api/src/services/queue-service.ts',

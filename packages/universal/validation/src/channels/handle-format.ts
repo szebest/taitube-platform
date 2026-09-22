@@ -61,10 +61,15 @@ export function normalizeHandle(handle: string): string {
   return clean.toLowerCase().trim();
 }
 
+/**
+ * Format only, which is all an input rule can see. Whether a well-formed handle is *available* -
+ * reserved, or already held by another channel - needs the reserved list and a repository read, so
+ * it is `decideHandleClaim` in `@vp/domain-rules`.
+ */
 export function validateHandle(handle: string): Result<string, InvalidHandleFormat> {
-  if (!isValidHandleFormat(handle)) return err(invalidHandleFormat(handle, BOUNDS));
-  if (isReservedHandle(handle)) return err(invalidHandleFormat(handle, BOUNDS, true));
-  return ok(normalizeHandle(handle));
+  return isValidHandleFormat(handle)
+    ? ok(normalizeHandle(handle))
+    : err(invalidHandleFormat(handle, BOUNDS));
 }
 
 function handleBase(email: string, sub: string): string {

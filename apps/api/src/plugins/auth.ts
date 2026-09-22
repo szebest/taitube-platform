@@ -1,6 +1,7 @@
 import * as crypto from 'node:crypto';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { type UserContext, parseRole } from '@vp/permissions';
+import { isErr } from '@vp/result';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { ChannelService } from '../services/channel-service';
@@ -62,21 +63,29 @@ export async function authPlugin(
 
     const token = authHeader.slice(7).trim();
 
+    // The catch covers token verification and nothing else. It used to wrap provisioning too,
+    // which reported a dead database as `Token verification failed` and answered 401.
+    let payload: Awaited<ReturnType<typeof verifyUniversalToken>>;
     try {
-      const payload = await verifyUniversalToken(token, options.jwksUrl);
-      request.user = {
-        id: payload.sub,
-        role: parseRole(payload.role || 'user'),
-        email: payload.email,
-      };
-
-      await options.channelService?.ensureProvisioned(payload.sub, payload.email);
+      payload = await verifyUniversalToken(token, options.jwksUrl);
     } catch (err) {
       if (err instanceof PermanentError) throw err;
       throw new PermanentError(
         ErrorCodes.UNAUTHORIZED,
         `Token verification failed: ${(err as Error).message}`
       );
+    }
+
+    request.user = {
+      id: payload.sub,
+      role: parseRole(payload.role || 'user'),
+      email: payload.email,
+    };
+
+    // A pre-handler has no `Result` to return, so this is one of the two places that converts one.
+    const provisioned = await options.channelService?.ensureProvisioned(payload.sub, payload.email);
+    if (provisioned && isErr(provisioned)) {
+      throw new TransientError(provisioned.error.code, provisioned.error.message);
     }
   });
 }

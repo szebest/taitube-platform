@@ -47,14 +47,15 @@ describe('@vp/validation: validateHandle', () => {
   });
 
   it.each([
-    { name: 'a malformed handle', handle: 'ab', reserved: false },
-    { name: 'a leading @, which the format has never accepted', handle: '@mateusz', reserved: false },
-    { name: 'a reserved handle', handle: 'admin', reserved: true },
-  ])('rejects $name and says whether it was reserved', ({ handle, reserved }) => {
-    const result = validateHandle(handle);
+    { name: 'a malformed handle', handle: 'ab' },
+    { name: 'a leading @, which the format has never accepted', handle: '@mateusz' },
+    { name: 'a handle over the ceiling', handle: 'a'.repeat(31) },
+  ])('rejects $name', ({ handle }) => {
+    expect(isErr(validateHandle(handle))).toBe(true);
+  });
 
-    expect(isErr(result)).toBe(true);
-    expect(isErr(result) && result.error.reserved).toBe(reserved);
+  it('accepts a reserved handle, because availability is not a format question', () => {
+    expect(isOk(validateHandle('admin'))).toBe(true);
   });
 });
 

@@ -1,76 +1,77 @@
-import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
-import { DatabaseError } from '@vp/core/ports';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import { channels } from '@vp/db';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
+import {
+  type DatabaseUnavailable,
+  type HandleTaken,
+  databaseUnavailable,
+  handleTaken,
+} from '@vp/errors';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, eq, ne } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
+import { isUniqueViolation } from '../pg-errors';
+
+function mapRow(row: typeof channels.$inferSelect): Channel {
+  return {
+    id: row.id,
+    userId: row.userId,
+    handle: row.handle,
+    displayName: row.displayName,
+    avatarUrl: row.avatarUrl,
+    bannerUrl: row.bannerUrl,
+    bio: row.bio,
+    subscriberCount: row.subscriberCount,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
 
 export class PostgresChannelRepository implements ChannelRepositoryPort {
   constructor(private readonly db: PostgresJsDatabase<Record<string, unknown>>) {}
 
-  private mapRow(row: typeof channels.$inferSelect): Channel {
-    return {
-      id: row.id,
-      userId: row.userId,
-      handle: row.handle,
-      displayName: row.displayName,
-      avatarUrl: row.avatarUrl,
-      bannerUrl: row.bannerUrl,
-      bio: row.bio,
-      subscriberCount: row.subscriberCount,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    };
+  private unavailable(operation: string) {
+    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
   }
 
-  async findById(id: string): Promise<Channel | null> {
-    try {
-      const [row] = await this.db.select().from(channels).where(eq(channels.id, id)).limit(1);
-      return row ? this.mapRow(row) : null;
-    } catch (err) {
-      throw new DatabaseError(`Failed to find channel by ID: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+  /** `channels` is unique on both `handle` and `user_id`; either collision is a taken handle. */
+  private conflict(handle: string, operation: string) {
+    return (cause: unknown): DatabaseUnavailable | HandleTaken =>
+      isUniqueViolation(cause) ? handleTaken(handle) : databaseUnavailable(operation, cause);
   }
 
-  async findByUserId(userId: string): Promise<Channel | null> {
-    try {
-      const [row] = await this.db
-        .select()
-        .from(channels)
-        .where(eq(channels.userId, userId))
-        .limit(1);
-      return row ? this.mapRow(row) : null;
-    } catch (err) {
-      throw new DatabaseError(`Failed to find channel by user ID: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+  private async findOneBy(
+    column: (typeof channels)['id' | 'userId' | 'handle'],
+    value: string,
+    operation: string
+  ): Promise<Result<Channel | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      this.db.select().from(channels).where(eq(column, value)).limit(1),
+      this.unavailable(operation)
+    );
+
+    return map(rows, ([row]) => (row ? mapRow(row) : null));
   }
 
-  async findByHandle(handle: string): Promise<Channel | null> {
-    try {
-      const normalized = handle.toLowerCase();
-      const [row] = await this.db
-        .select()
-        .from(channels)
-        .where(eq(channels.handle, normalized))
-        .limit(1);
-      return row ? this.mapRow(row) : null;
-    } catch (err) {
-      throw new DatabaseError(`Failed to find channel by handle: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+  findById(id: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
+    return this.findOneBy(channels.id, id, 'findById');
   }
 
-  async create(input: CreateChannelInput): Promise<Channel> {
+  findByUserId(userId: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
+    return this.findOneBy(channels.userId, userId, 'findByUserId');
+  }
+
+  findByHandle(handle: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
+    return this.findOneBy(channels.handle, handle.toLowerCase(), 'findByHandle');
+  }
+
+  async create(
+    input: CreateChannelInput
+  ): Promise<Result<Channel, DatabaseUnavailable | HandleTaken>> {
     const handle = input.handle.toLowerCase();
-    try {
-      const [row] = await this.db
+    const rows = await fromPromise(
+      this.db
         .insert(channels)
         .values({
           id: input.id ?? uuidv7(),
@@ -82,72 +83,46 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
           bio: input.bio ?? null,
           subscriberCount: input.subscriberCount ?? 0,
         })
-        .returning();
+        .returning(),
+      this.conflict(handle, 'create')
+    );
 
-      if (!row) {
-        throw new DatabaseError('Failed to insert channel: no row returned');
-      }
-      return this.mapRow(row);
-    } catch (err: unknown) {
-      const pgErr = err as { code?: string; message?: string };
-      if (pgErr.code === '23505') {
-        throw new PermanentError(
-          ErrorCodes.HANDLE_ALREADY_TAKEN,
-          `Channel with handle "${handle}" or user already exists`
-        );
-      }
-      if (err instanceof PermanentError) throw err;
-      throw new DatabaseError(`Failed to create channel: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+    if (!rows.ok) return rows;
+    const [row] = rows.value;
+    return row ? ok(mapRow(row)) : err(databaseUnavailable('create', 'insert returned no row'));
   }
 
-  async update(id: string, input: UpdateChannelInput): Promise<Channel> {
-    try {
-      if (input.handle) {
-        const normalized = input.handle.toLowerCase();
-        const [conflict] = await this.db
+  async update(
+    id: string,
+    input: UpdateChannelInput
+  ): Promise<Result<Channel | null, DatabaseUnavailable | HandleTaken>> {
+    const handle = input.handle?.toLowerCase();
+
+    if (handle) {
+      const conflicting = await fromPromise(
+        this.db
           .select({ id: channels.id })
           .from(channels)
-          .where(and(eq(channels.handle, normalized), ne(channels.id, id)))
-          .limit(1);
-        if (conflict) {
-          throw new PermanentError(
-            ErrorCodes.HANDLE_ALREADY_TAKEN,
-            `Channel with handle "${normalized}" already exists`
-          );
-        }
-      }
-
-      const updateValues: Partial<typeof channels.$inferInsert> = {
-        updatedAt: new Date(),
-      };
-      if (input.handle !== undefined) updateValues.handle = input.handle.toLowerCase();
-      if (input.displayName !== undefined) updateValues.displayName = input.displayName;
-      if (input.avatarUrl !== undefined) updateValues.avatarUrl = input.avatarUrl;
-      if (input.bannerUrl !== undefined) updateValues.bannerUrl = input.bannerUrl;
-      if (input.bio !== undefined) updateValues.bio = input.bio;
-
-      const [row] = await this.db
-        .update(channels)
-        .set(updateValues)
-        .where(eq(channels.id, id))
-        .returning();
-
-      if (!row) {
-        throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, `Channel ${id} not found`);
-      }
-      return this.mapRow(row);
-    } catch (err: unknown) {
-      const pgErr = err as { code?: string; message?: string };
-      if (pgErr.code === '23505') {
-        throw new PermanentError(ErrorCodes.HANDLE_ALREADY_TAKEN, 'Channel handle already taken');
-      }
-      if (err instanceof PermanentError) throw err;
-      throw new DatabaseError(`Failed to update channel: ${(err as Error).message}`, {
-        cause: err,
-      });
+          .where(and(eq(channels.handle, handle), ne(channels.id, id)))
+          .limit(1),
+        this.unavailable('update')
+      );
+      if (!conflicting.ok) return conflicting;
+      if (conflicting.value[0]) return err(handleTaken(handle));
     }
+
+    const values: Partial<typeof channels.$inferInsert> = { updatedAt: new Date() };
+    if (handle !== undefined) values.handle = handle;
+    if (input.displayName !== undefined) values.displayName = input.displayName;
+    if (input.avatarUrl !== undefined) values.avatarUrl = input.avatarUrl;
+    if (input.bannerUrl !== undefined) values.bannerUrl = input.bannerUrl;
+    if (input.bio !== undefined) values.bio = input.bio;
+
+    const rows = await fromPromise(
+      this.db.update(channels).set(values).where(eq(channels.id, id)).returning(),
+      this.conflict(handle ?? '', 'update')
+    );
+
+    return map(rows, ([row]) => (row ? mapRow(row) : null));
   }
 }

@@ -30,12 +30,15 @@ describe('@vp/domain-rules: decideHandleClaim', () => {
     expect(isOk(result)).toBe(true);
   });
 
-  it.each([
-    { name: 'a malformed handle', handle: 'ab' },
-    { name: 'a reserved handle', handle: 'admin' },
-  ])('rejects $name before asking who holds it', ({ handle }) => {
-    const result = decideHandleClaim({ handle, heldBy: null });
+  it('rejects a malformed handle before asking who holds it', () => {
+    const result = decideHandleClaim({ handle: 'ab', heldBy: null });
 
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.INVALID_HANDLE_FORMAT);
+  });
+
+  it('reports a reserved handle as taken, not as malformed', () => {
+    const result = decideHandleClaim({ handle: 'admin', heldBy: null });
+
+    expect(isErr(result) && result.error.code).toBe(ErrorCodes.HANDLE_ALREADY_TAKEN);
   });
 });

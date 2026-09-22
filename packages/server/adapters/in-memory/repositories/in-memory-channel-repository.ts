@@ -1,6 +1,13 @@
-import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
+import {
+  type DatabaseUnavailable,
+  type HandleTaken,
+  ErrorCodes,
+  PermanentError,
+  handleTaken,
+} from '@vp/errors';
+import { type Result, err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export class InMemoryChannelRepository implements ChannelRepositoryPort {
@@ -55,45 +62,34 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     this.seedDevChannels();
   }
 
-  async findById(id: string): Promise<Channel | null> {
-    return this.channels.get(id) ?? null;
+  async findById(id: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
+    return ok(this.channels.get(id) ?? null);
   }
 
-  async findByUserId(userId: string): Promise<Channel | null> {
-    for (const channel of this.channels.values()) {
-      if (channel.userId === userId) {
-        return channel;
-      }
-    }
-    return null;
+  async findByUserId(userId: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
+    return ok(this.find((channel) => channel.userId === userId));
   }
 
-  async findByHandle(handle: string): Promise<Channel | null> {
+  async findByHandle(handle: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
     const normalized = handle.toLowerCase();
+    return ok(this.find((channel) => channel.handle.toLowerCase() === normalized));
+  }
+
+  private find(matches: (channel: Channel) => boolean): Channel | null {
     for (const channel of this.channels.values()) {
-      if (channel.handle.toLowerCase() === normalized) {
-        return channel;
-      }
+      if (matches(channel)) return channel;
     }
     return null;
   }
 
-  async create(input: CreateChannelInput): Promise<Channel> {
+  async create(
+    input: CreateChannelInput
+  ): Promise<Result<Channel, DatabaseUnavailable | HandleTaken>> {
     const normalized = input.handle.toLowerCase();
-    for (const channel of this.channels.values()) {
-      if (channel.handle.toLowerCase() === normalized) {
-        throw new PermanentError(
-          ErrorCodes.HANDLE_ALREADY_TAKEN,
-          `Channel with handle "${normalized}" already exists`
-        );
-      }
-      if (channel.userId === input.userId) {
-        throw new PermanentError(
-          ErrorCodes.HANDLE_ALREADY_TAKEN,
-          `User ${input.userId} already has a channel`
-        );
-      }
-    }
+    const colliding = this.find(
+      (channel) => channel.handle.toLowerCase() === normalized || channel.userId === input.userId
+    );
+    if (colliding) return err(handleTaken(normalized));
 
     const now = new Date();
     const channel: Channel = {
@@ -109,7 +105,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       updatedAt: now,
     };
     this.channels.set(channel.id, channel);
-    return channel;
+    return ok(channel);
   }
 
   /**
@@ -126,22 +122,19 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     return channel.subscriberCount;
   }
 
-  async update(id: string, input: UpdateChannelInput): Promise<Channel> {
+  async update(
+    id: string,
+    input: UpdateChannelInput
+  ): Promise<Result<Channel | null, DatabaseUnavailable | HandleTaken>> {
     const channel = this.channels.get(id);
-    if (!channel) {
-      throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, `Channel ${id} not found`);
-    }
+    if (!channel) return ok(null);
 
     if (input.handle) {
       const normalized = input.handle.toLowerCase();
-      for (const other of this.channels.values()) {
-        if (other.id !== id && other.handle.toLowerCase() === normalized) {
-          throw new PermanentError(
-            ErrorCodes.HANDLE_ALREADY_TAKEN,
-            `Channel with handle "${normalized}" already exists`
-          );
-        }
-      }
+      const heldByAnother = this.find(
+        (other) => other.id !== id && other.handle.toLowerCase() === normalized
+      );
+      if (heldByAnother) return err(handleTaken(normalized));
       channel.handle = normalized;
     }
 
@@ -151,6 +144,6 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     if (input.bio !== undefined) channel.bio = input.bio;
     channel.updatedAt = new Date();
 
-    return channel;
+    return ok(channel);
   }
 }
