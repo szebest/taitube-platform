@@ -183,7 +183,7 @@ packages/client/      browser only
 
 | Tier | Packages | May depend on |
 |---|---|---|
-| `universal` | `api-contracts`, `domain`, `env-schema`, `errors`, `pagination`, `permissions`, `tsconfig` | `universal` only — no `node:*`, no server SDK |
+| `universal` | `api-contracts`, `domain`, `errors`, `pagination`, `permissions`, `tsconfig` | `universal` only — no `node:*`, no server SDK |
 | `server` | `adapters`, `compose-autoscaler`, `config`, `core`, `db`, `dev-token`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
 | `client` | `api-client` | `universal` + `client` |
 
@@ -198,7 +198,7 @@ portability.
 **Which way may dependencies point?** That is the *layer*, declared as `vp.layer`:
 
 ```json
-"vp": { "tier": "server", "layer": 2 }
+"vp": { "layer": 2 }
 ```
 
 | Layer | Meaning | Packages |
@@ -262,7 +262,7 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
-| `package-boundaries.test.ts` | every package declares a tier and a layer; `vp.tier` matches its directory under `packages/`; `universal` never depends on `server`; dependencies point strictly down | a manifest whose tier contradicts its directory |
+| `package-boundaries.test.ts` | a package under `packages/<tier>/` takes its tier from that directory and must not declare `vp.tier`; everything else must; `universal` never depends on `server`; dependencies point strictly down, devDependencies included | a manifest that declares a tier its directory already fixes |
 | `sdk-confinement.test.ts` | `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are imported only under `packages/server/adapters/` and `packages/server/db/`, and **declared** in no other manifest | `import { Queue } from 'bullmq'` in `apps/api/src/app.ts` |
 | `lockfile-closure.test.ts` | `apps/web`'s resolved runtime closure holds no `server`-tier package — read from the lockfile, so a transitive edge is caught too | a `server` package linked into a `universal` package two hops from `apps/web` |
 | `local-first.test.ts` | no production source names an off-machine host; every uncommented `.env.example` default is local | a hardcoded `https://…onrender.com` |

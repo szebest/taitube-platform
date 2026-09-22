@@ -222,7 +222,8 @@ shows up as a failing test.
 2. Put it in `packages/<tier>/<name>`. The directory is the tier; there is no second place to declare it.
 3. Decide the **layer**: one more than the highest layer it depends on. If that forces a sibling edge, the
    design is wrong — fix the dependency, not the number.
-4. `package.json` gets `"vp": { "tier": ..., "layer": ... }`, and `tsconfig.json` extends
+4. `package.json` gets `"vp": { "layer": ... }` - **not a `tier`**, the directory already fixes that and
+   declaring one fails `pnpm boundaries`. `tsconfig.json` extends
    `@vp/tsconfig/<tier>.json`.
 5. Write `AGENTS.md` and run `pnpm sync:claude` for the symlink.
 6. `pnpm boundaries` must pass.
@@ -241,7 +242,7 @@ layer and have both depend on it. Do not add a sibling edge.
 
 ### Changing a package's tier
 
-Move the directory, update `vp.tier`, run `pnpm install` and `pnpm boundaries`. The move is deliberate by
+Move the directory, then run `pnpm install` and `pnpm boundaries`. There is no `vp.tier` to update. The move is deliberate by
 design — a tier change should be a visible commit, not a one-word edit.
 
 ---

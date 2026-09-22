@@ -1800,7 +1800,6 @@ video-pipeline/
 │   ├── universal/                          # runs in a browser AND on a server — no node:*, no server SDK
 │   │   ├── api-contracts/                  # zod schema per endpoint: params, query, body, response, error codes (single source)
 │   │   ├── domain/                          # entities, value objects, ranking & eligibility policy, the status vocabulary
-│   │   ├── env-schema/                      # zod env fragments + inferred types; the one .env contract, no runtime access
 │   │   ├── errors/                          # ApiErrorCodes + PipelineErrorCodes, ErrorCode union, Permanent/TransientError
 │   │   ├── pagination/                      # CursorCodec, Paginator, the limit+1 sentinel protocol
 │   │   ├── permissions/                     # declarative CASL rules, normalizers, helpers — the one isomorphic rule engine
@@ -1819,6 +1818,7 @@ video-pipeline/
 │       │   ├── in-memory/                   # autonomous test doubles with encapsulated state
 │       │   └── __tests__/contract/          # one conformance suite per port, run against BOTH adapters (PGLite)
 │       ├── config/                          # loadEnv(): reads process.env against @vp/env-schema, exits 1 on failure
+│       ├── env-schema/                      # zod env fragments + inferred types; the one .env contract, no runtime access
 │       ├── db/                               # drizzle schema, migrations/, client, seed
 │       ├── events/                           # Redis Pub/Sub channels + SSE envelope schemas
 │       ├── ffmpeg/                           # probe(), transcode/thumbnail args, progress parser, ladder, master playlist

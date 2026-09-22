@@ -37,7 +37,7 @@
     "start": "react-scripts start",
     "build": "cross-env DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false CI=false react-scripts build",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
