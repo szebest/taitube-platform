@@ -561,7 +561,12 @@ Decided at the throw site, never by regex on messages.
 | 3 | Backend-only monorepo with tRPC for client-server RPC | Rejected | Couples API transport to tRPC runtime; prevents clean REST/OpenAPI standard documentation for public consumers, third-party integrations, and standard load testing tools (k6). |
 
 **Consequences:**
-- `apps/web` must **never** import `core`, `adapters`, `packages/server/db`, or server runtimes. Enforced via ESLint/Biome import boundaries and CI build checks.
+- `apps/web` must **never** import `@vp/core`, `@vp/adapters`, `@vp/db` or any other `packages/server/*`
+  package. Enforced three ways, strongest first: pnpm links only declared dependencies, so the import does
+  not resolve; `pnpm boundaries` (`scripts/check-boundaries.ts`) rejects the manifest ahead of `pnpm build`
+  and `pnpm typecheck`; and `tests/architecture/` asserts it from both the manifest graph
+  (`package-boundaries.test.ts`) and the resolved lockfile (`lockfile-closure.test.ts`), which catches a
+  transitive edge no import scan would see. See [ARCHITECTURE.md §6](../ARCHITECTURE.md).
 - API endpoints are authored once in `packages/universal/api-contracts` (Zod) and compiled to OpenAPI schemas.
 - `packages/client/api-client` generates TanStack React Query hooks and type-safe fetchers from `@vp/api-contracts`.
 

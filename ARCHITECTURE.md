@@ -256,6 +256,7 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 |---|---|---|
 | `package-boundaries.test.ts` | every package declares a tier and a layer; `vp.tier` matches its directory under `packages/`; `universal` never depends on `server`; dependencies point strictly down | a manifest whose tier contradicts its directory |
 | `sdk-confinement.test.ts` | `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are imported only under `packages/server/adapters/` and `packages/server/db/`, and **declared** in no other manifest | `import { Queue } from 'bullmq'` in `apps/api/src/app.ts` |
+| `lockfile-closure.test.ts` | `apps/web`'s resolved runtime closure holds no `server`-tier package — read from the lockfile, so a transitive edge is caught too | a `server` package linked into a `universal` package two hops from `apps/web` |
 | `local-first.test.ts` | no production source names an off-machine host; every uncommented `.env.example` default is local | a hardcoded `https://…onrender.com` |
 | `file-ceiling.test.ts` | no production source over 400 lines or 10 KB | 450 lines appended to a domain module |
 | `test-correspondence.test.ts` | every production source has `__tests__/<name>.test.ts` beside it | a new source file with no spec |
