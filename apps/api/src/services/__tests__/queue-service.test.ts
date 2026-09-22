@@ -30,6 +30,13 @@ describe('apps/api: QueueService', () => {
     expect(metrics.find((m) => m.name === 'probe')?.counts.active).toBe(0);
   });
 
+  it('never reports zeroes for a registered queue whose port cannot answer', async () => {
+    const stub = { getName: () => 'probe' } as unknown as JobQueue;
+    const service = new QueueService({ queues: new Map<string, JobQueue>([['probe', stub]]) });
+
+    await expect(service.getQueueMetrics()).rejects.toThrow(TypeError);
+  });
+
   it('pauses and resumes a registered queue', async () => {
     const { service, queues } = serviceWith('package');
 

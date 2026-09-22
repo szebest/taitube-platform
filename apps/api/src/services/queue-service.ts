@@ -29,10 +29,6 @@ export interface QueueStatus {
   counts: QueueCountMetrics;
 }
 
-/**
- * QueueService — Domain service managing BullMQ queues inspection, Bull Board integration,
- * and operational controls (pause, resume, metrics).
- */
 export class QueueService {
   private readonly queuesMap: Map<string, JobQueue>;
   private readonly auth: AuthorizationPort;
@@ -49,16 +45,10 @@ export class QueueService {
     assertAdminAccess(this.auth, caller);
   }
 
-  /**
-   * Returns the registered JobQueue port for a specific queue name.
-   */
   getQueue(name: string): JobQueue | undefined {
     return this.queuesMap.get(name);
   }
 
-  /**
-   * Collects runtime status and job counts across all known queues.
-   */
   async getQueueMetrics(): Promise<QueueStatus[]> {
     const statuses: QueueStatus[] = [];
 
@@ -73,59 +63,22 @@ export class QueueService {
         continue;
       }
 
-      const [isPaused, counts] = await Promise.all([
-        typeof q.isPaused === 'function' ? q.isPaused() : Promise.resolve(false),
-        typeof q.getJobCounts === 'function'
-          ? q.getJobCounts()
-          : Promise.resolve({
-              active: 0,
-              completed: 0,
-              failed: 0,
-              delayed: 0,
-              waiting: 0,
-              paused: 0,
-            }),
-      ]);
+      const [isPaused, counts] = await Promise.all([q.isPaused(), q.getJobCounts()]);
 
-      statuses.push({
-        name: queueName,
-        isPaused,
-        counts,
-      });
+      statuses.push({ name: queueName, isPaused, counts });
     }
 
     return statuses;
   }
 
-  /**
-   * Pauses a specific job queue.
-   */
   async pauseQueue(queueName: string): Promise<void> {
-    const q = this.queuesMap.get(queueName);
-    if (!q) {
-      throw new PermanentError('QUEUE_NOT_FOUND', `Queue "${queueName}" not found`);
-    }
-    if (typeof q.pause === 'function') {
-      await q.pause();
-    }
+    await this.requireQueue(queueName).pause();
   }
 
-  /**
-   * Resumes a specific job queue.
-   */
   async resumeQueue(queueName: string): Promise<void> {
-    const q = this.queuesMap.get(queueName);
-    if (!q) {
-      throw new PermanentError('QUEUE_NOT_FOUND', `Queue "${queueName}" not found`);
-    }
-    if (typeof q.resume === 'function') {
-      await q.resume();
-    }
+    await this.requireQueue(queueName).resume();
   }
 
-  /**
-   * Configures and returns the Bull Board Fastify plugin mounted at the given basePath.
-   */
   getBoardPlugin(basePath: string): FastifyPluginCallback {
     const serverAdapter = new FastifyAdapter();
     serverAdapter.setBasePath(basePath);
@@ -136,5 +89,13 @@ export class QueueService {
     });
 
     return serverAdapter.registerPlugin();
+  }
+
+  private requireQueue(queueName: string): JobQueue {
+    const q = this.queuesMap.get(queueName);
+    if (!q) {
+      throw new PermanentError('QUEUE_NOT_FOUND', `Queue "${queueName}" not found`);
+    }
+    return q;
   }
 }
