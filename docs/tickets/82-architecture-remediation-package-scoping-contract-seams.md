@@ -697,49 +697,48 @@ Extend the W3 architecture suite (do not start a second one):
 
 ---
 
-### Outstanding at the end of W3 — why this ticket is not `done`
+### Still open — why this ticket is not `done`
 
-W3 (the last workstream) landed, and every workstream's implementation is on
-`ticket/82-architecture-remediation`. An audit of every AC found the following still open. They are listed
-so the next reader does not have to re-derive them; nothing here is blocked on W3.
+Every workstream's implementation is on `ticket/82-architecture-remediation`. This list is re-derived from
+the tree rather than carried forward, so anything an earlier audit named and the tree no longer shows is
+gone and is not repeated here: ADR-23 exists, `vp.tier` is off all 22 package manifests, `PageLimitSchema`
+derives its bounds from `@vp/pagination`, and `apps/worker/src/runner.ts` no longer compares
+`constructor.name`.
 
 **Needs a decision, not just work**
 
-1. **ADR-23 does not exist.** `docs/SDD.md` runs ADR-22 → ADR-24. The universal/server/client split *is*
-   recorded, but inside ADR-24. Either split it out or amend this ticket and its DoD line.
-2. **`vp.tier` still on all 22 package manifests**, which contradicts W9's "the tier has one source of truth:
-   the directory; `vp.tier` survives only on `apps/*`". `scripts/check-boundaries.ts` currently *requires* the
-   field — `TIER_MAY_IMPORT[pkg.tier]` keys the whole dependency check off it — so removing it is a change to
-   the checker, not a manifest edit. ADR-24's "Superseded" row reads as though the field were already gone.
-   Decide whether the AC or the implementation is wrong.
-3. **File ceiling.** Eight production files still exceed 400 lines / 10 KB, so the W4 AC is unmet. Seven breach
-   only the 10 KB half; `packages/server/gen-video/src/generator.ts` (447 lines) breaches both.
-   `packages/server/db/src/schema.ts` cannot be split under this ticket — reworking it is explicitly out of
-   scope. The ceiling is now machine-enforced against
-   `tests/architecture/oversized-sources.ts`, a shrink-only list holding exactly those eight, so the number
-   cannot grow; bringing it to zero wants its own ticket alongside the 1:1 test backlog.
+1. **W2's `vp.tier` acceptance criterion contradicts what shipped.** Line 525 asks every `package.json` to
+   declare `"vp": { "tier": ... }`. W9 made the directory the tier (ADR-23), and `scripts/check-boundaries.ts`
+   now *rejects* the field on anything under `packages/<tier>/`; it survives only on the three `apps/*`
+   manifests, which sit outside `packages/`. Amend the AC or revert the design — both cannot stand.
+2. **`@vp/core` has two runtime dependencies** — `@vp/domain` and `@vp/permissions` — against the **zero**
+   W2 asks for at line 529. Both arrived with the W9 split, which moved the portable 38 files out and left a
+   package of ports and repository contracts expressed over that vocabulary. Decide whether the clause meant
+   "no driver SDK reaches the browser through core" (satisfied) or literally zero, in which case core must
+   stop leaning on `@vp/permissions`.
+3. **File ceiling.** Seven production files still stand over the 400-line / 10 KB ceiling, so the W4 AC is
+   unmet. All seven breach only the 10 KB half — the longest is `apps/worker/src/stages/transcode.ts` at 391
+   lines. `packages/server/db/src/schema.ts` cannot be split under this ticket; reworking it is explicitly
+   out of scope. The ceiling is machine-enforced against `tests/architecture/oversized-sources.ts`, a
+   shrink-only list holding exactly those seven, so the number cannot grow; taking it to zero wants its own
+   ticket alongside the 1:1 test backlog.
 
 **Straightforward work**
 
-4. **ADR-21 has no pre-migration annotation**, and SDD §15.1 still describes `apps/web` as React 19 +
-   TanStack Start + Vite 6 + Tailwind v4 while the app is CRA 5 + React 18. The honest note exists in
-   `AGENTS.md` but not in the SDD.
-5. **SDD §15.1 has no tier column** — it carries the tier *directories* in its tree, but no table.
-6. **`@vp/core` has one runtime dependency** (`@vp/domain`, from the W9 split), so W2's "zero runtime
-   dependencies" clause is unmet.
-7. **`PageLimitSchema` in `@vp/api-contracts` hardcodes `.min(1).max(100).default(20)`** independently of
-   `PAGE_SIZE_DEFAULT` / `PAGE_SIZE_MAX`, so raising the env value leaves the wire contract rejecting at 100.
-   The runtime `Paginator` does derive from the env; the contract does not.
-8. **`apps/worker/src/runner.ts:89,91` still compares `constructor.name`** against `'InMemoryJobQueue'` /
-   `'InMemoryRepositories'` — the same defect W4 removed from `apps/api`, in the file the AC did not name.
+4. **ADR-21 has no pre-migration annotation**, and SDD §15.1's tree still describes `apps/web` as
+   "React 19 · TanStack Start/Router · Vite 6 · Tailwind v4" while the app is CRA 5 + React 18. The honest
+   note exists in `ARCHITECTURE.md` and `apps/web/AGENTS.md`, not in the SDD.
+5. **SDD §15.1 has no tier column.** Its tree carries the tier directories with a gloss on each, but §15.1
+   holds no table at all — the first one below it belongs to §15.2 Toolchain.
 
 **Process, not code**
 
-9. **Nothing is pushed or merged.** All 69 commits sit on one local branch; the DoD asks for nine reviewed
+6. **Nothing is pushed or merged.** All 80 commits sit on one local branch; the DoD asks for nine reviewed
    PRs with green CI.
-10. **`pnpm lint` reports 69 warnings** (67 `noExplicitAny`, 2 `useSimplifiedLogicExpression`), against a DoD
-    of zero. 68 predate this ticket; `apps/web` contributes one, a third-party children type in
-    `drag-scroll-menu.tsx`.
-11. **`make smoke-offline` has not been run** in this workstream — it needs Docker and the image set.
-12. **The architecture suite is a CI step, not a *required* check.** `main` has no branch-protection rule, and
-    that is a GitHub setting, not a file in this repository.
+7. **`pnpm lint` reports 70 warnings** (67 `noExplicitAny`, 3 `useSimplifiedLogicExpression`), against a DoD
+   of zero. Most sit in `apps/worker` and `apps/api` specs; `apps/web` contributes one, a third-party
+   children type in `drag-scroll-menu.tsx`.
+8. **`make smoke-offline` has not been run** in this workstream — it needs Docker and the image set.
+9. **The architecture suite is a CI step, not a *required* check.** `ci.yml` runs `pnpm test:architecture`,
+   but `main` carries no branch-protection rule, and that is a GitHub setting rather than a file in this
+   repository.
