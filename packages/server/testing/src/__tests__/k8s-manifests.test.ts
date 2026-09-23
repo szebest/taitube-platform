@@ -1,4 +1,6 @@
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import * as yaml from 'js-yaml';
 
@@ -111,6 +113,30 @@ const CLOUD_REPLICA_CAPS = [
 ];
 
 const stage = (name: string) => name.replace('vp-worker-', '');
+
+/** Three heartbeat intervals: the worker writes one every `WORKER_HEARTBEAT_INTERVAL_MS` (15 s). */
+const STALE_AFTER_SECONDS = 45;
+
+/** Runs a liveness command against a heartbeat file of the given age, or none at all. */
+function livenessPasses(command: string, ageSeconds: number | undefined): boolean {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vp-liveness-'));
+  const file = path.join(dir, 'heartbeat');
+  if (ageSeconds !== undefined) {
+    fs.writeFileSync(file, `${Math.floor(Date.now() / 1000) - ageSeconds}\n`);
+  }
+  const exits = (() => {
+    try {
+      execFileSync('sh', ['-c', command.replaceAll('/tmp/vp/heartbeat', file)], {
+        stdio: 'ignore',
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  fs.rmSync(dir, { recursive: true, force: true });
+  return exits;
+}
 const scaledObjectOf = (name: 'local' | 'cloud', workerName: string) =>
   named(name, 'ScaledObject', `${workerName}-scaledobject`);
 
@@ -165,7 +191,10 @@ describe('infra/k8s: local overlay', () => {
       expect(container.securityContext.allowPrivilegeEscalation).toBe(false);
       expect(container.resources.requests).toMatchObject(requests);
       expect(container.resources.limits).toMatchObject(limits);
-      expect(container.livenessProbe.exec.command[2]).toContain('/tmp/vp/heartbeat');
+      expect(container.livenessProbe.exec.command[2]).toBe(
+        `test -f /tmp/vp/heartbeat && test $(( $(date +%s) - $(cat /tmp/vp/heartbeat) )) -lt ${STALE_AFTER_SECONDS}`
+      );
+      expect(container.readinessProbe.httpGet).toEqual({ path: '/readyz', port: 'metrics' });
 
       const tmpVolume = deployment?.spec.template.spec.volumes.find(
         (v: Manifest) => v.name === 'tmp'
@@ -173,6 +202,17 @@ describe('infra/k8s: local overlay', () => {
       expect(tmpVolume?.emptyDir?.sizeLimit).toBeDefined();
     }
   );
+
+  it.each([
+    { heartbeat: 'a fresh heartbeat', age: 5, alive: true },
+    { heartbeat: 'a heartbeat three intervals old', age: STALE_AFTER_SECONDS, alive: false },
+    { heartbeat: 'no heartbeat file', age: undefined, alive: false },
+  ])('fails worker liveness on $heartbeat: $alive', ({ age, alive }) => {
+    const container = named('local', 'Deployment', 'vp-worker-probe')?.spec.template.spec
+      .containers[0];
+
+    expect(livenessPasses(container.livenessProbe.exec.command[2], age)).toBe(alive);
+  });
 
   it.each(WORKER_STAGES.filter((s) => s.threads))(
     '$name derives FFMPEG_THREADS from its cpu limit',
