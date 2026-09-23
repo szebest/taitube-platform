@@ -10,6 +10,12 @@
 
 **Status:** ready-for-agent
 
+> **Ticket 87 note:** a formatter is a cached, configured object with a lifetime, which is exactly what
+> [87](87-composition-root-typed-container-config-value.md) gives a home to. Register the formatter cache in the
+> container rather than as a module-level singleton — `defaultPaginator` and `getMetrics()` are the pattern 87
+> is removing, and a process-wide formatter cache keyed by locale is the same trap with an extra dimension.
+> Locale reaches a formatter as an argument or as config, never from ambient state.
+
 ---
 
 ## Why this ticket exists

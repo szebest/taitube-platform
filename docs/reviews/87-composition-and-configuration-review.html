@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Composition &amp; configuration review for taitube-platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { curve: "basis" } });
+    </script>
+    <style>
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .lbl { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+      .pre-wrap { white-space: pre-wrap; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans antialiased">
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+
+      <header class="border-b border-slate-300 pb-8">
+        <div class="flex items-baseline justify-between flex-wrap gap-3">
+          <h1 class="font-serif text-4xl tracking-tight">Composition &amp; configuration review</h1>
+          <p class="mono text-sm text-slate-500">taitube-platform @ <span class="text-slate-700">1cbb39a</span> &middot; 2026-09-23</p>
+        </div>
+        <p class="mt-3 text-slate-600 max-w-3xl">
+          How dependencies are wired and how configuration reaches the code that needs it, read from source after
+          tickets 82 and 84 landed. Every claim carries a <span class="mono text-sm">file:line</span> and was re-read
+          before it was written down. Baseline: <span class="mono text-sm">pnpm test:architecture</span> is green
+          &mdash; 19 files, 109 assertions, 991&nbsp;ms.
+        </p>
+        <p class="mt-4 text-sm text-slate-500">
+          Outcome: <a class="text-blue-700 underline" href="../tickets/87-composition-root-typed-container-config-value.md">ticket 87</a>.
+        </p>
+      </header>
+
+      <!-- ── 1. THE QUESTION ─────────────────────────────────────────── -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl">1. The question that started this</h2>
+        <p class="text-slate-700 max-w-3xl">
+          <em>Should dependency injection become global, the way it is in C#, NestJS or Angular, instead of passing
+          objects explicitly?</em>
+        </p>
+        <p class="text-slate-700 max-w-3xl">
+          Passing objects explicitly is not the problem. It is the reason 45 unit tests can build a service with
+          exactly the collaborators the case needs, and it is what makes the hexagon real rather than documented.
+          The problem is that the passing is <strong>optional</strong>, so the wiring the composition root performs is
+          not the wiring that runs. Eleven services read <span class="mono text-sm">process.env</span> behind the
+          caller's back, six construct a collaborator the caller forgot to hand them, and one builds a concrete
+          adapter class from inside <span class="mono text-sm">apps/api</span>.
+        </p>
+        <p class="text-slate-700 max-w-3xl">
+          That is a service locator wearing a constructor. A global container built on top of it would inherit every
+          one of those fallbacks and hide them one layer deeper. The order matters: <strong>make the dependencies
+          total first, then give them one registration surface.</strong>
+        </p>
+      </section>
+
+      <!-- ── 2. THE GRAPH TODAY ──────────────────────────────────────── -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl">2. Three composition roots, two of them disagreeing</h2>
+        <p class="text-slate-700 max-w-3xl">
+          659 lines wire this system, across four files. The API half was rebuilt in ticket 82 and is the better
+          half; the worker half was not touched and still decides its environment by inspecting objects.
+        </p>
+
+        <div class="bg-white rounded-lg border border-slate-200 p-5">
+          <pre class="mermaid">
+flowchart TB
+  subgraph API["apps/api &mdash; 370 lines"]
+    A1["app.ts<br/>buildApp()"] --> A2["composition/adapter-set.ts<br/>resolveAdapterSet(kind)"]
+    A1 --> A3["composition/service-set.ts<br/>createServiceSet()"]
+    A3 --> A2
+  end
+  subgraph WK["apps/worker &mdash; 289 lines"]
+    W1["runner.ts<br/>createWorkerRunner()"]
+  end
+  ENV[("process.env<br/>read raw in 11 more places")]
+  A1 -.-> ENV
+  A3 -.-> ENV
+  W1 -.-> ENV
+  SVC["12 services<br/>6 build their own collaborators"] -.-> ENV
+  A3 --> SVC
+  W1 --> ST["7 worker stages<br/>all read env at the default-parameter"]
+  ST -.-> ENV
+  CFG["@vp/config loadEnv()<br/>validated AppEnv"] --> M1["api/main.ts"]
+  CFG --> M2["worker/main.ts (partial)"]
+  M1 -. "4 of 40 keys forwarded" .-> A1
+  style ENV fill:#fee2e2,stroke:#ef4444
+  style CFG fill:#dcfce7,stroke:#22c55e
+          </pre>
+        </div>
+
+        <p class="text-slate-700 max-w-3xl">
+          <span class="mono text-sm">loadEnv()</span> exists, validates 40 keys with zod and fails fast with a
+          readable list. <span class="mono text-sm">apps/api/src/main.ts:11-19</span> forwards four of them into
+          <span class="mono text-sm">buildApp</span> and drops the rest; everything downstream re-reads raw
+          <span class="mono text-sm">process.env</span> with its own default. The green box is the design. The red box
+          is what actually configures the system.
+        </p>
+      </section>
+
+      <!-- ── 3. FINDINGS ─────────────────────────────────────────────── -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl">3. Findings</h2>
+        <div class="overflow-x-auto bg-white rounded-lg border border-slate-200">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-100 text-left">
+              <tr>
+                <th class="p-3 font-semibold w-10">#</th>
+                <th class="p-3 font-semibold">What is wrong</th>
+                <th class="p-3 font-semibold w-64">Where</th>
+                <th class="p-3 font-semibold w-24">Severity</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 align-top">
+              <tr>
+                <td class="p-3 mono">F1</td>
+                <td class="p-3"><strong>A configuration key that nothing reads.</strong> <span class="mono text-xs">S3_BUCKET_RAW</span> and <span class="mono text-xs">S3_BUCKET_PUBLIC</span> are declared in <span class="mono text-xs">.env.example</span>, in the zod schema and in the Kubernetes ConfigMap. Eleven production sites read <span class="mono text-xs">STORAGE_RAW_BUCKET</span> / <span class="mono text-xs">STORAGE_PUBLIC_BUCKET</span>, which are declared nowhere. Setting the bucket names documented for R2 at <span class="mono text-xs">.env.example:57-58</span> changes nothing &mdash; every reader falls through to the literal <span class="mono text-xs">'raw'</span> and <span class="mono text-xs">'public'</span>.</td>
+                <td class="p-3 mono text-xs">env-schema/src/index.ts:43-44 &middot; infra/k8s/base/configmap-secret.yaml:20-21 vs api/src/app.ts:52, upload-service.ts:80, worker stages &times;8</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-100 text-red-800 text-xs">high</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 mono">F2</td>
+                <td class="p-3"><strong>Nothing closes the API.</strong> <span class="mono text-xs">apps/api/src/main.ts</span> installs no <span class="mono text-xs">SIGTERM</span> or <span class="mono text-xs">SIGINT</span> handler, so the <span class="mono text-xs">onClose</span> hook never runs in production. The hook is also partial: it closes the category cache and the SSE hub, and leaves the Postgres pool, the Redis client, the storage client and eight BullMQ queues open. The worker does this correctly at <span class="mono text-xs">worker/src/main.ts:41-51</span>.</td>
+                <td class="p-3 mono text-xs">api/src/main.ts:32-37 &middot; api/src/app.ts:110-115</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-100 text-red-800 text-xs">high</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 mono">F3</td>
+                <td class="p-3"><strong>Services construct their own collaborators.</strong> Six constructors recover from a dependency the caller did not pass. <span class="mono text-xs">VideoService</span> builds a <span class="mono text-xs">CaslAuthorizationAdapter</span> &mdash; a service in <span class="mono text-xs">apps/api</span> importing a concrete adapter class, which is the single edge Invariant 1 exists to prevent. CASL is not on the SDK confinement list, so no test fires.</td>
+                <td class="p-3 mono text-xs">video-service.ts:77-78 &middot; feed-service.ts:46 &middot; category-service.ts:53 &middot; dlq-service.ts:59 &middot; subscription-service.ts:56 &middot; queue-service.ts:50</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-orange-100 text-orange-800 text-xs">med-high</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 mono">F4</td>
+                <td class="p-3"><strong>One value, four fallback chains, one of them empty.</strong> The CDN base is resolved and its trailing slash stripped in four places. <span class="mono text-xs">SubscriptionService</span> is the odd sibling: <span class="mono text-xs">(options.cdnBaseUrl ?? '')</span> &mdash; no env read, no default. Built without that option it emits relative thumbnail URLs while every other service emits absolute ones.</td>
+                <td class="p-3 mono text-xs">video-service.ts:83-84 &middot; sse-service.ts:116-117 &middot; subscription-service.ts:55 &middot; worker/stages/package.ts:56,62</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-orange-100 text-orange-800 text-xs">med-high</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 mono">F5</td>
+                <td class="p-3"><strong>Two environment detections, and the worker's is the shape an invariant already bans.</strong> <span class="mono text-xs">adapter-set.ts</span> takes an explicit <span class="mono text-xs">AdapterKind</span>, with a comment saying why inferring it is dangerous. <span class="mono text-xs">runner.ts</span> still infers, with <span class="mono text-xs">instanceof InMemoryJobQueue</span>. The fixture <span class="mono text-xs">class-name-inference.test.ts</span> uses to prove itself is <span class="mono text-xs">queue.constructor.name === 'InMemoryJobQueue'</span> &mdash; the same decision, one refactor away from the banned form.</td>
+                <td class="p-3 mono text-xs">worker/src/runner.ts:88-91 vs api/src/composition/adapter-set.ts:33-60</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-orange-100 text-orange-800 text-xs">med-high</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 mono">F6</td>
+                <td class="p-3"><strong><span class="mono text-xs">buildApp</span> is not a build.</strong> It starts two <span class="mono text-xs">setInterval</span> pollers and fires both immediately, and opens a Redis pub/sub subscription for the SSE hub. There are 32 call sites; 30 of them are tests that want routes, not timers.</td>
+                <td class="p-3 mono text-xs">api/src/app.ts:106-108 &middot; composition/service-set.ts:82</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-xs">medium</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 mono">F7</td>
+                <td class="p-3"><strong>Two shapes of route registration, and none of them is a plugin.</strong> Twelve <span class="mono text-xs">register*Routes</span> return <span class="mono text-xs">void</span>; <span class="mono text-xs">registerAdminQueuesRoutes</span> returns a promise, because it happens to call <span class="mono text-xs">app.register</span> inside. The <span class="mono text-xs">await</span>s in <span class="mono text-xs">buildApp</span> flush Avvio's boot queue; nothing between them reads a decorator the previous one added, so they are ordering ceremony, not ordering. Because no route module is a Fastify plugin, all thirteen share one encapsulation context.</td>
+                <td class="p-3 mono text-xs">api/src/app.ts:66-104 &middot; routes/admin/queues.ts:13</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-xs">medium</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 mono">F8</td>
+                <td class="p-3"><strong>25 conditional spreads guard a compiler flag that is off.</strong> <span class="mono text-xs">...(x === undefined ? {} : { x })</span> is only needed under <span class="mono text-xs">exactOptionalPropertyTypes</span>, which is set in no tsconfig in this repo. Under the current settings each one is assignment-equivalent to <span class="mono text-xs">x</span>.</td>
+                <td class="p-3 mono text-xs">11 files &mdash; service-set.ts&nbsp;&times;7, app.ts&nbsp;&times;3, feed-service.ts&nbsp;&times;3, &hellip;</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs">low</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 mono">F9</td>
+                <td class="p-3"><strong>Pure functions dressed as injectable services.</strong> <span class="mono text-xs">HttpCacheService</span> is 81 lines, three methods, zero state &mdash; injected into two services that each also build their own. <span class="mono text-xs">Singleflight</span> is a <span class="mono text-xs">Map&lt;string, Promise&gt;</span> with no Redis in it, living in <span class="mono text-xs">adapters/redis/</span>. SDD §6.4 blesses both, to maintain "a &gt;1:1 ratio of services to routes" &mdash; a target with no consumer, satisfied by classing three pure functions.</td>
+                <td class="p-3 mono text-xs">services/http-cache-service.ts &middot; adapters/redis/singleflight.ts &middot; docs/SDD.md §6.4</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-xs">medium</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 mono">F10</td>
+                <td class="p-3"><strong>The domain's identity type is owned by a Fastify plugin.</strong> Eleven service modules import <span class="mono text-xs">AuthUser</span> from <span class="mono text-xs">../plugins/auth</span>, where it is one line: <span class="mono text-xs">export type AuthUser = UserContext</span>, re-exported from <span class="mono text-xs">@vp/permissions</span>. The transport layer is upstream of the domain for no reason anyone chose.</td>
+                <td class="p-3 mono text-xs">plugins/auth.ts:25 &middot; 11 modules under services/</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs">low</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── 4. THE DI ANSWER ────────────────────────────────────────── -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl">4. What a container should and should not buy</h2>
+        <p class="text-slate-700 max-w-3xl">
+          Five things make DI in .NET, NestJS and Angular feel like infrastructure rather than plumbing. Four of them
+          are worth having here. The fifth is the one that costs a runtime dependency, and it is the one that buys
+          least.
+        </p>
+        <div class="overflow-x-auto bg-white rounded-lg border border-slate-200">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-100 text-left">
+              <tr>
+                <th class="p-3 font-semibold">What those frameworks give</th>
+                <th class="p-3 font-semibold w-44">Here today</th>
+                <th class="p-3 font-semibold">Verdict</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 align-top">
+              <tr>
+                <td class="p-3">One registration surface (<span class="mono text-xs">ServiceCollection</span>, <span class="mono text-xs">@Module({providers})</span>)</td>
+                <td class="p-3 text-orange-700">Three, two disagreeing (F5)</td>
+                <td class="p-3"><strong>Take it.</strong> One module per layer, shared by both apps.</td>
+              </tr>
+              <tr>
+                <td class="p-3">Lazy resolution &mdash; only what is reached is constructed</td>
+                <td class="p-3 text-orange-700">Everything, eagerly, 32&times; (F6)</td>
+                <td class="p-3"><strong>Take it.</strong> A memoised factory per token is four lines.</td>
+              </tr>
+              <tr>
+                <td class="p-3">Declared lifetimes (singleton / scoped / transient)</td>
+                <td class="p-3 text-slate-600">Implicit; two process-wide singletons (<span class="mono text-xs">defaultPaginator</span>, <span class="mono text-xs">getMetrics()</span>)</td>
+                <td class="p-3"><strong>Take the half that pays.</strong> Singleton-per-container plus ordered <span class="mono text-xs">dispose()</span>, which is also the fix for F2. Request scope has no consumer &mdash; the caller is already an argument.</td>
+              </tr>
+              <tr>
+                <td class="p-3">Test overrides (<span class="mono text-xs">overrideProvider().useValue()</span>)</td>
+                <td class="p-3 text-green-700">Already good &mdash; <span class="mono text-xs">buildApp({ adapters })</span></td>
+                <td class="p-3"><strong>Keep.</strong> Same ergonomics, one <span class="mono text-xs">override(token, value)</span>.</td>
+              </tr>
+              <tr>
+                <td class="p-3">Constructor injection <em>by type</em>, resolved through reflection</td>
+                <td class="p-3 text-slate-600">Hand-written <span class="mono text-xs">new X({&hellip;})</span></td>
+                <td class="p-3"><strong>Leave it.</strong> See below.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-white rounded-lg border border-slate-200 p-5 space-y-3">
+          <h3 class="font-serif text-lg">Why not the decorator kind</h3>
+          <ul class="list-disc pl-5 text-slate-700 space-y-1 text-sm max-w-3xl">
+            <li><strong>It needs reflection.</strong> <span class="mono text-xs">@Injectable()</span> resolving by type
+              requires <span class="mono text-xs">emitDecoratorMetadata</span> and a <span class="mono text-xs">reflect-metadata</span>
+              polyfill in the eager path of both deployables. TC39 standard decorators carry no parameter types, so
+              that ecosystem is pinned to the legacy flag indefinitely.</li>
+            <li><strong>It is a dual-runtime bet.</strong> Rule 2 requires worker code to behave identically under
+              vitest and <span class="mono text-xs">bun test</span>. Decorator metadata emission is exactly the class of
+              transpiler-level behaviour that rule exists to keep out.</li>
+            <li><strong>It trades a compile error for a runtime one.</strong> Forget <span class="mono text-xs">reactionCache</span>
+              today and TypeScript names the call site. Through a string- or symbol-keyed registry you find out when the
+              route runs &mdash; unless tokens carry their type, which is the cheap half of the idea and needs no decorators.</li>
+            <li><strong>45 unit tests would get worse.</strong> <span class="mono text-xs">new VideoService({ videos, authorization })</span>
+              is one line and says precisely what the case touches. <span class="mono text-xs">Test.createTestingModule</span>
+              is the NestJS tax for the same thing.</li>
+          </ul>
+        </div>
+
+        <div class="bg-slate-900 text-slate-100 rounded-lg p-5 overflow-x-auto">
+          <div class="lbl text-slate-400 mb-2">the whole mechanism &mdash; no dependency, no reflection, no cast</div>
+          <pre class="mono text-xs pre-wrap">export interface Token&lt;T&gt; { readonly name: string; readonly _t?: (x: T) =&gt; T }
+export const token = &lt;T&gt;(name: string): Token&lt;T&gt; =&gt; ({ name });
+
+export class Container {
+  provide&lt;T&gt;(t: Token&lt;T&gt;, make: (c: Container) =&gt; T): this   // registration
+  get&lt;T&gt;(t: Token&lt;T&gt;): T                                      // lazy, memoised, cycle-detecting
+  override&lt;T&gt;(t: Token&lt;T&gt;, value: T): this                    // tests
+  dispose(): Promise&lt;Result&lt;void, ShutdownFailed&gt;&gt;            // reverse construction order
+}
+
+// registration reads like a @Module, and the compiler checks every edge
+c.provide(Storage,      (c) =&gt; c.get(Config).kind === 'in-memory'
+                                 ? new InMemoryStorageClient()
+                                 : new S3StorageClient(c.get(Config).s3));
+c.provide(VideoService, (c) =&gt; new VideoService({
+  videos:        c.get(Repositories).videos,
+  authorization: c.get(Authorization),
+  paginator:     c.get(Paginator),
+  reactionCache: c.get(ReactionCache),
+  probeQueue:    c.get(Queues).get('probe'),
+  cdn:           c.get(Config).cdn,
+}));</pre>
+        </div>
+        <p class="text-slate-700 max-w-3xl text-sm">
+          <span class="mono text-xs">get</span> returns <span class="mono text-xs">T</span> with no cast, because the
+          token carries the type. The registration module is the single global surface that was missing. Nothing about
+          it is Fastify-specific, so <span class="mono text-xs">apps/worker</span> registers the same adapter half and
+          adds its own stages &mdash; which is what deletes F5.
+        </p>
+        <p class="text-slate-700 max-w-3xl text-sm">
+          At the transport edge there is a second, smaller move with the same shape: Fastify already has a container.
+          <span class="mono text-xs">app.decorate('services', …)</span> plus one <span class="mono text-xs">declare module 'fastify'</span>
+          &mdash; the mechanism <span class="mono text-xs">request.user</span> already uses at
+          <span class="mono text-xs">plugins/auth.ts:32-36</span> &mdash; retires thirteen hand-written
+          <span class="mono text-xs">*RouteOptions</span> interfaces and lets every route module become a plain plugin
+          registered from one table. That is what makes the <span class="mono text-xs">await</span>s uniform (F7),
+          rather than choosing a side.
+        </p>
+      </section>
+
+      <!-- ── 5. VIDEOSERVICE ─────────────────────────────────────────── -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl">5. Worked example: the <span class="mono text-xl">VideoService</span> constructor</h2>
+        <p class="text-slate-700 max-w-3xl">
+          Six statements, five of which exist only because the deps type is optional. Making the type total deletes the
+          body entirely &mdash; and the two fields that survive are not fields at all.
+        </p>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-white rounded-lg border border-red-200 p-4 overflow-x-auto">
+            <div class="lbl text-red-700 mb-2">today &mdash; video-service.ts:66-85</div>
+            <pre class="mono text-xs pre-wrap">private readonly videos: VideoRepository;
+private readonly cleanCdnBase: string;
+private readonly reactionCache?: ReactionCachePort;
+private readonly auth: AuthorizationPort;
+private readonly paginator: Paginator;
+private readonly lifecycle: VideoLifecycleDeps;
+
+constructor(deps: VideoServiceDeps) {
+  this.videos = deps.videos;
+  this.reactionCache = deps.reactionCache;
+  this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
+  this.paginator = deps.paginator ?? defaultPaginator;
+  this.lifecycle = {
+    videos: this.videos,
+    ...(deps.probeQueue ? { probeQueue: deps.probeQueue } : {}),
+  };
+  const cdnBase = deps.cdnBaseUrl || process.env['CDN_BASE_URL']
+    || DEFAULT_CDN_BASE_URL;
+  this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
+}</pre>
+          </div>
+          <div class="bg-white rounded-lg border border-green-200 p-4 overflow-x-auto">
+            <div class="lbl text-green-700 mb-2">after</div>
+            <pre class="mono text-xs pre-wrap">export interface VideoServiceDeps extends VideoLifecycleDeps {
+  reactionCache?: ReactionCachePort;
+  authorization: AuthorizationPort;
+  paginator: Paginator;
+  cdn: CdnBase;
+}
+
+export class VideoService {
+  constructor(private readonly deps: VideoServiceDeps) {}
+  …
+}</pre>
+            <ul class="list-disc pl-5 text-slate-700 space-y-1 text-xs mt-3">
+              <li><span class="mono">lifecycle</span> goes because the interface <em>extends</em> what the lifecycle
+                functions need. Rebuilding <span class="mono">{ videos, probeQueue }</span> field by field is a
+                needless projection of a type it could have aliased.</li>
+              <li><span class="mono">cleanCdnBase</span> goes because normalising a URL base is not this service's
+                job. <span class="mono">CdnBase</span> is parsed once in config &mdash; deleting the same
+                <span class="mono">.replace(/\/+$/, '')</span> from four files (F4).</li>
+              <li><span class="mono">auth</span> and <span class="mono">paginator</span> go from "or I will invent one"
+                to required, which is what makes the container's registration the truth (F3).</li>
+              <li>The import of <span class="mono">CaslAuthorizationAdapter</span> from
+                <span class="mono">@vp/adapters</span> disappears from <span class="mono">apps/api/src/services/</span>.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 6. BUILDAPP ─────────────────────────────────────────────── -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl">6. Worked example: <span class="mono text-xl">buildApp</span></h2>
+        <p class="text-slate-700 max-w-3xl">
+          Four jobs are braided into one function: resolving configuration, constructing the object graph, registering
+          HTTP, and starting background work. Splitting them is what answers the <span class="mono text-sm">await</span>
+          question, because the question only looks odd while the other three jobs are in the way.
+        </p>
+        <div class="bg-white rounded-lg border border-slate-200 p-5">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-left">
+              <tr><th class="p-2 font-semibold w-44">Job</th><th class="p-2 font-semibold">Today</th><th class="p-2 font-semibold">Belongs to</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 align-top">
+              <tr><td class="p-2 mono text-xs">config</td><td class="p-2">4 options + 2 raw <span class="mono text-xs">process.env</span> reads at <span class="mono text-xs">app.ts:52-53</span>, then 11 more downstream</td><td class="p-2"><span class="mono text-xs">loadEnv()</span> at the process entry, once</td></tr>
+              <tr><td class="p-2 mono text-xs">graph</td><td class="p-2"><span class="mono text-xs">resolveAdapterSet</span> + <span class="mono text-xs">createServiceSet</span>, both eager</td><td class="p-2"><span class="mono text-xs">Container</span> registration modules, lazy</td></tr>
+              <tr><td class="p-2 mono text-xs">http</td><td class="p-2">13 bespoke calls, 2 return shapes, 5 <span class="mono text-xs">await</span>s</td><td class="p-2">one table of Fastify plugins, one <span class="mono text-xs">await app.register</span> each</td></tr>
+              <tr><td class="p-2 mono text-xs">lifecycle</td><td class="p-2">2 pollers started inside the builder; <span class="mono text-xs">onClose</span> closes 2 of ~12 resources; no signal handler</td><td class="p-2"><span class="mono text-xs">start()</span> / <span class="mono text-xs">container.dispose()</span>, driven by <span class="mono text-xs">main.ts</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-slate-700 max-w-3xl text-sm">
+          On the <span class="mono text-sm">await</span>s specifically: <span class="mono text-sm">app.register()</span>
+          is deferred &mdash; Avvio runs the boot queue at <span class="mono text-sm">ready()</span> or
+          <span class="mono text-sm">listen()</span>, in registration order either way. Awaiting forces that step to run
+          now, which only matters when the next line reads something the plugin installed. No line in
+          <span class="mono text-sm">buildApp</span> does. So the five awaits are neither wrong nor load-bearing; they
+          are the residue of thirteen registration calls that were never given one shape. Make every route module a
+          plugin and the answer is the same for all of them.
+        </p>
+      </section>
+
+      <!-- ── 7. WHAT LANDS ───────────────────────────────────────────── -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl">7. What lands, and in what order</h2>
+        <div class="bg-white rounded-lg border border-slate-200 overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-100 text-left">
+              <tr><th class="p-3 font-semibold w-20">Stream</th><th class="p-3 font-semibold">Work</th><th class="p-3 font-semibold w-32">Closes</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 align-top">
+              <tr><td class="p-3 mono">W1</td><td class="p-3"><span class="mono text-xs">@vp/composition</span> &mdash; typed tokens, lazy memoised factories, cycle detection, ordered <span class="mono text-xs">dispose</span></td><td class="p-3 mono text-xs">&mdash;</td></tr>
+              <tr><td class="p-3 mono">W2</td><td class="p-3"><span class="mono text-xs">AppConfig</span> as a value: one <span class="mono text-xs">loadEnv()</span> per process, <span class="mono text-xs">CdnBase</span> and bucket names parsed once, the phantom env keys reconciled</td><td class="p-3 mono text-xs">F1, F4</td></tr>
+              <tr><td class="p-3 mono">W3</td><td class="p-3">Total dependencies: delete all six self-construction fallbacks and the 25 conditional spreads; deps become required</td><td class="p-3 mono text-xs">F3, F8</td></tr>
+              <tr><td class="p-3 mono">W4</td><td class="p-3">One registration surface for both apps; <span class="mono text-xs">AdapterKind</span> is the only switch; the worker's <span class="mono text-xs">instanceof</span> inference is deleted</td><td class="p-3 mono text-xs">F5</td></tr>
+              <tr><td class="p-3 mono">W5</td><td class="p-3">The API edge: route modules become plugins registered from a table, <span class="mono text-xs">app.decorate('services')</span>, pollers leave the builder, <span class="mono text-xs">SIGTERM</span> drains and disposes</td><td class="p-3 mono text-xs">F2, F6, F7</td></tr>
+              <tr><td class="p-3 mono">W6</td><td class="p-3">Placement: <span class="mono text-xs">Singleflight</span> out of <span class="mono text-xs">adapters/redis/</span>, <span class="mono text-xs">HttpCacheService</span> back to functions, <span class="mono text-xs">AuthUser</span> read from <span class="mono text-xs">@vp/permissions</span></td><td class="p-3 mono text-xs">F9, F10</td></tr>
+              <tr><td class="p-3 mono">W7</td><td class="p-3">Machine enforcement &mdash; the assertions that keep all of the above from drifting back &mdash; plus SDD ADR-25 and the deletion of the services-to-routes ratio line</td><td class="p-3 mono text-xs">all</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-slate-700 max-w-3xl text-sm">
+          W2 and W3 before W1 is the important ordering. A container registered over optional dependencies would
+          faithfully reproduce today's ambiguity behind a nicer API, and the ambiguity is the actual defect.
+        </p>
+      </section>
+
+      <footer class="border-t border-slate-300 pt-6 text-sm text-slate-500">
+        <p>Read at <span class="mono">1cbb39a</span>. Ticket: <a class="text-blue-700 underline" href="../tickets/87-composition-root-typed-container-config-value.md">87 &mdash; One composition root</a>. Prior review: <a class="text-blue-700 underline" href="82-architecture-remediation-review.html">82 &mdash; architecture remediation</a>.</p>
+      </footer>
+    </main>
+  </body>
+</html>
