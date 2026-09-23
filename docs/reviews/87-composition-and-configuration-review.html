@@ -103,6 +103,37 @@ flowchart TB
       <!-- ── 3. FINDINGS ─────────────────────────────────────────────── -->
       <section class="space-y-4">
         <h2 class="font-serif text-2xl">3. Findings</h2>
+
+        <div class="rounded-lg border-2 border-red-400 bg-red-50 p-5 space-y-3">
+          <div class="flex items-baseline gap-3 flex-wrap">
+            <span class="lbl text-red-700">F11 &middot; critical &middot; found on the second pass</span>
+            <h3 class="font-serif text-lg">A secret with a default, and the default is public</h3>
+          </div>
+          <p class="text-slate-800 text-sm max-w-3xl">
+            <span class="mono text-xs">env-schema/src/index.ts:58</span> declares
+            <span class="mono text-xs">ADMIN_TOKEN: z.string().default('change-me-32-bytes-random')</span>.
+            <span class="mono text-xs">plugins/auth.ts:18</span> declares the <em>same</em> default again,
+            independently. <span class="mono text-xs">auth.ts:45-47</span> grants
+            <span class="mono text-xs">role: 'ADMIN'</span> to any request whose
+            <span class="mono text-xs">x-admin-token</span> header matches it, before JWKS verification and
+            without provisioning. <span class="mono text-xs">.env.example:76</span> and
+            <span class="mono text-xs">infra/k8s/base/configmap-secret.yaml:66</span> ship it as a value.
+          </p>
+          <p class="text-slate-800 text-sm max-w-3xl">
+            A deployment that does not set <span class="mono text-xs">ADMIN_TOKEN</span> hands
+            <span class="mono text-xs">/admin/*</span> and Bull Board to anyone who reads this repository, and
+            nothing fails on boot to say so. Four more secret-shaped keys carry the same shape of default:
+            <span class="mono text-xs">WEBHOOK_SIGNING_SECRET</span>,
+            <span class="mono text-xs">S3_ACCESS_KEY_ID</span>,
+            <span class="mono text-xs">S3_SECRET_ACCESS_KEY</span>,
+            <span class="mono text-xs">REDIS_PASSWORD</span>.
+          </p>
+          <p class="text-slate-800 text-sm max-w-3xl">
+            It belongs here rather than in a security review because it is the same defect as F1 and F4 with a
+            worse consequence: a value that should arrive as configuration is invented by the code that needs
+            it. <strong>It is the only finding in this document that is exploitable rather than expensive.</strong>
+          </p>
+        </div>
         <div class="overflow-x-auto bg-white rounded-lg border border-slate-200">
           <table class="w-full text-sm">
             <thead class="bg-slate-100 text-left">
@@ -394,7 +425,8 @@ export class VideoService {
               <tr><td class="p-3 mono">W4</td><td class="p-3">One registration surface for both apps; <span class="mono text-xs">AdapterKind</span> is the only switch; the worker's <span class="mono text-xs">instanceof</span> inference is deleted</td><td class="p-3 mono text-xs">F5</td></tr>
               <tr><td class="p-3 mono">W5</td><td class="p-3">The API edge: route modules become plugins registered from a table, <span class="mono text-xs">app.decorate('services')</span>, pollers leave the builder, <span class="mono text-xs">SIGTERM</span> drains and disposes</td><td class="p-3 mono text-xs">F2, F6, F7</td></tr>
               <tr><td class="p-3 mono">W6</td><td class="p-3">Placement: <span class="mono text-xs">Singleflight</span> out of <span class="mono text-xs">adapters/redis/</span>, <span class="mono text-xs">HttpCacheService</span> back to functions, <span class="mono text-xs">AuthUser</span> read from <span class="mono text-xs">@vp/permissions</span></td><td class="p-3 mono text-xs">F9, F10</td></tr>
-              <tr><td class="p-3 mono">W7</td><td class="p-3">Machine enforcement &mdash; the assertions that keep all of the above from drifting back &mdash; plus SDD ADR-25 and the deletion of the services-to-routes ratio line</td><td class="p-3 mono text-xs">all</td></tr>
+              <tr><td class="p-3 mono">W7</td><td class="p-3">Machine enforcement &mdash; nine assertions that keep all of the above from drifting back &mdash; plus SDD ADR-25, SDD §11 and the deletion of the services-to-routes ratio line</td><td class="p-3 mono text-xs">all</td></tr>
+              <tr><td class="p-3 mono">W8</td><td class="p-3">Pay for what the ticket rewrites: narrow the correspondence rule so 31 declaration-only files leave the exemption list honestly, and write real specs for the ~19 files this ticket restructures</td><td class="p-3 mono text-xs">&mdash;</td></tr>
             </tbody>
           </table>
         </div>
@@ -404,8 +436,41 @@ export class VideoService {
         </p>
       </section>
 
+      <!-- ── 8. WHAT IT MOVES ────────────────────────────────────────── -->
+      <section class="space-y-4">
+        <h2 class="font-serif text-2xl">8. What it moves</h2>
+        <p class="text-slate-700 max-w-3xl text-sm">
+          Scored against what a platform of this kind needs in production, at <span class="mono text-sm">9d11fdc</span>.
+          The &quot;after&quot; column is a target derived from the acceptance criteria, not a claim.
+        </p>
+        <div class="bg-white rounded-lg border border-slate-200 overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-100 text-left">
+              <tr><th class="p-3 font-semibold">Dimension</th><th class="p-3 font-semibold w-20">Today</th><th class="p-3 font-semibold w-20">After 87</th><th class="p-3 font-semibold">What closes it</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr><td class="p-3">Configuration</td><td class="p-3 text-red-700 font-serif text-lg">3</td><td class="p-3 text-green-700 font-serif text-lg">9</td><td class="p-3">W2, and the env closure asserted in both directions</td></tr>
+              <tr><td class="p-3">Lifecycle &amp; operability</td><td class="p-3 text-red-700 font-serif text-lg">3</td><td class="p-3 text-green-700 font-serif text-lg">9</td><td class="p-3">W5: drain, readiness flip, grace periods, forced exit</td></tr>
+              <tr><td class="p-3">Dependency injection</td><td class="p-3 text-amber-700 font-serif text-lg">5</td><td class="p-3 text-green-700 font-serif text-lg">9</td><td class="p-3">W1, W3, W4</td></tr>
+              <tr><td class="p-3">Boundaries &amp; structure</td><td class="p-3 text-amber-700 font-serif text-lg">7</td><td class="p-3 text-green-700 font-serif text-lg">9</td><td class="p-3">W6, and instantiation asserted rather than only imports</td></tr>
+              <tr><td class="p-3">Authorization</td><td class="p-3 text-amber-700 font-serif text-lg">8</td><td class="p-3 text-green-700 font-serif text-lg">9</td><td class="p-3">W2: no defaulted secret, production boot fails without one (F11)</td></tr>
+              <tr><td class="p-3">Drift resistance</td><td class="p-3 text-amber-700 font-serif text-lg">8</td><td class="p-3 text-green-700 font-serif text-lg">9</td><td class="p-3">W7</td></tr>
+              <tr><td class="p-3">Error handling</td><td class="p-3 text-green-700 font-serif text-lg">9</td><td class="p-3 text-green-700 font-serif text-lg">9</td><td class="p-3">unchanged, ticket 84 did this</td></tr>
+              <tr><td class="p-3">Test discipline</td><td class="p-3 text-amber-700 font-serif text-lg">6</td><td class="p-3 text-amber-700 font-serif text-lg">7.5</td><td class="p-3">W8 takes 188 exemptions to ~138; reaching 9 is ticket 88</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-slate-700 max-w-3xl text-sm">
+          Test discipline is the one dimension 87 cannot finish. 39% of production sources are exempt from a rule
+          the repo calls a strict violation to break; 31 of those are the rule over-reaching into
+          declaration-only files, ~19 are files this ticket rewrites, and the remaining ~138 are ~130 specs -
+          a bigger job than everything else in the ticket combined. That is ticket 88, and 55 of its entries are
+          <span class="mono text-xs">apps/web</span>, which tickets 53-55 replace outright.
+        </p>
+      </section>
+
       <footer class="border-t border-slate-300 pt-6 text-sm text-slate-500">
-        <p>Read at <span class="mono">1cbb39a</span>. Ticket: <a class="text-blue-700 underline" href="../tickets/87-composition-root-typed-container-config-value.md">87 &mdash; One composition root</a>. Prior review: <a class="text-blue-700 underline" href="82-architecture-remediation-review.html">82 &mdash; architecture remediation</a>.</p>
+        <p>Read at <span class="mono">1cbb39a</span>. Ticket: <a class="text-blue-700 underline" href="../tickets/87-composition-root-typed-container-config-value.md">87 &mdash; One composition root</a>. Prior review: <a class="text-blue-700 underline" href="82-architecture-remediation-review.html">82 &mdash; architecture remediation</a>. Follow-up: <a class="text-blue-700 underline" href="../tickets/88-test-correspondence-burn-down.md">88 &mdash; test correspondence burn-down</a>.</p>
       </footer>
     </main>
   </body>
