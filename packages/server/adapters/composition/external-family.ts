@@ -61,13 +61,24 @@ export function registerFamily(c: Container): void {
       Adapters.QueueRegistry,
       () =>
         new LazyQueueRegistry(
-          (name) => new BullMqJobQueue({ type: 'connection', name, connection })
+          (name) =>
+            new BullMqJobQueue({
+              type: 'connection',
+              name,
+              connection,
+              prefix: config.redis.bullmqPrefix,
+            })
         ),
       closeOnDispose
     )
     .provide(
       Adapters.FlowProducer,
-      () => new BullMqFlowProducer({ type: 'connection', connection }),
+      () =>
+        new BullMqFlowProducer({
+          type: 'connection',
+          connection,
+          prefix: config.redis.bullmqPrefix,
+        }),
       closeOnDispose
     )
     .provide(

@@ -1,5 +1,4 @@
 import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
@@ -33,6 +32,8 @@ export interface ThumbnailProcessorDeps {
   workerId: string;
   logger: Logger;
   heartbeatPath: string;
+  tmpDir: string;
+  ffmpegPath: string;
   spriteIntervalSec: number;
 }
 
@@ -47,6 +48,8 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     workerId,
     logger,
     heartbeatPath,
+    tmpDir: tmpRoot,
+    ffmpegPath,
     spriteIntervalSec,
   } = deps;
 
@@ -109,7 +112,8 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     };
 
     // Per-job temp directory with guaranteed cleanup on every exit path
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `vp-thumb-${videoId}-`));
+    await fs.mkdir(tmpRoot, { recursive: true });
+    const tmpDir = await fs.mkdtemp(path.join(tmpRoot, `vp-thumb-${videoId}-`));
 
     try {
       // 1. Download source from S3
@@ -136,6 +140,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       const generated = await fromPromise(
         () =>
           runFfmpegThumbnail({
+            ffmpegPath,
             sourcePath: localSourcePath,
             outputDir: tmpDir,
             durationMs,

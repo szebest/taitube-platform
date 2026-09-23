@@ -39,6 +39,7 @@ export interface SpriteVttCue {
 }
 
 export interface RunThumbnailOptions {
+  ffmpegPath: string;
   sourcePath: string;
   outputDir: string;
   durationMs: number;
@@ -282,6 +283,7 @@ export async function runFfmpegThumbnail(
   options: RunThumbnailOptions
 ): Promise<ThumbnailExecutionResult> {
   const {
+    ffmpegPath,
     sourcePath,
     outputDir,
     durationMs,
@@ -316,8 +318,8 @@ export async function runFfmpegThumbnail(
 
   // 3. Concurrently generate poster and sprite
   await Promise.all([
-    runFfmpeg({ stage: 'thumbnail', args: posterArgs, timeoutMs }),
-    runFfmpeg({ stage: 'thumbnail', args: spriteArgs, timeoutMs }),
+    runFfmpeg({ ffmpegPath, stage: 'thumbnail', args: posterArgs, timeoutMs }),
+    runFfmpeg({ ffmpegPath, stage: 'thumbnail', args: spriteArgs, timeoutMs }),
   ]);
 
   return {

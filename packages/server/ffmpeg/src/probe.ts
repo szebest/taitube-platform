@@ -97,7 +97,7 @@ export function parseFps(rateStr?: string): number {
  */
 export function validateAndParseProbe(
   raw: RawFfprobeOutput,
-  maxDurationSec = 7200 // 2 hours default per PRD FR-1
+  maxDurationSec: number
 ): ProbeMetadata {
   if (raw.error) {
     throw new PermanentError(
@@ -187,9 +187,14 @@ export function validateAndParseProbe(
 /**
  * Runs ffprobe on a file path or URL and returns validated ProbeMetadata (SDD §8.1).
  */
+export interface FfprobeOptions {
+  ffprobePath: string;
+  maxDurationSec: number;
+}
+
 export async function runFfprobe(
   targetPathOrUrl: string,
-  maxDurationSec?: number
+  { ffprobePath, maxDurationSec }: FfprobeOptions
 ): Promise<ProbeMetadata> {
   const args = [
     '-v',
@@ -204,7 +209,7 @@ export async function runFfprobe(
   ];
 
   return new Promise<ProbeMetadata>((resolve, reject) => {
-    const proc = spawn('ffprobe', args, {
+    const proc = spawn(ffprobePath, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 

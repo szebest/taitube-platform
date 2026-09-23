@@ -5,10 +5,13 @@ import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
 
 export interface TranscodeOptions {
+  ffmpegPath: string;
   sourcePath: string;
   outputDir: string;
   rendition: LadderEntry;
   fps: number;
+  gopSeconds: number;
+  hlsSegmentSeconds: number;
   durationMs?: number;
   threads: number;
   attempt?: number;
@@ -40,15 +43,14 @@ export function computeFfmpegThreads(baseThreads: number, attempt = 1): number {
  * Builds the exact FFmpeg argument array according to SDD §8.2.
  */
 export function buildTranscodeArgs(options: TranscodeOptions): string[] {
-  const { sourcePath, outputDir, rendition, fps, preset } = options;
+  const { sourcePath, outputDir, rendition, fps, preset, gopSeconds, hlsSegmentSeconds } = options;
 
   const threads =
     options.attempt !== undefined
       ? computeFfmpegThreads(options.threads, options.attempt)
       : options.threads;
 
-  // SDD §8.2 & AC 18: GOP = round(2 * fps)
-  const gop = Math.max(1, Math.round(2 * fps));
+  const gop = Math.max(1, Math.round(gopSeconds * fps));
   const segmentFilename = path.join(outputDir, 'seg_%05d.ts');
   const playlistFilename = path.join(outputDir, 'index.m3u8');
 
@@ -92,7 +94,7 @@ export function buildTranscodeArgs(options: TranscodeOptions): string[] {
     '-sc_threshold',
     '0',
     '-force_key_frames',
-    'expr:gte(t,n_forced*2)',
+    `expr:gte(t,n_forced*${gopSeconds})`,
     '-c:a',
     'aac',
     '-b:a',
@@ -104,7 +106,7 @@ export function buildTranscodeArgs(options: TranscodeOptions): string[] {
     '-f',
     'hls',
     '-hls_time',
-    '6',
+    String(hlsSegmentSeconds),
     '-hls_playlist_type',
     'vod',
     '-hls_flags',
@@ -182,6 +184,7 @@ export function classifyFfmpegError(
 }
 
 export interface FfmpegRunOptions {
+  ffmpegPath: string;
   /** Names the span and the timeout message; one word, e.g. `transcode` or `thumbnail`. */
   stage: string;
   args: string[];
@@ -218,7 +221,7 @@ function redactedCommand(args: string[]): string {
  * SIGKILL, and rejects with the classified error built from the stderr tail.
  */
 export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
-  const { stage, args, timeoutMs, onStdoutLine } = options;
+  const { ffmpegPath, stage, args, timeoutMs, onStdoutLine } = options;
 
   const span = trace.getTracer('video-pipeline').startSpan('ffmpeg', {
     attributes: {
@@ -230,7 +233,7 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
   const startTime = Date.now();
 
   return new Promise((resolve, reject) => {
-    const proc = spawn('ffmpeg', args, {
+    const proc = spawn(ffmpegPath, args, {
       stdio: ['ignore', onStdoutLine ? 'pipe' : 'ignore', 'pipe'],
     });
 
@@ -320,6 +323,7 @@ export async function runFfmpegTranscode(
   const timeoutMs = options.timeoutMs || Math.max(3 * durationMs, 10 * 60 * 1000);
 
   await runFfmpeg({
+    ffmpegPath: options.ffmpegPath,
     stage: 'transcode',
     args: buildTranscodeArgs(options),
     timeoutMs,

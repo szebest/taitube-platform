@@ -1,6 +1,7 @@
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { describe, expect, it } from 'vitest';
 import { validateAndParseProbe } from '../index';
+import { PROBE_LIMITS } from './encoder-settings';
 
 describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
   it('AC 17: s60 1080p video selects full ladder [1080p, 720p, 480p]', () => {
@@ -24,7 +25,7 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
       },
     };
 
-    const res = validateAndParseProbe(raw);
+    const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
     expect(res.durationMs).toBe(60000);
     expect(res.fps).toBe(24);
     expect(res.videoCodec).toBe('h264');
@@ -49,7 +50,7 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
       },
     };
 
-    const res = validateAndParseProbe(raw);
+    const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
     expect(res.ladder.map((r) => r.name)).toEqual(['720p', '480p']);
   });
 
@@ -69,7 +70,7 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
       },
     };
 
-    const res = validateAndParseProbe(raw);
+    const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
     expect(res.ladder.map((r) => r.name)).toEqual(['480p']);
   });
 
@@ -92,7 +93,7 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
       },
     };
 
-    const res = validateAndParseProbe(raw);
+    const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
     expect(res.rotation).toBe(90);
     expect(res.effectiveWidth).toBe(1080);
     expect(res.effectiveHeight).toBe(1920);
@@ -115,7 +116,7 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
       },
     };
 
-    const res = validateAndParseProbe(raw);
+    const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
     expect(res.videoCodec).toBe('hevc');
     expect(res.ladder.length).toBe(3);
   });
@@ -133,9 +134,11 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
       },
     };
 
-    expect(() => validateAndParseProbe(raw)).toThrowError(PermanentError);
+    expect(() => validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec)).toThrowError(
+      PermanentError
+    );
     try {
-      validateAndParseProbe(raw);
+      validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
     } catch (err: unknown) {
       expect((err as PermanentError).code).toBe(ErrorCodes.CORRUPT_CONTAINER);
     }
@@ -157,7 +160,7 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
     };
 
     try {
-      validateAndParseProbe(raw);
+      validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
       expect.unreachable();
     } catch (err: unknown) {
       expect((err as PermanentError).code).toBe(ErrorCodes.UNSUPPORTED_CODEC);
@@ -203,7 +206,7 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
     };
 
     try {
-      validateAndParseProbe(raw);
+      validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
       expect.unreachable();
     } catch (err: unknown) {
       expect((err as PermanentError).code).toBe(ErrorCodes.CORRUPT_CONTAINER);

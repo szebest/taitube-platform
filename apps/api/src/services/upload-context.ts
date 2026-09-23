@@ -22,6 +22,8 @@ export interface UploadContext {
   rawBucket: string;
   probeQueue: JobQueue;
   multipartThresholdBytes: number;
+  partSizeMinBytes: number;
+  partSizeMaxBytes: number;
   presignedUrlTtlSeconds: number;
   uploadSessionTtlSeconds: number;
   maxInflightPerUser: number;

@@ -52,6 +52,8 @@ export function uploadContext(
     probeQueue: new InMemoryJobQueue('probe'),
     rawBucket: 'raw',
     multipartThresholdBytes: 10 * 1024 * 1024,
+    partSizeMinBytes: 8 * 1024 * 1024,
+    partSizeMaxBytes: 64 * 1024 * 1024,
     presignedUrlTtlSeconds: 900,
     uploadSessionTtlSeconds: 86_400,
     maxInflightPerUser: 3,

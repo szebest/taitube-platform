@@ -94,6 +94,8 @@ export function registerServices(c: Container): Container {
           probeQueue: c.get(Adapters.ProbeQueue),
           rawBucket: config().buckets.raw,
           multipartThresholdBytes: config().limits.multipartThresholdBytes,
+          partSizeMinBytes: config().limits.partSizeMinBytes,
+          partSizeMaxBytes: config().limits.partSizeMaxBytes,
           presignedUrlTtlSeconds: config().limits.presignTtlSeconds,
           uploadSessionTtlSeconds: config().limits.uploadSessionTtlSeconds,
           maxInflightPerUser: config().limits.maxInflightPerUser,

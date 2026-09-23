@@ -10,6 +10,7 @@ import {
   computeFfmpegThreads,
   runFfmpegTranscode,
 } from '../index';
+import { ENCODER } from './encoder-settings';
 
 describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
   const defaultRendition: LadderEntry = {
@@ -71,6 +72,7 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
       { attempt: 4, expected: '1' },
     ])('passes $expected threads to ffmpeg on attempt $attempt', ({ attempt, expected }) => {
       const args = buildTranscodeArgs({
+        ...ENCODER,
         sourcePath: 'dummy.mp4',
         outputDir: 'out',
         rendition: defaultRendition,
@@ -85,6 +87,7 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
 
     it('enforces -fps_mode cfr in buildTranscodeArgs for VFR handling', () => {
       const args = buildTranscodeArgs({
+        ...ENCODER,
         sourcePath: 'dummy.mp4',
         outputDir: 'out',
         rendition: defaultRendition,
@@ -154,6 +157,7 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
         const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-vfr-${rendition.name}-`));
         try {
           await runFfmpegTranscode({
+            ...ENCODER,
             sourcePath: vfrPath,
             outputDir: outDir,
             rendition,
@@ -201,6 +205,7 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
         const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-s60-${rendition.name}-`));
         try {
           await runFfmpegTranscode({
+            ...ENCODER,
             sourcePath: s60Path,
             outputDir: outDir,
             rendition,

@@ -11,6 +11,7 @@ import {
   parseSpriteVtt,
   runFfmpegThumbnail,
 } from '../index';
+import { ENCODER } from './encoder-settings';
 
 describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
   it('builds poster arguments with 10% seek offset and 1280x720 letterboxing', () => {
@@ -132,6 +133,7 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
 
     try {
       const result = await runFfmpegThumbnail({
+        ffmpegPath: ENCODER.ffmpegPath,
         sourcePath: fixturePath,
         outputDir: tmpDir,
         durationMs: 60000,

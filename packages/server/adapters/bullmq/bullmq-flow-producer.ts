@@ -5,7 +5,7 @@ import { type ConnectionOptions, type FlowJob, FlowProducer } from 'bullmq';
 
 export type BullMqFlowProducerConfig =
   | { type: 'producer'; producer: FlowProducer }
-  | { type: 'connection'; connection: ConnectionOptions };
+  | { type: 'connection'; connection: ConnectionOptions; prefix: string };
 
 export class BullMqFlowProducer extends FlowProducerPort {
   private readonly producer: FlowProducer;
@@ -17,7 +17,7 @@ export class BullMqFlowProducer extends FlowProducerPort {
         this.producer = config.producer;
         return;
       case 'connection':
-        this.producer = new FlowProducer({ connection: config.connection, prefix: 'bull' });
+        this.producer = new FlowProducer({ connection: config.connection, prefix: config.prefix });
         return;
       default:
         assertNever(config, 'BullMqFlowProducerConfig');

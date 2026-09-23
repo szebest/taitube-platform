@@ -107,7 +107,10 @@ export async function initiateUpload(
     });
   }
 
-  const partSizeBytes = calculatePartSize(sizeBytes);
+  const partSizeBytes = calculatePartSize(sizeBytes, {
+    minBytes: ctx.partSizeMinBytes,
+    maxBytes: ctx.partSizeMaxBytes,
+  });
   const partsExpected = calculateTotalParts(sizeBytes, partSizeBytes);
 
   const session = await ctx.multipart.createMultipartUpload(ctx.rawBucket, sourceKey, contentType);

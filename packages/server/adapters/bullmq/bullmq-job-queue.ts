@@ -37,7 +37,8 @@ export type BullMqJobQueueConfig = {
   | {
       type: 'connection';
       connection: ConnectionOptions;
-      options?: Omit<QueueOptions, 'connection'>;
+      prefix: string;
+      options?: Omit<QueueOptions, 'connection' | 'prefix'>;
     }
 );
 
@@ -61,7 +62,7 @@ export class BullMqJobQueue extends JobQueue {
       case 'connection':
         return new Queue(config.name, {
           connection: config.connection,
-          prefix: 'bull',
+          prefix: config.prefix,
           ...config.options,
         });
       default:
