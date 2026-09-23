@@ -349,6 +349,9 @@ importers:
       uuidv7:
         specifier: ^1.2.1
         version: 1.2.1
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@electric-sql/pglite':
         specifier: ^0.5.8
@@ -717,6 +720,9 @@ importers:
 
   packages/server/events:
     dependencies:
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../../universal/errors
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../job-contracts
@@ -757,6 +763,9 @@ importers:
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../job-contracts
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
     devDependencies:
       '@vp/testing':
         specifier: workspace:*
@@ -843,6 +852,9 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: ^1.43.0
         version: 1.43.0
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       pino:
         specifier: ^10.3.1
         version: 10.3.1

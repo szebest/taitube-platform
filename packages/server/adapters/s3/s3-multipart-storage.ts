@@ -19,7 +19,6 @@ import {
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, fromPromise, map, ok } from '@vp/result';
-import { measureStorageOp } from '../storage-metrics-helper';
 import { S3StorageClient, type S3StorageClientConfig } from './s3-storage-client';
 
 export type S3MultipartStorageConfig =
@@ -48,15 +47,13 @@ export class S3MultipartStorage extends MultipartStorage {
     key: string,
     contentType: string
   ): Promise<Result<string, StorageUnavailable>> {
-    return measureStorageOp('multipart', bucket, () =>
-      fromPromise(async () => {
-        const res = await this.client.send(
-          new CreateMultipartUploadCommand({ Bucket: bucket, Key: key, ContentType: contentType })
-        );
-        if (!res.UploadId) throw new Error('No UploadId returned from S3 createMultipartUpload');
-        return res.UploadId;
-      }, this.unavailable('createMultipartUpload'))
-    );
+    return fromPromise(async () => {
+      const res = await this.client.send(
+        new CreateMultipartUploadCommand({ Bucket: bucket, Key: key, ContentType: contentType })
+      );
+      if (!res.UploadId) throw new Error('No UploadId returned from S3 createMultipartUpload');
+      return res.UploadId;
+    }, this.unavailable('createMultipartUpload'));
   }
 
   async createPresignedPartUrl(
@@ -134,27 +131,25 @@ export class S3MultipartStorage extends MultipartStorage {
     parts: StorageCompletePartInput[]
   ): Promise<Result<void, StorageUnavailable>> {
     const sorted = [...parts].sort((a, b) => a.partNumber - b.partNumber);
-    return measureStorageOp('multipart', bucket, async () => {
-      const sent = await fromPromise(
-        () =>
-          this.client.send(
-            new CompleteMultipartUploadCommand({
-              Bucket: bucket,
-              Key: key,
-              UploadId: uploadId,
-              MultipartUpload: {
-                Parts: sorted.map((p) => ({
-                  PartNumber: p.partNumber,
-                  ETag: p.etag.startsWith('"') ? p.etag : `"${p.etag}"`,
-                })),
-              },
-            })
-          ),
-        this.unavailable('completeMultipartUpload')
-      );
+    const sent = await fromPromise(
+      () =>
+        this.client.send(
+          new CompleteMultipartUploadCommand({
+            Bucket: bucket,
+            Key: key,
+            UploadId: uploadId,
+            MultipartUpload: {
+              Parts: sorted.map((p) => ({
+                PartNumber: p.partNumber,
+                ETag: p.etag.startsWith('"') ? p.etag : `"${p.etag}"`,
+              })),
+            },
+          })
+        ),
+      this.unavailable('completeMultipartUpload')
+    );
 
-      return map(sent, () => undefined);
-    });
+    return map(sent, () => undefined);
   }
 
   async abortMultipartUpload(

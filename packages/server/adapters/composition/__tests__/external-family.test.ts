@@ -1,6 +1,9 @@
 import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
+import { createMetricsRegistry } from '@vp/observability';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
+import type { MeteredMultipartStorage } from '../../metered/metered-multipart-storage';
+import type { MeteredStorageClient } from '../../metered/metered-storage-client';
 import { PostgresDatabaseClient } from '../../postgres/postgres-database-client';
 import { RedisSubscriptionCacheAdapter } from '../../redis/redis-subscription-cache.adapter';
 import { S3MultipartStorage } from '../../s3/s3-multipart-storage';
@@ -10,7 +13,9 @@ import { registerFamily } from '../external-family';
 
 function family(): Container {
   const config = inProcessAppConfig({ kind: 'external', postgres: { poolMax: 3 } });
-  const c = new Container().provide(Adapters.Config, () => config);
+  const c = new Container()
+    .provide(Adapters.Config, () => config)
+    .provide(Adapters.Metrics, () => createMetricsRegistry());
   registerFamily(c);
   return c;
 }
@@ -20,8 +25,9 @@ describe('external adapter family', () => {
     const c = family();
 
     expect(c.get(Adapters.DbClient)).toBeInstanceOf(PostgresDatabaseClient);
-    expect(c.get(Adapters.Storage)).toBeInstanceOf(S3StorageClient);
-    expect(await (c.get(Adapters.Storage) as S3StorageClient).getRawClient().config.region()).toBe(
+    const storage = c.get(Adapters.Storage) as MeteredStorageClient;
+    expect(storage.inner).toBeInstanceOf(S3StorageClient);
+    expect(await (storage.inner as S3StorageClient).getRawClient().config.region()).toBe(
       'us-east-1'
     );
     await c.dispose();
@@ -40,11 +46,11 @@ describe('external adapter family', () => {
 
   it('builds multipart over the one S3 client, and closes that client once', async () => {
     const c = family();
-    const multipart = c.get(Adapters.Multipart);
-    const storage = c.get(Adapters.Storage) as S3StorageClient;
+    const multipart = c.get(Adapters.Multipart) as MeteredMultipartStorage;
+    const storage = (c.get(Adapters.Storage) as MeteredStorageClient).inner;
     const close = vi.spyOn(storage, 'close');
 
-    expect(multipart).toBeInstanceOf(S3MultipartStorage);
+    expect(multipart.inner).toBeInstanceOf(S3MultipartStorage);
     await c.dispose();
     expect(close).toHaveBeenCalledTimes(1);
   });

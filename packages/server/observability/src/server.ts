@@ -1,66 +1,91 @@
 import * as http from 'node:http';
+import { type Result, fromPromise, isErr, ok } from '@vp/result';
 import type { Registry } from 'prom-client';
 
 export interface MetricsServerOptions {
   port: number;
-  host?: string;
+  host: string;
   registry: Registry;
+  /** Serves `/readyz` when given: 200 while it answers `true`, 503 otherwise. */
+  ready?: () => Promise<boolean>;
 }
 
-export interface MetricsServer {
-  server: http.Server;
-  port: number;
-  close: () => Promise<void>;
-}
+type Reply = { status: number; contentType: string; body: string };
 
-export async function startMetricsServer(
-  options: MetricsServerOptions | number,
-  registryArg?: Registry
-): Promise<MetricsServer> {
-  const port = typeof options === 'number' ? options : options.port;
-  const host = typeof options === 'number' ? '0.0.0.0' : (options.host ?? '0.0.0.0');
-  const registry = typeof options === 'number' ? (registryArg as Registry) : options.registry;
+const text = (status: number, body: string): Reply => ({
+  status,
+  contentType: 'text/plain',
+  body,
+});
 
-  const server = http.createServer(async (req, res) => {
-    if (req.url === '/metrics' && req.method === 'GET') {
-      try {
-        const metrics = await registry.metrics();
-        res.writeHead(200, { 'Content-Type': registry.contentType });
-        res.end(metrics);
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end((err as Error).message);
-      }
-      return;
-    }
+/**
+ * The process's one scrape endpoint. Constructing it opens nothing, so a composition root can
+ * build it with the graph and `listen()` it as the first thing the process starts.
+ */
+export class MetricsServer {
+  private readonly server: http.Server;
 
-    if (req.url === '/healthz' && req.method === 'GET') {
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.end('ok');
-      return;
-    }
-
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
-  });
-
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(port, host, () => {
-      server.removeListener('error', reject);
-      resolve();
+  constructor(private readonly options: MetricsServerOptions) {
+    this.server = http.createServer((req, res) => {
+      void this.reply(req).then(({ status, contentType, body }) => {
+        res.writeHead(status, { 'Content-Type': contentType });
+        res.end(body);
+      });
     });
-  });
+  }
 
-  const addr = server.address();
-  const actualPort = typeof addr === 'object' && addr !== null ? addr.port : port;
+  get port(): number {
+    const address = this.server.address();
+    return typeof address === 'object' && address !== null ? address.port : this.options.port;
+  }
 
-  return {
-    server,
-    port: actualPort,
-    close: () =>
+  listen(): Promise<Result<void, Error>> {
+    return fromPromise(
       new Promise<void>((resolve, reject) => {
-        server.close((err) => (err ? reject(err) : resolve()));
+        this.server.once('error', reject);
+        this.server.listen(this.options.port, this.options.host, () => {
+          this.server.removeListener('error', reject);
+          resolve();
+        });
       }),
-  };
+      (cause) => cause as Error
+    );
+  }
+
+  close(): Promise<Result<void, Error>> {
+    if (!this.server.listening) return Promise.resolve(ok());
+    return fromPromise(
+      new Promise<void>((resolve, reject) => {
+        this.server.close((error) => (error ? reject(error) : resolve()));
+      }),
+      (cause) => cause as Error
+    );
+  }
+
+  private async reply(req: http.IncomingMessage): Promise<Reply> {
+    if (req.method !== 'GET') return text(404, 'Not Found');
+
+    switch (req.url) {
+      case '/metrics': {
+        const { registry } = this.options;
+        const scraped = await fromPromise(
+          () => registry.metrics(),
+          (cause) => cause as Error
+        );
+        return isErr(scraped)
+          ? text(500, scraped.error.message)
+          : { status: 200, contentType: registry.contentType, body: scraped.value };
+      }
+      case '/healthz':
+        return text(200, 'ok');
+      case '/readyz': {
+        const { ready } = this.options;
+        if (!ready) return text(404, 'Not Found');
+        const answered = await fromPromise(ready, () => false);
+        return answered.ok && answered.value ? text(200, 'ready') : text(503, 'not ready');
+      }
+      default:
+        return text(404, 'Not Found');
+    }
+  }
 }

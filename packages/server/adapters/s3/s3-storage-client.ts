@@ -26,7 +26,6 @@ import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result';
 import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
-import { measureStorageOp } from '../storage-metrics-helper';
 import { type S3ConnectionConfig, isNotFound, s3ClientFrom } from './s3-config';
 
 export type S3StorageClientConfig =
@@ -80,55 +79,49 @@ export class S3StorageClient extends StorageClient {
   async uploadObject(
     params: StorageUploadParams
   ): Promise<Result<StorageUploadResult, StorageUnavailable>> {
-    return measureStorageOp('put', params.bucket, async () => {
-      const sent = await fromPromise(
-        () =>
-          this.client.send(
-            new PutObjectCommand({
-              Bucket: params.bucket,
-              Key: params.key,
-              Body: params.body as PutObjectCommand['input']['Body'],
-              ContentType: params.contentType,
-              CacheControl: params.cacheControl,
-            })
-          ),
-        this.unavailable('uploadObject')
-      );
+    const sent = await fromPromise(
+      () =>
+        this.client.send(
+          new PutObjectCommand({
+            Bucket: params.bucket,
+            Key: params.key,
+            Body: params.body as PutObjectCommand['input']['Body'],
+            ContentType: params.contentType,
+            CacheControl: params.cacheControl,
+          })
+        ),
+      this.unavailable('uploadObject')
+    );
 
-      return map(sent, (res) => ({ key: params.key, etag: res.ETag }));
-    });
+    return map(sent, (res) => ({ key: params.key, etag: res.ETag }));
   }
 
   async headObject(
     bucket: string,
     key: string
   ): Promise<Result<StorageObjectMetadata | null, StorageUnavailable>> {
-    return measureStorageOp('head', bucket, () =>
-      this.absentOr<StorageObjectMetadata | null>('headObject', null, async () => {
-        const res = await this.client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
-        return {
-          contentLength: res.ContentLength ?? 0,
-          contentType: res.ContentType,
-          cacheControl: res.CacheControl,
-          etag: res.ETag,
-        };
-      })
-    );
+    return this.absentOr<StorageObjectMetadata | null>('headObject', null, async () => {
+      const res = await this.client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+      return {
+        contentLength: res.ContentLength ?? 0,
+        contentType: res.ContentType,
+        cacheControl: res.CacheControl,
+        etag: res.ETag,
+      };
+    });
   }
 
   async getObject(bucket: string, key: string): Promise<Result<Buffer, StorageUnavailable>> {
-    return measureStorageOp('get', bucket, async () =>
-      fromPromise(async () => {
-        const res = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-        if (!res.Body) throw new Error('Empty response body received from S3');
+    return fromPromise(async () => {
+      const res = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+      if (!res.Body) throw new Error('Empty response body received from S3');
 
-        const chunks: Buffer[] = [];
-        for await (const chunk of res.Body as AsyncIterable<Uint8Array | Buffer | string>) {
-          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-        }
-        return Buffer.concat(chunks);
-      }, this.unavailable('getObject'))
-    );
+      const chunks: Buffer[] = [];
+      for await (const chunk of res.Body as AsyncIterable<Uint8Array | Buffer | string>) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      return Buffer.concat(chunks);
+    }, this.unavailable('getObject'));
   }
 
   async downloadObject(
@@ -136,24 +129,20 @@ export class S3StorageClient extends StorageClient {
     key: string,
     targetFilePath: string
   ): Promise<Result<boolean, StorageUnavailable>> {
-    return measureStorageOp('get', bucket, () =>
-      this.absentOr('downloadObject', false, async () => {
-        const res = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-        if (!res.Body) return false;
-        await pipeline(res.Body as NodeJS.ReadableStream, fs.createWriteStream(targetFilePath));
-        return true;
-      })
-    );
+    return this.absentOr('downloadObject', false, async () => {
+      const res = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+      if (!res.Body) return false;
+      await pipeline(res.Body as NodeJS.ReadableStream, fs.createWriteStream(targetFilePath));
+      return true;
+    });
   }
 
   async deleteObject(bucket: string, key: string): Promise<Result<void, StorageUnavailable>> {
-    return measureStorageOp('delete', bucket, async () => {
-      const sent = await fromPromise(
-        () => this.client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key })),
-        this.unavailable('deleteObject')
-      );
-      return map(sent, () => undefined);
-    });
+    const sent = await fromPromise(
+      () => this.client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key })),
+      this.unavailable('deleteObject')
+    );
+    return map(sent, () => undefined);
   }
 
   async deleteObjects(
@@ -162,52 +151,48 @@ export class S3StorageClient extends StorageClient {
   ): Promise<Result<StorageDeleteObjectsResult, StorageUnavailable>> {
     if (keys.length === 0) return ok({ deletedKeys: [] });
 
-    return measureStorageOp('delete', bucket, async () => {
-      const deleted: string[] = [];
-      for (let i = 0; i < keys.length; i += S3_MAX_KEYS_PER_REQUEST) {
-        const chunk = keys.slice(i, i + S3_MAX_KEYS_PER_REQUEST);
-        const sent = await fromPromise(
-          () =>
-            this.client.send(
-              new DeleteObjectsCommand({
-                Bucket: bucket,
-                Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
-              })
-            ),
-          this.unavailable('deleteObjects')
-        );
-        if (!sent.ok) return sent;
-        deleted.push(...chunk);
-      }
-      return ok({ deletedKeys: deleted });
-    });
+    const deleted: string[] = [];
+    for (let i = 0; i < keys.length; i += S3_MAX_KEYS_PER_REQUEST) {
+      const chunk = keys.slice(i, i + S3_MAX_KEYS_PER_REQUEST);
+      const sent = await fromPromise(
+        () =>
+          this.client.send(
+            new DeleteObjectsCommand({
+              Bucket: bucket,
+              Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
+            })
+          ),
+        this.unavailable('deleteObjects')
+      );
+      if (!sent.ok) return sent;
+      deleted.push(...chunk);
+    }
+    return ok({ deletedKeys: deleted });
   }
 
   async listObjects(
     params: StorageListObjectsParams
   ): Promise<Result<StorageListObjectsResult, StorageUnavailable>> {
-    return measureStorageOp('list', params.bucket, async () => {
-      const sent = await fromPromise(
-        () =>
-          this.client.send(
-            new ListObjectsV2Command({
-              Bucket: params.bucket,
-              Prefix: params.prefix,
-              ContinuationToken: params.continuationToken,
-              MaxKeys: params.maxKeys,
-            })
-          ),
-        this.unavailable('listObjects')
-      );
+    const sent = await fromPromise(
+      () =>
+        this.client.send(
+          new ListObjectsV2Command({
+            Bucket: params.bucket,
+            Prefix: params.prefix,
+            ContinuationToken: params.continuationToken,
+            MaxKeys: params.maxKeys,
+          })
+        ),
+      this.unavailable('listObjects')
+    );
 
-      return map(sent, (res) => ({
-        keys: (res.Contents ?? [])
-          .map((obj) => obj.Key)
-          .filter((k): k is string => typeof k === 'string' && k.length > 0),
-        nextContinuationToken: res.NextContinuationToken,
-        isTruncated: res.IsTruncated ?? false,
-      }));
-    });
+    return map(sent, (res) => ({
+      keys: (res.Contents ?? [])
+        .map((obj) => obj.Key)
+        .filter((k): k is string => typeof k === 'string' && k.length > 0),
+      nextContinuationToken: res.NextContinuationToken,
+      isTruncated: res.IsTruncated ?? false,
+    }));
   }
 
   async purgePrefix(bucket: string, prefix: string): Promise<Result<number, StorageUnavailable>> {

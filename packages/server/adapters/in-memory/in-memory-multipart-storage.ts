@@ -10,7 +10,6 @@ import {
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
-import { measureStorageOp } from '../storage-metrics-helper';
 
 interface InFlightPart {
   partNumber: number;
@@ -43,16 +42,14 @@ export class InMemoryMultipartStorage extends MultipartStorage {
     key: string,
     contentType: string
   ): Promise<Result<string, StorageUnavailable>> {
-    return measureStorageOp('multipart', bucket, async () => {
-      const uploadId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      this.uploads.set(uploadId, {
-        bucket,
-        key,
-        contentType,
-        parts: new Map(),
-      });
-      return ok(uploadId);
+    const uploadId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    this.uploads.set(uploadId, {
+      bucket,
+      key,
+      contentType,
+      parts: new Map(),
     });
+    return ok(uploadId);
   }
 
   async createPresignedPartUrl(

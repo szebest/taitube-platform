@@ -3,27 +3,22 @@ import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom
 export interface PipelineMetrics {
   registry: Registry;
 
-  // HTTP Metrics (API)
   httpRequestDuration: Histogram<string>;
   httpRequestsInFlight: Gauge<string>;
 
-  // SSE Metrics
   sseConnections: Gauge<string>;
   sseEventsPublished: Counter<string>;
 
-  // BullMQ Queue & Worker Metrics
   bullmqQueueJobs: Gauge<string>;
   bullmqQueueOldestWaitingAge: Gauge<string>;
   jobsProcessed: Counter<string>;
   jobDuration: Histogram<string>;
   jobWaitDuration: Histogram<string>;
 
-  // Transcoding & FFmpeg Metrics
   transcodeRealtimeFactor: Histogram<string>;
   transcodeOutputBytes: Counter<string>;
   ffmpegExitTotal: Counter<string>;
 
-  // Storage & System Metrics
   storageOpsTotal: Counter<string>;
   storageOpDuration: Histogram<string>;
   workerTmpBytes: Gauge<string>;
@@ -36,10 +31,13 @@ export interface PipelineMetrics {
   outboxEventsPublished: Counter<string>;
 }
 
-export function createMetricsRegistry(defaultLabels: Record<string, string> = {}): PipelineMetrics {
+/** Every process metric carries this, so a scrape of any deployable names each series once. */
+const PROCESS_METRICS_PREFIX = 'vp_';
+
+/** One per process, built by its composition root and handed to everything that records. */
+export function createMetricsRegistry(): PipelineMetrics {
   const registry = new Registry();
-  registry.setDefaultLabels(defaultLabels);
-  collectDefaultMetrics({ register: registry });
+  collectDefaultMetrics({ register: registry, prefix: PROCESS_METRICS_PREFIX });
 
   const httpRequestDuration = new Histogram({
     name: 'http_request_duration_seconds',
@@ -224,13 +222,4 @@ export function createMetricsRegistry(defaultLabels: Record<string, string> = {}
     outboxDrainDuration,
     outboxEventsPublished,
   };
-}
-
-let defaultMetricsInstance: PipelineMetrics | null = null;
-
-export function getMetrics(): PipelineMetrics {
-  if (!defaultMetricsInstance) {
-    defaultMetricsInstance = createMetricsRegistry();
-  }
-  return defaultMetricsInstance;
 }

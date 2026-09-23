@@ -30,7 +30,7 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
         jobId: `${VIDEO_IDS.a}--probe`,
         videoId: VIDEO_IDS.a,
         payload: { videoId: VIDEO_IDS.a },
-        errorCode: 'PROBE_FAILED',
+        errorCode: 'CORRUPT_CONTAINER',
         errorMessage: 'ffprobe exited 1',
         attemptsMade: 3,
         workerId: 'worker-1',
@@ -48,7 +48,7 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
     it('parks a new entry by default', async () => {
       expect(expectOk(await dlq.findById(DLQ_IDS.first))).toMatchObject({
         queue: 'probe',
-        errorCode: 'PROBE_FAILED',
+        errorCode: 'CORRUPT_CONTAINER',
         attemptsMade: 3,
         workerId: 'worker-1',
         status: 'PARKED',

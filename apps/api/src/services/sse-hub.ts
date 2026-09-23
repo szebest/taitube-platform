@@ -2,13 +2,14 @@ import type { ServerResponse } from 'node:http';
 import type { CacheClient } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
 import { SseMessageEnvelope, USER_WILDCARD_CHANNEL, VIDEO_WILDCARD_CHANNEL } from '@vp/events';
-import { getMetrics } from '@vp/observability';
-import { type Result, err, isErr, isOk, ok, tryCatch } from '@vp/result';
+import type { PipelineMetrics } from '@vp/observability';
+import { type Result, err, ignore, isErr, isOk, ok, tryCatch } from '@vp/result';
 import { SseConnection } from './sse-connection';
 import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';
 
 export interface SseHubOptions {
   cache: CacheClient;
+  metrics: PipelineMetrics;
   maxConnectionsPerUser: number;
   maxPodConnections: number;
   heartbeatMs: number;
@@ -23,6 +24,7 @@ export interface RegisterConnectionOptions {
 
 export class SseHub {
   private readonly cache: CacheClient;
+  private readonly metrics: PipelineMetrics;
   private readonly maxConnectionsPerUser: number;
   private readonly maxPodConnections: number;
   private readonly heartbeatMs: number;
@@ -38,6 +40,7 @@ export class SseHub {
 
   constructor(options: SseHubOptions) {
     this.cache = options.cache;
+    this.metrics = options.metrics;
     this.maxConnectionsPerUser = options.maxConnectionsPerUser;
     this.maxPodConnections = options.maxPodConnections;
     this.heartbeatMs = options.heartbeatMs;
@@ -105,7 +108,7 @@ export class SseHub {
     this.activeConnections++;
 
     const channelType = channel.startsWith('video:') ? 'video' : 'user';
-    getMetrics().sseConnections.inc({ channel_type: channelType });
+    this.metrics.sseConnections.inc({ channel_type: channelType });
 
     connection.once('close', () => {
       this.unregister(connection);
@@ -135,7 +138,7 @@ export class SseHub {
     this.activeConnections = Math.max(0, this.activeConnections - 1);
 
     const channelType = connection.channel.startsWith('video:') ? 'video' : 'user';
-    getMetrics().sseConnections.dec({ channel_type: channelType });
+    this.metrics.sseConnections.dec({ channel_type: channelType });
   }
 
   private handlePubSubMessage(channel: string, rawMessage: string): void {
@@ -153,10 +156,12 @@ export class SseHub {
 
     const envelope: SseMessageEnvelope = parsed.data;
     for (const conn of set) {
-      // One connection that cannot take the event must not cost the others theirs.
-      tryCatch(
-        () => conn.onLiveEvent(envelope),
-        () => null
+      ignore(
+        tryCatch(
+          () => conn.onLiveEvent(envelope),
+          () => null
+        ),
+        'one connection that cannot take the event must not cost the others theirs'
       );
     }
   }
@@ -183,9 +188,14 @@ export class SseHub {
     this.activeConnections = 0;
 
     if (this.patternListener) {
-      // A cache that is already gone has nothing to unsubscribe from, so its failure is dropped.
-      await this.cache.punsubscribe(VIDEO_WILDCARD_CHANNEL, this.patternListener);
-      await this.cache.punsubscribe(USER_WILDCARD_CHANNEL, this.patternListener);
+      ignore(
+        await this.cache.punsubscribe(VIDEO_WILDCARD_CHANNEL, this.patternListener),
+        'a cache that is already gone has nothing to unsubscribe from'
+      );
+      ignore(
+        await this.cache.punsubscribe(USER_WILDCARD_CHANNEL, this.patternListener),
+        'a cache that is already gone has nothing to unsubscribe from'
+      );
       this.patternListener = undefined;
       this.isSubscribed = false;
     }

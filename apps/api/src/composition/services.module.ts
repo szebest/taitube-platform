@@ -1,8 +1,9 @@
 import { Adapters, queueNamed } from '@vp/adapters/composition';
 import { type Container, token } from '@vp/composition';
 import type { JobQueue } from '@vp/core/ports';
-import { getMetrics } from '@vp/observability';
+import { MetricsServer } from '@vp/observability';
 import { Paginator } from '@vp/pagination';
+import type { FastifyPluginCallback } from 'fastify';
 import { CategoryService } from '../services/category-service';
 import { ChannelService } from '../services/channel-service';
 import { DlqService } from '../services/dlq-service';
@@ -19,6 +20,7 @@ import { SseService } from '../services/sse-service';
 import { SubscriptionService } from '../services/subscription-service';
 import { UploadService } from '../services/upload-service';
 import { VideoService } from '../services/video-service';
+import { bullBoardPlugin } from './bull-board';
 
 export interface ServiceSet {
   videoService: VideoService;
@@ -33,6 +35,7 @@ export interface ServiceSet {
   sseService: SseService;
   sseHub: SseHub;
   readiness: ReadinessService;
+  queueBoard: FastifyPluginCallback;
 }
 
 export const Services = {
@@ -52,11 +55,17 @@ export const Services = {
   QueuePoller: token<Poller>('QueuePoller'),
   SqlPoller: token<Poller>('SqlPoller'),
   HousekeepingQueue: token<JobQueue>('HousekeepingQueue'),
+  QueueBoard: token<FastifyPluginCallback>('QueueBoard'),
+  MetricsServer: token<MetricsServer>('MetricsServer'),
   ServiceSet: token<ServiceSet>('ServiceSet'),
 } as const;
 
-/** Resolving them is what makes `start()` run them; nothing here opens a socket or a timer. */
+/**
+ * Resolving them is what makes `start()` run them, in this order: the scrape endpoint first, so
+ * the subscription, the pollers and the schedulers are measured from their first tick.
+ */
 export function resolveBackground(c: Container): void {
+  c.get(Services.MetricsServer);
   c.get(Services.SseHub);
   c.get(Services.QueuePoller);
   c.get(Services.SqlPoller);
@@ -148,8 +157,14 @@ export function registerServices(c: Container): Container {
       (c) =>
         new QueueService({
           queues: c.get(Adapters.Queues),
-          boardQueues: c.get(Adapters.BoardQueues),
         })
+    )
+    .provide(Services.QueueBoard, (c) =>
+      bullBoardPlugin({
+        basePath: '/admin/queues',
+        queues: c.get(Adapters.Queues).values(),
+        boardQueues: c.get(Adapters.BoardQueues),
+      })
     )
     .provide(
       Services.DlqService,
@@ -176,6 +191,7 @@ export function registerServices(c: Container): Container {
       (c) =>
         new SseHub({
           cache: c.get(Adapters.Cache),
+          metrics: c.get(Adapters.Metrics),
           maxConnectionsPerUser: config().sse.maxPerUser,
           maxPodConnections: config().sse.maxPerPod,
           heartbeatMs: config().sse.heartbeatMs,
@@ -196,8 +212,9 @@ export function registerServices(c: Container): Container {
       Services.QueuePoller,
       (c) => {
         const queues = c.get(Adapters.Queues);
+        const metrics = c.get(Adapters.Metrics);
         return new Poller(
-          () => pollQueueMetrics(queues, getMetrics()),
+          () => pollQueueMetrics(queues, metrics),
           config().pollers.queueIntervalMs
         );
       },
@@ -205,17 +222,29 @@ export function registerServices(c: Container): Container {
     )
     .provide(
       Services.SqlPoller,
-      () =>
-        new Poller(
-          () => pollSqlMetrics(repositories(), getMetrics(), config().pollers.staleStepMs),
+      (c) => {
+        const metrics = c.get(Adapters.Metrics);
+        return new Poller(
+          () => pollSqlMetrics(repositories(), metrics, config().pollers.staleStepMs),
           config().pollers.sqlIntervalMs
-        ),
+        );
+      },
       { start: (poller) => poller.start(), dispose: (poller) => poller.stop() }
     )
     .provide(
       Services.HousekeepingQueue,
       (c) => queueNamed(c.get(Adapters.Queues), 'housekeeping'),
       { start: (queue) => registerHousekeepingSchedulers(queue) }
+    )
+    .provide(
+      Services.MetricsServer,
+      (c) =>
+        new MetricsServer({
+          port: config().http.metricsPort,
+          host: '0.0.0.0',
+          registry: c.get(Adapters.Metrics).registry,
+        }),
+      { start: (server) => server.listen(), dispose: (server) => server.close() }
     )
     .provide(Services.ServiceSet, (c) => ({
       videoService: c.get(Services.VideoService),
@@ -230,5 +259,6 @@ export function registerServices(c: Container): Container {
       sseService: c.get(Services.SseService),
       sseHub: c.get(Services.SseHub),
       readiness: c.get(Services.Readiness),
+      queueBoard: c.get(Services.QueueBoard),
     }));
 }

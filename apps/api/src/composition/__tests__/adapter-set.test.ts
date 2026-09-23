@@ -33,8 +33,9 @@ describe('apps/api/composition: adapter overrides', () => {
   });
 
   it('leaves the configured adapter in place when an override is absent', async () => {
+    const configured = (await adapters()).get(Adapters.Storage);
     const c = overrideAdapters(await adapters(), { storage: undefined });
 
-    expect(c.get(Adapters.Storage)).toBeInstanceOf(InMemoryStorageClient);
+    expect(c.get(Adapters.Storage).constructor).toBe(configured.constructor);
   });
 });

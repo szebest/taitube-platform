@@ -1,16 +1,21 @@
 import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
+import { createMetricsRegistry } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../../in-memory/in-memory-subscription-cache';
+import type { MeteredMultipartStorage } from '../../metered/metered-multipart-storage';
+import type { MeteredStorageClient } from '../../metered/metered-storage-client';
 import { Adapters } from '../adapter-tokens';
 import { registerFamily } from '../in-memory-family';
 
 function family(): Container {
-  const c = new Container().provide(Adapters.Config, () => inProcessAppConfig());
+  const c = new Container()
+    .provide(Adapters.Config, () => inProcessAppConfig())
+    .provide(Adapters.Metrics, () => createMetricsRegistry());
   registerFamily(c);
   return c;
 }
@@ -19,8 +24,12 @@ describe('in-memory adapter family', () => {
   it('builds multipart over the storage it registered', () => {
     const c = family();
 
-    expect(c.get(Adapters.Storage)).toBeInstanceOf(InMemoryStorageClient);
-    expect(c.get(Adapters.Multipart)).toBeInstanceOf(InMemoryMultipartStorage);
+    expect((c.get(Adapters.Storage) as MeteredStorageClient).inner).toBeInstanceOf(
+      InMemoryStorageClient
+    );
+    expect((c.get(Adapters.Multipart) as MeteredMultipartStorage).inner).toBeInstanceOf(
+      InMemoryMultipartStorage
+    );
     expect(c.get(Adapters.SubscriptionCache)).toBeInstanceOf(InMemorySubscriptionCache);
   });
 
