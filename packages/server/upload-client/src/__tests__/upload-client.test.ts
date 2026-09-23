@@ -4,7 +4,11 @@ import * as http from 'node:http';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
-import { InMemoryCacheClient, InMemoryDatabaseClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import {
+  InMemoryCacheClient,
+  InMemoryDatabaseClient,
+  InMemoryRepositories,
+} from '@vp/adapters/in-memory';
 import { buildApp } from '@vp/api';
 import { mintToken } from '@vp/dev-token';
 import { expectOk } from '@vp/testing/result';

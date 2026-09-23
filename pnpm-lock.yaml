@@ -438,6 +438,9 @@ importers:
       '@vp/db':
         specifier: workspace:*
         version: link:../db
+      '@vp/dev-token':
+        specifier: workspace:*
+        version: link:../dev-token
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain

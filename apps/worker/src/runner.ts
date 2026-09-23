@@ -8,7 +8,7 @@ import type {
   StorageClient,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
+import type { AppConfig } from '@vp/env-schema';
 import { type AnyFailure, toPipelineError } from '@vp/errors';
 import {
   type Logger,
@@ -33,7 +33,7 @@ export interface WorkerAdapterOverrides {
 }
 
 export interface WorkerRunnerOptions {
-  config?: AppConfig;
+  config: AppConfig;
   adapters?: WorkerAdapterOverrides;
   logger?: Logger;
   metrics?: PipelineMetrics;
@@ -63,8 +63,8 @@ function overrideAdapters(c: Container, overrides: WorkerAdapterOverrides = {}):
 }
 
 /** Composes one stage over the adapter family its configuration names, and starts consuming. */
-export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Promise<WorkerRunner> {
-  const config = options.config ?? inProcessAppConfig();
+export async function createWorkerRunner(options: WorkerRunnerOptions): Promise<WorkerRunner> {
+  const { config } = options;
   const { stage } = config.worker;
   initTracing({ serviceName: `vp-worker-${stage}`, ...config.otel });
 

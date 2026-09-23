@@ -50,8 +50,6 @@ spec:
           env:
             - name: WORKER_STAGE
               value: housekeeping
-            - name: OTEL_SERVICE_NAME
-              value: vp-worker-housekeeping
           resources:
             requests:
               cpu: 200m

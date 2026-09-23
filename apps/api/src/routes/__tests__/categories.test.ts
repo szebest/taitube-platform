@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../../app';
@@ -17,7 +18,7 @@ describe('public category routes', () => {
       sortOrder: 0,
       isActive: false,
     });
-    app = await buildApp({ adapters: { repositories } });
+    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
     await app.ready();
   });
 

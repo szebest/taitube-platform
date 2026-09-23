@@ -49,8 +49,8 @@ Options:
 `);
 }
 
-export async function main(): Promise<void> {
-  const { options, check, help } = parseArgs(process.argv.slice(2));
+export async function main(args: readonly string[] = process.argv.slice(2)): Promise<void> {
+  const { options, check, help } = parseArgs([...args]);
 
   if (help) {
     printHelp();

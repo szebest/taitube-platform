@@ -100,7 +100,7 @@ export async function main(): Promise<void> {
   console.log(`  Status:    ${result.status}`);
 }
 
-if (process.argv[1]?.includes('cli')) {
+if (process.env.NODE_ENV !== 'test') {
   main().catch((err) => {
     console.error('[upload-client] Error:', err);
     process.exit(1);

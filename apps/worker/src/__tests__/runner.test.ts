@@ -57,7 +57,7 @@ describe('apps/worker: createWorkerRunner', () => {
   });
 
   it('names nothing still being disposed once it has closed', async () => {
-    const runner = await createWorkerRunner({ logger });
+    const runner = await createWorkerRunner({ config: inProcessAppConfig(), logger });
 
     await runner.close();
 

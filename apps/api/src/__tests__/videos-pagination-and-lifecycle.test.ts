@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -34,6 +35,7 @@ describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)
     storage = new InMemoryStorageClient();
 
     app = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories,
         cache,

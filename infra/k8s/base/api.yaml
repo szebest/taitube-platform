@@ -48,9 +48,6 @@ spec:
                 name: vp-config
             - secretRef:
                 name: vp-secrets
-          env:
-            - name: OTEL_SERVICE_NAME
-              value: vp-api
           resources:
             requests:
               cpu: 250m

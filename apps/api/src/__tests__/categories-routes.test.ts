@@ -385,6 +385,7 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
       const podBCacheService = new RedisCategoryCacheAdapter({ cache });
       expectOk(await podBCacheService.start());
       const podBApp = await buildApp({
+        config: inProcessAppConfig(),
         adapters: {
           repositories,
           cache,

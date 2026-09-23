@@ -50,8 +50,6 @@ spec:
           env:
             - name: WORKER_STAGE
               value: thumbnail
-            - name: OTEL_SERVICE_NAME
-              value: vp-worker-thumbnail
             - name: FFMPEG_THREADS
               valueFrom:
                 resourceFieldRef:

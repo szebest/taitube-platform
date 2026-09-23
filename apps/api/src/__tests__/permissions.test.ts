@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -39,6 +40,7 @@ describe('apps/api: route authorization', () => {
 
     repositories = new InMemoryRepositories();
     app = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories,
         cache: new InMemoryCacheClient(),

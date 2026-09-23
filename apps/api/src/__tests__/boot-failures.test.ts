@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryCacheClient, InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type {
   JobSchedulerTemplate,
@@ -49,7 +50,10 @@ function timers(): number {
 
 describe('apps/api: a dependency the API cannot boot without fails the start', () => {
   it('refuses to start on a cache that cannot take the SSE subscription', async () => {
-    const { app, container } = await composeApp({ adapters: { cache: new UnsubscribableCache() } });
+    const { app, container } = await composeApp({
+      config: inProcessAppConfig(),
+      adapters: { cache: new UnsubscribableCache() },
+    });
 
     const failed = expectErr(await container.start());
 
@@ -59,6 +63,7 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
 
   it('refuses to start when the housekeeping schedulers cannot be registered', async () => {
     const { app, container } = await composeApp({
+      config: inProcessAppConfig(),
       adapters: { queues: queuesWith(new UnschedulableQueue('housekeeping')) },
     });
 
@@ -77,7 +82,7 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
     const subscribe = vi.spyOn(cache, 'subscribe');
     const psubscribe = vi.spyOn(cache, 'psubscribe');
 
-    const app = await buildApp({ adapters: { cache } });
+    const app = await buildApp({ config: inProcessAppConfig(), adapters: { cache } });
     await app.ready();
 
     expect(timers()).toBe(before);
@@ -91,7 +96,10 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
     const before = timers();
     const cache = new InMemoryCacheClient();
     const psubscribe = vi.spyOn(cache, 'psubscribe');
-    const { app, container } = await composeApp({ adapters: { cache } });
+    const { app, container } = await composeApp({
+      config: inProcessAppConfig(),
+      adapters: { cache },
+    });
 
     expectOk(await container.start());
     expect(timers()).toBeGreaterThan(before);

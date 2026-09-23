@@ -1,12 +1,27 @@
 import type { Container } from '@vp/composition';
-import type { JobQueue } from '@vp/core/ports';
-import type { AppConfig } from '@vp/env-schema';
+import type { JobQueue, TokenVerifier } from '@vp/core/ports';
+import { getDevJwks } from '@vp/dev-token';
+import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
+import { assertNever } from '@vp/result';
+import { DevTokenVerifier } from '../auth/dev-token-verifier';
+import { JwksTokenVerifier } from '../auth/jwks-token-verifier';
 import { CaslAuthorizationAdapter } from '../authorization/casl-authorization-adapter';
 import { RedisCategoryCacheAdapter } from '../redis/redis-category-cache.adapter';
 import { RedisReactionCacheAdapter } from '../redis/redis-reaction-cache.adapter';
 import { Adapters } from './adapter-tokens';
 import { queueNamed } from './queue-registry';
+
+function tokenVerifier(auth: AuthConfig): TokenVerifier {
+  switch (auth.type) {
+    case 'jwks':
+      return new JwksTokenVerifier({ ...auth, fetch: (url) => fetch(url), now: Date.now });
+    case 'dev':
+      return new DevTokenVerifier({ ...auth, jwks: getDevJwks(), now: Date.now });
+    default:
+      return assertNever(auth, 'auth.type');
+  }
+}
 
 /**
  * The only place the platform chooses between the in-memory and the external adapter family.
@@ -27,6 +42,7 @@ export async function registerAdapters(c: Container, config: AppConfig): Promise
     })
     .provide(Adapters.ProbeQueue, (c) => queueNamed(c.get(Adapters.Queues), 'probe'))
     .provide(Adapters.Authorization, () => new CaslAuthorizationAdapter())
+    .provide(Adapters.TokenVerifier, () => tokenVerifier(config.auth))
     .provide(
       Adapters.ReactionCache,
       (c) =>

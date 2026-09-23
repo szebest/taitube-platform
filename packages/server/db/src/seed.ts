@@ -1,5 +1,3 @@
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { createDbClient } from './client';
 import { renditions, users, videos } from './schema';
 
@@ -180,17 +178,4 @@ export async function seedDatabase(connectionUrl: string): Promise<void> {
 
   console.log('[db:seed] Seed completed successfully: Dev user + READY video created.');
   await sql.end();
-}
-
-// Auto-run if executed directly
-if (
-  process.argv[1] &&
-  fileURLToPath(import.meta.url).toLowerCase() === path.resolve(process.argv[1]).toLowerCase()
-) {
-  seedDatabase(process.env['DATABASE_URL'] ?? 'postgres://vp:vp@localhost:5432/vp')
-    .then(() => process.exit(0))
-    .catch((err) => {
-      console.error('[db:seed] Seed failed:', err);
-      process.exit(1);
-    });
 }

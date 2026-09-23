@@ -123,7 +123,6 @@ jobs:
       - name: Run database migrations
         env:
           DATABASE_URL: postgres://vp:vp@localhost:5432/vp
-          DATABASE_URL_MIGRATIONS: postgres://vp:vp@localhost:5432/vp
         run: pnpm db:migrate
 
       - name: Run unit tests (Node 24)
@@ -193,7 +192,6 @@ jobs:
       - name: Run database migrations
         env:
           DATABASE_URL: postgres://vp:vp@localhost:5432/vp
-          DATABASE_URL_MIGRATIONS: postgres://vp:vp@localhost:5432/vp
         run: pnpm db:migrate
 
       - name: Run worker & packages unit tests under Bun (runtime parity gate)
@@ -255,7 +253,7 @@ jobs:
           docker compose -f infra/compose/docker-compose.yml up -d postgres redis minio
           until docker compose -f infra/compose/docker-compose.yml exec -T postgres pg_isready -U vp -d vp; do sleep 1; done
           docker compose -f infra/compose/docker-compose.yml up minio-init
-          DATABASE_URL="postgres://vp:vp@localhost:5432/vp" DATABASE_URL_MIGRATIONS="postgres://vp:vp@localhost:5432/vp" pnpm db:migrate
+          DATABASE_URL="postgres://vp:vp@localhost:5432/vp" pnpm db:migrate
 
       - name: Run infrastructure smoke test (infra/compose/test.sh)
         run: bash infra/compose/test.sh

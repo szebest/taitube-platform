@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
@@ -23,7 +24,7 @@ describe('public channel route', () => {
       handle: 'makers',
       displayName: 'The Makers',
     });
-    app = await buildApp({ adapters: { repositories } });
+    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
     await app.ready();
   });
 

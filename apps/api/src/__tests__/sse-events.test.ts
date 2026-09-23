@@ -564,6 +564,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     const sharedCache = new InMemoryCacheClient();
 
     const app1 = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories,
         cache: sharedCache,
@@ -573,6 +574,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     const addr1 = await app1.listen({ port: 0, host: '127.0.0.1' });
 
     const app2 = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories,
         cache: sharedCache,

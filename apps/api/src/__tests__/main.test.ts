@@ -46,7 +46,7 @@ describe('apps/api: main', () => {
     vi.restoreAllMocks();
   });
 
-  it('refuses a production boot without ADMIN_TOKEN before it binds a port', async () => {
+  it('refuses a production boot without its secrets before it binds a port', async () => {
     const port = await freePort();
     const exit = vi
       .spyOn(process, 'exit')
@@ -56,10 +56,10 @@ describe('apps/api: main', () => {
     await expect(
       main({
         NODE_ENV: 'production',
-        DATABASE_URL: 'postgres://vp:vp@localhost:5432/vp',
+        DATABASE_URL: 'postgres://localhost:5432/vp',
         PORT: String(port),
       })
-    ).rejects.toThrow('ADMIN_TOKEN');
+    ).rejects.toThrow('S3_ACCESS_KEY_ID: is required in production');
 
     expect(exit).toHaveBeenCalledWith(1);
     expect(await refusesConnections(port)).toBe(true);

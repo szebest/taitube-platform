@@ -116,8 +116,8 @@ obs-down: ## Stop observability stack
 obs-check: ## Assert observability stack targets UP and healthy via Prometheus API
 	bash scripts/obs-check.sh
 
-k8s-local-secrets: ## Write the local cluster's git-ignored ADMIN_TOKEN / WEBHOOK_SIGNING_SECRET once, with random values
-	@test -f $(LOCAL_SECRETS) || printf 'ADMIN_TOKEN=%s\nWEBHOOK_SIGNING_SECRET=%s\n' "$$(openssl rand -hex 32)" "$$(openssl rand -hex 32)" > $(LOCAL_SECRETS)
+k8s-local-secrets: ## Write the local cluster's git-ignored ADMIN_TOKEN once, with a random value
+	@test -f $(LOCAL_SECRETS) || printf 'ADMIN_TOKEN=%s\n' "$$(openssl rand -hex 32)" > $(LOCAL_SECRETS)
 
 k8s-validate: ## Validate Kubernetes manifests across local and cloud overlays
 	bash scripts/validate-k8s.sh
@@ -154,7 +154,7 @@ k3d-deploy: k8s-local-secrets ## Build local images, import to k3d, and apply Ku
 	fi
 	@echo "Applying Kubernetes manifests (local overlay)..."
 	@. ./$(LOCAL_SECRETS) && kubectl kustomize infra/k8s/overlays/local \
-		| sed -e "s/change-me-admin-token-local-cluster/$$ADMIN_TOKEN/" -e "s/change-me-webhook-secret-local-cluster/$$WEBHOOK_SIGNING_SECRET/" \
+		| sed -e "s/change-me-admin-token-local-cluster/$$ADMIN_TOKEN/" \
 		| kubectl apply -f -
 	@echo "Waiting for database migrations Job to complete..."
 	kubectl wait --for=condition=complete job/vp-migrate -n video-pipeline --timeout=120s || kubectl logs job/vp-migrate -n video-pipeline

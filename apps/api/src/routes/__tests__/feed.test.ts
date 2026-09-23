@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../../app';
@@ -25,7 +26,7 @@ describe('public feed route', () => {
         sourceKey: `raw/${id}/source.mp4`,
       });
     }
-    app = await buildApp({ adapters: { repositories } });
+    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
     await app.ready();
   });
 

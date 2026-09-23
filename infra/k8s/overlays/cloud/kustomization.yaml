@@ -8,6 +8,7 @@ resources:
   - cloudflared.yaml
   - redis.yaml
   - alloy.yaml
+  - external-secret.yaml
 
 # Cloud overlay skeleton (Phase 4, Ticket 32)
 # Replaces in-cluster Postgres and MinIO with Neon and Cloudflare R2 configurations
@@ -45,8 +46,27 @@ patches:
         path: /data/OTEL_EXPORTER_OTLP_ENDPOINT
         value: "http://alloy:4318"
       - op: add
-        path: /data/HOUSEKEEPING_INTERVAL_MS
-        value: "900000"
+        path: /data/AUTH_JWKS_URL
+        value: "https://auth.example.com/.well-known/jwks.json"
+      - op: replace
+        path: /data/AUTH_ISSUER
+        value: "https://auth.example.com/"
+      - op: replace
+        path: /data/AUTH_AUDIENCE
+        value: "taitube"
+      - op: replace
+        path: /data/CORS_ORIGINS
+        value: "https://taitube.example.com"
+  - target:
+      version: v1
+      kind: Secret
+      name: vp-secrets
+    patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: vp-secrets
   - target:
       group: keda.sh
       version: v1alpha1

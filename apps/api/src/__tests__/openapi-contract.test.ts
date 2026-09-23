@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -14,6 +15,7 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
 
   beforeAll(async () => {
     app = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories: new InMemoryRepositories(),
         cache: new InMemoryCacheClient(),

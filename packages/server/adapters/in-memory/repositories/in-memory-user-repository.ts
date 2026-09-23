@@ -36,17 +36,6 @@ export class InMemoryUserRepository extends UserRepository {
       webhookUrl: null,
       createdAt: new Date(),
     });
-    this.usersMap.set('00000000-0000-7000-8000-000000000003', {
-      id: '00000000-0000-7000-8000-000000000003',
-      email: 'admin@video-pipeline.local',
-      tier: 'enterprise',
-      role: 'ADMIN',
-      maxConcurrentUploads: 50,
-      maxVideoDurationSec: 14400,
-      storageQuotaBytes: 1024 * 1024 * 1024 * 1024,
-      webhookUrl: null,
-      createdAt: new Date(),
-    });
   }
 
   async findById(id: string): Promise<Result<UserRecord | null, DatabaseUnavailable>> {

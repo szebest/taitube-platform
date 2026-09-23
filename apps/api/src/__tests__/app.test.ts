@@ -15,7 +15,7 @@ describe('apps/api: composeApp', () => {
   });
 
   it('registers every plugin in the route table', async () => {
-    const app = await buildApp();
+    const app = await buildApp({ config: inProcessAppConfig() });
     await app.ready();
 
     const registered = app.printRoutes({ commonPrefix: false });
@@ -27,7 +27,10 @@ describe('apps/api: composeApp', () => {
 
   it('builds over an adapter a test hands it instead of the configured one', async () => {
     const storage = new InMemoryStorageClient();
-    const { app, container } = await composeApp({ adapters: { storage } });
+    const { app, container } = await composeApp({
+      config: inProcessAppConfig(),
+      adapters: { storage },
+    });
 
     expect(container.get(Adapters.Storage)).toBe(storage);
     await app.close();
@@ -36,7 +39,10 @@ describe('apps/api: composeApp', () => {
   it('disposes the container when the app closes, and leaves an override to its owner', async () => {
     const storage = new InMemoryStorageClient();
     const storageClose = vi.spyOn(storage, 'close');
-    const { app, container } = await composeApp({ adapters: { storage } });
+    const { app, container } = await composeApp({
+      config: inProcessAppConfig(),
+      adapters: { storage },
+    });
     const cacheClose = vi.spyOn(container.get(Adapters.Cache), 'close');
 
     await app.close();

@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintDevToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
@@ -32,7 +33,10 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
     if (!hkQ) throw new Error('housekeeping queue missing');
     housekeepingQueue = hkQ;
 
-    const composed = await composeApp({ adapters: { repositories, queues: queuesMap } });
+    const composed = await composeApp({
+      config: inProcessAppConfig(),
+      adapters: { repositories, queues: queuesMap },
+    });
     expectOk(await composed.container.start());
     app = composed.app;
     await app.ready();
@@ -88,7 +92,10 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
 
     it('restarting the API twice leaves exactly one of each scheduler', async () => {
       // Boot a second API instance on the same queues
-      const second = await composeApp({ adapters: { repositories, queues: queuesMap } });
+      const second = await composeApp({
+        config: inProcessAppConfig(),
+        adapters: { repositories, queues: queuesMap },
+      });
       expectOk(await second.container.start());
       const secondApp = second.app;
 
