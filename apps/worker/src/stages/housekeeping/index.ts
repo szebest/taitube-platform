@@ -6,9 +6,9 @@ import type {
   StorageClient,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import type { AnyFailure } from '@vp/errors';
 import { HousekeepingJob, type QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
-import type { AnyFailure } from '@vp/errors';
 import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runPurgeDeleted } from './purge-deleted';

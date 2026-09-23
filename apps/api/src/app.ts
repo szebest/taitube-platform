@@ -1,7 +1,7 @@
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
-import { registerAdapters } from '@vp/adapters';
+import { registerAdapters } from '@vp/adapters/composition';
 import { Container } from '@vp/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import fastify, { type FastifyInstance } from 'fastify';

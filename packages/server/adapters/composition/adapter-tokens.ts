@@ -1,3 +1,4 @@
+import type { BaseAdapter } from '@bull-board/api/baseAdapter';
 import { token } from '@vp/composition';
 import type {
   AuthorizationPort,
@@ -30,4 +31,5 @@ export const Adapters = {
   SubscriptionCache: token<SubscriptionCachePort>('SubscriptionCache'),
   CategoryCache: token<CategoryCachePort>('CategoryCache'),
   Authorization: token<AuthorizationPort>('Authorization'),
+  BoardQueues: token<(queues: Iterable<JobQueue>) => BaseAdapter[]>('BoardQueues'),
 } as const;

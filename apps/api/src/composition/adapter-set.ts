@@ -1,4 +1,4 @@
-import { Adapters } from '@vp/adapters';
+import { Adapters } from '@vp/adapters/composition';
 import type { Container, Token } from '@vp/composition';
 import type {
   AuthorizationPort,

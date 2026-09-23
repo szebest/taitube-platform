@@ -1,5 +1,4 @@
-import { Adapters } from '@vp/adapters';
-import { bullBoardQueues } from '@vp/adapters/bullmq';
+import { Adapters } from '@vp/adapters/composition';
 import { type Container, token } from '@vp/composition';
 import type { JobQueue } from '@vp/core/ports';
 import { getMetrics } from '@vp/observability';
@@ -142,7 +141,11 @@ export function registerServices(c: Container): Container {
     )
     .provide(
       Services.QueueService,
-      (c) => new QueueService({ queues: c.get(Adapters.Queues), boardQueues: bullBoardQueues })
+      (c) =>
+        new QueueService({
+          queues: c.get(Adapters.Queues),
+          boardQueues: c.get(Adapters.BoardQueues),
+        })
     )
     .provide(
       Services.DlqService,

@@ -1,5 +1,6 @@
-import { CaslAuthorizationAdapter, RedisReactionCacheAdapter } from '@vp/adapters';
+import { CaslAuthorizationAdapter } from '@vp/adapters/authorization';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
+import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { VideoRepository } from '@vp/core/repositories';
 import { asCdnBase } from '@vp/env-schema';
 import { defaultPaginator } from '@vp/pagination';

@@ -1,4 +1,5 @@
 import { type Container, closeOnDispose } from '@vp/composition';
+import { portBoardQueues } from '../bullmq/port-board-queues';
 import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
 import { InMemoryFlowProducer } from '../in-memory/in-memory-flow-producer';
@@ -33,5 +34,6 @@ export function registerFamily(c: Container): void {
       },
       closeOnDispose
     )
-    .provide(Adapters.SubscriptionCache, () => new InMemorySubscriptionCache());
+    .provide(Adapters.SubscriptionCache, () => new InMemorySubscriptionCache())
+    .provide(Adapters.BoardQueues, () => portBoardQueues);
 }

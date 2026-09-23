@@ -159,7 +159,7 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
             rendition,
             fps: 24,
             durationMs: 15000,
-            threads: 2,
+            threads: 0,
             preset: 'ultrafast',
           });
 
@@ -206,7 +206,7 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
             rendition,
             fps: 24,
             durationMs: 18000, // 3 segments
-            threads: 2,
+            threads: 0,
             preset: 'ultrafast',
           });
 

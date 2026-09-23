@@ -1,9 +1,9 @@
-import { RedisReactionCacheAdapter } from '@vp/adapters';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
+import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { type Result, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { beforeEach, describe, expect, it } from 'vitest';

@@ -78,6 +78,17 @@ describe('apps/api/services: SseHub', () => {
     expect(chunks.join('')).toContain('"percent":45');
   });
 
+  it('subscribes once when two streams ask it to at the same time', async () => {
+    cache.isReachable = true;
+    const psubscribe = vi.spyOn(cache, 'psubscribe');
+
+    const [first, second] = await Promise.all([hub.init(), hub.init()]);
+
+    expectOk(first);
+    expectOk(second);
+    expect(psubscribe).toHaveBeenCalledTimes(2);
+  });
+
   it('reports a cache that cannot take the wildcard subscription', async () => {
     expect(expectErr(await hub.init()).code).toBe(ErrorCodes.CACHE_UNAVAILABLE);
   });

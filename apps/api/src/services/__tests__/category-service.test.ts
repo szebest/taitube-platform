@@ -1,5 +1,5 @@
-import { RedisCategoryCacheAdapter } from '@vp/adapters';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cache.adapter';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';

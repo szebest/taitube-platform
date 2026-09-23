@@ -1,4 +1,4 @@
-import { Adapters } from '@vp/adapters';
+import { Adapters } from '@vp/adapters/composition';
 import { InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { buildApp, composeApp } from '../app';

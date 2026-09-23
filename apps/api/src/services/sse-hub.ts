@@ -33,6 +33,7 @@ export class SseHub {
   private activeConnections = 0;
   private isSubscribed = false;
   private isClosed = false;
+  private subscribing: Promise<Result<void, CacheUnavailable>> | undefined;
   private patternListener?: (pattern: string, channel: string, message: string) => void;
 
   constructor(options: SseHubOptions) {
@@ -50,6 +51,13 @@ export class SseHub {
   async init(): Promise<Result<void, CacheUnavailable>> {
     if (this.isSubscribed || this.isClosed) return ok();
 
+    this.subscribing ??= this.subscribe();
+    const subscribed = await this.subscribing;
+    if (isErr(subscribed)) this.subscribing = undefined;
+    return subscribed;
+  }
+
+  private async subscribe(): Promise<Result<void, CacheUnavailable>> {
     this.patternListener = (_pattern: string, channel: string, rawMessage: string) => {
       this.handlePubSubMessage(channel, rawMessage);
     };

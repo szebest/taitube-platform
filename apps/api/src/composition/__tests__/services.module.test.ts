@@ -1,4 +1,4 @@
-import { Adapters, registerAdapters } from '@vp/adapters';
+import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import { Container } from '@vp/composition';
 import type { PatternMessageListener } from '@vp/core/ports';

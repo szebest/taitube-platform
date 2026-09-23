@@ -1,4 +1,4 @@
-import { Adapters } from '@vp/adapters';
+import { Adapters } from '@vp/adapters/composition';
 import { type Container, token } from '@vp/composition';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { toPipelineError } from '@vp/errors';

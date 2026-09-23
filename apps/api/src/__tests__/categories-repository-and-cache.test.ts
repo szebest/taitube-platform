@@ -1,9 +1,9 @@
-import { RedisCategoryCacheAdapter } from '@vp/adapters';
 import {
   InMemoryCacheClient,
   InMemoryCategoryRepository,
   InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
+import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cache.adapter';
 import type { Category } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { ok } from '@vp/result';

@@ -1,4 +1,4 @@
-import { Adapters, registerAdapters } from '@vp/adapters';
+import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { Container } from '@vp/composition';
 import type {
   CacheClient,

@@ -584,11 +584,16 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     const app1Received: string[] = [];
     const app2Received: string[] = [];
 
-    const connectTo = (url: string, collector: string[]) =>
-      new Promise<void>((resolve, reject) => {
+    const connectTo = (url: string, collector: string[]) => {
+      let snapshotSeen = () => {};
+      const ready = new Promise<void>((resolve) => {
+        snapshotSeen = resolve;
+      });
+      const done = new Promise<void>((resolve, reject) => {
         const req = http.get(url, (res) => {
           res.on('data', (c) => {
             collector.push(c.toString());
+            if (collector.join('').includes('event: snapshot')) snapshotSeen();
             if (collector.join('').includes('"overall":99')) {
               req.destroy();
               resolve();
@@ -600,12 +605,13 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
           if ((err as any).code !== 'ECONNRESET') reject(err);
         });
       });
+      return { ready, done };
+    };
 
-    const p1 = connectTo(`${addr1}/v1/videos/${PUBLIC_VIDEO_ID}/events`, app1Received);
-    const p2 = connectTo(`${addr2}/v1/videos/${PUBLIC_VIDEO_ID}/events`, app2Received);
+    const stream1 = connectTo(`${addr1}/v1/videos/${PUBLIC_VIDEO_ID}/events`, app1Received);
+    const stream2 = connectTo(`${addr2}/v1/videos/${PUBLIC_VIDEO_ID}/events`, app2Received);
 
-    // Wait a brief tick for both to connect and receive snapshots
-    await new Promise((r) => setTimeout(r, 100));
+    await Promise.all([stream1.ready, stream2.ready]);
 
     // Worker publishes to shared cache
     await publishVideoEvent({
@@ -615,7 +621,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
       data: { rendition: '720p', percent: 99, overall: 99 },
     });
 
-    await Promise.all([p1, p2]);
+    await Promise.all([stream1.done, stream2.done]);
 
     expect(app1Received.join('')).toContain('"percent":99,"overall":99');
     expect(app2Received.join('')).toContain('"percent":99,"overall":99');

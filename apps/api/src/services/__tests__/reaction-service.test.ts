@@ -1,5 +1,5 @@
-import { RedisReactionCacheAdapter } from '@vp/adapters';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ReactionService } from '../reaction-service';

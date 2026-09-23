@@ -17,6 +17,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./composition": {
+      "types": "./dist/composition/index.d.ts",
+      "import": "./dist/composition/index.js",
+      "default": "./dist/composition/index.js"
+    },
     "./s3": {
       "types": "./dist/s3/index.d.ts",
       "import": "./dist/s3/index.js",
@@ -26,6 +31,11 @@
       "types": "./dist/redis/index.d.ts",
       "import": "./dist/redis/index.js",
       "default": "./dist/redis/index.js"
+    },
+    "./redis/*": {
+      "types": "./dist/redis/*.d.ts",
+      "import": "./dist/redis/*.js",
+      "default": "./dist/redis/*.js"
     },
     "./bullmq": {
       "types": "./dist/bullmq/index.d.ts",

@@ -1,10 +1,10 @@
 import * as net from 'node:net';
-import { Adapters } from '@vp/adapters';
+import { Adapters } from '@vp/adapters/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { composeApp } from '../app';
 import { main, serve } from '../main';
 
-const TIMINGS = { drainDelayMs: 150, graceMs: 2_000 };
+const TIMINGS = { drainDelayMs: 50, graceMs: 2_000 };
 
 function config(): AppConfig {
   return inProcessAppConfig({ http: { port: 0, metricsPort: 0 } });
@@ -60,7 +60,12 @@ describe('apps/api: main', () => {
   it('finishes a request that is in flight when shutdown begins', async () => {
     const composed = await composeApp({ config: config() });
     let release = () => {};
+    let entered = () => {};
+    const handling = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
     composed.app.get('/slow', async () => {
+      entered();
       await new Promise<void>((resolve) => {
         release = resolve;
       });
@@ -69,7 +74,7 @@ describe('apps/api: main', () => {
     const api = await serve(composed, config(), TIMINGS);
 
     const inFlight = fetch(`${api.address}/slow`);
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await handling;
     const shutdown = api.shutdown();
     release();
 
@@ -80,7 +85,10 @@ describe('apps/api: main', () => {
   });
 
   it('answers /readyz 503 at once while /livez stays 200 and the server still accepts', async () => {
-    const api = await serve(await composeApp({ config: config() }), config(), TIMINGS);
+    const api = await serve(await composeApp({ config: config() }), config(), {
+      drainDelayMs: 250,
+      graceMs: 2_000,
+    });
     expect((await fetch(`${api.address}/readyz`)).status).toBe(200);
 
     const shutdown = api.shutdown();
@@ -134,7 +142,7 @@ describe('apps/api: main', () => {
       () => new Promise(() => {})
     );
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const api = await serve(composed, config(), { drainDelayMs: 0, graceMs: 200 });
+    const api = await serve(composed, config(), { drainDelayMs: 0, graceMs: 100 });
 
     expect(await api.shutdown()).toBe('forced');
     expect(log).toHaveBeenLastCalledWith(expect.stringContaining('still waiting on Storage'));

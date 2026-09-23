@@ -1,4 +1,5 @@
 import { type Container, closeOnDispose, token } from '@vp/composition';
+import { bullBoardQueues } from '../bullmq/bull-board-queues';
 import { BullMqFlowProducer } from '../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../bullmq/bullmq-job-queue';
 import { redisConnectionOptions } from '../bullmq/connection';
@@ -63,5 +64,6 @@ export function registerFamily(c: Container): void {
     .provide(
       Adapters.SubscriptionCache,
       (c) => new RedisSubscriptionCacheAdapter({ redis: c.get(Redis).getRedis() })
-    );
+    )
+    .provide(Adapters.BoardQueues, () => bullBoardQueues);
 }
