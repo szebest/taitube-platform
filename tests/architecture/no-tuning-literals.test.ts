@@ -62,10 +62,10 @@ function inlinesUnit(node: ts.Node): boolean {
   if (!ts.isBinaryExpression(node) || node.operatorToken.kind !== ts.SyntaxKind.AsteriskToken) {
     return false;
   }
-  const { parent } = node;
+  let parent = node.parent;
+  while (ts.isParenthesizedExpression(parent)) parent = parent.parent;
   const insideChain =
-    (ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.AsteriskToken) ||
-    ts.isParenthesizedExpression(parent);
+    ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.AsteriskToken;
   if (insideChain) return false;
 
   const literals = multiplicationFactors(node)
@@ -115,6 +115,8 @@ describe('architecture: tuning values live in AppConfig', () => {
     { shape: 'module constant', source: 'const STALE_STEP_MS = 5 * 60 * 1000;' },
     { shape: 'inlined unit', source: 'const cutoff = retentionDays * 24 * 60 * 60 * 1000;' },
     { shape: 'inlined unit', source: 'const ms = hours * 3600000;' },
+    { shape: 'inlined unit', source: 'const cutoff = Date.now() - (days * 86_400_000);' },
+    { shape: 'inlined unit', source: 'const ms = (days * 24 * 60 * 60 * 1000);' },
   ])('recognises $shape in $source', ({ shape, source }) => {
     expect(tuningLiterals('fixture.ts', source)).toEqual([expect.stringContaining(shape)]);
   });
