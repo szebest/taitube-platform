@@ -5,8 +5,8 @@
 | Phase | 5 — Developer experience & growth |
 | Size | L |
 | Blocked by | 84 — Result-typed error handling, domain returns and the edge decides |
-| Blocks | — |
-| Spec | [SDD ADR-19 Hexagonal architecture](../SDD.md#adr-19-hexagonal-architecture-interface-segregation-and-modular-repository-boundaries) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23-package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-24 Result-typed error handling](../SDD.md#adr-24-result-typed-error-handling-domain-returns-the-edge-decides) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes-domain-services) · [SDD §16 Environment variables](../SDD.md#16-environment-variables) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
+| Blocks | 88 |
+| Spec | [SDD ADR-19 Hexagonal architecture](../SDD.md#adr-19-hexagonal-architecture-interface-segregation-and-modular-repository-boundaries) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23-package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-24 Result-typed error handling](../SDD.md#adr-24-result-typed-error-handling-domain-returns-the-edge-decides) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes-domain-services) · [SDD §16 Environment variables](../SDD.md#16-environment-variables) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** ready-for-agent
 
@@ -28,9 +28,21 @@ nothing fails: a *different* object graph boots, silently, and every test still 
 That is a service locator wearing a constructor, and it is the reason the wiring does not feel global. It also
 has a bill already due.
 
-### The four things that are actually wrong
+### The five things that are actually wrong
 
-**1. A configuration key that nothing reads.**
+**1. A secret with a default, and the default is public.**
+
+`packages/server/env-schema/src/index.ts:58` declares `ADMIN_TOKEN: z.string().default('change-me-32-bytes-random')`.
+`apps/api/src/plugins/auth.ts:18` declares the *same* default again, independently. `auth.ts:45-47` grants
+`role: 'ADMIN'` to any request carrying `x-admin-token` equal to it, before JWKS verification and without
+provisioning. `.env.example:76` and `infra/k8s/base/configmap-secret.yaml:66` ship it as a value.
+
+A deployment that does not set `ADMIN_TOKEN` therefore hands `/admin/*` and Bull Board to anyone who reads this
+repository, and nothing fails on boot to say so. Four other secret-shaped keys carry the same shape of default:
+`WEBHOOK_SIGNING_SECRET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `REDIS_PASSWORD`. **Fix this one first;
+it is the only finding here that is exploitable rather than expensive.**
+
+**2. A configuration key that nothing reads.**
 
 | Declared | Read |
 |---|---|
@@ -42,7 +54,7 @@ reader falls through to the literal `'raw'`, so the R2 deployment from ticket 32
 happens to be called `raw`. Two spellings of one contract, and the validated one is the dead one — which is
 precisely what SDD §16 says cannot happen, because config "is one contract for both apps, declared with zod".
 
-**2. Nothing shuts the API down.**
+**3. Nothing shuts the API down.**
 
 `apps/api/src/main.ts` installs no `SIGTERM` or `SIGINT` handler, so the `onClose` hook at `app.ts:110-115`
 never runs in production. The hook is partial anyway: it closes the category cache and the SSE hub, and leaves
@@ -50,7 +62,7 @@ the Postgres pool, the Redis client, the storage client and eight BullMQ queues 
 gets this right. Under a rolling deploy or a KEDA scale-in the API drops in-flight requests and orphans its
 connections; the worker, on the same cluster, drains cleanly.
 
-**3. Two environment detections, and the worker's is the shape an invariant already bans.**
+**4. Two environment detections, and the worker's is the shape an invariant already bans.**
 
 `composition/adapter-set.ts:33-39` carries a comment explaining why the family of adapters is a *parameter*:
 the inference it replaced compared `constructor.name` against a string literal, and a minifier would have
@@ -59,7 +71,7 @@ InMemoryJobQueue || options.repositories instanceof InMemoryRepositories || proc
 The fixture `tests/architecture/class-name-inference.test.ts:59` uses to prove itself fires is
 `queue.constructor.name === 'InMemoryJobQueue'`: the same decision, one refactor away from the banned form.
 
-**4. One value, four fallback chains, and the odd sibling is empty.**
+**5. One value, four fallback chains, and the odd sibling is empty.**
 
 The CDN base is resolved and stripped of its trailing slash in four places: `video-service.ts:83-84`,
 `sse-service.ts:116-117`, `worker/src/stages/package.ts:56,62` and `subscription-service.ts:55`. The last one is
@@ -167,10 +179,18 @@ The mechanism and nothing else. Target ≤ 150 lines across `container.ts` and `
   from the stage deps object instead of a default parameter; `apps/worker/src/config.ts` folds into `AppConfig`.
 - `apps/worker/src/main.ts` calls `loadEnv()` the way `apps/api/src/main.ts` already does, and passes the config
   into `createWorkerRunner`.
+- **No secret-shaped key carries a default.** `ADMIN_TOKEN`, `WEBHOOK_SIGNING_SECRET`, `S3_ACCESS_KEY_ID`,
+  `S3_SECRET_ACCESS_KEY` and `REDIS_PASSWORD` become required in `AppEnv`. Local development gets its values
+  from `.env.example` and the compose file, which is where a development credential belongs; a process booting
+  with `NODE_ENV=production` and a missing or well-known secret fails at `loadEnv()` with the readable list it
+  already produces, instead of serving. The second, independent default at `apps/api/src/plugins/auth.ts:18` is
+  deleted with the rest of the ambient reads.
+- The `.env.example` and `configmap-secret.yaml` values keep their placeholder text, because a placeholder that
+  a schema now refuses to accept in production is a prompt rather than a credential.
 
 ### W3 — Dependencies become total
 
-- Delete all six self-construction fallbacks: `video-service.ts:77,78`, `feed-service.ts:46`,
+- Delete all seven self-construction fallbacks, across six files: `video-service.ts:77,78`, `feed-service.ts:46`,
   `category-service.ts:53`, `dlq-service.ts:59`, `subscription-service.ts:56`, `queue-service.ts:50`. Every one
   becomes a required dependency.
 - `VideoServiceDeps extends VideoLifecycleDeps`, so the `this.lifecycle = { videos, …probeQueue }` projection at
@@ -214,6 +234,15 @@ The mechanism and nothing else. Target ≤ 150 lines across `container.ts` and `
 - `apps/api/src/main.ts` installs `SIGTERM`/`SIGINT` → `app.close()` → `onClose` → `container.dispose()`, with a
   drain timeout, matching `apps/worker/src/main.ts:41-51`. `dispose()` closes the Postgres pool, the Redis
   client, the storage client, all eight queues, the SSE hub, the category cache and both pollers.
+- **The drain is observable, not just internal.** A shutdown flips a lifecycle flag that `/readyz`
+  (`routes/health.ts:31-55`) reads *first*, so the endpoint answers 503 the moment `SIGTERM` lands while the
+  server is still accepting and finishing in-flight requests. `/livez` keeps answering 200 until the process
+  exits, which is the distinction the two probes exist for and which the current handler does not make.
+- **Something has to wait for the drain.** `infra/k8s/base/api.yaml` sets no `terminationGracePeriodSeconds`
+  and no `preStop`, so today kubelet's 30s default races an ingress that is still routing. This ticket sets
+  both on the API and on all eight worker deployments, and sets `stop_grace_period` plus an explicit
+  `STOPSIGNAL` in `infra/compose/`. A drain nobody waits for is not a drain.
+- A forced exit after the grace window, logged, so a wedged disposer cannot hold a pod open until it is killed.
 
 ### W6 — Placement
 
@@ -235,7 +264,10 @@ New assertions in `tests/architecture/`, each with the fixture that proves it fi
 
 | Assertion | Holds | Fixture |
 |---|---|---|
-| `env-key-closure.test.ts` | every env key read in production source is declared in `@vp/env-schema`, and every schema key appears uncommented in `.env.example` | `process.env['STORAGE_RAW_BUCKET']` — **this is the assertion that would have caught F1 on the day it was written** |
+| `env-key-closure.test.ts` | every env key read in production source is declared in `@vp/env-schema`; every schema key appears uncommented in `.env.example`; and **every key set in `infra/compose/`, `infra/k8s/`, `.github/workflows/` or the `Makefile` exists in the schema** | `process.env['STORAGE_RAW_BUCKET']`, and a `STORAGE_RAW_BUCKET:` line in a compose env block — **this is the assertion that would have caught the dead bucket key on the day it was written, from both directions** |
+| `no-defaulted-secrets.test.ts` | no key whose name matches `TOKEN\|SECRET\|PASSWORD\|ACCESS_KEY` carries a `.default()` in `@vp/env-schema`, and no production source holds a literal fallback for one | `ADMIN_TOKEN: z.string().default('change-me-32-bytes-random')`, and `process.env.ADMIN_TOKEN \|\| 'change-me-32-bytes-random'` |
+| `adapter-instantiation.test.ts` | a concrete adapter is **constructed** only in a composition module or `@vp/testing` — not merely imported there | `new CaslAuthorizationAdapter()` inside `video-service.ts`, which the import rule alone would miss once the class is re-exported |
+| `drain-before-close.test.ts` | `/readyz` answers 503 once shutdown begins while the server is still accepting, and `/livez` keeps answering 200 until exit | a shutdown that closes the server before flipping readiness |
 | `env-confinement.test.ts` | `process.env` appears only in `@vp/config`, `@vp/env-schema`, `apps/*/src/main.ts`, CLI entrypoints and `@vp/testing` | an env read added to a service |
 | `total-dependencies.test.ts` | no constructor under `apps/api/src/services/` or `apps/worker/src/stages/` recovers from a missing dependency (`?? new`, `|| new`, `?? default*`) | `deps.paginator ?? defaultPaginator` |
 | `route-plugins.test.ts` | every module under `apps/api/src/routes/` exports a Fastify plugin and appears in the registration table | a route module exporting a bare `void` registrar |
@@ -247,8 +279,10 @@ Docs, in the same PR:
 - **SDD ADR-25 — Composition: one container, configuration is a value.** Records the container, the rejection of
   reflection-based DI with the dual-runtime reason, and `AdapterKind` as the single environment switch.
 - **SDD §16** — correct the bucket keys and note that the schema is closed over what the code reads.
-- **ARCHITECTURE.md** — Invariant 8 (*configuration is a value, dependencies are total*) in §5, plus the six new
-  rows in the §6 enforcement table.
+- **ARCHITECTURE.md** — Invariant 8 (*configuration is a value, dependencies are total*) and Invariant 9
+  (*a process drains before it closes*) in §5, plus the nine new rows in the §6 enforcement table.
+- **SDD §11 Security** — record that no secret-shaped key may carry a default and that production boot fails
+  without one, with the `x-admin-token` path named as the reason.
 - **SDD §6.4** — delete the sentence mandating "a **>1:1 ratio of services to routes**". A ratio is a target
   with no consumer, and it is currently satisfied by classing three pure functions (`HttpCacheService`) and by
   filing a promise map under adapters (`Singleflight`). ARCHITECTURE.md §6 already says an invariant that cannot
@@ -256,6 +290,45 @@ Docs, in the same PR:
 - **`apps/api/src/routes/README.md`** — its worked example shows `options.channelService ?? new ChannelService({ … })`,
   the exact anti-pattern W3 removes, and a signature that will no longer exist.
 - **`CLAUDE.md`** rules 3 and 4, and `apps/api/AGENTS.md`, `apps/worker/AGENTS.md`, `packages/server/adapters/AGENTS.md`.
+
+### W8 — Pay for what this ticket rewrites
+
+`tests/architecture/untested-sources.ts` exempts **188 of 488 production sources** from the mandated 1:1 test
+correspondence — 39%, against a rule `CLAUDE.md` calls a strict architectural violation to break. The list is
+shrink-only, so it never gets worse; it also never gets better on its own. This ticket takes the part it caused
+and the part that is the rule's own fault, and ticket 88 takes the rest.
+
+- **Narrow the rule, and delete 31 entries honestly.** 31 of the 188 are declaration-only files — pure `type`,
+  `interface` and `abstract class` with no runtime code, mostly `@vp/core/repositories` (12) and
+  `@vp/core/ports` (7). A spec for `packages/server/core/ports/authorization.ts` (16 lines, one abstract class,
+  zero behaviour) asserts that TypeScript compiles. `test-correspondence.test.ts` stops treating a source with
+  no runtime code as a correspondence target, and those 31 leave the list because the rule was wrong, not
+  because the code got tested.
+- **Every file this ticket rewrites leaves the list.** All 14 route modules become plugins, `runner.ts` is
+  restructured, `config.ts` is deleted, `plugins/auth.ts` loses its ambient reads, and two services change
+  shape: **≈19 entries**, each paid for with a real spec, not a smoke test.
+- **The two new packages are 1:1 from birth** and never appear on the list.
+- Net: **188 → ≈138**, correspondence **61% → ≈72%**. The residue is 73 in `packages/server` adapters and 55 in
+  `apps/web`; both are [88](88-test-correspondence-burn-down.md), because writing ~130 specs is a bigger job
+  than everything above it put together and hiding it inside this ticket would make neither deliverable.
+
+---
+
+## What this ticket moves
+
+Measured at `9d11fdc`, projected on the acceptance criteria below. The numbers are a target for the
+implementer, not a claim.
+
+| Dimension | Today | After 87 | What closes it |
+|---|---|---|---|
+| Configuration | 3 | **9** | W2, and the env closure asserted in both directions |
+| Lifecycle & operability | 3 | **9** | W5: drain, readiness flip, grace periods, forced exit |
+| Authorization | 8 | **9** | W2: no defaulted secret, production boot fails without one |
+| Dependency injection | 5 | **9** | W1, W3, W4: one surface, total deps, one environment switch |
+| Boundaries & structure | 7 | **9** | W6, and instantiation asserted rather than only imports |
+| Drift resistance | 8 | **9** | W7: nine assertions, no new exception list |
+| Error handling | 9 | 9 | unchanged — 84 did this |
+| Test discipline | 6 | **7.5** | W8; reaching 9 is [88](88-test-correspondence-burn-down.md) |
 
 ---
 
@@ -276,12 +349,15 @@ Docs, in the same PR:
 - [ ] `asCdnBase('http://cdn/x///')` and `asCdnBase('http://cdn/x')` produce the same `CdnBase`; no module outside `@vp/env-schema` strips a trailing slash from it.
 - [ ] A `SubscriptionService` built from the container emits the same absolute thumbnail URL as `VideoService` for the same video.
 - [ ] `apps/worker/src/config.ts` is deleted and `WORKER_STAGE` reaches the runner through `AppConfig`.
+- [ ] No `.default()` on a key matching `TOKEN|SECRET|PASSWORD|ACCESS_KEY`, and no literal fallback for one anywhere in production source.
+- [ ] `NODE_ENV=production` with `ADMIN_TOKEN` unset fails at `loadEnv()` and never binds a port — proved by a test, and by a second test that the same env boots fine under `development`.
+- [ ] Sending `x-admin-token: change-me-32-bytes-random` to a production-configured app is rejected. That request is admitted today.
 
 ### W3 — Total dependencies
 - [ ] `VideoService`'s constructor body is empty; `VideoServiceDeps extends VideoLifecycleDeps`.
 - [ ] No service constructor contains `??` or `||` against a constructed value.
 - [ ] Zero `...(x === undefined ? {} : { x })` spreads remain in `apps/api/src` and `apps/worker/src`.
-- [ ] `apps/api/src/services/` imports nothing from `@vp/adapters`.
+- [ ] `apps/api/src/services/` imports nothing from `@vp/adapters`, and instantiates no adapter (asserted, not grepped).
 - [ ] `CategoryCachePort` is in `@vp/core/ports` with an in-memory double, and `CategoryService` names the port.
 
 ### W4 — Registration
@@ -296,6 +372,10 @@ Docs, in the same PR:
 - [ ] `buildApp()` creates no timer and opens no subscription — asserted by a test that builds an app and finds no pending handles.
 - [ ] `SIGTERM` closes the HTTP server, then disposes the container; a test drives `main()`'s exported shutdown and asserts every adapter's `close` was called exactly once, in reverse construction order.
 - [ ] The API's shutdown path matches the worker's: both drain, both log, both exit 0.
+- [ ] A request in flight when `SIGTERM` arrives completes with its normal response — driven against a real `listen()` and a slow route, not a mocked server.
+- [ ] `/readyz` answers 503 within one event-loop turn of `SIGTERM` while `/livez` still answers 200, and the server is still accepting at that moment.
+- [ ] `terminationGracePeriodSeconds` and a `preStop` hook are set on the API and all eight worker deployments; `stop_grace_period` and `STOPSIGNAL` are set in compose. Quote the values and say what they are derived from.
+- [ ] A disposer that never resolves does not hold the process past the grace window; the forced exit is logged with the disposer's name.
 
 ### W6 — Placement
 - [ ] `@vp/concurrency` exists at T1 with `Singleflight` and its spec; `packages/server/adapters/redis/singleflight.ts` is gone.
@@ -303,10 +383,19 @@ Docs, in the same PR:
 - [ ] `grep -rn "from '../plugins/auth'" apps/api/src/services/` returns nothing.
 
 ### W7 — Enforcement & docs
-- [ ] Six new assertions green, each with a fixture proving it fires; `pnpm test:architecture` stays under 2 s.
+- [ ] Nine new assertions green, each with a fixture proving it fires; `pnpm test:architecture` stays under 2 s.
+- [ ] `env-key-closure` fails on a key set in a compose or k8s env block that the schema does not declare, and on a schema key missing from `.env.example`.
+- [ ] `adapter-instantiation` fails on `new CaslAuthorizationAdapter()` inside a service even when the import is legal.
 - [ ] SDD ADR-25 written; §16 corrected; §6.4's ratio sentence deleted; ARCHITECTURE.md §5 and §6 updated.
 - [ ] `apps/api/src/routes/README.md` matches the code it documents.
 - [ ] No exception list is added, and none of the five existing shrink-only lists grows.
+
+### W8 — Test correspondence
+- [ ] `untested-sources.ts` is at **≈138 entries or fewer**, down from 188. Quote the exact before and after.
+- [ ] The 31 declaration-only entries are gone because `test-correspondence.test.ts` no longer targets a source with no runtime code — with a fixture proving the narrowed rule still fires on a file that does have runtime code.
+- [ ] Every file this ticket rewrites has a real spec beside it. A spec that only asserts a module imports is not one; it fails review.
+- [ ] `@vp/composition` and `@vp/concurrency` never appear on the list.
+- [ ] The other four shrink-only lists are unchanged or shorter.
 
 ### Repo-wide
 - [ ] `pnpm boundaries`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture` green, output pasted in the PR.
@@ -324,6 +413,11 @@ Docs, in the same PR:
 - **Rebranding `@vp/*` to `@taitube/*`** — that is ticket 48, and doing both at once makes either unreviewable.
 - **Moving authorization, caching or pagination behaviour.** This ticket changes how collaborators arrive, never
   what they do. Any behavioural difference is a bug in this ticket.
+- **The other ~138 exempt sources.** 73 in `packages/server` adapters and 55 in `apps/web`. That is
+  [ticket 88](88-test-correspondence-burn-down.md), which this ticket unblocks by narrowing the rule first so
+  88 is not writing 31 specs that assert nothing.
+- **Rotating or re-scoping the `x-admin-token` path.** W2 makes the credential real; whether a shared admin
+  header should exist beside JWKS at all is a design question with its own blast radius.
 - **`apps/web`.** Nothing here crosses the client tier.
 
 ---
