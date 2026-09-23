@@ -275,6 +275,21 @@ The mechanism and nothing else. Target ≤ 150 lines across `container.ts` and `
   Delete `httpCacheService` from `FeedServiceDeps` and `CategoryServiceDeps`.
 - **`AuthUser` is read from `@vp/permissions`.** The eleven service modules importing it from `../plugins/auth`
   import `UserContext` directly; `plugins/auth.ts` keeps the Fastify augmentation and drops the re-export alias.
+- **The in-memory doubles stop shipping to production.** `@vp/adapters` already declares eight subpath exports
+  — `./s3`, `./redis`, `./bullmq`, `./postgres`, `./in-memory`, `./in-memory/*`, `./authorization` — and
+  **nothing in the repo imports any of them**, because the root barrel re-exports the lot, including
+  `export * from './in-memory/index'`. Both composition roots import that barrel, so ~3,000 lines of test
+  doubles sit in the eager path of `apps/api` and `apps/worker` at boot. `registerAdapters` imports the
+  concrete family from the concrete subpaths and the doubles from `./in-memory`, and the root barrel stops
+  re-exporting `./in-memory`. The split exists; one line defeats it. (Rule 11, and it feeds
+  [83](83-granular-container-topology-full-stack-deployment.md)'s image sizes directly.)
+- **`InMemoryRepositories` gets the same treatment as the app graph.** `in-memory-repositories.ts:29-60` wires
+  twelve repositories by hand and then resolves three circular edges by mutation — `setUploadsRepo`,
+  `setVideosRepo`, `setOutboxRepo` — after construction. `dlq` receives `outboxRepo` **twice**, once through
+  the constructor at `:35` and again through the setter at `:59`. `clear()` is a hand-maintained list of twelve
+  calls that must be kept in sync with twelve fields; miss one and state leaks between test cases silently.
+  The container from W1 handles a lazy back-edge without a mutator, and `clear()` becomes a loop over what was
+  registered. If the mechanism is not good enough for the doubles it is not good enough for the app.
 
 ### W7 — Machine enforcement, docs and standards
 
@@ -402,6 +417,9 @@ implementer, not a claim.
 - [ ] `@vp/concurrency` exists at T1 with `Singleflight` and its spec; `packages/server/adapters/redis/singleflight.ts` is gone.
 - [ ] `HttpCacheService` is gone; three exported functions carry its behaviour and its tests.
 - [ ] `grep -rn "from '../plugins/auth'" apps/api/src/services/` returns nothing.
+- [ ] The root `@vp/adapters` barrel does not re-export `./in-memory`; an assertion fails if it does again.
+- [ ] Neither deployable loads an `InMemory*` class at boot in `external` mode — proved by a module-graph check, not by reading.
+- [ ] `InMemoryRepositories` has no `set*Repo` mutator, injects `outboxRepo` once, and its `clear()` is derived from registration rather than a hand-written list.
 
 ### W7 — Enforcement & docs
 - [ ] Nine new assertions green, each with a fixture proving it fires; `pnpm test:architecture` stays under 2 s.

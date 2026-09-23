@@ -43,6 +43,39 @@ fail — it makes a suite pass that should not. One shared contract suite, run o
 against the real adapter, is worth more than nineteen separate specs and is how the 15 Postgres and ~39
 SDK-adapter entries get paid for at the same time.
 
+The doubles are **3,029 lines against the postgres adapter's 2,540**. The fake costs more to maintain than the
+thing it fakes, and two places show what that buys.
+
+### The public feed is ranked twice, in two languages, and nothing compares them
+
+`packages/server/adapters/in-memory/repositories/public-feed-query.ts` ranks in TypeScript, through
+`publicFeedRanking` and `comparePublicFeedRank` in `@vp/domain`.
+`packages/server/adapters/postgres/repositories/public-feed-query.ts:37` ranks in SQL:
+`(views + viewsOffset) / power(ageHours + ageOffsetHours, exponent)`.
+
+They share the **constants** (`TRENDING_GRAVITY`, `PUBLIC_FEED_STATUS`) and not the formula. Each has its own
+`__tests__/public-feed-query.test.ts` — the same name on both sides, asserting the same semantics separately,
+which is the pair that should have been one suite from the start.
+
+The consequence is not academic. The rank is a float and the cursor is a keyset over it, so a divergence
+between the two implementations at a page boundary **duplicates or skips rows** rather than erroring, and only
+in production, because every test that walks pages walks the TypeScript one. `in-memory/repositories/keyset.ts:12`
+says it out loud: *"Sort comparator matching the postgres adapter's `ORDER BY <sort> DESC, <tie> DESC`"* — a
+comment where an assertion belongs.
+
+### `InMemoryFlowProducer` is a driver, not a double
+
+`in-memory-flow-producer.ts` reaches through the `FlowProducerPort` into `InMemoryJobQueue`'s internals —
+`enqueueWaiting`, `executeJob`, `failJob`, `onJobCompleted`, `onJobFailed`, plus an `initialState` option only
+that class has — behind **five `instanceof InMemoryJobQueue` guards**. When a guard is false it does nothing
+and returns no error, so a flow whose parent queue is not in-memory simply never runs its parent (`:73-76`).
+
+It also reproduces BullMQ's internals: `waiting-children`, `failParentOnFailure`, `ignoreDependencyOnFailure`,
+and children keyed three ways including the literal `bull:<queue>:<jobId>` format at `:68`, because production
+code reads them by that key. A BullMQ implementation detail has travelled through a port that exists to hide
+it. The contract suite is where that gets found; the fix is a narrower port, and it is this ticket's one
+allowed production change.
+
 ---
 
 ## Scope
@@ -70,6 +103,16 @@ double and the concrete adapter each run it — the double in the `unit` job, th
 A drifted double becomes a failing test instead of a passing lie. This is also the cheapest path through the
 largest three rows of the table above.
 
+### W1b — One ranking, asserted across both adapters
+
+The feed contract suite runs the same ordered page assertions against the in-memory repository and against
+Postgres, over a fixture set built to straddle a page boundary and to tie on rank. If the SQL and the
+TypeScript disagree anywhere, that is a failure, not a rounding difference. Fold the two
+`public-feed-query.test.ts` files into it and delete the surviving duplicate.
+
+Whether the SQL should be generated from `@vp/domain` rather than merely agree with it is worth asking in the
+PR; asserting agreement is the cheap half and it is what this ticket buys.
+
 ### W2 — Per-adapter specs for what the contract cannot express
 
 Query shape, presign parameters, multipart part sizing, BullMQ job options, pub/sub channel names. One file per
@@ -95,6 +138,8 @@ than an open-ended exemption.
 - [ ] `pnpm test` and `pnpm test:bun` green; the `integration` job green against real Postgres, Redis and MinIO.
 - [ ] No spec asserts only that a module imports, and none tests a mock. Both are review-blocking.
 - [ ] `pnpm test` wall-clock regression stated and justified. Adding ~130 specs will cost something; say how much and where it lands (`unit` vs `integration`).
+- [ ] A deliberate off-by-one in either feed ranking fails the suite; the two `public-feed-query.test.ts` files are one suite.
+- [ ] `in-memory-flow-producer.ts` contains no `instanceof InMemoryJobQueue`, and a flow over a non-in-memory queue fails loudly instead of hanging.
 - [ ] `docs/standards/testing.md` records the contract-suite pattern as the way a port is tested here.
 - [ ] No other shrink-only list grows.
 
@@ -106,7 +151,9 @@ than an open-ended exemption.
   stack that is being replaced.
 - **Coverage thresholds.** A percentage gate is a different mechanism with different failure modes, and the 1:1
   rule is the one this repo chose.
-- **Changing any production behaviour.** A spec that needs a source changed to become testable means the source
+- **Changing any production behaviour, with one exception.** Narrowing `FlowProducerPort` so the in-memory
+  driver stops reaching through it is allowed, because the contract suite cannot be written against a port that
+  the double bypasses. Everything else: a spec that needs a source changed to become testable means the source
   is the ticket, and it gets its own.
 
 ---
