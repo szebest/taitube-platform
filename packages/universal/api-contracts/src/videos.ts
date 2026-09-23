@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { defaultCursorCodec } from '@vp/pagination';
+import { Base64UrlCursorCodec } from '@vp/pagination';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint.js';
 import { CursorSchema, PageLimitSchema } from './pagination.js';
@@ -12,7 +12,7 @@ import {
 } from './video-resource.js';
 
 function isKeysetCursor(cursor: string): boolean {
-  const decoded = defaultCursorCodec.decode(cursor);
+  const decoded = new Base64UrlCursorCodec().decode(cursor);
   if (!decoded.ok) return false;
 
   const createdAt = decoded.value['createdAt'];

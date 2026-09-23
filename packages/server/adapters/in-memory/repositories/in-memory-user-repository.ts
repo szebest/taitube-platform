@@ -3,14 +3,11 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
 
 export class InMemoryUserRepository extends UserRepository {
-  private readonly usersMap: Map<string, UserRecord>;
+  private readonly usersMap = new Map<string, UserRecord>();
 
-  constructor(usersMap: Map<string, UserRecord> = new Map()) {
+  constructor() {
     super();
-    this.usersMap = usersMap;
-    if (this.usersMap.size === 0) {
-      this.seedDevUsers();
-    }
+    this.seedDevUsers();
   }
 
   seedDevUsers(): void {

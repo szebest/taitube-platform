@@ -14,15 +14,11 @@ import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 export class InMemoryDlqRepository extends DlqRepository {
-  private readonly entriesMap: Map<string, DlqEntryRecord>;
+  private readonly entriesMap = new Map<string, DlqEntryRecord>();
   private readonly outboxRepo?: OutboxRepository;
 
-  constructor(
-    entriesMap?: Map<string, DlqEntryRecord>,
-    options?: { outboxRepo?: OutboxRepository }
-  ) {
+  constructor(options?: { outboxRepo?: OutboxRepository }) {
     super();
-    this.entriesMap = entriesMap ?? new Map();
     this.outboxRepo = options?.outboxRepo;
   }
 

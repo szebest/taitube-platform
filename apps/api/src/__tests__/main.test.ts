@@ -190,9 +190,10 @@ describe('apps/api: main', () => {
       if (signal === 'SIGTERM') handler();
     };
 
-    await main(booting);
+    const api = await main(booting);
+    await api.shutdown();
 
-    await vi.waitFor(() => expect(booting.exit).toHaveBeenCalledWith(0));
+    expect(booting.exit).toHaveBeenCalledWith(0);
     expect(await refusesConnections(port)).toBe(true);
   });
 

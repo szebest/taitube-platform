@@ -1,3 +1,4 @@
+import ts from 'typescript';
 import { productionSources, read, trackedFiles } from './repo-files';
 
 /**
@@ -49,6 +50,66 @@ describe('architecture: a concrete adapter is constructed only where the graph i
     const offenders = productionSources()
       .filter((file) => SCOPE.test(file) && !mayConstruct(file))
       .flatMap((file) => constructs(read(file), classes).map((name) => `${file}: new ${name}`));
+
+    expect(offenders).toEqual([]);
+  });
+});
+
+/**
+ * A service or a stage builds values, never collaborators. `SseConnection` is the one class here: it
+ * is one per request, owns only the response it wraps, and has nothing a composition root could
+ * hand in ahead of time. `Promise` and `AbortController` are per-call values like `Date`.
+ */
+const DOMAIN_ROOTS = ['apps/api/src/services/', 'apps/worker/src/stages/'];
+const VALUES: ReadonlySet<string> = new Set([
+  'Date',
+  'Map',
+  'Set',
+  'URL',
+  'Promise',
+  'AbortController',
+  'SseConnection',
+]);
+
+function collaboratorsBuilt(file: string, source: string): string[] {
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const found: string[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isNewExpression(node)) {
+      const name = node.expression.getText();
+      if (!(VALUES.has(name) || name.endsWith('Error'))) found.push(`${file}: new ${name}`);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return found;
+}
+
+describe('architecture: a service or a stage constructs values only', () => {
+  it.each([
+    { built: 'a coalescer', source: 'private readonly flight = new Singleflight();' },
+    { built: 'a board adapter', source: 'const adapter = new FastifyAdapter();' },
+    {
+      built: 'a per-job collaborator',
+      source: 'const uploader = new StreamingSegmentUploader(o);',
+    },
+  ])('recognises $built', ({ source }) => {
+    expect(collaboratorsBuilt('fixture.ts', source)).toHaveLength(1);
+  });
+
+  it.each([
+    { value: 'a timestamp', source: 'const now = new Date();' },
+    { value: 'a lookup', source: 'const seen = new Set<string>();' },
+    { value: 'a failure', source: 'const e = new TransientError(code, message);' },
+    { value: 'a per-request connection', source: 'const c = new SseConnection(res, 1, 2);' },
+  ])('leaves $value alone', ({ source }) => {
+    expect(collaboratorsBuilt('fixture.ts', source)).toEqual([]);
+  });
+
+  it('finds no collaborator built in a service or a stage', () => {
+    const offenders = productionSources()
+      .filter((file) => DOMAIN_ROOTS.some((root) => file.startsWith(root)))
+      .flatMap((file) => collaboratorsBuilt(file, read(file)));
 
     expect(offenders).toEqual([]);
   });

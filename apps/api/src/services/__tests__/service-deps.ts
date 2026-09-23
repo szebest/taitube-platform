@@ -9,7 +9,7 @@ import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cac
 import type { StorageClient } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
-import { defaultPaginator } from '@vp/pagination';
+import { Paginator } from '@vp/pagination';
 import type { UploadContext } from '../upload-context';
 import type { VideoServiceDeps } from '../video-service';
 
@@ -30,7 +30,7 @@ export function videoServiceDeps(
       backend: { type: 'cache', cache: new InMemoryCacheClient() },
     }),
     authorization: new CaslAuthorizationAdapter(),
-    paginator: defaultPaginator,
+    paginator: new Paginator(),
     probeQueue: new InMemoryJobQueue('probe'),
     ...overrides,
   };

@@ -1,5 +1,5 @@
 import { err, ok } from '../result';
-import { fromPromise, fromThrowable, tryCatch } from '../try-catch';
+import { fromPromise, fromThrowable, parseJson, tryCatch } from '../try-catch';
 
 const describeCause = (cause: unknown) => ({ code: 'WRAPPED' as const, cause });
 
@@ -18,6 +18,18 @@ describe('@vp/result: tryCatch', () => {
     }, describeCause);
 
     expect(result).toEqual(err({ code: 'WRAPPED', cause: thrown }));
+  });
+});
+
+describe('@vp/result: parseJson', () => {
+  it('returns the parsed value of JSON text', () => {
+    expect(parseJson('{"a":[1]}')).toEqual(ok({ a: [1] }));
+  });
+
+  it.each(['', '{', 'not json'])('returns a SyntaxError for %j instead of throwing', (text) => {
+    const parsed = parseJson(text);
+
+    expect(parsed.ok ? undefined : parsed.error).toBeInstanceOf(SyntaxError);
   });
 });
 

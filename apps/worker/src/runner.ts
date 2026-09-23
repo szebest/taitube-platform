@@ -42,6 +42,7 @@ export interface WorkerRunner {
   outboxRelay?: OutboxRelay;
   metricsPort: () => number;
   start: () => Promise<Result<void, StartupFailed>>;
+  started: () => readonly string[];
   close: () => Promise<void>;
   disposing: () => string | undefined;
 }
@@ -92,9 +93,9 @@ export async function composeWorker(options: WorkerRunnerOptions): Promise<Worke
       if (isErr(started) && started.error.type === 'failed') {
         logger.error({ token: started.error.token, cause: started.error.cause }, 'Startup failed');
       }
-      if (!isErr(started)) logger.info({ started: container.started() }, 'Worker started');
       return started;
     },
+    started: () => container.started(),
     close: async () => {
       logger.info('Shutting down worker...');
       const disposed = await container.dispose();

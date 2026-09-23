@@ -14,12 +14,7 @@ import { type Result, ok } from '@vp/result';
 import type { InternalStep } from './types';
 
 export class InMemoryStepRepository extends StepRepository {
-  private readonly stepsMap: Map<string, InternalStep>;
-
-  constructor(stepsMap: Map<string, InternalStep> = new Map()) {
-    super();
-    this.stepsMap = stepsMap;
-  }
+  private readonly stepsMap = new Map<string, InternalStep>();
 
   private getStepKey(videoId: string, step: string, rendition: string): string {
     return `${videoId}:${step}:${rendition}`;

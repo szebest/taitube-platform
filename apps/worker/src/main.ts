@@ -58,7 +58,7 @@ export async function main(host: ProcessHost): Promise<WorkerProcess> {
   const started = await runner.start();
   if (isErr(started) && started.error.type === 'failed') throw started.error.cause;
 
-  console.log(`[worker] Consuming queue "${runner.worker.name}"`);
+  console.log(`[worker] Started ${runner.started().join(', ')}; consuming "${runner.worker.name}"`);
   console.log(`[worker] Metrics on http://0.0.0.0:${runner.metricsPort()}/metrics`);
   return { runner, metricsPort: runner.metricsPort(), shutdown };
 }

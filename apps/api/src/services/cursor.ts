@@ -3,7 +3,6 @@ import {
   type CursorPayload,
   type InvalidCursor,
   type Paginator,
-  defaultPaginator,
   invalidCursor,
 } from '@vp/pagination';
 import { type Result, andThen, err, ok } from '@vp/result';
@@ -71,8 +70,8 @@ function decodeWith<T>(
 }
 
 export function decodeCreatedAtCursor(
-  cursor?: string,
-  paginator: Paginator = defaultPaginator
+  cursor: string | undefined,
+  paginator: Paginator
 ): Result<{ createdAt: Date; id: string } | null, InvalidCursor> {
   return decodeWith(cursor, paginator, (payload) =>
     andThen(asDate(payload['createdAt']), (createdAt) =>
@@ -82,8 +81,8 @@ export function decodeCreatedAtCursor(
 }
 
 export function decodeSubscriptionCursor(
-  cursor?: string,
-  paginator: Paginator = defaultPaginator
+  cursor: string | undefined,
+  paginator: Paginator
 ): Result<{ createdAt: Date; channelId: string } | null, InvalidCursor> {
   return decodeWith(cursor, paginator, (payload) =>
     andThen(asDate(payload['createdAt']), (createdAt) =>
@@ -92,17 +91,13 @@ export function decodeSubscriptionCursor(
   );
 }
 
-export function encodeFeedCursor(
-  v: FeedCursorRow,
-  instant: number,
-  paginator: Paginator = defaultPaginator
-): string {
+export function encodeFeedCursor(v: FeedCursorRow, instant: number, paginator: Paginator): string {
   return paginator.encodeCursor(feedCursorPayload(v, instant));
 }
 
 export function decodeFeedCursor(
-  cursor?: string,
-  paginator: Paginator = defaultPaginator
+  cursor: string | undefined,
+  paginator: Paginator
 ): Result<FeedCursor | null, InvalidCursor> {
   return decodeWith(cursor, paginator, (payload) =>
     andThen(asDate(payload['createdAt']), (createdAt) =>

@@ -26,12 +26,22 @@ const ASSERT_NEVER = /(^|[^\w.])throw\s+assertNever\b/;
  */
 const CONVERTS_TO_THROW = /\b\w+OrThrow\s*\(/g;
 
+/**
+ * `Schema.parse(...)` and `JSON.parse(...)` throw on bad input just as a `throw` would. The domain
+ * reads a schema through `safeParse` and JSON through `parseJson`, which answer with a value.
+ */
+const THROWING_PARSE = /\b[A-Z]\w*\.parse\(/g;
+
 function throwSites(source: string): string[] {
   const sites = [...source.matchAll(THROW)]
     .map((match) => source.slice(match.index ?? 0).split('\n')[0] ?? '')
     .filter((line) => !ASSERT_NEVER.test(line));
 
-  return [...sites, ...[...source.matchAll(CONVERTS_TO_THROW)].map(([hit]) => hit)];
+  return [
+    ...sites,
+    ...[...source.matchAll(CONVERTS_TO_THROW)].map(([hit]) => hit),
+    ...[...source.matchAll(THROWING_PARSE)].map(([hit]) => hit),
+  ];
 }
 
 function throwsOutsideAssertNever(file: string): boolean {
@@ -65,6 +75,8 @@ describe('architecture: domain code returns its failures, it does not throw them
       source: 'const v = unwrapOrThrow(await repo.f());',
     },
     { shape: 'the same helper under another name', source: 'const v = okOrThrow(result);' },
+    { shape: 'a zod parse', source: 'const data = NotifyJob.parse({ videoId });' },
+    { shape: 'a JSON parse', source: 'const page = JSON.parse(raw) as Page;' },
   ])('counts $shape against a domain source', ({ source }) => {
     expect(throwSites(source)).not.toEqual([]);
   });
@@ -73,6 +85,7 @@ describe('architecture: domain code returns its failures, it does not throw them
     { shape: 'an exhaustiveness assertion', source: 'throw assertNever(failure, "present");' },
     { shape: 'a property named after a throw', source: 'const x = e.throwSite;' },
     { shape: 'a returned failure', source: 'return err(databaseUnavailable("findById"));' },
+    { shape: 'a safe parse', source: 'const parsed = SseMessageEnvelope.safeParse(json);' },
   ])('leaves $shape alone', ({ source }) => {
     expect(throwSites(source)).toEqual([]);
   });

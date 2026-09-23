@@ -6,7 +6,7 @@ import type { MediaTools } from '@vp/ffmpeg';
 import { type Logger, MetricsServer, type PipelineMetrics } from '@vp/observability';
 import { fromPromise, isErr, isOk, ok } from '@vp/result';
 import { createFailureHandler } from '../failure-handler';
-import { Heartbeat } from '../heartbeat';
+import { Heartbeat, everyInterval } from '../heartbeat';
 import { validateJobId, validateQueueName } from '../job-identity';
 import { STAGE_REGISTRY, type StageDefinition, type StageProcessor } from '../registry';
 import { housekeepingTasks } from '../stages/housekeeping/index';
@@ -117,6 +117,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
           path: config().worker.heartbeatPath,
           intervalMs: config().worker.heartbeatIntervalMs,
           now: Date.now,
+          every: everyInterval,
         }),
       { start: (heartbeat) => heartbeat.start(), dispose: (heartbeat) => heartbeat.stop() }
     )

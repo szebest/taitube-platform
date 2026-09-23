@@ -1,4 +1,3 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryJobQueue,
@@ -7,6 +6,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { type Result, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { createHousekeepingProcessor, runReconcileReactionCounters } from '../stages/housekeeping';

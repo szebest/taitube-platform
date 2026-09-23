@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
+import { tryCatch } from '@vp/result';
 import { selectLadder } from './ladder';
 
 export interface RawStream {
@@ -50,7 +51,7 @@ export interface ProbeMetadata {
   ladder: LadderEntry[];
 }
 
-const ALLOWED_INPUT_CODECS = new Set(['h264', 'hevc', 'vp9', 'av1', 'mpeg4']);
+const ALLOWED_INPUT_CODECS: ReadonlySet<string> = new Set(['h264', 'hevc', 'vp9', 'av1', 'mpeg4']);
 
 /**
  * Parses rotation angle from ffprobe stream tags or display matrix side data.
@@ -243,22 +244,18 @@ export async function runFfprobe(
         return;
       }
 
-      try {
-        const raw = JSON.parse(stdout) as RawFfprobeOutput;
-        const result = validateAndParseProbe(raw, maxDurationSec);
-        resolve(result);
-      } catch (err) {
-        if (err instanceof PermanentError) {
-          reject(err);
-        } else {
-          reject(
-            new PermanentError(
-              ErrorCodes.CORRUPT_CONTAINER,
-              `Failed to parse ffprobe output: ${(err as Error).message}. Raw: ${stdout.slice(0, 300)}`
-            )
-          );
-        }
-      }
+      const parsed = tryCatch(
+        () => validateAndParseProbe(JSON.parse(stdout) as RawFfprobeOutput, maxDurationSec),
+        (cause) =>
+          cause instanceof PermanentError
+            ? cause
+            : new PermanentError(
+                ErrorCodes.CORRUPT_CONTAINER,
+                `Failed to parse ffprobe output: ${(cause as Error).message}. Raw: ${stdout.slice(0, 300)}`
+              )
+      );
+      if (parsed.ok) resolve(parsed.value);
+      else reject(parsed.error);
     });
   });
 }

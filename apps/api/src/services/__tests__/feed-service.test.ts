@@ -1,7 +1,9 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import { Singleflight } from '@vp/concurrency';
 import { publicFeedInstant } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { cacheUnavailable } from '@vp/errors';
+import { Paginator } from '@vp/pagination';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { encodeFeedCursor } from '../cursor';
@@ -37,7 +39,12 @@ describe('apps/api/services: FeedService', () => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
     videoService = new VideoService(videoServiceDeps(repositories.videos));
-    service = new FeedService({ videoService, cache, ...HTTP_CACHE });
+    service = new FeedService({
+      singleflight: new Singleflight(),
+      videoService,
+      cache,
+      ...HTTP_CACHE,
+    });
   });
 
   it('serves the weak sha256 ETag the shared http-cache functions compute', async () => {
@@ -60,6 +67,7 @@ describe('apps/api/services: FeedService', () => {
 
   it('honours a configured freshness window', async () => {
     const tuned = new FeedService({
+      singleflight: new Singleflight(),
       videoService,
       cache,
       maxAgeSeconds: 5,
@@ -144,7 +152,8 @@ describe('apps/api/services: FeedService', () => {
   it('never caches a cursored page', async () => {
     const cursor = encodeFeedCursor(
       { createdAt: new Date(), id: OWNER_ID, viewsCount: 0 },
-      publicFeedInstant()
+      publicFeedInstant(),
+      new Paginator()
     );
 
     await service.getFeed({ sort: 'recent', cursor });
@@ -154,6 +163,7 @@ describe('apps/api/services: FeedService', () => {
 
   it('still answers when the cache is unavailable', async () => {
     const broken = new FeedService({
+      singleflight: new Singleflight(),
       ...HTTP_CACHE,
       videoService,
       cache: Object.assign(new InMemoryCacheClient(), {

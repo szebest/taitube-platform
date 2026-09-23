@@ -7,7 +7,7 @@ import type { VideoSummary } from "@vp/api-contracts";
 import { canUpdateVideo } from "@vp/permissions";
 
 import { Can } from "src/components";
-import { timeAgo } from "src/lib";
+import { formatTimeAgo } from "src/lib";
 
 import { formatNumbers } from "../../helpers";
 
@@ -37,7 +37,7 @@ export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
 								<div className={styles.container__meta__stats}>
 									<span className={styles.text}>{formatNumbers(video.viewsCount ?? 0)} views</span>
 									<span className={styles.seperator} />
-									<span className={styles.text}>{timeAgo.format(new Date(video.createdAt))}</span>
+									<span className={styles.text}>{formatTimeAgo(new Date(video.createdAt))}</span>
 								</div>
 							</div>
 						</div>

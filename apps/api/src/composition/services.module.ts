@@ -1,5 +1,6 @@
 import { Adapters, queueNamed } from '@vp/adapters/composition';
 import { type Container, token } from '@vp/composition';
+import { Singleflight } from '@vp/concurrency';
 import type { JobQueue } from '@vp/core/ports';
 import { MetricsServer } from '@vp/observability';
 import { Paginator } from '@vp/pagination';
@@ -116,6 +117,7 @@ export function registerServices(c: Container): Container {
         new FeedService({
           videoService: c.get(Services.VideoService),
           cache: c.get(Adapters.Cache),
+          singleflight: new Singleflight(),
           ...config().httpCache.feed,
         })
     )

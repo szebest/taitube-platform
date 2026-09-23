@@ -4,7 +4,7 @@ import styles from './video-description.module.scss';
 
 import type { Video } from '@vp/api-contracts';
 
-import { timeAgo } from 'src/lib';
+import { formatTimeAgo } from 'src/lib';
 
 export type VideoDescriptionProps = {
 	video: Video;
@@ -19,7 +19,7 @@ export const VideoDescription = ({ video }: VideoDescriptionProps) => {
 	return (
 		<div className={styles.wrapper}>
 			<div className={styles.details}>
-				<span title={new Date(video.createdAt).toLocaleString()}>{timeAgo.format(new Date(video.createdAt).getTime() - 10000)}</span>
+				<span title={new Date(video.createdAt).toLocaleString()}>{formatTimeAgo(new Date(video.createdAt).getTime() - 10000)}</span>
 			</div>
 			<span className={styles.description}>{descriptionExpanded ? description : descriptionSubstring}</span>
 			<button type="button" className={`${styles.descriptionExpandBtn} ${descriptionSubstring.length === description.length ? styles.hide : ''} ${descriptionExpanded ? styles.expanded : ''} btn`} onClick={() => setDescriptionExpanded(prev => !prev)}>

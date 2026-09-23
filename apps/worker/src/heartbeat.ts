@@ -3,10 +3,24 @@ import * as path from 'node:path';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { type Result, fromPromise, ignore, isErr, ok } from '@vp/result';
 
+export interface Repeating {
+  stop(): void;
+}
+
+/** Runs `tick` every `intervalMs` until stopped; a spec hands in one it drives by hand. */
+export type Every = (intervalMs: number, tick: () => Promise<void>) => Repeating;
+
+export const everyInterval: Every = (intervalMs, tick) => {
+  const timer = setInterval(() => void tick(), intervalMs);
+  timer.unref?.();
+  return { stop: () => clearInterval(timer) };
+};
+
 export interface HeartbeatOptions {
   path: string;
   intervalMs: number;
   now: () => number;
+  every: Every;
 }
 
 const toError = (cause: unknown): Error =>
@@ -18,7 +32,7 @@ const toError = (cause: unknown): Error =>
  * anything else is a shell syntax error, and the probe fails the pod.
  */
 export class Heartbeat {
-  private timer: ReturnType<typeof setInterval> | undefined;
+  private repeating: Repeating | undefined;
 
   constructor(private readonly options: HeartbeatOptions) {}
 
@@ -34,14 +48,13 @@ export class Heartbeat {
     const first = await this.beat();
     if (isErr(first)) return first;
 
-    this.timer = setInterval(() => void this.tick(), this.options.intervalMs);
-    this.timer.unref?.();
+    this.repeating = this.options.every(this.options.intervalMs, () => this.tick());
     return ok();
   }
 
   stop(): void {
-    clearInterval(this.timer);
-    this.timer = undefined;
+    this.repeating?.stop();
+    this.repeating = undefined;
   }
 
   private async tick(): Promise<void> {

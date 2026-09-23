@@ -60,7 +60,7 @@ describe('apps/api/services: video lifecycle', () => {
           from: 'FAILED',
           to: 'FAILED',
           eventType: 'video.failed',
-          patch: { errorCode: 'PROBE_FAILED', errorMessage: 'boom' },
+          patch: { errorCode: 'CORRUPT_CONTAINER', errorMessage: 'boom' },
         })
       );
 

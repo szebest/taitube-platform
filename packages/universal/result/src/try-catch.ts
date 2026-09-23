@@ -8,6 +8,14 @@ export function tryCatch<T, E>(fn: () => T, onThrow: (cause: unknown) => E): Res
   }
 }
 
+/** `JSON.parse` as a `Result`: text that is not JSON is a failure to answer, not a throw. */
+export function parseJson(text: string): Result<unknown, SyntaxError> {
+  return tryCatch(
+    (): unknown => JSON.parse(text),
+    (cause) => cause as SyntaxError
+  );
+}
+
 export function fromThrowable<A extends readonly unknown[], T, E>(
   fn: (...args: A) => T,
   onThrow: (cause: unknown) => E

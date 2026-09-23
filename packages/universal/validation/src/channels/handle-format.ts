@@ -9,7 +9,7 @@ export const HANDLE_MAX_LENGTH = 30;
 /** How many suffixed handles a caller may try before giving up on a collision run. */
 export const HANDLE_CANDIDATE_ATTEMPTS = 1000;
 
-const RESERVED_HANDLES = new Set([
+const RESERVED_HANDLES: ReadonlySet<string> = new Set([
   'admin',
   'api',
   'system',

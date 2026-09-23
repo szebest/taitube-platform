@@ -30,46 +30,26 @@ import { selectPublicFeed } from './public-feed-query';
 import {
   DEFAULT_VIDEO_RECORD,
   type InMemoryVideoRepositoryOptions,
-  type InternalStep,
   type UploadLookup,
 } from './types';
 
 export type { InMemoryVideoRepositoryOptions };
 
 export class InMemoryVideoRepository extends VideoRepository {
-  private readonly videosMap: Map<string, VideoRecord>;
-  private readonly eventsList?: VideoEventRecord[];
-  private readonly renditionsMap?: Map<string, RenditionRecord>;
-  private readonly stepsMap?: Map<string, InternalStep>;
-  private readonly uploadsMap?: Map<string, UploadRecord>;
+  private readonly videosMap = new Map<string, VideoRecord>();
   private readonly eventsRepo?: EventRepository;
   private readonly renditionsRepo?: RenditionRepository;
   private readonly stepsRepo?: StepRepository;
   private readonly uploadsRepo?: UploadLookup;
   private readonly outboxRepo?: OutboxRepository;
 
-  constructor(
-    optsOrMap?: InMemoryVideoRepositoryOptions | Map<string, VideoRecord>,
-    eventsList?: VideoEventRecord[],
-    renditionsMap?: Map<string, RenditionRecord>,
-    stepsMap?: Map<string, InternalStep>,
-    uploadsMap?: Map<string, UploadRecord>
-  ) {
+  constructor(options: InMemoryVideoRepositoryOptions = {}) {
     super();
-    if (optsOrMap instanceof Map) {
-      this.videosMap = optsOrMap;
-      this.eventsList = eventsList;
-      this.renditionsMap = renditionsMap;
-      this.stepsMap = stepsMap;
-      this.uploadsMap = uploadsMap;
-    } else {
-      this.videosMap = optsOrMap?.videosMap ?? new Map();
-      this.eventsRepo = optsOrMap?.eventsRepo;
-      this.renditionsRepo = optsOrMap?.renditionsRepo;
-      this.stepsRepo = optsOrMap?.stepsRepo;
-      this.uploadsRepo = optsOrMap?.uploadsRepo;
-      this.outboxRepo = optsOrMap?.outboxRepo;
-    }
+    this.eventsRepo = options.eventsRepo;
+    this.renditionsRepo = options.renditionsRepo;
+    this.stepsRepo = options.stepsRepo;
+    this.uploadsRepo = options.uploadsRepo;
+    this.outboxRepo = options.outboxRepo;
   }
 
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
@@ -81,27 +61,19 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   private async getEvents(id: string): Promise<VideoEventRecord[]> {
-    if (this.eventsRepo) return unwrapOr(await this.eventsRepo.findByVideoId(id), []);
-    return this.eventsList ? this.eventsList.filter((e) => e.videoId === id) : [];
+    return this.eventsRepo ? unwrapOr(await this.eventsRepo.findByVideoId(id), []) : [];
   }
 
   private async getSteps(id: string): Promise<ProcessingStepRecord[]> {
-    if (this.stepsRepo) return unwrapOr(await this.stepsRepo.findByVideoId(id), []);
-    return this.stepsMap ? Array.from(this.stepsMap.values()).filter((s) => s.videoId === id) : [];
+    return this.stepsRepo ? unwrapOr(await this.stepsRepo.findByVideoId(id), []) : [];
   }
 
   private async getRenditions(id: string): Promise<RenditionRecord[]> {
-    if (this.renditionsRepo) return unwrapOr(await this.renditionsRepo.findByVideoId(id), []);
-    return this.renditionsMap
-      ? Array.from(this.renditionsMap.values()).filter((r) => r.videoId === id)
-      : [];
+    return this.renditionsRepo ? unwrapOr(await this.renditionsRepo.findByVideoId(id), []) : [];
   }
 
   private async getUpload(id: string): Promise<UploadRecord | null> {
-    if (this.uploadsRepo) return unwrapOr(await this.uploadsRepo.findByVideoId(id), null);
-    return this.uploadsMap
-      ? (Array.from(this.uploadsMap.values()).find((u) => u.videoId === id) ?? null)
-      : null;
+    return this.uploadsRepo ? unwrapOr(await this.uploadsRepo.findByVideoId(id), null) : null;
   }
 
   private async emitEvent(
@@ -110,23 +82,8 @@ export class InMemoryVideoRepository extends VideoRepository {
     payload: Record<string, unknown>,
     traceId?: string | null
   ): Promise<Result<void, DatabaseUnavailable>> {
-    if (this.eventsRepo) {
-      return map(
-        await this.eventsRepo.create({ videoId, type, payload, traceId }),
-        () => undefined
-      );
-    }
-    if (this.eventsList) {
-      this.eventsList.push({
-        id: this.eventsList.length + 1,
-        videoId,
-        type,
-        payload,
-        traceId: traceId ?? null,
-        createdAt: new Date(),
-      });
-    }
-    return ok();
+    if (!this.eventsRepo) return ok();
+    return map(await this.eventsRepo.create({ videoId, type, payload, traceId }), () => undefined);
   }
 
   async findWithDetails(id: string): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>> {

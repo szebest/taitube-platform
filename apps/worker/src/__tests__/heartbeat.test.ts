@@ -1,51 +1,69 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { Heartbeat } from '../heartbeat';
+import { type Every, Heartbeat, everyInterval } from '../heartbeat';
 
 const INTERVAL_MS = 15_000;
+
+/** A scheduler the spec advances by hand, so no real interval has to elapse. */
+function manualInterval() {
+  const ticks: Array<() => Promise<void>> = [];
+  const every: Every = (_intervalMs, tick) => {
+    ticks.push(tick);
+    return { stop: () => ticks.splice(ticks.indexOf(tick), 1) };
+  };
+  return { every, advance: () => Promise.all(ticks.map((tick) => tick())), ticks };
+}
 
 describe('apps/worker: Heartbeat', () => {
   let dir: string;
   let file: string;
   let clockMs: number;
-  let heartbeat: Heartbeat;
 
+  const heartbeat = (every: Every = manualInterval().every) =>
+    new Heartbeat({ path: file, intervalMs: INTERVAL_MS, now: () => clockMs, every });
   const written = () => fs.readFile(file, 'utf8');
 
   beforeEach(async () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), 'vp-heartbeat-'));
     file = path.join(dir, 'nested', 'heartbeat');
     clockMs = 1_700_000_000_500;
-    heartbeat = new Heartbeat({ path: file, intervalMs: INTERVAL_MS, now: () => clockMs });
   });
 
   afterEach(async () => {
-    heartbeat.stop();
-    vi.useRealTimers();
     await fs.rm(dir, { recursive: true, force: true });
   });
 
   it('writes integer epoch seconds and a newline, creating the directory', async () => {
-    expect((await heartbeat.beat()).ok).toBe(true);
+    expect((await heartbeat().beat()).ok).toBe(true);
 
     expect(await written()).toBe('1700000000\n');
   });
 
-  it('writes on start and again on every interval, in the same format', async () => {
-    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
-    expect((await heartbeat.start()).ok).toBe(true);
-    expect(await written()).toMatch(/^\d+\n$/);
+  it('writes on start and again on every tick, in the same format, until stopped', async () => {
+    const interval = manualInterval();
+    const beating = heartbeat(interval.every);
+
+    expect((await beating.start()).ok).toBe(true);
+    expect(await written()).toBe('1700000000\n');
 
     clockMs += INTERVAL_MS;
-    vi.advanceTimersByTime(INTERVAL_MS);
+    await interval.advance();
+    expect(await written()).toBe('1700000015\n');
 
-    await vi.waitFor(async () => expect(await written()).toBe('1700000015\n'));
+    beating.stop();
+    expect(interval.ticks).toEqual([]);
   });
 
   it('refuses to start when the first beat cannot be written', async () => {
     await fs.writeFile(path.join(dir, 'nested'), 'a file where the directory should be');
+    const interval = manualInterval();
 
-    expect((await heartbeat.start()).ok).toBe(false);
+    expect((await heartbeat(interval.every).start()).ok).toBe(false);
+    expect(interval.ticks).toEqual([]);
+  });
+
+  it('schedules a real interval that stops cleanly', () => {
+    expect(() => everyInterval(INTERVAL_MS, async () => {}).stop()).not.toThrow();
   });
 });

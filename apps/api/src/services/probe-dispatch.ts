@@ -1,7 +1,7 @@
 import type { JobQueue, QueueJobOptions } from '@vp/core/ports';
 import type { NewOutboxInput } from '@vp/core/repositories';
 import type { QueueUnavailable } from '@vp/errors';
-import { ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
+import { type ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Result, map } from '@vp/result';
 
 const PROBE_QUEUE = 'probe';
@@ -27,12 +27,12 @@ export interface ProbeDispatch {
  * a different id.
  */
 export function buildProbeDispatch(input: ProbeDispatchInput): ProbeDispatch {
-  const data = ProbeJob.parse({
+  const data: ProbeJob = {
     videoId: input.videoId,
     sourceKey: input.sourceKey,
     generation: input.generation,
     traceparent: input.traceparent,
-  });
+  };
 
   const opts: QueueJobOptions = {
     jobId: ids.probe(input.videoId, input.generation),

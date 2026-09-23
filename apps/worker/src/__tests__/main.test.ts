@@ -103,9 +103,10 @@ describe('apps/worker: main', () => {
       if (signal === 'SIGTERM') setImmediate(handler);
     };
 
-    await main(processHost);
+    const worker = await main(processHost);
+    await worker.shutdown();
 
-    await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
+    expect(exit).toHaveBeenCalledWith(0);
     expect(consume).not.toHaveBeenCalled();
   });
 });

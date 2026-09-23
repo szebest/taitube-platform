@@ -4,7 +4,6 @@
  * on a file that is over and unlisted, and on a listed file that now fits.
  */
 export const OVERSIZED_SOURCES: readonly string[] = [
-  'packages/server/adapters/in-memory/repositories/in-memory-video-repository.ts',
   'packages/server/adapters/postgres/repositories/postgres-video-repository.ts',
   'packages/server/db/src/schema.ts',
 ];

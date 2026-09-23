@@ -86,11 +86,13 @@ describe('packages/composition: exitOnSignals', () => {
         onSignal: (name, handler) => void handlers.set(name, handler),
         exit,
       };
-      exitOnSignals(host, async (): Promise<ShutdownOutcome> => outcome);
+      const settled = Promise.resolve<ShutdownOutcome>(outcome);
+      exitOnSignals(host, () => settled);
 
       handlers.get(signal)?.();
+      await settled;
 
-      await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(code));
+      expect(exit).toHaveBeenCalledWith(code);
     }
   );
 });

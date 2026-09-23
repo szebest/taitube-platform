@@ -3,7 +3,7 @@ import type { CacheClient } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
 import { SseMessageEnvelope, USER_WILDCARD_CHANNEL, VIDEO_WILDCARD_CHANNEL } from '@vp/events';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, ignore, isErr, isOk, ok, tryCatch } from '@vp/result';
+import { type Result, err, ignore, isErr, isOk, ok, parseJson, tryCatch } from '@vp/result';
 import { SseConnection } from './sse-connection';
 import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';
 
@@ -145,13 +145,10 @@ export class SseHub {
     const set = this.connectionsByChannel.get(channel);
     if (!set || set.size === 0) return;
 
-    const decoded = tryCatch(
-      () => SseMessageEnvelope.safeParse(JSON.parse(rawMessage)),
-      () => null
-    );
+    const decoded = parseJson(rawMessage);
     if (!isOk(decoded)) return;
 
-    const parsed = decoded.value;
+    const parsed = SseMessageEnvelope.safeParse(decoded.value);
     if (!parsed.success) return;
 
     const envelope: SseMessageEnvelope = parsed.data;

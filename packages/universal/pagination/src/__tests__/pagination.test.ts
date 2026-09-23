@@ -1,12 +1,6 @@
 import { ok } from '@vp/result';
 import { JsonCursorCodec } from '../cursor-codec';
-import {
-  DEFAULT_PAGINATION,
-  PAGE_SIZE_DEFAULT,
-  PAGE_SIZE_MAX,
-  Paginator,
-  defaultPaginator,
-} from '../pagination';
+import { DEFAULT_PAGINATION, PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX, Paginator } from '../pagination';
 
 describe('packages/pagination: Paginator', () => {
   const jsonPaginator = new Paginator({ cursorCodec: new JsonCursorCodec() });
@@ -31,7 +25,7 @@ describe('packages/pagination: Paginator', () => {
       { scenario: 'fractional', requested: 12.9, expected: 12 },
       { scenario: 'not a number', requested: Number.NaN, expected: 20 },
     ])('resolves a $scenario limit to $expected', ({ requested, expected }) => {
-      expect(defaultPaginator.limit(requested)).toBe(expected);
+      expect(new Paginator().limit(requested)).toBe(expected);
     });
 
     it('honours configured overrides', () => {
@@ -50,7 +44,7 @@ describe('packages/pagination: Paginator', () => {
   });
 
   it('asks for one row beyond the page', () => {
-    expect(defaultPaginator.window(20)).toBe(21);
+    expect(new Paginator().window(20)).toBe(21);
   });
 
   describe('paginate', () => {
@@ -76,17 +70,17 @@ describe('packages/pagination: Paginator', () => {
     });
 
     it('round-trips its own cursor through the configured codec', () => {
-      const page = defaultPaginator.paginate(rows(3), 2, { cursorOf, toItem });
+      const page = new Paginator().paginate(rows(3), 2, { cursorOf, toItem });
 
-      expect(defaultPaginator.decodeCursor(page.nextCursor)).toEqual(ok({ id: 'r1' }));
+      expect(new Paginator().decodeCursor(page.nextCursor)).toEqual(ok({ id: 'r1' }));
     });
   });
 
   describe('decodeCursor', () => {
     it('treats an absent cursor as the first page', () => {
-      expect(defaultPaginator.decodeCursor(undefined)).toEqual(ok(null));
-      expect(defaultPaginator.decodeCursor(null)).toEqual(ok(null));
-      expect(defaultPaginator.decodeCursor('')).toEqual(ok(null));
+      expect(new Paginator().decodeCursor(undefined)).toEqual(ok(null));
+      expect(new Paginator().decodeCursor(null)).toEqual(ok(null));
+      expect(new Paginator().decodeCursor('')).toEqual(ok(null));
     });
   });
 
@@ -94,7 +88,7 @@ describe('packages/pagination: Paginator', () => {
     const rows3 = rows(3);
 
     expect(jsonPaginator.paginate(rows3, 2, { cursorOf, toItem }).nextCursor).toBe('{"id":"r1"}');
-    expect(defaultPaginator.paginate(rows3, 2, { cursorOf, toItem }).nextCursor).not.toBe(
+    expect(new Paginator().paginate(rows3, 2, { cursorOf, toItem }).nextCursor).not.toBe(
       '{"id":"r1"}'
     );
   });

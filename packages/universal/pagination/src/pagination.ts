@@ -1,9 +1,9 @@
 import { type Result, ok } from '@vp/result';
 import {
+  Base64UrlCursorCodec,
   type CursorCodec,
   type CursorPayload,
   type InvalidCursor,
-  defaultCursorCodec,
 } from './cursor-codec.js';
 
 /**
@@ -58,7 +58,7 @@ export class Paginator {
       defaultLimit: options.defaultLimit ?? DEFAULT_PAGINATION.defaultLimit,
       maxLimit: options.maxLimit ?? DEFAULT_PAGINATION.maxLimit,
     };
-    this.cursorCodec = options.cursorCodec ?? defaultCursorCodec;
+    this.cursorCodec = options.cursorCodec ?? new Base64UrlCursorCodec();
   }
 
   /** The page size to request, clamped into `[1, maxLimit]`. */
@@ -100,6 +100,3 @@ export class Paginator {
     };
   }
 }
-
-/** Shared instance for callers with no configured override. */
-export const defaultPaginator = new Paginator();

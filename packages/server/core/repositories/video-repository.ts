@@ -5,7 +5,7 @@ import type {
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
-import type { DatabaseUnavailable, VersionConflict } from '@vp/errors';
+import type { DatabaseUnavailable, ErrorCode, VersionConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { Result } from '@vp/result';
 
@@ -42,7 +42,7 @@ export interface NewVideoInput {
   likesCount?: number;
   dislikesCount?: number;
   categoryId?: string | null;
-  errorCode?: string | null;
+  errorCode?: ErrorCode | null;
   errorMessage?: string | null;
   generation?: number;
   readyAt?: Date | null;
@@ -93,7 +93,10 @@ export interface TransitionVideoOptions {
   eventPayload?: Record<string, unknown>;
   traceId?: string | null;
   patch?: Partial<
-    Omit<VideoRecord, 'id' | 'ownerId' | 'status' | 'createdAt' | 'updatedAt' | 'version'>
+    Omit<
+      VideoRecord,
+      'id' | 'ownerId' | 'status' | 'createdAt' | 'updatedAt' | 'version' | 'errorCode'
+    > & { errorCode: ErrorCode | null }
   >;
   outbox?: NewOutboxInput;
 }

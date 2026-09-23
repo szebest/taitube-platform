@@ -25,7 +25,9 @@ function expectRejected(decoded: Result<unknown, InvalidCursor>): void {
 describe('apps/api/services: pagination cursors', () => {
   describe('feed cursor', () => {
     it('round-trips the row a page resumes after, plus the instant it ranked against', () => {
-      expect(expectOk(decodeFeedCursor(encodeFeedCursor(ROW, INSTANT)))).toEqual({
+      expect(
+        expectOk(decodeFeedCursor(encodeFeedCursor(ROW, INSTANT, paginator), paginator))
+      ).toEqual({
         id: 'video-1',
         createdAt: CREATED_AT,
         viewsCount: 42,
@@ -45,7 +47,9 @@ describe('apps/api/services: pagination cursors', () => {
     it.each(['recent', 'popular', 'trending'] as const)(
       'yields the same %s rank the repository derives from the row itself',
       (sort) => {
-        const cursor = expectOk(decodeFeedCursor(encodeFeedCursor(ROW, INSTANT)));
+        const cursor = expectOk(
+          decodeFeedCursor(encodeFeedCursor(ROW, INSTANT, paginator), paginator)
+        );
         const rankOf = publicFeedRanking(sort);
 
         expect(rankOf(cursor as NonNullable<typeof cursor>, INSTANT)).toBe(rankOf(ROW, INSTANT));
@@ -65,8 +69,8 @@ describe('apps/api/services: pagination cursors', () => {
     });
 
     it('returns null for an absent cursor', () => {
-      expect(decodeFeedCursor(undefined)).toEqual(ok(null));
-      expect(decodeFeedCursor('')).toEqual(ok(null));
+      expect(decodeFeedCursor(undefined, paginator)).toEqual(ok(null));
+      expect(decodeFeedCursor('', paginator)).toEqual(ok(null));
     });
 
     it.each<{ scenario: string; payload: Record<string, unknown> }>([
@@ -84,26 +88,26 @@ describe('apps/api/services: pagination cursors', () => {
         payload: { createdAt: CREATED_AT.toISOString(), viewsCount: 1, instant: INSTANT },
       },
     ])('rejects a cursor with $scenario', ({ payload }) => {
-      expectRejected(decodeFeedCursor(paginator.encodeCursor(payload as never)));
+      expectRejected(decodeFeedCursor(paginator.encodeCursor(payload as never), paginator));
     });
 
     it('rejects a cursor the codec cannot read at all', () => {
-      expectRejected(decodeFeedCursor('not-a-cursor'));
+      expectRejected(decodeFeedCursor('not-a-cursor', paginator));
     });
   });
 
   describe('createdAt cursor', () => {
     it('round-trips the keyset', () => {
       const cursor = paginator.encodeCursor(createdAtCursorPayload(ROW));
-      expect(expectOk(decodeCreatedAtCursor(cursor))).toEqual({
+      expect(expectOk(decodeCreatedAtCursor(cursor, paginator))).toEqual({
         id: 'video-1',
         createdAt: CREATED_AT,
       });
     });
 
     it('returns null for an absent cursor and rejects a broken one', () => {
-      expect(decodeCreatedAtCursor(undefined)).toEqual(ok(null));
-      expectRejected(decodeCreatedAtCursor('not-a-cursor'));
+      expect(decodeCreatedAtCursor(undefined, paginator)).toEqual(ok(null));
+      expectRejected(decodeCreatedAtCursor('not-a-cursor', paginator));
     });
   });
 
@@ -111,12 +115,12 @@ describe('apps/api/services: pagination cursors', () => {
     it('round-trips the keyset', () => {
       const item = { channelId: 'channel-1', createdAt: CREATED_AT };
       const cursor = paginator.encodeCursor(subscriptionCursorPayload(item));
-      expect(expectOk(decodeSubscriptionCursor(cursor))).toEqual(item);
+      expect(expectOk(decodeSubscriptionCursor(cursor, paginator))).toEqual(item);
     });
 
     it('returns null for an absent cursor and rejects a broken one', () => {
-      expect(decodeSubscriptionCursor(undefined)).toEqual(ok(null));
-      expectRejected(decodeSubscriptionCursor('not-a-cursor'));
+      expect(decodeSubscriptionCursor(undefined, paginator)).toEqual(ok(null));
+      expectRejected(decodeSubscriptionCursor('not-a-cursor', paginator));
     });
   });
 });
