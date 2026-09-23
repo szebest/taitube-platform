@@ -6,6 +6,7 @@ import {
   type UploadOpenFailure,
   type UploadSizeMismatch,
   decideUploadOpen,
+  jobPriorityFor,
   notMultipart,
   partManifestMismatch,
   sourceMissing,
@@ -23,9 +24,6 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
-
-const PRIORITY_PAID = 1;
-const PRIORITY_FREE = 5;
 
 export interface UploadPart {
   partNumber: number;
@@ -124,12 +122,6 @@ async function rejectSizeMismatch(
   return err(uploadSizeMismatch(video.id, video.sourceSizeBytes ?? null, actualSizeBytes));
 }
 
-/** A tier lookup that cannot answer costs the job its priority, not its admission. */
-async function probePriority(ctx: UploadContext, ownerId: string): Promise<number> {
-  const record = unwrapOr(await ctx.users.findById(ownerId), null);
-  return record?.tier === 'pro' || record?.tier === 'enterprise' ? PRIORITY_PAID : PRIORITY_FREE;
-}
-
 /**
  * Completes an upload, verifies the stored object, CAS-transitions the video to
  * UPLOADED and enqueues the probe job the same transition committed to the outbox.
@@ -175,7 +167,7 @@ export async function completeUpload(
     sourceKey: video.sourceKey,
     generation: 1,
     traceparent,
-    priority: await probePriority(ctx, video.ownerId),
+    priority: jobPriorityFor(unwrapOr(await ctx.users.findById(video.ownerId), null)?.tier),
   });
 
   const transitioned = await ctx.videos.transition({

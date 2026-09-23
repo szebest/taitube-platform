@@ -1,4 +1,5 @@
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
+import { JOB_PRIORITY } from '@vp/domain-rules';
 import { ids, stagePolicies } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';
@@ -30,6 +31,10 @@ describe('apps/api/services: probe dispatch', () => {
     ['lets a paid tier jump the queue', 1, 1],
   ])('%s', (_label, priority, expected) => {
     expect(dispatch({ priority }).opts.priority).toBe(expected);
+  });
+
+  it('falls back to the same lane a free owner gets', () => {
+    expect(stagePolicies.probe.priority).toBe(JOB_PRIORITY.free);
   });
 
   it('commits the same job to the outbox that the fast path enqueues', async () => {

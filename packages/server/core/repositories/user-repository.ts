@@ -1,8 +1,6 @@
-import type { UserRole } from '@vp/domain';
+import type { UserRole, UserTier } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
-
-export type UserTier = 'free' | 'pro' | 'enterprise';
 
 export interface UserRecord {
   id: string;

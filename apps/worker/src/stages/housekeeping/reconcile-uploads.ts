@@ -1,5 +1,6 @@
 import type { JobQueue, MultipartStorage } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { jobPriorityFor } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
@@ -115,9 +116,9 @@ export async function runReconcileUploads(
       continue;
     }
 
-    // A tier lookup that cannot answer costs the job its priority, not its admission.
-    const user = unwrapOr(await repositories.users.findById(video.ownerId), null);
-    const priority = user?.tier === 'pro' || user?.tier === 'enterprise' ? 1 : 5;
+    const priority = jobPriorityFor(
+      unwrapOr(await repositories.users.findById(video.ownerId), null)?.tier
+    );
 
     const probeJobId = ids.probe(video.id, video.generation ?? 1);
     await probeQueue.add(
