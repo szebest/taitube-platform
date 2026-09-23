@@ -1,9 +1,11 @@
-import { productionSources, read, shrinkOnly } from './repo-files';
-import { THROWING_DOMAIN_SOURCES } from './throwing-domain-sources';
+import { productionSources, read } from './repo-files';
 
 /**
  * Layers 1 and 2 return their failures (SDD ADR-24). The only `throw` they may reach is
  * `assertNever`, which fires on a variant the compiler already proved unreachable.
+ *
+ * Ticket 84 converted the last service and the last stage, so this is a flat assertion now: the
+ * shrink-only list it used to read from is gone.
  */
 const DOMAIN_ROOTS = [
   'packages/universal/validation/',
@@ -19,8 +21,7 @@ const ASSERT_NEVER = /(^|[^\w.])throw\s+assertNever\b/;
 /**
  * A helper that turns a `Result` into a throw is the same escape hatch one indirection away, and
  * the literal-`throw` sweep cannot see it: `unwrapOrThrow` has a capital T and word characters to
- * its left, so it matched neither half of `THROW`. Five stage files converted a failure into a
- * throw eleven times and the guard called them clean. This matches the shape rather than the one
+ * its left, so it matched neither half of `THROW`. This matches the shape rather than the one
  * name, so the next `assertOrThrow` is caught the day it is written.
  */
 const CONVERTS_TO_THROW = /\b\w+OrThrow\s*\(/g;
@@ -52,22 +53,17 @@ describe('architecture: domain code returns its failures, it does not throw them
     expect(covered.length).toBeGreaterThan(50);
   });
 
-  it('holds the converted domain code free of throw', () => {
-    const { unlisted } = shrinkOnly(offenders(), THROWING_DOMAIN_SOURCES);
-
-    expect(unlisted).toEqual([]);
-  });
-
-  it('keeps the exception list shrinking: no entry that no longer throws', () => {
-    const { stale } = shrinkOnly(offenders(), THROWING_DOMAIN_SOURCES);
-
-    expect(stale).toEqual([]);
+  it('finds no rule, service or stage that throws its failure', () => {
+    expect(offenders()).toEqual([]);
   });
 
   it.each([
     { shape: 'a bare throw', source: 'throw new PermanentError("x");' },
     { shape: 'a throw after a return', source: 'if (!row) throw notFound(id);' },
-    { shape: 'a Result unwrapped into a throw', source: 'const v = unwrapOrThrow(await repo.f());' },
+    {
+      shape: 'a Result unwrapped into a throw',
+      source: 'const v = unwrapOrThrow(await repo.f());',
+    },
     { shape: 'the same helper under another name', source: 'const v = okOrThrow(result);' },
   ])('counts $shape against a domain source', ({ source }) => {
     expect(throwSites(source)).not.toEqual([]);

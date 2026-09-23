@@ -1,9 +1,11 @@
-import { NON_RESULT_PORT_METHODS } from './non-result-port-methods';
-import { read, shrinkOnly, trackedFiles } from './repo-files';
+import { read, trackedFiles } from './repo-files';
 
 /**
  * An I/O method that types as `Promise<T>` hides every way it can fail. `Promise<Result<T, E>>`
  * puts the narrow failure union for that port in the signature, where a caller has to answer it.
+ *
+ * Ticket 84 converted the last of them, so this is a flat assertion now: the shrink-only list it
+ * used to read from is gone, and a port method that hides its failures is simply a failure here.
  */
 const PORT_ROOTS = ['packages/server/core/ports/', 'packages/server/core/repositories/'];
 const METHOD = /^\s*(?:abstract\s+)?(\w+)\s*(?:<[^>]*>)?\([^;]*?\):\s*(Promise<[^;]+)/gm;
@@ -35,19 +37,7 @@ describe('architecture: every I/O port method returns a Result', () => {
     expect(asyncMethods('packages/server/core/repositories/category-repository.ts')).not.toEqual([]);
   });
 
-  it('sees a converted port as converted', () => {
-    expect(offenders().filter((entry) => entry.includes('category-repository'))).toEqual([]);
-  });
-
-  it('allows no new port method that hides its failures', () => {
-    const { unlisted } = shrinkOnly(offenders(), NON_RESULT_PORT_METHODS);
-
-    expect(unlisted).toEqual([]);
-  });
-
-  it('keeps the exception list shrinking: no entry that already returns a Result', () => {
-    const { stale } = shrinkOnly(offenders(), NON_RESULT_PORT_METHODS);
-
-    expect(stale).toEqual([]);
+  it('finds no port method that hides its failures behind a bare promise', () => {
+    expect(offenders()).toEqual([]);
   });
 });

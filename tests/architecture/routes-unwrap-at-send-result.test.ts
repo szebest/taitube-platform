@@ -66,9 +66,12 @@ describe('architecture: a route hands its Result to sendResult and renders nothi
 
   it.each([
     { shape: 'sendResult', source: '  return sendResult(reply, request, result);' },
-    { shape: 'an isErr short-circuit', source: '  if (isErr(page)) return sendResult(r, q, page);' },
+    {
+      shape: 'an isErr short-circuit',
+      source: '  if (isErr(page)) return sendResult(r, q, page);',
+    },
     { shape: 'a value read after that guard', source: '  reply.headers(page.value.headers);' },
-    { shape: 'a promise catch on a fetch', source: "  const x = await f().catch(() => null);" },
+    { shape: 'a promise catch on a fetch', source: '  const x = await f().catch(() => null);' },
     { shape: 'an exhaustiveness assertion', source: '  throw assertNever(f, "present");' },
   ])('leaves $shape alone', ({ source }) => {
     expect(unwrapsOutsideSendResult(source)).toBe(false);

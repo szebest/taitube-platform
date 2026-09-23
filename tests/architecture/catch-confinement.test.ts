@@ -1,4 +1,4 @@
-import { LEGACY_CATCH_SITES, PENDING_CATCH_SITES } from './legacy-catch-sites';
+import { LEGACY_CATCH_SITES } from './legacy-catch-sites';
 import { productionSources, read, shrinkOnly } from './repo-files';
 
 /**
@@ -43,11 +43,28 @@ describe('architecture: catch is confined to the boundary that converts a throw'
   });
 
   /**
-   * The out-of-scope half of the list cannot shrink through this ticket, so counting it as work
-   * outstanding overstates what is left. This is the number that has to reach zero.
+   * Nothing on the list is waiting on a conversion any more: ticket 84 converted every port,
+   * service and stage, and what remains is the process, CLI, telemetry, build and browser
+   * boundaries it named out of scope.
    */
-  it('separates what this ticket still owes from what a later ticket has to claim', () => {
-    expect(PENDING_CATCH_SITES.every((file) => LEGACY_CATCH_SITES.includes(file))).toBe(true);
-    expect(PENDING_CATCH_SITES.length).toBeLessThan(LEGACY_CATCH_SITES.length);
+  it('leaves only the boundaries a later ticket has to claim', () => {
+    const roots = [
+      'packages/server/ffmpeg/',
+      'packages/server/gen-video/',
+      'packages/server/dev-token/',
+      'packages/server/upload-client/',
+      'packages/server/compose-autoscaler/',
+      'packages/server/observability/',
+      'packages/server/db/',
+      'apps/web/',
+      'scripts/',
+      'apps/api/src/plugins/',
+      'apps/api/src/migrate.ts',
+      'apps/worker/src/main.ts',
+      'apps/worker/src/with-telemetry.ts',
+      'apps/worker/src/failure-handler.ts',
+    ];
+
+    expect(LEGACY_CATCH_SITES.filter((file) => !roots.some((r) => file.startsWith(r)))).toEqual([]);
   });
 });

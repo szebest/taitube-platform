@@ -1,18 +1,15 @@
 /**
- * Sources that still `catch` outside the boundary that converts a throw into a `Result`. The list
- * may only shrink: `catch-confinement.test.ts` fails both on a new breach and on a listed entry
- * that no longer catches, so it can never be appended to.
+ * Sources that `catch` outside the boundary that converts a throw into a `Result`. The list may
+ * only shrink: `catch-confinement.test.ts` fails both on a new breach and on a listed entry that
+ * no longer catches, so it can never be appended to.
  *
- * Two kinds of entry live here and they are not the same promise. **Out of scope** entries are
- * named in ticket 84's own "Out of scope" section - process spawning, CLI tools and `apps/web` -
- * and will not shrink through this ticket; they are listed so the sweep stays total, not because
- * anyone is waiting on them. **Pending** entries are waiting on a specific conversion, and each
- * says which. A reader could not previously tell the two apart, which made the ratchet's shape
- * misleading: a list that cannot reach zero reads as a list nobody is working on.
+ * Every entry left is a boundary ticket 84 named out of its own scope: a spawned process, a CLI's
+ * top-level exit-code handler, telemetry that must never fail what it instruments, a build or
+ * migration entrypoint, `apps/web` (tickets 53, 70 and 71 own the browser side), and the two
+ * pre-handlers that have no reply to render into. The half that was waiting on a conversion is
+ * gone - the ports, the services and the stages all return now.
  */
-
-/** Out of ticket scope. These do not shrink through 84; a later ticket has to claim them. */
-const OUT_OF_SCOPE: readonly string[] = [
+export const LEGACY_CATCH_SITES: readonly string[] = [
   // Spawns FFmpeg and reads its exit code - a process boundary, not a port.
   'packages/server/ffmpeg/src/probe.ts',
   'packages/server/ffmpeg/src/transcode.ts',
@@ -50,50 +47,4 @@ const OUT_OF_SCOPE: readonly string[] = [
   'apps/api/src/plugins/auth.ts',
   'apps/api/src/plugins/jwks-verifier.ts',
   'apps/worker/src/failure-handler.ts',
-];
-
-/** Waiting on a named conversion. Each goes when the thing it names returns a `Result`. */
-const PENDING: readonly string[] = [
-  // Goes with the W5 conversion of the service that owns the file.
-  'apps/api/src/services/channel-service.ts',
-  'apps/api/src/services/cursor.ts',
-  'apps/api/src/services/feed-service.ts',
-  'apps/api/src/services/sse-connection.ts',
-  'apps/api/src/services/sse-hub.ts',
-  'apps/api/src/services/upload-complete.ts',
-
-  // Poll loops around a port that still throws; go with that port's W4 conversion.
-  'apps/api/src/services/queue-poller.ts',
-  'apps/api/src/services/sql-poller.ts',
-
-  // Catches `HealthCheckable.checkHealth`, still a bare `Promise<boolean>` on the port ratchet.
-  'apps/api/src/routes/health.ts',
-
-  // Catches `QueueService.assertAdmin`; goes when that service returns its verdict.
-  'apps/api/src/routes/admin/queues.ts',
-
-  // Stage not yet converted; the catch wraps a StorageClient, JobQueue or MultipartStorage call
-  // that still throws, so it goes with that port's W4 conversion rather than with the stage.
-  'apps/worker/src/stages/housekeeping/outbox-relay.ts',
-  'apps/worker/src/stages/housekeeping/purge-deleted.ts',
-  'apps/worker/src/stages/housekeeping/reconcile-processing.ts',
-  'apps/worker/src/stages/housekeeping/reconcile-uploads.ts',
-  'apps/worker/src/stages/housekeeping/tmp-sweep.ts',
-  'apps/worker/src/stages/notify.ts',
-  'apps/worker/src/stages/package.ts',
-  'apps/worker/src/stages/probe.ts',
-  'apps/worker/src/stages/progress-reporter.ts',
-  'apps/worker/src/stages/segment-uploader.ts',
-  'apps/worker/src/stages/thumbnail.ts',
-  'apps/worker/src/stages/transcode.ts',
-
-  // Decodes an opaque cursor, so the catch is a parse boundary. Goes with INVALID_CURSOR.
-  'packages/universal/pagination/src/cursor-codec.ts',
-  'packages/universal/api-contracts/src/videos.ts',
-  'packages/server/storage/src/keys.ts',
-];
-
-export const LEGACY_CATCH_SITES: readonly string[] = [...OUT_OF_SCOPE, ...PENDING].sort();
-
-/** What is left for this ticket to do, as opposed to what a later one has to claim. */
-export const PENDING_CATCH_SITES: readonly string[] = PENDING;
+].sort();
