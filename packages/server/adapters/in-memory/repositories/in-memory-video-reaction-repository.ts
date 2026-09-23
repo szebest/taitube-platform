@@ -8,7 +8,7 @@ import type {
   VideoReaction,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface InMemoryVideoReactionRepositoryOptions {
@@ -73,7 +73,12 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
     this.videoCounters.set(videoId, { likesCount, dislikesCount });
 
     if (this.videosRepo) {
-      await this.videosRepo.updateReactionCounters(videoId, likesCount, dislikesCount);
+      const counted = await this.videosRepo.updateReactionCounters(
+        videoId,
+        likesCount,
+        dislikesCount
+      );
+      if (isErr(counted)) return counted;
     }
 
     return ok({
@@ -102,10 +107,9 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
     dislikesCount: number
   ): Promise<Result<void, DatabaseUnavailable>> {
     this.videoCounters.set(videoId, { likesCount, dislikesCount });
-    if (this.videosRepo) {
-      await this.videosRepo.updateReactionCounters(videoId, likesCount, dislikesCount);
-    }
-    return ok();
+    return this.videosRepo
+      ? this.videosRepo.updateReactionCounters(videoId, likesCount, dislikesCount)
+      : ok();
   }
 
   async listVideoIdsWithReactions(

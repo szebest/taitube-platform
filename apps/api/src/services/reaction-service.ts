@@ -4,7 +4,7 @@ import type { ReactionCounts, ReactionInputType, ReactionType } from '@vp/domain
 import { type ReactFailure, decideReact } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, isOk, ok } from '@vp/result';
+import { type Result, err, ignore, isErr, isOk, ok } from '@vp/result';
 
 export interface ReactionServiceDeps {
   videoReactions: VideoReactionRepositoryPort;
@@ -55,8 +55,14 @@ export class ReactionService {
     if (isErr(written)) return written;
 
     const { newType, likesCount, dislikesCount } = written.value;
-    await this.deps.reactionCache.setCounts(videoId, { likesCount, dislikesCount });
-    await this.deps.reactionCache.setUserReaction(user.id, videoId, newType);
+    ignore(
+      await this.deps.reactionCache.setCounts(videoId, { likesCount, dislikesCount }),
+      'the reaction is written; the counts reconciler repairs the cache'
+    );
+    ignore(
+      await this.deps.reactionCache.setUserReaction(user.id, videoId, newType),
+      'the reaction is written; the cache heals on its TTL'
+    );
 
     return ok({ videoId, reaction: newType, likesCount, dislikesCount });
   }

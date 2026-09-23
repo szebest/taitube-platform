@@ -1,6 +1,7 @@
+import { join } from 'node:path';
 import ts from 'typescript';
-import { fixtureProgram, serverProgram } from './program';
-import { productionSources, read } from './repo-files';
+import { fixtureProgram, productionProgram } from './program';
+import { ROOT, read } from './repo-files';
 
 const ENV_SCHEMA = 'packages/server/env-schema/src/';
 const SERVER_ROOTS = ['apps/api/src/', 'apps/worker/src/', 'packages/server/'];
@@ -185,19 +186,15 @@ describe('architecture: every declared key is read and every config leaf is cons
   });
 
   it('consumes every AppConfig leaf in production source outside env-schema', () => {
-    const roots = productionSources().filter((file) =>
-      SERVER_ROOTS.some((root) => file.startsWith(root))
-    );
-    const program = serverProgram(roots);
+    const { program, roots } = productionProgram();
+    const onServer = (file: string) =>
+      SERVER_ROOTS.some((root) => file.startsWith(join(ROOT, root)));
 
     expect(
       unconsumedLeaves(
         program,
         (file) => file.endsWith(`${ENV_SCHEMA}app-config.ts`),
-        (file) =>
-          !file.includes('/node_modules/') &&
-          !file.includes(`/${ENV_SCHEMA}`) &&
-          roots.some((root) => file.endsWith(root))
+        (file) => roots.has(file) && onServer(file) && !file.includes(`/${ENV_SCHEMA}`)
       )
     ).toEqual([]);
   });

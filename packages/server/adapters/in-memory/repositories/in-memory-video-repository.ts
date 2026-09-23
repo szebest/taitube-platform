@@ -23,7 +23,7 @@ import {
 } from '@vp/core/repositories';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { canReadVideo } from '@vp/permissions';
-import { type Result, assertNever, err, ok, unwrapOr } from '@vp/result';
+import { type Result, assertNever, err, isErr, map, ok, unwrapOr } from '@vp/result';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { selectPublicFeed } from './public-feed-query';
@@ -109,10 +109,14 @@ export class InMemoryVideoRepository extends VideoRepository {
     type: string,
     payload: Record<string, unknown>,
     traceId?: string | null
-  ): Promise<void> {
+  ): Promise<Result<void, DatabaseUnavailable>> {
     if (this.eventsRepo) {
-      await this.eventsRepo.create({ videoId, type, payload, traceId });
-    } else if (this.eventsList) {
+      return map(
+        await this.eventsRepo.create({ videoId, type, payload, traceId }),
+        () => undefined
+      );
+    }
+    if (this.eventsList) {
       this.eventsList.push({
         id: this.eventsList.length + 1,
         videoId,
@@ -122,6 +126,7 @@ export class InMemoryVideoRepository extends VideoRepository {
         createdAt: new Date(),
       });
     }
+    return ok();
   }
 
   async findWithDetails(id: string): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>> {
@@ -195,13 +200,13 @@ export class InMemoryVideoRepository extends VideoRepository {
     if (patch.title !== undefined) video.title = patch.title;
     if (patch.description !== undefined) video.description = patch.description;
     if (patch.visibility !== undefined) video.visibility = patch.visibility;
-    await this.emitEvent(videoId, 'video.metadata_updated', {
+    const recorded = await this.emitEvent(videoId, 'video.metadata_updated', {
       patch,
       expectedVersion,
       newVersion: video.version,
       ...(userId ? { requestedBy: userId } : {}),
     });
-    return ok(video);
+    return map(recorded, () => video);
   }
 
   async transition(options: TransitionVideoOptions): Promise<Result<boolean, DatabaseUnavailable>> {
@@ -221,14 +226,16 @@ export class InMemoryVideoRepository extends VideoRepository {
       updatedAt: now,
       readyAt: to === 'READY' ? now : video.readyAt,
     });
-    await this.emitEvent(
+    const recorded = await this.emitEvent(
       videoId,
       eventType || `video.${to.toLowerCase()}`,
       eventPayload,
       effectiveTraceId
     );
+    if (isErr(recorded)) return recorded;
     if (options.outbox && this.outboxRepo) {
-      await this.outboxRepo.enqueue(options.outbox);
+      const enqueued = await this.outboxRepo.enqueue(options.outbox);
+      if (isErr(enqueued)) return enqueued;
     }
     return ok(true);
   }

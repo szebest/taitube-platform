@@ -1,4 +1,4 @@
-import { type Result, ok } from '@vp/result';
+import { type Result, fromPromise, ignore, ok } from '@vp/result';
 
 /**
  * Samples on an interval once started, and not before: building one opens no timer, which is what
@@ -25,8 +25,10 @@ export class Poller {
     this.timer = undefined;
   }
 
-  /** A scrape is not a request: a sample that cannot be taken leaves the gauges where they were. */
   private sample(): void {
-    this.poll().catch(() => {});
+    ignore(
+      fromPromise(this.poll, (cause) => cause),
+      'a scrape is not a request: a sample that cannot be taken leaves the gauges where they were'
+    );
   }
 }

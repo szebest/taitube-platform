@@ -1,7 +1,7 @@
 import type { FeedQuery, FeedResponse } from '@vp/api-contracts';
 import { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
-import { type Result, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
+import { type Result, ignore, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';
 
@@ -121,8 +121,10 @@ export class FeedService {
     return isOk(parsed) ? parsed.value : undefined;
   }
 
-  /** A cold page cache costs latency, never correctness, so the write's failure is dropped here. */
   private async writeCache(variant: string, page: CachedFeedPage): Promise<void> {
-    await this.cache.set(this.cacheKey(variant), JSON.stringify(page), this.maxAgeSeconds);
+    ignore(
+      await this.cache.set(this.cacheKey(variant), JSON.stringify(page), this.maxAgeSeconds),
+      'a cold page cache costs latency, never correctness'
+    );
   }
 }

@@ -12,7 +12,7 @@ import {
 } from '@vp/domain-rules';
 import type { CategorySlugConflict, DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, isOk, map, ok } from '@vp/result';
+import { type Result, err, ignore, isErr, isOk, map, ok } from '@vp/result';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 
 export interface CategoryServiceDeps {
@@ -130,7 +130,12 @@ export class CategoryService {
 
   private async invalidatingOnSuccess<T, E>(write: Promise<Result<T, E>>): Promise<Result<T, E>> {
     const settled = await write;
-    if (isOk(settled)) await this.deps.categoryCache.invalidate();
+    if (isOk(settled)) {
+      ignore(
+        await this.deps.categoryCache.invalidate(),
+        'the write committed; a stale L1 expires on its own TTL'
+      );
+    }
     return settled;
   }
 }
