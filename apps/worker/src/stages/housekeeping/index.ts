@@ -8,7 +8,8 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import { HousekeepingJob, type QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
-import { assertNever } from '@vp/result';
+import type { AnyFailure } from '@vp/errors';
+import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runPurgeDeleted } from './purge-deleted';
 import { runReconcileProcessing } from './reconcile-processing';
@@ -45,12 +46,12 @@ export interface HousekeepingProcessorOptions extends HousekeepingSettings {
 
 export function createHousekeepingProcessor(
   options: HousekeepingProcessorOptions
-): (job: QueueJob<unknown>) => Promise<unknown> {
+): (job: QueueJob<unknown>) => Promise<Result<unknown, AnyFailure>> {
   const { repositories, storage, multipart, getQueue, workerId, logger } = options;
   const { rawBucket, publicBucket, retentionDays, maxInflightPerUser, tmpDir } = options;
   const probeQueue = options.probeQueue ?? (getQueue ? getQueue('probe') : undefined);
 
-  return async (job: QueueJob<unknown>): Promise<unknown> => {
+  return async (job: QueueJob<unknown>): Promise<Result<unknown, AnyFailure>> => {
     const data = HousekeepingJob.parse(job.data);
     logger?.info({ task: data.task, jobId: job.id }, 'Executing housekeeping task');
 
@@ -92,7 +93,7 @@ export function createHousekeepingProcessor(
         });
 
       case 'tmp-sweep':
-        return await runTmpSweep({ tmpDir, logger });
+        return ok(await runTmpSweep({ tmpDir, logger }));
 
       case 'reconcile-reaction-counters':
         return await runReconcileReactionCounters({

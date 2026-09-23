@@ -1,10 +1,10 @@
 import { type ShutdownOutcome, shutdownOnce } from '@vp/composition';
 import { loadEnv } from '@vp/config';
-import { toAppConfig } from '@vp/env-schema';
+import { type AppConfig, toAppConfig } from '@vp/env-schema';
 import { type AnyFailure, toPipelineError } from '@vp/errors';
 import { initTracing } from '@vp/observability';
 import { isErr } from '@vp/result';
-import { composeApp } from './app';
+import { type ComposedApp, composeApp } from './app';
 import { startMetricsServer } from './plugins/metrics';
 
 /**
@@ -19,14 +19,11 @@ export interface ApiProcess {
   shutdown: () => Promise<ShutdownOutcome>;
 }
 
-export async function main(
-  env: Record<string, string | undefined> = process.env,
+export async function serve(
+  { app, container }: ComposedApp,
+  config: AppConfig,
   timings: { drainDelayMs: number; graceMs: number } = API_SHUTDOWN
 ): Promise<ApiProcess> {
-  const config = toAppConfig(loadEnv(env));
-  initTracing({ serviceName: 'vp-api', ...config.otel });
-
-  const { app, container } = await composeApp({ config });
   const started = await container.start();
   if (isErr(started)) {
     await app.close();
@@ -51,6 +48,15 @@ export async function main(
   });
 
   return { address, shutdown };
+}
+
+export async function main(
+  env: Record<string, string | undefined> = process.env
+): Promise<ApiProcess> {
+  const config = toAppConfig(loadEnv(env));
+  initTracing({ serviceName: 'vp-api', ...config.otel });
+
+  return serve(await composeApp({ config }), config);
 }
 
 if (process.env.NODE_ENV !== 'test') {

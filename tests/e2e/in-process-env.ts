@@ -132,6 +132,7 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
   const teardown = async (): Promise<void> => {
     for (const closeWorker of workerClosers) await closeWorker().catch(() => {});
     await app.close().catch(() => {});
+    for (const queue of queuesMap.values()) await queue.close();
     await s3Instance.close().catch(() => {});
   };
 

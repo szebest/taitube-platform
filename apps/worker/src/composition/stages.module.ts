@@ -117,7 +117,6 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
             }
           );
         },
-        dispose: ({ queue }) => queue.close(),
       }
     )
     .provide(
