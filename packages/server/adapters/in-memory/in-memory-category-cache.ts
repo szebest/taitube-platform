@@ -15,8 +15,9 @@ export class InMemoryCategoryCache implements CategoryCachePort {
     return fetched;
   }
 
-  async invalidate(): Promise<void> {
+  async invalidate(): Promise<Result<void, never>> {
     this.cached = null;
+    return ok();
   }
 
   clear(): void {

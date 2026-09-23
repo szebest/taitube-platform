@@ -1,6 +1,7 @@
 import type { CacheClient, CategoryCachePort } from '@vp/core/ports';
 import type { Category } from '@vp/domain';
-import { type Result, isOk, ok, tryCatch, unwrapOr } from '@vp/result';
+import type { CacheUnavailable } from '@vp/errors';
+import { type Result, isErr, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
 
 export const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';
 export const CATEGORIES_INVALIDATION_CHANNEL = 'taitube:events:cache:categories:invalidated';
@@ -145,16 +146,17 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
     return ok(categories);
   }
 
-  async invalidate(): Promise<void> {
-    // 1. Invalidate local L1 cache
+  /** The broadcast still goes out when the L2 delete fails, since peers' L1 is the staler copy. */
+  async invalidate(): Promise<Result<void, CacheUnavailable>> {
     this.clearL1();
+    if (!this.cache) return ok();
 
-    // 2. Invalidate L2 distributed Redis cache, then broadcast to the other replicas
-    await this.cache?.del(CATEGORIES_CACHE_KEY);
-    await this.cache?.publish(
+    const deleted = await this.cache.del(CATEGORIES_CACHE_KEY);
+    const published = await this.cache.publish(
       CATEGORIES_INVALIDATION_CHANNEL,
       JSON.stringify({ invalidatedAt: Date.now() })
     );
+    return isErr(deleted) ? deleted : map(published, () => undefined);
   }
 
   async close(): Promise<void> {

@@ -1,6 +1,6 @@
 import { createBullBoard } from '@bull-board/api';
+import type { BaseAdapter } from '@bull-board/api/baseAdapter';
 import { FastifyAdapter } from '@bull-board/fastify';
-import { bullBoardQueues } from '@vp/adapters/bullmq';
 import type { JobQueue } from '@vp/core/ports';
 import {
   type AuthorizationFailure,
@@ -16,6 +16,7 @@ import type { FastifyPluginCallback } from 'fastify';
 
 export interface QueueServiceDeps {
   queues: Map<string, JobQueue>;
+  boardQueues: (queues: Iterable<JobQueue>) => BaseAdapter[];
 }
 
 export interface QueueCountMetrics {
@@ -44,9 +45,11 @@ const IDLE_COUNTS: QueueCountMetrics = {
 
 export class QueueService {
   private readonly queuesMap: Map<string, JobQueue>;
+  private readonly boardQueues: QueueServiceDeps['boardQueues'];
 
   constructor(deps: QueueServiceDeps) {
     this.queuesMap = deps.queues;
+    this.boardQueues = deps.boardQueues;
   }
 
   /**
@@ -104,7 +107,7 @@ export class QueueService {
     serverAdapter.setBasePath(basePath);
 
     createBullBoard({
-      queues: bullBoardQueues(this.queuesMap.values()),
+      queues: this.boardQueues(this.queuesMap.values()),
       serverAdapter,
     });
 

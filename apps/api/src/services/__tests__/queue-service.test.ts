@@ -1,3 +1,4 @@
+import { bullBoardQueues } from '@vp/adapters/bullmq';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { ErrorCodes, queueUnavailable } from '@vp/errors';
@@ -9,7 +10,7 @@ import { QueueService } from '../queue-service';
 function serviceWith(...names: string[]): { service: QueueService; queues: InMemoryJobQueue[] } {
   const queues = names.map((name) => new InMemoryJobQueue(name));
   const registry = new Map<string, JobQueue>(queues.map((queue, i) => [names[i] as string, queue]));
-  return { service: new QueueService({ queues: registry }), queues };
+  return { service: new QueueService({ queues: registry, boardQueues: bullBoardQueues }), queues };
 }
 
 describe('apps/api: QueueService', () => {
@@ -38,7 +39,10 @@ describe('apps/api: QueueService', () => {
       getName: () => 'probe',
       isPaused: async () => err(queueUnavailable('isPaused')),
     } as unknown as JobQueue;
-    const service = new QueueService({ queues: new Map<string, JobQueue>([['probe', stub]]) });
+    const service = new QueueService({
+      queues: new Map<string, JobQueue>([['probe', stub]]),
+      boardQueues: bullBoardQueues,
+    });
 
     expect(expectErr(await service.getQueueMetrics()).code).toBe(ErrorCodes.QUEUE_UNAVAILABLE);
   });

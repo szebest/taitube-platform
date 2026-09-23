@@ -34,7 +34,9 @@ function offenders(): string[] {
 describe('architecture: every I/O port method returns a Result', () => {
   it('parses the port files it is asserting about', () => {
     expect(portFiles().length).toBeGreaterThan(15);
-    expect(asyncMethods('packages/server/core/repositories/category-repository.ts')).not.toEqual([]);
+    expect(asyncMethods('packages/server/core/repositories/category-repository.ts')).not.toEqual(
+      []
+    );
   });
 
   it('finds no port method that hides its failures behind a bare promise', () => {

@@ -86,7 +86,9 @@ describe('architecture: an error identity is instanceof and its class is the voc
 
     expect(comparesCodeToBareLiteral("err.code === 'VERSION_CONFLICT'", codes)).toBe(true);
     expect(comparesCodeToBareLiteral("errorWithCode?.code === 'ENOSPC'", codes)).toBe(false);
-    expect(comparesCodeToBareLiteral('err.code === ErrorCodes.VERSION_CONFLICT', codes)).toBe(false);
+    expect(comparesCodeToBareLiteral('err.code === ErrorCodes.VERSION_CONFLICT', codes)).toBe(
+      false
+    );
   });
 
   it('reads the vocabulary it checks against', () => {

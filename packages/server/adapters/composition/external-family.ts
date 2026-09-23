@@ -44,7 +44,8 @@ export function registerFamily(c: Container): void {
     .provide(Adapters.Storage, (c) => c.get(S3))
     .provide(
       Adapters.Multipart,
-      (c) => new S3MultipartStorage({ type: 'storage', storageClient: c.get(S3) })
+      (c) => new S3MultipartStorage({ type: 'storage', storageClient: c.get(S3) }),
+      closeOnDispose
     )
     .provide(
       Adapters.QueueRegistry,

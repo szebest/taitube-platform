@@ -38,7 +38,7 @@ export function buildProbeDispatch(input: ProbeDispatchInput): ProbeDispatch {
     jobId: ids.probe(input.videoId, input.generation),
     ...stagePolicies.probe,
     ...defaultJobOptions,
-    ...(input.priority === undefined ? {} : { priority: input.priority }),
+    priority: input.priority ?? stagePolicies.probe.priority,
   };
 
   return {
