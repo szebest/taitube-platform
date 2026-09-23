@@ -58,7 +58,10 @@ export function composeAppKeys(source: string): string[] {
   return keys;
 }
 
-/** Keys a manifest hands the app pods: ConfigMap and Secret entries and container env names. */
+/**
+ * Keys a manifest hands the app pods: ConfigMap and Secret entries, container env names, the keys an
+ * overlay patches into them and the keys an ExternalSecret materialises.
+ */
 export function k8sAppKeys(source: string): string[] {
   const lines = source.split('\n');
   const keys: string[] = [];
@@ -66,7 +69,11 @@ export function k8sAppKeys(source: string): string[] {
     if (/^(data|stringData):\s*$/.test(line)) keys.push(...childKeys(lines, at));
   });
   keys.push(
-    ...[...source.matchAll(/^\s*- name: ([A-Z][A-Z0-9_]+)\s*$/gm)].map((m) => m[1] as string)
+    ...[...source.matchAll(/^\s*- name: ([A-Z][A-Z0-9_]+)\s*$/gm)].map((m) => m[1] as string),
+    ...[...source.matchAll(/\bpath: \/(?:data|stringData)\/([A-Z][A-Z0-9_]+)\s*$/gm)].map(
+      (m) => m[1] as string
+    ),
+    ...[...source.matchAll(/^\s*- secretKey: ([A-Z][A-Z0-9_]+)\s*$/gm)].map((m) => m[1] as string)
   );
   return keys;
 }

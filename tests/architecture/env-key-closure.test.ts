@@ -60,6 +60,14 @@ describe('architecture: the environment schema is closed over what the platform 
     ]);
     expect(
       undeclared(
+        k8sAppKeys(
+          '      - op: add\n        path: /data/HOUSEKEEPING_INTERVAL_MS\n        value: "1"\n'
+        )
+      )
+    ).toEqual(['HOUSEKEEPING_INTERVAL_MS']);
+    expect(undeclared(k8sAppKeys('  data:\n    - secretKey: LOKI_URL\n'))).toEqual(['LOKI_URL']);
+    expect(
+      undeclared(
         workflowAppKeys(
           '      - name: t\n        env:\n          S3_RAW_BUCKET: raw\n        run: pnpm test\n'
         )
@@ -85,10 +93,10 @@ describe('architecture: the environment schema is closed over what the platform 
     expect([...schemaKeys()].filter((key) => !example.has(key))).toEqual([]);
   });
 
-  it('declares every key compose, k8s, CI and make hand to this code', () => {
+  it('declares every key compose, the k8s base and overlays, CI and make hand to this code', () => {
     const set = [
       ...composeAppKeys(read('infra/compose/docker-compose.yml')),
-      ...trackedFiles('infra/k8s/base')
+      ...trackedFiles('infra/k8s/base', 'infra/k8s/overlays')
         .filter((file) => file.endsWith('.yaml'))
         .flatMap((file) => k8sAppKeys(read(file))),
       ...trackedFiles('.github/workflows').flatMap((file) => workflowAppKeys(read(file))),

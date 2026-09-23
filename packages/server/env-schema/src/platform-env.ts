@@ -9,6 +9,7 @@ export const PLATFORM_ENV = {
   OTEL_EXPORTER_OTLP_HEADERS: 'Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml',
   WORKER_RUNTIME: 'the worker image CMD and the k8s worker command, apps/worker/Dockerfile',
   REDIS_ADDR: 'the KEDA redis trigger, addressFromEnv in infra/k8s/base/scaled-objects.yaml',
+  CLOUDFLARE_TUNNEL_TOKEN: 'cloudflared, infra/k8s/overlays/cloud/cloudflared.yaml',
 } as const;
 
 export type PlatformEnvKey = keyof typeof PLATFORM_ENV;
