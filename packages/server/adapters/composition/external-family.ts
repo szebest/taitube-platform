@@ -40,7 +40,13 @@ export function registerFamily(c: Container): void {
     )
     .provide(
       Redis,
-      () => new RedisCacheClient({ type: 'url', url: config.redis.url }),
+      () =>
+        new RedisCacheClient({
+          type: 'url',
+          url: config.redis.url,
+          pubsubUrl: config.redis.pubsubUrl,
+          password: config.redis.password,
+        }),
       closeOnDispose
     )
     .provide(Adapters.Cache, (c) => c.get(Redis))

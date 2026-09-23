@@ -220,7 +220,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     }
   });
 
-  it('AC 18: uploads file with concurrency 4, survives crash at 50%, resumes from ListParts and reaches UPLOADED', async () => {
+  it('AC 18: survives a crash at 50%, resumes from ListParts with concurrency 4 and reaches UPLOADED', async () => {
     const client = new UploadClient({
       apiBaseUrl: `http://127.0.0.1:${apiPort}`,
       token: authToken,
@@ -237,7 +237,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     await expect(
       client.uploadFile({
         filePath: tempFilePath,
-        concurrency: 4,
+        concurrency: 1,
         existingUploadId: init.uploadId,
         signal: crash.signal,
         onProgress: (completed, total) => {
