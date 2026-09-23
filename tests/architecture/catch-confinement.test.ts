@@ -1,4 +1,4 @@
-import { LEGACY_CATCH_SITES } from './legacy-catch-sites';
+import { LEGACY_CATCH_SITES, PENDING_CATCH_SITES } from './legacy-catch-sites';
 import { productionSources, read, shrinkOnly } from './repo-files';
 
 /**
@@ -40,5 +40,14 @@ describe('architecture: catch is confined to the boundary that converts a throw'
     const { stale } = shrinkOnly(offenders(), LEGACY_CATCH_SITES);
 
     expect(stale).toEqual([]);
+  });
+
+  /**
+   * The out-of-scope half of the list cannot shrink through this ticket, so counting it as work
+   * outstanding overstates what is left. This is the number that has to reach zero.
+   */
+  it('separates what this ticket still owes from what a later ticket has to claim', () => {
+    expect(PENDING_CATCH_SITES.every((file) => LEGACY_CATCH_SITES.includes(file))).toBe(true);
+    expect(PENDING_CATCH_SITES.length).toBeLessThan(LEGACY_CATCH_SITES.length);
   });
 });

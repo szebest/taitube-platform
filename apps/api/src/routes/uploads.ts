@@ -5,7 +5,6 @@ import {
   issueUploadParts,
   startUpload,
 } from '@vp/api-contracts';
-import { PermanentError } from '@vp/errors';
 import { isErr } from '@vp/result';
 import { ALLOWED_CONTENT_TYPES, type UploadLimits, validateStartUpload } from '@vp/validation';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -13,6 +12,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { UploadService } from '../services/upload-service';
 import { contractPaths, contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
 
 export interface UploadsRouteOptions {
   uploadService: UploadService;
@@ -60,9 +60,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
           request.body;
 
         const validated = validateStartUpload({ filename, sizeBytes, contentType, title }, limits);
-        if (isErr(validated)) {
-          throw new PermanentError(validated.error.code, validated.error.message);
-        }
+        if (isErr(validated)) return sendResult(reply, request, validated);
 
         const result = await uploadService.initiate(user, {
           filename,

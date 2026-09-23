@@ -82,7 +82,8 @@ export async function authPlugin(
       email: payload.email,
     };
 
-    // A pre-handler has no `Result` to return, so this is one of the two places that converts one.
+    // A pre-handler runs before any route, so it has no reply to render a Problem into and no
+    // `Result` to return. ADR-24 routes it to the backstop instead, which is why this throws.
     const provisioned = await options.channelService?.ensureProvisioned(payload.sub, payload.email);
     if (provisioned && isErr(provisioned)) {
       throw new TransientError(provisioned.error.code, provisioned.error.message);

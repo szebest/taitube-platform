@@ -818,6 +818,31 @@ logging — stated here so the next reader does not "simplify" it by moving a me
   construction and `problemFor` projects it into `Problem.errors` — which is what lets a form highlight the
   offending field after a server rejection. A **state-rule** or **infra** failure sends `code`/`title`/
   `status`/`detail` only. No per-field allowlist to maintain, and no judgement call at each call site.
+- **Is `unwrapOrThrow` a sanctioned third unwrap site?** *Decided:* no, and it is deleted. It converted a
+  `Result` into a throw at twenty call sites in `apps/worker`, which contradicts W7's "runner.ts is the only
+  throw in apps/worker" and Rule 14's two unwrap points. It was also invisible to
+  `no-domain-throw.test.ts`, whose sweep looked for a literal `throw` and so matched neither half of
+  `unwrapOrThrow`. The sweep now matches the shape (`/\b\w+OrThrow\s*\(/`) as well as the keyword, so the
+  next helper of that kind is caught the day it is written. A stage that is not yet converted converts
+  inline, where the sweep counts it and `throwing-domain-sources.ts` names the file.
+
+- **W4 and W5 are not complete, and the ticket is not done.** *Decided:* record the remainder rather than
+  claim it. As of this branch the three ratchets stand at **76 port methods**, **16 throwing domain sources**
+  and **25 pending catch sites** (49 listed, of which 24 are out of this ticket's scope by its own
+  "Out of scope" section). Converted end to end so far: categories, channels, users, videos, uploads,
+  subscriptions and reactions, plus five housekeeping stages. What is left is not a decision, it is work:
+  each remaining port pulls its call sites with it, and the ticket's own guidance is not to convert several
+  resources halfway. The biggest single unlocks, in order, are `storage-client` (12 methods),
+  `cache-client` (11), `job-queue` (10) and `step-repository` (7) - the last is what most worker stages are
+  waiting on.
+
+- **Why is the catch list split in two?** *Decided:* because a shrink-only list that cannot reach zero
+  misreports itself. `@vp/ffmpeg`, `@vp/gen-video`, `@vp/dev-token`, `@vp/upload-client`,
+  `@vp/observability` and `apps/web` are named out of scope by this ticket, so their entries will never
+  shrink through it; they sat on the same list as entries waiting on W5 with nothing to tell them apart.
+  `legacy-catch-sites.ts` now groups them under `OUT_OF_SCOPE` and `PENDING`, every entry carries its
+  one-line reason, and `PENDING_CATCH_SITES` is the number that has to reach zero.
+
 - **Do the frontend and the backend share the *presenter*, or only the rule?** *Decided:* only the rule. A
   `Problem` and a toast are different answers to the same failure, and a shared presenter would force one of
   them to win — which is the coupling this ticket exists to remove. `present()` and `presentStartUpload()` are
