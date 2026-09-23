@@ -44,3 +44,14 @@ export function match<T, E extends Coded, R>(
   return handle(result.error);
 }
 
+/** A reason held in a variable could say anything, so only a spelled-out one justifies a drop. */
+export type IgnoreReason<S extends string> = string extends S ? never : S extends '' ? never : S;
+
+/**
+ * The one sanctioned way to drop a `Result`. `no-discarded-result.test.ts` fails on any other
+ * statement that leaves one unread, and reads `reason` to say why this one may be.
+ */
+export function ignore<S extends string>(
+  _result: Result<unknown, unknown> | PromiseLike<Result<unknown, unknown>>,
+  _reason: IgnoreReason<S>
+): void {}

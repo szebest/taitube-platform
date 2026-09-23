@@ -1,4 +1,4 @@
-import { all, andThen, map, mapErr, match, unwrapOr } from '../combinators';
+import { all, andThen, ignore, map, mapErr, match, unwrapOr } from '../combinators';
 import { type Result, err, ok } from '../result';
 
 type Boom = { readonly code: 'BOOM'; readonly at: string };
@@ -84,5 +84,15 @@ describe('@vp/result: match', () => {
     { name: 'GONE', failure: gone as Failure, expected: 'gone' },
   ])('routes $name to its own handler with the narrowed payload', ({ failure, expected }) => {
     expect(match(err(failure) as Result<number, Failure>, () => 'unused', handlers)).toBe(expected);
+  });
+});
+
+describe('@vp/result: ignore', () => {
+  it.each([
+    { shape: 'a settled failure', result: err(gone) },
+    { shape: 'a settled success', result: ok(1) },
+    { shape: 'a pending result', result: Promise.resolve(err(boom)) },
+  ])('drops $shape and returns nothing', ({ result }) => {
+    expect(ignore(result, 'the cache is advisory')).toBeUndefined();
   });
 });
