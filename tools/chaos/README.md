@@ -21,7 +21,7 @@ make toxiproxy-up
 
 - API Endpoint: `http://localhost:8474`
 - Upstream MinIO Proxy: `http://localhost:9002` (routes to `minio:9000`)
-- When running storage chaos scenarios, configure `S3_ENDPOINT=http://localhost:9002` (or in Compose `STORAGE_ENDPOINT=http://toxiproxy:9002`).
+- When running storage chaos scenarios, configure `S3_ENDPOINT=http://localhost:9002` (or in Compose `S3_ENDPOINT=http://toxiproxy:9002`).
 
 ### Toxics Reference
 

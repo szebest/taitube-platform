@@ -5,7 +5,7 @@ REDIS_IMAGE ?= redis:7-alpine
 CLUSTER_TOOL ?= k3d
 CLUSTER_NAME ?= vp
 
-.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-validate load-s1 load-s2 load-s3 load-smoke
+.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-local-secrets k8s-validate load-s1 load-s2 load-s3 load-smoke
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -115,7 +115,10 @@ obs-down: ## Stop observability stack
 obs-check: ## Assert observability stack targets UP and healthy via Prometheus API
 	bash scripts/obs-check.sh
 
-k8s-validate: ## Validate Kubernetes manifests across local and cloud overlays
+k8s-local-secrets: ## Write the local overlay's git-ignored Secret patch with random values, once
+	@test -f infra/k8s/overlays/local/secrets.patch.yaml || printf 'apiVersion: v1\nkind: Secret\nmetadata:\n  name: vp-secrets\n  namespace: video-pipeline\nstringData:\n  ADMIN_TOKEN: "%s"\n  WEBHOOK_SIGNING_SECRET: "%s"\n' "$$(openssl rand -hex 32)" "$$(openssl rand -hex 32)" > infra/k8s/overlays/local/secrets.patch.yaml
+
+k8s-validate: k8s-local-secrets ## Validate Kubernetes manifests across local and cloud overlays
 	bash scripts/validate-k8s.sh
 
 k3d-up: ## Create local k3d (or kind) cluster and install Helm charts (Postgres, Redis, MinIO, KEDA, Prometheus Stack)
@@ -137,7 +140,7 @@ k3d-up: ## Create local k3d (or kind) cluster and install Helm charts (Postgres,
 	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace -f infra/k8s/helm-values/kube-prometheus-stack.yaml
 	@echo "Cluster infrastructure ready."
 
-k3d-deploy: ## Build local images, import to k3d, and apply Kustomize local overlay
+k3d-deploy: k8s-local-secrets ## Build local images, import to k3d, and apply Kustomize local overlay
 	@echo "Building local Docker images..."
 	docker compose -f $(COMPOSE_FILE) build api worker-probe
 	docker tag video-pipeline-api:latest vp-api:local

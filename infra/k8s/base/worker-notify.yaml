@@ -29,6 +29,10 @@ spec:
         - name: worker
           image: ghcr.io/szebest/vp-worker:latest
           command: ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} dist/main.js"]
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
