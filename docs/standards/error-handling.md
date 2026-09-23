@@ -195,6 +195,9 @@ messages" becomes "decided once per code, in the vocabulary, and the throw site 
 left to make". The unknown-error default - transient, attempt cap 3 - still applies to anything that
 escapes as a raw throw.
 
+A stage returns its outcome, so the runner hands BullMQ `outcome.value` rather than the `Result`
+itself: a parent flow job reads its children's return values, and the wrapper stops at this seam.
+
 ### Classifying something that is already an exception
 
 `classifyError(error)` in `@vp/errors` is the one place that answers "is this permanent". It returns
@@ -297,10 +300,19 @@ Validation is parameterised, so the frontend needs `MAX_UPLOAD_BYTES` and the al
 as values. Whether that is a field on an existing response or a small `GET /v1/config` is ticket 53's
 call. What is decided here: **the limit is supplied to the rule, never baked into it.**
 
-## What is still being converted
+## What the machine checks
 
-The categories, channels and videos resources are converted end to end and are the reference every
-other resource copies. The rest is carried by three shrink-only allowlists in `tests/architecture/` -
-`throwing-domain-sources.ts`, `legacy-catch-sites.ts` and `non-result-port-methods.ts`. Each fails
-on a new breach **and** on a listed entry that no longer breaches, so they can only get shorter and
-may not be appended to. Converting a resource means deleting its lines from all three.
+Every resource is converted, so the three shrink-only allowlists that carried the migration are
+gone and their assertions are flat:
+
+| Assertion | Test |
+|---|---|
+| Every I/O method on a `@vp/core` port or repository returns `Promise<Result<T, InfraFailure>>` | `result-returning-ports.test.ts` |
+| No rule, service or stage throws its failure, and no helper converts one into a throw | `no-domain-throw.test.ts` |
+| `catch` appears only in `@vp/result`, in an adapter, or at a boundary the list still names | `catch-confinement.test.ts` |
+| `sendResult` is the only unwrap point under `routes/`, and a route imports no port | `routes-unwrap-at-send-result.test.ts` |
+
+`legacy-catch-sites.ts` is the one list left, and nothing on it is waiting on a conversion: it holds
+the process boundaries (`@vp/ffmpeg`, `@vp/gen-video`), the CLI exit-code handlers, telemetry setup,
+the build and migration entrypoints, `apps/web` (tickets 53, 70 and 71) and the two pre-handlers
+that have no reply to render into.

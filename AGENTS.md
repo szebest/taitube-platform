@@ -12,7 +12,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 ## How work is organised
 - Work items are tracer-bullet tickets in `docs/tickets/NN-slug.md`; the index `docs/tickets/README.md` shows the frontier (tickets whose blockers are done). Use the `vp-work-ticket` skill to pick one up.
 - Numbering represents dependency order, not priority. Never start a ticket whose blockers are not `done`.
-- **Frontier Priority Policy:** Ticket **84** (Result-typed error handling - domain code returns, the edge decides) takes absolute precedence over every other frontier ticket, including 83 and the Phase 5 frontend tickets (`36`+). Every ticket from 42 onward adds a domain service, so the cost of 84 grows with each ticket taken before it. Tickets 79 (offline smoke runner refactor & CI cleanup), 80 (developer experience, local dev setup & CI/CD acceleration) and 82 (architecture remediation) are done. 84 is in progress on PR #101 with W4 and W5 outstanding, so finish it before starting anything else; after it take 83, then 85.
+- **Frontier Priority Policy:** Ticket **84** (Result-typed error handling - domain code returns, the edge decides) is done, along with 79 (offline smoke runner refactor & CI cleanup), 80 (developer experience, local dev setup & CI/CD acceleration) and 82 (architecture remediation). The frontier is **83** (granular container topology - per-app images and a one-app dev loop) and **85** (the universal `Intl` formatting core), which 84 unblocks. Ticket 86 is unreachable: it is blocked by 63 and 72, which sit behind roughly twenty blocked frontend tickets, whatever its own prose claims.
 - Ticket status lives in the ticket's `**Status:**` line; run `python3 docs/tickets/gen-index.py` after changing it.
 
 ---

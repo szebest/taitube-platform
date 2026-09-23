@@ -97,10 +97,10 @@ Low-level client for executing parameterized queries, transactions, and health c
 - **`Repositories`**: Aggregating container interface bundling domain repositories.
 
 ### `AuthorizationPort`
-Abstracts user authorization, declarative rule evaluation, and RFC 9457 error gating:
+Abstracts user authorization and declarative rule evaluation. It answers the verdict; the refusal is a
+rule's, through `authorize(actor, allowed, context)` in `@vp/domain-rules` (ADR-24):
 - `getAbility()`: returns the active `@casl/ability` instance.
 - `can(action, subject)` / `can(helper, params)`: evaluates if an action is permitted.
-- `assertCan(action, subject, message?)` / `assertCan(helper, params, options)`: throws RFC 9457 `UNAUTHORIZED` (401) or `FORBIDDEN` (403) if denied.
 - `forUser(user)`: returns a new `AuthorizationPort` instance scoped to the target user.
 
 ### `StorageClient`

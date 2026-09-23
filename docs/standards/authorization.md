@@ -124,7 +124,8 @@ drift. `toOutboxRecord` is the exception, confining the one assertion that jsonb
 ### 2. Dependency Inversion in Domain Services (`AuthorizationPort`)
 Domain services depend on the abstract port `AuthorizationPort` (`packages/server/core/ports/authorization.port.ts`).
 - Concrete implementation: `CaslAuthorizationAdapter` (`packages/server/adapters/authorization/casl-authorization-adapter.ts`).
-- Holds memoized `AppAbility`, implements `can(action, subject)`, `assertCan(...)`, and `.forUser(user)`.
+- Holds memoized `AppAbility`, implements `can(action, subject)` and `.forUser(user)`. It answers the
+  verdict only: the refusal belongs to `authorize(actor, allowed, context)` in `@vp/domain-rules` (ADR-24).
 - Test doubles: `PermissiveAuthorizationAdapter` and `StrictAuthorizationAdapter` in `packages/server/adapters/in-memory/`.
 
 ### 3. HTTP Transport Carries Identity, Not Permissions

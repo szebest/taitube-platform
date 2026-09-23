@@ -681,10 +681,18 @@ one and no second consumer could choose differently.
 - **Go-style `[value, error]` tuples.** They do not narrow: nothing stops a caller reading `value` after a
   non-null `error`, and the union has no discriminant for a `switch` to be exhaustive over.
 
-**Consequences.** The largest diff is mechanical and is being landed resource by resource; the categories,
-channels and videos slices are converted and are the reference. Three shrink-only allowlists in `tests/architecture/` record what is
-left and may only get shorter. Wire format is unchanged: a client cannot tell that the server stopped
-throwing, apart from four additive codes.
+**Consequences.** Every port, repository, service and stage is converted. The three shrink-only allowlists
+that carried the migration are gone and their assertions are flat: `result-returning-ports.test.ts`,
+`no-domain-throw.test.ts` and `routes-unwrap-at-send-result.test.ts` simply fail on an offender.
+`legacy-catch-sites.ts` is the one list left and holds only the boundaries this ADR does not reach - process
+spawning, CLI exit-code handlers, telemetry setup, build and migration entrypoints, `apps/web`, and the two
+pre-handlers with no reply to render into. Wire format is unchanged: a client cannot tell that the server
+stopped throwing, apart from four additive codes.
+
+`@vp/pagination` composes `@vp/result` to answer `Result<CursorPayload, InvalidCursor>` from its codec, which
+moved it to T2 and carried `@vp/api-contracts` and `@vp/env-schema` to T3 and `@vp/config` to T4. A pipeline
+stage reports a media verdict as `MediaFailure`, whose discriminant is the `PipelineErrorCode` the process
+reported and which `RETRY_CLASS` already classifies.
 
 Authority: [docs/standards/error-handling.md](standards/error-handling.md).
 

@@ -46,7 +46,10 @@ adapters/
   Drizzle wraps the driver error and puts the real one on `cause`, and PGLite (which the contract suite runs
   against) raises the same duplicate key with no SQLSTATE at all.
 - The in-memory doubles return the **same** `Result` types as the real adapters, and the contract conformance
-  suite asserts they agree on failures as well as on values.
+  suite asserts they agree on failures as well as on values - the `channels.handle` unique violation surfaces
+  as `HANDLE_ALREADY_TAKEN` from both.
+- **`fromPromise` takes a thunk.** An SDK builder chain runs synchronously up to its last call, so handing the
+  finished promise over leaves everything before it outside the boundary.
 
 ### Rule 4: File Length Discipline
 - Target `<= 250 lines` per file.

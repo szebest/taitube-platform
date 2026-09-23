@@ -32,8 +32,8 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 
 ### Rule 3: One Authorization Mechanism — `AuthorizationPort` Inside Services
 - There is exactly one place an authorization decision is made: a domain service calling
-  `AuthorizationPort.can(...)` / `.assertCan(...)` with a `@vp/permissions` rule helper. The concrete
-  implementation (`CaslAuthorizationAdapter`) is injected from the composition root.
+  `AuthorizationPort.can(...)` with a `@vp/permissions` rule helper. The concrete implementation
+  (`CaslAuthorizationAdapter`) is injected from the composition root.
 - Routes carry **authentication** only: `requireAuth(request)` for a caller that must be signed in, or
   `request.user` when the endpoint also serves anonymous callers. They never check a role, an ownership
   field or a permission themselves, and they never resolve a resource in order to authorize it.
@@ -43,8 +43,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
   not a permission.
 - Authorization stays inside the domain; it just returns now. `authorize(actor, allowed, context)` in
   `@vp/domain-rules` is the one owner of the 401-vs-403 distinction: not signed in is `UNAUTHORIZED`, signed
-  in without the permission is `FORBIDDEN`. `AuthorizationPort.assertCan` is being removed as each service
-  converts; `can` stays.
+  in without the permission is `FORBIDDEN`. `AuthorizationPort.assertCan` is gone; `can` stays.
 - There are no Fastify authorization decorators. `server.authorize`, `verifyPermission`, `request.authorize`,
   `request.assertCan` and `request.can` existed as four overlapping entry points; the async `request.authorize`
   was called without `await` on the reactions route and silently let every unauthorized write through. Do not

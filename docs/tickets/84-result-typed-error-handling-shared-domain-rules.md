@@ -8,17 +8,12 @@
 | Blocks | 85 |
 | Spec | [SDD ADR-18 Error taxonomy](../SDD.md#adr-18-error-taxonomy-decides-retry-policy) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes-domain-services) · [SDD ADR-19 Hexagonal architecture](../SDD.md#adr-19-hexagonal-architecture-interface-segregation-and-modular-repository-boundaries) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23-package-runtime-tiers-the-directory-is-the-tier) |
 
-**Status:** in-progress
+**Status:** done
 
-> **Priority:** this ticket takes precedence over every other frontier ticket, including 83 and the Phase 5
-> frontend work. Every ticket from 42 onward adds a domain service, and each one added before this lands is
-> another service written in the pattern being replaced. The cost of this change is proportional to the number
-> of services that exist when it starts.
->
-> The status board shows this ticket as `blocked`, because ticket 82's `**Status:**` line still reads
-> `ready-for-agent` while several of its workstreams are outstanding. The parts of 82 this ticket builds on —
-> `@vp/api-contracts`, the package runtime tiers and `tests/architecture/` — are merged in `main` (PR #95);
-> 82's remaining workstreams do not touch anything here. Start this one.
+> **Landed.** All nine workstreams are merged. The three shrink-only ratchets that carried the migration are
+> at zero: every I/O port method returns a `Result`, no rule, service or stage throws its failure, and the only
+> `catch` sites left are the process, CLI, telemetry, build and browser boundaries this ticket names out of its
+> own scope. The next frontier ticket is 83.
 
 ---
 
@@ -602,156 +597,156 @@ logging — stated here so the next reader does not "simplify" it by moving a me
 ## Acceptance criteria
 
 ### W1 — `@vp/result`
-- [ ] `packages/universal/result` exists, tier `universal` (by directory), `"vp": { "layer": 1 }`, **zero**
+- [x] `packages/universal/result` exists, tier `universal` (by directory), `"vp": { "layer": 1 }`, **zero**
       runtime dependencies, and `pnpm boundaries` passes.
-- [ ] `Result<T, E>` is the stated discriminated union; `ok`/`err`/`isOk`/`isErr` narrow correctly, asserted
+- [x] `Result<T, E>` is the stated discriminated union; `ok`/`err`/`isOk`/`isErr` narrow correctly, asserted
       with type-level tests as well as runtime ones.
-- [ ] `map`, `mapErr`, `andThen`, `unwrapOr`, `match`, `all`, `andThenAsync`, `mapAsync` implemented and tested.
-- [ ] `tryCatch`, `fromThrowable`, `fromPromise` convert a throwing call into a `Result` and are tested against
+- [x] `map`, `mapErr`, `andThen`, `unwrapOr`, `match`, `all`, `andThenAsync`, `mapAsync` implemented and tested.
+- [x] `tryCatch`, `fromThrowable`, `fromPromise` convert a throwing call into a `Result` and are tested against
       a throw, a rejection and a non-`Error` throw value.
-- [ ] Async functions return `Promise<Result<T, E>>`; there is **no `ResultAsync` class** anywhere.
-- [ ] `assertNever` exists; a test fixture proves that adding a variant to a union makes an existing exhaustive
+- [x] Async functions return `Promise<Result<T, E>>`; there is **no `ResultAsync` class** anywhere.
+- [x] `assertNever` exists; a test fixture proves that adding a variant to a union makes an existing exhaustive
       `switch` **fail to compile** (a `tsc --noEmit` expect-error fixture, not a runtime assertion).
-- [ ] Every source file has its 1:1 `__tests__/<name>.test.ts`; green under `vitest` **and** `bun test`;
+- [x] Every source file has its 1:1 `__tests__/<name>.test.ts`; green under `vitest` **and** `bun test`;
       no file over 250 lines.
 
 ### W2 — Failure vocabulary
-- [ ] `Failure<C extends ErrorCode, D>` exists in `@vp/errors`; every failure type in the repo is built from it
+- [x] `Failure<C extends ErrorCode, D>` exists in `@vp/errors`; every failure type in the repo is built from it
       and discriminates on `code`. No failure type is `Error`, `string` or `unknown`.
-- [ ] `RETRY_CLASS` is a `Readonly<Record<ErrorCode, 'permanent' | 'transient'>>`; omitting a code is a compile
+- [x] `RETRY_CLASS` is a `Readonly<Record<ErrorCode, 'permanent' | 'transient'>>`; omitting a code is a compile
       error, proven by a fixture.
-- [ ] `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE` and `INVALID_CURSOR` exist in
+- [x] `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE` and `INVALID_CURSOR` exist in
       `ApiErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS` and SDD §6.2.
-- [ ] `problemFor(failure, instance, overrides?)` in `@vp/api-contracts` is the single `Problem` renderer;
+- [x] `problemFor(failure, instance, overrides?)` in `@vp/api-contracts` is the single `Problem` renderer;
       `plugins/errors.ts` and `sendResult` both call it and a test asserts identical bodies.
-- [ ] `@vp/validation` failure payloads are projected into `Problem.errors`; `@vp/domain-rules` and infra
+- [x] `@vp/validation` failure payloads are projected into `Problem.errors`; `@vp/domain-rules` and infra
       payloads are **not** on the wire, and `problemFor` distinguishes them by type rather than by a list. A
       test asserts `DatabaseUnavailable`'s `operation` never appears in a response body and `UploadTooLarge`'s
       limit does; an expect-error fixture proves passing a domain-rule failure to the payload-projecting
       overload does not compile.
-- [ ] `@vp/errors` remains T1 universal with no new dependency; `pnpm why bullmq` from `apps/web` still returns
+- [x] `@vp/errors` remains T1 universal with no new dependency; `pnpm why bullmq` from `apps/web` still returns
       nothing.
 
 ### W3 — `@vp/validation` and `@vp/domain-rules`
-- [ ] `packages/universal/validation` exists, tier `universal`, `"vp": { "layer": 2 }`, depending **only** on
+- [x] `packages/universal/validation` exists, tier `universal`, `"vp": { "layer": 2 }`, depending **only** on
       `@vp/result` and `@vp/errors`; `packages/universal/domain-rules` exists, tier `universal`,
       `"vp": { "layer": 3 }`, depending on `@vp/validation`, `@vp/permissions` and `@vp/domain`.
       `pnpm boundaries` passes with no exception entry, and `lockfile-closure.test.ts` still reports zero
       `server`-tier packages reachable from `apps/web`.
-- [ ] **`@vp/validation` imports no entity type** — no `@vp/domain`, no `@vp/core`, no record shape. Asserted by
+- [x] **`@vp/validation` imports no entity type** — no `@vp/domain`, no `@vp/core`, no record shape. Asserted by
       W8 and proven by a violating fixture; this is the machine-checked form of "input only".
-- [ ] One rule per file in both packages, with a `failures.ts` per resource exporting its variants and unions.
-- [ ] Every rule in both packages is pure: no `await`, no port, no `Date.now()`, no logging, no `throw` —
+- [x] One rule per file in both packages, with a `failures.ts` per resource exporting its variants and unions.
+- [x] Every rule in both packages is pure: no `await`, no port, no `Date.now()`, no logging, no `throw` —
       asserted by W8.
-- [ ] **Both packages run with no ports, no network and no server globals.** Each has a vitest config running
+- [x] **Both packages run with no ports, no network and no server globals.** Each has a vitest config running
       its suites under `environment: 'jsdom'` as well as node, so a browser-hostile API fails a test rather
       than a review.
-- [ ] Validation takes its limits as **arguments** (`validateStartUpload(input, limits)`); no rule in either
+- [x] Validation takes its limits as **arguments** (`validateStartUpload(input, limits)`); no rule in either
       package reads `MAX_UPLOAD_BYTES`, an env var, a config module or a hardcoded ceiling.
-- [ ] `ALLOWED_CONTENT_TYPES` and the size cap live in `@vp/validation`, not in `apps/api/src/routes/uploads.ts`;
+- [x] `ALLOWED_CONTENT_TYPES` and the size cap live in `@vp/validation`, not in `apps/api/src/routes/uploads.ts`;
       the route performs no validation of its own, closing that Rule 1 violation.
-- [ ] A fixture proves the client tier can consume both: a file under a `client`-tier compilation unit imports
+- [x] A fixture proves the client tier can consume both: a file under a `client`-tier compilation unit imports
       and calls `validateStartUpload` **and** a domain rule against a plain entity object, and `pnpm boundaries`
       plus `lockfile-closure.test.ts` pass.
-- [ ] The `Video` and `Upload` entities live in `@vp/domain`; `VideoRecord`/`UploadRecord` in `@vp/core` alias
+- [x] The `Video` and `Upload` entities live in `@vp/domain`; `VideoRecord`/`UploadRecord` in `@vp/core` alias
       them rather than restating their fields.
-- [ ] `assertAdminAccess`, the upload size/content-type/expiry checks, the handle-format and handle-candidate
+- [x] `assertAdminAccess`, the upload size/content-type/expiry checks, the handle-format and handle-candidate
       logic and the video visibility branch exist **only** here — a grep for each in `apps/api` returns nothing.
-- [ ] Typecheck proves the tier: a `node:*` import added to any file in this package is `error TS2307`.
+- [x] Typecheck proves the tier: a `node:*` import added to any file in this package is `error TS2307`.
 
 ### W4 — Ports & adapters
-- [ ] Every I/O method on `@vp/core` ports and repository interfaces returns `Promise<Result<T, InfraFailure>>`
+- [x] Every I/O method on `@vp/core` ports and repository interfaces returns `Promise<Result<T, InfraFailure>>`
       with the narrow union for that port. Asserted by `result-returning-ports.test.ts`.
-- [ ] Absence returns `ok(null)`, not a failure — `findById`, `findByHandle`, `findWithDetails` and siblings.
-- [ ] Every SDK call in `packages/server/adapters/**` is wrapped at the call site; no `catch` remains in an
+- [x] Absence returns `ok(null)`, not a failure — `findById`, `findByHandle`, `findWithDetails` and siblings.
+- [x] Every SDK call in `packages/server/adapters/**` is wrapped at the call site; no `catch` remains in an
       adapter that is not a `tryCatch`/`fromPromise` boundary.
-- [ ] Unique-violation on `channels.handle` surfaces as `HANDLE_ALREADY_TAKEN`, not a swallowed exception.
-- [ ] The in-memory doubles return the same `Result` types; the ticket-82 contract conformance suite asserts
+- [x] Unique-violation on `channels.handle` surfaces as `HANDLE_ALREADY_TAKEN`, not a swallowed exception.
+- [x] The in-memory doubles return the same `Result` types; the ticket-82 contract conformance suite asserts
       both adapters agree on **failures** as well as values, including the handle conflict.
 
 ### W5 — Services
-- [ ] Every service in `apps/api/src/services/` and every stage in `apps/worker/src/stages/` returns a
+- [x] Every service in `apps/api/src/services/` and every stage in `apps/worker/src/stages/` returns a
       `Result`; **zero** `throw`, `try` or `catch` in either tree — asserted by W8.
-- [ ] Error unions are inferred from composition. A test fixture adds a failure to a rule and proves the
+- [x] Error unions are inferred from composition. A test fixture adds a failure to a rule and proves the
       service's inferred return type widens and the route stops compiling.
-- [ ] `VideoService.get` returns `VideoNotFound` and `VideoForbidden` as **distinct** variants; nothing in the
+- [x] `VideoService.get` returns `VideoNotFound` and `VideoForbidden` as **distinct** variants; nothing in the
       service converts one into the other.
-- [ ] `channel-service.ts`'s two `catch {}` blocks are gone, replaced by typed conflict handling; a test proves
+- [x] `channel-service.ts`'s two `catch {}` blocks are gone, replaced by typed conflict handling; a test proves
       a concurrent duplicate identity still succeeds **and** that a dead database now surfaces instead of
       producing a channel-less user.
-- [ ] `feed-service.ts`'s cache fallback is a deliberate narrowing: `CacheUnavailable` is absent from its return
+- [x] `feed-service.ts`'s cache fallback is a deliberate narrowing: `CacheUnavailable` is absent from its return
       type because it is handled, and a test asserts the feed still serves when the cache is down.
-- [ ] `AuthorizationPort.assertCan` is deleted; `can` remains; no service throws an authorization failure.
-- [ ] No service file exceeds 400 lines / 10 KB; every one has its 1:1 test file.
+- [x] `AuthorizationPort.assertCan` is deleted; `can` remains; no service throws an authorization failure.
+- [x] No service file exceeds 400 lines / 10 KB; every one has its 1:1 test file.
 
 ### W6 — API edge
-- [ ] `sendResult` exists and is the **only** unwrap point in `apps/api/src/routes/**` — asserted by W8.
-- [ ] Its default mapping is total over `ErrorCode` via `PROBLEM_STATUS`; a route needing the standard response
+- [x] `sendResult` exists and is the **only** unwrap point in `apps/api/src/routes/**` — asserted by W8.
+- [x] Its default mapping is total over `ErrorCode` via `PROBLEM_STATUS`; a route needing the standard response
       passes no options.
-- [ ] `options.on` is typed from the service's own error union: an override for an unreachable code is a compile
+- [x] `options.on` is typed from the service's own error union: an override for an unreachable code is a compile
       error, and the handler receives the narrowed variant with its payload. Proven by an expect-error fixture.
-- [ ] At least one route ships a **total presenter module** (`*.presenter.ts`) with a `switch` over its full
+- [x] At least one route ships a **total presenter module** (`*.presenter.ts`) with a `switch` over its full
       failure union and `assertNever(failure)` in the `default`; an expect-error fixture proves that adding a
       variant to the rule breaks its compilation. `docs/standards/error-handling.md` records when to use the
       default, `on`, or a presenter.
-- [ ] A presenter imports no port and holds no business branch — asserted by W8's `no-domain-throw` sweep
+- [x] A presenter imports no port and holds no business branch — asserted by W8's `no-domain-throw` sweep
       extended to flag a repository import under `routes/`.
-- [ ] **The two-consumer demonstration ships as a test:** the public video route renders `VideoForbidden` as a
+- [x] **The two-consumer demonstration ships as a test:** the public video route renders `VideoForbidden` as a
       generic `404`, an admin route renders the same failure from the same service call as a detailed `403`,
       and `VideoService` contains no branch for either.
-- [ ] `setErrorHandler` is narrowed to the backstop table above; a test asserts that a domain failure reaching
+- [x] `setErrorHandler` is narrowed to the backstop table above; a test asserts that a domain failure reaching
       it is a **bug**, and that the backstop and `sendResult` produce identical bodies for the same failure.
-- [ ] Every route is transport-only; the contract-drift test from ticket 82 still passes.
+- [x] Every route is transport-only; the contract-drift test from ticket 82 still passes.
 
 ### W7 — Worker edge
-- [ ] `runner.ts` is the only `throw` in `apps/worker`; it converts via `RETRY_CLASS`.
-- [ ] A permanent failure goes straight to the DLQ with no retry; a transient one retries with backoff — both
+- [x] `runner.ts` is the only `throw` in `apps/worker`; it converts via `RETRY_CLASS`.
+- [x] A permanent failure goes straight to the DLQ with no retry; a transient one retries with backoff — both
       asserted against the real queue behaviour, not the mapping table.
-- [ ] Raw throws escaping a stage still default to transient with the attempt cap of 3 (ADR-18 unchanged).
-- [ ] `pnpm test:bun` green for `apps/worker` and every package it imports.
+- [x] Raw throws escaping a stage still default to transient with the attempt cap of 3 (ADR-18 unchanged).
+- [x] `pnpm test:bun` green for `apps/worker` and every package it imports.
 
 ### W8 — Enforcement & docs
-- [ ] The four assertions in the table exist in `tests/architecture/`, run in `pnpm test:architecture` and in
+- [x] The four assertions in the table exist in `tests/architecture/`, run in `pnpm test:architecture` and in
       CI's `lint-typecheck` fail-fast step, and each is proven by a deliberately-violating fixture.
-- [ ] `tests/architecture/legacy-catch-sites.ts` is shrink-only and fails both on a new breach and on a stale
+- [x] `tests/architecture/legacy-catch-sites.ts` is shrink-only and fails both on a new breach and on a stale
       entry; its remaining entries each carry a one-line reason.
-- [ ] `docs/standards/error-handling.md` exists with the layer table, the API, and the before/after diffs.
-- [ ] SDD: **ADR-24** added with rejected alternatives; ADR-18 points at `RETRY_CLASS`; §6.2 lists the new
+- [x] `docs/standards/error-handling.md` exists with the layer table, the API, and the before/after diffs.
+- [x] SDD: **ADR-24** added with rejected alternatives; ADR-18 points at `RETRY_CLASS`; §6.2 lists the new
       codes; §6.4 describes `sendResult`; §15.1 lists both new packages.
-- [ ] `ARCHITECTURE.md`: Invariant 7 added; §6 table gains the four rows.
-- [ ] Root `AGENTS.md`: Rule 14 added; directory index updated. `packages/AGENTS.md`: the layer tables updated
+- [x] `ARCHITECTURE.md`: Invariant 7 added; §6 table gains the four rows.
+- [x] Root `AGENTS.md`: Rule 14 added; directory index updated. `packages/AGENTS.md`: the layer tables updated
       and the frontend recipe names `@vp/validation` and `@vp/domain-rules` with the input-vs-entity test.
-- [ ] `AGENTS.md` written for all three new packages and updated for `errors`, `core`, `adapters`, `api`,
+- [x] `AGENTS.md` written for all three new packages and updated for `errors`, `core`, `adapters`, `api`,
       `worker`, `web`; every one has its `CLAUDE.md` symlink and `pnpm boundaries` passes.
-- [ ] Tickets 42, 43, 44, 45, 46, 47, 48, 50, 51, 53, 70 and 83 carry the note; ticket 70's scope is reduced in
+- [x] Tickets 42, 43, 44, 45, 46, 47, 48, 50, 51, 53, 70 and 83 carry the note; ticket 70's scope is reduced in
       writing. `python3 docs/tickets/gen-index.py` re-run.
 
 ### W9 — Frontend contract (documentation only)
-- [ ] `docs/standards/error-handling.md` documents the end-to-end flow diagram, the `ViewState` shape, the
+- [x] `docs/standards/error-handling.md` documents the end-to-end flow diagram, the `ViewState` shape, the
       `present(failure)` total-`switch` mirror of the backend presenter, and when consumption is inline vs.
       extracted — with the `validateStartUpload` walkthrough as the worked example.
-- [ ] It states that **the component holds no logic**: no API call, no `try/catch`, no `if (failure.code === …)`,
+- [x] It states that **the component holds no logic**: no API call, no `try/catch`, no `if (failure.code === …)`,
       no validation literal, no success-path decision. A hook or presenter owns **both** branches and the
       component is `(viewState) => JSX`.
-- [ ] It states that the browser copy of an input rule is an optimisation and the backend re-runs it as the
+- [x] It states that the browser copy of an input rule is an optimisation and the backend re-runs it as the
       authority — and that "re-runs it" means the identical imported function.
-- [ ] The two-consumers-one-rule table is documented (upload page: inline field error · bulk import: toast and
+- [x] The two-consumers-one-rule table is documented (upload page: inline field error · bulk import: toast and
       continue), with the explicit note that neither touches the rule.
-- [ ] `apps/web/AGENTS.md` gains a section: `@vp/validation` is where form checks come from and
+- [x] `apps/web/AGENTS.md` gains a section: `@vp/validation` is where form checks come from and
       `@vp/domain-rules` is where entity-dependent decisions come from, hooks unwrap `Result`, components do
       not; the hardcoded `{ 'video/mp4': ['.mp4'] }` at `upload-video-form.tsx:23` is named as the thing
       ticket 53 deletes.
-- [ ] Both packages' `AGENTS.md` state that `apps/web` is a first-class consumer, that validation must stay
+- [x] Both packages' `AGENTS.md` state that `apps/web` is a first-class consumer, that validation must stay
       browser-runnable and parameterised, that a domain rule runs against a cached entity in the browser as
       readily as against a repository read on the server, and that neither may render, log or format.
-- [ ] The limits-as-data decision is recorded: the rule receives the ceiling and the allowed types, and how the
+- [x] The limits-as-data decision is recorded: the rule receives the ceiling and the allowed types, and how the
       frontend obtains them is ticket 53's call.
-- [ ] **Zero changes under `apps/web/`** in this ticket — verified by the PR diff.
+- [x] **Zero changes under `apps/web/`** in this ticket — verified by the PR diff.
 
 ### Repo-wide
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm boundaries`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`,
       `pnpm build`, `make smoke-offline` and `make e2e` all green, with output pasted in the PR.
-- [ ] No new runtime dependency anywhere (local-first, PRD G11 / SDD P9).
+- [x] No new runtime dependency anywhere (local-first, PRD G11 / SDD P9).
 
 ---
 
@@ -826,22 +821,28 @@ logging — stated here so the next reader does not "simplify" it by moving a me
   next helper of that kind is caught the day it is written. A stage that is not yet converted converts
   inline, where the sweep counts it and `throwing-domain-sources.ts` names the file.
 
-- **W4 and W5 are not complete, and the ticket is not done.** *Decided:* record the remainder rather than
-  claim it. As of this branch the three ratchets stand at **76 port methods**, **16 throwing domain sources**
-  and **25 pending catch sites** (49 listed, of which 24 are out of this ticket's scope by its own
-  "Out of scope" section). Converted end to end so far: categories, channels, users, videos, uploads,
-  subscriptions and reactions, plus five housekeeping stages. What is left is not a decision, it is work:
-  each remaining port pulls its call sites with it, and the ticket's own guidance is not to convert several
-  resources halfway. The biggest single unlocks, in order, are `storage-client` (12 methods),
-  `cache-client` (11), `job-queue` (10) and `step-repository` (7) - the last is what most worker stages are
-  waiting on.
+- **W4 and W5 are not complete, and the ticket is not done.** *Decided, then done:* the remainder that entry
+  recorded - 76 port methods, 16 throwing domain sources and 25 pending catch sites - is converted. All twelve
+  ports and repositories return the narrow failure union for their port, every service in `apps/api/src/services/`
+  and every stage in `apps/worker/src/stages/` returns its failure, and `PENDING` is empty. The two lists that
+  only tracked the migration are deleted and their assertions are flat; `legacy-catch-sites.ts` is the one list
+  left and holds only out-of-scope boundaries.
 
-- **Why is the catch list split in two?** *Decided:* because a shrink-only list that cannot reach zero
-  misreports itself. `@vp/ffmpeg`, `@vp/gen-video`, `@vp/dev-token`, `@vp/upload-client`,
-  `@vp/observability` and `apps/web` are named out of scope by this ticket, so their entries will never
-  shrink through it; they sat on the same list as entries waiting on W5 with nothing to tell them apart.
-  `legacy-catch-sites.ts` now groups them under `OUT_OF_SCOPE` and `PENDING`, every entry carries its
-  one-line reason, and `PENDING_CATCH_SITES` is the number that has to reach zero.
+- **Why is the catch list split in two?** *Decided, then resolved:* the split existed because the pending half
+  could reach zero and the out-of-scope half could not. The pending half is empty, so the split has nothing
+  left to say: `legacy-catch-sites.ts` is one list again, documented as the boundaries a later ticket has to
+  claim, and `catch-confinement.test.ts` asserts that every entry is one of them.
+
+- **Where does a pipeline stage's media verdict live?** *Decided:* in `@vp/errors`, as
+  `MediaFailure = Failure<PipelineErrorCode, { stage }>`. `@vp/ffmpeg` spawns a process and is out of scope, so
+  it still throws; `mediaFailureFrom(stage, cause)` is the one line that stops it, and it keeps the code the
+  process reported rather than inventing one. The union is `PipelineErrorCode` rather than a single code
+  because one stage genuinely has several answers, and `RETRY_CLASS` already classifies each.
+
+- **Does `@vp/pagination` stay T1?** *Decided:* no. Its codec was the last parse boundary raising an exception,
+  and the only sanctioned conversion is `tryCatch` from `@vp/result`, so the package composes it and moves to
+  T2. `@vp/api-contracts` and `@vp/env-schema` follow to T3 and `@vp/config` to T4. The alternative - a second,
+  local `Result` inside `@vp/pagination` - is the second vocabulary this ticket forbids.
 
 - **Do the frontend and the backend share the *presenter*, or only the rule?** *Decided:* only the rule. A
   `Problem` and a toast are different answers to the same failure, and a shared presenter would force one of
