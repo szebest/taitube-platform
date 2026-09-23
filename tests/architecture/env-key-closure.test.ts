@@ -9,9 +9,6 @@ import {
 } from './env-keys';
 import { productionSources, read, trackedFiles } from './repo-files';
 
-/** Keys the Node runtime reads, never this code: declared by the platform, not by the schema. */
-const RUNTIME_KEYS = new Set(['NODE_OPTIONS']);
-
 interface Manifest {
   name: string;
   dependencies?: Record<string, string>;
@@ -40,7 +37,7 @@ function deployableRoots(): string[] {
 
 function undeclared(keys: string[]): string[] {
   const declared = schemaKeys();
-  return [...new Set(keys)].filter((key) => !(declared.has(key) || RUNTIME_KEYS.has(key))).sort();
+  return [...new Set(keys)].filter((key) => !declared.has(key)).sort();
 }
 
 describe('architecture: the environment schema is closed over what the platform reads and sets', () => {

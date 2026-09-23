@@ -34,6 +34,7 @@ export const CoreEnvSchema = z.object({
   PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
   TURBO_TELEMETRY_DISABLED: z.string().default('1'),
   DO_NOT_TRACK: z.string().default('1'),
+  NODE_OPTIONS: z.string().optional(),
 });
 
 export const PostgresEnvSchema = z.object({
