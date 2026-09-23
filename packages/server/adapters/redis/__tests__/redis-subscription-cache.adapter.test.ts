@@ -1,6 +1,9 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import { RedisSubscriptionCacheAdapter } from '../redis-subscription-cache.adapter';
 import { FakeRedis } from './fake-redis';
+
+const CACHES = inProcessAppConfig().caches;
 
 const USER_ID = 'user-1';
 const CHANNEL_ID = 'channel-1';
@@ -13,7 +16,7 @@ describe('RedisSubscriptionCacheAdapter', () => {
 
   beforeEach(() => {
     redis = new FakeRedis();
-    cache = new RedisSubscriptionCacheAdapter({ redis: redis.asRedis() });
+    cache = new RedisSubscriptionCacheAdapter({ ...CACHES.subscriptions, redis: redis.asRedis() });
   });
 
   describe('isSubscribed', () => {
@@ -80,6 +83,7 @@ describe('RedisSubscriptionCacheAdapter', () => {
 
   it('honours the configured ttls', async () => {
     const custom = new RedisSubscriptionCacheAdapter({
+      ...CACHES.subscriptions,
       redis: redis.asRedis(),
       userSubscriptionsTtlSeconds: 60,
       subscriberCountTtlSeconds: 30,

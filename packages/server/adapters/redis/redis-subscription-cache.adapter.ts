@@ -5,8 +5,8 @@ import type { Redis } from 'ioredis';
 
 export interface RedisSubscriptionCacheAdapterConfig {
   redis: Redis;
-  userSubscriptionsTtlSeconds?: number;
-  subscriberCountTtlSeconds?: number;
+  userSubscriptionsTtlSeconds: number;
+  subscriberCountTtlSeconds: number;
 }
 
 /**
@@ -22,8 +22,8 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
 
   constructor(config: RedisSubscriptionCacheAdapterConfig) {
     this.redis = config.redis;
-    this.userSubscriptionsTtlSeconds = config.userSubscriptionsTtlSeconds ?? 86400;
-    this.subscriberCountTtlSeconds = config.subscriberCountTtlSeconds ?? 3600;
+    this.userSubscriptionsTtlSeconds = config.userSubscriptionsTtlSeconds;
+    this.subscriberCountTtlSeconds = config.subscriberCountTtlSeconds;
   }
 
   private userKey(userId: string): string {

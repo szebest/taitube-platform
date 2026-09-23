@@ -203,7 +203,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
   }
 
   async listVideoIdsWithReactions(
-    limit = 100,
+    limit: number,
     offset = 0
   ): Promise<Result<string[], DatabaseUnavailable>> {
     const rows = await fromPromise(

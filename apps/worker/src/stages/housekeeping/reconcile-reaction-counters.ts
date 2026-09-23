@@ -8,7 +8,7 @@ export interface ReconcileReactionCountersOptions {
   repositories: Repositories;
   reactionCache: ReactionCachePort;
   logger?: Logger;
-  limit?: number;
+  limit: number;
 }
 
 export interface ReconcileReactionCountersResult {
@@ -36,7 +36,7 @@ function drifted(left: Counts, right: Counts): boolean {
 export async function runReconcileReactionCounters(
   options: ReconcileReactionCountersOptions
 ): Promise<Result<ReconcileReactionCountersResult, DatabaseUnavailable>> {
-  const { repositories, reactionCache, logger, limit = 500 } = options;
+  const { repositories, reactionCache, logger, limit } = options;
 
   let checkedCount = 0;
   let repairedCount = 0;

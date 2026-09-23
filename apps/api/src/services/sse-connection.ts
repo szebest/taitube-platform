@@ -7,8 +7,8 @@ export interface SseConnectionOptions {
   channel: string;
   userId?: string;
   rawResponse: ServerResponse;
-  heartbeatMs?: number;
-  idleTimeoutMs?: number;
+  heartbeatMs: number;
+  idleTimeoutMs: number;
 }
 
 export class SseConnection extends EventEmitter {
@@ -31,16 +31,13 @@ export class SseConnection extends EventEmitter {
     this.userId = options.userId;
     this.res = options.rawResponse;
 
-    const heartbeatMs = options.heartbeatMs ?? 15_000;
-    const idleTimeoutMs = options.idleTimeoutMs ?? 30 * 60 * 1000;
-
     this.heartbeatTimer = setInterval(() => {
       this.sendHeartbeat();
-    }, heartbeatMs);
+    }, options.heartbeatMs);
 
     this.idleTimer = setTimeout(() => {
       this.close();
-    }, idleTimeoutMs);
+    }, options.idleTimeoutMs);
 
     this.res.on('drain', () => {
       this.handleDrain();

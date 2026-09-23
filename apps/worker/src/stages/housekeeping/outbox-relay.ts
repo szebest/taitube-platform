@@ -13,8 +13,8 @@ export interface OutboxRelayOptions {
   repositories: Repositories;
   getQueue?: (name: string) => JobQueue;
   flowProducer?: FlowProducerPort;
-  batchSize?: number;
-  intervalMs?: number;
+  batchSize: number;
+  intervalMs: number;
   logger?: Logger;
   metrics?: PipelineMetrics;
 }
@@ -59,11 +59,11 @@ export async function drainOutboxOnce(
   options: {
     getQueue?: (name: string) => JobQueue;
     flowProducer?: FlowProducerPort;
-    batchSize?: number;
+    batchSize: number;
     logger?: Logger;
   }
 ): Promise<Result<DrainOutboxResult, DatabaseUnavailable>> {
-  const { getQueue, flowProducer, batchSize = 50, logger } = options;
+  const { getQueue, flowProducer, batchSize, logger } = options;
   const startMs = Date.now();
   const claimed = await repositories.outbox.claimBatch(batchSize);
   if (isErr(claimed)) return claimed;
@@ -111,7 +111,7 @@ export class OutboxRelay {
   start(): void {
     if (this.running) return;
     this.running = true;
-    const intervalMs = this.options.intervalMs ?? 1000;
+    const { intervalMs } = this.options;
 
     const loop = async () => {
       if (!this.running) return;

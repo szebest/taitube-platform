@@ -19,7 +19,7 @@ async function stageContainer(stage: WorkerStageName, tmpDir = os.tmpdir(), outb
     logger: createLogger({ service: 'stages-test', level: 'silent' }),
     metrics: createMetricsRegistry(),
     workerId: 'stages-test',
-    outboxRelay: { enabled: outbox, intervalMs: 60_000 },
+    outboxRelay: { enabled: outbox },
   });
 }
 

@@ -1,4 +1,7 @@
-import { asCdnBase } from '@vp/env-schema';
+import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
+import { housekeepingTasks } from '../stages/housekeeping/index';
+
+const config = inProcessAppConfig();
 
 /** The configuration a stage reads, at the values `.env.example` gives a local process. */
 export const STAGE_SETTINGS = {
@@ -11,4 +14,9 @@ export const STAGE_SETTINGS = {
   retentionDays: 7,
   maxInflightPerUser: 3,
   tmpDir: '/tmp/vp',
+  segmentUpload: config.worker.segmentUpload,
+  housekeeping: config.housekeeping,
+  workerId: 'worker-spec',
 };
+
+export const TASKS = housekeepingTasks(config.housekeeping);

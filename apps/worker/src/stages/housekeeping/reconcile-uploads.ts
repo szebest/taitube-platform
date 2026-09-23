@@ -11,8 +11,8 @@ export interface ReconcileUploadsOptions {
   multipart: MultipartStorage;
   probeQueue: JobQueue;
   rawBucket: string;
-  uploadingThresholdMs?: number;
-  uploadedThresholdMs?: number;
+  uploadingThresholdMs: number;
+  uploadedThresholdMs: number;
   maxInflightPerUser: number;
   logger?: Logger;
 }
@@ -36,8 +36,8 @@ export async function runReconcileUploads(
     multipart,
     probeQueue,
     rawBucket,
-    uploadingThresholdMs = 24 * 60 * 60 * 1000,
-    uploadedThresholdMs = 5 * 60 * 1000,
+    uploadingThresholdMs,
+    uploadedThresholdMs,
     maxInflightPerUser,
     logger,
   } = options;

@@ -28,7 +28,7 @@ export interface ProbeProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
   rawBucket: string;
-  workerId?: string;
+  workerId: string;
   logger: Logger;
   heartbeatPath: string;
   getQueue?: (name: string) => JobQueue;
@@ -63,7 +63,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     repositories,
     storage,
     rawBucket,
-    workerId = `worker-${process.pid}`,
+    workerId,
     logger,
     heartbeatPath,
     getQueue,

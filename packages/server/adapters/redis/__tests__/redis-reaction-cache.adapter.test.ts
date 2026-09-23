@@ -1,9 +1,12 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import type { ReactionCounts } from '@vp/domain';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { RedisReactionCacheAdapter } from '../redis-reaction-cache.adapter';
 import { FakeRedis } from './fake-redis';
+
+const CACHES = inProcessAppConfig().caches;
 
 const VIDEO_ID = 'video-1';
 const USER_ID = 'user-1';
@@ -22,6 +25,7 @@ describe('RedisReactionCacheAdapter', () => {
     beforeEach(() => {
       redis = new FakeRedis();
       adapter = new RedisReactionCacheAdapter({
+        ...CACHES.reactions,
         backend: { type: 'redis', redis: redis.asRedis() },
       });
     });
@@ -124,7 +128,10 @@ describe('RedisReactionCacheAdapter', () => {
 
     beforeEach(() => {
       cache = new InMemoryCacheClient();
-      adapter = new RedisReactionCacheAdapter({ backend: { type: 'cache', cache } });
+      adapter = new RedisReactionCacheAdapter({
+        ...CACHES.reactions,
+        backend: { type: 'cache', cache },
+      });
     });
 
     afterEach(() => {
@@ -184,6 +191,7 @@ describe('RedisReactionCacheAdapter', () => {
 
         try {
           const eager = new RedisReactionCacheAdapter({
+            ...CACHES.reactions,
             backend: { type: 'cache', cache },
             ttlSeconds: 1,
             beta: 1000,

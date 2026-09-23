@@ -7,7 +7,7 @@ export interface StoragePresignedPartParams {
   key: string;
   uploadId: string;
   partNumber: number;
-  expiresInSeconds?: number;
+  expiresInSeconds: number;
 }
 
 export interface StoragePresignedPartInfo {

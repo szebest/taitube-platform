@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryJobQueue,
@@ -9,7 +10,9 @@ import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cac
 import { type Result, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { createHousekeepingProcessor, runReconcileReactionCounters } from '../stages/housekeeping';
-import { STAGE_SETTINGS } from './stage-settings';
+import { STAGE_SETTINGS, TASKS } from './stage-settings';
+
+const CACHES = inProcessAppConfig().caches;
 
 describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () => {
   let repos: InMemoryRepositories;
@@ -20,6 +23,7 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
     repos = new InMemoryRepositories();
     cacheClient = new InMemoryCacheClient();
     reactionCache = new RedisReactionCacheAdapter({
+      ...CACHES.reactions,
       backend: { type: 'cache', cache: cacheClient },
     });
   });
@@ -48,10 +52,7 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
 
     // 3. Run reconciler
     const result = expectOk(
-      await runReconcileReactionCounters({
-        repositories: repos,
-        reactionCache,
-      })
+      await runReconcileReactionCounters({ ...TASKS.reactions, repositories: repos, reactionCache })
     );
 
     expect(result.checkedCount).toBe(1);
@@ -69,10 +70,7 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
 
     // 6. Running reconciler again with no drift repairs 0
     const secondRun = expectOk(
-      await runReconcileReactionCounters({
-        repositories: repos,
-        reactionCache,
-      })
+      await runReconcileReactionCounters({ ...TASKS.reactions, repositories: repos, reactionCache })
     );
     expect(secondRun.checkedCount).toBe(1);
     expect(secondRun.repairedCount).toBe(0);
@@ -119,10 +117,7 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
     await reactionCache.setCounts(videoId, { likesCount: 0, dislikesCount: 0 });
 
     const res = expectOk(
-      await runReconcileReactionCounters({
-        repositories: repos,
-        reactionCache,
-      })
+      await runReconcileReactionCounters({ ...TASKS.reactions, repositories: repos, reactionCache })
     );
 
     expect(res.checkedCount).toBe(1);

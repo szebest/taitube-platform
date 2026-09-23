@@ -41,7 +41,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
       : err(databaseUnavailable('enqueue', 'insert returned no row'));
   }
 
-  async claimBatch(limit = 50): Promise<Result<OutboxRecord[], DatabaseUnavailable>> {
+  async claimBatch(limit: number): Promise<Result<OutboxRecord[], DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
         this.db
@@ -85,7 +85,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
     return map(rows, (updated) => updated.length > 0);
   }
 
-  async prune(retentionDays = 7): Promise<Result<number, DatabaseUnavailable>> {
+  async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
     const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
     const rows = await fromPromise(
       () =>

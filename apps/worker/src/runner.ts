@@ -38,7 +38,6 @@ export interface WorkerRunnerOptions {
   logger?: Logger;
   metrics?: PipelineMetrics;
   workerId?: string;
-  outboxRelayIntervalMs?: number;
   disableOutboxRelay?: boolean;
 }
 
@@ -79,11 +78,8 @@ export async function createWorkerRunner(options: WorkerRunnerOptions): Promise<
   registerStages(container, {
     logger,
     metrics: options.metrics ?? getMetrics(),
-    workerId: options.workerId,
-    outboxRelay: {
-      enabled: !options.disableOutboxRelay,
-      intervalMs: options.outboxRelayIntervalMs ?? 1000,
-    },
+    workerId: options.workerId ?? `worker-${process.pid}`,
+    outboxRelay: { enabled: !options.disableOutboxRelay },
   });
 
   const { queue } = container.get(Worker.Consumer);

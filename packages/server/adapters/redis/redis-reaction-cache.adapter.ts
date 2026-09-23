@@ -11,8 +11,8 @@ import {
 
 export interface RedisReactionCacheAdapterConfig {
   backend: ReactionCacheBackend;
-  ttlSeconds?: number;
-  userReactionTtlSeconds?: number;
+  ttlSeconds: number;
+  userReactionTtlSeconds: number;
   beta?: number;
 }
 
@@ -26,8 +26,8 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
 
   constructor(config: RedisReactionCacheAdapterConfig) {
     this.backend = config.backend;
-    this.ttlSeconds = config.ttlSeconds ?? 3600;
-    this.userReactionTtlSeconds = config.userReactionTtlSeconds ?? 86400;
+    this.ttlSeconds = config.ttlSeconds;
+    this.userReactionTtlSeconds = config.userReactionTtlSeconds;
     this.beta = config.beta ?? 1.0;
     this.counts = new ReactionCountsStore({ backend: config.backend, ttlSeconds: this.ttlSeconds });
   }

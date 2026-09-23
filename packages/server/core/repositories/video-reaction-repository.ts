@@ -25,7 +25,7 @@ export interface VideoReactionRepositoryPort {
     dislikesCount: number
   ): Promise<Result<void, DatabaseUnavailable>>;
   listVideoIdsWithReactions(
-    limit?: number,
+    limit: number,
     offset?: number
   ): Promise<Result<string[], DatabaseUnavailable>>;
 }

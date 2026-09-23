@@ -61,7 +61,7 @@ export class S3MultipartStorage extends MultipartStorage {
   async createPresignedPartUrl(
     params: StoragePresignedPartParams
   ): Promise<Result<StoragePresignedPartInfo, StorageUnavailable>> {
-    const expiresIn = params.expiresInSeconds ?? 900;
+    const expiresIn = params.expiresInSeconds;
     const signed = await fromPromise(
       () =>
         getSignedUrl(

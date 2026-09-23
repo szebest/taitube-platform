@@ -20,7 +20,7 @@ export class InMemoryOutboxRepository extends OutboxRepository {
     return ok({ ...record });
   }
 
-  async claimBatch(limit = 50): Promise<Result<OutboxRecord[], DatabaseUnavailable>> {
+  async claimBatch(limit: number): Promise<Result<OutboxRecord[], DatabaseUnavailable>> {
     const results: OutboxRecord[] = [];
     const sorted = Array.from(this.items.values())
       .filter((r) => r.publishedAt === null)
@@ -47,7 +47,7 @@ export class InMemoryOutboxRepository extends OutboxRepository {
     return ok(true);
   }
 
-  async prune(retentionDays = 7): Promise<Result<number, DatabaseUnavailable>> {
+  async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
     const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
     let count = 0;
     for (const [id, item] of this.items.entries()) {

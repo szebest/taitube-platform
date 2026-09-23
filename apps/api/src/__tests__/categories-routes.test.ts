@@ -11,6 +11,8 @@ import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
 
+const CACHES = inProcessAppConfig().caches;
+
 const ADMIN_TOKEN = 'operator-token-for-tests';
 
 describe('Admin Category Management & Public Cached Category API (Ticket 37)', () => {
@@ -33,7 +35,7 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
     storage = new InMemoryStorageClient();
-    categoryCache = new RedisCategoryCacheAdapter({ cache });
+    categoryCache = new RedisCategoryCacheAdapter({ ...CACHES.categories, cache });
 
     app = await buildApp({
       config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
@@ -382,7 +384,7 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
   describe('Multi-Instance L1 Cache Invalidation via Pub/Sub', () => {
     it('mutation on Pod A purges L1 in-memory cache on Pod B via Pub/Sub broadcast', async () => {
       // Setup second app instance (Pod B) connected to the same shared cache & repo
-      const podBCacheService = new RedisCategoryCacheAdapter({ cache });
+      const podBCacheService = new RedisCategoryCacheAdapter({ ...CACHES.categories, cache });
       expectOk(await podBCacheService.start());
       const podBApp = await buildApp({
         config: inProcessAppConfig(),

@@ -30,7 +30,7 @@ export interface StageDeps {
   getQueue: (name: string) => JobQueue;
   flowProducer: FlowProducerPort;
   logger: Logger;
-  workerId: string | undefined;
+  workerId: string;
 }
 
 export type StageProcessor = (job: QueueJob<unknown>) => Promise<Result<unknown, AnyFailure>>;
@@ -76,6 +76,7 @@ const transcode = (d: StageDeps) =>
       logger: d.logger,
       heartbeatPath: d.config.worker.heartbeatPath,
       ffmpeg: { threads: d.config.worker.ffmpegThreads, preset: d.config.worker.x264Preset },
+      segmentUpload: d.config.worker.segmentUpload,
       getQueue: d.getQueue,
     })
   );
@@ -195,6 +196,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           retentionDays: d.config.limits.rawRetentionDays,
           maxInflightPerUser: d.config.limits.maxInflightPerUser,
           tmpDir: d.config.worker.tmpDir,
+          housekeeping: d.config.housekeeping,
         })
       ),
   },

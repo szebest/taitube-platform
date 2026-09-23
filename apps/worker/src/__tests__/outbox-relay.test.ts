@@ -8,6 +8,7 @@ import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { OutboxRelay, drainOutboxOnce } from '../stages/housekeeping/outbox-relay';
+import { TASKS } from './stage-settings';
 
 describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
   let repositories: InMemoryRepositories;
@@ -50,7 +51,9 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       expect(probeQueue.enqueuedJobs).toHaveLength(0);
 
       // Drain outbox
-      const result = expectOk(await drainOutboxOnce(repositories, { getQueue }));
+      const result = expectOk(
+        await drainOutboxOnce(repositories, { batchSize: TASKS.outbox.batchSize, getQueue })
+      );
       expect(result.processedCount).toBe(1);
       expect(result.successCount).toBe(1);
       expect(result.failureCount).toBe(0);
@@ -60,7 +63,9 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       expect(probeQueue.enqueuedJobs[0]?.id).toBe(jobId);
 
       // Second drain finds nothing (already published)
-      const secondResult = expectOk(await drainOutboxOnce(repositories, { getQueue }));
+      const secondResult = expectOk(
+        await drainOutboxOnce(repositories, { batchSize: TASKS.outbox.batchSize, getQueue })
+      );
       expect(secondResult.processedCount).toBe(0);
     });
 
@@ -82,7 +87,10 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       const failingGetQueue = () =>
         ({ add: async () => err(queueUnavailable('add')) }) as unknown as InMemoryJobQueue;
 
-      const result = await drainOutboxOnce(repositories, { getQueue: failingGetQueue });
+      const result = await drainOutboxOnce(repositories, {
+        batchSize: TASKS.outbox.batchSize,
+        getQueue: failingGetQueue,
+      });
       expect(expectOk(result).processedCount).toBe(1);
       expect(expectOk(result).failureCount).toBe(1);
 
@@ -139,7 +147,9 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       expect(probeQueue.enqueuedJobs).toHaveLength(0);
 
       // Outbox relay runs (e.g. housekeeping worker loop)
-      const relayResult = expectOk(await drainOutboxOnce(repositories, { getQueue }));
+      const relayResult = expectOk(
+        await drainOutboxOnce(repositories, { batchSize: TASKS.outbox.batchSize, getQueue })
+      );
       expect(relayResult.successCount).toBe(1);
 
       // Job is now enqueued by the relay
@@ -188,7 +198,10 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       });
 
       // Relay drains outbox and attempts to add job
-      const result = await drainOutboxOnce(repositories, { getQueue });
+      const result = await drainOutboxOnce(repositories, {
+        batchSize: TASKS.outbox.batchSize,
+        getQueue,
+      });
       expect(expectOk(result).successCount).toBe(1);
 
       // Queue length stays 1 because InMemoryJobQueue deduplicates by jobId
@@ -254,7 +267,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
         },
       });
 
-      await drainOutboxOnce(repositories, { getQueue });
+      await drainOutboxOnce(repositories, { batchSize: TASKS.outbox.batchSize, getQueue });
 
       // Metric must still have no repairs
       const afterVal =
@@ -266,11 +279,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
   describe('OutboxRelay timer loop', () => {
     it('starts and stops gracefully', async () => {
-      const relay = new OutboxRelay({
-        repositories,
-        getQueue,
-        intervalMs: 50,
-      });
+      const relay = new OutboxRelay({ ...TASKS.outbox, repositories, getQueue, intervalMs: 50 });
 
       relay.start();
       expect(relay.isRunning()).toBe(true);
@@ -304,7 +313,10 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
       const start = Date.now();
       const drainResult = expectOk(
-        await drainOutboxOnce(repositories, { getQueue, batchSize: 50 })
+        await drainOutboxOnce(repositories, {
+          getQueue,
+          batchSize: 50,
+        })
       );
       const elapsedMs = Date.now() - start;
 

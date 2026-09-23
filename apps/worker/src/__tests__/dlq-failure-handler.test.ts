@@ -107,6 +107,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     const queue = getQueue(queueName);
 
     const onFailed = createFailureHandler({
+      workerId: STAGE_SETTINGS.workerId,
       stage: queueName,
       queueName,
       repositories,
@@ -193,6 +194,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     const queue = getQueue(queueName);
 
     const onFailed = createFailureHandler({
+      workerId: STAGE_SETTINGS.workerId,
       stage: queueName,
       queueName,
       repositories,
@@ -238,6 +240,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     const queue = getQueue(queueName);
 
     const onFailed = createFailureHandler({
+      workerId: STAGE_SETTINGS.workerId,
       stage: queueName,
       queueName,
       repositories,
@@ -291,6 +294,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
 
     qPackage.onFailed(
       createFailureHandler({
+        workerId: STAGE_SETTINGS.workerId,
         stage: 'package',
         queueName: 'package',
         repositories,
@@ -301,6 +305,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     );
     q720.onFailed(
       createFailureHandler({
+        workerId: STAGE_SETTINGS.workerId,
         stage: 'transcode-720p',
         queueName: 'transcode-720p',
         repositories,
@@ -449,6 +454,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
 
       probeQueue.onFailed(
         createFailureHandler({
+          workerId: STAGE_SETTINGS.workerId,
           stage: 'probe',
           queueName: 'probe',
           repositories,

@@ -31,9 +31,9 @@ interface L1CacheEntry {
 
 export interface RedisCategoryCacheAdapterConfig {
   cache?: CacheClient | null;
-  l1TtlMs?: number; // default: 60_000 (60s)
-  l2TtlSeconds?: number; // default: 300 (5m)
-  maxL1Entries?: number; // default: 100
+  l1TtlMs: number;
+  l2TtlSeconds: number;
+  maxL1Entries: number;
 }
 
 export class RedisCategoryCacheAdapter implements CategoryCachePort {
@@ -44,11 +44,11 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
   private readonly l1Cache = new Map<string, L1CacheEntry>();
   private readonly onInvalidateMessage: (channel: string, message: string) => void;
 
-  constructor(config: RedisCategoryCacheAdapterConfig = {}) {
+  constructor(config: RedisCategoryCacheAdapterConfig) {
     this.cache = config.cache;
-    this.l1TtlMs = config.l1TtlMs ?? 60_000;
-    this.l2TtlSeconds = config.l2TtlSeconds ?? 300;
-    this.maxL1Entries = config.maxL1Entries ?? 100;
+    this.l1TtlMs = config.l1TtlMs;
+    this.l2TtlSeconds = config.l2TtlSeconds;
+    this.maxL1Entries = config.maxL1Entries;
 
     this.onInvalidateMessage = (_channel: string, _message: string) => {
       this.clearL1();

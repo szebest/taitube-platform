@@ -66,7 +66,11 @@ export function registerFamily(c: Container): void {
     )
     .provide(
       Adapters.SubscriptionCache,
-      (c) => new RedisSubscriptionCacheAdapter({ redis: c.get(Redis).getRedis() })
+      (c) =>
+        new RedisSubscriptionCacheAdapter({
+          redis: c.get(Redis).getRedis(),
+          ...config.caches.subscriptions,
+        })
     )
     .provide(Adapters.BoardQueues, () => bullBoardQueues);
 }

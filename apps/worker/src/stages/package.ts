@@ -31,7 +31,7 @@ export interface PackageProcessorDeps {
   storage: StorageClient;
   publicBucket: string;
   cdn: CdnBase;
-  workerId?: string;
+  workerId: string;
   logger: Logger;
   getQueue?: (name: string) => JobQueue;
 }
@@ -49,15 +49,7 @@ export type PackageStageFailure =
   | QueueUnavailable;
 
 export function createPackageProcessor(deps: PackageProcessorDeps) {
-  const {
-    repositories,
-    storage,
-    publicBucket,
-    cdn,
-    workerId = `worker-${process.pid}`,
-    logger,
-    getQueue,
-  } = deps;
+  const { repositories, storage, publicBucket, cdn, workerId, logger, getQueue } = deps;
 
   return async function processPackageJob(
     job: QueueJob<PackageJob>

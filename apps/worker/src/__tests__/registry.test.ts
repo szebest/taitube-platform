@@ -17,6 +17,8 @@ import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { STAGE_REGISTRY, type StageDeps } from '../registry';
 
+const CACHES = inProcessAppConfig().caches;
+
 const STAGES = PipelineEnvSchema.shape.WORKER_STAGE.removeDefault().options;
 
 /** The preStop sleep and the margin the process keeps before the kubelet's SIGKILL. */
@@ -41,7 +43,10 @@ function deps(): StageDeps {
     storage,
     multipart: new InMemoryMultipartStorage(storage),
     cache,
-    reactionCache: new RedisReactionCacheAdapter({ backend: { type: 'cache', cache } }),
+    reactionCache: new RedisReactionCacheAdapter({
+      ...CACHES.reactions,
+      backend: { type: 'cache', cache },
+    }),
     getQueue,
     flowProducer: new InMemoryFlowProducer(getQueue),
     logger: createLogger({ service: 'registry-test', level: 'silent' }),

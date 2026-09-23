@@ -109,7 +109,7 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
   }
 
   async listVideoIdsWithReactions(
-    limit = 100,
+    limit: number,
     offset = 0
   ): Promise<Result<string[], DatabaseUnavailable>> {
     const ids = new Set<string>();

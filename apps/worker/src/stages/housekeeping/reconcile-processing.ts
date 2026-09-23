@@ -9,8 +9,8 @@ import { uuidv7 } from 'uuidv7';
 export interface ReconcileProcessingOptions {
   repositories: Repositories;
   getQueue: (name: QueueName) => JobQueue;
-  thresholdMs?: number;
-  workerId?: string;
+  thresholdMs: number;
+  workerId: string;
   logger?: Logger;
 }
 
@@ -35,13 +35,7 @@ const ACTIVE_PROCESSING_QUEUES: QueueName[] = [
 export async function runReconcileProcessing(
   options: ReconcileProcessingOptions
 ): Promise<Result<ReconcileProcessingResult, DatabaseUnavailable>> {
-  const {
-    repositories,
-    getQueue,
-    thresholdMs = 3 * 60 * 60 * 1000,
-    workerId = 'housekeeping',
-    logger,
-  } = options;
+  const { repositories, getQueue, thresholdMs, workerId, logger } = options;
 
   let orphanedCount = 0;
 

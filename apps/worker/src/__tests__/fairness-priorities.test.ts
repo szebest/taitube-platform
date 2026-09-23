@@ -8,7 +8,7 @@ import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { describe, expect, it } from 'vitest';
 import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
-import { STAGE_SETTINGS } from './stage-settings';
+import { STAGE_SETTINGS, TASKS } from './stage-settings';
 
 describe('Fairness & Admission Control Simulation (Ticket 18: AC 4, SDD §9.4, §14.2)', () => {
   it('User B (5 videos, pro tier) reaches READY before User A (50 videos, free tier) finishes', async () => {
@@ -31,6 +31,7 @@ describe('Fairness & Admission Control Simulation (Ticket 18: AC 4, SDD §9.4, �
     // Helper to simulate reconciler release whenever a video reaches READY
     async function triggerReconciler() {
       await runReconcileUploads({
+        ...TASKS.uploads,
         ...STAGE_SETTINGS,
         repositories,
         multipart,

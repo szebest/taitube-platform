@@ -26,7 +26,9 @@ import {
   runReconcileUploads,
   runTmpSweep,
 } from '../stages/housekeeping/index';
-import { STAGE_SETTINGS } from './stage-settings';
+import { STAGE_SETTINGS, TASKS } from './stage-settings';
+
+const CACHES = inProcessAppConfig().caches;
 
 describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket 17)', () => {
   let repositories: InMemoryRepositories;
@@ -92,6 +94,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Run reconcile-uploads with 1 hour threshold (so 2 hours ago is stale)
       const result = expectOk(
         await runReconcileUploads({
+          ...TASKS.uploads,
           ...STAGE_SETTINGS,
           repositories,
           multipart,
@@ -131,6 +134,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       const result = expectOk(
         await runReconcileUploads({
+          ...TASKS.uploads,
           ...STAGE_SETTINGS,
           repositories,
           multipart,
@@ -175,6 +179,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Run reconciler with 5 min threshold
       const result = expectOk(
         await runReconcileUploads({
+          ...TASKS.uploads,
           ...STAGE_SETTINGS,
           repositories,
           multipart,
@@ -242,6 +247,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // No jobs in queues
       const result = expectOk(
         await runReconcileProcessing({
+          ...TASKS.processing,
+          workerId: STAGE_SETTINGS.workerId,
           repositories,
           getQueue,
           thresholdMs: 3 * 60 * 60 * 1000, // 3h
@@ -294,6 +301,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       const result = expectOk(
         await runReconcileProcessing({
+          ...TASKS.processing,
+          workerId: STAGE_SETTINGS.workerId,
           repositories,
           getQueue,
           thresholdMs: 3 * 60 * 60 * 1000,
@@ -342,6 +351,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       const result = expectOk(
         await runReconcileProcessing({
+          ...TASKS.processing,
+          workerId: STAGE_SETTINGS.workerId,
           repositories,
           getQueue,
           thresholdMs: 3 * 60 * 60 * 1000,
@@ -409,6 +420,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Run purge-deleted with 1 hour threshold
       const result = expectOk(
         await runPurgeDeleted({
+          ...TASKS.purge,
           ...STAGE_SETTINGS,
           repositories,
           storage,
@@ -458,6 +470,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       const result = expectOk(
         await runPurgeDeleted({
+          ...TASKS.purge,
           ...STAGE_SETTINGS,
           repositories,
           storage,
@@ -528,6 +541,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Run purge-deleted
       const result = expectOk(
         await runPurgeDeleted({
+          ...TASKS.purge,
           ...STAGE_SETTINGS,
           repositories,
           storage,
@@ -563,6 +577,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // On a second run, old generations MUST NOT be re-purged (starvation prevention)
       const secondRunResult = expectOk(
         await runPurgeDeleted({
+          ...TASKS.purge,
           ...STAGE_SETTINGS,
           repositories,
           storage,
@@ -607,6 +622,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Simulate 2 workers concurrently executing reconcile-uploads
       const [worker1Result, worker2Result] = await Promise.all([
         runReconcileUploads({
+          ...TASKS.uploads,
           ...STAGE_SETTINGS,
           repositories,
           multipart,
@@ -614,6 +630,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
           uploadingThresholdMs: 60 * 60 * 1000,
         }),
         runReconcileUploads({
+          ...TASKS.uploads,
           ...STAGE_SETTINGS,
           repositories,
           multipart,
@@ -661,8 +678,20 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       // Run 2 purge workers concurrently
       const [w1, w2] = await Promise.all([
-        runPurgeDeleted({ ...STAGE_SETTINGS, repositories, storage, thresholdMs: 60 * 60 * 1000 }),
-        runPurgeDeleted({ ...STAGE_SETTINGS, repositories, storage, thresholdMs: 60 * 60 * 1000 }),
+        runPurgeDeleted({
+          ...TASKS.purge,
+          ...STAGE_SETTINGS,
+          repositories,
+          storage,
+          thresholdMs: 60 * 60 * 1000,
+        }),
+        runPurgeDeleted({
+          ...TASKS.purge,
+          ...STAGE_SETTINGS,
+          repositories,
+          storage,
+          thresholdMs: 60 * 60 * 1000,
+        }),
       ]);
 
       // Exactly one worker performed the hard-delete
@@ -748,6 +777,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       await fs.utimes(oldDir, threeHoursAgo, threeHoursAgo);
 
       const result = await runTmpSweep({
+        ...TASKS.tmpSweep,
         ...STAGE_SETTINGS,
         tmpDir: tmpBase,
         thresholdMs: 2 * 60 * 60 * 1000,
@@ -782,6 +812,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         storage,
         multipart,
         reactionCache: new RedisReactionCacheAdapter({
+          ...CACHES.reactions,
           backend: { type: 'cache', cache: new InMemoryCacheClient() },
         }),
         getQueue,

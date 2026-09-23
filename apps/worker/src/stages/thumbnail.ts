@@ -30,7 +30,7 @@ export interface ThumbnailProcessorDeps {
   storage: StorageClient;
   rawBucket: string;
   publicBucket: string;
-  workerId?: string;
+  workerId: string;
   logger: Logger;
   heartbeatPath: string;
   spriteIntervalSec: number;
@@ -44,7 +44,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     storage,
     rawBucket,
     publicBucket,
-    workerId = `worker-${process.pid}`,
+    workerId,
     logger,
     heartbeatPath,
     spriteIntervalSec,

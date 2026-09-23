@@ -7,14 +7,15 @@ import { fromPromise, isErr, ok } from '@vp/result';
 import { createFailureHandler } from '../failure-handler';
 import { validateQueueName } from '../job-identity';
 import { STAGE_REGISTRY, type StageDefinition, type StageProcessor } from '../registry';
+import { housekeepingTasks } from '../stages/housekeeping/index';
 import { OutboxRelay } from '../stages/housekeeping/outbox-relay';
 import { withTelemetry } from '../with-telemetry';
 
 export interface StageRuntime {
   logger: Logger;
   metrics: PipelineMetrics;
-  workerId: string | undefined;
-  outboxRelay: { enabled: boolean; intervalMs: number };
+  workerId: string;
+  outboxRelay: { enabled: boolean };
 }
 
 export interface StageConsumer {
@@ -130,7 +131,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
               flowProducer: c.get(Adapters.FlowProducer),
               logger: runtime.logger,
               metrics: runtime.metrics,
-              intervalMs: runtime.outboxRelay.intervalMs,
+              ...housekeepingTasks(c.get(Adapters.Config).housekeeping).outbox,
             })
           : undefined,
       {

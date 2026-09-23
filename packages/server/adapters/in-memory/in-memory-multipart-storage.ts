@@ -57,7 +57,7 @@ export class InMemoryMultipartStorage extends MultipartStorage {
   async createPresignedPartUrl(
     params: StoragePresignedPartParams
   ): Promise<Result<StoragePresignedPartInfo, StorageUnavailable>> {
-    const expiresIn = params.expiresInSeconds ?? 900;
+    const expiresIn = params.expiresInSeconds;
     return ok({
       partNumber: params.partNumber,
       url: `http://localhost:9000/${params.bucket}/${params.key}?uploadId=${params.uploadId}&partNumber=${params.partNumber}&mock-presigned-part=true`,

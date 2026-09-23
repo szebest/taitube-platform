@@ -1,8 +1,11 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ReactionService } from '../reaction-service';
+
+const CACHES = inProcessAppConfig().caches;
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000a1';
 const OWNER_ID = '00000000-0000-7000-8000-0000000000a2';
@@ -11,6 +14,7 @@ function makeService(repositories: InMemoryRepositories): ReactionService {
   return new ReactionService({
     videoReactions: repositories.videoReactions,
     reactionCache: new RedisReactionCacheAdapter({
+      ...CACHES.reactions,
       backend: { type: 'cache', cache: new InMemoryCacheClient() },
     }),
     videos: repositories.videos,

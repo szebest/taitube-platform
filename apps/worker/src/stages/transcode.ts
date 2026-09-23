@@ -27,11 +27,12 @@ export interface TranscodeProcessorDeps {
   cache?: CacheClient;
   rawBucket: string;
   publicBucket: string;
-  workerId?: string;
+  workerId: string;
   logger: Logger;
   metrics?: PipelineMetrics;
   heartbeatPath: string;
   ffmpeg: { threads: number; preset: string };
+  segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
   getQueue?: (name: string) => JobQueue;
   streamingInput?: boolean;
 }
@@ -50,7 +51,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     storage,
     rawBucket,
     publicBucket,
-    workerId = `worker-${process.pid}`,
+    workerId,
     logger,
     metrics: depsMetrics,
     heartbeatPath,
@@ -192,8 +193,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         rendition: rendition.name,
         publicBucket,
         storage,
-        concurrency: 4,
-        maxRetries: 3,
+        ...deps.segmentUpload,
         logger: log,
       });
       uploader.start();

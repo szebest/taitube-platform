@@ -232,7 +232,7 @@ export class S3StorageClient extends StorageClient {
   async createPresignedPutUrl(
     params: StoragePresignedPutParams
   ): Promise<Result<StoragePresignedPutResult, StorageUnavailable>> {
-    const expiresIn = params.expiresInSeconds ?? 900;
+    const expiresIn = params.expiresInSeconds;
     const signed = await fromPromise(
       () =>
         getSignedUrl(
@@ -266,7 +266,7 @@ export class S3StorageClient extends StorageClient {
         getSignedUrl(
           this.client,
           new GetObjectCommand({ Bucket: params.bucket, Key: params.key }),
-          { expiresIn: params.expiresInSeconds ?? 900 }
+          { expiresIn: params.expiresInSeconds }
         ),
       this.unavailable('createPresignedGetUrl')
     );

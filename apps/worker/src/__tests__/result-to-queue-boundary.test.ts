@@ -5,6 +5,7 @@ import { type Result, err, isErr, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
+import { STAGE_SETTINGS } from './stage-settings';
 
 const logger = createLogger({ service: 'queue-boundary-test', level: 'error' });
 const metrics = createMetricsRegistry({ env: 'test' });
@@ -64,6 +65,7 @@ describe('the worker edge: a stage Result becomes the queue throw', () => {
       const videoId = uuidv7();
       const jobId = `${videoId}--probe--g1`;
       const onFailed = createFailureHandler({
+        workerId: STAGE_SETTINGS.workerId,
         stage: 'probe',
         queueName: 'probe',
         repositories,

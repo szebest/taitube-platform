@@ -15,6 +15,9 @@ import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 import { measureStorageOp } from '../storage-metrics-helper';
 
+/** S3's ListObjectsV2 pages at 1000 keys when MaxKeys is absent; the double pages the same. */
+const S3_LIST_PAGE_KEYS = 1000;
+
 interface StoredObject {
   data: Buffer;
   contentType: string;
@@ -141,7 +144,7 @@ export class InMemoryStorageClient extends StorageClient {
       }
       matchingKeys.sort();
 
-      const maxKeys = params.maxKeys ?? 1000;
+      const maxKeys = params.maxKeys ?? S3_LIST_PAGE_KEYS;
       let filteredKeys = matchingKeys;
       if (params.continuationToken) {
         const token = params.continuationToken;
@@ -192,7 +195,7 @@ export class InMemoryStorageClient extends StorageClient {
   async createPresignedPutUrl(
     params: StoragePresignedPutParams
   ): Promise<Result<StoragePresignedPutResult, StorageUnavailable>> {
-    const expiresIn = params.expiresInSeconds ?? 900;
+    const expiresIn = params.expiresInSeconds;
     return ok({
       url: `http://localhost:9000/${params.bucket}/${params.key}?mock-presigned=true`,
       headers: {

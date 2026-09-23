@@ -16,6 +16,27 @@ const JWKS_CACHE_TTL_MS = 5 * 60 * 1000;
 /** An unknown `kid` refetches at most this often, so a flood of forged kids cannot hammer the IdP. */
 const JWKS_REFETCH_INTERVAL_MS = 30 * 1000;
 
+/** Tuning with no environment key: declared once here, so no consumer holds a default of its own. */
+const CACHES = {
+  categories: { l1TtlMs: 60_000, l2TtlSeconds: 300, maxL1Entries: 100 },
+  reactions: { ttlSeconds: 3_600, userReactionTtlSeconds: 86_400 },
+  subscriptions: { userSubscriptionsTtlSeconds: 86_400, subscriberCountTtlSeconds: 3_600 },
+} as const;
+
+const HOUSEKEEPING = {
+  outboxRelayIntervalMs: 1_000,
+  outboxBatchSize: 50,
+  outboxRetentionDays: 7,
+  purgeDeletedAfterMs: 60 * 60 * 1000,
+  stuckProcessingAfterMs: 3 * 60 * 60 * 1000,
+  stuckUploadingAfterMs: 24 * 60 * 60 * 1000,
+  stuckUploadedAfterMs: 5 * 60 * 1000,
+  tmpSweepAfterMs: 2 * 60 * 60 * 1000,
+  reactionReconcileLimit: 500,
+} as const;
+
+const SEGMENT_UPLOAD = { concurrency: 4, maxRetries: 3, retryDelayMs: 150 } as const;
+
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
 
 export type AuthConfig =
@@ -73,6 +94,22 @@ export interface AppConfig {
     resourceAttributes: string;
   };
   auth: AuthConfig;
+  caches: {
+    categories: { l1TtlMs: number; l2TtlSeconds: number; maxL1Entries: number };
+    reactions: { ttlSeconds: number; userReactionTtlSeconds: number };
+    subscriptions: { userSubscriptionsTtlSeconds: number; subscriberCountTtlSeconds: number };
+  };
+  housekeeping: {
+    outboxRelayIntervalMs: number;
+    outboxBatchSize: number;
+    outboxRetentionDays: number;
+    purgeDeletedAfterMs: number;
+    stuckProcessingAfterMs: number;
+    stuckUploadingAfterMs: number;
+    stuckUploadedAfterMs: number;
+    tmpSweepAfterMs: number;
+    reactionReconcileLimit: number;
+  };
   http: {
     port: number;
     metricsPort: number;
@@ -92,6 +129,7 @@ export interface AppConfig {
     hlsSegmentSeconds: number;
     gopSeconds: number;
     spriteIntervalSeconds: number;
+    segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
   };
 }
 
@@ -174,6 +212,12 @@ export function toAppConfig(env: AppEnv): AppConfig {
       resourceAttributes: env.OTEL_RESOURCE_ATTRIBUTES,
     },
     auth: authConfig(env),
+    caches: {
+      categories: { ...CACHES.categories },
+      reactions: { ...CACHES.reactions },
+      subscriptions: { ...CACHES.subscriptions },
+    },
+    housekeeping: { ...HOUSEKEEPING },
     http: {
       port: env.PORT,
       metricsPort: env.METRICS_PORT,
@@ -193,6 +237,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       hlsSegmentSeconds: env.HLS_SEGMENT_SECONDS,
       gopSeconds: env.GOP_SECONDS,
       spriteIntervalSeconds: env.SPRITE_INTERVAL_SECONDS,
+      segmentUpload: { ...SEGMENT_UPLOAD },
     },
   };
 }

@@ -29,7 +29,7 @@ export interface StoragePresignedPutParams {
   key: string;
   contentType: string;
   contentLength: number;
-  expiresInSeconds?: number;
+  expiresInSeconds: number;
 }
 
 export interface StoragePresignedPutResult {
@@ -41,7 +41,7 @@ export interface StoragePresignedPutResult {
 export interface StoragePresignedGetParams {
   bucket: string;
   key: string;
-  expiresInSeconds?: number;
+  expiresInSeconds: number;
 }
 
 export interface StorageListObjectsParams {

@@ -46,11 +46,18 @@ export async function registerAdapters(c: Container, config: AppConfig): Promise
     .provide(
       Adapters.ReactionCache,
       (c) =>
-        new RedisReactionCacheAdapter({ backend: { type: 'cache', cache: c.get(Adapters.Cache) } })
+        new RedisReactionCacheAdapter({
+          backend: { type: 'cache', cache: c.get(Adapters.Cache) },
+          ...config.caches.reactions,
+        })
     )
     .provide(
       Adapters.CategoryCache,
-      (c) => new RedisCategoryCacheAdapter({ cache: c.get(Adapters.Cache) }),
+      (c) =>
+        new RedisCategoryCacheAdapter({
+          cache: c.get(Adapters.Cache),
+          ...config.caches.categories,
+        }),
       {
         start: (cache) => cache.start(),
         dispose: (cache) => cache.close(),

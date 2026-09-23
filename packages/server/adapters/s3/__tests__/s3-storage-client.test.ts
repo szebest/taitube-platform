@@ -335,13 +335,14 @@ describe('S3StorageClient', () => {
       expect(ttlMs).toBeLessThanOrEqual(15 * 60 * 1000 + 2000);
     });
 
-    it('defaults the PUT expiry to 15 minutes and reports a zero content length', async () => {
+    it('signs the PUT for the expiry it is handed and reports a zero content length', async () => {
       const presigned = expectOk(
         await localClient().createPresignedPutUrl({
           bucket: BUCKET,
           key: KEY,
           contentType: 'video/mp4',
           contentLength: 0,
+          expiresInSeconds: 900,
         })
       );
 

@@ -20,6 +20,12 @@ const ROWS: readonly Row[] = [
   ['the hard-coded admin-token user id', /000000000003/g, PRODUCTION_SOURCE, 0],
   ['the dev seed in the migrate Job', /@vp\/db\/seed/g, ['apps/api/src/migrate.ts'], 0],
   ['a composition root defaulting its config', /\?\? inProcessAppConfig/g, PRODUCTION_SOURCE, 0],
+  [
+    'the worker id default, outside composition',
+    /worker-\$\{process\.pid\}/g,
+    PRODUCTION_SOURCE,
+    1,
+  ],
 ];
 
 function countMatches(pattern: RegExp, sources: readonly string[]): number {

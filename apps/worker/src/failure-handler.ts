@@ -20,19 +20,11 @@ export interface FailureHandlerDeps {
   getQueue?: (name: string) => JobQueue;
   logger: Logger;
   metrics?: PipelineMetrics;
-  workerId?: string;
+  workerId: string;
 }
 
 export function createFailureHandler(deps: FailureHandlerDeps) {
-  const {
-    stage,
-    queueName,
-    repositories,
-    getQueue,
-    logger,
-    metrics,
-    workerId = `worker-${process.pid}`,
-  } = deps;
+  const { stage, queueName, repositories, getQueue, logger, metrics, workerId } = deps;
 
   return async function onFailed(job: QueueJob<unknown>, err: Error): Promise<void> {
     const jobId = job.id || '';
