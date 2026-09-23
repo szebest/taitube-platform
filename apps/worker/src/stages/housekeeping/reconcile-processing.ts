@@ -1,9 +1,10 @@
 import type { JobQueue } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { QueueName } from '@vp/job-contracts';
+import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
+import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { unwrapOrThrow } from '../../queue-error';
 
 export interface ReconcileProcessingOptions {
   repositories: Repositories;
@@ -33,7 +34,7 @@ const ACTIVE_PROCESSING_QUEUES: QueueName[] = [
  */
 export async function runReconcileProcessing(
   options: ReconcileProcessingOptions
-): Promise<ReconcileProcessingResult> {
+): Promise<Result<ReconcileProcessingResult, DatabaseUnavailable>> {
   const {
     repositories,
     getQueue,
@@ -46,13 +47,13 @@ export async function runReconcileProcessing(
 
   let orphanedCount = 0;
 
-  const staleProcessing = unwrapOrThrow(
-    await repositories.videos.scan({
-      status: 'PROCESSING',
-      idleFor: { since: 'updatedAt', ms: thresholdMs },
-    })
-  );
-  for (const video of staleProcessing) {
+  const staleProcessing = await repositories.videos.scan({
+    status: 'PROCESSING',
+    idleFor: { since: 'updatedAt', ms: thresholdMs },
+  });
+  if (isErr(staleProcessing)) return staleProcessing;
+
+  for (const video of staleProcessing.value) {
     // 1. Check if any step is currently RUNNING
     const steps = await repositories.steps.findByVideoId(video.id);
     const hasRunningStep = steps.some((s) => s.status === 'RUNNING');
@@ -92,21 +93,20 @@ export async function runReconcileProcessing(
     }
 
     // 3. CAS transition to FAILED with errorCode 'ORPHANED'
-    const transitioned = unwrapOrThrow(
-      await repositories.videos.transition({
-        videoId: video.id,
-        from: 'PROCESSING',
-        to: 'FAILED',
-        eventType: 'video.failed',
-        eventPayload: { code: 'ORPHANED', message: 'Processing orphaned' },
-        patch: {
-          errorCode: 'ORPHANED',
-          errorMessage: 'Processing timed out with no active steps or waiting jobs',
-        },
-      })
-    );
+    const transitioned = await repositories.videos.transition({
+      videoId: video.id,
+      from: 'PROCESSING',
+      to: 'FAILED',
+      eventType: 'video.failed',
+      eventPayload: { code: 'ORPHANED', message: 'Processing orphaned' },
+      patch: {
+        errorCode: 'ORPHANED',
+        errorMessage: 'Processing timed out with no active steps or waiting jobs',
+      },
+    });
+    if (isErr(transitioned)) return transitioned;
 
-    if (transitioned) {
+    if (transitioned.value) {
       orphanedCount += 1;
       logger?.warn(
         { videoId: video.id, thresholdMs },
@@ -134,5 +134,5 @@ export async function runReconcileProcessing(
     }
   }
 
-  return { orphanedCount };
+  return ok({ orphanedCount });
 }

@@ -1,18 +1,6 @@
 import { databaseUnavailable } from '@vp/errors';
 import { err, ok } from '@vp/result';
-import { failedResult, unwrapOrThrow } from '../queue-error';
-
-describe('unwrapOrThrow', () => {
-  it('hands back the value of a successful Result', () => {
-    expect(unwrapOrThrow(ok({ videoId: 'v1' }))).toEqual({ videoId: 'v1' });
-  });
-
-  it('throws the class @vp/errors picks for the code, so the stage does not choose', () => {
-    expect(() => unwrapOrThrow(err(databaseUnavailable('findById')))).toThrow(
-      'Database unavailable'
-    );
-  });
-});
+import { failedResult } from '../queue-error';
 
 describe('failedResult', () => {
   it('recognises a failed Result a converted stage returned', () => {

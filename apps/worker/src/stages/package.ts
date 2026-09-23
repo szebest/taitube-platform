@@ -1,7 +1,8 @@
 import type { JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, toPipelineError } from '@vp/errors';
+import { isErr } from '@vp/result';
 import { generateMasterPlaylist } from '@vp/ffmpeg';
 import {
   NotifyJob,
@@ -15,7 +16,7 @@ import {
 import { type Logger, getMetrics } from '@vp/observability';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
-import { unwrapOrThrow } from '../queue-error';
+
 import { validateJobId } from '../registry';
 
 export interface PackageProcessorDeps {
@@ -126,7 +127,9 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       }
 
       // Query video metadata for fps
-      const video = unwrapOrThrow(await repositories.videos.findById(videoId));
+      const videoResult = await repositories.videos.findById(videoId);
+      if (isErr(videoResult)) throw toPipelineError(videoResult.error);
+      const video = videoResult.value;
       const rawFps = video?.fps;
       const fps =
         typeof rawFps === 'number'
@@ -198,30 +201,26 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
         ...defaultJobOptions,
       };
 
-      const transitioned = unwrapOrThrow(
-        await repositories.videos.transition({
-          videoId,
-          from: 'PROCESSING',
-          to: 'READY',
-          eventType: 'video.ready',
-          eventPayload: { playbackUrl, masterKey },
-          patch,
-          outbox: notifyJobData
-            ? {
-                kind: 'notify',
-                payload: {
-                  type: 'queue',
-                  queueName: 'notify',
-                  job: {
-                    name: 'notify',
-                    data: notifyJobData,
-                    opts: notifyJobOpts,
-                  },
-                },
-              }
-            : undefined,
-        })
-      );
+      const transitionedResult = await repositories.videos.transition({
+        videoId,
+        from: 'PROCESSING',
+        to: 'READY',
+        eventType: 'video.ready',
+        eventPayload: { playbackUrl, masterKey },
+        patch,
+        outbox: notifyJobData
+          ? {
+              kind: 'notify',
+              payload: {
+                type: 'queue',
+                queueName: 'notify',
+                job: { name: 'notify', data: notifyJobData, opts: notifyJobOpts },
+              },
+            }
+          : undefined,
+      });
+      if (isErr(transitionedResult)) throw toPipelineError(transitionedResult.error);
+      const transitioned = transitionedResult.value;
 
       log.info({ videoId, playbackUrl, transitioned }, 'Video transitioned to READY');
 

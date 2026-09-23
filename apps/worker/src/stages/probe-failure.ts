@@ -1,8 +1,8 @@
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
 import { NotifyJob, type ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
-import { unwrapOr } from '@vp/result';
-import { unwrapOrThrow } from '../queue-error';
+import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 
 export interface ProbeFailureContext {
   repositories: Repositories;
@@ -22,7 +22,7 @@ export async function recordProbeFailure(
   ctx: ProbeFailureContext,
   errorCode: string,
   errorMessage: string
-): Promise<void> {
+): Promise<Result<void, DatabaseUnavailable>> {
   const { repositories, job, lockToken, getQueue } = ctx;
   const { videoId } = job.data;
 
@@ -35,21 +35,20 @@ export async function recordProbeFailure(
     errorMessage,
   });
 
-  const transitioned = unwrapOrThrow(
-    await repositories.videos.transition({
-      videoId,
-      from: 'PROBING',
-      to: 'FAILED',
-      eventType: 'video.failed',
-      eventPayload: { errorCode, errorMessage },
-      patch: { errorCode, errorMessage },
-    })
-  );
+  const transitioned = await repositories.videos.transition({
+    videoId,
+    from: 'PROBING',
+    to: 'FAILED',
+    eventType: 'video.failed',
+    eventPayload: { errorCode, errorMessage },
+    patch: { errorCode, errorMessage },
+  });
+  if (isErr(transitioned)) return transitioned;
 
-  if (!transitioned || !getQueue) return;
+  if (!transitioned.value || !getQueue) return ok();
 
   const video = unwrapOr(await repositories.videos.findById(videoId), null);
-  if (!video) return;
+  if (!video) return ok();
 
   await getQueue('notify')
     .add(
@@ -69,4 +68,6 @@ export async function recordProbeFailure(
       }
     )
     .catch(() => {});
+
+  return ok();
 }

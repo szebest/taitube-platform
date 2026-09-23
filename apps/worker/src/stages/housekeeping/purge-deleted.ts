@@ -1,7 +1,8 @@
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
-import { unwrapOrThrow } from '../../queue-error';
+import { type Result, isErr, ok } from '@vp/result';
 
 export interface PurgeDeletedOptions {
   repositories: Repositories;
@@ -23,7 +24,9 @@ export interface PurgeDeletedResult {
  *    then hard-delete DB rows.
  * 2. Purge old generation prefixes (e.g. videos/{id}/hls/g1/) once generation > 1 is READY.
  */
-export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<PurgeDeletedResult> {
+export async function runPurgeDeleted(
+  options: PurgeDeletedOptions
+): Promise<Result<PurgeDeletedResult, DatabaseUnavailable>> {
   const {
     repositories,
     storage,
@@ -39,13 +42,13 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
   let purgedGenerationsCount = 0;
 
   // 1. Soft-deleted videos purge (AC 4)
-  const softDeletedVideos = unwrapOrThrow(
-    await repositories.videos.scan({
-      status: 'DELETED',
-      idleFor: { since: 'deletedAt', ms: thresholdMs },
-    })
-  );
-  for (const video of softDeletedVideos) {
+  const softDeletedVideos = await repositories.videos.scan({
+    status: 'DELETED',
+    idleFor: { since: 'deletedAt', ms: thresholdMs },
+  });
+  if (isErr(softDeletedVideos)) return softDeletedVideos;
+
+  for (const video of softDeletedVideos.value) {
     logger?.info({ videoId: video.id }, 'Purging objects and hard-deleting soft-deleted video');
 
     try {
@@ -59,8 +62,9 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
       await storage.purgePrefix(publicBucket, `videos/${video.id}/`);
 
       // (c) Hard-delete video row only if storage purge succeeded
-      const deleted = unwrapOrThrow(await repositories.videos.hardDelete(video.id));
-      if (deleted) {
+      const deleted = await repositories.videos.hardDelete(video.id);
+      if (isErr(deleted)) return deleted;
+      if (deleted.value) {
         purgedVideosCount += 1;
         logger?.info({ videoId: video.id }, 'Hard-deleted video row from database');
       }
@@ -73,14 +77,14 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
   }
 
   // 2. Old generations purge for reprocessed videos (AC 5)
-  const readyVideosWithOldGen = unwrapOrThrow(
-    await repositories.videos.scan({
-      status: 'READY',
-      minGeneration: 2,
-      without: { event: 'video.generation_purged', forCurrentGeneration: true },
-    })
-  );
-  for (const video of readyVideosWithOldGen) {
+  const readyVideosWithOldGen = await repositories.videos.scan({
+    status: 'READY',
+    minGeneration: 2,
+    without: { event: 'video.generation_purged', forCurrentGeneration: true },
+  });
+  if (isErr(readyVideosWithOldGen)) return readyVideosWithOldGen;
+
+  for (const video of readyVideosWithOldGen.value) {
     const currentGen = video.generation;
 
     for (let oldGen = 1; oldGen < currentGen; oldGen += 1) {
@@ -125,5 +129,5 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
     logger?.warn({ err: (err as Error).message }, 'Failed to prune published outbox rows');
   }
 
-  return { purgedVideosCount, purgedGenerationsCount };
+  return ok({ purgedVideosCount, purgedGenerationsCount });
 }

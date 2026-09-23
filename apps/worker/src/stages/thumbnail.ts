@@ -3,7 +3,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, toPipelineError } from '@vp/errors';
+import { isErr } from '@vp/result';
 import { runFfmpegThumbnail } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
@@ -15,7 +16,7 @@ import {
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { getHeartbeatPath } from '../config';
-import { unwrapOrThrow } from '../queue-error';
+
 import { validateJobId } from '../registry';
 
 export interface ThumbnailProcessorDeps {
@@ -205,16 +206,15 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       }
 
       // 5. Update video row with posterKey and spriteKey (AC 1, AC 3) only if not fenced out
-      unwrapOrThrow(
-        await repositories.videos.transition({
-          videoId,
-          from: 'PROCESSING',
-          to: 'PROCESSING',
-          eventType: 'thumbnail.completed',
-          eventPayload: { posterKey, spriteKey, spriteVttKey },
-          patch: { posterKey, spriteKey },
-        })
-      );
+      const committed = await repositories.videos.transition({
+        videoId,
+        from: 'PROCESSING',
+        to: 'PROCESSING',
+        eventType: 'thumbnail.completed',
+        eventPayload: { posterKey, spriteKey, spriteVttKey },
+        patch: { posterKey, spriteKey },
+      });
+      if (isErr(committed)) throw toPipelineError(committed.error);
 
       return {
         posterKey,

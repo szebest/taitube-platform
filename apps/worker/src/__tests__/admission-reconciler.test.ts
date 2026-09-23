@@ -48,13 +48,15 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     const heldVideo = await createVideo(FREE_USER_ID, 'UPLOADED');
 
     // Run reconciler with 0 threshold override (simulating cadence trigger)
-    const result = await runReconcileUploads({
-      repositories,
-      multipart,
-      probeQueue,
-      uploadedThresholdMs: 0,
-      maxInflightPerUser: 3,
-    });
+    const result = expectOk(
+      await runReconcileUploads({
+        repositories,
+        multipart,
+        probeQueue,
+        uploadedThresholdMs: 0,
+        maxInflightPerUser: 3,
+      })
+    );
 
     // Inflight is 3 >= 3, so video remains held
     expect(result.reenqueuedCount).toBe(0);
@@ -74,13 +76,15 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     await createVideo(FREE_USER_ID, 'UPLOADED');
 
     // Run reconciler with 0 threshold override
-    const result = await runReconcileUploads({
-      repositories,
-      multipart,
-      probeQueue,
-      uploadedThresholdMs: 0,
-      maxInflightPerUser: 3,
-    });
+    const result = expectOk(
+      await runReconcileUploads({
+        repositories,
+        multipart,
+        probeQueue,
+        uploadedThresholdMs: 0,
+        maxInflightPerUser: 3,
+      })
+    );
 
     // Exactly 1 video released (reaches the max 3 in-flight)
     expect(result.reenqueuedCount).toBe(1);
@@ -112,13 +116,15 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     });
 
     // Second run: owner now has 3 in-flight (2 existing + held1), so held2 remains held
-    const result2 = await runReconcileUploads({
-      repositories,
-      multipart,
-      probeQueue,
-      uploadedThresholdMs: 0,
-      maxInflightPerUser: 3,
-    });
+    const result2 = expectOk(
+      await runReconcileUploads({
+        repositories,
+        multipart,
+        probeQueue,
+        uploadedThresholdMs: 0,
+        maxInflightPerUser: 3,
+      })
+    );
     expect(result2.reenqueuedCount).toBe(0);
 
     // Now complete one video (PROBING -> READY)
@@ -133,13 +139,15 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     }
 
     // Now in-flight is 2 (< 3), run reconciler again: held2 is released!
-    const result3 = await runReconcileUploads({
-      repositories,
-      multipart,
-      probeQueue,
-      uploadedThresholdMs: 0,
-      maxInflightPerUser: 3,
-    });
+    const result3 = expectOk(
+      await runReconcileUploads({
+        repositories,
+        multipart,
+        probeQueue,
+        uploadedThresholdMs: 0,
+        maxInflightPerUser: 3,
+      })
+    );
     expect(result3.reenqueuedCount).toBe(1);
     expect(probeQueue.enqueuedJobs).toHaveLength(2);
   });
@@ -147,13 +155,15 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
   it('AC 2: Reconciler releases held video for pro user with priority 1', async () => {
     await createVideo(PRO_USER_ID, 'UPLOADED');
 
-    const result = await runReconcileUploads({
-      repositories,
-      multipart,
-      probeQueue,
-      uploadedThresholdMs: 0,
-      maxInflightPerUser: 3,
-    });
+    const result = expectOk(
+      await runReconcileUploads({
+        repositories,
+        multipart,
+        probeQueue,
+        uploadedThresholdMs: 0,
+        maxInflightPerUser: 3,
+      })
+    );
 
     expect(result.reenqueuedCount).toBe(1);
     expect(probeQueue.enqueuedJobs).toHaveLength(1);

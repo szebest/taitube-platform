@@ -11,6 +11,9 @@ const VIDEO_KEY = `taitube:video:${VIDEO_ID}:reactions`;
 
 const COUNTS: ReactionCounts = { likesCount: 7, dislikesCount: 2 };
 
+/** The background refresh is fire-and-forget, so let the microtask queue and one timer tick drain. */
+const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
 describe('RedisReactionCacheAdapter', () => {
   describe('over a redis connection', () => {
     let redis: FakeRedis;
@@ -174,17 +177,23 @@ describe('RedisReactionCacheAdapter', () => {
         await adapter.getCounts(VIDEO_ID, fetcher);
         expect(fetches).toBe(1);
 
-        vi.spyOn(Math, 'random').mockReturnValue(random);
-        const eager = new RedisReactionCacheAdapter({ cache, ttlSeconds: 1, beta: 1000 });
+        const realRandom = Math.random;
+        Math.random = () => random;
 
-        expect(expectOk(await eager.getCounts(VIDEO_ID, fetcher))).toEqual({
-          likesCount: 100,
-          dislikesCount: 5,
-        });
+        try {
+          const eager = new RedisReactionCacheAdapter({ cache, ttlSeconds: 1, beta: 1000 });
 
-        await vi.waitFor(() => expect(fetches).toBe(expected));
-        eager.clear();
-        vi.restoreAllMocks();
+          expect(expectOk(await eager.getCounts(VIDEO_ID, fetcher))).toEqual({
+            likesCount: 100,
+            dislikesCount: 5,
+          });
+
+          await settle();
+          expect(fetches).toBe(expected);
+          eager.clear();
+        } finally {
+          Math.random = realRandom;
+        }
       }
     );
 

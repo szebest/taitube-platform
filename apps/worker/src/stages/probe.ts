@@ -3,14 +3,14 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, toPipelineError } from '@vp/errors';
 import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
-import { unwrapOr } from '@vp/result';
+import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { getHeartbeatPath } from '../config';
-import { unwrapOrThrow } from '../queue-error';
+
 import { validateJobId } from '../registry';
 import { enqueueFollowUpJobs } from './probe-enqueue';
 import { recordProbeFailure } from './probe-failure';
@@ -58,22 +58,21 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     await fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
 
     // 2. CAS Transition: UPLOADED -> PROBING (AC 17)
-    const started = unwrapOrThrow(
-      await repositories.videos.transition({
-        videoId,
-        from: 'UPLOADED',
-        to: 'PROBING',
-        eventType: 'probe.started',
-        eventPayload: {
-          jobId: job.id,
-          attempt: (job.attemptsMade ?? 0) + 1,
-        },
-      })
-    );
+    const startedResult = await repositories.videos.transition({
+      videoId,
+      from: 'UPLOADED',
+      to: 'PROBING',
+      eventType: 'probe.started',
+      eventPayload: { jobId: job.id, attempt: (job.attemptsMade ?? 0) + 1 },
+    });
+    if (isErr(startedResult)) throw toPipelineError(startedResult.error);
+    const started = startedResult.value;
 
     if (!started) {
       // Check current video state
-      const current = unwrapOrThrow(await repositories.videos.findById(videoId));
+      const currentResult = await repositories.videos.findById(videoId);
+      if (isErr(currentResult)) throw toPipelineError(currentResult.error);
+      const current = currentResult.value;
       if (current && ['PROCESSING', 'READY', 'FAILED', 'DELETED'].includes(current.status)) {
         log.info(
           { status: current.status },
@@ -207,25 +206,24 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       }
 
       // 9. CAS transition: PROBING -> PROCESSING with metadata patch (AC 17)
-      unwrapOrThrow(
-        await repositories.videos.transition({
-          videoId,
-          from: 'PROBING',
-          to: 'PROCESSING',
-          eventType: 'probe.completed',
-          eventPayload: {
-            durationMs: metadata.durationMs,
-            ladder: metadata.ladder.map((r) => r.name),
-          },
-          patch: {
-            durationMs: metadata.durationMs,
-            width: metadata.effectiveWidth,
-            height: metadata.effectiveHeight,
-            fps: metadata.fps,
-            ladder: metadata.ladder,
-          },
-        })
-      );
+      const committed = await repositories.videos.transition({
+        videoId,
+        from: 'PROBING',
+        to: 'PROCESSING',
+        eventType: 'probe.completed',
+        eventPayload: {
+          durationMs: metadata.durationMs,
+          ladder: metadata.ladder.map((r) => r.name),
+        },
+        patch: {
+          durationMs: metadata.durationMs,
+          width: metadata.effectiveWidth,
+          height: metadata.effectiveHeight,
+          fps: metadata.fps,
+          ladder: metadata.ladder,
+        },
+      });
+      if (isErr(committed)) throw toPipelineError(committed.error);
 
       // Determine priority from job opts or user tier (SDD §9.4, AC 3)
       let priority = job.opts?.priority;

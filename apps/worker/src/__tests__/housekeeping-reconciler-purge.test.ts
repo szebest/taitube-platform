@@ -9,6 +9,7 @@ import {
 } from '@vp/adapters';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { ids } from '@vp/job-contracts';
+import type { Result } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -82,12 +83,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(beforeList.some((u) => u.uploadId === uploadId)).toBe(true);
 
       // Run reconcile-uploads with 1 hour threshold (so 2 hours ago is stale)
-      const result = await runReconcileUploads({
-        repositories,
-        multipart,
-        rawBucket: 'raw',
-        uploadingThresholdMs: 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileUploads({
+          repositories,
+          multipart,
+          rawBucket: 'raw',
+          uploadingThresholdMs: 60 * 60 * 1000,
+        })
+      );
 
       expect(result.abandonedCount).toBe(1);
 
@@ -117,11 +120,13 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         status: 'UPLOADING',
       });
 
-      const result = await runReconcileUploads({
-        repositories,
-        multipart,
-        uploadingThresholdMs: 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileUploads({
+          repositories,
+          multipart,
+          uploadingThresholdMs: 60 * 60 * 1000,
+        })
+      );
 
       expect(result.abandonedCount).toBe(0);
       const video = expectOk(await repositories.videos.findById(videoId));
@@ -157,12 +162,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(probeQueue.enqueuedJobs).toHaveLength(0);
 
       // Run reconciler with 5 min threshold
-      const result = await runReconcileUploads({
-        repositories,
-        multipart,
-        probeQueue,
-        uploadedThresholdMs: 5 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileUploads({
+          repositories,
+          multipart,
+          probeQueue,
+          uploadedThresholdMs: 5 * 60 * 1000,
+        })
+      );
 
       expect(result.reenqueuedCount).toBe(1);
 
@@ -221,11 +228,13 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       // No jobs in queues
-      const result = await runReconcileProcessing({
-        repositories,
-        getQueue,
-        thresholdMs: 3 * 60 * 60 * 1000, // 3h
-      });
+      const result = expectOk(
+        await runReconcileProcessing({
+          repositories,
+          getQueue,
+          thresholdMs: 3 * 60 * 60 * 1000, // 3h
+        })
+      );
 
       expect(result.orphanedCount).toBe(1);
 
@@ -271,11 +280,13 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         lockToken: uuidv7(),
       });
 
-      const result = await runReconcileProcessing({
-        repositories,
-        getQueue,
-        thresholdMs: 3 * 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileProcessing({
+          repositories,
+          getQueue,
+          thresholdMs: 3 * 60 * 60 * 1000,
+        })
+      );
 
       expect(result.orphanedCount).toBe(0);
       const checkVideo = expectOk(await repositories.videos.findById(videoId));
@@ -301,11 +312,13 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const transcodeQueue = getQueue('transcode-720p') as InMemoryJobQueue;
       await transcodeQueue.add('transcode', { videoId, rendition: '720p' });
 
-      const result = await runReconcileProcessing({
-        repositories,
-        getQueue,
-        thresholdMs: 3 * 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileProcessing({
+          repositories,
+          getQueue,
+          thresholdMs: 3 * 60 * 60 * 1000,
+        })
+      );
 
       expect(result.orphanedCount).toBe(0);
       const checkVideo = expectOk(await repositories.videos.findById(videoId));
@@ -331,11 +344,13 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const probeQueue = getQueue('probe') as InMemoryJobQueue;
       await probeQueue.add('probe', { videoId }, { priority: 5 });
 
-      const result = await runReconcileProcessing({
-        repositories,
-        getQueue,
-        thresholdMs: 3 * 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileProcessing({
+          repositories,
+          getQueue,
+          thresholdMs: 3 * 60 * 60 * 1000,
+        })
+      );
 
       expect(result.orphanedCount).toBe(0);
       const checkVideo = expectOk(await repositories.videos.findById(videoId));
@@ -396,13 +411,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(initialPublicList.keys.length).toBe(TOTAL_OBJECTS + 1);
 
       // Run purge-deleted with 1 hour threshold
-      const result = await runPurgeDeleted({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        publicBucket: 'public',
-        thresholdMs: 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runPurgeDeleted({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          publicBucket: 'public',
+          thresholdMs: 60 * 60 * 1000,
+        })
+      );
 
       expect(result.purgedVideosCount).toBe(1);
 
@@ -444,13 +461,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         return originalPurge(bucket, prefix);
       };
 
-      const result = await runPurgeDeleted({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        publicBucket: 'public',
-        thresholdMs: 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runPurgeDeleted({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          publicBucket: 'public',
+          thresholdMs: 60 * 60 * 1000,
+        })
+      );
 
       expect(result.purgedVideosCount).toBe(0);
 
@@ -511,12 +530,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       // Run purge-deleted
-      const result = await runPurgeDeleted({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        publicBucket: 'public',
-      });
+      const result = expectOk(
+        await runPurgeDeleted({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          publicBucket: 'public',
+        })
+      );
 
       expect(result.purgedGenerationsCount).toBeGreaterThanOrEqual(1);
 
@@ -537,12 +558,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(g2Rend).not.toBeNull();
 
       // On a second run, old generations MUST NOT be re-purged (starvation prevention)
-      const secondRunResult = await runPurgeDeleted({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        publicBucket: 'public',
-      });
+      const secondRunResult = expectOk(
+        await runPurgeDeleted({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          publicBucket: 'public',
+        })
+      );
       expect(secondRunResult.purgedGenerationsCount).toBe(0);
     });
   });
@@ -590,7 +613,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       ]);
 
       // Exactly ONE worker must have transitioned/abandoned the video
-      const totalAbandoned = worker1Result.abandonedCount + worker2Result.abandonedCount;
+      const totalAbandoned =
+        expectOk(worker1Result).abandonedCount + expectOk(worker2Result).abandonedCount;
       expect(totalAbandoned).toBe(1);
 
       // Final video status is ABANDONED
@@ -640,7 +664,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       ]);
 
       // Exactly one worker performed the hard-delete
-      expect(w1.purgedVideosCount + w2.purgedVideosCount).toBe(1);
+      expect(expectOk(w1).purgedVideosCount + expectOk(w2).purgedVideosCount).toBe(1);
       const checkVideo = expectOk(await repositories.videos.findById(videoId));
       expect(checkVideo).toBeNull();
     });
@@ -670,12 +694,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         contentType: 'video/mp4',
       });
 
-      const result = await runExpireRaw({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        retentionDays: 7,
-      });
+      const result = expectOk(
+        await runExpireRaw({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          retentionDays: 7,
+        })
+      );
 
       expect(result.expiredCount).toBe(1);
 
@@ -688,12 +714,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(events.filter((e) => e.type === 'video.raw_expired')).toHaveLength(1);
 
       // On a second run, video MUST NOT be re-expired (starvation and duplicate prevention)
-      const secondRun = await runExpireRaw({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        retentionDays: 7,
-      });
+      const secondRun = expectOk(
+        await runExpireRaw({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          retentionDays: 7,
+        })
+      );
       expect(secondRun.expiredCount).toBe(0);
 
       const eventsAfter = await repositories.events.findByVideoId(videoId);
@@ -757,8 +785,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         data: { task: 'reconcile-uploads' },
       } as QueueJob<unknown>);
 
-      expect(res).toBeDefined();
-      expect(res).toHaveProperty('abandonedCount');
+      expect(expectOk(res as Result<unknown, unknown>)).toHaveProperty('abandonedCount');
     });
 
     it('starts a worker runner for housekeeping stage successfully', async () => {

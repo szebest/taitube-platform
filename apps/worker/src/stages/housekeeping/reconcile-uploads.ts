@@ -1,9 +1,9 @@
 import type { JobQueue, MultipartStorage } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
+import type { DatabaseUnavailable } from '@vp/errors';
 import { type Logger, getMetrics } from '@vp/observability';
-import { unwrapOr } from '@vp/result';
-import { unwrapOrThrow } from '../../queue-error';
+import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 
 export interface ReconcileUploadsOptions {
   repositories: Repositories;
@@ -29,7 +29,7 @@ export interface ReconcileUploadsResult {
  */
 export async function runReconcileUploads(
   options: ReconcileUploadsOptions
-): Promise<ReconcileUploadsResult> {
+): Promise<Result<ReconcileUploadsResult, DatabaseUnavailable>> {
   const {
     repositories,
     multipart,
@@ -52,24 +52,23 @@ export async function runReconcileUploads(
   let reenqueuedCount = 0;
 
   // 1. Stale UPLOADING -> ABANDONED
-  const staleUploading = unwrapOrThrow(
-    await repositories.videos.scan({
-      status: 'UPLOADING',
-      idleFor: { since: 'updatedAt', ms: uploadingThresholdMs },
-    })
-  );
-  for (const video of staleUploading) {
-    const transitioned = unwrapOrThrow(
-      await repositories.videos.transition({
-        videoId: video.id,
-        from: 'UPLOADING',
-        to: 'ABANDONED',
-        eventType: 'video.abandoned',
-        eventPayload: { reason: 'stale_upload_timeout', thresholdMs: uploadingThresholdMs },
-      })
-    );
+  const staleUploading = await repositories.videos.scan({
+    status: 'UPLOADING',
+    idleFor: { since: 'updatedAt', ms: uploadingThresholdMs },
+  });
+  if (isErr(staleUploading)) return staleUploading;
 
-    if (transitioned) {
+  for (const video of staleUploading.value) {
+    const transitioned = await repositories.videos.transition({
+      videoId: video.id,
+      from: 'UPLOADING',
+      to: 'ABANDONED',
+      eventType: 'video.abandoned',
+      eventPayload: { reason: 'stale_upload_timeout', thresholdMs: uploadingThresholdMs },
+    });
+    if (isErr(transitioned)) return transitioned;
+
+    if (transitioned.value) {
       abandonedCount += 1;
       logger?.info({ videoId: video.id }, 'Reconciler abandoned stale UPLOADING video');
 
@@ -100,22 +99,23 @@ export async function runReconcileUploads(
   }
 
   // 2. Stale UPLOADED without probe step -> re-enqueue probe if under in-flight limit
-  const staleUploaded = unwrapOrThrow(
-    await repositories.videos.scan({
-      status: 'UPLOADED',
-      idleFor: { since: 'updatedAt', ms: uploadedThresholdMs },
-      without: { step: 'probe' },
-    })
-  );
+  const staleUploaded = await repositories.videos.scan({
+    status: 'UPLOADED',
+    idleFor: { since: 'updatedAt', ms: uploadedThresholdMs },
+    without: { step: 'probe' },
+  });
+  if (isErr(staleUploaded)) return staleUploaded;
+
   const ownerInflightCounts = new Map<string, number>();
 
-  for (const video of staleUploaded) {
+  for (const video of staleUploaded.value) {
     if (probeQueue) {
       let currentInflight = ownerInflightCounts.get(video.ownerId);
       if (currentInflight === undefined) {
-        currentInflight = unwrapOrThrow(
-          await repositories.videos.countInFlightByOwner(video.ownerId)
-        );
+        const counted = await repositories.videos.countInFlightByOwner(video.ownerId);
+        if (isErr(counted)) return counted;
+
+        currentInflight = counted.value;
         ownerInflightCounts.set(video.ownerId, currentInflight);
       }
 
@@ -165,5 +165,5 @@ export async function runReconcileUploads(
     }
   }
 
-  return { abandonedCount, reenqueuedCount };
+  return ok({ abandonedCount, reenqueuedCount });
 }
