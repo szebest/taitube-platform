@@ -1,5 +1,6 @@
 import * as crypto from 'node:crypto';
 import type { AuthFailure, Principal } from '@vp/core/ports';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import { type Result, err, isErr, ok, tryCatch } from '@vp/result';
 
@@ -135,7 +136,7 @@ function checkClaims(
   claims: Record<string, unknown>,
   policy: ClaimPolicy
 ): Result<Principal, AuthFailure> {
-  const nowSeconds = Math.floor(policy.now() / 1000);
+  const nowSeconds = Math.floor(policy.now() / MS_PER_SECOND);
   const { sub, iss, aud, exp, nbf, role, email } = claims;
 
   if (iss !== policy.issuer) return err(unauthorized('the issuer is not trusted'));

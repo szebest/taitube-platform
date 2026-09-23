@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
 import { selectLadder } from './ladder';
@@ -147,7 +148,7 @@ export function validateAndParseProbe(
   // Rule 4: Duration validation
   const rawDuration = raw.format?.duration || videoStream.duration;
   const durationSec = rawDuration ? Number(rawDuration) : 0;
-  const durationMs = Math.round(durationSec * 1000);
+  const durationMs = Math.round(durationSec * MS_PER_SECOND);
 
   if (durationMs <= 0 || Number.isNaN(durationMs)) {
     throw new PermanentError(ErrorCodes.CORRUPT_CONTAINER, 'Invalid or missing video duration');

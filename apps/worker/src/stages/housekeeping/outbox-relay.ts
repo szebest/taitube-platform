@@ -1,5 +1,6 @@
 import type { FlowProducerPort, JobQueue } from '@vp/core/ports';
 import type { OutboxPayload, Repositories } from '@vp/core/repositories';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -95,7 +96,7 @@ export async function drainOutboxOnce(
   }
 
   if (items.length > 0) {
-    getMetrics().outboxDrainDuration.observe((Date.now() - startMs) / 1000);
+    getMetrics().outboxDrainDuration.observe((Date.now() - startMs) / MS_PER_SECOND);
   }
 
   return ok({ processedCount: items.length, successCount, failureCount });

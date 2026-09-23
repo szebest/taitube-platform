@@ -1,4 +1,5 @@
 import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/repositories';
+import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
@@ -48,7 +49,7 @@ export class InMemoryOutboxRepository extends OutboxRepository {
   }
 
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
-    const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+    const cutoff = new Date(Date.now() - retentionDays * MS_PER_DAY);
     let count = 0;
     for (const [id, item] of this.items.entries()) {
       if (item.publishedAt !== null && item.publishedAt < cutoff) {

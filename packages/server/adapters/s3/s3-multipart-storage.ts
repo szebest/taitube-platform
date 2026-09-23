@@ -16,6 +16,7 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, fromPromise, map, ok } from '@vp/result';
 import { measureStorageOp } from '../storage-metrics-helper';
@@ -80,7 +81,7 @@ export class S3MultipartStorage extends MultipartStorage {
     return map(signed, (url) => ({
       partNumber: params.partNumber,
       url,
-      expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + expiresIn * MS_PER_SECOND).toISOString(),
     }));
   }
 

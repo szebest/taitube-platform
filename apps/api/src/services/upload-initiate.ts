@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import type { StoragePresignedPartInfo } from '@vp/core/ports';
 import type { VideoVisibility } from '@vp/domain';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type Result, all, isErr, ok } from '@vp/result';
@@ -48,8 +49,8 @@ export async function initiateUpload(
   const uploadId = uuidv7();
   const ext = path.extname(filename).slice(1) || 'mp4';
   const sourceKey = rawSourceKey(videoId, ext);
-  const expiresAt = new Date(Date.now() + ctx.presignedUrlTtlSeconds * 1000);
-  const sessionExpiresAt = new Date(Date.now() + ctx.uploadSessionTtlSeconds * 1000);
+  const expiresAt = new Date(Date.now() + ctx.presignedUrlTtlSeconds * MS_PER_SECOND);
+  const sessionExpiresAt = new Date(Date.now() + ctx.uploadSessionTtlSeconds * MS_PER_SECOND);
 
   const isMultipart = params.strategy
     ? params.strategy === 'multipart'

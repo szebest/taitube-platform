@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { type ShutdownOutcome, shutdownOnce } from '@vp/composition';
 import { loadEnv } from '@vp/config';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { toAppConfig } from '@vp/env-schema';
 import { getMetrics, startMetricsServer } from '@vp/observability';
 import { fromPromise, isErr } from '@vp/result';
@@ -17,7 +18,7 @@ export interface WorkerProcess {
 /** A read-only or misconfigured volume costs the liveness probe its file, not the worker its job. */
 async function writeHeartbeat(heartbeatPath: string): Promise<void> {
   await fs.mkdir(path.dirname(heartbeatPath), { recursive: true }).catch(() => {});
-  await fs.writeFile(heartbeatPath, `${Math.floor(Date.now() / 1000)}\n`).catch(() => {});
+  await fs.writeFile(heartbeatPath, `${Math.floor(Date.now() / MS_PER_SECOND)}\n`).catch(() => {});
 }
 
 export async function main(

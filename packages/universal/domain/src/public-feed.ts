@@ -1,3 +1,5 @@
+import { MS_PER_HOUR } from '@vp/domain/time';
+
 export type PublicFeedSort = 'recent' | 'popular' | 'trending';
 
 export const DEFAULT_PUBLIC_FEED_SORT: PublicFeedSort = 'recent';
@@ -10,8 +12,6 @@ export const TRENDING_GRAVITY = {
   ageOffsetHours: 2,
   exponent: 1.5,
 } as const;
-
-const HOUR_MS = 3_600_000;
 
 export const PUBLIC_FEED_INSTANT_GRANULARITY_MS = 60_000;
 
@@ -31,7 +31,7 @@ export function publicFeedWalkInstant(cursor?: PublicFeedCursor | null): number 
 }
 
 export function videoAgeHours(createdAt: Date, nowMs: number): number {
-  return Math.max(0, (nowMs - createdAt.getTime()) / HOUR_MS);
+  return Math.max(0, (nowMs - createdAt.getTime()) / MS_PER_HOUR);
 }
 
 export function trendingScore(viewsCount: number, ageHours: number): number {

@@ -109,7 +109,7 @@ is stale — fix it.
 | `@vp/composition` | server | `@vp/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/errors` |
 | `@vp/events` | server | `@vp/job-contracts`, `@vp/result` |
-| `@vp/ffmpeg` | server | `@vp/errors`, `@vp/job-contracts` |
+| `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts` |
 | `@vp/testing` | server | `@vp/result` |
 
 ### T3 — Domain capability
@@ -119,7 +119,7 @@ is stale — fix it.
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
-| `@vp/env-schema` | server | `@vp/pagination`, `@vp/result` |
+| `@vp/env-schema` | server | `@vp/domain`, `@vp/pagination`, `@vp/result` |
 
 ### T4 — Integration
 

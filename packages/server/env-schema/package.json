@@ -19,6 +19,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@vp/domain": "workspace:*",
     "@vp/pagination": "workspace:*",
     "@vp/result": "workspace:*",
     "zod": "^3.24.2"

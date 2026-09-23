@@ -1,5 +1,12 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import {
+  MS_PER_HOUR,
+  MS_PER_MINUTE,
+  MS_PER_SECOND,
+  SECONDS_PER_HOUR,
+  SECONDS_PER_MINUTE,
+} from '@vp/domain/time';
 import { type FfmpegProcessLimits, runFfmpeg } from './transcode';
 
 /** The sprite sheet's geometry; the WebVTT cues and the tiling filter both read it. */
@@ -67,7 +74,7 @@ export interface ThumbnailExecutionResult {
  */
 export function buildPosterArgs(options: PosterOptions): string[] {
   const { sourcePath, outputPath, durationMs } = options;
-  const t10 = durationMs && durationMs > 0 ? (durationMs * 0.1) / 1000 : 0;
+  const t10 = durationMs && durationMs > 0 ? (durationMs * 0.1) / MS_PER_SECOND : 0;
 
   return [
     '-hide_banner',
@@ -104,7 +111,7 @@ export function calculateSpriteGrid(
   durationMs: number,
   { intervalSec, columns }: SpriteLayout
 ): SpriteGrid {
-  const durationSec = durationMs / 1000;
+  const durationSec = durationMs / MS_PER_SECOND;
   const frameCount = Math.max(1, Math.ceil(durationSec / intervalSec));
   const rows = Math.max(1, Math.ceil(frameCount / columns));
   return { durationSec, frameCount, rows, columns };
@@ -142,11 +149,11 @@ export function buildSpriteArgs(options: SpriteOptions): string[] {
  * Formats milliseconds into WebVTT timestamp format: HH:MM:SS.mmm
  */
 export function formatVttTimestamp(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const milliseconds = Math.floor(ms % 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+  const totalSeconds = Math.floor(ms / MS_PER_SECOND);
+  const milliseconds = Math.floor(ms % MS_PER_SECOND);
+  const hours = Math.floor(totalSeconds / SECONDS_PER_HOUR);
+  const minutes = Math.floor((totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+  const seconds = totalSeconds % SECONDS_PER_MINUTE;
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
 }
 
@@ -158,7 +165,7 @@ export function generateSpriteVtt(options: GenerateSpriteVttOptions): string {
   const { intervalSec, columns, tileWidth, tileHeight } = layout;
 
   const { frameCount } = calculateSpriteGrid(durationMs, layout);
-  const intervalMs = intervalSec * 1000;
+  const intervalMs = intervalSec * MS_PER_SECOND;
 
   const lines: string[] = ['WEBVTT', ''];
 
@@ -241,15 +248,15 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
       const segments = hms.split(':').map(Number);
       if (segments.length === 3) {
         return (
-          (segments[0] ?? 0) * 3600000 +
-          (segments[1] ?? 0) * 60000 +
-          (segments[2] ?? 0) * 1000 +
+          (segments[0] ?? 0) * MS_PER_HOUR +
+          (segments[1] ?? 0) * MS_PER_MINUTE +
+          (segments[2] ?? 0) * MS_PER_SECOND +
           Number(ms.padEnd(3, '0').slice(0, 3))
         );
       }
       return (
-        (segments[0] ?? 0) * 60000 +
-        (segments[1] ?? 0) * 1000 +
+        (segments[0] ?? 0) * MS_PER_MINUTE +
+        (segments[1] ?? 0) * MS_PER_SECOND +
         Number(ms.padEnd(3, '0').slice(0, 3))
       );
     };

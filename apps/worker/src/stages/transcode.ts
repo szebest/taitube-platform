@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { CacheClient, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -271,7 +272,8 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       });
       if (isErr(comp)) return comp;
 
-      const avgBitrateBps = durationMs > 0 ? Math.round((totalBytes * 8) / (durationMs / 1000)) : 0;
+      const avgBitrateBps =
+        durationMs > 0 ? Math.round((totalBytes * 8) / (durationMs / MS_PER_SECOND)) : 0;
 
       if (durationMs > 0 && processingMs > 0) {
         metrics.transcodeRealtimeFactor.observe(

@@ -44,6 +44,36 @@ function isTuning(node: ts.Expression | undefined): boolean {
   return value !== undefined && !IDENTITY.has(value);
 }
 
+/**
+ * Minutes, hours and days spelt as arithmetic. `@vp/domain/time` owns them, so a duration reads as
+ * `retentionDays * MS_PER_DAY`, never as a literal chain written to get past the constant check.
+ */
+const COMPOUND_UNITS = new Set([60_000, 3_600_000, 86_400_000, 3_600, 86_400]);
+
+function multiplicationFactors(node: ts.Expression): ts.Expression[] {
+  if (ts.isParenthesizedExpression(node)) return multiplicationFactors(node.expression);
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.AsteriskToken) {
+    return [...multiplicationFactors(node.left), ...multiplicationFactors(node.right)];
+  }
+  return [node];
+}
+
+function inlinesUnit(node: ts.Node): boolean {
+  if (!ts.isBinaryExpression(node) || node.operatorToken.kind !== ts.SyntaxKind.AsteriskToken) {
+    return false;
+  }
+  const { parent } = node;
+  const insideChain =
+    (ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.AsteriskToken) ||
+    ts.isParenthesizedExpression(parent);
+  if (insideChain) return false;
+
+  const literals = multiplicationFactors(node)
+    .map(numericValue)
+    .filter((value): value is number => value !== undefined);
+  return literals.length > 0 && COMPOUND_UNITS.has(literals.reduce((a, b) => a * b, 1));
+}
+
 function tuningLiterals(file: string, source: string): string[] {
   const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
   const found: string[] = [];
@@ -62,6 +92,7 @@ function tuningLiterals(file: string, source: string): string[] {
     }
     if (ts.isBindingElement(node) && isTuning(node.initializer)) report(node, 'destructuring');
     if (ts.isParameter(node) && isTuning(node.initializer)) report(node, 'parameter');
+    if (inlinesUnit(node)) report(node, 'inlined unit, use @vp/domain/time');
     ts.forEachChild(node, visit);
   };
   for (const statement of sourceFile.statements) {
@@ -82,7 +113,9 @@ describe('architecture: tuning values live in AppConfig', () => {
     { shape: 'parameter', source: 'function poll(intervalMs = 15_000) {}' },
     { shape: 'module constant', source: 'export const QUEUE_POLL_INTERVAL_MS = 5_000;' },
     { shape: 'module constant', source: 'const STALE_STEP_MS = 5 * 60 * 1000;' },
-  ])('recognises a numeric default as a $shape', ({ shape, source }) => {
+    { shape: 'inlined unit', source: 'const cutoff = retentionDays * 24 * 60 * 60 * 1000;' },
+    { shape: 'inlined unit', source: 'const ms = hours * 3600000;' },
+  ])('recognises $shape in $source', ({ shape, source }) => {
     expect(tuningLiterals('fixture.ts', source)).toEqual([expect.stringContaining(shape)]);
   });
 
@@ -91,6 +124,8 @@ describe('architecture: tuning values live in AppConfig', () => {
     'const attempt = job.attemptsMade ?? 1;',
     'const { limit = DEFAULT_LIMIT } = options;',
     "const name = options.name ?? 'probe';",
+    'const cutoff = retentionDays * MS_PER_DAY;',
+    'const bps = (bytes * 8) / (durationMs / MS_PER_SECOND);',
   ])('lets %s through', (source) => {
     expect(tuningLiterals('fixture.ts', source)).toEqual([]);
   });

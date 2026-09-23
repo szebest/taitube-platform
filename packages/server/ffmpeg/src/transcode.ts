@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import * as path from 'node:path';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { MICROSECONDS_PER_MS } from '@vp/domain/time';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
 
@@ -343,7 +344,7 @@ export async function runFfmpegTranscode(
       if (!prefix) return;
       const microseconds = Number.parseInt(line.slice(prefix.length), 10);
       if (Number.isNaN(microseconds) || microseconds <= 0) return;
-      const outTimeMs = Math.round(microseconds / 1000);
+      const outTimeMs = Math.round(microseconds / MICROSECONDS_PER_MS);
       options.onProgress?.({
         percent: Math.min(100, Math.round((outTimeMs / durationMs) * 100)),
         outTimeMs,

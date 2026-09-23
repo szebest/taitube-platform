@@ -34,7 +34,11 @@ driver ports and repository contracts stayed behind as `@vp/core`; everything po
 4. **Policy constants carry domain-loaded names** — `TRENDING_GRAVITY`, `PUBLIC_FEED_VISIBILITY` — so a
    call site reads as a rule rather than as a magic number.
 5. **Relative imports carry `.js`** (`./channel.js`), because CRA's webpack refuses extensionless ESM.
-6. **Input rules are not here.** The handle format helpers moved to `@vp/validation`, because a format check
+6. **Time units live in `time.ts`** (`MS_PER_DAY`, `SECONDS_PER_HOUR`, ...), exported as `@vp/domain/time`, and
+   every package above T1 spells a duration with them. `public-feed.ts` imports them by that name as well,
+   so the module needs no relative specifier. `no-tuning-literals.test.ts` fails on a minute, hour or day
+   written as literal arithmetic in a service, stage, adapter or `@vp/ffmpeg`.
+7. **Input rules are not here.** The handle format helpers moved to `@vp/validation`, because a format check
    needs no entity and `@vp/validation` may not import this package. This is entity and policy vocabulary; a
    predicate over submitted input belongs one package over.
 

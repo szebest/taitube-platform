@@ -1,3 +1,4 @@
+import { MS_PER_SECOND } from '@vp/domain/time';
 import type { LadderEntry } from '@vp/job-contracts';
 
 export function getAvcCodecString(profile: 'main' | 'high' | string, level: string): string {
@@ -32,7 +33,7 @@ export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
     if (measured?.avgBitrateBps) {
       avgBandwidth = measured.avgBitrateBps;
     } else if (measured?.bytes && measured?.durationMs && measured.durationMs > 0) {
-      avgBandwidth = Math.round((measured.bytes * 8) / (measured.durationMs / 1000));
+      avgBandwidth = Math.round((measured.bytes * 8) / (measured.durationMs / MS_PER_SECOND));
     } else {
       avgBandwidth = (r.videoKbps + r.audioKbps) * 1000;
     }

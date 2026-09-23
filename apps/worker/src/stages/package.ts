@@ -24,6 +24,7 @@ import { type Result, err, isErr, ok } from '@vp/result';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { validateJobId } from '../job-identity';
 
 export interface PackageProcessorDeps {
@@ -248,7 +249,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
     // Record time_to_ready_seconds metric (Ticket 22 / SDD §13.1)
     if (transitioned && video) {
-      const durationSec = (video.durationMs || 0) / 1000;
+      const durationSec = (video.durationMs || 0) / MS_PER_SECOND;
       let bucket = '<1min';
       if (durationSec >= 900) {
         bucket = '15-60';
@@ -259,7 +260,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       }
 
       const createdAtTime = video.createdAt ? new Date(video.createdAt).getTime() : Date.now();
-      const timeToReadySec = Math.max(0, (Date.now() - createdAtTime) / 1000);
+      const timeToReadySec = Math.max(0, (Date.now() - createdAtTime) / MS_PER_SECOND);
       getMetrics().timeToReady.observe({ bucket }, timeToReadySec);
     }
 

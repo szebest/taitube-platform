@@ -11,6 +11,7 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
@@ -200,7 +201,7 @@ export class InMemoryStorageClient extends StorageClient {
         'content-type': params.contentType,
         'content-length': String(params.contentLength ?? 0),
       },
-      expiresAt: new Date(Date.now() + expiresIn * 1000),
+      expiresAt: new Date(Date.now() + expiresIn * MS_PER_SECOND),
     });
   }
 

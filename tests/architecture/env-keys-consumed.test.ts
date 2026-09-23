@@ -24,7 +24,7 @@ function propertiesOf(type: ts.Type): ts.Symbol[] {
   return (type.isUnion() ? type.types : [type]).flatMap((member) => member.getProperties());
 }
 
-/** The path every `AppConfig` property symbol stands at, and the leaf paths under each. */
+/** The dotted path each `AppConfig` property symbol stands at, groups as well as leaves. */
 function configPaths(checker: ts.TypeChecker, root: ts.Type): Map<ts.Symbol, string> {
   const paths = new Map<ts.Symbol, string>();
   const walk = (type: ts.Type, prefix: string): void => {
@@ -39,10 +39,6 @@ function configPaths(checker: ts.TypeChecker, root: ts.Type): Map<ts.Symbol, str
   return paths;
 }
 
-/**
- * The leaves under `path` a receiver actually takes. A spread or an argument hands over only what
- * the receiving type declares; a receiver typed `any`, or none at all, takes everything.
- */
 /** A receiver typed as a union takes a property any of its members declares. */
 function receivingProperty(
   checker: ts.TypeChecker,
@@ -55,6 +51,10 @@ function receivingProperty(
     .find((property) => property !== undefined);
 }
 
+/**
+ * The leaves under `path` a receiver actually takes. A spread or an argument hands over only what
+ * the receiving type declares; a receiver typed `any`, or none at all, takes everything.
+ */
 function leavesTaken(
   checker: ts.TypeChecker,
   path: string,
