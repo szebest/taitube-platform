@@ -104,12 +104,25 @@ export interface Token<T> { readonly name: string; readonly _t?: (x: T) => T }
 export const token = <T>(name: string): Token<T> => ({ name });
 
 export class Container {
-  provide<T>(t: Token<T>, make: (c: Container) => T): this
+  provide<T>(t: Token<T>, make: (c: Container) => T): this   // `make` is SYNCHRONOUS
   get<T>(t: Token<T>): T                             // lazy, memoised, cycle-detecting
   override<T>(t: Token<T>, value: T): this           // tests; throws once resolved
-  dispose(): Promise<Result<void, ShutdownFailed>>   // reverse construction order
+  start(): Promise<Result<void, StartupFailed>>      // phase 2, construction order
+  dispose(): Promise<Result<void, ShutdownFailed>>   // reverse construction order, idempotent
 }
+
+// Anything that needs I/O before it is usable declares it, instead of doing it in a factory.
+export interface Startable { start(): Promise<Result<void, AnyFailure>> }
 ```
+
+**Construction is synchronous; starting is not.** Two things in today's graph do I/O while the graph is being
+built: `SseHub.init()` opens a Redis subscription at `service-set.ts:82`, and `registerHousekeepingSchedulers`
+writes repeatable jobs at `app.ts:57`. If `get` were async every call site would be `await`-coloured and the
+container would become a scheduler. Instead a factory returns a constructed object, and when that object needs
+I/O the container collects it as a `Startable` that `start()` runs in construction order.
+
+That split is the one W5 needs anyway: `buildApp` resolves the graph and registers routes, `main.ts` calls
+`start()`. It is also why `buildApp()` in a test opens no socket - nothing calls `start()`.
 
 `get` returns `T` with no cast, because the token carries the type. Registration reads like a `@Module`, and the
 compiler checks every edge:
@@ -155,8 +168,13 @@ The mechanism and nothing else. Target ≤ 150 lines across `container.ts` and `
 - `get` is lazy and memoises per container. A cycle throws with the full resolution path in the message
   (`Config → Storage → Multipart → Storage`).
 - `override(token, value)` replaces a registration before first resolution; after it, it throws.
+- A factory is **synchronous**. A factory that needs to `await` is a `Startable` (see *The shape*); the container
+  refuses an async factory at registration, because a promise memoised as a value is a race nobody reads.
+- `start()` runs every resolved `Startable` in construction order and stops at the first `Err`, disposing what
+  already started. Nothing that was never resolved is started.
 - `dispose()` runs registered disposers in reverse construction order and aggregates their `Result`s. A disposer
-  is registered by the factory that created the resource, so ordering is derived, not declared.
+  is registered by the factory that created the resource, so ordering is derived, not declared. It is
+  **idempotent**: `SIGTERM` followed by `SIGINT` must not close a pool twice.
 - **Tier and layer:** `server`, because nothing client-side imports it (packages/AGENTS.md §1). **T2**, because
   `dispose()` speaks `Result` from `@vp/result` (T1) — a T1 declaration would be a forbidden sibling edge.
 
@@ -228,9 +246,9 @@ The mechanism and nothing else. Target ≤ 150 lines across `container.ts` and `
   uniform `await app.register(plugin)` each. This is the answer to the inconsistent awaits: they were never
   wrong (Avvio preserves registration order either way, and nothing between them reads a decorator the previous
   one installed), they were the residue of thirteen calls that were never given one shape.
-- `buildApp` starts nothing. `startQueuePoller` and `startSqlPoller` move to a `start(app)` called by `main.ts`;
-  `SseHub.init()` becomes a disposer-registering factory in the container, resolved when the events plugin is
-  registered. 30 of the 32 `buildApp` call sites are tests that want routes, not timers.
+- `buildApp` starts nothing: it resolves the graph and registers routes, and `main.ts` calls `container.start()`.
+  Both pollers, `SseHub.init()` and `registerHousekeepingSchedulers` become `Startable`s. 30 of the 32
+  `buildApp` call sites are tests that want routes, not timers and not a Redis subscription.
 - `apps/api/src/main.ts` installs `SIGTERM`/`SIGINT` → `app.close()` → `onClose` → `container.dispose()`, with a
   drain timeout, matching `apps/worker/src/main.ts:41-51`. `dispose()` closes the Postgres pool, the Redis
   client, the storage client, all eight queues, the SSE hub, the category cache and both pollers.
@@ -339,7 +357,10 @@ implementer, not a claim.
 - [ ] A factory is invoked at most once per container; a token never resolved is never invoked (assert with a spy).
 - [ ] A registration cycle throws with every token name on the path, in order.
 - [ ] `override` after resolution throws; `override` before resolution wins.
+- [ ] A factory returning a promise is refused at registration, with the token name in the message.
+- [ ] `start()` starts only resolved `Startable`s, in construction order; a failing one disposes what already started and returns `Err`.
 - [ ] `dispose()` returns `Err` naming every disposer that failed, and still runs the remaining ones.
+- [ ] `dispose()` called twice closes each resource exactly once.
 - [ ] `pnpm boundaries` passes with the package declared `server` / T2; the package has no `@vp/*` dependency beyond `@vp/result`.
 
 ### W2 — Configuration
