@@ -50,7 +50,6 @@ export class InMemoryStorageClient extends StorageClient {
     } else if (params.body instanceof Uint8Array) {
       buf = Buffer.from(params.body);
     } else {
-      // Readable stream
       const chunks: Buffer[] = [];
       for await (const chunk of params.body as AsyncIterable<Uint8Array | Buffer>) {
         chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));

@@ -1,4 +1,7 @@
 {
   "extends": "@vp/tsconfig/spec.json",
+  "compilerOptions": {
+    "paths": { "@vp/domain/*": ["./src/*"] }
+  },
   "include": ["src/**/*"]
 }
