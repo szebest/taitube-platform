@@ -59,11 +59,7 @@ export async function composeApp(options: BuildAppOptions = {}): Promise<Compose
 
   registerErrorHandler(app);
 
-  await app.register(registerAuth, {
-    channelService: services.channelService,
-    adminToken: config.auth.adminToken,
-    jwksUrl: config.auth.jwksUrl,
-  });
+  await app.register(registerAuth, { channelService: services.channelService, auth: config.auth });
   await app.register(registerHttpMetricsPlugin);
   await registerOpenApi(app);
 

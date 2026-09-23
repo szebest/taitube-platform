@@ -45,14 +45,17 @@ describe('packages/env-schema: toAppConfig', () => {
   });
 
   it.each([
-    { nodeEnv: 'test', kind: 'in-memory' },
-    { nodeEnv: 'development', kind: 'external' },
-    { nodeEnv: 'production', kind: 'external' },
-  ])('derives the $kind family from NODE_ENV=$nodeEnv', ({ nodeEnv, kind }) => {
-    const env = envFor(nodeEnv);
+    { nodeEnv: 'test', kind: 'in-memory', devTokens: true },
+    { nodeEnv: 'development', kind: 'external', devTokens: true },
+    { nodeEnv: 'production', kind: 'external', devTokens: false },
+  ])(
+    'derives the $kind family and devTokens=$devTokens from NODE_ENV=$nodeEnv',
+    ({ nodeEnv, kind, devTokens }) => {
+      const config = toAppConfig(envFor(nodeEnv));
 
-    expect(toAppConfig(env).kind).toBe(kind);
-  });
+      expect({ kind: config.kind, devTokens: config.auth.devTokens }).toEqual({ kind, devTokens });
+    }
+  );
 
   it('strips the CDN base once, so no consumer has to', () => {
     const config = toAppConfig(

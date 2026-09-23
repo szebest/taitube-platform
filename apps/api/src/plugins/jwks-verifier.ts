@@ -75,9 +75,14 @@ function getHashAlgorithm(alg?: string): string | null {
   }
 }
 
+export interface TokenVerification {
+  jwksUrl: string;
+  devTokens: boolean;
+}
+
 export async function verifyUniversalToken(
   token: string,
-  jwksUrl: string
+  { jwksUrl, devTokens }: TokenVerification
 ): Promise<DecodedTokenPayload> {
   const parts = token.split('.');
   if (parts.length !== 3) {
@@ -97,8 +102,8 @@ export async function verifyUniversalToken(
     throw new PermanentError(ErrorCodes.UNAUTHORIZED, 'Invalid JWT header format');
   }
 
-  // 1. Dev token check (EdDSA local issuer)
-  if (header.alg === 'EdDSA') {
+  // The dev seed is public, so a deployment that has not opted in verifies EdDSA through JWKS.
+  if (devTokens && header.alg === 'EdDSA') {
     try {
       const payload = verifyDevToken(token);
       const emailVal = (payload as unknown as Record<string, unknown>).email;
@@ -117,8 +122,6 @@ export async function verifyUniversalToken(
       );
     }
   }
-
-  // 2. Universal JWKS verification (Clerk, Supabase, Auth0, Keycloak, etc.)
 
   let jwks: JwksResponse;
   try {

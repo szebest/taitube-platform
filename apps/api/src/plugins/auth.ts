@@ -26,8 +26,7 @@ function matchesAdminToken(header: unknown, expected: string | undefined): boole
 
 export interface AuthPluginOptions {
   channelService: ChannelService;
-  adminToken: string | undefined;
-  jwksUrl: string;
+  auth: AppConfig['auth'];
 }
 
 declare module 'fastify' {
@@ -44,7 +43,7 @@ export async function authPlugin(app: FastifyInstance, options: AuthPluginOption
   app.decorateRequest('user', null);
 
   app.addHook('onRequest', async (request: FastifyRequest) => {
-    if (matchesAdminToken(request.headers['x-admin-token'], options.adminToken)) {
+    if (matchesAdminToken(request.headers['x-admin-token'], options.auth.adminToken)) {
       request.user = ADMIN_TOKEN_USER;
       return;
     }
@@ -69,7 +68,7 @@ export async function authPlugin(app: FastifyInstance, options: AuthPluginOption
     // which reported a dead database as `Token verification failed` and answered 401.
     let payload: Awaited<ReturnType<typeof verifyUniversalToken>>;
     try {
-      payload = await verifyUniversalToken(token, options.jwksUrl);
+      payload = await verifyUniversalToken(token, options.auth);
     } catch (err) {
       if (err instanceof PermanentError) throw err;
       throw new PermanentError(

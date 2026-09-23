@@ -17,11 +17,14 @@ const JWKS_URL = 'http://127.0.0.1:9/.well-known/jwks.json';
 
 async function appWith(
   adminToken: string | undefined,
-  channelService = channels()
+  { channelService = channels(), devTokens = true } = {}
 ): Promise<FastifyInstance> {
   const app = fastify({ logger: false });
   registerErrorHandler(app);
-  await app.register(registerAuth, { channelService, adminToken, jwksUrl: JWKS_URL });
+  await app.register(registerAuth, {
+    channelService,
+    auth: { adminToken, jwksUrl: JWKS_URL, devTokens },
+  });
   app.get('/whoami', async (request) => ({ user: request.user }));
   return app;
 }
@@ -63,6 +66,16 @@ describe('apps/api/plugins: auth', () => {
     });
   });
 
+  it('refuses a dev bearer token with 401 where dev tokens are off, as in production', async () => {
+    const app = await appWith(undefined, { devTokens: false });
+    const token = mintToken({ sub: '00000000-0000-7000-8000-0000000000a3', role: 'ADMIN' });
+
+    expect(await whoami(app, { authorization: `Bearer ${token}` })).toEqual({
+      status: 401,
+      user: undefined,
+    });
+  });
+
   it.each([
     { scenario: 'a header that is not a bearer token', authorization: 'Basic abc' },
     { scenario: 'a malformed token', authorization: 'Bearer not.a-jwt' },
@@ -77,7 +90,7 @@ describe('apps/api/plugins: auth', () => {
     vi.spyOn(channelService, 'ensureProvisioned').mockResolvedValue(
       err(databaseUnavailable('users.upsert'))
     );
-    const app = await appWith(undefined, channelService);
+    const app = await appWith(undefined, { channelService });
     const token = mintToken({ sub: '00000000-0000-7000-8000-0000000000a2', role: 'user' });
 
     expect((await whoami(app, { authorization: `Bearer ${token}` })).status).toBe(503);

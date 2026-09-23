@@ -40,7 +40,7 @@ export interface AppConfig {
     samplerArg: number;
     resourceAttributes: string;
   };
-  auth: { jwksUrl: string; adminToken: string | undefined };
+  auth: { jwksUrl: string; adminToken: string | undefined; devTokens: boolean };
   http: { port: number; metricsPort: number };
   worker: {
     stage: WorkerStageName;
@@ -97,7 +97,11 @@ export function toAppConfig(env: AppEnv): AppConfig {
       samplerArg: env.OTEL_TRACES_SAMPLER_ARG,
       resourceAttributes: env.OTEL_RESOURCE_ATTRIBUTES,
     },
-    auth: { jwksUrl: env.AUTH_JWKS_URL, adminToken: env.ADMIN_TOKEN },
+    auth: {
+      jwksUrl: env.AUTH_JWKS_URL,
+      adminToken: env.ADMIN_TOKEN,
+      devTokens: env.NODE_ENV !== 'production',
+    },
     http: { port: env.PORT, metricsPort: env.METRICS_PORT },
     worker: {
       stage: env.WORKER_STAGE,
@@ -121,7 +125,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 function merged<T>(base: T, overrides: unknown): T {
-  if (!isPlainObject(base) || !isPlainObject(overrides)) return (overrides ?? base) as T;
+  if (!(isPlainObject(base) && isPlainObject(overrides))) return (overrides ?? base) as T;
 
   const result: Record<string, unknown> = { ...base };
   for (const [key, value] of Object.entries(overrides)) {
