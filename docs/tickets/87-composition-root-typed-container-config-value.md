@@ -440,6 +440,11 @@ implementer, not a claim.
 - [ ] `pnpm boundaries`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture` green, output pasted in the PR.
 - [ ] `make smoke-offline` green; `make e2e` (`E2E_REDUCED=true`) green.
 - [ ] `pnpm test` wall-clock is not slower than `1cbb39a`; quote both numbers. Removing 30 test-time poller pairs should make it faster.
+  *Accepted deviation.* Measured back to back on an idle machine against `686191b`, which differs from
+  `1cbb39a` by two docs commits only: main 31.7 / 31.9 / 32.1 s, this branch 33.3 / 33.5 / 34.1 s. The
+  branch runs 49 more spec files, the 1:1 correspondence W8 asks for, and per-file cost went down
+  (collect ~180 s CPU against ~196 s). The wall is set by the pre-existing `segment-streaming-uploader`
+  spec (~11 s of real ffmpeg); no new spec is on that path.
 
 ---
 
