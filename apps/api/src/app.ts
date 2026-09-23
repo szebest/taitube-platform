@@ -49,7 +49,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const limits = options.limits ?? {};
 
   const adapters = resolveAdapterSet(options.adapters);
-  const rawBucket = options.rawBucket ?? process.env['STORAGE_RAW_BUCKET'] ?? 'raw';
+  const rawBucket = options.rawBucket ?? process.env['S3_BUCKET_RAW'] ?? 'raw';
   const cdnBaseUrl = options.cdnBaseUrl ?? process.env['CDN_BASE_URL'] ?? DEFAULT_CDN_BASE_URL;
 
   const housekeepingQueue = adapters.queues.get('housekeeping');

@@ -43,8 +43,8 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
   const {
     repositories,
     storage,
-    rawBucket = process.env['STORAGE_RAW_BUCKET'] || 'raw',
-    publicBucket = process.env['STORAGE_PUBLIC_BUCKET'] || 'public',
+    rawBucket = process.env['S3_BUCKET_RAW'] || 'raw',
+    publicBucket = process.env['S3_BUCKET_PUBLIC'] || 'public',
     workerId = `worker-${process.pid}`,
     logger,
     heartbeatPath = getHeartbeatPath(),

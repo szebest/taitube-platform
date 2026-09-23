@@ -77,7 +77,7 @@ export class UploadService {
       ...(deps.users ? { users: deps.users } : {}),
       storage: deps.storage,
       multipart: deps.multipart,
-      rawBucket: deps.rawBucket || process.env['STORAGE_RAW_BUCKET'] || 'raw',
+      rawBucket: deps.rawBucket || process.env['S3_BUCKET_RAW'] || 'raw',
       ...(deps.probeQueue ? { probeQueue: deps.probeQueue } : {}),
       multipartThresholdBytes: deps.multipartThresholdBytes ?? MULTIPART_THRESHOLD_BYTES,
       presignedUrlTtlSeconds: deps.presignedUrlTtlSeconds ?? DEFAULT_PRESIGNED_TTL_SECONDS,

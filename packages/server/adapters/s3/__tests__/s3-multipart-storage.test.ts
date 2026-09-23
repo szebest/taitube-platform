@@ -173,7 +173,7 @@ describe('S3MultipartStorage', () => {
     const r2Enabled = process.env['STORAGE_E2E_R2'] === '1';
 
     it.skipIf(!r2Enabled)('drives a real R2 bucket through the same calls', async () => {
-      const bucket = process.env['STORAGE_RAW_BUCKET'] || BUCKET;
+      const bucket = process.env['S3_BUCKET_RAW'] || BUCKET;
       const multipart = new S3MultipartStorage();
 
       const uploadId = expectOk(await multipart.createMultipartUpload(bucket, KEY, 'video/mp4'));

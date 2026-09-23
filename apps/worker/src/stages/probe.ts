@@ -66,7 +66,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
   const {
     repositories,
     storage,
-    rawBucket = process.env['STORAGE_RAW_BUCKET'] || 'raw',
+    rawBucket = process.env['S3_BUCKET_RAW'] || 'raw',
     workerId = `worker-${process.pid}`,
     logger,
     heartbeatPath = getHeartbeatPath(),

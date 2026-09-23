@@ -264,13 +264,10 @@ jobs:
         env:
           NODE_ENV: test
           DATABASE_URL: postgres://vp:vp@localhost:5432/vp
-          POSTGRES_URL: postgres://vp:vp@localhost:5432/vp
           REDIS_URL: redis://:vp@localhost:6379
           S3_ENDPOINT: http://localhost:9000
           S3_ACCESS_KEY_ID: minioadmin
           S3_SECRET_ACCESS_KEY: minioadmin
-          S3_RAW_BUCKET: raw
-          S3_PUBLIC_BUCKET: public
         run: pnpm test:integration
 
       - name: Stop infrastructure services

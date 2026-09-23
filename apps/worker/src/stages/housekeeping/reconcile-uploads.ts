@@ -34,7 +34,7 @@ export async function runReconcileUploads(
     repositories,
     multipart,
     probeQueue,
-    rawBucket = process.env['STORAGE_RAW_BUCKET'] ?? 'raw',
+    rawBucket = process.env['S3_BUCKET_RAW'] ?? 'raw',
     uploadingThresholdMs = process.env['RECONCILE_UPLOADING_THRESHOLD_MS']
       ? Number.parseInt(process.env['RECONCILE_UPLOADING_THRESHOLD_MS'], 10)
       : 24 * 60 * 60 * 1000,

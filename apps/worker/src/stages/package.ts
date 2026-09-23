@@ -52,7 +52,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
   const {
     repositories,
     storage,
-    publicBucket = process.env['STORAGE_PUBLIC_BUCKET'] || 'public',
+    publicBucket = process.env['S3_BUCKET_PUBLIC'] || 'public',
     cdnBaseUrl = process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL,
     workerId = `worker-${process.pid}`,
     logger,

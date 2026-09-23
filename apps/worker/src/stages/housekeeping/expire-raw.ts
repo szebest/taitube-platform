@@ -29,7 +29,7 @@ export async function runExpireRaw(
   const {
     repositories,
     storage,
-    rawBucket = process.env['STORAGE_RAW_BUCKET'] ?? 'raw',
+    rawBucket = process.env['S3_BUCKET_RAW'] ?? 'raw',
     retentionDays = process.env['RAW_RETENTION_DAYS']
       ? Number.parseInt(process.env['RAW_RETENTION_DAYS'], 10)
       : 7,

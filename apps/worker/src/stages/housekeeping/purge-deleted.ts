@@ -30,8 +30,8 @@ export async function runPurgeDeleted(
   const {
     repositories,
     storage,
-    rawBucket = process.env['STORAGE_RAW_BUCKET'] ?? 'raw',
-    publicBucket = process.env['STORAGE_PUBLIC_BUCKET'] ?? 'public',
+    rawBucket = process.env['S3_BUCKET_RAW'] ?? 'raw',
+    publicBucket = process.env['S3_BUCKET_PUBLIC'] ?? 'public',
     thresholdMs = process.env['PURGE_DELETED_THRESHOLD_MS']
       ? Number.parseInt(process.env['PURGE_DELETED_THRESHOLD_MS'], 10)
       : 60 * 60 * 1000,
