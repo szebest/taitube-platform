@@ -53,7 +53,12 @@ export function registerFamily(c: Container): void {
     )
     .provide(Adapters.Cache, (c) => c.get(Redis))
     .provide(S3, () => new S3StorageClient({ type: 'connection', ...config.s3 }), closeOnDispose)
-    .provide(Adapters.Storage, (c) => new MeteredStorageClient(c.get(S3), c.get(Adapters.Metrics)))
+    .provide(
+      Adapters.Storage,
+      (c) => new MeteredStorageClient(c.get(S3), c.get(Adapters.Metrics)),
+      // S3 above owns the client this wraps and closes it; closing it here too would close it twice.
+      { dispose: () => undefined }
+    )
     .provide(
       Adapters.Multipart,
       (c) =>
