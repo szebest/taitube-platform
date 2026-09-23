@@ -1,8 +1,16 @@
 import * as net from 'node:net';
 import { Adapters } from '@vp/adapters/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
+import { shutdownTracing } from '@vp/observability';
+import { err } from '@vp/result';
 import { composeApp } from '../app';
+import { Services } from '../composition/services.module';
 import { main, serve } from '../main';
+
+vi.mock('@vp/observability', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@vp/observability')>()),
+  shutdownTracing: vi.fn(async () => {}),
+}));
 
 const TIMINGS = { drainDelayMs: 50, graceMs: 2_000 };
 
@@ -103,22 +111,27 @@ describe('apps/api: main', () => {
     expect(await shutdown).toBe('drained');
   });
 
-  it('closes every adapter exactly once, a dependent before what it depends on', async () => {
+  it('releases every resource exactly once, in reverse construction order', async () => {
     const composed = await composeApp({ config: config() });
-    const closed: string[] = [];
     const { container } = composed;
-    const adapters: Array<[string, { close(): Promise<unknown> }]> = [
-      ['DbClient', container.get(Adapters.DbClient)],
-      ['Cache', container.get(Adapters.Cache)],
-      ['Storage', container.get(Adapters.Storage)],
-      ['Multipart', container.get(Adapters.Multipart)],
-      ['QueueRegistry', container.get(Adapters.QueueRegistry)],
+    const released: string[] = [];
+    const resources: Array<[string, object, 'close' | 'stop']> = [
+      ['DbClient', container.get(Adapters.DbClient), 'close'],
+      ['Cache', container.get(Adapters.Cache), 'close'],
+      ['Storage', container.get(Adapters.Storage), 'close'],
+      ['Multipart', container.get(Adapters.Multipart), 'close'],
+      ['QueueRegistry', container.get(Adapters.QueueRegistry), 'close'],
+      ['CategoryCache', container.get(Adapters.CategoryCache), 'close'],
+      ['SseHub', container.get(Services.SseHub), 'close'],
+      ['QueuePoller', container.get(Services.QueuePoller), 'stop'],
+      ['SqlPoller', container.get(Services.SqlPoller), 'stop'],
     ];
-    for (const [name, adapter] of adapters) {
-      const close = adapter.close.bind(adapter);
-      vi.spyOn(adapter, 'close').mockImplementation(async () => {
-        closed.push(name);
-        return close();
+    for (const [name, resource, method] of resources) {
+      const target = resource as Record<string, () => unknown>;
+      const original = target[method]?.bind(resource);
+      vi.spyOn(target, method).mockImplementation(() => {
+        released.push(name);
+        return original?.();
       });
     }
     const api = await serve(composed, config(), TIMINGS);
@@ -126,14 +139,36 @@ describe('apps/api: main', () => {
     expect(await api.shutdown()).toBe('drained');
     await api.shutdown();
 
-    expect([...closed].sort()).toEqual([
-      'Cache',
+    expect(released).toEqual([
+      'SqlPoller',
+      'QueuePoller',
       'DbClient',
+      'SseHub',
+      'CategoryCache',
       'Multipart',
-      'QueueRegistry',
       'Storage',
+      'Cache',
+      'QueueRegistry',
     ]);
-    expect(closed.indexOf('Multipart')).toBeLessThan(closed.indexOf('Storage'));
+  });
+
+  it('fails the shutdown when a disposer returns an error, and names it', async () => {
+    const composed = await composeApp({ config: config() });
+    vi.spyOn(composed.container.get(Adapters.Storage), 'close').mockResolvedValue(
+      err('bucket gone') as never
+    );
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const api = await serve(composed, config(), TIMINGS);
+
+    expect(await api.shutdown()).toBe('failed');
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('Storage'));
+  });
+
+  it('flushes buffered spans once the servers have closed', async () => {
+    const api = await serve(await composeApp({ config: config() }), config(), TIMINGS);
+
+    expect(await api.shutdown()).toBe('drained');
+    expect(shutdownTracing).toHaveBeenCalledTimes(1);
   });
 
   it('gives up on a disposer that never resolves, and names it', async () => {

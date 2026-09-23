@@ -1,6 +1,6 @@
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { Container, closeOnDispose } from '../container';
+import { Container, DisposeFailed, closeOnDispose } from '../container';
 import { token } from '../token';
 
 class VideoService {
@@ -197,6 +197,19 @@ describe('packages/composition: Container', () => {
     release();
     await disposal;
     expect(c.disposing()).toBeUndefined();
+  });
+});
+
+describe('packages/composition: DisposeFailed', () => {
+  it('names every disposer that failed', () => {
+    const failure = {
+      failed: [
+        { token: 'Storage', cause: 'gone' },
+        { token: 'Cache', cause: 'x' },
+      ],
+    };
+
+    expect(new DisposeFailed(failure).message).toBe('disposers failed: Storage, Cache');
   });
 });
 

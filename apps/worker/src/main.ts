@@ -4,6 +4,7 @@ import { type ShutdownOutcome, shutdownOnce } from '@vp/composition';
 import { loadEnv } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
 import { getMetrics, startMetricsServer } from '@vp/observability';
+import { fromPromise, isErr } from '@vp/result';
 import { STAGE_REGISTRY } from './registry';
 import { type WorkerRunner, createWorkerRunner } from './runner';
 
@@ -47,8 +48,12 @@ export async function main(
     drain: () => clearInterval(heartbeat),
     drainDelayMs: 0,
     close: async () => {
-      await runner.close();
+      const closed = await fromPromise(
+        () => runner.close(),
+        (cause) => cause
+      );
       await metricsServer.close();
+      if (isErr(closed)) throw closed.error;
     },
     graceMs: stage.shutdownTimeoutMs,
     pending: () => runner.disposing(),

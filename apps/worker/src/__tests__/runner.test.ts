@@ -1,6 +1,8 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
+import { queueUnavailable } from '@vp/errors';
 import { createLogger } from '@vp/observability';
+import { err } from '@vp/result';
 import { createWorkerRunner } from '../runner';
 
 const logger = createLogger({ service: 'runner-test', level: 'silent' });
@@ -30,6 +32,16 @@ describe('apps/worker: createWorkerRunner', () => {
 
     expect(runner.queue).toBe(jobQueue);
     expect(close).not.toHaveBeenCalled();
+  });
+
+  it('rejects its close, naming the disposer that failed', async () => {
+    const runner = await createWorkerRunner({
+      config: inProcessAppConfig({ worker: { stage: 'package' } }),
+      logger,
+    });
+    vi.spyOn(runner.queue, 'close').mockResolvedValue(err(queueUnavailable('close', 'gone')));
+
+    await expect(runner.close()).rejects.toThrow('disposers failed: QueueRegistry');
   });
 
   it('starts the outbox relay for housekeeping and stops it on close', async () => {

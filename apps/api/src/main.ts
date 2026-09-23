@@ -2,8 +2,8 @@ import { type ShutdownOutcome, shutdownOnce } from '@vp/composition';
 import { loadEnv } from '@vp/config';
 import { type AppConfig, toAppConfig } from '@vp/env-schema';
 import { type AnyFailure, toPipelineError } from '@vp/errors';
-import { initTracing } from '@vp/observability';
-import { isErr } from '@vp/result';
+import { initTracing, shutdownTracing } from '@vp/observability';
+import { fromPromise, isErr } from '@vp/result';
 import { type ComposedApp, composeApp } from './app';
 import { startMetricsServer } from './plugins/metrics';
 
@@ -26,6 +26,7 @@ export async function serve(
 ): Promise<ApiProcess> {
   const started = await container.start();
   if (isErr(started)) {
+    console.error(`[api] startup failed at ${started.error.token}:`, started.error.cause);
     await app.close();
     throw toPipelineError(started.error.cause as AnyFailure);
   }
@@ -40,8 +41,13 @@ export async function serve(
     ...timings,
     drain: () => app.services.readiness.beginDrain(),
     close: async () => {
-      await app.close();
+      const closed = await fromPromise(
+        () => app.close(),
+        (cause) => cause
+      );
       await metricsServer.close();
+      await shutdownTracing();
+      if (isErr(closed)) throw closed.error;
     },
     pending: () => container.disposing(),
     log: (message) => console.log(`[api] ${message}`),

@@ -1,5 +1,5 @@
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
-import { Container } from '@vp/composition';
+import { Container, DisposeFailed } from '@vp/composition';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -16,6 +16,7 @@ import {
   createLogger,
   getMetrics,
   initTracing,
+  shutdownTracing,
 } from '@vp/observability';
 import { isErr, ok } from '@vp/result';
 import { Worker, registerStages } from './composition/stages.module';
@@ -89,7 +90,10 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
   const outboxRelay = container.get(Worker.OutboxRelay);
 
   const started = await container.start();
-  if (isErr(started)) throw toPipelineError(started.error.cause as AnyFailure);
+  if (isErr(started)) {
+    logger.error({ token: started.error.token, cause: started.error.cause }, 'Startup failed');
+    throw toPipelineError(started.error.cause as AnyFailure);
+  }
 
   return {
     queue,
@@ -98,9 +102,8 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     close: async () => {
       logger.info('Shutting down worker...');
       const disposed = await container.dispose();
-      if (isErr(disposed)) {
-        logger.warn({ failed: disposed.error.failed.map((f) => f.token) }, 'Disposers failed');
-      }
+      await shutdownTracing();
+      if (isErr(disposed)) throw new DisposeFailed(disposed.error);
     },
     disposing: () => container.disposing(),
   };

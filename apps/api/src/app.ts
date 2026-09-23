@@ -2,8 +2,9 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { registerAdapters } from '@vp/adapters/composition';
-import { Container } from '@vp/composition';
+import { Container, DisposeFailed } from '@vp/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
+import { isErr } from '@vp/result';
 import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { type AdapterOverrides, overrideAdapters } from './composition/adapter-set';
@@ -68,7 +69,8 @@ export async function composeApp(options: BuildAppOptions = {}): Promise<Compose
   }
 
   app.addHook('onClose', async () => {
-    await container.dispose();
+    const disposed = await container.dispose();
+    if (isErr(disposed)) throw new DisposeFailed(disposed.error);
   });
 
   return { app, container };

@@ -25,6 +25,13 @@ export interface ShutdownFailed {
   readonly failed: readonly StartupFailed[];
 }
 
+export class DisposeFailed extends Error {
+  constructor(readonly failure: ShutdownFailed) {
+    super(`disposers failed: ${failure.failed.map(({ token }) => token).join(', ')}`);
+    this.name = 'DisposeFailed';
+  }
+}
+
 type Factory<T> = (c: Container) => T;
 
 type Key = { readonly name: string };
