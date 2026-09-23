@@ -92,10 +92,10 @@ export const PipelineEnvSchema = z.object({
       'housekeeping',
     ])
     .default('probe'),
-  WORKER_CONCURRENCY: z
-    .string()
-    .optional()
-    .transform((val) => (val && val.trim() !== '' ? Number.parseInt(val, 10) : undefined)),
+  WORKER_CONCURRENCY: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.coerce.number().int().positive().optional()
+  ),
   WORKER_RUNTIME: z.enum(['bun', 'node']).default('bun'),
   FFMPEG_PATH: z.string().default('ffmpeg'),
   FFPROBE_PATH: z.string().default('ffprobe'),

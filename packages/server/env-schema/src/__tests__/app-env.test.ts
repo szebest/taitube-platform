@@ -104,6 +104,27 @@ describe('packages/env-schema: the environment contract', () => {
     );
   });
 
+  it('leaves no empty value followed by a comment, which compose reads as the value', () => {
+    const content = readFileSync(resolve(__dirname, '../../../../../.env.example'), 'utf8');
+
+    expect(content.split('\n').filter((line) => /^[A-Z0-9_]+=\s+#/.test(line))).toEqual([]);
+  });
+
+  it.each([
+    { raw: undefined, expected: undefined },
+    { raw: '', expected: undefined },
+    { raw: '3', expected: 3 },
+  ])('reads WORKER_CONCURRENCY $raw as $expected', ({ raw, expected }) => {
+    expect(AppEnvShape.shape.WORKER_CONCURRENCY.parse(raw)).toBe(expected);
+  });
+
+  it.each(['# empty = stage default', 'abc', '0', '-1', '2.5'])(
+    'refuses WORKER_CONCURRENCY %s',
+    (raw) => {
+      expect(AppEnvShape.shape.WORKER_CONCURRENCY.safeParse(raw).success).toBe(false);
+    }
+  );
+
   it('defaults the connection pool without being told', () => {
     expect(
       PostgresEnvSchema.parse({ DATABASE_URL: 'postgres://user:pass@localhost:5432/testdb' })
