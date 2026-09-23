@@ -173,15 +173,14 @@ export class VideoService {
     );
 
     if (this.reactionCache) {
+      const stored = {
+        likesCount: decided.value.likesCount ?? 0,
+        dislikesCount: decided.value.dislikesCount ?? 0,
+      };
       // A dead cache costs the stored counters their refresh, not the video its response.
       const counts = unwrapOr(
-        await this.reactionCache.getCounts(videoId, async () =>
-          ok({
-            likesCount: decided.value.likesCount ?? 0,
-            dislikesCount: decided.value.dislikesCount ?? 0,
-          })
-        ),
-        { likesCount: decided.value.likesCount ?? 0, dislikesCount: decided.value.dislikesCount ?? 0 }
+        await this.reactionCache.getCounts(videoId, async () => ok(stored)),
+        stored
       );
       view.likesCount = counts.likesCount;
       view.dislikesCount = counts.dislikesCount;
