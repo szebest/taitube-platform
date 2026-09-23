@@ -13,7 +13,7 @@
 
 /** Out of ticket scope. These do not shrink through 84; a later ticket has to claim them. */
 const OUT_OF_SCOPE: readonly string[] = [
-  // Spawns FFmpeg and reads its exit code - a process boundary, not a port (ticket: out of scope).
+  // Spawns FFmpeg and reads its exit code - a process boundary, not a port.
   'packages/server/ffmpeg/src/probe.ts',
   'packages/server/ffmpeg/src/transcode.ts',
   'packages/server/gen-video/src/generator.ts',
