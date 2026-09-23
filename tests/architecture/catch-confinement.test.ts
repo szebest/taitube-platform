@@ -62,7 +62,6 @@ describe('architecture: catch is confined to the boundary that converts a throw'
       'apps/api/src/migrate.ts',
       'apps/worker/src/main.ts',
       'apps/worker/src/with-telemetry.ts',
-      'apps/worker/src/failure-handler.ts',
     ];
 
     expect(LEGACY_CATCH_SITES.filter((file) => !roots.some((r) => file.startsWith(r)))).toEqual([]);

@@ -85,7 +85,6 @@ export const UNTESTED_SOURCES: readonly string[] = [
   'apps/web/src/modules/shared/providers/sidebar-provider.tsx',
   'apps/web/src/modules/shared/providers/theme-provider.tsx',
   'apps/worker/src/config.ts',
-  'apps/worker/src/failure-handler.ts',
   'apps/worker/src/main.ts',
   'apps/worker/src/registry.ts',
   'apps/worker/src/runner.ts',

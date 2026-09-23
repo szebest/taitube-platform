@@ -42,9 +42,8 @@ export const LEGACY_CATCH_SITES: readonly string[] = [
   'scripts/check-boundaries.ts',
   'scripts/sync-claude-symlinks.ts',
 
-  // Pre-handlers and the queue failure path: no reply to render into and no Result to return, so
-  // ADR-24's backstop table routes them here deliberately.
+  // Pre-handlers: no reply to render into and no Result to return, so ADR-24's backstop table
+  // routes them here deliberately.
   'apps/api/src/plugins/auth.ts',
   'apps/api/src/plugins/jwks-verifier.ts',
-  'apps/worker/src/failure-handler.ts',
 ].sort();
