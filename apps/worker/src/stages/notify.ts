@@ -6,7 +6,7 @@ import type { NotifyJob } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { type Result, isErr, map, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { validateJobId } from '../registry';
+import { validateJobId } from '../job-identity';
 
 export interface NotifyProcessorDeps {
   repositories: Repositories;

@@ -1,12 +1,13 @@
-import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
+import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { publicFeedInstant } from '@vp/domain';
 import { cacheUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { encodeFeedCursor } from '../cursor';
 import { FeedService } from '../feed-service';
-import { HttpCacheService } from '../http-cache-service';
+import { generateEtag } from '../http-cache';
 import { VideoService } from '../video-service';
+import { videoServiceDeps } from './service-deps';
 
 const OWNER_ID = '00000000-0000-7000-8000-0000000000f1';
 const CATEGORY_ID = '00000000-0000-7000-8000-0000000000f2';
@@ -32,19 +33,16 @@ describe('apps/api/services: FeedService', () => {
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
-    videoService = new VideoService({
-      videos: repositories.videos,
-      cdnBaseUrl: 'http://localhost:9000/public',
-    });
+    videoService = new VideoService(videoServiceDeps(repositories.videos));
     service = new FeedService({ videoService, cache });
   });
 
-  it('serves a weak sha256 ETag from the one HttpCacheService implementation', async () => {
+  it('serves the weak sha256 ETag the shared http-cache functions compute', async () => {
     await publish('00000000-0000-7000-8000-0000000000f3');
 
     const page = expectOk(await service.getFeed({ sort: 'recent' }));
 
-    expect(page.etag).toBe(new HttpCacheService().generateEtag(page.data));
+    expect(page.etag).toBe(generateEtag(page.data));
     expect(page.etag).toMatch(/^W\/"[a-f0-9]{16}"$/);
   });
 
@@ -162,14 +160,6 @@ describe('apps/api/services: FeedService', () => {
 
     expect(expectOk(await broken.getFeed({ sort: 'recent' }))).toMatchObject({
       notModified: false,
-    });
-  });
-
-  it('works with no cache wired at all', async () => {
-    const uncached = new FeedService({ videoService });
-
-    expect(expectOk(await uncached.getFeed({ sort: 'recent' }))).toMatchObject({
-      data: { items: [], total: 0 },
     });
   });
 });

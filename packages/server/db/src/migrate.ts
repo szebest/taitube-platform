@@ -8,13 +8,7 @@ import postgres from 'postgres';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function runMigrations(connectionUrl?: string): Promise<void> {
-  const url =
-    connectionUrl ||
-    process.env.DATABASE_URL_MIGRATIONS ||
-    process.env.DATABASE_URL ||
-    'postgres://vp:vp@localhost:5432/vp';
-
+export async function runMigrations(url: string): Promise<void> {
   console.log(`[db:migrate] Connecting to ${url.replace(/:[^:@]+@/, ':***@')}...`);
   const sql = postgres(url, { max: 1 });
 
@@ -88,7 +82,11 @@ if (
   process.argv[1] &&
   fileURLToPath(import.meta.url).toLowerCase() === path.resolve(process.argv[1]).toLowerCase()
 ) {
-  runMigrations()
+  runMigrations(
+    process.env['DATABASE_URL_MIGRATIONS'] ??
+      process.env['DATABASE_URL'] ??
+      'postgres://vp:vp@localhost:5432/vp'
+  )
     .then(() => {
       process.exit(0);
     })

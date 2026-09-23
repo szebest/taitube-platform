@@ -1,4 +1,8 @@
-import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+} from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -15,7 +19,6 @@ describe('OpenAPI 3.1 & Scalar Documentation Contract (Ticket 19)', () => {
         cache: new InMemoryCacheClient(),
         storage: new InMemoryStorageClient(),
       },
-      cdnBaseUrl: 'http://localhost:9000/public',
     });
     await app.ready();
     swaggerSpec = app.swagger() as Record<string, unknown>;

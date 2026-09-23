@@ -1,25 +1,27 @@
 import { type FlowJobNode, FlowProducerPort } from '@vp/core/ports';
 import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, ok } from '@vp/result';
+import { type Result, assertNever, err, fromPromise, ok } from '@vp/result';
 import { type ConnectionOptions, type FlowJob, FlowProducer } from 'bullmq';
-import { getRedisConnectionOptions } from './connection';
 
-export interface BullMqFlowProducerConfig {
-  connection?: ConnectionOptions;
-  producer?: FlowProducer;
-}
+export type BullMqFlowProducerConfig =
+  | { type: 'producer'; producer: FlowProducer }
+  | { type: 'connection'; connection: ConnectionOptions };
 
 export class BullMqFlowProducer extends FlowProducerPort {
   private readonly producer: FlowProducer;
 
-  constructor(config: BullMqFlowProducerConfig = {}) {
+  constructor(config: BullMqFlowProducerConfig) {
     super();
-    this.producer =
-      config.producer ??
-      new FlowProducer({
-        connection: getRedisConnectionOptions(config.connection),
-        prefix: 'bull',
-      });
+    switch (config.type) {
+      case 'producer':
+        this.producer = config.producer;
+        return;
+      case 'connection':
+        this.producer = new FlowProducer({ connection: config.connection, prefix: 'bull' });
+        return;
+      default:
+        assertNever(config, 'BullMqFlowProducerConfig');
+    }
   }
 
   private unavailable(operation: string) {

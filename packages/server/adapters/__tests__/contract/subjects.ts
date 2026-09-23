@@ -83,6 +83,7 @@ export async function pgliteSubject(): Promise<RepositoriesSubject> {
   );
 
   const repositories = new PostgresRepositories({
+    type: 'drizzle',
     db: db as unknown as PostgresJsDatabase<typeof schema>,
   });
 

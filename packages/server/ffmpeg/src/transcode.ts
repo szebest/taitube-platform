@@ -10,9 +10,9 @@ export interface TranscodeOptions {
   rendition: LadderEntry;
   fps: number;
   durationMs?: number;
-  threads?: number;
+  threads: number;
   attempt?: number;
-  preset?: string;
+  preset: string;
   timeoutMs?: number;
   onProgress?: (progress: { percent: number; outTimeMs: number }) => void;
 }
@@ -40,21 +40,12 @@ export function computeFfmpegThreads(baseThreads: number, attempt = 1): number {
  * Builds the exact FFmpeg argument array according to SDD §8.2.
  */
 export function buildTranscodeArgs(options: TranscodeOptions): string[] {
-  const {
-    sourcePath,
-    outputDir,
-    rendition,
-    fps,
-    preset = process.env.X264_PRESET || 'veryfast',
-  } = options;
-
-  const baseThreads =
-    options.threads !== undefined ? options.threads : Number(process.env.FFMPEG_THREADS || '0');
+  const { sourcePath, outputDir, rendition, fps, preset } = options;
 
   const threads =
     options.attempt !== undefined
-      ? computeFfmpegThreads(baseThreads, options.attempt)
-      : baseThreads;
+      ? computeFfmpegThreads(options.threads, options.attempt)
+      : options.threads;
 
   // SDD §8.2 & AC 18: GOP = round(2 * fps)
   const gop = Math.max(1, Math.round(2 * fps));

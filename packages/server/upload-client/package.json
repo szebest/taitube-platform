@@ -30,6 +30,7 @@
     "@vp/api": "workspace:*",
     "@vp/core": "workspace:*",
     "@vp/dev-token": "workspace:*",
+    "@vp/env-schema": "workspace:*",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "fastify": "^5.2.1",

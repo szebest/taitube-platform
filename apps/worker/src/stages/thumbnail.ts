@@ -22,19 +22,18 @@ import {
   spriteVttKey as getSpriteVttKey,
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
-import { getHeartbeatPath } from '../config';
 
-import { validateJobId } from '../registry';
+import { validateJobId } from '../job-identity';
 
 export interface ThumbnailProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
-  rawBucket?: string;
-  publicBucket?: string;
+  rawBucket: string;
+  publicBucket: string;
   workerId?: string;
   logger: Logger;
-  heartbeatPath?: string;
-  spriteIntervalSec?: number;
+  heartbeatPath: string;
+  spriteIntervalSec: number;
 }
 
 export type ThumbnailStageFailure = MediaFailure | StorageUnavailable | DatabaseUnavailable;
@@ -43,11 +42,11 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
   const {
     repositories,
     storage,
-    rawBucket = process.env['S3_BUCKET_RAW'] || 'raw',
-    publicBucket = process.env['S3_BUCKET_PUBLIC'] || 'public',
+    rawBucket,
+    publicBucket,
     workerId = `worker-${process.pid}`,
     logger,
-    heartbeatPath = getHeartbeatPath(),
+    heartbeatPath,
     spriteIntervalSec,
   } = deps;
 
@@ -110,7 +109,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     };
 
     // Forced failure check for test verification (AC 3)
-    if (forceFailure || process.env['FORCE_THUMBNAIL_FAILURE'] === 'true') {
+    if (forceFailure) {
       log.warn({ errorCode: ErrorCodes.FFMPEG_FAILED }, 'Forced thumbnail failure requested');
       return failThumbnail(
         mediaFailure('thumbnail', ErrorCodes.FFMPEG_FAILED, 'Forced thumbnail failure for testing')
@@ -148,7 +147,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
             sourcePath: localSourcePath,
             outputDir: tmpDir,
             durationMs,
-            intervalSec: spriteIntervalSec ?? Number(process.env['SPRITE_INTERVAL_SECONDS'] || '5'),
+            intervalSec: spriteIntervalSec,
           }),
         (cause) => mediaFailureFrom('thumbnail', cause)
       );

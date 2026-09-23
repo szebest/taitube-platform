@@ -18,19 +18,18 @@ import type { ProbeJob } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { getHeartbeatPath } from '../config';
 
-import { validateJobId } from '../registry';
+import { validateJobId } from '../job-identity';
 import { enqueueFollowUpJobs } from './probe-enqueue';
 import { recordProbeFailure } from './probe-failure';
 
 export interface ProbeProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
-  rawBucket?: string;
+  rawBucket: string;
   workerId?: string;
   logger: Logger;
-  heartbeatPath?: string;
+  heartbeatPath: string;
   getQueue?: (name: string) => JobQueue;
   flowProducer?: FlowProducerPort;
 }
@@ -66,10 +65,10 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
   const {
     repositories,
     storage,
-    rawBucket = process.env['S3_BUCKET_RAW'] || 'raw',
+    rawBucket,
     workerId = `worker-${process.pid}`,
     logger,
-    heartbeatPath = getHeartbeatPath(),
+    heartbeatPath,
     getQueue,
     flowProducer,
   } = deps;

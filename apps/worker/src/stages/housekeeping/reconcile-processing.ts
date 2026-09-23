@@ -38,9 +38,7 @@ export async function runReconcileProcessing(
   const {
     repositories,
     getQueue,
-    thresholdMs = process.env['RECONCILE_PROCESSING_THRESHOLD_MS']
-      ? Number.parseInt(process.env['RECONCILE_PROCESSING_THRESHOLD_MS'], 10)
-      : 3 * 60 * 60 * 1000,
+    thresholdMs = 3 * 60 * 60 * 1000,
     workerId = 'housekeeping',
     logger,
   } = options;

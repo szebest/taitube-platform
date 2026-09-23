@@ -45,6 +45,7 @@ async function runFairnessSimulation() {
   // Helper to trigger reconciler to release held uploads
   async function triggerReconciler() {
     await runReconcileUploads({
+      rawBucket: 'raw',
       repositories,
       multipart,
       probeQueue,

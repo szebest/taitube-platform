@@ -15,8 +15,7 @@ import type { TranscodeJob, TranscodeResult } from '@vp/job-contracts';
 import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { getHeartbeatPath } from '../config';
-import { validateJobId } from '../registry';
+import { validateJobId } from '../job-identity';
 import { TranscodeProgressReporter } from './progress-reporter';
 import { StreamingSegmentUploader } from './segment-uploader';
 import { transcodeFailure } from './transcode-failure';
@@ -26,12 +25,13 @@ export interface TranscodeProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
   cache?: CacheClient;
-  rawBucket?: string;
-  publicBucket?: string;
+  rawBucket: string;
+  publicBucket: string;
   workerId?: string;
   logger: Logger;
   metrics?: PipelineMetrics;
-  heartbeatPath?: string;
+  heartbeatPath: string;
+  ffmpeg: { threads: number; preset: string };
   getQueue?: (name: string) => JobQueue;
   simulateFailureRendition?: string;
   streamingInput?: boolean;
@@ -49,13 +49,14 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
   const {
     repositories,
     storage,
-    rawBucket = process.env['S3_BUCKET_RAW'] || 'raw',
-    publicBucket = process.env['S3_BUCKET_PUBLIC'] || 'public',
+    rawBucket,
+    publicBucket,
     workerId = `worker-${process.pid}`,
     logger,
     metrics: depsMetrics,
-    heartbeatPath = getHeartbeatPath(),
-    simulateFailureRendition = process.env['SIMULATE_FAILURE_RENDITION'],
+    heartbeatPath,
+    ffmpeg,
+    simulateFailureRendition,
     streamingInput: depsStreamingInput,
   } = deps;
 
@@ -68,8 +69,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
 
     const { videoId, sourceKey, rendition, fps, durationMs } = job.data;
     const attempt = (job.attemptsMade ?? 0) + 1;
-    const baseThreads = Number(process.env.FFMPEG_THREADS || '2');
-    const threads = computeFfmpegThreads(baseThreads, attempt);
+    const threads = computeFfmpegThreads(ffmpeg.threads, attempt);
     const stage = `transcode-${rendition.name}`;
 
     const log = logger.child({
@@ -79,7 +79,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       rendition: rendition.name,
       attempt,
       threads,
-      baseThreads,
+      baseThreads: ffmpeg.threads,
     });
 
     const startTime = Date.now();
@@ -189,11 +189,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         sourceKey,
         tmpDir,
         rendition: rendition.name,
-        streaming:
-          depsStreamingInput ??
-          (process.env['TRANSCODE_STREAMING_INPUT'] === 'true' ||
-            process.env['STREAMING_INPUT'] === 'true' ||
-            job.data.streamingInput === true),
+        streaming: depsStreamingInput ?? job.data.streamingInput === true,
         log,
       });
       if (isErr(source)) {
@@ -225,6 +221,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
             fps,
             durationMs,
             threads,
+            preset: ffmpeg.preset,
             attempt,
             onProgress: ({ percent }) => {
               const now = Date.now();

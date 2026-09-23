@@ -7,13 +7,14 @@ import {
   InMemorySubscriptionCache,
   InMemorySubscriptionRepository,
   InMemoryVideoRepository,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
+import { defaultPaginator } from '@vp/pagination';
+import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AuthUser } from '../../plugins/auth';
 import { SubscriptionService } from '../subscription-service';
+import { TEST_CDN } from './service-deps';
 
 describe('SubscriptionService', () => {
   let channels: InMemoryChannelRepository;
@@ -30,7 +31,7 @@ describe('SubscriptionService', () => {
     userId: '33333333-3333-7333-8333-333333333333',
     channelId: '44444444-4444-7444-8444-444444444444',
   };
-  const subscriber: AuthUser = {
+  const subscriber: UserContext = {
     id: '55555555-5555-7555-8555-555555555555',
     email: 'subscriber@example.com',
     role: 'USER',
@@ -50,7 +51,13 @@ describe('SubscriptionService', () => {
       videosRepo: videos,
     });
     cache = new InMemorySubscriptionCache();
-    service = new SubscriptionService({ subscriptions, channels, subscriptionCache: cache });
+    service = new SubscriptionService({
+      subscriptions,
+      channels,
+      subscriptionCache: cache,
+      cdn: TEST_CDN,
+      paginator: defaultPaginator,
+    });
 
     await channels.create({
       id: creator.channelId,
@@ -115,7 +122,7 @@ describe('SubscriptionService', () => {
     );
 
     it('returns CANNOT_SUBSCRIBE_TO_SELF, which the repositories no longer decide', async () => {
-      const owner: AuthUser = { id: creator.userId, role: 'USER' };
+      const owner: UserContext = { id: creator.userId, role: 'USER' };
 
       expect(expectErr(await service.subscribe(owner, creator.channelId)).code).toBe(
         ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF
@@ -230,6 +237,8 @@ describe('SubscriptionService', () => {
       const broken = new SubscriptionService({
         subscriptions,
         channels,
+        cdn: TEST_CDN,
+        paginator: defaultPaginator,
         subscriptionCache: Object.assign(new InMemorySubscriptionCache(), {
           isSubscribed: async () => err(cacheUnavailable('isSubscribed')),
         }),

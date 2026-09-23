@@ -1,9 +1,9 @@
+import { RedisCategoryCacheAdapter } from '@vp/adapters';
 import {
-  CategoryCacheService,
   InMemoryCacheClient,
   InMemoryCategoryRepository,
   InMemoryVideoRepository,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import type { Category } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { ok } from '@vp/result';
@@ -152,13 +152,13 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
     });
   });
 
-  describe('CategoryCacheService (L1/L2 and Pub/Sub invalidation)', () => {
+  describe('RedisCategoryCacheAdapter (L1/L2 and Pub/Sub invalidation)', () => {
     let cache: InMemoryCacheClient;
-    let service: CategoryCacheService;
+    let service: RedisCategoryCacheAdapter;
 
     beforeEach(() => {
       cache = new InMemoryCacheClient();
-      service = new CategoryCacheService({ cache, l1TtlMs: 1000, l2TtlSeconds: 10 });
+      service = new RedisCategoryCacheAdapter({ cache, l1TtlMs: 1000, l2TtlSeconds: 10 });
     });
 
     it('misses the cache on the first call, then serves the same rows from L1', async () => {
@@ -217,8 +217,9 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
     });
 
     it('purges a second instance L1 via Pub/Sub when the first invalidates', async () => {
-      const instanceA = new CategoryCacheService({ cache });
-      const instanceB = new CategoryCacheService({ cache });
+      const instanceA = new RedisCategoryCacheAdapter({ cache });
+      const instanceB = new RedisCategoryCacheAdapter({ cache });
+      expectOk(await instanceB.start());
       const rows = [aCategoryRow()];
 
       expectOk(await instanceA.getCategories(async () => ok(rows)));
@@ -231,8 +232,8 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
       expect(instanceA.getL1Size()).toBe(0);
       expect(instanceB.getL1Size()).toBe(0);
 
-      instanceA.close();
-      instanceB.close();
+      await instanceA.close();
+      await instanceB.close();
     });
   });
 });

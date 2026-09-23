@@ -157,9 +157,9 @@ describe('RedisReactionCacheAdapter', () => {
         likesCount: 50,
         dislikesCount: 0,
       });
-      expect(expectOk(await adapter.getUserReaction('user-49', VIDEO_ID, async () => ok(null)))).toBe(
-        'LIKE'
-      );
+      expect(
+        expectOk(await adapter.getUserReaction('user-49', VIDEO_ID, async () => ok(null)))
+      ).toBe('LIKE');
     });
 
     it.each([

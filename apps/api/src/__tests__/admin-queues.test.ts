@@ -1,6 +1,7 @@
-import { InMemoryJobQueue } from '@vp/adapters';
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { mintDevToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
@@ -12,19 +13,18 @@ describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
 
   const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
   const REGULAR_USER_ID = '00000000-0000-7000-8000-000000000002';
-  const VALID_ADMIN_TOKEN = 'change-me-32-bytes-random';
+  const VALID_ADMIN_TOKEN = 'operator-token-for-tests';
 
   let adminJwt: string;
   let regularJwt: string;
 
   beforeAll(async () => {
-    process.env.ADMIN_TOKEN = VALID_ADMIN_TOKEN;
-
     for (const name of QUEUES) {
       queuesMap.set(name, new InMemoryJobQueue(name));
     }
 
     app = await buildApp({
+      config: inProcessAppConfig({ auth: { adminToken: VALID_ADMIN_TOKEN } }),
       adapters: {
         queues: queuesMap,
       },

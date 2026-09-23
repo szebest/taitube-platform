@@ -1,13 +1,15 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
-  InMemoryMultipartStorage,
-  InMemoryRepositories,
-  InMemoryStorageClient,
   PostgresRepositories,
   S3MultipartStorage,
   S3StorageClient,
 } from '../../packages/server/adapters/index';
+import {
+  InMemoryMultipartStorage,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+} from '../../packages/server/adapters/in-memory/index';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -79,15 +81,24 @@ export class E2ERunner {
         const res = await fetch(`${this.apiUrl}/healthz`);
         if (res.ok) {
           console.log(`[e2e-runner] Connected to API at ${this.apiUrl}`);
-          this.repositories = process.env['DATABASE_URL']
-            ? new PostgresRepositories()
+          const { DATABASE_URL, S3_ENDPOINT } = process.env;
+          this.repositories = DATABASE_URL
+            ? new PostgresRepositories({ type: 'url', url: DATABASE_URL, max: 5 })
             : new InMemoryRepositories();
-          this.storage = process.env['S3_ENDPOINT']
-            ? new S3StorageClient()
-            : new InMemoryStorageClient();
-          this.multipart = process.env['S3_ENDPOINT']
-            ? new S3MultipartStorage()
-            : new InMemoryMultipartStorage(this.storage);
+          if (S3_ENDPOINT) {
+            const s3 = new S3StorageClient({
+              type: 'connection',
+              endpoint: S3_ENDPOINT,
+              region: process.env['S3_REGION'] ?? 'us-east-1',
+              accessKeyId: process.env['S3_ACCESS_KEY_ID'] ?? 'minioadmin',
+              secretAccessKey: process.env['S3_SECRET_ACCESS_KEY'] ?? 'minioadmin',
+            });
+            this.storage = s3;
+            this.multipart = new S3MultipartStorage({ type: 'storage', storageClient: s3 });
+          } else {
+            this.storage = new InMemoryStorageClient();
+            this.multipart = new InMemoryMultipartStorage(this.storage);
+          }
           return this.apiUrl;
         }
       } catch {

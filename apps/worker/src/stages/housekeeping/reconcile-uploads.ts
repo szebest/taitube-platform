@@ -9,10 +9,10 @@ export interface ReconcileUploadsOptions {
   repositories: Repositories;
   multipart?: MultipartStorage;
   probeQueue?: JobQueue;
-  rawBucket?: string;
+  rawBucket: string;
   uploadingThresholdMs?: number;
   uploadedThresholdMs?: number;
-  maxInflightPerUser?: number;
+  maxInflightPerUser: number;
   logger?: Logger;
 }
 
@@ -34,17 +34,10 @@ export async function runReconcileUploads(
     repositories,
     multipart,
     probeQueue,
-    rawBucket = process.env['S3_BUCKET_RAW'] ?? 'raw',
-    uploadingThresholdMs = process.env['RECONCILE_UPLOADING_THRESHOLD_MS']
-      ? Number.parseInt(process.env['RECONCILE_UPLOADING_THRESHOLD_MS'], 10)
-      : 24 * 60 * 60 * 1000,
-    uploadedThresholdMs = process.env['RECONCILE_UPLOADED_THRESHOLD_MS']
-      ? Number.parseInt(process.env['RECONCILE_UPLOADED_THRESHOLD_MS'], 10)
-      : 5 * 60 * 1000,
-    maxInflightPerUser = options.maxInflightPerUser ??
-      (process.env['MAX_INFLIGHT_PER_USER']
-        ? Number.parseInt(process.env['MAX_INFLIGHT_PER_USER'], 10)
-        : 3),
+    rawBucket,
+    uploadingThresholdMs = 24 * 60 * 60 * 1000,
+    uploadedThresholdMs = 5 * 60 * 1000,
+    maxInflightPerUser,
     logger,
   } = options;
 

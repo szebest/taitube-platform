@@ -1,13 +1,14 @@
+import { RedisReactionCacheAdapter } from '@vp/adapters';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemoryStorageClient,
-  RedisReactionCacheAdapter,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import { type Result, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createHousekeepingProcessor, runReconcileReactionCounters } from '../stages/housekeeping';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () => {
   let repos: InMemoryRepositories;
@@ -79,6 +80,7 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
   it('createHousekeepingProcessor executes reconcile-reaction-counters task', async () => {
     const storage = new InMemoryStorageClient();
     const processor = createHousekeepingProcessor({
+      ...STAGE_SETTINGS,
       repositories: repos,
       storage,
       reactionCache,

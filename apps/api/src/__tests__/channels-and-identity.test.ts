@@ -1,5 +1,9 @@
 import * as crypto from 'node:crypto';
-import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+} from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';

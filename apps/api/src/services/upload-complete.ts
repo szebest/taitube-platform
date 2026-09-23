@@ -19,8 +19,8 @@ import {
   type StorageUnavailable,
 } from '@vp/errors';
 import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
+import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
 
@@ -124,7 +124,11 @@ async function rejectSizeMismatch(
   return err(uploadSizeMismatch(video.id, video.sourceSizeBytes ?? null, actualSizeBytes));
 }
 
-async function probePriority(ctx: UploadContext, user: AuthUser, ownerId: string): Promise<number> {
+async function probePriority(
+  ctx: UploadContext,
+  user: UserContext,
+  ownerId: string
+): Promise<number> {
   if (ctx.users) {
     // A tier lookup that cannot answer costs the job its priority, not its admission.
     const record = unwrapOr(await ctx.users.findById(ownerId), null);
@@ -139,7 +143,7 @@ async function probePriority(ctx: UploadContext, user: AuthUser, ownerId: string
  */
 export async function completeUpload(
   ctx: UploadContext,
-  user: AuthUser,
+  user: UserContext,
   uploadId: string,
   parts?: UploadPart[],
   options?: CompleteUploadOptions

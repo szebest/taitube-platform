@@ -1,5 +1,9 @@
 import * as http from 'node:http';
-import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+} from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
@@ -33,7 +37,6 @@ describe('Public Video Feed API & Anonymous Access (Ticket 36)', () => {
         cache,
         storage,
       },
-      cdnBaseUrl: 'http://localhost:9000/public',
     });
     baseUrl = await app.listen({ port: 0, host: '127.0.0.1' });
   });

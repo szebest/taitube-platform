@@ -1,12 +1,15 @@
+import { loadEnv } from '@vp/config';
 import { runMigrations } from '@vp/db/migrate';
 import { seedDatabase } from '@vp/db/seed';
+import { toAppConfig } from '@vp/env-schema';
 
 async function main(): Promise<void> {
+  const { postgres } = toAppConfig(loadEnv());
   const maxRetries = 10;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      await runMigrations();
-      await seedDatabase();
+      await runMigrations(postgres.migrationsUrl);
+      await seedDatabase(postgres.url);
       console.log('[api:migrate] Database migration and seed finished.');
       return;
     } catch (err) {

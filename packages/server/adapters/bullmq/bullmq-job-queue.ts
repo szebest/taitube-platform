@@ -9,7 +9,7 @@ import {
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
 import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok, tryCatch } from '@vp/result';
+import { type Result, assertNever, err, fromPromise, map, ok, tryCatch } from '@vp/result';
 import {
   type ConnectionOptions,
   type Job,
@@ -21,7 +21,6 @@ import {
   type WorkerOptions,
 } from 'bullmq';
 import { bullMqProcessor } from './bullmq-processor';
-import { getRedisConnectionOptions } from './connection';
 import { toQueueJob } from './job-mapping';
 
 export type WorkerFactory = (
@@ -30,13 +29,17 @@ export type WorkerFactory = (
   options: WorkerOptions
 ) => Worker;
 
-export interface BullMqJobQueueConfig {
+export type BullMqJobQueueConfig = {
   name: string;
-  connection?: ConnectionOptions;
-  options?: Omit<QueueOptions, 'connection'>;
-  queue?: Queue;
   createWorker?: WorkerFactory;
-}
+} & (
+  | { type: 'queue'; queue: Queue }
+  | {
+      type: 'connection';
+      connection: ConnectionOptions;
+      options?: Omit<QueueOptions, 'connection'>;
+    }
+);
 
 export class BullMqJobQueue extends JobQueue {
   private readonly queue: Queue;
@@ -48,13 +51,22 @@ export class BullMqJobQueue extends JobQueue {
     super();
     this.createWorker =
       config.createWorker ?? ((name, processor, options) => new Worker(name, processor, options));
-    this.queue =
-      config.queue ??
-      new Queue(config.name, {
-        connection: getRedisConnectionOptions(config.connection),
-        prefix: 'bull',
-        ...config.options,
-      });
+    this.queue = BullMqJobQueue.queueFor(config);
+  }
+
+  private static queueFor(config: BullMqJobQueueConfig): Queue {
+    switch (config.type) {
+      case 'queue':
+        return config.queue;
+      case 'connection':
+        return new Queue(config.name, {
+          connection: config.connection,
+          prefix: 'bull',
+          ...config.options,
+        });
+      default:
+        return assertNever(config, 'BullMqJobQueueConfig');
+    }
   }
 
   private unavailable(operation: string) {
@@ -127,9 +139,7 @@ export class BullMqJobQueue extends JobQueue {
     const started = tryCatch(
       () =>
         this.createWorker(this.queue.name, bullMqProcessor<T>(handler), {
-          connection:
-            (this.queue.opts.connection as ConnectionOptions | undefined) ??
-            getRedisConnectionOptions(),
+          connection: this.queue.opts.connection as ConnectionOptions,
           prefix: this.queue.opts.prefix,
           concurrency: options?.concurrency,
           lockDuration: options?.lockDurationMs,

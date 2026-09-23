@@ -1,4 +1,4 @@
-import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
+import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { createLogger } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';

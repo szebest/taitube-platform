@@ -6,8 +6,8 @@ import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import {
   CATEGORIES_CACHE_KEY,
   CATEGORIES_INVALIDATION_CHANNEL,
-  CategoryCacheService,
-} from '../category-cache.service';
+  RedisCategoryCacheAdapter,
+} from '../redis-category-cache.adapter';
 
 function category(overrides: Partial<Category> & { id: string }): Category {
   return {
@@ -27,9 +27,9 @@ const MUSIC = category({ id: 'music', name: 'Music', sortOrder: 2 });
 const GAMING = category({ id: 'gaming', name: 'Gaming', sortOrder: 1 });
 const ART = category({ id: 'art', name: 'Art', sortOrder: 1 });
 
-describe('CategoryCacheService', () => {
+describe('RedisCategoryCacheAdapter', () => {
   let cache: InMemoryCacheClient;
-  let service: CategoryCacheService;
+  let service: RedisCategoryCacheAdapter;
   let fetches: number;
 
   const fetcher = async () => {
@@ -40,7 +40,7 @@ describe('CategoryCacheService', () => {
   beforeEach(() => {
     fetches = 0;
     cache = new InMemoryCacheClient();
-    service = new CategoryCacheService({ cache });
+    service = new RedisCategoryCacheAdapter({ cache });
   });
 
   afterEach(async () => {
@@ -63,7 +63,7 @@ describe('CategoryCacheService', () => {
   it('rehydrates from the shared L2 cache when L1 is cold', async () => {
     const first = expectOk(await service.getCategories(fetcher));
 
-    const replica = new CategoryCacheService({ cache });
+    const replica = new RedisCategoryCacheAdapter({ cache });
     const second = expectOk(await replica.getCategories(fetcher));
 
     expect(fetches).toBe(1);
@@ -75,7 +75,7 @@ describe('CategoryCacheService', () => {
   it('revives the dates that a JSON round trip flattened', async () => {
     expectOk(await service.getCategories(fetcher));
 
-    const replica = new CategoryCacheService({ cache });
+    const replica = new RedisCategoryCacheAdapter({ cache });
     const categories = expectOk(await replica.getCategories(fetcher));
 
     expect(categories[0]?.createdAt).toBeInstanceOf(Date);
@@ -89,7 +89,7 @@ describe('CategoryCacheService', () => {
   });
 
   it('expires an L1 entry once its ttl has passed', async () => {
-    const shortLived = new CategoryCacheService({ cache: null, l1TtlMs: -1 });
+    const shortLived = new RedisCategoryCacheAdapter({ cache: null, l1TtlMs: -1 });
 
     expectOk(await shortLived.getCategories(fetcher));
     expectOk(await shortLived.getCategories(fetcher));
@@ -99,7 +99,7 @@ describe('CategoryCacheService', () => {
   });
 
   it('evicts the oldest entry once L1 is full', async () => {
-    const tiny = new CategoryCacheService({ cache: null, maxL1Entries: 1 });
+    const tiny = new RedisCategoryCacheAdapter({ cache: null, maxL1Entries: 1 });
     expectOk(await tiny.getCategories(fetcher));
 
     expect(tiny.getL1Size()).toBe(1);
@@ -115,8 +115,19 @@ describe('CategoryCacheService', () => {
     expect(cache.publishedMessages.at(-1)?.channel).toBe(CATEGORIES_INVALIDATION_CHANNEL);
   });
 
+  it('opens no subscription until it is started', async () => {
+    const replica = new RedisCategoryCacheAdapter({ cache });
+    expectOk(await replica.getCategories(fetcher));
+
+    await cache.publish(CATEGORIES_INVALIDATION_CHANNEL, JSON.stringify({ invalidatedAt: 1 }));
+
+    expect(replica.getL1Size()).toBe(1);
+    await replica.close();
+  });
+
   it('drops its own L1 when another replica announces an invalidation', async () => {
-    const replica = new CategoryCacheService({ cache });
+    const replica = new RedisCategoryCacheAdapter({ cache });
+    expectOk(await replica.start());
     expectOk(await replica.getCategories(fetcher));
     expect(replica.getL1Size()).toBe(1);
 
@@ -127,7 +138,8 @@ describe('CategoryCacheService', () => {
   });
 
   it('stops listening for invalidations once closed', async () => {
-    const replica = new CategoryCacheService({ cache });
+    const replica = new RedisCategoryCacheAdapter({ cache });
+    expectOk(await replica.start());
     expectOk(await replica.getCategories(fetcher));
     await replica.close();
     expectOk(await replica.getCategories(fetcher));
@@ -137,7 +149,7 @@ describe('CategoryCacheService', () => {
   });
 
   it('falls back to the source when the distributed cache is unusable', async () => {
-    const broken = new CategoryCacheService({
+    const broken = new RedisCategoryCacheAdapter({
       cache: Object.assign(new InMemoryCacheClient(), {
         get: async () => err(cacheUnavailable('get')),
         set: async () => err(cacheUnavailable('set')),
@@ -151,18 +163,19 @@ describe('CategoryCacheService', () => {
   });
 
   it('serves reads when it cannot subscribe to the invalidation channel', async () => {
-    const unreachable = new CategoryCacheService({
+    const unreachable = new RedisCategoryCacheAdapter({
       cache: Object.assign(new InMemoryCacheClient(), {
         subscribe: async () => err(cacheUnavailable('subscribe')),
       }),
     });
+    expectOk(await unreachable.start());
 
     expect(expectOk(await unreachable.getCategories(fetcher))).toHaveLength(3);
     await unreachable.close();
   });
 
   it('closes cleanly when it cannot unsubscribe', async () => {
-    const unreachable = new CategoryCacheService({
+    const unreachable = new RedisCategoryCacheAdapter({
       cache: Object.assign(new InMemoryCacheClient(), {
         unsubscribe: async () => err(cacheUnavailable('unsubscribe')),
       }),
@@ -174,7 +187,7 @@ describe('CategoryCacheService', () => {
   });
 
   it('works with no distributed cache at all', async () => {
-    const local = new CategoryCacheService({ cache: null });
+    const local = new RedisCategoryCacheAdapter({ cache: null });
 
     const categories = expectOk(await local.getCategories(fetcher));
     expect(categories).toHaveLength(3);

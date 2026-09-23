@@ -4,7 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';
 
-export function registerDevJwksRoute(app: FastifyInstance): void {
+export async function devJwksRoutes(app: FastifyInstance): Promise<void> {
   app
     .withTypeProvider<ZodTypeProvider>()
     .get(jwks.path, { schema: contractSchema(jwks) }, async (_request, reply) => {

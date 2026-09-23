@@ -1,13 +1,34 @@
-import { withEnv } from '@vp/testing';
 import { isNotFound, s3ClientFrom } from '../s3-config';
 
 describe('s3 adapter: connection config', () => {
-  it('prefers the explicit config over the environment', async () => {
-    await withEnv({ S3_ENDPOINT: 'http://from-env:9000' }, async () => {
-      const client = s3ClientFrom({ endpoint: 'http://explicit:9000', region: 'eu-west-1' });
+  it('connects to the endpoint and region it is given', async () => {
+    const client = s3ClientFrom({ endpoint: 'http://explicit:9000', region: 'eu-west-1' });
 
-      expect(await client.config.region()).toBe('eu-west-1');
+    expect(await client.config.region()).toBe('eu-west-1');
+  });
+
+  it('signs with the keys it is given', async () => {
+    const client = s3ClientFrom({
+      endpoint: 'http://localhost:9000',
+      region: 'us-east-1',
+      accessKeyId: 'key',
+      secretAccessKey: 'secret',
     });
+
+    expect(await client.config.credentials()).toMatchObject({
+      accessKeyId: 'key',
+      secretAccessKey: 'secret',
+    });
+  });
+
+  it('honours an explicit path-style setting over the endpoint heuristic', () => {
+    const client = s3ClientFrom({
+      endpoint: 'https://account.r2.cloudflarestorage.com',
+      region: 'auto',
+      forcePathStyle: true,
+    });
+
+    expect(client.config.forcePathStyle).toBe(true);
   });
 
   it.each([
@@ -19,15 +40,8 @@ describe('s3 adapter: connection config', () => {
       endpoint: 'https://account.r2.cloudflarestorage.com',
       expected: false,
     },
-  ])('forces path style for $scenario', async ({ endpoint, expected }) => {
-    await withEnv(
-      { S3_FORCE_PATH_STYLE: undefined, STORAGE_FORCE_PATH_STYLE: undefined },
-      async () => {
-        const client = s3ClientFrom({ endpoint });
-
-        expect(client.config.forcePathStyle).toBe(expected);
-      }
-    );
+  ])('forces path style for $scenario', ({ endpoint, expected }) => {
+    expect(s3ClientFrom({ endpoint, region: 'us-east-1' }).config.forcePathStyle).toBe(expected);
   });
 
   it.each([

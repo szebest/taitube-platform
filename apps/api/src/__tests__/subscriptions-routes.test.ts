@@ -4,8 +4,9 @@ import {
   InMemoryRepositories,
   InMemoryStorageClient,
   InMemorySubscriptionCache,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
@@ -97,7 +98,7 @@ describe('Channel Subscriptions & Subscribed Feed API (Ticket 41)', () => {
         dbClient: new InMemoryDatabaseClient(),
         subscriptionCache: cacheService,
       },
-      cdnBaseUrl: 'http://cdn.videopipeline.local',
+      config: inProcessAppConfig({ cdn: 'http://cdn.videopipeline.local' }),
     });
     await app.ready();
   });

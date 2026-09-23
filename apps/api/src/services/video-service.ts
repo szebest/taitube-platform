@@ -1,6 +1,4 @@
-import { CaslAuthorizationAdapter } from '@vp/adapters';
-import type { AuthorizationPort, JobQueue, ReactionCachePort } from '@vp/core/ports';
-import type { VideoRepository } from '@vp/core/repositories';
+import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
 import type { VideoStatus, VideoVisibility } from '@vp/domain';
 import {
   type ReadVideoFailure,
@@ -9,12 +7,11 @@ import {
   decideVideoRead,
   videoNotFound,
 } from '@vp/domain-rules';
-import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
+import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
-import { type InvalidCursor, type Paginator, defaultPaginator } from '@vp/pagination';
-import { canAccessAdmin } from '@vp/permissions';
+import type { InvalidCursor, Paginator } from '@vp/pagination';
+import { type UserContext, canAccessAdmin } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 import {
   type ReprocessResult,
   type SoftDeleteResult,
@@ -24,25 +21,6 @@ import {
   softDeleteVideo,
 } from './video-lifecycle';
 
-export * from './video-lifecycle';
-
-export * from './video-views';
-import {
-  type VideoDetailView,
-  type VideoSummaryView,
-  toVideoDetailView,
-  toVideoSummaryView,
-} from './video-views';
-
-export interface VideoServiceDeps {
-  videos: VideoRepository;
-  cdnBaseUrl?: string;
-  reactionCache?: ReactionCachePort;
-  authorization?: AuthorizationPort;
-  paginator?: Paginator;
-  probeQueue?: JobQueue;
-}
-
 import {
   type FeedSort,
   createdAtCursorPayload,
@@ -50,10 +28,23 @@ import {
   decodeFeedCursor,
   feedCursorPayload,
 } from './cursor';
+import {
+  type VideoDetailView,
+  type VideoSummaryView,
+  toVideoDetailView,
+  toVideoSummaryView,
+} from './video-views';
 
-/**
- * VideoService — Deep domain module for video operations and projections (SDD §6.1, §6.3).
- */
+export * from './video-lifecycle';
+export * from './video-views';
+
+export interface VideoServiceDeps extends VideoLifecycleDeps {
+  cdn: CdnBase;
+  reactionCache: ReactionCachePort;
+  authorization: AuthorizationPort;
+  paginator: Paginator;
+}
+
 export type ListVideosFailure = DatabaseUnavailable | InvalidCursor;
 
 export type ReadVideoServiceFailure = ReadVideoFailure | DatabaseUnavailable;
@@ -64,38 +55,17 @@ export type UpdateVideoServiceFailure =
   | VersionConflict;
 
 export class VideoService {
-  private readonly videos: VideoRepository;
-  private readonly cleanCdnBase: string;
-  private readonly reactionCache?: ReactionCachePort;
-  private readonly auth: AuthorizationPort;
-  private readonly paginator: Paginator;
-  private readonly lifecycle: VideoLifecycleDeps;
+  constructor(private readonly deps: VideoServiceDeps) {}
 
-  constructor(deps: VideoServiceDeps) {
-    this.videos = deps.videos;
-    this.reactionCache = deps.reactionCache;
-    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
-    this.paginator = deps.paginator ?? defaultPaginator;
-    this.lifecycle = {
-      videos: this.videos,
-      ...(deps.probeQueue ? { probeQueue: deps.probeQueue } : {}),
-    };
-    const cdnBase = deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL;
-    this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
-  }
-
-  /**
-   * Keyset paginated video list scoped to caller (SDD §6.1, PRD US-12).
-   */
   async list(
-    user: AuthUser,
+    user: UserContext,
     options: { cursor?: string; limit?: number; status?: VideoStatus }
   ): Promise<Result<{ items: VideoSummaryView[]; nextCursor: string | null }, ListVideosFailure>> {
-    const limit = this.paginator.limit(options.limit);
-    const cursor = decodeCreatedAtCursor(options.cursor, this.paginator);
+    const limit = this.deps.paginator.limit(options.limit);
+    const cursor = decodeCreatedAtCursor(options.cursor, this.deps.paginator);
     if (isErr(cursor)) return cursor;
 
-    const rows = await this.videos.listByOwner({
+    const rows = await this.deps.videos.listByOwner({
       ownerId: user.id,
       viewer: user,
       cursor: cursor.value,
@@ -104,17 +74,13 @@ export class VideoService {
     });
 
     return map(rows, (found) =>
-      this.paginator.paginate(found, limit, {
+      this.deps.paginator.paginate(found, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
+        toItem: (v) => toVideoSummaryView(v, this.deps.cdn),
       })
     );
   }
 
-  /**
-   * Keyset paginated public video feed (PRD US-12, FR-14, SDD §6.1).
-   * Unauthenticated: queries visibility = 'public' AND status = 'READY'.
-   */
   async listPublic(options: {
     sort?: FeedSort;
     categoryId?: string;
@@ -127,11 +93,11 @@ export class VideoService {
     >
   > {
     const sort = options.sort ?? 'recent';
-    const limit = this.paginator.limit(options.limit);
-    const cursor = decodeFeedCursor(options.cursor, this.paginator);
+    const limit = this.deps.paginator.limit(options.limit);
+    const cursor = decodeFeedCursor(options.cursor, this.deps.paginator);
     if (isErr(cursor)) return cursor;
 
-    const found = await this.videos.listPublic({
+    const found = await this.deps.videos.listPublic({
       sort,
       categoryId: options.categoryId,
       cursor: cursor.value,
@@ -139,9 +105,9 @@ export class VideoService {
     });
 
     return map(found, (result) => ({
-      ...this.paginator.paginate(result.items, limit, {
+      ...this.deps.paginator.paginate(result.items, limit, {
         cursorOf: (row) => feedCursorPayload(row, result.instant),
-        toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
+        toItem: (v) => toVideoSummaryView(v, this.deps.cdn),
       }),
       total: result.total,
     }));
@@ -153,10 +119,10 @@ export class VideoService {
    * whole point of ADR-24.
    */
   async get(
-    viewer: AuthUser | null,
+    viewer: UserContext | null,
     videoId: string
   ): Promise<Result<VideoDetailView, ReadVideoServiceFailure>> {
-    const found = await this.videos.findWithDetails(videoId);
+    const found = await this.deps.videos.findWithDetails(videoId);
     if (isErr(found)) return found;
 
     const decided = decideVideoRead({
@@ -172,29 +138,27 @@ export class VideoService {
     const view = toVideoDetailView(
       decided.value,
       details.renditions,
-      this.cleanCdnBase,
+      this.deps.cdn,
       details.events
     );
 
-    if (this.reactionCache) {
-      const stored = {
-        likesCount: decided.value.likesCount ?? 0,
-        dislikesCount: decided.value.dislikesCount ?? 0,
-      };
-      // A dead cache costs the stored counters their refresh, not the video its response.
-      const counts = unwrapOr(
-        await this.reactionCache.getCounts(videoId, async () => ok(stored)),
-        stored
-      );
-      view.likesCount = counts.likesCount;
-      view.dislikesCount = counts.dislikesCount;
-    }
+    const stored = {
+      likesCount: decided.value.likesCount ?? 0,
+      dislikesCount: decided.value.dislikesCount ?? 0,
+    };
+    // A dead cache costs the stored counters their refresh, not the video its response.
+    const counts = unwrapOr(
+      await this.deps.reactionCache.getCounts(videoId, async () => ok(stored)),
+      stored
+    );
+    view.likesCount = counts.likesCount;
+    view.dislikesCount = counts.dislikesCount;
 
     return ok(view);
   }
 
   async updateMetadata(
-    user: AuthUser,
+    user: UserContext,
     videoId: string,
     input: {
       title?: string;
@@ -203,7 +167,7 @@ export class VideoService {
       version: number;
     }
   ): Promise<Result<VideoDetailView, UpdateVideoServiceFailure>> {
-    const existing = await this.videos.findById(videoId);
+    const existing = await this.deps.videos.findById(videoId);
     if (isErr(existing)) return existing;
 
     const { version, ...patch } = input;
@@ -219,7 +183,7 @@ export class VideoService {
       return err(versionConflict(videoId, version));
     }
 
-    const updated = await this.videos.updateMetadata({
+    const updated = await this.deps.videos.updateMetadata({
       videoId,
       expectedVersion: version,
       patch,
@@ -234,22 +198,22 @@ export class VideoService {
   /**
    * Admins are not throttled on reprocess; the route only asks, it does not decide.
    */
-  isRateLimitExempt(user: AuthUser): boolean {
-    return this.auth.can(canAccessAdmin, { user });
+  isRateLimitExempt(user: UserContext): boolean {
+    return this.deps.authorization.can(canAccessAdmin, { user });
   }
 
   reprocess(
-    user: AuthUser,
+    user: UserContext,
     videoId: string,
     options: { traceparent?: string } = {}
   ): Promise<Result<ReprocessResult, VideoLifecycleServiceFailure>> {
-    return reprocessVideo(this.lifecycle, user, videoId, options);
+    return reprocessVideo(this.deps, user, videoId, options);
   }
 
   softDelete(
-    user: AuthUser,
+    user: UserContext,
     videoId: string
   ): Promise<Result<SoftDeleteResult, VideoLifecycleServiceFailure>> {
-    return softDeleteVideo(this.lifecycle, user, videoId);
+    return softDeleteVideo(this.deps, user, videoId);
   }
 }

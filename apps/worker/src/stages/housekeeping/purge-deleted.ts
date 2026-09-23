@@ -7,8 +7,8 @@ import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 export interface PurgeDeletedOptions {
   repositories: Repositories;
   storage: StorageClient;
-  rawBucket?: string;
-  publicBucket?: string;
+  rawBucket: string;
+  publicBucket: string;
   thresholdMs?: number;
   logger?: Logger;
 }
@@ -30,11 +30,9 @@ export async function runPurgeDeleted(
   const {
     repositories,
     storage,
-    rawBucket = process.env['S3_BUCKET_RAW'] ?? 'raw',
-    publicBucket = process.env['S3_BUCKET_PUBLIC'] ?? 'public',
-    thresholdMs = process.env['PURGE_DELETED_THRESHOLD_MS']
-      ? Number.parseInt(process.env['PURGE_DELETED_THRESHOLD_MS'], 10)
-      : 60 * 60 * 1000,
+    rawBucket,
+    publicBucket,
+    thresholdMs = 60 * 60 * 1000,
     logger,
   } = options;
 

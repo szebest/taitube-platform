@@ -1,4 +1,4 @@
-import { InMemoryJobQueue } from '@vp/adapters';
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { ids, stagePolicies } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';

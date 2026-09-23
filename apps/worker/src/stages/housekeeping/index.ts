@@ -24,7 +24,15 @@ export * from './expire-raw';
 export * from './tmp-sweep';
 export * from './outbox-relay';
 
-export interface HousekeepingProcessorOptions {
+export interface HousekeepingSettings {
+  rawBucket: string;
+  publicBucket: string;
+  retentionDays: number;
+  maxInflightPerUser: number;
+  tmpDir: string;
+}
+
+export interface HousekeepingProcessorOptions extends HousekeepingSettings {
   repositories: Repositories;
   storage: StorageClient;
   multipart?: MultipartStorage;
@@ -39,6 +47,7 @@ export function createHousekeepingProcessor(
   options: HousekeepingProcessorOptions
 ): (job: QueueJob<unknown>) => Promise<unknown> {
   const { repositories, storage, multipart, getQueue, workerId, logger } = options;
+  const { rawBucket, publicBucket, retentionDays, maxInflightPerUser, tmpDir } = options;
   const probeQueue = options.probeQueue ?? (getQueue ? getQueue('probe') : undefined);
 
   return async (job: QueueJob<unknown>): Promise<unknown> => {
@@ -51,6 +60,8 @@ export function createHousekeepingProcessor(
           repositories,
           multipart,
           probeQueue,
+          rawBucket,
+          maxInflightPerUser,
           logger,
         });
 
@@ -66,6 +77,8 @@ export function createHousekeepingProcessor(
         return await runPurgeDeleted({
           repositories,
           storage,
+          rawBucket,
+          publicBucket,
           logger,
         });
 
@@ -73,13 +86,13 @@ export function createHousekeepingProcessor(
         return await runExpireRaw({
           repositories,
           storage,
+          rawBucket,
+          retentionDays,
           logger,
         });
 
       case 'tmp-sweep':
-        return await runTmpSweep({
-          logger,
-        });
+        return await runTmpSweep({ tmpDir, logger });
 
       case 'reconcile-reaction-counters':
         return await runReconcileReactionCounters({

@@ -1,15 +1,16 @@
-import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
+import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { VideoStatus } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
+import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import type { AuthUser } from '../../plugins/auth';
 import { VideoService } from '../video-service';
+import { videoServiceDeps } from './service-deps';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000c1';
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-0000000000c2', role: 'USER' };
-const STRANGER: AuthUser = { id: '00000000-0000-7000-8000-0000000000c3', role: 'USER' };
-const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-0000000000c4', role: 'ADMIN' };
+const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000c2', role: 'USER' };
+const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000c3', role: 'USER' };
+const ADMIN: UserContext = { id: '00000000-0000-7000-8000-0000000000c4', role: 'ADMIN' };
 
 describe('apps/api/services: video lifecycle', () => {
   let repositories: InMemoryRepositories;
@@ -34,11 +35,7 @@ describe('apps/api/services: video lifecycle', () => {
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     probeQueue = new InMemoryJobQueue('probe');
-    service = new VideoService({
-      videos: repositories.videos,
-      cdnBaseUrl: 'http://localhost:9000/public',
-      probeQueue,
-    });
+    service = new VideoService(videoServiceDeps(repositories.videos, { probeQueue }));
   });
 
   describe('reprocess', () => {

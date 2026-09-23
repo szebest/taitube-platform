@@ -1,8 +1,3 @@
-/**
- * Singleflight promise coalescing (Go sync/singleflight pattern).
- * Ensures that concurrent calls with identical key execute the underlying
- * asynchronous operation exactly once.
- */
 export class Singleflight {
   private readonly calls = new Map<string, Promise<unknown>>();
 

@@ -10,26 +10,12 @@ import { ALLOWED_CONTENT_TYPES, type UploadLimits, validateStartUpload } from '@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
-import type { UploadService } from '../services/upload-service';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
-export interface UploadsRouteOptions {
-  uploadService: UploadService;
-  maxUploadBytes?: number;
-  rateLimitMax?: number;
-}
-
-/**
- * Fastify routes plugin for video uploads (SDD §3.1, §6.1).
- * Thin transport adapter delegating domain orchestration to UploadService.
- */
-export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRouteOptions): void {
-  const {
-    uploadService,
-    maxUploadBytes = 5 * 1024 * 1024 * 1024, // 5 GB default cap
-    rateLimitMax = 30,
-  } = options;
+export async function uploadsRoutes(app: FastifyInstance): Promise<void> {
+  const { uploadService } = app.services;
+  const { maxUploadBytes, uploadRateLimitMax } = app.config.limits;
 
   const limits: UploadLimits = {
     maxBytes: maxUploadBytes,
@@ -44,7 +30,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
       {
         config: {
           rateLimit: {
-            max: rateLimitMax,
+            max: uploadRateLimitMax,
             timeWindow: '1 minute',
             keyGenerator: (req: FastifyRequest) => req.user?.id || req.ip,
           },

@@ -12,6 +12,7 @@ const KEY = '018f0000-0000-7000-8000-000000000001/source.mp4';
 
 function localClient(): S3StorageClient {
   return new S3StorageClient({
+    type: 'connection',
     endpoint: 'http://localhost:9000',
     region: 'us-east-1',
     accessKeyId: 'minioadmin',
@@ -23,7 +24,7 @@ describe('S3StorageClient', () => {
   describe('uploadObject', () => {
     it('sends the body with its content headers and returns the etag', async () => {
       const fake = fakeS3Client({ PutObjectCommand: () => ({ ETag: '"abc"' }) });
-      const storage = new S3StorageClient({ client: fake.client });
+      const storage = new S3StorageClient({ type: 'client', client: fake.client });
 
       const result = expectOk(
         await storage.uploadObject({
@@ -54,7 +55,7 @@ describe('S3StorageClient', () => {
           throw cause;
         },
       });
-      const storage = new S3StorageClient({ client: fake.client });
+      const storage = new S3StorageClient({ type: 'client', client: fake.client });
 
       expect(
         expectErr(
@@ -81,7 +82,9 @@ describe('S3StorageClient', () => {
       });
 
       expect(
-        expectOk(await new S3StorageClient({ client: fake.client }).headObject(BUCKET, KEY))
+        expectOk(
+          await new S3StorageClient({ type: 'client', client: fake.client }).headObject(BUCKET, KEY)
+        )
       ).toEqual({
         contentLength: 2048,
         contentType: 'video/mp4',
@@ -101,7 +104,9 @@ describe('S3StorageClient', () => {
       });
 
       expect(
-        expectOk(await new S3StorageClient({ client: fake.client }).headObject(BUCKET, KEY))
+        expectOk(
+          await new S3StorageClient({ type: 'client', client: fake.client }).headObject(BUCKET, KEY)
+        )
       ).toBeNull();
     });
 
@@ -113,7 +118,9 @@ describe('S3StorageClient', () => {
       });
 
       expect(
-        expectErr(await new S3StorageClient({ client: fake.client }).headObject(BUCKET, KEY)).code
+        expectErr(
+          await new S3StorageClient({ type: 'client', client: fake.client }).headObject(BUCKET, KEY)
+        ).code
       ).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
     });
   });
@@ -125,7 +132,7 @@ describe('S3StorageClient', () => {
       });
 
       const body = expectOk(
-        await new S3StorageClient({ client: fake.client }).getObject(BUCKET, KEY)
+        await new S3StorageClient({ type: 'client', client: fake.client }).getObject(BUCKET, KEY)
       );
       expect(body.toString()).toBe('hello');
     });
@@ -134,7 +141,9 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client({ GetObjectCommand: () => ({}) });
 
       expect(
-        expectErr(await new S3StorageClient({ client: fake.client }).getObject(BUCKET, KEY)).code
+        expectErr(
+          await new S3StorageClient({ type: 'client', client: fake.client }).getObject(BUCKET, KEY)
+        ).code
       ).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
     });
   });
@@ -158,7 +167,11 @@ describe('S3StorageClient', () => {
 
       expect(
         expectOk(
-          await new S3StorageClient({ client: fake.client }).downloadObject(BUCKET, KEY, target)
+          await new S3StorageClient({ type: 'client', client: fake.client }).downloadObject(
+            BUCKET,
+            KEY,
+            target
+          )
         )
       ).toBe(true);
       expect(fs.readFileSync(target, 'utf8')).toBe('on disk');
@@ -177,7 +190,7 @@ describe('S3StorageClient', () => {
 
       expect(
         expectOk(
-          await new S3StorageClient({ client: fake.client }).downloadObject(
+          await new S3StorageClient({ type: 'client', client: fake.client }).downloadObject(
             BUCKET,
             KEY,
             path.join(targetDir, 'missing.mp4')
@@ -190,7 +203,7 @@ describe('S3StorageClient', () => {
   describe('deletes', () => {
     it('deletes one object', async () => {
       const fake = fakeS3Client();
-      await new S3StorageClient({ client: fake.client }).deleteObject(BUCKET, KEY);
+      await new S3StorageClient({ type: 'client', client: fake.client }).deleteObject(BUCKET, KEY);
 
       expect(fake.sent[0]).toMatchObject({
         name: 'DeleteObjectCommand',
@@ -202,7 +215,12 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client();
 
       expect(
-        expectOk(await new S3StorageClient({ client: fake.client }).deleteObjects(BUCKET, []))
+        expectOk(
+          await new S3StorageClient({ type: 'client', client: fake.client }).deleteObjects(
+            BUCKET,
+            []
+          )
+        )
       ).toEqual({ deletedKeys: [] });
       expect(fake.sent).toEqual([]);
     });
@@ -212,7 +230,10 @@ describe('S3StorageClient', () => {
       const keys = Array.from({ length: 1001 }, (_, i) => `videos/${i}.ts`);
 
       const result = expectOk(
-        await new S3StorageClient({ client: fake.client }).deleteObjects(BUCKET, keys)
+        await new S3StorageClient({ type: 'client', client: fake.client }).deleteObjects(
+          BUCKET,
+          keys
+        )
       );
 
       expect(result.deletedKeys).toHaveLength(1001);
@@ -234,7 +255,7 @@ describe('S3StorageClient', () => {
 
       expect(
         expectOk(
-          await new S3StorageClient({ client: fake.client }).listObjects({
+          await new S3StorageClient({ type: 'client', client: fake.client }).listObjects({
             bucket: BUCKET,
             prefix: 'videos/',
             maxKeys: 10,
@@ -247,7 +268,11 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client({ ListObjectsV2Command: () => ({}) });
 
       expect(
-        expectOk(await new S3StorageClient({ client: fake.client }).listObjects({ bucket: BUCKET }))
+        expectOk(
+          await new S3StorageClient({ type: 'client', client: fake.client }).listObjects({
+            bucket: BUCKET,
+          })
+        )
       ).toEqual({ keys: [], nextContinuationToken: undefined, isTruncated: false });
     });
   });
@@ -262,7 +287,12 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client({ ListObjectsV2Command: () => pages[page++] ?? {} });
 
       expect(
-        expectOk(await new S3StorageClient({ client: fake.client }).purgePrefix(BUCKET, 'videos/'))
+        expectOk(
+          await new S3StorageClient({ type: 'client', client: fake.client }).purgePrefix(
+            BUCKET,
+            'videos/'
+          )
+        )
       ).toBe(3);
       expect(fake.sent.filter((c) => c.name === 'DeleteObjectsCommand')).toHaveLength(2);
     });
@@ -271,7 +301,12 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client({ ListObjectsV2Command: () => ({ IsTruncated: false }) });
 
       expect(
-        expectOk(await new S3StorageClient({ client: fake.client }).purgePrefix(BUCKET, 'videos/'))
+        expectOk(
+          await new S3StorageClient({ type: 'client', client: fake.client }).purgePrefix(
+            BUCKET,
+            'videos/'
+          )
+        )
       ).toBe(0);
       expect(fake.sent.some((c) => c.name === 'DeleteObjectsCommand')).toBe(false);
     });
@@ -331,7 +366,7 @@ describe('S3StorageClient', () => {
   describe('lifecycle', () => {
     it('destroys the driver on close', async () => {
       const fake = fakeS3Client();
-      const storage = new S3StorageClient({ client: fake.client });
+      const storage = new S3StorageClient({ type: 'client', client: fake.client });
 
       await storage.close();
       expect(fake.destroyed()).toBe(true);
@@ -339,7 +374,9 @@ describe('S3StorageClient', () => {
 
     it('hands the raw driver back to the multipart adapter', () => {
       const fake = fakeS3Client();
-      expect(new S3StorageClient({ client: fake.client }).getRawClient()).toBe(fake.client);
+      expect(new S3StorageClient({ type: 'client', client: fake.client }).getRawClient()).toBe(
+        fake.client
+      );
     });
   });
 });

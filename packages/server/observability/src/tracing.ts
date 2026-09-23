@@ -18,10 +18,12 @@ propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
 export interface TracingConfig {
   serviceName: string;
-  enabled?: boolean;
-  otlpEndpoint?: string;
-  sampler?: 'always_on' | 'always_off' | 'parentbased_always_on' | 'ratio';
-  sampleRatio?: number;
+  enabled: boolean;
+  serviceVersion: string;
+  endpoint: string;
+  sampler: string;
+  samplerArg: number;
+  resourceAttributes: string;
 }
 
 export interface TracingContext {
@@ -44,14 +46,7 @@ function parseResourceAttributes(raw?: string): Record<string, string> {
   return attrs;
 }
 
-function resolveSampler(samplerType?: string, sampleRatio?: number): Sampler {
-  const st = samplerType || process.env.OTEL_TRACES_SAMPLER || 'parentbased_always_on';
-  const ratio =
-    sampleRatio ??
-    (process.env.OTEL_TRACES_SAMPLER_ARG
-      ? Number.parseFloat(process.env.OTEL_TRACES_SAMPLER_ARG)
-      : 1.0);
-
+function resolveSampler(st: string, ratio: number): Sampler {
   if (st === 'always_on') {
     return new AlwaysOnSampler();
   }
@@ -71,37 +66,20 @@ function resolveSampler(samplerType?: string, sampleRatio?: number): Sampler {
  * Initializes OpenTelemetry SDK for Node and Bun runtimes.
  */
 export function initTracing(config: TracingConfig): NodeSDK | null {
-  const isEnabled =
-    config.enabled ??
-    (process.env.OTEL_ENABLED !== 'false' &&
-      (process.env.OTEL_ENABLED === 'true' ||
-        process.env.NODE_ENV === 'production' ||
-        Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT)));
-
-  if (!isEnabled) {
-    return null;
-  }
-
-  if (sdkInstance) {
-    return sdkInstance;
-  }
-
-  const endpoint =
-    config.otlpEndpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
-
-  const resourceAttrs = parseResourceAttributes(process.env.OTEL_RESOURCE_ATTRIBUTES);
+  if (!config.enabled) return null;
+  if (sdkInstance) return sdkInstance;
 
   const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: config.serviceName,
-    [ATTR_SERVICE_VERSION]: process.env.SERVICE_VERSION || 'dev',
-    ...resourceAttrs,
+    [ATTR_SERVICE_VERSION]: config.serviceVersion,
+    ...parseResourceAttributes(config.resourceAttributes),
   });
 
   const traceExporter = new OTLPTraceExporter({
-    url: `${endpoint.replace(/\/$/, '')}/v1/traces`,
+    url: `${config.endpoint.replace(/\/$/, '')}/v1/traces`,
   });
 
-  const sampler = resolveSampler(config.sampler, config.sampleRatio);
+  const sampler = resolveSampler(config.sampler, config.samplerArg);
 
   const sdk = new NodeSDK({
     resource,

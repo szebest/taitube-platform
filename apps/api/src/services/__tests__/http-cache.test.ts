@@ -1,18 +1,21 @@
-import { type CacheControlOptions, HttpCacheService } from '../http-cache-service';
+import {
+  type CacheControlOptions,
+  buildCacheHeaders,
+  generateEtag,
+  isNotModified,
+} from '../http-cache';
 
-describe('HttpCacheService', () => {
-  const service = new HttpCacheService();
-
+describe('apps/api/services: http-cache', () => {
   describe('generateEtag', () => {
     it.each([
       { scenario: 'weak by default', weak: undefined, pattern: /^W\/"[0-9a-f]{16}"$/ },
       { scenario: 'strong when weak is false', weak: false, pattern: /^"[0-9a-f]{16}"$/ },
     ])('tags $scenario', ({ weak, pattern }) => {
-      expect(service.generateEtag({ id: '1', name: 'Music' }, weak)).toMatch(pattern);
+      expect(generateEtag({ id: '1', name: 'Music' }, weak)).toMatch(pattern);
     });
 
     it('produces deterministic output for identical input', () => {
-      expect(service.generateEtag('hello world')).toBe(service.generateEtag('hello world'));
+      expect(generateEtag('hello world')).toBe(generateEtag('hello world'));
     });
   });
 
@@ -77,7 +80,7 @@ describe('HttpCacheService', () => {
         expected: false,
       },
     ])('$scenario: $expected', ({ ifNoneMatch, currentEtag, expected }) => {
-      expect(service.isNotModified(ifNoneMatch, currentEtag)).toBe(expected);
+      expect(isNotModified(ifNoneMatch, currentEtag)).toBe(expected);
     });
   });
 
@@ -97,7 +100,7 @@ describe('HttpCacheService', () => {
         expected: { 'Cache-Control': 'private, max-age=0, must-revalidate' },
       },
     ])('builds headers for $scenario', ({ options, expected }) => {
-      expect(service.buildCacheHeaders(options)).toEqual(expected);
+      expect(buildCacheHeaders(options)).toEqual(expected);
     });
   });
 });

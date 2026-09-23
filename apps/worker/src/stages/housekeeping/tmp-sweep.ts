@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import type { Logger } from '@vp/observability';
 
 export interface TmpSweepOptions {
-  tmpDir?: string;
+  tmpDir: string;
   thresholdMs?: number;
   logger?: Logger;
 }
@@ -16,14 +16,8 @@ export interface TmpSweepResult {
  * Sweeps orphaned temp directories on the housekeeping pod (SDD §9.8):
  * Remove orphaned /tmp/vp/* dirs older than 2 h (worker pods clean their own on exit).
  */
-export async function runTmpSweep(options: TmpSweepOptions = {}): Promise<TmpSweepResult> {
-  const {
-    tmpDir = process.env['TMP_DIR'] ?? '/tmp/vp',
-    thresholdMs = process.env['TMP_SWEEP_THRESHOLD_MS']
-      ? Number.parseInt(process.env['TMP_SWEEP_THRESHOLD_MS'], 10)
-      : 2 * 60 * 60 * 1000,
-    logger,
-  } = options;
+export async function runTmpSweep(options: TmpSweepOptions): Promise<TmpSweepResult> {
+  const { tmpDir, thresholdMs = 2 * 60 * 60 * 1000, logger } = options;
 
   const entries = await fs.readdir(tmpDir, { withFileTypes: true }).catch(() => []);
   const cutoff = Date.now() - thresholdMs;

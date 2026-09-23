@@ -1,10 +1,10 @@
+import { Singleflight } from '@vp/concurrency';
 import type { CacheClient, ReactionCachePort } from '@vp/core/ports';
 import type { ReactionCounts, ReactionType } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { type Result, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { Redis } from 'ioredis';
 import { type CachedCounts, ReactionCountsStore } from './reaction-counts-store';
-import { Singleflight } from './singleflight';
 
 export interface RedisReactionCacheAdapterConfig {
   redis?: Redis;

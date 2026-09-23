@@ -1,13 +1,8 @@
 import { getVideoAsAdmin, problemFor } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import type { VideoService } from '../../services/video-service';
 import { contractPaths, contractSchema } from '../contract-schema';
 import { sendResult } from '../send-result';
-
-export interface AdminVideosRouteOptions {
-  videoService: VideoService;
-}
 
 /**
  * The operator's read of a video. It calls the same `VideoService.get` as the public route and
@@ -17,11 +12,8 @@ export interface AdminVideosRouteOptions {
  * `VideoService` has no branch for either. That is the property ADR-24 exists to provide, and it is
  * asserted in `apps/api/src/routes/admin/__tests__/videos.test.ts`.
  */
-export function registerAdminVideosRoutes(
-  app: FastifyInstance,
-  options: AdminVideosRouteOptions
-): void {
-  const { videoService } = options;
+export async function adminVideosRoutes(app: FastifyInstance): Promise<void> {
+  const { videoService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(getVideoAsAdmin)) {

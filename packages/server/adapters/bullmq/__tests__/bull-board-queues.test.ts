@@ -5,7 +5,7 @@ import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue } from './fake-queue';
 
 function bullMqQueue(name: string): BullMqJobQueue {
-  return new BullMqJobQueue({ name, queue: new FakeQueue({ name }).asQueue() });
+  return new BullMqJobQueue({ type: 'queue', name, queue: new FakeQueue({ name }).asQueue() });
 }
 
 describe('adapters/bullmq: bull board queues', () => {

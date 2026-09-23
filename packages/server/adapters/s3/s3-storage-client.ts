@@ -23,22 +23,33 @@ import {
   type StorageUploadResult,
 } from '@vp/core/ports';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
+import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result';
 import { measureStorageOp } from '../storage-metrics-helper';
 import { type S3ConnectionConfig, isNotFound, s3ClientFrom } from './s3-config';
 
-export interface S3StorageClientConfig extends S3ConnectionConfig {
-  client?: S3Client;
-}
+export type S3StorageClientConfig =
+  | { type: 'client'; client: S3Client }
+  | ({ type: 'connection' } & S3ConnectionConfig);
 
 const DELETE_BATCH = 1000;
 
 export class S3StorageClient extends StorageClient {
   private readonly client: S3Client;
 
-  constructor(config: S3StorageClientConfig = {}) {
+  constructor(config: S3StorageClientConfig) {
     super();
-    this.client = config.client ?? s3ClientFrom(config);
+    this.client = S3StorageClient.clientFor(config);
+  }
+
+  private static clientFor(config: S3StorageClientConfig): S3Client {
+    switch (config.type) {
+      case 'client':
+        return config.client;
+      case 'connection':
+        return s3ClientFrom(config);
+      default:
+        return assertNever(config, 'S3StorageClientConfig');
+    }
   }
 
   getRawClient(): S3Client {

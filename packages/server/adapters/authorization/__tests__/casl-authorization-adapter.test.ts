@@ -28,7 +28,12 @@ describe('CaslAuthorizationAdapter', () => {
   it.each([
     { scenario: 'a signed-in user', actor: user, action: 'create' as const, expected: true },
     { scenario: 'an anonymous caller', actor: null, action: 'create' as const, expected: false },
-    { scenario: 'a user reaching for admin', actor: user, action: 'manage' as const, expected: false },
+    {
+      scenario: 'a user reaching for admin',
+      actor: user,
+      action: 'manage' as const,
+      expected: false,
+    },
   ])('can() answers $expected for $scenario', ({ actor, action, expected }) => {
     const adapter = new CaslAuthorizationAdapter(actor);
 

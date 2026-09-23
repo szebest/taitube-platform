@@ -9,8 +9,8 @@ import type {
 } from '@vp/core/repositories';
 import { type UploadAccessFailure, decideUploadAccess } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { type Result, isErr, map } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 
 export interface UploadContext {
   uploads: UploadRepository;
@@ -40,7 +40,7 @@ export type LoadOwnedUploadFailure = UploadAccessFailure | DatabaseUnavailable;
  */
 export async function loadOwnedUpload(
   ctx: UploadContext,
-  user: AuthUser,
+  user: UserContext,
   uploadId: string,
   action: string
 ): Promise<Result<OwnedUpload, LoadOwnedUploadFailure>> {

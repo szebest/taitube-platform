@@ -6,8 +6,8 @@ import {
   notMultipart,
 } from '@vp/domain-rules';
 import type { StorageUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { type Result, all, err, isErr, map, ok } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
 
 export interface UploadResumeInfo {
@@ -32,7 +32,7 @@ export type PartUrlsFailure =
  */
 export async function getUploadResumeInfo(
   ctx: UploadContext,
-  user: AuthUser,
+  user: UserContext,
   uploadId: string
 ): Promise<Result<UploadResumeInfo, ResumeInfoFailure>> {
   const owned = await loadOwnedUpload(ctx, user, uploadId, 'view this upload');
@@ -64,7 +64,7 @@ export async function getUploadResumeInfo(
 
 export async function issueUploadPartUrls(
   ctx: UploadContext,
-  user: AuthUser,
+  user: UserContext,
   uploadId: string,
   from: number,
   count: number

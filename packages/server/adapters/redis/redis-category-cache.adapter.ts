@@ -1,4 +1,4 @@
-import type { CacheClient } from '@vp/core/ports';
+import type { CacheClient, CategoryCachePort } from '@vp/core/ports';
 import type { Category } from '@vp/domain';
 import { type Result, isOk, ok, tryCatch, unwrapOr } from '@vp/result';
 
@@ -28,14 +28,14 @@ interface L1CacheEntry {
   expiresAt: number;
 }
 
-export interface CategoryCacheServiceConfig {
+export interface RedisCategoryCacheAdapterConfig {
   cache?: CacheClient | null;
   l1TtlMs?: number; // default: 60_000 (60s)
   l2TtlSeconds?: number; // default: 300 (5m)
   maxL1Entries?: number; // default: 100
 }
 
-export class CategoryCacheService {
+export class RedisCategoryCacheAdapter implements CategoryCachePort {
   private readonly cache?: CacheClient | null;
   private readonly l1TtlMs: number;
   private readonly l2TtlSeconds: number;
@@ -43,7 +43,7 @@ export class CategoryCacheService {
   private readonly l1Cache = new Map<string, L1CacheEntry>();
   private readonly onInvalidateMessage: (channel: string, message: string) => void;
 
-  constructor(config: CategoryCacheServiceConfig = {}) {
+  constructor(config: RedisCategoryCacheAdapterConfig = {}) {
     this.cache = config.cache;
     this.l1TtlMs = config.l1TtlMs ?? 60_000;
     this.l2TtlSeconds = config.l2TtlSeconds ?? 300;
@@ -52,10 +52,15 @@ export class CategoryCacheService {
     this.onInvalidateMessage = (_channel: string, _message: string) => {
       this.clearL1();
     };
+  }
 
-    // A pod that cannot subscribe still serves reads; it only stops hearing peers, so its L1
-    // entries expire on their own TTL instead of being cleared early.
-    void this.cache?.subscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage);
+  /**
+   * A pod that cannot subscribe still serves reads; it only stops hearing peers, so its L1
+   * entries expire on their own TTL instead of being cleared early.
+   */
+  async start(): Promise<Result<void, never>> {
+    await this.cache?.subscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage);
+    return ok();
   }
 
   private setL1(key: string, value: Category[], ttlMs: number): void {

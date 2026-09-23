@@ -1,7 +1,8 @@
 import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
+import { asCdnBase } from '@vp/env-schema';
 import { playbackUrl, toVideoDetailView, toVideoSummaryView } from '../video-views';
 
-const CDN = 'http://localhost:9000/public';
+const CDN = asCdnBase('http://localhost:9000/public');
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000e1';
 const CREATED_AT = new Date('2026-01-02T03:04:05.000Z');
 

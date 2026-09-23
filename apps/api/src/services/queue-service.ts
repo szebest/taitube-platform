@@ -13,10 +13,9 @@ import { QUEUES } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { type Result, all, err, isErr, map, ok } from '@vp/result';
 import type { FastifyPluginCallback } from 'fastify';
-import type { AuthUser } from '../plugins/auth';
 
 export interface QueueServiceDeps {
-  queues?: Map<string, JobQueue>;
+  queues: Map<string, JobQueue>;
 }
 
 export interface QueueCountMetrics {
@@ -46,15 +45,15 @@ const IDLE_COUNTS: QueueCountMetrics = {
 export class QueueService {
   private readonly queuesMap: Map<string, JobQueue>;
 
-  constructor(deps: QueueServiceDeps = {}) {
-    this.queuesMap = deps.queues ?? new Map<string, JobQueue>();
+  constructor(deps: QueueServiceDeps) {
+    this.queuesMap = deps.queues;
   }
 
   /**
    * Guards the Bull Board operator UI, which the board plugin serves itself. It returns the verdict
    * rather than throwing it, so the pre-handler renders a `Problem` instead of catching.
    */
-  requireAdmin(caller: AuthUser | null): Result<UserContext, AuthorizationFailure> {
+  requireAdmin(caller: UserContext | null): Result<UserContext, AuthorizationFailure> {
     return decideAdminAccess(caller);
   }
 

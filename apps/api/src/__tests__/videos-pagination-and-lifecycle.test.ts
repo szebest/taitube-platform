@@ -1,4 +1,8 @@
-import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+} from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
@@ -35,7 +39,6 @@ describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)
         cache,
         storage,
       },
-      cdnBaseUrl: 'http://localhost:9000/public',
     });
     await app.ready();
   });

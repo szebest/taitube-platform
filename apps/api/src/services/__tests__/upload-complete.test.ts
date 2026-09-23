@@ -3,15 +3,15 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
+import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000d001', role: 'CREATOR' };
-const STRANGER: AuthUser = { id: '00000000-0000-7000-8000-00000000d002', role: 'CREATOR' };
+const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000d001', role: 'CREATOR' };
+const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000d002', role: 'CREATOR' };
 const MB = 1024 * 1024;
 const SIZE = 3;
 
@@ -33,7 +33,8 @@ describe('apps/api/services: complete upload', () => {
       probeQueue,
       multipartThresholdBytes: 10 * MB,
       maxInflightPerUser,
-      ...(uploadSessionTtlSeconds === undefined ? {} : { uploadSessionTtlSeconds }),
+      presignedUrlTtlSeconds: 900,
+      uploadSessionTtlSeconds,
     });
   }
 

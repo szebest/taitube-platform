@@ -1,6 +1,6 @@
 import type { JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
+import type { CdnBase } from '@vp/env-schema';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -24,13 +24,13 @@ import { type Result, err, isErr, ok } from '@vp/result';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 
-import { validateJobId } from '../registry';
+import { validateJobId } from '../job-identity';
 
 export interface PackageProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
-  publicBucket?: string;
-  cdnBaseUrl?: string;
+  publicBucket: string;
+  cdn: CdnBase;
   workerId?: string;
   logger: Logger;
   getQueue?: (name: string) => JobQueue;
@@ -52,14 +52,12 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
   const {
     repositories,
     storage,
-    publicBucket = process.env['S3_BUCKET_PUBLIC'] || 'public',
-    cdnBaseUrl = process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL,
+    publicBucket,
+    cdn,
     workerId = `worker-${process.pid}`,
     logger,
     getQueue,
   } = deps;
-
-  const cleanCdnBase = cdnBaseUrl.replace(/\/+$/, '');
 
   return async function processPackageJob(
     job: QueueJob<PackageJob>
@@ -96,7 +94,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       return ok({
         videoId,
         masterKey: masterPlaylistKey(videoId, generation),
-        playbackUrl: `${cleanCdnBase}/${masterPlaylistKey(videoId, generation)}`,
+        playbackUrl: `${cdn}/${masterPlaylistKey(videoId, generation)}`,
       });
     }
 
@@ -188,7 +186,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
     });
     if (isErr(uploaded)) return uploaded;
 
-    const playbackUrl = `${cleanCdnBase}/${masterKey}`;
+    const playbackUrl = `${cdn}/${masterKey}`;
 
     // 5. Complete step in DB with fencing token (AC 20)
     const comp = await repositories.steps.complete({

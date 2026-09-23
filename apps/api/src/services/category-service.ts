@@ -1,4 +1,4 @@
-import type { CategoryCacheService } from '@vp/adapters';
+import type { CategoryCachePort } from '@vp/core/ports';
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import type { Category, CreateCategoryInput, UpdateCategoryInput } from '@vp/domain';
 import {
@@ -11,14 +11,13 @@ import {
   decideCategoryUpdate,
 } from '@vp/domain-rules';
 import type { CategorySlugConflict, DatabaseUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, isOk, map, ok } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
-import { HttpCacheService } from './http-cache-service';
+import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 
 export interface CategoryServiceDeps {
   categories: CategoryRepositoryPort;
-  categoryCacheService: CategoryCacheService;
-  httpCacheService?: HttpCacheService;
+  categoryCache: CategoryCachePort;
 }
 
 const CATEGORIES_MAX_AGE_SECONDS = 300;
@@ -43,15 +42,7 @@ export type DeleteCategoryServiceFailure = DeleteCategoryFailure | DatabaseUnava
  * returned rather than thrown.
  */
 export class CategoryService {
-  private readonly categories: CategoryRepositoryPort;
-  private readonly categoryCacheService: CategoryCacheService;
-  private readonly httpCacheService: HttpCacheService;
-
-  constructor(deps: CategoryServiceDeps) {
-    this.categories = deps.categories;
-    this.categoryCacheService = deps.categoryCacheService;
-    this.httpCacheService = deps.httpCacheService ?? new HttpCacheService();
-  }
+  constructor(private readonly deps: CategoryServiceDeps) {}
 
   /**
    * `CacheUnavailable` is absent from the return type because the cache service handles it by
@@ -60,16 +51,16 @@ export class CategoryService {
   async listActive(
     ifNoneMatch?: string
   ): Promise<Result<ListCategoriesResult, DatabaseUnavailable>> {
-    const found = await this.categoryCacheService.getCategories(() =>
-      this.categories.findAll({ activeOnly: true })
+    const found = await this.deps.categoryCache.getCategories(() =>
+      this.deps.categories.findAll({ activeOnly: true })
     );
 
     return map(found, (categories) => {
-      const etag = this.httpCacheService.generateEtag(categories);
+      const etag = generateEtag(categories);
       return {
         categories,
-        notModified: this.httpCacheService.isNotModified(ifNoneMatch, etag),
-        headers: this.httpCacheService.buildCacheHeaders({
+        notModified: isNotModified(ifNoneMatch, etag),
+        headers: buildCacheHeaders({
           etag,
           maxAgeSeconds: CATEGORIES_MAX_AGE_SECONDS,
           staleWhileRevalidateSeconds: CATEGORIES_STALE_WHILE_REVALIDATE_SECONDS,
@@ -79,10 +70,10 @@ export class CategoryService {
   }
 
   async create(
-    caller: AuthUser | null,
+    caller: UserContext | null,
     input: CreateCategoryInput
   ): Promise<Result<Category, CreateCategoryServiceFailure>> {
-    const slugHeldBy = await this.categories.findBySlug(input.slug);
+    const slugHeldBy = await this.deps.categories.findBySlug(input.slug);
     if (isErr(slugHeldBy)) return slugHeldBy;
 
     const decided = decideCategoryCreate({
@@ -92,15 +83,15 @@ export class CategoryService {
     });
     if (isErr(decided)) return decided;
 
-    return await this.invalidatingOnSuccess(this.categories.create(input));
+    return await this.invalidatingOnSuccess(this.deps.categories.create(input));
   }
 
   async update(
-    caller: AuthUser | null,
+    caller: UserContext | null,
     id: string,
     input: UpdateCategoryInput
   ): Promise<Result<Category, UpdateCategoryServiceFailure>> {
-    const existing = await this.categories.findById(id);
+    const existing = await this.deps.categories.findById(id);
     if (isErr(existing)) return existing;
 
     const decided = decideCategoryUpdate({
@@ -111,20 +102,20 @@ export class CategoryService {
     });
     if (isErr(decided)) return decided;
 
-    const updated = await this.invalidatingOnSuccess(this.categories.update(id, input));
+    const updated = await this.invalidatingOnSuccess(this.deps.categories.update(id, input));
     if (isErr(updated)) return updated;
 
     return updated.value ? ok(updated.value) : err(categoryNotFound(id));
   }
 
   async delete(
-    caller: AuthUser | null,
+    caller: UserContext | null,
     id: string
   ): Promise<Result<void, DeleteCategoryServiceFailure>> {
-    const existing = await this.categories.findById(id);
+    const existing = await this.deps.categories.findById(id);
     if (isErr(existing)) return existing;
 
-    const videoCount = await this.categories.countVideos(id);
+    const videoCount = await this.deps.categories.countVideos(id);
     if (isErr(videoCount)) return videoCount;
 
     const decided = decideCategoryDelete({
@@ -135,12 +126,12 @@ export class CategoryService {
     });
     if (isErr(decided)) return decided;
 
-    return await this.invalidatingOnSuccess(this.categories.delete(id));
+    return await this.invalidatingOnSuccess(this.deps.categories.delete(id));
   }
 
   private async invalidatingOnSuccess<T, E>(write: Promise<Result<T, E>>): Promise<Result<T, E>> {
     const settled = await write;
-    if (isOk(settled)) await this.categoryCacheService.invalidate();
+    if (isOk(settled)) await this.deps.categoryCache.invalidate();
     return settled;
   }
 }

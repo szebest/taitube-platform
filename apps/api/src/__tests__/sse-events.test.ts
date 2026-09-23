@@ -1,13 +1,30 @@
 import * as http from 'node:http';
 import { PassThrough } from 'node:stream';
-import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+} from '@vp/adapters/in-memory';
+import type { CacheClient } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { publishVideoEvent, videoChannel } from '@vp/events';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
 import { SseConnection } from '../services/sse-connection';
-import { SseHub } from '../services/sse-hub';
+import { SseHub, type SseHubOptions } from '../services/sse-hub';
+
+function hubOptions(cache: CacheClient, overrides: Partial<SseHubOptions> = {}): SseHubOptions {
+  return {
+    cache,
+    maxConnectionsPerUser: 20,
+    maxPodConnections: 5000,
+    heartbeatMs: 15_000,
+    idleTimeoutMs: 30 * 60 * 1000,
+    ...overrides,
+  };
+}
 
 describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Backpressure', () => {
   let app: FastifyInstance;
@@ -38,11 +55,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
         cache,
         storage,
       },
-      limits: {
-        sseHeartbeatMs: 100,
-        sseIdleTimeoutMs: 500,
-        sseMaxPerUser: 20,
-      },
+      config: inProcessAppConfig({ sse: { heartbeatMs: 100, idleTimeoutMs: 500, maxPerUser: 20 } }),
     });
 
     const address = await app.listen({ port: 0, host: '127.0.0.1' });
@@ -308,7 +321,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
 
   // AC 4: Progress events streamed in real-time over SSE
   it('AC 4: Progress events streamed in real-time over SSE', async () => {
-    const hub = new SseHub({ cache });
+    const hub = new SseHub(hubOptions(cache));
     expectOk(await hub.init());
 
     const stream = new PassThrough();
@@ -381,7 +394,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     });
 
     it('enforces 20 active streams per user returning 429 RATE_LIMITED', async () => {
-      const hub = new SseHub({ cache, maxConnectionsPerUser: 20 });
+      const hub = new SseHub(hubOptions(cache, { maxConnectionsPerUser: 20 }));
       const connections: any[] = [];
 
       for (let i = 0; i < 20; i++) {
@@ -427,10 +440,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     });
 
     it('enforces pod connection cap via SseHub', async () => {
-      const hub = new SseHub({
-        cache,
-        maxPodConnections: 3,
-      });
+      const hub = new SseHub(hubOptions(cache, { maxPodConnections: 3 }));
 
       const dummyRes = new PassThrough();
       const conns = [

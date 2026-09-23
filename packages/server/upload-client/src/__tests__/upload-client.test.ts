@@ -1,14 +1,10 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import {
-  InMemoryCacheClient,
-  InMemoryDatabaseClient,
-  InMemoryRepositories,
-  S3MultipartStorage,
-  S3StorageClient,
-} from '@vp/adapters';
+import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
+import { InMemoryCacheClient, InMemoryDatabaseClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { buildApp } from '@vp/api';
 import { mintToken } from '@vp/dev-token';
 import { expectOk } from '@vp/testing/result';
@@ -175,6 +171,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     });
 
     const storage = new S3StorageClient({
+      type: 'connection',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',
@@ -183,6 +180,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     });
 
     const multipart = new S3MultipartStorage({
+      type: 'connection',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',
@@ -198,10 +196,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
         storage,
         multipart,
       },
-      limits: {
-        multipartThresholdBytes: 8 * 1024 * 1024,
-      },
-      rawBucket: 'raw',
+      config: inProcessAppConfig({ limits: { multipartThresholdBytes: 8 * 1024 * 1024 } }),
     });
 
     const address = await app.listen({ port: 0, host: '127.0.0.1' });

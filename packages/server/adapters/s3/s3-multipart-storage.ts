@@ -21,16 +21,17 @@ import { type Result, fromPromise, map, ok } from '@vp/result';
 import { measureStorageOp } from '../storage-metrics-helper';
 import { S3StorageClient, type S3StorageClientConfig } from './s3-storage-client';
 
-export interface S3MultipartStorageConfig extends S3StorageClientConfig {
-  storageClient?: S3StorageClient;
-}
+export type S3MultipartStorageConfig =
+  | { type: 'storage'; storageClient: S3StorageClient }
+  | S3StorageClientConfig;
 
 export class S3MultipartStorage extends MultipartStorage {
   private readonly client: S3Client;
 
-  constructor(config: S3MultipartStorageConfig = {}) {
+  constructor(config: S3MultipartStorageConfig) {
     super();
-    this.client = (config.storageClient ?? new S3StorageClient(config)).getRawClient();
+    const storage = config.type === 'storage' ? config.storageClient : new S3StorageClient(config);
+    this.client = storage.getRawClient();
   }
 
   private unavailable(operation: string) {

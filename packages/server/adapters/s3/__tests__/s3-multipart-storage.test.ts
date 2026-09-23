@@ -9,7 +9,10 @@ const KEY = '018f0000-0000-7000-8000-000000000001/source.mp4';
 const UPLOAD_ID = 's3-upload-1';
 
 function multipartOver(fake: FakeS3): S3MultipartStorage {
-  return new S3MultipartStorage({ storageClient: new S3StorageClient({ client: fake.client }) });
+  return new S3MultipartStorage({
+    type: 'storage',
+    storageClient: new S3StorageClient({ type: 'client', client: fake.client }),
+  });
 }
 
 describe('S3MultipartStorage', () => {
@@ -38,6 +41,7 @@ describe('S3MultipartStorage', () => {
   describe('createPresignedPartUrl', () => {
     it('signs a part upload with an ISO expiry', async () => {
       const multipart = new S3MultipartStorage({
+        type: 'connection',
         endpoint: 'http://localhost:9000',
         region: 'us-east-1',
         accessKeyId: 'minioadmin',
@@ -174,7 +178,13 @@ describe('S3MultipartStorage', () => {
 
     it.skipIf(!r2Enabled)('drives a real R2 bucket through the same calls', async () => {
       const bucket = process.env['S3_BUCKET_RAW'] || BUCKET;
-      const multipart = new S3MultipartStorage();
+      const multipart = new S3MultipartStorage({
+        type: 'connection',
+        endpoint: process.env['S3_ENDPOINT'] ?? '',
+        region: process.env['S3_REGION'] ?? 'auto',
+        accessKeyId: process.env['S3_ACCESS_KEY_ID'],
+        secretAccessKey: process.env['S3_SECRET_ACCESS_KEY'],
+      });
 
       const uploadId = expectOk(await multipart.createMultipartUpload(bucket, KEY, 'video/mp4'));
       expect(uploadId).toBeDefined();

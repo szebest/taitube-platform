@@ -1,4 +1,4 @@
-import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
+import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { queueUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';

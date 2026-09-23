@@ -14,6 +14,7 @@
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
     "@vp/adapters": "workspace:*",
+    "@vp/composition": "workspace:*",
     "@vp/config": "workspace:*",
     "@vp/core": "workspace:*",
     "@vp/db": "workspace:*",

@@ -1,0 +1,28 @@
+# AGENTS.md — @vp/concurrency (In-process Coalescing)
+
+> Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+---
+
+## 1. Scope & Purpose
+
+`Singleflight`: concurrent calls with one key share one in-flight promise. It is a `Map<string, Promise>`
+and nothing more, which is why it is not in `@vp/adapters`: no driver sits behind it, so it is not an
+adapter, and a service importing it from there crossed the service-to-adapter edge for a data structure.
+
+Consumers: `FeedService` (`apps/api`) and `RedisReactionCacheAdapter` (`@vp/adapters`).
+
+---
+
+## 2. Invariants
+
+1. **T1, no `@vp/*` dependency, no runtime API.** It runs unchanged under Node and Bun.
+2. **One implementation, so no port.** A second implementation is the moment to add one, not before.
+
+---
+
+## 3. Local Commands
+
+```bash
+pnpm --filter @vp/concurrency typecheck
+pnpm --filter @vp/concurrency test
+```

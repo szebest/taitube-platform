@@ -7,10 +7,11 @@ import {
   decideSubscribe,
   decideUnsubscribe,
 } from '@vp/domain-rules';
+import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type InvalidCursor, type Paginator, defaultPaginator } from '@vp/pagination';
+import type { InvalidCursor, Paginator } from '@vp/pagination';
+import type { UserContext } from '@vp/permissions';
 import { type Result, isErr, map, ok, unwrapOr } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 import {
   createdAtCursorPayload,
   decodeCreatedAtCursor,
@@ -29,12 +30,12 @@ export interface SubscriptionStatusView {
   subscriberCount: number;
 }
 
-export interface SubscriptionServiceOptions {
+export interface SubscriptionServiceDeps {
   subscriptions: SubscriptionRepositoryPort;
   channels: ChannelRepositoryPort;
-  subscriptionCache?: SubscriptionCachePort;
-  cdnBaseUrl?: string;
-  paginator?: Paginator;
+  subscriptionCache: SubscriptionCachePort;
+  cdn: CdnBase;
+  paginator: Paginator;
 }
 
 export type SubscribeServiceFailure = SubscribeFailure | DatabaseUnavailable;
@@ -42,92 +43,81 @@ export type UnsubscribeServiceFailure = UnsubscribeFailure | DatabaseUnavailable
 export type ReadSubscriptionFailure = UnsubscribeFailure | DatabaseUnavailable;
 
 export class SubscriptionService {
-  private readonly subscriptions: SubscriptionRepositoryPort;
-  private readonly channels: ChannelRepositoryPort;
-  private readonly subscriptionCache?: SubscriptionCachePort;
-  private readonly cleanCdnBase: string;
-  private readonly paginator: Paginator;
-
-  constructor(options: SubscriptionServiceOptions) {
-    this.subscriptions = options.subscriptions;
-    this.channels = options.channels;
-    this.subscriptionCache = options.subscriptionCache;
-    this.cleanCdnBase = (options.cdnBaseUrl ?? '').replace(/\/+$/, '');
-    this.paginator = options.paginator ?? defaultPaginator;
-  }
+  constructor(private readonly deps: SubscriptionServiceDeps) {}
 
   /**
    * `CacheUnavailable` is absent from every signature here on purpose: a dead cache costs a query,
    * not an answer, so this service handles it rather than passing it on.
    */
   async subscribe(
-    user: AuthUser,
+    user: UserContext,
     channelId: string
   ): Promise<Result<SubscriptionStatusView, SubscribeServiceFailure>> {
-    const found = await this.channels.findById(channelId);
+    const found = await this.deps.channels.findById(channelId);
     if (isErr(found)) return found;
 
     const decided = decideSubscribe({ subscriber: user, channel: found.value, channelId });
     if (isErr(decided)) return decided;
 
-    const written = await this.subscriptions.subscribe(user.id, channelId);
+    const written = await this.deps.subscriptions.subscribe(user.id, channelId);
     if (isErr(written)) return written;
 
     const { subscriberCount, changed } = written.value;
     if (changed) {
-      await this.subscriptionCache?.addSubscription(user.id, channelId);
-      await this.subscriptionCache?.setSubscriberCount(channelId, subscriberCount);
+      await this.deps.subscriptionCache.addSubscription(user.id, channelId);
+      await this.deps.subscriptionCache.setSubscriberCount(channelId, subscriberCount);
     }
     return ok({ channelId, subscribed: true, subscriberCount });
   }
 
   async unsubscribe(
-    user: AuthUser,
+    user: UserContext,
     channelId: string
   ): Promise<Result<SubscriptionStatusView, UnsubscribeServiceFailure>> {
-    const found = await this.channels.findById(channelId);
+    const found = await this.deps.channels.findById(channelId);
     if (isErr(found)) return found;
 
     const decided = decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
     if (isErr(decided)) return decided;
 
-    const written = await this.subscriptions.unsubscribe(user.id, channelId);
+    const written = await this.deps.subscriptions.unsubscribe(user.id, channelId);
     if (isErr(written)) return written;
 
     const { subscriberCount, changed } = written.value;
     if (changed) {
-      await this.subscriptionCache?.removeSubscription(user.id, channelId);
-      await this.subscriptionCache?.setSubscriberCount(channelId, subscriberCount);
+      await this.deps.subscriptionCache.removeSubscription(user.id, channelId);
+      await this.deps.subscriptionCache.setSubscriberCount(channelId, subscriberCount);
     }
     return ok({ channelId, subscribed: false, subscriberCount });
   }
 
   async isSubscribed(
-    user: AuthUser,
+    user: UserContext,
     channelId: string
   ): Promise<Result<{ channelId: string; subscribed: boolean }, ReadSubscriptionFailure>> {
-    const found = await this.channels.findById(channelId);
+    const found = await this.deps.channels.findById(channelId);
     if (isErr(found)) return found;
 
     const decided = decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
     if (isErr(decided)) return decided;
 
-    const cached = this.subscriptionCache
-      ? unwrapOr(await this.subscriptionCache.isSubscribed(user.id, channelId), null)
-      : null;
+    const cached = unwrapOr(
+      await this.deps.subscriptionCache.isSubscribed(user.id, channelId),
+      null
+    );
     if (cached !== null) return ok({ channelId, subscribed: cached });
 
     // On a miss, prime the whole set: one query answers this call and every
     // later one, instead of a point lookup that leaves the cache still cold.
-    const channelIds = await this.subscriptions.getUserSubscriptionChannelIds(user.id);
+    const channelIds = await this.deps.subscriptions.getUserSubscriptionChannelIds(user.id);
     if (isErr(channelIds)) return channelIds;
 
-    await this.subscriptionCache?.setUserSubscriptions(user.id, channelIds.value);
+    await this.deps.subscriptionCache.setUserSubscriptions(user.id, channelIds.value);
     return ok({ channelId, subscribed: channelIds.value.includes(channelId) });
   }
 
   async listSubscriptions(
-    user: AuthUser,
+    user: UserContext,
     options: { cursor?: string; limit?: number }
   ): Promise<
     Result<
@@ -135,17 +125,17 @@ export class SubscriptionService {
       DatabaseUnavailable | InvalidCursor
     >
   > {
-    const limit = this.paginator.limit(options.limit);
-    const cursor = decodeSubscriptionCursor(options.cursor, this.paginator);
+    const limit = this.deps.paginator.limit(options.limit);
+    const cursor = decodeSubscriptionCursor(options.cursor, this.deps.paginator);
     if (isErr(cursor)) return cursor;
 
-    const rows = await this.subscriptions.listUserSubscriptions(user.id, {
+    const rows = await this.deps.subscriptions.listUserSubscriptions(user.id, {
       cursor: cursor.value ?? undefined,
       limit,
     });
 
     return map(rows, (found) =>
-      this.paginator.paginate(found, limit, {
+      this.deps.paginator.paginate(found, limit, {
         cursorOf: (row) =>
           subscriptionCursorPayload({ createdAt: row.subscribedAt, channelId: row.id }),
         toItem: (row) => ({ ...row, subscribedAt: row.subscribedAt.toISOString() }),
@@ -154,7 +144,7 @@ export class SubscriptionService {
   }
 
   async getFeed(
-    user: AuthUser,
+    user: UserContext,
     options: { cursor?: string; limit?: number }
   ): Promise<
     Result<
@@ -162,19 +152,19 @@ export class SubscriptionService {
       DatabaseUnavailable | InvalidCursor
     >
   > {
-    const limit = this.paginator.limit(options.limit);
-    const cursor = decodeCreatedAtCursor(options.cursor, this.paginator);
+    const limit = this.deps.paginator.limit(options.limit);
+    const cursor = decodeCreatedAtCursor(options.cursor, this.deps.paginator);
     if (isErr(cursor)) return cursor;
 
-    const feed = await this.subscriptions.getSubscriptionFeed(user.id, {
+    const feed = await this.deps.subscriptions.getSubscriptionFeed(user.id, {
       cursor: cursor.value ?? undefined,
       limit,
     });
 
     return map(feed, ({ items: rows, total }) => ({
-      ...this.paginator.paginate(rows, limit, {
+      ...this.deps.paginator.paginate(rows, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (video) => toVideoSummaryView(video, this.cleanCdnBase),
+        toItem: (video) => toVideoSummaryView(video, this.deps.cdn),
       }),
       total,
     }));

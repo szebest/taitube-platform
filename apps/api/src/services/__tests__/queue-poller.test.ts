@@ -1,0 +1,52 @@
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
+import type { JobQueue } from '@vp/core/ports';
+import { queueUnavailable } from '@vp/errors';
+import { createMetricsRegistry } from '@vp/observability';
+import { err } from '@vp/result';
+import { pollQueueMetrics } from '../queue-poller';
+
+async function gauge(metrics: ReturnType<typeof createMetricsRegistry>, name: string) {
+  const all = await metrics.registry.getMetricsAsJSON();
+  return all.find((metric) => metric.name === name)?.values ?? [];
+}
+
+describe('apps/api/services: pollQueueMetrics', () => {
+  it('records the job counts of every queue it is given', async () => {
+    const probe = new InMemoryJobQueue('probe');
+    await probe.add('probe', { videoId: 'v1' });
+    const metrics = createMetricsRegistry();
+
+    await pollQueueMetrics(new Map<string, JobQueue>([['probe', probe]]), metrics);
+
+    const waiting = (await gauge(metrics, 'bullmq_queue_jobs')).find(
+      (sample) => sample.labels.queue === 'probe' && sample.labels.state === 'waiting'
+    );
+    expect(waiting?.value).toBe(1);
+  });
+
+  it('costs an unreachable queue its own sample and nothing else', async () => {
+    const broken = Object.assign(new InMemoryJobQueue('probe'), {
+      getJobCounts: async () => err(queueUnavailable('getJobCounts')),
+      getJobs: async () => err(queueUnavailable('getJobs')),
+    });
+    const healthy = new InMemoryJobQueue('notify');
+    await healthy.add('notify', { videoId: 'v1' });
+    const metrics = createMetricsRegistry();
+
+    await pollQueueMetrics(
+      new Map<string, JobQueue>([
+        ['probe', broken],
+        ['notify', healthy],
+      ]),
+      metrics
+    );
+
+    const samples = await gauge(metrics, 'bullmq_queue_jobs');
+    expect(samples.some((sample) => sample.labels.queue === 'probe')).toBe(false);
+    expect(samples.some((sample) => sample.labels.queue === 'notify')).toBe(true);
+    const age = (await gauge(metrics, 'bullmq_queue_oldest_waiting_age_seconds')).find(
+      (sample) => sample.labels.queue === 'probe'
+    );
+    expect(age?.value).toBe(0);
+  });
+});

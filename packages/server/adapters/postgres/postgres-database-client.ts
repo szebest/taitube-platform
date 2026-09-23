@@ -1,33 +1,25 @@
 import { DatabaseClient } from '@vp/core/ports';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
+import { type Result, assertNever, fromPromise, map } from '@vp/result';
 import postgres, { type Sql } from 'postgres';
 
-export interface PostgresDatabaseClientConfig {
-  connectionString?: string;
-  sql?: Sql;
-}
+export type PostgresDatabaseClientConfig = { type: 'sql'; sql: Sql } | { type: 'url'; url: string };
 
 export class PostgresDatabaseClient extends DatabaseClient {
   private readonly sql: Sql;
 
-  constructor(config: PostgresDatabaseClientConfig = {}) {
+  constructor(config: PostgresDatabaseClientConfig) {
     super();
-    if (config.sql) {
-      this.sql = config.sql;
-      return;
+    switch (config.type) {
+      case 'sql':
+        this.sql = config.sql;
+        return;
+      case 'url':
+        this.sql = postgres(config.url, { max: 10, idle_timeout: 20, connect_timeout: 10 });
+        return;
+      default:
+        assertNever(config, 'PostgresDatabaseClientConfig');
     }
-
-    const connectionString =
-      config.connectionString ??
-      process.env['DATABASE_URL'] ??
-      'postgres://vp:vppass@localhost:5432/videopipeline';
-
-    this.sql = postgres(connectionString, {
-      max: 10,
-      idle_timeout: 20,
-      connect_timeout: 10,
-    });
   }
 
   getRawSql(): Sql {
@@ -72,7 +64,9 @@ export class PostgresDatabaseClient extends DatabaseClient {
   ): Promise<Result<T, E | DatabaseUnavailable>> {
     const committed = await fromPromise(
       () =>
-        this.sql.begin((txSql) => fn(new PostgresDatabaseClient({ sql: txSql as unknown as Sql }))),
+        this.sql.begin((txSql) =>
+          fn(new PostgresDatabaseClient({ type: 'sql', sql: txSql as unknown as Sql }))
+        ),
       this.unavailable('transaction')
     );
 

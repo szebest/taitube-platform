@@ -1,6 +1,6 @@
 import type { ServerResponse } from 'node:http';
 import { PassThrough } from 'node:stream';
-import { InMemoryCacheClient } from '@vp/adapters';
+import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { videoChannel } from '@vp/events';
@@ -30,7 +30,13 @@ describe('apps/api/services: SseHub', () => {
 
   beforeEach(() => {
     cache = new UnsubscribableCache();
-    hub = new SseHub({ cache, heartbeatMs: 10_000, idleTimeoutMs: 10_000 });
+    hub = new SseHub({
+      cache,
+      maxConnectionsPerUser: 20,
+      maxPodConnections: 5000,
+      heartbeatMs: 10_000,
+      idleTimeoutMs: 10_000,
+    });
     chunks = [];
   });
 

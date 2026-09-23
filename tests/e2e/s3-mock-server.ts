@@ -1,5 +1,5 @@
 import * as http from 'node:http';
-import type { InMemoryMultipartStorage, InMemoryStorageClient } from '../../packages/server/adapters/index';
+import type { InMemoryMultipartStorage, InMemoryStorageClient } from '../../packages/server/adapters/in-memory/index';
 import { isErr, ok, unwrapOr } from '../../packages/universal/result/src/index';
 
 export interface MockS3ServerInstance {

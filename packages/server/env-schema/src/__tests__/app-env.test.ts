@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
-import { AppEnvSchema, CoreEnvSchema, PostgresEnvSchema } from '../index';
+import {
+  AppEnvSchema,
+  AppEnvShape,
+  CoreEnvSchema,
+  PostgresEnvSchema,
+  SECRET_KEYS,
+} from '../app-env';
 
 const CLOUD_HOSTS = [/r2\.cloudflarestorage\.com/, /neon\.tech/, /grafana\.net/];
 
@@ -29,7 +35,7 @@ describe('packages/env-schema: the environment contract', () => {
   const example = parseEnvExample();
 
   it('carries exactly the keys the schema declares', () => {
-    expect(Object.keys(example).sort()).toEqual(Object.keys(AppEnvSchema.shape).sort());
+    expect(Object.keys(example).sort()).toEqual(Object.keys(AppEnvShape.shape).sort());
   });
 
   it.each([
@@ -45,7 +51,7 @@ describe('packages/env-schema: the environment contract', () => {
   });
 
   it('declares no browser build variable', () => {
-    const browserKeys = Object.keys(AppEnvSchema.shape).filter((key) =>
+    const browserKeys = Object.keys(AppEnvShape.shape).filter((key) =>
       key.startsWith('REACT_APP_')
     );
 
@@ -65,6 +71,37 @@ describe('packages/env-schema: the environment contract', () => {
 
     expect(core.PAGE_SIZE_DEFAULT).toBe(PAGE_SIZE_DEFAULT);
     expect(core.PAGE_SIZE_MAX).toBe(PAGE_SIZE_MAX);
+  });
+
+  it.each(SECRET_KEYS.map((key) => ({ key })))('gives $key no default', ({ key }) => {
+    expect(AppEnvShape.shape[key].parse(undefined)).toBeUndefined();
+  });
+
+  it('refuses a production boot that is missing a secret or still holds the placeholder', () => {
+    const parsed = AppEnvSchema.safeParse({ ...example, NODE_ENV: 'production', ADMIN_TOKEN: '' });
+
+    expect(parsed.success).toBe(false);
+    expect(parsed.error?.issues.map((issue) => [issue.path.join('.'), issue.message])).toEqual([
+      ['ADMIN_TOKEN', 'is required in production'],
+      [
+        'WEBHOOK_SIGNING_SECRET',
+        'still holds the published placeholder, which is not a credential',
+      ],
+    ]);
+  });
+
+  it('boots the same environment under development, where a secret may be absent', () => {
+    const { ADMIN_TOKEN: _unset, ...env } = example;
+
+    expect(AppEnvSchema.parse({ ...env, NODE_ENV: 'development' }).ADMIN_TOKEN).toBeUndefined();
+  });
+
+  it('boots production once every secret is a real value', () => {
+    const secrets = Object.fromEntries(SECRET_KEYS.map((key) => [key, `${key}-rotated-value`]));
+
+    expect(AppEnvSchema.safeParse({ ...example, ...secrets, NODE_ENV: 'production' }).success).toBe(
+      true
+    );
   });
 
   it('defaults the connection pool without being told', () => {

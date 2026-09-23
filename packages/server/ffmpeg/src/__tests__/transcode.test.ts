@@ -1,6 +1,5 @@
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
-import { describe, expect, it } from 'vitest';
 import {
   buildTranscodeArgs,
   classifyFfmpegError,
@@ -40,6 +39,8 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
       outputDir: '/tmp/out-720p',
       rendition: ladder720p,
       fps: 24,
+      threads: 2,
+      preset: 'veryfast',
     });
 
     expect(args24).toContain('-hide_banner');
@@ -79,6 +80,8 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
       outputDir: '/tmp/out-720p',
       rendition: ladder720p,
       fps: 29.97,
+      threads: 2,
+      preset: 'veryfast',
     });
     const gIndex30 = args30.indexOf('-g');
     expect(args30[gIndex30 + 1]).toBe('60');

@@ -9,8 +9,8 @@ import {
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
+import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, ok } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
 export { DELETABLE_STATUSES, REPROCESSABLE_STATUSES };
@@ -42,7 +42,7 @@ export type VideoLifecycleServiceFailure =
  */
 export async function reprocessVideo(
   deps: VideoLifecycleDeps,
-  user: AuthUser,
+  user: UserContext,
   videoId: string,
   options: { traceparent?: string } = {}
 ): Promise<Result<ReprocessResult, VideoLifecycleServiceFailure>> {
@@ -80,7 +80,7 @@ export async function reprocessVideo(
 /** Soft deletes a video (SDD §6.1, §9.8). Deleting an already-deleted video is a no-op, not a failure. */
 export async function softDeleteVideo(
   deps: VideoLifecycleDeps,
-  user: AuthUser,
+  user: UserContext,
   videoId: string
 ): Promise<Result<SoftDeleteResult, VideoLifecycleServiceFailure>> {
   const found = await deps.videos.findById(videoId);

@@ -134,6 +134,8 @@ export async function runAbandonedUploadTest(ctx: DlqCheckContext): Promise<{
   await new Promise((r) => setTimeout(r, 50));
   if (repositories && multipart) {
     await runReconcileUploads({
+      rawBucket: 'raw',
+      maxInflightPerUser: 3,
       repositories,
       multipart,
       uploadingThresholdMs: 10,

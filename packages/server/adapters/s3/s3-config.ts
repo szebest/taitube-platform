@@ -1,10 +1,10 @@
 import { S3Client, type S3ClientConfig } from '@aws-sdk/client-s3';
 
 export interface S3ConnectionConfig {
-  endpoint?: string;
-  region?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
+  endpoint: string;
+  region: string;
+  accessKeyId?: string | undefined;
+  secretAccessKey?: string | undefined;
   forcePathStyle?: boolean;
 }
 
@@ -14,34 +14,15 @@ function localEndpoint(endpoint: string): boolean {
   );
 }
 
+/** Without both keys the SDK resolves credentials itself, as an IAM role or a profile expects. */
 export function s3ClientFrom(config: S3ConnectionConfig): S3Client {
-  const endpoint =
-    config.endpoint ??
-    process.env['S3_ENDPOINT'] ??
-    process.env['STORAGE_ENDPOINT'] ??
-    'http://localhost:9000';
+  const { endpoint, region, accessKeyId, secretAccessKey } = config;
 
   const s3Config: S3ClientConfig = {
     endpoint,
-    region:
-      config.region ?? process.env['S3_REGION'] ?? process.env['STORAGE_REGION'] ?? 'us-east-1',
-    credentials: {
-      accessKeyId:
-        config.accessKeyId ??
-        process.env['S3_ACCESS_KEY_ID'] ??
-        process.env['STORAGE_ACCESS_KEY_ID'] ??
-        'minioadmin',
-      secretAccessKey:
-        config.secretAccessKey ??
-        process.env['S3_SECRET_ACCESS_KEY'] ??
-        process.env['STORAGE_SECRET_ACCESS_KEY'] ??
-        'minioadmin',
-    },
-    forcePathStyle:
-      config.forcePathStyle ??
-      (process.env['S3_FORCE_PATH_STYLE'] === 'true' ||
-        process.env['STORAGE_FORCE_PATH_STYLE'] === 'true' ||
-        localEndpoint(endpoint)),
+    region,
+    forcePathStyle: config.forcePathStyle ?? localEndpoint(endpoint),
+    ...(accessKeyId && secretAccessKey ? { credentials: { accessKeyId, secretAccessKey } } : {}),
   };
 
   return new S3Client(s3Config);

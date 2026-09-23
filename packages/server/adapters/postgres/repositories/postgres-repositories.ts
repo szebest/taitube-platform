@@ -1,8 +1,8 @@
 import type { Repositories } from '@vp/core/repositories';
 import * as schema from '@vp/db';
+import { assertNever } from '@vp/result';
 import { type PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
-import type { PostgresDatabaseClient } from '../postgres-database-client';
 import { PostgresCategoryRepository } from './postgres-category-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
@@ -16,13 +16,9 @@ import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
 
-export interface PostgresRepositoriesConfig {
-  url?: string;
-  max?: number;
-  db?: PostgresJsDatabase<typeof schema>;
-  sql?: Sql;
-  client?: PostgresDatabaseClient;
-}
+export type PostgresRepositoriesConfig =
+  | { type: 'drizzle'; db: PostgresJsDatabase<typeof schema>; sql?: Sql }
+  | { type: 'url'; url: string; max: number };
 
 export class PostgresRepositories implements Repositories {
   readonly videos: PostgresVideoRepository;
@@ -40,27 +36,9 @@ export class PostgresRepositories implements Repositories {
 
   private readonly sql?: Sql;
 
-  constructor(config: PostgresRepositoriesConfig = {}) {
-    let db: PostgresJsDatabase<typeof schema>;
-
-    if (config.db) {
-      db = config.db;
-      this.sql = config.sql;
-    } else if (config.client) {
-      this.sql = config.client.getRawSql();
-      db = drizzle(this.sql, { schema });
-    } else {
-      const connectionString =
-        config.url ||
-        process.env['DATABASE_URL'] ||
-        'postgres://vp:vppass@localhost:5432/videopipeline';
-      const poolMax =
-        config.max ??
-        (process.env['DATABASE_POOL_MAX'] ? Number(process.env['DATABASE_POOL_MAX']) : 10);
-      const client = postgres(connectionString, { max: poolMax });
-      this.sql = client;
-      db = drizzle(client, { schema });
-    }
+  constructor(config: PostgresRepositoriesConfig) {
+    const { db, sql } = PostgresRepositories.connect(config);
+    this.sql = sql;
 
     this.videos = new PostgresVideoRepository(db);
     this.uploads = new PostgresUploadRepository(db);
@@ -74,6 +52,22 @@ export class PostgresRepositories implements Repositories {
     this.channels = new PostgresChannelRepository(db);
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);
+  }
+
+  private static connect(config: PostgresRepositoriesConfig): {
+    db: PostgresJsDatabase<typeof schema>;
+    sql: Sql | undefined;
+  } {
+    switch (config.type) {
+      case 'drizzle':
+        return { db: config.db, sql: config.sql };
+      case 'url': {
+        const sql = postgres(config.url, { max: config.max });
+        return { db: drizzle(sql, { schema }), sql };
+      }
+      default:
+        return assertNever(config, 'PostgresRepositoriesConfig');
+    }
   }
 
   async close(): Promise<void> {

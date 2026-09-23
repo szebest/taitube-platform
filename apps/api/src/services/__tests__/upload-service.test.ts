@@ -2,13 +2,13 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
+import type { UserContext } from '@vp/permissions';
 import { MULTIPART_THRESHOLD_BYTES } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
-import type { AuthUser } from '../../plugins/auth';
 import { UploadService, type UploadServiceDeps } from '../upload-service';
 
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000e001', role: 'CREATOR' };
+const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'CREATOR' };
 
 describe('apps/api/services: UploadService', () => {
   let repositories: InMemoryRepositories;
@@ -21,6 +21,10 @@ describe('apps/api/services: UploadService', () => {
       events: repositories.events,
       storage,
       multipart: new InMemoryMultipartStorage(storage),
+      rawBucket: 'raw',
+      multipartThresholdBytes: MULTIPART_THRESHOLD_BYTES,
+      presignedUrlTtlSeconds: 900,
+      maxInflightPerUser: 3,
       ...overrides,
     });
   }
@@ -30,7 +34,7 @@ describe('apps/api/services: UploadService', () => {
     storage = new InMemoryStorageClient();
   });
 
-  it('falls back to the packaged multipart threshold', async () => {
+  it('switches to multipart above the configured threshold', async () => {
     const service = build();
 
     const result = expectOk(

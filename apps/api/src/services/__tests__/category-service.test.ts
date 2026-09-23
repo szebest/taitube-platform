@@ -1,27 +1,28 @@
-import { CategoryCacheService, InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
+import { RedisCategoryCacheAdapter } from '@vp/adapters';
+import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import type { AuthUser } from '../../plugins/auth';
 import { CategoryService } from '../category-service';
 
-const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };
+const ADMIN: UserContext = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };
 
 describe('CategoryService', () => {
   let repositories: InMemoryRepositories;
-  let cacheService: CategoryCacheService;
+  let cacheService: RedisCategoryCacheAdapter;
   let categoryService: CategoryService;
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     repositories.clear();
-    cacheService = new CategoryCacheService({
+    cacheService = new RedisCategoryCacheAdapter({
       cache: new InMemoryCacheClient(),
       l1TtlMs: 5000,
       l2TtlSeconds: 300,
     });
     categoryService = new CategoryService({
       categories: repositories.categories,
-      categoryCacheService: cacheService,
+      categoryCache: cacheService,
     });
   });
 
@@ -112,7 +113,7 @@ describe('CategoryService', () => {
     { scenario: 'an anonymous caller', caller: null, code: ErrorCodes.UNAUTHORIZED },
     {
       scenario: 'a signed-in non-admin',
-      caller: { id: 'user-1', role: 'USER' } as AuthUser,
+      caller: { id: 'user-1', role: 'USER' } as UserContext,
       code: ErrorCodes.FORBIDDEN,
     },
   ])('refuses taxonomy writes from $scenario', async ({ caller, code }) => {

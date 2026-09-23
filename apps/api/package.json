@@ -33,6 +33,8 @@
     "@scalar/fastify-api-reference": "^1.67.0",
     "@vp/adapters": "workspace:*",
     "@vp/api-contracts": "workspace:*",
+    "@vp/composition": "workspace:*",
+    "@vp/concurrency": "workspace:*",
     "@vp/config": "workspace:*",
     "@vp/core": "workspace:*",
     "@vp/db": "workspace:*",

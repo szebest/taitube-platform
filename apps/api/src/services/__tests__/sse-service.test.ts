@@ -1,14 +1,15 @@
-import { InMemoryRepositories } from '@vp/adapters';
+import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { RenditionStatus } from '@vp/domain';
+import { asCdnBase } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
+import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import type { AuthUser } from '../../plugins/auth';
 import { SseService, mapEventToSse } from '../sse-service';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000d1';
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
-const STRANGER: AuthUser = { id: '00000000-0000-7000-8000-0000000000d3', role: 'USER' };
+const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
+const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000d3', role: 'USER' };
 const CDN = 'http://localhost:9000/public';
 
 describe('apps/api/services: SseService', () => {
@@ -47,7 +48,7 @@ describe('apps/api/services: SseService', () => {
       videos: repositories.videos,
       renditions: repositories.renditions,
       events: repositories.events,
-      cdnBaseUrl: `${CDN}/`,
+      cdn: asCdnBase(`${CDN}/`),
     });
   });
 

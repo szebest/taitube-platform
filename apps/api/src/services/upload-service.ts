@@ -1,18 +1,6 @@
-import type {
-  JobQueue,
-  MultipartStorage,
-  StorageClient,
-  StoragePresignedPartInfo,
-} from '@vp/core/ports';
-import type {
-  EventRepository,
-  UploadRepository,
-  UserRepository,
-  VideoRepository,
-} from '@vp/core/repositories';
+import type { StoragePresignedPartInfo } from '@vp/core/ports';
+import type { UserContext } from '@vp/permissions';
 import type { Result } from '@vp/result';
-import { MULTIPART_THRESHOLD_BYTES } from '@vp/storage';
-import type { AuthUser } from '../plugins/auth';
 import { type AbortUploadFailure, abortUpload } from './upload-abort';
 import {
   type CompleteUploadFailure,
@@ -41,25 +29,12 @@ export * from './upload-context';
 export * from './upload-initiate';
 export * from './upload-parts';
 
-const DEFAULT_PRESIGNED_TTL_SECONDS = 15 * 60;
 /** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
-const DEFAULT_UPLOAD_SESSION_TTL_SECONDS = 24 * 60 * 60;
-const DEFAULT_MAX_INFLIGHT_PER_USER = 3;
+const UPLOAD_SESSION_TTL_SECONDS = 24 * 60 * 60;
 
-export interface UploadServiceDeps {
-  uploads: UploadRepository;
-  videos: VideoRepository;
-  events: EventRepository;
-  users?: UserRepository;
-  storage: StorageClient;
-  multipart: MultipartStorage;
-  rawBucket?: string;
-  probeQueue?: JobQueue;
-  multipartThresholdBytes?: number;
-  presignedUrlTtlSeconds?: number;
+export type UploadServiceDeps = Omit<UploadContext, 'uploadSessionTtlSeconds'> & {
   uploadSessionTtlSeconds?: number;
-  maxInflightPerUser?: number;
-}
+};
 
 /**
  * UploadService — the upload lifecycle (SDD §3.1, §6.1). Each use case lives in
@@ -71,41 +46,27 @@ export class UploadService {
 
   constructor(deps: UploadServiceDeps) {
     this.ctx = {
-      uploads: deps.uploads,
-      videos: deps.videos,
-      events: deps.events,
-      ...(deps.users ? { users: deps.users } : {}),
-      storage: deps.storage,
-      multipart: deps.multipart,
-      rawBucket: deps.rawBucket || process.env['S3_BUCKET_RAW'] || 'raw',
-      ...(deps.probeQueue ? { probeQueue: deps.probeQueue } : {}),
-      multipartThresholdBytes: deps.multipartThresholdBytes ?? MULTIPART_THRESHOLD_BYTES,
-      presignedUrlTtlSeconds: deps.presignedUrlTtlSeconds ?? DEFAULT_PRESIGNED_TTL_SECONDS,
-      uploadSessionTtlSeconds: deps.uploadSessionTtlSeconds ?? DEFAULT_UPLOAD_SESSION_TTL_SECONDS,
-      maxInflightPerUser:
-        deps.maxInflightPerUser ??
-        (process.env['MAX_INFLIGHT_PER_USER']
-          ? Number.parseInt(process.env['MAX_INFLIGHT_PER_USER'], 10)
-          : DEFAULT_MAX_INFLIGHT_PER_USER),
+      ...deps,
+      uploadSessionTtlSeconds: deps.uploadSessionTtlSeconds ?? UPLOAD_SESSION_TTL_SECONDS,
     };
   }
 
   initiate(
-    user: AuthUser,
+    user: UserContext,
     params: InitiateUploadParams
   ): Promise<Result<InitiateUploadResult, InitiateUploadFailure>> {
     return initiateUpload(this.ctx, user, params);
   }
 
   getResumeInfo(
-    user: AuthUser,
+    user: UserContext,
     uploadId: string
   ): Promise<Result<UploadResumeInfo, ResumeInfoFailure>> {
     return getUploadResumeInfo(this.ctx, user, uploadId);
   }
 
   issuePartUrls(
-    user: AuthUser,
+    user: UserContext,
     uploadId: string,
     from: number,
     count: number
@@ -114,7 +75,7 @@ export class UploadService {
   }
 
   complete(
-    user: AuthUser,
+    user: UserContext,
     uploadId: string,
     parts?: UploadPart[],
     options?: CompleteUploadOptions
@@ -122,7 +83,7 @@ export class UploadService {
     return completeUpload(this.ctx, user, uploadId, parts, options);
   }
 
-  abort(user: AuthUser, uploadId: string): Promise<Result<void, AbortUploadFailure>> {
+  abort(user: UserContext, uploadId: string): Promise<Result<void, AbortUploadFailure>> {
     return abortUpload(this.ctx, user, uploadId);
   }
 }

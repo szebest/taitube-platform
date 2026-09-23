@@ -1,4 +1,4 @@
-import { InMemoryCacheClient, InMemoryJobQueue } from '@vp/adapters';
+import { InMemoryCacheClient, InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type {
   JobSchedulerTemplate,
   PatternMessageListener,
@@ -13,7 +13,8 @@ import {
 } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import { type Result, err } from '@vp/result';
-import { buildApp } from '../app';
+import { expectErr, expectOk } from '@vp/testing/result';
+import { buildApp, composeApp } from '../app';
 
 class UnsubscribableCache extends InMemoryCacheClient {
   override async psubscribe(
@@ -42,25 +43,53 @@ function queuesWith(housekeeping: InMemoryJobQueue): Map<string, InMemoryJobQueu
   return queues;
 }
 
-describe('apps/api: a dependency the API cannot boot without fails the boot', () => {
+function timers(): number {
+  return process.getActiveResourcesInfo().filter((resource) => resource === 'Timeout').length;
+}
+
+describe('apps/api: a dependency the API cannot boot without fails the start', () => {
   it('refuses to start on a cache that cannot take the SSE subscription', async () => {
-    await expect(buildApp({ adapters: { cache: new UnsubscribableCache() } })).rejects.toMatchObject(
-      { code: ErrorCodes.CACHE_UNAVAILABLE }
-    );
+    const { app, container } = await composeApp({ adapters: { cache: new UnsubscribableCache() } });
+
+    const failed = expectErr(await container.start());
+
+    expect(failed.cause).toMatchObject({ code: ErrorCodes.CACHE_UNAVAILABLE });
+    await app.close();
   });
 
   it('refuses to start when the housekeeping schedulers cannot be registered', async () => {
-    await expect(
-      buildApp({ adapters: { queues: queuesWith(new UnschedulableQueue('housekeeping')) } })
-    ).rejects.toMatchObject({ code: ErrorCodes.QUEUE_UNAVAILABLE });
+    const { app, container } = await composeApp({
+      adapters: { queues: queuesWith(new UnschedulableQueue('housekeeping')) },
+    });
+
+    const failed = expectErr(await container.start());
+
+    expect(failed).toMatchObject({
+      token: 'HousekeepingQueue',
+      cause: { code: ErrorCodes.QUEUE_UNAVAILABLE },
+    });
+    await app.close();
   });
 
-  it('starts on adapters that answer, and closes cleanly', async () => {
+  it('builds the whole app without opening a timer, and closes cleanly', async () => {
+    const before = timers();
+
     const app = await buildApp({});
-
     await app.ready();
-    await app.close();
 
+    expect(timers()).toBe(before);
     expect(app.printRoutes()).toContain('uploads');
+    await app.close();
+  });
+
+  it('starts the pollers only when asked, and stops them on close', async () => {
+    const before = timers();
+    const { app, container } = await composeApp({});
+
+    expectOk(await container.start());
+    expect(timers()).toBeGreaterThan(before);
+
+    await app.close();
+    expect(timers()).toBe(before);
   });
 });

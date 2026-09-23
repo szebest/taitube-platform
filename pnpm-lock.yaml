@@ -71,6 +71,12 @@ importers:
       '@vp/api-contracts':
         specifier: workspace:*
         version: link:../../packages/universal/api-contracts
+      '@vp/composition':
+        specifier: workspace:*
+        version: link:../../packages/server/composition
+      '@vp/concurrency':
+        specifier: workspace:*
+        version: link:../../packages/server/concurrency
       '@vp/config':
         specifier: workspace:*
         version: link:../../packages/server/config
@@ -289,6 +295,9 @@ importers:
       '@vp/adapters':
         specifier: workspace:*
         version: link:../../packages/server/adapters
+      '@vp/composition':
+        specifier: workspace:*
+        version: link:../../packages/server/composition
       '@vp/config':
         specifier: workspace:*
         version: link:../../packages/server/config
@@ -414,6 +423,12 @@ importers:
       '@ucast/core':
         specifier: ^2.0.0
         version: 2.0.0
+      '@vp/composition':
+        specifier: workspace:*
+        version: link:../composition
+      '@vp/concurrency':
+        specifier: workspace:*
+        version: link:../concurrency
       '@vp/core':
         specifier: workspace:*
         version: link:../core
@@ -426,9 +441,15 @@ importers:
       '@vp/domain-rules':
         specifier: workspace:*
         version: link:../../universal/domain-rules
+      '@vp/env-schema':
+        specifier: workspace:*
+        version: link:../env-schema
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
+      '@vp/job-contracts':
+        specifier: workspace:*
+        version: link:../job-contracts
       '@vp/observability':
         specifier: workspace:*
         version: link:../observability
@@ -487,6 +508,46 @@ importers:
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../../universal/tsconfig
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/composition:
+    dependencies:
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/concurrency:
+    devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
@@ -851,6 +912,9 @@ importers:
       '@vp/dev-token':
         specifier: workspace:*
         version: link:../dev-token
+      '@vp/env-schema':
+        specifier: workspace:*
+        version: link:../env-schema
       '@vp/testing':
         specifier: workspace:*
         version: link:../testing

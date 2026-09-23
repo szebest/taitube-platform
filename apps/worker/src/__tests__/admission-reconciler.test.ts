@@ -1,8 +1,13 @@
-import { InMemoryJobQueue, InMemoryMultipartStorage, InMemoryRepositories } from '@vp/adapters';
+import {
+  InMemoryJobQueue,
+  InMemoryMultipartStorage,
+  InMemoryRepositories,
+} from '@vp/adapters/in-memory';
 import { ids } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2, AC 3)', () => {
   let repositories: InMemoryRepositories;
@@ -50,6 +55,7 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     // Run reconciler with 0 threshold override (simulating cadence trigger)
     const result = expectOk(
       await runReconcileUploads({
+        ...STAGE_SETTINGS,
         repositories,
         multipart,
         probeQueue,
@@ -78,6 +84,7 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     // Run reconciler with 0 threshold override
     const result = expectOk(
       await runReconcileUploads({
+        ...STAGE_SETTINGS,
         repositories,
         multipart,
         probeQueue,
@@ -118,6 +125,7 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     // Second run: owner now has 3 in-flight (2 existing + held1), so held2 remains held
     const result2 = expectOk(
       await runReconcileUploads({
+        ...STAGE_SETTINGS,
         repositories,
         multipart,
         probeQueue,
@@ -141,6 +149,7 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
     // Now in-flight is 2 (< 3), run reconciler again: held2 is released!
     const result3 = expectOk(
       await runReconcileUploads({
+        ...STAGE_SETTINGS,
         repositories,
         multipart,
         probeQueue,
@@ -157,6 +166,7 @@ describe('apps/worker Admission Control Reconciler & Priorities (Ticket 18: AC 2
 
     const result = expectOk(
       await runReconcileUploads({
+        ...STAGE_SETTINGS,
         repositories,
         multipart,
         probeQueue,

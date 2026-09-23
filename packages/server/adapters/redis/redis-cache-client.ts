@@ -1,14 +1,12 @@
 import type { MessageListener, PatternMessageListener } from '@vp/core/ports';
 import { CacheClient } from '@vp/core/ports';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
+import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result';
 import { Redis, type RedisOptions } from 'ioredis';
 
-export interface RedisCacheClientConfig {
-  url?: string;
-  options?: RedisOptions;
-  client?: Redis;
-}
+export type RedisCacheClientConfig =
+  | { type: 'client'; client: Redis }
+  | { type: 'url'; url: string; options?: RedisOptions };
 
 export class RedisCacheClient extends CacheClient {
   private readonly redis: Redis;
@@ -16,20 +14,24 @@ export class RedisCacheClient extends CacheClient {
   private readonly channelListeners = new Map<string, Set<MessageListener>>();
   private readonly patternListeners = new Map<string, Set<PatternMessageListener>>();
 
-  constructor(config: RedisCacheClientConfig = {}) {
+  constructor(config: RedisCacheClientConfig) {
     super();
 
-    if (config.client) {
-      this.redis = config.client;
-      return;
+    switch (config.type) {
+      case 'client':
+        this.redis = config.client;
+        return;
+      case 'url':
+        this.redis = new Redis(config.url, {
+          maxRetriesPerRequest: null,
+          enableReadyCheck: false,
+          lazyConnect: true,
+          ...config.options,
+        });
+        return;
+      default:
+        assertNever(config, 'RedisCacheClientConfig');
     }
-
-    this.redis = new Redis(config.url ?? process.env['REDIS_URL'] ?? 'redis://127.0.0.1:6379', {
-      maxRetriesPerRequest: null,
-      enableReadyCheck: false,
-      lazyConnect: true,
-      ...config.options,
-    });
   }
 
   getRedis(): Redis {

@@ -4,14 +4,9 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { SseHub } from '../services/sse-hub';
-import type { SseService, SseSession } from '../services/sse-service';
+import type { SseSession } from '../services/sse-service';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
-
-export interface EventsRouteOptions {
-  sseHub: SseHub;
-  sseService: SseService;
-}
 
 const SSE_HEADERS = {
   'Content-Type': 'text/event-stream',
@@ -32,7 +27,9 @@ function resumeFrom(request: FastifyRequest): number | null {
 
 /**
  * Registration subscribes before any state is read, and the snapshot is taken before the 200 goes
- * out, so a failure on either still renders as a `Problem` rather than as a half-open stream.
+ * out, so a failure on either still renders as a `Problem` rather than as a half-open stream. The
+ * hub is already subscribed once the process has started; `init()` is then a no-op, and in a
+ * process nobody started it is what keeps a stream from opening onto a silent hub.
  */
 async function stream(
   hub: SseHub,
@@ -40,9 +37,12 @@ async function stream(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<FastifyReply | undefined> {
+  const subscribed = await hub.init();
+  if (isErr(subscribed)) return sendResult(reply, request, subscribed);
+
   const registered = hub.register({
     channel: session.channel,
-    ...(session.userId ? { userId: session.userId } : {}),
+    userId: session.userId,
     rawResponse: reply.raw,
   });
   if (isErr(registered)) return sendResult(reply, request, registered);
@@ -76,8 +76,8 @@ async function stream(
   return undefined;
 }
 
-export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteOptions): void {
-  const { sseHub, sseService } = options;
+export async function eventsRoutes(app: FastifyInstance): Promise<void> {
+  const { sseHub, sseService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(streamVideoEvents)) {

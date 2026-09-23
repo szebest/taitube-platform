@@ -4,8 +4,9 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -41,10 +42,10 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
         probeQueue,
         queues: adminQueues,
       },
-      limits: {
-        multipartThresholdBytes: 5 * 1024 * 1024,
-      },
-      rawBucket: 'raw-bucket',
+      config: inProcessAppConfig({
+        buckets: { raw: 'raw-bucket' },
+        limits: { multipartThresholdBytes: 5 * 1024 * 1024 },
+      }),
     });
 
     await app.ready();

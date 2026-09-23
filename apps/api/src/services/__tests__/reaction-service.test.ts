@@ -1,4 +1,5 @@
-import { InMemoryRepositories } from '@vp/adapters';
+import { RedisReactionCacheAdapter } from '@vp/adapters';
+import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ReactionService } from '../reaction-service';
@@ -9,6 +10,7 @@ const OWNER_ID = '00000000-0000-7000-8000-0000000000a2';
 function makeService(repositories: InMemoryRepositories): ReactionService {
   return new ReactionService({
     videoReactions: repositories.videoReactions,
+    reactionCache: new RedisReactionCacheAdapter({ cache: new InMemoryCacheClient() }),
     videos: repositories.videos,
   });
 }

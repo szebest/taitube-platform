@@ -77,7 +77,7 @@ function getHashAlgorithm(alg?: string): string | null {
 
 export async function verifyUniversalToken(
   token: string,
-  jwksUrl?: string
+  jwksUrl: string
 ): Promise<DecodedTokenPayload> {
   const parts = token.split('.');
   if (parts.length !== 3) {
@@ -111,23 +111,18 @@ export async function verifyUniversalToken(
         exp: payload.exp,
       };
     } catch (devErr) {
-      // If dev token verification failed and no custom jwksUrl was provided, fail
-      if (!jwksUrl) {
-        throw new PermanentError(
-          ErrorCodes.UNAUTHORIZED,
-          `Token verification failed: ${(devErr as Error).message}`
-        );
-      }
+      throw new PermanentError(
+        ErrorCodes.UNAUTHORIZED,
+        `Token verification failed: ${(devErr as Error).message}`
+      );
     }
   }
 
   // 2. Universal JWKS verification (Clerk, Supabase, Auth0, Keycloak, etc.)
-  const targetJwksUrl =
-    jwksUrl || process.env.AUTH_JWKS_URL || 'http://localhost:3000/.well-known/jwks.json';
 
   let jwks: JwksResponse;
   try {
-    jwks = await fetchJwks(targetJwksUrl);
+    jwks = await fetchJwks(jwksUrl);
   } catch (err) {
     throw new PermanentError(
       ErrorCodes.UNAUTHORIZED,
