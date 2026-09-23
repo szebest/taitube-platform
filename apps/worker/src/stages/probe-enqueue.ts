@@ -80,7 +80,6 @@ export async function enqueueFollowUpJobs(
             generation: job.data.generation,
             durationMs: metadata.durationMs,
             traceparent: job.data.traceparent,
-            ...(job.data.forceThumbnailFailure ? { forceFailure: true } : {}),
           }),
           opts: {
             jobId: ids.thumbnail(videoId, job.data.generation),
@@ -145,7 +144,6 @@ export async function enqueueFollowUpJobs(
           generation: job.data.generation,
           durationMs: metadata.durationMs,
           traceparent: job.data.traceparent,
-          ...(job.data.forceThumbnailFailure ? { forceFailure: true } : {}),
         }),
         {
           jobId: thumbnailJobId,

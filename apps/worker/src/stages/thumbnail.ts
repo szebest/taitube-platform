@@ -55,7 +55,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
   ): Promise<Result<ThumbnailResult, ThumbnailStageFailure>> {
     validateJobId(job.id || '');
 
-    const { videoId, sourceKey, durationMs, forceFailure } = job.data;
+    const { videoId, sourceKey, durationMs } = job.data;
     const attempt = (job.attemptsMade ?? 0) + 1;
     const log = logger.child({ videoId, jobId: job.id, stage: 'thumbnail', attempt });
 
@@ -107,14 +107,6 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       });
       return isErr(recorded) ? recorded : err(failure);
     };
-
-    // Forced failure check for test verification (AC 3)
-    if (forceFailure) {
-      log.warn({ errorCode: ErrorCodes.FFMPEG_FAILED }, 'Forced thumbnail failure requested');
-      return failThumbnail(
-        mediaFailure('thumbnail', ErrorCodes.FFMPEG_FAILED, 'Forced thumbnail failure for testing')
-      );
-    }
 
     // Per-job temp directory with guaranteed cleanup on every exit path
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `vp-thumb-${videoId}-`));

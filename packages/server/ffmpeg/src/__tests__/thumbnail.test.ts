@@ -2,7 +2,6 @@ import { execSync } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { PermanentError } from '@vp/errors';
 import { describe, expect, it } from 'vitest';
 import {
   buildPosterArgs,
@@ -169,16 +168,5 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     }
-  });
-
-  it('forceFailure option throws PermanentError with code FFMPEG_FAILED', async () => {
-    await expect(
-      runFfmpegThumbnail({
-        sourcePath: 'dummy.mp4',
-        outputDir: '/tmp',
-        durationMs: 60000,
-        forceFailure: true,
-      })
-    ).rejects.toThrow(PermanentError);
   });
 });

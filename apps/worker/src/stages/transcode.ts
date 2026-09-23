@@ -33,7 +33,6 @@ export interface TranscodeProcessorDeps {
   heartbeatPath: string;
   ffmpeg: { threads: number; preset: string };
   getQueue?: (name: string) => JobQueue;
-  simulateFailureRendition?: string;
   streamingInput?: boolean;
 }
 
@@ -56,7 +55,6 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     metrics: depsMetrics,
     heartbeatPath,
     ffmpeg,
-    simulateFailureRendition,
     streamingInput: depsStreamingInput,
   } = deps;
 
@@ -153,18 +151,6 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       });
       return isErr(marked) ? marked : err(failure);
     };
-
-    // Simulated permanent failure check for resilience tests
-    if (simulateFailureRendition === rendition.name) {
-      log.error({ rendition: rendition.name }, 'Simulated permanent transcode failure');
-      return failTranscode(
-        mediaFailure(
-          stage,
-          ErrorCodes.FFMPEG_FAILED,
-          `Simulated permanent failure in transcode-${rendition.name}`
-        )
-      );
-    }
 
     // 2. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
     const tmpDir = await fs.mkdtemp(

@@ -7,6 +7,7 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTranscodeProcessor } from '../stages/transcode';
+import { failTranscodeOf } from './ffmpeg-failures';
 import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off', () => {
@@ -558,12 +559,12 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         audioBitrateKbps: 128,
       });
 
+      failTranscodeOf('720p');
       const processor = createTranscodeProcessor({
         ...STAGE_SETTINGS,
         repositories,
         storage,
         logger,
-        simulateFailureRendition: '720p',
       });
 
       expect(expectErr(await processor(makeJob(videoId, '720p'))).code).toBe(

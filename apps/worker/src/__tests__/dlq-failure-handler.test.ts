@@ -15,6 +15,7 @@ import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { throughRunner } from './queue-boundary';
+import { failTranscodeOf } from './ffmpeg-failures';
 import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
@@ -309,14 +310,19 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       })
     );
 
-    // Transcode processor fails permanently with FFMPEG_FAILED
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/fail-parent.mp4',
+      body: Buffer.from('source'),
+      contentType: 'video/mp4',
+    });
+    failTranscodeOf('720p');
     const transcode720 = createTranscodeProcessor({
       ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
       getQueue,
-      simulateFailureRendition: '720p',
     });
     await q720.process(throughRunner(transcode720));
 

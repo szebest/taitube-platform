@@ -1,6 +1,5 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { ErrorCodes, PermanentError } from '@vp/errors';
 import { runFfmpeg } from './transcode';
 
 export interface PosterOptions {
@@ -46,7 +45,6 @@ export interface RunThumbnailOptions {
   intervalSec?: number;
   columns?: number;
   timeoutMs?: number;
-  forceFailure?: boolean;
 }
 
 export interface ThumbnailExecutionResult {
@@ -283,10 +281,6 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
 export async function runFfmpegThumbnail(
   options: RunThumbnailOptions
 ): Promise<ThumbnailExecutionResult> {
-  if (options.forceFailure) {
-    throw new PermanentError(ErrorCodes.FFMPEG_FAILED, 'Forced thumbnail failure for testing');
-  }
-
   const {
     sourcePath,
     outputDir,

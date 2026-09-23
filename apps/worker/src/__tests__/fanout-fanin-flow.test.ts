@@ -17,6 +17,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { throughRunner } from './queue-boundary';
+import { failTranscodeOf } from './ffmpeg-failures';
 import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', () => {
@@ -569,7 +570,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     expect(qThumb.enqueuedJobs).toHaveLength(1);
   });
 
-  it('AC 5: Simulated permanent failure in transcode-480p -> parent fails -> video FAILED with child error_code, other children outputs left in place', async () => {
+  it('AC 5: A permanent FFmpeg failure in transcode-480p -> parent fails -> video FAILED with child error_code, other children outputs left in place', async () => {
     const sourceKey = 'raw/s60.mp4';
     const videoId = await setupUploadedVideo(sourceKey, 'Failing Video');
     await storage.uploadObject({
@@ -674,18 +675,17 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     const rendsBeforeFail = expectOk(await repositories.renditions.findByVideoId(videoId));
     expect(rendsBeforeFail.find((r: any) => r.name === '720p')?.status).toBe('DONE');
 
-    // 2. Process 480p with simulated permanent failure
+    failTranscodeOf('480p');
     const transcode480 = createTranscodeProcessor({
       ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
       getQueue,
-      simulateFailureRendition: '480p',
     });
 
     await expect(getQueue('transcode-480p').process(throughRunner(transcode480))).rejects.toThrow(
-      'Simulated permanent failure in transcode-480p'
+      'FFmpeg failed for transcode-480p'
     );
 
     // 3. Verify parent failed and video transitioned to FAILED with child's error code (AC 5)

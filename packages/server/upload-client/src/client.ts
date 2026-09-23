@@ -46,10 +46,10 @@ export interface ResumeInfoResult {
   uploadedParts?: UploadedPartStatus[];
 }
 
-export class ClientCrashedError extends Error {
-  constructor(message = 'Client simulated crash at threshold') {
+export class UploadAbortedError extends Error {
+  constructor(message = 'Upload aborted before every part was sent') {
     super(message);
-    this.name = 'ClientCrashedError';
+    this.name = 'UploadAbortedError';
   }
 }
 
@@ -176,7 +176,7 @@ export class UploadClient {
     strategy?: 'single' | 'multipart';
     concurrency?: number;
     existingUploadId?: string;
-    killAtPercent?: number; // for testing simulated crash at ~50%
+    signal?: AbortSignal;
     onProgress?: (completedParts: number, totalParts: number) => void;
   }): Promise<{ videoId: string; uploadId: string; status: string }> {
     const {
@@ -186,7 +186,7 @@ export class UploadClient {
       strategy: requestedStrategy,
       concurrency = 4, // Default concurrency 4 per AC 18
       existingUploadId,
-      killAtPercent,
+      signal,
       onProgress,
     } = options;
 
@@ -269,6 +269,7 @@ export class UploadClient {
     const fd = fs.openSync(filePath, 'r');
 
     const abortController = new AbortController();
+    signal?.addEventListener('abort', () => abortController.abort(), { once: true });
 
     try {
       const uploadWorker = async (): Promise<void> => {
@@ -277,14 +278,6 @@ export class UploadClient {
 
           const partNumber = missingParts[nextMissingIndex++];
           if (!partNumber) break;
-
-          // If simulating a crash at killAtPercent, do not start parts beyond the crash threshold (AC 18)
-          if (killAtPercent !== undefined) {
-            const maxPartsAllowed = Math.ceil(partsExpected * (killAtPercent / 100));
-            if (partNumber > maxPartsAllowed) {
-              break;
-            }
-          }
 
           // Fetch part URL if not cached
           let partUrl = partUrlsMap.get(partNumber);
@@ -335,17 +328,6 @@ export class UploadClient {
           if (onProgress) {
             onProgress(completedPartsMap.size, partsExpected);
           }
-
-          // Check if simulated crash threshold reached (AC 18)
-          if (killAtPercent !== undefined) {
-            const currentPercent = (completedPartsMap.size / partsExpected) * 100;
-            if (currentPercent >= killAtPercent) {
-              abortController.abort();
-              throw new ClientCrashedError(
-                `Simulated client crash reached at ${currentPercent.toFixed(1)}% (${completedPartsMap.size}/${partsExpected} parts)`
-              );
-            }
-          }
         }
       };
 
@@ -357,6 +339,12 @@ export class UploadClient {
       await Promise.all(workers);
     } finally {
       fs.closeSync(fd);
+    }
+
+    if (abortController.signal.aborted) {
+      throw new UploadAbortedError(
+        `Upload aborted after ${completedPartsMap.size}/${partsExpected} parts`
+      );
     }
 
     // Complete upload
