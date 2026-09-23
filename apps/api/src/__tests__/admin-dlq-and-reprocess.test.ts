@@ -187,7 +187,7 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
         payload: { videoId, rendition: { name: '720p' }, generation: 1 },
         status: 'PARKED',
       });
-      dlqEntryId = entry.id;
+      dlqEntryId = expectOk(entry).id;
     });
 
     it('requires admin access', async () => {
@@ -238,13 +238,13 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
       expect(targetQueue.enqueuedJobs[0]?.id).toBe(`${videoId}--transcode--720p--g1--r1`);
 
       // Verify DLQ status updated
-      const updated = await repositories.dlq.findById(dlqEntryId);
+      const updated = expectOk(await repositories.dlq.findById(dlqEntryId));
       expect(updated?.status).toBe('REPLAYED');
       expect(updated?.replayedAt).toBeDefined();
 
       // Verify audit event dlq.replayed written to video_events
       const events = await repositories.events.findByVideoId(videoId);
-      const replayEvent = events.find((e) => e.type === 'dlq.replayed');
+      const replayEvent = expectOk(events).find((e) => e.type === 'dlq.replayed');
       expect(replayEvent).toBeDefined();
       expect(replayEvent?.payload).toMatchObject({
         dlqEntryId,
@@ -272,7 +272,7 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
         payload: { videoId, sourceKey: 'raw/corrupt.mp4' },
         status: 'PARKED',
       });
-      dlqEntryId = entry.id;
+      dlqEntryId = expectOk(entry).id;
     });
 
     it('requires admin access', async () => {
@@ -310,12 +310,12 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
       expect(res.statusCode).toBe(204);
 
       // Verify DLQ status updated to DISCARDED
-      const updated = await repositories.dlq.findById(dlqEntryId);
+      const updated = expectOk(await repositories.dlq.findById(dlqEntryId));
       expect(updated?.status).toBe('DISCARDED');
 
       // Verify dlq.discarded event written
       const events = await repositories.events.findByVideoId(videoId);
-      const discardEvent = events.find((e) => e.type === 'dlq.discarded');
+      const discardEvent = expectOk(events).find((e) => e.type === 'dlq.discarded');
       expect(discardEvent).toBeDefined();
       expect(discardEvent?.payload).toMatchObject({
         dlqEntryId,
@@ -409,7 +409,7 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
 
       // Verify video.reprocessing audit event
       const events = await repositories.events.findByVideoId(videoId);
-      const reprocessEvent = events.find((e) => e.type === 'video.reprocessing');
+      const reprocessEvent = expectOk(events).find((e) => e.type === 'video.reprocessing');
       expect(reprocessEvent).toBeDefined();
       expect((reprocessEvent?.payload as { generation?: number })?.generation).toBe(2);
     });

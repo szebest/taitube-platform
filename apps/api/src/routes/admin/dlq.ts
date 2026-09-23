@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { DlqService } from '../../services/dlq-service';
 import { contractPaths, contractSchema } from '../contract-schema';
+import { sendResult } from '../send-result';
 
 export interface AdminDlqRouteOptions {
   dlqService: DlqService;
@@ -28,8 +29,12 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
       },
       async (request, reply) => {
         const { cursor, limit, status } = request.query;
-        const result = await dlqService.list(request.user, { cursor, limit, status });
-        return reply.status(200).send(result);
+
+        return sendResult(
+          reply,
+          request,
+          await dlqService.list(request.user, { cursor, limit, status })
+        );
       }
     );
   }
@@ -46,8 +51,10 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
       },
       async (request, reply) => {
         const { id } = request.params;
-        const result = await dlqService.replay(request.user, id);
-        return reply.status(202).send(result);
+
+        return sendResult(reply, request, await dlqService.replay(request.user, id), {
+          status: 202,
+        });
       }
     );
   }
@@ -63,8 +70,10 @@ export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRo
       },
       async (request, reply) => {
         const { id } = request.params;
-        await dlqService.discard(request.user, id);
-        return reply.status(204).send(null);
+
+        return sendResult(reply, request, await dlqService.discard(request.user, id), {
+          status: 204,
+        });
       }
     );
   }

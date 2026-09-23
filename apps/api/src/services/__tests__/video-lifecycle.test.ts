@@ -50,7 +50,7 @@ describe('apps/api/services: video lifecycle', () => {
       expect(result).toEqual({ videoId: VIDEO_ID, status: 'PROBING', generation: 2 });
       expect(await storedVideo()).toMatchObject({ status: 'PROBING', generation: 2 });
 
-      const jobs = await probeQueue.getJobs(['waiting', 'delayed', 'active']);
+      const jobs = expectOk(await probeQueue.getJobs(['waiting', 'delayed', 'active']));
       expect(jobs).toHaveLength(1);
       expect(jobs[0]?.opts?.jobId).toBe(ids.probe(VIDEO_ID, 2));
     });
@@ -77,7 +77,7 @@ describe('apps/api/services: video lifecycle', () => {
 
       expectOk(await service.reprocess(OWNER, VIDEO_ID));
 
-      const events = await repositories.events.findByVideoId(VIDEO_ID);
+      const events = expectOk(await repositories.events.findByVideoId(VIDEO_ID));
       expect(events.find((event) => event.type === 'video.reprocessing')?.payload).toMatchObject({
         generation: 2,
         requestedBy: OWNER.id,

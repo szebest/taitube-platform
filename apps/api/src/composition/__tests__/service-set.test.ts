@@ -52,9 +52,11 @@ describe('apps/api/composition: service set', () => {
     const adapters = resolveAdapterSet({ kind: 'in-memory' });
 
     const services = await createServiceSet(adapters, CONFIG);
-    const started = await services.uploadService.initiate(
-      { id: '00000000-0000-7000-8000-00000000f001', role: 'CREATOR' },
-      { filename: 'clip.mp4', sizeBytes: 1024, contentType: 'video/mp4' }
+    const started = expectOk(
+      await services.uploadService.initiate(
+        { id: '00000000-0000-7000-8000-00000000f001', role: 'CREATOR' },
+        { filename: 'clip.mp4', sizeBytes: 1024, contentType: 'video/mp4' }
+      )
     );
 
     expect(expectOk(await adapters.repositories.videos.findById(started.videoId))).toMatchObject({

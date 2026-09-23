@@ -1,4 +1,4 @@
-import type { AuthorizationPort, JobQueue, MultipartStorage, StorageClient } from '@vp/core/ports';
+import type { JobQueue, MultipartStorage, StorageClient } from '@vp/core/ports';
 import type {
   EventRepository,
   UploadRecord,
@@ -7,9 +7,9 @@ import type {
   VideoRecord,
   VideoRepository,
 } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError, toPipelineError } from '@vp/errors';
-import { canAccessUpload } from '@vp/permissions';
-import { isErr } from '@vp/result';
+import { type UploadAccessFailure, decideUploadAccess } from '@vp/domain-rules';
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, isErr, map } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 
 export interface UploadContext {
@@ -24,51 +24,35 @@ export interface UploadContext {
   multipartThresholdBytes: number;
   presignedUrlTtlSeconds: number;
   maxInflightPerUser: number;
-  auth: AuthorizationPort;
 }
 
+export interface OwnedUpload {
+  upload: UploadRecord;
+  video: VideoRecord;
+}
+
+export type LoadOwnedUploadFailure = UploadAccessFailure | DatabaseUnavailable;
+
 /**
- * Every upload use case past initiation starts the same way: find the upload
- * with its video, or refuse. Ownership is asserted before the caller learns
- * whether the upload exists.
+ * Every upload use case past initiation starts the same way: find the upload with its video, or
+ * refuse. The refusal is a rule's verdict, returned rather than thrown.
  */
 export async function loadOwnedUpload(
   ctx: UploadContext,
   user: AuthUser,
   uploadId: string,
   action: string
-): Promise<{ upload: UploadRecord; video: VideoRecord }> {
+): Promise<Result<OwnedUpload, LoadOwnedUploadFailure>> {
   const found = await ctx.uploads.findWithVideo(uploadId);
-  if (isErr(found)) throw toPipelineError(found.error);
+  if (isErr(found)) return found;
 
   const record = found.value;
-  if (record === null) {
-    throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Upload ${uploadId} not found`);
-  }
+  const decided = decideUploadAccess({
+    actor: user,
+    upload: record ? { id: record.upload.id, ownerId: record.video.ownerId } : null,
+    uploadId,
+    action,
+  });
 
-  ctx.auth.assertCan(
-    canAccessUpload,
-    {
-      user: user,
-      upload: { ownerId: record.video.ownerId },
-      video: { ownerId: record.video.ownerId },
-    },
-    {
-      action: 'access',
-      subject: 'Upload',
-      user: user,
-      message: `Not authorized to ${action}`,
-    }
-  );
-
-  return record;
-}
-
-export function assertUploadOpen(upload: UploadRecord): void {
-  if (upload.status !== 'OPEN') {
-    throw new PermanentError(
-      ErrorCodes.UPLOAD_NOT_OPEN,
-      `Upload is not open (current status: ${upload.status})`
-    );
-  }
+  return map(decided, () => record as OwnedUpload);
 }

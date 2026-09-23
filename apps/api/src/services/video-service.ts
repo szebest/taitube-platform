@@ -11,7 +11,7 @@ import {
 } from '@vp/domain-rules';
 import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
-import { type Paginator, defaultPaginator } from '@vp/pagination';
+import { type InvalidCursor, type Paginator, defaultPaginator } from '@vp/pagination';
 import { canAccessAdmin } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
@@ -54,6 +54,8 @@ import {
 /**
  * VideoService — Deep domain module for video operations and projections (SDD §6.1, §6.3).
  */
+export type ListVideosFailure = DatabaseUnavailable | InvalidCursor;
+
 export type ReadVideoServiceFailure = ReadVideoFailure | DatabaseUnavailable;
 
 export type UpdateVideoServiceFailure =
@@ -88,15 +90,15 @@ export class VideoService {
   async list(
     user: AuthUser,
     options: { cursor?: string; limit?: number; status?: VideoStatus }
-  ): Promise<
-    Result<{ items: VideoSummaryView[]; nextCursor: string | null }, DatabaseUnavailable>
-  > {
+  ): Promise<Result<{ items: VideoSummaryView[]; nextCursor: string | null }, ListVideosFailure>> {
     const limit = this.paginator.limit(options.limit);
+    const cursor = decodeCreatedAtCursor(options.cursor, this.paginator);
+    if (isErr(cursor)) return cursor;
 
     const rows = await this.videos.listByOwner({
       ownerId: user.id,
       viewer: user,
-      cursor: decodeCreatedAtCursor(options.cursor, this.paginator),
+      cursor: cursor.value,
       limit,
       status: options.status,
     });
@@ -121,16 +123,18 @@ export class VideoService {
   }): Promise<
     Result<
       { items: VideoSummaryView[]; nextCursor: string | null; total: number },
-      DatabaseUnavailable
+      ListVideosFailure
     >
   > {
     const sort = options.sort ?? 'recent';
     const limit = this.paginator.limit(options.limit);
+    const cursor = decodeFeedCursor(options.cursor, this.paginator);
+    if (isErr(cursor)) return cursor;
 
     const found = await this.videos.listPublic({
       sort,
       categoryId: options.categoryId,
-      cursor: decodeFeedCursor(options.cursor, this.paginator),
+      cursor: cursor.value,
       limit,
     });
 

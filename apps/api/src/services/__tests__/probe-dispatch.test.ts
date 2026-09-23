@@ -1,6 +1,7 @@
 import { InMemoryJobQueue } from '@vp/adapters';
 import { ids, stagePolicies } from '@vp/job-contracts';
 import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';
+import { expectOk } from '@vp/testing/result';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000b1';
 const TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
@@ -36,7 +37,7 @@ describe('apps/api/services: probe dispatch', () => {
     const built = dispatch({ generation: 2 });
 
     await enqueueProbe(queue, built);
-    const [job] = await queue.getJobs(['waiting', 'delayed', 'active', 'completed']);
+    const [job] = expectOk(await queue.getJobs(['waiting', 'delayed', 'active', 'completed']));
 
     expect(built.outbox.payload).toMatchObject({
       type: 'queue',

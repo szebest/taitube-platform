@@ -29,12 +29,14 @@ describe('apps/api/services: initiate upload', () => {
   });
 
   it('issues a single presigned PUT below the multipart threshold', async () => {
-    const result = await service.initiate(OWNER, {
-      filename: 'sample.mp4',
-      sizeBytes: 5 * MB,
-      contentType: 'video/mp4',
-      title: 'Service Direct Test',
-    });
+    const result = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'sample.mp4',
+        sizeBytes: 5 * MB,
+        contentType: 'video/mp4',
+        title: 'Service Direct Test',
+      })
+    );
 
     expect(result).toMatchObject({ strategy: 'single' });
     expect(result.singleUrl).toBeDefined();
@@ -52,22 +54,26 @@ describe('apps/api/services: initiate upload', () => {
     ['forced to multipart', 1 * MB, 'multipart', 'multipart'],
     ['forced to single', 20 * MB, 'single', 'single'],
   ] as const)('picks %s -> %s', async (_label, sizeBytes, strategy, expected) => {
-    const result = await service.initiate(OWNER, {
-      filename: 'sample.mp4',
-      sizeBytes,
-      contentType: 'video/mp4',
-      ...(strategy ? { strategy } : {}),
-    });
+    const result = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'sample.mp4',
+        sizeBytes,
+        contentType: 'video/mp4',
+        ...(strategy ? { strategy } : {}),
+      })
+    );
 
     expect(result.strategy).toBe(expected);
   });
 
   it('hands back the first batch of part URLs for a multipart upload', async () => {
-    const result = await service.initiate(OWNER, {
-      filename: 'big.mp4',
-      sizeBytes: 50 * MB,
-      contentType: 'video/mp4',
-    });
+    const result = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'big.mp4',
+        sizeBytes: 50 * MB,
+        contentType: 'video/mp4',
+      })
+    );
 
     expect(result.parts?.length).toBe(result.partsExpected);
     expect(result.parts?.[0]?.partNumber).toBe(1);
@@ -77,12 +83,14 @@ describe('apps/api/services: initiate upload', () => {
     ['defaults to private', undefined, 'private'],
     ['honours the requested visibility', 'public', 'public'],
   ] as const)('%s', async (_label, visibility, expected) => {
-    const result = await service.initiate(OWNER, {
-      filename: 'sample.mp4',
-      sizeBytes: MB,
-      contentType: 'video/mp4',
-      ...(visibility ? { visibility } : {}),
-    });
+    const result = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'sample.mp4',
+        sizeBytes: MB,
+        contentType: 'video/mp4',
+        ...(visibility ? { visibility } : {}),
+      })
+    );
 
     expect(expectOk(await repositories.videos.findById(result.videoId))).toMatchObject({
       visibility: expected,
@@ -90,11 +98,13 @@ describe('apps/api/services: initiate upload', () => {
   });
 
   it('titles the video after the filename when no title is given', async () => {
-    const result = await service.initiate(OWNER, {
-      filename: 'holiday.mov',
-      sizeBytes: MB,
-      contentType: 'video/quicktime',
-    });
+    const result = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'holiday.mov',
+        sizeBytes: MB,
+        contentType: 'video/quicktime',
+      })
+    );
 
     expect(expectOk(await repositories.videos.findById(result.videoId))).toMatchObject({
       title: 'holiday.mov',
@@ -103,13 +113,15 @@ describe('apps/api/services: initiate upload', () => {
   });
 
   it('records the initiation as a video event', async () => {
-    const result = await service.initiate(OWNER, {
-      filename: 'sample.mp4',
-      sizeBytes: MB,
-      contentType: 'video/mp4',
-    });
+    const result = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'sample.mp4',
+        sizeBytes: MB,
+        contentType: 'video/mp4',
+      })
+    );
 
-    const events = await repositories.events.findByVideoId(result.videoId);
+    const events = expectOk(await repositories.events.findByVideoId(result.videoId));
     expect(events.find((event) => event.type === 'upload.initiated')?.payload).toMatchObject({
       uploadId: result.uploadId,
       strategy: 'single',

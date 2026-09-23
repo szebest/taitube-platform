@@ -33,11 +33,13 @@ describe('apps/api/services: UploadService', () => {
   it('falls back to the packaged multipart threshold', async () => {
     const service = build();
 
-    const result = await service.initiate(OWNER, {
-      filename: 'clip.mp4',
-      sizeBytes: MULTIPART_THRESHOLD_BYTES + 1,
-      contentType: 'video/mp4',
-    });
+    const result = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'clip.mp4',
+        sizeBytes: MULTIPART_THRESHOLD_BYTES + 1,
+        contentType: 'video/mp4',
+      })
+    );
 
     expect(result.strategy).toBe('multipart');
   });
@@ -45,11 +47,13 @@ describe('apps/api/services: UploadService', () => {
   it('stores the source under the configured raw bucket', async () => {
     const service = build({ rawBucket: 'custom-raw' });
 
-    const { videoId } = await service.initiate(OWNER, {
-      filename: 'clip.mp4',
-      sizeBytes: 1024,
-      contentType: 'video/mp4',
-    });
+    const { videoId } = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'clip.mp4',
+        sizeBytes: 1024,
+        contentType: 'video/mp4',
+      })
+    );
     const video = expectOk(await repositories.videos.findById(videoId));
     await storage.uploadObject({
       bucket: 'custom-raw',
@@ -58,22 +62,25 @@ describe('apps/api/services: UploadService', () => {
       contentType: 'video/mp4',
     });
 
-    await expect(
-      service.complete(OWNER, expectOk(await repositories.uploads.findByVideoId(videoId))?.id ?? '')
-    ).resolves.toMatchObject({
-      status: 'UPLOADED',
-    });
+    const completed = await service.complete(
+      OWNER,
+      expectOk(await repositories.uploads.findByVideoId(videoId))?.id ?? ''
+    );
+
+    expect(expectOk(completed)).toMatchObject({ status: 'UPLOADED' });
   });
 
   it('dates the presigned URLs by the configured TTL', async () => {
     const service = build({ presignedUrlTtlSeconds: 60 });
 
     const before = Date.now();
-    const { expiresAt } = await service.initiate(OWNER, {
-      filename: 'clip.mp4',
-      sizeBytes: 1024,
-      contentType: 'video/mp4',
-    });
+    const { expiresAt } = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'clip.mp4',
+        sizeBytes: 1024,
+        contentType: 'video/mp4',
+      })
+    );
     const after = Date.now();
 
     const expiry = new Date(expiresAt).getTime();

@@ -1,12 +1,12 @@
 import * as http from 'node:http';
 import { InMemoryRepositories, S3MultipartStorage, S3StorageClient } from '@vp/adapters';
-import { JobQueue, type QueueJob, type QueueJobCounts, type QueueJobOptions } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
+import { MockProbeJobQueue } from './mock-probe-queue';
 
 describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
   let app: FastifyInstance;
@@ -21,42 +21,8 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
   const signedLengths = new Map<string, number>();
 
   // Mock queue for probe
-  interface MockJobRecord {
-    name: string;
-    data: Record<string, unknown>;
-    opts?: QueueJobOptions;
-  }
-
-  const probeJobs: MockJobRecord[] = [];
-  class MockProbeJobQueue extends JobQueue {
-    async checkHealth(): Promise<boolean> {
-      return true;
-    }
-    getName(): string {
-      return 'probe';
-    }
-    async add<T = unknown>(name: string, data: T, opts?: QueueJobOptions): Promise<QueueJob<T>> {
-      probeJobs.push({ name, data: data as Record<string, unknown>, opts });
-      return { id: opts?.jobId || 'probe-1', name, data, opts };
-    }
-    async process(): Promise<void> {}
-    async isPaused(): Promise<boolean> {
-      return false;
-    }
-    async pause(): Promise<void> {}
-    async resume(): Promise<void> {}
-    async getJobCounts(): Promise<QueueJobCounts> {
-      return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
-    }
-    async getJobs(): Promise<QueueJob<unknown>[]> {
-      return [];
-    }
-    async getJobState(_jobId: string): Promise<string | undefined> {
-      return 'completed';
-    }
-    async close(): Promise<void> {}
-  }
   const mockProbeQueue = new MockProbeJobQueue();
+  const probeJobs = mockProbeQueue.jobs;
 
   beforeAll(async () => {
     // 1. Start lightweight S3 mock server with signature / length checks
@@ -294,7 +260,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
 
     // Verify upload.completed event written to video_events
     const events = await repositories.events.findByVideoId(videoId);
-    expect(events.some((e) => e.type === 'upload.completed')).toBe(true);
+    expect(expectOk(events).some((e) => e.type === 'upload.completed')).toBe(true);
 
     // Verify probe job was enqueued in Redis with deterministic jobId
     const expectedJobId = `${videoId}--probe--g1`;
@@ -517,7 +483,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
 
     // Outbox record was atomically written in the DB transaction
     const pendingOutbox = await repositories.outbox.claimBatch(10);
-    const probeOutboxItem = pendingOutbox.find(
+    const probeOutboxItem = expectOk(pendingOutbox).find(
       (item) =>
         item.kind === 'probe' &&
         item.payload.type === 'queue' &&
@@ -526,7 +492,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     expect(probeOutboxItem).toBeDefined();
 
     // Outbox relay logic: claims batch from outbox and adds to queue, marking published
-    for (const item of pendingOutbox) {
+    for (const item of expectOk(pendingOutbox)) {
       if (item.payload.type === 'queue') {
         await mockProbeQueue.add(
           item.payload.job.name,

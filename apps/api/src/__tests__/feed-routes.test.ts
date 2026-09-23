@@ -5,6 +5,7 @@ import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
+import { expectOk } from '@vp/testing/result';
 
 describe('Public Video Feed API & Anonymous Access (Ticket 36)', () => {
   let app: FastifyInstance;
@@ -381,7 +382,7 @@ describe('Public Video Feed API & Anonymous Access (Ticket 36)', () => {
     });
     expect(res.statusCode).toBe(200);
 
-    const cached = await cache.get('taitube:feed:public:recent:all');
+    const cached = expectOk(await cache.get('taitube:feed:public:recent:all'));
     expect(cached).not.toBeNull();
     const parsed = JSON.parse(cached ?? '{}');
     expect(parsed.data.items[0]?.title).toBe('Cache Test Video');

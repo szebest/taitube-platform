@@ -1,16 +1,14 @@
-import { CaslAuthorizationAdapter } from '@vp/adapters';
-import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
-import type { AuthorizationPort } from '@vp/core/ports';
 import type {
   EventRepository,
   RenditionRecord,
   RenditionRepository,
   VideoRepository,
 } from '@vp/core/repositories';
-import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
-import { toPipelineError } from '@vp/errors';
-import { isErr } from '@vp/result';
+import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/domain-rules';
+import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
+import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
+import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 import { playbackUrl } from './video-views';
 
@@ -33,8 +31,8 @@ export interface SseReplayEvent {
 export interface SseSession {
   channel: string;
   userId?: string;
-  snapshot(): Promise<SseSnapshot>;
-  replay(afterId: number): Promise<SseReplayEvent[]>;
+  snapshot(): Promise<Result<SseSnapshot, DatabaseUnavailable>>;
+  replay(afterId: number): Promise<Result<SseReplayEvent[], DatabaseUnavailable>>;
 }
 
 export interface SseServiceDeps {
@@ -42,8 +40,9 @@ export interface SseServiceDeps {
   renditions: RenditionRepository;
   events: EventRepository;
   cdnBaseUrl?: string;
-  authorization?: AuthorizationPort;
 }
+
+export type OpenVideoStreamFailure = ReadVideoFailure | DatabaseUnavailable;
 
 export function mapEventToSse(record: {
   id: number;
@@ -109,13 +108,11 @@ export class SseService {
   private readonly renditions: RenditionRepository;
   private readonly events: EventRepository;
   private readonly cleanCdnBase: string;
-  private readonly auth: AuthorizationPort;
 
   constructor(deps: SseServiceDeps) {
     this.videos = deps.videos;
     this.renditions = deps.renditions;
     this.events = deps.events;
-    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
     const cdnBase = deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL;
     this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
   }
@@ -123,25 +120,28 @@ export class SseService {
   /**
    * Authorises a single-video stream exactly as GET /v1/videos/:id does.
    */
-  async openVideoStream(user: AuthUser | null, videoId: string): Promise<SseSession> {
+  async openVideoStream(
+    user: AuthUser | null,
+    videoId: string
+  ): Promise<Result<SseSession, OpenVideoStreamFailure>> {
     const found = await this.videos.findById(videoId);
-    if (isErr(found)) throw toPipelineError(found.error);
+    if (isErr(found)) return found;
 
     const decided = decideVideoRead({ viewer: user, video: found.value, videoId });
-    if (isErr(decided)) throw toPipelineError(publicReadFailure(decided.error));
+    if (isErr(decided)) return err(publicReadFailure(decided.error));
     const video = decided.value;
 
-    return {
+    return ok({
       channel: videoChannel(videoId),
       ...(user ? { userId: user.id } : {}),
+      // A snapshot that cannot read the renditions or the event id still opens the stream on what
+      // the video row already said; the live events that follow carry the rest.
       snapshot: async () => {
-        const [renditions, lastEventId] = await Promise.all([
-          this.renditions.findByVideoId(videoId).catch(() => []),
-          this.events.getLatestEventId(videoId).catch(() => 0),
-        ]);
-
+        const renditions = unwrapOr(await this.renditions.findByVideoId(videoId), []);
+        const lastEventId = unwrapOr(await this.events.getLatestEventId(videoId), 0);
         const url = playbackUrl(video, this.cleanCdnBase);
-        return {
+
+        return ok({
           lastEventId,
           data: {
             videoId,
@@ -149,27 +149,30 @@ export class SseService {
             progress: renditionProgress(video.status === 'READY', renditions),
             ...(url ? { playbackUrl: url } : {}),
           },
-        };
+        });
       },
-      replay: (afterId) =>
-        this.events.findAfterId(videoId, afterId).then((rows) => rows.map(mapEventToSse)),
-    };
+      replay: async (afterId) =>
+        map(await this.events.findAfterId(videoId, afterId), (rows) => rows.map(mapEventToSse)),
+    });
   }
 
   openUserStream(user: AuthUser): SseSession {
     return {
       channel: userChannel(user.id),
       userId: user.id,
-      snapshot: async () => ({
-        lastEventId: 0,
-        data: {
-          userId: user.id,
-          status: 'SUBSCRIBED',
-          progress: { overall: 0, byRendition: {} },
-        },
-      }),
-      replay: (afterId) =>
-        this.events.findAfterIdForUser(user.id, afterId).then((rows) => rows.map(mapEventToSse)),
+      snapshot: async () =>
+        ok({
+          lastEventId: 0,
+          data: {
+            userId: user.id,
+            status: 'SUBSCRIBED',
+            progress: { overall: 0, byRendition: {} },
+          },
+        }),
+      replay: async (afterId) =>
+        map(await this.events.findAfterIdForUser(user.id, afterId), (rows) =>
+          rows.map(mapEventToSse)
+        ),
     };
   }
 }

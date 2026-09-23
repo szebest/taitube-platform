@@ -5,7 +5,7 @@ import {
   issueUploadParts,
   startUpload,
 } from '@vp/api-contracts';
-import { isErr } from '@vp/result';
+import { isErr, map } from '@vp/result';
 import { ALLOWED_CONTENT_TYPES, type UploadLimits, validateStartUpload } from '@vp/validation';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -72,7 +72,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
           visibility,
         });
 
-        return reply.status(201).send(result);
+        return sendResult(reply, request, result, { status: 201 });
       }
     );
   }
@@ -89,8 +89,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
       async (request, reply) => {
         const user = requireAuth(request);
         const { uploadId } = request.params;
-        const result = await uploadService.getResumeInfo(user, uploadId);
-        return reply.status(200).send(result);
+        return sendResult(reply, request, await uploadService.getResumeInfo(user, uploadId));
       }
     );
   }
@@ -109,8 +108,13 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
         const user = requireAuth(request);
         const { uploadId } = request.params;
         const { from, count } = request.query;
-        const parts = await uploadService.issuePartUrls(user, uploadId, from, count);
-        return reply.status(200).send({ parts });
+        const issued = await uploadService.issuePartUrls(user, uploadId, from, count);
+
+        return sendResult(
+          reply,
+          request,
+          map(issued, (parts) => ({ parts }))
+        );
       }
     );
   }
@@ -132,7 +136,8 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
         const result = await uploadService.complete(user, uploadId, request.body?.parts, {
           testCrashAfterCommit,
         });
-        return reply.status(202).send(result);
+
+        return sendResult(reply, request, result, { status: 202 });
       }
     );
   }
@@ -149,8 +154,9 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
       async (request, reply) => {
         const user = requireAuth(request);
         const { uploadId } = request.params;
-        await uploadService.abort(user, uploadId);
-        return reply.status(204).send(null);
+        return sendResult(reply, request, await uploadService.abort(user, uploadId), {
+          status: 204,
+        });
       }
     );
   }

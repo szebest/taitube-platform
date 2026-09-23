@@ -90,7 +90,6 @@ export async function createServiceSet(
       storage: adapters.storage,
       multipart: adapters.multipart,
       rawBucket: config.rawBucket,
-      authorization,
       ...(adapters.probeQueue ? { probeQueue: adapters.probeQueue } : {}),
       ...(limits.multipartThresholdBytes === undefined
         ? {}
@@ -121,12 +120,11 @@ export async function createServiceSet(
       cdnBaseUrl,
       paginator,
     }),
-    queueService: new QueueService({ queues: adapters.queues, authorization }),
+    queueService: new QueueService({ queues: adapters.queues }),
     dlqService: new DlqService({
       dlq: repositories.dlq,
       events: repositories.events,
       queues: adapters.queues,
-      authorization,
       paginator,
     }),
     sseService: new SseService({
@@ -134,7 +132,6 @@ export async function createServiceSet(
       renditions: repositories.renditions,
       events: repositories.events,
       cdnBaseUrl,
-      authorization,
     }),
   };
 }

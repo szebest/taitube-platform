@@ -120,7 +120,7 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
     expect(videoAfter?.status).toBe('UPLOADED');
 
     // Verify probe job was enqueued in InMemoryJobQueue
-    const jobs = await probeQueue.getJobs();
+    const jobs = expectOk(await probeQueue.getJobs());
     expect(jobs.length).toBeGreaterThanOrEqual(1);
     const probeJob = jobs.find(
       (j) => (j.data as Record<string, unknown>)?.['videoId'] === initData.videoId

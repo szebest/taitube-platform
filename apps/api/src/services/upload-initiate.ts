@@ -1,7 +1,9 @@
 import * as path from 'node:path';
 import type { StoragePresignedPartInfo } from '@vp/core/ports';
 import type { VideoVisibility } from '@vp/domain';
+import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import { calculatePartSize, calculateTotalParts, rawSourceKey } from '@vp/storage';
+import { type Result, all, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { AuthUser } from '../plugins/auth';
 import type { UploadContext } from './upload-context';
@@ -30,11 +32,13 @@ export interface InitiateUploadResult {
   expiresAt: string;
 }
 
+export type InitiateUploadFailure = StorageUnavailable | DatabaseUnavailable;
+
 export async function initiateUpload(
   ctx: UploadContext,
   user: AuthUser,
   params: InitiateUploadParams
-): Promise<InitiateUploadResult> {
+): Promise<Result<InitiateUploadResult, InitiateUploadFailure>> {
   const { filename, sizeBytes, contentType, sha256, title, visibility } = params;
 
   const videoId = uuidv7();
@@ -66,10 +70,12 @@ export async function initiateUpload(
       contentLength: sizeBytes,
       expiresInSeconds: ctx.presignedUrlTtlSeconds,
     });
+    if (isErr(presigned)) return presigned;
 
-    await createVideoRow();
+    const created = await createVideoRow();
+    if (isErr(created)) return created;
 
-    await ctx.uploads.create({
+    const opened = await ctx.uploads.create({
       id: uploadId,
       videoId,
       strategy: 'single',
@@ -81,35 +87,36 @@ export async function initiateUpload(
       sha256,
       expiresAt,
     });
+    if (isErr(opened)) return opened;
 
-    await ctx.events.create({
+    const recorded = await ctx.events.create({
       videoId,
       type: 'upload.initiated',
       payload: { uploadId, strategy: 'single', sizeBytes, filename },
     });
+    if (isErr(recorded)) return recorded;
 
-    return {
+    return ok({
       videoId,
       uploadId,
       strategy: 'single',
-      singleUrl: presigned.url,
-      headers: presigned.headers,
+      singleUrl: presigned.value.url,
+      headers: presigned.value.headers,
       expiresAt: expiresAt.toISOString(),
-    };
+    });
   }
 
   const partSizeBytes = calculatePartSize(sizeBytes);
   const partsExpected = calculateTotalParts(sizeBytes, partSizeBytes);
 
-  const multipartUploadId = await ctx.multipart.createMultipartUpload(
-    ctx.rawBucket,
-    sourceKey,
-    contentType
-  );
+  const session = await ctx.multipart.createMultipartUpload(ctx.rawBucket, sourceKey, contentType);
+  if (isErr(session)) return session;
+  const multipartUploadId = session.value;
 
-  await createVideoRow();
+  const created = await createVideoRow();
+  if (isErr(created)) return created;
 
-  await ctx.uploads.create({
+  const opened = await ctx.uploads.create({
     id: uploadId,
     videoId,
     strategy: 'multipart',
@@ -122,8 +129,9 @@ export async function initiateUpload(
     sha256,
     expiresAt,
   });
+  if (isErr(opened)) return opened;
 
-  await ctx.events.create({
+  const recorded = await ctx.events.create({
     videoId,
     type: 'upload.initiated',
     payload: {
@@ -136,10 +144,11 @@ export async function initiateUpload(
       multipartUploadId,
     },
   });
+  if (isErr(recorded)) return recorded;
 
-  const parts: StoragePresignedPartInfo[] = [];
+  const signed: Result<StoragePresignedPartInfo, StorageUnavailable>[] = [];
   for (let part = 1; part <= Math.min(partsExpected, INITIAL_PART_URL_BATCH); part++) {
-    parts.push(
+    signed.push(
       await ctx.multipart.createPresignedPartUrl({
         bucket: ctx.rawBucket,
         key: sourceKey,
@@ -150,13 +159,16 @@ export async function initiateUpload(
     );
   }
 
-  return {
+  const parts = all(signed);
+  if (isErr(parts)) return parts;
+
+  return ok({
     videoId,
     uploadId,
     strategy: 'multipart',
     partSizeBytes,
     partsExpected,
-    parts,
+    parts: parts.value,
     expiresAt: expiresAt.toISOString(),
-  };
+  });
 }

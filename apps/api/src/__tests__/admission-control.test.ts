@@ -93,7 +93,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     });
 
     // Probe job is enqueued with priority 5
-    const jobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const jobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(jobs).toHaveLength(1);
     expect(jobs[0]?.data).toMatchObject({ videoId });
     expect(jobs[0]?.opts?.priority).toBe(5);
@@ -109,7 +109,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
       admission: 'admitted',
     });
 
-    const jobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const jobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(jobs).toHaveLength(1);
     expect(jobs[0]?.data).toMatchObject({ videoId });
     expect(jobs[0]?.opts?.priority).toBe(1);
@@ -169,7 +169,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     expect(v4Db?.status).toBe('UPLOADED');
 
     // No new probe job enqueued for v4!
-    const afterJobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const afterJobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(afterJobs).toHaveLength(3);
     expect(
       afterJobs.find((j) => (j.data as { videoId: string }).videoId === v4.videoId)
@@ -180,7 +180,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     expect(proVid.completeRes.statusCode).toBe(202);
     expect(proVid.completeRes.json().admission).toBe('admitted');
 
-    const totalJobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const totalJobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(totalJobs).toHaveLength(4);
     const proJob = totalJobs.find(
       (j) => (j.data as { videoId: string }).videoId === proVid.videoId

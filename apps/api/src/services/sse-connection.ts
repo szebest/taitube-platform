@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import type { ServerResponse } from 'node:http';
+import { isOk, tryCatch } from '@vp/result';
 import { SSE_PING_COMMENT, type SseMessageEnvelope, formatSseFrame } from '@vp/events';
 
 export interface SseConnectionOptions {
@@ -185,12 +186,14 @@ export class SseConnection extends EventEmitter {
     if (this.isClosed || this.res.writableEnded || this.res.destroyed) {
       return false;
     }
-    try {
-      return this.res.write(chunk);
-    } catch {
-      this.close();
-      return false;
-    }
+    const written = tryCatch(
+      () => this.res.write(chunk),
+      () => null
+    );
+    if (isOk(written)) return written.value;
+
+    this.close();
+    return false;
   }
 
   close(): void {
@@ -206,12 +209,12 @@ export class SseConnection extends EventEmitter {
       this.idleTimer = undefined;
     }
 
-    try {
-      if (!(this.res.writableEnded || this.res.destroyed)) {
-        this.res.end();
-      }
-    } catch {
-      // Ignored during shutdown
+    if (!(this.res.writableEnded || this.res.destroyed)) {
+      // The peer may already be gone, and a torn-down socket must not fail the shutdown.
+      tryCatch(
+        () => this.res.end(),
+        () => null
+      );
     }
 
     this.emit('close');

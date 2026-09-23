@@ -4,7 +4,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
-import { expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
@@ -38,9 +38,9 @@ describe('apps/api/services: abort upload', () => {
     ['a single PUT upload', MB],
     ['a multipart upload', 50 * MB],
   ])('abandons the video behind %s', async (_label, sizeBytes) => {
-    const { uploadId, videoId } = await start(sizeBytes);
+    const { uploadId, videoId } = expectOk(await start(sizeBytes));
 
-    await service.abort(OWNER, uploadId);
+    expectOk(await service.abort(OWNER, uploadId));
 
     expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
       status: 'ABANDONED',
@@ -51,11 +51,11 @@ describe('apps/api/services: abort upload', () => {
   });
 
   it('records the abort as a video event', async () => {
-    const { uploadId, videoId } = await start(MB);
+    const { uploadId, videoId } = expectOk(await start(MB));
 
-    await service.abort(OWNER, uploadId);
+    expectOk(await service.abort(OWNER, uploadId));
 
-    const events = await repositories.events.findByVideoId(videoId);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.find((event) => event.type === 'upload.aborted')?.payload).toMatchObject({
       uploadId,
       strategy: 'single',
@@ -63,17 +63,15 @@ describe('apps/api/services: abort upload', () => {
   });
 
   it('refuses a caller who does not own the upload', async () => {
-    const { uploadId, videoId } = await start(MB);
+    const { uploadId, videoId } = expectOk(await start(MB));
 
-    await expect(service.abort(STRANGER, uploadId)).rejects.toThrow('Not authorized');
+    expect(expectErr(await service.abort(STRANGER, uploadId)).message).toContain('Not authorized');
     expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
       status: 'UPLOADING',
     });
   });
 
   it('reports an unknown upload as not found', async () => {
-    await expect(service.abort(OWNER, 'missing')).rejects.toMatchObject({
-      code: ErrorCodes.VIDEO_NOT_FOUND,
-    });
+    expect(expectErr(await service.abort(OWNER, 'missing')).code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
   });
 });

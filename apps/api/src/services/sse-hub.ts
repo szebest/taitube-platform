@@ -1,9 +1,10 @@
 import type { ServerResponse } from 'node:http';
 import type { CacheClient } from '@vp/core/ports';
-import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { SseMessageEnvelope, USER_WILDCARD_CHANNEL, VIDEO_WILDCARD_CHANNEL } from '@vp/events';
 import { getMetrics } from '@vp/observability';
+import { type Result, err, isOk, ok, tryCatch } from '@vp/result';
 import { SseConnection } from './sse-connection';
+import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';
 
 export interface SseHubOptions {
   cache: CacheClient;
@@ -55,16 +56,10 @@ export class SseHub {
     await this.cache.psubscribe(USER_WILDCARD_CHANNEL, this.patternListener);
   }
 
-  register(options: RegisterConnectionOptions): SseConnection {
-    if (this.isClosed) {
-      throw new TransientError(ErrorCodes.STORAGE_UNAVAILABLE, 'SSE hub is shutting down');
-    }
-
+  register(options: RegisterConnectionOptions): Result<SseConnection, SseRegisterFailure> {
+    if (this.isClosed) return err(sseUnavailable('SSE hub is shutting down'));
     if (this.activeConnections >= this.maxPodConnections) {
-      throw new TransientError(
-        ErrorCodes.STORAGE_UNAVAILABLE,
-        'Maximum pod SSE connection limit reached'
-      );
+      return err(sseUnavailable('Maximum pod SSE connection limit reached'));
     }
 
     const { channel, userId, rawResponse } = options;
@@ -72,10 +67,7 @@ export class SseHub {
     if (userId) {
       const currentCount = this.userConnectionCounts.get(userId) ?? 0;
       if (currentCount >= this.maxConnectionsPerUser) {
-        throw new PermanentError(
-          ErrorCodes.RATE_LIMITED,
-          `Maximum active SSE streams (${this.maxConnectionsPerUser}) exceeded for user`
-        );
+        return err(sseStreamLimitReached(userId, this.maxConnectionsPerUser));
       }
       this.userConnectionCounts.set(userId, currentCount + 1);
     }
@@ -104,7 +96,7 @@ export class SseHub {
       this.unregister(connection);
     });
 
-    return connection;
+    return ok(connection);
   }
 
   private unregister(connection: SseConnection): void {
@@ -136,24 +128,22 @@ export class SseHub {
     const set = this.connectionsByChannel.get(channel);
     if (!set || set.size === 0) return;
 
-    let envelope: SseMessageEnvelope;
-    try {
-      const parsedJson = JSON.parse(rawMessage);
-      const parsed = SseMessageEnvelope.safeParse(parsedJson);
-      if (!parsed.success) {
-        return;
-      }
-      envelope = parsed.data;
-    } catch {
-      return;
-    }
+    const decoded = tryCatch(
+      () => SseMessageEnvelope.safeParse(JSON.parse(rawMessage)),
+      () => null
+    );
+    if (!isOk(decoded)) return;
 
+    const parsed = decoded.value;
+    if (!parsed.success) return;
+
+    const envelope: SseMessageEnvelope = parsed.data;
     for (const conn of set) {
-      try {
-        conn.onLiveEvent(envelope);
-      } catch {
-        // Safe dispatch
-      }
+      // One connection that cannot take the event must not cost the others theirs.
+      tryCatch(
+        () => conn.onLiveEvent(envelope),
+        () => null
+      );
     }
   }
 
@@ -179,17 +169,9 @@ export class SseHub {
     this.activeConnections = 0;
 
     if (this.isSubscribed) {
-      if (this.patternListener) {
-        await Promise.resolve(
-          this.cache.punsubscribe(VIDEO_WILDCARD_CHANNEL, this.patternListener)
-        ).catch(() => {});
-        await Promise.resolve(
-          this.cache.punsubscribe(USER_WILDCARD_CHANNEL, this.patternListener)
-        ).catch(() => {});
-      } else {
-        await Promise.resolve(this.cache.punsubscribe(VIDEO_WILDCARD_CHANNEL)).catch(() => {});
-        await Promise.resolve(this.cache.punsubscribe(USER_WILDCARD_CHANNEL)).catch(() => {});
-      }
+      // A cache that is already gone has nothing to unsubscribe from, so its failure is dropped.
+      await this.cache.punsubscribe(VIDEO_WILDCARD_CHANNEL, this.patternListener);
+      await this.cache.punsubscribe(USER_WILDCARD_CHANNEL, this.patternListener);
       this.isSubscribed = false;
     }
   }

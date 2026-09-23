@@ -150,8 +150,7 @@ export class ChannelService {
   /**
    * Creates the user and channel rows a verified identity implies, on its first authenticated
    * request. Both writes tolerate losing a race with a concurrent request for the same identity -
-   * but only that. Before ADR-24 this was two `catch {}` blocks, which could not tell a unique
-   * violation from a dead Postgres, so the second one silently produced a channel-less user.
+   * and only that, so a dead store still surfaces instead of producing a channel-less user.
    */
   async ensureProvisioned(
     userId: string,

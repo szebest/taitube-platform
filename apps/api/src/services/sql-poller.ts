@@ -34,12 +34,10 @@ export function startSqlPoller(options: SqlPollerOptions): SqlPoller {
       }
     }
 
-    try {
-      // 5 minutes = 300,000 ms (SDD §13.5: RUNNING steps with heartbeat_at < now()-5m)
-      const staleSteps = await repositories.steps.countRunningStale(5 * 60 * 1000);
-      metrics.processingStepsRunningStale.set(staleSteps);
-    } catch {
-      // DB unavailable — skip silently
+    // 5 minutes = 300,000 ms (SDD §13.5: RUNNING steps with heartbeat_at < now()-5m)
+    const staleSteps = await repositories.steps.countRunningStale(5 * 60 * 1000);
+    if (isOk(staleSteps)) {
+      metrics.processingStepsRunningStale.set(staleSteps.value);
     }
   }
 

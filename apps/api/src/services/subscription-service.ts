@@ -8,7 +8,7 @@ import {
   decideUnsubscribe,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Paginator, defaultPaginator } from '@vp/pagination';
+import { type InvalidCursor, type Paginator, defaultPaginator } from '@vp/pagination';
 import { type Result, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 import {
@@ -130,11 +130,17 @@ export class SubscriptionService {
     user: AuthUser,
     options: { cursor?: string; limit?: number }
   ): Promise<
-    Result<{ items: SubscribedChannelView[]; nextCursor: string | null }, DatabaseUnavailable>
+    Result<
+      { items: SubscribedChannelView[]; nextCursor: string | null },
+      DatabaseUnavailable | InvalidCursor
+    >
   > {
     const limit = this.paginator.limit(options.limit);
+    const cursor = decodeSubscriptionCursor(options.cursor, this.paginator);
+    if (isErr(cursor)) return cursor;
+
     const rows = await this.subscriptions.listUserSubscriptions(user.id, {
-      cursor: decodeSubscriptionCursor(options.cursor, this.paginator) ?? undefined,
+      cursor: cursor.value ?? undefined,
       limit,
     });
 
@@ -153,12 +159,15 @@ export class SubscriptionService {
   ): Promise<
     Result<
       { items: VideoSummaryView[]; nextCursor: string | null; total: number },
-      DatabaseUnavailable
+      DatabaseUnavailable | InvalidCursor
     >
   > {
     const limit = this.paginator.limit(options.limit);
+    const cursor = decodeCreatedAtCursor(options.cursor, this.paginator);
+    if (isErr(cursor)) return cursor;
+
     const feed = await this.subscriptions.getSubscriptionFeed(user.id, {
-      cursor: decodeCreatedAtCursor(options.cursor, this.paginator) ?? undefined,
+      cursor: cursor.value ?? undefined,
       limit,
     });
 

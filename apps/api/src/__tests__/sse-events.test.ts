@@ -7,6 +7,7 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
 import { SseConnection } from '../services/sse-connection';
 import { SseHub } from '../services/sse-hub';
+import { expectErr, expectOk } from '@vp/testing/result';
 
 describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Backpressure', () => {
   let app: FastifyInstance;
@@ -193,13 +194,13 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     // 1. Simulate an event fired DURING connect (before DB snapshot returns)
     // Event with id = initialEvent.id (already in DB)
     connection.onLiveEvent({
-      id: initialEvent.id,
+      id: expectOk(initialEvent).id,
       event: 'progress',
       data: { rendition: '720p', percent: 10, overall: 5 },
     });
     // Another event fired during connect with id = initialEvent.id + 1 (new event)
     connection.onLiveEvent({
-      id: initialEvent.id + 1,
+      id: expectOk(initialEvent).id + 1,
       event: 'progress',
       data: { rendition: '720p', percent: 20, overall: 10 },
     });
@@ -214,20 +215,20 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
         status: 'PROCESSING',
         progress: { overall: 5, byRendition: { '720p': 10 } },
       },
-      initialEvent.id
+      expectOk(initialEvent).id
     );
 
     // 3. Mark live with snapshot ID
-    connection.markLive(initialEvent.id);
+    connection.markLive(expectOk(initialEvent).id);
 
     // Assertions:
     // Frame 0 is snapshot
     expect(writtenFrames[0]).toContain('event: snapshot');
-    expect(writtenFrames[0]).toContain(`id: ${initialEvent.id}`);
+    expect(writtenFrames[0]).toContain(`id: ${expectOk(initialEvent).id}`);
 
     // Frame 1 is the new event (id + 1), and event (initialEvent.id) was deduplicated!
     expect(writtenFrames.length).toBe(2);
-    expect(writtenFrames[1]).toContain(`id: ${initialEvent.id + 1}`);
+    expect(writtenFrames[1]).toContain(`id: ${expectOk(initialEvent).id + 1}`);
     expect(writtenFrames[1]).toContain('"percent":20');
 
     connection.close();
@@ -316,7 +317,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
       userId: OWNER_USER_ID,
       rawResponse: stream as any,
     });
-    conn.markLive();
+    expectOk(conn).markLive();
 
     const chunks: string[] = [];
     stream.on('data', (c) => chunks.push(c.toString()));
@@ -338,7 +339,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     expect(output).toContain('"percent":45');
     expect(output).toContain('"rendition":"720p"');
 
-    conn.close();
+    expectOk(conn).close();
     await hub.close();
   });
 
@@ -434,14 +435,14 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
         hub.register({ channel: 'video:3', rawResponse: dummyRes as any }),
       ];
 
-      expect(() => {
-        hub.register({ channel: 'video:4', rawResponse: dummyRes as any });
-      }).toThrowError(/Maximum pod SSE connection limit reached/);
+      expect(
+        expectErr(hub.register({ channel: 'video:4', rawResponse: dummyRes as any })).message
+      ).toMatch(/Maximum pod SSE connection limit reached/);
 
-      const firstPodConn = conns[0];
-      firstPodConn?.close();
-      const conn4 = hub.register({ channel: 'video:4', rawResponse: dummyRes as any });
-      expect(conn4).toBeDefined();
+      expectOk(conns[0] as ReturnType<SseHub['register']>).close();
+      expect(
+        expectOk(hub.register({ channel: 'video:4', rawResponse: dummyRes as any }))
+      ).toBeDefined();
 
       await hub.close();
     });

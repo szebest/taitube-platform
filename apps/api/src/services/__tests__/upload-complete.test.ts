@@ -6,7 +6,7 @@ import {
 } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
-import { expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
@@ -37,11 +37,13 @@ describe('apps/api/services: complete upload', () => {
   }
 
   async function startSingle(sizeBytes = SIZE) {
-    const started = await service.initiate(OWNER, {
-      filename: 'clip.mp4',
-      sizeBytes,
-      contentType: 'video/mp4',
-    });
+    const started = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'clip.mp4',
+        sizeBytes,
+        contentType: 'video/mp4',
+      })
+    );
     const video = expectOk(await repositories.videos.findById(started.videoId));
     return { ...started, sourceKey: video?.sourceKey ?? '' };
   }
@@ -65,14 +67,14 @@ describe('apps/api/services: complete upload', () => {
     const started = await startSingle();
     await store(started.sourceKey, SIZE);
 
-    const result = await service.complete(OWNER, started.uploadId);
+    const result = expectOk(await service.complete(OWNER, started.uploadId));
 
     expect(result).toEqual({
       videoId: started.videoId,
       status: 'UPLOADED',
       admission: 'admitted',
     });
-    const jobs = await probeQueue.getJobs(['waiting', 'delayed', 'active']);
+    const jobs = expectOk(await probeQueue.getJobs(['waiting', 'delayed', 'active']));
     expect(jobs[0]?.opts?.jobId).toBe(ids.probe(started.videoId, 1));
   });
 
@@ -81,18 +83,18 @@ describe('apps/api/services: complete upload', () => {
     const started = await startSingle();
     await store(started.sourceKey, SIZE);
 
-    await expect(service.complete(OWNER, started.uploadId)).resolves.toMatchObject({
+    expect(expectOk(await service.complete(OWNER, started.uploadId))).toMatchObject({
       admission: 'held',
     });
-    expect(await probeQueue.getJobs(['waiting', 'delayed', 'active'])).toHaveLength(0);
+    expect(expectOk(await probeQueue.getJobs(['waiting', 'delayed', 'active']))).toHaveLength(0);
   });
 
   it('is idempotent once the video has moved past UPLOADING', async () => {
     const started = await startSingle();
     await store(started.sourceKey, SIZE);
-    await service.complete(OWNER, started.uploadId);
+    expectOk(await service.complete(OWNER, started.uploadId));
 
-    await expect(service.complete(OWNER, started.uploadId)).resolves.toEqual({
+    expect(expectOk(await service.complete(OWNER, started.uploadId))).toEqual({
       videoId: started.videoId,
       status: 'UPLOADED',
     });
@@ -101,52 +103,56 @@ describe('apps/api/services: complete upload', () => {
   it('reports a missing object as SOURCE_MISSING', async () => {
     const started = await startSingle();
 
-    await expect(service.complete(OWNER, started.uploadId)).rejects.toMatchObject({
-      code: ErrorCodes.SOURCE_MISSING,
-    });
+    expect(expectErr(await service.complete(OWNER, started.uploadId)).code).toBe(
+      ErrorCodes.SOURCE_MISSING
+    );
   });
 
   it('rejects and deletes an object whose size disagrees with the declaration', async () => {
     const started = await startSingle();
     await store(started.sourceKey, SIZE + 10);
 
-    await expect(service.complete(OWNER, started.uploadId)).rejects.toMatchObject({
-      code: ErrorCodes.UPLOAD_SIZE_MISMATCH,
-    });
+    expect(expectErr(await service.complete(OWNER, started.uploadId)).code).toBe(
+      ErrorCodes.UPLOAD_SIZE_MISMATCH
+    );
     expect(expectOk(await repositories.videos.findById(started.videoId))).toMatchObject({
       status: 'REJECTED',
       errorCode: ErrorCodes.UPLOAD_SIZE_MISMATCH,
     });
-    await expect(storage.headObject('raw', started.sourceKey)).resolves.toBeNull();
+    expect(expectOk(await storage.headObject('raw', started.sourceKey))).toBeNull();
   });
 
   it('refuses a caller who does not own the upload', async () => {
     const started = await startSingle();
 
-    await expect(service.complete(STRANGER, started.uploadId)).rejects.toThrow('Not authorized');
+    expect(expectErr(await service.complete(STRANGER, started.uploadId)).message).toContain(
+      'Not authorized'
+    );
   });
 
   it('refuses to complete an upload that was aborted', async () => {
     const started = await startSingle();
     await repositories.uploads.updateStatus(started.uploadId, 'ABORTED');
 
-    await expect(service.complete(OWNER, started.uploadId)).rejects.toMatchObject({
-      code: ErrorCodes.UPLOAD_NOT_OPEN,
-    });
+    expect(expectErr(await service.complete(OWNER, started.uploadId)).code).toBe(
+      ErrorCodes.UPLOAD_NOT_OPEN
+    );
   });
 
   it.each([
     ['no parts at all', undefined],
     ['fewer parts than expected', [{ partNumber: 1, etag: 'a' }]],
   ])('refuses a multipart completion with %s', async (_label, parts) => {
-    const started = await service.initiate(OWNER, {
-      filename: 'big.mp4',
-      sizeBytes: 50 * MB,
-      contentType: 'video/mp4',
-    });
+    const started = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'big.mp4',
+        sizeBytes: 50 * MB,
+        contentType: 'video/mp4',
+      })
+    );
 
-    await expect(service.complete(OWNER, started.uploadId, parts)).rejects.toMatchObject({
-      code: ErrorCodes.VALIDATION_FAILED,
-    });
+    expect(expectErr(await service.complete(OWNER, started.uploadId, parts)).code).toBe(
+      ErrorCodes.VALIDATION_FAILED
+    );
   });
 });
