@@ -20,14 +20,15 @@ Routes in `apps/api/src/routes/` are strictly transport adapters:
 
 ---
 
-## 2. Deep Domain Services (>1:1 Ratio)
+## 2. Deep Domain Services
 
 Every domain resource has a service in `apps/api/src/services/`:
 - `VideoService`, `UploadService`, `CategoryService`, `ChannelService`, `DlqService`, `QueueService`.
-- Factored-out reusable utility services:
-  - `HttpCacheService`: Computes deterministic ETags and evaluates conditional requests (`If-None-Match`).
-  - `Singleflight`: Coalesces concurrent reads to prevent cache stampedes.
-  - `SseHub`: Manages Server-Sent Events subscribers and Redis pub/sub fanout.
+- Collaborators are injected and required; `composition/services.module.ts` builds them. A service never
+  constructs or defaults one.
+- Shared helpers are imported: `http-cache.ts` (ETags, conditional requests, `Cache-Control`) and
+  `Singleflight` from `@vp/concurrency`.
+- Routes are plugins reading `app.services`, registered from `routes/index.ts`.
 
 ---
 

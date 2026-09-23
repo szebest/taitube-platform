@@ -106,6 +106,8 @@ Every single source file, helper, util, rule, normalizer, or adapter MUST map to
 - **No Bundled Catch-All Suites:** Creating catch-all files such as `normalizers.test.ts` covering multiple distinct units (`video.normalizer.ts`, `comment.normalizer.ts`, `channel.normalizer.ts`) is strictly forbidden.
 - **Granular Failure Isolation:** 1:1 test correspondence ensures rapid root-cause isolation, prevents test pollution across unrelated units, and maintains zero context ambiguity for autonomous agents.
 - **Machine-enforced:** `tests/architecture/test-correspondence.test.ts` requires `__tests__/<name>.test.ts`
-  beside every production source. The sources that predate the rule are listed in
+  beside every production source that has runtime code. A module that erases to nothing (types,
+  interfaces, an abstract class of abstract members) is not a target; the rule decides by transpiling it.
+  The sources that predate the rule are listed in
   `tests/architecture/untested-sources.ts`; that list may only shrink — an entry that gains a spec must be
   removed, and a new source may not be added to it.

@@ -6,10 +6,10 @@ Every domain resource and entity in the API has a corresponding service in `apps
 
 Services are deep modules that encapsulate business rules, domain invariants, repository interactions, cache coordination, error classification, and entity-to-view transformations. They are completely decoupled from Fastify and HTTP transport concerns.
 
-### More than 1:1 Ratio: Service Composition & Reusability
-We strictly maintain a **>1:1 ratio of services to routes**. In addition to resource-level domain services, we maintain smaller, generalized utility services that higher-level domain services compose. For example:
-- `CategoryService` and `FeedService` depend on `HttpCacheService` for deterministic ETag generation, conditional evaluation (`If-None-Match`), and `Cache-Control` header assembly. It is the **only** ETag implementation in the repository.
-- `FeedService` composes `Singleflight` (from `packages/server/adapters/redis`) to coalesce concurrent misses on the same feed page.
+### Composition: shared helpers are imported, collaborators are injected
+A service's collaborators arrive through its deps and are required; `composition/services.module.ts` is the one place they are built. Shared stateless helpers are plain imports:
+- `CategoryService` and `FeedService` import `generateEtag`, `isNotModified` and `buildCacheHeaders` from `http-cache.ts`, the **only** ETag implementation in the repository.
+- `FeedService` composes `Singleflight` from `@vp/concurrency` to coalesce concurrent misses on the same feed page.
 - `QueueService` abstracts BullMQ queue inspection, Bull Board integration, and operational queue control (pause/resume).
 - `VideoService` and `UploadService` share `probe-dispatch.ts`, so the probe job the CAS transition writes to the outbox is byte-for-byte the job the fast path enqueues.
 
@@ -19,10 +19,10 @@ We strictly maintain a **>1:1 ratio of services to routes**. In addition to reso
 1. **Domain Logic & Invariants**: Enforce entity validation, business constraints (e.g. handle syntax, reserved checks, ownership verification).
 2. **Repository & Port Orchestration**: Invoke abstract ports (`VideoRepository`, `UserRepository`, `ChannelRepository`, `CategoryRepository`, `DlqRepository`, `StorageClient`, `CacheClient`, `JobQueue`).
 3. **Authorization**: Decide access through the injected `AuthorizationPort` with a `@vp/permissions` rule helper. This is the only place in `apps/api` where an authorization decision is made (`apps/api/AGENTS.md` Rule 3); `services/admin-access.ts` is the single admin gate.
-4. **Error Classification**: Throw `PermanentError` or `TransientError` with RFC 9457 machine-readable error codes (`ErrorCodes.CATEGORY_NOT_FOUND`, `ErrorCodes.CHANNEL_NOT_FOUND`, `ErrorCodes.DLQ_ENTRY_NOT_FOUND`, etc.).
+4. **Failures as values**: Return `Result<T, E>` whose failure carries an `ErrorCode` (`CATEGORY_NOT_FOUND`, `CHANNEL_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, …); the route renders it through `sendResult` (ADR-24).
 5. **Data Projection & DTO Formatting**: Transform database entities into API response views (converting `Date` to ISO string, attaching CDN URLs).
 6. **Caching & Invalidation**: Coordinate L1/L2 caches and invalidate caches upon state modifications.
-7. **Sub-service Composition**: Delegate specialized cross-cutting operations to shared services (`HttpCacheService`, `Singleflight`).
+7. **Composition**: Delegate cross-cutting operations to the shared helpers (`http-cache.ts`, `Singleflight`) and to injected ports; never construct or default a collaborator.
 
 ---
 
@@ -51,10 +51,12 @@ We strictly maintain a **>1:1 ratio of services to routes**. In addition to reso
 | `SubscriptionService` | `subscription-service.ts` | Channel subscriptions and the subscriber video feed |
 | `DlqService` | `dlq-service.ts` | Dead-letter queue listing, job replay with fresh suffixes, discarding |
 | `QueueService` | `queue-service.ts` | Queue inspection, metrics gathering, Bull Board UI integration, pause/resume |
-| `HttpCacheService` | `http-cache-service.ts` | The repository's only ETag generation, conditional `If-None-Match` evaluation, `Cache-Control` header construction |
+| — | `http-cache.ts` | The repository's only ETag generation, conditional `If-None-Match` evaluation, `Cache-Control` header construction |
+| `ReadinessService` | `readiness-service.ts` | `/readyz`: the drain flag first, then each dependency's health check |
+| `Poller` | `poller.ts` | The one interval sampler both metric pollers run on, started only by `container.start()` |
 | `SseService` | `sse-service.ts` | SSE snapshot assembly, event replay, stream read authorization |
 | `SseHub` | `sse-hub.ts` | Real-time SSE connections, Redis pub/sub broadcasting, heartbeat management |
 | — | `admin-access.ts` | The single admin gate every operator service calls |
 
-`Singleflight` is not an `apps/api` service: it lives in `packages/server/adapters/redis/singleflight.ts` and is imported
-from `@vp/adapters`.
+`Singleflight` is not an `apps/api` service: it lives in `@vp/concurrency`, because it is a promise map with no
+driver behind it and a service importing it from `@vp/adapters` crossed the service-to-adapter edge.

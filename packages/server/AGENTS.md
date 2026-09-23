@@ -10,9 +10,9 @@
 Everything a browser does not import. This is the default tier — a package is `universal` or `client`
 only when it has earned it with a real consumer.
 
-Members: `adapters`, `config`, `core`, `db`, `events`, `ffmpeg`, `job-contracts`, `observability`,
-`storage`, `testing`, plus the CLI packages `compose-autoscaler`, `dev-token`, `gen-video`,
-`upload-client`.
+Members: `adapters`, `composition`, `concurrency`, `config`, `core`, `db`, `env-schema`, `events`,
+`ffmpeg`, `job-contracts`, `observability`, `storage`, `testing`, plus the CLI packages
+`compose-autoscaler`, `dev-token`, `gen-video`, `upload-client`.
 
 CLI packages live here rather than in `tools/` because they are workspace packages with a
 `package.json`. `tools/` is for scripts and static assets that are not packages.
@@ -23,9 +23,9 @@ CLI packages live here rather than in `tools/` because they are workspace packag
 2. **Dependencies point strictly down a layer.** `vp.layer` in `package.json` is authoritative; a
    same-layer dependency is a violation, not a judgement call. See [packages/AGENTS.md](../AGENTS.md) §2.
 3. **Concrete SDKs stay in `adapters/`.** `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres` and
-   `drizzle-orm` may be imported only inside `packages/server/adapters`, `packages/server/db`, and the two
-   composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`). Domain logic depends on the
-   abstract ports in `@vp/core/ports`.
+   `drizzle-orm` may be imported only inside `packages/server/adapters` and `packages/server/db`. The two
+   composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`) name no SDK: they call
+   `registerAdapters` from `@vp/adapters`. Domain logic depends on the abstract ports in `@vp/core/ports`.
 4. **Dual runtime (Rule 2).** Worker code and shared packages must pass under both `vitest` and `bun test`.
    No `Bun.*` proprietary APIs in source.
 5. **Local-first (Rule 1).** No external host, nothing phones home, `make smoke-offline` stays green.

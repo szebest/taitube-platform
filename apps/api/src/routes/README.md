@@ -28,14 +28,17 @@ Instead, route handlers forward incoming HTTP requests directly to dedicated **D
 ## Pattern Example
 
 ```typescript
-// Good: Thin controller delegating to ChannelService
-export function registerChannelsRoutes(app: FastifyInstance, options: ChannelsRoutesOptions): void {
-  const channelService = options.channelService ?? new ChannelService({ ... });
-  const server = app.withTypeProvider<ZodTypeProvider>();
+// A route module is a plugin: its services come from app.services, never an options object.
+export async function channelsRoutes(app: FastifyInstance): Promise<void> {
+  const { channelService } = app.services;
+  const typedApp = app.withTypeProvider<ZodTypeProvider>();
 
-  server.get('/v1/channels/:idOrHandle', { schema: { ... } }, async (request, reply) => {
-    const channel = await channelService.getPublicChannel(request.params.idOrHandle);
-    return reply.status(200).send(channel);
-  });
+  typedApp.get(getChannel.path, { schema: contractSchema(getChannel) }, async (request, reply) =>
+    sendResult(reply, request, await channelService.getPublicChannel(request.params.idOrHandle))
+  );
 }
 ```
+
+Register it by adding it to the `ROUTES` table in `routes/index.ts`; `buildApp` registers every entry
+with one uniform `await app.register(plugin)`. `route-plugins.test.ts` fails on a route module that
+exports anything else or is missing from the table.
