@@ -1,5 +1,7 @@
 import { CoreEnvSchema } from '@vp/env-schema';
+import { toPipelineError } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
+import { isErr } from '@vp/result';
 import { CategoryService } from '../services/category-service';
 import { ChannelService } from '../services/channel-service';
 import { DlqService } from '../services/dlq-service';
@@ -77,7 +79,8 @@ export async function createServiceSet(
     ...(limits.sseHeartbeatMs === undefined ? {} : { heartbeatMs: limits.sseHeartbeatMs }),
     ...(limits.sseIdleTimeoutMs === undefined ? {} : { idleTimeoutMs: limits.sseIdleTimeoutMs }),
   });
-  await sseHub.init();
+  const subscribed = await sseHub.init();
+  if (isErr(subscribed)) throw toPipelineError(subscribed.error);
 
   return {
     videoService,

@@ -309,7 +309,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
   // AC 4: Progress events streamed in real-time over SSE
   it('AC 4: Progress events streamed in real-time over SSE', async () => {
     const hub = new SseHub({ cache });
-    await hub.init();
+    expectOk(await hub.init());
 
     const stream = new PassThrough();
     const conn = hub.register({

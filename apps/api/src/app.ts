@@ -2,7 +2,9 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
+import { toPipelineError } from '@vp/errors';
 import { getMetrics } from '@vp/observability';
+import { isErr } from '@vp/result';
 import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { type AdapterOverrides, resolveAdapterSet } from './composition/adapter-set';
@@ -52,7 +54,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   const housekeepingQueue = adapters.queues.get('housekeeping');
   if (housekeepingQueue) {
-    await registerHousekeepingSchedulers(housekeepingQueue);
+    const registered = await registerHousekeepingSchedulers(housekeepingQueue);
+    if (isErr(registered)) throw toPipelineError(registered.error);
   }
 
   const services = await createServiceSet(adapters, { cdnBaseUrl, rawBucket, limits });
