@@ -1,5 +1,9 @@
 import { isOk } from '@vp/result';
-import { VIDEO_DESCRIPTION_MAX_LENGTH, VIDEO_TITLE_BOUNDS, validateVideoMetadata } from '../metadata';
+import {
+  VIDEO_DESCRIPTION_MAX_LENGTH,
+  VIDEO_TITLE_BOUNDS,
+  validateVideoMetadata,
+} from '../metadata';
 
 describe('@vp/validation: validateVideoMetadata', () => {
   it.each([

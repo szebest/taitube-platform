@@ -12,10 +12,7 @@ export interface UpdateCategoryRuleInput {
   readonly patch: { readonly name?: string; readonly slug?: string };
 }
 
-export type UpdateCategoryFailure =
-  | AuthorizationFailure
-  | CategoryNotFound
-  | CategoryFormFailure;
+export type UpdateCategoryFailure = AuthorizationFailure | CategoryNotFound | CategoryFormFailure;
 
 /**
  * Only the supplied fields are checked. A patch that omits the slug is not a patch with an empty

@@ -44,9 +44,7 @@ export function sendResult<T, E extends AnyFailure>(
   }
 
   const failure = result.error;
-  const override = options.on?.[failure.code as E['code']] as
-    | ((failure: E) => Problem)
-    | undefined;
+  const override = options.on?.[failure.code as E['code']] as ((failure: E) => Problem) | undefined;
   const problem =
     override?.(failure) ?? options.present?.(failure) ?? problemFor(failure, request.url);
 

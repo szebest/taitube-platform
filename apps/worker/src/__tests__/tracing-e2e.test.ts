@@ -16,6 +16,7 @@ import {
 import type { QueueJob } from '@vp/core/ports';
 import type { NotifyJob, ProbeJob } from '@vp/job-contracts';
 import { createLogger, getActiveSpanContext } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
@@ -23,7 +24,6 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { withTelemetry } from '../with-telemetry';
-import { expectOk } from '@vp/testing/result';
 
 describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', () => {
   let exporter: InMemorySpanExporter;
@@ -279,7 +279,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
 
     // Check package status
     const packageJobId = `${videoId}--package--g1`;
-    const packageState = await packageQueue.getJobState(packageJobId);
+    const packageState = expectOk(await packageQueue.getJobState(packageJobId));
     expect(packageState).toBe('completed');
 
     // 6. Worker runs notify stage

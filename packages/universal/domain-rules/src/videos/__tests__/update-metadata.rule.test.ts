@@ -64,19 +64,19 @@ describe('@vp/domain-rules: decideVideoMetadataUpdate — which forbidden it is'
       visibility: 'unlisted' as const,
       readable: true,
     },
-  ])('marks $name as readable=$readable, so the edge knows whether to disguise it', ({
-    visibility,
-    readable,
-  }) => {
-    const video = aVideo({ visibility });
-    const result = decideVideoMetadataUpdate({
-      editor: STRANGER,
-      video,
-      videoId: video.id,
-      patch: { title: 'Hack' },
-    });
+  ])(
+    'marks $name as readable=$readable, so the edge knows whether to disguise it',
+    ({ visibility, readable }) => {
+      const video = aVideo({ visibility });
+      const result = decideVideoMetadataUpdate({
+        editor: STRANGER,
+        video,
+        videoId: video.id,
+        patch: { title: 'Hack' },
+      });
 
-    expect(isErr(result) && result.error.code).toBe(ErrorCodes.FORBIDDEN);
-    expect(isErr(result) && 'readable' in result.error && result.error.readable).toBe(readable);
-  });
+      expect(isErr(result) && result.error.code).toBe(ErrorCodes.FORBIDDEN);
+      expect(isErr(result) && 'readable' in result.error && result.error.readable).toBe(readable);
+    }
+  );
 });

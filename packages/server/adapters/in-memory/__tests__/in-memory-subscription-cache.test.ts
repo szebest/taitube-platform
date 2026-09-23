@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest';
 import { expectOk } from '@vp/testing/result';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { InMemorySubscriptionCache } from '../in-memory-subscription-cache';
 
 describe('InMemorySubscriptionCache', () => {

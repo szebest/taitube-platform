@@ -1,5 +1,5 @@
-import { ErrorCodes, type Failure } from '@vp/errors';
 import type { VideoStatus } from '@vp/domain';
+import { ErrorCodes, type Failure } from '@vp/errors';
 
 export { type VersionConflict, versionConflict } from '@vp/errors';
 
@@ -13,10 +13,7 @@ export type VideoForbidden = Failure<
   typeof ErrorCodes.FORBIDDEN,
   { videoId: string; readable: boolean }
 >;
-export type VideoReadRequiresAuth = Failure<
-  typeof ErrorCodes.UNAUTHORIZED,
-  { videoId: string }
->;
+export type VideoReadRequiresAuth = Failure<typeof ErrorCodes.UNAUTHORIZED, { videoId: string }>;
 export type VideoStatusNotEligible = Failure<
   typeof ErrorCodes.VALIDATION_FAILED,
   { videoId: string; status: VideoStatus; eligible: readonly VideoStatus[] }

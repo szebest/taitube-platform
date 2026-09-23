@@ -1,7 +1,7 @@
 import { InMemoryJobQueue } from '@vp/adapters';
 import { ids, stagePolicies } from '@vp/job-contracts';
-import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';
 import { expectOk } from '@vp/testing/result';
+import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000b1';
 const TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
@@ -48,6 +48,6 @@ describe('apps/api/services: probe dispatch', () => {
   });
 
   it('is a no-op when no queue is wired, leaving the outbox as the only publisher', async () => {
-    await expect(enqueueProbe(undefined, dispatch())).resolves.toBeUndefined();
+    expect(expectOk(await enqueueProbe(undefined, dispatch()))).toBeUndefined();
   });
 });

@@ -1,7 +1,7 @@
 import type { JobQueue } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import type { QueueName } from '@vp/job-contracts';
 import type { DatabaseUnavailable } from '@vp/errors';
+import type { QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';

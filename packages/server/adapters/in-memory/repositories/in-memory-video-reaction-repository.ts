@@ -1,3 +1,4 @@
+import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import { reactionDelta } from '@vp/domain';
 import type {
   ReactionCounts,
@@ -6,7 +7,6 @@ import type {
   SetReactionResult,
   VideoReaction,
 } from '@vp/domain';
-import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';

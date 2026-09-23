@@ -148,7 +148,7 @@ describe('apps/api/services: SseService', () => {
       const session = service.openUserStream(OWNER);
 
       expect(session.channel).toBe(userChannel(OWNER.id));
-      await expect(session.snapshot()).resolves.toEqual({
+      expect(expectOk(await session.snapshot())).toEqual({
         lastEventId: 0,
         data: {
           userId: OWNER.id,
@@ -162,7 +162,7 @@ describe('apps/api/services: SseService', () => {
       await seed('public');
       await repositories.events.create({ videoId: VIDEO_ID, type: 'video.ready' });
 
-      await expect(service.openUserStream(OWNER).replay(0)).resolves.toEqual([
+      expect(expectOk(await service.openUserStream(OWNER).replay(0))).toEqual([
         { id: expect.any(Number), event: 'status', data: { status: 'READY' } },
       ]);
     });

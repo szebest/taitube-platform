@@ -150,7 +150,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     expect(inflight).toBe(3);
 
     // Initial probe jobs count is 3
-    const initialJobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const initialJobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(initialJobs).toHaveLength(3);
 
     // 4th complete by the same user

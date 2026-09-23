@@ -1,6 +1,6 @@
+import { classifyError, isPermanentError, isTransientError, toPipelineError } from '../classify';
 import { ErrorCodes } from '../error-codes';
 import { databaseUnavailable } from '../infra-failures';
-import { classifyError, isPermanentError, isTransientError, toPipelineError } from '../classify';
 import { PermanentError, TransientError } from '../pipeline-error';
 
 describe('@vp/errors: classifyError', () => {

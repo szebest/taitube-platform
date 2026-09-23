@@ -3,11 +3,11 @@ import { PassThrough } from 'node:stream';
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
 import { publishVideoEvent, videoChannel } from '@vp/events';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
 import { SseConnection } from '../services/sse-connection';
 import { SseHub } from '../services/sse-hub';
-import { expectErr, expectOk } from '@vp/testing/result';
 
 describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Backpressure', () => {
   let app: FastifyInstance;
@@ -391,19 +391,21 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
           userId: OWNER_USER_ID,
           rawResponse: dummyRes as any,
         });
-        connections.push(conn);
+        connections.push(expectOk(conn));
       }
 
       expect(hub.getUserConnectionCount(OWNER_USER_ID)).toBe(20);
 
-      // 21st connection must throw RATE_LIMITED
-      expect(() => {
-        hub.register({
-          channel: 'video:test',
-          userId: OWNER_USER_ID,
-          rawResponse: new PassThrough() as any,
-        });
-      }).toThrowError(/Maximum active SSE streams \(20\) exceeded/);
+      // 21st connection must be refused as RATE_LIMITED
+      expect(
+        expectErr(
+          hub.register({
+            channel: 'video:test',
+            userId: OWNER_USER_ID,
+            rawResponse: new PassThrough() as any,
+          })
+        ).message
+      ).toMatch(/Maximum active SSE streams \(20\) exceeded/);
 
       // Clean up one connection
       const firstConn = connections[0];
@@ -411,11 +413,13 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
       expect(hub.getUserConnectionCount(OWNER_USER_ID)).toBe(19);
 
       // Now 21st connection succeeds
-      const newConn = hub.register({
-        channel: 'video:test',
-        userId: OWNER_USER_ID,
-        rawResponse: new PassThrough() as any,
-      });
+      const newConn = expectOk(
+        hub.register({
+          channel: 'video:test',
+          userId: OWNER_USER_ID,
+          rawResponse: new PassThrough() as any,
+        })
+      );
       connections.push(newConn);
       expect(hub.getUserConnectionCount(OWNER_USER_ID)).toBe(20);
 

@@ -1,3 +1,5 @@
+import { ErrorCodes } from '@vp/errors';
+import { err, ok } from '@vp/result';
 import {
   Base64UrlCursorCodec,
   type CursorCodec,
@@ -5,8 +7,6 @@ import {
   JsonCursorCodec,
   defaultCursorCodec,
 } from '../cursor-codec';
-import { ErrorCodes } from '@vp/errors';
-import { err, ok } from '@vp/result';
 
 describe('packages/pagination: cursor codecs', () => {
   const codecs: Array<{ name: string; codec: CursorCodec }> = [

@@ -1,6 +1,6 @@
 import type { RenditionRepository } from '@vp/core/repositories';
-import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import { expectOk } from '@vp/testing/result';
+import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const RENDITION_720_ID = '00000000-0000-7000-8000-000000000601';

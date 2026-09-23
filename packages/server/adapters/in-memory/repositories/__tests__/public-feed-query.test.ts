@@ -1,9 +1,9 @@
+import type { VideoRecord } from '@vp/core/repositories';
 import {
   PUBLIC_FEED_INSTANT_GRANULARITY_MS,
   type PublicFeedSort,
   publicFeedInstant,
 } from '@vp/domain';
-import type { VideoRecord } from '@vp/core/repositories';
 import { selectPublicFeed } from '../public-feed-query';
 
 const HOUR_MS = 3_600_000;

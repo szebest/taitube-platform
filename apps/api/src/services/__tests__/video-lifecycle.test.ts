@@ -98,7 +98,7 @@ describe('apps/api/services: video lifecycle', () => {
       expect(expectErr(await service.reprocess(STRANGER, VIDEO_ID)).code).toBe(
         ErrorCodes.FORBIDDEN
       );
-      expect(await probeQueue.getJobs(['waiting', 'delayed', 'active'])).toHaveLength(0);
+      expect(expectOk(await probeQueue.getJobs(['waiting', 'delayed', 'active']))).toHaveLength(0);
     });
 
     it.each<VideoStatus>(['UPLOADING', 'UPLOADED', 'PROBING', 'DELETED'])(

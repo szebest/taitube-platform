@@ -221,9 +221,9 @@ describe('SubscriptionService', () => {
     });
 
     it('rejects a malformed cursor', async () => {
-      await expect(service.getFeed(subscriber, { cursor: 'not-a-cursor' })).rejects.toThrowError(
-        expect.objectContaining({ code: ErrorCodes.VALIDATION_FAILED })
-      );
+      const refused = expectErr(await service.getFeed(subscriber, { cursor: 'not-a-cursor' }));
+
+      expect(refused.code).toBe(ErrorCodes.INVALID_CURSOR);
     });
 
     it('still serves the feed when the cache is down, which is why the union has no CacheUnavailable', async () => {

@@ -1,4 +1,5 @@
 import type { SubscriptionRepositoryPort } from '@vp/core/repositories';
+import { expectOk } from '@vp/testing/result';
 import {
   HOUR_MS,
   OTHER_OWNER_ID,
@@ -8,7 +9,6 @@ import {
   publicVideo,
   seedOwners,
 } from './fixtures';
-import { expectOk } from '@vp/testing/result';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const SUBSCRIBER_ID = '00000000-0000-7000-8000-000000000103';

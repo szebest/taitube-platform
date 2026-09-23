@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { ServerResponse } from 'node:http';
-import { isOk, tryCatch } from '@vp/result';
 import { SSE_PING_COMMENT, type SseMessageEnvelope, formatSseFrame } from '@vp/events';
+import { isOk, tryCatch } from '@vp/result';
 
 export interface SseConnectionOptions {
   channel: string;

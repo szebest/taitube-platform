@@ -1,5 +1,7 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters';
 import { publicFeedInstant } from '@vp/domain';
+import { cacheUnavailable } from '@vp/errors';
+import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { encodeFeedCursor } from '../cursor';
 import { FeedService } from '../feed-service';
@@ -105,7 +107,7 @@ describe('apps/api/services: FeedService', () => {
 
     await service.getFeed({ sort, ...(categoryId ? { categoryId } : {}) });
 
-    await expect(cache.get(key)).resolves.not.toBeNull();
+    expect(expectOk(await cache.get(key))).not.toBeNull();
   });
 
   it('resumes a trending walk from a cursor minted before the ranking shifted', async () => {
@@ -146,19 +148,15 @@ describe('apps/api/services: FeedService', () => {
 
     await service.getFeed({ sort: 'recent', cursor });
 
-    await expect(cache.get('taitube:feed:public:recent:all')).resolves.toBeNull();
+    expect(expectOk(await cache.get('taitube:feed:public:recent:all'))).toBeNull();
   });
 
   it('still answers when the cache is unavailable', async () => {
     const broken = new FeedService({
       videoService,
       cache: Object.assign(new InMemoryCacheClient(), {
-        get: async () => {
-          throw new Error('redis down');
-        },
-        set: async () => {
-          throw new Error('redis down');
-        },
+        get: async () => err(cacheUnavailable('get')),
+        set: async () => err(cacheUnavailable('set')),
       }),
     });
 

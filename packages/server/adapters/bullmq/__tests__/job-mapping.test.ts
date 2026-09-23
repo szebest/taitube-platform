@@ -25,7 +25,12 @@ describe('bullmq adapter: job mapping', () => {
 
   it.each([
     { field: 'an absent id', job: bullJob({ id: undefined }), path: 'id', expected: '' },
-    { field: 'absent options', job: bullJob({ opts: undefined }), path: 'attempts', expected: undefined },
+    {
+      field: 'absent options',
+      job: bullJob({ opts: undefined }),
+      path: 'attempts',
+      expected: undefined,
+    },
   ])('tolerates $field', ({ job, path, expected }) => {
     const mapped = toQueueJob(job) as unknown as Record<string, unknown> & {
       opts: Record<string, unknown>;

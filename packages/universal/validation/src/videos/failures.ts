@@ -10,9 +10,7 @@ export function invalidVideoTitle(bounds: LengthBounds): InvalidVideoTitle {
 }
 
 export function invalidVideoDescription(maxLength: number): InvalidVideoDescription {
-  return invalidField(
-    'description',
-    `Description must be at most ${maxLength} characters`,
-    { maxLength }
-  );
+  return invalidField('description', `Description must be at most ${maxLength} characters`, {
+    maxLength,
+  });
 }

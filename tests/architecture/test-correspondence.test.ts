@@ -1,6 +1,6 @@
-import { dirname, basename } from 'node:path';
-import { UNTESTED_SOURCES } from './untested-sources';
+import { basename, dirname } from 'node:path';
 import { isSpec, productionSources, shrinkOnly, trackedFiles } from './repo-files';
+import { UNTESTED_SOURCES } from './untested-sources';
 
 function siblingSpecs(file: string): string[] {
   const stem = basename(file).replace(/\.tsx?$/, '');

@@ -6,7 +6,7 @@ import {
   channelNotFound,
   decideHandleClaim,
 } from '@vp/domain-rules';
-import { ErrorCodes, type DatabaseUnavailable, type HandleTaken } from '@vp/errors';
+import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
 import { type Result, err, isErr, ok } from '@vp/result';
 import { handleCandidates } from '@vp/validation';
 
@@ -152,10 +152,7 @@ export class ChannelService {
    * request. Both writes tolerate losing a race with a concurrent request for the same identity -
    * and only that, so a dead store still surfaces instead of producing a channel-less user.
    */
-  async ensureProvisioned(
-    userId: string,
-    email?: string
-  ): Promise<Result<void, ProvisionFailure>> {
+  async ensureProvisioned(userId: string, email?: string): Promise<Result<void, ProvisionFailure>> {
     const userEmail = email || `${userId}@taitube.local`;
 
     const existingUser = await this.users.findById(userId);

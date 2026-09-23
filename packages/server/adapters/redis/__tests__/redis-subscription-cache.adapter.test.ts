@@ -1,5 +1,5 @@
-import { RedisSubscriptionCacheAdapter } from '../redis-subscription-cache.adapter';
 import { expectOk } from '@vp/testing/result';
+import { RedisSubscriptionCacheAdapter } from '../redis-subscription-cache.adapter';
 import { FakeRedis } from './fake-redis';
 
 const USER_ID = 'user-1';

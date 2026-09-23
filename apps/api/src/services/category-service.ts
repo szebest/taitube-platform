@@ -1,5 +1,6 @@
 import type { CategoryCacheService } from '@vp/adapters';
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
+import type { Category, CreateCategoryInput, UpdateCategoryInput } from '@vp/domain';
 import {
   type CreateCategoryFailure,
   type DeleteCategoryFailure,
@@ -9,7 +10,6 @@ import {
   decideCategoryDelete,
   decideCategoryUpdate,
 } from '@vp/domain-rules';
-import type { Category, CreateCategoryInput, UpdateCategoryInput } from '@vp/domain';
 import type { CategorySlugConflict, DatabaseUnavailable } from '@vp/errors';
 import { type Result, err, isErr, isOk, map, ok } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
@@ -138,9 +138,7 @@ export class CategoryService {
     return await this.invalidatingOnSuccess(this.categories.delete(id));
   }
 
-  private async invalidatingOnSuccess<T, E>(
-    write: Promise<Result<T, E>>
-  ): Promise<Result<T, E>> {
+  private async invalidatingOnSuccess<T, E>(write: Promise<Result<T, E>>): Promise<Result<T, E>> {
     const settled = await write;
     if (isOk(settled)) await this.categoryCacheService.invalidate();
     return settled;

@@ -1,7 +1,9 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
 import type { JobQueue } from '@vp/core/ports';
+import { queueUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import { getMetrics } from '@vp/observability';
+import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -48,18 +50,18 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       expect(probeQueue.enqueuedJobs).toHaveLength(0);
 
       // Drain outbox
-      const result = await drainOutboxOnce(repositories, { getQueue });
-      expect(expectOk(result).processedCount).toBe(1);
-      expect(expectOk(result).successCount).toBe(1);
-      expect(expectOk(result).failureCount).toBe(0);
+      const result = expectOk(await drainOutboxOnce(repositories, { getQueue }));
+      expect(result.processedCount).toBe(1);
+      expect(result.successCount).toBe(1);
+      expect(result.failureCount).toBe(0);
 
       // Verify job was published
       expect(probeQueue.enqueuedJobs).toHaveLength(1);
       expect(probeQueue.enqueuedJobs[0]?.id).toBe(jobId);
 
       // Second drain finds nothing (already published)
-      const secondResult = await drainOutboxOnce(repositories, { getQueue });
-      expect(expectOk(secondResult).processedCount).toBe(0);
+      const secondResult = expectOk(await drainOutboxOnce(repositories, { getQueue }));
+      expect(secondResult.processedCount).toBe(0);
     });
 
     it('records attempts on failure to publish to queue', async () => {
@@ -76,10 +78,9 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
         },
       });
 
-      // Provide a getQueue that throws
-      const failingGetQueue = () => {
-        throw new Error('Queue unavailable');
-      };
+      // A queue whose port reports itself unreachable
+      const failingGetQueue = () =>
+        ({ add: async () => err(queueUnavailable('add')) }) as unknown as InMemoryJobQueue;
 
       const result = await drainOutboxOnce(repositories, { getQueue: failingGetQueue });
       expect(expectOk(result).processedCount).toBe(1);
@@ -138,8 +139,8 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       expect(probeQueue.enqueuedJobs).toHaveLength(0);
 
       // Outbox relay runs (e.g. housekeeping worker loop)
-      const relayResult = await drainOutboxOnce(repositories, { getQueue });
-      expect(expectOk(relayResult).successCount).toBe(1);
+      const relayResult = expectOk(await drainOutboxOnce(repositories, { getQueue }));
+      expect(relayResult.successCount).toBe(1);
 
       // Job is now enqueued by the relay
       expect(probeQueue.enqueuedJobs).toHaveLength(1);
@@ -220,14 +221,11 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       );
 
       // Prune with 7 days retention
-      const prunedCount = await repositories.outbox.prune(7);
-      expect(prunedCount).toBe(1);
+      expect(expectOk(await repositories.outbox.prune(7))).toBe(1);
 
       // Fresh one remains
-      const freshItem = await repositories.outbox.findById(expectOk(item2).id);
-      expect(freshItem).not.toBeNull();
-      const oldItem = await repositories.outbox.findById(expectOk(item1).id);
-      expect(oldItem).toBeNull();
+      expect(expectOk(await repositories.outbox.findById(expectOk(item2).id))).not.toBeNull();
+      expect(expectOk(await repositories.outbox.findById(expectOk(item1).id))).toBeNull();
     });
   });
 
@@ -305,10 +303,12 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       }
 
       const start = Date.now();
-      const drainResult = await drainOutboxOnce(repositories, { getQueue, batchSize: 50 });
+      const drainResult = expectOk(
+        await drainOutboxOnce(repositories, { getQueue, batchSize: 50 })
+      );
       const elapsedMs = Date.now() - start;
 
-      expect(expectOk(drainResult).successCount).toBe(20);
+      expect(drainResult.successCount).toBe(20);
       expect(elapsedMs).toBeLessThan(1000); // p95 < 1 s locally (typically < 20 ms in-memory)
     });
   });
@@ -349,8 +349,8 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('READY');
 
-      const pending = await repositories.outbox.claimBatch(10);
-      const notifyItem = expectOk(pending).find((p) => p.kind === 'notify');
+      const pending = expectOk(await repositories.outbox.claimBatch(10));
+      const notifyItem = pending.find((p) => p.kind === 'notify');
       expect(notifyItem).toBeDefined();
       expect(notifyItem?.payload.type).toBe('queue');
       if (notifyItem?.payload.type === 'queue') {

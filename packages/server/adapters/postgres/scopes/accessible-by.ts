@@ -1,5 +1,5 @@
-import { PUBLIC_FEED_VISIBILITY } from '@vp/domain';
 import { videos } from '@vp/db';
+import { PUBLIC_FEED_VISIBILITY } from '@vp/domain';
 import type { AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { type SQL, eq } from 'drizzle-orm';
 import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';

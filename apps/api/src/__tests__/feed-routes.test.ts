@@ -2,10 +2,10 @@ import * as http from 'node:http';
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
-import { expectOk } from '@vp/testing/result';
 
 describe('Public Video Feed API & Anonymous Access (Ticket 36)', () => {
   let app: FastifyInstance;

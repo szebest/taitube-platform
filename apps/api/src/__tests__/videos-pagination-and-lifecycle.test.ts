@@ -296,8 +296,8 @@ describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)
     expect(patch1.version).toBe(2);
 
     // Verify video.metadata_updated event was recorded
-    const events = await repositories.events.findByVideoId(videoId);
-    const metaEvent = expectOk(events).find((e) => e.type === 'video.metadata_updated');
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
+    const metaEvent = events.find((e) => e.type === 'video.metadata_updated');
     expect(metaEvent).toBeDefined();
     expect((metaEvent?.payload as { newVersion: number }).newVersion).toBe(2);
 

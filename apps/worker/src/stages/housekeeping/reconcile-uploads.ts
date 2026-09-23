@@ -1,7 +1,7 @@
 import type { JobQueue, MultipartStorage } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import type { DatabaseUnavailable } from '@vp/errors';
+import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 

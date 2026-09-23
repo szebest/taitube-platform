@@ -1,8 +1,8 @@
+import { expectOk } from '@vp/testing/result';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { bullBoardQueues } from '../bull-board-queues';
 import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue } from './fake-queue';
-import { expectOk } from '@vp/testing/result';
 
 function bullMqQueue(name: string): BullMqJobQueue {
   return new BullMqJobQueue({ name, queue: new FakeQueue({ name }).asQueue() });

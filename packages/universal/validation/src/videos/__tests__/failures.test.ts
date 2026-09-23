@@ -8,7 +8,11 @@ describe('@vp/validation: video metadata failures', () => {
       failure: invalidVideoTitle({ minLength: 1, maxLength: 200 }),
       field: 'title',
     },
-    { name: 'invalidVideoDescription', failure: invalidVideoDescription(5000), field: 'description' },
+    {
+      name: 'invalidVideoDescription',
+      failure: invalidVideoDescription(5000),
+      field: 'description',
+    },
   ])('$name names $field, carries VALIDATION_FAILED and is wire-safe', ({ failure, field }) => {
     expect(failure.code).toBe(ErrorCodes.VALIDATION_FAILED);
     expect(failure.field).toBe(field);

@@ -243,8 +243,8 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
       expect(updated?.replayedAt).toBeDefined();
 
       // Verify audit event dlq.replayed written to video_events
-      const events = await repositories.events.findByVideoId(videoId);
-      const replayEvent = expectOk(events).find((e) => e.type === 'dlq.replayed');
+      const events = expectOk(await repositories.events.findByVideoId(videoId));
+      const replayEvent = events.find((e) => e.type === 'dlq.replayed');
       expect(replayEvent).toBeDefined();
       expect(replayEvent?.payload).toMatchObject({
         dlqEntryId,

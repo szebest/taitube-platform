@@ -2,6 +2,7 @@ import { InMemoryJobQueue } from '@vp/adapters';
 import type { JobQueue } from '@vp/core/ports';
 import { mintDevToken } from '@vp/dev-token';
 import { QUEUES } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
 
@@ -118,7 +119,7 @@ describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
   });
 
   it('AC 18: pausing transcode-720p stops new jobs, resuming continues', async () => {
-    const queue720p = queuesMap.get('transcode-720p');
+    const queue720p = queuesMap.get('transcode-720p') as JobQueue;
     expect(queue720p).toBeDefined();
 
     // 1. Pause queue via Bull Board API
@@ -131,7 +132,7 @@ describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
     });
     expect(pauseRes.statusCode).toBe(200);
 
-    const isPaused = await queue720p?.isPaused();
+    const isPaused = expectOk(await queue720p.isPaused());
     expect(isPaused).toBe(true);
 
     // 2. Resume queue via Bull Board API
@@ -144,7 +145,7 @@ describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
     });
     expect(resumeRes.statusCode).toBe(200);
 
-    const isResumed = await queue720p?.isPaused();
+    const isResumed = expectOk(await queue720p.isPaused());
     expect(isResumed).toBe(false);
   });
 });

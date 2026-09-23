@@ -2,8 +2,8 @@ import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 import {
   type DatabaseUnavailable,
-  type HandleTaken,
   ErrorCodes,
+  type HandleTaken,
   PermanentError,
   handleTaken,
 } from '@vp/errors';

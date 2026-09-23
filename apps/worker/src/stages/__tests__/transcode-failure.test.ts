@@ -3,8 +3,14 @@ import { transcodeFailure } from '../transcode-failure';
 
 describe('apps/worker/stages: transcode failure classification', () => {
   it.each([
-    { shape: 'an ENOSPC errno', cause: Object.assign(new Error('write failed'), { code: 'ENOSPC' }) },
-    { shape: 'a DISK_FULL hint', cause: Object.assign(new Error('write failed'), { hint: 'DISK_FULL' }) },
+    {
+      shape: 'an ENOSPC errno',
+      cause: Object.assign(new Error('write failed'), { code: 'ENOSPC' }),
+    },
+    {
+      shape: 'a DISK_FULL hint',
+      cause: Object.assign(new Error('write failed'), { hint: 'DISK_FULL' }),
+    },
     { shape: 'the errno in the message', cause: new Error('ENOSPC: no space left') },
     { shape: 'the phrase in the message', cause: new Error('No space left on device') },
   ])('reads $shape as DISK_FULL', ({ cause }) => {
@@ -15,8 +21,14 @@ describe('apps/worker/stages: transcode failure classification', () => {
   });
 
   it.each([
-    { shape: 'a permanent pipeline error', cause: new PermanentError(ErrorCodes.UNSUPPORTED_CODEC, 'av1') },
-    { shape: 'a transient pipeline error', cause: new TransientError(ErrorCodes.FFMPEG_TIMEOUT, 'slow') },
+    {
+      shape: 'a permanent pipeline error',
+      cause: new PermanentError(ErrorCodes.UNSUPPORTED_CODEC, 'av1'),
+    },
+    {
+      shape: 'a transient pipeline error',
+      cause: new TransientError(ErrorCodes.FFMPEG_TIMEOUT, 'slow'),
+    },
   ])('keeps the code $shape already reported', ({ cause }) => {
     expect(transcodeFailure('1080p', cause).code).toBe(cause.code);
   });

@@ -1,6 +1,6 @@
 import {
-  AuthorizationPort,
   type AuthorizationOptions,
+  AuthorizationPort,
   type PermissionCheckFn,
 } from '@vp/core/ports';
 import {

@@ -2,11 +2,11 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { JobQueue, type QueueJob } from '@vp/core/ports';
 import type { PackageJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
+import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
-import { ok } from '@vp/result';
 
 describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 17, 18)', () => {
   let repositories: InMemoryRepositories;
@@ -110,8 +110,8 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     expect(expectOk(complete1).completed).toBe(false);
 
     // Verify step remains completed by worker 2
-    const steps = await repositories.steps.findByVideoId(videoId);
-    const step = expectOk(steps).find((s: any) => s.step === 'transcode' && s.rendition === '720p');
+    const steps = expectOk(await repositories.steps.findByVideoId(videoId));
+    const step = steps.find((s: any) => s.step === 'transcode' && s.rendition === '720p');
     expect(step?.workerId).toBe('worker-fresh');
     expect(step?.attempt).toBe(2);
     expect(step?.status).toBe('DONE');
@@ -199,8 +199,8 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     const v1 = expectOk(await repositories.videos.findById(videoId));
     expect(v1?.status).toBe('READY');
 
-    const events1 = await repositories.events.findByVideoId(videoId);
-    const readyEvents1 = expectOk(events1).filter((e: any) => e.type === 'video.ready');
+    const events1 = expectOk(await repositories.events.findByVideoId(videoId));
+    const readyEvents1 = events1.filter((e: any) => e.type === 'video.ready');
     expect(readyEvents1.length).toBe(1);
 
     // Simulate duplicate/zombie re-execution of package job (attempt 2)
@@ -208,8 +208,8 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     await processor(duplicateJob);
 
     // Invariant: count(video_events where type='video.ready') MUST REMAIN EXACTLY 1
-    const events2 = await repositories.events.findByVideoId(videoId);
-    const readyEvents2 = expectOk(events2).filter((e: any) => e.type === 'video.ready');
+    const events2 = expectOk(await repositories.events.findByVideoId(videoId));
+    const readyEvents2 = events2.filter((e: any) => e.type === 'video.ready');
     expect(readyEvents2.length).toBe(1);
 
     // Invariant: notify enqueued exactly once

@@ -3,7 +3,11 @@ import { categoryInUse, categoryNotFound, categorySlugConflict } from '../failur
 
 describe('@vp/domain-rules: category failures', () => {
   it.each([
-    { name: 'categoryNotFound', failure: categoryNotFound('music'), code: ErrorCodes.CATEGORY_NOT_FOUND },
+    {
+      name: 'categoryNotFound',
+      failure: categoryNotFound('music'),
+      code: ErrorCodes.CATEGORY_NOT_FOUND,
+    },
     {
       name: 'categorySlugConflict',
       failure: categorySlugConflict('music'),

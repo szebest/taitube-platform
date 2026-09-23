@@ -1,14 +1,14 @@
 import type {
-  ChannelSubscription,
-  SubscribedChannelItem,
-  SubscriptionChangeResult,
-} from '@vp/domain';
-import type {
   ListSubscriptionsOptions,
   SubscriptionFeedOptions,
   SubscriptionRepositoryPort,
   VideoRecord,
 } from '@vp/core/repositories';
+import type {
+  ChannelSubscription,
+  SubscribedChannelItem,
+  SubscriptionChangeResult,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';

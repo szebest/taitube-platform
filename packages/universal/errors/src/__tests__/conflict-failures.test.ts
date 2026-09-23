@@ -1,5 +1,5 @@
-import { ErrorCodes, isInputFailure } from '../index';
 import { categorySlugConflict, handleTaken, versionConflict } from '../conflict-failures';
+import { ErrorCodes, isInputFailure } from '../index';
 
 describe('@vp/errors: conflict failures', () => {
   it.each([
@@ -9,7 +9,11 @@ describe('@vp/errors: conflict failures', () => {
       failure: categorySlugConflict('music'),
       code: ErrorCodes.CATEGORY_SLUG_CONFLICT,
     },
-    { name: 'versionConflict', failure: versionConflict('v1', 3), code: ErrorCodes.VERSION_CONFLICT },
+    {
+      name: 'versionConflict',
+      failure: versionConflict('v1', 3),
+      code: ErrorCodes.VERSION_CONFLICT,
+    },
   ])('$name carries $code and stays off the wire', ({ failure, code }) => {
     expect(failure.code).toBe(code);
     expect(isInputFailure(failure)).toBe(false);

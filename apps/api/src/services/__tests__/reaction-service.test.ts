@@ -53,10 +53,7 @@ describe('apps/api/services: ReactionService', () => {
     ).toBeNull();
   });
 
-  it.each([
-    { role: 'USER' as const },
-    { role: 'GUEST' as const },
-  ])(
+  it.each([{ role: 'USER' as const }, { role: 'GUEST' as const }])(
     'reports a missing video as VIDEO_NOT_FOUND for a $role, because the read decides before the permission',
     async ({ role }) => {
       const failure = expectErr(

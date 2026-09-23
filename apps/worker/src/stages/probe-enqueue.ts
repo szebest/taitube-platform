@@ -1,4 +1,5 @@
 import type { FlowProducerPort, JobQueue, QueueJob } from '@vp/core/ports';
+import type { QueueUnavailable } from '@vp/errors';
 import type { ProbeMetadata } from '@vp/ffmpeg';
 import {
   PackageJob,
@@ -9,7 +10,6 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { QueueUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
 

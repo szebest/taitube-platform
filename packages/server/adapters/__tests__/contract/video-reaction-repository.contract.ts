@@ -1,7 +1,7 @@
 import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
+import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
-import { expectOk } from '@vp/testing/result';
 
 export function describeVideoReactionRepositoryContract(
   makeSubject: MakeRepositoriesSubject
@@ -73,6 +73,16 @@ export function describeVideoReactionRepositoryContract(
       });
       expect(expectOk(await reactions.countGroundTruth(VIDEO_IDS.b))).toEqual({
         likesCount: 0,
+        dislikesCount: 1,
+      });
+    });
+
+    it('keeps the denormalised counters on the video in step with each reaction', async () => {
+      await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'LIKE');
+      await reactions.setReaction(VIDEO_IDS.a, OTHER_OWNER_ID, 'DISLIKE');
+
+      expect(expectOk(await subject.repositories.videos.findById(VIDEO_IDS.a))).toMatchObject({
+        likesCount: 1,
         dislikesCount: 1,
       });
     });

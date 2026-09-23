@@ -65,10 +65,10 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
 
   describe('AC 1: Schedulers exist with ids/crons from SDD §9.8 & idempotent boot', () => {
     it('initializes housekeeping schedulers with exact ids and crons from SDD §9.8', async () => {
-      const schedulers = await housekeepingQueue.getJobSchedulers();
+      const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
       expect(schedulers).toHaveLength(6);
 
-      const map = new Map(expectOk(schedulers).map((s) => [s.id, s]));
+      const map = new Map(schedulers.map((s) => [s.id, s]));
 
       expect(map.get('reconcile-uploads')?.pattern).toBe('*/15 * * * *');
       expect(map.get('reconcile-processing')?.pattern).toBe('*/10 * * * *');
@@ -81,8 +81,8 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
     it.each(HOUSEKEEPING_SCHEDULER_CONFIGS)(
       'scheduler "$id" carries task payload matching its id',
       async ({ id }) => {
-        const schedulers = await housekeepingQueue.getJobSchedulers();
-        const map = new Map(expectOk(schedulers).map((s) => [s.id, s]));
+        const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
+        const map = new Map(schedulers.map((s) => [s.id, s]));
         const item = map.get(id);
         expect(item).toBeDefined();
         expect((item?.data as { task: string })?.task).toBe(id);
@@ -99,12 +99,10 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       });
       await secondApp.ready();
 
-      const schedulers = await housekeepingQueue.getJobSchedulers();
+      const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
       expect(schedulers).toHaveLength(6);
 
-      const ids = expectOk(schedulers)
-        .map((s) => s.id)
-        .sort();
+      const ids = schedulers.map((s) => s.id).sort();
       expect(ids).toEqual([
         'expire-raw',
         'purge-deleted',
@@ -191,8 +189,8 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       expect(video?.status).toBe('DELETED');
       expect((video as unknown as { deletedAt?: Date })?.deletedAt).toBeDefined();
 
-      const events = await repositories.events.findByVideoId(videoId);
-      expect(expectOk(events).some((e) => e.type === 'video.deleted')).toBe(true);
+      const events = expectOk(await repositories.events.findByVideoId(videoId));
+      expect(events.some((e) => e.type === 'video.deleted')).toBe(true);
     });
 
     it('allows soft delete via alternative path /videos/:id', async () => {

@@ -1,6 +1,6 @@
 import type { DlqRepository } from '@vp/core/repositories';
-import { VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
 import { expectOk } from '@vp/testing/result';
+import { VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const DLQ_IDS = {

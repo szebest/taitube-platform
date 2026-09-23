@@ -1,14 +1,13 @@
 import { ErrorCodes, isInputFailure } from '@vp/errors';
-import {
-  cannotSubscribeToSelf,
-  channelForbidden,
-  channelNotFound,
-  handleTaken,
-} from '../failures';
+import { cannotSubscribeToSelf, channelForbidden, channelNotFound, handleTaken } from '../failures';
 
 describe('@vp/domain-rules: channel failures', () => {
   it.each([
-    { name: 'channelNotFound', failure: channelNotFound('@me'), code: ErrorCodes.CHANNEL_NOT_FOUND },
+    {
+      name: 'channelNotFound',
+      failure: channelNotFound('@me'),
+      code: ErrorCodes.CHANNEL_NOT_FOUND,
+    },
     { name: 'handleTaken', failure: handleTaken('me'), code: ErrorCodes.HANDLE_ALREADY_TAKEN },
     {
       name: 'cannotSubscribeToSelf',

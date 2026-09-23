@@ -5,13 +5,13 @@ import { JobQueue, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import type { NotifyJob, PackageJob, TranscodeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
-import { expectOk } from '@vp/testing/result';
+import { ok } from '@vp/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createNotifyProcessor } from '../stages/notify';
 import { createPackageProcessor } from '../stages/package';
 import { createTranscodeProcessor } from '../stages/transcode';
-import { ok } from '@vp/result';
 
 describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23)', () => {
   let repositories: InMemoryRepositories;
@@ -183,9 +183,9 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
       traceparent: '00-01-01-01',
     });
 
-    const result = await processor(job);
-    expect(expectOk(result).segmentCount).toBe(10);
-    expect(expectOk(result).bytes).toBeGreaterThan(10000);
+    const result = expectOk(await processor(job));
+    expect(result.segmentCount).toBe(10);
+    expect(result.bytes).toBeGreaterThan(10000);
 
     // 1. Verify 10 TS segments uploaded with immutable cache control (AC 17)
     const tsUploads = uploadedObjects.filter((o) => o.key.endsWith('.ts'));
@@ -202,17 +202,17 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     expect(lastUpload?.cacheControl).toBe('public, max-age=60');
 
     // 3. Verify renditions row is DONE with segmentCount=10 and bytes (AC 17)
-    const rends = await repositories.renditions.findByVideoId(videoId);
-    const rend = expectOk(rends).find((r: any) => r.name === '720p');
+    const rends = expectOk(await repositories.renditions.findByVideoId(videoId));
+    const rend = rends.find((r: any) => r.name === '720p');
     expect(rend?.status).toBe('DONE');
     expect(rend?.segmentCount).toBe(10);
     expect(rend?.bytes).toBeGreaterThan(10000);
     expect(rend?.playlistKey).toBe(`videos/${videoId}/hls/720p/index.m3u8`);
 
     // 4. Verify transcode returns TranscodeResult with playlistKey and avgBitrateBps for the Flow parent
-    expect(expectOk(result).rendition).toBe('720p');
-    expect(expectOk(result).playlistKey).toBe(`videos/${videoId}/hls/720p/index.m3u8`);
-    expect(expectOk(result).avgBitrateBps).toBeGreaterThan(0);
+    expect(result.rendition).toBe('720p');
+    expect(result.playlistKey).toBe(`videos/${videoId}/hls/720p/index.m3u8`);
+    expect(result.avgBitrateBps).toBeGreaterThan(0);
 
     transcodeSpy.mockRestore();
   });
@@ -310,8 +310,8 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     expect(video?.readyAt).toBeDefined();
 
     // 2. Verify video_events has exactly ONE video.ready (AC 19)
-    const events = await repositories.events.findByVideoId(videoId);
-    const readyEvents = expectOk(events).filter((e: any) => e.type === 'video.ready');
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
+    const readyEvents = events.filter((e: any) => e.type === 'video.ready');
     expect(readyEvents.length).toBe(1);
 
     // 3. Verify notify job was enqueued (AC 19)
@@ -347,11 +347,10 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
       traceparent: '00-01-01-01',
     });
 
-    await expect(processor(job)).rejects.toThrow();
+    expect(expectErr(await processor(job)).code).toBe(ErrorCodes.SEGMENT_VERIFY_FAILED);
 
-    // Verify step recorded SEGMENT_VERIFY_FAILED
-    const steps = await repositories.steps.findByVideoId(videoId);
-    const step = expectOk(steps).find((s: any) => s.step === 'package');
+    const steps = expectOk(await repositories.steps.findByVideoId(videoId));
+    const step = steps.find((s: any) => s.step === 'package');
     expect(step?.errorCode).toBe(ErrorCodes.SEGMENT_VERIFY_FAILED);
   });
 
@@ -406,8 +405,8 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     expect(parsedUserMsg.data.playbackUrl).toBe(playbackUrl);
 
     // Verify step completed in DB
-    const steps = await repositories.steps.findByVideoId(videoId);
-    const step = expectOk(steps).find((s: any) => s.step === 'notify');
+    const steps = expectOk(await repositories.steps.findByVideoId(videoId));
+    const step = steps.find((s: any) => s.step === 'notify');
     expect(step?.status).toBe('DONE');
   });
 });

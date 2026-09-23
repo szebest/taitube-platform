@@ -1,11 +1,10 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
-import { ErrorCodes, storageUnavailable, toPipelineError } from '@vp/errors';
+import { type AnyFailure, ErrorCodes, storageUnavailable, toPipelineError } from '@vp/errors';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
-import { err, ok } from '@vp/result';
+import { type Result, err, isErr, ok } from '@vp/result';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
-import { failedResult } from '../queue-error';
-import { expectOk } from '@vp/testing/result';
 
 const logger = createLogger({ service: 'queue-boundary-test', level: 'error' });
 const metrics = createMetricsRegistry({ env: 'test' });
@@ -16,8 +15,8 @@ const corruptContainer = {
 } as const;
 
 /** The exact line `runner.ts` runs on every job outcome. */
-function runnerOutcome(outcome: unknown): Error | null {
-  return failedResult(outcome) ? toPipelineError(outcome.error) : null;
+function runnerOutcome(outcome: Result<unknown, AnyFailure>): Error | null {
+  return isErr(outcome) ? toPipelineError(outcome.error) : null;
 }
 
 describe('the worker edge: a stage Result becomes the queue throw', () => {
@@ -39,10 +38,6 @@ describe('the worker edge: a stage Result becomes the queue throw', () => {
 
   it('lets a stage that succeeded through untouched', () => {
     expect(runnerOutcome(ok({ videoId: 'v1', published: true }))).toBeNull();
-  });
-
-  it('lets a stage that never converted through untouched', () => {
-    expect(runnerOutcome({ videoId: 'v1', published: true })).toBeNull();
   });
 
   it.each([

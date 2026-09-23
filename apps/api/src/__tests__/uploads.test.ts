@@ -259,8 +259,8 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     expect(video?.status).toBe('UPLOADED');
 
     // Verify upload.completed event written to video_events
-    const events = await repositories.events.findByVideoId(videoId);
-    expect(expectOk(events).some((e) => e.type === 'upload.completed')).toBe(true);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
+    expect(events.some((e) => e.type === 'upload.completed')).toBe(true);
 
     // Verify probe job was enqueued in Redis with deterministic jobId
     const expectedJobId = `${videoId}--probe--g1`;
@@ -482,8 +482,8 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     expect(probeJobs.length).toBe(initialProbeCount);
 
     // Outbox record was atomically written in the DB transaction
-    const pendingOutbox = await repositories.outbox.claimBatch(10);
-    const probeOutboxItem = expectOk(pendingOutbox).find(
+    const pendingOutbox = expectOk(await repositories.outbox.claimBatch(10));
+    const probeOutboxItem = pendingOutbox.find(
       (item) =>
         item.kind === 'probe' &&
         item.payload.type === 'queue' &&
@@ -492,7 +492,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     expect(probeOutboxItem).toBeDefined();
 
     // Outbox relay logic: claims batch from outbox and adds to queue, marking published
-    for (const item of expectOk(pendingOutbox)) {
+    for (const item of pendingOutbox) {
       if (item.payload.type === 'queue') {
         await mockProbeQueue.add(
           item.payload.job.name,

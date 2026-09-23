@@ -8,8 +8,10 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
+import { storageUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { Result } from '@vp/result';
+import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -81,8 +83,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       // Verify multipart is active before reconciler runs
-      const beforeList = await multipart.listMultipartUploads('raw');
-      expect(expectOk(beforeList).some((u) => u.uploadId === uploadId)).toBe(true);
+      const beforeList = expectOk(await multipart.listMultipartUploads('raw'));
+      expect(beforeList.some((u) => u.uploadId === uploadId)).toBe(true);
 
       // Run reconcile-uploads with 1 hour threshold (so 2 hours ago is stale)
       const result = expectOk(
@@ -105,12 +107,12 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(uploadRecord?.status).toBe('ABORTED');
 
       // Multipart upload on storage must be aborted (listMultipartUploads empty)
-      const afterList = await multipart.listMultipartUploads('raw');
-      expect(expectOk(afterList).filter((u) => u.uploadId === uploadId)).toHaveLength(0);
+      const afterList = expectOk(await multipart.listMultipartUploads('raw'));
+      expect(afterList.filter((u) => u.uploadId === uploadId)).toHaveLength(0);
 
       // Event must be logged
-      const events = await repositories.events.findByVideoId(videoId);
-      expect(expectOk(events).some((e) => e.type === 'video.abandoned')).toBe(true);
+      const events = expectOk(await repositories.events.findByVideoId(videoId));
+      expect(events.some((e) => e.type === 'video.abandoned')).toBe(true);
     });
 
     it('does NOT abort fresh uploads that have not exceeded threshold', async () => {
@@ -426,7 +428,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(result.purgedVideosCount).toBe(1);
 
       // Verify raw source is deleted
-      const rawMeta = await storage.headObject('raw', `raw/${videoId}/source.mp4`);
+      const rawMeta = expectOk(await storage.headObject('raw', `raw/${videoId}/source.mp4`));
       expect(rawMeta).toBeNull();
 
       // Verify ALL public objects (> 1000) are gone
@@ -456,12 +458,10 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       // Spy on purgePrefix to simulate storage outage
       const originalPurge = storage.purgePrefix.bind(storage);
-      storage.purgePrefix = async (bucket, prefix) => {
-        if (bucket === 'public') {
-          throw new Error('503 Service Unavailable: S3 outage');
-        }
-        return originalPurge(bucket, prefix);
-      };
+      storage.purgePrefix = async (bucket, prefix) =>
+        bucket === 'public'
+          ? err(storageUnavailable('purgePrefix', '503 Service Unavailable: S3 outage'))
+          : originalPurge(bucket, prefix);
 
       const result = expectOk(
         await runPurgeDeleted({
@@ -550,13 +550,19 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
       expect(expectOk(g1List).keys).toHaveLength(0);
 
-      const legacyMaster = await storage.headObject('public', `videos/${videoId}/hls/master.m3u8`);
+      const legacyMaster = expectOk(
+        await storage.headObject('public', `videos/${videoId}/hls/master.m3u8`)
+      );
       expect(legacyMaster).toBeNull();
 
       // Active g2 objects MUST still exist!
-      const g2Master = await storage.headObject('public', `videos/${videoId}/hls/g2/master.m3u8`);
+      const g2Master = expectOk(
+        await storage.headObject('public', `videos/${videoId}/hls/g2/master.m3u8`)
+      );
       expect(g2Master).not.toBeNull();
-      const g2Rend = await storage.headObject('public', `videos/${videoId}/hls/g2/720p/index.m3u8`);
+      const g2Rend = expectOk(
+        await storage.headObject('public', `videos/${videoId}/hls/g2/720p/index.m3u8`)
+      );
       expect(g2Rend).not.toBeNull();
 
       // On a second run, old generations MUST NOT be re-purged (starvation prevention)
@@ -710,12 +716,12 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(result.expiredCount).toBe(1);
 
       // Raw object is gone
-      const head = await storage.headObject('raw', sourceKey);
+      const head = expectOk(await storage.headObject('raw', sourceKey));
       expect(head).toBeNull();
 
       // Audit event exists exactly once
-      const events = await repositories.events.findByVideoId(videoId);
-      expect(expectOk(events).filter((e) => e.type === 'video.raw_expired')).toHaveLength(1);
+      const events = expectOk(await repositories.events.findByVideoId(videoId));
+      expect(events.filter((e) => e.type === 'video.raw_expired')).toHaveLength(1);
 
       // On a second run, video MUST NOT be re-expired (starvation and duplicate prevention)
       const secondRun = expectOk(
@@ -728,8 +734,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       );
       expect(secondRun.expiredCount).toBe(0);
 
-      const eventsAfter = await repositories.events.findByVideoId(videoId);
-      expect(expectOk(eventsAfter).filter((e) => e.type === 'video.raw_expired')).toHaveLength(1);
+      const eventsAfter = expectOk(await repositories.events.findByVideoId(videoId));
+      expect(eventsAfter.filter((e) => e.type === 'video.raw_expired')).toHaveLength(1);
     });
 
     it('runTmpSweep cleans files older than threshold and preserves recent ones', async () => {

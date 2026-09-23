@@ -14,6 +14,7 @@ import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createTranscodeProcessor } from '../stages/transcode';
+import { throughRunner } from './queue-boundary';
 
 describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
   let repositories: InMemoryRepositories;
@@ -177,10 +178,10 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     expect(dlqData?.error?.unrecoverable).toBe(true);
 
     // Verify processing_steps DEAD and renditions FAILED (AC 3)
-    const steps = await repositories.steps.findByVideoId(videoId);
-    expect(expectOk(steps).some((s) => s.step === 'transcode' && s.status === 'DEAD')).toBe(true);
-    const rends = await repositories.renditions.findByVideoId(videoId);
-    expect(expectOk(rends).some((r) => r.name === '720p' && r.status === 'FAILED')).toBe(true);
+    const steps = expectOk(await repositories.steps.findByVideoId(videoId));
+    expect(steps.some((s) => s.step === 'transcode' && s.status === 'DEAD')).toBe(true);
+    const rends = expectOk(await repositories.renditions.findByVideoId(videoId));
+    expect(rends.some((r) => r.name === '720p' && r.status === 'FAILED')).toBe(true);
   });
 
   // AC 2: TransientError -> DLQ after attempts
@@ -315,7 +316,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       getQueue,
       simulateFailureRendition: '720p',
     });
-    await q720.process(transcode720);
+    await q720.process(throughRunner(transcode720));
 
     // Package processor
     const packageProc = createPackageProcessor({
@@ -324,7 +325,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       logger,
       getQueue,
     });
-    await qPackage.process(packageProc);
+    await qPackage.process(throughRunner(packageProc));
 
     // Create flow with failParentOnFailure
     await flowProducer.add({
@@ -478,7 +479,9 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
         }
       );
 
-      await expect(probeQueue.process(probeProcessor)).rejects.toThrow(fixture.errorMsg);
+      await expect(probeQueue.process(throughRunner(probeProcessor))).rejects.toThrow(
+        fixture.errorMsg
+      );
 
       // Verify each hostile file ends in DLQ with expected code and attemptsMade = 1
       const dlqEntries = expectOk(await repositories.dlq.list({ limit: 100 }));

@@ -17,12 +17,14 @@ describe('@vp/validation: handle format', () => {
     }
   );
 
-  it.each([{ handle: 'ab' }, { handle: 'a'.repeat(31) }, { handle: 'has space' }, { handle: 'e!' }])(
-    'rejects $handle',
-    ({ handle }) => {
-      expect(isValidHandleFormat(handle)).toBe(false);
-    }
-  );
+  it.each([
+    { handle: 'ab' },
+    { handle: 'a'.repeat(31) },
+    { handle: 'has space' },
+    { handle: 'e!' },
+  ])('rejects $handle', ({ handle }) => {
+    expect(isValidHandleFormat(handle)).toBe(false);
+  });
 
   it.each([{ handle: 'admin' }, { handle: 'ADMIN' }, { handle: 'videos' }])(
     'treats $handle as reserved',

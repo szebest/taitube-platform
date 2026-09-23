@@ -69,8 +69,8 @@ describe('apps/worker: recordProbeFailure', () => {
       'gone'
     );
 
-    const steps = await repositories.steps.findByVideoId(videoId);
-    expect(expectOk(steps).find((step) => step.step === 'probe')).toMatchObject({
+    const steps = expectOk(await repositories.steps.findByVideoId(videoId));
+    expect(steps.find((step) => step.step === 'probe')).toMatchObject({
       status: 'FAILED',
     });
   });
@@ -82,8 +82,8 @@ describe('apps/worker: recordProbeFailure', () => {
       'gone'
     );
 
-    const events = await repositories.events.findByVideoId(videoId);
-    expect(expectOk(events).some((event) => event.type === 'video.failed')).toBe(true);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
+    expect(events.some((event) => event.type === 'video.failed')).toBe(true);
   });
 
   it('tells the owner, so a failed probe does not go unnoticed', async () => {

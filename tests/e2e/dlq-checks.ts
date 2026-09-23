@@ -6,6 +6,8 @@ import type { MultipartStorage, Repositories, StorageClient } from '../../packag
 import { ErrorCodes } from '../../packages/universal/errors/src/index';
 import { UploadClient } from '../../packages/server/upload-client/src/index';
 import type { VideoTestResult, VideoTestSpec } from './specs';
+import { unwrapOr } from '../../packages/universal/result/src/index';
+import { expectOk } from '../../packages/server/testing/src/result';
 
 const uuidv7 = () => crypto.randomUUID();
 
@@ -39,15 +41,17 @@ export async function runForcedTransientDlqReplay(ctx: DlqCheckContext): Promise
   }
 
   const videoId = uuidv7();
-  await repositories.videos.create({
-    id: videoId,
-    ownerId: adminId,
-    title: 'Forced Transient Replay Video',
-    status: 'PROCESSING',
-    sourceKey: 'raw/s15.mp4',
-  });
+  expectOk(
+    await repositories.videos.create({
+      id: videoId,
+      ownerId: adminId,
+      title: 'Forced Transient Replay Video',
+      status: 'PROCESSING',
+      sourceKey: 'raw/s15.mp4',
+    })
+  );
 
-  const entry = await repositories.dlq.create({
+  const created = await repositories.dlq.create({
     id: uuidv7(),
     queue: 'transcode-720p',
     jobId: `${videoId}--transcode--720p--g1`,
@@ -76,6 +80,7 @@ export async function runForcedTransientDlqReplay(ctx: DlqCheckContext): Promise
     },
     status: 'PARKED',
   });
+  const entry = expectOk(created);
 
   const replayRes = await fetch(`${apiUrl}/admin/dlq/${entry.id}/replay`, {
     method: 'POST',
@@ -87,12 +92,12 @@ export async function runForcedTransientDlqReplay(ctx: DlqCheckContext): Promise
   }
 
   const replayData = (await replayRes.json()) as { status: string; replayJobId: string };
-  const updated = await repositories.dlq.findById(entry.id);
+  const updated = unwrapOr(await repositories.dlq.findById(entry.id), null);
 
   const replayStart = Date.now();
   let replayedStepSuccess = false;
   while (Date.now() - replayStart < 30000) {
-    const steps = await repositories.steps.findByVideoId(videoId);
+    const steps = unwrapOr(await repositories.steps.findByVideoId(videoId), []);
     const tStep = steps.find((s) => s.step === 'transcode' && s.rendition === '720p');
     if (tStep?.status === 'DONE') {
       replayedStepSuccess = true;
@@ -135,8 +140,8 @@ export async function runAbandonedUploadTest(ctx: DlqCheckContext): Promise<{
     });
   }
 
-  const video = await repositories.videos.findById(init.videoId);
-  const upload = await repositories.uploads.findById(init.uploadId);
+  const video = unwrapOr(await repositories.videos.findById(init.videoId), null);
+  const upload = unwrapOr(await repositories.uploads.findById(init.uploadId), null);
   return {
     passed: Boolean(video?.status === 'ABANDONED' && upload?.status === 'ABORTED'),
     videoId: init.videoId,
@@ -179,7 +184,7 @@ export async function auditDlqHostile(
   }
 
   if (items.length === 0 && repositories?.dlq) {
-    items = await repositories.dlq.list({ limit: 100 });
+    items = unwrapOr(await repositories.dlq.list({ limit: 100 }), []);
   }
 
   const hostileSpecs = specs.filter((s) => s.expectedStatus === 'FAILED');

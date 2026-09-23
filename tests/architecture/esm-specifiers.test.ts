@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { extname, join, resolve } from 'node:path';
 import { glob } from 'node:fs/promises';
+import { extname, join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '../..');
 const BROWSER_TIERS = ['universal', 'client'];

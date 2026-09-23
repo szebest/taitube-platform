@@ -448,8 +448,8 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(video?.status).toBe('ABANDONED');
 
     // Invariant: video_events has upload.aborted event
-    const events = await repositories.events.findByVideoId(videoId);
-    expect(expectOk(events).some((e) => e.type === 'upload.aborted')).toBe(true);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
+    expect(events.some((e) => e.type === 'upload.aborted')).toBe(true);
 
     // Subsequent GET returns 410 with UPLOAD_NOT_OPEN
     const getRes = await app.inject({
