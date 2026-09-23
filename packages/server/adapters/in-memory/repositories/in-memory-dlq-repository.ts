@@ -15,7 +15,7 @@ import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 export class InMemoryDlqRepository extends DlqRepository {
   private readonly entriesMap: Map<string, DlqEntryRecord>;
-  private outboxRepo?: OutboxRepository;
+  private readonly outboxRepo?: OutboxRepository;
 
   constructor(
     entriesMap?: Map<string, DlqEntryRecord>,
@@ -89,10 +89,6 @@ export class InMemoryDlqRepository extends DlqRepository {
         .slice(0, limit + 1)
         .map((entry) => ({ ...entry }))
     );
-  }
-
-  setOutboxRepo(repo: OutboxRepository): void {
-    this.outboxRepo = repo;
   }
 
   async updateStatus(

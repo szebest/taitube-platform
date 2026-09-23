@@ -14,7 +14,6 @@ import {
   type TransitionVideoOptions,
   type UpdateVideoMetadataOptions,
   type UploadRecord,
-  type UploadRepository,
   type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
@@ -32,6 +31,7 @@ import {
   DEFAULT_VIDEO_RECORD,
   type InMemoryVideoRepositoryOptions,
   type InternalStep,
+  type UploadLookup,
 } from './types';
 
 export type { InMemoryVideoRepositoryOptions };
@@ -42,11 +42,11 @@ export class InMemoryVideoRepository extends VideoRepository {
   private readonly renditionsMap?: Map<string, RenditionRecord>;
   private readonly stepsMap?: Map<string, InternalStep>;
   private readonly uploadsMap?: Map<string, UploadRecord>;
-  private eventsRepo?: EventRepository;
-  private renditionsRepo?: RenditionRepository;
-  private stepsRepo?: StepRepository;
-  private uploadsRepo?: UploadRepository;
-  private outboxRepo?: OutboxRepository;
+  private readonly eventsRepo?: EventRepository;
+  private readonly renditionsRepo?: RenditionRepository;
+  private readonly stepsRepo?: StepRepository;
+  private readonly uploadsRepo?: UploadLookup;
+  private readonly outboxRepo?: OutboxRepository;
 
   constructor(
     optsOrMap?: InMemoryVideoRepositoryOptions | Map<string, VideoRecord>,
@@ -70,19 +70,6 @@ export class InMemoryVideoRepository extends VideoRepository {
       this.uploadsRepo = optsOrMap?.uploadsRepo;
       this.outboxRepo = optsOrMap?.outboxRepo;
     }
-  }
-
-  setUploadsRepo(repo: UploadRepository) {
-    this.uploadsRepo = repo;
-  }
-  setEventsRepo(repo: EventRepository) {
-    this.eventsRepo = repo;
-  }
-  setRenditionsRepo(repo: RenditionRepository) {
-    this.renditionsRepo = repo;
-  }
-  setStepsRepo(repo: StepRepository) {
-    this.stepsRepo = repo;
   }
 
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {

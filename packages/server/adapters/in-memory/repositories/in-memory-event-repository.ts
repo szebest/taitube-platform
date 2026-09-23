@@ -7,22 +7,18 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok, unwrapOr } from '@vp/result';
 
 /** The one thing this repository needs from a video: who owns it. */
-interface VideoOwnerLookup {
+export interface VideoOwnerLookup {
   findById(id: string): Promise<Result<{ ownerId: string } | null, unknown>>;
 }
 
 export class InMemoryEventRepository extends EventRepository {
   private readonly eventsList: VideoEventRecord[];
-  private videosRepo?: VideoOwnerLookup;
+  private readonly videosRepo?: VideoOwnerLookup;
 
   constructor(eventsList: VideoEventRecord[] = [], videosRepo?: VideoOwnerLookup) {
     super();
     this.eventsList = eventsList;
     this.videosRepo = videosRepo;
-  }
-
-  setVideosRepo(repo: VideoOwnerLookup): void {
-    this.videosRepo = repo;
   }
 
   async create(data: NewVideoEventInput): Promise<Result<VideoEventRecord, DatabaseUnavailable>> {

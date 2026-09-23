@@ -34,9 +34,12 @@ export interface InMemoryVideoRepositoryOptions {
   eventsRepo?: EventRepository;
   renditionsRepo?: RenditionRepository;
   stepsRepo?: StepRepository;
-  uploadsRepo?: UploadRepository;
+  uploadsRepo?: UploadLookup;
   outboxRepo?: OutboxRepository;
 }
+
+/** A video's upload is the one thing this repository reads back from uploads. */
+export type UploadLookup = Pick<UploadRepository, 'findByVideoId'>;
 
 export const DEFAULT_VIDEO_RECORD: Omit<
   VideoRecord,

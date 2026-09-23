@@ -92,7 +92,6 @@ export const UNTESTED_SOURCES: readonly string[] = [
   'packages/server/adapters/in-memory/repositories/in-memory-event-repository.ts',
   'packages/server/adapters/in-memory/repositories/in-memory-outbox-repository.ts',
   'packages/server/adapters/in-memory/repositories/in-memory-rendition-repository.ts',
-  'packages/server/adapters/in-memory/repositories/in-memory-repositories.ts',
   'packages/server/adapters/in-memory/repositories/in-memory-step-repository.ts',
   'packages/server/adapters/in-memory/repositories/in-memory-upload-repository.ts',
   'packages/server/adapters/in-memory/repositories/in-memory-user-repository.ts',

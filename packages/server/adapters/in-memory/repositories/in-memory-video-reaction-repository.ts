@@ -18,14 +18,10 @@ export interface InMemoryVideoReactionRepositoryOptions {
 export class InMemoryVideoReactionRepository implements VideoReactionRepositoryPort {
   private readonly reactions = new Map<string, VideoReaction>();
   private readonly videoCounters = new Map<string, { likesCount: number; dislikesCount: number }>();
-  private videosRepo?: VideoRepository;
+  private readonly videosRepo?: VideoRepository;
 
   constructor(options: InMemoryVideoReactionRepositoryOptions = {}) {
     this.videosRepo = options.videosRepo;
-  }
-
-  setVideosRepo(videosRepo: VideoRepository): void {
-    this.videosRepo = videosRepo;
   }
 
   private key(videoId: string, userId: string): string {
