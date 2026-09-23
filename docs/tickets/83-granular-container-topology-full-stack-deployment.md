@@ -25,6 +25,14 @@
 > packages in the build graph — include them in the per-app Docker build contexts, the `pnpm deploy --prod` prune and the turbo
 > cache keys. See [84](84-result-typed-error-handling-shared-domain-rules.md).
 
+> **Ticket 87 note:** three things this ticket needs, whichever lands first.
+> `@vp/composition` and `@vp/concurrency` (both `server`) are new packages in the build graph — same treatment
+> as above. The API gains the `SIGTERM`/`SIGINT` drain the worker already has, so the per-app images and the
+> compose/k8s stop behaviour (`STOPSIGNAL`, `stop_grace_period`, `terminationGracePeriodSeconds`, `preStop`)
+> must give it time to run rather than assume an instant exit. And the raw/public bucket env keys are
+> reconciled on `S3_BUCKET_RAW` / `S3_BUCKET_PUBLIC`: any `STORAGE_*_BUCKET` written into a compose or manifest
+> env block by this ticket is already dead. See [87](87-composition-root-typed-container-config-value.md).
+
 ---
 
 ## Why this ticket exists
