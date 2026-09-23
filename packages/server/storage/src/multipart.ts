@@ -2,6 +2,9 @@
 export const MULTIPART_MAX_PARTS = 10000;
 export const MULTIPART_URL_BATCH_SIZE = 100;
 
+/** ListObjectsV2 pages and DeleteObjects batches both stop at 1000 keys. */
+export const S3_MAX_KEYS_PER_REQUEST = 1000;
+
 export interface PartSizeBounds {
   minBytes: number;
   maxBytes: number;

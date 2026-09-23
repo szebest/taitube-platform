@@ -8,8 +8,6 @@ import { fromPromise, isErr } from '@vp/result';
 import { STAGE_REGISTRY } from './registry';
 import { type WorkerRunner, createWorkerRunner } from './runner';
 
-const HEARTBEAT_INTERVAL_MS = 15_000;
-
 export interface WorkerProcess {
   runner: WorkerRunner;
   metricsPort: number;
@@ -40,7 +38,7 @@ export async function main(
   await writeHeartbeat(config.worker.heartbeatPath);
   const heartbeat = setInterval(
     () => void writeHeartbeat(config.worker.heartbeatPath),
-    HEARTBEAT_INTERVAL_MS
+    config.worker.heartbeatIntervalMs
   );
   heartbeat.unref?.();
 

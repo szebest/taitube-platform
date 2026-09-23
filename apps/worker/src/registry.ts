@@ -86,6 +86,8 @@ const transcode = (d: StageDeps) =>
         gopSeconds: d.config.worker.gopSeconds,
         hlsSegmentSeconds: d.config.worker.hlsSegmentSeconds,
         timeoutFactor: d.config.worker.jobTimeoutFactor,
+        minTimeoutMs: d.config.worker.ffmpegProcess.minTranscodeTimeoutMs,
+        limits: d.config.worker.ffmpegProcess,
       },
       segmentUpload: d.config.worker.segmentUpload,
       getQueue: d.getQueue,
@@ -140,7 +142,8 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           heartbeatPath: d.config.worker.heartbeatPath,
           tmpDir: d.config.worker.tmpDir,
           ffmpegPath: d.config.worker.ffmpegPath,
-          spriteIntervalSec: d.config.worker.spriteIntervalSeconds,
+          sprite: d.config.worker.sprite,
+          ffmpegProcess: d.config.worker.ffmpegProcess,
         })
       ),
   },

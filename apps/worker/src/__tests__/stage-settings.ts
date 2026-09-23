@@ -9,7 +9,8 @@ export const STAGE_SETTINGS = {
   publicBucket: 'public',
   heartbeatPath: '/tmp/vp/heartbeat',
   cdn: asCdnBase('http://localhost:9000/public'),
-  spriteIntervalSec: 5,
+  sprite: config.worker.sprite,
+  ffmpegProcess: config.worker.ffmpegProcess,
   ffmpeg: {
     path: config.worker.ffmpegPath,
     threads: 2,
@@ -17,6 +18,8 @@ export const STAGE_SETTINGS = {
     gopSeconds: config.worker.gopSeconds,
     hlsSegmentSeconds: config.worker.hlsSegmentSeconds,
     timeoutFactor: config.worker.jobTimeoutFactor,
+    minTimeoutMs: config.worker.ffmpegProcess.minTranscodeTimeoutMs,
+    limits: config.worker.ffmpegProcess,
   },
   ffmpegPath: config.worker.ffmpegPath,
   ffprobePath: config.worker.ffprobePath,

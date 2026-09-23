@@ -1,4 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { createMetricsRegistry } from '@vp/observability';
 import { pollSqlMetrics } from '../sql-poller';
 
@@ -50,7 +51,7 @@ describe('apps/api/services: SQL poller', () => {
     internalStep.heartbeatAt = staleTime;
     internalStep.startedAt = staleTime;
 
-    await pollSqlMetrics(testRepos, testMetrics);
+    await pollSqlMetrics(testRepos, testMetrics, inProcessAppConfig().pollers.staleStepMs);
 
     const metricsJson = await testMetrics.registry.getMetricsAsJSON();
     const staleMetric = metricsJson.find((m) => m.name === 'processing_steps_running_stale');

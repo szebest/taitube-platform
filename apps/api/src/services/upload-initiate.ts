@@ -4,11 +4,14 @@ import type { VideoVisibility } from '@vp/domain';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type Result, all, isErr, ok } from '@vp/result';
-import { calculatePartSize, calculateTotalParts, rawSourceKey } from '@vp/storage';
+import {
+  MULTIPART_URL_BATCH_SIZE,
+  calculatePartSize,
+  calculateTotalParts,
+  rawSourceKey,
+} from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import type { UploadContext } from './upload-context';
-
-const INITIAL_PART_URL_BATCH = 100;
 
 export interface InitiateUploadParams {
   filename: string;
@@ -151,7 +154,7 @@ export async function initiateUpload(
   if (isErr(recorded)) return recorded;
 
   const signed: Result<StoragePresignedPartInfo, StorageUnavailable>[] = [];
-  for (let part = 1; part <= Math.min(partsExpected, INITIAL_PART_URL_BATCH); part++) {
+  for (let part = 1; part <= Math.min(partsExpected, MULTIPART_URL_BATCH_SIZE); part++) {
     signed.push(
       await ctx.multipart.createPresignedPartUrl({
         bucket: ctx.rawBucket,

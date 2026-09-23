@@ -76,6 +76,7 @@ describe('apps/api: composeApp', () => {
     });
 
     expect(res.statusCode).toBe(413);
+    expect(res.json()).toMatchObject({ status: 413, title: 'Payload Too Large' });
     await app.close();
   });
 

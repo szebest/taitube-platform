@@ -24,7 +24,7 @@ describe('Cloud Infrastructure & Terraform (Ticket 31)', () => {
     expect(content).toContain('CLOUDFLARE_API_TOKEN');
     expect(content).toContain('HCLOUD_TOKEN');
     expect(content).toContain('DATABASE_URL');
-    expect(content).toContain('OTEL_EXPORTER_OTLP_ENDPOINT');
+    expect(content).toContain('GRAFANA_OTLP_ENDPOINT');
   });
 
   it('Interactive setup wizard exists and has executable syntax', () => {

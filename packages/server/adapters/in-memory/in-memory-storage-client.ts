@@ -13,10 +13,8 @@ import {
 } from '@vp/core/ports';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
+import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
 import { measureStorageOp } from '../storage-metrics-helper';
-
-/** S3's ListObjectsV2 pages at 1000 keys when MaxKeys is absent; the double pages the same. */
-const S3_LIST_PAGE_KEYS = 1000;
 
 interface StoredObject {
   data: Buffer;
@@ -144,7 +142,7 @@ export class InMemoryStorageClient extends StorageClient {
       }
       matchingKeys.sort();
 
-      const maxKeys = params.maxKeys ?? S3_LIST_PAGE_KEYS;
+      const maxKeys = params.maxKeys ?? S3_MAX_KEYS_PER_REQUEST;
       let filteredKeys = matchingKeys;
       if (params.continuationToken) {
         const token = params.continuationToken;

@@ -6,6 +6,7 @@ import { JwksTokenVerifier } from '../jwks-token-verifier';
 const JWKS_URL = 'https://idp.example/.well-known/jwks.json';
 const CACHE_TTL_MS = 300_000;
 const REFETCH_INTERVAL_MS = 30_000;
+const FETCH_TIMEOUT_MS = 20;
 
 function claims(now: number) {
   const iat = Math.floor(now / 1000);
@@ -15,7 +16,10 @@ function claims(now: number) {
 function harness() {
   const clock = { now: 1_000_000 };
   const published: { keys: Jwk[] } = { keys: [] };
-  const fetch = vi.fn(async () => Response.json(published));
+  const fetch = vi.fn(
+    async (_url: string, _init: { signal: AbortSignal }): Promise<Response> =>
+      Response.json(published)
+  );
   const verifier = new JwksTokenVerifier({
     jwksUrl: JWKS_URL,
     issuer: 'https://idp.example/',
@@ -23,6 +27,7 @@ function harness() {
     algorithms: ['RS256', 'ES256'],
     cacheTtlMs: CACHE_TTL_MS,
     refetchIntervalMs: REFETCH_INTERVAL_MS,
+    fetchTimeoutMs: FETCH_TIMEOUT_MS,
     fetch,
     now: () => clock.now,
   });
@@ -39,7 +44,7 @@ describe('packages/adapters/auth: JwksTokenVerifier', () => {
     expectOk(await verifier.verify(signJwt(key, claims(clock.now))));
 
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch).toHaveBeenCalledWith(JWKS_URL);
+    expect(fetch).toHaveBeenCalledWith(JWKS_URL, { signal: expect.any(AbortSignal) });
   });
 
   it('accepts a rotated key on the first token that names it, before the cache expires', async () => {
@@ -99,5 +104,34 @@ describe('packages/adapters/auth: JwksTokenVerifier', () => {
     );
 
     expect(refused.code).toBe('UNAUTHORIZED');
+  });
+
+  it('gives up on a JWKS that never answers once the fetch timeout passes', async () => {
+    const { clock, fetch, verifier } = harness();
+    fetch.mockImplementation(
+      (_url, { signal }) =>
+        new Promise((_resolve, reject) => {
+          signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+        })
+    );
+
+    const refused = expectErr(
+      await verifier.verify(signJwt(signingKey('RS256', 'k1'), claims(clock.now)))
+    );
+
+    expect(refused.reason).toBe('the JWKS is unreachable');
+  });
+
+  it('shares one fetch between concurrent verifies of a cold cache', async () => {
+    const { clock, published, fetch, verifier } = harness();
+    const key = signingKey('RS256', 'k1');
+    published.keys = [key.jwk];
+
+    const verified = await Promise.all(
+      Array.from({ length: 10 }, () => verifier.verify(signJwt(key, claims(clock.now))))
+    );
+
+    expect(verified.every((result) => result.ok)).toBe(true);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

@@ -9,7 +9,8 @@ export interface JwksTokenVerifierDeps {
   algorithms: readonly string[];
   cacheTtlMs: number;
   refetchIntervalMs: number;
-  fetch: (url: string) => Promise<Response>;
+  fetchTimeoutMs: number;
+  fetch: (url: string, init: { signal: AbortSignal }) => Promise<Response>;
   now: () => number;
 }
 
@@ -26,6 +27,7 @@ function isJwks(body: unknown): body is Jwks {
 export class JwksTokenVerifier extends TokenVerifier {
   private cached: { jwks: Jwks; fetchedAt: number } | null = null;
   private lastFetchAt = Number.NEGATIVE_INFINITY;
+  private pending: Promise<Result<Jwks, AuthFailure>> | null = null;
 
   constructor(private readonly deps: JwksTokenVerifierDeps) {
     super();
@@ -57,11 +59,22 @@ export class JwksTokenVerifier extends TokenVerifier {
     return recently ? ok(stale) : this.fetchKeys();
   }
 
-  private async fetchKeys(): Promise<Result<Jwks, AuthFailure>> {
+  /** Every verify waiting on keys shares one request, so a burst of logins costs the IdP one fetch. */
+  private fetchKeys(): Promise<Result<Jwks, AuthFailure>> {
+    this.pending ??= this.requestKeys().finally(() => {
+      this.pending = null;
+    });
+    return this.pending;
+  }
+
+  private async requestKeys(): Promise<Result<Jwks, AuthFailure>> {
     this.lastFetchAt = this.deps.now();
 
     const response = await fromPromise(
-      () => this.deps.fetch(this.deps.jwksUrl),
+      () =>
+        this.deps.fetch(this.deps.jwksUrl, {
+          signal: AbortSignal.timeout(this.deps.fetchTimeoutMs),
+        }),
       () => unauthorized('the JWKS is unreachable')
     );
     if (isErr(response)) return response;

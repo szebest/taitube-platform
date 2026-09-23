@@ -1,24 +1,19 @@
 import * as crypto from 'node:crypto';
 import type { AuthFailure, TokenVerifier } from '@vp/core/ports';
-import type { AppConfig } from '@vp/env-schema';
+import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type UserContext, parseRole } from '@vp/permissions';
-import { type Result, err, isErr, ok } from '@vp/result';
+import { type Result, assertNever, err, isErr, ok } from '@vp/result';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { ServiceSet } from '../composition/services.module';
 import { sendResult } from '../routes/send-result';
 import type { ChannelService } from '../services/channel-service';
 
-export interface AdminCredential {
-  token: string;
-  userId: string;
-}
-
 export interface AuthPluginOptions {
   channelService: ChannelService;
   verifier: TokenVerifier;
-  admin: AdminCredential | undefined;
+  auth: AuthConfig;
 }
 
 declare module 'fastify' {
@@ -31,34 +26,37 @@ declare module 'fastify' {
   }
 }
 
-/** Only dev mode has a static admin credential; production admins carry a verified role claim. */
-export function adminCredential(auth: AppConfig['auth']): AdminCredential | undefined {
-  switch (auth.type) {
-    case 'dev':
-      return auth.adminToken ? { token: auth.adminToken, userId: auth.adminUserId } : undefined;
-    case 'jwks':
-      return undefined;
-  }
-}
-
-function matchesAdminToken(header: unknown, admin: AdminCredential | undefined): boolean {
-  if (typeof header !== 'string' || !admin) return false;
+function matchesAdminToken(header: unknown, adminToken: string | undefined): boolean {
+  if (typeof header !== 'string' || !adminToken) return false;
 
   return crypto.timingSafeEqual(
     crypto.createHash('sha256').update(header).digest(),
-    crypto.createHash('sha256').update(admin.token).digest()
+    crypto.createHash('sha256').update(adminToken).digest()
   );
+}
+
+/** Only dev mode has a static admin credential; production admins carry a verified role claim. */
+function adminFromHeader(request: FastifyRequest, auth: AuthConfig): UserContext | null {
+  switch (auth.type) {
+    case 'dev':
+      return matchesAdminToken(request.headers['x-admin-token'], auth.adminToken)
+        ? { id: auth.adminUserId, role: 'ADMIN' }
+        : null;
+    case 'jwks':
+      return null;
+    default:
+      return assertNever(auth, 'auth.type');
+  }
 }
 
 const BEARER = /^Bearer (.+)$/;
 
 async function identify(
   request: FastifyRequest,
-  { verifier, admin }: AuthPluginOptions
+  { verifier, auth }: AuthPluginOptions
 ): Promise<Result<UserContext | null, AuthFailure>> {
-  if (admin && matchesAdminToken(request.headers['x-admin-token'], admin)) {
-    return ok({ id: admin.userId, role: 'ADMIN' });
-  }
+  const admin = adminFromHeader(request, auth);
+  if (admin) return ok(admin);
 
   const header = request.headers.authorization;
   if (!header) return ok(null);

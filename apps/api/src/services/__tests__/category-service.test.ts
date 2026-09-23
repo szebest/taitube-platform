@@ -27,6 +27,7 @@ describe('CategoryService', () => {
     categoryService = new CategoryService({
       categories: repositories.categories,
       categoryCache: cacheService,
+      ...inProcessAppConfig().httpCache.categories,
     });
   });
 

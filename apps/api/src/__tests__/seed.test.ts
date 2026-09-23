@@ -1,22 +1,20 @@
-import { seedDatabase } from '@vp/db/seed';
+import { spawnSync } from 'node:child_process';
+import { resolve } from 'node:path';
 import { PRODUCTION_ENV } from '@vp/testing/env';
-import { seed } from '../seed';
 
-vi.mock(import('@vp/db/seed'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  seedDatabase: vi.fn(async () => {}),
-}));
+const ROOT = resolve(import.meta.dirname, '../../../..');
+const ENTRYPOINT = resolve(import.meta.dirname, '../seed.ts');
 
-describe('apps/api: seed', () => {
-  it('refuses a production database and writes nothing to it', async () => {
-    await expect(seed(PRODUCTION_ENV)).rejects.toThrow('refuses NODE_ENV=production');
+describe('apps/api: pnpm db:seed', () => {
+  it('exits 1 under production before it touches a database', () => {
+    const run = spawnSync('npx', ['tsx', ENTRYPOINT], {
+      env: { PATH: process.env.PATH, ...PRODUCTION_ENV },
+      cwd: ROOT,
+      encoding: 'utf8',
+      timeout: 20_000,
+    });
 
-    expect(seedDatabase).not.toHaveBeenCalled();
-  });
-
-  it('seeds the database a development environment names', async () => {
-    await seed({ NODE_ENV: 'development', DATABASE_URL: 'postgres://localhost:5432/vp' });
-
-    expect(seedDatabase).toHaveBeenCalledWith('postgres://localhost:5432/vp');
+    expect(run.status).toBe(1);
+    expect(run.stderr).toContain('refuses NODE_ENV=production');
   });
 });

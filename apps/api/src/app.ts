@@ -10,7 +10,7 @@ import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod
 import { type AdapterOverrides, overrideAdapters } from './composition/adapter-set';
 import { registerOpenApi } from './composition/openapi';
 import { Services, registerServices, resolveBackground } from './composition/services.module';
-import { adminCredential, registerAuth } from './plugins/auth';
+import { registerAuth } from './plugins/auth';
 import { rateLimitProblem, registerErrorHandler } from './plugins/errors';
 import { registerHttpMetricsPlugin } from './plugins/http-metrics';
 import { routesFor } from './routes/index';
@@ -67,7 +67,7 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
   await app.register(registerAuth, {
     channelService: services.channelService,
     verifier: container.get(Adapters.TokenVerifier),
-    admin: adminCredential(config.auth),
+    auth: config.auth,
   });
   await app.register(registerHttpMetricsPlugin);
   await registerOpenApi(app);

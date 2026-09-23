@@ -207,7 +207,7 @@ say "Set up Grafana Cloud for remote metrics, traces, and logs."
 open_url "https://grafana.com"
 step "Go to your Grafana Cloud Portal → OpenTelemetry → Configure."
 step "Note your OTLP Endpoint URL and generate an API Token."
-step "Note the Basic Auth header (feeds OTEL_EXPORTER_OTLP_HEADERS)."
+step "Note the OTLP endpoint and Basic Auth header (feed GRAFANA_OTLP_ENDPOINT and GRAFANA_OTLP_HEADERS)."
 pause "Confirm once you have your Grafana Cloud credentials."
 
 # ── Stage 6: External Secrets ─────────────────────────────────────────────

@@ -15,7 +15,11 @@ import { queueNamed } from './queue-registry';
 function tokenVerifier(auth: AuthConfig): TokenVerifier {
   switch (auth.type) {
     case 'jwks':
-      return new JwksTokenVerifier({ ...auth, fetch: (url) => fetch(url), now: Date.now });
+      return new JwksTokenVerifier({
+        ...auth,
+        fetch: (url, init) => fetch(url, init),
+        now: Date.now,
+      });
     case 'dev':
       return new DevTokenVerifier({ ...auth, jwks: getDevJwks(), now: Date.now });
     default:

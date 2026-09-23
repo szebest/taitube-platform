@@ -119,14 +119,14 @@ is stale — fix it.
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
-| `@vp/env-schema` | server | `@vp/pagination` |
+| `@vp/env-schema` | server | `@vp/pagination`, `@vp/result` |
 
 ### T4 — Integration
 
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
-| `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result` |
+| `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
 | `@vp/config` | server | `@vp/env-schema` |
 
 ### T5 — Applications

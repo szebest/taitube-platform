@@ -1,4 +1,5 @@
-import { signJwt, signingKey } from '@vp/testing/jwt';
+import * as crypto from 'node:crypto';
+import { type SigningKey, signJwt, signingKey } from '@vp/testing/jwt';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { type ClaimPolicy, decodeJwt, selectKey, verifyJwt } from '../jwt';
 
@@ -21,7 +22,14 @@ const CLAIMS = {
 const rsa = signingKey('RS256', 'rsa');
 const ec = signingKey('ES256', 'ec');
 const ed = signingKey('EdDSA', 'ed');
-const JWKS = { keys: [rsa.jwk, ec.jwk, ed.jwk] };
+const p384 = crypto.generateKeyPairSync('ec', { namedCurve: 'P-384' });
+const p384SigningAsEs256: SigningKey = {
+  alg: 'ES256',
+  kid: 'p384',
+  privateKey: p384.privateKey,
+  jwk: { ...p384.publicKey.export({ format: 'jwk' }), kid: 'p384', alg: 'ES256', use: 'sig' },
+};
+const JWKS = { keys: [rsa.jwk, ec.jwk, ed.jwk, p384SigningAsEs256.jwk] };
 
 function verify(token: string, policy: ClaimPolicy = POLICY) {
   return verifyJwt(expectOk(decodeJwt(token)), JWKS, policy);
@@ -67,6 +75,10 @@ describe('packages/adapters/auth: verifyJwt', () => {
       token: () => signJwt(rsa, CLAIMS, { kid: undefined }),
     },
     { scenario: 'an unknown kid', token: () => signJwt(signingKey('RS256', 'nobody'), CLAIMS) },
+    {
+      scenario: 'an ES256 token genuinely signed by a P-384 key',
+      token: () => signJwt(p384SigningAsEs256, CLAIMS),
+    },
   ])('refuses $scenario', ({ token }) => {
     expect(expectErr(verify(token())).code).toBe('UNAUTHORIZED');
   });

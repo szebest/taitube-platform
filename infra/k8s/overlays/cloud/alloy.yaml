@@ -30,9 +30,9 @@ data:
 
     otelcol.exporter.otlp "grafanacloud" {
       client {
-        endpoint = sys.env("OTEL_EXPORTER_OTLP_ENDPOINT")
+        endpoint = sys.env("GRAFANA_OTLP_ENDPOINT")
         headers = {
-          "Authorization" = sys.env("OTEL_EXPORTER_OTLP_HEADERS"),
+          "Authorization" = sys.env("GRAFANA_OTLP_HEADERS"),
         }
       }
     }
@@ -63,16 +63,16 @@ spec:
         - /etc/alloy/config.alloy
         - --server.http.listen-addr=0.0.0.0:12345
         env:
-        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        - name: GRAFANA_OTLP_ENDPOINT
           valueFrom:
             secretKeyRef:
               name: vp-secrets
-              key: OTEL_EXPORTER_OTLP_ENDPOINT
-        - name: OTEL_EXPORTER_OTLP_HEADERS
+              key: GRAFANA_OTLP_ENDPOINT
+        - name: GRAFANA_OTLP_HEADERS
           valueFrom:
             secretKeyRef:
               name: vp-secrets
-              key: OTEL_EXPORTER_OTLP_HEADERS
+              key: GRAFANA_OTLP_HEADERS
         ports:
         - containerPort: 4317
           name: otlp-grpc

@@ -50,7 +50,7 @@ declares its own default now.
    any `ADMIN_TOKEN` at all. A default for one of them is public by construction; `no-defaulted-secrets.test.ts`
    fails on it, and on URL userinfo in a default.
 8. **Two schemas, named consumers.** `AppEnv` keys are read by `toAppConfig`; `PLATFORM_ENV` keys are handed
-   to something else and name it. Tuning with no key is a named constant in `app-config.ts`, declared once;
+   to something else and name it. Tuning with no key is a named constant in `tuning.ts`, declared once;
    `env-keys-consumed.test.ts` and `no-tuning-literals.test.ts` hold both.
 
 ---

@@ -1,41 +1,25 @@
-import { type AppEnv, AppEnvSchema, type JWS_ALGORITHMS } from './app-env';
+import { assertNever } from '@vp/result';
+import type { AppEnv, JWS_ALGORITHMS } from './app-env';
 import { type CdnBase, asCdnBase } from './cdn-base';
+import {
+  CACHES,
+  FFMPEG_PROCESS,
+  HOUSEKEEPING,
+  HTTP_CACHE,
+  JWKS_CACHE_TTL_MS,
+  JWKS_FETCH_TIMEOUT_MS,
+  JWKS_REFETCH_INTERVAL_MS,
+  POLLERS,
+  SEGMENT_UPLOAD,
+  SPRITE_GEOMETRY,
+  SSE_IDLE_TIMEOUT_MS,
+  UPLOAD_SESSION_TTL_SECONDS,
+  WORKER_HEARTBEAT_INTERVAL_MS,
+} from './tuning';
 
 export type AdapterKind = AppEnv['ADAPTER_FAMILY'];
 
 export type JwsAlgorithm = (typeof JWS_ALGORITHMS)[number];
-
-/** SDD §10: an idle stream closes after 30 minutes and the client reconnects with Last-Event-ID. */
-const SSE_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
-
-/** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
-const UPLOAD_SESSION_TTL_SECONDS = 24 * 60 * 60;
-
-const JWKS_CACHE_TTL_MS = 5 * 60 * 1000;
-
-/** An unknown `kid` refetches at most this often, so a flood of forged kids cannot hammer the IdP. */
-const JWKS_REFETCH_INTERVAL_MS = 30 * 1000;
-
-/** Tuning with no environment key: declared once here, so no consumer holds a default of its own. */
-const CACHES = {
-  categories: { l1TtlMs: 60_000, l2TtlSeconds: 300, maxL1Entries: 100 },
-  reactions: { ttlSeconds: 3_600, userReactionTtlSeconds: 86_400 },
-  subscriptions: { userSubscriptionsTtlSeconds: 86_400, subscriberCountTtlSeconds: 3_600 },
-} as const;
-
-const HOUSEKEEPING = {
-  outboxRelayIntervalMs: 1_000,
-  outboxBatchSize: 50,
-  outboxRetentionDays: 7,
-  purgeDeletedAfterMs: 60 * 60 * 1000,
-  stuckProcessingAfterMs: 3 * 60 * 60 * 1000,
-  stuckUploadingAfterMs: 24 * 60 * 60 * 1000,
-  stuckUploadedAfterMs: 5 * 60 * 1000,
-  tmpSweepAfterMs: 2 * 60 * 60 * 1000,
-  reactionReconcileLimit: 500,
-} as const;
-
-const SEGMENT_UPLOAD = { concurrency: 4, maxRetries: 3, retryDelayMs: 150 } as const;
 
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
 
@@ -48,6 +32,7 @@ export type AuthConfig =
       algorithms: readonly JwsAlgorithm[];
       cacheTtlMs: number;
       refetchIntervalMs: number;
+      fetchTimeoutMs: number;
     }
   | {
       type: 'dev';
@@ -58,6 +43,7 @@ export type AuthConfig =
     };
 
 export interface AppConfig {
+  environment: AppEnv['NODE_ENV'];
   kind: AdapterKind;
   logLevel: string;
   cdn: CdnBase;
@@ -99,6 +85,11 @@ export interface AppConfig {
     reactions: { ttlSeconds: number; userReactionTtlSeconds: number };
     subscriptions: { userSubscriptionsTtlSeconds: number; subscriberCountTtlSeconds: number };
   };
+  pollers: { queueIntervalMs: number; sqlIntervalMs: number; staleStepMs: number };
+  httpCache: {
+    categories: { maxAgeSeconds: number; staleWhileRevalidateSeconds: number };
+    feed: { maxAgeSeconds: number; staleWhileRevalidateSeconds: number };
+  };
   housekeeping: {
     outboxRelayIntervalMs: number;
     outboxBatchSize: number;
@@ -121,6 +112,7 @@ export interface AppConfig {
     stage: WorkerStageName;
     concurrency: number | undefined;
     heartbeatPath: string;
+    heartbeatIntervalMs: number;
     tmpDir: string;
     ffmpegPath: string;
     ffprobePath: string;
@@ -129,7 +121,13 @@ export interface AppConfig {
     hlsSegmentSeconds: number;
     gopSeconds: number;
     jobTimeoutFactor: number;
-    spriteIntervalSeconds: number;
+    ffmpegProcess: {
+      killGraceMs: number;
+      stderrTailLines: number;
+      minTranscodeTimeoutMs: number;
+      thumbnailTimeoutMs: number;
+    };
+    sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
     segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
   };
 }
@@ -146,6 +144,7 @@ function authConfig(env: AppEnv): AuthConfig {
         algorithms: env.AUTH_ALGORITHMS,
         cacheTtlMs: JWKS_CACHE_TTL_MS,
         refetchIntervalMs: JWKS_REFETCH_INTERVAL_MS,
+        fetchTimeoutMs: JWKS_FETCH_TIMEOUT_MS,
       };
     }
     case 'dev':
@@ -156,6 +155,8 @@ function authConfig(env: AppEnv): AuthConfig {
         adminToken: env.ADMIN_TOKEN,
         adminUserId: env.AUTH_DEV_USER_ID,
       };
+    default:
+      return assertNever(env.AUTH_MODE, 'AUTH_MODE');
   }
 }
 
@@ -163,6 +164,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
   const quiet = env.NODE_ENV === 'test';
 
   return {
+    environment: env.NODE_ENV,
     kind: env.ADAPTER_FAMILY,
     logLevel: quiet ? 'silent' : env.LOG_LEVEL,
     cdn: asCdnBase(env.CDN_BASE_URL),
@@ -218,6 +220,11 @@ export function toAppConfig(env: AppEnv): AppConfig {
       reactions: { ...CACHES.reactions },
       subscriptions: { ...CACHES.subscriptions },
     },
+    pollers: { ...POLLERS },
+    httpCache: {
+      categories: { ...HTTP_CACHE.categories },
+      feed: { ...HTTP_CACHE.feed },
+    },
     housekeeping: { ...HOUSEKEEPING },
     http: {
       port: env.PORT,
@@ -230,6 +237,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       stage: env.WORKER_STAGE,
       concurrency: env.WORKER_CONCURRENCY,
       heartbeatPath: env.WORKER_HEARTBEAT_PATH,
+      heartbeatIntervalMs: WORKER_HEARTBEAT_INTERVAL_MS,
       tmpDir: env.TMP_DIR,
       ffmpegPath: env.FFMPEG_PATH,
       ffprobePath: env.FFPROBE_PATH,
@@ -238,44 +246,9 @@ export function toAppConfig(env: AppEnv): AppConfig {
       hlsSegmentSeconds: env.HLS_SEGMENT_SECONDS,
       gopSeconds: env.GOP_SECONDS,
       jobTimeoutFactor: env.JOB_TIMEOUT_FACTOR,
-      spriteIntervalSeconds: env.SPRITE_INTERVAL_SECONDS,
+      ffmpegProcess: { ...FFMPEG_PROCESS },
+      sprite: { intervalSec: env.SPRITE_INTERVAL_SECONDS, ...SPRITE_GEOMETRY },
       segmentUpload: { ...SEGMENT_UPLOAD },
     },
   };
-}
-
-type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
-
-/** `cdn` is taken as a plain string and branded on the way in, so an override cannot skip it. */
-export type AppConfigOverrides = DeepPartial<Omit<AppConfig, 'cdn'>> & { cdn?: string };
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function merged<T>(base: T, overrides: unknown): T {
-  if (!(isPlainObject(base) && isPlainObject(overrides))) return (overrides ?? base) as T;
-
-  const result: Record<string, unknown> = { ...base };
-  for (const [key, value] of Object.entries(overrides)) {
-    if (value !== undefined) result[key] = merged(base[key], value);
-  }
-  return result as T;
-}
-
-/**
- * What an in-process app runs on: the in-memory family over the schema defaults, with any
- * overrides merged in `AppConfig`'s own shape.
- */
-export function inProcessAppConfig(overrides: AppConfigOverrides = {}): AppConfig {
-  const { cdn, ...rest } = overrides;
-  const base = toAppConfig(
-    AppEnvSchema.parse({
-      NODE_ENV: 'test',
-      ADAPTER_FAMILY: 'in-memory',
-      DATABASE_URL: 'postgres://localhost:5432/vp',
-    })
-  );
-
-  return merged({ ...base, cdn: cdn === undefined ? base.cdn : asCdnBase(cdn) }, rest);
 }

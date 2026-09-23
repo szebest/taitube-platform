@@ -20,22 +20,71 @@ function isLeaf(checker: ts.TypeChecker, type: ts.Type): boolean {
   return !(type.flags & ts.TypeFlags.Object) || type.getProperties().length === 0;
 }
 
-function configSymbols(checker: ts.TypeChecker, root: ts.Type): Map<ts.Symbol, string[]> {
-  const symbols = new Map<ts.Symbol, string[]>();
-  const walk = (type: ts.Type, prefix: string): string[] => {
-    const members = type.isUnion() ? type.types : [type];
-    return members.flatMap((member) =>
-      member.getProperties().flatMap((property) => {
-        const path = `${prefix}${property.name}`;
-        const propertyType = checker.getTypeOfSymbol(property);
-        const leaves = isLeaf(checker, propertyType) ? [path] : walk(propertyType, `${path}.`);
-        symbols.set(property, [...new Set([...(symbols.get(property) ?? []), ...leaves])]);
-        return leaves;
-      })
-    );
+function propertiesOf(type: ts.Type): ts.Symbol[] {
+  return (type.isUnion() ? type.types : [type]).flatMap((member) => member.getProperties());
+}
+
+/** The path every `AppConfig` property symbol stands at, and the leaf paths under each. */
+function configPaths(checker: ts.TypeChecker, root: ts.Type): Map<ts.Symbol, string> {
+  const paths = new Map<ts.Symbol, string>();
+  const walk = (type: ts.Type, prefix: string): void => {
+    for (const property of propertiesOf(type)) {
+      const path = `${prefix}${property.name}`;
+      paths.set(property, path);
+      const propertyType = checker.getTypeOfSymbol(property);
+      if (!isLeaf(checker, propertyType)) walk(propertyType, `${path}.`);
+    }
   };
   walk(root, '');
-  return symbols;
+  return paths;
+}
+
+/**
+ * The leaves under `path` a receiver actually takes. A spread or an argument hands over only what
+ * the receiving type declares; a receiver typed `any`, or none at all, takes everything.
+ */
+/** A receiver typed as a union takes a property any of its members declares. */
+function receivingProperty(
+  checker: ts.TypeChecker,
+  receiving: ts.Type,
+  name: string
+): ts.Symbol | undefined {
+  const members = checker.getNonNullableType(receiving);
+  return (members.isUnion() ? members.types : [members])
+    .map((member) => checker.getPropertyOfType(checker.getApparentType(member), name))
+    .find((property) => property !== undefined);
+}
+
+function leavesTaken(
+  checker: ts.TypeChecker,
+  path: string,
+  type: ts.Type,
+  receiving: ts.Type | undefined
+): string[] {
+  if (isLeaf(checker, type)) return [path];
+  const open = !receiving || (receiving.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) !== 0;
+  return propertiesOf(type).flatMap((property) => {
+    const taken = open ? undefined : receivingProperty(checker, receiving, property.name);
+    if (!open && !taken) return [];
+    return leavesTaken(
+      checker,
+      `${path}.${property.name}`,
+      checker.getTypeOfSymbol(property),
+      taken && checker.getTypeOfSymbol(taken)
+    );
+  });
+}
+
+function receivingType(checker: ts.TypeChecker, node: ts.Node): ts.Type | undefined {
+  const { parent } = node;
+  if (ts.isSpreadAssignment(parent) && ts.isObjectLiteralExpression(parent.parent)) {
+    return checker.getContextualType(parent.parent);
+  }
+  const handedOver =
+    ((ts.isCallExpression(parent) || ts.isNewExpression(parent)) &&
+      parent.arguments?.some((argument) => argument === node)) ||
+    (ts.isPropertyAssignment(parent) && parent.initializer === node);
+  return handedOver && ts.isExpression(node) ? checker.getContextualType(node) : undefined;
 }
 
 /** A reference consumes what it names unless it only reaches further in. */
@@ -59,14 +108,20 @@ function unconsumedLeaves(
   );
   if (!appConfig) throw new Error('AppConfig is not declared where the assertion looks for it');
 
-  const symbols = configSymbols(checker, checker.getTypeAtLocation(appConfig.name));
-  const leaves = new Set([...symbols.values()].flat());
+  const root = checker.getTypeAtLocation(appConfig.name);
+  const paths = configPaths(checker, root);
+  const leaves = new Set(leavesTaken(checker, '', root, undefined).map((leaf) => leaf.slice(1)));
   const consumed = new Set<string>();
 
   const consume = (symbol: ts.Symbol | undefined, node: ts.Node) => {
     if (!symbol || reachesFurther(node)) return;
-    for (const root of checker.getRootSymbols(symbol)) {
-      for (const leaf of symbols.get(root) ?? []) consumed.add(leaf);
+    for (const rootSymbol of checker.getRootSymbols(symbol)) {
+      const path = paths.get(rootSymbol);
+      if (path === undefined) continue;
+      const type = checker.getTypeOfSymbol(rootSymbol);
+      for (const leaf of leavesTaken(checker, path, type, receivingType(checker, node))) {
+        consumed.add(leaf);
+      }
     }
   };
   const visit = (node: ts.Node): void => {
@@ -92,14 +147,16 @@ describe('architecture: every declared key is read and every config leaf is cons
   it('recognises a config leaf no consumer reads', () => {
     const program = fixtureProgram({
       '/fixture/app-config.ts':
-        'export interface AppConfig { http: { port: number; host: string }; cdn: string; pool: { max: number } }',
+        'export interface AppConfig { http: { port: number; host: string }; cdn: string; pool: { max: number; bogusTtlSeconds: number } }',
       '/fixture/consumer.ts': [
         "import type { AppConfig } from './app-config';",
         'declare function open(pool: { max: number }): void;',
+        'declare function listen(options: { port: number }): void;',
         'export const start = (config: AppConfig) => {',
         '  const { cdn } = config;',
         '  open(config.pool);',
-        '  return [config.http.port, cdn];',
+        '  listen({ ...config.http });',
+        '  return cdn;',
         '};',
       ].join('\n'),
     });
@@ -110,7 +167,7 @@ describe('architecture: every declared key is read and every config leaf is cons
         (file) => file.endsWith('app-config.ts'),
         (file) => file.endsWith('consumer.ts')
       )
-    ).toEqual(['http.host']);
+    ).toEqual(['http.host', 'pool.bogusTtlSeconds']);
   });
 
   it('reads every AppEnv key in toAppConfig', () => {

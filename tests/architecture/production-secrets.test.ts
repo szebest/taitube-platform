@@ -98,6 +98,18 @@ describe('architecture: rendered production manifests carry no local credential'
     }
   });
 
+  it('gives every cloud key one owner: the ConfigMap or the ExternalSecret, never both', () => {
+    const cloud = render('infra/k8s/overlays/cloud');
+    const configMapKeys = Object.keys(named(cloud, 'ConfigMap', 'vp-config')?.data ?? {});
+    const secretKeys = new Set(
+      (named(cloud, 'ExternalSecret', 'vp-secrets')?.spec?.data ?? []).map(
+        (entry) => entry.secretKey
+      )
+    );
+
+    expect(configMapKeys.filter((key) => secretKeys.has(key))).toEqual([]);
+  });
+
   it('renders no credential the repo ships for local use into the cloud overlay', () => {
     const leaked = strings(render('infra/k8s/overlays/cloud')).filter(heldLocalCredentials);
 

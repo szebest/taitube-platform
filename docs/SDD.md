@@ -2105,7 +2105,7 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
 
-Two schemas, each with named consumers. `AppEnv` (`app-env.ts`) is what `toAppConfig()` reads, and every key in it reaches a consumer: `env-keys-consumed.test.ts` checks every `AppEnv` key is read by `toAppConfig` and every `AppConfig` leaf is read by production source outside `env-schema`. `PLATFORM_ENV` (`platform-env.ts`) is the short list of keys this repo hands to something else, each naming the consumer beside it. Tuning with no key of its own (cache TTLs, housekeeping thresholds, the outbox cadence, the segment uploader's retries) is declared once, as a named constant in `app-config.ts`; no service, stage or adapter holds a numeric default (`no-tuning-literals.test.ts`).
+Two schemas, each with named consumers. `AppEnv` (`app-env.ts`) is what `toAppConfig()` reads, and every key in it reaches a consumer: `env-keys-consumed.test.ts` checks every `AppEnv` key is read by `toAppConfig` and every `AppConfig` leaf is read by production source outside `env-schema`. `PLATFORM_ENV` (`platform-env.ts`) is the short list of keys this repo hands to something else, each naming the consumer beside it. Tuning with no key of its own (cache TTLs, housekeeping thresholds, the outbox cadence, the segment uploader's retries) is declared once, as a named constant in `tuning.ts`; no service, stage or adapter holds a numeric default (`no-tuning-literals.test.ts`).
 
 The schema is **closed over what the code reads**: every key the deployables read is declared, every declared key is uncommented in `.env.example`, and every key compose, the k8s base and overlays, CI steps and `make` hand the apps is declared (`env-key-closure.test.ts`). `process.env` is read only in the entrypoints and env homes `tests/architecture/entrypoints.ts` lists; everything below takes the `AppConfig` value `toAppConfig()` shapes (ADR-25).
 
@@ -2215,7 +2215,7 @@ Handed to something other than this code, and declared so the schema stays close
 |---|---|
 | `NODE_OPTIONS` | Node itself; the images and compose set `--import @vp/config/register` |
 | `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | turbo and every tool honouring the convention (P9) |
-| `OTEL_EXPORTER_OTLP_HEADERS` 🔒 | Grafana Alloy (`Authorization=Basic <base64(instanceId:token)>`) |
+| `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` 🔒 | Grafana Alloy's upstream (`Authorization=Basic <base64(instanceId:token)>`). Named apart from `OTEL_EXPORTER_OTLP_*` because `vp-secrets` reaches every app pod, and the OTel SDK there would read them in place of the ConfigMap's `http://alloy:4318` |
 | `WORKER_RUNTIME` | the worker image `CMD` and the k8s worker command (`bun` or `node`) |
 | `REDIS_ADDR` | the KEDA redis trigger (`addressFromEnv`) |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |

@@ -12,11 +12,13 @@ export interface TranscodeOptions {
   fps: number;
   gopSeconds: number;
   hlsSegmentSeconds: number;
-  durationMs?: number;
+  durationMs: number;
   threads: number;
   attempt?: number;
   preset: string;
   timeoutFactor: number;
+  minTimeoutMs: number;
+  limits: FfmpegProcessLimits;
   onProgress?: (progress: { percent: number; outTimeMs: number }) => void;
 }
 
@@ -183,8 +185,15 @@ export function classifyFfmpegError(
   );
 }
 
+/** How a run is policed: the grace a SIGTERM gets before SIGKILL, and how much stderr a failure keeps. */
+export interface FfmpegProcessLimits {
+  killGraceMs: number;
+  stderrTailLines: number;
+}
+
 export interface FfmpegRunOptions {
   ffmpegPath: string;
+  limits: FfmpegProcessLimits;
   /** Names the span and the timeout message; one word, e.g. `transcode` or `thumbnail`. */
   stage: string;
   args: string[];
@@ -196,12 +205,6 @@ export interface FfmpegRunOptions {
 
 /** ffmpeg reports both of these in microseconds, whatever the suffix says. */
 const PROGRESS_TIME_KEYS = ['out_time_ms=', 'out_time_us='] as const;
-
-/** A short source still gets long enough to start FFmpeg and write its first segment. */
-const MIN_TRANSCODE_TIMEOUT_MS = 10 * 60 * 1000;
-
-const STDERR_TAIL_LINES = 50;
-const KILL_GRACE_MS = 3000;
 
 function redactedCommand(args: string[]): string {
   return [
@@ -224,7 +227,7 @@ function redactedCommand(args: string[]): string {
  * SIGKILL, and rejects with the classified error built from the stderr tail.
  */
 export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
-  const { ffmpegPath, stage, args, timeoutMs, onStdoutLine } = options;
+  const { ffmpegPath, stage, args, timeoutMs, onStdoutLine, limits } = options;
 
   const span = trace.getTracer('video-pipeline').startSpan('ffmpeg', {
     attributes: {
@@ -248,7 +251,7 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
       proc.kill('SIGTERM');
       setTimeout(() => {
         if (!proc.killed) proc.kill('SIGKILL');
-      }, KILL_GRACE_MS);
+      }, limits.killGraceMs);
     }, timeoutMs);
 
     if (onStdoutLine && proc.stdout) {
@@ -269,7 +272,7 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
       for (const line of chunk.split('\n')) {
         if (!line.trim()) continue;
         stderrLines.push(line.trim());
-        if (stderrLines.length > STDERR_TAIL_LINES) {
+        if (stderrLines.length > limits.stderrTailLines) {
           stderrLines.shift();
         }
       }
@@ -322,11 +325,12 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
 export async function runFfmpegTranscode(
   options: TranscodeOptions
 ): Promise<TranscodeExecutionResult> {
-  const durationMs = options.durationMs || 60000;
-  const timeoutMs = Math.max(options.timeoutFactor * durationMs, MIN_TRANSCODE_TIMEOUT_MS);
+  const { durationMs } = options;
+  const timeoutMs = Math.max(options.timeoutFactor * durationMs, options.minTimeoutMs);
 
   await runFfmpeg({
     ffmpegPath: options.ffmpegPath,
+    limits: options.limits,
     stage: 'transcode',
     args: buildTranscodeArgs(options),
     timeoutMs,

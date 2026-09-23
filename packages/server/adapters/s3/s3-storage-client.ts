@@ -26,12 +26,11 @@ import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result';
 import { measureStorageOp } from '../storage-metrics-helper';
 import { type S3ConnectionConfig, isNotFound, s3ClientFrom } from './s3-config';
+import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
 
 export type S3StorageClientConfig =
   | { type: 'client'; client: S3Client }
   | ({ type: 'connection' } & S3ConnectionConfig);
-
-const DELETE_BATCH = 1000;
 
 export class S3StorageClient extends StorageClient {
   private readonly client: S3Client;
@@ -164,8 +163,8 @@ export class S3StorageClient extends StorageClient {
 
     return measureStorageOp('delete', bucket, async () => {
       const deleted: string[] = [];
-      for (let i = 0; i < keys.length; i += DELETE_BATCH) {
-        const chunk = keys.slice(i, i + DELETE_BATCH);
+      for (let i = 0; i < keys.length; i += S3_MAX_KEYS_PER_REQUEST) {
+        const chunk = keys.slice(i, i + S3_MAX_KEYS_PER_REQUEST);
         const sent = await fromPromise(
           () =>
             this.client.send(

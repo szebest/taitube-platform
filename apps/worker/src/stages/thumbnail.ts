@@ -10,7 +10,7 @@ import {
   mediaFailure,
   mediaFailureFrom,
 } from '@vp/errors';
-import { runFfmpegThumbnail } from '@vp/ffmpeg';
+import { type SpriteLayout, runFfmpegThumbnail } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
@@ -34,7 +34,8 @@ export interface ThumbnailProcessorDeps {
   heartbeatPath: string;
   tmpDir: string;
   ffmpegPath: string;
-  spriteIntervalSec: number;
+  sprite: SpriteLayout;
+  ffmpegProcess: { killGraceMs: number; stderrTailLines: number; thumbnailTimeoutMs: number };
 }
 
 export type ThumbnailStageFailure = MediaFailure | StorageUnavailable | DatabaseUnavailable;
@@ -50,7 +51,8 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     heartbeatPath,
     tmpDir: tmpRoot,
     ffmpegPath,
-    spriteIntervalSec,
+    sprite,
+    ffmpegProcess,
   } = deps;
 
   return async function processThumbnailJob(
@@ -144,7 +146,9 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
             sourcePath: localSourcePath,
             outputDir: tmpDir,
             durationMs,
-            intervalSec: spriteIntervalSec,
+            layout: sprite,
+            timeoutMs: ffmpegProcess.thumbnailTimeoutMs,
+            limits: ffmpegProcess,
           }),
         (cause) => mediaFailureFrom('thumbnail', cause)
       );

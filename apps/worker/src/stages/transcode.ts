@@ -9,7 +9,7 @@ import {
   type StorageUnavailable,
   mediaFailure,
 } from '@vp/errors';
-import { computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
+import { type FfmpegProcessLimits, computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
 import type { TranscodeJob, TranscodeResult } from '@vp/job-contracts';
 import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
@@ -38,6 +38,8 @@ export interface TranscodeProcessorDeps {
     gopSeconds: number;
     hlsSegmentSeconds: number;
     timeoutFactor: number;
+    minTimeoutMs: number;
+    limits: FfmpegProcessLimits;
   };
   segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
   getQueue?: (name: string) => JobQueue;
@@ -211,6 +213,8 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
             gopSeconds: ffmpeg.gopSeconds,
             hlsSegmentSeconds: ffmpeg.hlsSegmentSeconds,
             timeoutFactor: ffmpeg.timeoutFactor,
+            minTimeoutMs: ffmpeg.minTimeoutMs,
+            limits: ffmpeg.limits,
             durationMs,
             threads,
             preset: ffmpeg.preset,

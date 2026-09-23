@@ -20,7 +20,7 @@ Secret from a `ClusterSecretStore` named `vp-secret-store`, and the overlay dele
 - `DATABASE_URL` / `DATABASE_URL_MIGRATIONS` (Neon PostgreSQL)
 - `REDIS_PASSWORD` (Redis)
 - `S3_ENDPOINT` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` (Cloudflare R2)
-- `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_EXPORTER_OTLP_HEADERS` (Grafana Cloud, read by Alloy)
+- `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` (Grafana Cloud, read by Alloy only)
 - `CLOUDFLARE_TUNNEL_TOKEN` (cloudflared)
 
 There is no `ADMIN_TOKEN` in the cloud: production refuses one, and an admin is a token whose verified role

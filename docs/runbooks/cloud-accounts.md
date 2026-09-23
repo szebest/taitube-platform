@@ -142,7 +142,7 @@ If using the Always Free Arm path instead of Hetzner (ADR-15, SDD §12.3):
    - Note the OTLP Endpoint URL: `https://otlp-gateway-<region>.grafana.net/otlp`
    - Generate an API Token / Access Policy with `metrics:write`, `logs:write`, `traces:write`.
    - Copy the Authorization Header (Basic `<base64>`):
-     - Feeds: `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`
+     - Feeds: `GRAFANA_OTLP_ENDPOINT`, `GRAFANA_OTLP_HEADERS` (read by Alloy)
 3. Under **Loki** & **Prometheus**:
    - Note the Push endpoint URLs for Grafana Alloy daemonset.
    - Feeds: `LOKI_URL`, `PROMETHEUS_REMOTE_WRITE_URL`

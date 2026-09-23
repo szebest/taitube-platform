@@ -2,8 +2,6 @@ import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
 import type { PipelineMetrics } from '@vp/observability';
 import { isOk } from '@vp/result';
 
-export const QUEUE_POLL_INTERVAL_MS = 5_000;
-
 const QUEUE_STATE_KEYS: ReadonlyArray<keyof QueueJobCounts> = [
   'waiting',
   'active',

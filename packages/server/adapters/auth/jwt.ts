@@ -22,6 +22,7 @@ export interface ClaimPolicy {
 
 interface Signer {
   kty: string;
+  crv?: string;
   digest: string | null;
   dsaEncoding?: 'ieee-p1363';
 }
@@ -31,9 +32,9 @@ const SIGNERS: ReadonlyMap<string, Signer> = new Map([
   ['RS256', { kty: 'RSA', digest: 'sha256' }],
   ['RS384', { kty: 'RSA', digest: 'sha384' }],
   ['RS512', { kty: 'RSA', digest: 'sha512' }],
-  ['ES256', { kty: 'EC', digest: 'sha256', dsaEncoding: 'ieee-p1363' }],
-  ['ES384', { kty: 'EC', digest: 'sha384', dsaEncoding: 'ieee-p1363' }],
-  ['ES512', { kty: 'EC', digest: 'sha512', dsaEncoding: 'ieee-p1363' }],
+  ['ES256', { kty: 'EC', crv: 'P-256', digest: 'sha256', dsaEncoding: 'ieee-p1363' }],
+  ['ES384', { kty: 'EC', crv: 'P-384', digest: 'sha384', dsaEncoding: 'ieee-p1363' }],
+  ['ES512', { kty: 'EC', crv: 'P-521', digest: 'sha512', dsaEncoding: 'ieee-p1363' }],
   ['EdDSA', { kty: 'OKP', digest: null }],
 ]);
 
@@ -108,6 +109,9 @@ function verifySignature(
     return err(unauthorized(`the key declares ${key.alg}, the token ${alg}`));
   }
   if (key.kty !== signer.kty) return err(unauthorized(`alg ${alg} cannot use a ${key.kty} key`));
+  if (signer.crv !== undefined && key.crv !== signer.crv) {
+    return err(unauthorized(`alg ${alg} cannot use a ${key.crv} curve`));
+  }
 
   const verified = tryCatch(
     () =>

@@ -1,24 +1,15 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import ts from 'typescript';
-import { ROOT, trackedFiles } from './repo-files';
+import { ROOT } from './repo-files';
+import { workspaceSources } from './workspace-sources';
 
-/**
- * `@vp/*` mapped to source, so a type-aware assertion needs no build: `lint-typecheck` runs this
- * suite before anything is compiled.
- */
 function workspacePaths(): Record<string, string[]> {
-  const paths: Record<string, string[]> = {};
-  for (const manifest of trackedFiles('packages').filter((f) =>
-    /^packages\/\w+\/[\w-]+\/package\.json$/.test(f)
-  )) {
-    const dir = dirname(manifest);
-    const { name } = JSON.parse(readFileSync(join(ROOT, manifest), 'utf8')) as { name: string };
-    const src = existsSync(join(ROOT, dir, 'src')) ? `${dir}/src` : dir;
-    paths[name] = [`${src}/index.ts`];
-    paths[`${name}/*`] = [`${src}/*`, `${dir}/*`];
-  }
-  return paths;
+  return Object.fromEntries(
+    workspaceSources().flatMap(({ name, root, src }) => [
+      [name, [join(src, 'index.ts')]],
+      [`${name}/*`, [join(src, '*'), join(root, '*')]],
+    ])
+  );
 }
 
 const OPTIONS: ts.CompilerOptions = {
@@ -33,7 +24,7 @@ const OPTIONS: ts.CompilerOptions = {
   paths: workspacePaths(),
 };
 
-let shared: ts.Program | undefined;
+const programs = new Map<string, ts.Program>();
 
 /**
  * Only this repo's modules and Fastify resolve: a third-party import reads as `any`, which keeps the
@@ -50,13 +41,19 @@ function workspaceOnlyHost(): ts.CompilerHost {
   return host;
 }
 
+/** Built once per set of roots, so the type-aware assertions over the same sources share it. */
 export function serverProgram(roots: readonly string[]): ts.Program {
-  shared ??= ts.createProgram(
+  const key = [...roots].sort().join('\n');
+  const built = programs.get(key);
+  if (built) return built;
+
+  const program = ts.createProgram(
     roots.map((file) => join(ROOT, file)),
     OPTIONS,
     workspaceOnlyHost()
   );
-  return shared;
+  programs.set(key, program);
+  return program;
 }
 
 export function fixtureProgram(files: Record<string, string>): ts.Program {

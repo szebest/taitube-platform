@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@vp/pagination": "workspace:*",
+    "@vp/result": "workspace:*",
     "zod": "^3.24.2"
   },
   "devDependencies": {

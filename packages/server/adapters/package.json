@@ -88,6 +88,7 @@
     "@vp/observability": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/result": "workspace:*",
+    "@vp/storage": "workspace:*",
     "bullmq": "^6.3.4",
     "drizzle-orm": "^0.45.2",
     "ioredis": "^5.11.1",

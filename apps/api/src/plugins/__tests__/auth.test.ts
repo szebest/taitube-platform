@@ -1,17 +1,30 @@
 import { DevTokenVerifier } from '@vp/adapters/auth';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { getDevJwks, mintToken } from '@vp/dev-token';
-import { inProcessAppConfig } from '@vp/env-schema';
+import { type AuthConfig, inProcessAppConfig } from '@vp/env-schema';
 import { databaseUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import fastify, { type FastifyInstance } from 'fastify';
 import { ChannelService } from '../../services/channel-service';
-import { type AdminCredential, adminCredential, registerAuth } from '../auth';
+import { registerAuth } from '../auth';
 import { registerErrorHandler } from '../errors';
 
-const OPERATOR: AdminCredential = {
-  token: 'rotated-operator-token',
-  userId: '00000000-0000-7000-8000-0000000000b1',
+const OPERATOR_TOKEN = 'rotated-operator-token';
+const OPERATOR_ID = '00000000-0000-7000-8000-0000000000b1';
+
+function devAuth(adminToken: string | undefined): AuthConfig {
+  return inProcessAppConfig({ auth: { adminToken, adminUserId: OPERATOR_ID } }).auth;
+}
+
+const JWKS_AUTH: AuthConfig = {
+  type: 'jwks',
+  jwksUrl: 'https://idp.vp.local/jwks',
+  issuer: 'https://idp.vp.local/',
+  audience: 'taitube',
+  algorithms: ['RS256'],
+  cacheTtlMs: 1,
+  refetchIntervalMs: 1,
+  fetchTimeoutMs: 1,
 };
 
 function channels(): ChannelService {
@@ -26,13 +39,10 @@ const verifier = new DevTokenVerifier({
   now: Date.now,
 });
 
-async function appWith(
-  admin: AdminCredential | undefined,
-  channelService = channels()
-): Promise<FastifyInstance> {
+async function appWith(auth: AuthConfig, channelService = channels()): Promise<FastifyInstance> {
   const app = fastify({ logger: false });
   registerErrorHandler(app);
-  await app.register(registerAuth, { channelService, verifier, admin });
+  await app.register(registerAuth, { channelService, verifier, auth });
   app.get('/whoami', async (request) => ({ user: request.user }));
   return app;
 }
@@ -46,20 +56,21 @@ describe('apps/api/plugins: auth', () => {
   it('admits the dev admin token as the provisioned user it names', async () => {
     const channelService = channels();
     const provision = vi.spyOn(channelService, 'ensureProvisioned');
-    const app = await appWith(OPERATOR, channelService);
+    const app = await appWith(devAuth(OPERATOR_TOKEN), channelService);
 
-    expect(await whoami(app, { 'x-admin-token': OPERATOR.token })).toEqual({
+    expect(await whoami(app, { 'x-admin-token': OPERATOR_TOKEN })).toEqual({
       status: 200,
-      user: { id: OPERATOR.userId, role: 'ADMIN' },
+      user: { id: OPERATOR_ID, role: 'ADMIN' },
     });
-    expect(provision).toHaveBeenCalledWith(OPERATOR.userId, undefined);
+    expect(provision).toHaveBeenCalledWith(OPERATOR_ID, undefined);
   });
 
   it.each([
-    { scenario: 'an app holding another token', admin: OPERATOR },
-    { scenario: 'an app with no admin credential', admin: undefined },
-  ])('treats an unknown x-admin-token as nobody on $scenario', async ({ admin }) => {
-    const app = await appWith(admin);
+    { scenario: 'a dev app holding another token', auth: devAuth(OPERATOR_TOKEN) },
+    { scenario: 'a dev app with no admin token', auth: devAuth(undefined) },
+    { scenario: 'a jwks app, which has no static admin', auth: JWKS_AUTH },
+  ])('treats an unknown x-admin-token as nobody on $scenario', async ({ auth }) => {
+    const app = await appWith(auth);
 
     expect(await whoami(app, { 'x-admin-token': 'change-me-32-bytes-random' })).toEqual({
       status: 200,
@@ -68,7 +79,7 @@ describe('apps/api/plugins: auth', () => {
   });
 
   it('resolves a bearer token into the caller it names', async () => {
-    const app = await appWith(undefined);
+    const app = await appWith(devAuth(undefined));
     const token = mintToken({ sub: '00000000-0000-7000-8000-0000000000a1', role: 'user' });
 
     expect(await whoami(app, { authorization: `Bearer ${token}` })).toEqual({
@@ -82,7 +93,7 @@ describe('apps/api/plugins: auth', () => {
     { scenario: 'a malformed token', authorization: 'Bearer not.a-jwt' },
     { scenario: 'a token for another issuer', authorization: `Bearer ${mintToken({ iss: 'x' })}` },
   ])('answers $scenario with a 401 problem', async ({ authorization }) => {
-    const app = await appWith(undefined);
+    const app = await appWith(devAuth(undefined));
     const res = await app.inject({ method: 'GET', url: '/whoami', headers: { authorization } });
 
     expect(res.statusCode).toBe(401);
@@ -95,35 +106,9 @@ describe('apps/api/plugins: auth', () => {
     vi.spyOn(channelService, 'ensureProvisioned').mockResolvedValue(
       err(databaseUnavailable('users.upsert'))
     );
-    const app = await appWith(undefined, channelService);
+    const app = await appWith(devAuth(undefined), channelService);
     const token = mintToken({ sub: '00000000-0000-7000-8000-0000000000a2', role: 'user' });
 
     expect((await whoami(app, { authorization: `Bearer ${token}` })).status).toBe(503);
-  });
-});
-
-describe('apps/api/plugins: adminCredential', () => {
-  it('reads the admin token and the user it acts as from dev mode', () => {
-    const auth = inProcessAppConfig({ auth: { adminToken: OPERATOR.token } }).auth;
-
-    expect(adminCredential(auth)).toEqual({
-      token: OPERATOR.token,
-      userId: '00000000-0000-7000-8000-000000000001',
-    });
-  });
-
-  it('has no admin credential in dev mode without a token, or in jwks mode at all', () => {
-    expect(adminCredential(inProcessAppConfig().auth)).toBeUndefined();
-    expect(
-      adminCredential({
-        type: 'jwks',
-        jwksUrl: 'https://idp.example/jwks',
-        issuer: 'https://idp.example/',
-        audience: 'taitube',
-        algorithms: ['RS256'],
-        cacheTtlMs: 1,
-        refetchIntervalMs: 1,
-      })
-    ).toBeUndefined();
   });
 });

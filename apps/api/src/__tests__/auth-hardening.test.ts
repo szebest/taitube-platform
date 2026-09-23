@@ -40,6 +40,7 @@ describe('apps/api: authentication under a production configuration', () => {
     const env = loadEnv({
       ...PRODUCTION_ENV,
       ADAPTER_FAMILY: 'in-memory',
+      AUTH_ALGORITHMS: 'RS256,RS512,ES256',
       AUTH_JWKS_URL: `http://127.0.0.1:${port}/.well-known/jwks.json`,
     });
     app = await buildApp({ config: toAppConfig(env) });
@@ -77,7 +78,7 @@ describe('apps/api: authentication under a production configuration', () => {
     { scenario: 'the wrong aud', token: () => signJwt(rsa, claims({ aud: 'vp-api' })) },
     { scenario: 'alg none', token: () => signJwt(rsa, claims(), { alg: 'none' }) },
     {
-      scenario: 'an alg the JWK does not declare',
+      scenario: 'an accepted alg the JWK does not declare',
       token: () => signJwt(rsa, claims(), { alg: 'RS512' }),
     },
     {

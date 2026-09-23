@@ -1,7 +1,12 @@
 import ts from 'typescript';
 import { productionSources, read } from './repo-files';
 
-const ROOTS = ['apps/api/src/services/', 'apps/worker/src/', 'packages/server/adapters/'];
+const ROOTS = [
+  'apps/api/src/services/',
+  'apps/worker/src/',
+  'packages/server/adapters/',
+  'packages/server/ffmpeg/src/',
+];
 
 /** `?? 0` and `?? 1` say "none" and "one", not how much: they are not tuning. */
 const IDENTITY = new Set([0, 1]);
@@ -59,6 +64,12 @@ function tuningLiterals(file: string, source: string): string[] {
     if (ts.isParameter(node) && isTuning(node.initializer)) report(node, 'parameter');
     ts.forEachChild(node, visit);
   };
+  for (const statement of sourceFile.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    for (const declaration of statement.declarationList.declarations) {
+      if (isTuning(declaration.initializer)) report(declaration, 'module constant');
+    }
+  }
   visit(sourceFile);
   return found;
 }
@@ -69,6 +80,8 @@ describe('architecture: tuning values live in AppConfig', () => {
     { shape: 'fallback', source: 'const ttl = deps.ttlMs ?? 5 * 60 * 1000;' },
     { shape: 'destructuring', source: 'const { concurrency = 4 } = deps;' },
     { shape: 'parameter', source: 'function poll(intervalMs = 15_000) {}' },
+    { shape: 'module constant', source: 'export const QUEUE_POLL_INTERVAL_MS = 5_000;' },
+    { shape: 'module constant', source: 'const STALE_STEP_MS = 5 * 60 * 1000;' },
   ])('recognises a numeric default as a $shape', ({ shape, source }) => {
     expect(tuningLiterals('fixture.ts', source)).toEqual([expect.stringContaining(shape)]);
   });

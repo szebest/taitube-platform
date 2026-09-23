@@ -1,5 +1,6 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { publicFeedInstant } from '@vp/domain';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { cacheUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
@@ -8,6 +9,8 @@ import { FeedService } from '../feed-service';
 import { generateEtag } from '../http-cache';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
+
+const HTTP_CACHE = inProcessAppConfig().httpCache.feed;
 
 const OWNER_ID = '00000000-0000-7000-8000-0000000000f1';
 const CATEGORY_ID = '00000000-0000-7000-8000-0000000000f2';
@@ -34,7 +37,7 @@ describe('apps/api/services: FeedService', () => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
     videoService = new VideoService(videoServiceDeps(repositories.videos));
-    service = new FeedService({ videoService, cache });
+    service = new FeedService({ videoService, cache, ...HTTP_CACHE });
   });
 
   it('serves the weak sha256 ETag the shared http-cache functions compute', async () => {
@@ -151,6 +154,7 @@ describe('apps/api/services: FeedService', () => {
 
   it('still answers when the cache is unavailable', async () => {
     const broken = new FeedService({
+      ...HTTP_CACHE,
       videoService,
       cache: Object.assign(new InMemoryCacheClient(), {
         get: async () => err(cacheUnavailable('get')),
