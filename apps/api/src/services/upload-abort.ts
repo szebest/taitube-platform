@@ -1,12 +1,12 @@
-import { type UploadNotOpen, uploadNotOpen } from '@vp/domain-rules';
+import { type UploadOpenFailure, decideUploadOpen } from '@vp/domain-rules';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
-import { type Result, err, isErr, map } from '@vp/result';
+import { type Result, isErr, map } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
 
 export type AbortUploadFailure =
   | LoadOwnedUploadFailure
-  | UploadNotOpen
+  | UploadOpenFailure
   | StorageUnavailable
   | DatabaseUnavailable;
 
@@ -23,7 +23,8 @@ export async function abortUpload(
   if (isErr(owned)) return owned;
 
   const { upload, video } = owned.value;
-  if (upload.status === 'COMPLETED') return err(uploadNotOpen(upload.id, upload.status));
+  const open = decideUploadOpen({ upload, now: new Date() });
+  if (isErr(open)) return open;
 
   const removed =
     upload.strategy === 'multipart' && upload.multipartUploadId

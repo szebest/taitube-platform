@@ -21,7 +21,7 @@ describe('apps/api/services: complete upload', () => {
   let probeQueue: InMemoryJobQueue;
   let service: UploadService;
 
-  function build(maxInflightPerUser = 3): UploadService {
+  function build(maxInflightPerUser = 3, uploadSessionTtlSeconds?: number): UploadService {
     return new UploadService({
       uploads: repositories.uploads,
       videos: repositories.videos,
@@ -33,6 +33,7 @@ describe('apps/api/services: complete upload', () => {
       probeQueue,
       multipartThresholdBytes: 10 * MB,
       maxInflightPerUser,
+      ...(uploadSessionTtlSeconds === undefined ? {} : { uploadSessionTtlSeconds }),
     });
   }
 
@@ -136,6 +137,23 @@ describe('apps/api/services: complete upload', () => {
 
     expect(expectErr(await service.complete(OWNER, started.uploadId)).code).toBe(
       ErrorCodes.UPLOAD_NOT_OPEN
+    );
+  });
+
+  it('refuses to complete an upload whose session has expired', async () => {
+    const expired = build(3, 0);
+    const started = expectOk(
+      await expired.initiate(OWNER, {
+        filename: 'clip.mp4',
+        sizeBytes: SIZE,
+        contentType: 'video/mp4',
+      })
+    );
+    const video = expectOk(await repositories.videos.findById(started.videoId));
+    await store(video?.sourceKey ?? '', SIZE);
+
+    expect(expectErr(await service.complete(OWNER, started.uploadId)).code).toBe(
+      ErrorCodes.UPLOAD_EXPIRED
     );
   });
 

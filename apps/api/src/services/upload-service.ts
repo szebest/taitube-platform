@@ -42,6 +42,8 @@ export * from './upload-initiate';
 export * from './upload-parts';
 
 const DEFAULT_PRESIGNED_TTL_SECONDS = 15 * 60;
+/** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
+const DEFAULT_UPLOAD_SESSION_TTL_SECONDS = 24 * 60 * 60;
 const DEFAULT_MAX_INFLIGHT_PER_USER = 3;
 
 export interface UploadServiceDeps {
@@ -55,6 +57,7 @@ export interface UploadServiceDeps {
   probeQueue?: JobQueue;
   multipartThresholdBytes?: number;
   presignedUrlTtlSeconds?: number;
+  uploadSessionTtlSeconds?: number;
   maxInflightPerUser?: number;
 }
 
@@ -78,6 +81,7 @@ export class UploadService {
       ...(deps.probeQueue ? { probeQueue: deps.probeQueue } : {}),
       multipartThresholdBytes: deps.multipartThresholdBytes ?? MULTIPART_THRESHOLD_BYTES,
       presignedUrlTtlSeconds: deps.presignedUrlTtlSeconds ?? DEFAULT_PRESIGNED_TTL_SECONDS,
+      uploadSessionTtlSeconds: deps.uploadSessionTtlSeconds ?? DEFAULT_UPLOAD_SESSION_TTL_SECONDS,
       maxInflightPerUser:
         deps.maxInflightPerUser ??
         (process.env['MAX_INFLIGHT_PER_USER']

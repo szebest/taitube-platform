@@ -17,10 +17,8 @@ describe('apps/api/services: abort upload', () => {
   let storage: InMemoryStorageClient;
   let service: UploadService;
 
-  beforeEach(() => {
-    repositories = new InMemoryRepositories();
-    storage = new InMemoryStorageClient();
-    service = new UploadService({
+  const build = (uploadSessionTtlSeconds?: number) =>
+    new UploadService({
       uploads: repositories.uploads,
       videos: repositories.videos,
       events: repositories.events,
@@ -28,7 +26,13 @@ describe('apps/api/services: abort upload', () => {
       multipart: new InMemoryMultipartStorage(storage),
       rawBucket: 'raw',
       multipartThresholdBytes: 10 * MB,
+      ...(uploadSessionTtlSeconds === undefined ? {} : { uploadSessionTtlSeconds }),
     });
+
+  beforeEach(() => {
+    repositories = new InMemoryRepositories();
+    storage = new InMemoryStorageClient();
+    service = build();
   });
 
   const start = (sizeBytes: number) =>
@@ -73,5 +77,24 @@ describe('apps/api/services: abort upload', () => {
 
   it('reports an unknown upload as not found', async () => {
     expect(expectErr(await service.abort(OWNER, 'missing')).code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
+  });
+
+  it('refuses a second abort of the same upload', async () => {
+    const { uploadId } = expectOk(await start(MB));
+    expectOk(await service.abort(OWNER, uploadId));
+
+    expect(expectErr(await service.abort(OWNER, uploadId)).code).toBe(ErrorCodes.UPLOAD_NOT_OPEN);
+  });
+
+  it('refuses an upload whose session has expired', async () => {
+    const { uploadId } = expectOk(
+      await build(0).initiate(OWNER, {
+        filename: 'clip.mp4',
+        sizeBytes: MB,
+        contentType: 'video/mp4',
+      })
+    );
+
+    expect(expectErr(await service.abort(OWNER, uploadId)).code).toBe(ErrorCodes.UPLOAD_EXPIRED);
   });
 });

@@ -1,9 +1,9 @@
 import type { StoragePresignedPartInfo, StorageUploadedPartInfo } from '@vp/core/ports';
 import {
   type NotMultipart,
-  type UploadNotOpen,
+  type UploadOpenFailure,
+  decideUploadOpen,
   notMultipart,
-  uploadNotOpen,
 } from '@vp/domain-rules';
 import type { StorageUnavailable } from '@vp/errors';
 import { type Result, all, err, isErr, map, ok } from '@vp/result';
@@ -18,10 +18,10 @@ export interface UploadResumeInfo {
   uploadedParts?: StorageUploadedPartInfo[];
 }
 
-export type ResumeInfoFailure = LoadOwnedUploadFailure | UploadNotOpen | StorageUnavailable;
+export type ResumeInfoFailure = LoadOwnedUploadFailure | UploadOpenFailure | StorageUnavailable;
 export type PartUrlsFailure =
   | LoadOwnedUploadFailure
-  | UploadNotOpen
+  | UploadOpenFailure
   | NotMultipart
   | StorageUnavailable;
 
@@ -39,7 +39,8 @@ export async function getUploadResumeInfo(
   if (isErr(owned)) return owned;
 
   const { upload, video } = owned.value;
-  if (upload.status !== 'OPEN') return err(uploadNotOpen(upload.id, upload.status));
+  const open = decideUploadOpen({ upload, now: new Date() });
+  if (isErr(open)) return open;
 
   if (upload.strategy !== 'multipart' || !upload.multipartUploadId) {
     return ok({ status: upload.status, strategy: upload.strategy });
@@ -72,7 +73,8 @@ export async function issueUploadPartUrls(
   if (isErr(owned)) return owned;
 
   const { upload, video } = owned.value;
-  if (upload.status !== 'OPEN') return err(uploadNotOpen(upload.id, upload.status));
+  const open = decideUploadOpen({ upload, now: new Date() });
+  if (isErr(open)) return open;
 
   if (upload.strategy !== 'multipart' || !upload.multipartUploadId) {
     return err(notMultipart(upload.id));

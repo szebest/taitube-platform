@@ -3,12 +3,12 @@ import {
   type NotMultipart,
   type PartManifestMismatch,
   type SourceMissing,
-  type UploadNotOpen,
+  type UploadOpenFailure,
   type UploadSizeMismatch,
+  decideUploadOpen,
   notMultipart,
   partManifestMismatch,
   sourceMissing,
-  uploadNotOpen,
   uploadSizeMismatch,
 } from '@vp/domain-rules';
 import {
@@ -56,7 +56,7 @@ const CRASHED_AFTER_COMMIT: CrashedAfterCommit = {
 export type CompleteUploadFailure =
   | CrashedAfterCommit
   | LoadOwnedUploadFailure
-  | UploadNotOpen
+  | UploadOpenFailure
   | NotMultipart
   | PartManifestMismatch
   | SourceMissing
@@ -149,7 +149,9 @@ export async function completeUpload(
 
   const { upload, video } = owned.value;
   if (video.status !== 'UPLOADING') return ok({ videoId: video.id, status: video.status });
-  if (upload.status === 'ABORTED') return err(uploadNotOpen(upload.id, upload.status));
+
+  const open = decideUploadOpen({ upload, now: new Date() });
+  if (isErr(open)) return open;
 
   if (upload.strategy === 'multipart') {
     const finished = await finishMultipart(ctx, upload, video, parts);

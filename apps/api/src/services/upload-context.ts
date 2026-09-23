@@ -23,6 +23,7 @@ export interface UploadContext {
   probeQueue?: JobQueue;
   multipartThresholdBytes: number;
   presignedUrlTtlSeconds: number;
+  uploadSessionTtlSeconds: number;
   maxInflightPerUser: number;
 }
 

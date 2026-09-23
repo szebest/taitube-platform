@@ -14,12 +14,12 @@ const MB = 1024 * 1024;
 
 describe('apps/api/services: upload parts', () => {
   let repositories: InMemoryRepositories;
+  let storage: InMemoryStorageClient;
   let service: UploadService;
+  let expiredService: UploadService;
 
-  beforeEach(() => {
-    repositories = new InMemoryRepositories();
-    const storage = new InMemoryStorageClient();
-    service = new UploadService({
+  const build = (uploadSessionTtlSeconds?: number) =>
+    new UploadService({
       uploads: repositories.uploads,
       videos: repositories.videos,
       events: repositories.events,
@@ -27,7 +27,14 @@ describe('apps/api/services: upload parts', () => {
       multipart: new InMemoryMultipartStorage(storage),
       rawBucket: 'raw',
       multipartThresholdBytes: 10 * MB,
+      ...(uploadSessionTtlSeconds === undefined ? {} : { uploadSessionTtlSeconds }),
     });
+
+  beforeEach(() => {
+    repositories = new InMemoryRepositories();
+    storage = new InMemoryStorageClient();
+    service = build();
+    expiredService = build(0);
   });
 
   const startMultipart = () =>
@@ -81,6 +88,20 @@ describe('apps/api/services: upload parts', () => {
         ErrorCodes.UPLOAD_NOT_OPEN
       );
     });
+
+    it('refuses an upload whose session has expired', async () => {
+      const { uploadId } = expectOk(
+        await expiredService.initiate(OWNER, {
+          filename: 'big.mp4',
+          sizeBytes: 50 * MB,
+          contentType: 'video/mp4',
+        })
+      );
+
+      expect(expectErr(await service.getResumeInfo(OWNER, uploadId)).code).toBe(
+        ErrorCodes.UPLOAD_EXPIRED
+      );
+    });
   });
 
   describe('issuePartUrls', () => {
@@ -113,6 +134,20 @@ describe('apps/api/services: upload parts', () => {
 
       expect(expectErr(await service.issuePartUrls(STRANGER, uploadId, 1, 1)).message).toContain(
         'Not authorized'
+      );
+    });
+
+    it('refuses to issue parts once the session has expired', async () => {
+      const { uploadId } = expectOk(
+        await expiredService.initiate(OWNER, {
+          filename: 'big.mp4',
+          sizeBytes: 50 * MB,
+          contentType: 'video/mp4',
+        })
+      );
+
+      expect(expectErr(await service.issuePartUrls(OWNER, uploadId, 1, 1)).code).toBe(
+        ErrorCodes.UPLOAD_EXPIRED
       );
     });
   });

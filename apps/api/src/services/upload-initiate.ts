@@ -46,6 +46,7 @@ export async function initiateUpload(
   const ext = path.extname(filename).slice(1) || 'mp4';
   const sourceKey = rawSourceKey(videoId, ext);
   const expiresAt = new Date(Date.now() + ctx.presignedUrlTtlSeconds * 1000);
+  const sessionExpiresAt = new Date(Date.now() + ctx.uploadSessionTtlSeconds * 1000);
 
   const isMultipart = params.strategy
     ? params.strategy === 'multipart'
@@ -85,7 +86,7 @@ export async function initiateUpload(
       declaredSizeBytes: sizeBytes,
       declaredContentType: contentType,
       sha256,
-      expiresAt,
+      expiresAt: sessionExpiresAt,
     });
     if (isErr(opened)) return opened;
 
@@ -127,7 +128,7 @@ export async function initiateUpload(
     declaredSizeBytes: sizeBytes,
     declaredContentType: contentType,
     sha256,
-    expiresAt,
+    expiresAt: sessionExpiresAt,
   });
   if (isErr(opened)) return opened;
 

@@ -30,6 +30,7 @@ describe('apps/api/services: upload context', () => {
       rawBucket: 'raw',
       multipartThresholdBytes: 1024,
       presignedUrlTtlSeconds: 900,
+      uploadSessionTtlSeconds: 86_400,
       maxInflightPerUser: 3,
     };
 
