@@ -81,7 +81,7 @@ export class ReactionCountsStore {
     const cache = this.cache;
     if (!cache) return null;
 
-    const json = unwrapOr(await fromPromise(() => cache.get(key), this.unavailable('read')), null);
+    const json = unwrapOr(await cache.get(key), null);
     if (!json) return null;
 
     return unwrapOr(
@@ -193,7 +193,7 @@ export class ReactionCountsStore {
       });
     this.adjustMutexes.set(key, next);
 
-    return map(await fromPromise(next, this.unavailable('adjust')), () => undefined);
+    return map(await fromPromise(() => next, this.unavailable('adjust')), () => undefined);
   }
 
   async invalidate(videoId: string): Promise<Result<void, CacheUnavailable>> {

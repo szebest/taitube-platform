@@ -1,22 +1,16 @@
+import type { DatabaseUnavailable } from '@vp/errors';
+import type { Result } from '@vp/result';
 import type { HealthCheckable } from './health-checkable';
 
-export class DatabaseError extends Error {
-  readonly code?: string;
-  override readonly cause?: unknown;
-
-  constructor(message: string, options?: { code?: string; cause?: unknown }) {
-    super(message);
-    this.name = 'DatabaseError';
-    this.code = options?.code;
-    this.cause = options?.cause;
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-}
-
-export abstract class DatabaseClient implements HealthCheckable {
-  abstract checkHealth(): Promise<boolean>;
-  abstract query<T = unknown>(sql: string, params?: unknown[]): Promise<T[]>;
-  abstract execute(sql: string, params?: unknown[]): Promise<number>;
-  abstract transaction<T>(fn: (tx: DatabaseClient) => Promise<T>): Promise<T>;
-  abstract close(): Promise<void>;
+export abstract class DatabaseClient implements HealthCheckable<DatabaseUnavailable> {
+  abstract checkHealth(): Promise<Result<void, DatabaseUnavailable>>;
+  abstract query<T = unknown>(
+    sql: string,
+    params?: unknown[]
+  ): Promise<Result<T[], DatabaseUnavailable>>;
+  abstract execute(sql: string, params?: unknown[]): Promise<Result<number, DatabaseUnavailable>>;
+  abstract transaction<T, E>(
+    fn: (tx: DatabaseClient) => Promise<Result<T, E>>
+  ): Promise<Result<T, E | DatabaseUnavailable>>;
+  abstract close(): Promise<Result<void, DatabaseUnavailable>>;
 }

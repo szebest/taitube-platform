@@ -3,7 +3,8 @@ import {
   type NewVideoEventInput,
   type VideoEventRecord,
 } from '@vp/core/repositories';
-import { type Result, unwrapOr } from '@vp/result';
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, ok, unwrapOr } from '@vp/result';
 
 /** The one thing this repository needs from a video: who owns it. */
 interface VideoOwnerLookup {
@@ -24,7 +25,7 @@ export class InMemoryEventRepository extends EventRepository {
     this.videosRepo = repo;
   }
 
-  async create(data: NewVideoEventInput): Promise<VideoEventRecord> {
+  async create(data: NewVideoEventInput): Promise<Result<VideoEventRecord, DatabaseUnavailable>> {
     const record: VideoEventRecord = {
       id: this.eventsList.length + 1,
       videoId: data.videoId,
@@ -34,22 +35,30 @@ export class InMemoryEventRepository extends EventRepository {
       createdAt: new Date(),
     };
     this.eventsList.push(record);
-    return record;
+    return ok(record);
   }
 
-  async findByVideoId(videoId: string): Promise<VideoEventRecord[]> {
-    return this.eventsList.filter((e) => e.videoId === videoId);
+  async findByVideoId(videoId: string): Promise<Result<VideoEventRecord[], DatabaseUnavailable>> {
+    return ok(this.eventsList.filter((e) => e.videoId === videoId));
   }
 
-  async findAfterId(videoId: string, afterId: number): Promise<VideoEventRecord[]> {
-    return this.eventsList
-      .filter((e) => e.videoId === videoId && e.id > afterId)
-      .sort((a, b) => a.id - b.id);
+  async findAfterId(
+    videoId: string,
+    afterId: number
+  ): Promise<Result<VideoEventRecord[], DatabaseUnavailable>> {
+    return ok(
+      this.eventsList
+        .filter((e) => e.videoId === videoId && e.id > afterId)
+        .sort((a, b) => a.id - b.id)
+    );
   }
 
-  async findAfterIdForUser(userId: string, afterId: number): Promise<VideoEventRecord[]> {
+  async findAfterIdForUser(
+    userId: string,
+    afterId: number
+  ): Promise<Result<VideoEventRecord[], DatabaseUnavailable>> {
     if (!this.videosRepo) {
-      return this.eventsList.filter((e) => e.id > afterId).sort((a, b) => a.id - b.id);
+      return ok(this.eventsList.filter((e) => e.id > afterId).sort((a, b) => a.id - b.id));
     }
     const matching: VideoEventRecord[] = [];
     for (const event of this.eventsList) {
@@ -60,13 +69,13 @@ export class InMemoryEventRepository extends EventRepository {
         }
       }
     }
-    return matching.sort((a, b) => a.id - b.id);
+    return ok(matching.sort((a, b) => a.id - b.id));
   }
 
-  async getLatestEventId(videoId: string): Promise<number> {
+  async getLatestEventId(videoId: string): Promise<Result<number, DatabaseUnavailable>> {
     const events = this.eventsList.filter((e) => e.videoId === videoId);
-    if (events.length === 0) return 0;
-    return Math.max(...events.map((e) => e.id));
+    if (events.length === 0) return ok(0);
+    return ok(Math.max(...events.map((e) => e.id)));
   }
 
   clear(): void {

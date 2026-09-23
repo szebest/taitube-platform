@@ -1,5 +1,6 @@
 import type { Category } from '@vp/domain';
-import { ok } from '@vp/result';
+import { cacheUnavailable } from '@vp/errors';
+import { err, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import {
@@ -110,7 +111,7 @@ describe('CategoryCacheService', () => {
     await service.invalidate();
 
     expect(service.getL1Size()).toBe(0);
-    expect(await cache.get(CATEGORIES_CACHE_KEY)).toBeNull();
+    expect(expectOk(await cache.get(CATEGORIES_CACHE_KEY))).toBeNull();
     expect(cache.publishedMessages.at(-1)?.channel).toBe(CATEGORIES_INVALIDATION_CHANNEL);
   });
 
@@ -138,12 +139,8 @@ describe('CategoryCacheService', () => {
   it('falls back to the source when the distributed cache is unusable', async () => {
     const broken = new CategoryCacheService({
       cache: Object.assign(new InMemoryCacheClient(), {
-        get: async () => {
-          throw new Error('redis down');
-        },
-        set: async () => {
-          throw new Error('redis down');
-        },
+        get: async () => err(cacheUnavailable('get')),
+        set: async () => err(cacheUnavailable('set')),
       }),
     });
 
@@ -153,45 +150,26 @@ describe('CategoryCacheService', () => {
     await broken.close();
   });
 
-  it('survives a subscribe that rejects instead of leaking an unhandled rejection', async () => {
-    const rejections: unknown[] = [];
-    const record = (reason: unknown) => rejections.push(reason);
-    process.on('unhandledRejection', record);
-
+  it('serves reads when it cannot subscribe to the invalidation channel', async () => {
     const unreachable = new CategoryCacheService({
       cache: Object.assign(new InMemoryCacheClient(), {
-        subscribe: async () => {
-          throw new Error('NOAUTH Authentication required.');
-        },
+        subscribe: async () => err(cacheUnavailable('subscribe')),
       }),
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    process.off('unhandledRejection', record);
-
-    expect(rejections).toEqual([]);
     expect(expectOk(await unreachable.getCategories(fetcher))).toHaveLength(3);
     await unreachable.close();
   });
 
-  it('survives an unsubscribe that rejects instead of leaking an unhandled rejection', async () => {
-    const rejections: unknown[] = [];
-    const record = (reason: unknown) => rejections.push(reason);
-    process.on('unhandledRejection', record);
-
+  it('closes cleanly when it cannot unsubscribe', async () => {
     const unreachable = new CategoryCacheService({
       cache: Object.assign(new InMemoryCacheClient(), {
-        unsubscribe: async () => {
-          throw new Error('NOAUTH Authentication required.');
-        },
+        unsubscribe: async () => err(cacheUnavailable('unsubscribe')),
       }),
     });
 
     await unreachable.close();
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    process.off('unhandledRejection', record);
 
-    expect(rejections).toEqual([]);
     expect(unreachable.getL1Size()).toBe(0);
   });
 

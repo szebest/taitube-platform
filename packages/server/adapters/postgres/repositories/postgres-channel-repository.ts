@@ -47,7 +47,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     operation: string
   ): Promise<Result<Channel | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db.select().from(channels).where(eq(column, value)).limit(1),
+      () => this.db.select().from(channels).where(eq(column, value)).limit(1),
       this.unavailable(operation)
     );
 
@@ -71,19 +71,20 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
   ): Promise<Result<Channel, DatabaseUnavailable | HandleTaken>> {
     const handle = input.handle.toLowerCase();
     const rows = await fromPromise(
-      this.db
-        .insert(channels)
-        .values({
-          id: input.id ?? uuidv7(),
-          userId: input.userId,
-          handle,
-          displayName: input.displayName,
-          avatarUrl: input.avatarUrl ?? null,
-          bannerUrl: input.bannerUrl ?? null,
-          bio: input.bio ?? null,
-          subscriberCount: input.subscriberCount ?? 0,
-        })
-        .returning(),
+      () =>
+        this.db
+          .insert(channels)
+          .values({
+            id: input.id ?? uuidv7(),
+            userId: input.userId,
+            handle,
+            displayName: input.displayName,
+            avatarUrl: input.avatarUrl ?? null,
+            bannerUrl: input.bannerUrl ?? null,
+            bio: input.bio ?? null,
+            subscriberCount: input.subscriberCount ?? 0,
+          })
+          .returning(),
       this.conflict(handle, 'create')
     );
 
@@ -100,11 +101,12 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
 
     if (handle) {
       const conflicting = await fromPromise(
-        this.db
-          .select({ id: channels.id })
-          .from(channels)
-          .where(and(eq(channels.handle, handle), ne(channels.id, id)))
-          .limit(1),
+        () =>
+          this.db
+            .select({ id: channels.id })
+            .from(channels)
+            .where(and(eq(channels.handle, handle), ne(channels.id, id)))
+            .limit(1),
         this.unavailable('update')
       );
       if (!conflicting.ok) return conflicting;
@@ -119,7 +121,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     if (input.bio !== undefined) values.bio = input.bio;
 
     const rows = await fromPromise(
-      this.db.update(channels).set(values).where(eq(channels.id, id)).returning(),
+      () => this.db.update(channels).set(values).where(eq(channels.id, id)).returning(),
       this.conflict(handle ?? '', 'update')
     );
 

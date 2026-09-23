@@ -2,12 +2,13 @@ import {
   MultipartStorage,
   type StorageClient,
   type StorageCompletePartInput,
-  StorageError,
   type StorageMultipartUploadInfo,
   type StoragePresignedPartInfo,
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
+import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
+import { type Result, err, ok } from '@vp/result';
 import { measureStorageOp } from '../storage-metrics-helper';
 
 interface InFlightPart {
@@ -32,11 +33,15 @@ export class InMemoryMultipartStorage extends MultipartStorage {
     this.storageClient = storageClient;
   }
 
-  async checkHealth(): Promise<boolean> {
-    return true;
+  async checkHealth(): Promise<Result<void, StorageUnavailable>> {
+    return ok();
   }
 
-  async createMultipartUpload(bucket: string, key: string, contentType: string): Promise<string> {
+  async createMultipartUpload(
+    bucket: string,
+    key: string,
+    contentType: string
+  ): Promise<Result<string, StorageUnavailable>> {
     return measureStorageOp('multipart', bucket, async () => {
       const uploadId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       this.uploads.set(uploadId, {
@@ -45,50 +50,52 @@ export class InMemoryMultipartStorage extends MultipartStorage {
         contentType,
         parts: new Map(),
       });
-      return uploadId;
+      return ok(uploadId);
     });
   }
 
   async createPresignedPartUrl(
     params: StoragePresignedPartParams
-  ): Promise<StoragePresignedPartInfo> {
+  ): Promise<Result<StoragePresignedPartInfo, StorageUnavailable>> {
     const expiresIn = params.expiresInSeconds ?? 900;
-    return {
+    return ok({
       partNumber: params.partNumber,
       url: `http://localhost:9000/${params.bucket}/${params.key}?uploadId=${params.uploadId}&partNumber=${params.partNumber}&mock-presigned-part=true`,
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
-    };
+    });
   }
 
-  seedPart(uploadId: string, partNumber: number, data: Buffer): void {
+  /** Test seam: a part arrives through a presigned PUT in production, which no double can serve. */
+  seedPart(uploadId: string, partNumber: number, data: Buffer): Result<void, StorageUnavailable> {
     const upload = this.uploads.get(uploadId);
-    if (!upload) {
-      throw new StorageError(`Upload not found: ${uploadId}`);
-    }
+    if (!upload) return err(storageUnavailable('seedPart', uploadId));
     const etag = `etag-part-${partNumber}-${Math.random().toString(36).slice(2, 8)}`;
     upload.parts.set(partNumber, { partNumber, data, etag });
+    return ok();
   }
 
   async listMultipartParts(
     _bucket: string,
     _key: string,
     uploadId: string
-  ): Promise<StorageUploadedPartInfo[]> {
+  ): Promise<Result<StorageUploadedPartInfo[], StorageUnavailable>> {
     const upload = this.uploads.get(uploadId);
     if (!upload) {
-      return [];
+      return ok([]);
     }
-    return Array.from(upload.parts.values()).map((p) => ({
-      partNumber: p.partNumber,
-      etag: p.etag,
-      size: p.data.length,
-    }));
+    return ok(
+      Array.from(upload.parts.values()).map((p) => ({
+        partNumber: p.partNumber,
+        etag: p.etag,
+        size: p.data.length,
+      }))
+    );
   }
 
   async listMultipartUploads(
     bucket: string,
     prefix?: string
-  ): Promise<StorageMultipartUploadInfo[]> {
+  ): Promise<Result<StorageMultipartUploadInfo[], StorageUnavailable>> {
     const result: StorageMultipartUploadInfo[] = [];
     for (const [uploadId, upload] of this.uploads.entries()) {
       if (upload.bucket === bucket) {
@@ -100,7 +107,7 @@ export class InMemoryMultipartStorage extends MultipartStorage {
         }
       }
     }
-    return result;
+    return ok(result);
   }
 
   async completeMultipartUpload(
@@ -108,10 +115,10 @@ export class InMemoryMultipartStorage extends MultipartStorage {
     key: string,
     uploadId: string,
     parts: StorageCompletePartInput[]
-  ): Promise<void> {
+  ): Promise<Result<void, StorageUnavailable>> {
     const upload = this.uploads.get(uploadId);
     if (!upload) {
-      throw new StorageError(`Upload not found: ${uploadId}`);
+      return err(storageUnavailable('completeMultipartUpload', uploadId));
     }
 
     const sortedParts = [...parts].sort((a, b) => a.partNumber - b.partNumber);
@@ -125,22 +132,30 @@ export class InMemoryMultipartStorage extends MultipartStorage {
     const fullBody = Buffer.concat(chunks);
 
     if (this.storageClient) {
-      await this.storageClient.uploadObject({
+      const uploaded = await this.storageClient.uploadObject({
         bucket,
         key,
         body: fullBody,
         contentType: upload.contentType,
       });
+      if (!uploaded.ok) return uploaded;
     }
 
     this.uploads.delete(uploadId);
+    return ok();
   }
 
-  async abortMultipartUpload(_bucket: string, _key: string, uploadId: string): Promise<void> {
+  async abortMultipartUpload(
+    _bucket: string,
+    _key: string,
+    uploadId: string
+  ): Promise<Result<void, StorageUnavailable>> {
     this.uploads.delete(uploadId);
+    return ok();
   }
 
-  async close(): Promise<void> {
+  async close(): Promise<Result<void, StorageUnavailable>> {
     this.uploads.clear();
+    return ok();
   }
 }

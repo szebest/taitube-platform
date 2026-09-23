@@ -94,17 +94,17 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   private async getEvents(id: string): Promise<VideoEventRecord[]> {
-    if (this.eventsRepo) return this.eventsRepo.findByVideoId(id);
+    if (this.eventsRepo) return unwrapOr(await this.eventsRepo.findByVideoId(id), []);
     return this.eventsList ? this.eventsList.filter((e) => e.videoId === id) : [];
   }
 
   private async getSteps(id: string): Promise<ProcessingStepRecord[]> {
-    if (this.stepsRepo) return this.stepsRepo.findByVideoId(id);
+    if (this.stepsRepo) return unwrapOr(await this.stepsRepo.findByVideoId(id), []);
     return this.stepsMap ? Array.from(this.stepsMap.values()).filter((s) => s.videoId === id) : [];
   }
 
   private async getRenditions(id: string): Promise<RenditionRecord[]> {
-    if (this.renditionsRepo) return this.renditionsRepo.findByVideoId(id);
+    if (this.renditionsRepo) return unwrapOr(await this.renditionsRepo.findByVideoId(id), []);
     return this.renditionsMap
       ? Array.from(this.renditionsMap.values()).filter((r) => r.videoId === id)
       : [];

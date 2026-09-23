@@ -25,12 +25,16 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
     userId: string
   ): Promise<Result<ReactionType | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db
-        .select({ type: schema.videoReactions.type })
-        .from(schema.videoReactions)
-        .where(
-          and(eq(schema.videoReactions.videoId, videoId), eq(schema.videoReactions.userId, userId))
-        ),
+      () =>
+        this.db
+          .select({ type: schema.videoReactions.type })
+          .from(schema.videoReactions)
+          .where(
+            and(
+              eq(schema.videoReactions.videoId, videoId),
+              eq(schema.videoReactions.userId, userId)
+            )
+          ),
       this.unavailable('getUserReaction')
     );
 
@@ -39,13 +43,14 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
 
   async getReactionCounts(videoId: string): Promise<Result<ReactionCounts, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db
-        .select({
-          likesCount: schema.videos.likesCount,
-          dislikesCount: schema.videos.dislikesCount,
-        })
-        .from(schema.videos)
-        .where(eq(schema.videos.id, videoId)),
+      () =>
+        this.db
+          .select({
+            likesCount: schema.videos.likesCount,
+            dislikesCount: schema.videos.dislikesCount,
+          })
+          .from(schema.videos)
+          .where(eq(schema.videos.id, videoId)),
       this.unavailable('getReactionCounts')
     );
 
@@ -63,109 +68,114 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
     const newType: ReactionType | null = type === 'NONE' ? null : type;
 
     return await fromPromise(
-      this.db.transaction(async (tx) => {
-        let previousType: ReactionType | null = null;
+      () =>
+        this.db.transaction(async (tx) => {
+          let previousType: ReactionType | null = null;
 
-        if (newType === null) {
-          const [deleted] = await tx
-            .delete(schema.videoReactions)
-            .where(
-              and(
-                eq(schema.videoReactions.videoId, videoId),
-                eq(schema.videoReactions.userId, userId)
+          if (newType === null) {
+            const [deleted] = await tx
+              .delete(schema.videoReactions)
+              .where(
+                and(
+                  eq(schema.videoReactions.videoId, videoId),
+                  eq(schema.videoReactions.userId, userId)
+                )
               )
-            )
-            .returning({ type: schema.videoReactions.type });
+              .returning({ type: schema.videoReactions.type });
 
-          previousType = (deleted?.type as ReactionType) ?? null;
-        } else {
-          const [prev] = await tx
-            .select({ type: schema.videoReactions.type })
-            .from(schema.videoReactions)
-            .where(
-              and(
-                eq(schema.videoReactions.videoId, videoId),
-                eq(schema.videoReactions.userId, userId)
-              )
-            );
+            previousType = (deleted?.type as ReactionType) ?? null;
+          } else {
+            const [prev] = await tx
+              .select({ type: schema.videoReactions.type })
+              .from(schema.videoReactions)
+              .where(
+                and(
+                  eq(schema.videoReactions.videoId, videoId),
+                  eq(schema.videoReactions.userId, userId)
+                )
+              );
 
-          previousType = (prev?.type as ReactionType) ?? null;
+            previousType = (prev?.type as ReactionType) ?? null;
 
-          await tx
-            .insert(schema.videoReactions)
-            .values({
-              id: uuidv7(),
-              videoId,
-              userId,
-              type: newType,
-              updatedAt: new Date(),
-            })
-            .onConflictDoUpdate({
-              target: [schema.videoReactions.userId, schema.videoReactions.videoId],
-              set: {
+            await tx
+              .insert(schema.videoReactions)
+              .values({
+                id: uuidv7(),
+                videoId,
+                userId,
                 type: newType,
-                updatedAt: sql`now()`,
-              },
-            });
-        }
-
-        const { likes: deltaLikes, dislikes: deltaDislikes } = reactionDelta(previousType, newType);
-
-        let likesCount = 0;
-        let dislikesCount = 0;
-
-        if (deltaLikes !== 0 || deltaDislikes !== 0) {
-          const [updatedVideo] = await tx
-            .update(schema.videos)
-            .set({
-              likesCount: sql`GREATEST(0, ${schema.videos.likesCount} + ${deltaLikes})`,
-              dislikesCount: sql`GREATEST(0, ${schema.videos.dislikesCount} + ${deltaDislikes})`,
-              updatedAt: new Date(),
-            })
-            .where(eq(schema.videos.id, videoId))
-            .returning({
-              likesCount: schema.videos.likesCount,
-              dislikesCount: schema.videos.dislikesCount,
-            });
-
-          if (updatedVideo) {
-            likesCount = updatedVideo.likesCount;
-            dislikesCount = updatedVideo.dislikesCount;
+                updatedAt: new Date(),
+              })
+              .onConflictDoUpdate({
+                target: [schema.videoReactions.userId, schema.videoReactions.videoId],
+                set: {
+                  type: newType,
+                  updatedAt: sql`now()`,
+                },
+              });
           }
-        } else {
-          const [currVideo] = await tx
-            .select({
-              likesCount: schema.videos.likesCount,
-              dislikesCount: schema.videos.dislikesCount,
-            })
-            .from(schema.videos)
-            .where(eq(schema.videos.id, videoId));
-          if (currVideo) {
-            likesCount = currVideo.likesCount;
-            dislikesCount = currVideo.dislikesCount;
-          }
-        }
 
-        return {
-          previousType,
-          newType,
-          likesCount,
-          dislikesCount,
-        };
-      }),
+          const { likes: deltaLikes, dislikes: deltaDislikes } = reactionDelta(
+            previousType,
+            newType
+          );
+
+          let likesCount = 0;
+          let dislikesCount = 0;
+
+          if (deltaLikes !== 0 || deltaDislikes !== 0) {
+            const [updatedVideo] = await tx
+              .update(schema.videos)
+              .set({
+                likesCount: sql`GREATEST(0, ${schema.videos.likesCount} + ${deltaLikes})`,
+                dislikesCount: sql`GREATEST(0, ${schema.videos.dislikesCount} + ${deltaDislikes})`,
+                updatedAt: new Date(),
+              })
+              .where(eq(schema.videos.id, videoId))
+              .returning({
+                likesCount: schema.videos.likesCount,
+                dislikesCount: schema.videos.dislikesCount,
+              });
+
+            if (updatedVideo) {
+              likesCount = updatedVideo.likesCount;
+              dislikesCount = updatedVideo.dislikesCount;
+            }
+          } else {
+            const [currVideo] = await tx
+              .select({
+                likesCount: schema.videos.likesCount,
+                dislikesCount: schema.videos.dislikesCount,
+              })
+              .from(schema.videos)
+              .where(eq(schema.videos.id, videoId));
+            if (currVideo) {
+              likesCount = currVideo.likesCount;
+              dislikesCount = currVideo.dislikesCount;
+            }
+          }
+
+          return {
+            previousType,
+            newType,
+            likesCount,
+            dislikesCount,
+          };
+        }),
       this.unavailable('setReaction')
     );
   }
 
   async countGroundTruth(videoId: string): Promise<Result<ReactionCounts, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db
-        .select({
-          likesCount: sql<number>`count(*) filter (where ${schema.videoReactions.type} = 'LIKE')`,
-          dislikesCount: sql<number>`count(*) filter (where ${schema.videoReactions.type} = 'DISLIKE')`,
-        })
-        .from(schema.videoReactions)
-        .where(eq(schema.videoReactions.videoId, videoId)),
+      () =>
+        this.db
+          .select({
+            likesCount: sql<number>`count(*) filter (where ${schema.videoReactions.type} = 'LIKE')`,
+            dislikesCount: sql<number>`count(*) filter (where ${schema.videoReactions.type} = 'DISLIKE')`,
+          })
+          .from(schema.videoReactions)
+          .where(eq(schema.videoReactions.videoId, videoId)),
       this.unavailable('countGroundTruth')
     );
 
@@ -181,10 +191,11 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
     dislikesCount: number
   ): Promise<Result<void, DatabaseUnavailable>> {
     const done = await fromPromise(
-      this.db
-        .update(schema.videos)
-        .set({ likesCount, dislikesCount, updatedAt: new Date() })
-        .where(eq(schema.videos.id, videoId)),
+      () =>
+        this.db
+          .update(schema.videos)
+          .set({ likesCount, dislikesCount, updatedAt: new Date() })
+          .where(eq(schema.videos.id, videoId)),
       this.unavailable('updateVideoCounters')
     );
 
@@ -196,11 +207,12 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
     offset = 0
   ): Promise<Result<string[], DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db
-        .selectDistinct({ videoId: schema.videoReactions.videoId })
-        .from(schema.videoReactions)
-        .limit(limit)
-        .offset(offset),
+      () =>
+        this.db
+          .selectDistinct({ videoId: schema.videoReactions.videoId })
+          .from(schema.videoReactions)
+          .limit(limit)
+          .offset(offset),
       this.unavailable('listVideoIdsWithReactions')
     );
 

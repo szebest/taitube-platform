@@ -16,7 +16,7 @@ export class PostgresUserRepository extends UserRepository {
 
   async findById(id: string): Promise<Result<UserRecord | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1),
+      () => this.db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1),
       this.unavailable('findById')
     );
 
@@ -25,23 +25,24 @@ export class PostgresUserRepository extends UserRepository {
 
   async upsert(user: UpsertUserInput): Promise<Result<UserRecord, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db
-        .insert(schema.users)
-        .values({
-          id: user.id,
-          email: user.email,
-          tier: user.tier ?? 'free',
-          role: user.role ?? 'USER',
-        })
-        .onConflictDoUpdate({
-          target: schema.users.id,
-          set: {
+      () =>
+        this.db
+          .insert(schema.users)
+          .values({
+            id: user.id,
             email: user.email,
             tier: user.tier ?? 'free',
-            ...(user.role ? { role: user.role } : {}),
-          },
-        })
-        .returning(),
+            role: user.role ?? 'USER',
+          })
+          .onConflictDoUpdate({
+            target: schema.users.id,
+            set: {
+              email: user.email,
+              tier: user.tier ?? 'free',
+              ...(user.role ? { role: user.role } : {}),
+            },
+          })
+          .returning(),
       this.unavailable('upsert')
     );
 

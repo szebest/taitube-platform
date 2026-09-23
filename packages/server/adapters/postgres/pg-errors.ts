@@ -27,8 +27,9 @@ function hasSqlState(error: unknown, state: string): boolean {
  */
 function hasMessage(error: unknown, needle: string): boolean {
   return causes(error).some(
-    (link) => typeof (link as { message?: unknown }).message === 'string' &&
-      ((link as { message: string }).message).includes(needle)
+    (link) =>
+      typeof (link as { message?: unknown }).message === 'string' &&
+      (link as { message: string }).message.includes(needle)
   );
 }
 

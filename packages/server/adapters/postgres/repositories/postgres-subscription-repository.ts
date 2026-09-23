@@ -37,35 +37,36 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     channelId: string
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
     return await fromPromise(
-      this.db.transaction(async (tx) => {
-        const [channel] = await tx
-          .select({ userId: ch.userId, subscriberCount: ch.subscriberCount })
-          .from(ch)
-          .where(eq(ch.id, channelId));
+      () =>
+        this.db.transaction(async (tx) => {
+          const [channel] = await tx
+            .select({ userId: ch.userId, subscriberCount: ch.subscriberCount })
+            .from(ch)
+            .where(eq(ch.id, channelId));
 
-        if (!channel) return { subscriberCount: 0, changed: false };
+          if (!channel) return { subscriberCount: 0, changed: false };
 
-        const [inserted] = await tx
-          .insert(cs)
-          .values({ id: uuidv7(), subscriberId, channelId, createdAt: new Date() })
-          .onConflictDoNothing()
-          .returning({ id: cs.id });
+          const [inserted] = await tx
+            .insert(cs)
+            .values({ id: uuidv7(), subscriberId, channelId, createdAt: new Date() })
+            .onConflictDoNothing()
+            .returning({ id: cs.id });
 
-        if (!inserted) {
-          return { subscriberCount: channel.subscriberCount, changed: false };
-        }
+          if (!inserted) {
+            return { subscriberCount: channel.subscriberCount, changed: false };
+          }
 
-        const [updated] = await tx
-          .update(ch)
-          .set({ subscriberCount: sql`${ch.subscriberCount} + 1`, updatedAt: new Date() })
-          .where(eq(ch.id, channelId))
-          .returning({ subscriberCount: ch.subscriberCount });
+          const [updated] = await tx
+            .update(ch)
+            .set({ subscriberCount: sql`${ch.subscriberCount} + 1`, updatedAt: new Date() })
+            .where(eq(ch.id, channelId))
+            .returning({ subscriberCount: ch.subscriberCount });
 
-        return {
-          subscriberCount: updated?.subscriberCount ?? channel.subscriberCount + 1,
-          changed: true,
-        };
-      }),
+          return {
+            subscriberCount: updated?.subscriberCount ?? channel.subscriberCount + 1,
+            changed: true,
+          };
+        }),
       this.unavailable('subscribe')
     );
   }
@@ -75,37 +76,38 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     channelId: string
   ): Promise<Result<SubscriptionChangeResult, DatabaseUnavailable>> {
     return await fromPromise(
-      this.db.transaction(async (tx) => {
-        const [channel] = await tx
-          .select({ subscriberCount: ch.subscriberCount })
-          .from(ch)
-          .where(eq(ch.id, channelId));
+      () =>
+        this.db.transaction(async (tx) => {
+          const [channel] = await tx
+            .select({ subscriberCount: ch.subscriberCount })
+            .from(ch)
+            .where(eq(ch.id, channelId));
 
-        if (!channel) return { subscriberCount: 0, changed: false };
+          if (!channel) return { subscriberCount: 0, changed: false };
 
-        const [deleted] = await tx
-          .delete(cs)
-          .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
-          .returning({ id: cs.id });
+          const [deleted] = await tx
+            .delete(cs)
+            .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
+            .returning({ id: cs.id });
 
-        if (!deleted) {
-          return { subscriberCount: channel.subscriberCount, changed: false };
-        }
+          if (!deleted) {
+            return { subscriberCount: channel.subscriberCount, changed: false };
+          }
 
-        const [updated] = await tx
-          .update(ch)
-          .set({
-            subscriberCount: sql`GREATEST(0, ${ch.subscriberCount} - 1)`,
-            updatedAt: new Date(),
-          })
-          .where(eq(ch.id, channelId))
-          .returning({ subscriberCount: ch.subscriberCount });
+          const [updated] = await tx
+            .update(ch)
+            .set({
+              subscriberCount: sql`GREATEST(0, ${ch.subscriberCount} - 1)`,
+              updatedAt: new Date(),
+            })
+            .where(eq(ch.id, channelId))
+            .returning({ subscriberCount: ch.subscriberCount });
 
-        return {
-          subscriberCount: updated?.subscriberCount ?? Math.max(0, channel.subscriberCount - 1),
-          changed: true,
-        };
-      }),
+          return {
+            subscriberCount: updated?.subscriberCount ?? Math.max(0, channel.subscriberCount - 1),
+            changed: true,
+          };
+        }),
       this.unavailable('unsubscribe')
     );
   }
@@ -115,11 +117,12 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     channelId: string
   ): Promise<Result<boolean, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db
-        .select({ id: cs.id })
-        .from(cs)
-        .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
-        .limit(1),
+      () =>
+        this.db
+          .select({ id: cs.id })
+          .from(cs)
+          .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
+          .limit(1),
       this.unavailable('isSubscribed')
     );
 
@@ -130,7 +133,11 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     subscriberId: string
   ): Promise<Result<string[], DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db.select({ channelId: cs.channelId }).from(cs).where(eq(cs.subscriberId, subscriberId)),
+      () =>
+        this.db
+          .select({ channelId: cs.channelId })
+          .from(cs)
+          .where(eq(cs.subscriberId, subscriberId)),
       this.unavailable('getUserSubscriptionChannelIds')
     );
 
@@ -139,7 +146,11 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
 
   async getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db.select({ subscriberCount: ch.subscriberCount }).from(ch).where(eq(ch.id, channelId)),
+      () =>
+        this.db
+          .select({ subscriberCount: ch.subscriberCount })
+          .from(ch)
+          .where(eq(ch.id, channelId)),
       this.unavailable('getSubscriberCount')
     );
 
@@ -151,35 +162,36 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     options: ListSubscriptionsOptions
   ): Promise<Result<SubscribedChannelItem[], DatabaseUnavailable>> {
     return await fromPromise(
-      this.db
-        .select({
-          id: ch.id,
-          userId: ch.userId,
-          handle: ch.handle,
-          displayName: ch.displayName,
-          avatarUrl: ch.avatarUrl,
-          bannerUrl: ch.bannerUrl,
-          bio: ch.bio,
-          subscriberCount: ch.subscriberCount,
-          subscribedAt: cs.createdAt,
-        })
-        .from(cs)
-        .innerJoin(ch, eq(cs.channelId, ch.id))
-        .where(
-          drizzleWhere(
-            eq(cs.subscriberId, subscriberId),
-            keysetBefore(
-              cs.createdAt,
-              cs.channelId,
-              options.cursor && {
-                sort: options.cursor.createdAt,
-                tie: options.cursor.channelId,
-              }
+      () =>
+        this.db
+          .select({
+            id: ch.id,
+            userId: ch.userId,
+            handle: ch.handle,
+            displayName: ch.displayName,
+            avatarUrl: ch.avatarUrl,
+            bannerUrl: ch.bannerUrl,
+            bio: ch.bio,
+            subscriberCount: ch.subscriberCount,
+            subscribedAt: cs.createdAt,
+          })
+          .from(cs)
+          .innerJoin(ch, eq(cs.channelId, ch.id))
+          .where(
+            drizzleWhere(
+              eq(cs.subscriberId, subscriberId),
+              keysetBefore(
+                cs.createdAt,
+                cs.channelId,
+                options.cursor && {
+                  sort: options.cursor.createdAt,
+                  tie: options.cursor.channelId,
+                }
+              )
             )
           )
-        )
-        .orderBy(desc(cs.createdAt), desc(cs.channelId))
-        .limit(options.limit + 1),
+          .orderBy(desc(cs.createdAt), desc(cs.channelId))
+          .limit(options.limit + 1),
       this.unavailable('listUserSubscriptions')
     );
   }
@@ -196,34 +208,36 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     );
 
     const counted = await fromPromise(
-      this.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(v)
-        .innerJoin(ch, eq(v.ownerId, ch.userId))
-        .innerJoin(cs, eq(cs.channelId, ch.id))
-        .where(baseWhere),
+      () =>
+        this.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(v)
+          .innerJoin(ch, eq(v.ownerId, ch.userId))
+          .innerJoin(cs, eq(cs.channelId, ch.id))
+          .where(baseWhere),
       this.unavailable('getSubscriptionFeed')
     );
     if (isErr(counted)) return counted;
 
     const rows = await fromPromise(
-      this.db
-        .select({ video: v })
-        .from(v)
-        .innerJoin(ch, eq(v.ownerId, ch.userId))
-        .innerJoin(cs, eq(cs.channelId, ch.id))
-        .where(
-          drizzleWhere(
-            baseWhere,
-            keysetBefore(
-              v.createdAt,
-              v.id,
-              options.cursor && { sort: options.cursor.createdAt, tie: options.cursor.id }
+      () =>
+        this.db
+          .select({ video: v })
+          .from(v)
+          .innerJoin(ch, eq(v.ownerId, ch.userId))
+          .innerJoin(cs, eq(cs.channelId, ch.id))
+          .where(
+            drizzleWhere(
+              baseWhere,
+              keysetBefore(
+                v.createdAt,
+                v.id,
+                options.cursor && { sort: options.cursor.createdAt, tie: options.cursor.id }
+              )
             )
           )
-        )
-        .orderBy(desc(v.createdAt), desc(v.id))
-        .limit(options.limit + 1),
+          .orderBy(desc(v.createdAt), desc(v.id))
+          .limit(options.limit + 1),
       this.unavailable('getSubscriptionFeed')
     );
 

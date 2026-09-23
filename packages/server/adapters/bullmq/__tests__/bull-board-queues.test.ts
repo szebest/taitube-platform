@@ -2,6 +2,7 @@ import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { bullBoardQueues } from '../bull-board-queues';
 import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue } from './fake-queue';
+import { expectOk } from '@vp/testing/result';
 
 function bullMqQueue(name: string): BullMqJobQueue {
   return new BullMqJobQueue({ name, queue: new FakeQueue({ name }).asQueue() });
@@ -10,7 +11,10 @@ function bullMqQueue(name: string): BullMqJobQueue {
 describe('adapters/bullmq: bull board queues', () => {
   it.each([
     { scenario: 'a BullMQ queue', queue: () => bullMqQueue('probe') },
-    { scenario: 'a port with another driver behind it', queue: () => new InMemoryJobQueue('probe') },
+    {
+      scenario: 'a port with another driver behind it',
+      queue: () => new InMemoryJobQueue('probe'),
+    },
   ])('presents $scenario under its own name', ({ queue }) => {
     const [board] = bullBoardQueues([queue()]);
 
@@ -26,10 +30,10 @@ describe('adapters/bullmq: bull board queues', () => {
     expect(await board?.getJobCounts()).toMatchObject({ waiting: 1 });
 
     await board?.pause();
-    expect(await queue.isPaused()).toBe(true);
+    expect(expectOk(await queue.isPaused())).toBe(true);
 
     await board?.resume();
-    expect(await queue.isPaused()).toBe(false);
+    expect(expectOk(await queue.isPaused())).toBe(false);
   });
 
   it('lists no jobs for a port that is not BullMQ', async () => {

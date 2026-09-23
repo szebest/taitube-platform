@@ -140,10 +140,11 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
   }
 
   private async readUserReaction(userId: string, videoId: string): Promise<string | null> {
-    if (this.redis) {
+    const redis = this.redis;
+    if (redis) {
       return unwrapOr(
         await fromPromise(
-          this.redis.hget(this.userKey(userId), videoId),
+          () => redis.hget(this.userKey(userId), videoId),
           this.unavailable('getUserReaction')
         ),
         null
@@ -151,13 +152,7 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     }
 
     if (this.cache) {
-      return unwrapOr(
-        await fromPromise(
-          this.cache.get(this.userKeyFallback(userId, videoId)),
-          this.unavailable('getUserReaction')
-        ),
-        null
-      );
+      return unwrapOr(await this.cache.get(this.userKeyFallback(userId, videoId)), null);
     }
 
     return null;
@@ -170,17 +165,18 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
   ): Promise<Result<void, CacheUnavailable>> {
     const value = reaction ?? 'NONE';
 
-    if (this.redis) {
+    const redis = this.redis;
+    if (redis) {
       const key = this.userKey(userId);
       const written = await fromPromise(
-        this.redis.hset(key, videoId, value),
+        () => redis.hset(key, videoId, value),
         this.unavailable('setUserReaction')
       );
       if (isErr(written)) return written;
 
       return map(
         await fromPromise(
-          this.redis.expire(key, this.userReactionTtlSeconds),
+          () => redis.expire(key, this.userReactionTtlSeconds),
           this.unavailable('setUserReaction')
         ),
         () => undefined
@@ -188,12 +184,10 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     }
 
     if (this.cache) {
-      return map(
-        await fromPromise(
-          this.cache.set(this.userKeyFallback(userId, videoId), value, this.userReactionTtlSeconds),
-          this.unavailable('setUserReaction')
-        ),
-        () => undefined
+      return this.cache.set(
+        this.userKeyFallback(userId, videoId),
+        value,
+        this.userReactionTtlSeconds
       );
     }
 

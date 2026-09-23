@@ -109,9 +109,7 @@ describe('ReactionCountsStore', () => {
     it('serialises concurrent adjustments so none is lost', async () => {
       await store.write(VIDEO_ID, { likesCount: 0, dislikesCount: 0 }, 1);
 
-      await Promise.all(
-        Array.from({ length: 20 }, () => store.adjust(VIDEO_ID, 1, 0))
-      );
+      await Promise.all(Array.from({ length: 20 }, () => store.adjust(VIDEO_ID, 1, 0)));
 
       expect(await store.read(VIDEO_ID)).toMatchObject({ likesCount: 20, dislikesCount: 0 });
     });
@@ -127,18 +125,19 @@ describe('ReactionCountsStore', () => {
       await store.write(VIDEO_ID, COUNTS, 1);
       expectOk(await store.invalidate(VIDEO_ID));
 
-      expect(await cache.get(KEY)).toBeNull();
+      expect(expectOk(await cache.get(KEY))).toBeNull();
     });
   });
 
   describe('with nothing wired up', () => {
     const store = new ReactionCountsStore({ ttlSeconds: 60 });
 
-    it.each([
-      { operation: 'read', run: () => store.read(VIDEO_ID) },
-    ])('reports a miss from $operation', async ({ run }) => {
-      expect(await run()).toBeNull();
-    });
+    it.each([{ operation: 'read', run: () => store.read(VIDEO_ID) }])(
+      'reports a miss from $operation',
+      async ({ run }) => {
+        expect(await run()).toBeNull();
+      }
+    );
 
     it.each([
       { operation: 'write', run: () => store.write(VIDEO_ID, COUNTS, 1) },

@@ -1,5 +1,6 @@
 import type { RenditionRepository } from '@vp/core/repositories';
 import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { expectOk } from '@vp/testing/result';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const RENDITION_720_ID = '00000000-0000-7000-8000-000000000601';
@@ -43,7 +44,7 @@ export function describeRenditionRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('defaults a new rendition to PENDING', async () => {
-      const [stored] = await renditions.findByVideoId(VIDEO_IDS.a);
+      const [stored] = expectOk(await renditions.findByVideoId(VIDEO_IDS.a));
       expect(stored).toMatchObject({
         name: '720p',
         width: 1280,
@@ -55,28 +56,34 @@ export function describeRenditionRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('lists by one video and by several at once', async () => {
-      expect((await renditions.findByVideoId(VIDEO_IDS.b)).map((r) => r.name)).toEqual(['1080p']);
-      expect(await renditions.findByVideoId(VIDEO_IDS.f)).toEqual([]);
+      expect(expectOk(await renditions.findByVideoId(VIDEO_IDS.b)).map((r) => r.name)).toEqual([
+        '1080p',
+      ]);
+      expect(expectOk(await renditions.findByVideoId(VIDEO_IDS.f))).toEqual([]);
 
-      const both = await renditions.findByVideoIds([VIDEO_IDS.a, VIDEO_IDS.b]);
+      const both = expectOk(await renditions.findByVideoIds([VIDEO_IDS.a, VIDEO_IDS.b]));
       expect(both.map((r) => r.name).sort()).toEqual(['1080p', '720p']);
-      expect(await renditions.findByVideoIds([])).toEqual([]);
+      expect(expectOk(await renditions.findByVideoIds([]))).toEqual([]);
     });
 
     it('patches a rendition addressed by video and name', async () => {
-      const updated = await renditions.update(VIDEO_IDS.a, '720p', {
-        status: 'DONE',
-        segmentCount: 12,
-        bytes: 4096,
-        playlistKey: `videos/${VIDEO_IDS.a}/hls/720p/index.m3u8`,
-      });
+      const updated = expectOk(
+        await renditions.update(VIDEO_IDS.a, '720p', {
+          status: 'DONE',
+          segmentCount: 12,
+          bytes: 4096,
+          playlistKey: `videos/${VIDEO_IDS.a}/hls/720p/index.m3u8`,
+        })
+      );
 
       expect(updated).toMatchObject({ status: 'DONE', segmentCount: 12, bytes: 4096 });
-      expect((await renditions.findByVideoId(VIDEO_IDS.a))[0]?.status).toBe('DONE');
+      expect(expectOk(await renditions.findByVideoId(VIDEO_IDS.a))[0]?.status).toBe('DONE');
     });
 
     it('returns null when the rendition to patch does not exist', async () => {
-      expect(await renditions.update(VIDEO_IDS.a, '2160p', { status: 'DONE' })).toBeNull();
+      expect(
+        expectOk(await renditions.update(VIDEO_IDS.a, '2160p', { status: 'DONE' }))
+      ).toBeNull();
     });
   });
 }

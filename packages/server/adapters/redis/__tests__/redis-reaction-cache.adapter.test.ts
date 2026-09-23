@@ -223,7 +223,7 @@ describe('RedisReactionCacheAdapter', () => {
       await adapter.setCounts(VIDEO_ID, COUNTS);
       await adapter.invalidate(VIDEO_ID);
 
-      expect(await cache.get(VIDEO_KEY)).toBeNull();
+      expect(expectOk(await cache.get(VIDEO_KEY))).toBeNull();
     });
   });
 

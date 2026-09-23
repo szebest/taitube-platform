@@ -1,4 +1,6 @@
 import type { StepStatus } from '@vp/domain';
+import type { DatabaseUnavailable } from '@vp/errors';
+import type { Result } from '@vp/result';
 
 export interface ProcessingStepRecord {
   id: string;
@@ -73,11 +75,15 @@ export interface MarkDeadOptions {
 }
 
 export abstract class StepRepository {
-  abstract claim(options: ClaimStepOptions): Promise<ClaimStepResult>;
-  abstract complete(options: CompleteStepOptions): Promise<CompleteStepResult>;
-  abstract fail(options: FailStepOptions): Promise<FailStepResult>;
-  abstract markDead(options: MarkDeadOptions): Promise<boolean>;
-  abstract heartbeat(lockToken: string): Promise<boolean>;
-  abstract findByVideoId(videoId: string): Promise<ProcessingStepRecord[]>;
-  abstract countRunningStale(thresholdMs: number): Promise<number>;
+  abstract claim(options: ClaimStepOptions): Promise<Result<ClaimStepResult, DatabaseUnavailable>>;
+  abstract complete(
+    options: CompleteStepOptions
+  ): Promise<Result<CompleteStepResult, DatabaseUnavailable>>;
+  abstract fail(options: FailStepOptions): Promise<Result<FailStepResult, DatabaseUnavailable>>;
+  abstract markDead(options: MarkDeadOptions): Promise<Result<boolean, DatabaseUnavailable>>;
+  abstract heartbeat(lockToken: string): Promise<Result<boolean, DatabaseUnavailable>>;
+  abstract findByVideoId(
+    videoId: string
+  ): Promise<Result<ProcessingStepRecord[], DatabaseUnavailable>>;
+  abstract countRunningStale(thresholdMs: number): Promise<Result<number, DatabaseUnavailable>>;
 }

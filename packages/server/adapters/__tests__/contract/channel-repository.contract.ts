@@ -49,7 +49,10 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
 
     it.each([
       { name: 'an unknown handle', read: (c: ChannelRepositoryPort) => c.findByHandle('missing') },
-      { name: 'an unknown user', read: (c: ChannelRepositoryPort) => c.findByUserId(OTHER_OWNER_ID) },
+      {
+        name: 'an unknown user',
+        read: (c: ChannelRepositoryPort) => c.findByUserId(OTHER_OWNER_ID),
+      },
       { name: 'an unknown id', read: (c: ChannelRepositoryPort) => c.findById(ABSENT_ID) },
     ])('answers ok(null) for $name, because absence is not a failure', async ({ read }) => {
       expect(expectOk(await read(channels))).toBeNull();

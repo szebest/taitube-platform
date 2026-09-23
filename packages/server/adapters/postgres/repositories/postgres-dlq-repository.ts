@@ -1,4 +1,3 @@
-import { DatabaseError } from '@vp/core/ports';
 import {
   type DlqEntryRecord,
   DlqRepository,
@@ -8,10 +7,11 @@ import {
   type NewOutboxInput,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
+import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { desc, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { drizzleWhere, keysetBefore } from '../scopes/index';
-import { toDbError as dbErr } from './types';
 
 const { dlqEntries: dlq } = schema;
 
@@ -20,75 +20,80 @@ export class PostgresDlqRepository extends DlqRepository {
     super();
   }
 
-  async create(entry: NewDlqEntryInput): Promise<DlqEntryRecord> {
-    try {
-      const rows = await this.db
-        .insert(dlq)
-        .values({
-          id: entry.id,
-          queue: entry.queue,
-          jobId: entry.jobId,
-          videoId: entry.videoId ?? null,
-          payload: entry.payload,
-          errorCode: entry.errorCode ?? null,
-          errorMessage: entry.errorMessage ?? null,
-          stack: entry.stack ?? null,
-          attemptsMade: entry.attemptsMade,
-          workerId: entry.workerId ?? null,
-          status: entry.status ?? 'PARKED',
-        })
-        .onConflictDoUpdate({
-          target: [dlq.queue, dlq.jobId, dlq.attemptsMade],
-          set: {
+  private unavailable(operation: string) {
+    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
+  }
+
+  async create(entry: NewDlqEntryInput): Promise<Result<DlqEntryRecord, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .insert(dlq)
+          .values({
+            id: entry.id,
+            queue: entry.queue,
+            jobId: entry.jobId,
+            videoId: entry.videoId ?? null,
+            payload: entry.payload,
             errorCode: entry.errorCode ?? null,
             errorMessage: entry.errorMessage ?? null,
             stack: entry.stack ?? null,
+            attemptsMade: entry.attemptsMade,
             workerId: entry.workerId ?? null,
-          },
-        })
-        .returning();
+            status: entry.status ?? 'PARKED',
+          })
+          .onConflictDoUpdate({
+            target: [dlq.queue, dlq.jobId, dlq.attemptsMade],
+            set: {
+              errorCode: entry.errorCode ?? null,
+              errorMessage: entry.errorMessage ?? null,
+              stack: entry.stack ?? null,
+              workerId: entry.workerId ?? null,
+            },
+          })
+          .returning(),
+      this.unavailable('create')
+    );
 
-      const created = rows[0];
-      if (!created) throw new DatabaseError('Failed to create DLQ entry: empty return');
-      return created;
-    } catch (err: unknown) {
-      throw dbErr(`Failed to create DLQ entry for job ${entry.jobId}`, err);
-    }
+    if (!rows.ok) return rows;
+    const [created] = rows.value;
+    return created ? ok(created) : err(databaseUnavailable('create', 'insert returned no row'));
   }
 
-  async findById(id: string): Promise<DlqEntryRecord | null> {
-    try {
-      const rows = await this.db.select().from(dlq).where(eq(dlq.id, id)).limit(1);
+  async findById(id: string): Promise<Result<DlqEntryRecord | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () => this.db.select().from(dlq).where(eq(dlq.id, id)).limit(1),
+      this.unavailable('findById')
+    );
 
-      return rows[0] ?? null;
-    } catch (err: unknown) {
-      throw dbErr(`Failed to get DLQ entry ${id}`, err);
-    }
+    return map(rows, ([row]) => row ?? null);
   }
 
-  async list(options: ListDlqEntriesOptions): Promise<DlqEntryRecord[]> {
+  async list(
+    options: ListDlqEntriesOptions
+  ): Promise<Result<DlqEntryRecord[], DatabaseUnavailable>> {
     const { cursor, limit, status } = options;
-    try {
-      const rows = await this.db
-        .select()
-        .from(dlq)
-        .where(
-          drizzleWhere(
-            status ? eq(dlq.status, status) : undefined,
-            keysetBefore(
-              dlq.createdAt,
-              dlq.id,
-              cursor && { sort: cursor.createdAt, tie: cursor.id }
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(dlq)
+          .where(
+            drizzleWhere(
+              status ? eq(dlq.status, status) : undefined,
+              keysetBefore(
+                dlq.createdAt,
+                dlq.id,
+                cursor && { sort: cursor.createdAt, tie: cursor.id }
+              )
             )
           )
-        )
-        .orderBy(desc(dlq.createdAt), desc(dlq.id))
-        .limit(limit + 1);
+          .orderBy(desc(dlq.createdAt), desc(dlq.id))
+          .limit(limit + 1),
+      this.unavailable('list')
+    );
 
-      return rows as DlqEntryRecord[];
-    } catch (err: unknown) {
-      throw dbErr('Failed to list DLQ entries', err);
-    }
+    return map(rows, (found) => found as DlqEntryRecord[]);
   }
 
   async updateStatus(
@@ -96,15 +101,24 @@ export class PostgresDlqRepository extends DlqRepository {
     status: DlqStatus,
     patch?: { replayedAt?: Date },
     outbox?: NewOutboxInput
-  ): Promise<DlqEntryRecord | null> {
-    try {
-      const updateData: { status: DlqStatus; replayedAt?: Date } = { status };
-      if (patch?.replayedAt !== undefined) {
-        updateData.replayedAt = patch.replayedAt;
-      }
+  ): Promise<Result<DlqEntryRecord | null, DatabaseUnavailable>> {
+    const updateData: { status: DlqStatus; replayedAt?: Date } = { status };
+    if (patch?.replayedAt !== undefined) {
+      updateData.replayedAt = patch.replayedAt;
+    }
 
-      if (outbox) {
-        return await this.db.transaction(async (tx) => {
+    if (!outbox) {
+      const rows = await fromPromise(
+        () => this.db.update(dlq).set(updateData).where(eq(dlq.id, id)).returning(),
+        this.unavailable('updateStatus')
+      );
+
+      return map(rows, ([row]) => row ?? null);
+    }
+
+    const committed = await fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
           const rows = await tx.update(dlq).set(updateData).where(eq(dlq.id, id)).returning();
 
           await tx.insert(schema.outbox).values({
@@ -116,14 +130,10 @@ export class PostgresDlqRepository extends DlqRepository {
           });
 
           return rows[0] ?? null;
-        });
-      }
+        }),
+      this.unavailable('updateStatus')
+    );
 
-      const rows = await this.db.update(dlq).set(updateData).where(eq(dlq.id, id)).returning();
-
-      return rows[0] ?? null;
-    } catch (err: unknown) {
-      throw dbErr(`Failed to update DLQ entry status ${id}`, err);
-    }
+    return committed;
   }
 }

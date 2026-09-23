@@ -1,4 +1,6 @@
-import { DatabaseClient, DatabaseError } from '@vp/core/ports';
+import { DatabaseClient } from '@vp/core/ports';
+import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
+import { type Result, fromPromise, map } from '@vp/result';
 import postgres, { type Sql } from 'postgres';
 
 export interface PostgresDatabaseClientConfig {
@@ -32,45 +34,53 @@ export class PostgresDatabaseClient extends DatabaseClient {
     return this.sql;
   }
 
-  async checkHealth(): Promise<boolean> {
-    try {
-      await this.sql`SELECT 1`;
-      return true;
-    } catch {
-      return false;
-    }
+  private unavailable(operation: string) {
+    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
   }
 
-  async query<T = unknown>(queryText: string, params: unknown[] = []): Promise<T[]> {
-    try {
-      return (await this.sql.unsafe(queryText, params as any[])) as T[];
-    } catch (err: unknown) {
-      throw new DatabaseError(`Database query failed: ${(err as Error).message}`, { cause: err });
-    }
+  async checkHealth(): Promise<Result<void, DatabaseUnavailable>> {
+    const probed = await fromPromise(() => this.sql`SELECT 1`, this.unavailable('checkHealth'));
+    return map(probed, () => undefined);
   }
 
-  async execute(queryText: string, params: unknown[] = []): Promise<number> {
-    try {
-      const res = await this.sql.unsafe(queryText, params as any[]);
-      return res.count ?? 0;
-    } catch (err: unknown) {
-      throw new DatabaseError(`Database execute failed: ${(err as Error).message}`, { cause: err });
-    }
+  async query<T = unknown>(
+    queryText: string,
+    params: unknown[] = []
+  ): Promise<Result<T[], DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () => this.sql.unsafe(queryText, params as never[]),
+      this.unavailable('query')
+    );
+
+    return map(rows, (found) => found as unknown as T[]);
   }
 
-  async transaction<T>(fn: (tx: DatabaseClient) => Promise<T>): Promise<T> {
-    try {
-      const res = await (this.sql.begin as any)(async (txSql: unknown) => {
-        const txClient = new PostgresDatabaseClient({ sql: txSql as Sql });
-        return await fn(txClient);
-      });
-      return res as T;
-    } catch (err: unknown) {
-      throw new DatabaseError(`Transaction failed: ${(err as Error).message}`, { cause: err });
-    }
+  async execute(
+    queryText: string,
+    params: unknown[] = []
+  ): Promise<Result<number, DatabaseUnavailable>> {
+    const executed = await fromPromise(
+      () => this.sql.unsafe(queryText, params as never[]),
+      this.unavailable('execute')
+    );
+
+    return map(executed, (res) => res.count ?? 0);
   }
 
-  async close(): Promise<void> {
-    await this.sql.end();
+  async transaction<T, E>(
+    fn: (tx: DatabaseClient) => Promise<Result<T, E>>
+  ): Promise<Result<T, E | DatabaseUnavailable>> {
+    const committed = await fromPromise(
+      () =>
+        this.sql.begin((txSql) => fn(new PostgresDatabaseClient({ sql: txSql as unknown as Sql }))),
+      this.unavailable('transaction')
+    );
+
+    return committed.ok ? committed.value : committed;
+  }
+
+  async close(): Promise<Result<void, DatabaseUnavailable>> {
+    const closed = await fromPromise(() => this.sql.end(), this.unavailable('close'));
+    return map(closed, () => undefined);
   }
 }

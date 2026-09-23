@@ -2,7 +2,6 @@ import * as fs from 'node:fs';
 import {
   StorageClient,
   type StorageDeleteObjectsResult,
-  StorageError,
   type StorageListObjectsParams,
   type StorageListObjectsResult,
   type StorageObjectMetadata,
@@ -12,6 +11,8 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
+import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
+import { type Result, err, ok } from '@vp/result';
 import { measureStorageOp } from '../storage-metrics-helper';
 
 interface StoredObject {
@@ -33,11 +34,13 @@ export class InMemoryStorageClient extends StorageClient {
     return `${bucket}/${key}`;
   }
 
-  async checkHealth(): Promise<boolean> {
-    return this.isHealthy;
+  async checkHealth(): Promise<Result<void, StorageUnavailable>> {
+    return this.isHealthy ? ok() : err(storageUnavailable('checkHealth'));
   }
 
-  async uploadObject(params: StorageUploadParams): Promise<StorageUploadResult> {
+  async uploadObject(
+    params: StorageUploadParams
+  ): Promise<Result<StorageUploadResult, StorageUnavailable>> {
     return measureStorageOp('put', params.bucket, async () => {
       let buf: Buffer;
       if (Buffer.isBuffer(params.body)) {
@@ -63,57 +66,70 @@ export class InMemoryStorageClient extends StorageClient {
         etag,
       });
 
-      return {
+      return ok({
         key: params.key,
         etag,
-      };
+      });
     });
   }
 
-  async downloadObject(bucket: string, key: string, targetFilePath: string): Promise<boolean> {
+  async downloadObject(
+    bucket: string,
+    key: string,
+    targetFilePath: string
+  ): Promise<Result<boolean, StorageUnavailable>> {
     return measureStorageOp('get', bucket, async () => {
       const item = this.storage.get(this.getStorageKey(bucket, key));
       if (!item) {
-        return false;
+        return ok(false);
       }
       fs.writeFileSync(targetFilePath, item.data);
-      return true;
+      return ok(true);
     });
   }
 
-  async headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null> {
+  async headObject(
+    bucket: string,
+    key: string
+  ): Promise<Result<StorageObjectMetadata | null, StorageUnavailable>> {
     return measureStorageOp('head', bucket, async () => {
       const item = this.storage.get(this.getStorageKey(bucket, key));
       if (!item) {
-        return null;
+        return ok(null);
       }
-      return {
+      return ok({
         contentLength: item.data.length,
         contentType: item.contentType,
         cacheControl: item.cacheControl,
         etag: item.etag,
-      };
+      });
     });
   }
 
-  async deleteObject(bucket: string, key: string): Promise<void> {
+  async deleteObject(bucket: string, key: string): Promise<Result<void, StorageUnavailable>> {
     return measureStorageOp('delete', bucket, async () => {
       this.storage.delete(this.getStorageKey(bucket, key));
+      return ok();
     });
   }
 
-  async deleteObjects(bucket: string, keys: string[]): Promise<StorageDeleteObjectsResult> {
+  async deleteObjects(
+    bucket: string,
+    keys: string[]
+  ): Promise<Result<StorageDeleteObjectsResult, StorageUnavailable>> {
     const deleted: string[] = [];
     return measureStorageOp('delete', bucket, async () => {
       for (const key of keys) {
         this.storage.delete(this.getStorageKey(bucket, key));
         deleted.push(key);
       }
-      return { deletedKeys: deleted };
+      return ok({ deletedKeys: deleted });
     });
   }
 
-  async listObjects(params: StorageListObjectsParams): Promise<StorageListObjectsResult> {
+  async listObjects(
+    params: StorageListObjectsParams
+  ): Promise<Result<StorageListObjectsResult, StorageUnavailable>> {
     return measureStorageOp('list', params.bucket, async () => {
       const bucketPrefix = `${params.bucket}/`;
       const fullPrefix = `${params.bucket}/${params.prefix ?? ''}`;
@@ -135,62 +151,66 @@ export class InMemoryStorageClient extends StorageClient {
       const slice = filteredKeys.slice(0, maxKeys);
       const isTruncated = filteredKeys.length > maxKeys;
       const lastKey = slice.length > 0 ? slice[slice.length - 1] : undefined;
-      return {
+      return ok({
         keys: slice,
         nextContinuationToken: isTruncated ? lastKey : undefined,
         isTruncated,
-      };
+      });
     });
   }
 
-  async purgePrefix(bucket: string, prefix: string): Promise<number> {
+  async purgePrefix(bucket: string, prefix: string): Promise<Result<number, StorageUnavailable>> {
     let totalDeleted = 0;
     let continuationToken: string | undefined;
     do {
-      const page = await this.listObjects({
+      const listed = await this.listObjects({
         bucket,
         prefix,
         continuationToken,
         maxKeys: 1000,
       });
+      if (!listed.ok) return listed;
+      const page = listed.value;
       if (page.keys.length > 0) {
-        await this.deleteObjects(bucket, page.keys);
+        const removed = await this.deleteObjects(bucket, page.keys);
+        if (!removed.ok) return removed;
         totalDeleted += page.keys.length;
       }
       continuationToken = page.isTruncated ? page.nextContinuationToken : undefined;
     } while (continuationToken);
-    return totalDeleted;
+    return ok(totalDeleted);
   }
 
-  async getObject(bucket: string, key: string): Promise<Buffer> {
+  /** A missing object is a failure here as it is in S3: `getObject` has no absent answer. */
+  async getObject(bucket: string, key: string): Promise<Result<Buffer, StorageUnavailable>> {
     return measureStorageOp('get', bucket, async () => {
       const item = this.storage.get(this.getStorageKey(bucket, key));
-      if (!item) {
-        throw new StorageError(`Object not found: ${bucket}/${key}`);
-      }
-      return item.data;
+      return item ? ok(item.data) : err(storageUnavailable('getObject', `${bucket}/${key}`));
     });
   }
 
   async createPresignedPutUrl(
     params: StoragePresignedPutParams
-  ): Promise<StoragePresignedPutResult> {
+  ): Promise<Result<StoragePresignedPutResult, StorageUnavailable>> {
     const expiresIn = params.expiresInSeconds ?? 900;
-    return {
+    return ok({
       url: `http://localhost:9000/${params.bucket}/${params.key}?mock-presigned=true`,
       headers: {
         'content-type': params.contentType,
         'content-length': String(params.contentLength ?? 0),
       },
       expiresAt: new Date(Date.now() + expiresIn * 1000),
-    };
+    });
   }
 
-  async createPresignedGetUrl(params: StoragePresignedGetParams): Promise<string> {
-    return `http://localhost:9000/${params.bucket}/${params.key}?mock-presigned-get=true`;
+  async createPresignedGetUrl(
+    params: StoragePresignedGetParams
+  ): Promise<Result<string, StorageUnavailable>> {
+    return ok(`http://localhost:9000/${params.bucket}/${params.key}?mock-presigned-get=true`);
   }
 
-  async close(): Promise<void> {
+  async close(): Promise<Result<void, StorageUnavailable>> {
     this.storage.clear();
+    return ok();
   }
 }

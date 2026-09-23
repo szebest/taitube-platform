@@ -50,7 +50,7 @@ export class PostgresVideoRepository extends VideoRepository {
 
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db.select().from(v).where(eq(v.id, id)).limit(1),
+      () => this.db.select().from(v).where(eq(v.id, id)).limit(1),
       this.unavailable('findById')
     );
 
@@ -64,15 +64,15 @@ export class PostgresVideoRepository extends VideoRepository {
 
     const [renditions, steps, events] = await Promise.all([
       fromPromise(
-        this.db.select().from(rn).where(eq(rn.videoId, id)),
+        () => this.db.select().from(rn).where(eq(rn.videoId, id)),
         this.unavailable('findWithDetails')
       ),
       fromPromise(
-        this.db.select().from(ps).where(eq(ps.videoId, id)),
+        () => this.db.select().from(ps).where(eq(ps.videoId, id)),
         this.unavailable('findWithDetails')
       ),
       fromPromise(
-        this.db.select().from(ve).where(eq(ve.videoId, id)),
+        () => this.db.select().from(ve).where(eq(ve.videoId, id)),
         this.unavailable('findWithDetails')
       ),
     ]);
@@ -99,10 +99,11 @@ export class PostgresVideoRepository extends VideoRepository {
     };
 
     const rows = await fromPromise(
-      this.db
-        .insert(v)
-        .values(vals as VideoInsert)
-        .returning(),
+      () =>
+        this.db
+          .insert(v)
+          .values(vals as VideoInsert)
+          .returning(),
       this.unavailable('create')
     );
 
@@ -123,12 +124,13 @@ export class PostgresVideoRepository extends VideoRepository {
     );
 
     return await fromPromise(
-      this.db
-        .select()
-        .from(v)
-        .where(whereClause)
-        .orderBy(desc(v.createdAt), desc(v.id))
-        .limit(limit + 1),
+      () =>
+        this.db
+          .select()
+          .from(v)
+          .where(whereClause)
+          .orderBy(desc(v.createdAt), desc(v.id))
+          .limit(limit + 1),
       this.unavailable('listByOwner')
     );
   }
@@ -141,18 +143,19 @@ export class PostgresVideoRepository extends VideoRepository {
     const instant = new Date(instantMs);
 
     const counted = await fromPromise(
-      this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(scope),
+      () => this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(scope),
       this.unavailable('listPublic')
     );
     if (!counted.ok) return counted;
 
     const rows = await fromPromise(
-      this.db
-        .select()
-        .from(v)
-        .where(drizzleWhere(scope, publicFeedCursorScope(options, instant)))
-        .orderBy(...publicFeedOrderBy(options, instant))
-        .limit(options.limit + 1),
+      () =>
+        this.db
+          .select()
+          .from(v)
+          .where(drizzleWhere(scope, publicFeedCursorScope(options, instant)))
+          .orderBy(...publicFeedOrderBy(options, instant))
+          .limit(options.limit + 1),
       this.unavailable('listPublic')
     );
 
@@ -169,36 +172,41 @@ export class PostgresVideoRepository extends VideoRepository {
     const { videoId, expectedVersion, patch, userId } = options;
 
     const committed = await fromPromise(
-      this.db.transaction(async (tx): Promise<Result<VideoRecord | null, VersionConflict>> => {
-        const [updated] = await tx
-          .update(v)
-          .set({
-            version: sql`${v.version} + 1`,
-            updatedAt: new Date(),
-            ...patch,
-          })
-          .where(and(eq(v.id, videoId), eq(v.version, expectedVersion)))
-          .returning();
+      () =>
+        this.db.transaction(async (tx): Promise<Result<VideoRecord | null, VersionConflict>> => {
+          const [updated] = await tx
+            .update(v)
+            .set({
+              version: sql`${v.version} + 1`,
+              updatedAt: new Date(),
+              ...patch,
+            })
+            .where(and(eq(v.id, videoId), eq(v.version, expectedVersion)))
+            .returning();
 
-        if (!updated) {
-          // A zero-row update is a stale version or a video that is not there; only the second is ok(null).
-          const [present] = await tx.select({ id: v.id }).from(v).where(eq(v.id, videoId)).limit(1);
-          return present ? err(versionConflict(videoId, expectedVersion)) : ok(null);
-        }
+          if (!updated) {
+            // A zero-row update is a stale version or a video that is not there; only the second is ok(null).
+            const [present] = await tx
+              .select({ id: v.id })
+              .from(v)
+              .where(eq(v.id, videoId))
+              .limit(1);
+            return present ? err(versionConflict(videoId, expectedVersion)) : ok(null);
+          }
 
-        await tx.insert(ve).values({
-          videoId,
-          type: 'video.metadata_updated',
-          payload: {
-            patch,
-            expectedVersion,
-            newVersion: updated.version,
-            ...(userId ? { requestedBy: userId } : {}),
-          },
-          createdAt: new Date(),
-        });
-        return ok(updated);
-      }),
+          await tx.insert(ve).values({
+            videoId,
+            type: 'video.metadata_updated',
+            payload: {
+              patch,
+              expectedVersion,
+              newVersion: updated.version,
+              ...(userId ? { requestedBy: userId } : {}),
+            },
+            createdAt: new Date(),
+          });
+          return ok(updated);
+        }),
       this.unavailable('updateMetadata')
     );
 
@@ -212,44 +220,45 @@ export class PostgresVideoRepository extends VideoRepository {
     const effectiveTraceId = traceId || (activeSpan ? activeSpan.spanContext().traceId : null);
 
     return await fromPromise(
-      this.db.transaction(async (tx) => {
-        const statusCond = Array.isArray(from)
-          ? inArray(v.status, from as VideoStatus[])
-          : eq(v.status, from as VideoStatus);
+      () =>
+        this.db.transaction(async (tx) => {
+          const statusCond = Array.isArray(from)
+            ? inArray(v.status, from as VideoStatus[])
+            : eq(v.status, from as VideoStatus);
 
-        const rows = await tx
-          .update(v)
-          .set({
-            ...patch,
-            status: to,
-            updatedAt: new Date(),
-            ...(to === 'READY' ? { readyAt: new Date() } : {}),
-          } as VideoInsert)
-          .where(and(eq(v.id, videoId), statusCond))
-          .returning({ id: v.id });
+          const rows = await tx
+            .update(v)
+            .set({
+              ...patch,
+              status: to,
+              updatedAt: new Date(),
+              ...(to === 'READY' ? { readyAt: new Date() } : {}),
+            } as VideoInsert)
+            .where(and(eq(v.id, videoId), statusCond))
+            .returning({ id: v.id });
 
-        if (rows.length === 0) return false;
+          if (rows.length === 0) return false;
 
-        await tx.insert(ve).values({
-          videoId,
-          type: effectiveEventType,
-          payload: eventPayload,
-          traceId: effectiveTraceId,
-          createdAt: new Date(),
-        } as VideoEventInsert);
-
-        if (options.outbox) {
-          await tx.insert(schema.outbox).values({
-            id: options.outbox.id || sql`gen_random_uuid()`,
-            kind: options.outbox.kind,
-            payload: options.outbox.payload,
+          await tx.insert(ve).values({
+            videoId,
+            type: effectiveEventType,
+            payload: eventPayload,
+            traceId: effectiveTraceId,
             createdAt: new Date(),
-            attempts: 0,
-          });
-        }
+          } as VideoEventInsert);
 
-        return true;
-      }),
+          if (options.outbox) {
+            await tx.insert(schema.outbox).values({
+              id: options.outbox.id || sql`gen_random_uuid()`,
+              kind: options.outbox.kind,
+              payload: options.outbox.payload,
+              createdAt: new Date(),
+              attempts: 0,
+            });
+          }
+
+          return true;
+        }),
       this.unavailable('transition')
     );
   }
@@ -290,7 +299,13 @@ export class PostgresVideoRepository extends VideoRepository {
     );
 
     const rows = await fromPromise(
-      this.db.select().from(v).where(whereClause).for('update', { skipLocked: true }).limit(limit),
+      () =>
+        this.db
+          .select()
+          .from(v)
+          .where(whereClause)
+          .for('update', { skipLocked: true })
+          .limit(limit),
       this.unavailable('scan')
     );
 
@@ -299,10 +314,11 @@ export class PostgresVideoRepository extends VideoRepository {
 
   async hardDelete(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db
-        .delete(v)
-        .where(and(eq(v.id, id), eq(v.status, 'DELETED')))
-        .returning({ id: v.id }),
+      () =>
+        this.db
+          .delete(v)
+          .where(and(eq(v.id, id), eq(v.status, 'DELETED')))
+          .returning({ id: v.id }),
       this.unavailable('hardDelete')
     );
 
@@ -317,7 +333,7 @@ export class PostgresVideoRepository extends VideoRepository {
     );
 
     const rows = await fromPromise(
-      this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(whereClause),
+      () => this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(whereClause),
       this.unavailable('countInFlightByOwner')
     );
 
@@ -326,10 +342,11 @@ export class PostgresVideoRepository extends VideoRepository {
 
   async countByStatus(): Promise<Result<Record<string, number>, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db
-        .select({ status: v.status, count: sql<number>`count(*)::int` })
-        .from(v)
-        .groupBy(v.status),
+      () =>
+        this.db
+          .select({ status: v.status, count: sql<number>`count(*)::int` })
+          .from(v)
+          .groupBy(v.status),
       this.unavailable('countByStatus')
     );
 
@@ -348,10 +365,11 @@ export class PostgresVideoRepository extends VideoRepository {
     dislikesCount: number
   ): Promise<Result<void, DatabaseUnavailable>> {
     const updated = await fromPromise(
-      this.db
-        .update(v)
-        .set({ likesCount, dislikesCount, updatedAt: new Date() })
-        .where(eq(v.id, videoId)),
+      () =>
+        this.db
+          .update(v)
+          .set({ likesCount, dislikesCount, updatedAt: new Date() })
+          .where(eq(v.id, videoId)),
       this.unavailable('updateReactionCounters')
     );
 

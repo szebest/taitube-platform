@@ -1,4 +1,6 @@
 import { type FlowJobNode, FlowProducerPort, type JobQueue, type QueueJob } from '@vp/core/ports';
+import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
+import { type Result, err, ok } from '@vp/result';
 import { InMemoryJobQueue } from './in-memory-job-queue';
 
 export class InMemoryFlowProducer extends FlowProducerPort {
@@ -14,11 +16,11 @@ export class InMemoryFlowProducer extends FlowProducerPort {
     this.isHealthy = healthy;
   }
 
-  async checkHealth(): Promise<boolean> {
-    return this.isHealthy;
+  async checkHealth(): Promise<Result<void, QueueUnavailable>> {
+    return this.isHealthy ? ok() : err(queueUnavailable('checkHealth'));
   }
 
-  async add<T = unknown>(node: FlowJobNode<T>): Promise<unknown> {
+  async add<T = unknown>(node: FlowJobNode<T>): Promise<Result<unknown, QueueUnavailable>> {
     const parentQueue = this.getQueue(node.queueName);
     const parentJobId = node.opts?.jobId ?? `parent-${Date.now()}`;
 
@@ -29,7 +31,7 @@ export class InMemoryFlowProducer extends FlowProducerPort {
 
     // 1. Add parent in 'waiting-children' state if children exist, or 'waiting' if no children
     const initialState = children.length > 0 ? 'waiting-children' : 'waiting';
-    const parentJob =
+    const added =
       parentQueue instanceof InMemoryJobQueue
         ? await parentQueue.add(node.name, node.data, {
             ...node.opts,
@@ -40,13 +42,14 @@ export class InMemoryFlowProducer extends FlowProducerPort {
             ...node.opts,
             jobId: parentJobId,
           });
+    if (!added.ok) return added;
+    const parentJob = added.value;
 
     // Provide getChildrenValues to parent
-    parentJob.getChildrenValues = async <R = Record<string, unknown>>() =>
-      childrenValues as R;
+    parentJob.getChildrenValues = async <R = Record<string, unknown>>() => childrenValues as R;
 
     if (children.length === 0) {
-      return { job: parentJob, children: [] };
+      return ok({ job: parentJob, children: [] });
     }
 
     // 2. Add each child and hook into completion / failure
@@ -99,12 +102,15 @@ export class InMemoryFlowProducer extends FlowProducerPort {
         ...childNode.opts,
         jobId: childJobId,
       });
+      if (!childJob.ok) return childJob;
 
-      childJobs.push(childJob);
+      childJobs.push(childJob.value);
     }
 
-    return { job: parentJob, children: childJobs };
+    return ok({ job: parentJob, children: childJobs });
   }
 
-  async close(): Promise<void> {}
+  async close(): Promise<Result<void, QueueUnavailable>> {
+    return ok();
+  }
 }

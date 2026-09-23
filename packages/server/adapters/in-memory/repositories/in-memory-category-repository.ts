@@ -5,7 +5,11 @@ import type {
   ListCategoriesOptions,
   UpdateCategoryInput,
 } from '@vp/domain';
-import { type CategorySlugConflict, type DatabaseUnavailable, categorySlugConflict } from '@vp/errors';
+import {
+  type CategorySlugConflict,
+  type DatabaseUnavailable,
+  categorySlugConflict,
+} from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
@@ -41,9 +45,7 @@ export class InMemoryCategoryRepository implements CategoryRepositoryPort {
     return null;
   }
 
-  async findAll(
-    options?: ListCategoriesOptions
-  ): Promise<Result<Category[], DatabaseUnavailable>> {
+  async findAll(options?: ListCategoriesOptions): Promise<Result<Category[], DatabaseUnavailable>> {
     const all = Array.from(this.categories.values()).filter(
       (category) => !options?.activeOnly || category.isActive
     );

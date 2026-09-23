@@ -44,7 +44,10 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
   ): Promise<Result<boolean | null, CacheUnavailable>> {
     const key = this.userKey(userId);
 
-    const exists = await fromPromise(this.redis.exists(key), this.unavailable('isSubscribed'));
+    const exists = await fromPromise(
+      () => this.redis.exists(key),
+      this.unavailable('isSubscribed')
+    );
 
     return await andThenAsync(
       exists,

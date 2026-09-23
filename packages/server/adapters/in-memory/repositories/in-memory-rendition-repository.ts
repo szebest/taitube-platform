@@ -3,6 +3,8 @@ import {
   type RenditionRecord,
   RenditionRepository,
 } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, ok } from '@vp/result';
 
 export class InMemoryRenditionRepository extends RenditionRepository {
   private readonly renditionsMap: Map<string, RenditionRecord>;
@@ -12,7 +14,7 @@ export class InMemoryRenditionRepository extends RenditionRepository {
     this.renditionsMap = renditionsMap;
   }
 
-  async create(data: NewRenditionInput): Promise<RenditionRecord> {
+  async create(data: NewRenditionInput): Promise<Result<RenditionRecord, DatabaseUnavailable>> {
     const now = new Date();
     const id = data.id ?? `rend-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const record: RenditionRecord = {
@@ -31,20 +33,22 @@ export class InMemoryRenditionRepository extends RenditionRepository {
       createdAt: now,
     };
     this.renditionsMap.set(id, record);
-    return record;
+    return ok(record);
   }
 
-  async findByVideoId(videoId: string): Promise<RenditionRecord[]> {
+  async findByVideoId(videoId: string): Promise<Result<RenditionRecord[], DatabaseUnavailable>> {
     const results: RenditionRecord[] = [];
     for (const r of this.renditionsMap.values()) {
       if (r.videoId === videoId) {
         results.push(r);
       }
     }
-    return results;
+    return ok(results);
   }
 
-  async findByVideoIds(videoIds: string[]): Promise<RenditionRecord[]> {
+  async findByVideoIds(
+    videoIds: string[]
+  ): Promise<Result<RenditionRecord[], DatabaseUnavailable>> {
     const idSet = new Set(videoIds);
     const results: RenditionRecord[] = [];
     for (const r of this.renditionsMap.values()) {
@@ -52,20 +56,20 @@ export class InMemoryRenditionRepository extends RenditionRepository {
         results.push(r);
       }
     }
-    return results;
+    return ok(results);
   }
 
   async update(
     videoId: string,
     name: string,
     patch: Partial<RenditionRecord>
-  ): Promise<RenditionRecord | null> {
+  ): Promise<Result<RenditionRecord | null, DatabaseUnavailable>> {
     const rendition = Array.from(this.renditionsMap.values()).find(
       (r) => r.videoId === videoId && r.name === name
     );
-    if (!rendition) return null;
+    if (!rendition) return ok(null);
     Object.assign(rendition, patch);
-    return { ...rendition };
+    return ok({ ...rendition });
   }
 
   clear(): void {

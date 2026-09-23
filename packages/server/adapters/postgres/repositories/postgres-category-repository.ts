@@ -45,16 +45,14 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
       isUniqueViolation(cause) ? categorySlugConflict(slug) : databaseUnavailable(operation, cause);
   }
 
-  async findAll(
-    options?: ListCategoriesOptions
-  ): Promise<Result<Category[], DatabaseUnavailable>> {
+  async findAll(options?: ListCategoriesOptions): Promise<Result<Category[], DatabaseUnavailable>> {
     let query = this.db.select().from(categories).$dynamic();
     if (options?.activeOnly) {
       query = query.where(eq(categories.isActive, true));
     }
 
     const rows = await fromPromise(
-      query.orderBy(asc(categories.sortOrder), asc(categories.name)),
+      () => query.orderBy(asc(categories.sortOrder), asc(categories.name)),
       this.unavailable('findAll')
     );
 
@@ -63,7 +61,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
 
   async findById(id: string): Promise<Result<Category | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db.select().from(categories).where(eq(categories.id, id)).limit(1),
+      () => this.db.select().from(categories).where(eq(categories.id, id)).limit(1),
       this.unavailable('findById')
     );
 
@@ -72,7 +70,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
 
   async findBySlug(slug: string): Promise<Result<Category | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db.select().from(categories).where(eq(categories.slug, slug)).limit(1),
+      () => this.db.select().from(categories).where(eq(categories.slug, slug)).limit(1),
       this.unavailable('findBySlug')
     );
 
@@ -83,43 +81,44 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
     input: CreateCategoryInput
   ): Promise<Result<Category, DatabaseUnavailable | CategorySlugConflict>> {
     const rows = await fromPromise(
-      this.db
-        .insert(categories)
-        .values({
-          id: input.id ?? uuidv7(),
-          slug: input.slug,
-          name: input.name,
-          description: input.description ?? null,
-          iconUrl: input.iconUrl ?? null,
-          sortOrder: input.sortOrder ?? 0,
-          isActive: input.isActive ?? true,
-        })
-        .returning(),
+      () =>
+        this.db
+          .insert(categories)
+          .values({
+            id: input.id ?? uuidv7(),
+            slug: input.slug,
+            name: input.name,
+            description: input.description ?? null,
+            iconUrl: input.iconUrl ?? null,
+            sortOrder: input.sortOrder ?? 0,
+            isActive: input.isActive ?? true,
+          })
+          .returning(),
       this.conflict(input.slug, 'create')
     );
 
     if (!rows.ok) return rows;
     const [row] = rows.value;
-    return row
-      ? ok(mapRow(row))
-      : err(databaseUnavailable('create', 'insert returned no row'));
+    return row ? ok(mapRow(row)) : err(databaseUnavailable('create', 'insert returned no row'));
   }
 
   async update(
     id: string,
     input: UpdateCategoryInput
   ): Promise<Result<Category | null, DatabaseUnavailable | CategorySlugConflict>> {
-    if (input.slug) {
+    const slug = input.slug;
+    if (slug) {
       const conflicting = await fromPromise(
-        this.db
-          .select({ id: categories.id })
-          .from(categories)
-          .where(and(eq(categories.slug, input.slug), ne(categories.id, id)))
-          .limit(1),
+        () =>
+          this.db
+            .select({ id: categories.id })
+            .from(categories)
+            .where(and(eq(categories.slug, slug), ne(categories.id, id)))
+            .limit(1),
         this.unavailable('update')
       );
       if (!conflicting.ok) return conflicting;
-      if (conflicting.value[0]) return err(categorySlugConflict(input.slug));
+      if (conflicting.value[0]) return err(categorySlugConflict(slug));
     }
 
     const values: Partial<typeof categories.$inferInsert> = { updatedAt: new Date() };
@@ -131,7 +130,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
     if (input.isActive !== undefined) values.isActive = input.isActive;
 
     const rows = await fromPromise(
-      this.db.update(categories).set(values).where(eq(categories.id, id)).returning(),
+      () => this.db.update(categories).set(values).where(eq(categories.id, id)).returning(),
       this.conflict(input.slug ?? '', 'update')
     );
 
@@ -140,7 +139,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
 
   async delete(id: string): Promise<Result<void, DatabaseUnavailable>> {
     const deleted = await fromPromise(
-      this.db.delete(categories).where(eq(categories.id, id)),
+      () => this.db.delete(categories).where(eq(categories.id, id)),
       this.unavailable('delete')
     );
 
@@ -149,10 +148,11 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
 
   async countVideos(categoryId: string): Promise<Result<number, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      this.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(videos)
-        .where(and(eq(videos.categoryId, categoryId), sql`${videos.deletedAt} IS NULL`)),
+      () =>
+        this.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(videos)
+          .where(and(eq(videos.categoryId, categoryId), sql`${videos.deletedAt} IS NULL`)),
       this.unavailable('countVideos')
     );
 

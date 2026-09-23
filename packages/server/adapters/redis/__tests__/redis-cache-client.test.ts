@@ -1,6 +1,10 @@
-import { CacheError } from '@vp/core/ports';
+import { type CacheUnavailable, ErrorCodes } from '@vp/errors';
+import { type Result, isOk } from '@vp/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { RedisCacheClient } from '../redis-cache-client';
 import { FakeRedis } from './fake-redis';
+
+type Cached = Promise<Result<unknown, CacheUnavailable>>;
 
 describe('RedisCacheClient', () => {
   let redis: FakeRedis;
@@ -14,10 +18,10 @@ describe('RedisCacheClient', () => {
   describe('key/value', () => {
     it('round-trips a value', async () => {
       await cache.set('k', 'v');
-      expect(await cache.get('k')).toBe('v');
+      expect(expectOk(await cache.get('k'))).toBe('v');
 
       await cache.del('k');
-      expect(await cache.get('k')).toBeNull();
+      expect(expectOk(await cache.get('k'))).toBeNull();
     });
 
     it('passes the ttl through as an EX expiry', async () => {
@@ -29,30 +33,34 @@ describe('RedisCacheClient', () => {
     });
 
     it.each([
-      { op: 'get', run: (c: RedisCacheClient) => c.get('k'), driver: 'get' as const },
-      { op: 'set', run: (c: RedisCacheClient) => c.set('k', 'v'), driver: 'set' as const },
-      { op: 'del', run: (c: RedisCacheClient) => c.del('k'), driver: 'del' as const },
-      { op: 'ping', run: (c: RedisCacheClient) => c.ping(), driver: 'ping' as const },
+      { op: 'get', run: (c: RedisCacheClient) => c.get('k') as Cached, driver: 'get' as const },
+      {
+        op: 'set',
+        run: (c: RedisCacheClient) => c.set('k', 'v') as Cached,
+        driver: 'set' as const,
+      },
+      { op: 'del', run: (c: RedisCacheClient) => c.del('k') as Cached, driver: 'del' as const },
+      { op: 'ping', run: (c: RedisCacheClient) => c.ping() as Cached, driver: 'ping' as const },
       {
         op: 'publish',
-        run: (c: RedisCacheClient) => c.publish('ch', 'm'),
+        run: (c: RedisCacheClient) => c.publish('ch', 'm') as Cached,
         driver: 'publish' as const,
       },
-    ])('wraps a driver failure on $op in a CacheError', async ({ run, driver }) => {
+    ])('reports a driver failure on $op as CACHE_UNAVAILABLE', async ({ run, driver }) => {
       Object.assign(redis, {
         [driver]: async () => {
           throw new Error('connection lost');
         },
       });
 
-      await expect(run(cache)).rejects.toThrow(CacheError);
+      expect(expectErr(await run(cache)).code).toBe(ErrorCodes.CACHE_UNAVAILABLE);
     });
   });
 
   describe('health', () => {
     it('is healthy while the driver answers PONG', async () => {
-      expect(await cache.checkHealth()).toBe(true);
-      expect(await cache.ping()).toBe('PONG');
+      expect(isOk(await cache.checkHealth())).toBe(true);
+      expect(expectOk(await cache.ping())).toBe('PONG');
     });
 
     it.each([
@@ -60,7 +68,7 @@ describe('RedisCacheClient', () => {
       { scenario: 'the driver answers something else', ping: async () => 'NOPE' },
     ])('is unhealthy when $scenario', async ({ ping }) => {
       Object.assign(redis, { ping });
-      expect(await cache.checkHealth()).toBe(false);
+      expect(isOk(await cache.checkHealth())).toBe(false);
     });
   });
 

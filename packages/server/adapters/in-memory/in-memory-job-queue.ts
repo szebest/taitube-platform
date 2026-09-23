@@ -8,7 +8,8 @@ import {
   type QueueWorkerOptions,
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
-import { classifyError } from '@vp/errors';
+import { type QueueUnavailable, classifyError, queueUnavailable } from '@vp/errors';
+import { type Result, err, ok } from '@vp/result';
 
 export class InMemoryJobQueue extends JobQueue {
   private readonly name: string;
@@ -32,16 +33,16 @@ export class InMemoryJobQueue extends JobQueue {
     this.isHealthy = healthy;
   }
 
-  async checkHealth(): Promise<boolean> {
-    return this.isHealthy;
+  async checkHealth(): Promise<Result<void, QueueUnavailable>> {
+    return this.isHealthy ? ok() : err(queueUnavailable('checkHealth'));
   }
 
   getName(): string {
     return this.name;
   }
 
-  async getJobState(jobId: string): Promise<string | undefined> {
-    return this.jobStates.get(jobId);
+  async getJobState(jobId: string): Promise<Result<string | undefined, QueueUnavailable>> {
+    return ok(this.jobStates.get(jobId));
   }
 
   setJobState(jobId: string, state: string): void {
@@ -72,13 +73,13 @@ export class InMemoryJobQueue extends JobQueue {
     name: string,
     data: T,
     options?: QueueJobOptions & { initialState?: string }
-  ): Promise<QueueJob<T>> {
+  ): Promise<Result<QueueJob<T>, QueueUnavailable>> {
     const jobId = options?.jobId ?? `job-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
     // BullMQ deduplication: if job exists in any non-removed state, return existing job
     const existing = this.allJobs.get(jobId);
     if (existing) {
-      return existing as QueueJob<T>;
+      return ok(existing as QueueJob<T>);
     }
 
     const job: QueueJob<T> & { opts?: QueueJobOptions } = {
@@ -104,7 +105,7 @@ export class InMemoryJobQueue extends JobQueue {
       }
     }
 
-    return job;
+    return ok(job);
   }
 
   private readonly jobCompletedListeners: ((job: QueueJob<unknown>, result: unknown) => void)[] =
@@ -202,12 +203,13 @@ export class InMemoryJobQueue extends JobQueue {
   async process<T = unknown>(
     handler: (job: QueueJob<T>) => Promise<unknown>,
     _options?: QueueWorkerOptions
-  ): Promise<void> {
+  ): Promise<Result<void, QueueUnavailable>> {
     this.processor = handler as (job: QueueJob<unknown>) => Promise<unknown>;
     // Process pending jobs if not paused
     if (!this.paused) {
       await this.drain();
     }
+    return ok();
   }
 
   private isDraining = false;
@@ -250,35 +252,39 @@ export class InMemoryJobQueue extends JobQueue {
     }
   }
 
-  async isPaused(): Promise<boolean> {
-    return this.paused;
+  async isPaused(): Promise<Result<boolean, QueueUnavailable>> {
+    return ok(this.paused);
   }
 
-  async pause(): Promise<void> {
+  async pause(): Promise<Result<void, QueueUnavailable>> {
     this.paused = true;
+    return ok();
   }
 
-  async resume(): Promise<void> {
+  async resume(): Promise<Result<void, QueueUnavailable>> {
     this.paused = false;
     if (this.processor && !this.isDraining) {
       queueMicrotask(() => {
         this.drain().catch(() => {});
       });
     }
+    return ok();
   }
 
-  async getJobCounts(): Promise<QueueJobCounts> {
-    return {
+  async getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>> {
+    return ok({
       waiting: this.enqueuedJobs.length,
       active: Array.from(this.jobStates.values()).filter((s) => s === 'active').length,
       completed: this.completedJobs.length,
       failed: this.failedJobs.length,
       delayed: 0,
       paused: this.paused ? this.enqueuedJobs.length : 0,
-    };
+    });
   }
 
-  async getJobs(types: string[] = ['waiting']): Promise<QueueJob<unknown>[]> {
+  async getJobs(
+    types: string[] = ['waiting']
+  ): Promise<Result<QueueJob<unknown>[], QueueUnavailable>> {
     const result: QueueJob<unknown>[] = [];
     if (
       types.includes('waiting') ||
@@ -294,14 +300,14 @@ export class InMemoryJobQueue extends JobQueue {
     if (types.includes('failed')) {
       result.push(...this.failedJobs.map((f) => f.job));
     }
-    return result;
+    return ok(result);
   }
 
-  async upsertJobScheduler<T = unknown>(
+  override async upsertJobScheduler<T = unknown>(
     id: string,
     repeatOpts: UpsertJobSchedulerOptions,
     template?: JobSchedulerTemplate<T>
-  ): Promise<unknown> {
+  ): Promise<Result<unknown, QueueUnavailable>> {
     const scheduler: JobSchedulerInfo = {
       id,
       name: template?.name ?? id,
@@ -310,11 +316,11 @@ export class InMemoryJobQueue extends JobQueue {
       data: template?.data,
     };
     this.schedulers.set(id, scheduler);
-    return scheduler;
+    return ok(scheduler);
   }
 
-  async getJobSchedulers(): Promise<JobSchedulerInfo[]> {
-    return Array.from(this.schedulers.values());
+  override async getJobSchedulers(): Promise<Result<JobSchedulerInfo[], QueueUnavailable>> {
+    return ok(Array.from(this.schedulers.values()));
   }
 
   clear(): void {
@@ -327,8 +333,9 @@ export class InMemoryJobQueue extends JobQueue {
     this.schedulers.clear();
   }
 
-  async close(): Promise<void> {
+  async close(): Promise<Result<void, QueueUnavailable>> {
     this.processor = undefined;
     this.isDraining = false;
+    return ok();
   }
 }

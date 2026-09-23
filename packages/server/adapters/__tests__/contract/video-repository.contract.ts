@@ -294,7 +294,7 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
         await completeUpload();
         await completeUpload();
 
-        const events = await subject.repositories.events.findByVideoId(VIDEO_IDS.a);
+        const events = expectOk(await subject.repositories.events.findByVideoId(VIDEO_IDS.a));
         expect(events.filter((e) => e.type === 'upload.completed')).toHaveLength(1);
       });
 
