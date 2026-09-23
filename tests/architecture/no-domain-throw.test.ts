@@ -1,5 +1,5 @@
-import { THROWING_DOMAIN_SOURCES } from './throwing-domain-sources';
 import { productionSources, read, shrinkOnly } from './repo-files';
+import { THROWING_DOMAIN_SOURCES } from './throwing-domain-sources';
 
 /**
  * Layers 1 and 2 return their failures (SDD ADR-24). The only `throw` they may reach is
@@ -16,12 +16,25 @@ const DOMAIN_ROOTS = [
 const THROW = /(^|[^\w.])throw\s+/g;
 const ASSERT_NEVER = /(^|[^\w.])throw\s+assertNever\b/;
 
+/**
+ * A helper that turns a `Result` into a throw is the same escape hatch one indirection away, and
+ * the literal-`throw` sweep cannot see it: `unwrapOrThrow` has a capital T and word characters to
+ * its left, so it matched neither half of `THROW`. Five stage files converted a failure into a
+ * throw eleven times and the guard called them clean. This matches the shape rather than the one
+ * name, so the next `assertOrThrow` is caught the day it is written.
+ */
+const CONVERTS_TO_THROW = /\b\w+OrThrow\s*\(/g;
+
+function throwSites(source: string): string[] {
+  const sites = [...source.matchAll(THROW)]
+    .map((match) => source.slice(match.index ?? 0).split('\n')[0] ?? '')
+    .filter((line) => !ASSERT_NEVER.test(line));
+
+  return [...sites, ...[...source.matchAll(CONVERTS_TO_THROW)].map(([hit]) => hit)];
+}
+
 function throwsOutsideAssertNever(file: string): boolean {
-  const source = read(file);
-  return [...source.matchAll(THROW)].some((match) => {
-    const line = source.slice(match.index ?? 0).split('\n')[0] ?? '';
-    return !ASSERT_NEVER.test(line);
-  });
+  return throwSites(read(file)).length > 0;
 }
 
 function offenders(): string[] {
@@ -49,6 +62,23 @@ describe('architecture: domain code returns its failures, it does not throw them
     const { stale } = shrinkOnly(offenders(), THROWING_DOMAIN_SOURCES);
 
     expect(stale).toEqual([]);
+  });
+
+  it.each([
+    { shape: 'a bare throw', source: 'throw new PermanentError("x");' },
+    { shape: 'a throw after a return', source: 'if (!row) throw notFound(id);' },
+    { shape: 'a Result unwrapped into a throw', source: 'const v = unwrapOrThrow(await repo.f());' },
+    { shape: 'the same helper under another name', source: 'const v = okOrThrow(result);' },
+  ])('counts $shape against a domain source', ({ source }) => {
+    expect(throwSites(source)).not.toEqual([]);
+  });
+
+  it.each([
+    { shape: 'an exhaustiveness assertion', source: 'throw assertNever(failure, "present");' },
+    { shape: 'a property named after a throw', source: 'const x = e.throwSite;' },
+    { shape: 'a returned failure', source: 'return err(databaseUnavailable("findById"));' },
+  ])('leaves $shape alone', ({ source }) => {
+    expect(throwSites(source)).toEqual([]);
   });
 
   it('does not count a throw assertNever against a rule', () => {
