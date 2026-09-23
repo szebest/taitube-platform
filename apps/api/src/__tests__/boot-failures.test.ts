@@ -71,23 +71,31 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
     await app.close();
   });
 
-  it('builds the whole app without opening a timer, and closes cleanly', async () => {
+  it('builds the whole app without opening a timer or a subscription, and closes cleanly', async () => {
     const before = timers();
+    const cache = new InMemoryCacheClient();
+    const subscribe = vi.spyOn(cache, 'subscribe');
+    const psubscribe = vi.spyOn(cache, 'psubscribe');
 
-    const app = await buildApp({});
+    const app = await buildApp({ adapters: { cache } });
     await app.ready();
 
     expect(timers()).toBe(before);
+    expect(subscribe).not.toHaveBeenCalled();
+    expect(psubscribe).not.toHaveBeenCalled();
     expect(app.printRoutes()).toContain('uploads');
     await app.close();
   });
 
-  it('starts the pollers only when asked, and stops them on close', async () => {
+  it('starts the pollers and the subscription only when asked, and stops them on close', async () => {
     const before = timers();
-    const { app, container } = await composeApp({});
+    const cache = new InMemoryCacheClient();
+    const psubscribe = vi.spyOn(cache, 'psubscribe');
+    const { app, container } = await composeApp({ adapters: { cache } });
 
     expectOk(await container.start());
     expect(timers()).toBeGreaterThan(before);
+    expect(psubscribe).toHaveBeenCalled();
 
     await app.close();
     expect(timers()).toBe(before);
