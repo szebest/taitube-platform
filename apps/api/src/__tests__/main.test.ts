@@ -7,8 +7,8 @@ import { composeApp } from '../app';
 import { Services } from '../composition/services.module';
 import { main, serve } from '../main';
 
-vi.mock('@vp/observability', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@vp/observability')>()),
+vi.mock(import('@vp/observability'), async (importOriginal) => ({
+  ...(await importOriginal()),
   shutdownTracing: vi.fn(async () => {}),
 }));
 
