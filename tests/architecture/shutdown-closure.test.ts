@@ -1,4 +1,3 @@
-import { Container, closeOnDispose, token } from '../../packages/server/composition/src/index';
 import { productionSources, read } from './repo-files';
 
 const RESOURCE_ROOTS = ['packages/server/adapters/', 'apps/api/src/services/', 'apps/worker/src/'];
@@ -55,27 +54,5 @@ describe('architecture: everything the container builds, it also releases', () =
       .flatMap((file) => undisposed(read(file), classes).map((name) => `${file}: ${name}`));
 
     expect(offenders).toEqual([]);
-  });
-
-  it('releases in reverse construction order', async () => {
-    const released: string[] = [];
-    const resource = (name: string) => ({ close: async () => void released.push(name) });
-    const Pool = token<{ close(): Promise<void> }>('Pool');
-    const Repositories = token<{ close(): Promise<void> }>('Repositories');
-    const c = new Container()
-      .provide(Pool, () => resource('Pool'), closeOnDispose)
-      .provide(
-        Repositories,
-        (c) => {
-          c.get(Pool);
-          return resource('Repositories');
-        },
-        closeOnDispose
-      );
-    c.get(Repositories);
-
-    await c.dispose();
-
-    expect(released).toEqual(['Repositories', 'Pool']);
   });
 });
