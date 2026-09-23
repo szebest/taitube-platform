@@ -23,15 +23,15 @@ export function describeVideoReactionRepositoryContract(
     });
 
     it('starts with no reaction and zeroed counts', async () => {
-      expect(await reactions.getUserReaction(VIDEO_IDS.a, OWNER_ID)).toBeNull();
-      expect(await reactions.getReactionCounts(VIDEO_IDS.a)).toEqual({
+      expect(expectOk(await reactions.getUserReaction(VIDEO_IDS.a, OWNER_ID))).toBeNull();
+      expect(expectOk(await reactions.getReactionCounts(VIDEO_IDS.a))).toEqual({
         likesCount: 0,
         dislikesCount: 0,
       });
     });
 
     it('records a like and reports the new totals', async () => {
-      const result = await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'LIKE');
+      const result = expectOk(await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'LIKE'));
 
       expect(result).toMatchObject({
         previousType: null,
@@ -39,12 +39,12 @@ export function describeVideoReactionRepositoryContract(
         likesCount: 1,
         dislikesCount: 0,
       });
-      expect(await reactions.getUserReaction(VIDEO_IDS.a, OWNER_ID)).toBe('LIKE');
+      expect(expectOk(await reactions.getUserReaction(VIDEO_IDS.a, OWNER_ID))).toBe('LIKE');
     });
 
     it('moves a reaction from like to dislike without double counting', async () => {
       await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'LIKE');
-      const flipped = await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'DISLIKE');
+      const flipped = expectOk(await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'DISLIKE'));
 
       expect(flipped).toMatchObject({
         previousType: 'LIKE',
@@ -56,10 +56,10 @@ export function describeVideoReactionRepositoryContract(
 
     it('withdraws a reaction with NONE', async () => {
       await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'LIKE');
-      const cleared = await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'NONE');
+      const cleared = expectOk(await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'NONE'));
 
       expect(cleared).toMatchObject({ previousType: 'LIKE', newType: null, likesCount: 0 });
-      expect(await reactions.getUserReaction(VIDEO_IDS.a, OWNER_ID)).toBeNull();
+      expect(expectOk(await reactions.getUserReaction(VIDEO_IDS.a, OWNER_ID))).toBeNull();
     });
 
     it('counts each user once per video', async () => {
@@ -67,11 +67,11 @@ export function describeVideoReactionRepositoryContract(
       await reactions.setReaction(VIDEO_IDS.a, OTHER_OWNER_ID, 'LIKE');
       await reactions.setReaction(VIDEO_IDS.b, OWNER_ID, 'DISLIKE');
 
-      expect(await reactions.countGroundTruth(VIDEO_IDS.a)).toEqual({
+      expect(expectOk(await reactions.countGroundTruth(VIDEO_IDS.a))).toEqual({
         likesCount: 2,
         dislikesCount: 0,
       });
-      expect(await reactions.countGroundTruth(VIDEO_IDS.b)).toEqual({
+      expect(expectOk(await reactions.countGroundTruth(VIDEO_IDS.b))).toEqual({
         likesCount: 0,
         dislikesCount: 1,
       });
@@ -88,10 +88,10 @@ export function describeVideoReactionRepositoryContract(
       await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'LIKE');
       await reactions.setReaction(VIDEO_IDS.b, OWNER_ID, 'LIKE');
 
-      const all = await reactions.listVideoIdsWithReactions();
+      const all = expectOk(await reactions.listVideoIdsWithReactions());
       expect([...all].sort()).toEqual([VIDEO_IDS.a, VIDEO_IDS.b]);
-      expect(await reactions.listVideoIdsWithReactions(1)).toHaveLength(1);
-      expect(await reactions.listVideoIdsWithReactions(10, 2)).toEqual([]);
+      expect(expectOk(await reactions.listVideoIdsWithReactions(1))).toHaveLength(1);
+      expect(expectOk(await reactions.listVideoIdsWithReactions(10, 2))).toEqual([]);
     });
   });
 }

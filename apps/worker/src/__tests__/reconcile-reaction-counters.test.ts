@@ -4,6 +4,8 @@ import {
   InMemoryStorageClient,
   RedisReactionCacheAdapter,
 } from '@vp/adapters';
+import { type Result, ok } from '@vp/result';
+import { expectOk } from '@vp/testing/result';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createHousekeepingProcessor, runReconcileReactionCounters } from '../stages/housekeeping';
 
@@ -29,12 +31,12 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
     await repos.videoReactions.setReaction(videoId, 'u3', 'DISLIKE');
 
     // Ground truth: 2 likes, 1 dislike
-    const groundTruth = await repos.videoReactions.countGroundTruth(videoId);
+    const groundTruth = expectOk(await repos.videoReactions.countGroundTruth(videoId));
     expect(groundTruth).toEqual({ likesCount: 2, dislikesCount: 1 });
 
     // 2. Simulate drift: artificially corrupt the denormalized counters in DB
     await repos.videoReactions.updateVideoCounters(videoId, 999, 999);
-    expect(await repos.videoReactions.getReactionCounts(videoId)).toEqual({
+    expect(expectOk(await repos.videoReactions.getReactionCounts(videoId))).toEqual({
       likesCount: 999,
       dislikesCount: 999,
     });
@@ -43,30 +45,33 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
     await reactionCache.setCounts(videoId, { likesCount: 999, dislikesCount: 999 });
 
     // 3. Run reconciler
-    const result = await runReconcileReactionCounters({
-      repositories: repos,
-      reactionCache,
-    });
+    const result = expectOk(
+      await runReconcileReactionCounters({
+        repositories: repos,
+        reactionCache,
+      })
+    );
 
     expect(result.checkedCount).toBe(1);
     expect(result.repairedCount).toBe(1);
 
     // 4. Verify denormalized counters in DB were repaired
-    const repairedDbCounts = await repos.videoReactions.getReactionCounts(videoId);
+    const repairedDbCounts = expectOk(await repos.videoReactions.getReactionCounts(videoId));
     expect(repairedDbCounts).toEqual({ likesCount: 2, dislikesCount: 1 });
 
     // 5. Verify Redis cache was synchronized
-    const repairedCacheCounts = await reactionCache.getCounts(videoId, async () => ({
-      likesCount: 0,
-      dislikesCount: 0,
-    }));
+    const repairedCacheCounts = expectOk(
+      await reactionCache.getCounts(videoId, async () => ok({ likesCount: 0, dislikesCount: 0 }))
+    );
     expect(repairedCacheCounts).toEqual({ likesCount: 2, dislikesCount: 1 });
 
     // 6. Running reconciler again with no drift repairs 0
-    const secondRun = await runReconcileReactionCounters({
-      repositories: repos,
-      reactionCache,
-    });
+    const secondRun = expectOk(
+      await runReconcileReactionCounters({
+        repositories: repos,
+        reactionCache,
+      })
+    );
     expect(secondRun.checkedCount).toBe(1);
     expect(secondRun.repairedCount).toBe(0);
   });
@@ -83,17 +88,19 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
     await repos.videoReactions.setReaction(videoId, 'u1', 'LIKE');
     await repos.videoReactions.updateVideoCounters(videoId, 0, 0); // corrupt
 
-    const res = (await processor({
-      id: 'job-reconcile-test',
-      data: { task: 'reconcile-reaction-counters' },
-    } as unknown as Parameters<typeof processor>[0])) as {
-      checkedCount: number;
-      repairedCount: number;
-    };
+    const res = expectOk(
+      (await processor({
+        id: 'job-reconcile-test',
+        data: { task: 'reconcile-reaction-counters' },
+      } as unknown as Parameters<typeof processor>[0])) as Result<
+        { checkedCount: number; repairedCount: number },
+        unknown
+      >
+    );
 
     expect(res.checkedCount).toBe(1);
     expect(res.repairedCount).toBe(1);
-    expect(await repos.videoReactions.getReactionCounts(videoId)).toEqual({
+    expect(expectOk(await repos.videoReactions.getReactionCounts(videoId))).toEqual({
       likesCount: 1,
       dislikesCount: 0,
     });
@@ -106,18 +113,19 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
     // DB denormalized counts are correct (1, 0), but Redis has stale drift (0, 0)
     await reactionCache.setCounts(videoId, { likesCount: 0, dislikesCount: 0 });
 
-    const res = await runReconcileReactionCounters({
-      repositories: repos,
-      reactionCache,
-    });
+    const res = expectOk(
+      await runReconcileReactionCounters({
+        repositories: repos,
+        reactionCache,
+      })
+    );
 
     expect(res.checkedCount).toBe(1);
     expect(res.repairedCount).toBe(1);
 
-    const fixed = await reactionCache.getCounts(videoId, async () => ({
-      likesCount: 0,
-      dislikesCount: 0,
-    }));
+    const fixed = expectOk(
+      await reactionCache.getCounts(videoId, async () => ok({ likesCount: 0, dislikesCount: 0 }))
+    );
     expect(fixed).toEqual({ likesCount: 1, dislikesCount: 0 });
   });
 });

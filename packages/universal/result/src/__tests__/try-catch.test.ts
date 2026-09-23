@@ -48,4 +48,18 @@ describe('@vp/result: fromPromise', () => {
       err({ code: 'WRAPPED', cause: thrown })
     );
   });
+
+  it('takes a thunk, so the call that builds the promise is inside the boundary', async () => {
+    await expect(fromPromise(() => Promise.resolve(5), describeCause)).resolves.toEqual(ok(5));
+  });
+
+  it('catches a synchronous throw from a thunk, which a bare promise argument cannot', async () => {
+    const thrown = new Error('builder blew up before it returned a promise');
+
+    await expect(
+      fromPromise(() => {
+        throw thrown;
+      }, describeCause)
+    ).resolves.toEqual(err({ code: 'WRAPPED', cause: thrown }));
+  });
 });

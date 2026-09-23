@@ -113,7 +113,6 @@ export async function createServiceSet(
       videoReactions: repositories.videoReactions,
       reactionCache: adapters.reactionCache,
       videos: repositories.videos,
-      authorization,
     }),
     subscriptionService: new SubscriptionService({
       subscriptions: repositories.subscriptions,

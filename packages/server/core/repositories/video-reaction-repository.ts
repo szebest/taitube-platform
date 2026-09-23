@@ -4,12 +4,28 @@ import type {
   ReactionType,
   SetReactionResult,
 } from '@vp/domain';
+import type { DatabaseUnavailable } from '@vp/errors';
+import type { Result } from '@vp/result';
 
 export interface VideoReactionRepositoryPort {
-  getUserReaction(videoId: string, userId: string): Promise<ReactionType | null>;
-  getReactionCounts(videoId: string): Promise<ReactionCounts>;
-  setReaction(videoId: string, userId: string, type: ReactionInputType): Promise<SetReactionResult>;
-  countGroundTruth(videoId: string): Promise<ReactionCounts>;
-  updateVideoCounters(videoId: string, likesCount: number, dislikesCount: number): Promise<void>;
-  listVideoIdsWithReactions(limit?: number, offset?: number): Promise<string[]>;
+  getUserReaction(
+    videoId: string,
+    userId: string
+  ): Promise<Result<ReactionType | null, DatabaseUnavailable>>;
+  getReactionCounts(videoId: string): Promise<Result<ReactionCounts, DatabaseUnavailable>>;
+  setReaction(
+    videoId: string,
+    userId: string,
+    type: ReactionInputType
+  ): Promise<Result<SetReactionResult, DatabaseUnavailable>>;
+  countGroundTruth(videoId: string): Promise<Result<ReactionCounts, DatabaseUnavailable>>;
+  updateVideoCounters(
+    videoId: string,
+    likesCount: number,
+    dislikesCount: number
+  ): Promise<Result<void, DatabaseUnavailable>>;
+  listVideoIdsWithReactions(
+    limit?: number,
+    offset?: number
+  ): Promise<Result<string[], DatabaseUnavailable>>;
 }

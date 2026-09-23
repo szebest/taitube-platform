@@ -7,6 +7,8 @@ import type {
   VideoReaction,
 } from '@vp/domain';
 import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface InMemoryVideoReactionRepositoryOptions {
@@ -30,24 +32,24 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
     return `${userId}:${videoId}`;
   }
 
-  async getUserReaction(videoId: string, userId: string): Promise<ReactionType | null> {
+  async getUserReaction(
+    videoId: string,
+    userId: string
+  ): Promise<Result<ReactionType | null, DatabaseUnavailable>> {
     const reaction = this.reactions.get(this.key(videoId, userId));
-    return reaction ? reaction.type : null;
+    return ok(reaction ? reaction.type : null);
   }
 
-  async getReactionCounts(videoId: string): Promise<ReactionCounts> {
+  async getReactionCounts(videoId: string): Promise<Result<ReactionCounts, DatabaseUnavailable>> {
     const counts = this.videoCounters.get(videoId);
-    if (counts) {
-      return { ...counts };
-    }
-    return { likesCount: 0, dislikesCount: 0 };
+    return ok(counts ? { ...counts } : { likesCount: 0, dislikesCount: 0 });
   }
 
   async setReaction(
     videoId: string,
     userId: string,
     type: ReactionInputType
-  ): Promise<SetReactionResult> {
+  ): Promise<Result<SetReactionResult, DatabaseUnavailable>> {
     const k = this.key(videoId, userId);
     const existing = this.reactions.get(k);
     const previousType = existing ? existing.type : null;
@@ -78,15 +80,15 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
       await this.videosRepo.updateReactionCounters(videoId, likesCount, dislikesCount);
     }
 
-    return {
+    return ok({
       previousType,
       newType,
       likesCount,
       dislikesCount,
-    };
+    });
   }
 
-  async countGroundTruth(videoId: string): Promise<ReactionCounts> {
+  async countGroundTruth(videoId: string): Promise<Result<ReactionCounts, DatabaseUnavailable>> {
     let likesCount = 0;
     let dislikesCount = 0;
     for (const r of this.reactions.values()) {
@@ -95,26 +97,30 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
         else if (r.type === 'DISLIKE') dislikesCount++;
       }
     }
-    return { likesCount, dislikesCount };
+    return ok({ likesCount, dislikesCount });
   }
 
   async updateVideoCounters(
     videoId: string,
     likesCount: number,
     dislikesCount: number
-  ): Promise<void> {
+  ): Promise<Result<void, DatabaseUnavailable>> {
     this.videoCounters.set(videoId, { likesCount, dislikesCount });
     if (this.videosRepo) {
       await this.videosRepo.updateReactionCounters(videoId, likesCount, dislikesCount);
     }
+    return ok();
   }
 
-  async listVideoIdsWithReactions(limit = 100, offset = 0): Promise<string[]> {
+  async listVideoIdsWithReactions(
+    limit = 100,
+    offset = 0
+  ): Promise<Result<string[], DatabaseUnavailable>> {
     const ids = new Set<string>();
     for (const r of this.reactions.values()) {
       ids.add(r.videoId);
     }
-    return Array.from(ids).slice(offset, offset + limit);
+    return ok(Array.from(ids).slice(offset, offset + limit));
   }
 
   clear(): void {

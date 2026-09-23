@@ -13,7 +13,7 @@ import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { type Paginator, defaultPaginator } from '@vp/pagination';
 import { canAccessAdmin } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
+import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 import {
   type ReprocessResult,
@@ -173,10 +173,16 @@ export class VideoService {
     );
 
     if (this.reactionCache) {
-      const counts = await this.reactionCache.getCounts(videoId, async () => ({
-        likesCount: decided.value.likesCount ?? 0,
-        dislikesCount: decided.value.dislikesCount ?? 0,
-      }));
+      // A dead cache costs the stored counters their refresh, not the video its response.
+      const counts = unwrapOr(
+        await this.reactionCache.getCounts(videoId, async () =>
+          ok({
+            likesCount: decided.value.likesCount ?? 0,
+            dislikesCount: decided.value.dislikesCount ?? 0,
+          })
+        ),
+        { likesCount: decided.value.likesCount ?? 0, dislikesCount: decided.value.dislikesCount ?? 0 }
+      );
       view.likesCount = counts.likesCount;
       view.dislikesCount = counts.dislikesCount;
     }

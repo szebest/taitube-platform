@@ -15,38 +15,19 @@ describe('Video Reaction Repositories (Ticket 40)', () => {
     reactionRepo = new InMemoryVideoReactionRepository({ videosRepo: videoRepo });
   });
 
-  it('records initial LIKE reaction and updates counter', async () => {
+  it.each([
+    { type: 'LIKE' as const, likesCount: 1, dislikesCount: 0 },
+    { type: 'DISLIKE' as const, likesCount: 0, dislikesCount: 1 },
+  ])('records an initial $type and updates the counter', async ({ type, ...counts }) => {
     const videoId = '11111111-1111-7111-8111-111111111111';
     const userId = 'user-1';
 
-    const result = await reactionRepo.setReaction(videoId, userId, 'LIKE');
-    expect(result.previousType).toBeNull();
-    expect(result.newType).toBe('LIKE');
-    expect(result.likesCount).toBe(1);
-    expect(result.dislikesCount).toBe(0);
+    const result = expectOk(await reactionRepo.setReaction(videoId, userId, type));
+    expect(result).toMatchObject({ previousType: null, newType: type, ...counts });
 
-    const userReaction = await reactionRepo.getUserReaction(videoId, userId);
-    expect(userReaction).toBe('LIKE');
-
-    const counts = await reactionRepo.getReactionCounts(videoId);
-    expect(counts).toEqual({ likesCount: 1, dislikesCount: 0 });
-
-    const groundTruth = await reactionRepo.countGroundTruth(videoId);
-    expect(groundTruth).toEqual({ likesCount: 1, dislikesCount: 0 });
-  });
-
-  it('records initial DISLIKE reaction and updates counter', async () => {
-    const videoId = '11111111-1111-7111-8111-111111111111';
-    const userId = 'user-2';
-
-    const result = await reactionRepo.setReaction(videoId, userId, 'DISLIKE');
-    expect(result.previousType).toBeNull();
-    expect(result.newType).toBe('DISLIKE');
-    expect(result.likesCount).toBe(0);
-    expect(result.dislikesCount).toBe(1);
-
-    const userReaction = await reactionRepo.getUserReaction(videoId, userId);
-    expect(userReaction).toBe('DISLIKE');
+    expect(expectOk(await reactionRepo.getUserReaction(videoId, userId))).toBe(type);
+    expect(expectOk(await reactionRepo.getReactionCounts(videoId))).toEqual(counts);
+    expect(expectOk(await reactionRepo.countGroundTruth(videoId))).toEqual(counts);
   });
 
   it('idempotency: repeatedly liking the same video does not double increment', async () => {
@@ -54,14 +35,14 @@ describe('Video Reaction Repositories (Ticket 40)', () => {
     const userId = 'user-3';
 
     await reactionRepo.setReaction(videoId, userId, 'LIKE');
-    const second = await reactionRepo.setReaction(videoId, userId, 'LIKE');
+    const second = expectOk(await reactionRepo.setReaction(videoId, userId, 'LIKE'));
 
     expect(second.previousType).toBe('LIKE');
     expect(second.newType).toBe('LIKE');
     expect(second.likesCount).toBe(1);
     expect(second.dislikesCount).toBe(0);
 
-    const counts = await reactionRepo.getReactionCounts(videoId);
+    const counts = expectOk(await reactionRepo.getReactionCounts(videoId));
     expect(counts).toEqual({ likesCount: 1, dislikesCount: 0 });
   });
 
@@ -71,20 +52,24 @@ describe('Video Reaction Repositories (Ticket 40)', () => {
 
     // 1. Initial DISLIKE
     await reactionRepo.setReaction(videoId, userId, 'DISLIKE');
-    let counts = await reactionRepo.getReactionCounts(videoId);
-    expect(counts).toEqual({ likesCount: 0, dislikesCount: 1 });
+    expect(expectOk(await reactionRepo.getReactionCounts(videoId))).toEqual({
+      likesCount: 0,
+      dislikesCount: 1,
+    });
 
     // 2. Switch to LIKE
-    const switched = await reactionRepo.setReaction(videoId, userId, 'LIKE');
+    const switched = expectOk(await reactionRepo.setReaction(videoId, userId, 'LIKE'));
     expect(switched.previousType).toBe('DISLIKE');
     expect(switched.newType).toBe('LIKE');
     expect(switched.likesCount).toBe(1);
     expect(switched.dislikesCount).toBe(0);
 
-    counts = await reactionRepo.getReactionCounts(videoId);
-    expect(counts).toEqual({ likesCount: 1, dislikesCount: 0 });
+    expect(expectOk(await reactionRepo.getReactionCounts(videoId))).toEqual({
+      likesCount: 1,
+      dislikesCount: 0,
+    });
 
-    const groundTruth = await reactionRepo.countGroundTruth(videoId);
+    const groundTruth = expectOk(await reactionRepo.countGroundTruth(videoId));
     expect(groundTruth).toEqual({ likesCount: 1, dislikesCount: 0 });
   });
 
@@ -93,17 +78,17 @@ describe('Video Reaction Repositories (Ticket 40)', () => {
     const userId = 'user-5';
 
     await reactionRepo.setReaction(videoId, userId, 'LIKE');
-    const cleared = await reactionRepo.setReaction(videoId, userId, 'NONE');
+    const cleared = expectOk(await reactionRepo.setReaction(videoId, userId, 'NONE'));
 
     expect(cleared.previousType).toBe('LIKE');
     expect(cleared.newType).toBeNull();
     expect(cleared.likesCount).toBe(0);
     expect(cleared.dislikesCount).toBe(0);
 
-    const userReaction = await reactionRepo.getUserReaction(videoId, userId);
+    const userReaction = expectOk(await reactionRepo.getUserReaction(videoId, userId));
     expect(userReaction).toBeNull();
 
-    const groundTruth = await reactionRepo.countGroundTruth(videoId);
+    const groundTruth = expectOk(await reactionRepo.countGroundTruth(videoId));
     expect(groundTruth).toEqual({ likesCount: 0, dislikesCount: 0 });
   });
 
@@ -130,11 +115,11 @@ describe('Video Reaction Repositories (Ticket 40)', () => {
     const videoId = '33333333-3333-7333-8333-333333333333';
 
     await repos.videoReactions.setReaction(videoId, 'user-1', 'LIKE');
-    expect(await repos.videoReactions.getUserReaction(videoId, 'user-1')).toBe('LIKE');
+    expect(expectOk(await repos.videoReactions.getUserReaction(videoId, 'user-1'))).toBe('LIKE');
 
     repos.clear();
-    expect(await repos.videoReactions.getUserReaction(videoId, 'user-1')).toBeNull();
-    expect(await repos.videoReactions.getReactionCounts(videoId)).toEqual({
+    expect(expectOk(await repos.videoReactions.getUserReaction(videoId, 'user-1'))).toBeNull();
+    expect(expectOk(await repos.videoReactions.getReactionCounts(videoId))).toEqual({
       likesCount: 0,
       dislikesCount: 0,
     });
@@ -148,7 +133,7 @@ describe('Video Reaction Repositories (Ticket 40)', () => {
     await reactionRepo.setReaction(v1, 'u2', 'DISLIKE');
     await reactionRepo.setReaction(v2, 'u3', 'LIKE');
 
-    const videoIds = await reactionRepo.listVideoIdsWithReactions();
+    const videoIds = expectOk(await reactionRepo.listVideoIdsWithReactions());
     expect(videoIds).toHaveLength(2);
     expect(videoIds).toContain(v1);
     expect(videoIds).toContain(v2);

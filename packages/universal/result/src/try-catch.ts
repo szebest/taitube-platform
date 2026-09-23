@@ -15,12 +15,17 @@ export function fromThrowable<A extends readonly unknown[], T, E>(
   return (...args: A) => tryCatch(() => fn(...args), onThrow);
 }
 
+/**
+ * Pass a thunk whenever the expression that produces the promise can itself throw. An SDK builder
+ * chain - `redis.multi().hset(...).exec()` - runs synchronously up to the last call, so handing the
+ * finished promise to this function leaves everything before `exec()` outside the boundary.
+ */
 export async function fromPromise<T, E>(
-  promise: PromiseLike<T>,
+  promise: PromiseLike<T> | (() => PromiseLike<T>),
   onThrow: (cause: unknown) => E
 ): Promise<Result<T, E>> {
   try {
-    return ok(await promise);
+    return ok(await (typeof promise === 'function' ? promise() : promise));
   } catch (cause) {
     return err(onThrow(cause));
   }
