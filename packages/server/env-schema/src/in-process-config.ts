@@ -23,7 +23,8 @@ function merged<T>(base: T, overrides: unknown): T {
 
 /**
  * What an in-process app runs on: the in-memory family over the schema defaults, with any
- * overrides merged in `AppConfig`'s own shape.
+ * overrides merged in `AppConfig`'s own shape. Port 0 lets the OS pick, so two in-process apps
+ * never contend for the metrics port.
  */
 export function inProcessAppConfig(overrides: AppConfigOverrides = {}): AppConfig {
   const { cdn, ...rest } = overrides;
@@ -32,6 +33,7 @@ export function inProcessAppConfig(overrides: AppConfigOverrides = {}): AppConfi
       NODE_ENV: 'test',
       ADAPTER_FAMILY: 'in-memory',
       DATABASE_URL: 'postgres://localhost:5432/vp',
+      METRICS_PORT: 0,
     })
   );
 

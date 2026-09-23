@@ -1,13 +1,16 @@
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import { type ShutdownOutcome, shutdownOnce } from '@vp/composition';
+import {
+  type ProcessHost,
+  type ShutdownOutcome,
+  exitOnSignals,
+  shutdownOnce,
+} from '@vp/composition';
 import { loadEnv } from '@vp/config';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { toAppConfig } from '@vp/env-schema';
-import { getMetrics, startMetricsServer } from '@vp/observability';
-import { fromPromise, isErr } from '@vp/result';
+import { mediaTools } from '@vp/ffmpeg';
+import { createLogger, initTracing } from '@vp/observability';
+import { ignore, isErr } from '@vp/result';
 import { STAGE_REGISTRY } from './registry';
-import { type WorkerRunner, createWorkerRunner } from './runner';
+import { type WorkerRunner, composeWorker } from './runner';
 
 export interface WorkerProcess {
   runner: WorkerRunner;
@@ -15,64 +18,65 @@ export interface WorkerProcess {
   shutdown: () => Promise<ShutdownOutcome>;
 }
 
-/** A read-only or misconfigured volume costs the liveness probe its file, not the worker its job. */
-async function writeHeartbeat(heartbeatPath: string): Promise<void> {
-  await fs.mkdir(path.dirname(heartbeatPath), { recursive: true }).catch(() => {});
-  await fs.writeFile(heartbeatPath, `${Math.floor(Date.now() / MS_PER_SECOND)}\n`).catch(() => {});
-}
+export async function main(host: ProcessHost): Promise<WorkerProcess> {
+  const config = toAppConfig(loadEnv(host.env, { exitOnError: false }));
+  const { stage } = config.worker;
 
-export async function main(
-  env: Record<string, string | undefined> = process.env
-): Promise<WorkerProcess> {
-  const config = toAppConfig(loadEnv(env));
-  const stage = STAGE_REGISTRY[config.worker.stage];
+  const tracing = initTracing({ serviceName: `vp-worker-${stage}`, ...config.otel });
+  if (isErr(tracing)) console.warn(`[worker] tracing disabled: ${tracing.error.message}`);
 
-  const runner = await createWorkerRunner({ config });
-  console.log(`[worker] Started processing on queue "${runner.worker.name}"`);
-
-  const metricsServer = await startMetricsServer({
-    port: config.http.metricsPort,
-    registry: getMetrics().registry,
+  const runner = await composeWorker({
+    config,
+    logger: createLogger({
+      service: `worker-${stage}`,
+      level: config.logLevel,
+      bindings: { stage },
+    }),
+    media: mediaTools,
+    workerId: `worker-${process.pid}`,
   });
-  console.log(`[worker] Metrics server listening on http://0.0.0.0:${metricsServer.port}/metrics`);
-
-  await writeHeartbeat(config.worker.heartbeatPath);
-  const heartbeat = setInterval(
-    () => void writeHeartbeat(config.worker.heartbeatPath),
-    config.worker.heartbeatIntervalMs
-  );
-  heartbeat.unref?.();
 
   const shutdown = shutdownOnce({
-    drain: () => clearInterval(heartbeat),
+    drain: () => {},
     drainDelayMs: 0,
     close: async () => {
-      const closed = await fromPromise(
-        () => runner.close(),
-        (cause) => cause
-      );
-      await metricsServer.close();
-      if (isErr(closed)) throw closed.error;
+      await runner.close();
+      if (tracing.ok) {
+        ignore(
+          await tracing.value.shutdown(),
+          'spans that could not be flushed are lost either way; the close is what decides the exit'
+        );
+      }
     },
-    graceMs: stage.shutdownTimeoutMs,
+    graceMs: STAGE_REGISTRY[stage].shutdownTimeoutMs,
     pending: () => runner.disposing(),
     log: (message) => console.log(`[worker] ${message}`),
   });
 
-  return { runner, metricsPort: metricsServer.port, shutdown };
+  exitOnSignals(host, shutdown);
+
+  const started = await runner.start();
+  if (isErr(started) && started.error.type === 'failed') throw started.error.cause;
+
+  console.log(`[worker] Consuming queue "${runner.worker.name}"`);
+  console.log(`[worker] Metrics on http://0.0.0.0:${runner.metricsPort()}/metrics`);
+  return { runner, metricsPort: runner.metricsPort(), shutdown };
+}
+
+export function run(host: ProcessHost): Promise<void> {
+  return main(host).then(
+    () => undefined,
+    (cause) => {
+      console.error('Fatal worker error:', cause);
+      host.exit(1);
+    }
+  );
 }
 
 if (process.env['NODE_ENV'] !== 'test') {
-  main()
-    .then(({ shutdown }) => {
-      for (const signal of ['SIGTERM', 'SIGINT'] as const) {
-        process.on(signal, () => {
-          void shutdown().then((outcome) => process.exit(outcome === 'drained' ? 0 : 1));
-        });
-      }
-    })
-    .catch((err) => {
-      console.error('Fatal worker error:', err);
-      process.exit(1);
-    });
+  void run({
+    env: process.env,
+    onSignal: (signal, handler) => process.on(signal, handler),
+    exit: (code) => process.exit(code),
+  });
 }

@@ -1,11 +1,16 @@
-import { type ShutdownOutcome, shutdownOnce } from '@vp/composition';
+import {
+  type ProcessHost,
+  type ShutdownOutcome,
+  exitOnSignals,
+  shutdownOnce,
+} from '@vp/composition';
 import { loadEnv } from '@vp/config';
 import { type AppConfig, toAppConfig } from '@vp/env-schema';
 import { type AnyFailure, toPipelineError } from '@vp/errors';
-import { initTracing, shutdownTracing } from '@vp/observability';
-import { fromPromise, isErr } from '@vp/result';
+import { type Tracing, initTracing } from '@vp/observability';
+import { assertNever, fromPromise, ignore, isErr, ok } from '@vp/result';
 import { type ComposedApp, composeApp } from './app';
-import { startMetricsServer } from './plugins/metrics';
+import { Services } from './composition/services.module';
 
 /**
  * `infra/k8s/base/api.yaml` gives the pod 30 s: a 5 s preStop, then SIGTERM. The drain delay
@@ -16,66 +21,95 @@ export const API_SHUTDOWN = { drainDelayMs: 2_000, graceMs: 20_000 } as const;
 
 export interface ApiProcess {
   address: string;
+  metricsPort: number;
   shutdown: () => Promise<ShutdownOutcome>;
+}
+
+export interface ServeOptions {
+  tracing: Tracing;
+  timings?: { drainDelayMs: number; graceMs: number };
+  /** Given by `main`, so its signal handlers are in before the container starts. */
+  signals?: ProcessHost;
 }
 
 export async function serve(
   { app, container }: ComposedApp,
   config: AppConfig,
-  timings: { drainDelayMs: number; graceMs: number } = API_SHUTDOWN
+  { tracing, timings = API_SHUTDOWN, signals }: ServeOptions
 ): Promise<ApiProcess> {
-  const started = await container.start();
-  if (isErr(started)) {
-    console.error(`[api] startup failed at ${started.error.token}:`, started.error.cause);
-    await app.close();
-    throw toPipelineError(started.error.cause as AnyFailure);
-  }
-
-  const address = await app.listen({ port: config.http.port, host: '0.0.0.0' });
-  console.log(`[api] Fastify server listening on ${address}`);
-
-  const metricsServer = await startMetricsServer(config.http.metricsPort);
-  console.log(`[api] Metrics server listening on http://0.0.0.0:${metricsServer.port}/metrics`);
-
+  const lifecycle: { phase: 'starting' | 'listening' | 'stopping' } = { phase: 'starting' };
   const shutdown = shutdownOnce({
-    ...timings,
-    drain: () => app.services.readiness.beginDrain(),
+    graceMs: timings.graceMs,
+    get drainDelayMs() {
+      return lifecycle.phase === 'listening' ? timings.drainDelayMs : 0;
+    },
+    drain: () => {
+      if (lifecycle.phase === 'starting') lifecycle.phase = 'stopping';
+      app.services.readiness.beginDrain();
+    },
     close: async () => {
       const closed = await fromPromise(
         () => app.close(),
         (cause) => cause
       );
-      await metricsServer.close();
-      await shutdownTracing();
+      ignore(
+        await tracing.shutdown(),
+        'spans that could not be flushed are lost either way; the close is what decides the exit'
+      );
       if (isErr(closed)) throw closed.error;
     },
     pending: () => container.disposing(),
     log: (message) => console.log(`[api] ${message}`),
   });
+  if (signals) exitOnSignals(signals, shutdown);
 
-  return { address, shutdown };
+  const metricsPort = () => container.get(Services.MetricsServer).port;
+  const started = await container.start();
+  if (lifecycle.phase === 'stopping') return { address: '', metricsPort: metricsPort(), shutdown };
+  if (isErr(started)) {
+    switch (started.error.type) {
+      case 'interrupted':
+        return { address: '', metricsPort: metricsPort(), shutdown };
+      case 'failed':
+        console.error(`[api] startup failed at ${started.error.token}:`, started.error.cause);
+        await app.close();
+        throw toPipelineError(started.error.cause as AnyFailure);
+      default:
+        return assertNever(started.error, 'StartupFailed');
+    }
+  }
+
+  const address = await app.listen({ port: config.http.port, host: '0.0.0.0' });
+  lifecycle.phase = 'listening';
+  console.log(`[api] Fastify server listening on ${address}`);
+  console.log(`[api] Metrics on http://0.0.0.0:${metricsPort()}/metrics`);
+
+  return { address, metricsPort: metricsPort(), shutdown };
 }
 
-export async function main(
-  env: Record<string, string | undefined> = process.env
-): Promise<ApiProcess> {
-  const config = toAppConfig(loadEnv(env));
-  initTracing({ serviceName: 'vp-api', ...config.otel });
+export async function main(host: ProcessHost): Promise<ApiProcess> {
+  const config = toAppConfig(loadEnv(host.env, { exitOnError: false }));
+  const traced = initTracing({ serviceName: 'vp-api', ...config.otel });
+  if (isErr(traced)) console.warn(`[api] tracing disabled: ${traced.error.message}`);
+  const tracing = traced.ok ? traced.value : { shutdown: async () => ok() };
 
-  return serve(await composeApp({ config }), config);
+  return serve(await composeApp({ config }), config, { tracing, signals: host });
+}
+
+export function run(host: ProcessHost): Promise<void> {
+  return main(host).then(
+    () => undefined,
+    (cause) => {
+      console.error('Fatal API error:', cause);
+      host.exit(1);
+    }
+  );
 }
 
 if (process.env.NODE_ENV !== 'test') {
-  main()
-    .then(({ shutdown }) => {
-      for (const signal of ['SIGTERM', 'SIGINT'] as const) {
-        process.on(signal, () => {
-          void shutdown().then((outcome) => process.exit(outcome === 'drained' ? 0 : 1));
-        });
-      }
-    })
-    .catch((err) => {
-      console.error('Fatal API error:', err);
-      process.exit(1);
-    });
+  void run({
+    env: process.env,
+    onSignal: (signal, handler) => process.on(signal, handler),
+    exit: (code) => process.exit(code),
+  });
 }

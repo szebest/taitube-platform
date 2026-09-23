@@ -5,7 +5,8 @@ import { registerAdapters } from '@vp/adapters/composition';
 import { Container } from '@vp/composition';
 import type { WorkerStageName } from '@vp/env-schema';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createLogger, createMetricsRegistry } from '@vp/observability';
+import { mediaTools } from '@vp/ffmpeg';
+import { createLogger } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { OutboxRelay } from '../../stages/housekeeping/outbox-relay';
 import { Worker, registerStages } from '../stages.module';
@@ -17,7 +18,7 @@ async function stageContainer(stage: WorkerStageName, tmpDir = os.tmpdir(), outb
   );
   return registerStages(c, {
     logger: createLogger({ service: 'stages-test', level: 'silent' }),
-    metrics: createMetricsRegistry(),
+    media: mediaTools,
     workerId: 'stages-test',
     outboxRelay: { enabled: outbox },
   });

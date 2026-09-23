@@ -1,18 +1,19 @@
 import * as net from 'node:net';
 import { Adapters } from '@vp/adapters/composition';
+import type { ProcessHost } from '@vp/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
-import { shutdownTracing } from '@vp/observability';
-import { err } from '@vp/result';
+import type { Tracing } from '@vp/observability';
+import { err, ok } from '@vp/result';
 import { composeApp } from '../app';
 import { Services } from '../composition/services.module';
-import { main, serve } from '../main';
+import { main, run, serve } from '../main';
 
-vi.mock(import('@vp/observability'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  shutdownTracing: vi.fn(async () => {}),
-}));
+const tracing: Tracing = { shutdown: vi.fn(async () => ok()) };
+const TIMINGS = { tracing, timings: { drainDelayMs: 50, graceMs: 2_000 } };
 
-const TIMINGS = { drainDelayMs: 50, graceMs: 2_000 };
+function host(env: Record<string, string>): ProcessHost & { exit: ReturnType<typeof vi.fn> } {
+  return { env, onSignal: () => {}, exit: vi.fn() };
+}
 
 function config(): AppConfig {
   return inProcessAppConfig({ http: { port: 0, metricsPort: 0 } });
@@ -48,20 +49,19 @@ describe('apps/api: main', () => {
 
   it('refuses a production boot without its secrets before it binds a port', async () => {
     const port = await freePort();
-    const exit = vi
-      .spyOn(process, 'exit')
-      .mockImplementation((() => undefined) as unknown as typeof process.exit);
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const production = host({
+      NODE_ENV: 'production',
+      DATABASE_URL: 'postgres://localhost:5432/vp',
+      PORT: String(port),
+    });
 
-    await expect(
-      main({
-        NODE_ENV: 'production',
-        DATABASE_URL: 'postgres://localhost:5432/vp',
-        PORT: String(port),
-      })
-    ).rejects.toThrow('S3_ACCESS_KEY_ID: is required in production');
+    await run(production);
 
-    expect(exit).toHaveBeenCalledWith(1);
+    expect(production.exit).toHaveBeenCalledWith(1);
+    expect(String(error.mock.calls.at(-1)?.[1])).toContain(
+      'S3_ACCESS_KEY_ID: is required in production'
+    );
     expect(await refusesConnections(port)).toBe(true);
   });
 
@@ -94,8 +94,8 @@ describe('apps/api: main', () => {
 
   it('answers /readyz 503 at once while /livez stays 200 and the server still accepts', async () => {
     const api = await serve(await composeApp({ config: config() }), config(), {
-      drainDelayMs: 250,
-      graceMs: 2_000,
+      tracing,
+      timings: { drainDelayMs: 250, graceMs: 2_000 },
     });
     expect((await fetch(`${api.address}/readyz`)).status).toBe(200);
 
@@ -123,6 +123,7 @@ describe('apps/api: main', () => {
       ['QueueRegistry', container.get(Adapters.QueueRegistry), 'close'],
       ['CategoryCache', container.get(Adapters.CategoryCache), 'close'],
       ['SseHub', container.get(Services.SseHub), 'close'],
+      ['MetricsServer', container.get(Services.MetricsServer), 'close'],
       ['QueuePoller', container.get(Services.QueuePoller), 'stop'],
       ['SqlPoller', container.get(Services.SqlPoller), 'stop'],
     ];
@@ -140,15 +141,16 @@ describe('apps/api: main', () => {
     await api.shutdown();
 
     expect(released).toEqual([
-      'SqlPoller',
-      'QueuePoller',
       'DbClient',
-      'SseHub',
       'CategoryCache',
       'Multipart',
       'Storage',
-      'Cache',
+      'SqlPoller',
+      'QueuePoller',
       'QueueRegistry',
+      'SseHub',
+      'Cache',
+      'MetricsServer',
     ]);
   });
 
@@ -165,10 +167,33 @@ describe('apps/api: main', () => {
   });
 
   it('flushes buffered spans once the servers have closed', async () => {
-    const api = await serve(await composeApp({ config: config() }), config(), TIMINGS);
+    const flushed: Tracing = { shutdown: vi.fn(async () => ok()) };
+    const api = await serve(await composeApp({ config: config() }), config(), {
+      ...TIMINGS,
+      tracing: flushed,
+    });
 
     expect(await api.shutdown()).toBe('drained');
-    expect(shutdownTracing).toHaveBeenCalledTimes(1);
+    expect(flushed.shutdown).toHaveBeenCalledTimes(1);
+  });
+
+  it('drains and exits 0, and never listens, on a SIGTERM that arrives while it boots', async () => {
+    const port = await freePort();
+    const booting = host({
+      NODE_ENV: 'test',
+      ADAPTER_FAMILY: 'in-memory',
+      DATABASE_URL: 'postgres://localhost:5432/vp',
+      PORT: String(port),
+      METRICS_PORT: '0',
+    });
+    booting.onSignal = (signal, handler) => {
+      if (signal === 'SIGTERM') handler();
+    };
+
+    await main(booting);
+
+    await vi.waitFor(() => expect(booting.exit).toHaveBeenCalledWith(0));
+    expect(await refusesConnections(port)).toBe(true);
   });
 
   it('gives up on a disposer that never resolves, and names it', async () => {
@@ -177,7 +202,10 @@ describe('apps/api: main', () => {
       () => new Promise(() => {})
     );
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const api = await serve(composed, config(), { drainDelayMs: 0, graceMs: 100 });
+    const api = await serve(composed, config(), {
+      tracing,
+      timings: { drainDelayMs: 0, graceMs: 100 },
+    });
 
     expect(await api.shutdown()).toBe('forced');
     expect(log).toHaveBeenLastCalledWith(expect.stringContaining('still waiting on Storage'));

@@ -52,8 +52,8 @@ export const CoreEnvSchema = z.object({
   CORS_ORIGINS: commaList(z.string()).default('http://localhost:5173,http://localhost:8080'),
   TRUST_PROXY: commaList(z.string()).default(''),
   HTTP_BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(1_048_576),
-  PORT: z.coerce.number().int().positive().default(3000),
-  METRICS_PORT: z.coerce.number().int().positive().default(9464),
+  PORT: z.coerce.number().int().nonnegative().default(3000),
+  METRICS_PORT: z.coerce.number().int().nonnegative().default(9464),
   PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(PAGE_SIZE_DEFAULT),
   PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
 });

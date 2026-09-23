@@ -1,17 +1,19 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { queueUnavailable } from '@vp/errors';
+import { mediaTools } from '@vp/ffmpeg';
 import { createLogger } from '@vp/observability';
 import { err } from '@vp/result';
 import { createWorkerRunner } from '../runner';
 
 const logger = createLogger({ service: 'runner-test', level: 'silent' });
+const collaborators = { logger, media: mediaTools, workerId: 'runner-spec' };
 
 describe('apps/worker: createWorkerRunner', () => {
   it('consumes the configured stage over the in-memory family', async () => {
     const runner = await createWorkerRunner({
       config: inProcessAppConfig({ worker: { stage: 'package' } }),
-      logger,
+      ...collaborators,
     });
 
     expect(runner.worker.name).toBe('package');
@@ -26,7 +28,7 @@ describe('apps/worker: createWorkerRunner', () => {
     const runner = await createWorkerRunner({
       config: inProcessAppConfig({ worker: { stage: 'probe' } }),
       adapters: { jobQueue, repositories: new InMemoryRepositories() },
-      logger,
+      ...collaborators,
     });
     await runner.close();
 
@@ -37,7 +39,7 @@ describe('apps/worker: createWorkerRunner', () => {
   it('rejects its close, naming the disposer that failed', async () => {
     const runner = await createWorkerRunner({
       config: inProcessAppConfig({ worker: { stage: 'package' } }),
-      logger,
+      ...collaborators,
     });
     vi.spyOn(runner.queue, 'close').mockResolvedValue(err(queueUnavailable('close', 'gone')));
 
@@ -50,7 +52,7 @@ describe('apps/worker: createWorkerRunner', () => {
         worker: { stage: 'housekeeping' },
         housekeeping: { outboxRelayIntervalMs: 60_000 },
       }),
-      logger,
+      ...collaborators,
     });
 
     expect(runner.outboxRelay?.isRunning()).toBe(true);
@@ -59,7 +61,7 @@ describe('apps/worker: createWorkerRunner', () => {
   });
 
   it('names nothing still being disposed once it has closed', async () => {
-    const runner = await createWorkerRunner({ config: inProcessAppConfig(), logger });
+    const runner = await createWorkerRunner({ config: inProcessAppConfig(), ...collaborators });
 
     await runner.close();
 
