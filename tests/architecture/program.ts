@@ -50,7 +50,6 @@ function workspaceOnlyHost(): ts.CompilerHost {
   return host;
 }
 
-/** One program over every server-side production source, built once per suite run. */
 export function serverProgram(roots: readonly string[]): ts.Program {
   shared ??= ts.createProgram(
     roots.map((file) => join(ROOT, file)),
@@ -60,7 +59,6 @@ export function serverProgram(roots: readonly string[]): ts.Program {
   return shared;
 }
 
-/** A program over in-memory files, for the fixture that proves an assertion fires. */
 export function fixtureProgram(files: Record<string, string>): ts.Program {
   const host = ts.createCompilerHost(OPTIONS);
   const read = host.readFile.bind(host);

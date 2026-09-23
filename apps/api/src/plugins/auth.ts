@@ -10,7 +10,6 @@ import type { ServiceSet } from '../composition/services.module';
 import { sendResult } from '../routes/send-result';
 import type { ChannelService } from '../services/channel-service';
 
-/** A dev-mode operator credential: the token and the provisioned user it acts as. */
 export interface AdminCredential {
   token: string;
   userId: string;

@@ -20,7 +20,6 @@ function isLeaf(checker: ts.TypeChecker, type: ts.Type): boolean {
   return !(type.flags & ts.TypeFlags.Object) || type.getProperties().length === 0;
 }
 
-/** Every property symbol under `AppConfig`, and the leaf paths it stands for. */
 function configSymbols(checker: ts.TypeChecker, root: ts.Type): Map<ts.Symbol, string[]> {
   const symbols = new Map<ts.Symbol, string[]>();
   const walk = (type: ts.Type, prefix: string): string[] => {

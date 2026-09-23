@@ -1,4 +1,3 @@
-/** The smallest environment a production boot accepts: rotated secrets and a jwks issuer. */
 export const PRODUCTION_ENV: Readonly<Record<string, string>> = {
   NODE_ENV: 'production',
   AUTH_MODE: 'jwks',

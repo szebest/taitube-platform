@@ -5,8 +5,8 @@
  *
  * Every entry left is a boundary ticket 84 named out of its own scope: a spawned process, a CLI's
  * top-level exit-code handler, telemetry that must never fail what it instruments, a build or
- * migration entrypoint, and `apps/web` (tickets 53, 70 and 71 own the browser side). The half that was waiting on a conversion is
- * gone - the ports, the services and the stages all return now.
+ * migration entrypoint, and `apps/web` (tickets 53, 70 and 71 own the browser side). The half that
+ * was waiting on a conversion is gone - the ports, the services and the stages all return now.
  */
 export const LEGACY_CATCH_SITES: readonly string[] = [
   // Spawns FFmpeg and reads its exit code - a process boundary, not a port.

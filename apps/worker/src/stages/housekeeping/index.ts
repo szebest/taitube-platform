@@ -45,7 +45,6 @@ export interface HousekeepingProcessorOptions extends HousekeepingSettings {
   logger?: Logger;
 }
 
-/** Each task's thresholds, in the option names the task reads them by. */
 export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
   return {
     uploads: {
