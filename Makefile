@@ -4,6 +4,7 @@ REDIS_IMAGE ?= redis:7-alpine
 
 CLUSTER_TOOL ?= k3d
 CLUSTER_NAME ?= vp
+LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 
 .PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-local-secrets k8s-validate load-s1 load-s2 load-s3 load-smoke
 
@@ -115,10 +116,10 @@ obs-down: ## Stop observability stack
 obs-check: ## Assert observability stack targets UP and healthy via Prometheus API
 	bash scripts/obs-check.sh
 
-k8s-local-secrets: ## Write the local overlay's git-ignored Secret patch with random values, once
-	@test -f infra/k8s/overlays/local/secrets.patch.yaml || printf 'apiVersion: v1\nkind: Secret\nmetadata:\n  name: vp-secrets\n  namespace: video-pipeline\nstringData:\n  ADMIN_TOKEN: "%s"\n  WEBHOOK_SIGNING_SECRET: "%s"\n' "$$(openssl rand -hex 32)" "$$(openssl rand -hex 32)" > infra/k8s/overlays/local/secrets.patch.yaml
+k8s-local-secrets: ## Write the local cluster's git-ignored ADMIN_TOKEN / WEBHOOK_SIGNING_SECRET once, with random values
+	@test -f $(LOCAL_SECRETS) || printf 'ADMIN_TOKEN=%s\nWEBHOOK_SIGNING_SECRET=%s\n' "$$(openssl rand -hex 32)" "$$(openssl rand -hex 32)" > $(LOCAL_SECRETS)
 
-k8s-validate: k8s-local-secrets ## Validate Kubernetes manifests across local and cloud overlays
+k8s-validate: ## Validate Kubernetes manifests across local and cloud overlays
 	bash scripts/validate-k8s.sh
 
 k3d-up: ## Create local k3d (or kind) cluster and install Helm charts (Postgres, Redis, MinIO, KEDA, Prometheus Stack)
@@ -152,7 +153,9 @@ k3d-deploy: k8s-local-secrets ## Build local images, import to k3d, and apply Ku
 		k3d image import vp-api:local vp-worker:local -c $(CLUSTER_NAME); \
 	fi
 	@echo "Applying Kubernetes manifests (local overlay)..."
-	kubectl apply -k infra/k8s/overlays/local
+	@. ./$(LOCAL_SECRETS) && kubectl kustomize infra/k8s/overlays/local \
+		| sed -e "s/change-me-admin-token-local-cluster/$$ADMIN_TOKEN/" -e "s/change-me-webhook-secret-local-cluster/$$WEBHOOK_SIGNING_SECRET/" \
+		| kubectl apply -f -
 	@echo "Waiting for database migrations Job to complete..."
 	kubectl wait --for=condition=complete job/vp-migrate -n video-pipeline --timeout=120s || kubectl logs job/vp-migrate -n video-pipeline
 	@echo "Waiting for API and Worker deployments to become ready..."

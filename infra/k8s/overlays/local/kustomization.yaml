@@ -16,9 +16,6 @@ images:
     newTag: local
 
 patches:
-  # `make k3d-deploy` writes this once with random values: the base Secret's placeholders are
-  # refused by a production boot, and this cluster runs NODE_ENV=production.
-  - path: secrets.patch.yaml
   - target:
       kind: Deployment
       name: vp-api
