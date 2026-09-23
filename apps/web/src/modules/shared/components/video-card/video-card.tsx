@@ -42,7 +42,7 @@ export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
 							</div>
 						</div>
 						<div>
-							<Can I={canUpdateVideo} this={{ video: { id: video.id, ownerId: video.ownerId } }}>
+							<Can type="rule" I={canUpdateVideo} this={{ video: { id: video.id, ownerId: video.ownerId } }}>
 								<VideoSettingsDropdown video={video} />
 							</Can>
 						</div>

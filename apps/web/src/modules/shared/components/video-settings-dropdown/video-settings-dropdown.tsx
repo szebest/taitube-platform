@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import styles from './video-settings-dropdown.module.scss';
 
 import type { VideoSummary } from "@vp/api-contracts";
+import { fromPromise, isErr } from "@vp/result";
 
 import { useDeleteVideoMutation } from "../../api";
 
@@ -24,14 +25,13 @@ export const VideoSettingsDropdown = memo(({ video, shouldRedirectOnDelete }: Vi
 	}
 
 	const handleDelete = async () => {
-		const result = await deleteVideo(video.id);
+		const deleted = await fromPromise(() => deleteVideo(video.id).unwrap(), (cause) => cause);
+		if (isErr(deleted)) return;
 
-		if ("data" in result) {
-			toast('Successfully deleted the video');
+		toast('Successfully deleted the video');
 
-			if (shouldRedirectOnDelete) {
-				navigate(-1);
-			}
+		if (shouldRedirectOnDelete) {
+			navigate(-1);
 		}
 	}
 

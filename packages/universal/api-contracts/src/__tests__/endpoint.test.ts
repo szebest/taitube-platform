@@ -1,4 +1,5 @@
-import { buildPath, defineEndpoint } from '../endpoint';
+import { buildPath, defineEndpoint, isEndpoint } from '../endpoint';
+import { getVideo } from '../videos';
 import { VideoIdParamSchema, VideoSchema } from '../video-resource';
 
 describe('packages/api-contracts: endpoint', () => {
@@ -30,5 +31,19 @@ describe('packages/api-contracts: endpoint', () => {
 
   it('refuses to build a path with a missing parameter', () => {
     expect(() => buildPath('/v1/videos/:id')).toThrow(/Missing path parameter "id"/);
+  });
+
+  it.each([
+    { scenario: 'an endpoint contract', value: getVideo, expected: true },
+    { scenario: 'a schema', value: VideoSchema, expected: false },
+    { scenario: 'a constant', value: ['recent', 'popular'], expected: false },
+    { scenario: 'null', value: null, expected: false },
+    {
+      scenario: 'an object whose result is not a schema',
+      value: { method: 'GET', path: '/v1/videos', result: {} },
+      expected: false,
+    },
+  ])('tells $scenario apart from an endpoint', ({ value, expected }) => {
+    expect(isEndpoint(value)).toBe(expected);
   });
 });

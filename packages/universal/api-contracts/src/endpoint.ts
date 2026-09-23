@@ -1,7 +1,9 @@
 import type { ErrorCode } from '@vp/errors';
-import type { z } from 'zod';
+import { z } from 'zod';
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const;
+
+export type HttpMethod = (typeof HTTP_METHODS)[number];
 
 export type ErrorResponses = Readonly<Record<number, readonly ErrorCode[]>>;
 
@@ -55,13 +57,13 @@ export function buildPath(path: string, params: Record<string, string | number> 
   });
 }
 
+const EndpointShapeSchema = z.object({
+  method: z.enum(HTTP_METHODS),
+  path: z.string(),
+  result: z.instanceof(z.ZodType),
+});
+
 /** Whether an exported member of a contract group is an endpoint rather than a schema or type. */
 export function isEndpoint(value: unknown): value is EndpointContract {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'method' in value &&
-    'path' in value &&
-    'result' in value
-  );
+  return EndpointShapeSchema.safeParse(value).success;
 }

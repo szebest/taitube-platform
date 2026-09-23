@@ -152,4 +152,4 @@ In `apps/web`:
 - `PermissionsProvider` (`apps/web/src/modules/shared/providers/permissions-provider.tsx`): Computes and memoizes `getUserPermissions(userContext)`.
 - `usePermissions()`: Context hook exposing `{ ability, can, cannot, assertCan }`.
 - `useCan(action, subject)`: O(1) declarative permission hook with zero rule re-evaluations.
-- `<Can do={action} on={subject} fallback={<Fallback />}>{children}</Can>`: Headless UI slot component adhering to Rule 14.
+- `<Can type="ability" do={action} on={subject} fallback={<Fallback />}>{children}</Can>`, or `<Can type="rule" I={canX} this={params}>`: headless UI slot component, tagged by `type` and switched over exhaustively.

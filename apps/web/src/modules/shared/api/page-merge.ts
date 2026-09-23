@@ -1,6 +1,7 @@
 export type CursorPage<T> = {
 	items: T[];
 	nextCursor: string | null;
+	total?: number;
 };
 
 /**
@@ -10,8 +11,5 @@ export type CursorPage<T> = {
 export function appendPage<T extends CursorPage<unknown>>(cache: T, incoming: T): void {
 	cache.items.push(...incoming.items);
 	cache.nextCursor = incoming.nextCursor;
-
-	if ('total' in incoming) {
-		(cache as T & { total: number }).total = (incoming as T & { total: number }).total;
-	}
+	if (incoming.total !== undefined) cache.total = incoming.total;
 }

@@ -18,7 +18,7 @@ export const VideoDetails = ({ video }: VideoDetailsProps) => {
 		<div className={styles.container}>
 			<div className={styles.top}>
 				<h4 className={styles.title} title={video.title ?? ''}>{video.title}</h4>
-				<Can I={canUpdateVideo} this={{ video: { id: video.id, ownerId: video.ownerId } }}>
+				<Can type="rule" I={canUpdateVideo} this={{ video: { id: video.id, ownerId: video.ownerId } }}>
 					<VideoSettingsDropdown video={video} shouldRedirectOnDelete />
 				</Can>
 			</div>

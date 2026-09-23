@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { fromPromise, isOk } from '@vp/result';
+import { z } from 'zod';
 
 import { useUpdateVideoMutation, useVideoQuery } from 'src/modules/shared/api';
 
@@ -8,6 +10,8 @@ import type { EditVideoFormModel } from 'src/modules/shared/models';
 
 import { EditVideoForm } from '../../components';
 import { LoadingSpinner } from 'src/modules/shared/components';
+
+const VersionConflictSchema = z.object({ status: z.literal(409) });
 
 export function EditPage() {
 	const { videoId } = useParams();
@@ -30,16 +34,19 @@ export function EditPage() {
 	const submit = async (form: EditVideoFormModel) => {
 		if (!video) return;
 
-		const response = await edit({ ...form, id: video.id, version: video.version });
+		const saved = await fromPromise(
+			() => edit({ ...form, id: video.id, version: video.version }).unwrap(),
+			(cause) => cause
+		);
 
-		if ("data" in response) {
+		if (isOk(saved)) {
 			toast('Successfully edited the video');
 
 			navigate(-1);
 			return;
 		}
 
-		if ("status" in response.error && response.error.status === 409) {
+		if (VersionConflictSchema.safeParse(saved.error).success) {
 			toast('The video changed while you were editing it');
 		}
 	}

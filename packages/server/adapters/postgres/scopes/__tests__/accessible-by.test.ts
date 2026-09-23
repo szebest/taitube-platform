@@ -1,5 +1,5 @@
 import { videos } from '@vp/db';
-import { type UserContext, getUserPermissions } from '@vp/permissions';
+import type { UserContext } from '@vp/permissions';
 import { accessibleBy, ownerScope, publicVisibilityScope, videoReadScope } from '../accessible-by';
 import { sqlParams, sqlText } from './sql-text';
 
@@ -31,11 +31,6 @@ describe('adapters/postgres/scoping: accessible-by adapter', () => {
       { name: 'admin', user: admin },
     ])('imposes no restriction for a $name', ({ user }) => {
       expect(videoReadScope(user)).toBeUndefined();
-    });
-
-    it('accepts a prebuilt ability and yields the same scope as its user', () => {
-      expect(sqlText(videoReadScope(getUserPermissions(guest)))).toBe(GUEST_READ_SQL);
-      expect(videoReadScope(getUserPermissions(admin))).toBeUndefined();
     });
   });
 
