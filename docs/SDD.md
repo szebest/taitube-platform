@@ -1541,15 +1541,15 @@ flowchart LR
 
 | Area | Control |
 |---|---|
-| Authentication | JWT bearer verified with `@fastify/jwt` against `AUTH_JWKS_URL` (RS256/EdDSA); `sub` → `users.id` (auto-provision on first sight). A token signed with the public `packages/server/dev-token` seed is accepted only where `AppConfig.auth.devTokens` is set, which is every `NODE_ENV` but `production`; in production an EdDSA token verifies against `AUTH_JWKS_URL` like any other. Admin routes require role claim `admin` or `x-admin-token` (constant-time compare). |
+| Authentication | A bearer token is verified by the `TokenVerifier` port (`@vp/core/ports`), and `AUTH_MODE` picks the adapter once, in `toAppConfig`. `jwks` verifies against `AUTH_JWKS_URL`: `iss` must equal `AUTH_ISSUER`, `aud` must name `AUTH_AUDIENCE`, `exp` is required, `alg` must be one of `AUTH_ALGORITHMS` and the one the JWK declares (never `none`), a kid-less token is refused while the key set holds more than one key, ES* signatures are read as JWS `r||s`, and an unknown `kid` refetches the key set at most once per 30 s so a rotated key is accepted at once. `dev` verifies `pnpm dev-token` tokens against the key derived from the committed seed and serves that key at `/.well-known/jwks.json`; production refuses `AUTH_MODE=dev` at `loadEnv()`, so neither the route nor the seed key exist there (`auth-hardening.test.ts`). `sub` becomes `users.id`, provisioned on first sight. An admin is a token whose verified role claim is `admin`; the static `x-admin-token` (constant-time compare) exists in dev mode only, acts as the provisioned `AUTH_DEV_USER_ID`, and production refuses any `ADMIN_TOKEN`. |
 | Authorisation | Declarative RBAC & ABAC permission engine powered by pure functional `@casl/ability` in `packages/universal/permissions` (`@vp/permissions`), decoupled from backend repository/port internals for full backend (`apps/api`) and frontend (`apps/web`) sharing without framework bloat. Strictly typed `Role = 'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'` with boundary-only `parseRole` sanitization. Modular rule sets composed via global `getUserPermissions(user)` builder. Formalized through clean adapters: Postgres Scopes adapter in `packages/server/adapters/postgres/scopes/` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`, `traits`) for row-level database security with CASL `rulesToAST` compilation; `FastifyAuthorizationAdapter` for HTTP preHandlers and memoized `request.ability`; `ProblemDetailsErrorAdapter` for standardized RFC 9457 (401 UNAUTHORIZED vs 403 FORBIDDEN with structured error context); and `ReactPermissionsAdapter` (`useCan`, `PermissionsProvider`, `<Can />` headless slot) for reactive frontend gating. Consumed strictly via library-agnostic `canX({ user, resource })` action helpers and `assertCan(...)` guards; manual hand-checking of roles, user IDs, or ownership in routes/services/repositories is strictly forbidden. Video queries scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
 | Upload safety | Presigned URLs TTL 15 min; `Content-Type` and `Content-Length` are signed into the single-PUT URL; multipart verified via `HeadObject` after completion; server deletes and `REJECT`s on mismatch. Content-type allowlist (`video/mp4, video/quicktime, video/webm, video/x-matroska`). Per-user quota (`MAX_UPLOAD_BYTES`, `MAX_INFLIGHT_PER_USER`). |
 | Storage | Buckets private; CDN reads `public` via R2 custom domain (no public bucket URL exposed). Least-privilege access keys: API key may `Put/Get/Head/Multipart*` on `raw` only; worker key may `Get` on `raw` and `Put/Delete` on `public`. |
 | Command injection | FFmpeg invoked with argv arrays via `spawn` (never `exec`/shell); object keys are derived from UUIDs, never from user filenames (original filename stored as metadata only). |
-| Webhooks | HMAC-SHA256 signature header `X-Signature: t=…,v1=…` with 5-min replay window; `Idempotency-Key` header. Outbound webhooks only to `https://` URLs; SSRF guard (deny private IP ranges). |
-| Rate limiting | `@fastify/rate-limit` keyed by user (fallback IP): 30/min uploads, 300/min reads, 5/min reprocess. |
-| Transport | TLS terminated by Cloudflare (Tunnel/Proxy) in cloud; `HSTS`; CORS allowlist = frontend origins. |
-| Secrets | Env only; `.env` git-ignored; cloud via Kubernetes Secrets (sealed-secrets or SOPS+age in repo). No secrets in images. **No secret-shaped key has a default** (`ADMIN_TOKEN`, `WEBHOOK_SIGNING_SECRET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`): each is optional outside production, and a process with `NODE_ENV=production` and a missing one, or one still holding the published `change-me` placeholder, fails at `loadEnv()` and never binds a port. The reason is the `x-admin-token` path: it resolves a caller to `ADMIN` before JWKS verification, so a defaulted token handed `/admin/*` and Bull Board to anyone who read this repository. `no-defaulted-secrets.test.ts` asserts it. `make k3d-deploy` substitutes random values, kept once in a git-ignored file, for the base Secret's placeholders when it applies the local overlay. |
+| Webhooks | Not built: no feature sends one, so `WEBHOOK_SIGNING_SECRET` and `WEBHOOK_URL_ALLOWLIST` are not declared. When outbound webhooks land they sign with HMAC-SHA256 (`X-Signature: t=…,v1=…`, 5-min replay window), go only to `https://` URLs behind an SSRF guard, and bring their keys back. |
+| Rate limiting | `@fastify/rate-limit` keyed by user (fallback IP): 30/min uploads, 300/min reads, 5/min reprocess, with admins on the reprocess `allowList`. The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names, and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
+| Transport | TLS terminated by Cloudflare (Tunnel/Proxy) in cloud; `HSTS`; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. |
+| Secrets | Env only; `.env` git-ignored; no secrets in images. The cloud overlay holds no credential at all: an `ExternalSecret` (External Secrets Operator, `ClusterSecretStore` `vp-secret-store`) materialises `vp-secrets`, and the overlay deletes the base's local Secret. **No secret-shaped key has a default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`) are required under `NODE_ENV=production`, and every secret and every `*_URL` key is refused there if it holds a credential this repo ships for local use (`vp`, `minioadmin`, `admin`, `change-me*`, bare or as URL userinfo). No schema default and no production literal carries URL userinfo. `production-secrets.test.ts` renders the base and the cloud overlay with kustomize and holds both; `no-defaulted-secrets.test.ts` holds the schema. |
 | Containers | Non-root user, read-only root FS, `tmpfs`/emptyDir for `/tmp/vp`, `resources.limits` on every pod, distroless-ish base for API (`node:24-slim`), minimal ffmpeg layer for workers. |
 | Redis | `requirepass`, not exposed outside the network/cluster, `noeviction`. |
 | Supply chain | `pnpm audit` + Dependabot/Renovate; lockfile frozen in CI; images built in CI and pinned by digest in manifests; Trivy scan on images. |
@@ -2105,37 +2105,41 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
 
-The schema is **closed over what the code reads**: every key the deployables read is declared here, every declared key is uncommented in `.env.example`, and every key compose, the k8s base, CI steps and `make` hand the apps is declared (`env-key-closure.test.ts`). `process.env` is read only at `apps/*/src/main.ts`; everything below takes the `AppConfig` value `toAppConfig()` shapes (ADR-25).
+Two schemas, each with named consumers. `AppEnv` (`app-env.ts`) is what `toAppConfig()` reads, and every key in it reaches a consumer: `env-keys-consumed.test.ts` checks every `AppEnv` key is read by `toAppConfig` and every `AppConfig` leaf is read by production source outside `env-schema`. `PLATFORM_ENV` (`platform-env.ts`) is the short list of keys this repo hands to something else, each naming the consumer beside it. Tuning with no key of its own (cache TTLs, housekeeping thresholds, the outbox cadence, the segment uploader's retries) is declared once, as a named constant in `app-config.ts`; no service, stage or adapter holds a numeric default (`no-tuning-literals.test.ts`).
+
+The schema is **closed over what the code reads**: every key the deployables read is declared, every declared key is uncommented in `.env.example`, and every key compose, the k8s base and overlays, CI steps and `make` hand the apps is declared (`env-key-closure.test.ts`). `process.env` is read only in the entrypoints and env homes `tests/architecture/entrypoints.ts` lists; everything below takes the `AppConfig` value `toAppConfig()` shapes (ADR-25).
 
 ### 16.1 Core
 
 | Variable | Used by | Example (local) | Notes |
 |---|---|---|---|
-| `NODE_ENV` | both | `development` | `production` disables dev auth bypass and pretty logs |
+| `NODE_ENV` | both | `development` | `production` turns on the refusals of §11 |
 | `LOG_LEVEL` | both | `debug` | pino level |
-| `OTEL_SERVICE_NAME` / `SERVICE_VERSION` | both | `vp-api` / git sha | OTel resource attributes; service name defaults per app (`vp-api`, `vp-worker-<stage>`), version set by Dockerfile |
-| `PUBLIC_API_URL` | api | `http://localhost:3000` | for OpenAPI, webhooks |
-| `CORS_ORIGINS` | api | `http://localhost:5173` | comma list of frontend origins |
+| `SERVICE_VERSION` | both | git sha | OTel resource attribute; the service name is set in code (`vp-api`, `vp-worker-<stage>`) |
+| `ADAPTER_FAMILY` | both | `external` | `in-memory` only for in-process tests; the one switch `registerAdapters` reads |
+| `CORS_ORIGINS` | api | `http://localhost:5173` | comma list of frontend origins; production refuses empty or `*` |
+| `TRUST_PROXY` | api | empty | comma list of proxy addresses/CIDRs whose `X-Forwarded-For` is trusted |
+| `HTTP_BODY_LIMIT_BYTES` | api | `1048576` | JSON body cap; media goes straight to S3 |
 | `PORT` / `METRICS_PORT` | both | `3000` / `9464` | metrics bound to a separate port |
-| `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | both (dev + images) | `1` / `1` | no phone-home from tooling/libraries (P9) |
-| `NODE_OPTIONS` | both (images + compose) | unset; `--import @vp/config/register` in the images and compose | read by Node itself, never by this code; declared so the schema is closed over every key the platform sets |
 
 ### 16.2 PostgreSQL
 
 | Variable | Example (local) | Cloud (Neon) |
 |---|---|---|
-| `DATABASE_URL` 🔒 | `postgres://vp:vp@localhost:5432/vp` | `postgresql://user:pass@ep-xxx.eu-central-1.aws.neon.tech/vp?sslmode=require` (pooled endpoint `-pooler` for the API; direct for migrations) |
-| `DATABASE_URL_MIGRATIONS` 🔒 | same as above | Neon **direct** (non-pooled) URL |
+| `DATABASE_URL` 🔒 | `postgres://vp:vp@localhost:5432/vp` | `postgresql://user:pass@ep-xxx.eu-central-1.aws.neon.tech/vp?sslmode=require` (pooled endpoint `-pooler` for the API) |
+| `DATABASE_URL_MIGRATIONS` 🔒 | empty (= `DATABASE_URL`) | Neon **direct** (non-pooled) URL |
 | `DATABASE_POOL_MAX` | `10` | `5` per pod (Neon free ≈ 100 connections via pooler) |
+
+`pnpm db:migrate` (`apps/api/src/migrate.ts`, also the k8s migrate Job) migrates and nothing else. `pnpm db:seed` (`apps/api/src/seed.ts`) writes the dev user and a READY video, and refuses `NODE_ENV=production`; compose runs both for local development.
 
 ### 16.3 Redis (BullMQ + Pub/Sub)
 
 | Variable | Example (local) | Notes |
 |---|---|---|
-| `REDIS_URL` 🔒 | `redis://:vp@localhost:6379/0` | queues, db 0; `rediss://` for TLS |
-| `REDIS_PUBSUB_URL` 🔒 | `redis://:vp@localhost:6379/1` | separate logical DB / connection for Pub/Sub |
-| `REDIS_ADDR` / `REDIS_PASSWORD` 🔒 | `redis:6379` / `vp` | only for the KEDA Redis-list fallback scaler |
-| `BULLMQ_PREFIX` | `bull` | must match KEDA `listName` prefix |
+| `REDIS_URL` | `redis://localhost:6379/0` | queues and cache; `rediss://` for TLS; no credential in the URL |
+| `REDIS_PUBSUB_URL` | `redis://localhost:6379/1` | the connection publish and subscribe use |
+| `REDIS_PASSWORD` 🔒 | `vp` | handed to BullMQ and to the cache client |
+| `BULLMQ_PREFIX` | `bull` | queue and flow key prefix; must match the KEDA `listName` prefix |
 
 ### 16.4 Object storage (S3-compatible)
 
@@ -2148,25 +2152,24 @@ The schema is **closed over what the code reads**: every key the deployables rea
 | `S3_SECRET_ACCESS_KEY` 🔒 | `minioadmin` | R2 Secret Access Key | B2 applicationKey |
 | `S3_BUCKET_RAW` | `raw` | `vp-raw` | `vp-raw` |
 | `S3_BUCKET_PUBLIC` | `public` | `vp-public` | `vp-public` |
-
-The two bucket keys are the only spelling: every reader in both apps takes them through `AppConfig.buckets`. An earlier `STORAGE_RAW_BUCKET` / `STORAGE_PUBLIC_BUCKET` spelling, read by the code but declared nowhere, is gone.
 | `S3_PRESIGN_TTL_SEC` | `900` | `900` | `900` |
 | `CDN_BASE_URL` | `http://localhost:9000/public` | `https://cdn.example.com` (R2 custom domain) | `https://cdn.example.com` (Cloudflare → B2) |
 | `S3_MULTIPART_THRESHOLD_BYTES` | `104857600` (100 MB) | same | same |
 | `S3_PART_SIZE_MIN_BYTES` / `S3_PART_SIZE_MAX_BYTES` | `8388608` / `67108864` | same | same |
 | `RAW_RETENTION_DAYS` | `7` | `7` | `7` |
 
-Worker and API should use **different** access keys with the scoped permissions from §11; env names are identical, values differ per deployment.
+The two bucket keys are the only spelling: every reader in both apps takes them through `AppConfig.buckets`. Worker and API should use **different** access keys with the scoped permissions from §11; env names are identical, values differ per deployment.
 
 ### 16.5 Auth
 
 | Variable | Example | Notes |
 |---|---|---|
-| `AUTH_JWKS_URL` | `http://localhost:3000/.well-known/jwks.json` (dev issuer from `packages/server/dev-token`) or your IdP (`https://<clerk|supabase|auth0>/.well-known/jwks.json`) | RS256/EdDSA verification |
-| `AUTH_ISSUER` / `AUTH_AUDIENCE` | `vp-dev` / `vp-api` | claim checks |
-| `AUTH_DEV_USER_ID` | `00000000-0000-7000-8000-000000000001` | development only |
-| `ADMIN_TOKEN` 🔒 | random 32 bytes | `x-admin-token` for admin routes / Bull Board (or role claim); unset admits nobody; required in production |
-| `WEBHOOK_SIGNING_SECRET` 🔒 | random 32 bytes | HMAC for outbound webhooks; required in production |
+| `AUTH_MODE` | `dev` | `dev` (the `pnpm dev-token` key) or `jwks` (your IdP); production refuses `dev` |
+| `AUTH_JWKS_URL` | empty in dev; `https://<clerk|supabase|auth0>/.well-known/jwks.json` | required when `AUTH_MODE=jwks` |
+| `AUTH_ISSUER` / `AUTH_AUDIENCE` | `vp-dev` / `vp-api` | compared to `iss` and `aud`, in both modes |
+| `AUTH_ALGORITHMS` | `RS256,ES256` | the algs a jwks token may use |
+| `AUTH_DEV_USER_ID` | `00000000-0000-7000-8000-000000000001` | dev mode: the provisioned user `ADMIN_TOKEN` acts as |
+| `ADMIN_TOKEN` 🔒 | random 32 bytes | dev mode `x-admin-token` for admin routes and Bull Board; unset admits nobody; production refuses any value |
 
 ### 16.6 Pipeline tuning
 
@@ -2174,32 +2177,29 @@ Worker and API should use **different** access keys with the scoped permissions 
 |---|---|---|
 | `WORKER_STAGE` | — (required in worker) | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` |
 | `WORKER_CONCURRENCY` | per stage registry | override |
-| `WORKER_RUNTIME` | `bun` | build arg / CMD switch |
-| `FFMPEG_PATH` / `FFPROBE_PATH` | `ffmpeg` / `ffprobe` | |
+| `FFMPEG_PATH` / `FFPROBE_PATH` | `ffmpeg` / `ffprobe` | the binaries the stages spawn |
 | `FFMPEG_THREADS` | CPU limit | K8s `resourceFieldRef` |
 | `X264_PRESET` | `veryfast` | load-test variable |
-| `HLS_SEGMENT_SECONDS` | `6` | |
-| `GOP_SECONDS` | `2` | |
-| `TRANSCODE_MODE` | `per-rendition` | `combined` for tiny nodes (ADR-08 #2) |
+| `HLS_SEGMENT_SECONDS` | `6` | `-hls_time` |
+| `GOP_SECONDS` | `2` | GOP = `round(GOP_SECONDS × fps)`, a forced keyframe every `GOP_SECONDS` |
 | `MAX_UPLOAD_BYTES` | `4294967296` | 4 GB |
-| `MAX_DURATION_SEC` | `3600` | |
+| `MAX_DURATION_SEC` | `3600` | probe refuses a longer source with `DURATION_EXCEEDED` |
+| `JOB_TIMEOUT_FACTOR` | `3` | transcode hard timeout = max(factor × duration, 10 min) |
 | `MAX_INFLIGHT_PER_USER` | `3` | admission control |
 | `UPLOAD_RATE_LIMIT_MAX` | `30` | `POST /v1/uploads` per user per minute; raise for load tests |
-| `ALLOWED_CONTENT_TYPES` | `video/mp4,video/quicktime,video/webm,video/x-matroska` | |
-| `JOB_TIMEOUT_FACTOR` | `3` | hard timeout = max(factor × duration, 10 min) |
-| `TMP_DIR` | `/tmp/vp` | emptyDir/tmpfs |
+| `TMP_DIR` | `/tmp/vp` | emptyDir/tmpfs; probe, transcode and thumbnail work under it and housekeeping sweeps it |
 | `SSE_HEARTBEAT_MS` | `15000` | |
 | `SSE_MAX_PER_USER` / `SSE_MAX_PER_POD` | `20` / `5000` | |
 | `SPRITE_INTERVAL_SECONDS` | `5` | thumbnail sprite frame interval (PRD OQ-4) |
 | `WORKER_HEARTBEAT_PATH` | `/tmp/vp/heartbeat` | the file the worker liveness probe reads |
-| `WEBHOOK_URL_ALLOWLIST` | empty | optional outbound targets |
+
+The upload content types are a typed constant in `@vp/validation` that the browser shares, not configuration.
 
 ### 16.7 Observability
 
 | Variable | Local | Grafana Cloud |
 |---|---|---|
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318` | `https://otlp-gateway-<region>.grafana.net/otlp` |
-| `OTEL_EXPORTER_OTLP_HEADERS` 🔒 | — | `Authorization=Basic <base64(instanceId:token)>` |
 | `OTEL_TRACES_SAMPLER` / `OTEL_TRACES_SAMPLER_ARG` | `parentbased_always_on` | `parentbased_traceidratio` / `0.2` |
 | `OTEL_RESOURCE_ATTRIBUTES` | `deployment.environment=local` | `deployment.environment=cloud` |
 | `PROMETHEUS_REMOTE_WRITE_URL` 🔒 (Alloy/k6 only) | — | `https://prometheus-prod-xx.grafana.net/api/prom/push` + basic auth |
@@ -2207,15 +2207,26 @@ Worker and API should use **different** access keys with the scoped permissions 
 | `SENTRY_DSN` 🔒 (optional) | — | |
 | `API` / `TOKEN` / `K6_PROMETHEUS_RW_SERVER_URL` (k6 only) | `http://localhost:3000` / dev JWT / `http://localhost:9090/api/v1/write` | reference deployment URL / Grafana Cloud k6 |
 
-### 16.8 Cloud-only
+### 16.8 Platform keys (`PLATFORM_ENV`)
+
+Handed to something other than this code, and declared so the schema stays closed:
+
+| Variable | Consumer |
+|---|---|
+| `NODE_OPTIONS` | Node itself; the images and compose set `--import @vp/config/register` |
+| `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | turbo and every tool honouring the convention (P9) |
+| `OTEL_EXPORTER_OTLP_HEADERS` 🔒 | Grafana Alloy (`Authorization=Basic <base64(instanceId:token)>`) |
+| `WORKER_RUNTIME` | the worker image `CMD` and the k8s worker command (`bun` or `node`) |
+| `REDIS_ADDR` | the KEDA redis trigger (`addressFromEnv`) |
+| `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
+
+### 16.9 Cloud-only (not read by any process in this repo)
 
 | Variable | Notes |
 |---|---|
-| `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` sidecar/DaemonSet |
 | `CLOUDFLARE_API_TOKEN` 🔒, `CLOUDFLARE_ACCOUNT_ID` | Terraform (R2 buckets, DNS, tunnel) |
 | `HCLOUD_TOKEN` 🔒 | Terraform (Hetzner) |
 | `GHCR_USERNAME` / `GHCR_TOKEN` 🔒 | image pull secret for private images (public images need none) |
-| `SOPS_AGE_KEY` 🔒 | decrypting `infra/k8s/overlays/cloud/secrets.enc.yaml` |
 
 ---
 

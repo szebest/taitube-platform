@@ -33,7 +33,7 @@ describe('Cloud Infrastructure & Terraform (Ticket 31)', () => {
     expect(content).toContain('TOTAL_STAGES=6');
     expect(content).toContain('stage "Cloudflare: Domain & Account ID"');
     expect(content).toContain('stage "Hetzner Cloud: API Token & SSH Key"');
-    expect(content).toContain('stage "Secrets: SOPS & age Key Management"');
+    expect(content).toContain('stage "Secrets: External Secrets Operator"');
   });
 
   it('AC 2: Terraform configurations exist and follow style guide', () => {

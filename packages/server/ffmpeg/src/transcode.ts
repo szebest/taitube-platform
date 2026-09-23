@@ -16,7 +16,7 @@ export interface TranscodeOptions {
   threads: number;
   attempt?: number;
   preset: string;
-  timeoutMs?: number;
+  timeoutFactor: number;
   onProgress?: (progress: { percent: number; outTimeMs: number }) => void;
 }
 
@@ -197,6 +197,9 @@ export interface FfmpegRunOptions {
 /** ffmpeg reports both of these in microseconds, whatever the suffix says. */
 const PROGRESS_TIME_KEYS = ['out_time_ms=', 'out_time_us='] as const;
 
+/** A short source still gets long enough to start FFmpeg and write its first segment. */
+const MIN_TRANSCODE_TIMEOUT_MS = 10 * 60 * 1000;
+
 const STDERR_TAIL_LINES = 50;
 const KILL_GRACE_MS = 3000;
 
@@ -320,7 +323,7 @@ export async function runFfmpegTranscode(
   options: TranscodeOptions
 ): Promise<TranscodeExecutionResult> {
   const durationMs = options.durationMs || 60000;
-  const timeoutMs = options.timeoutMs || Math.max(3 * durationMs, 10 * 60 * 1000);
+  const timeoutMs = Math.max(options.timeoutFactor * durationMs, MIN_TRANSCODE_TIMEOUT_MS);
 
   await runFfmpeg({
     ffmpegPath: options.ffmpegPath,

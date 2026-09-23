@@ -37,6 +37,7 @@ export interface TranscodeProcessorDeps {
     preset: string;
     gopSeconds: number;
     hlsSegmentSeconds: number;
+    timeoutFactor: number;
   };
   segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
   getQueue?: (name: string) => JobQueue;
@@ -209,6 +210,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
             fps,
             gopSeconds: ffmpeg.gopSeconds,
             hlsSegmentSeconds: ffmpeg.hlsSegmentSeconds,
+            timeoutFactor: ffmpeg.timeoutFactor,
             durationMs,
             threads,
             preset: ffmpeg.preset,

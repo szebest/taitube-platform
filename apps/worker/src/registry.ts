@@ -85,6 +85,7 @@ const transcode = (d: StageDeps) =>
         preset: d.config.worker.x264Preset,
         gopSeconds: d.config.worker.gopSeconds,
         hlsSegmentSeconds: d.config.worker.hlsSegmentSeconds,
+        timeoutFactor: d.config.worker.jobTimeoutFactor,
       },
       segmentUpload: d.config.worker.segmentUpload,
       getQueue: d.getQueue,

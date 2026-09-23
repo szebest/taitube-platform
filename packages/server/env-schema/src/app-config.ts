@@ -128,6 +128,7 @@ export interface AppConfig {
     x264Preset: string;
     hlsSegmentSeconds: number;
     gopSeconds: number;
+    jobTimeoutFactor: number;
     spriteIntervalSeconds: number;
     segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
   };
@@ -236,6 +237,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       x264Preset: env.X264_PRESET,
       hlsSegmentSeconds: env.HLS_SEGMENT_SECONDS,
       gopSeconds: env.GOP_SECONDS,
+      jobTimeoutFactor: env.JOB_TIMEOUT_FACTOR,
       spriteIntervalSeconds: env.SPRITE_INTERVAL_SECONDS,
       segmentUpload: { ...SEGMENT_UPLOAD },
     },

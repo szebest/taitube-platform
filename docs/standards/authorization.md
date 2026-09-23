@@ -139,7 +139,8 @@ Domain services depend on the abstract port `AuthorizationPort` (`packages/serve
 ### 3. HTTP Transport Carries Identity, Not Permissions
 `apps/api` has no Fastify authorization decorator. Routes resolve **who** the caller is and hand that to a
 domain service, which makes the decision through `AuthorizationPort`:
-- `plugins/auth.ts` populates `request.user` from a Bearer JWT or a valid `x-admin-token`.
+- `plugins/auth.ts` populates `request.user` from a Bearer JWT the `TokenVerifier` port accepts, or, in dev
+  mode only, a valid `x-admin-token`. A token it refuses answers a 401 problem from the hook itself.
 - `requireAuth(request)` throws RFC 9457 `401 UNAUTHORIZED` when an endpoint needs a caller and there is none.
 - `decideAdminAccess` in `@vp/domain-rules` holds the one admin gate; operator services compose it with
   the resolved caller.

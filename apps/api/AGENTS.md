@@ -41,7 +41,11 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 - Admin endpoints pass `request.user` to their service, which composes `decideAdminAccess` from
   `@vp/domain-rules` - the single admin gate, returning its verdict instead of throwing it. The
   `x-admin-token` credential is resolved into `request.user` by `plugins/auth.ts`, because it is an identity,
-  not a permission.
+  not a permission. It exists in dev mode only: production refuses `ADMIN_TOKEN`, and an admin there is a
+  token whose verified role claim says so.
+- **Tokens are verified by the `TokenVerifier` port.** `plugins/auth.ts` never parses a JWT; the adapter
+  `registerAdapters` picks from `config.auth.type` does, and the dev JWKS route is registered only in dev
+  mode (`routesFor(config.auth)`).
 - Authorization stays inside the domain; it just returns now. `authorize(actor, allowed, context)` in
   `@vp/domain-rules` is the one owner of the 401-vs-403 distinction: not signed in is `UNAUTHORIZED`, signed
   in without the permission is `FORBIDDEN`. `AuthorizationPort.assertCan` is gone; `can` stays.
@@ -61,8 +65,8 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 - A route hands the `Result` to `sendResult`, the only unwrap point in `apps/api`. Default mapping, a
   per-code `options.on`, or a total `*.presenter.ts` module with `assertNever`; when to use which is in
   [docs/standards/error-handling.md](../../docs/standards/error-handling.md).
-- `setErrorHandler` stays, narrowed to a backstop: transport validation, rate limiting, auth pre-handler
-  rejections and genuine bugs. Both paths call the same `problemFor`, so the body is identical either way.
+- `setErrorHandler` stays, narrowed to a backstop: transport validation, rate limiting, Fastify's own 4xx
+  errors (answered with their own status) and genuine bugs. The auth hook answers its own 401 problem. Both paths call the same `problemFor`, so the body is identical either way.
 - `PermanentError` / `TransientError` are the BullMQ queue-boundary representation only (ADR-18). Domain code
   in this app does not throw them.
 

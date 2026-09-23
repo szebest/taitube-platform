@@ -126,7 +126,7 @@ is stale — fix it.
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
-| `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result` |
+| `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result` |
 | `@vp/config` | server | `@vp/env-schema` |
 
 ### T5 — Applications

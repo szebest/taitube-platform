@@ -125,6 +125,7 @@ export const PipelineEnvSchema = z.object({
   GOP_SECONDS: z.coerce.number().int().positive().default(2),
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(4294967296),
   MAX_DURATION_SEC: z.coerce.number().int().positive().default(3600),
+  JOB_TIMEOUT_FACTOR: z.coerce.number().int().positive().default(3),
   MAX_INFLIGHT_PER_USER: z.coerce.number().int().positive().default(3),
   UPLOAD_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(30),
   TMP_DIR: z.string().default('/tmp/vp'),

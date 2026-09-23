@@ -16,6 +16,7 @@ export const STAGE_SETTINGS = {
     preset: 'veryfast',
     gopSeconds: config.worker.gopSeconds,
     hlsSegmentSeconds: config.worker.hlsSegmentSeconds,
+    timeoutFactor: config.worker.jobTimeoutFactor,
   },
   ffmpegPath: config.worker.ffmpegPath,
   ffprobePath: config.worker.ffprobePath,

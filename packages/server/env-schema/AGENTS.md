@@ -32,7 +32,8 @@ declares its own default now.
 3. **Defaults stay local-first (Rule 1).** Every default names `localhost` or a local literal; nothing
    points at a cloud host.
 4. **Consumers read `AppConfig`, not `AppEnv`.** `toAppConfig(env)` shapes the parsed environment once:
-   `kind: AdapterKind` is derived from `NODE_ENV` here and nowhere else, `cdn` is a `CdnBase` whose
+   `kind: AdapterKind` is `ADAPTER_FAMILY`, never inferred from `NODE_ENV`, `auth` is a tagged union on
+   `type` (`jwks` or `dev`) resolved once from `AUTH_MODE`, `cdn` is a `CdnBase` whose
    trailing slashes `asCdnBase` strips once, and buckets, limits and connections are grouped for the
    module that uses them. `inProcessAppConfig(overrides)` is what a test or an in-process app runs on:
    the in-memory family over the schema defaults, overrides merged in `AppConfig`'s own shape.
@@ -43,10 +44,14 @@ declares its own default now.
    and `PAGE_SIZE_MAX` are imported from `@vp/pagination`, which `@vp/api-contracts` reads too, so the
    env default and the advertised page bound cannot drift. That edge, and `@vp/pagination` being T2, is
    why this package is T3.
-7. **A secret has no default.** `ADMIN_TOKEN`, `WEBHOOK_SIGNING_SECRET`, `S3_ACCESS_KEY_ID`,
-   `S3_SECRET_ACCESS_KEY` and `REDIS_PASSWORD` are optional outside production and required in it, and a
-   production boot refuses the published `change-me` placeholder. A default for one of them is public by
-   construction; `no-defaulted-secrets.test.ts` fails on it.
+7. **A secret has no default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+   `REDIS_PASSWORD`) are optional outside production and required in it, and a production boot refuses any
+   secret or `*_URL` value holding a credential this repo ships for local use (`local-credentials.ts`), and
+   any `ADMIN_TOKEN` at all. A default for one of them is public by construction; `no-defaulted-secrets.test.ts`
+   fails on it, and on URL userinfo in a default.
+8. **Two schemas, named consumers.** `AppEnv` keys are read by `toAppConfig`; `PLATFORM_ENV` keys are handed
+   to something else and name it. Tuning with no key is a named constant in `app-config.ts`, declared once;
+   `env-keys-consumed.test.ts` and `no-tuning-literals.test.ts` hold both.
 
 ---
 

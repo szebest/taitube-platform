@@ -94,10 +94,11 @@ docker compose logs minio
 
 **Cloud R2 Credential Renewal / Recovery**:
 If R2 tokens expired or were rotated:
-1. Update `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` in `infra/k8s/overlays/cloud/secrets.enc.yaml`.
-2. Apply updated secrets:
+1. Update `video-pipeline/S3_ACCESS_KEY_ID` and `video-pipeline/S3_SECRET_ACCESS_KEY` in the secret store
+   behind `vp-secret-store`.
+2. Let the `ExternalSecret` refresh the Secret, then restart the workers:
    ```bash
-   sops -d infra/k8s/overlays/cloud/secrets.enc.yaml | kubectl apply -f -
+   kubectl annotate externalsecret vp-secrets -n video-pipeline force-sync=$(date +%s) --overwrite
    kubectl rollout restart deployment -l app.kubernetes.io/component=worker
    ```
 

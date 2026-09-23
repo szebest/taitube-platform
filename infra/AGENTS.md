@@ -18,7 +18,7 @@ Instructions for any coding agent working on infrastructure, orchestration, and 
 1. **Local-First Baseline:** The system must run completely offline without internet connectivity. External cloud services (R2, Neon, Grafana Cloud) are optional reference overlays and never hard dependencies.
 2. **Deterministic Parity:** Local MinIO buckets (`raw`, `public`) mirror the exact object key layouts and permissions configured in Cloudflare R2 via Terraform.
 3. **Queue Health & Durability:** Redis instances must run with `maxmemory-policy: noeviction` and append-only files (`appendonly: yes`) to prevent BullMQ job loss.
-4. **Secret Management:** Secrets committed to git (e.g. in `infra/k8s/overlays/cloud/secrets.enc.yaml`) must be encrypted using SOPS and age. Plaintext secrets must never be committed.
+4. **Secret Management:** No cloud credential is committed, encrypted or not. The cloud overlay reads its secrets through an `ExternalSecret`, and `tests/architecture/production-secrets.test.ts` renders it to hold that no `Secret` value and no local credential reaches it.
 
 ---
 

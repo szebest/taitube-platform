@@ -149,30 +149,16 @@ If using the Always Free Arm path instead of Hetzner (ADR-15, SDD §12.3):
 
 ---
 
-## 6. Secrets Encryption with SOPS & age
+## 6. Secrets through External Secrets
 
-To protect sensitive credentials in git according to the project's non-negotiable rules:
+No credential is committed to git, encrypted or not:
 
-1. **Install `age` and `sops`**:
-   - macOS: `brew install age sops`
-   - Linux: `sudo apt install age` or download binaries from GitHub releases.
-   - Windows: `scoop install age sops` or `choco install age.portable sops`
-2. **Generate an age key pair**:
+1. **Install External Secrets Operator** and point a `ClusterSecretStore` named `vp-secret-store` at your
+   secret manager. The repo holds no credential: `infra/k8s/overlays/cloud/external-secret.yaml` names the
+   keys the store must hold under `video-pipeline/<KEY>` (see `infra/k8s/overlays/cloud/README.md`).
+2. **Deploying** needs no decryption step:
    ```bash
-   age-keygen -o age.key
-   ```
-   - Public key looks like: `age1...`
-   - Store `age.key` safely (e.g. `~/.config/sops/age/keys.txt` or export `SOPS_AGE_KEY`).
-3. **Configure SOPS**:
-   The repo includes `.sops.yaml` matching your age public key.
-4. **Edit encrypted secrets**:
-   ```bash
-   sops infra/k8s/overlays/cloud/secrets.enc.yaml
-   ```
-5. **Decrypting in CI or deployment**:
-   ```bash
-   export SOPS_AGE_KEY=$(cat age.key)
-   sops -d infra/k8s/overlays/cloud/secrets.enc.yaml | kubectl apply -f -
+   kubectl kustomize infra/k8s/overlays/cloud | kubectl apply -f -
    ```
 
 ---
@@ -190,5 +176,5 @@ Print or copy this checklist when provisioning:
 - [ ] `infra/terraform/terraform.tfvars` filled from `.example`
 - [ ] `terraform plan` executed with 0 errors
 - [ ] `terraform apply` completed; outputs saved
-- [ ] Cloud secrets recorded in `infra/k8s/overlays/cloud/secrets.enc.yaml`
+- [ ] Cloud secrets stored in the secret manager behind `vp-secret-store`
 - [ ] R2 live compatibility test executed: `STORAGE_E2E_R2=1 pnpm test`
