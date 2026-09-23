@@ -1,3 +1,4 @@
+import { Container, token } from '@vp/composition';
 import type { Repositories } from '@vp/core/repositories';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
@@ -11,6 +12,70 @@ import { InMemoryUploadRepository } from './in-memory-upload-repository';
 import { InMemoryUserRepository } from './in-memory-user-repository';
 import { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
 import { InMemoryVideoRepository } from './in-memory-video-repository';
+
+const Repo = {
+  events: token<InMemoryEventRepository>('events'),
+  renditions: token<InMemoryRenditionRepository>('renditions'),
+  steps: token<InMemoryStepRepository>('steps'),
+  users: token<InMemoryUserRepository>('users'),
+  videos: token<InMemoryVideoRepository>('videos'),
+  uploads: token<InMemoryUploadRepository>('uploads'),
+  dlq: token<InMemoryDlqRepository>('dlq'),
+  outbox: token<InMemoryOutboxRepository>('outbox'),
+  categories: token<InMemoryCategoryRepository>('categories'),
+  channels: token<InMemoryChannelRepository>('channels'),
+  videoReactions: token<InMemoryVideoReactionRepository>('videoReactions'),
+  subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
+} as const;
+
+/**
+ * Videos and events, and videos and uploads, each need the other. The back-edge is a delegate that
+ * resolves on first call, after both are built, so no repository needs a setter to be wired.
+ */
+function graph(): Container {
+  return new Container()
+    .provide(Repo.outbox, () => new InMemoryOutboxRepository())
+    .provide(Repo.renditions, () => new InMemoryRenditionRepository())
+    .provide(Repo.steps, () => new InMemoryStepRepository())
+    .provide(Repo.users, () => new InMemoryUserRepository())
+    .provide(Repo.channels, () => new InMemoryChannelRepository())
+    .provide(
+      Repo.events,
+      (c) => new InMemoryEventRepository([], { findById: (id) => c.get(Repo.videos).findById(id) })
+    )
+    .provide(
+      Repo.videos,
+      (c) =>
+        new InMemoryVideoRepository({
+          eventsRepo: c.get(Repo.events),
+          renditionsRepo: c.get(Repo.renditions),
+          stepsRepo: c.get(Repo.steps),
+          outboxRepo: c.get(Repo.outbox),
+          uploadsRepo: { findByVideoId: (id) => c.get(Repo.uploads).findByVideoId(id) },
+        })
+    )
+    .provide(Repo.uploads, (c) => new InMemoryUploadRepository({ videosRepo: c.get(Repo.videos) }))
+    .provide(
+      Repo.dlq,
+      (c) => new InMemoryDlqRepository(undefined, { outboxRepo: c.get(Repo.outbox) })
+    )
+    .provide(
+      Repo.categories,
+      (c) => new InMemoryCategoryRepository({ videosRepo: c.get(Repo.videos) })
+    )
+    .provide(
+      Repo.videoReactions,
+      (c) => new InMemoryVideoReactionRepository({ videosRepo: c.get(Repo.videos) })
+    )
+    .provide(
+      Repo.subscriptions,
+      (c) =>
+        new InMemorySubscriptionRepository({
+          channelsRepo: c.get(Repo.channels),
+          videosRepo: c.get(Repo.videos),
+        })
+    );
+}
 
 export class InMemoryRepositories implements Repositories {
   readonly events: InMemoryEventRepository;
@@ -27,50 +92,24 @@ export class InMemoryRepositories implements Repositories {
   readonly subscriptions: InMemorySubscriptionRepository;
 
   constructor() {
-    this.events = new InMemoryEventRepository();
-    this.renditions = new InMemoryRenditionRepository();
-    this.steps = new InMemoryStepRepository();
-    this.users = new InMemoryUserRepository();
-    this.outbox = new InMemoryOutboxRepository();
-    this.dlq = new InMemoryDlqRepository(undefined, { outboxRepo: this.outbox });
-    this.videos = new InMemoryVideoRepository({
-      eventsRepo: this.events,
-      renditionsRepo: this.renditions,
-      stepsRepo: this.steps,
-      outboxRepo: this.outbox,
-    });
-
-    this.uploads = new InMemoryUploadRepository({
-      videosRepo: this.videos,
-    });
-    this.categories = new InMemoryCategoryRepository({
-      videosRepo: this.videos,
-    });
-    this.channels = new InMemoryChannelRepository();
-    this.videoReactions = new InMemoryVideoReactionRepository({
-      videosRepo: this.videos,
-    });
-    this.subscriptions = new InMemorySubscriptionRepository({
-      channelsRepo: this.channels,
-      videosRepo: this.videos,
-    });
-    this.videos.setUploadsRepo(this.uploads);
-    this.events.setVideosRepo(this.videos);
-    this.dlq.setOutboxRepo(this.outbox);
+    const c = graph();
+    this.events = c.get(Repo.events);
+    this.renditions = c.get(Repo.renditions);
+    this.steps = c.get(Repo.steps);
+    this.users = c.get(Repo.users);
+    this.videos = c.get(Repo.videos);
+    this.uploads = c.get(Repo.uploads);
+    this.dlq = c.get(Repo.dlq);
+    this.outbox = c.get(Repo.outbox);
+    this.categories = c.get(Repo.categories);
+    this.channels = c.get(Repo.channels);
+    this.videoReactions = c.get(Repo.videoReactions);
+    this.subscriptions = c.get(Repo.subscriptions);
   }
 
   clear(): void {
-    this.events.clear();
-    this.renditions.clear();
-    this.steps.clear();
-    this.users.clear();
-    this.videos.clear();
-    this.uploads.clear();
-    this.dlq.clear();
-    this.outbox.clear();
-    this.categories.clear();
-    this.channels.clear();
-    this.videoReactions.clear();
-    this.subscriptions.clear();
+    for (const name of Object.keys(Repo) as (keyof typeof Repo)[]) {
+      this[name].clear();
+    }
   }
 }

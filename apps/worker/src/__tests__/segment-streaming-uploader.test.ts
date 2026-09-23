@@ -1,12 +1,13 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes, storageUnavailable } from '@vp/errors';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTranscodeProcessor } from '../stages/transcode';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off', () => {
   let repositories: InMemoryRepositories;
@@ -180,7 +181,12 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
           };
         });
 
-        const processor = createTranscodeProcessor({ repositories, storage, logger });
+        const processor = createTranscodeProcessor({
+          ...STAGE_SETTINGS,
+          repositories,
+          storage,
+          logger,
+        });
 
         // Attempt 2 (attemptsMade = 1)
         loggedMessages.length = 0;
@@ -254,7 +260,12 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         };
       });
 
-      const processor = createTranscodeProcessor({ repositories, storage, logger });
+      const processor = createTranscodeProcessor({
+        ...STAGE_SETTINGS,
+        repositories,
+        storage,
+        logger,
+      });
       const res = expectOk(await processor(makeJob(videoId, '720p')));
 
       expect(res.segmentCount).toBe(2);
@@ -301,7 +312,12 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         };
       });
 
-      const processor = createTranscodeProcessor({ repositories, storage, logger });
+      const processor = createTranscodeProcessor({
+        ...STAGE_SETTINGS,
+        repositories,
+        storage,
+        logger,
+      });
 
       expect(expectErr(await processor(makeJob(videoId, '720p'))).code).toBe(
         ErrorCodes.STORAGE_UNAVAILABLE
@@ -352,6 +368,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       });
 
       const processor = createTranscodeProcessor({
+        ...STAGE_SETTINGS,
         repositories,
         storage,
         logger,
@@ -403,7 +420,12 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         throw enospcError;
       });
 
-      const processor = createTranscodeProcessor({ repositories, storage, logger });
+      const processor = createTranscodeProcessor({
+        ...STAGE_SETTINGS,
+        repositories,
+        storage,
+        logger,
+      });
 
       expect(expectErr(await processor(makeJob(videoId, '720p')))).toMatchObject({
         code: ErrorCodes.DISK_FULL,
@@ -494,7 +516,12 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         };
       });
 
-      const processor = createTranscodeProcessor({ repositories, storage, logger });
+      const processor = createTranscodeProcessor({
+        ...STAGE_SETTINGS,
+        repositories,
+        storage,
+        logger,
+      });
       const result = expectOk(await processor(makeJob(videoId, '720p')));
 
       expect(result.segmentCount).toBe(totalSegments);
@@ -532,6 +559,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       });
 
       const processor = createTranscodeProcessor({
+        ...STAGE_SETTINGS,
         repositories,
         storage,
         logger,
@@ -577,6 +605,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       });
 
       const processor = createTranscodeProcessor({
+        ...STAGE_SETTINGS,
         repositories,
         storage,
         logger,

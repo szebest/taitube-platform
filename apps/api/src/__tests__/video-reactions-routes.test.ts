@@ -5,7 +5,7 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
@@ -109,9 +109,7 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     expect(res.statusCode).toBe(403);
     expect(res.json().code).toBe(ErrorCodes.FORBIDDEN);
 
-    const stored = expectOk(
-      await repos.videoReactions.getUserReaction(testVideoId, guestUser.id)
-    );
+    const stored = expectOk(await repos.videoReactions.getUserReaction(testVideoId, guestUser.id));
     expect(stored).toBeNull();
   });
 

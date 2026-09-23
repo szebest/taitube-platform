@@ -8,7 +8,7 @@ This document describes the architectural boundaries, ports, and adapters layer 
 
 1. **Dependency Inversion:** High-level policy (domain services, routes, worker pipeline stages) must never import, instantiate, or depend directly on low-level details (concrete SDKs like `@aws-sdk/client-s3`, `ioredis`, `bullmq`, or Postgres/Drizzle drivers).
 2. **Ports as Abstract Classes:** Every boundary is defined by an abstract class in `@vp/core/ports`. Abstract classes are used instead of pure TypeScript interfaces to allow `instanceof` checks, centralized error wrapping, and runtime health check contract enforcement.
-3. **Single Injection Seam:** Concrete adapters are instantiated exclusively at composition roots (`apps/api/src/app.ts` and `apps/worker/src/runner.ts`) and injected down into domain services and worker stage processors.
+3. **Single Injection Seam:** Concrete adapters are constructed only inside `@vp/adapters` and by composition modules; `registerAdapters` picks the family, and the composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`) resolve one `Container` over it and inject its values down into domain services and worker stage processors.
 4. **Interface Segregation:** Distinct responsibilities are separated into dedicated ports rather than god-objects:
    - Standard object operations live in `StorageClient`; multi-part lifecycle operations live in `MultipartStorage`.
    - Low-level database connection/transaction execution lives in `DatabaseClient`; domain entity data access lives in dedicated domain repositories (`VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, `CategoryRepositoryPort`, `VideoReactionRepositoryPort`).
@@ -166,7 +166,8 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 ### Invariant 4: Deep Domain Services vs Thin Transport Routes
 - Route handlers in `apps/api/src/routes/` are strictly thin HTTP transport adapters.
 - Domain workflows and invariants live in deep domain services in `apps/api/src/services/`.
-- Maintain a `>1:1` ratio of domain services to routes via composable utilities (`HttpCacheService`, `Singleflight`, `SseHub`).
+- Every route module is a Fastify plugin that reads its services from `app.services` and is registered
+  from the one table in `apps/api/src/routes/index.ts`.
 - See [apps/api/AGENTS.md](apps/api/AGENTS.md).
 
 ### Invariant 5: Package Runtime Tiers & Dependency Layers
@@ -183,8 +184,8 @@ packages/client/      browser only
 
 | Tier | Packages | May depend on |
 |---|---|---|
-| `universal` | `api-contracts`, `domain`, `errors`, `pagination`, `permissions`, `tsconfig` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `compose-autoscaler`, `config`, `core`, `db`, `dev-token`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
+| `universal` | `api-contracts`, `domain`, `domain-rules`, `errors`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
+| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
 | `client` | `api-client` | `universal` + `client` |
 
 Apps sit outside `packages/` and declare their tier in `package.json`: `apps/api` and `apps/worker` are
@@ -203,10 +204,10 @@ portability.
 
 | Layer | Meaning | Packages |
 |---|---|---|
-| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `pagination`, `tsconfig`, `compose-autoscaler`, `dev-token`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing` |
-| T2 | Contracts and policy | `api-contracts`, `db`, `env-schema`, `events`, `ffmpeg`, `permissions` |
-| T3 | Domain capability — ports and repository contracts | `config`, `core` |
-| T4 | Integration — concrete drivers and generated clients | `adapters`, `api-client` |
+| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `compose-autoscaler`, `concurrency`, `dev-token`, `gen-video`, `job-contracts`, `observability`, `storage` |
+| T2 | Contracts and policy | `composition`, `db`, `events`, `ffmpeg`, `pagination`, `permissions`, `testing`, `validation` |
+| T3 | Domain capability — ports, repository contracts, rules and the configuration value | `api-contracts`, `core`, `domain-rules`, `env-schema` |
+| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config` |
 | T5 | Applications | `apps/api`, `apps/worker`, `apps/web` |
 | T6 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
@@ -244,8 +245,10 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 - For all frontend architectural patterns, see [apps/web/AGENTS.md](apps/web/AGENTS.md).
 
 ### Invariant 6: Deterministic Test Suite Parity
-- Every production source has a spec of the same name beside it in `__tests__/`, asserted by
-  `tests/architecture/test-correspondence.test.ts` against a shrink-only exception list (section 6).
+- Every production source with runtime code has a spec of the same name beside it in `__tests__/`,
+  asserted by `tests/architecture/test-correspondence.test.ts` against a shrink-only exception list
+  (section 6). A module that erases to nothing - types, interfaces, an abstract class of abstract members -
+  is not a target: its spec could only assert that TypeScript compiles.
 - No heuristic skips: test suites never swallow connection errors or skip assertions conditionally.
 - Strict 1:1 parity between local developer environments and remote CI pipelines.
 - Unit tests execute against in-memory doubles; database durability tests execute against PostgreSQL.
@@ -257,7 +260,7 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 
 A failure is part of every signature below the edge. Domain code returns `Result<T, E>` from `@vp/result`
 instead of throwing it (SDD ADR-24), and only two places unwrap one: `sendResult` in `apps/api/src/routes/`
-and `runner.ts` in `apps/worker`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
+and `instrument` in `apps/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
 the exception.
 
 - **Rules are pure and universal.** `@vp/validation` (T2) sees the submitted input and nothing else;
@@ -271,21 +274,52 @@ the exception.
 
 Authority: [docs/standards/error-handling.md](docs/standards/error-handling.md).
 
+---
+
+### Invariant 8: Configuration Is a Value, Dependencies Are Total
+
+Both deployables build one object graph from one `Container` (`@vp/composition`, SDD ADR-25) over one
+`AppConfig` value, and nothing below the composition modules reaches around it.
+
+- **`process.env` is read where a process starts.** `loadEnv()` in `@vp/config` parses it once at
+  `apps/*/src/main.ts`; `toAppConfig()` in `@vp/env-schema` shapes it for consumers. Services, stages and
+  adapters take configuration as a value.
+- **The schema is closed in both directions.** Every key the deployables read is declared, every declared
+  key is in `.env.example`, and every key compose, the k8s base, CI and `make` hand to this code is declared.
+- **`AdapterKind` is the one environment switch.** `registerAdapters(c, config)` in `@vp/adapters` picks the
+  in-memory or external family from `config.kind` and imports only that family.
+- **Dependencies are total.** A service or stage never constructs, defaults or infers a collaborator it was
+  not handed; forgetting one in a composition module is a compile error.
+- **A concrete adapter is constructed only in a composition module** or inside `@vp/adapters` itself.
+- **No secret-shaped key has a default**, and a production boot refuses a missing or placeholder one.
+
+### Invariant 9: A Process Drains Before It Closes
+
+- `buildApp()` / `createWorkerRunner()` construct; `container.start()` runs I/O. A test that builds the app
+  opens no subscription and leaves no timer.
+- On `SIGTERM`/`SIGINT` both processes run `shutdownOnce` from `@vp/composition`: readiness flips first,
+  the listener keeps accepting for the drain delay, then the server closes and the container disposes in
+  reverse construction order. A close that outlives the grace window is abandoned and the pending disposer
+  is named in the log.
+- Every resource a composition module constructs registers a disposer.
+- `terminationGracePeriodSeconds`, the `preStop` hook, compose's `stop_grace_period` and each process's
+  grace window are derived from one another (SDD ADR-25).
+
 ## 6. Verification & Enforcement
 
 Every invariant in section 5 is an assertion in `tests/architecture/`, run by `pnpm test:architecture`
-(≈0.5 s, no build) and again inside `pnpm test`. CI runs it as a named fail-fast step in `lint-typecheck`,
+(≈1.5 s, no build) and again inside `pnpm test`. CI runs it as a named fail-fast step in `lint-typecheck`,
 before lint and typecheck. **An invariant that cannot be asserted is deleted from this document rather than
 left as decoration** — a rule a human has to remember to check is a rule that has already drifted.
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
 | `package-boundaries.test.ts` | a package under `packages/<tier>/` takes its tier from that directory and must not declare `vp.tier`; everything else must; `universal` never depends on `server`; dependencies point strictly down, devDependencies included | a manifest that declares a tier its directory already fixes |
-| `sdk-confinement.test.ts` | `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are imported only under `packages/server/adapters/` and `packages/server/db/`, and **declared** in no other manifest | `import { Queue } from 'bullmq'` in `apps/api/src/app.ts` |
+| `sdk-confinement.test.ts` | `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are imported only under `packages/server/adapters/` and `packages/server/db/`, and **declared** in no other manifest; `@vp/adapters` is imported only from a composition module | `import { Queue } from 'bullmq'` in `apps/api/src/app.ts`; `import { CaslAuthorizationAdapter } from '@vp/adapters'` in a service |
 | `lockfile-closure.test.ts` | `apps/web`'s resolved runtime closure holds no `server`-tier package — read from the lockfile, so a transitive edge is caught too | a `server` package linked into a `universal` package two hops from `apps/web` |
 | `local-first.test.ts` | no production source names an off-machine host; every uncommented `.env.example` default is local | a hardcoded `https://…onrender.com` |
 | `file-ceiling.test.ts` | no production source over 400 lines or 10 KB | 450 lines appended to a domain module |
-| `test-correspondence.test.ts` | every production source has `__tests__/<name>.test.ts` beside it | a new source file with no spec |
+| `test-correspondence.test.ts` | every production source with runtime code has `__tests__/<name>.test.ts` beside it | a new source file with no spec; a constant, a function or an abstract class with a concrete method still counts |
 | `esm-specifiers.test.ts` | relative imports in `universal` and `client` packages carry an explicit extension | an extensionless relative import |
 | `core-barrels.test.ts` | each `@vp/core` barrel re-exports only its own folder; no `*.port.ts` anywhere | a barrel re-exporting a sibling folder |
 | `no-domain-throw.test.ts` | no `throw` in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` or `apps/worker/src/stages/`, except a `throw assertNever` | `throw new Error` added to a rule |
@@ -293,6 +327,15 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 | `catch-confinement.test.ts` | `catch` appears only in `@vp/result`, `packages/server/adapters/`, the two composition roots and the two edges | a `try/catch` added to a service |
 | `result-returning-ports.test.ts` | every I/O method on a `@vp/core` port or repository returns `Promise<Result<…>>` | a port method returning a bare `Promise<T>` |
 | `error-code-drift.test.ts` | every `ErrorCode` has a `PROBLEM_STATUS` entry, a `RETRY_CLASS` entry and a line in SDD §6.2 | a code added to `ApiErrorCodes` only |
+| `env-key-closure.test.ts` | every key the deployables read is declared in `@vp/env-schema`; every schema key is uncommented in `.env.example`; every key compose, the k8s base, CI steps running `pnpm` and `make` recipes hand to this code is declared | `process.env['STORAGE_RAW_BUCKET']`, and a `STORAGE_RAW_BUCKET:` line in a compose app env block |
+| `env-confinement.test.ts` | `process.env` appears only in `@vp/config`, `@vp/env-schema`, `@vp/testing`, `apps/*/src/main.ts`, tool `*.config.ts` files and modules that end their own process | an env read added to a service |
+| `no-defaulted-secrets.test.ts` | no `TOKEN\|SECRET\|PASSWORD\|ACCESS_KEY` key carries a `.default()`, and no production source holds a literal fallback for one | `ADMIN_TOKEN: z.string().default('change-me-32-bytes-random')`, and `process.env.ADMIN_TOKEN \|\| 'change-me-…'` |
+| `adapter-instantiation.test.ts` | a concrete adapter is **constructed** only in a composition module or inside `@vp/adapters` | `new CaslAuthorizationAdapter()` inside a service, whose import alone would be legal |
+| `total-dependencies.test.ts` | no service or stage recovers from a missing dependency (`?? new`, `\|\| new`, `?? default*`) | `deps.paginator ?? defaultPaginator` |
+| `route-plugins.test.ts` | every route module exports a Fastify plugin, carries no options interface and appears in `routes/index.ts` | a route module exporting a bare `void` registrar |
+| `drain-before-close.test.ts` | the shared shutdown flips readiness before it closes, both mains use it, and `/readyz` reads the drain flag before any dependency | a shutdown that closes the server before flipping readiness |
+| `shutdown-closure.test.ts` | every resource a composition module constructs registers a disposer; `dispose()` releases in reverse construction order | an adapter registered with no disposer |
+| `in-memory-off-boot-path.test.ts` | neither `main.ts` reaches an `adapters/in-memory/` module on its static boot path, and the root barrel does not re-export them | a boot path that reaches the doubles through a barrel |
 | `apps/api/src/__tests__/contract-drift.test.ts` | every registered Fastify route has an `@vp/api-contracts` entry, and every contract entry is routed | a route registered with no contract entry |
 
 The contract-drift assertion stays in `apps/api` because it has to boot the app: it builds a real Fastify

@@ -15,16 +15,16 @@ import {
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import { defaultJobOptions, generateReplayJobId, stagePolicies } from '@vp/job-contracts';
-import { type InvalidCursor, type Paginator, defaultPaginator } from '@vp/pagination';
+import type { InvalidCursor, Paginator } from '@vp/pagination';
+import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface DlqServiceDeps {
   dlq: DlqRepository;
   events: EventRepository;
   queues: Map<string, JobQueue>;
-  paginator?: Paginator;
+  paginator: Paginator;
 }
 
 export interface ReplayDlqResult {
@@ -47,37 +47,27 @@ export type DiscardDlqFailure = AuthorizationFailure | DlqEntryNotFound | Databa
  * and both are returned: nothing here throws and nothing here renders.
  */
 export class DlqService {
-  private readonly dlq: DlqRepository;
-  private readonly events: EventRepository;
-  private readonly queues: Map<string, JobQueue>;
-  private readonly paginator: Paginator;
-
-  constructor(deps: DlqServiceDeps) {
-    this.dlq = deps.dlq;
-    this.events = deps.events;
-    this.queues = deps.queues;
-    this.paginator = deps.paginator ?? defaultPaginator;
-  }
+  constructor(private readonly deps: DlqServiceDeps) {}
 
   async list(
-    caller: AuthUser | null,
+    caller: UserContext | null,
     options: { cursor?: string; limit?: number; status?: DlqStatus }
   ): Promise<Result<{ items: DlqEntryRecord[]; nextCursor: string | null }, ListDlqFailure>> {
     const admin = decideAdminAccess(caller);
     if (isErr(admin)) return admin;
 
-    const cursor = decodeCreatedAtCursor(options.cursor, this.paginator);
+    const cursor = decodeCreatedAtCursor(options.cursor, this.deps.paginator);
     if (isErr(cursor)) return cursor;
 
-    const limit = this.paginator.limit(options.limit);
-    const rows = await this.dlq.list({
+    const limit = this.deps.paginator.limit(options.limit);
+    const rows = await this.deps.dlq.list({
       cursor: cursor.value,
       limit,
-      ...(options.status ? { status: options.status } : {}),
+      status: options.status || undefined,
     });
 
     return map(rows, (found) =>
-      this.paginator.paginate(found, limit, {
+      this.deps.paginator.paginate(found, limit, {
         cursorOf: createdAtCursorPayload,
         toItem: (row) => row,
       })
@@ -86,13 +76,13 @@ export class DlqService {
 
   /** Replays a dead-letter job into its origin queue under a fresh id and records an audit event. */
   async replay(
-    caller: AuthUser | null,
+    caller: UserContext | null,
     id: string
   ): Promise<Result<ReplayDlqResult, ReplayDlqFailure>> {
     const entry = await this.entryFor(caller, id);
     if (isErr(entry)) return entry;
 
-    const targetQueue = this.queues.get(entry.value.queue);
+    const targetQueue = this.deps.queues.get(entry.value.queue);
     if (!targetQueue) return err(replayQueueUnknown(entry.value.queue));
 
     const replayJobId = generateReplayJobId(entry.value.jobId);
@@ -104,7 +94,7 @@ export class DlqService {
       ...defaultJobOptions,
     };
 
-    const updated = await this.dlq.updateStatus(
+    const updated = await this.deps.dlq.updateStatus(
       id,
       'REPLAYED',
       { replayedAt: new Date() },
@@ -133,11 +123,11 @@ export class DlqService {
     return ok({ status: 'REPLAYED', dlqEntryId: id, replayJobId });
   }
 
-  async discard(caller: AuthUser | null, id: string): Promise<Result<void, DiscardDlqFailure>> {
+  async discard(caller: UserContext | null, id: string): Promise<Result<void, DiscardDlqFailure>> {
     const entry = await this.entryFor(caller, id);
     if (isErr(entry)) return entry;
 
-    const updated = await this.dlq.updateStatus(id, 'DISCARDED');
+    const updated = await this.deps.dlq.updateStatus(id, 'DISCARDED');
     if (isErr(updated)) return updated;
 
     return this.record(entry.value, 'dlq.discarded', {
@@ -148,7 +138,7 @@ export class DlqService {
   }
 
   private async entryFor(
-    caller: AuthUser | null,
+    caller: UserContext | null,
     id: string
   ): Promise<
     Result<DlqEntryRecord, AuthorizationFailure | DlqEntryNotFound | DatabaseUnavailable>
@@ -156,7 +146,7 @@ export class DlqService {
     const admin = decideAdminAccess(caller);
     if (isErr(admin)) return admin;
 
-    const found = await this.dlq.findById(id);
+    const found = await this.deps.dlq.findById(id);
     if (isErr(found)) return found;
 
     return found.value ? ok(found.value) : err(dlqEntryNotFound(id));
@@ -170,7 +160,7 @@ export class DlqService {
   ): Promise<Result<void, DatabaseUnavailable>> {
     if (!entry.videoId) return ok();
     return map(
-      await this.events.create({ videoId: entry.videoId, type, payload }),
+      await this.deps.events.create({ videoId: entry.videoId, type, payload }),
       () => undefined
     );
   }

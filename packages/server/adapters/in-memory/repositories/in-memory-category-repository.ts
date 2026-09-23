@@ -24,14 +24,10 @@ export interface InMemoryCategoryRepositoryOptions {
  */
 export class InMemoryCategoryRepository implements CategoryRepositoryPort {
   private readonly categories = new Map<string, Category>();
-  private videosRepo?: InMemoryVideoRepository;
+  private readonly videosRepo?: InMemoryVideoRepository;
 
   constructor(options?: InMemoryCategoryRepositoryOptions) {
     this.videosRepo = options?.videosRepo;
-  }
-
-  setVideosRepo(videosRepo: InMemoryVideoRepository): void {
-    this.videosRepo = videosRepo;
   }
 
   clear(): void {

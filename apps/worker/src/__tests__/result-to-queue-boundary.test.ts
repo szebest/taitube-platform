@@ -1,4 +1,4 @@
-import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
+import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { type AnyFailure, ErrorCodes, storageUnavailable, toPipelineError } from '@vp/errors';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
 import { type Result, err, isErr, ok } from '@vp/result';

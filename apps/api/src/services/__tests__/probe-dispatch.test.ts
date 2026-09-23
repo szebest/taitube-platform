@@ -1,4 +1,5 @@
-import { InMemoryJobQueue } from '@vp/adapters';
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
+import { JOB_PRIORITY } from '@vp/domain';
 import { ids, stagePolicies } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';
@@ -12,7 +13,7 @@ function dispatch(overrides: { generation?: number; priority?: number } = {}) {
     sourceKey: `raw/${VIDEO_ID}/source.mp4`,
     generation: overrides.generation ?? 1,
     traceparent: TRACEPARENT,
-    ...(overrides.priority === undefined ? {} : { priority: overrides.priority }),
+    priority: overrides.priority,
   });
 }
 
@@ -32,6 +33,10 @@ describe('apps/api/services: probe dispatch', () => {
     expect(dispatch({ priority }).opts.priority).toBe(expected);
   });
 
+  it('falls back to the same lane a free owner gets', () => {
+    expect(stagePolicies.probe.priority).toBe(JOB_PRIORITY.free);
+  });
+
   it('commits the same job to the outbox that the fast path enqueues', async () => {
     const queue = new InMemoryJobQueue('probe');
     const built = dispatch({ generation: 2 });
@@ -45,9 +50,5 @@ describe('apps/api/services: probe dispatch', () => {
       job: { name: 'probe', data: built.data, opts: built.opts },
     });
     expect(job).toMatchObject({ name: 'probe', data: built.data });
-  });
-
-  it('is a no-op when no queue is wired, leaving the outbox as the only publisher', async () => {
-    expect(expectOk(await enqueueProbe(undefined, dispatch()))).toBeUndefined();
   });
 });

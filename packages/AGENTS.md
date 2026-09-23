@@ -90,50 +90,52 @@ is stale — fix it.
 | `@vp/domain` | universal | `packages/universal/domain` |
 | `@vp/errors` | universal | `packages/universal/errors` |
 | `@vp/result` | universal | `packages/universal/result` |
-| `@vp/pagination` | universal | `packages/universal/pagination` |
 | `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
+| `@vp/concurrency` | server | `packages/server/concurrency` |
 | `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/observability` | server | `packages/server/observability` |
 | `@vp/storage` | server | `packages/server/storage` |
-| `@vp/testing` | server | `packages/server/testing` |
 | `@vp/compose-autoscaler` | server | `packages/server/compose-autoscaler` |
 | `@vp/dev-token` | server | `packages/server/dev-token` |
 | `@vp/gen-video` | server | `packages/server/gen-video` |
 
-### T2 — Contracts & domain capability
+### T2 — Contracts & policy
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
+| `@vp/pagination` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/permissions` | universal | `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
+| `@vp/composition` | server | `@vp/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/errors` |
-| `@vp/env-schema` | server | `@vp/pagination` |
-| `@vp/events` | server | `@vp/job-contracts` |
+| `@vp/events` | server | `@vp/job-contracts`, `@vp/result` |
 | `@vp/ffmpeg` | server | `@vp/errors`, `@vp/job-contracts` |
+| `@vp/testing` | server | `@vp/result` |
 
 ### T3 — Domain capability
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@vp/config` | server | `@vp/env-schema` |
-| `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
+| `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
+| `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
+| `@vp/env-schema` | server | `@vp/pagination` |
 
 ### T4 — Integration
 
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
-| `@vp/adapters` | server | `@vp/core`, `@vp/db`, `@vp/domain`, `@vp/errors`, `@vp/observability`, `@vp/permissions` |
+| `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result` |
+| `@vp/config` | server | `@vp/env-schema` |
 
 ### T5 — Applications
 
 | App | Tier | Depends on |
 |---|---|---|
 | `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/permissions` |
-| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/storage` |
-| `@vp/worker` | server | `@vp/adapters`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/observability`, `@vp/storage` |
+| `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/storage` |
+| `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/observability`, `@vp/storage` |
 
 ### T6 — Reference tools
 

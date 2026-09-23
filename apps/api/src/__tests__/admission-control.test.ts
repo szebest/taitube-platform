@@ -3,8 +3,9 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import { mintDevToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -36,9 +37,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
         multipart,
         probeQueue,
       },
-      limits: {
-        maxInflightPerUser: 3,
-      },
+      config: inProcessAppConfig({ limits: { maxInflightPerUser: 3 } }),
     });
     await app.ready();
 

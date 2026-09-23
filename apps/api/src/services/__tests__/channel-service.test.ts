@@ -1,4 +1,4 @@
-import { InMemoryRepositories } from '@vp/adapters';
+import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';

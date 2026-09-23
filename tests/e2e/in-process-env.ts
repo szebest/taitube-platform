@@ -1,4 +1,7 @@
 import type { FastifyInstance } from 'fastify';
+import { buildApp } from '../../apps/api/src/app';
+import { createWorkerRunner } from '../../apps/worker/src/runner';
+import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import {
   InMemoryCacheClient,
   InMemoryFlowProducer,
@@ -6,10 +9,7 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '../../packages/server/adapters/index';
-import { buildApp } from '../../apps/api/src/app';
-import { createWorkerRunner } from '../../apps/worker/src/runner';
-import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
+} from '../../packages/server/adapters/in-memory/index';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -18,6 +18,7 @@ import type {
   Repositories,
   StorageClient,
 } from '../../packages/server/core/ports/index';
+import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
 import { createLogger, createMetricsRegistry } from '../../packages/server/observability/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
@@ -76,20 +77,22 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
     'package',
     'notify',
     'housekeeping',
-  ];
+  ] as const;
   const logger = createLogger({ service: 'e2e-worker', level: 'warn' });
   const metrics = createMetricsRegistry({ env: 'test' });
 
   for (const stage of workerStages) {
     const runner = await createWorkerRunner({
-      stage,
-      repositories,
-      storage,
-      multipart,
-      cache,
-      jobQueue: queuesMap.get(stage),
-      getQueue,
-      flowProducer,
+      config: inProcessAppConfig({ cdn: `${s3Instance.baseUrl}/public`, worker: { stage } }),
+      adapters: {
+        repositories,
+        storage,
+        multipart,
+        cache,
+        jobQueue: queuesMap.get(stage),
+        getQueue,
+        flowProducer,
+      },
       logger,
       metrics,
       workerId: `e2e-worker-${stage}`,
@@ -103,23 +106,22 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
       storage,
       multipart,
       cache,
-      probeQueue: queuesMap.get('probe'),
+      probeQueue: getQueue('probe'),
       queues: queuesMap,
     },
-    limits: {
-      multipartThresholdBytes: 8 * 1024 * 1024,
-      sseHeartbeatMs: 2000,
-      maxInflightPerUser: 100,
-    },
-    rawBucket: 'raw',
-    cdnBaseUrl: `${s3Instance.baseUrl}/public`,
+    config: inProcessAppConfig({
+      cdn: `${s3Instance.baseUrl}/public`,
+      limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 },
+      sse: { heartbeatMs: 2000 },
+    }),
   });
 
   const reconcilerTimer = setInterval(() => {
     runReconcileUploads({
+      rawBucket: 'raw',
       repositories,
       multipart,
-      probeQueue: queuesMap.get('probe'),
+      probeQueue: getQueue('probe'),
       maxInflightPerUser: 100,
       uploadedThresholdMs: 500,
     }).catch(() => {});
@@ -134,6 +136,7 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
   const teardown = async (): Promise<void> => {
     for (const closeWorker of workerClosers) await closeWorker().catch(() => {});
     await app.close().catch(() => {});
+    for (const queue of queuesMap.values()) await queue.close();
     await s3Instance.close().catch(() => {});
   };
 

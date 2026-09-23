@@ -2,7 +2,8 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
-import type { Repositories } from '@vp/core/repositories';
+import type { Repositories, UserRecord } from '@vp/core/repositories';
+import { jobPriorityFor } from '@vp/domain';
 import {
   type CacheUnavailable,
   type DatabaseUnavailable,
@@ -18,19 +19,18 @@ import type { ProbeJob } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { getHeartbeatPath } from '../config';
 
-import { validateJobId } from '../registry';
+import { validateJobId } from '../job-identity';
 import { enqueueFollowUpJobs } from './probe-enqueue';
 import { recordProbeFailure } from './probe-failure';
 
 export interface ProbeProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
-  rawBucket?: string;
+  rawBucket: string;
   workerId?: string;
   logger: Logger;
-  heartbeatPath?: string;
+  heartbeatPath: string;
   getQueue?: (name: string) => JobQueue;
   flowProducer?: FlowProducerPort;
 }
@@ -48,28 +48,24 @@ export type ProbeStageFailure =
   | QueueUnavailable
   | CacheUnavailable;
 
-const PRIORITY_PAID = 1;
-const PRIORITY_FREE = 5;
-
-/** A tier lookup that cannot answer costs the job its priority, not its place in the queue. */
-async function probePriority(repositories: Repositories, videoId: string): Promise<number> {
-  if (!repositories.users) return PRIORITY_FREE;
-
+async function ownerTier(
+  repositories: Repositories,
+  videoId: string
+): Promise<UserRecord['tier'] | undefined> {
   const video = unwrapOr(await repositories.videos.findById(videoId), null);
-  if (!video?.ownerId) return PRIORITY_FREE;
+  if (!video?.ownerId) return undefined;
 
-  const owner = unwrapOr(await repositories.users.findById(video.ownerId), null);
-  return owner?.tier === 'pro' || owner?.tier === 'enterprise' ? PRIORITY_PAID : PRIORITY_FREE;
+  return unwrapOr(await repositories.users.findById(video.ownerId), null)?.tier;
 }
 
 export function createProbeProcessor(deps: ProbeProcessorDeps) {
   const {
     repositories,
     storage,
-    rawBucket = process.env['STORAGE_RAW_BUCKET'] || 'raw',
+    rawBucket,
     workerId = `worker-${process.pid}`,
     logger,
-    heartbeatPath = getHeartbeatPath(),
+    heartbeatPath,
     getQueue,
     flowProducer,
   } = deps;
@@ -286,7 +282,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       const enqueued = await enqueueFollowUpJobs({
         job,
         metadata,
-        priority: job.opts?.priority ?? (await probePriority(repositories, videoId)),
+        priority: job.opts?.priority ?? jobPriorityFor(await ownerTier(repositories, videoId)),
         flowProducer,
         getQueue,
         log,

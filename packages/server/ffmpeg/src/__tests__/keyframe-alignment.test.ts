@@ -4,7 +4,6 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { ErrorCodes, TransientError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
-import { describe, expect, it } from 'vitest';
 import {
   buildTranscodeArgs,
   classifyFfmpegError,
@@ -66,42 +65,22 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
       expect(computeFfmpegThreads(4, 5)).toBe(1);
     });
 
-    it('injects computed threads into buildTranscodeArgs when attempt is specified', () => {
-      const argsAttempt1 = buildTranscodeArgs({
+    it.each([
+      { attempt: 1, expected: '4' },
+      { attempt: 2, expected: '3' },
+      { attempt: 4, expected: '1' },
+    ])('passes $expected threads to ffmpeg on attempt $attempt', ({ attempt, expected }) => {
+      const args = buildTranscodeArgs({
         sourcePath: 'dummy.mp4',
         outputDir: 'out',
         rendition: defaultRendition,
         fps: 24,
         threads: 4,
-        attempt: 1,
+        preset: 'veryfast',
+        attempt,
       });
-      const threadsIdx1 = argsAttempt1.indexOf('-threads');
-      expect(threadsIdx1).toBeGreaterThanOrEqual(0);
-      expect(argsAttempt1[threadsIdx1 + 1]).toBe('4');
 
-      const argsAttempt2 = buildTranscodeArgs({
-        sourcePath: 'dummy.mp4',
-        outputDir: 'out',
-        rendition: defaultRendition,
-        fps: 24,
-        threads: 4,
-        attempt: 2,
-      });
-      const threadsIdx2 = argsAttempt2.indexOf('-threads');
-      expect(threadsIdx2).toBeGreaterThanOrEqual(0);
-      expect(argsAttempt2[threadsIdx2 + 1]).toBe('3');
-
-      const argsAttempt4 = buildTranscodeArgs({
-        sourcePath: 'dummy.mp4',
-        outputDir: 'out',
-        rendition: defaultRendition,
-        fps: 24,
-        threads: 4,
-        attempt: 4,
-      });
-      const threadsIdx4 = argsAttempt4.indexOf('-threads');
-      expect(threadsIdx4).toBeGreaterThanOrEqual(0);
-      expect(argsAttempt4[threadsIdx4 + 1]).toBe('1');
+      expect(args[args.indexOf('-threads') + 1]).toBe(expected);
     });
 
     it('enforces -fps_mode cfr in buildTranscodeArgs for VFR handling', () => {
@@ -110,6 +89,8 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
         outputDir: 'out',
         rendition: defaultRendition,
         fps: 24,
+        threads: 2,
+        preset: 'veryfast',
       });
       const fpsModeIdx = args.indexOf('-fps_mode');
       expect(fpsModeIdx).toBeGreaterThanOrEqual(0);
@@ -178,6 +159,7 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
             rendition,
             fps: 24,
             durationMs: 15000,
+            threads: 0,
             preset: 'ultrafast',
           });
 
@@ -224,6 +206,7 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
             rendition,
             fps: 24,
             durationMs: 18000, // 3 segments
+            threads: 0,
             preset: 'ultrafast',
           });
 

@@ -12,9 +12,9 @@ describe('postgres adapter: constraint classification', () => {
   });
 
   it('falls back to the fixed Postgres wording for a driver that sets no SQLSTATE', () => {
-    expect(isUniqueViolation({ message: 'Failed query', cause: { message: DUPLICATE_MESSAGE } })).toBe(
-      true
-    );
+    expect(
+      isUniqueViolation({ message: 'Failed query', cause: { message: DUPLICATE_MESSAGE } })
+    ).toBe(true);
   });
 
   it.each([

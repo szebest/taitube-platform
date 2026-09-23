@@ -1,13 +1,10 @@
-import {
-  InMemoryMultipartStorage,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters';
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
+import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
-import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
+import { uploadContext } from './service-deps';
 
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-000000000001', role: 'CREATOR' };
+const OWNER: UserContext = { id: '00000000-0000-7000-8000-000000000001', role: 'CREATOR' };
 const MB = 1024 * 1024;
 
 describe('apps/api/services: initiate upload', () => {
@@ -17,15 +14,7 @@ describe('apps/api/services: initiate upload', () => {
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     const storage = new InMemoryStorageClient();
-    service = new UploadService({
-      uploads: repositories.uploads,
-      videos: repositories.videos,
-      events: repositories.events,
-      storage,
-      multipart: new InMemoryMultipartStorage(storage),
-      rawBucket: 'raw',
-      multipartThresholdBytes: 10 * MB,
-    });
+    service = new UploadService(uploadContext(repositories, storage));
   });
 
   it('issues a single presigned PUT below the multipart threshold', async () => {

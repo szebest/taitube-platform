@@ -9,18 +9,18 @@ import type {
 } from '@vp/core/repositories';
 import { type UploadAccessFailure, decideUploadAccess } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { type Result, isErr, map } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 
 export interface UploadContext {
   uploads: UploadRepository;
   videos: VideoRepository;
   events: EventRepository;
-  users?: UserRepository;
+  users: UserRepository;
   storage: StorageClient;
   multipart: MultipartStorage;
   rawBucket: string;
-  probeQueue?: JobQueue;
+  probeQueue: JobQueue;
   multipartThresholdBytes: number;
   presignedUrlTtlSeconds: number;
   uploadSessionTtlSeconds: number;
@@ -40,7 +40,7 @@ export type LoadOwnedUploadFailure = UploadAccessFailure | DatabaseUnavailable;
  */
 export async function loadOwnedUpload(
   ctx: UploadContext,
-  user: AuthUser,
+  user: UserContext,
   uploadId: string,
   action: string
 ): Promise<Result<OwnedUpload, LoadOwnedUploadFailure>> {

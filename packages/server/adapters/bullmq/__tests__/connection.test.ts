@@ -1,45 +1,16 @@
-import { withEnv } from '@vp/testing';
-import { getRedisConnectionOptions } from '../connection';
+import { redisConnectionOptions } from '../connection';
 
-const REDIS_ENV = {
-  REDIS_URL: undefined,
-  REDIS_HOST: undefined,
-  REDIS_PORT: undefined,
-  REDIS_PASSWORD: undefined,
-};
-
-describe('getRedisConnectionOptions', () => {
-  it('returns the caller override untouched', async () => {
-    const override = { host: 'given', port: 1234 };
-    await withEnv({ ...REDIS_ENV, REDIS_URL: 'redis://ignored:6380' }, () => {
-      expect(getRedisConnectionOptions(override)).toBe(override);
-    });
-  });
-
-  it('falls back to localhost when nothing is configured', async () => {
-    await withEnv(REDIS_ENV, () => {
-      expect(getRedisConnectionOptions()).toEqual({ host: '127.0.0.1', port: 6379 });
-    });
-  });
-
-  it('reads the discrete host, port and password variables', async () => {
-    await withEnv(
-      { ...REDIS_ENV, REDIS_HOST: 'redis', REDIS_PORT: '6380', REDIS_PASSWORD: 'hunter2' },
-      () => {
-        expect(getRedisConnectionOptions()).toEqual({
-          host: 'redis',
-          port: 6380,
-          password: 'hunter2',
-        });
-      }
-    );
-  });
-
+describe('redisConnectionOptions', () => {
   it.each([
     {
       scenario: 'host and port',
       url: 'redis://cache:6380',
       expected: { host: 'cache', port: 6380 },
+    },
+    {
+      scenario: 'the default port',
+      url: 'redis://cache',
+      expected: { host: 'cache', port: 6379 },
     },
     {
       scenario: 'an embedded password',
@@ -52,47 +23,31 @@ describe('getRedisConnectionOptions', () => {
       expected: { host: 'cache', port: 6379, password: 'secret', username: 'alice' },
     },
     {
+      scenario: 'the default username, which carries no meaning',
+      url: 'redis://default:secret@cache:6379',
+      expected: { host: 'cache', port: 6379, password: 'secret' },
+    },
+    {
       scenario: 'a database index',
       url: 'redis://cache:6379/3',
       expected: { host: 'cache', port: 6379, db: 3 },
     },
-  ])('parses $scenario out of REDIS_URL', async ({ url, expected }) => {
-    await withEnv({ ...REDIS_ENV, REDIS_URL: url }, () => {
-      expect(getRedisConnectionOptions()).toEqual(expected);
-    });
+  ])('parses $scenario out of the url', ({ url, expected }) => {
+    expect(redisConnectionOptions(url)).toEqual(expected);
   });
 
-  it('drops the default username that carries no meaning', async () => {
-    await withEnv({ ...REDIS_ENV, REDIS_URL: 'redis://default:secret@cache:6379' }, () => {
-      expect(getRedisConnectionOptions()).toEqual({
-        host: 'cache',
-        port: 6379,
-        password: 'secret',
-      });
-    });
+  it.each([
+    {
+      scenario: 'prefers the url password',
+      url: 'redis://:from-url@cache:6379',
+      password: 'from-url',
+    },
+    { scenario: 'takes the separate password', url: 'redis://cache:6379', password: 'separate' },
+  ])('$scenario when both are available', ({ url, password }) => {
+    expect(redisConnectionOptions(url, 'separate')).toMatchObject({ password });
   });
 
-  it('prefers the url password over the environment one', async () => {
-    await withEnv(
-      { ...REDIS_ENV, REDIS_URL: 'redis://:from-url@cache:6379', REDIS_PASSWORD: 'from-env' },
-      () => {
-        expect(getRedisConnectionOptions()).toMatchObject({ password: 'from-url' });
-      }
-    );
-  });
-
-  it('takes the environment password when the url carries none', async () => {
-    await withEnv(
-      { ...REDIS_ENV, REDIS_URL: 'redis://cache:6379', REDIS_PASSWORD: 'from-env' },
-      () => {
-        expect(getRedisConnectionOptions()).toMatchObject({ password: 'from-env' });
-      }
-    );
-  });
-
-  it('falls through to the discrete variables when the url will not parse', async () => {
-    await withEnv({ ...REDIS_ENV, REDIS_URL: 'not a url', REDIS_HOST: 'redis' }, () => {
-      expect(getRedisConnectionOptions()).toEqual({ host: 'redis', port: 6379 });
-    });
+  it('refuses a url that will not parse', () => {
+    expect(() => redisConnectionOptions('not a url')).toThrow();
   });
 });

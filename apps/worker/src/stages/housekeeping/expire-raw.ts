@@ -7,8 +7,8 @@ import { type Result, isErr, ok } from '@vp/result';
 export interface ExpireRawOptions {
   repositories: Repositories;
   storage: StorageClient;
-  rawBucket?: string;
-  retentionDays?: number;
+  rawBucket: string;
+  retentionDays: number;
   logger?: Logger;
 }
 
@@ -26,22 +26,14 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export async function runExpireRaw(
   options: ExpireRawOptions
 ): Promise<Result<ExpireRawResult, DatabaseUnavailable>> {
-  const {
-    repositories,
-    storage,
-    rawBucket = process.env['STORAGE_RAW_BUCKET'] ?? 'raw',
-    retentionDays = process.env['RAW_RETENTION_DAYS']
-      ? Number.parseInt(process.env['RAW_RETENTION_DAYS'], 10)
-      : 7,
-    logger,
-  } = options;
+  const { repositories, storage, rawBucket, retentionDays, logger } = options;
 
   let expiredCount = 0;
 
   const expiredVideos = await repositories.videos.scan({
     status: 'READY',
     idleFor: { since: 'readyAt', ms: retentionDays * DAY_MS },
-    without: { event: 'video.raw_expired' },
+    without: { type: 'event', event: 'video.raw_expired' },
   });
   if (isErr(expiredVideos)) return expiredVideos;
 

@@ -18,7 +18,7 @@ export interface InMemoryUploadRepositoryOptions {
 export class InMemoryUploadRepository extends UploadRepository {
   private readonly uploadsMap: Map<string, UploadRecord>;
   private readonly videosMap?: Map<string, VideoRecord>;
-  private videosRepo?: VideoRepository;
+  private readonly videosRepo?: VideoRepository;
 
   constructor(
     optionsOrUploadsMap?: InMemoryUploadRepositoryOptions | Map<string, UploadRecord>,
@@ -33,10 +33,6 @@ export class InMemoryUploadRepository extends UploadRepository {
       this.videosMap = optionsOrUploadsMap?.videosMap;
       this.videosRepo = optionsOrUploadsMap?.videosRepo;
     }
-  }
-
-  setVideosRepo(repo: VideoRepository): void {
-    this.videosRepo = repo;
   }
 
   async findById(id: string): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {

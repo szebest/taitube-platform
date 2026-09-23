@@ -8,7 +8,7 @@ export const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
 export const SEED_VIDEO_ID = '018f0000-0000-7000-8000-000000000001';
 export const OTHER_PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000002';
 
-export async function seedDatabase(connectionUrl?: string): Promise<void> {
+export async function seedDatabase(connectionUrl: string): Promise<void> {
   const { db, sql } = createDbClient(connectionUrl);
 
   let connected = false;
@@ -187,7 +187,7 @@ if (
   process.argv[1] &&
   fileURLToPath(import.meta.url).toLowerCase() === path.resolve(process.argv[1]).toLowerCase()
 ) {
-  seedDatabase()
+  seedDatabase(process.env['DATABASE_URL'] ?? 'postgres://vp:vp@localhost:5432/vp')
     .then(() => process.exit(0))
     .catch((err) => {
       console.error('[db:seed] Seed failed:', err);

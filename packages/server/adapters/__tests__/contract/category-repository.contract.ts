@@ -71,7 +71,9 @@ export function describeCategoryRepositoryContract(makeSubject: MakeRepositories
     });
 
     it('patches only the supplied fields', async () => {
-      const updated = expectOk(await categories.update(CATEGORY_MUSIC_ID, { name: 'Music & Audio' }));
+      const updated = expectOk(
+        await categories.update(CATEGORY_MUSIC_ID, { name: 'Music & Audio' })
+      );
 
       expect(updated?.name).toBe('Music & Audio');
       expect(updated?.slug).toBe('music');

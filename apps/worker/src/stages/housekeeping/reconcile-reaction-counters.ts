@@ -6,7 +6,7 @@ import { type Result, isErr, isOk, ok } from '@vp/result';
 
 export interface ReconcileReactionCountersOptions {
   repositories: Repositories;
-  reactionCache?: ReactionCachePort;
+  reactionCache: ReactionCachePort;
   logger?: Logger;
   limit?: number;
 }
@@ -55,19 +55,15 @@ export async function runReconcileReactionCounters(
     if (isErr(stored)) return stored;
     const denormalized = stored.value;
 
-    let cachedDrift = false;
-    if (reactionCache) {
-      const cached = await reactionCache.getCounts(videoId, async () => stored);
-      if (isOk(cached) && drifted(cached.value, groundTruth)) {
-        cachedDrift = true;
-        logger?.warn(
-          { videoId, groundTruth, cached: cached.value },
-          'Reaction counter drift detected in Redis cache; repairing'
-        );
-      }
+    let hasDrift = false;
+    const cached = await reactionCache.getCounts(videoId, async () => stored);
+    if (isOk(cached) && drifted(cached.value, groundTruth)) {
+      hasDrift = true;
+      logger?.warn(
+        { videoId, groundTruth, cached: cached.value },
+        'Reaction counter drift detected in Redis cache; repairing'
+      );
     }
-
-    let hasDrift = cachedDrift;
 
     if (drifted(denormalized, groundTruth)) {
       hasDrift = true;
@@ -83,11 +79,8 @@ export async function runReconcileReactionCounters(
       if (isErr(repaired)) return repaired;
     }
 
-    if (reactionCache && hasDrift) {
-      await reactionCache.setCounts(videoId, groundTruth);
-    }
-
     if (hasDrift) {
+      await reactionCache.setCounts(videoId, groundTruth);
       repairedCount++;
     }
   }

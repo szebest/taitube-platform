@@ -7,7 +7,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ## 1. Scope & Architecture
 
 `apps/api` is the Fastify 5 REST API and real-time Server-Sent Events (SSE) server running on Node.js 24.
-- **Composition Root:** `apps/api/src/composition/` resolves the adapter set (`adapter-set.ts`) and builds the services over it (`service-set.ts`); `app.ts` wires the two together with the Fastify plugins and routes. Nothing else constructs a concrete adapter or a domain service.
+- **Composition Root:** `apps/api/src/app.ts` composes one `Container`: `registerAdapters` from `@vp/adapters` picks the adapter family from `config.kind`, `composition/services.module.ts` registers every service, `composition/adapter-set.ts` is the `adapters` override seam tests use. `buildApp()` constructs and registers routes and starts nothing; `main.ts` calls `container.start()` and owns the drained shutdown. Nothing else constructs a concrete adapter or a domain service.
 - **Zero Concrete Driver Imports:** Route handlers and domain services must NEVER import `@aws-sdk/client-s3`, `ioredis`, `bullmq`, or Postgres/Drizzle directly.
 
 ---
@@ -25,10 +25,11 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
   sit inline in `routes/uploads.ts`, which is how the browser ended up enforcing a narrower list and no size
   check at all. A route calls the shared rule; it does not hold one.
 
-### Rule 2: Deep Domain Services (>1:1 Ratio)
+### Rule 2: Deep Domain Services, Total Dependencies
 - Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`, `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`, `SubscriptionService`, `SseService`, `DlqService`, `QueueService`).
-- Extract smaller, reusable domain services (`HttpCacheService`, `SseHub`) that higher-level services compose; `Singleflight` comes from `@vp/adapters`.
+- A service's dependencies are required. It never constructs, defaults or reads from `process.env` a collaborator or a setting it was not handed, and it imports nothing from `@vp/adapters` (`total-dependencies`, `adapter-instantiation` and `sdk-confinement` assert it). HTTP cache helpers are three functions in `http-cache.ts`; `Singleflight` comes from `@vp/concurrency`.
 - Services must remain completely decoupled from Fastify transport objects (`FastifyRequest`, `FastifyReply`).
+- Routes are plugins: `export async function xRoutes(app: FastifyInstance)`, reading `app.services` and `app.config`, registered from `routes/index.ts`.
 
 ### Rule 3: One Authorization Mechanism — `AuthorizationPort` Inside Services
 - There is exactly one place an authorization decision is made: a domain service calling

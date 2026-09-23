@@ -9,10 +9,10 @@ import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from '
 
 export interface SseHubOptions {
   cache: CacheClient;
-  maxConnectionsPerUser?: number;
-  maxPodConnections?: number;
-  heartbeatMs?: number;
-  idleTimeoutMs?: number;
+  maxConnectionsPerUser: number;
+  maxPodConnections: number;
+  heartbeatMs: number;
+  idleTimeoutMs: number;
 }
 
 export interface RegisterConnectionOptions {
@@ -33,16 +33,15 @@ export class SseHub {
   private activeConnections = 0;
   private isSubscribed = false;
   private isClosed = false;
+  private subscribing: Promise<Result<void, CacheUnavailable>> | undefined;
   private patternListener?: (pattern: string, channel: string, message: string) => void;
 
   constructor(options: SseHubOptions) {
     this.cache = options.cache;
-    this.maxConnectionsPerUser =
-      options.maxConnectionsPerUser ?? Number(process.env['SSE_MAX_PER_USER'] || '20');
-    this.maxPodConnections =
-      options.maxPodConnections ?? Number(process.env['SSE_MAX_POD_CONNECTIONS'] || '5000');
-    this.heartbeatMs = options.heartbeatMs ?? 15_000;
-    this.idleTimeoutMs = options.idleTimeoutMs ?? 30 * 60 * 1000;
+    this.maxConnectionsPerUser = options.maxConnectionsPerUser;
+    this.maxPodConnections = options.maxPodConnections;
+    this.heartbeatMs = options.heartbeatMs;
+    this.idleTimeoutMs = options.idleTimeoutMs;
   }
 
   /**
@@ -52,6 +51,13 @@ export class SseHub {
   async init(): Promise<Result<void, CacheUnavailable>> {
     if (this.isSubscribed || this.isClosed) return ok();
 
+    this.subscribing ??= this.subscribe();
+    const subscribed = await this.subscribing;
+    if (isErr(subscribed)) this.subscribing = undefined;
+    return subscribed;
+  }
+
+  private async subscribe(): Promise<Result<void, CacheUnavailable>> {
     this.patternListener = (_pattern: string, channel: string, rawMessage: string) => {
       this.handlePubSubMessage(channel, rawMessage);
     };

@@ -1,5 +1,6 @@
 import type { JobQueue, MultipartStorage } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { jobPriorityFor } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
@@ -7,12 +8,12 @@ import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 
 export interface ReconcileUploadsOptions {
   repositories: Repositories;
-  multipart?: MultipartStorage;
-  probeQueue?: JobQueue;
-  rawBucket?: string;
+  multipart: MultipartStorage;
+  probeQueue: JobQueue;
+  rawBucket: string;
   uploadingThresholdMs?: number;
   uploadedThresholdMs?: number;
-  maxInflightPerUser?: number;
+  maxInflightPerUser: number;
   logger?: Logger;
 }
 
@@ -34,17 +35,10 @@ export async function runReconcileUploads(
     repositories,
     multipart,
     probeQueue,
-    rawBucket = process.env['STORAGE_RAW_BUCKET'] ?? 'raw',
-    uploadingThresholdMs = process.env['RECONCILE_UPLOADING_THRESHOLD_MS']
-      ? Number.parseInt(process.env['RECONCILE_UPLOADING_THRESHOLD_MS'], 10)
-      : 24 * 60 * 60 * 1000,
-    uploadedThresholdMs = process.env['RECONCILE_UPLOADED_THRESHOLD_MS']
-      ? Number.parseInt(process.env['RECONCILE_UPLOADED_THRESHOLD_MS'], 10)
-      : 5 * 60 * 1000,
-    maxInflightPerUser = options.maxInflightPerUser ??
-      (process.env['MAX_INFLIGHT_PER_USER']
-        ? Number.parseInt(process.env['MAX_INFLIGHT_PER_USER'], 10)
-        : 3),
+    rawBucket,
+    uploadingThresholdMs = 24 * 60 * 60 * 1000,
+    uploadedThresholdMs = 5 * 60 * 1000,
+    maxInflightPerUser,
     logger,
   } = options;
 
@@ -76,7 +70,7 @@ export async function runReconcileUploads(
       const upload = unwrapOr(await repositories.uploads.findByVideoId(video.id), null);
       if (upload) {
         await repositories.uploads.updateStatus(upload.id, 'ABORTED');
-        if (upload.multipartUploadId && multipart) {
+        if (upload.multipartUploadId) {
           // A session that storage will expire on its own is not worth holding the sweep for.
           const aborted = await multipart.abortMultipartUpload(
             rawBucket,
@@ -98,65 +92,58 @@ export async function runReconcileUploads(
   const staleUploaded = await repositories.videos.scan({
     status: 'UPLOADED',
     idleFor: { since: 'updatedAt', ms: uploadedThresholdMs },
-    without: { step: 'probe' },
+    without: { type: 'step', step: 'probe' },
   });
   if (isErr(staleUploaded)) return staleUploaded;
 
   const ownerInflightCounts = new Map<string, number>();
 
   for (const video of staleUploaded.value) {
-    if (probeQueue) {
-      let currentInflight = ownerInflightCounts.get(video.ownerId);
-      if (currentInflight === undefined) {
-        const counted = await repositories.videos.countInFlightByOwner(video.ownerId);
-        if (isErr(counted)) return counted;
+    let currentInflight = ownerInflightCounts.get(video.ownerId);
+    if (currentInflight === undefined) {
+      const counted = await repositories.videos.countInFlightByOwner(video.ownerId);
+      if (isErr(counted)) return counted;
 
-        currentInflight = counted.value;
-        ownerInflightCounts.set(video.ownerId, currentInflight);
-      }
-
-      if (currentInflight >= maxInflightPerUser) {
-        logger?.info(
-          { videoId: video.id, ownerId: video.ownerId, currentInflight, maxInflightPerUser },
-          'Reconciler skipping held video: owner in-flight limit reached'
-        );
-        continue;
-      }
-
-      let priority = 5;
-      if (repositories.users) {
-        // A tier lookup that cannot answer costs the job its priority, not its admission.
-        const user = unwrapOr(await repositories.users.findById(video.ownerId), null);
-        if (user?.tier === 'pro' || user?.tier === 'enterprise') {
-          priority = 1;
-        }
-      }
-
-      const probeJobId = ids.probe(video.id, video.generation ?? 1);
-      await probeQueue.add(
-        'probe',
-        {
-          videoId: video.id,
-          sourceKey: video.sourceKey,
-          generation: video.generation ?? 1,
-          traceparent: '00-00000000000000000000000000000001-0000000000000001-01',
-        },
-        {
-          jobId: probeJobId,
-          ...stagePolicies.probe,
-          ...defaultJobOptions,
-          priority,
-        }
-      );
-
-      ownerInflightCounts.set(video.ownerId, currentInflight + 1);
-      reenqueuedCount += 1;
-      getMetrics().reconcilerRepairsTotal.inc({ type: 'missing_probe' });
-      logger?.info(
-        { videoId: video.id, probeJobId, priority },
-        'Reconciler released held video and enqueued probe job'
-      );
+      currentInflight = counted.value;
+      ownerInflightCounts.set(video.ownerId, currentInflight);
     }
+
+    if (currentInflight >= maxInflightPerUser) {
+      logger?.info(
+        { videoId: video.id, ownerId: video.ownerId, currentInflight, maxInflightPerUser },
+        'Reconciler skipping held video: owner in-flight limit reached'
+      );
+      continue;
+    }
+
+    const priority = jobPriorityFor(
+      unwrapOr(await repositories.users.findById(video.ownerId), null)?.tier
+    );
+
+    const probeJobId = ids.probe(video.id, video.generation ?? 1);
+    await probeQueue.add(
+      'probe',
+      {
+        videoId: video.id,
+        sourceKey: video.sourceKey,
+        generation: video.generation ?? 1,
+        traceparent: '00-00000000000000000000000000000001-0000000000000001-01',
+      },
+      {
+        jobId: probeJobId,
+        ...stagePolicies.probe,
+        ...defaultJobOptions,
+        priority,
+      }
+    );
+
+    ownerInflightCounts.set(video.ownerId, currentInflight + 1);
+    reenqueuedCount += 1;
+    getMetrics().reconcilerRepairsTotal.inc({ type: 'missing_probe' });
+    logger?.info(
+      { videoId: video.id, probeJobId, priority },
+      'Reconciler released held video and enqueued probe job'
+    );
   }
 
   return ok({ abandonedCount, reenqueuedCount });

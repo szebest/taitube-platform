@@ -1,4 +1,4 @@
-import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
+import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintDevToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
@@ -6,7 +6,7 @@ import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 import { HOUSEKEEPING_SCHEDULER_CONFIGS } from '../services/housekeeping-schedulers';
 
 describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC 4)', () => {
@@ -32,12 +32,9 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
     if (!hkQ) throw new Error('housekeeping queue missing');
     housekeepingQueue = hkQ;
 
-    app = await buildApp({
-      adapters: {
-        repositories,
-        queues: queuesMap,
-      },
-    });
+    const composed = await composeApp({ adapters: { repositories, queues: queuesMap } });
+    expectOk(await composed.container.start());
+    app = composed.app;
     await app.ready();
 
     adminJwt = mintDevToken({
@@ -91,13 +88,9 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
 
     it('restarting the API twice leaves exactly one of each scheduler', async () => {
       // Boot a second API instance on the same queues
-      const secondApp = await buildApp({
-        adapters: {
-          repositories,
-          queues: queuesMap,
-        },
-      });
-      await secondApp.ready();
+      const second = await composeApp({ adapters: { repositories, queues: queuesMap } });
+      expectOk(await second.container.start());
+      const secondApp = second.app;
 
       const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
       expect(schedulers).toHaveLength(6);

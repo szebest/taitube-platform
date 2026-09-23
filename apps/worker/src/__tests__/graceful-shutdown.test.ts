@@ -1,4 +1,4 @@
-import { InMemoryJobQueue } from '@vp/adapters';
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import { expectOk } from '@vp/testing/result';
 import { describe, expect, it, vi } from 'vitest';

@@ -16,7 +16,7 @@ Instructions for any coding agent working on `@vp/errors`.
 - **`RETRY_CLASS`** - ADR-18's `'permanent' | 'transient'`, declared once per code.
 
 `PermanentError` / `TransientError` stay, and they are now **only** the BullMQ queue-boundary
-representation. `apps/worker/src/runner.ts` builds one from `RETRY_CLASS` at the moment a stage's
+representation. `instrument` in `apps/worker/src/composition/stages.module.ts` builds one from `RETRY_CLASS` at the moment a stage's
 `Result` has to become a throw, because BullMQ's retry contract is the exception. Nothing else in the
 repo throws them, and domain code never does.
 

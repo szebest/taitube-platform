@@ -1,14 +1,14 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { InMemoryStorageClient } from '@vp/adapters';
+import { InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { createLogger } from '@vp/observability';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { resolveTranscodeSource } from '../transcode-source';
 
 const SOURCE_KEY = 'raw/018f0000-0000-7000-8000-000000000001/source.mp4';
-const log = createLogger({ service: 'test' });
+const log = createLogger({ service: 'test', level: 'silent' });
 
 describe('apps/worker/stages: transcode input source', () => {
   let storage: InMemoryStorageClient;

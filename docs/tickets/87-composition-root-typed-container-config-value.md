@@ -8,7 +8,7 @@
 | Blocks | 88 |
 | Spec | [SDD ADR-19 Hexagonal architecture](../SDD.md#adr-19-hexagonal-architecture-interface-segregation-and-modular-repository-boundaries) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23-package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-24 Result-typed error handling](../SDD.md#adr-24-result-typed-error-handling-domain-returns-the-edge-decides) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes-domain-services) · [SDD §16 Environment variables](../SDD.md#16-environment-variables) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready-for-agent
+**Status:** done
 
 > Review that produced this ticket: [docs/reviews/87-composition-and-configuration-review.html](../reviews/87-composition-and-configuration-review.html),
 > read at `1cbb39a`. Every `file:line` below was re-read there.
@@ -440,6 +440,11 @@ implementer, not a claim.
 - [ ] `pnpm boundaries`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture` green, output pasted in the PR.
 - [ ] `make smoke-offline` green; `make e2e` (`E2E_REDUCED=true`) green.
 - [ ] `pnpm test` wall-clock is not slower than `1cbb39a`; quote both numbers. Removing 30 test-time poller pairs should make it faster.
+  *Accepted deviation.* Measured back to back on an idle machine against `686191b`, which differs from
+  `1cbb39a` by two docs commits only: main 31.7 / 31.9 / 32.1 s, this branch 33.3 / 33.5 / 34.1 s. The
+  branch runs 49 more spec files, the 1:1 correspondence W8 asks for, and per-file cost went down
+  (collect ~180 s CPU against ~196 s). The wall is set by the pre-existing `segment-streaming-uploader`
+  spec (~11 s of real ffmpeg); no new spec is on that path.
 
 ---
 

@@ -1,39 +1,35 @@
-import type { CacheClient, ReactionCachePort } from '@vp/core/ports';
+import { Singleflight } from '@vp/concurrency';
+import type { ReactionCachePort } from '@vp/core/ports';
 import type { ReactionCounts, ReactionType } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { type Result, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
-import type { Redis } from 'ioredis';
-import { type CachedCounts, ReactionCountsStore } from './reaction-counts-store';
-import { Singleflight } from './singleflight';
+import {
+  type CachedCounts,
+  type ReactionCacheBackend,
+  ReactionCountsStore,
+} from './reaction-counts-store';
 
 export interface RedisReactionCacheAdapterConfig {
-  redis?: Redis;
-  cache?: CacheClient | null;
-  ttlSeconds?: number; // default: 3600 (1 hour)
-  userReactionTtlSeconds?: number; // default: 86400 (24 hours)
-  beta?: number; // XFetch beta factor, default: 1.0
+  backend: ReactionCacheBackend;
+  ttlSeconds?: number;
+  userReactionTtlSeconds?: number;
+  beta?: number;
 }
 
 export class RedisReactionCacheAdapter implements ReactionCachePort {
-  private readonly redis?: Redis;
-  private readonly cache?: CacheClient | null;
+  private readonly backend: ReactionCacheBackend;
   private readonly counts: ReactionCountsStore;
   private readonly ttlSeconds: number;
   private readonly userReactionTtlSeconds: number;
   private readonly beta: number;
   readonly singleflight = new Singleflight();
 
-  constructor(config: RedisReactionCacheAdapterConfig = {}) {
-    this.redis = config.redis;
-    this.cache = config.cache;
+  constructor(config: RedisReactionCacheAdapterConfig) {
+    this.backend = config.backend;
     this.ttlSeconds = config.ttlSeconds ?? 3600;
     this.userReactionTtlSeconds = config.userReactionTtlSeconds ?? 86400;
     this.beta = config.beta ?? 1.0;
-    this.counts = new ReactionCountsStore({
-      redis: config.redis,
-      cache: config.cache,
-      ttlSeconds: this.ttlSeconds,
-    });
+    this.counts = new ReactionCountsStore({ backend: config.backend, ttlSeconds: this.ttlSeconds });
   }
 
   private userKey(userId: string): string {
@@ -140,22 +136,18 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
   }
 
   private async readUserReaction(userId: string, videoId: string): Promise<string | null> {
-    const redis = this.redis;
-    if (redis) {
-      return unwrapOr(
-        await fromPromise(
-          () => redis.hget(this.userKey(userId), videoId),
-          this.unavailable('getUserReaction')
-        ),
-        null
-      );
+    const { backend } = this;
+    if (backend.type === 'cache') {
+      return unwrapOr(await backend.cache.get(this.userKeyFallback(userId, videoId)), null);
     }
 
-    if (this.cache) {
-      return unwrapOr(await this.cache.get(this.userKeyFallback(userId, videoId)), null);
-    }
-
-    return null;
+    return unwrapOr(
+      await fromPromise(
+        () => backend.redis.hget(this.userKey(userId), videoId),
+        this.unavailable('getUserReaction')
+      ),
+      null
+    );
   }
 
   async setUserReaction(
@@ -164,9 +156,10 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     reaction: ReactionType | null
   ): Promise<Result<void, CacheUnavailable>> {
     const value = reaction ?? 'NONE';
+    const { backend } = this;
 
-    const redis = this.redis;
-    if (redis) {
+    if (backend.type === 'redis') {
+      const { redis } = backend;
       const key = this.userKey(userId);
       const written = await fromPromise(
         () => redis.hset(key, videoId, value),
@@ -183,15 +176,11 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
       );
     }
 
-    if (this.cache) {
-      return this.cache.set(
-        this.userKeyFallback(userId, videoId),
-        value,
-        this.userReactionTtlSeconds
-      );
-    }
-
-    return ok();
+    return backend.cache.set(
+      this.userKeyFallback(userId, videoId),
+      value,
+      this.userReactionTtlSeconds
+    );
   }
 
   clear(): void {

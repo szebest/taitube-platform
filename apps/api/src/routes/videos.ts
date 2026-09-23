@@ -2,21 +2,12 @@ import { deleteVideo, getVideo, listVideos, reprocessVideo, updateVideo } from '
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
-import type { VideoService } from '../services/video-service';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 import { presentPublicVideoFailure } from './videos.presenter';
 
-export interface VideosRouteOptions {
-  videoService: VideoService;
-}
-
-/**
- * Fastify routes plugin for video queries and management (SDD §6.1, §6.3).
- * Thin transport adapter delegating domain operations to VideoService.
- */
-export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteOptions): void {
-  const { videoService } = options;
+export async function videosRoutes(app: FastifyInstance): Promise<void> {
+  const { videoService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(listVideos)) {
@@ -66,9 +57,14 @@ export function registerVideosRoutes(app: FastifyInstance, options: VideosRouteO
       async (request, reply) => {
         const user = requireAuth(request);
         const { id } = request.params;
-        return sendResult(reply, request, await videoService.updateMetadata(user, id, request.body), {
-          present: (failure) => presentPublicVideoFailure(failure, request.url),
-        });
+        return sendResult(
+          reply,
+          request,
+          await videoService.updateMetadata(user, id, request.body),
+          {
+            present: (failure) => presentPublicVideoFailure(failure, request.url),
+          }
+        );
       }
     );
   }

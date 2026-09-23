@@ -1,4 +1,4 @@
-import { read, trackedFiles } from './repo-files';
+import { productionSources, read, trackedFiles } from './repo-files';
 
 const SDK = /^(@aws-sdk\/[^/'"]+|ioredis|bullmq|postgres|drizzle-orm)(\/.*)?$/;
 const SPECIFIER = /(?:from|import|require)\s*\(?\s*['"]([^'"]+)['"]/g;
@@ -20,7 +20,38 @@ function declaredSdks(manifest: string): string[] {
   ].filter((name) => SDK.test(name));
 }
 
+const ADAPTERS = /(?:from|import)\s*\(?\s*['"]@vp\/adapters(?:\/[^'"]*)?['"]/;
+const ADAPTER_HOMES = [
+  /\/composition\//,
+  /^apps\/api\/src\/app\.ts$/,
+  /^apps\/worker\/src\/runner\.ts$/,
+  /^packages\/server\/testing\//,
+];
+
+function importsAdaptersOutsideAHome(file: string, source: string): boolean {
+  return ADAPTERS.test(source) && !ADAPTER_HOMES.some((home) => home.test(file));
+}
+
 describe('architecture: concrete driver SDKs stay behind the adapter seam', () => {
+  it('recognises a service importing @vp/adapters', () => {
+    const service = "import { CaslAuthorizationAdapter } from '@vp/adapters';";
+
+    expect(importsAdaptersOutsideAHome('apps/api/src/services/video-service.ts', service)).toBe(
+      true
+    );
+    expect(
+      importsAdaptersOutsideAHome('apps/api/src/composition/services.module.ts', service)
+    ).toBe(false);
+  });
+
+  it('imports @vp/adapters only from a composition module', () => {
+    const offenders = productionSources()
+      .filter((file) => /^apps\//.test(file))
+      .filter((file) => importsAdaptersOutsideAHome(file, read(file)));
+
+    expect(offenders).toEqual([]);
+  });
+
   it('still recognises the imports the adapters legitimately make', () => {
     expect(sdkImports('packages/server/adapters/redis/redis-cache-client.ts')).toContain('ioredis');
     expect(sdkImports('packages/server/db/src/client.ts')).toContain('postgres');

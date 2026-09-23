@@ -1,4 +1,5 @@
 import type { UploadRecord, VideoRecord } from '@vp/core/repositories';
+import { jobPriorityFor } from '@vp/domain';
 import {
   type NotMultipart,
   type PartManifestMismatch,
@@ -19,13 +20,10 @@ import {
   type StorageUnavailable,
 } from '@vp/errors';
 import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
+import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
-
-const PRIORITY_PAID = 1;
-const PRIORITY_FREE = 5;
 
 export interface UploadPart {
   partNumber: number;
@@ -124,22 +122,13 @@ async function rejectSizeMismatch(
   return err(uploadSizeMismatch(video.id, video.sourceSizeBytes ?? null, actualSizeBytes));
 }
 
-async function probePriority(ctx: UploadContext, user: AuthUser, ownerId: string): Promise<number> {
-  if (ctx.users) {
-    // A tier lookup that cannot answer costs the job its priority, not its admission.
-    const record = unwrapOr(await ctx.users.findById(ownerId), null);
-    return record?.tier === 'pro' || record?.tier === 'enterprise' ? PRIORITY_PAID : PRIORITY_FREE;
-  }
-  return (user as { tier?: string }).tier === 'pro' ? PRIORITY_PAID : PRIORITY_FREE;
-}
-
 /**
  * Completes an upload, verifies the stored object, CAS-transitions the video to
  * UPLOADED and enqueues the probe job the same transition committed to the outbox.
  */
 export async function completeUpload(
   ctx: UploadContext,
-  user: AuthUser,
+  user: UserContext,
   uploadId: string,
   parts?: UploadPart[],
   options?: CompleteUploadOptions
@@ -178,7 +167,7 @@ export async function completeUpload(
     sourceKey: video.sourceKey,
     generation: 1,
     traceparent,
-    priority: await probePriority(ctx, user, video.ownerId),
+    priority: jobPriorityFor(unwrapOr(await ctx.users.findById(video.ownerId), null)?.tier),
   });
 
   const transitioned = await ctx.videos.transition({

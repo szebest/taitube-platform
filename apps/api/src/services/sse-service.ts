@@ -5,11 +5,11 @@ import type {
   VideoRepository,
 } from '@vp/core/repositories';
 import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/domain-rules';
-import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
+import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
+import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 import { playbackUrl } from './video-views';
 
 export interface SseSnapshot {
@@ -39,7 +39,7 @@ export interface SseServiceDeps {
   videos: VideoRepository;
   renditions: RenditionRepository;
   events: EventRepository;
-  cdnBaseUrl?: string;
+  cdn: CdnBase;
 }
 
 export type OpenVideoStreamFailure = ReadVideoFailure | DatabaseUnavailable;
@@ -104,27 +104,16 @@ function renditionProgress(
  * replays. Connection lifecycle, backpressure and fan-out stay in SseHub.
  */
 export class SseService {
-  private readonly videos: VideoRepository;
-  private readonly renditions: RenditionRepository;
-  private readonly events: EventRepository;
-  private readonly cleanCdnBase: string;
-
-  constructor(deps: SseServiceDeps) {
-    this.videos = deps.videos;
-    this.renditions = deps.renditions;
-    this.events = deps.events;
-    const cdnBase = deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL;
-    this.cleanCdnBase = cdnBase.replace(/\/+$/, '');
-  }
+  constructor(private readonly deps: SseServiceDeps) {}
 
   /**
    * Authorises a single-video stream exactly as GET /v1/videos/:id does.
    */
   async openVideoStream(
-    user: AuthUser | null,
+    user: UserContext | null,
     videoId: string
   ): Promise<Result<SseSession, OpenVideoStreamFailure>> {
-    const found = await this.videos.findById(videoId);
+    const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;
 
     const decided = decideVideoRead({ viewer: user, video: found.value, videoId });
@@ -137,9 +126,9 @@ export class SseService {
       // A snapshot that cannot read the renditions or the event id still opens the stream on what
       // the video row already said; the live events that follow carry the rest.
       snapshot: async () => {
-        const renditions = unwrapOr(await this.renditions.findByVideoId(videoId), []);
-        const lastEventId = unwrapOr(await this.events.getLatestEventId(videoId), 0);
-        const url = playbackUrl(video, this.cleanCdnBase);
+        const renditions = unwrapOr(await this.deps.renditions.findByVideoId(videoId), []);
+        const lastEventId = unwrapOr(await this.deps.events.getLatestEventId(videoId), 0);
+        const url = playbackUrl(video, this.deps.cdn);
 
         return ok({
           lastEventId,
@@ -152,11 +141,13 @@ export class SseService {
         });
       },
       replay: async (afterId) =>
-        map(await this.events.findAfterId(videoId, afterId), (rows) => rows.map(mapEventToSse)),
+        map(await this.deps.events.findAfterId(videoId, afterId), (rows) =>
+          rows.map(mapEventToSse)
+        ),
     });
   }
 
-  openUserStream(user: AuthUser): SseSession {
+  openUserStream(user: UserContext): SseSession {
     return {
       channel: userChannel(user.id),
       userId: user.id,
@@ -170,7 +161,7 @@ export class SseService {
           },
         }),
       replay: async (afterId) =>
-        map(await this.events.findAfterIdForUser(user.id, afterId), (rows) =>
+        map(await this.deps.events.findAfterIdForUser(user.id, afterId), (rows) =>
           rows.map(mapEventToSse)
         ),
     };

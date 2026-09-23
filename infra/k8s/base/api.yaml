@@ -17,6 +17,8 @@ spec:
         app.kubernetes.io/name: vp-api
         app.kubernetes.io/part-of: video-pipeline
     spec:
+      # preStop (5 s) + the process's own 20 s grace window + 5 s before SIGKILL.
+      terminationGracePeriodSeconds: 30
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
@@ -26,6 +28,10 @@ spec:
         - name: api
           image: ghcr.io/szebest/vp-api:latest
           command: ["node", "dist/main.js"]
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false

@@ -1,56 +1,24 @@
 import { DegradedSchema, liveness, livenessAlias, readiness } from '@vp/api-contracts';
-import type { CacheClient, DatabaseClient, HealthCheckable, StorageClient } from '@vp/core/ports';
-import { isOk } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';
 
-export interface HealthRouteOptions {
-  dbClient?: DatabaseClient | null;
-  cache?: CacheClient | null;
-  storage?: StorageClient | null;
-}
-
-/** An unwired dependency is not a dependency, so it cannot be unreachable. */
-async function isReachable(dependency?: HealthCheckable | null): Promise<boolean> {
-  return dependency ? isOk(await dependency.checkHealth()) : true;
-}
-
-export function registerHealthRoutes(app: FastifyInstance, options: HealthRouteOptions): void {
-  const { dbClient, cache, storage } = options;
+/** Liveness never consults readiness: a draining process is alive until it exits. */
+export async function healthRoutes(app: FastifyInstance): Promise<void> {
+  const { readiness: probe } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  const livenessHandler = async () => {
-    return { status: 'ok' as const };
-  };
+  const livenessHandler = async () => ({ status: 'ok' as const });
 
   server.get(liveness.path, { schema: contractSchema(liveness) }, livenessHandler);
-
   server.get(livenessAlias.path, { schema: contractSchema(livenessAlias) }, livenessHandler);
 
   server.get(
     readiness.path,
     { schema: contractSchema(readiness, { responses: { 503: DegradedSchema } }) },
     async (_request, reply) => {
-      const dependencies = {
-        postgres: dbClient,
-        redis: cache,
-        s3: storage,
-      };
-
-      const checks: Record<string, 'ok' | 'failed'> = {};
-      let isHealthy = true;
-
-      for (const [name, dependency] of Object.entries(dependencies)) {
-        checks[name] = (await isReachable(dependency)) ? 'ok' : 'failed';
-        isHealthy = isHealthy && checks[name] === 'ok';
-      }
-
-      const statusCode = isHealthy ? 200 : 503;
-      return reply.status(statusCode).send({
-        status: isHealthy ? 'ok' : 'degraded',
-        checks,
-      });
+      const { ready, checks } = await probe.report();
+      return reply.status(ready ? 200 : 503).send({ status: ready ? 'ok' : 'degraded', checks });
     }
   );
 }

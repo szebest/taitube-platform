@@ -5,7 +5,7 @@ import {
   InMemoryJobQueue,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import { parseSpriteVtt } from '@vp/ffmpeg';
 import type { ProbeJob, ThumbnailJob } from '@vp/job-contracts';
@@ -18,6 +18,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { throughRunner } from './queue-boundary';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', () => {
   let repositories: InMemoryRepositories;
@@ -75,6 +76,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     });
 
     const processor = createThumbnailProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -158,6 +160,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
 
     // 1. Run probe stage to construct flow
     const probeProcessor = createProbeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -181,6 +184,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
 
     // Register package processor
     const packageProcessor = createPackageProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -189,24 +193,28 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     await qPackage.process(throughRunner(packageProcessor));
 
     const transcode1080 = createTranscodeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
       getQueue,
     });
     const transcode720 = createTranscodeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
       getQueue,
     });
     const transcode480 = createTranscodeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
       getQueue,
     });
     const thumbProcessor = createThumbnailProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -319,6 +327,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
 
     // 1. Run probe with forceThumbnailFailure flag
     const probeProcessor = createProbeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -347,6 +356,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     const qPackage = getQueue('package');
 
     const packageProcessor = createPackageProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -355,24 +365,28 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     await qPackage.process(throughRunner(packageProcessor));
 
     const transcode1080 = createTranscodeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
       getQueue,
     });
     const transcode720 = createTranscodeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
       getQueue,
     });
     const transcode480 = createTranscodeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
       getQueue,
     });
     const thumbProcessor = createThumbnailProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -418,6 +432,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     const videoId = await setupUploadedVideo('raw/missing.mp4');
 
     const processor = createThumbnailProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,

@@ -1,4 +1,8 @@
-import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+} from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
@@ -32,7 +36,6 @@ describe('two consumers of VideoService.get render the same failure differently'
         cache: new InMemoryCacheClient(),
         storage: new InMemoryStorageClient(),
       },
-      cdnBaseUrl: 'http://localhost:9000/public',
     });
     await app.ready();
   });

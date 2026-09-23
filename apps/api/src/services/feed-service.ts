@@ -1,8 +1,8 @@
-import { Singleflight } from '@vp/adapters';
 import type { FeedQuery, FeedResponse } from '@vp/api-contracts';
+import { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
 import { type Result, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
-import { HttpCacheService } from './http-cache-service';
+import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';
 
 const FEED_MAX_AGE_SECONDS = 30;
@@ -10,8 +10,7 @@ const FEED_STALE_WHILE_REVALIDATE_SECONDS = 60;
 
 export interface FeedServiceDeps {
   videoService: VideoService;
-  cache?: CacheClient;
-  httpCacheService?: HttpCacheService;
+  cache: CacheClient;
   maxAgeSeconds?: number;
   staleWhileRevalidateSeconds?: number;
 }
@@ -34,8 +33,7 @@ interface CachedFeedPage {
  */
 export class FeedService {
   private readonly videoService: VideoService;
-  private readonly cache?: CacheClient;
-  private readonly httpCache: HttpCacheService;
+  private readonly cache: CacheClient;
   private readonly maxAgeSeconds: number;
   private readonly staleWhileRevalidateSeconds: number;
   private readonly singleflight = new Singleflight();
@@ -43,7 +41,6 @@ export class FeedService {
   constructor(deps: FeedServiceDeps) {
     this.videoService = deps.videoService;
     this.cache = deps.cache;
-    this.httpCache = deps.httpCacheService ?? new HttpCacheService();
     this.maxAgeSeconds = deps.maxAgeSeconds ?? FEED_MAX_AGE_SECONDS;
     this.staleWhileRevalidateSeconds =
       deps.staleWhileRevalidateSeconds ?? FEED_STALE_WHILE_REVALIDATE_SECONDS;
@@ -72,9 +69,9 @@ export class FeedService {
       () =>
         this.videoService.listPublic({
           sort,
-          ...(query.categoryId ? { categoryId: query.categoryId } : {}),
-          ...(query.cursor ? { cursor: query.cursor } : {}),
-          ...(limit === undefined ? {} : { limit }),
+          categoryId: query.categoryId || undefined,
+          cursor: query.cursor || undefined,
+          limit,
         })
     );
 
@@ -92,7 +89,7 @@ export class FeedService {
 
     const fresh: CachedFeedPage = {
       data: listed.value,
-      etag: this.httpCache.generateEtag(listed.value),
+      etag: generateEtag(listed.value),
     };
     if (!hasCursor) {
       await this.writeCache(variant, fresh);
@@ -104,8 +101,8 @@ export class FeedService {
   private page(cached: CachedFeedPage, ifNoneMatch?: string): FeedPage {
     return {
       ...cached,
-      notModified: this.httpCache.isNotModified(ifNoneMatch, cached.etag),
-      headers: this.httpCache.buildCacheHeaders({
+      notModified: isNotModified(ifNoneMatch, cached.etag),
+      headers: buildCacheHeaders({
         etag: cached.etag,
         maxAgeSeconds: this.maxAgeSeconds,
         staleWhileRevalidateSeconds: this.staleWhileRevalidateSeconds,
@@ -118,8 +115,6 @@ export class FeedService {
   }
 
   private async readCache(variant: string): Promise<CachedFeedPage | undefined> {
-    if (!this.cache) return undefined;
-
     const raw = unwrapOr(await this.cache.get(this.cacheKey(variant)), null);
     if (!raw) return undefined;
 
@@ -132,6 +127,6 @@ export class FeedService {
 
   /** A cold page cache costs latency, never correctness, so the write's failure is dropped here. */
   private async writeCache(variant: string, page: CachedFeedPage): Promise<void> {
-    await this.cache?.set(this.cacheKey(variant), JSON.stringify(page), this.maxAgeSeconds);
+    await this.cache.set(this.cacheKey(variant), JSON.stringify(page), this.maxAgeSeconds);
   }
 }

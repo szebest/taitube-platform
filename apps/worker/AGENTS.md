@@ -7,8 +7,9 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 ## 1. Scope & Architecture
 
 `apps/worker` executes asynchronous BullMQ processing stages across the video ingestion and transcoding pipeline.
-- **Composition Root:** `apps/worker/src/runner.ts` wires stage processors with concrete or in-memory adapters.
-- **Stage Registry:** The active processing stage is selected by the `WORKER_STAGE` environment variable (`probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`).
+- **Composition Root:** `apps/worker/src/runner.ts` composes one `Container` over the same `registerAdapters` the API uses, so `config.kind` is the only switch between adapter families; `composition/stages.module.ts` binds the stage's processor to its queue as a Startable.
+- **Stage Registry:** `STAGE_REGISTRY` in `registry.ts` carries each stage's worker options and its processor factory, keyed by `config.worker.stage` (`WORKER_STAGE`). Adding a stage is one registry entry.
+- **Configuration is a value:** `main.ts` calls `loadEnv()` and hands `toAppConfig()`'s result to the runner. Stages take buckets, the CDN base, the heartbeat path and ffmpeg settings from their deps; nothing below `main.ts` reads `process.env`.
 
 ---
 
@@ -25,8 +26,8 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 - Step completions verify `lock_token` via `completeStep` to reject zombie workers if a job was re-queued.
 - State transitions on `videos` execute via Compare-and-Set and atomically log audit records in `video_events`.
 
-### Rule 3: The Runner Is the Only Throw
-- A stage returns `Result<T, E>` and decides nothing about retries (SDD ADR-24). `runner.ts` converts:
+### Rule 3: The Consumer Is the Only Throw
+- A stage returns `Result<T, E>` and decides nothing about retries (SDD ADR-24). `composition/stages.module.ts` converts:
   `if (isErr(outcome)) throw toPipelineError(outcome.error)`, because BullMQ's retry contract *is* the exception
   - a stage that returns normally is a completed job.
 - `toPipelineError` lives in `@vp/errors` and reads `RETRY_CLASS`, so ADR-18's classification is decided once
@@ -46,7 +47,7 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 - Handlers must use `finally` blocks to guarantee temporary files are unlinked on both success and error paths to prevent disk leaks.
 
 ### Rule 5: Graceful Shutdown & Liveness
-- Handle `SIGTERM` and `SIGINT` to allow active transcoding jobs to finish or abort cleanly within bounded timeouts.
+- `SIGTERM` and `SIGINT` run `shutdownOnce` from `@vp/composition`, the same drained shutdown as the API: the runner's container disposes in reverse construction order and a close that outlives the stage's `shutdownTimeoutMs` is abandoned with the pending disposer named. `shutdownTimeoutMs` is the pod's `terminationGracePeriodSeconds` less the 5 s preStop and a 5 s margin; `registry.test.ts` reads the manifests to hold them together.
 - Periodically touch the heartbeat file (`WORKER_HEARTBEAT_PATH`) to prevent watchdog kills.
 
 ---

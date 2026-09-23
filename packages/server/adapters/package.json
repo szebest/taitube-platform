@@ -17,6 +17,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./composition": {
+      "types": "./dist/composition/index.d.ts",
+      "import": "./dist/composition/index.js",
+      "default": "./dist/composition/index.js"
+    },
     "./s3": {
       "types": "./dist/s3/index.d.ts",
       "import": "./dist/s3/index.js",
@@ -26,6 +31,11 @@
       "types": "./dist/redis/index.d.ts",
       "import": "./dist/redis/index.js",
       "default": "./dist/redis/index.js"
+    },
+    "./redis/*": {
+      "types": "./dist/redis/*.d.ts",
+      "import": "./dist/redis/*.js",
+      "default": "./dist/redis/*.js"
     },
     "./bullmq": {
       "types": "./dist/bullmq/index.d.ts",
@@ -60,11 +70,15 @@
     "@casl/ability": "^6.8.1",
     "@opentelemetry/api": "^1.9.1",
     "@ucast/core": "^2.0.0",
+    "@vp/composition": "workspace:*",
+    "@vp/concurrency": "workspace:*",
     "@vp/core": "workspace:*",
     "@vp/db": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/domain-rules": "workspace:*",
+    "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
+    "@vp/job-contracts": "workspace:*",
     "@vp/observability": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/result": "workspace:*",

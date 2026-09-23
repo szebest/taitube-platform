@@ -3,20 +3,11 @@ import { isErr } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import type { FeedService } from '../services/feed-service';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
-export interface FeedRouteOptions {
-  feedService: FeedService;
-}
-
-/**
- * Fastify routes plugin for the public video feed (PRD US-12, FR-14, SDD §6.1).
- * Thin transport adapter delegating caching and conditional evaluation to FeedService.
- */
-export function registerFeedRoutes(app: FastifyInstance, options: FeedRouteOptions): void {
-  const { feedService } = options;
+export async function feedRoutes(app: FastifyInstance): Promise<void> {
+  const { feedService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(getFeed)) {

@@ -1,11 +1,11 @@
-import { InMemoryRepositories } from '@vp/adapters';
+import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { createMetricsRegistry } from '@vp/observability';
-import { startSqlPoller } from '../sql-poller';
+import { pollSqlMetrics } from '../sql-poller';
 
 const OWNER_ID = '00000000-0000-7000-8000-000000000001';
 
 describe('apps/api/services: SQL poller', () => {
-  it('records videos_by_status and processing_steps_running_stale on the first poll', async () => {
+  it('records videos_by_status and processing_steps_running_stale', async () => {
     const testRepos = new InMemoryRepositories();
     const testMetrics = createMetricsRegistry();
 
@@ -50,13 +50,7 @@ describe('apps/api/services: SQL poller', () => {
     internalStep.heartbeatAt = staleTime;
     internalStep.startedAt = staleTime;
 
-    const poller = startSqlPoller({
-      repositories: testRepos,
-      metrics: testMetrics,
-      intervalMs: 10_000,
-    });
-
-    await new Promise((r) => setTimeout(r, 50));
+    await pollSqlMetrics(testRepos, testMetrics);
 
     const metricsJson = await testMetrics.registry.getMetricsAsJSON();
     const staleMetric = metricsJson.find((m) => m.name === 'processing_steps_running_stale');
@@ -65,7 +59,5 @@ describe('apps/api/services: SQL poller', () => {
     const statusMetric = metricsJson.find((m) => m.name === 'videos_by_status');
     const processingVal = statusMetric?.values.find((v) => v.labels.status === 'PROCESSING');
     expect(processingVal?.value).toBe(1);
-
-    poller.stop();
   });
 });

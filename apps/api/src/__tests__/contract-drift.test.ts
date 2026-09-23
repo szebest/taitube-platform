@@ -1,4 +1,8 @@
-import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+} from '@vp/adapters/in-memory';
 import { API_ENDPOINTS, endpointKey, findEndpoint } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
@@ -83,7 +87,6 @@ describe('apps/api: contract drift', () => {
         cache: new InMemoryCacheClient(),
         storage: new InMemoryStorageClient(),
       },
-      cdnBaseUrl: 'http://localhost:9000/public',
     });
     await app.ready();
     registered = parseRouteTree(app.printRoutes({ commonPrefix: false }));

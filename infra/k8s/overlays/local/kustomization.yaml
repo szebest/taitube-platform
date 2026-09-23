@@ -6,6 +6,7 @@ namespace: video-pipeline
 resources:
   - ../../base
 
+
 images:
   - name: ghcr.io/szebest/vp-api
     newName: vp-api

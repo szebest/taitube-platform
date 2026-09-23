@@ -14,6 +14,7 @@ describe('BullMqJobQueue', () => {
     workers.length = 0;
     queue = new FakeQueue();
     jobQueue = new BullMqJobQueue({
+      type: 'queue',
       name: 'probe',
       queue: queue.asQueue(),
       createWorker: fakeWorkerFactory,
@@ -32,6 +33,7 @@ describe('BullMqJobQueue', () => {
       { scenario: 'there is no connection', init: { failClient: true }, expected: false },
     ])('reports health as $expected when $scenario', async ({ init, expected }) => {
       const subject = new BullMqJobQueue({
+        type: 'queue',
         name: 'probe',
         queue: new FakeQueue(init).asQueue(),
       });
@@ -80,6 +82,7 @@ describe('BullMqJobQueue', () => {
   describe('job state', () => {
     it('reads the state of a known job and undefined for an unknown one', async () => {
       const subject = new BullMqJobQueue({
+        type: 'queue',
         name: 'probe',
         queue: new FakeQueue({ jobs: [fakeJob({ id: 'job-1', state: 'active' })] }).asQueue(),
       });
@@ -90,6 +93,7 @@ describe('BullMqJobQueue', () => {
 
     it('projects the job list onto the port shape', async () => {
       const subject = new BullMqJobQueue({
+        type: 'queue',
         name: 'probe',
         queue: new FakeQueue({
           jobs: [fakeJob({ id: 'job-1', name: 'probe', attemptsMade: 2 })],
@@ -109,6 +113,7 @@ describe('BullMqJobQueue', () => {
 
     it('fills in the counts the queue does not report', async () => {
       const subject = new BullMqJobQueue({
+        type: 'queue',
         name: 'probe',
         queue: new FakeQueue({ counts: { waiting: 3, failed: 1 } }).asQueue(),
       });
@@ -155,6 +160,7 @@ describe('BullMqJobQueue', () => {
 
     it('projects the registered schedulers, falling back across the naming fields', async () => {
       const subject = new BullMqJobQueue({
+        type: 'queue',
         name: 'probe',
         queue: new FakeQueue({
           schedulers: [

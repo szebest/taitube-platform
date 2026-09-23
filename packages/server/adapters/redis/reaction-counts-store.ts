@@ -1,7 +1,16 @@
 import type { CacheClient } from '@vp/core/ports';
 import type { ReactionCounts } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
-import { type Result, fromPromise, isErr, map, ok, tryCatch, unwrapOr } from '@vp/result';
+import {
+  type Result,
+  assertNever,
+  fromPromise,
+  isErr,
+  map,
+  ok,
+  tryCatch,
+  unwrapOr,
+} from '@vp/result';
 import type { Redis } from 'ioredis';
 
 export interface CachedCounts {
@@ -11,9 +20,13 @@ export interface CachedCounts {
   delta?: number;
 }
 
+/** Redis speaks hashes and atomic increments; any other cache gets JSON and a per-key chain. */
+export type ReactionCacheBackend =
+  | { type: 'redis'; redis: Redis }
+  | { type: 'cache'; cache: CacheClient };
+
 export interface ReactionCountsStoreConfig {
-  redis?: Redis;
-  cache?: CacheClient | null;
+  backend: ReactionCacheBackend;
   ttlSeconds: number;
 }
 
@@ -23,14 +36,12 @@ export interface ReactionCountsStoreConfig {
  * two storage shapes it has to speak.
  */
 export class ReactionCountsStore {
-  private readonly redis?: Redis;
-  private readonly cache?: CacheClient | null;
+  private readonly backend: ReactionCacheBackend;
   private readonly ttlSeconds: number;
   private readonly adjustMutexes = new Map<string, Promise<void>>();
 
   constructor(config: ReactionCountsStoreConfig) {
-    this.redis = config.redis;
-    this.cache = config.cache;
+    this.backend = config.backend;
     this.ttlSeconds = config.ttlSeconds;
   }
 
@@ -49,24 +60,35 @@ export class ReactionCountsStore {
    */
   async read(videoId: string): Promise<CachedCounts | null> {
     const key = this.key(videoId);
+    const { backend } = this;
 
-    if (this.redis) {
-      const redis = this.redis;
-      const hash = unwrapOr(
-        await fromPromise(() => redis.hgetall(key), this.unavailable('read')),
-        null
-      );
-      if (!hash || (hash['likes'] === undefined && hash['dislikes'] === undefined)) return null;
-
-      return {
-        likesCount: Number.parseInt(hash['likes'] || '0', 10),
-        dislikesCount: Number.parseInt(hash['dislikes'] || '0', 10),
-        cachedAt: hash['cachedAt'] ? Number.parseInt(hash['cachedAt'], 10) : undefined,
-        delta: hash['delta'] ? Number.parseInt(hash['delta'], 10) : undefined,
-      };
+    switch (backend.type) {
+      case 'redis':
+        return this.readHash(backend.redis, key);
+      case 'cache':
+        return this.readJsonCounts(backend.cache, key);
+      default:
+        return assertNever(backend, 'ReactionCacheBackend');
     }
+  }
 
-    const parsed = this.cache ? await this.readJson(key) : null;
+  private async readHash(redis: Redis, key: string): Promise<CachedCounts | null> {
+    const hash = unwrapOr(
+      await fromPromise(() => redis.hgetall(key), this.unavailable('read')),
+      null
+    );
+    if (!hash || (hash['likes'] === undefined && hash['dislikes'] === undefined)) return null;
+
+    return {
+      likesCount: Number.parseInt(hash['likes'] || '0', 10),
+      dislikesCount: Number.parseInt(hash['dislikes'] || '0', 10),
+      cachedAt: hash['cachedAt'] ? Number.parseInt(hash['cachedAt'], 10) : undefined,
+      delta: hash['delta'] ? Number.parseInt(hash['delta'], 10) : undefined,
+    };
+  }
+
+  private async readJsonCounts(cache: CacheClient, key: string): Promise<CachedCounts | null> {
+    const parsed = await this.readJson(cache, key);
     if (!parsed) return null;
 
     return {
@@ -77,10 +99,7 @@ export class ReactionCountsStore {
     };
   }
 
-  private async readJson(key: string): Promise<Record<string, unknown> | null> {
-    const cache = this.cache;
-    if (!cache) return null;
-
+  private async readJson(cache: CacheClient, key: string): Promise<Record<string, unknown> | null> {
     const json = unwrapOr(await cache.get(key), null);
     if (!json) return null;
 
@@ -97,9 +116,10 @@ export class ReactionCountsStore {
   ): Promise<Result<void, CacheUnavailable>> {
     const key = this.key(videoId);
     const cachedAt = Date.now();
+    const { backend } = this;
 
-    const redis = this.redis;
-    if (redis) {
+    if (backend.type === 'redis') {
+      const { redis } = backend;
       const done = await fromPromise(
         () =>
           redis
@@ -117,22 +137,17 @@ export class ReactionCountsStore {
       return map(done, () => undefined);
     }
 
-    if (this.cache) {
-      const payload = JSON.stringify({
-        likes: counts.likesCount,
-        dislikes: counts.dislikesCount,
-        cachedAt,
-        delta,
-      });
-      const cache = this.cache;
-      const done = await fromPromise(
-        () => cache.set(key, payload, this.ttlSeconds),
-        this.unavailable('write')
-      );
-      return map(done, () => undefined);
-    }
-
-    return ok();
+    const payload = JSON.stringify({
+      likes: counts.likesCount,
+      dislikes: counts.dislikesCount,
+      cachedAt,
+      delta,
+    });
+    const done = await fromPromise(
+      () => backend.cache.set(key, payload, this.ttlSeconds),
+      this.unavailable('write')
+    );
+    return map(done, () => undefined);
   }
 
   async adjust(
@@ -141,9 +156,10 @@ export class ReactionCountsStore {
     deltaDislikes: number
   ): Promise<Result<void, CacheUnavailable>> {
     const key = this.key(videoId);
+    const { backend } = this;
 
-    const redis = this.redis;
-    if (redis) {
+    if (backend.type === 'redis') {
+      const { redis } = backend;
       const present = await fromPromise(() => redis.exists(key), this.unavailable('adjust'));
       if (isErr(present)) return present;
       if (!present.value) return ok();
@@ -158,8 +174,7 @@ export class ReactionCountsStore {
       return map(applied, () => undefined);
     }
 
-    if (!this.cache) return ok();
-    return await this.adjustSerialised(key, deltaLikes, deltaDislikes);
+    return await this.adjustSerialised(backend.cache, key, deltaLikes, deltaDislikes);
   }
 
   /**
@@ -167,17 +182,15 @@ export class ReactionCountsStore {
    * concurrent adjustments from both reading the same pre-increment value.
    */
   private async adjustSerialised(
+    cache: CacheClient,
     key: string,
     deltaLikes: number,
     deltaDislikes: number
   ): Promise<Result<void, CacheUnavailable>> {
-    const cache = this.cache;
-    if (!cache) return ok();
-
     const prev = this.adjustMutexes.get(key) ?? Promise.resolve();
     const next = prev
       .then(async () => {
-        const parsed = await this.readJson(key);
+        const parsed = await this.readJson(cache, key);
         if (!parsed) return;
 
         const likes = Math.max(0, Number(parsed['likes'] ?? 0) + deltaLikes);
@@ -198,24 +211,22 @@ export class ReactionCountsStore {
 
   async invalidate(videoId: string): Promise<Result<void, CacheUnavailable>> {
     const key = this.key(videoId);
+    const { backend } = this;
 
-    const redis = this.redis;
-    if (redis) {
-      return map(
-        await fromPromise(() => redis.del(key), this.unavailable('invalidate')),
-        () => undefined
-      );
+    switch (backend.type) {
+      case 'redis':
+        return map(
+          await fromPromise(() => backend.redis.del(key), this.unavailable('invalidate')),
+          () => undefined
+        );
+      case 'cache':
+        return map(
+          await fromPromise(() => backend.cache.del(key), this.unavailable('invalidate')),
+          () => undefined
+        );
+      default:
+        return assertNever(backend, 'ReactionCacheBackend');
     }
-
-    const cache = this.cache;
-    if (cache) {
-      return map(
-        await fromPromise(() => cache.del(key), this.unavailable('invalidate')),
-        () => undefined
-      );
-    }
-
-    return ok();
   }
 
   clear(): void {

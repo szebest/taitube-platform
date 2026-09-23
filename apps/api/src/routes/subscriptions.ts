@@ -8,23 +8,11 @@ import {
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
-import type { SubscriptionService } from '../services/subscription-service';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
-export interface SubscriptionsRouteOptions {
-  subscriptionService: SubscriptionService;
-}
-
-/**
- * Fastify routes plugin for channel subscriptions & subscriber video feed (Ticket 41, SDD §6.1).
- * Thin transport adapter delegating subscription operations to SubscriptionService.
- */
-export function registerSubscriptionsRoutes(
-  app: FastifyInstance,
-  options: SubscriptionsRouteOptions
-): void {
-  const { subscriptionService } = options;
+export async function subscriptionsRoutes(app: FastifyInstance): Promise<void> {
+  const { subscriptionService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(subscribeToChannel)) {

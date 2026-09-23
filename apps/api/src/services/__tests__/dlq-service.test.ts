@@ -1,11 +1,12 @@
-import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
+import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
+import { defaultPaginator } from '@vp/pagination';
+import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import type { AuthUser } from '../../plugins/auth';
 import { DlqService } from '../dlq-service';
 
-const ADMIN: AuthUser = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };
+const ADMIN: UserContext = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };
 
 describe('DlqService', () => {
   let repositories: InMemoryRepositories;
@@ -21,6 +22,7 @@ describe('DlqService', () => {
       dlq: repositories.dlq,
       events: repositories.events,
       queues,
+      paginator: defaultPaginator,
     });
   });
 
@@ -86,7 +88,7 @@ describe('DlqService', () => {
     { scenario: 'an anonymous caller', caller: null, code: ErrorCodes.UNAUTHORIZED },
     {
       scenario: 'a signed-in non-admin',
-      caller: { id: 'user-1', role: 'USER' } as AuthUser,
+      caller: { id: 'user-1', role: 'USER' } as UserContext,
       code: ErrorCodes.FORBIDDEN,
     },
   ])('refuses $scenario', async ({ caller, code }) => {

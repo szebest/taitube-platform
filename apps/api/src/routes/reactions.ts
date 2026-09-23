@@ -2,23 +2,11 @@ import { getMyReaction, setReaction } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
-import type { ReactionService } from '../services/reaction-service';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
-export interface ReactionsRouteOptions {
-  reactionService: ReactionService;
-}
-
-/**
- * Fastify routes plugin for high-throughput video reactions (Ticket 40, SDD §6.1).
- * Thin transport adapter delegating reaction mutations and reads to ReactionService.
- */
-export function registerReactionsRoutes(
-  app: FastifyInstance,
-  options: ReactionsRouteOptions
-): void {
-  const { reactionService } = options;
+export async function reactionsRoutes(app: FastifyInstance): Promise<void> {
+  const { reactionService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(setReaction)) {

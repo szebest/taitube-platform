@@ -2,7 +2,7 @@ import type { JobQueue, QueueJobOptions } from '@vp/core/ports';
 import type { NewOutboxInput } from '@vp/core/repositories';
 import type { QueueUnavailable } from '@vp/errors';
 import { ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
-import { type Result, map, ok } from '@vp/result';
+import { type Result, map } from '@vp/result';
 
 const PROBE_QUEUE = 'probe';
 
@@ -38,7 +38,7 @@ export function buildProbeDispatch(input: ProbeDispatchInput): ProbeDispatch {
     jobId: ids.probe(input.videoId, input.generation),
     ...stagePolicies.probe,
     ...defaultJobOptions,
-    ...(input.priority === undefined ? {} : { priority: input.priority }),
+    priority: input.priority ?? stagePolicies.probe.priority,
   };
 
   return {
@@ -55,11 +55,9 @@ export function buildProbeDispatch(input: ProbeDispatchInput): ProbeDispatch {
   };
 }
 
-/** A deployment with no probe queue wired has nothing to enqueue, which is not a failure. */
 export async function enqueueProbe(
-  queue: JobQueue | undefined,
+  queue: JobQueue,
   dispatch: ProbeDispatch
 ): Promise<Result<void, QueueUnavailable>> {
-  if (!queue) return ok();
   return map(await queue.add(PROBE_QUEUE, dispatch.data, dispatch.opts), () => undefined);
 }

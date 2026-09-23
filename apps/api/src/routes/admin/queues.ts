@@ -1,20 +1,8 @@
 import type { FastifyInstance } from 'fastify';
-import type { QueueService } from '../../services/queue-service';
 import { sendResult } from '../send-result';
 
-export interface AdminQueuesOptions {
-  queueService: QueueService;
-}
-
-/**
- * Admin Queues Route — Thin HTTP transport adapter providing Bull Board admin UI
- * and queue inspection endpoints, delegating all operations to QueueService.
- */
-export async function registerAdminQueuesRoutes(
-  app: FastifyInstance,
-  options: AdminQueuesOptions
-): Promise<void> {
-  const { queueService } = options;
+export async function adminQueuesRoutes(app: FastifyInstance): Promise<void> {
+  const { queueService } = app.services;
 
   const boardPlugin = queueService.getBoardPlugin('/admin/queues');
 

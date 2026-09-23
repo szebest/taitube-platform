@@ -11,10 +11,7 @@ function isLocal(url: string): boolean {
   if (host.includes('${')) return true;
 
   return (
-    LOOPBACK.has(host) ||
-    host === XML_NAMESPACE ||
-    host.endsWith('.local') ||
-    !host.includes('.')
+    LOOPBACK.has(host) || host === XML_NAMESPACE || host.endsWith('.local') || !host.includes('.')
   );
 }
 

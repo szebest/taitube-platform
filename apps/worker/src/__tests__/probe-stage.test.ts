@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
-import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
@@ -8,8 +8,8 @@ import { createLogger } from '@vp/observability';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { validateJobId, validateQueueName } from '../registry';
 import { createProbeProcessor } from '../stages/probe';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () => {
   let repositories: InMemoryRepositories;
@@ -50,22 +50,11 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     return videoId;
   }
 
-  it('AC 22: unknown queue name or ":" in queue name or job id fails fast', () => {
-    expect(() => validateQueueName('invalid-queue')).toThrow('Unknown queue name "invalid-queue"');
-    expect(() => validateQueueName('probe:invalid')).toThrow("Queue name must not contain ':'");
-    expect(() => validateJobId('video1:probe:g1')).toThrow("Job ID must not contain ':'");
-    expect(validateJobId('video1--probe--g1')).toBe('video1--probe--g1');
-  });
-
   it('AC 19: deleted or missing source object throws UnrecoverableError and sets video to FAILED', async () => {
     const missingKey = 'raw/non-existent.mp4';
     const videoId = await setupUploadedVideo(missingKey, 'Missing Video');
 
-    const processor = createProbeProcessor({
-      repositories,
-      storage,
-      logger,
-    });
+    const processor = createProbeProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
 
     const job = createMockJob(`${videoId}--probe--g1`, {
       videoId,
@@ -152,11 +141,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       .spyOn(ffmpegModule, 'runFfprobe')
       .mockRejectedValueOnce(new PermanentError(ErrorCodes.CORRUPT_CONTAINER, 'Zero bytes media'));
 
-    const processor = createProbeProcessor({
-      repositories,
-      storage,
-      logger,
-    });
+    const processor = createProbeProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
 
     const job = createMockJob(`${videoId}--probe--g1`, {
       videoId,
@@ -234,11 +219,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       ],
     });
 
-    const processor = createProbeProcessor({
-      repositories,
-      storage,
-      logger,
-    });
+    const processor = createProbeProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
 
     const job = createMockJob(`${videoId}--probe--g1`, {
       videoId,
@@ -304,11 +285,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
 
     const ffmpegModule = await import('@vp/ffmpeg');
 
-    const processor = createProbeProcessor({
-      repositories,
-      storage,
-      logger,
-    });
+    const processor = createProbeProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
 
     // 1. Test p720
     vi.spyOn(ffmpegModule, 'runFfprobe').mockResolvedValueOnce({
@@ -485,11 +462,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
 
     const ffmpegModule = await import('@vp/ffmpeg');
 
-    const processor = createProbeProcessor({
-      repositories,
-      storage,
-      logger,
-    });
+    const processor = createProbeProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
 
     // 1. audio-only -> CORRUPT_CONTAINER
     vi.spyOn(ffmpegModule, 'runFfprobe').mockRejectedValueOnce(

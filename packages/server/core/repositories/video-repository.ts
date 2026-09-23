@@ -100,7 +100,9 @@ export interface TransitionVideoOptions {
 
 export type VideoIdleClock = 'updatedAt' | 'deletedAt' | 'readyAt';
 
-export type VideoScanAbsence = { step: string } | { event: string; forCurrentGeneration?: boolean };
+export type VideoScanAbsence =
+  | { type: 'step'; step: string }
+  | { type: 'event'; event: string; forCurrentGeneration?: boolean };
 
 export interface VideoScan {
   status: VideoStatus;

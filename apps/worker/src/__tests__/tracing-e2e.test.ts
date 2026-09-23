@@ -12,7 +12,7 @@ import {
   InMemoryJobQueue,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { NotifyJob, ProbeJob } from '@vp/job-contracts';
 import { createLogger, getActiveSpanContext } from '@vp/observability';
@@ -24,6 +24,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { withTelemetry } from '../with-telemetry';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', () => {
   let exporter: InMemorySpanExporter;
@@ -219,6 +220,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
 
     // 2. Worker runs probe wrapped with withTelemetry
     const rawProbeProcessor = createProbeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       flowProducer,
@@ -241,6 +243,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
     // 3. Register package stage processor
     const packageQueue = getQueue('package');
     const rawPackageProcessor = createPackageProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       getQueue,
@@ -251,6 +254,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
 
     // 4. Worker processes transcode children (1080p, 720p, 480p)
     const rawTranscodeProcessor = createTranscodeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -267,6 +271,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
     // 5. Worker processes thumbnail child
     const thumbQueue = getQueue('thumbnail');
     const rawThumbProcessor = createThumbnailProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,

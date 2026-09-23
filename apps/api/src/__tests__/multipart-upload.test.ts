@@ -1,11 +1,8 @@
 import * as http from 'node:http';
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  S3MultipartStorage,
-  S3StorageClient,
-} from '@vp/adapters';
+import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
+import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { MULTIPART_MIN_PART_SIZE } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
@@ -178,6 +175,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     });
 
     const s3Client = new S3StorageClient({
+      type: 'connection',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',
@@ -185,7 +183,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
       forcePathStyle: true,
     });
 
-    const multipart = new S3MultipartStorage({ storageClient: s3Client });
+    const multipart = new S3MultipartStorage({ type: 'storage', storageClient: s3Client });
 
     app = await buildApp({
       adapters: {
@@ -194,12 +192,8 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
         storage: s3Client,
         multipart,
         probeQueue: mockProbeQueue,
-        queues: new Map(),
       },
-      limits: {
-        multipartThresholdBytes: 10 * 1024 * 1024,
-      },
-      rawBucket: 'raw',
+      config: inProcessAppConfig({ limits: { multipartThresholdBytes: 10 * 1024 * 1024 } }),
     });
     await app.ready();
   });

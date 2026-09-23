@@ -1,15 +1,13 @@
-import {
-  InMemoryMultipartStorage,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters';
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import type { AuthUser } from '../../plugins/auth';
+import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';
+import { uploadContext } from './service-deps';
 
-const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000b001', role: 'CREATOR' };
-const STRANGER: AuthUser = { id: '00000000-0000-7000-8000-00000000b002', role: 'CREATOR' };
+const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000b001', role: 'CREATOR' };
+const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000b002', role: 'CREATOR' };
 const MB = 1024 * 1024;
 
 describe('apps/api/services: upload parts', () => {
@@ -18,23 +16,14 @@ describe('apps/api/services: upload parts', () => {
   let service: UploadService;
   let expiredService: UploadService;
 
-  const build = (uploadSessionTtlSeconds?: number) =>
-    new UploadService({
-      uploads: repositories.uploads,
-      videos: repositories.videos,
-      events: repositories.events,
-      storage,
-      multipart: new InMemoryMultipartStorage(storage),
-      rawBucket: 'raw',
-      multipartThresholdBytes: 10 * MB,
-      ...(uploadSessionTtlSeconds === undefined ? {} : { uploadSessionTtlSeconds }),
-    });
+  const build = (overrides: Partial<UploadContext> = {}) =>
+    new UploadService(uploadContext(repositories, storage, overrides));
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     storage = new InMemoryStorageClient();
     service = build();
-    expiredService = build(0);
+    expiredService = build({ uploadSessionTtlSeconds: 0 });
   });
 
   const startMultipart = () =>

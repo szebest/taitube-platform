@@ -2,19 +2,21 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import {
+  InMemoryCacheClient,
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
+import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
-import { storageUnavailable } from '@vp/errors';
+import { inProcessAppConfig } from '@vp/env-schema';
+import { queueUnavailable, storageUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { Result } from '@vp/result';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it } from 'vitest';
 import { createWorkerRunner } from '../runner';
 import {
   createHousekeepingProcessor,
@@ -24,6 +26,7 @@ import {
   runReconcileUploads,
   runTmpSweep,
 } from '../stages/housekeeping/index';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket 17)', () => {
   let repositories: InMemoryRepositories;
@@ -89,8 +92,10 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Run reconcile-uploads with 1 hour threshold (so 2 hours ago is stale)
       const result = expectOk(
         await runReconcileUploads({
+          ...STAGE_SETTINGS,
           repositories,
           multipart,
+          probeQueue: getQueue('probe'),
           rawBucket: 'raw',
           uploadingThresholdMs: 60 * 60 * 1000,
         })
@@ -126,8 +131,10 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       const result = expectOk(
         await runReconcileUploads({
+          ...STAGE_SETTINGS,
           repositories,
           multipart,
+          probeQueue: getQueue('probe'),
           uploadingThresholdMs: 60 * 60 * 1000,
         })
       );
@@ -168,6 +175,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Run reconciler with 5 min threshold
       const result = expectOk(
         await runReconcileUploads({
+          ...STAGE_SETTINGS,
           repositories,
           multipart,
           probeQueue,
@@ -297,10 +305,29 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(checkVideo?.status).toBe('PROCESSING');
     });
 
-    it('does NOT mark as orphaned if a job is waiting in a processing queue', async () => {
+    it.each([
+      {
+        scenario: 'a job is waiting in a processing queue',
+        arrange: async (videoId: string) => {
+          await getQueue('transcode-720p').add('transcode', { videoId, rendition: '720p' });
+        },
+      },
+      {
+        scenario: 'a job is in prioritized state',
+        arrange: async (videoId: string) => {
+          await getQueue('probe').add('probe', { videoId }, { priority: 5 });
+        },
+      },
+      {
+        scenario: 'a processing queue cannot be inspected',
+        arrange: async () => {
+          vi.spyOn(getQueue('probe'), 'getJobs').mockResolvedValue(
+            err(queueUnavailable('getJobs', 'redis down'))
+          );
+        },
+      },
+    ])('does NOT mark as orphaned if $scenario', async ({ arrange }) => {
       const videoId = uuidv7();
-      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
-
       const video = expectOk(
         await repositories.videos.create({
           id: videoId,
@@ -310,43 +337,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
           generation: 1,
         })
       );
-      video.updatedAt = fourHoursAgo;
-
-      // Add a waiting job to transcode-720p
-      const transcodeQueue = getQueue('transcode-720p') as InMemoryJobQueue;
-      await transcodeQueue.add('transcode', { videoId, rendition: '720p' });
-
-      const result = expectOk(
-        await runReconcileProcessing({
-          repositories,
-          getQueue,
-          thresholdMs: 3 * 60 * 60 * 1000,
-        })
-      );
-
-      expect(result.orphanedCount).toBe(0);
-      const checkVideo = expectOk(await repositories.videos.findById(videoId));
-      expect(checkVideo?.status).toBe('PROCESSING');
-    });
-
-    it('does NOT mark as orphaned if a job is in prioritized state', async () => {
-      const videoId = uuidv7();
-      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
-
-      const video = expectOk(
-        await repositories.videos.create({
-          id: videoId,
-          ownerId: uuidv7(),
-          sourceKey: `raw/${videoId}/source.mp4`,
-          status: 'PROCESSING',
-          generation: 1,
-        })
-      );
-      video.updatedAt = fourHoursAgo;
-
-      // Add a prioritized job to probe queue
-      const probeQueue = getQueue('probe') as InMemoryJobQueue;
-      await probeQueue.add('probe', { videoId }, { priority: 5 });
+      video.updatedAt = new Date(Date.now() - 4 * 60 * 60 * 1000);
+      await arrange(videoId);
 
       const result = expectOk(
         await runReconcileProcessing({
@@ -417,6 +409,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Run purge-deleted with 1 hour threshold
       const result = expectOk(
         await runPurgeDeleted({
+          ...STAGE_SETTINGS,
           repositories,
           storage,
           rawBucket: 'raw',
@@ -465,6 +458,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       const result = expectOk(
         await runPurgeDeleted({
+          ...STAGE_SETTINGS,
           repositories,
           storage,
           rawBucket: 'raw',
@@ -534,6 +528,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Run purge-deleted
       const result = expectOk(
         await runPurgeDeleted({
+          ...STAGE_SETTINGS,
           repositories,
           storage,
           rawBucket: 'raw',
@@ -568,6 +563,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // On a second run, old generations MUST NOT be re-purged (starvation prevention)
       const secondRunResult = expectOk(
         await runPurgeDeleted({
+          ...STAGE_SETTINGS,
           repositories,
           storage,
           rawBucket: 'raw',
@@ -611,13 +607,17 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // Simulate 2 workers concurrently executing reconcile-uploads
       const [worker1Result, worker2Result] = await Promise.all([
         runReconcileUploads({
+          ...STAGE_SETTINGS,
           repositories,
           multipart,
+          probeQueue: getQueue('probe'),
           uploadingThresholdMs: 60 * 60 * 1000,
         }),
         runReconcileUploads({
+          ...STAGE_SETTINGS,
           repositories,
           multipart,
+          probeQueue: getQueue('probe'),
           uploadingThresholdMs: 60 * 60 * 1000,
         }),
       ]);
@@ -661,16 +661,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       // Run 2 purge workers concurrently
       const [w1, w2] = await Promise.all([
-        runPurgeDeleted({
-          repositories,
-          storage,
-          thresholdMs: 60 * 60 * 1000,
-        }),
-        runPurgeDeleted({
-          repositories,
-          storage,
-          thresholdMs: 60 * 60 * 1000,
-        }),
+        runPurgeDeleted({ ...STAGE_SETTINGS, repositories, storage, thresholdMs: 60 * 60 * 1000 }),
+        runPurgeDeleted({ ...STAGE_SETTINGS, repositories, storage, thresholdMs: 60 * 60 * 1000 }),
       ]);
 
       // Exactly one worker performed the hard-delete
@@ -706,6 +698,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       const result = expectOk(
         await runExpireRaw({
+          ...STAGE_SETTINGS,
           repositories,
           storage,
           rawBucket: 'raw',
@@ -726,6 +719,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       // On a second run, video MUST NOT be re-expired (starvation and duplicate prevention)
       const secondRun = expectOk(
         await runExpireRaw({
+          ...STAGE_SETTINGS,
           repositories,
           storage,
           rawBucket: 'raw',
@@ -754,6 +748,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       await fs.utimes(oldDir, threeHoursAgo, threeHoursAgo);
 
       const result = await runTmpSweep({
+        ...STAGE_SETTINGS,
         tmpDir: tmpBase,
         thresholdMs: 2 * 60 * 60 * 1000,
       });
@@ -782,9 +777,13 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
   describe('Housekeeping worker runner integration', () => {
     it('executes tasks dispatched via createHousekeepingProcessor', async () => {
       const processor = createHousekeepingProcessor({
+        ...STAGE_SETTINGS,
         repositories,
         storage,
         multipart,
+        reactionCache: new RedisReactionCacheAdapter({
+          backend: { type: 'cache', cache: new InMemoryCacheClient() },
+        }),
         getQueue,
       });
 
@@ -800,11 +799,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
     it('starts a worker runner for housekeeping stage successfully', async () => {
       const runner = await createWorkerRunner({
-        stage: 'housekeeping',
-        repositories,
-        storage,
-        multipart,
-        getQueue,
+        config: inProcessAppConfig({ worker: { stage: 'housekeeping' } }),
+        adapters: { repositories, storage, multipart, getQueue },
       });
 
       expect(runner.worker.name).toBe('housekeeping');

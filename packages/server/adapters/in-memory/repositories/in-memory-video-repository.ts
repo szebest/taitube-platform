@@ -14,7 +14,6 @@ import {
   type TransitionVideoOptions,
   type UpdateVideoMetadataOptions,
   type UploadRecord,
-  type UploadRepository,
   type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
@@ -24,7 +23,7 @@ import {
 } from '@vp/core/repositories';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { canReadVideo } from '@vp/permissions';
-import { type Result, err, ok, unwrapOr } from '@vp/result';
+import { type Result, assertNever, err, ok, unwrapOr } from '@vp/result';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { selectPublicFeed } from './public-feed-query';
@@ -32,6 +31,7 @@ import {
   DEFAULT_VIDEO_RECORD,
   type InMemoryVideoRepositoryOptions,
   type InternalStep,
+  type UploadLookup,
 } from './types';
 
 export type { InMemoryVideoRepositoryOptions };
@@ -42,11 +42,11 @@ export class InMemoryVideoRepository extends VideoRepository {
   private readonly renditionsMap?: Map<string, RenditionRecord>;
   private readonly stepsMap?: Map<string, InternalStep>;
   private readonly uploadsMap?: Map<string, UploadRecord>;
-  private eventsRepo?: EventRepository;
-  private renditionsRepo?: RenditionRepository;
-  private stepsRepo?: StepRepository;
-  private uploadsRepo?: UploadRepository;
-  private outboxRepo?: OutboxRepository;
+  private readonly eventsRepo?: EventRepository;
+  private readonly renditionsRepo?: RenditionRepository;
+  private readonly stepsRepo?: StepRepository;
+  private readonly uploadsRepo?: UploadLookup;
+  private readonly outboxRepo?: OutboxRepository;
 
   constructor(
     optsOrMap?: InMemoryVideoRepositoryOptions | Map<string, VideoRecord>,
@@ -70,19 +70,6 @@ export class InMemoryVideoRepository extends VideoRepository {
       this.uploadsRepo = optsOrMap?.uploadsRepo;
       this.outboxRepo = optsOrMap?.outboxRepo;
     }
-  }
-
-  setUploadsRepo(repo: UploadRepository) {
-    this.uploadsRepo = repo;
-  }
-  setEventsRepo(repo: EventRepository) {
-    this.eventsRepo = repo;
-  }
-  setRenditionsRepo(repo: RenditionRepository) {
-    this.renditionsRepo = repo;
-  }
-  setStepsRepo(repo: StepRepository) {
-    this.stepsRepo = repo;
   }
 
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
@@ -247,17 +234,23 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   private async isAbsent(video: VideoRecord, absence: VideoScanAbsence): Promise<boolean> {
-    if ('step' in absence) {
-      const steps = await this.getSteps(video.id);
-      return !steps.some((s) => s.step === absence.step);
+    switch (absence.type) {
+      case 'step': {
+        const steps = await this.getSteps(video.id);
+        return !steps.some((s) => s.step === absence.step);
+      }
+      case 'event': {
+        const events = await this.getEvents(video.id);
+        return !events.some(
+          (e) =>
+            e.type === absence.event &&
+            (!absence.forCurrentGeneration ||
+              Number((e.payload as { generation?: number })?.generation ?? 0) >= video.generation)
+        );
+      }
+      default:
+        return assertNever(absence, 'VideoScanAbsence');
     }
-    const events = await this.getEvents(video.id);
-    return !events.some(
-      (e) =>
-        e.type === absence.event &&
-        (!absence.forCurrentGeneration ||
-          Number((e.payload as { generation?: number })?.generation ?? 0) >= video.generation)
-    );
   }
 
   async scan(filter: VideoScan): Promise<Result<VideoRecord[], DatabaseUnavailable>> {

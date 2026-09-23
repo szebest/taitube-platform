@@ -1,6 +1,10 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemoryStorageClient,
+} from '@vp/adapters/in-memory';
 import { JobQueue, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import type { NotifyJob, PackageJob, TranscodeJob } from '@vp/job-contracts';
@@ -12,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createNotifyProcessor } from '../stages/notify';
 import { createPackageProcessor } from '../stages/package';
 import { createTranscodeProcessor } from '../stages/transcode';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23)', () => {
   let repositories: InMemoryRepositories;
@@ -157,6 +162,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     const mockQueue = new MockTranscodeQueue();
 
     const processor = createTranscodeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -274,6 +280,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     const mockQueue = new MockPackageQueue();
 
     const processor = createPackageProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -322,11 +329,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
   it('AC 19: package fails when rendition playlist does NOT exist on storage', async () => {
     const videoId = await setupProcessingVideo('raw/missing-rendition.mp4');
 
-    const processor = createPackageProcessor({
-      repositories,
-      storage,
-      logger,
-    });
+    const processor = createPackageProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
 
     const job = createMockJob<PackageJob>(`${videoId}--package--g1`, {
       videoId,

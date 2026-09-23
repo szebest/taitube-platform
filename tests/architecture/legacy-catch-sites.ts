@@ -36,7 +36,6 @@ export const LEGACY_CATCH_SITES: readonly string[] = [
 
   // Build and migration entrypoints. Not domain code, and not reached by a request or a job.
   'apps/api/src/migrate.ts',
-  'apps/worker/src/main.ts',
   'packages/server/db/src/migrate.ts',
   'packages/server/db/src/seed.ts',
   'scripts/check-boundaries.ts',

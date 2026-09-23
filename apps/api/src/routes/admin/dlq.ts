@@ -1,20 +1,11 @@
 import { discardDlqEntry, listDlq, replayDlqEntry } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import type { DlqService } from '../../services/dlq-service';
 import { contractPaths, contractSchema } from '../contract-schema';
 import { sendResult } from '../send-result';
 
-export interface AdminDlqRouteOptions {
-  dlqService: DlqService;
-}
-
-/**
- * Fastify routes plugin for Admin DLQ inspection, replay, and discarding.
- * Thin transport adapter delegating DLQ operations to DlqService.
- */
-export function registerAdminDlqRoutes(app: FastifyInstance, options: AdminDlqRouteOptions): void {
-  const { dlqService } = options;
+export async function adminDlqRoutes(app: FastifyInstance): Promise<void> {
+  const { dlqService } = app.services;
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 

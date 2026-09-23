@@ -1,13 +1,15 @@
 import {
   InMemoryCacheClient,
+  InMemoryJobQueue,
+  InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
-  RedisReactionCacheAdapter,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
+import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { type Result, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
-import { beforeEach, describe, expect, it } from 'vitest';
 import { createHousekeepingProcessor, runReconcileReactionCounters } from '../stages/housekeeping';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () => {
   let repos: InMemoryRepositories;
@@ -18,7 +20,7 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
     repos = new InMemoryRepositories();
     cacheClient = new InMemoryCacheClient();
     reactionCache = new RedisReactionCacheAdapter({
-      cache: cacheClient,
+      backend: { type: 'cache', cache: cacheClient },
     });
   });
 
@@ -79,9 +81,12 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
   it('createHousekeepingProcessor executes reconcile-reaction-counters task', async () => {
     const storage = new InMemoryStorageClient();
     const processor = createHousekeepingProcessor({
+      ...STAGE_SETTINGS,
       repositories: repos,
       storage,
+      multipart: new InMemoryMultipartStorage(storage),
       reactionCache,
+      getQueue: (name) => new InMemoryJobQueue(name),
     });
 
     const videoId = '22222222-2222-7222-8222-222222222222';

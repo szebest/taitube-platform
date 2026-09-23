@@ -1,20 +1,24 @@
 import {
-  CategoryCacheService,
   InMemoryCacheClient,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
+import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cache.adapter';
 import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
+
+const ADMIN_TOKEN = 'operator-token-for-tests';
 
 describe('Admin Category Management & Public Cached Category API (Ticket 37)', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
   let storage: InMemoryStorageClient;
-  let categoryCacheService: CategoryCacheService;
+  let categoryCache: RedisCategoryCacheAdapter;
 
   const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
   const REGULAR_USER_ID = '00000000-0000-7000-8000-000000000001';
@@ -29,14 +33,15 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
     storage = new InMemoryStorageClient();
-    categoryCacheService = new CategoryCacheService({ cache });
+    categoryCache = new RedisCategoryCacheAdapter({ cache });
 
     app = await buildApp({
+      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
       adapters: {
         repositories,
         cache,
         storage,
-        categoryCache: categoryCacheService,
+        categoryCache: categoryCache,
       },
     });
   });
@@ -48,7 +53,7 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
   beforeEach(() => {
     repositories.clear();
     cache.clear();
-    categoryCacheService.clearL1();
+    categoryCache.clearL1();
   });
 
   describe('Public Category API (GET /v1/categories)', () => {
@@ -185,7 +190,7 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
         method: 'POST',
         url: '/v1/admin/categories',
         headers: {
-          'x-admin-token': process.env.ADMIN_TOKEN || 'change-me-32-bytes-random',
+          'x-admin-token': ADMIN_TOKEN,
         },
         payload: {
           name: 'Admin Via Header',
@@ -377,7 +382,8 @@ describe('Admin Category Management & Public Cached Category API (Ticket 37)', (
   describe('Multi-Instance L1 Cache Invalidation via Pub/Sub', () => {
     it('mutation on Pod A purges L1 in-memory cache on Pod B via Pub/Sub broadcast', async () => {
       // Setup second app instance (Pod B) connected to the same shared cache & repo
-      const podBCacheService = new CategoryCacheService({ cache });
+      const podBCacheService = new RedisCategoryCacheAdapter({ cache });
+      expectOk(await podBCacheService.start());
       const podBApp = await buildApp({
         adapters: {
           repositories,

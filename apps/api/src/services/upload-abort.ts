@@ -1,7 +1,7 @@
 import { type UploadOpenFailure, decideUploadOpen } from '@vp/domain-rules';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { type Result, isErr, map } from '@vp/result';
-import type { AuthUser } from '../plugins/auth';
 import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
 
 export type AbortUploadFailure =
@@ -16,7 +16,7 @@ export type AbortUploadFailure =
  */
 export async function abortUpload(
   ctx: UploadContext,
-  user: AuthUser,
+  user: UserContext,
   uploadId: string
 ): Promise<Result<void, AbortUploadFailure>> {
   const owned = await loadOwnedUpload(ctx, user, uploadId, 'abort this upload');

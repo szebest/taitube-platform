@@ -2,58 +2,28 @@ import type { Repositories } from '@vp/core/repositories';
 import type { PipelineMetrics } from '@vp/observability';
 import { isOk } from '@vp/result';
 
-export interface SqlPollerOptions {
-  repositories: Repositories;
-  metrics: PipelineMetrics;
-  /** Poll interval in ms. Default: 30000 */
-  intervalMs?: number;
-}
+export const SQL_POLL_INTERVAL_MS = 30_000;
 
-export interface SqlPoller {
-  stop: () => void;
-}
+/** SDD §13.5: a RUNNING step whose heartbeat is older than five minutes is stale. */
+const STALE_STEP_MS = 5 * 60 * 1000;
 
 /**
- * Polls the database every `intervalMs` and writes:
- *  - videos_by_status{status} (gauge) — count of videos grouped by status
- *
- * Note: time_to_ready_seconds is observed at the worker stage transition
- * when a video reaches READY status (in package stage).
- *
- * Ticket 22 AC 2.
+ * Writes `videos_by_status{status}` and `processing_steps_running_stale`. `time_to_ready_seconds`
+ * is observed by the package stage when a video reaches READY, not here.
  */
-export function startSqlPoller(options: SqlPollerOptions): SqlPoller {
-  const { repositories, metrics, intervalMs = 30_000 } = options;
-  let stopped = false;
-
-  async function poll(): Promise<void> {
-    const counts = await repositories.videos.countByStatus();
-    if (isOk(counts)) {
-      for (const [status, count] of Object.entries(counts.value)) {
-        metrics.videosByStatus.set({ status }, count);
-      }
-    }
-
-    // 5 minutes = 300,000 ms (SDD §13.5: RUNNING steps with heartbeat_at < now()-5m)
-    const staleSteps = await repositories.steps.countRunningStale(5 * 60 * 1000);
-    if (isOk(staleSteps)) {
-      metrics.processingStepsRunningStale.set(staleSteps.value);
+export async function pollSqlMetrics(
+  repositories: Repositories,
+  metrics: PipelineMetrics
+): Promise<void> {
+  const counts = await repositories.videos.countByStatus();
+  if (isOk(counts)) {
+    for (const [status, count] of Object.entries(counts.value)) {
+      metrics.videosByStatus.set({ status }, count);
     }
   }
 
-  const timer = setInterval(() => {
-    if (!stopped) {
-      poll().catch(() => {});
-    }
-  }, intervalMs);
-
-  // Run once immediately
-  poll().catch(() => {});
-
-  return {
-    stop: () => {
-      stopped = true;
-      clearInterval(timer);
-    },
-  };
+  const staleSteps = await repositories.steps.countRunningStale(STALE_STEP_MS);
+  if (isOk(staleSteps)) {
+    metrics.processingStepsRunningStale.set(staleSteps.value);
+  }
 }

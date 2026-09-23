@@ -3,7 +3,7 @@ import {
   InMemoryJobQueue,
   InMemoryRepositories,
   InMemoryStorageClient,
-} from '@vp/adapters';
+} from '@vp/adapters/in-memory';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { calculateBackoffDelay, ids, stagePolicies } from '@vp/job-contracts';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
@@ -15,6 +15,7 @@ import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { throughRunner } from './queue-boundary';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
   let repositories: InMemoryRepositories;
@@ -310,6 +311,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
 
     // Transcode processor fails permanently with FFMPEG_FAILED
     const transcode720 = createTranscodeProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -320,6 +322,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
 
     // Package processor
     const packageProc = createPackageProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
@@ -462,6 +465,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       );
 
       const probeProcessor = createProbeProcessor({
+        ...STAGE_SETTINGS,
         repositories,
         storage,
         logger,

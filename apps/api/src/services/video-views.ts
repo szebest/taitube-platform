@@ -1,5 +1,6 @@
 import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import type { VideoStatus, VideoVisibility } from '@vp/domain';
+import type { CdnBase } from '@vp/env-schema';
 import { masterPlaylistKey } from '@vp/storage';
 
 export interface VideoLadderEntry {
@@ -73,8 +74,8 @@ export interface VideoSummaryView {
   readyAt?: string;
 }
 
-function cdnUrl(cleanCdnBase: string, key: string): string {
-  return `${cleanCdnBase}/${key.replace(/^\/+/, '')}`;
+function cdnUrl(cdn: CdnBase, key: string): string {
+  return `${cdn}/${key.replace(/^\/+/, '')}`;
 }
 
 function isoOf(value: Date | string): string {
@@ -91,12 +92,12 @@ export interface PlayableVideo {
  * The HLS entry point a player is handed. Only a READY video has one, and the
  * key is a fallback for rows written before the packager recorded it.
  */
-export function playbackUrl(video: PlayableVideo, cleanCdnBase: string): string | undefined {
+export function playbackUrl(video: PlayableVideo, cdn: CdnBase): string | undefined {
   if (video.status !== 'READY') return undefined;
-  return cdnUrl(cleanCdnBase, video.masterPlaylistKey || masterPlaylistKey(video.id));
+  return cdnUrl(cdn, video.masterPlaylistKey || masterPlaylistKey(video.id));
 }
 
-export function toVideoSummaryView(v: VideoRecord, cleanCdnBase: string): VideoSummaryView {
+export function toVideoSummaryView(v: VideoRecord, cdn: CdnBase): VideoSummaryView {
   return {
     id: v.id,
     ownerId: v.ownerId,
@@ -105,8 +106,8 @@ export function toVideoSummaryView(v: VideoRecord, cleanCdnBase: string): VideoS
     visibility: v.visibility as VideoVisibility,
     status: v.status,
     durationMs: v.durationMs ?? undefined,
-    posterUrl: v.posterKey ? cdnUrl(cleanCdnBase, v.posterKey) : undefined,
-    playbackUrl: playbackUrl(v, cleanCdnBase),
+    posterUrl: v.posterKey ? cdnUrl(cdn, v.posterKey) : undefined,
+    playbackUrl: playbackUrl(v, cdn),
     viewsCount: v.viewsCount ?? 0,
     likesCount: v.likesCount ?? 0,
     dislikesCount: v.dislikesCount ?? 0,
@@ -121,7 +122,7 @@ export function toVideoSummaryView(v: VideoRecord, cleanCdnBase: string): VideoS
 export function toVideoDetailView(
   video: VideoRecord,
   videoRenditions: RenditionRecord[],
-  cleanCdnBase: string,
+  cdn: CdnBase,
   events?: Array<{ type: string; payload: unknown }>
 ): VideoDetailView {
   const isReady = video.status === 'READY';
@@ -160,7 +161,7 @@ export function toVideoDetailView(
   const renditions = videoRenditions.map((r) => ({
     name: r.name,
     status: r.status,
-    playlistUrl: r.playlistKey ? cdnUrl(cleanCdnBase, r.playlistKey) : undefined,
+    playlistUrl: r.playlistKey ? cdnUrl(cdn, r.playlistKey) : undefined,
   }));
 
   return {
@@ -177,11 +178,11 @@ export function toVideoDetailView(
     fps: video.fps ?? undefined,
     ladder: (video.ladder as VideoDetailView['ladder']) ?? undefined,
     renditions,
-    playbackUrl: playbackUrl(video, cleanCdnBase),
-    posterUrl: video.posterKey ? cdnUrl(cleanCdnBase, video.posterKey) : undefined,
-    spriteUrl: video.spriteKey ? cdnUrl(cleanCdnBase, video.spriteKey) : undefined,
+    playbackUrl: playbackUrl(video, cdn),
+    posterUrl: video.posterKey ? cdnUrl(cdn, video.posterKey) : undefined,
+    spriteUrl: video.spriteKey ? cdnUrl(cdn, video.spriteKey) : undefined,
     spriteVttUrl: video.spriteKey
-      ? cdnUrl(cleanCdnBase, video.spriteKey.replace(/\.[^.]+$/, '.vtt'))
+      ? cdnUrl(cdn, video.spriteKey.replace(/\.[^.]+$/, '.vtt'))
       : undefined,
     likesCount: video.likesCount ?? 0,
     dislikesCount: video.dislikesCount ?? 0,

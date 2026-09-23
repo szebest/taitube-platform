@@ -1,4 +1,4 @@
-import { InMemoryChannelRepository } from '@vp/adapters';
+import { InMemoryChannelRepository } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { isReservedHandle, isValidHandleFormat, normalizeHandle } from '@vp/validation';

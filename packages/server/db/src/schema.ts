@@ -3,6 +3,7 @@ import {
   STEP_STATUSES,
   UPLOAD_STATUSES,
   USER_ROLES,
+  type UserTier,
   VIDEO_STATUSES,
   type VideoVisibility,
 } from '@vp/domain';
@@ -45,7 +46,7 @@ const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
   email: text('email').notNull().unique(),
-  tier: text('tier').$type<'free' | 'pro' | 'enterprise'>().notNull().default('free'),
+  tier: text('tier').$type<UserTier>().notNull().default('free'),
   role: userRoleEnum('role').notNull().default('USER'),
   createdAt: timestamptz('created_at').notNull().defaultNow(),
 });

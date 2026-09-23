@@ -66,7 +66,7 @@ packages/server/adapters/
 Following deep module design principles (`codebase-design`):
 - **Deep Modules (Services):** Substantial functionality hidden behind a clean, simple, stable interface. Examples: `UploadService`, `VideoService`, `CategoryService`.
 - **Thin Adapters (Routes):** Route handlers in `apps/api/src/routes/` are strictly transport adapters: they validate input with Zod, extract auth claims, delegate to domain services, and return HTTP status codes and headers.
-- **Service Composition:** Maintain a `>1:1` ratio of domain services to routes by factoring out smaller reusable services (`HttpCacheService`, `Singleflight`, `QueueService`) that higher-level domain services compose.
+- **Service Composition:** A service's collaborators are injected and required; stateless helpers shared between services (`http-cache.ts`, `@vp/concurrency`'s `Singleflight`) are imported, not injected.
 
 ---
 

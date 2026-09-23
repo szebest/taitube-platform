@@ -1,4 +1,4 @@
-import { InMemoryJobQueue } from '@vp/adapters';
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobSchedulerTemplate, UpsertJobSchedulerOptions } from '@vp/core/ports';
 import { ErrorCodes, type QueueUnavailable, queueUnavailable } from '@vp/errors';
 import { type Result, err } from '@vp/result';

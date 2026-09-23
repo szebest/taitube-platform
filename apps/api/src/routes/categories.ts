@@ -3,23 +3,11 @@ import { isErr } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import type { CategoryService } from '../services/category-service';
 import { contractPaths, contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
-export interface CategoriesRouteOptions {
-  categoryService: CategoryService;
-}
-
-/**
- * Public categories endpoint (Ticket 37, SDD §6.1).
- * Thin transport adapter delegating domain caching & queries to CategoryService.
- */
-export function registerCategoriesRoutes(
-  app: FastifyInstance,
-  options: CategoriesRouteOptions
-): void {
-  const { categoryService } = options;
+export async function categoriesRoutes(app: FastifyInstance): Promise<void> {
+  const { categoryService } = app.services;
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 

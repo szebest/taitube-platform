@@ -12,7 +12,7 @@ describe('RedisCacheClient', () => {
 
   beforeEach(() => {
     redis = new FakeRedis();
-    cache = new RedisCacheClient({ client: redis.asRedis() });
+    cache = new RedisCacheClient({ type: 'client', client: redis.asRedis() });
   });
 
   describe('key/value', () => {

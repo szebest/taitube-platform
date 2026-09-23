@@ -1,4 +1,8 @@
-import { InMemoryDlqRepository, InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
+import {
+  InMemoryDlqRepository,
+  InMemoryJobQueue,
+  InMemoryRepositories,
+} from '@vp/adapters/in-memory';
 import type { QueueJob, QueueJobOptions } from '@vp/core/ports';
 import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/repositories';
 import {

@@ -13,10 +13,16 @@ Instructions for any coding agent working on adapter drivers (`adapters`).
 adapters/
 ├── bullmq/      # BullMqJobQueue & BullMqFlowProducer
 ├── in-memory/   # In-memory test doubles for zero-dependency unit tests
+├── composition/ # Adapter tokens and registerAdapters: the one in-memory/external switch
 ├── postgres/    # PostgresDatabaseClient & Drizzle repository implementations
-├── redis/       # RedisCacheClient, pub/sub, singleflight, and reaction caching
+├── redis/       # RedisCacheClient, pub/sub, category, reaction and subscription caches
 └── s3/          # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
 ```
+
+`registerAdapters(c, config)` registers one family behind `config.kind` and imports that family's module
+on demand, so an external process never loads a test double. The root barrel exports the concrete
+adapters and the composition module; the doubles are reached only through `@vp/adapters/in-memory`, and
+`in-memory-off-boot-path.test.ts` walks both deployables' boot graphs to hold it there.
 
 ---
 
@@ -51,7 +57,14 @@ adapters/
 - **`fromPromise` takes a thunk.** An SDK builder chain runs synchronously up to its last call, so handing the
   finished promise over leaves everything before it outside the boundary.
 
-### Rule 4: File Length Discipline
+### Rule 4: Configuration Arrives as a Value
+- No adapter reads `process.env`. A driver takes an explicit connection or a prebuilt client, told apart by
+  a `type` tag and switched over exhaustively: `{ type: 'url', url }` or `{ type: 'client', client }`,
+  never an `'x' in config` probe or an optional field whose presence picks the mode.
+- A resource an adapter opens is closed by its `close()`, and the composition module that constructs it
+  registers that as its disposer (`shutdown-closure.test.ts`).
+
+### Rule 5: File Length Discipline
 - Target `<= 250 lines` per file.
 - Strict upper limit: `400 lines` (or `10 KB`) per file.
 

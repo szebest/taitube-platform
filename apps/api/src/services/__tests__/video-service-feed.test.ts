@@ -1,14 +1,11 @@
-import { InMemoryRepositories } from '@vp/adapters';
+import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { expectOk } from '@vp/testing/result';
-import { describe, expect, it } from 'vitest';
 import { VideoService } from '../video-service';
+import { videoServiceDeps } from './service-deps';
 
 describe('VideoService.listPublic (Ticket 36)', () => {
   const repositories = new InMemoryRepositories();
-  const videoService = new VideoService({
-    videos: repositories.videos,
-    cdnBaseUrl: 'http://localhost:9000/public',
-  });
+  const videoService = new VideoService(videoServiceDeps(repositories.videos));
 
   const OWNER_1 = '00000000-0000-7000-8000-000000000001';
   const OWNER_2 = '00000000-0000-7000-8000-000000000002';

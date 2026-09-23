@@ -1,6 +1,8 @@
 import * as http from 'node:http';
-import { InMemoryRepositories, S3MultipartStorage, S3StorageClient } from '@vp/adapters';
+import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
+import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
@@ -103,6 +105,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
 
     // 2. Build Fastify API with storage client pointing to local test S3 server
     const s3Client = new S3StorageClient({
+      type: 'connection',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test-key',
@@ -110,7 +113,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
       forcePathStyle: true,
     });
 
-    const multipart = new S3MultipartStorage({ storageClient: s3Client });
+    const multipart = new S3MultipartStorage({ type: 'storage', storageClient: s3Client });
 
     app = await buildApp({
       adapters: {
@@ -119,10 +122,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
         multipart,
         probeQueue: mockProbeQueue,
       },
-      limits: {
-        maxUploadBytes: 100 * 1024 * 1024,
-      },
-      rawBucket: 'raw',
+      config: inProcessAppConfig({ limits: { maxUploadBytes: 100 * 1024 * 1024 } }),
     });
     await app.ready();
   });
@@ -382,10 +382,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
       adapters: {
         repositories,
       },
-      limits: {
-        rateLimitMax: 3,
-      },
-      rawBucket: 'raw',
+      config: inProcessAppConfig({ limits: { uploadRateLimitMax: 3 } }),
     });
     await limitedApp.ready();
 

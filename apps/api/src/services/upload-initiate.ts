@@ -2,10 +2,10 @@ import * as path from 'node:path';
 import type { StoragePresignedPartInfo } from '@vp/core/ports';
 import type { VideoVisibility } from '@vp/domain';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { type Result, all, isErr, ok } from '@vp/result';
 import { calculatePartSize, calculateTotalParts, rawSourceKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
-import type { AuthUser } from '../plugins/auth';
 import type { UploadContext } from './upload-context';
 
 const INITIAL_PART_URL_BATCH = 100;
@@ -36,7 +36,7 @@ export type InitiateUploadFailure = StorageUnavailable | DatabaseUnavailable;
 
 export async function initiateUpload(
   ctx: UploadContext,
-  user: AuthUser,
+  user: UserContext,
   params: InitiateUploadParams
 ): Promise<Result<InitiateUploadResult, InitiateUploadFailure>> {
   const { filename, sizeBytes, contentType, sha256, title, visibility } = params;

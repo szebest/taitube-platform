@@ -1,4 +1,4 @@
-import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { JobQueue, type QueueJob } from '@vp/core/ports';
 import type { PackageJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
@@ -7,6 +7,7 @@ import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
+import { STAGE_SETTINGS } from './stage-settings';
 
 describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 17, 18)', () => {
   let repositories: InMemoryRepositories;
@@ -167,6 +168,7 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     const mockQueue = new MockCrashQueue();
 
     const processor = createPackageProcessor({
+      ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,

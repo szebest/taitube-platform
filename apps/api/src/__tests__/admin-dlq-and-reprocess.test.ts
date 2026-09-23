@@ -1,5 +1,6 @@
-import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
+import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintDevToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES, ids } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
@@ -16,7 +17,7 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
   const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
   const OWNER_USER_ID = '00000000-0000-7000-8000-000000000001';
   const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
-  const VALID_ADMIN_TOKEN = 'change-me-32-bytes-random';
+  const VALID_ADMIN_TOKEN = 'operator-token-for-tests';
 
   let adminJwt: string;
   let ownerJwt: string;
@@ -25,8 +26,6 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
   let probeQueue: InMemoryJobQueue;
 
   beforeAll(async () => {
-    process.env.ADMIN_TOKEN = VALID_ADMIN_TOKEN;
-
     for (const qName of QUEUES) {
       const q = new InMemoryJobQueue(qName);
       queuesMap.set(qName, q);
@@ -36,6 +35,7 @@ describe('apps/api Admin DLQ & Reprocess Endpoints (Ticket 16: AC 4, 5)', () => 
     probeQueue = q;
 
     app = await buildApp({
+      config: inProcessAppConfig({ auth: { adminToken: VALID_ADMIN_TOKEN } }),
       adapters: {
         repositories,
         queues: new Map(queuesMap),

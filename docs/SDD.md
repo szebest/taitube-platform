@@ -532,7 +532,7 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 Decided once per code, in the vocabulary, not at the throw site: `RETRY_CLASS` in
 `@vp/errors/src/retry-class.ts` is a `Readonly<Record<ErrorCode, 'permanent' | 'transient'>>`, so a new code
-does not compile until it is classified. `apps/worker/src/runner.ts` reads it to turn a stage's failed `Result`
+does not compile until it is classified. `instrument` in `apps/worker/src/composition/stages.module.ts` reads it to turn a stage's failed `Result`
 into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by regex on messages.
 
 ---
@@ -660,7 +660,7 @@ one and no second consumer could choose differently.
 - **The discriminant is the existing `ErrorCode`.** No second error vocabulary. `PROBLEM_STATUS` and
   `RETRY_CLASS` are both `Readonly<Record<ErrorCode, ...>>`, so a new code is a compile error until both edges
   have been told what it means.
-- **Two edges.** `sendResult` in `apps/api/src/routes/` renders a `Problem`; `runner.ts` converts to the BullMQ
+- **Two edges.** `sendResult` in `apps/api/src/routes/` renders a `Problem`; `instrument` in `apps/worker/src/composition/stages.module.ts` converts to the BullMQ
   throw via `toPipelineError`, which reads `RETRY_CLASS`. `PermanentError` / `TransientError` remain, as the
   queue-boundary representation only (ADR-18).
 - **A disguise is a rule, not a rendering.** The public route answers "you may not read this" with the same
@@ -695,6 +695,57 @@ stage reports a media verdict as `MediaFailure`, whose discriminant is the `Pipe
 reported and which `RETRY_CLASS` already classifies.
 
 Authority: [docs/standards/error-handling.md](standards/error-handling.md).
+
+### ADR-25 — Composition: One Container, Configuration Is a Value
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| 1 | Typed tokens and a hand-written `Container` (`@vp/composition`, server, T2) | **Accepted** | The token carries the type, so `get(VideoService)` types without a cast and a missing edge is a compile error; no dependency, no reflection, same behaviour under Node and Bun |
+| 2 | A decorator container resolving by type (`@Injectable`, NestJS-style) | Rejected | Needs `emitDecoratorMetadata` plus a `reflect-metadata` polyfill in the eager path of both deployables; TC39 decorators carry no parameter types, so it pins the legacy flag indefinitely, and transpiler-level behaviour is what dual-runtime parity (Rule 2) exists to keep out. It also trades a compile error for a runtime one |
+| 3 | Keep constructors with optional collaborators and in-service fallbacks | Rejected | Delete a line from the composition root and a different graph boots silently: that is a service locator wearing a constructor |
+
+**Context.** `VideoService` recovered from a missing authorization port, paginator and CDN base by building
+its own, reading `process.env` and reaching for a module-level default; four modules each stripped the CDN
+base's trailing slash, one of them into an empty string. The declared bucket keys `S3_BUCKET_RAW` /
+`S3_BUCKET_PUBLIC` were read by nothing while every consumer read an undeclared `STORAGE_*_BUCKET` and fell
+through to the literal `raw`. `ADMIN_TOKEN` defaulted to a value published in this repository and admitted
+anyone who sent it. The API installed no `SIGTERM` handler, and the worker inferred its adapter family from
+`instanceof InMemoryJobQueue`.
+
+**Decision.**
+
+- **One mechanism.** `Token<T>`, `Container.provide / get / override / start / dispose`. A factory is
+  synchronous; I/O a value needs before it is usable runs in its `start` hook, in construction order.
+  `dispose()` runs in reverse construction order, aggregates failures, is idempotent, and releases only what
+  a factory built, never an override. `shutdownOnce` is the drain both processes share.
+- **Configuration is a value.** `loadEnv()` (`@vp/config`) parses `process.env` once at `main.ts`;
+  `toAppConfig()` (`@vp/env-schema`, T3, so `@vp/adapters` at T4 can take it) shapes it into `AppConfig`.
+  `CdnBase` is branded and normalised once. Nothing below `main.ts` reads the environment.
+- **`AdapterKind` is the single environment switch.** `config.kind` is derived from `NODE_ENV` in
+  `toAppConfig` and read once, by `registerAdapters(c, config)` in `@vp/adapters`, which imports only the
+  chosen family so an external process never loads a test double.
+- **Dependencies are total.** Every collaborator a composition module provides is required by the service
+  or stage that takes it.
+- **Registration surfaces.** `registerAdapters` (`@vp/adapters`), `apps/api/src/composition/services.module.ts`,
+  `apps/worker/src/composition/stages.module.ts` and `STAGE_REGISTRY`, which carries each stage's processor
+  factory. At the HTTP edge the container is Fastify's own: `app.decorate('services')` and
+  `app.decorate('config')`, and every route module is a plugin registered from one table. Routes never see
+  the application container.
+- **Construction is not starting.** `buildApp()` resolves the graph and registers routes; `main.ts` calls
+  `container.start()`, which subscribes the SSE hub and the category cache, registers the housekeeping
+  schedulers and starts both metric pollers.
+- **A process drains before it closes.** `SIGTERM` flips `/readyz` to 503 while the listener keeps
+  accepting, closes the server after the drain delay, then disposes the container; a disposer that outlives
+  the grace window is abandoned and named in the log. The API pod gets `terminationGracePeriodSeconds: 30`
+  (5 s `preStop` + the process's 20 s grace window + 5 s before `SIGKILL`); each worker keeps the grace period
+  §9.4 gives its stage, with a 5 s `preStop`, and its `shutdownTimeoutMs` is that period less 10 s. Compose
+  sets `stop_signal: SIGTERM` and `stop_grace_period` = the process grace window + 5 s.
+
+**Consequences.** `tests/architecture/` asserts the env-key closure in both directions, env confinement, no
+defaulted secret, adapter instantiation, total dependencies, route plugins, drain-before-close, shutdown
+closure and the in-memory-free boot path (ARCHITECTURE.md §6). Tests build services with exactly the
+collaborators a case touches and build the app through `buildApp({ config, adapters })`, with
+`inProcessAppConfig(overrides)` merging overrides in `AppConfig`'s shape.
 
 ## 5. Domain Model & Database Schema
 
@@ -993,7 +1044,7 @@ FOR UPDATE SKIP LOCKED LIMIT 100;
 
 ## 6. API Contract
 
-Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; `AUTH_DEV_USER_ID` bypass when `NODE_ENV=development`). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
+Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; a token signed with the public `packages/server/dev-token` seed is accepted only outside production). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
 
 ### 6.1 Endpoints
 
@@ -1113,7 +1164,7 @@ To maintain strict modularity, testability, and separation of concerns, the API 
    - Encapsulate business logic, domain invariants, repository coordination, cache management (e.g. L1/L2 multi-tier caching and invalidation), and error classification.
    - Completely decoupled from Fastify; fully unit-testable in isolation using in-memory port doubles (`InMemoryRepositories`, `InMemoryCacheClient`, `InMemoryStorageClient`).
    - Every domain resource (`videos`, `uploads`, `channels`, `categories`, `dlq`, `queues`) has its own dedicated service (`VideoService`, `UploadService`, `ChannelService`, `CategoryService`, `DlqService`, `QueueService`).
-   - Maintains a **>1:1 ratio of services to routes** by factoring out reusable utility services (`HttpCacheService` for ETag generation and conditional `If-None-Match` evaluation, `Singleflight` for query coalescing) that domain services compose.
+   - Collaborators are injected and required; `composition/services.module.ts` builds them (ADR-25). Route modules are Fastify plugins that read `app.services`.
 
 ---
 
@@ -1490,7 +1541,7 @@ flowchart LR
 
 | Area | Control |
 |---|---|
-| Authentication | JWT bearer verified with `@fastify/jwt` against `AUTH_JWKS_URL` (RS256/EdDSA); `sub` → `users.id` (auto-provision on first sight). Dev bypass only when `NODE_ENV=development` **and** `AUTH_DEV_USER_ID` set. Admin routes require role claim `admin` or `x-admin-token` (constant-time compare). |
+| Authentication | JWT bearer verified with `@fastify/jwt` against `AUTH_JWKS_URL` (RS256/EdDSA); `sub` → `users.id` (auto-provision on first sight). A token signed with the public `packages/server/dev-token` seed is accepted only where `AppConfig.auth.devTokens` is set, which is every `NODE_ENV` but `production`; in production an EdDSA token verifies against `AUTH_JWKS_URL` like any other. Admin routes require role claim `admin` or `x-admin-token` (constant-time compare). |
 | Authorisation | Declarative RBAC & ABAC permission engine powered by pure functional `@casl/ability` in `packages/universal/permissions` (`@vp/permissions`), decoupled from backend repository/port internals for full backend (`apps/api`) and frontend (`apps/web`) sharing without framework bloat. Strictly typed `Role = 'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'` with boundary-only `parseRole` sanitization. Modular rule sets composed via global `getUserPermissions(user)` builder. Formalized through clean adapters: Postgres Scopes adapter in `packages/server/adapters/postgres/scopes/` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`, `traits`) for row-level database security with CASL `rulesToAST` compilation; `FastifyAuthorizationAdapter` for HTTP preHandlers and memoized `request.ability`; `ProblemDetailsErrorAdapter` for standardized RFC 9457 (401 UNAUTHORIZED vs 403 FORBIDDEN with structured error context); and `ReactPermissionsAdapter` (`useCan`, `PermissionsProvider`, `<Can />` headless slot) for reactive frontend gating. Consumed strictly via library-agnostic `canX({ user, resource })` action helpers and `assertCan(...)` guards; manual hand-checking of roles, user IDs, or ownership in routes/services/repositories is strictly forbidden. Video queries scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
 | Upload safety | Presigned URLs TTL 15 min; `Content-Type` and `Content-Length` are signed into the single-PUT URL; multipart verified via `HeadObject` after completion; server deletes and `REJECT`s on mismatch. Content-type allowlist (`video/mp4, video/quicktime, video/webm, video/x-matroska`). Per-user quota (`MAX_UPLOAD_BYTES`, `MAX_INFLIGHT_PER_USER`). |
 | Storage | Buckets private; CDN reads `public` via R2 custom domain (no public bucket URL exposed). Least-privilege access keys: API key may `Put/Get/Head/Multipart*` on `raw` only; worker key may `Get` on `raw` and `Put/Delete` on `public`. |
@@ -1498,7 +1549,7 @@ flowchart LR
 | Webhooks | HMAC-SHA256 signature header `X-Signature: t=…,v1=…` with 5-min replay window; `Idempotency-Key` header. Outbound webhooks only to `https://` URLs; SSRF guard (deny private IP ranges). |
 | Rate limiting | `@fastify/rate-limit` keyed by user (fallback IP): 30/min uploads, 300/min reads, 5/min reprocess. |
 | Transport | TLS terminated by Cloudflare (Tunnel/Proxy) in cloud; `HSTS`; CORS allowlist = frontend origins. |
-| Secrets | Env only; `.env` git-ignored; cloud via Kubernetes Secrets (sealed-secrets or SOPS+age in repo). No secrets in images. |
+| Secrets | Env only; `.env` git-ignored; cloud via Kubernetes Secrets (sealed-secrets or SOPS+age in repo). No secrets in images. **No secret-shaped key has a default** (`ADMIN_TOKEN`, `WEBHOOK_SIGNING_SECRET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`): each is optional outside production, and a process with `NODE_ENV=production` and a missing one, or one still holding the published `change-me` placeholder, fails at `loadEnv()` and never binds a port. The reason is the `x-admin-token` path: it resolves a caller to `ADMIN` before JWKS verification, so a defaulted token handed `/admin/*` and Bull Board to anyone who read this repository. `no-defaulted-secrets.test.ts` asserts it. `make k3d-deploy` substitutes random values, kept once in a git-ignored file, for the base Secret's placeholders when it applies the local overlay. |
 | Containers | Non-root user, read-only root FS, `tmpfs`/emptyDir for `/tmp/vp`, `resources.limits` on every pod, distroless-ish base for API (`node:24-slim`), minimal ffmpeg layer for workers. |
 | Redis | `requirepass`, not exposed outside the network/cluster, `noeviction`. |
 | Supply chain | `pnpm audit` + Dependabot/Renovate; lockfile frozen in CI; images built in CI and pinned by digest in manifests; Trivy scan on images. |
@@ -1895,10 +1946,13 @@ video-pipeline/
 │       │   ├── s3/                          # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
 │       │   ├── redis/                       # RedisCacheClient (ioredis)
 │       │   ├── bullmq/                      # BullMqJobQueue & BullMqFlowProducer (bullmq)
-│       │   ├── in-memory/                   # autonomous test doubles with encapsulated state
+│       │   ├── composition/                 # adapter tokens + registerAdapters: the one in-memory/external switch
+│       │   ├── in-memory/                   # autonomous test doubles with encapsulated state (@vp/adapters/in-memory)
 │       │   └── __tests__/contract/          # one conformance suite per port, run against BOTH adapters (PGLite)
+│       ├── composition/                     # T2 — Token<T>, Container (start/dispose), shutdownOnce (ADR-25)
+│       ├── concurrency/                     # T1 — Singleflight
 │       ├── config/                          # loadEnv(): reads process.env against @vp/env-schema, exits 1 on failure
-│       ├── env-schema/                      # zod env fragments + inferred types; the one .env contract, no runtime access
+│       ├── env-schema/                      # zod env fragments, AppConfig + toAppConfig, CdnBase; the one .env contract, no runtime access
 │       ├── db/                               # drizzle schema, migrations/, client, seed
 │       ├── events/                           # Redis Pub/Sub channels + SSE envelope schemas
 │       ├── ffmpeg/                           # probe(), transcode/thumbnail args, progress parser, ladder, master playlist
@@ -1910,23 +1964,24 @@ video-pipeline/
 ├── apps/
 │   ├── api/                              # Node 24 LTS · Fastify 5
 │   │   ├── src/
-│   │   │   ├── main.ts                   # boot: env → otel → db → redis → fastify → schedulers upsert
+│   │   │   ├── main.ts                   # boot: loadEnv → toAppConfig → composeApp → container.start() → listen; drained shutdown
 │   │   │   ├── migrate.ts                # drizzle-kit migrate entrypoint (run as compose/k8s Job)
-│   │   │   ├── app.ts                    # buildApp(): composition root, plugins, routes, error handler (problem+json)
+│   │   │   ├── app.ts                    # composeApp()/buildApp(): container, decorators, plugins, the route table
+│   │   │   ├── composition/              # services.module.ts, adapter-set.ts (the test override seam), openapi
 │   │   │   ├── plugins/                  # auth (jwt/jwks), rate-limit, under-pressure, swagger, bull-board, metrics
 │   │   │   ├── routes/                   # thin transport adapters (uploads, videos, admin, health)
 │   │   │   ├── services/                 # deep domain services (UploadService, VideoService)
 │   │   │   ├── sse/                      # SseHub (redis psubscribe → connections), snapshot, replay
-│   │   │   ├── queues/                   # QueueRegistry (BullMQ Queue instances), queue-metrics poller, schedulers
-│   │   │   └── config.ts                 # zod env schema for the API
+│   │   │   └── queues/                   # QueueRegistry (BullMQ Queue instances), queue-metrics poller, schedulers
 │   │   ├── test/                         # vitest: unit + integration (in-memory e2e)
 │   │   ├── Dockerfile
 │   │   └── package.json
 │   └── worker/                           # Bun 1.4 (runtime-switchable) · one image, WORKER_STAGE picks role
 │       ├── src/
-│       │   ├── main.ts                   # reads WORKER_STAGE → stageRegistry → Worker + graceful shutdown
-│       │   ├── runner.ts                 # composition root: wires adapters and stage processors
-│       │   ├── registry.ts               # { queue, processor, concurrency, lockDuration, shutdownTimeoutMs } per stage
+│       │   ├── main.ts                   # loadEnv → toAppConfig → runner → metrics + heartbeat; drained shutdown
+│       │   ├── runner.ts                 # composition root: registerAdapters + stages.module over one container
+│       │   ├── composition/              # stages.module.ts: consumer and outbox relay as Startables
+│       │   ├── registry.ts               # { queue, createProcessor, concurrency, lockDuration, shutdownTimeoutMs } per stage
 │       │   ├── stages/
 │       │   │   ├── probe.ts
 │       │   │   ├── transcode.ts          # shared by transcode-1080p/720p/480p (rendition from payload)
@@ -2048,7 +2103,9 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 ## 16. Environment Variables
 
-One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒.
+One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
+
+The schema is **closed over what the code reads**: every key the deployables read is declared here, every declared key is uncommented in `.env.example`, and every key compose, the k8s base, CI steps and `make` hand the apps is declared (`env-key-closure.test.ts`). `process.env` is read only at `apps/*/src/main.ts`; everything below takes the `AppConfig` value `toAppConfig()` shapes (ADR-25).
 
 ### 16.1 Core
 
@@ -2061,6 +2118,7 @@ One contract for both apps, declared with zod in `packages/server/env-schema` an
 | `CORS_ORIGINS` | api | `http://localhost:5173` | comma list of frontend origins |
 | `PORT` / `METRICS_PORT` | both | `3000` / `9464` | metrics bound to a separate port |
 | `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | both (dev + images) | `1` / `1` | no phone-home from tooling/libraries (P9) |
+| `NODE_OPTIONS` | both (images + compose) | unset; `--import @vp/config/register` in the images and compose | read by Node itself, never by this code; declared so the schema is closed over every key the platform sets |
 
 ### 16.2 PostgreSQL
 
@@ -2090,6 +2148,8 @@ One contract for both apps, declared with zod in `packages/server/env-schema` an
 | `S3_SECRET_ACCESS_KEY` 🔒 | `minioadmin` | R2 Secret Access Key | B2 applicationKey |
 | `S3_BUCKET_RAW` | `raw` | `vp-raw` | `vp-raw` |
 | `S3_BUCKET_PUBLIC` | `public` | `vp-public` | `vp-public` |
+
+The two bucket keys are the only spelling: every reader in both apps takes them through `AppConfig.buckets`. An earlier `STORAGE_RAW_BUCKET` / `STORAGE_PUBLIC_BUCKET` spelling, read by the code but declared nowhere, is gone.
 | `S3_PRESIGN_TTL_SEC` | `900` | `900` | `900` |
 | `CDN_BASE_URL` | `http://localhost:9000/public` | `https://cdn.example.com` (R2 custom domain) | `https://cdn.example.com` (Cloudflare → B2) |
 | `S3_MULTIPART_THRESHOLD_BYTES` | `104857600` (100 MB) | same | same |
@@ -2105,8 +2165,8 @@ Worker and API should use **different** access keys with the scoped permissions 
 | `AUTH_JWKS_URL` | `http://localhost:3000/.well-known/jwks.json` (dev issuer from `packages/server/dev-token`) or your IdP (`https://<clerk|supabase|auth0>/.well-known/jwks.json`) | RS256/EdDSA verification |
 | `AUTH_ISSUER` / `AUTH_AUDIENCE` | `vp-dev` / `vp-api` | claim checks |
 | `AUTH_DEV_USER_ID` | `00000000-0000-7000-8000-000000000001` | development only |
-| `ADMIN_TOKEN` 🔒 | random 32 bytes | `x-admin-token` for admin routes / Bull Board (or role claim) |
-| `WEBHOOK_SIGNING_SECRET` 🔒 | random 32 bytes | HMAC for outbound webhooks |
+| `ADMIN_TOKEN` 🔒 | random 32 bytes | `x-admin-token` for admin routes / Bull Board (or role claim); unset admits nobody; required in production |
+| `WEBHOOK_SIGNING_SECRET` 🔒 | random 32 bytes | HMAC for outbound webhooks; required in production |
 
 ### 16.6 Pipeline tuning
 
@@ -2131,6 +2191,7 @@ Worker and API should use **different** access keys with the scoped permissions 
 | `SSE_HEARTBEAT_MS` | `15000` | |
 | `SSE_MAX_PER_USER` / `SSE_MAX_PER_POD` | `20` / `5000` | |
 | `SPRITE_INTERVAL_SECONDS` | `5` | thumbnail sprite frame interval (PRD OQ-4) |
+| `WORKER_HEARTBEAT_PATH` | `/tmp/vp/heartbeat` | the file the worker liveness probe reads |
 | `WEBHOOK_URL_ALLOWLIST` | empty | optional outbound targets |
 
 ### 16.7 Observability

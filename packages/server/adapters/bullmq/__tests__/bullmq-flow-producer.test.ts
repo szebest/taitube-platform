@@ -48,7 +48,7 @@ const FLOW = {
 describe('BullMqFlowProducer', () => {
   it('passes the flow tree straight to the driver', async () => {
     const fake = new FakeFlowProducer();
-    const producer = new BullMqFlowProducer({ producer: fake.asProducer() });
+    const producer = new BullMqFlowProducer({ type: 'producer', producer: fake.asProducer() });
 
     expect(expectOk(await producer.add(FLOW))).toEqual({ job: { id: 'flow-1' } });
     expect(fake.added).toEqual([FLOW]);
@@ -56,6 +56,7 @@ describe('BullMqFlowProducer', () => {
 
   it('reports an add failure as QUEUE_UNAVAILABLE naming the operation', async () => {
     const producer = new BullMqFlowProducer({
+      type: 'producer',
       producer: new FakeFlowProducer({ addError: new Error('redis unavailable') }).asProducer(),
     });
 
@@ -71,6 +72,7 @@ describe('BullMqFlowProducer', () => {
     { scenario: 'there is no connection', init: { failClient: true }, expected: false },
   ])('reports health as $expected when $scenario', async ({ init, expected }) => {
     const producer = new BullMqFlowProducer({
+      type: 'producer',
       producer: new FakeFlowProducer(init).asProducer(),
     });
 
@@ -79,13 +81,14 @@ describe('BullMqFlowProducer', () => {
 
   it('closes the driver', async () => {
     const fake = new FakeFlowProducer();
-    await new BullMqFlowProducer({ producer: fake.asProducer() }).close();
+    await new BullMqFlowProducer({ type: 'producer', producer: fake.asProducer() }).close();
 
     expect(fake.closed).toBe(true);
   });
 
   it('reports a close failure as QUEUE_UNAVAILABLE', async () => {
     const producer = new BullMqFlowProducer({
+      type: 'producer',
       producer: new FakeFlowProducer({ closeError: new Error('still draining') }).asProducer(),
     });
 

@@ -24,7 +24,7 @@ import {
   databaseUnavailable,
   versionConflict,
 } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
+import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result';
 import { type SQL, and, desc, eq, inArray, notExists, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
@@ -264,28 +264,32 @@ export class PostgresVideoRepository extends VideoRepository {
   }
 
   private absenceScope(absence: VideoScanAbsence): SQL {
-    if ('step' in absence) {
-      return notExists(
-        this.db
-          .select({ present: sql`1` })
-          .from(ps)
-          .where(and(eq(ps.videoId, v.id), eq(ps.step, absence.step)))
-      );
+    switch (absence.type) {
+      case 'step':
+        return notExists(
+          this.db
+            .select({ present: sql`1` })
+            .from(ps)
+            .where(and(eq(ps.videoId, v.id), eq(ps.step, absence.step)))
+        );
+      case 'event':
+        return notExists(
+          this.db
+            .select({ present: sql`1` })
+            .from(ve)
+            .where(
+              drizzleWhere(
+                eq(ve.videoId, v.id),
+                eq(ve.type, absence.event),
+                absence.forCurrentGeneration
+                  ? sql`(${ve.payload}->>'generation')::int >= ${v.generation}`
+                  : undefined
+              )
+            )
+        );
+      default:
+        return assertNever(absence, 'VideoScanAbsence');
     }
-    return notExists(
-      this.db
-        .select({ present: sql`1` })
-        .from(ve)
-        .where(
-          drizzleWhere(
-            eq(ve.videoId, v.id),
-            eq(ve.type, absence.event),
-            absence.forCurrentGeneration
-              ? sql`(${ve.payload}->>'generation')::int >= ${v.generation}`
-              : undefined
-          )
-        )
-    );
   }
 
   async scan(filter: VideoScan): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
