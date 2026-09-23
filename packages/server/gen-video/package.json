@@ -18,6 +18,9 @@
     "test": "vitest run",
     "gen": "node --experimental-strip-types src/main.ts"
   },
+  "dependencies": {
+    "@vp/result": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@vp/testing": "workspace:*",
@@ -26,6 +29,6 @@
     "vitest": "^3.0.7"
   },
   "vp": {
-    "layer": 1
+    "layer": 2
   }
 }

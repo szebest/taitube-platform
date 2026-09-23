@@ -42,25 +42,11 @@ describe('architecture: catch is confined to the boundary that converts a throw'
     expect(stale).toEqual([]);
   });
 
-  /**
-   * Nothing on the list is waiting on a conversion any more: ticket 84 converted every port,
-   * service and stage, and what remains is the process, CLI, telemetry, build and browser
-   * boundaries it named out of scope.
-   */
-  it('leaves only the boundaries a later ticket has to claim', () => {
+  it('leaves only the process and telemetry boundaries', () => {
     const roots = [
       'packages/server/ffmpeg/',
-      'packages/server/gen-video/',
-      'packages/server/dev-token/',
-      'packages/server/upload-client/',
-      'packages/server/compose-autoscaler/',
       'packages/server/observability/',
-      'packages/server/db/',
-      'apps/web/',
-      'scripts/',
       'apps/api/src/plugins/',
-      'apps/api/src/migrate.ts',
-      'apps/worker/src/main.ts',
       'apps/worker/src/with-telemetry.ts',
     ];
 

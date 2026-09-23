@@ -1,5 +1,6 @@
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
+import { fromPromise, isErr } from '@vp/result';
 import {
   DEFAULT_STAGE_CONFIGS,
   type ScalerStageConfig,
@@ -52,7 +53,6 @@ export class ComposeAutoscaler {
         return res.text();
       });
 
-    // Initialize states
     for (const serviceName of Object.keys(this.configs)) {
       this.states.set(serviceName, {
         currentReplicas: this.configs[serviceName]?.minReplicas ?? 0,
@@ -66,57 +66,52 @@ export class ComposeAutoscaler {
     return new Map(this.states);
   }
 
-  /**
-   * Run one iteration of polling metrics and evaluating scaling rules.
-   */
   public async tick(nowMs: number = Date.now()): Promise<void> {
-    try {
-      const metricsText = await this.fetchMetrics(this.metricsUrl);
-      const queueDepths = parsePrometheusQueueMetrics(metricsText);
+    const metrics = await fromPromise(() => this.fetchMetrics(this.metricsUrl), String);
+    if (isErr(metrics)) {
+      this.log(`[WARN] Autoscaler poll iteration failed: ${metrics.error}`);
+      return;
+    }
+    const queueDepths = parsePrometheusQueueMetrics(metrics.value);
 
-      for (const [serviceName, config] of Object.entries(this.configs)) {
-        // Map compose service name (e.g. 'worker-transcode-1080p') to queue name ('transcode-1080p')
-        const queueName = serviceName.replace(/^worker-/, '');
-        const depth = queueDepths[queueName] ?? { waiting: 0, prioritized: 0, active: 0 };
-        const currentState = this.states.get(serviceName) ?? {
-          currentReplicas: config.minReplicas,
-          lastScaleDownTimeMs: 0,
-          scaleDownCandidateSinceMs: null,
-        };
+    for (const [serviceName, config] of Object.entries(this.configs)) {
+      // Compose service 'worker-transcode-1080p' drains queue 'transcode-1080p'.
+      const queueName = serviceName.replace(/^worker-/, '');
+      const depth = queueDepths[queueName] ?? { waiting: 0, prioritized: 0, active: 0 };
+      const currentState = this.states.get(serviceName) ?? {
+        currentReplicas: config.minReplicas,
+        lastScaleDownTimeMs: 0,
+        scaleDownCandidateSinceMs: null,
+      };
 
-        const decision = computeReplicas({
-          config,
-          state: currentState,
-          queueDepth: depth,
-          nowMs,
-        });
+      const decision = computeReplicas({
+        config,
+        state: currentState,
+        queueDepth: depth,
+        nowMs,
+      });
 
-        this.states.set(serviceName, decision.nextState);
+      this.states.set(serviceName, decision.nextState);
 
-        if (decision.action !== 'hold') {
-          const fileFlag = this.composeFile ? `-f ${this.composeFile} ` : '';
-          const cmd = `docker compose ${fileFlag}up -d --scale ${serviceName}=${decision.targetReplicas} --no-recreate`;
+      if (decision.action === 'hold') continue;
 
-          if (this.dryRun) {
-            this.log(
-              `[DRY-RUN] [${serviceName}] ${decision.reason} -> Target: ${decision.targetReplicas} (Command: ${cmd})`
-            );
-          } else {
-            this.log(
-              `[SCALING] [${serviceName}] ${decision.reason} -> Target: ${decision.targetReplicas}`
-            );
-            try {
-              await this.execCmd(cmd);
-            } catch (err) {
-              this.log(
-                `[ERROR] Failed to execute scale command for ${serviceName}: ${String(err)}`
-              );
-            }
-          }
-        }
+      const fileFlag = this.composeFile ? `-f ${this.composeFile} ` : '';
+      const cmd = `docker compose ${fileFlag}up -d --scale ${serviceName}=${decision.targetReplicas} --no-recreate`;
+
+      if (this.dryRun) {
+        this.log(
+          `[DRY-RUN] [${serviceName}] ${decision.reason} -> Target: ${decision.targetReplicas} (Command: ${cmd})`
+        );
+        continue;
       }
-    } catch (err) {
-      this.log(`[WARN] Autoscaler poll iteration failed: ${String(err)}`);
+
+      this.log(
+        `[SCALING] [${serviceName}] ${decision.reason} -> Target: ${decision.targetReplicas}`
+      );
+      const scaled = await fromPromise(() => this.execCmd(cmd), String);
+      if (isErr(scaled)) {
+        this.log(`[ERROR] Failed to execute scale command for ${serviceName}: ${scaled.error}`);
+      }
     }
   }
 

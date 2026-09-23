@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { ComposeAutoscaler } from '../runner';
 import type { ScalerStageConfig } from '../scaler';
 
@@ -37,10 +36,8 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} 0
 
     await autoscaler.tick(1000);
 
-    // Dry run must NOT execute commands
     expect(executedCommands.length).toBe(0);
 
-    // But MUST log the intended command
     const dryRunLog = loggedMessages.find((m) => m.includes('[DRY-RUN]'));
     expect(dryRunLog).toBeDefined();
     expect(dryRunLog).toContain('worker-transcode-1080p');
@@ -94,24 +91,52 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} ${currentActive}
       onLog: (msg) => logs.push(msg),
     });
 
-    // 1. Initial burst: 20 waiting -> should scale to max (5)
     await autoscaler.tick(0);
     expect(logs.some((l) => l.includes('scaled up') && l.includes('Target: 5'))).toBe(true);
 
-    // 2. Transcode completes, queue empty at t = 60s
     currentWaiting = 0;
     currentActive = 0;
     await autoscaler.tick(60_000);
-    // At t = 60s, cooldown (300s) has not elapsed: should hold 5
     const stateAt60s = autoscaler.getStates().get('worker-transcode-1080p');
     expect(stateAt60s?.currentReplicas).toBe(5);
 
-    // 3. At t = 361s (301s after drain started at 60s): cooldown expires, scales down to min (1)
     await autoscaler.tick(361_000);
     expect(logs.some((l) => l.includes('Cooldown period elapsed') && l.includes('Target: 1'))).toBe(
       true
     );
     const stateAt361s = autoscaler.getStates().get('worker-transcode-1080p');
     expect(stateAt361s?.currentReplicas).toBe(1);
+  });
+
+  it.each([
+    {
+      scenario: 'the metrics endpoint is unreachable',
+      fetcher: async (): Promise<string> => {
+        throw new Error('ECONNREFUSED');
+      },
+      executor: async () => ({ stdout: '', stderr: '' }),
+      logged: '[WARN] Autoscaler poll iteration failed: Error: ECONNREFUSED',
+    },
+    {
+      scenario: 'the scale command fails',
+      fetcher: async () => 'bullmq_queue_jobs{queue="transcode-1080p",state="waiting"} 2',
+      executor: async (): Promise<{ stdout: string; stderr: string }> => {
+        throw new Error('compose binary missing');
+      },
+      logged:
+        '[ERROR] Failed to execute scale command for worker-transcode-1080p: Error: compose binary missing',
+    },
+  ])('logs rather than throws when $scenario', async ({ fetcher, executor, logged }) => {
+    const logs: string[] = [];
+    const autoscaler = new ComposeAutoscaler({
+      metricsUrl: 'http://mock-api:9464/metrics',
+      stageConfigs: customConfig,
+      fetcher,
+      executor,
+      onLog: (msg) => logs.push(msg),
+    });
+
+    await expect(autoscaler.tick(1000)).resolves.toBeUndefined();
+    expect(logs).toContain(logged);
   });
 });

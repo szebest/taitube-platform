@@ -6,19 +6,17 @@ const ROOT = resolve(import.meta.dirname, '..');
 const check = process.argv.includes('--check');
 
 function linkState(path: string): 'ok' | 'missing' | 'wrong' {
-  try {
-    const stat = lstatSync(path);
-    if (!stat.isSymbolicLink()) return 'wrong';
-    return readlinkSync(path) === 'AGENTS.md' ? 'ok' : 'wrong';
-  } catch {
-    return 'missing';
-  }
+  const stat = lstatSync(path, { throwIfNoEntry: false });
+  if (!stat) return 'missing';
+  if (!stat.isSymbolicLink()) return 'wrong';
+  return readlinkSync(path) === 'AGENTS.md' ? 'ok' : 'wrong';
 }
 
 const agentsFiles: string[] = [];
 for await (const entry of glob('**/AGENTS.md', {
   cwd: ROOT,
-  exclude: (name) => name === 'node_modules' || name === 'dist' || name === '.agents' || name === '.git',
+  exclude: (name) =>
+    name === 'node_modules' || name === 'dist' || name === '.agents' || name === '.git',
 })) {
   agentsFiles.push(entry);
 }

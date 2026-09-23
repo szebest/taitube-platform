@@ -313,6 +313,6 @@ gone and their assertions are flat:
 | `sendResult` is the only unwrap point under `routes/`, and a route imports no port | `routes-unwrap-at-send-result.test.ts` |
 
 `legacy-catch-sites.ts` is the one list left, and nothing on it is waiting on a conversion: it holds
-the process boundaries (`@vp/ffmpeg`, `@vp/gen-video`), the CLI exit-code handlers, telemetry setup,
-the build and migration entrypoints, `apps/web` (tickets 53, 70 and 71) and the two pre-handlers
-that have no reply to render into.
+the `@vp/ffmpeg` process boundary and telemetry setup. The CLIs, `apps/web` and the build and
+migration entrypoints convert through `tryCatch` / `fromPromise`; a CLI keeps only its
+`main().catch(...)` exit-code handler.

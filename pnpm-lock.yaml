@@ -189,6 +189,9 @@ importers:
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../packages/universal/permissions
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../packages/universal/result
       axios:
         specifier: ^1.6.2
         version: 1.20.0
@@ -258,6 +261,9 @@ importers:
       web-vitals:
         specifier: ^2.1.4
         version: 2.1.4
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^5.16.5
@@ -492,6 +498,9 @@ importers:
       uuidv7:
         specifier: ^1.2.1
         version: 1.2.1
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@electric-sql/pglite':
         specifier: ^0.5.8
@@ -516,6 +525,10 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   packages/server/compose-autoscaler:
+    dependencies:
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -634,6 +647,9 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)
@@ -670,6 +686,10 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   packages/server/dev-token:
+    dependencies:
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -784,6 +804,10 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   packages/server/gen-video:
+    dependencies:
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -929,6 +953,9 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       '@vp/storage':
         specifier: workspace:*
         version: link:../storage

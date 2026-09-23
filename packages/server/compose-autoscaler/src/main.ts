@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import { type Result, isErr, ok, tryCatch } from '@vp/result';
 import { ComposeAutoscaler } from './runner';
 import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler';
 
@@ -46,7 +47,7 @@ function parseCliArgs(args: string[]): CliArgs {
 
 function printHelp(): void {
   console.log(`
-@vp/compose-autoscaler — Docker Compose Queue-Depth Autoscaler (Ticket 27)
+@vp/compose-autoscaler — Docker Compose Queue-Depth Autoscaler
 
 Polls Prometheus metrics (/metrics) from the API and dynamically scales
 worker stages via 'docker compose up -d --scale <service>=N --no-recreate'.
@@ -71,6 +72,31 @@ Environment Variables:
 `);
 }
 
+type StageOverrides = Record<string, ScalerStageConfig>;
+
+interface OverridesUnreadable {
+  message: string;
+  cause: unknown;
+}
+
+function parseOverrides(
+  read: () => string,
+  label: string
+): Result<StageOverrides, OverridesUnreadable> {
+  return tryCatch(
+    (): StageOverrides => JSON.parse(read()),
+    (cause) => ({ message: `Failed to load ${label}:`, cause })
+  );
+}
+
+function readStageOverrides(configFile?: string): Result<StageOverrides, OverridesUnreadable> {
+  if (configFile) {
+    return parseOverrides(() => fs.readFileSync(configFile, 'utf-8'), `config file ${configFile}`);
+  }
+  const inline = process.env.AUTOSCALER_CONFIG;
+  return inline ? parseOverrides(() => inline, 'AUTOSCALER_CONFIG JSON') : ok({});
+}
+
 export async function main(): Promise<void> {
   const args = parseCliArgs(process.argv.slice(2));
 
@@ -79,24 +105,12 @@ export async function main(): Promise<void> {
     return;
   }
 
-  let stageConfigs: Record<string, ScalerStageConfig> = { ...DEFAULT_STAGE_CONFIGS };
-
-  if (args.configFile) {
-    try {
-      const raw = fs.readFileSync(args.configFile, 'utf-8');
-      stageConfigs = { ...stageConfigs, ...JSON.parse(raw) };
-    } catch (err) {
-      console.error(`Failed to load config file ${args.configFile}:`, err);
-      process.exit(1);
-    }
-  } else if (process.env.AUTOSCALER_CONFIG) {
-    try {
-      stageConfigs = { ...stageConfigs, ...JSON.parse(process.env.AUTOSCALER_CONFIG) };
-    } catch (err) {
-      console.error('Failed to parse AUTOSCALER_CONFIG JSON:', err);
-      process.exit(1);
-    }
+  const overrides = readStageOverrides(args.configFile);
+  if (isErr(overrides)) {
+    console.error(overrides.error.message, overrides.error.cause);
+    process.exit(1);
   }
+  const stageConfigs = { ...DEFAULT_STAGE_CONFIGS, ...overrides.value };
 
   const dryRun = args.dryRun || process.env.AUTOSCALER_DRY_RUN === 'true';
 

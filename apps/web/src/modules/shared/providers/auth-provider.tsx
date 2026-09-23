@@ -30,8 +30,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 	)
 }
 
+export const useOptionalAuth = (): AuthContextValue | undefined => useContext(AuthContext)
+
 export const useAuth = () => {
-	const ctx = useContext(AuthContext)
+	const ctx = useOptionalAuth()
 	if (!ctx) {
 		throw new Error('useAuth must be used within AuthProvider')
 	}

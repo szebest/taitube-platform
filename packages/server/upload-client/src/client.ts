@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import { fromPromise, isErr } from '@vp/result';
 
 export interface UploadClientOptions {
   apiBaseUrl: string;
@@ -53,6 +54,11 @@ export class UploadAbortedError extends Error {
   }
 }
 
+async function ensureOk(res: Response, operation: string): Promise<void> {
+  if (res.ok) return;
+  throw new Error(`${operation} failed (${res.status}): ${await res.text()}`);
+}
+
 export class UploadClient {
   private apiBaseUrl: string;
   private token: string;
@@ -62,9 +68,6 @@ export class UploadClient {
     this.token = options.token;
   }
 
-  /**
-   * Initializes upload via POST /v1/uploads (SDD §3.1, §6.1, AC 17).
-   */
   async initUpload(params: InitUploadParams): Promise<InitUploadResult> {
     const res = await fetch(`${this.apiBaseUrl}/v1/uploads`, {
       method: 'POST',
@@ -75,17 +78,11 @@ export class UploadClient {
       body: JSON.stringify(params),
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`initUpload failed (${res.status}): ${err}`);
-    }
+    await ensureOk(res, 'initUpload');
 
     return (await res.json()) as InitUploadResult;
   }
 
-  /**
-   * Fetches resume info via GET /v1/uploads/:uploadId (SDD §3.1, §6.1, AC 18).
-   */
   async getResumeInfo(uploadId: string): Promise<ResumeInfoResult> {
     const res = await fetch(`${this.apiBaseUrl}/v1/uploads/${uploadId}`, {
       method: 'GET',
@@ -94,17 +91,11 @@ export class UploadClient {
       },
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`getResumeInfo failed (${res.status}): ${err}`);
-    }
+    await ensureOk(res, 'getResumeInfo');
 
     return (await res.json()) as ResumeInfoResult;
   }
 
-  /**
-   * Requests a fresh batch of presigned part URLs via POST /v1/uploads/:uploadId/parts (AC 17).
-   */
   async getPartUrls(uploadId: string, from: number, count = 100): Promise<PartInfo[]> {
     const res = await fetch(
       `${this.apiBaseUrl}/v1/uploads/${uploadId}/parts?from=${from}&count=${count}`,
@@ -116,18 +107,12 @@ export class UploadClient {
       }
     );
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`getPartUrls failed (${res.status}): ${err}`);
-    }
+    await ensureOk(res, 'getPartUrls');
 
     const data = (await res.json()) as { parts: PartInfo[] };
     return data.parts;
   }
 
-  /**
-   * Completes the upload via POST /v1/uploads/:uploadId/complete (AC 18, AC 19).
-   */
   async completeUpload(
     uploadId: string,
     parts?: Array<{ partNumber: number; etag: string }>
@@ -141,17 +126,11 @@ export class UploadClient {
       body: JSON.stringify(parts ? { parts } : {}),
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`completeUpload failed (${res.status}): ${err}`);
-    }
+    await ensureOk(res, 'completeUpload');
 
     return (await res.json()) as { videoId: string; status: string };
   }
 
-  /**
-   * Aborts upload via DELETE /v1/uploads/:uploadId (SDD §3.1, §6.1, AC 20).
-   */
   async abortUpload(uploadId: string): Promise<void> {
     const res = await fetch(`${this.apiBaseUrl}/v1/uploads/${uploadId}`, {
       method: 'DELETE',
@@ -160,15 +139,9 @@ export class UploadClient {
       },
     });
 
-    if (!res.ok && res.status !== 204) {
-      const err = await res.text();
-      throw new Error(`abortUpload failed (${res.status}): ${err}`);
-    }
+    await ensureOk(res, 'abortUpload');
   }
 
-  /**
-   * Uploads an entire file from disk (handles single or multipart, resumable, concurrency 4 per AC 18).
-   */
   async uploadFile(options: {
     filePath: string;
     contentType?: string;
@@ -184,7 +157,7 @@ export class UploadClient {
       contentType = 'video/mp4',
       title,
       strategy: requestedStrategy,
-      concurrency = 4, // Default concurrency 4 per AC 18
+      concurrency = 4,
       existingUploadId,
       signal,
       onProgress,
@@ -199,24 +172,22 @@ export class UploadClient {
     let partSizeBytes: number;
     let partsExpected: number;
     const partUrlsMap = new Map<number, string>();
-    const completedPartsMap = new Map<number, string>(); // partNumber -> etag
+    const etagsByPart = new Map<number, string>();
 
     if (existingUploadId) {
-      // Resuming existing upload (AC 18)
       const resumeInfo = await this.getResumeInfo(existingUploadId);
       uploadId = existingUploadId;
       strategy = resumeInfo.strategy as 'single' | 'multipart';
       partSizeBytes = resumeInfo.partSizeBytes || 8 * 1024 * 1024;
       partsExpected = resumeInfo.partsExpected || 1;
-      videoId = ''; // will be returned on complete
+      videoId = '';
 
       if (resumeInfo.uploadedParts) {
         for (const p of resumeInfo.uploadedParts) {
-          completedPartsMap.set(p.partNumber, p.etag);
+          etagsByPart.set(p.partNumber, p.etag);
         }
       }
     } else {
-      // Initialize new upload
       const init = await this.initUpload({
         filename: filePath.split(/[\\/]/).pop() || 'upload.mp4',
         sizeBytes,
@@ -249,7 +220,6 @@ export class UploadClient {
         return { videoId: comp.videoId, uploadId, status: comp.status };
       }
 
-      // Populate initial part URLs
       if (init.parts) {
         for (const p of init.parts) {
           partUrlsMap.set(p.partNumber, p.url);
@@ -257,10 +227,9 @@ export class UploadClient {
       }
     }
 
-    // Parallel upload of parts with concurrency limit (concurrency 4 per AC 18)
     const missingParts: number[] = [];
     for (let p = 1; p <= partsExpected; p++) {
-      if (!completedPartsMap.has(p)) {
+      if (!etagsByPart.has(p)) {
         missingParts.push(p);
       }
     }
@@ -279,7 +248,6 @@ export class UploadClient {
           const partNumber = missingParts[nextMissingIndex++];
           if (!partNumber) break;
 
-          // Fetch part URL if not cached
           let partUrl = partUrlsMap.get(partNumber);
           if (!partUrl) {
             const freshParts = await this.getPartUrls(
@@ -298,24 +266,20 @@ export class UploadClient {
 
           if (abortController.signal.aborted) break;
 
-          // Read slice from file
           const startOffset = (partNumber - 1) * partSizeBytes;
           const currentPartSize = Math.min(partSizeBytes, sizeBytes - startOffset);
           const buffer = Buffer.alloc(currentPartSize);
           fs.readSync(fd, buffer, 0, currentPartSize, startOffset);
 
-          // Upload part directly to storage via presigned PUT URL
-          let putRes: Response;
-          try {
-            putRes = await fetch(partUrl, {
-              method: 'PUT',
-              body: buffer,
-              signal: abortController.signal,
-            });
-          } catch (err) {
+          const put = await fromPromise(
+            () => fetch(partUrl, { method: 'PUT', body: buffer, signal: abortController.signal }),
+            (cause) => cause
+          );
+          if (isErr(put)) {
             if (abortController.signal.aborted) return;
-            throw err;
+            throw put.error;
           }
+          const putRes = put.value;
 
           if (!putRes.ok) {
             throw new Error(`Upload of part ${partNumber} failed with status ${putRes.status}`);
@@ -323,15 +287,14 @@ export class UploadClient {
 
           const etagRaw = putRes.headers.get('etag') || `"etag-${partNumber}"`;
           const etag = etagRaw.replace(/^"|"$/g, '');
-          completedPartsMap.set(partNumber, etag);
+          etagsByPart.set(partNumber, etag);
 
           if (onProgress) {
-            onProgress(completedPartsMap.size, partsExpected);
+            onProgress(etagsByPart.size, partsExpected);
           }
         }
       };
 
-      // Run concurrency workers
       const workers: Promise<void>[] = [];
       for (let i = 0; i < Math.min(concurrency, missingParts.length); i++) {
         workers.push(uploadWorker());
@@ -343,12 +306,11 @@ export class UploadClient {
 
     if (abortController.signal.aborted) {
       throw new UploadAbortedError(
-        `Upload aborted after ${completedPartsMap.size}/${partsExpected} parts`
+        `Upload aborted after ${etagsByPart.size}/${partsExpected} parts`
       );
     }
 
-    // Complete upload
-    const sortedParts = Array.from(completedPartsMap.entries())
+    const sortedParts = Array.from(etagsByPart.entries())
       .sort((a, b) => a[0] - b[0])
       .map(([partNumber, etag]) => ({ partNumber, etag }));
 

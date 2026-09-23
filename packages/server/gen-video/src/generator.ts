@@ -1,3 +1,4 @@
+import { fromPromise, isOk } from '@vp/result';
 import { generateFixture } from './generate-fixture';
 import { loadManifest } from './probe';
 import type { GeneratorOptions } from './types';
@@ -24,16 +25,15 @@ export async function generateAllFixtures(
   });
 
   for (const fixture of targets) {
-    try {
-      if (!options.quiet) {
-        console.log(`[gen-video] Generating ${fixture.id} (${fixture.filename})...`);
-      }
-      const out = await generateFixture(fixture, options.outputDir);
-      generated.push(out);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      errors.push(`Failed to generate ${fixture.id}: ${msg}`);
+    if (!options.quiet) {
+      console.log(`[gen-video] Generating ${fixture.id} (${fixture.filename})...`);
     }
+    const out = await fromPromise(
+      () => generateFixture(fixture, options.outputDir),
+      (cause) => (cause instanceof Error ? cause.message : String(cause))
+    );
+    if (isOk(out)) generated.push(out.value);
+    else errors.push(`Failed to generate ${fixture.id}: ${out.error}`);
   }
 
   return { generated, errors };

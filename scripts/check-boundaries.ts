@@ -41,13 +41,9 @@ function manifestDirs(): string[] {
     for (const name of readdirSync(tierDir)) dirs.push(join(tierDir, name));
   }
   for (const name of readdirSync(join(ROOT, 'apps'))) dirs.push(join(ROOT, 'apps', name));
-  return dirs.filter((d) => {
-    try {
-      return statSync(join(d, 'package.json')).isFile();
-    } catch {
-      return false;
-    }
-  });
+  return dirs.filter(
+    (d) => statSync(join(d, 'package.json'), { throwIfNoEntry: false })?.isFile() ?? false
+  );
 }
 
 function load(): Pkg[] {

@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@vp/errors": "workspace:*",
+    "@vp/result": "workspace:*",
     "@vp/storage": "workspace:*"
   },
   "devDependencies": {

@@ -20,6 +20,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@vp/result": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@vp/testing": "workspace:*",
@@ -28,6 +31,6 @@
     "vitest": "^3.0.7"
   },
   "vp": {
-    "layer": 1
+    "layer": 2
   }
 }
