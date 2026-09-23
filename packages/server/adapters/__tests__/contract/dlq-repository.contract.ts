@@ -1,4 +1,5 @@
 import type { DlqRepository } from '@vp/core/repositories';
+import { expectOk } from '@vp/testing/result';
 import { VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -45,7 +46,7 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
     });
 
     it('parks a new entry by default', async () => {
-      expect(await dlq.findById(DLQ_IDS.first)).toMatchObject({
+      expect(expectOk(await dlq.findById(DLQ_IDS.first))).toMatchObject({
         queue: 'probe',
         errorCode: 'PROBE_FAILED',
         attemptsMade: 3,
@@ -53,11 +54,14 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
         status: 'PARKED',
         replayedAt: null,
       });
-      expect(await dlq.findById(DLQ_IDS.unknown)).toBeNull();
+      expect(expectOk(await dlq.findById(DLQ_IDS.unknown))).toBeNull();
     });
 
     it('lists the entries newest first', async () => {
-      expect(idsOf(await dlq.list({ limit: 10 }))).toEqual([DLQ_IDS.second, DLQ_IDS.first]);
+      expect(idsOf(expectOk(await dlq.list({ limit: 10 })))).toEqual([
+        DLQ_IDS.second,
+        DLQ_IDS.first,
+      ]);
     });
 
     it.each([
@@ -66,30 +70,32 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
     ])('filters the listing down to $status entries', async ({ status, expected }) => {
       await dlq.updateStatus(DLQ_IDS.first, 'REPLAYED', { replayedAt: new Date() });
 
-      expect(idsOf(await dlq.list({ limit: 10, status }))).toEqual(expected);
+      expect(idsOf(expectOk(await dlq.list({ limit: 10, status })))).toEqual(expected);
     });
 
     it('over-fetches one row so the caller can detect a next page', async () => {
-      const window = await dlq.list({ limit: 1 });
+      const window = expectOk(await dlq.list({ limit: 1 }));
       expect(idsOf(window)).toEqual([DLQ_IDS.second, DLQ_IDS.first]);
 
       const page = window.slice(0, 1);
       const last = page[page.length - 1];
-      const next = await dlq.list({
-        limit: 1,
-        ...(last ? { cursor: { createdAt: last.createdAt, id: last.id } } : {}),
-      });
+      const next = expectOk(
+        await dlq.list({
+          limit: 1,
+          ...(last ? { cursor: { createdAt: last.createdAt, id: last.id } } : {}),
+        })
+      );
 
       expect(idsOf(next)).toEqual([DLQ_IDS.first]);
     });
 
     it('updates the status and reports an unknown entry as null', async () => {
       const replayedAt = new Date();
-      const updated = await dlq.updateStatus(DLQ_IDS.first, 'REPLAYED', { replayedAt });
+      const updated = expectOk(await dlq.updateStatus(DLQ_IDS.first, 'REPLAYED', { replayedAt }));
 
       expect(updated?.status).toBe('REPLAYED');
       expect(updated?.replayedAt).not.toBeNull();
-      expect(await dlq.updateStatus(DLQ_IDS.unknown, 'DISCARDED')).toBeNull();
+      expect(expectOk(await dlq.updateStatus(DLQ_IDS.unknown, 'DISCARDED'))).toBeNull();
     });
 
     it('writes the outbox row in the same call when one is supplied', async () => {
@@ -105,7 +111,7 @@ export function describeDlqRepositoryContract(makeSubject: MakeRepositoriesSubje
         }
       );
 
-      expect(await subject.repositories.outbox.findById(outboxId)).toMatchObject({
+      expect(expectOk(await subject.repositories.outbox.findById(outboxId))).toMatchObject({
         kind: 'job.enqueue',
       });
     });

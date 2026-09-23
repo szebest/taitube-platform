@@ -34,7 +34,9 @@
   },
   "dependencies": {
     "@vp/domain": "workspace:*",
-    "@vp/permissions": "workspace:*"
+    "@vp/errors": "workspace:*",
+    "@vp/permissions": "workspace:*",
+    "@vp/result": "workspace:*"
   },
   "devDependencies": {
     "@vp/tsconfig": "workspace:*",

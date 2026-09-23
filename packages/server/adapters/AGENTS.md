@@ -34,7 +34,24 @@ adapters/
 - Must expose `.clear()` for clean test teardown.
 - Repositories communicate with each other exclusively through port interfaces, never by manipulating private foreign structures.
 
-### Rule 3: File Length Discipline
+### Rule 3: Every SDK Call Is Wrapped Where It Is Made
+- This package is the only home for `catch` outside `@vp/result`, and the only form it takes is `tryCatch` /
+  `fromPromise` **at the exact line the SDK is called** - never around a block. A wrapper around ten statements
+  cannot say which one failed, which is the property that made `catch {}` unreviewable in the first place.
+- An adapter reports infra failures and the constraint violations the domain cares about
+  (`HANDLE_ALREADY_TAKEN`, `CATEGORY_SLUG_CONFLICT`), and **decides nothing else**. Not-found, in-use and
+  permission are rules; they live in `@vp/domain-rules`. An adapter that decides one of those has put a copy
+  of the rule in every adapter.
+- Classify a driver error through `postgres/pg-errors.ts`, never by reading `code` off the top-level object:
+  Drizzle wraps the driver error and puts the real one on `cause`, and PGLite (which the contract suite runs
+  against) raises the same duplicate key with no SQLSTATE at all.
+- The in-memory doubles return the **same** `Result` types as the real adapters, and the contract conformance
+  suite asserts they agree on failures as well as on values - the `channels.handle` unique violation surfaces
+  as `HANDLE_ALREADY_TAKEN` from both.
+- **`fromPromise` takes a thunk.** An SDK builder chain runs synchronously up to its last call, so handing the
+  finished promise over leaves everything before it outside the boundary.
+
+### Rule 4: File Length Discipline
 - Target `<= 250 lines` per file.
 - Strict upper limit: `400 lines` (or `10 KB`) per file.
 

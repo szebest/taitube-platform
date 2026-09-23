@@ -12,17 +12,15 @@ import {
 } from './video-resource.js';
 
 function isKeysetCursor(cursor: string): boolean {
-  try {
-    const payload = defaultCursorCodec.decode(cursor);
-    const createdAt = payload['createdAt'];
-    return (
-      typeof createdAt === 'string' &&
-      !Number.isNaN(new Date(createdAt).getTime()) &&
-      typeof payload['id'] === 'string'
-    );
-  } catch {
-    return false;
-  }
+  const decoded = defaultCursorCodec.decode(cursor);
+  if (!decoded.ok) return false;
+
+  const createdAt = decoded.value['createdAt'];
+  return (
+    typeof createdAt === 'string' &&
+    !Number.isNaN(new Date(createdAt).getTime()) &&
+    typeof decoded.value['id'] === 'string'
+  );
 }
 
 export const ListVideosQuerySchema = z.object({

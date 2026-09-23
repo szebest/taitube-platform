@@ -1,5 +1,6 @@
 import { InMemoryJobQueue, InMemoryMultipartStorage, InMemoryRepositories } from '@vp/adapters';
 import { ids } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { describe, expect, it } from 'vitest';
 import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
@@ -36,7 +37,7 @@ describe('Fairness & Admission Control Simulation (Ticket 18: AC 4, SDD ยง9.4, ย
     // Set up workers for pipeline stages
     await probeQueue.process(async (job) => {
       const { videoId } = job.data as { videoId: string };
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       if (!video) return;
 
       await repositories.videos.transition({
@@ -84,7 +85,7 @@ describe('Fairness & Admission Control Simulation (Ticket 18: AC 4, SDD ยง9.4, ย
 
     await packageQueue.process(async (job) => {
       const { videoId } = job.data as { videoId: string };
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       if (!video) return;
 
       await repositories.videos.transition({
@@ -110,18 +111,20 @@ describe('Fairness & Admission Control Simulation (Ticket 18: AC 4, SDD ยง9.4, ย
       const videoId = uuidv7();
       const sourceKey = `raw/${videoId}/source.mp4`;
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId,
-        title: `video-${index}`,
-        status: 'UPLOADED',
-        sourceKey,
-        sourceSizeBytes: 1000,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId,
+          title: `video-${index}`,
+          status: 'UPLOADED',
+          sourceKey,
+          sourceSizeBytes: 1000,
+        })
+      );
       // Set updatedAt in past so reconciler can detect it if held
       video.updatedAt = new Date(Date.now() - 5000);
 
-      const inFlight = await repositories.videos.countInFlightByOwner(ownerId);
+      const inFlight = expectOk(await repositories.videos.countInFlightByOwner(ownerId));
       if (inFlight < MAX_INFLIGHT) {
         // Admitted immediately
         await probeQueue.add(

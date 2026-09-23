@@ -1,21 +1,26 @@
-import type { Category } from '@vp/domain';
 import type { CacheClient } from '@vp/core/ports';
+import type { Category } from '@vp/domain';
+import { type Result, isOk, ok, tryCatch, unwrapOr } from '@vp/result';
 
 export const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';
 export const CATEGORIES_INVALIDATION_CHANNEL = 'taitube:events:cache:categories:invalidated';
 
-/**
- * Pub/sub on the `CacheClient` port may return a promise or nothing, so a try/catch alone
- * cannot see an adapter that rejects and a `.catch` alone cannot see one that throws. This
- * runs the call synchronously, so a sync adapter still subscribes before the next statement,
- * and swallows either failure.
- */
-function settled(run: () => Promise<void> | void): Promise<void> {
-  try {
-    return Promise.resolve(run()).catch(() => undefined);
-  } catch {
-    return Promise.resolve();
-  }
+interface CachedCategories {
+  categories: Array<Category & { createdAt: string; updatedAt: string }>;
+}
+
+function parseCategories(json: string): Category[] | null {
+  const parsed = tryCatch(
+    () => JSON.parse(json) as CachedCategories,
+    () => null
+  );
+  if (!isOk(parsed)) return null;
+
+  return parsed.value.categories.map((c) => ({
+    ...c,
+    createdAt: new Date(c.createdAt),
+    updatedAt: new Date(c.updatedAt),
+  }));
 }
 
 interface L1CacheEntry {
@@ -48,14 +53,9 @@ export class CategoryCacheService {
       this.clearL1();
     };
 
-    const cache = this.cache;
-    if (cache) {
-      // A pod that cannot subscribe still serves reads; it only stops hearing peers, so its L1
-      // entries expire on their own TTL instead of being cleared early.
-      void settled(() =>
-        cache.subscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage)
-      );
-    }
+    // A pod that cannot subscribe still serves reads; it only stops hearing peers, so its L1
+    // entries expire on their own TTL instead of being cleared early.
+    void this.cache?.subscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage);
   }
 
   private setL1(key: string, value: Category[], ttlMs: number): void {
@@ -96,39 +96,35 @@ export class CategoryCacheService {
     return this.l1Cache.size;
   }
 
-  async getCategories(fetcher: () => Promise<Category[]>): Promise<Category[]> {
+  /**
+   * A cache miss or a dead Redis is not a failure of this call: it falls through to the source and
+   * the cache failure is dropped, which is the deliberate narrowing ADR-24 allows. Only the
+   * source's own failure reaches the caller, and it is the one in the signature.
+   */
+  async getCategories<E>(
+    fetcher: () => Promise<Result<Category[], E>>
+  ): Promise<Result<Category[], E>> {
     // 1. Check L1 In-Memory LRU Cache
     const l1 = this.getL1(CATEGORIES_CACHE_KEY);
     if (l1) {
-      return l1.value;
+      return ok(l1.value);
     }
 
     // 2. Check L2 Distributed Redis Cache
     if (this.cache) {
-      try {
-        const cachedJson = await this.cache.get(CATEGORIES_CACHE_KEY);
-        if (cachedJson) {
-          const parsed = JSON.parse(cachedJson) as {
-            categories: Array<Category & { createdAt: string; updatedAt: string }>;
-          };
-
-          const categories: Category[] = parsed.categories.map((c) => ({
-            ...c,
-            createdAt: new Date(c.createdAt),
-            updatedAt: new Date(c.updatedAt),
-          }));
-
-          this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
-          return categories;
-        }
-      } catch {
-        // Fallback to fetcher on Redis error
+      const cachedJson = unwrapOr(await this.cache.get(CATEGORIES_CACHE_KEY), null);
+      const categories = cachedJson ? parseCategories(cachedJson) : null;
+      if (categories) {
+        this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
+        return ok(categories);
       }
     }
 
     // 3. Cache Miss: Fetch from source
-    const rawCategories = await fetcher();
-    const categories = [...rawCategories].sort((a, b) => {
+    const fetched = await fetcher();
+    if (!isOk(fetched)) return fetched;
+
+    const categories = [...fetched.value].sort((a, b) => {
       if (a.sortOrder !== b.sortOrder) {
         return a.sortOrder - b.sortOrder;
       }
@@ -136,55 +132,28 @@ export class CategoryCacheService {
     });
 
     // 4. Populate L2 Distributed Redis Cache
-    if (this.cache) {
-      try {
-        await this.cache.set(
-          CATEGORIES_CACHE_KEY,
-          JSON.stringify({ categories }),
-          this.l2TtlSeconds
-        );
-      } catch {
-        // Non-blocking L2 cache write failure
-      }
-    }
+    await this.cache?.set(CATEGORIES_CACHE_KEY, JSON.stringify({ categories }), this.l2TtlSeconds);
 
     // 5. Populate L1 In-Memory LRU Cache
     this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
 
-    return categories;
+    return ok(categories);
   }
 
   async invalidate(): Promise<void> {
     // 1. Invalidate local L1 cache
     this.clearL1();
 
-    // 2. Invalidate L2 distributed Redis cache
-    if (this.cache) {
-      try {
-        await this.cache.del(CATEGORIES_CACHE_KEY);
-      } catch {
-        // Non-blocking
-      }
-
-      // 3. Broadcast cache invalidation to all cluster replicas via Pub/Sub
-      try {
-        await this.cache.publish(
-          CATEGORIES_INVALIDATION_CHANNEL,
-          JSON.stringify({ invalidatedAt: Date.now() })
-        );
-      } catch {
-        // Non-blocking
-      }
-    }
+    // 2. Invalidate L2 distributed Redis cache, then broadcast to the other replicas
+    await this.cache?.del(CATEGORIES_CACHE_KEY);
+    await this.cache?.publish(
+      CATEGORIES_INVALIDATION_CHANNEL,
+      JSON.stringify({ invalidatedAt: Date.now() })
+    );
   }
 
   async close(): Promise<void> {
-    const cache = this.cache;
-    if (cache) {
-      await settled(() =>
-        cache.unsubscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage)
-      );
-    }
+    await this.cache?.unsubscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage);
     this.clearL1();
   }
 }

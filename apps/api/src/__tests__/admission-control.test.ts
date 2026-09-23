@@ -5,6 +5,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import { mintDevToken } from '@vp/dev-token';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
@@ -58,7 +59,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     });
     expect(initRes.statusCode).toBe(201);
     const { videoId, uploadId } = initRes.json();
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     if (!video) {
       throw new Error('Video not found');
     }
@@ -92,7 +93,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     });
 
     // Probe job is enqueued with priority 5
-    const jobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const jobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(jobs).toHaveLength(1);
     expect(jobs[0]?.data).toMatchObject({ videoId });
     expect(jobs[0]?.opts?.priority).toBe(5);
@@ -108,7 +109,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
       admission: 'admitted',
     });
 
-    const jobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const jobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(jobs).toHaveLength(1);
     expect(jobs[0]?.data).toMatchObject({ videoId });
     expect(jobs[0]?.opts?.priority).toBe(1);
@@ -145,11 +146,11 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     });
 
     // Verify active in-flight count is 3
-    const inflight = await repositories.videos.countInFlightByOwner(FREE_USER_ID);
+    const inflight = expectOk(await repositories.videos.countInFlightByOwner(FREE_USER_ID));
     expect(inflight).toBe(3);
 
     // Initial probe jobs count is 3
-    const initialJobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const initialJobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(initialJobs).toHaveLength(3);
 
     // 4th complete by the same user
@@ -164,11 +165,11 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     });
 
     // Video 4 in DB is UPLOADED
-    const v4Db = await repositories.videos.findById(v4.videoId);
+    const v4Db = expectOk(await repositories.videos.findById(v4.videoId));
     expect(v4Db?.status).toBe('UPLOADED');
 
     // No new probe job enqueued for v4!
-    const afterJobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const afterJobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(afterJobs).toHaveLength(3);
     expect(
       afterJobs.find((j) => (j.data as { videoId: string }).videoId === v4.videoId)
@@ -179,7 +180,7 @@ describe('apps/api Admission Control and Tier Priorities (Ticket 18: AC 1, AC 3)
     expect(proVid.completeRes.statusCode).toBe(202);
     expect(proVid.completeRes.json().admission).toBe('admitted');
 
-    const totalJobs = await probeQueue.getJobs(['waiting', 'prioritized']);
+    const totalJobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));
     expect(totalJobs).toHaveLength(4);
     const proJob = totalJobs.find(
       (j) => (j.data as { videoId: string }).videoId === proVid.videoId

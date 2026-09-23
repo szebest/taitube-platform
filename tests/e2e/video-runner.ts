@@ -4,6 +4,7 @@ import * as path from 'node:path';
 import type { Repositories } from '../../packages/server/core/ports/index';
 import { UploadClient } from '../../packages/server/upload-client/src/index';
 import type { VideoTestResult, VideoTestSpec } from './specs';
+import { unwrapOr } from '../../packages/universal/result/src/index';
 
 export interface VideoRunnerContext {
   apiUrl: string;
@@ -126,7 +127,7 @@ export async function runSingleVideo(
     let actualSegmentCount = 0;
     if (spec.expectedStatus === 'READY') {
       if (repositories?.renditions) {
-        const rList = await repositories.renditions.findByVideoId(videoId);
+        const rList = unwrapOr(await repositories.renditions.findByVideoId(videoId), []);
         if (rList.length > 0 && rList[0]?.segmentCount != null) {
           actualSegmentCount = rList[0].segmentCount;
         }
@@ -145,7 +146,7 @@ export async function runSingleVideo(
 
     let eventCount = 1;
     if (repositories?.events) {
-      const evs = await repositories.events.findByVideoId(videoId);
+      const evs = unwrapOr(await repositories.events.findByVideoId(videoId), []);
       const terminalEv = spec.expectedStatus === 'READY' ? 'video.ready' : 'video.failed';
       eventCount = evs.filter((e) => e.type === terminalEv).length;
     }

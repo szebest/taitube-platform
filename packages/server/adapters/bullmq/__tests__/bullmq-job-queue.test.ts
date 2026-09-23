@@ -1,5 +1,7 @@
-import { QueueError, type QueueJob } from '@vp/core/ports';
-import { UnrecoverableError } from 'bullmq';
+import type { QueueJob } from '@vp/core/ports';
+import { ErrorCodes } from '@vp/errors';
+import { isOk } from '@vp/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue, fakeJob } from './fake-queue';
 import { type WorkerHandler, fakeWorkerFactory, workers } from './fake-worker';
@@ -33,21 +35,23 @@ describe('BullMqJobQueue', () => {
         name: 'probe',
         queue: new FakeQueue(init).asQueue(),
       });
-      expect(await subject.checkHealth()).toBe(expected);
+      expect(isOk(await subject.checkHealth())).toBe(expected);
     });
   });
 
   describe('add', () => {
     it('forwards the retry policy and returns the enqueued job', async () => {
-      const job = await jobQueue.add(
-        'probe',
-        { videoId: 'v1' },
-        {
-          jobId: 'v1--probe',
-          attempts: 5,
-          priority: 2,
-          backoff: { type: 'exponential', delay: 1000 },
-        }
+      const job = expectOk(
+        await jobQueue.add(
+          'probe',
+          { videoId: 'v1' },
+          {
+            jobId: 'v1--probe',
+            attempts: 5,
+            priority: 2,
+            backoff: { type: 'exponential', delay: 1000 },
+          }
+        )
       );
 
       expect(job).toMatchObject({ id: 'v1--probe', name: 'probe', data: { videoId: 'v1' } });
@@ -59,15 +63,17 @@ describe('BullMqJobQueue', () => {
       });
     });
 
-    it('wraps an enqueue failure in a QueueError naming the queue', async () => {
+    it('reports an enqueue failure as QUEUE_UNAVAILABLE naming the operation', async () => {
       Object.assign(queue, {
         add: async () => {
           throw new Error('redis unavailable');
         },
       });
 
-      await expect(jobQueue.add('probe', {})).rejects.toThrow(QueueError);
-      await expect(jobQueue.add('probe', {})).rejects.toThrow(/queue "probe"/);
+      expect(expectErr(await jobQueue.add('probe', {}))).toMatchObject({
+        code: ErrorCodes.QUEUE_UNAVAILABLE,
+        operation: 'add',
+      });
     });
   });
 
@@ -78,8 +84,8 @@ describe('BullMqJobQueue', () => {
         queue: new FakeQueue({ jobs: [fakeJob({ id: 'job-1', state: 'active' })] }).asQueue(),
       });
 
-      expect(await subject.getJobState('job-1')).toBe('active');
-      expect(await subject.getJobState('missing')).toBeUndefined();
+      expect(expectOk(await subject.getJobState('job-1'))).toBe('active');
+      expect(expectOk(await subject.getJobState('missing'))).toBeUndefined();
     });
 
     it('projects the job list onto the port shape', async () => {
@@ -90,8 +96,14 @@ describe('BullMqJobQueue', () => {
         }).asQueue(),
       });
 
-      expect(await subject.getJobs()).toEqual([
-        { id: 'job-1', name: 'probe', data: {}, attemptsMade: 2 },
+      expect(expectOk(await subject.getJobs())).toEqual([
+        {
+          id: 'job-1',
+          name: 'probe',
+          data: {},
+          attemptsMade: 2,
+          opts: { jobId: 'job-1', attempts: 3, priority: 5 },
+        },
       ]);
     });
 
@@ -101,7 +113,7 @@ describe('BullMqJobQueue', () => {
         queue: new FakeQueue({ counts: { waiting: 3, failed: 1 } }).asQueue(),
       });
 
-      expect(await subject.getJobCounts()).toEqual({
+      expect(expectOk(await subject.getJobCounts())).toEqual({
         waiting: 3,
         active: 0,
         completed: 0,
@@ -114,22 +126,24 @@ describe('BullMqJobQueue', () => {
 
   describe('pause and resume', () => {
     it('toggles the paused state', async () => {
-      expect(await jobQueue.isPaused()).toBe(false);
+      expect(expectOk(await jobQueue.isPaused())).toBe(false);
 
       await jobQueue.pause();
-      expect(await jobQueue.isPaused()).toBe(true);
+      expect(expectOk(await jobQueue.isPaused())).toBe(true);
 
       await jobQueue.resume();
-      expect(await jobQueue.isPaused()).toBe(false);
+      expect(expectOk(await jobQueue.isPaused())).toBe(false);
     });
   });
 
   describe('schedulers', () => {
     it('passes the repeat options and template through', async () => {
-      const result = await jobQueue.upsertJobScheduler(
-        'reconcile',
-        { every: 60_000 },
-        { name: 'reconcile', data: { scope: 'all' }, opts: { attempts: 1 } }
+      const result = expectOk(
+        await jobQueue.upsertJobScheduler(
+          'reconcile',
+          { every: 60_000 },
+          { name: 'reconcile', data: { scope: 'all' }, opts: { attempts: 1 } }
+        )
       );
 
       expect(result).toMatchObject({
@@ -150,7 +164,7 @@ describe('BullMqJobQueue', () => {
         }).asQueue(),
       });
 
-      expect(await subject.getJobSchedulers()).toEqual([
+      expect(expectOk(await subject.getJobSchedulers())).toEqual([
         { id: 'a', name: 'reconcile', pattern: '* * * * *', every: undefined, data: { x: 1 } },
         { id: 'k', name: '', pattern: undefined, every: 1000, data: undefined },
       ]);
@@ -196,59 +210,16 @@ describe('BullMqJobQueue', () => {
       expect(await handler(fakeJob({ childrenValues: undefined }))).toEqual({});
     });
 
-    const rejection = (promise: Promise<unknown>): Promise<Error> =>
-      promise.then(
-        () => {
-          throw new Error('expected the handler to reject');
-        },
-        (err: Error) => err
-      );
-
-    it('marks a permanent failure unrecoverable so bullmq stops retrying', async () => {
-      const cause = Object.assign(new Error('bad codec'), {
-        isRetryable: false,
-        code: 'UNSUPPORTED_CODEC',
-      });
-      const handler = await handlerFor(async () => {
-        throw cause;
-      });
-
-      const error = await rejection(handler(fakeJob()));
-      expect(error).toBeInstanceOf(UnrecoverableError);
-      expect(error).toMatchObject({ message: 'bad codec', code: 'UNSUPPORTED_CODEC', cause });
-    });
-
-    it('lets a transient failure through so bullmq retries it', async () => {
-      const handler = await handlerFor(async () => {
-        throw Object.assign(new Error('s3 timeout'), { isRetryable: true });
-      });
-
-      const error = await rejection(handler(fakeJob({ attemptsMade: 9 })));
-      expect(error).not.toBeInstanceOf(UnrecoverableError);
-      expect(error.message).toBe('s3 timeout');
-    });
-
-    it('retries an unclassified failure, then gives up on the third attempt', async () => {
-      const handler = await handlerFor(async () => {
-        throw new Error('who knows');
-      });
-
-      expect(await rejection(handler(fakeJob({ attemptsMade: 1 })))).not.toBeInstanceOf(
-        UnrecoverableError
-      );
-      expect(await rejection(handler(fakeJob({ attemptsMade: 2 })))).toBeInstanceOf(
-        UnrecoverableError
-      );
-    });
-
-    it('wraps a worker start-up failure in a QueueError', async () => {
+    it('reports a worker start-up failure as QUEUE_UNAVAILABLE', async () => {
       Object.defineProperty(queue, 'opts', {
         get() {
           throw new Error('queue disposed');
         },
       });
 
-      await expect(jobQueue.process(async () => 'ok')).rejects.toThrow(QueueError);
+      expect(expectErr(await jobQueue.process(async () => 'ok')).code).toBe(
+        ErrorCodes.QUEUE_UNAVAILABLE
+      );
     });
   });
 
@@ -301,14 +272,14 @@ describe('BullMqJobQueue', () => {
       expect(queue.closed).toBe(true);
     });
 
-    it('wraps a close failure in a QueueError', async () => {
+    it('reports a close failure as QUEUE_UNAVAILABLE', async () => {
       Object.assign(queue, {
         close: async () => {
           throw new Error('still draining');
         },
       });
 
-      await expect(jobQueue.close()).rejects.toThrow(QueueError);
+      expect(expectErr(await jobQueue.close()).code).toBe(ErrorCodes.QUEUE_UNAVAILABLE);
     });
   });
 });

@@ -9,12 +9,14 @@ import {
 import type { QueueJob } from '@vp/core/ports';
 import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
+import { throughRunner } from './queue-boundary';
 
 describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', () => {
   let repositories: InMemoryRepositories;
@@ -177,13 +179,13 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
       attemptsMade: 0,
     };
 
-    const probeResult = await probeProcessor(probeJob);
+    const probeResult = expectOk(await probeProcessor(probeJob));
     expect(probeResult.status).toBe('PROCESSING');
 
     // Verify AC 3: package is in waiting-children
     const packageQueue = getQueue('package');
     const packageJobId = `${videoId}--package--g1`;
-    const packageState = await packageQueue.getJobState(packageJobId);
+    const packageState = expectOk(await packageQueue.getJobState(packageJobId));
     expect(packageState).toBe('waiting-children');
 
     // Register package processor
@@ -193,11 +195,11 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
       logger,
       getQueue,
     });
-    await packageQueue.process(packageProcessor);
+    await packageQueue.process(throughRunner(packageProcessor));
 
     // Verify package has NOT executed yet (still in waiting-children)
-    expect(await packageQueue.getJobState(packageJobId)).toBe('waiting-children');
-    const videoBeforeTranscode = await repositories.videos.findById(videoId);
+    expect(expectOk(await packageQueue.getJobState(packageJobId))).toBe('waiting-children');
+    const videoBeforeTranscode = expectOk(await repositories.videos.findById(videoId));
     expect(videoBeforeTranscode?.status).toBe('PROCESSING');
 
     // 2. Process transcode children on queues transcode-1080p, transcode-720p, transcode-480p and thumbnail
@@ -212,27 +214,27 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     const thumbnailProcessor = createThumbnailProcessor({ repositories, storage, logger });
 
     // Process 1080p and 720p first; package should STILL be in waiting-children
-    await q1080.process(transcode1080);
-    await q720.process(transcode720);
+    await q1080.process(throughRunner(transcode1080));
+    await q720.process(throughRunner(transcode720));
 
-    expect(await packageQueue.getJobState(packageJobId)).toBe('waiting-children');
+    expect(expectOk(await packageQueue.getJobState(packageJobId))).toBe('waiting-children');
 
     // Process thumbnail; package should STILL be in waiting-children because 480p is pending
-    await qThumb.process(thumbnailProcessor);
-    expect(await packageQueue.getJobState(packageJobId)).toBe('waiting-children');
+    await qThumb.process(throughRunner(thumbnailProcessor));
+    expect(expectOk(await packageQueue.getJobState(packageJobId))).toBe('waiting-children');
 
     // Process 480p (the final child)
-    await q480.process(transcode480);
+    await q480.process(throughRunner(transcode480));
 
     // Package now executes automatically upon completion of the last child!
     // Wait a tick for microtask drain
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Verify package completed
-    expect(await packageQueue.getJobState(packageJobId)).toBe('completed');
+    expect(expectOk(await packageQueue.getJobState(packageJobId))).toBe('completed');
 
     // 3. Verify video is now READY (AC 1)
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('READY');
     expect(video?.masterPlaylistKey).toBe(`videos/${videoId}/hls/master.m3u8`);
     expect(video?.readyAt).toBeDefined();
@@ -250,8 +252,10 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     expect(await storage.headObject('public', `videos/${videoId}/hls/master.m3u8`)).toBeTruthy();
 
     // 5. Verify master playlist contents (AC 1, AC 6)
-    const masterObj = await storage.getObject('public', `videos/${videoId}/hls/master.m3u8`);
-    const masterText = masterObj?.toString('utf-8') ?? '';
+    const masterObj = expectOk(
+      await storage.getObject('public', `videos/${videoId}/hls/master.m3u8`)
+    );
+    const masterText = masterObj.toString('utf-8');
 
     // Three EXT-X-STREAM-INF entries
     const streamInfLines = masterText
@@ -353,12 +357,12 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     });
 
     // 1. Verify p720 has ladder with 2 variants stored on video row (AC 2)
-    const p720Video = await repositories.videos.findById(p720Id);
+    const p720Video = expectOk(await repositories.videos.findById(p720Id));
     expect(p720Video?.ladder as any[]).toHaveLength(2);
     expect((p720Video?.ladder as any[])?.map((r: any) => r.name)).toEqual(['720p', '480p']);
 
     // 2. Verify p720 renditions start PENDING
-    let p720Rends = await repositories.renditions.findByVideoId(p720Id);
+    let p720Rends = expectOk(await repositories.renditions.findByVideoId(p720Id));
     expect(p720Rends.map((r: any) => r.status)).toEqual(['PENDING', 'PENDING']);
 
     // Mock sd360 probe: 360p height -> 480p (lowest rung kept, upscaled by rule)
@@ -395,14 +399,14 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     });
 
     // 3. Verify sd360 has ladder with 1 variant (480p) stored on video row (AC 2)
-    const sd360Video = await repositories.videos.findById(sd360Id);
+    const sd360Video = expectOk(await repositories.videos.findById(sd360Id));
     expect(sd360Video?.ladder as any[]).toHaveLength(1);
     expect((sd360Video?.ladder as any[])?.[0]?.name).toBe('480p');
 
     // 4. Verify independent rendition state progression PENDING -> RUNNING -> DONE
     vi.spyOn(ffmpegModule, 'runFfmpegTranscode').mockImplementation(async (options) => {
       // While running, verify rendition status is RUNNING
-      const inFlightRends = await repositories.renditions.findByVideoId(p720Id);
+      const inFlightRends = expectOk(await repositories.renditions.findByVideoId(p720Id));
       const currentRend = inFlightRends.find((r: any) => r.name === options.rendition.name);
       expect(currentRend?.status).toBe('RUNNING');
 
@@ -417,9 +421,9 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     });
 
     const transcode720 = createTranscodeProcessor({ repositories, storage, logger, getQueue });
-    await getQueue('transcode-720p').process(transcode720);
+    await getQueue('transcode-720p').process(throughRunner(transcode720));
 
-    p720Rends = await repositories.renditions.findByVideoId(p720Id);
+    p720Rends = expectOk(await repositories.renditions.findByVideoId(p720Id));
     const r720 = p720Rends.find((r) => r.name === '720p');
     const r480 = p720Rends.find((r) => r.name === '480p');
     expect(r720?.status).toBe('DONE');
@@ -620,13 +624,13 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
 
     // 1. Process 720p successfully
     const transcode720 = createTranscodeProcessor({ repositories, storage, logger, getQueue });
-    await getQueue('transcode-720p').process(transcode720);
+    await getQueue('transcode-720p').process(throughRunner(transcode720));
 
     // Verify 720p output was uploaded to storage
     expect(
       await storage.headObject('public', `videos/${videoId}/hls/720p/index.m3u8`)
     ).toBeTruthy();
-    const rendsBeforeFail = await repositories.renditions.findByVideoId(videoId);
+    const rendsBeforeFail = expectOk(await repositories.renditions.findByVideoId(videoId));
     expect(rendsBeforeFail.find((r: any) => r.name === '720p')?.status).toBe('DONE');
 
     // 2. Process 480p with simulated permanent failure
@@ -638,12 +642,12 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
       simulateFailureRendition: '480p',
     });
 
-    await expect(getQueue('transcode-480p').process(transcode480)).rejects.toThrow(
+    await expect(getQueue('transcode-480p').process(throughRunner(transcode480))).rejects.toThrow(
       'Simulated permanent failure in transcode-480p'
     );
 
     // 3. Verify parent failed and video transitioned to FAILED with child's error code (AC 5)
-    const failedVideo = await repositories.videos.findById(videoId);
+    const failedVideo = expectOk(await repositories.videos.findById(videoId));
     expect(failedVideo?.status).toBe('FAILED');
     expect(failedVideo?.errorCode).toBe('FFMPEG_FAILED');
 
@@ -651,7 +655,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     expect(
       await storage.headObject('public', `videos/${videoId}/hls/720p/index.m3u8`)
     ).toBeTruthy();
-    const finalRends = await repositories.renditions.findByVideoId(videoId);
+    const finalRends = expectOk(await repositories.renditions.findByVideoId(videoId));
     expect(finalRends.find((r: any) => r.name === '720p')?.status).toBe('DONE');
     expect(finalRends.find((r: any) => r.name === '480p')?.status).toBe('FAILED');
   });

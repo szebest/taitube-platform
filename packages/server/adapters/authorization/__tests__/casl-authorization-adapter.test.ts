@@ -25,12 +25,14 @@ describe('CaslAuthorizationAdapter', () => {
     expect(adapter.getAbility().can('read', 'Video')).toBe(true);
   });
 
-  it('can() evaluates AppAction + AppSubjects', () => {
-    const userAdapter = new CaslAuthorizationAdapter(user);
-    expect(userAdapter.can('create', 'Video')).toBe(true);
+  it.each([
+    { scenario: 'a signed-in user', actor: user, action: 'create' as const, expected: true },
+    { scenario: 'an anonymous caller', actor: null, action: 'create' as const, expected: false },
+    { scenario: 'a user reaching for admin', actor: user, action: 'manage' as const, expected: false },
+  ])('can() answers $expected for $scenario', ({ actor, action, expected }) => {
+    const adapter = new CaslAuthorizationAdapter(actor);
 
-    const guestAdapter = new CaslAuthorizationAdapter(null);
-    expect(guestAdapter.can('create', 'Video')).toBe(false);
+    expect(adapter.can(action, action === 'manage' ? 'all' : 'Video')).toBe(expected);
   });
 
   it('can() evaluates permission helper directly', () => {
@@ -38,39 +40,6 @@ describe('CaslAuthorizationAdapter', () => {
     expect(adapter.can(canUpdateVideo, { user, video: ownedVideo })).toBe(true);
     expect(adapter.can(canUpdateVideo, { user, video: foreignVideo })).toBe(false);
     expect(adapter.can(canUpdateVideo, { user: admin, video: foreignVideo })).toBe(true);
-  });
-
-  it('assertCan() does not throw when allowed', () => {
-    const adapter = new CaslAuthorizationAdapter();
-    expect(() => {
-      adapter.assertCan(
-        canUpdateVideo,
-        { user, video: ownedVideo },
-        { action: 'update', subject: 'Video' }
-      );
-    }).not.toThrow();
-  });
-
-  it('assertCan() throws 403 FORBIDDEN when not allowed', () => {
-    const adapter = new CaslAuthorizationAdapter();
-    expect(() => {
-      adapter.assertCan(
-        canUpdateVideo,
-        { user, video: foreignVideo },
-        { action: 'update', subject: 'Video' }
-      );
-    }).toThrowError(/Forbidden/);
-  });
-
-  it('assertCan(action, subject) succeeds for permitted action and throws 401/403 when denied', () => {
-    const userAdapter = new CaslAuthorizationAdapter(user);
-    expect(() => userAdapter.assertCan('create', 'Video')).not.toThrow();
-
-    const guestAdapter = new CaslAuthorizationAdapter(null);
-    expect(() => guestAdapter.assertCan('create', 'Video')).toThrowError(/Authentication required/);
-
-    const regularUserAdapter = new CaslAuthorizationAdapter({ id: 'u1', role: 'USER' });
-    expect(() => regularUserAdapter.assertCan('manage', 'all')).toThrowError(/Forbidden/);
   });
 
   it('forUser() returns adapter bound to specific user', () => {

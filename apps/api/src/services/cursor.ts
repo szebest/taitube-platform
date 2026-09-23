@@ -1,11 +1,12 @@
 import type { PublicFeedCursor, PublicFeedSort } from '@vp/domain';
 import {
   type CursorPayload,
-  InvalidCursorError,
+  type InvalidCursor,
   type Paginator,
   defaultPaginator,
+  invalidCursor,
 } from '@vp/pagination';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { type Result, andThen, err, ok } from '@vp/result';
 
 export type FeedSort = PublicFeedSort;
 
@@ -18,39 +19,22 @@ export interface FeedCursorRow {
   viewsCount?: number | null;
 }
 
-function invalidCursor(): never {
-  throw new PermanentError(ErrorCodes.VALIDATION_FAILED, 'Invalid pagination cursor');
-}
-
-/** Translates the codec's failure into the transport error the API reports. */
-function payloadOf(cursor: string | undefined, paginator: Paginator): CursorPayload | null {
-  try {
-    return paginator.decodeCursor(cursor);
-  } catch (err) {
-    if (err instanceof InvalidCursorError) invalidCursor();
-    throw err;
-  }
-}
-
 function isoOf(value: Date | string): string {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
 
-function parseDate(value: unknown): Date {
-  if (typeof value !== 'string') invalidCursor();
+function asDate(value: unknown): Result<Date, InvalidCursor> {
+  if (typeof value !== 'string') return err(invalidCursor());
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) invalidCursor();
-  return date;
+  return Number.isNaN(date.getTime()) ? err(invalidCursor()) : ok(date);
 }
 
-function parseId(value: unknown): string {
-  if (typeof value !== 'string') invalidCursor();
-  return value;
+function asId(value: unknown): Result<string, InvalidCursor> {
+  return typeof value === 'string' ? ok(value) : err(invalidCursor());
 }
 
-function parseNumber(value: unknown): number {
-  if (typeof value !== 'number' || !Number.isFinite(value)) invalidCursor();
-  return value;
+function asNumber(value: unknown): Result<number, InvalidCursor> {
+  return typeof value === 'number' && Number.isFinite(value) ? ok(value) : err(invalidCursor());
 }
 
 export function createdAtCursorPayload(v: {
@@ -75,22 +59,37 @@ export function feedCursorPayload(v: FeedCursorRow, instant: number): CursorPayl
   return { createdAt: isoOf(v.createdAt), viewsCount: v.viewsCount ?? 0, instant, id: v.id };
 }
 
+/** An absent cursor is the first page, so it stays `ok(null)` rather than becoming a failure. */
+function decodeWith<T>(
+  cursor: string | undefined,
+  paginator: Paginator,
+  read: (payload: CursorPayload) => Result<T, InvalidCursor>
+): Result<T | null, InvalidCursor> {
+  return andThen(paginator.decodeCursor(cursor), (payload) =>
+    payload === null ? ok(null) : read(payload)
+  );
+}
+
 export function decodeCreatedAtCursor(
   cursor?: string,
   paginator: Paginator = defaultPaginator
-): { createdAt: Date; id: string } | null {
-  const parsed = payloadOf(cursor, paginator);
-  if (!parsed) return null;
-  return { createdAt: parseDate(parsed.createdAt), id: parseId(parsed.id) };
+): Result<{ createdAt: Date; id: string } | null, InvalidCursor> {
+  return decodeWith(cursor, paginator, (payload) =>
+    andThen(asDate(payload['createdAt']), (createdAt) =>
+      andThen(asId(payload['id']), (id) => ok({ createdAt, id }))
+    )
+  );
 }
 
 export function decodeSubscriptionCursor(
   cursor?: string,
   paginator: Paginator = defaultPaginator
-): { createdAt: Date; channelId: string } | null {
-  const parsed = payloadOf(cursor, paginator);
-  if (!parsed) return null;
-  return { createdAt: parseDate(parsed.createdAt), channelId: parseId(parsed.channelId) };
+): Result<{ createdAt: Date; channelId: string } | null, InvalidCursor> {
+  return decodeWith(cursor, paginator, (payload) =>
+    andThen(asDate(payload['createdAt']), (createdAt) =>
+      andThen(asId(payload['channelId']), (channelId) => ok({ createdAt, channelId }))
+    )
+  );
 }
 
 export function encodeFeedCursor(
@@ -104,14 +103,14 @@ export function encodeFeedCursor(
 export function decodeFeedCursor(
   cursor?: string,
   paginator: Paginator = defaultPaginator
-): FeedCursor | null {
-  const parsed = payloadOf(cursor, paginator);
-  if (!parsed) return null;
-
-  return {
-    createdAt: parseDate(parsed.createdAt),
-    viewsCount: parseNumber(parsed.viewsCount),
-    instant: parseNumber(parsed.instant),
-    id: parseId(parsed.id),
-  };
+): Result<FeedCursor | null, InvalidCursor> {
+  return decodeWith(cursor, paginator, (payload) =>
+    andThen(asDate(payload['createdAt']), (createdAt) =>
+      andThen(asNumber(payload['viewsCount']), (viewsCount) =>
+        andThen(asNumber(payload['instant']), (instant) =>
+          andThen(asId(payload['id']), (id) => ok({ createdAt, viewsCount, instant, id }))
+        )
+      )
+    )
+  );
 }

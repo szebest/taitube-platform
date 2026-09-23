@@ -12,7 +12,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 ## How work is organised
 - Work items are tracer-bullet tickets in `docs/tickets/NN-slug.md`; the index `docs/tickets/README.md` shows the frontier (tickets whose blockers are done). Use the `vp-work-ticket` skill to pick one up.
 - Numbering represents dependency order, not priority. Never start a ticket whose blockers are not `done`.
-- **Frontier Priority Policy:** Ticket **84** (Result-typed error handling — domain code returns, the edge decides) takes absolute precedence over every other frontier ticket, including 83 and the Phase 5 frontend tickets (`36`+). Every ticket from 42 onward adds a domain service, so the cost of 84 grows with each ticket taken before it. Tickets 79 (offline smoke runner refactor & CI cleanup) and 80 (developer experience, local dev setup & CI/CD acceleration) are done; take 84 next, then ticket 82's outstanding workstreams and 83.
+- **Frontier Priority Policy:** Ticket **84** (Result-typed error handling - domain code returns, the edge decides) is done, along with 79 (offline smoke runner refactor & CI cleanup), 80 (developer experience, local dev setup & CI/CD acceleration) and 82 (architecture remediation). The frontier is **83** (granular container topology - per-app images and a one-app dev loop) and **85** (the universal `Intl` formatting core), which 84 unblocks. Ticket 86 is unreachable: it is blocked by 63 and 72, which sit behind roughly twenty blocked frontend tickets, whatever its own prose claims.
 - Ticket status lives in the ticket's `**Status:**` line; run `python3 docs/tickets/gen-index.py` after changing it.
 
 ---
@@ -32,6 +32,14 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 11. **Enforce optimal execution & zero-waste workflows:** All developer setups, Docker builds, CI jobs, test suites, and scripts must be engineered for speed and caching. Performance or cycle-time regressions are treated as blocking defects.
 12. **Mandatory 1:1 test file correspondence:** Every single source file, helper, util, rule, normalizer, or adapter MUST map to at least one dedicated test file matching its name; grouping tests for multiple separate source files into a single bundled test file is a strict architectural violation. See [docs/standards/testing.md](docs/standards/testing.md).
 13. **Package tiers & dependency layers:** A shared package's **directory** declares where its code may run — `packages/universal/` (browser and server), `packages/server/` (Node/Bun only), `packages/client/` (browser only) — and `vp.layer` in its `package.json` declares which way its dependencies may point (strictly down; a same-layer edge is a violation). `server` and `client` never see each other, so no path leads from `apps/web` to a server package. `pnpm boundaries` runs ahead of `pnpm build` and `pnpm typecheck` and fails on a violation. See [packages/AGENTS.md](packages/AGENTS.md).
+
+14. **Results at the domain seam:** domain code *returns* its failures, it does not throw them. Rules in
+    `@vp/validation` (input only) and `@vp/domain-rules` (input plus an entity) are pure and return
+    `Result<T, Failure>` from `@vp/result`; services compose them and return a `Result` whose error union is
+    **inferred**; only two places unwrap one - `sendResult` in `apps/api/src/routes/` and `runner.ts` in
+    `apps/worker`, which converts through `RETRY_CLASS`. `catch` belongs to `tryCatch`/`fromPromise` at the
+    exact line an SDK is called. The discriminant is the existing `ErrorCode`: never a second vocabulary.
+    See [docs/standards/error-handling.md](docs/standards/error-handling.md) and [SDD ADR-24](docs/SDD.md#adr-24-result-typed-error-handling-domain-returns-the-edge-decides).
 
 ---
 
@@ -55,7 +63,7 @@ Shared packages live under `packages/<tier>/`, where the directory **is** the ti
 import rules; each tier directory has its own: [universal](packages/universal/AGENTS.md) · [server](packages/server/AGENTS.md) · [client](packages/client/AGENTS.md).
 
 - **`packages/universal/` — runs in a browser and on a server:**  
-  [api-contracts](packages/universal/api-contracts/AGENTS.md) · [domain](packages/universal/domain/AGENTS.md) · [errors](packages/universal/errors/AGENTS.md) · [pagination](packages/universal/pagination/AGENTS.md) · [permissions](packages/universal/permissions/AGENTS.md) · [tsconfig](packages/universal/tsconfig/AGENTS.md)
+  [api-contracts](packages/universal/api-contracts/AGENTS.md) · [domain](packages/universal/domain/AGENTS.md) · [domain-rules](packages/universal/domain-rules/AGENTS.md) · [errors](packages/universal/errors/AGENTS.md) · [pagination](packages/universal/pagination/AGENTS.md) · [permissions](packages/universal/permissions/AGENTS.md) · [result](packages/universal/result/AGENTS.md) · [tsconfig](packages/universal/tsconfig/AGENTS.md) · [validation](packages/universal/validation/AGENTS.md)
 - **`packages/client/` — browser only:**  
   [api-client](packages/client/api-client/AGENTS.md)
 - **`packages/server/` — Node/Bun only:**  
@@ -75,6 +83,7 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 - **Git Workflow & Pull Requests:** [docs/standards/git-workflow.md](docs/standards/git-workflow.md)
 - **File Discipline & Sizing:** [docs/standards/file-discipline.md](docs/standards/file-discipline.md)
 - **Package Boundaries — tiers & layers:** [packages/AGENTS.md](packages/AGENTS.md)
+- **Error handling, `Result` at the domain seam:** [docs/standards/error-handling.md](docs/standards/error-handling.md)
 - **Machine-enforced invariants:** [ARCHITECTURE.md §6](ARCHITECTURE.md) · `tests/architecture/`
 - **Declarative Authorization:** [docs/standards/authorization.md](docs/standards/authorization.md)
 - **Domain Glossary:** [CONTEXT.md](CONTEXT.md)

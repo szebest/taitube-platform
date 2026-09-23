@@ -1,5 +1,6 @@
 import * as http from 'node:http';
 import type { InMemoryMultipartStorage, InMemoryStorageClient } from '../../packages/server/adapters/index';
+import { isErr, ok, unwrapOr } from '../../packages/universal/result/src/index';
 
 export interface MockS3ServerInstance {
   server: http.Server;
@@ -52,25 +53,26 @@ export async function startMockS3Server(options: {
     }
 
     if (req.method === 'GET') {
-      try {
-        const data = await storage.getObject(bucket, key);
-        const meta = await storage.headObject(bucket, key);
-        res.statusCode = 200;
-        res.setHeader('Content-Type', meta?.contentType || 'application/octet-stream');
-        res.setHeader('Content-Length', String(data.length));
-        res.end(data);
-      } catch {
+      const data = await storage.getObject(bucket, key);
+      const meta = unwrapOr(await storage.headObject(bucket, key), null);
+      if (isErr(data)) {
         res.statusCode = 404;
         res.end('Not Found');
+        return;
       }
+
+      res.statusCode = 200;
+      res.setHeader('Content-Type', meta?.contentType || 'application/octet-stream');
+      res.setHeader('Content-Length', String(data.value.length));
+      res.end(data.value);
       return;
     }
 
     if (req.method === 'HEAD') {
-      const meta = await storage.headObject(bucket, key);
+      const meta = unwrapOr(await storage.headObject(bucket, key), null);
       if (meta) {
         res.statusCode = 200;
-        res.setHeader('Content-Type', meta.contentType);
+        res.setHeader('Content-Type', meta.contentType ?? 'application/octet-stream');
         res.setHeader('Content-Length', String(meta.contentLength));
         res.end();
       } else {
@@ -94,28 +96,27 @@ export async function startMockS3Server(options: {
   // Configure presigned URL hooks on the in-memory adapters
   storage.createPresignedPutUrl = async (params) => {
     const expiresIn = params.expiresInSeconds ?? 900;
-    return {
+    return ok({
       url: `${baseUrl}/${params.bucket}/${params.key}`,
       headers: {
         'content-type': params.contentType,
         'content-length': String(params.contentLength ?? 0),
       },
       expiresAt: new Date(Date.now() + expiresIn * 1000),
-    };
+    });
   };
 
   multipart.createPresignedPartUrl = async (params) => {
     const expiresIn = params.expiresInSeconds ?? 900;
-    return {
+    return ok({
       partNumber: params.partNumber,
       url: `${baseUrl}/${params.bucket}/${params.key}?uploadId=${params.uploadId}&partNumber=${params.partNumber}`,
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
-    };
+    });
   };
 
-  storage.createPresignedGetUrl = async (params) => {
-    return `${baseUrl}/${params.bucket}/${params.key}`;
-  };
+  storage.createPresignedGetUrl = async (params) =>
+    ok(`${baseUrl}/${params.bucket}/${params.key}`);
 
   const close = async (): Promise<void> => {
     await new Promise<void>((resolve) => {

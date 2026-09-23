@@ -530,7 +530,10 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 - `UnrecoverableError` (BullMQ built-in: corrupt container, unsupported codec, duration exceeded, source object missing) → **no retry**, straight to DLQ + `FAILED`.
 - Unknown errors default to transient with a lower attempt cap (3) — "when unsure, retry a little, then park".
 
-Decided at the throw site, never by regex on messages.
+Decided once per code, in the vocabulary, not at the throw site: `RETRY_CLASS` in
+`@vp/errors/src/retry-class.ts` is a `Readonly<Record<ErrorCode, 'permanent' | 'transient'>>`, so a new code
+does not compile until it is classified. `apps/worker/src/runner.ts` reads it to turn a stage's failed `Result`
+into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by regex on messages.
 
 ---
 
@@ -636,6 +639,62 @@ test-only edge resolves in CI and its types land in the emitted `.d.ts`, so only
 - Changing a package's tier means moving it, which is a deliberate act rather than a one-word edit.
 
 ---
+
+### ADR-24 — Result-Typed Error Handling: Domain Returns, the Edge Decides
+
+**Context.** A failure was not part of any signature. `VideoService.get(user, id)` typed as
+`Promise<VideoDetailView>`, could fail three ways, and the compiler knew about none of them, so adding a
+fourth was a non-breaking change no caller handled. It also threw `VIDEO_NOT_FOUND` both for an absent row and
+for a CASL refusal, so a service three layers below HTTP had decided that a private video looks like a missing
+one and no second consumer could choose differently.
+
+**Decision.** Domain code returns `Result<T, E>` from `@vp/result`; only the edge unwraps it.
+
+- **Rules are pure and universal.** `@vp/validation` (T2) takes the input and nothing else and returns
+  wire-safe `InputFailure`s; `@vp/domain-rules` (T3) takes input plus an entity plus policy. The split is what
+  makes wire safety a *type* rather than a per-field judgement, and what lets a browser form run the backend's
+  own rule before it makes a network call.
+- **Ports and adapters return `Result`.** Absence is not a failure: `findById` answers `ok(null)`, because
+  whether a missing row is an error is a domain decision. Every SDK call is wrapped at the exact line it is
+  made, so a `catch` around ten statements can no longer hide which one failed.
+- **The discriminant is the existing `ErrorCode`.** No second error vocabulary. `PROBLEM_STATUS` and
+  `RETRY_CLASS` are both `Readonly<Record<ErrorCode, ...>>`, so a new code is a compile error until both edges
+  have been told what it means.
+- **Two edges.** `sendResult` in `apps/api/src/routes/` renders a `Problem`; `runner.ts` converts to the BullMQ
+  throw via `toPipelineError`, which reads `RETRY_CLASS`. `PermanentError` / `TransientError` remain, as the
+  queue-boundary representation only (ADR-18).
+- **A disguise is a rule, not a rendering.** The public route answers "you may not read this" with the same
+  404 as "it does not exist", so the 403 cannot confirm the id. Which refusals get that treatment is a domain
+  decision - a refusal to *edit* a video the caller can already see hides nothing - so `VideoForbidden` carries
+  `readable` and `publicReadFailure` owns the disguise. Presenters call it; they do not re-derive it.
+
+**Rejected alternatives.**
+
+- **`neverthrow`.** A T1 universal package here carries zero runtime dependencies, must typecheck without
+  `@types/node` and must pass under both `vitest` and `bun test`. The combinator set is ~120 lines we then own
+  and shape to the `ErrorCode` discriminant, against a dependency in every browser bundle and a `ResultAsync`
+  class that makes `await` illegal in half the codebase.
+- **Exceptions plus a global handler only.** A global handler receives `unknown`, so it cannot be exhaustive,
+  and it is one function for the whole app, so it cannot let two routes render the same failure differently -
+  which is the requirement this ADR exists to satisfy. It stays, narrowed to a backstop for transport
+  validation, rate limiting, auth pre-handlers and genuine bugs.
+- **Go-style `[value, error]` tuples.** They do not narrow: nothing stops a caller reading `value` after a
+  non-null `error`, and the union has no discriminant for a `switch` to be exhaustive over.
+
+**Consequences.** Every port, repository, service and stage is converted. The three shrink-only allowlists
+that carried the migration are gone and their assertions are flat: `result-returning-ports.test.ts`,
+`no-domain-throw.test.ts` and `routes-unwrap-at-send-result.test.ts` simply fail on an offender.
+`legacy-catch-sites.ts` is the one list left and holds only the boundaries this ADR does not reach - process
+spawning, CLI exit-code handlers, telemetry setup, build and migration entrypoints, `apps/web`, and the two
+pre-handlers with no reply to render into. Wire format is unchanged: a client cannot tell that the server
+stopped throwing, apart from four additive codes.
+
+`@vp/pagination` composes `@vp/result` to answer `Result<CursorPayload, InvalidCursor>` from its codec, which
+moved it to T2 and carried `@vp/api-contracts` and `@vp/env-schema` to T3 and `@vp/config` to T4. A pipeline
+stage reports a media verdict as `MediaFailure`, whose discriminant is the `PipelineErrorCode` the process
+reported and which `RETRY_CLASS` already classifies.
+
+Authority: [docs/standards/error-handling.md](standards/error-handling.md).
 
 ## 5. Domain Model & Database Schema
 
@@ -965,6 +1024,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /v1/admin/categories` | Create category | `{ name, slug, description?, iconUrl?, sortOrder?, isActive? }` | `201 Category` / `409 CATEGORY_SLUG_CONFLICT` | Invalidates L1/L2 category cache across pods. |
 | `PATCH /v1/admin/categories/:id` | Update category | `{ name?, slug?, description?, iconUrl?, sortOrder?, isActive? }` | `200 Category` / `404` / `409` | Invalidates L1/L2 category cache across pods. |
 | `DELETE /v1/admin/categories/:id` | Delete category | — | `204` / `404` / `409 CATEGORY_IN_USE` | Checks video usage. Invalidates L1/L2 cache. |
+| `GET /v1/admin/videos/:id` | Read a video as an operator | — | `200 Video` / `403 FORBIDDEN` / `404` | Same `VideoService.get` call as `GET /videos/:id`; renders `FORBIDDEN` as a detailed 403 where the public route disguises it as 404 (ADR-24). |
 | `GET /admin/queues/*` | Bull Board UI | — | HTML | `@bull-board/fastify`. |
 | `GET /admin/dlq?cursor=` | List DLQ | — | `200 { items:[DlqEntry] }` | From Postgres mirror. |
 | `POST /admin/dlq/:id/replay` | Replay | `{ resetAttempts?: true }` | `202` | Re-adds to origin queue with fresh `jobId` suffix `--r{n}`; audit event. |
@@ -1014,7 +1074,16 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CANNOT_SUBSCRIBE_TO_SELF` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL` (pipeline).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL` (pipeline).
+
+A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
+
+| Property | Map | Lives in |
+|---|---|---|
+| the HTTP status it is reported as | `PROBLEM_STATUS` | `@vp/api-contracts/src/problem.ts` |
+| `'permanent'` or `'transient'` (ADR-18) | `RETRY_CLASS` | `@vp/errors/src/retry-class.ts` |
+
+Those two maps are the authority; this list is the enumeration, and `tests/architecture/error-code-drift.test.ts` fails if they disagree.
 
 ### 6.3 Video resource (response shape)
 
@@ -1039,6 +1108,7 @@ To maintain strict modularity, testability, and separation of concerns, the API 
 1. **Routes (`apps/api/src/routes/`) — Thin HTTP Transport Adapters**:
    - Sole responsibilities: Fastify route definitions, Zod schema validation (`params`, `query`, `body`), authentication extraction (`requireAuth`, or `request.user` on endpoints that also serve anonymous callers), delegating execution directly to a domain service that decides authorization through `AuthorizationPort`, and returning HTTP response codes/headers.
    - Invariant: Route handlers MUST NEVER invoke repositories directly, perform business logic, execute transactions, or manage entity lifecycles.
+   - A route hands the service's `Result` to `sendResult(reply, request, result, options?)`, the only place in `apps/api` where one is unwrapped (ADR-24). Its default mapping is total over `ErrorCode` through `PROBLEM_STATUS`, so a route wanting the standard response passes nothing; `options.on` overrides one code for one route, and a `*.presenter.ts` module owns a whole union with `assertNever` in its `default`.
 2. **Services (`apps/api/src/services/`) — Deep Domain Services & Composition**:
    - Encapsulate business logic, domain invariants, repository coordination, cache management (e.g. L1/L2 multi-tier caching and invalidation), and error classification.
    - Completely decoupled from Fastify; fully unit-testable in isolation using in-memory port doubles (`InMemoryRepositories`, `InMemoryCacheClient`, `InMemoryStorageClient`).
@@ -1807,10 +1877,13 @@ video-pipeline/
 │   ├── universal/                          # runs in a browser AND on a server — no node:*, no server SDK
 │   │   ├── api-contracts/                  # zod schema per endpoint: params, query, body, response, error codes (single source)
 │   │   ├── domain/                          # entities, value objects, ranking & eligibility policy, the status vocabulary
-│   │   ├── errors/                          # ApiErrorCodes + PipelineErrorCodes, ErrorCode union, Permanent/TransientError
+│   │   ├── domain-rules/                    # T3 — policy, invariants and state transitions over an entity; returns Result (ADR-24)
+│   │   ├── errors/                          # ApiErrorCodes + PipelineErrorCodes, ErrorCode union, Failure<C,D>, RETRY_CLASS, Permanent/TransientError
 │   │   ├── pagination/                      # CursorCodec, Paginator, the limit+1 sentinel protocol
 │   │   ├── permissions/                     # declarative CASL rules, normalizers, helpers — the one isomorphic rule engine
-│   │   └── tsconfig/                        # base + server/universal/client/spec presets
+│   │   ├── result/                          # T1 — Result<T,E>, combinators, tryCatch/fromPromise, assertNever. Zero dependencies
+│   │   ├── tsconfig/                        # base + server/universal/client/spec presets
+│   │   └── validation/                      # T2 — predicates over submitted input only; wire-safe failures the browser runs first
 │   ├── client/                             # browser only
 │   │   └── api-client/                      # typed fetchers mapped from @vp/api-contracts; base URL injected
 │   └── server/                             # Node/Bun only

@@ -4,3 +4,5 @@ export * from './public-feed.js';
 export * from './reaction.js';
 export * from './status-vocabulary.js';
 export * from './subscription.js';
+export * from './upload.js';
+export * from './video.js';

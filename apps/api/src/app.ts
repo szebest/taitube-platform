@@ -2,7 +2,9 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
+import { toPipelineError } from '@vp/errors';
 import { getMetrics } from '@vp/observability';
+import { isErr } from '@vp/result';
 import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { type AdapterOverrides, resolveAdapterSet } from './composition/adapter-set';
@@ -14,6 +16,7 @@ import { registerHttpMetricsPlugin } from './plugins/http-metrics';
 import { registerAdminCategoriesRoutes } from './routes/admin/categories';
 import { registerAdminDlqRoutes } from './routes/admin/dlq';
 import { registerAdminQueuesRoutes } from './routes/admin/queues';
+import { registerAdminVideosRoutes } from './routes/admin/videos';
 import { registerCategoriesRoutes } from './routes/categories';
 import { registerChannelsRoutes } from './routes/channels';
 import { registerDevJwksRoute } from './routes/dev-jwks';
@@ -51,7 +54,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   const housekeepingQueue = adapters.queues.get('housekeeping');
   if (housekeepingQueue) {
-    await registerHousekeepingSchedulers(housekeepingQueue);
+    const registered = await registerHousekeepingSchedulers(housekeepingQueue);
+    if (isErr(registered)) throw toPipelineError(registered.error);
   }
 
   const services = await createServiceSet(adapters, { cdnBaseUrl, rawBucket, limits });
@@ -91,6 +95,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerFeedRoutes(app, { feedService: services.feedService });
   registerCategoriesRoutes(app, { categoryService: services.categoryService });
   registerAdminCategoriesRoutes(app, { categoryService: services.categoryService });
+  registerAdminVideosRoutes(app, { videoService: services.videoService });
   registerMeRoutes(app, { channelService: services.channelService });
   registerChannelsRoutes(app, { channelService: services.channelService });
   registerSubscriptionsRoutes(app, { subscriptionService: services.subscriptionService });

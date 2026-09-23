@@ -15,16 +15,24 @@ if (user.role !== 'admin' && video.userId !== user.id) {
 }
 ```
 
-Instead, all authorization decisions must be evaluated declaratively through `@vp/permissions`:
+Instead, all authorization decisions must be evaluated declaratively through `@vp/permissions`, and
+the verdict is **returned**, never thrown (ADR-24). `authorize` in `@vp/domain-rules` owns the
+401-vs-403 distinction, so no rule collapses a missing token into a refusal the caller cannot act on:
 
 ```typescript
-// ✅ CORRECT: Declarative evaluation via pure ability engine & assertion guard
-assertCan(canUpdateVideo({ user, video }), {
-  action: 'update',
-  subject: 'Video',
-  user,
-});
+// ✅ CORRECT: a pure ability answers the verdict, the rule returns the refusal
+export function decideVideoMetadataUpdate(
+  input: UpdateVideoMetadataInput
+): Result<VideoMetadataPatch, UpdateVideoMetadataFailure> {
+  if (!canUpdateVideo({ user: input.editor, video: readable.value, fields })) {
+    return err(videoEditForbidden(input.videoId));
+  }
+  return map(validateVideoMetadata(input.patch), () => input.patch);
+}
 ```
+
+`assertCan` is still exported from `@vp/permissions` for `apps/web`, whose provider builds
+`usePermissions().assertCan` on it. It has no place in a rule, a service or a route.
 
 ---
 
@@ -77,9 +85,9 @@ Centralized normalizers eliminate ad-hoc object spreads and provide canonical CA
 │  (Database SQL)  │          │ (Domain Services)│          │(Error/Validation)│          │  (Frontend UI)   │
 │                  │          │                  │          │                  │          │                  │
 │ - rulesToSql     │          │ - can()          │          │ - assertCan()    │          │ - useCan()       │
-│ - drizzleWhere   │          │ - assertCan()    │          │ - RFC 9457 401   │          │ - PermissionsCtx │
-│ - accessibleBy   │          │ - forUser()      │          │ - RFC 9457 403   │          │ - <Can /> slot   │
-│ - notDeletedScope│          │ - memoized       │          │ - invalidParams  │          │ - zero bloat     │
+│ - drizzleWhere   │          │ - forUser()      │          │ - RFC 9457 401   │          │ - PermissionsCtx │
+│ - accessibleBy   │          │ - memoized       │          │ - RFC 9457 403   │          │ - <Can /> slot   │
+│ - notDeletedScope│          │                  │          │ - invalidParams  │          │ - zero bloat     │
 └──────────────────┘          └──────────────────┘          └──────────────────┘          └──────────────────┘
 ```
 
@@ -124,7 +132,8 @@ drift. `toOutboxRecord` is the exception, confining the one assertion that jsonb
 ### 2. Dependency Inversion in Domain Services (`AuthorizationPort`)
 Domain services depend on the abstract port `AuthorizationPort` (`packages/server/core/ports/authorization.port.ts`).
 - Concrete implementation: `CaslAuthorizationAdapter` (`packages/server/adapters/authorization/casl-authorization-adapter.ts`).
-- Holds memoized `AppAbility`, implements `can(action, subject)`, `assertCan(...)`, and `.forUser(user)`.
+- Holds memoized `AppAbility`, implements `can(action, subject)` and `.forUser(user)`. It answers the
+  verdict only: the refusal belongs to `authorize(actor, allowed, context)` in `@vp/domain-rules` (ADR-24).
 - Test doubles: `PermissiveAuthorizationAdapter` and `StrictAuthorizationAdapter` in `packages/server/adapters/in-memory/`.
 
 ### 3. HTTP Transport Carries Identity, Not Permissions
@@ -132,9 +141,10 @@ Domain services depend on the abstract port `AuthorizationPort` (`packages/serve
 domain service, which makes the decision through `AuthorizationPort`:
 - `plugins/auth.ts` populates `request.user` from a Bearer JWT or a valid `x-admin-token`.
 - `requireAuth(request)` throws RFC 9457 `401 UNAUTHORIZED` when an endpoint needs a caller and there is none.
-- `services/admin-access.ts` holds the one admin gate; operator services call it with the resolved caller.
-- The error handler turns the `PermanentError` a rule helper raises into `401` (anonymous) or `403`
-  (authenticated but refused).
+- `decideAdminAccess` in `@vp/domain-rules` holds the one admin gate; operator services compose it with
+  the resolved caller.
+- `sendResult` renders the returned `UNAUTHORIZED` as `401` and `FORBIDDEN` as `403`. The global error
+  handler is a backstop for transport failures and auth pre-handler rejections, not for a rule's verdict.
 
 ### 4. Frontend Reactive State (`ReactPermissionsAdapter`) & Headless UI
 In `apps/web`:

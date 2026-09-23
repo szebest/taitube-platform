@@ -4,6 +4,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { ReactionService } from '../services/reaction-service';
 import { contractPaths, contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
 
 export interface ReactionsRouteOptions {
   reactionService: ReactionService;
@@ -33,8 +34,11 @@ export function registerReactionsRoutes(
       async (request, reply) => {
         const user = requireAuth(request);
         const { id } = request.params;
-        const result = await reactionService.setReaction(user, id, request.body.type);
-        return reply.status(200).send(result);
+        return sendResult(
+          reply,
+          request,
+          await reactionService.setReaction(user, id, request.body.type)
+        );
       }
     );
   }
@@ -51,8 +55,7 @@ export function registerReactionsRoutes(
       async (request, reply) => {
         const user = requireAuth(request);
         const { id } = request.params;
-        const result = await reactionService.getUserReaction(user, id);
-        return reply.status(200).send(result);
+        return sendResult(reply, request, await reactionService.getUserReaction(user, id));
       }
     );
   }

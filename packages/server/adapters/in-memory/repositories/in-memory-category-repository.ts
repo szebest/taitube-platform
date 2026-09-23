@@ -1,11 +1,16 @@
+import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import type {
   Category,
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
 } from '@vp/domain';
-import type { CategoryRepositoryPort } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import {
+  type CategorySlugConflict,
+  type DatabaseUnavailable,
+  categorySlugConflict,
+} from '@vp/errors';
+import { type Result, err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
@@ -13,6 +18,10 @@ export interface InMemoryCategoryRepositoryOptions {
   videosRepo?: InMemoryVideoRepository;
 }
 
+/**
+ * Reports the same failures as the Postgres adapter, including the slug conflict a unique index
+ * produces. It decides nothing else: whether a missing category is an error belongs to the rule.
+ */
 export class InMemoryCategoryRepository implements CategoryRepositoryPort {
   private readonly categories = new Map<string, Category>();
   private videosRepo?: InMemoryVideoRepository;
@@ -29,40 +38,37 @@ export class InMemoryCategoryRepository implements CategoryRepositoryPort {
     this.categories.clear();
   }
 
-  async findAll(options?: ListCategoriesOptions): Promise<Category[]> {
-    let result = Array.from(this.categories.values());
-    if (options?.activeOnly) {
-      result = result.filter((c) => c.isActive);
-    }
-    return result.sort((a, b) => {
-      if (a.sortOrder !== b.sortOrder) {
-        return a.sortOrder - b.sortOrder;
-      }
-      return a.name.localeCompare(b.name);
-    });
-  }
-
-  async findById(id: string): Promise<Category | null> {
-    return this.categories.get(id) ?? null;
-  }
-
-  async findBySlug(slug: string): Promise<Category | null> {
-    for (const cat of this.categories.values()) {
-      if (cat.slug === slug) {
-        return cat;
-      }
+  private bySlug(slug: string): Category | null {
+    for (const category of this.categories.values()) {
+      if (category.slug === slug) return category;
     }
     return null;
   }
 
-  async create(input: CreateCategoryInput): Promise<Category> {
-    const existing = await this.findBySlug(input.slug);
-    if (existing) {
-      throw new PermanentError(
-        ErrorCodes.CATEGORY_SLUG_CONFLICT,
-        `Category with slug "${input.slug}" already exists`
-      );
-    }
+  async findAll(options?: ListCategoriesOptions): Promise<Result<Category[], DatabaseUnavailable>> {
+    const all = Array.from(this.categories.values()).filter(
+      (category) => !options?.activeOnly || category.isActive
+    );
+
+    return ok(
+      all.sort((a, b) =>
+        a.sortOrder === b.sortOrder ? a.name.localeCompare(b.name) : a.sortOrder - b.sortOrder
+      )
+    );
+  }
+
+  async findById(id: string): Promise<Result<Category | null, DatabaseUnavailable>> {
+    return ok(this.categories.get(id) ?? null);
+  }
+
+  async findBySlug(slug: string): Promise<Result<Category | null, DatabaseUnavailable>> {
+    return ok(this.bySlug(slug));
+  }
+
+  async create(
+    input: CreateCategoryInput
+  ): Promise<Result<Category, DatabaseUnavailable | CategorySlugConflict>> {
+    if (this.bySlug(input.slug)) return err(categorySlugConflict(input.slug));
 
     const now = new Date();
     const category: Category = {
@@ -78,23 +84,19 @@ export class InMemoryCategoryRepository implements CategoryRepositoryPort {
     };
 
     this.categories.set(category.id, category);
-    return category;
+    return ok(category);
   }
 
-  async update(id: string, input: UpdateCategoryInput): Promise<Category> {
+  async update(
+    id: string,
+    input: UpdateCategoryInput
+  ): Promise<Result<Category | null, DatabaseUnavailable | CategorySlugConflict>> {
     const existing = this.categories.get(id);
-    if (!existing) {
-      throw new PermanentError(ErrorCodes.CATEGORY_NOT_FOUND, `Category "${id}" not found`);
-    }
+    if (!existing) return ok(null);
 
     if (input.slug && input.slug !== existing.slug) {
-      const slugOwner = await this.findBySlug(input.slug);
-      if (slugOwner && slugOwner.id !== id) {
-        throw new PermanentError(
-          ErrorCodes.CATEGORY_SLUG_CONFLICT,
-          `Category with slug "${input.slug}" already exists`
-        );
-      }
+      const owner = this.bySlug(input.slug);
+      if (owner && owner.id !== id) return err(categorySlugConflict(input.slug));
     }
 
     const updated: Category = {
@@ -109,30 +111,15 @@ export class InMemoryCategoryRepository implements CategoryRepositoryPort {
     };
 
     this.categories.set(id, updated);
-    return updated;
+    return ok(updated);
   }
 
-  async delete(id: string): Promise<void> {
-    const existing = this.categories.get(id);
-    if (!existing) {
-      throw new PermanentError(ErrorCodes.CATEGORY_NOT_FOUND, `Category "${id}" not found`);
-    }
-
-    const count = await this.countVideos(id);
-    if (count > 0) {
-      throw new PermanentError(
-        ErrorCodes.CATEGORY_IN_USE,
-        `Cannot delete category "${id}" because it is referenced by ${count} video(s)`
-      );
-    }
-
+  async delete(id: string): Promise<Result<void, DatabaseUnavailable>> {
     this.categories.delete(id);
+    return ok();
   }
 
-  async countVideos(categoryId: string): Promise<number> {
-    if (this.videosRepo) {
-      return this.videosRepo.countByCategoryId(categoryId);
-    }
-    return 0;
+  async countVideos(categoryId: string): Promise<Result<number, DatabaseUnavailable>> {
+    return ok(this.videosRepo ? await this.videosRepo.countByCategoryId(categoryId) : 0);
   }
 }

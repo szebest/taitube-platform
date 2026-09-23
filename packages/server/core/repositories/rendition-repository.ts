@@ -1,4 +1,6 @@
 import type { RenditionStatus } from '@vp/domain';
+import type { DatabaseUnavailable } from '@vp/errors';
+import type { Result } from '@vp/result';
 
 export interface RenditionRecord {
   id: string;
@@ -32,12 +34,14 @@ export interface NewRenditionInput {
 }
 
 export abstract class RenditionRepository {
-  abstract create(data: NewRenditionInput): Promise<RenditionRecord>;
-  abstract findByVideoId(videoId: string): Promise<RenditionRecord[]>;
-  abstract findByVideoIds(videoIds: string[]): Promise<RenditionRecord[]>;
+  abstract create(data: NewRenditionInput): Promise<Result<RenditionRecord, DatabaseUnavailable>>;
+  abstract findByVideoId(videoId: string): Promise<Result<RenditionRecord[], DatabaseUnavailable>>;
+  abstract findByVideoIds(
+    videoIds: string[]
+  ): Promise<Result<RenditionRecord[], DatabaseUnavailable>>;
   abstract update(
     videoId: string,
     name: string,
     patch: Partial<RenditionRecord>
-  ): Promise<RenditionRecord | null>;
+  ): Promise<Result<RenditionRecord | null, DatabaseUnavailable>>;
 }

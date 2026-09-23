@@ -11,6 +11,13 @@
 
 **Status:** ready
 
+> **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
+> `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
+> checks belong in `@vp/validation`, entity-dependent decisions in `@vp/domain-rules`, and routes hand the
+> `Result` to `sendResult`. A new error code must land in `ApiErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS` and
+> SDD §6.2 together, or it does not compile. Authority:
+> [docs/standards/error-handling.md](../standards/error-handling.md).
+
 > **Ticket 85 note:** the rename sweep must also cover `@vp/intl`, `@vp/messages` and `@vp/intl-react`,
 > introduced by [85](85-universal-intl-formatting-message-core.md).
 

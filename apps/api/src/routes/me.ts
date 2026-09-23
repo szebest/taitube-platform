@@ -4,6 +4,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { ChannelService } from '../services/channel-service';
 import { contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
 
 export interface MeRoutesOptions {
   channelService: ChannelService;
@@ -28,8 +29,7 @@ export function registerMeRoutes(app: FastifyInstance, options: MeRoutesOptions)
     },
     async (request, reply) => {
       const authUser = requireAuth(request);
-      const result = await channelService.getAccount(authUser.id);
-      return reply.status(200).send(result);
+      return sendResult(reply, request, await channelService.getAccount(authUser.id));
     }
   );
 
@@ -44,8 +44,11 @@ export function registerMeRoutes(app: FastifyInstance, options: MeRoutesOptions)
     },
     async (request, reply) => {
       const authUser = requireAuth(request);
-      const updated = await channelService.updateChannel(authUser.id, request.body);
-      return reply.status(200).send(updated);
+      return sendResult(
+        reply,
+        request,
+        await channelService.updateChannel(authUser.id, request.body)
+      );
     }
   );
 }

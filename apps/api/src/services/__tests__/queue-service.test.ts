@@ -1,6 +1,9 @@
 import { InMemoryJobQueue } from '@vp/adapters';
 import type { JobQueue } from '@vp/core/ports';
+import { ErrorCodes, queueUnavailable } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
+import { err } from '@vp/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { QueueService } from '../queue-service';
 
 function serviceWith(...names: string[]): { service: QueueService; queues: InMemoryJobQueue[] } {
@@ -23,7 +26,7 @@ describe('apps/api: QueueService', () => {
     const { service, queues } = serviceWith('transcode-1080p');
     await queues[0]?.add('test-job', { foo: 'bar' });
 
-    const metrics = await service.getQueueMetrics();
+    const metrics = expectOk(await service.getQueueMetrics());
 
     expect(metrics).toHaveLength(QUEUES.length);
     expect(metrics.find((m) => m.name === 'transcode-1080p')?.counts.waiting).toBe(1);
@@ -31,30 +34,35 @@ describe('apps/api: QueueService', () => {
   });
 
   it('never reports zeroes for a registered queue whose port cannot answer', async () => {
-    const stub = { getName: () => 'probe' } as unknown as JobQueue;
+    const stub = {
+      getName: () => 'probe',
+      isPaused: async () => err(queueUnavailable('isPaused')),
+    } as unknown as JobQueue;
     const service = new QueueService({ queues: new Map<string, JobQueue>([['probe', stub]]) });
 
-    await expect(service.getQueueMetrics()).rejects.toThrow(TypeError);
+    expect(expectErr(await service.getQueueMetrics()).code).toBe(ErrorCodes.QUEUE_UNAVAILABLE);
   });
 
   it('pauses and resumes a registered queue', async () => {
     const { service, queues } = serviceWith('package');
 
+    const queue = queues[0] as InMemoryJobQueue;
+
     await service.pauseQueue('package');
-    expect(await queues[0]?.isPaused()).toBe(true);
+    expect(expectOk(await queue.isPaused())).toBe(true);
 
     await service.resumeQueue('package');
-    expect(await queues[0]?.isPaused()).toBe(false);
+    expect(expectOk(await queue.isPaused())).toBe(false);
   });
 
   it.each([{ method: 'pauseQueue' as const }, { method: 'resumeQueue' as const }])(
-    '$method rejects an unknown queue',
+    '$method reports an unknown queue rather than throwing',
     async ({ method }) => {
       const { service } = serviceWith();
 
-      await expect(service[method]('invalid-queue')).rejects.toThrow(
-        'Queue "invalid-queue" not found'
-      );
+      const refused = expectErr(await service[method]('invalid-queue'));
+      expect(refused.code).toBe(ErrorCodes.INTERNAL);
+      expect(refused.message).toContain('invalid-queue');
     }
   );
 

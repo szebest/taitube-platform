@@ -5,10 +5,8 @@
  */
 export const OVERSIZED_SOURCES: readonly string[] = [
   'apps/worker/src/stages/transcode.ts',
-  'packages/server/adapters/bullmq/bullmq-job-queue.ts',
   'packages/server/adapters/in-memory/repositories/in-memory-video-repository.ts',
   'packages/server/adapters/postgres/repositories/postgres-video-repository.ts',
-  'packages/server/adapters/s3/s3-storage-client.ts',
   'packages/server/db/src/schema.ts',
   'packages/server/upload-client/src/client.ts',
 ];

@@ -1,28 +1,22 @@
-import type { AuthorizationPort, JobQueue } from '@vp/core/ports';
+import type { JobQueue } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
-import type { VideoStatus } from '@vp/domain';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import {
+  DELETABLE_STATUSES,
+  REPROCESSABLE_STATUSES,
+  type VideoLifecycleFailure,
+  decideVideoDelete,
+  decideVideoReprocess,
+} from '@vp/domain-rules';
+import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
-import { canDeleteVideo, canUpdateVideo } from '@vp/permissions';
+import { type Result, err, isErr, ok } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
-export const REPROCESSABLE_STATUSES: VideoStatus[] = ['READY', 'FAILED', 'PROCESSING'];
-
-export const DELETABLE_STATUSES: VideoStatus[] = [
-  'UPLOADING',
-  'UPLOADED',
-  'PROBING',
-  'PROCESSING',
-  'READY',
-  'FAILED',
-  'REJECTED',
-  'ABANDONED',
-];
+export { DELETABLE_STATUSES, REPROCESSABLE_STATUSES };
 
 export interface VideoLifecycleDeps {
   videos: VideoRepository;
-  auth: AuthorizationPort;
   probeQueue?: JobQueue;
 }
 
@@ -37,105 +31,76 @@ export interface SoftDeleteResult {
   status: 'DELETED';
 }
 
+export type VideoLifecycleServiceFailure =
+  | VideoLifecycleFailure
+  | VersionConflict
+  | DatabaseUnavailable;
+
 /**
- * Re-runs the pipeline for an existing source under a fresh generation (SDD §6.3).
- * The generation bump is what keeps the new probe job id distinct from the one
- * the first run already consumed.
+ * Re-runs the pipeline for an existing source under a fresh generation (SDD §6.3). The generation
+ * bump is what keeps the new probe job id distinct from the one the first run already consumed.
  */
 export async function reprocessVideo(
   deps: VideoLifecycleDeps,
   user: AuthUser,
   videoId: string,
   options: { traceparent?: string } = {}
-): Promise<ReprocessResult> {
-  const video = await deps.videos.findById(videoId);
-  if (!video) throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+): Promise<Result<ReprocessResult, VideoLifecycleServiceFailure>> {
+  const found = await deps.videos.findById(videoId);
+  if (isErr(found)) return found;
 
-  deps.auth.assertCan(
-    canUpdateVideo,
-    { user: user, video },
-    {
-      action: 'update',
-      subject: 'Video',
-      message: 'Only the video owner or an admin may reprocess this video',
-    }
-  );
+  const decided = decideVideoReprocess({ actor: user, video: found.value, videoId });
+  if (isErr(decided)) return decided;
 
-  if (!REPROCESSABLE_STATUSES.includes(video.status)) {
-    throw new PermanentError(
-      ErrorCodes.VALIDATION_FAILED,
-      `Cannot reprocess video with status ${video.status}. Must be ${REPROCESSABLE_STATUSES.join(', ')}.`
-    );
-  }
-
-  const generation = (video.generation || 1) + 1;
+  const generation = (decided.value.generation || 1) + 1;
   const dispatch = buildProbeDispatch({
     videoId,
-    sourceKey: video.sourceKey,
+    sourceKey: decided.value.sourceKey,
     generation,
     traceparent: options.traceparent || getActiveTraceparent() || createTraceparent(),
   });
 
   const transitioned = await deps.videos.transition({
     videoId,
-    from: REPROCESSABLE_STATUSES,
+    from: [...REPROCESSABLE_STATUSES],
     to: 'PROBING',
     eventType: 'video.reprocessing',
     eventPayload: { generation, requestedBy: user.id },
     patch: { generation, errorCode: null, errorMessage: null },
     outbox: dispatch.outbox,
   });
-
-  if (!transitioned) {
-    throw new PermanentError(
-      ErrorCodes.VERSION_CONFLICT,
-      'State conflict while transitioning video to PROBING for reprocess'
-    );
-  }
+  if (isErr(transitioned)) return transitioned;
+  if (!transitioned.value) return err(versionConflict(videoId));
 
   await enqueueProbe(deps.probeQueue, dispatch);
 
-  return { videoId, status: 'PROBING', generation };
+  return ok({ videoId, status: 'PROBING', generation });
 }
 
-/**
- * Soft deletes a video (SDD §6.1, §9.8, Ticket 17 AC 4).
- */
+/** Soft deletes a video (SDD §6.1, §9.8). Deleting an already-deleted video is a no-op, not a failure. */
 export async function softDeleteVideo(
   deps: VideoLifecycleDeps,
   user: AuthUser,
   videoId: string
-): Promise<SoftDeleteResult> {
-  const video = await deps.videos.findById(videoId);
-  if (!video) throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+): Promise<Result<SoftDeleteResult, VideoLifecycleServiceFailure>> {
+  const found = await deps.videos.findById(videoId);
+  if (isErr(found)) return found;
 
-  deps.auth.assertCan(
-    canDeleteVideo,
-    { user: user, video },
-    {
-      action: 'delete',
-      subject: 'Video',
-      message: 'Only the video owner or an admin may delete this video',
-    }
-  );
+  if (found.value?.status === 'DELETED') return ok({ videoId, status: 'DELETED' });
 
-  if (video.status === 'DELETED') return { videoId, status: 'DELETED' };
+  const decided = decideVideoDelete({ actor: user, video: found.value, videoId });
+  if (isErr(decided)) return decided;
 
   const transitioned = await deps.videos.transition({
     videoId,
-    from: DELETABLE_STATUSES,
+    from: [...DELETABLE_STATUSES],
     to: 'DELETED',
     eventType: 'video.deleted',
     eventPayload: { requestedBy: user.id },
     patch: { deletedAt: new Date() },
   });
+  if (isErr(transitioned)) return transitioned;
+  if (!transitioned.value) return err(versionConflict(videoId));
 
-  if (!transitioned) {
-    throw new PermanentError(
-      ErrorCodes.VERSION_CONFLICT,
-      'State conflict while transitioning video to DELETED'
-    );
-  }
-
-  return { videoId, status: 'DELETED' };
+  return ok({ videoId, status: 'DELETED' });
 }

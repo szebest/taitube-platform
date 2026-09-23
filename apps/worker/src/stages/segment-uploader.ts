@@ -1,8 +1,9 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { StorageClient } from '@vp/core/ports';
-import { ErrorCodes, TransientError } from '@vp/errors';
+import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
 import type { Logger } from '@vp/observability';
+import { type Result, err, isErr, ok } from '@vp/result';
 import { getHeaderMapping, renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
 
 export interface SegmentUploaderOptions {
@@ -46,7 +47,7 @@ export class StreamingSegmentUploader {
   private queue: string[] = [];
   private readonly queuedSet = new Set<string>();
   private readonly uploaded = new Map<string, number>(); // filename -> sizeBytes
-  private fatalError: Error | null = null;
+  private fatalError: MediaFailure | null = null;
   private activeWorkers = 0;
   private idleResolvers: Array<() => void> = [];
 
@@ -70,30 +71,26 @@ export class StreamingSegmentUploader {
     if (this.isRunning) return;
     this.isRunning = true;
     this.pollTimer = setInterval(() => {
-      this.scanDirectory().catch((err) => {
-        if (!this.fatalError) this.fatalError = err;
-      });
+      void this.scanDirectory();
     }, 100);
-    this.scanDirectory().catch(() => {});
+    void this.scanDirectory();
   }
 
+  /** The directory may not exist yet, or be mid-rename, so an unreadable scan is simply retried. */
   private async scanDirectory(): Promise<void> {
     if (this.fatalError) return;
-    try {
-      const files = await fs.readdir(this.outputDir);
-      for (const file of files) {
-        // FFmpeg writes seg_%05d.ts.tmp then renames to seg_%05d.ts
-        if (file.endsWith('.ts') && !file.endsWith('.tmp')) {
-          if (!this.queuedSet.has(file)) {
-            this.queuedSet.add(file);
-            this.queue.push(file);
-          }
-        }
+
+    const files = await fs.readdir(this.outputDir).catch(() => null);
+    if (!files) return;
+
+    for (const file of files) {
+      // FFmpeg writes seg_%05d.ts.tmp then renames to seg_%05d.ts
+      if (file.endsWith('.ts') && !file.endsWith('.tmp') && !this.queuedSet.has(file)) {
+        this.queuedSet.add(file);
+        this.queue.push(file);
       }
-      this.scheduleWork();
-    } catch {
-      // Directory may not be created yet or in transition
     }
+    this.scheduleWork();
   }
 
   private scheduleWork(): void {
@@ -101,64 +98,62 @@ export class StreamingSegmentUploader {
       const file = this.queue.shift();
       if (!file) break;
       this.activeWorkers++;
-      this.uploadSegment(file)
-        .catch(() => {})
-        .finally(() => {
-          this.activeWorkers--;
-          this.checkIdle();
-          this.scheduleWork();
-        });
+      this.uploadSegment(file).then((uploaded) => {
+        if (isErr(uploaded) && !this.fatalError) this.fatalError = uploaded.error;
+        this.activeWorkers--;
+        this.checkIdle();
+        this.scheduleWork();
+      });
     }
   }
 
-  private async uploadSegment(filename: string): Promise<void> {
+  private async uploadSegment(filename: string): Promise<Result<void, MediaFailure>> {
     const filePath = path.join(this.outputDir, filename);
     const key = renditionObjectKey(this.videoId, this.rendition, filename, this.generation);
     const headers = getHeaderMapping(filename);
 
-    let attempts = 0;
-    while (attempts < this.maxRetries) {
-      attempts++;
-      try {
-        const stat = await fs.stat(filePath);
-        const body = await fs.readFile(filePath);
+    let lastMessage = 'unknown';
 
-        await this.storage.uploadObject({
-          bucket: this.publicBucket,
-          key,
-          body,
-          contentType: headers.contentType,
-          cacheControl: headers.cacheControl,
-        });
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      const stat = await fs.stat(filePath).catch(() => null);
+      const body = stat ? await fs.readFile(filePath).catch(() => null) : null;
 
+      const uploaded =
+        stat && body
+          ? await this.storage.uploadObject({
+              bucket: this.publicBucket,
+              key,
+              body,
+              contentType: headers.contentType,
+              cacheControl: headers.cacheControl,
+            })
+          : err({ message: `Segment ${filename} could not be read` });
+
+      if (!isErr(uploaded)) {
         // Delete immediately after successful upload to keep local disk bounded
         await fs.unlink(filePath).catch(() => {});
-        this.uploaded.set(filename, stat.size);
-        return;
-      } catch (err: unknown) {
-        this.logger.warn(
-          {
-            filename,
-            attempt: attempts,
-            maxRetries: this.maxRetries,
-            error: (err as Error).message,
-          },
-          `Segment upload attempt ${attempts} failed, retrying...`
-        );
+        this.uploaded.set(filename, (stat as { size: number }).size);
+        return ok();
+      }
 
-        if (attempts >= this.maxRetries) {
-          const transErr = new TransientError(
-            ErrorCodes.STORAGE_UNAVAILABLE,
-            `Failed to upload segment ${filename} after ${attempts} attempts: ${(err as Error).message}`
-          );
-          this.fatalError = transErr;
-          this.checkIdle();
-          throw transErr;
-        }
+      lastMessage = uploaded.error.message;
+      this.logger.warn(
+        { filename, attempt, maxRetries: this.maxRetries, error: lastMessage },
+        `Segment upload attempt ${attempt} failed, retrying...`
+      );
 
-        await new Promise((resolve) => setTimeout(resolve, this.retryDelayMs * attempts));
+      if (attempt < this.maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, this.retryDelayMs * attempt));
       }
     }
+
+    return err(
+      mediaFailure(
+        `transcode-${this.rendition}`,
+        ErrorCodes.STORAGE_UNAVAILABLE,
+        `Failed to upload segment ${filename} after ${this.maxRetries} attempts: ${lastMessage}`
+      )
+    );
   }
 
   private checkIdle(): void {
@@ -176,44 +171,54 @@ export class StreamingSegmentUploader {
     });
   }
 
-  async stop(success: boolean): Promise<UploaderResult | null> {
+  /** `null` means the encode failed, so there is nothing to finish uploading. */
+  async stop(success: boolean): Promise<Result<UploaderResult | null, MediaFailure>> {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
     }
     this.isRunning = false;
 
-    if (!success) {
-      return null;
-    }
+    if (!success) return ok(null);
 
     // Drain remaining completed segments
     await this.scanDirectory();
     await this.waitForIdle();
 
-    if (this.fatalError) {
-      throw this.fatalError;
-    }
+    if (this.fatalError) return err(this.fatalError);
 
     // Playlist object is written ONLY after every segment upload succeeded (AC 2, SDD §9.7)
     const playlistPath = path.join(this.outputDir, 'index.m3u8');
-    let playlistContent: Buffer;
-    try {
-      playlistContent = await fs.readFile(playlistPath);
-    } catch {
-      throw new Error(`Playlist index.m3u8 not found in ${this.outputDir}`);
+    const playlistContent = await fs.readFile(playlistPath).catch(() => null);
+    if (!playlistContent) {
+      return err(
+        mediaFailure(
+          `transcode-${this.rendition}`,
+          ErrorCodes.SEGMENT_VERIFY_FAILED,
+          `Playlist index.m3u8 not found in ${this.outputDir}`
+        )
+      );
     }
 
     const playlistKey = renditionPlaylistKey(this.videoId, this.rendition, this.generation);
     const playlistHeaders = getHeaderMapping('index.m3u8');
 
-    await this.storage.uploadObject({
+    const uploaded = await this.storage.uploadObject({
       bucket: this.publicBucket,
       key: playlistKey,
       body: playlistContent,
       contentType: playlistHeaders.contentType,
       cacheControl: playlistHeaders.cacheControl,
     });
+    if (isErr(uploaded)) {
+      return err(
+        mediaFailure(
+          `transcode-${this.rendition}`,
+          ErrorCodes.STORAGE_UNAVAILABLE,
+          uploaded.error.message
+        )
+      );
+    }
 
     await fs.unlink(playlistPath).catch(() => {});
 
@@ -222,10 +227,6 @@ export class StreamingSegmentUploader {
       totalBytes += size;
     }
 
-    return {
-      segmentCount: this.uploaded.size,
-      totalBytes,
-      playlistKey,
-    };
+    return ok({ segmentCount: this.uploaded.size, totalBytes, playlistKey });
   }
 }

@@ -1,4 +1,6 @@
 import type { UserRole } from '@vp/domain';
+import type { DatabaseUnavailable } from '@vp/errors';
+import type { Result } from '@vp/result';
 
 export type UserTier = 'free' | 'pro' | 'enterprise';
 
@@ -26,6 +28,6 @@ export interface UpsertUserInput {
 }
 
 export abstract class UserRepository {
-  abstract findById(id: string): Promise<UserRecord | null>;
-  abstract upsert(user: UpsertUserInput): Promise<UserRecord>;
+  abstract findById(id: string): Promise<Result<UserRecord | null, DatabaseUnavailable>>;
+  abstract upsert(user: UpsertUserInput): Promise<Result<UserRecord, DatabaseUnavailable>>;
 }

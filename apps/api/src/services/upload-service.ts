@@ -1,6 +1,4 @@
-import { CaslAuthorizationAdapter } from '@vp/adapters';
 import type {
-  AuthorizationPort,
   JobQueue,
   MultipartStorage,
   StorageClient,
@@ -12,10 +10,12 @@ import type {
   UserRepository,
   VideoRepository,
 } from '@vp/core/repositories';
+import type { Result } from '@vp/result';
 import { MULTIPART_THRESHOLD_BYTES } from '@vp/storage';
 import type { AuthUser } from '../plugins/auth';
-import { abortUpload } from './upload-abort';
+import { type AbortUploadFailure, abortUpload } from './upload-abort';
 import {
+  type CompleteUploadFailure,
   type CompleteUploadOptions,
   type CompleteUploadResult,
   type UploadPart,
@@ -23,11 +23,18 @@ import {
 } from './upload-complete';
 import type { UploadContext } from './upload-context';
 import {
+  type InitiateUploadFailure,
   type InitiateUploadParams,
   type InitiateUploadResult,
   initiateUpload,
 } from './upload-initiate';
-import { type UploadResumeInfo, getUploadResumeInfo, issueUploadPartUrls } from './upload-parts';
+import {
+  type PartUrlsFailure,
+  type ResumeInfoFailure,
+  type UploadResumeInfo,
+  getUploadResumeInfo,
+  issueUploadPartUrls,
+} from './upload-parts';
 
 export * from './upload-complete';
 export * from './upload-context';
@@ -35,6 +42,8 @@ export * from './upload-initiate';
 export * from './upload-parts';
 
 const DEFAULT_PRESIGNED_TTL_SECONDS = 15 * 60;
+/** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
+const DEFAULT_UPLOAD_SESSION_TTL_SECONDS = 24 * 60 * 60;
 const DEFAULT_MAX_INFLIGHT_PER_USER = 3;
 
 export interface UploadServiceDeps {
@@ -48,8 +57,8 @@ export interface UploadServiceDeps {
   probeQueue?: JobQueue;
   multipartThresholdBytes?: number;
   presignedUrlTtlSeconds?: number;
+  uploadSessionTtlSeconds?: number;
   maxInflightPerUser?: number;
-  authorization?: AuthorizationPort;
 }
 
 /**
@@ -72,20 +81,26 @@ export class UploadService {
       ...(deps.probeQueue ? { probeQueue: deps.probeQueue } : {}),
       multipartThresholdBytes: deps.multipartThresholdBytes ?? MULTIPART_THRESHOLD_BYTES,
       presignedUrlTtlSeconds: deps.presignedUrlTtlSeconds ?? DEFAULT_PRESIGNED_TTL_SECONDS,
+      uploadSessionTtlSeconds: deps.uploadSessionTtlSeconds ?? DEFAULT_UPLOAD_SESSION_TTL_SECONDS,
       maxInflightPerUser:
         deps.maxInflightPerUser ??
         (process.env['MAX_INFLIGHT_PER_USER']
           ? Number.parseInt(process.env['MAX_INFLIGHT_PER_USER'], 10)
           : DEFAULT_MAX_INFLIGHT_PER_USER),
-      auth: deps.authorization ?? new CaslAuthorizationAdapter(),
     };
   }
 
-  initiate(user: AuthUser, params: InitiateUploadParams): Promise<InitiateUploadResult> {
+  initiate(
+    user: AuthUser,
+    params: InitiateUploadParams
+  ): Promise<Result<InitiateUploadResult, InitiateUploadFailure>> {
     return initiateUpload(this.ctx, user, params);
   }
 
-  getResumeInfo(user: AuthUser, uploadId: string): Promise<UploadResumeInfo> {
+  getResumeInfo(
+    user: AuthUser,
+    uploadId: string
+  ): Promise<Result<UploadResumeInfo, ResumeInfoFailure>> {
     return getUploadResumeInfo(this.ctx, user, uploadId);
   }
 
@@ -94,7 +109,7 @@ export class UploadService {
     uploadId: string,
     from: number,
     count: number
-  ): Promise<StoragePresignedPartInfo[]> {
+  ): Promise<Result<StoragePresignedPartInfo[], PartUrlsFailure>> {
     return issueUploadPartUrls(this.ctx, user, uploadId, from, count);
   }
 
@@ -103,11 +118,11 @@ export class UploadService {
     uploadId: string,
     parts?: UploadPart[],
     options?: CompleteUploadOptions
-  ): Promise<CompleteUploadResult> {
+  ): Promise<Result<CompleteUploadResult, CompleteUploadFailure>> {
     return completeUpload(this.ctx, user, uploadId, parts, options);
   }
 
-  abort(user: AuthUser, uploadId: string): Promise<void> {
+  abort(user: AuthUser, uploadId: string): Promise<Result<void, AbortUploadFailure>> {
     return abortUpload(this.ctx, user, uploadId);
   }
 }

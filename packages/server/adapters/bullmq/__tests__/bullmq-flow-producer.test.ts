@@ -1,4 +1,6 @@
-import { QueueError } from '@vp/core/ports';
+import { ErrorCodes } from '@vp/errors';
+import { isOk } from '@vp/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { FlowProducer } from 'bullmq';
 import { BullMqFlowProducer } from '../bullmq-flow-producer';
 
@@ -48,17 +50,19 @@ describe('BullMqFlowProducer', () => {
     const fake = new FakeFlowProducer();
     const producer = new BullMqFlowProducer({ producer: fake.asProducer() });
 
-    expect(await producer.add(FLOW)).toEqual({ job: { id: 'flow-1' } });
+    expect(expectOk(await producer.add(FLOW))).toEqual({ job: { id: 'flow-1' } });
     expect(fake.added).toEqual([FLOW]);
   });
 
-  it('wraps an add failure in a QueueError naming the parent job', async () => {
+  it('reports an add failure as QUEUE_UNAVAILABLE naming the operation', async () => {
     const producer = new BullMqFlowProducer({
       producer: new FakeFlowProducer({ addError: new Error('redis unavailable') }).asProducer(),
     });
 
-    await expect(producer.add(FLOW)).rejects.toThrow(QueueError);
-    await expect(producer.add(FLOW)).rejects.toThrow(/transcode-fanin/);
+    expect(expectErr(await producer.add(FLOW))).toMatchObject({
+      code: ErrorCodes.QUEUE_UNAVAILABLE,
+      operation: 'add',
+    });
   });
 
   it.each([
@@ -70,7 +74,7 @@ describe('BullMqFlowProducer', () => {
       producer: new FakeFlowProducer(init).asProducer(),
     });
 
-    expect(await producer.checkHealth()).toBe(expected);
+    expect(isOk(await producer.checkHealth())).toBe(expected);
   });
 
   it('closes the driver', async () => {
@@ -80,11 +84,11 @@ describe('BullMqFlowProducer', () => {
     expect(fake.closed).toBe(true);
   });
 
-  it('wraps a close failure in a QueueError', async () => {
+  it('reports a close failure as QUEUE_UNAVAILABLE', async () => {
     const producer = new BullMqFlowProducer({
       producer: new FakeFlowProducer({ closeError: new Error('still draining') }).asProducer(),
     });
 
-    await expect(producer.close()).rejects.toThrow(QueueError);
+    expect(expectErr(await producer.close()).code).toBe(ErrorCodes.QUEUE_UNAVAILABLE);
   });
 });

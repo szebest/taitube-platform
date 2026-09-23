@@ -1,5 +1,7 @@
 import type { MessageListener, PatternMessageListener } from '@vp/core/ports';
 import { CacheClient } from '@vp/core/ports';
+import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
+import { type Result, err, ok } from '@vp/result';
 
 export interface PublishedMessage {
   channel: string;
@@ -18,18 +20,15 @@ export class InMemoryCacheClient extends CacheClient {
     this.isHealthy = healthy;
   }
 
-  async checkHealth(): Promise<boolean> {
-    return this.isHealthy;
+  async checkHealth(): Promise<Result<void, CacheUnavailable>> {
+    return this.isHealthy ? ok() : err(cacheUnavailable('checkHealth'));
   }
 
-  async ping(): Promise<string> {
-    if (!this.isHealthy) {
-      throw new Error('Redis connection failed');
-    }
-    return 'PONG';
+  async ping(): Promise<Result<string, CacheUnavailable>> {
+    return this.isHealthy ? ok('PONG') : err(cacheUnavailable('ping'));
   }
 
-  async publish(channel: string, message: string): Promise<number> {
+  async publish(channel: string, message: string): Promise<Result<number, CacheUnavailable>> {
     this.publishedMessages.push({
       channel,
       message,
@@ -65,22 +64,29 @@ export class InMemoryCacheClient extends CacheClient {
       }
     }
 
-    return count;
+    return ok(count);
   }
 
-  subscribe(channel: string, listener: MessageListener): void {
+  async subscribe(
+    channel: string,
+    listener: MessageListener
+  ): Promise<Result<void, CacheUnavailable>> {
     let set = this.listeners.get(channel);
     if (!set) {
       set = new Set();
       this.listeners.set(channel, set);
     }
     set.add(listener);
+    return ok();
   }
 
-  unsubscribe(channel: string, listener?: MessageListener): void {
+  async unsubscribe(
+    channel: string,
+    listener?: MessageListener
+  ): Promise<Result<void, CacheUnavailable>> {
     if (!listener) {
       this.listeners.delete(channel);
-      return;
+      return ok();
     }
     const set = this.listeners.get(channel);
     if (set) {
@@ -89,21 +95,29 @@ export class InMemoryCacheClient extends CacheClient {
         this.listeners.delete(channel);
       }
     }
+    return ok();
   }
 
-  psubscribe(pattern: string, listener: PatternMessageListener): void {
+  async psubscribe(
+    pattern: string,
+    listener: PatternMessageListener
+  ): Promise<Result<void, CacheUnavailable>> {
     let set = this.patternListeners.get(pattern);
     if (!set) {
       set = new Set();
       this.patternListeners.set(pattern, set);
     }
     set.add(listener);
+    return ok();
   }
 
-  punsubscribe(pattern: string, listener?: PatternMessageListener): void {
+  async punsubscribe(
+    pattern: string,
+    listener?: PatternMessageListener
+  ): Promise<Result<void, CacheUnavailable>> {
     if (!listener) {
       this.patternListeners.delete(pattern);
-      return;
+      return ok();
     }
     const set = this.patternListeners.get(pattern);
     if (set) {
@@ -112,25 +126,32 @@ export class InMemoryCacheClient extends CacheClient {
         this.patternListeners.delete(pattern);
       }
     }
+    return ok();
   }
 
-  async get(key: string): Promise<string | null> {
+  async get(key: string): Promise<Result<string | null, CacheUnavailable>> {
     const item = this.kv.get(key);
-    if (!item) return null;
+    if (!item) return ok(null);
     if (item.expiresAt !== undefined && Date.now() > item.expiresAt) {
       this.kv.delete(key);
-      return null;
+      return ok(null);
     }
-    return item.value;
+    return ok(item.value);
   }
 
-  async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+  async set(
+    key: string,
+    value: string,
+    ttlSeconds?: number
+  ): Promise<Result<void, CacheUnavailable>> {
     const expiresAt = ttlSeconds !== undefined ? Date.now() + ttlSeconds * 1000 : undefined;
     this.kv.set(key, { value, expiresAt });
+    return ok();
   }
 
-  async del(key: string): Promise<void> {
+  async del(key: string): Promise<Result<void, CacheUnavailable>> {
     this.kv.delete(key);
+    return ok();
   }
 
   clear(): void {
@@ -143,9 +164,10 @@ export class InMemoryCacheClient extends CacheClient {
     this.patternListeners.clear();
   }
 
-  async close(): Promise<void> {
+  async close(): Promise<Result<void, CacheUnavailable>> {
     this.clear();
     this.clearListeners();
+    return ok();
   }
 
   private matchesPattern(pattern: string, channel: string): boolean {

@@ -1,11 +1,14 @@
-import {
-  handleCandidates,
-  isReservedHandle,
-  isValidHandleFormat,
-  normalizeHandle,
-} from '@vp/domain';
 import type { ChannelRepositoryPort, UserRepository } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import type { Channel } from '@vp/domain';
+import {
+  type ChannelNotFound,
+  type ClaimHandleFailure,
+  channelNotFound,
+  decideHandleClaim,
+} from '@vp/domain-rules';
+import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
+import { type Result, err, isErr, ok } from '@vp/result';
+import { handleCandidates } from '@vp/validation';
 
 export interface ChannelServiceDeps {
   users: UserRepository;
@@ -47,11 +50,24 @@ export interface UpdateChannelInput {
   bio?: string | null;
 }
 
+export type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string };
+
+export type GetAccountFailure = AccountNotFound | ChannelNotFound | DatabaseUnavailable;
+export type UpdateChannelFailure = ChannelNotFound | ClaimHandleFailure | DatabaseUnavailable;
+export type GetPublicChannelFailure = ChannelNotFound | DatabaseUnavailable;
+export type ProvisionFailure = DatabaseUnavailable | HandleTaken;
+
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-/**
- * ChannelService — Domain service managing user identity profiles and channel lifecycles.
- */
+function toChannelView(channel: Channel): ChannelView {
+  return {
+    ...channel,
+    createdAt: channel.createdAt.toISOString(),
+    updatedAt: channel.updatedAt.toISOString(),
+  };
+}
+
+/** User identity profiles and channel lifecycles. Returns its failures; throws none. */
 export class ChannelService {
   private readonly users: UserRepository;
   private readonly channels: ChannelRepositoryPort;
@@ -61,148 +77,125 @@ export class ChannelService {
     this.channels = deps.channels;
   }
 
-  /**
-   * Retrieves authenticated user details and their associated channel profile.
-   */
-  async getAccount(userId: string): Promise<UserAccountView> {
+  async getAccount(userId: string): Promise<Result<UserAccountView, GetAccountFailure>> {
     const user = await this.users.findById(userId);
-    if (!user) {
-      throw new PermanentError(ErrorCodes.UNAUTHORIZED, 'User record not found');
+    if (isErr(user)) return user;
+    if (!user.value) {
+      return err({ code: ErrorCodes.UNAUTHORIZED, message: 'User record not found' });
     }
 
     const channel = await this.channels.findByUserId(userId);
-    if (!channel) {
-      throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, 'Channel not found for user');
-    }
+    if (isErr(channel)) return channel;
+    if (!channel.value) return err(channelNotFound(userId));
 
-    const channelFormatted: ChannelView = {
-      ...channel,
-      createdAt: channel.createdAt.toISOString(),
-      updatedAt: channel.updatedAt.toISOString(),
+    const account = {
+      id: user.value.id,
+      email: user.value.email,
+      tier: user.value.tier,
+      createdAt: user.value.createdAt.toISOString(),
     };
 
-    const userFormatted = {
-      id: user.id,
-      email: user.email,
-      tier: user.tier,
-      createdAt: user.createdAt.toISOString(),
-    };
-
-    return {
-      ...userFormatted,
-      user: userFormatted,
-      channel: channelFormatted,
-    };
+    return ok({ ...account, user: account, channel: toChannelView(channel.value) });
   }
 
-  /**
-   * Updates an authenticated user's channel profile with validation and normalization.
-   */
-  async updateChannel(userId: string, input: UpdateChannelInput): Promise<ChannelView> {
-    const channel = await this.channels.findByUserId(userId);
-    if (!channel) {
-      throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, 'Channel not found for user');
-    }
+  async updateChannel(
+    userId: string,
+    input: UpdateChannelInput
+  ): Promise<Result<ChannelView, UpdateChannelFailure>> {
+    const existing = await this.channels.findByUserId(userId);
+    if (isErr(existing)) return existing;
+    if (!existing.value) return err(channelNotFound(userId));
 
-    let newHandle: string | undefined;
+    let handle: string | undefined;
     if (input.handle !== undefined) {
-      if (!isValidHandleFormat(input.handle)) {
-        throw new PermanentError(
-          ErrorCodes.INVALID_HANDLE_FORMAT,
-          'Invalid handle format: must be 3-30 characters matching ^[a-zA-Z0-9_.-]+$'
-        );
-      }
-      if (isReservedHandle(input.handle)) {
-        throw new PermanentError(
-          ErrorCodes.HANDLE_ALREADY_TAKEN,
-          `Handle "${input.handle}" is reserved`
-        );
-      }
-      newHandle = normalizeHandle(input.handle);
+      const heldBy = await this.channels.findByHandle(input.handle);
+      if (isErr(heldBy)) return heldBy;
+
+      const claimed = decideHandleClaim({
+        handle: input.handle,
+        heldBy: heldBy.value,
+        claimantChannelId: existing.value.id,
+      });
+      if (isErr(claimed)) return claimed;
+      handle = claimed.value;
     }
 
-    const updated = await this.channels.update(channel.id, {
-      handle: newHandle,
+    const updated = await this.channels.update(existing.value.id, {
+      handle,
       displayName: input.displayName,
       avatarUrl: input.avatarUrl,
       bannerUrl: input.bannerUrl,
       bio: input.bio,
     });
+    if (isErr(updated)) return updated;
 
-    return {
-      ...updated,
-      createdAt: updated.createdAt.toISOString(),
-      updatedAt: updated.updatedAt.toISOString(),
-    };
+    return updated.value ? ok(toChannelView(updated.value)) : err(channelNotFound(userId));
   }
 
-  /**
-   * Retrieves public channel details by UUID or handle.
-   */
-  async getPublicChannel(idOrHandle: string): Promise<ChannelView> {
-    const rawHandle = normalizeHandle(idOrHandle);
-
-    let channel = null;
+  async getPublicChannel(
+    idOrHandle: string
+  ): Promise<Result<ChannelView, GetPublicChannelFailure>> {
     if (UUID_REGEX.test(idOrHandle)) {
-      channel = await this.channels.findById(idOrHandle);
+      const byId = await this.channels.findById(idOrHandle);
+      if (isErr(byId)) return byId;
+      if (byId.value) return ok(toChannelView(byId.value));
     }
 
-    if (!channel) {
-      channel = await this.channels.findByHandle(rawHandle);
-    }
+    const byHandle = await this.channels.findByHandle(idOrHandle.replace(/^@/, ''));
+    if (isErr(byHandle)) return byHandle;
 
-    if (!channel) {
-      throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, `Channel "${idOrHandle}" not found`);
-    }
-
-    return {
-      ...channel,
-      createdAt: channel.createdAt.toISOString(),
-      updatedAt: channel.updatedAt.toISOString(),
-    };
+    return byHandle.value ? ok(toChannelView(byHandle.value)) : err(channelNotFound(idOrHandle));
   }
 
   /**
-   * Creates the user and channel rows a verified identity implies, on its first
-   * authenticated request. Both writes tolerate losing a race with a concurrent
-   * request for the same identity.
+   * Creates the user and channel rows a verified identity implies, on its first authenticated
+   * request. Both writes tolerate losing a race with a concurrent request for the same identity -
+   * and only that, so a dead store still surfaces instead of producing a channel-less user.
    */
-  async ensureProvisioned(userId: string, email?: string): Promise<void> {
+  async ensureProvisioned(userId: string, email?: string): Promise<Result<void, ProvisionFailure>> {
     const userEmail = email || `${userId}@taitube.local`;
 
-    if (!(await this.users.findById(userId))) {
-      try {
-        await this.users.upsert({ id: userId, email: userEmail, tier: 'free' });
-      } catch {
-        // A concurrent request for the same identity already inserted it.
-      }
+    const existingUser = await this.users.findById(userId);
+    if (isErr(existingUser)) return existingUser;
+
+    if (!existingUser.value) {
+      const upserted = await this.users.upsert({ id: userId, email: userEmail, tier: 'free' });
+      if (isErr(upserted)) return upserted;
     }
 
-    if (await this.channels.findByUserId(userId)) {
-      return;
-    }
+    const existingChannel = await this.channels.findByUserId(userId);
+    if (isErr(existingChannel)) return existingChannel;
+    if (existingChannel.value) return ok();
 
-    try {
-      await this.channels.create({
-        userId,
-        handle: await this.claimHandle(userEmail, userId),
-        displayName: email ? email.split('@')[0] || 'User' : 'User',
-      });
-    } catch {
-      // A concurrent request for the same identity already created the channel.
-    }
+    const handle = await this.claimHandle(userEmail, userId);
+    if (isErr(handle)) return handle;
+
+    const created = await this.channels.create({
+      userId,
+      handle: handle.value,
+      displayName: email ? email.split('@')[0] || 'User' : 'User',
+    });
+
+    // A concurrent request for the same identity got there first; that is a success for us.
+    return isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN
+      ? created
+      : ok();
   }
 
-  private async claimHandle(email: string, userId: string): Promise<string> {
+  private async claimHandle(
+    email: string,
+    userId: string
+  ): Promise<Result<string, ProvisionFailure>> {
     for (const candidate of handleCandidates(email, userId)) {
-      if (!(await this.channels.findByHandle(candidate))) {
-        return candidate;
-      }
+      const heldBy = await this.channels.findByHandle(candidate);
+      if (isErr(heldBy)) return heldBy;
+      if (!heldBy.value) return ok(candidate);
     }
 
-    throw new PermanentError(
-      ErrorCodes.HANDLE_ALREADY_TAKEN,
-      `Could not derive a free handle for user ${userId}`
-    );
+    return err({
+      code: ErrorCodes.HANDLE_ALREADY_TAKEN,
+      message: `Could not derive a free handle for user ${userId}`,
+      handle: '',
+    });
   }
 }

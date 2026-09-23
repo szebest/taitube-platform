@@ -2,7 +2,8 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { Readable } from 'node:stream';
-import { StorageError } from '@vp/core/ports';
+import { ErrorCodes } from '@vp/errors';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { S3StorageClient } from '../s3-storage-client';
 import { fakeS3Client, notFound } from './fake-s3-client';
 
@@ -24,13 +25,15 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client({ PutObjectCommand: () => ({ ETag: '"abc"' }) });
       const storage = new S3StorageClient({ client: fake.client });
 
-      const result = await storage.uploadObject({
-        bucket: BUCKET,
-        key: KEY,
-        body: Buffer.from('payload'),
-        contentType: 'video/mp4',
-        cacheControl: 'public, max-age=60',
-      });
+      const result = expectOk(
+        await storage.uploadObject({
+          bucket: BUCKET,
+          key: KEY,
+          body: Buffer.from('payload'),
+          contentType: 'video/mp4',
+          cacheControl: 'public, max-age=60',
+        })
+      );
 
       expect(result).toEqual({ key: KEY, etag: '"abc"' });
       expect(fake.sent[0]).toMatchObject({
@@ -44,20 +47,25 @@ describe('S3StorageClient', () => {
       });
     });
 
-    it('wraps a driver failure in a StorageError naming the key', async () => {
+    it('reports a driver failure as STORAGE_UNAVAILABLE carrying the cause', async () => {
+      const cause = new Error('connection reset');
       const fake = fakeS3Client({
         PutObjectCommand: () => {
-          throw new Error('connection reset');
+          throw cause;
         },
       });
       const storage = new S3StorageClient({ client: fake.client });
 
-      await expect(
-        storage.uploadObject({ bucket: BUCKET, key: KEY, body: Buffer.from('x'), contentType: 'video/mp4' })
-      ).rejects.toThrow(StorageError);
-      await expect(
-        storage.uploadObject({ bucket: BUCKET, key: KEY, body: Buffer.from('x'), contentType: 'video/mp4' })
-      ).rejects.toThrow(/connection reset/);
+      expect(
+        expectErr(
+          await storage.uploadObject({
+            bucket: BUCKET,
+            key: KEY,
+            body: Buffer.from('x'),
+            contentType: 'video/mp4',
+          })
+        )
+      ).toMatchObject({ code: ErrorCodes.STORAGE_UNAVAILABLE, operation: 'uploadObject', cause });
     });
   });
 
@@ -72,7 +80,9 @@ describe('S3StorageClient', () => {
         }),
       });
 
-      expect(await new S3StorageClient({ client: fake.client }).headObject(BUCKET, KEY)).toEqual({
+      expect(
+        expectOk(await new S3StorageClient({ client: fake.client }).headObject(BUCKET, KEY))
+      ).toEqual({
         contentLength: 2048,
         contentType: 'video/mp4',
         cacheControl: 'no-cache',
@@ -90,19 +100,21 @@ describe('S3StorageClient', () => {
         },
       });
 
-      expect(await new S3StorageClient({ client: fake.client }).headObject(BUCKET, KEY)).toBeNull();
+      expect(
+        expectOk(await new S3StorageClient({ client: fake.client }).headObject(BUCKET, KEY))
+      ).toBeNull();
     });
 
-    it('rethrows any other failure as a StorageError', async () => {
+    it('reports any other failure as STORAGE_UNAVAILABLE', async () => {
       const fake = fakeS3Client({
         HeadObjectCommand: () => {
           throw new Error('permission denied');
         },
       });
 
-      await expect(
-        new S3StorageClient({ client: fake.client }).headObject(BUCKET, KEY)
-      ).rejects.toThrow(StorageError);
+      expect(
+        expectErr(await new S3StorageClient({ client: fake.client }).headObject(BUCKET, KEY)).code
+      ).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
     });
   });
 
@@ -112,16 +124,18 @@ describe('S3StorageClient', () => {
         GetObjectCommand: () => ({ Body: Readable.from([Buffer.from('he'), Buffer.from('llo')]) }),
       });
 
-      const body = await new S3StorageClient({ client: fake.client }).getObject(BUCKET, KEY);
+      const body = expectOk(
+        await new S3StorageClient({ client: fake.client }).getObject(BUCKET, KEY)
+      );
       expect(body.toString()).toBe('hello');
     });
 
     it('fails when the response carries no body', async () => {
       const fake = fakeS3Client({ GetObjectCommand: () => ({}) });
 
-      await expect(
-        new S3StorageClient({ client: fake.client }).getObject(BUCKET, KEY)
-      ).rejects.toThrow(StorageError);
+      expect(
+        expectErr(await new S3StorageClient({ client: fake.client }).getObject(BUCKET, KEY)).code
+      ).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
     });
   });
 
@@ -143,7 +157,9 @@ describe('S3StorageClient', () => {
       const target = path.join(targetDir, 'source.mp4');
 
       expect(
-        await new S3StorageClient({ client: fake.client }).downloadObject(BUCKET, KEY, target)
+        expectOk(
+          await new S3StorageClient({ client: fake.client }).downloadObject(BUCKET, KEY, target)
+        )
       ).toBe(true);
       expect(fs.readFileSync(target, 'utf8')).toBe('on disk');
     });
@@ -160,10 +176,12 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client({ GetObjectCommand: handler });
 
       expect(
-        await new S3StorageClient({ client: fake.client }).downloadObject(
-          BUCKET,
-          KEY,
-          path.join(targetDir, 'missing.mp4')
+        expectOk(
+          await new S3StorageClient({ client: fake.client }).downloadObject(
+            BUCKET,
+            KEY,
+            path.join(targetDir, 'missing.mp4')
+          )
         )
       ).toBe(false);
     });
@@ -183,9 +201,9 @@ describe('S3StorageClient', () => {
     it('short-circuits an empty batch without reaching the driver', async () => {
       const fake = fakeS3Client();
 
-      expect(await new S3StorageClient({ client: fake.client }).deleteObjects(BUCKET, [])).toEqual({
-        deletedKeys: [],
-      });
+      expect(
+        expectOk(await new S3StorageClient({ client: fake.client }).deleteObjects(BUCKET, []))
+      ).toEqual({ deletedKeys: [] });
       expect(fake.sent).toEqual([]);
     });
 
@@ -193,7 +211,9 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client();
       const keys = Array.from({ length: 1001 }, (_, i) => `videos/${i}.ts`);
 
-      const result = await new S3StorageClient({ client: fake.client }).deleteObjects(BUCKET, keys);
+      const result = expectOk(
+        await new S3StorageClient({ client: fake.client }).deleteObjects(BUCKET, keys)
+      );
 
       expect(result.deletedKeys).toHaveLength(1001);
       expect(fake.sent).toHaveLength(2);
@@ -213,11 +233,13 @@ describe('S3StorageClient', () => {
       });
 
       expect(
-        await new S3StorageClient({ client: fake.client }).listObjects({
-          bucket: BUCKET,
-          prefix: 'videos/',
-          maxKeys: 10,
-        })
+        expectOk(
+          await new S3StorageClient({ client: fake.client }).listObjects({
+            bucket: BUCKET,
+            prefix: 'videos/',
+            maxKeys: 10,
+          })
+        )
       ).toEqual({ keys: ['a.ts', 'b.ts'], nextContinuationToken: 'token-2', isTruncated: true });
     });
 
@@ -225,7 +247,7 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client({ ListObjectsV2Command: () => ({}) });
 
       expect(
-        await new S3StorageClient({ client: fake.client }).listObjects({ bucket: BUCKET })
+        expectOk(await new S3StorageClient({ client: fake.client }).listObjects({ bucket: BUCKET }))
       ).toEqual({ keys: [], nextContinuationToken: undefined, isTruncated: false });
     });
   });
@@ -240,7 +262,7 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client({ ListObjectsV2Command: () => pages[page++] ?? {} });
 
       expect(
-        await new S3StorageClient({ client: fake.client }).purgePrefix(BUCKET, 'videos/')
+        expectOk(await new S3StorageClient({ client: fake.client }).purgePrefix(BUCKET, 'videos/'))
       ).toBe(3);
       expect(fake.sent.filter((c) => c.name === 'DeleteObjectsCommand')).toHaveLength(2);
     });
@@ -249,7 +271,7 @@ describe('S3StorageClient', () => {
       const fake = fakeS3Client({ ListObjectsV2Command: () => ({ IsTruncated: false }) });
 
       expect(
-        await new S3StorageClient({ client: fake.client }).purgePrefix(BUCKET, 'videos/')
+        expectOk(await new S3StorageClient({ client: fake.client }).purgePrefix(BUCKET, 'videos/'))
       ).toBe(0);
       expect(fake.sent.some((c) => c.name === 'DeleteObjectsCommand')).toBe(false);
     });
@@ -257,13 +279,15 @@ describe('S3StorageClient', () => {
 
   describe('presigned urls', () => {
     it('signs a PUT carrying the declared content headers and a 15 minute expiry', async () => {
-      const presigned = await localClient().createPresignedPutUrl({
-        bucket: BUCKET,
-        key: KEY,
-        contentType: 'video/mp4',
-        contentLength: 1048576,
-        expiresInSeconds: 900,
-      });
+      const presigned = expectOk(
+        await localClient().createPresignedPutUrl({
+          bucket: BUCKET,
+          key: KEY,
+          contentType: 'video/mp4',
+          contentLength: 1048576,
+          expiresInSeconds: 900,
+        })
+      );
 
       expect(presigned.url).toContain(`http://localhost:9000/${BUCKET}/`);
       expect(presigned.url).toContain('X-Amz-Signature');
@@ -277,23 +301,27 @@ describe('S3StorageClient', () => {
     });
 
     it('defaults the PUT expiry to 15 minutes and reports a zero content length', async () => {
-      const presigned = await localClient().createPresignedPutUrl({
-        bucket: BUCKET,
-        key: KEY,
-        contentType: 'video/mp4',
-        contentLength: 0,
-      });
+      const presigned = expectOk(
+        await localClient().createPresignedPutUrl({
+          bucket: BUCKET,
+          key: KEY,
+          contentType: 'video/mp4',
+          contentLength: 0,
+        })
+      );
 
       expect(presigned.url).toContain('X-Amz-Expires=900');
       expect(presigned.headers['content-length']).toBe('0');
     });
 
     it('signs a GET', async () => {
-      const url = await localClient().createPresignedGetUrl({
-        bucket: BUCKET,
-        key: KEY,
-        expiresInSeconds: 60,
-      });
+      const url = expectOk(
+        await localClient().createPresignedGetUrl({
+          bucket: BUCKET,
+          key: KEY,
+          expiresInSeconds: 60,
+        })
+      );
 
       expect(url).toContain(`http://localhost:9000/${BUCKET}/`);
       expect(url).toContain('X-Amz-Expires=60');

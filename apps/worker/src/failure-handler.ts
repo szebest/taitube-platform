@@ -1,5 +1,6 @@
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { classifyError } from '@vp/errors';
 import {
   DlqJob,
   NotifyJob,
@@ -9,6 +10,7 @@ import {
   stagePolicies,
 } from '@vp/job-contracts';
 import type { Logger, PipelineMetrics } from '@vp/observability';
+import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface FailureHandlerDeps {
@@ -38,7 +40,6 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     const videoId = (payload.videoId as string) || null;
     const attemptsMade = job.attemptsMade ?? 1;
 
-    // 1. Resolve error code
     interface ErrorWithDetails {
       code?: string;
       errorCode?: string;
@@ -56,17 +57,12 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       '';
 
     if (!errorCode) {
-      if (err.name === 'UnrecoverableError') {
-        errorCode = 'UNRECOVERABLE_ERROR';
-      } else {
-        errorCode = 'INTERNAL';
-      }
+      errorCode = classifyError(err) === 'permanent' ? 'UNRECOVERABLE_ERROR' : 'INTERNAL';
     }
 
     const errorMessage = err.message || 'Job failed';
     const stack = err.stack ?? null;
 
-    // 2. Alerting / metric hook (AC 6)
     if (metrics?.dlqEntriesTotal) {
       metrics.dlqEntriesTotal.inc({ queue: queueName, error_code: errorCode });
     }
@@ -75,66 +71,67 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       `dlq_entries_total{queue="${queueName}", error_code="${errorCode}"} incremented`
     );
 
-    // 3. Insert dlq_entries (unique per queue/job/attempt) (AC 3)
-    const dlqEntryId = uuidv7();
-    try {
-      await repositories.dlq.create({
-        id: dlqEntryId,
-        queue: queueName,
-        jobId,
-        videoId,
-        payload: job.data,
-        errorCode,
-        errorMessage,
-        stack,
-        attemptsMade,
-        workerId,
-        status: 'PARKED',
-      });
-    } catch (createErr: unknown) {
+    const created = await repositories.dlq.create({
+      id: uuidv7(),
+      queue: queueName,
+      jobId,
+      videoId,
+      payload: job.data,
+      errorCode,
+      errorMessage,
+      stack,
+      attemptsMade,
+      workerId,
+      status: 'PARKED',
+    });
+    if (isErr(created)) {
       logger.error(
-        { err: (createErr as Error).message, jobId, queueName },
+        { err: created.error.message, jobId, queueName },
         'Failed to insert dlq_entries row'
       );
     }
 
-    // 4. Add DlqJob copy to dlq queue (no worker consuming dlq) (AC 3)
     if (getQueue) {
-      try {
-        const dlqQueue = getQueue('dlq');
-        const dlqJobId = ids.dlq(queueName, jobId, attemptsMade);
-        const dlqPayload = DlqJob.parse({
-          originQueue: queueName as QueueName,
-          originJobId: jobId,
-          payload: job.data,
-          error: {
-            code: errorCode,
-            message: errorMessage,
-            stack: stack ?? undefined,
-            unrecoverable:
-              (err as { isRetryable?: boolean }).isRetryable === false ||
-              err.name === 'UnrecoverableError',
-          },
-          attemptsMade,
-          workerId,
-          failedAt: new Date().toISOString(),
-        });
+      const dlqJobId = ids.dlq(queueName, jobId, attemptsMade);
+      // safeParse rather than parse: an origin queue outside QUEUES is a caller bug worth a log,
+      // not a throw out of the handler that is already recording someone else's failure.
+      const dlqPayload = DlqJob.safeParse({
+        originQueue: queueName as QueueName,
+        originJobId: jobId,
+        payload: job.data,
+        error: {
+          code: errorCode,
+          message: errorMessage,
+          stack: stack ?? undefined,
+          unrecoverable: classifyError(err) === 'permanent',
+        },
+        attemptsMade,
+        workerId,
+        failedAt: new Date().toISOString(),
+      });
 
-        await dlqQueue.add('dlq', dlqPayload, {
+      if (!dlqPayload.success) {
+        logger.error(
+          { err: dlqPayload.error.message, jobId, queueName },
+          'Failed to build copy of job for dlq queue'
+        );
+      } else {
+        const added = await getQueue('dlq').add('dlq', dlqPayload.data, {
           jobId: dlqJobId,
           removeOnComplete: defaultJobOptions.removeOnComplete,
           removeOnFail: defaultJobOptions.removeOnFail,
         });
-        logger.info({ dlqJobId }, 'Enqueued DLQ copy job');
-      } catch (dlqErr: unknown) {
-        logger.error(
-          { err: (dlqErr as Error).message, jobId },
-          'Failed to add copy of job to dlq queue'
-        );
+        if (isErr(added)) {
+          logger.error(
+            { err: added.error.message, jobId },
+            'Failed to add copy of job to dlq queue'
+          );
+        } else {
+          logger.info({ dlqJobId }, 'Enqueued DLQ copy job');
+        }
       }
     }
 
-    // 5. Mark processing_steps DEAD and renditions FAILED (AC 3)
     if (videoId) {
       let stepName = stage;
       let renditionName = '-';
@@ -144,39 +141,41 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         renditionName = renditionObj?.name || stage.replace('transcode-', '');
       }
 
-      await repositories.steps
-        .markDead({
-          videoId,
-          step: stepName,
-          rendition: renditionName,
-          errorCode,
-          errorMessage,
-        })
-        .catch(() => {});
+      const marked = await repositories.steps.markDead({
+        videoId,
+        step: stepName,
+        rendition: renditionName,
+        errorCode,
+        errorMessage,
+      });
+      if (isErr(marked)) {
+        logger.error(
+          { err: marked.error.message, videoId, step: stepName },
+          'Failed to mark processing step DEAD'
+        );
+      }
 
       if (stage.startsWith('transcode-')) {
-        await repositories.renditions
-          .update(videoId, renditionName, { status: 'FAILED' })
-          .catch(() => {});
+        const failed = await repositories.renditions.update(videoId, renditionName, {
+          status: 'FAILED',
+        });
+        if (isErr(failed)) {
+          logger.error(
+            { err: failed.error.message, videoId, rendition: renditionName },
+            'Failed to mark rendition FAILED'
+          );
+        }
       }
     }
 
-    // 6. With failParentOnFailure, parent fails and video becomes FAILED with first child's error code (AC 3)
     if (stage === 'package' && videoId) {
-      // Find first failed child step to adopt its error code
-      let videoErrorCode = errorCode;
-      try {
-        const steps = await repositories.steps.findByVideoId(videoId);
-        const failedChild = steps.find(
-          (s) =>
-            (s.status === 'DEAD' || s.status === 'FAILED') && s.errorCode && s.step !== 'package'
-        );
-        if (failedChild?.errorCode) {
-          videoErrorCode = failedChild.errorCode;
-        }
-      } catch {}
+      const steps = unwrapOr(await repositories.steps.findByVideoId(videoId), []);
+      const failedChild = steps.find(
+        (s) => (s.status === 'DEAD' || s.status === 'FAILED') && s.errorCode && s.step !== 'package'
+      );
+      const videoErrorCode = failedChild?.errorCode ?? errorCode;
 
-      const video = await repositories.videos.findById(videoId).catch(() => null);
+      const video = unwrapOr(await repositories.videos.findById(videoId), null);
       const notifyJobId = ids.notify(videoId, 'video.failed', 1);
       const notifyJobData = video
         ? NotifyJob.parse({
@@ -194,8 +193,8 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         ...defaultJobOptions,
       };
 
-      const transitioned = await repositories.videos
-        .transition({
+      const transitioned = unwrapOr(
+        await repositories.videos.transition({
           videoId,
           from: ['PROCESSING', 'PROBING'],
           to: 'FAILED',
@@ -216,8 +215,9 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
                 },
               }
             : undefined,
-        })
-        .catch(() => false);
+        }),
+        false
+      );
 
       if (transitioned) {
         logger.error(
@@ -225,10 +225,14 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
           'Package failure transitioned video to FAILED'
         );
 
-        // Publish video.failed notification
         if (notifyJobData && getQueue) {
-          const notifyQueue = getQueue('notify');
-          await notifyQueue.add('notify', notifyJobData, notifyJobOpts).catch(() => {});
+          const notified = await getQueue('notify').add('notify', notifyJobData, notifyJobOpts);
+          if (isErr(notified)) {
+            logger.error(
+              { err: notified.error.message, videoId },
+              'Failed to publish video.failed to the notify queue'
+            );
+          }
         }
       }
     }

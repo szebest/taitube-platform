@@ -2,6 +2,7 @@ import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
 import { mintDevToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -64,7 +65,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
 
   describe('AC 1: Schedulers exist with ids/crons from SDD §9.8 & idempotent boot', () => {
     it('initializes housekeeping schedulers with exact ids and crons from SDD §9.8', async () => {
-      const schedulers = await housekeepingQueue.getJobSchedulers();
+      const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
       expect(schedulers).toHaveLength(6);
 
       const map = new Map(schedulers.map((s) => [s.id, s]));
@@ -80,7 +81,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
     it.each(HOUSEKEEPING_SCHEDULER_CONFIGS)(
       'scheduler "$id" carries task payload matching its id',
       async ({ id }) => {
-        const schedulers = await housekeepingQueue.getJobSchedulers();
+        const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
         const map = new Map(schedulers.map((s) => [s.id, s]));
         const item = map.get(id);
         expect(item).toBeDefined();
@@ -98,7 +99,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       });
       await secondApp.ready();
 
-      const schedulers = await housekeepingQueue.getJobSchedulers();
+      const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
       expect(schedulers).toHaveLength(6);
 
       const ids = schedulers.map((s) => s.id).sort();
@@ -184,11 +185,11 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
         status: 'DELETED',
       });
 
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('DELETED');
       expect((video as unknown as { deletedAt?: Date })?.deletedAt).toBeDefined();
 
-      const events = await repositories.events.findByVideoId(videoId);
+      const events = expectOk(await repositories.events.findByVideoId(videoId));
       expect(events.some((e) => e.type === 'video.deleted')).toBe(true);
     });
 
@@ -210,7 +211,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       });
 
       expect(res.statusCode).toBe(202);
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('DELETED');
     });
 
@@ -266,7 +267,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       });
 
       expect(res.statusCode).toBe(202);
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('DELETED');
     });
   });

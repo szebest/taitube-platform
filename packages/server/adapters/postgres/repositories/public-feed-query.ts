@@ -1,11 +1,11 @@
+import type { ListPublicVideosOptions } from '@vp/core/repositories';
+import { videos } from '@vp/db';
 import {
   PUBLIC_FEED_STATUS,
   type PublicFeedCursor,
   type PublicFeedSort,
   TRENDING_GRAVITY,
 } from '@vp/domain';
-import type { ListPublicVideosOptions } from '@vp/core/repositories';
-import { videos } from '@vp/db';
 import { type SQL, desc, eq, isNull, sql } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, publicVisibilityScope } from '../scopes/index';
 

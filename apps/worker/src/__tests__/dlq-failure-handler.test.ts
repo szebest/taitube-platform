@@ -7,12 +7,14 @@ import {
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { calculateBackoffDelay, ids, stagePolicies } from '@vp/job-contracts';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createTranscodeProcessor } from '../stages/transcode';
+import { throughRunner } from './queue-boundary';
 
 describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
   let repositories: InMemoryRepositories;
@@ -155,7 +157,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     expect(executionCount).toBe(1);
 
     // Verify entry in Postgres/InMemory mirror (AC 3)
-    const dlqEntries = await repositories.dlq.list({ limit: 100 });
+    const dlqEntries = expectOk(await repositories.dlq.list({ limit: 100 }));
     expect(dlqEntries).toHaveLength(1);
     const entry = dlqEntries[0];
     expect(entry).toBeDefined();
@@ -176,9 +178,9 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     expect(dlqData?.error?.unrecoverable).toBe(true);
 
     // Verify processing_steps DEAD and renditions FAILED (AC 3)
-    const steps = await repositories.steps.findByVideoId(videoId);
+    const steps = expectOk(await repositories.steps.findByVideoId(videoId));
     expect(steps.some((s) => s.step === 'transcode' && s.status === 'DEAD')).toBe(true);
-    const rends = await repositories.renditions.findByVideoId(videoId);
+    const rends = expectOk(await repositories.renditions.findByVideoId(videoId));
     expect(rends.some((r) => r.name === '720p' && r.status === 'FAILED')).toBe(true);
   });
 
@@ -219,7 +221,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     // Verify retried 4 times before failing
     expect(executionCount).toBe(4);
 
-    const dlqEntries = await repositories.dlq.list({ limit: 100 });
+    const dlqEntries = expectOk(await repositories.dlq.list({ limit: 100 }));
     expect(dlqEntries).toHaveLength(1);
     const entry = dlqEntries[0];
     expect(entry).toBeDefined();
@@ -264,7 +266,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
 
     expect(executionCount).toBe(3);
 
-    const dlqEntries = await repositories.dlq.list({ limit: 100 });
+    const dlqEntries = expectOk(await repositories.dlq.list({ limit: 100 }));
     expect(dlqEntries).toHaveLength(1);
     const entry = dlqEntries[0];
     expect(entry).toBeDefined();
@@ -314,7 +316,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       getQueue,
       simulateFailureRendition: '720p',
     });
-    await q720.process(transcode720);
+    await q720.process(throughRunner(transcode720));
 
     // Package processor
     const packageProc = createPackageProcessor({
@@ -323,7 +325,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       logger,
       getQueue,
     });
-    await qPackage.process(packageProc);
+    await qPackage.process(throughRunner(packageProc));
 
     // Create flow with failParentOnFailure
     await flowProducer.add({
@@ -384,7 +386,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     await new Promise((r) => setTimeout(r, 50));
 
     // Verify video transitioned to FAILED with the child's error code (FFMPEG_FAILED)
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('FAILED');
     expect(video?.errorCode).toBe(ErrorCodes.FFMPEG_FAILED);
 
@@ -403,7 +405,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     expect(notifyData?.payload?.errorCode).toBe(ErrorCodes.FFMPEG_FAILED);
 
     // Verify DLQ entries exist for both child and parent (AC 3)
-    const dlqEntries = await repositories.dlq.list({ limit: 100 });
+    const dlqEntries = expectOk(await repositories.dlq.list({ limit: 100 }));
     expect(dlqEntries.length).toBeGreaterThanOrEqual(1);
 
     // Verify metrics counter incremented (AC 6)
@@ -477,10 +479,12 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
         }
       );
 
-      await expect(probeQueue.process(probeProcessor)).rejects.toThrow(fixture.errorMsg);
+      await expect(probeQueue.process(throughRunner(probeProcessor))).rejects.toThrow(
+        fixture.errorMsg
+      );
 
       // Verify each hostile file ends in DLQ with expected code and attemptsMade = 1
-      const dlqEntries = await repositories.dlq.list({ limit: 100 });
+      const dlqEntries = expectOk(await repositories.dlq.list({ limit: 100 }));
       const entry = dlqEntries.find((i) => i.jobId === jobId);
       expect(entry).toBeDefined();
       expect(entry?.errorCode).toBe(fixture.expectedCode);
@@ -488,7 +492,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       expect(entry?.status).toBe('PARKED');
 
       // Verify video is FAILED
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('FAILED');
       expect(video?.errorCode).toBe(fixture.expectedCode);
     }

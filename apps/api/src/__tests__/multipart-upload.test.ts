@@ -5,13 +5,14 @@ import {
   S3MultipartStorage,
   S3StorageClient,
 } from '@vp/adapters';
-import { JobQueue } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { MULTIPART_MIN_PART_SIZE } from '@vp/storage';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
+import { MockProbeJobQueue } from './mock-probe-queue';
 
 describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18, 19, 20)', () => {
   let app: FastifyInstance;
@@ -33,36 +34,8 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
   const completedObjects = new Map<string, { size: number; contentType: string }>();
 
   // Probe queue recording
-  const probeJobs: Array<{ videoId: string }> = [];
-  class MockProbeJobQueue extends JobQueue {
-    async checkHealth(): Promise<boolean> {
-      return true;
-    }
-    getName(): string {
-      return 'probe';
-    }
-    async add<T = unknown>(_name: string, data: T): Promise<import('@vp/core/ports').QueueJob<T>> {
-      probeJobs.push(data as { videoId: string });
-      return { id: 'job-probe', name: 'probe', data };
-    }
-    async process(): Promise<void> {}
-    async isPaused(): Promise<boolean> {
-      return false;
-    }
-    async pause(): Promise<void> {}
-    async resume(): Promise<void> {}
-    async getJobCounts(): Promise<import('@vp/core/ports').QueueJobCounts> {
-      return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
-    }
-    async getJobs(): Promise<import('@vp/core/ports').QueueJob<unknown>[]> {
-      return [];
-    }
-    async getJobState(_jobId: string): Promise<string | undefined> {
-      return 'completed';
-    }
-    async close(): Promise<void> {}
-  }
   const mockProbeQueue = new MockProbeJobQueue();
+  const probeJobs = mockProbeQueue.jobs;
 
   beforeAll(async () => {
     authToken = mintToken({
@@ -268,7 +241,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(firstPart.expiresAt).toBeDefined();
 
     // Verify video in DB is UPLOADING
-    const video = await repositories.videos.findById(data.videoId);
+    const video = expectOk(await repositories.videos.findById(data.videoId));
     expect(video?.status).toBe('UPLOADING');
     expect(video?.sourceSizeBytes).toBe(fourGb);
   });
@@ -365,7 +338,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(compData.status).toBe('UPLOADED');
 
     // Probe job enqueued
-    expect(probeJobs.some((j) => j.videoId === compData.videoId)).toBe(true);
+    expect(probeJobs.some((j) => j.data['videoId'] === compData.videoId)).toBe(true);
   });
 
   it('AC 19: complete with missing parts returns 422 VALIDATION_FAILED', async () => {
@@ -437,7 +410,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(body.code).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
 
     // Verify video is marked REJECTED in database
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('REJECTED');
     expect(video?.errorCode).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
   });
@@ -471,11 +444,11 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(multipartUploads.has(s3UploadId)).toBe(false);
 
     // Invariant: Video status marked ABANDONED in DB
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('ABANDONED');
 
     // Invariant: video_events has upload.aborted event
-    const events = await repositories.events.findByVideoId(videoId);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.some((e) => e.type === 'upload.aborted')).toBe(true);
 
     // Subsequent GET returns 410 with UPLOAD_NOT_OPEN

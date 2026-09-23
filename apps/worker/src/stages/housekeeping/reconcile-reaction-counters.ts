@@ -1,6 +1,8 @@
 import type { ReactionCachePort } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
+import { type Result, isErr, isOk, ok } from '@vp/result';
 
 export interface ReconcileReactionCountersOptions {
   repositories: Repositories;
@@ -14,46 +16,52 @@ export interface ReconcileReactionCountersResult {
   repairedCount: number;
 }
 
+interface Counts {
+  likesCount: number;
+  dislikesCount: number;
+}
+
+function drifted(left: Counts, right: Counts): boolean {
+  return left.likesCount !== right.likesCount || left.dislikesCount !== right.dislikesCount;
+}
+
 /**
  * Drift reconciler for video reaction counters (Ticket 40, SDD §9.8, AC 48-49).
  * Verifies that denormalized and cached reaction counters match ground-truth COUNT(*) from video_reactions,
  * repairing any detected drift automatically.
+ *
+ * `CacheUnavailable` is narrowed away: a cache that cannot answer reports no drift and a cache that
+ * cannot be written is repaired by the next run, so only the database's failures reach the queue.
  */
 export async function runReconcileReactionCounters(
   options: ReconcileReactionCountersOptions
-): Promise<ReconcileReactionCountersResult> {
+): Promise<Result<ReconcileReactionCountersResult, DatabaseUnavailable>> {
   const { repositories, reactionCache, logger, limit = 500 } = options;
 
   let checkedCount = 0;
   let repairedCount = 0;
 
-  // 1. Gather distinct videos with reactions or active videos
   const videoIds = await repositories.videoReactions.listVideoIdsWithReactions(limit);
+  if (isErr(videoIds)) return videoIds;
 
-  for (const videoId of videoIds) {
+  for (const videoId of videoIds.value) {
     checkedCount++;
 
-    // 2. Fetch ground-truth count from video_reactions
-    const groundTruth = await repositories.videoReactions.countGroundTruth(videoId);
+    const truth = await repositories.videoReactions.countGroundTruth(videoId);
+    if (isErr(truth)) return truth;
+    const groundTruth = truth.value;
 
-    // 3. Fetch denormalized counts on videos record
-    const denormalized = await repositories.videoReactions.getReactionCounts(videoId);
+    const stored = await repositories.videoReactions.getReactionCounts(videoId);
+    if (isErr(stored)) return stored;
+    const denormalized = stored.value;
 
-    // 4. Fetch current cached counts from Redis (if configured)
     let cachedDrift = false;
     if (reactionCache) {
-      const cached = await reactionCache.getCounts(videoId, async () => denormalized);
-      if (
-        cached.likesCount !== groundTruth.likesCount ||
-        cached.dislikesCount !== groundTruth.dislikesCount
-      ) {
+      const cached = await reactionCache.getCounts(videoId, async () => stored);
+      if (isOk(cached) && drifted(cached.value, groundTruth)) {
         cachedDrift = true;
         logger?.warn(
-          {
-            videoId,
-            groundTruth,
-            cached,
-          },
+          { videoId, groundTruth, cached: cached.value },
           'Reaction counter drift detected in Redis cache; repairing'
         );
       }
@@ -61,27 +69,20 @@ export async function runReconcileReactionCounters(
 
     let hasDrift = cachedDrift;
 
-    if (
-      denormalized.likesCount !== groundTruth.likesCount ||
-      denormalized.dislikesCount !== groundTruth.dislikesCount
-    ) {
+    if (drifted(denormalized, groundTruth)) {
       hasDrift = true;
       logger?.warn(
-        {
-          videoId,
-          groundTruth,
-          denormalized,
-        },
+        { videoId, groundTruth, denormalized },
         'Reaction counter drift detected in Postgres denormalized counters; repairing'
       );
-      await repositories.videoReactions.updateVideoCounters(
+      const repaired = await repositories.videoReactions.updateVideoCounters(
         videoId,
         groundTruth.likesCount,
         groundTruth.dislikesCount
       );
+      if (isErr(repaired)) return repaired;
     }
 
-    // 5. Ensure Redis cache is repaired/consistent with ground-truth
     if (reactionCache && hasDrift) {
       await reactionCache.setCounts(videoId, groundTruth);
     }
@@ -93,8 +94,5 @@ export async function runReconcileReactionCounters(
 
   logger?.info({ checkedCount, repairedCount }, 'Completed video reaction counter reconciliation');
 
-  return {
-    checkedCount,
-    repairedCount,
-  };
+  return ok({ checkedCount, repairedCount });
 }

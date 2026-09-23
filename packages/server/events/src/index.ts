@@ -1,3 +1,4 @@
+import { type Result, unwrapOr } from '@vp/result';
 import { z } from 'zod';
 
 export { SseEvent } from '@vp/job-contracts';
@@ -22,7 +23,7 @@ export const SseMessageEnvelope = z.object({
 export type SseMessageEnvelope = z.infer<typeof SseMessageEnvelope>;
 
 export interface PublishVideoEventOptions {
-  cache: { publish(channel: string, message: string): Promise<number> };
+  cache: { publish(channel: string, message: string): Promise<Result<number, unknown>> };
   videoId: string;
   userId?: string;
   event: 'snapshot' | 'progress' | 'status';
@@ -45,7 +46,7 @@ export async function publishVideoEvent(options: PublishVideoEventOptions): Prom
     channels.push(userChannel(userId));
   }
   const published = await Promise.all(channels.map((ch) => cache.publish(ch, message)));
-  return published.reduce((sum, n) => sum + n, 0);
+  return published.reduce((sum, result) => sum + unwrapOr(result, 0), 0);
 }
 
 export function formatSseFrame(options: {

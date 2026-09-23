@@ -7,14 +7,12 @@ import {
   HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
-  S3Client,
-  type S3ClientConfig,
+  type S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   StorageClient,
   type StorageDeleteObjectsResult,
-  StorageError,
   type StorageListObjectsParams,
   type StorageListObjectsResult,
   type StorageObjectMetadata,
@@ -24,335 +22,247 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
+import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { measureStorageOp } from '../storage-metrics-helper';
+import { type S3ConnectionConfig, isNotFound, s3ClientFrom } from './s3-config';
 
-export interface S3StorageClientConfig {
-  endpoint?: string;
-  region?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
-  forcePathStyle?: boolean;
+export interface S3StorageClientConfig extends S3ConnectionConfig {
   client?: S3Client;
 }
+
+const DELETE_BATCH = 1000;
 
 export class S3StorageClient extends StorageClient {
   private readonly client: S3Client;
 
   constructor(config: S3StorageClientConfig = {}) {
     super();
-    if (config.client) {
-      this.client = config.client;
-      return;
-    }
-
-    const endpoint =
-      config.endpoint ??
-      process.env['S3_ENDPOINT'] ??
-      process.env['STORAGE_ENDPOINT'] ??
-      'http://localhost:9000';
-    const region =
-      config.region ?? process.env['S3_REGION'] ?? process.env['STORAGE_REGION'] ?? 'us-east-1';
-    const accessKeyId =
-      config.accessKeyId ??
-      process.env['S3_ACCESS_KEY_ID'] ??
-      process.env['STORAGE_ACCESS_KEY_ID'] ??
-      'minioadmin';
-    const secretAccessKey =
-      config.secretAccessKey ??
-      process.env['S3_SECRET_ACCESS_KEY'] ??
-      process.env['STORAGE_SECRET_ACCESS_KEY'] ??
-      'minioadmin';
-    const forcePathStyle =
-      config.forcePathStyle ??
-      (process.env['S3_FORCE_PATH_STYLE'] === 'true' ||
-        process.env['STORAGE_FORCE_PATH_STYLE'] === 'true' ||
-        endpoint.includes('localhost') ||
-        endpoint.includes('127.0.0.1') ||
-        endpoint.includes('minio'));
-
-    const s3Config: S3ClientConfig = {
-      endpoint,
-      region,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-      forcePathStyle,
-    };
-
-    this.client = new S3Client(s3Config);
+    this.client = config.client ?? s3ClientFrom(config);
   }
 
   getRawClient(): S3Client {
     return this.client;
   }
 
-  async checkHealth(): Promise<boolean> {
-    try {
-      return true;
-    } catch {
-      return false;
-    }
+  private unavailable(operation: string) {
+    return (cause: unknown): StorageUnavailable => storageUnavailable(operation, cause);
   }
 
-  async uploadObject(params: StorageUploadParams): Promise<StorageUploadResult> {
+  /** A 404 is an answer, not a fault: it resolves to `absent` while any other cause is a failure. */
+  private async absentOr<T>(
+    operation: string,
+    absent: T,
+    run: () => Promise<T>
+  ): Promise<Result<T, StorageUnavailable>> {
+    const sent = await fromPromise(run, (cause) =>
+      isNotFound(cause) ? null : storageUnavailable(operation, cause)
+    );
+    if (sent.ok) return ok(sent.value);
+    return sent.error === null ? ok(absent) : err(sent.error);
+  }
+
+  async checkHealth(): Promise<Result<void, StorageUnavailable>> {
+    return ok();
+  }
+
+  async uploadObject(
+    params: StorageUploadParams
+  ): Promise<Result<StorageUploadResult, StorageUnavailable>> {
     return measureStorageOp('put', params.bucket, async () => {
-      try {
-        const command = new PutObjectCommand({
-          Bucket: params.bucket,
-          Key: params.key,
-          Body: params.body as PutObjectCommand['input']['Body'],
-          ContentType: params.contentType,
-          CacheControl: params.cacheControl,
-        });
-        const res = await this.client.send(command);
-        return {
-          key: params.key,
-          etag: res.ETag,
-        };
-      } catch (err: unknown) {
-        throw new StorageError(`Failed to upload object ${params.key}: ${(err as Error).message}`, {
-          cause: err,
-        });
-      }
+      const sent = await fromPromise(
+        () =>
+          this.client.send(
+            new PutObjectCommand({
+              Bucket: params.bucket,
+              Key: params.key,
+              Body: params.body as PutObjectCommand['input']['Body'],
+              ContentType: params.contentType,
+              CacheControl: params.cacheControl,
+            })
+          ),
+        this.unavailable('uploadObject')
+      );
+
+      return map(sent, (res) => ({ key: params.key, etag: res.ETag }));
     });
   }
 
-  async headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null> {
-    return measureStorageOp('head', bucket, async () => {
-      try {
-        const command = new HeadObjectCommand({
-          Bucket: bucket,
-          Key: key,
-        });
-        const res = await this.client.send(command);
+  async headObject(
+    bucket: string,
+    key: string
+  ): Promise<Result<StorageObjectMetadata | null, StorageUnavailable>> {
+    return measureStorageOp('head', bucket, () =>
+      this.absentOr<StorageObjectMetadata | null>('headObject', null, async () => {
+        const res = await this.client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
         return {
           contentLength: res.ContentLength ?? 0,
           contentType: res.ContentType,
           cacheControl: res.CacheControl,
           etag: res.ETag,
         };
-      } catch (err: unknown) {
-        const error = err as { name?: string; $metadata?: { httpStatusCode?: number } };
-        if (
-          error.name === 'NotFound' ||
-          error.name === 'NoSuchKey' ||
-          error.$metadata?.httpStatusCode === 404
-        ) {
-          return null;
-        }
-        throw new StorageError(`Failed to head object ${key}: ${(err as Error).message}`, {
-          cause: err,
-        });
-      }
-    });
+      })
+    );
   }
 
-  async getObject(bucket: string, key: string): Promise<Buffer> {
-    return measureStorageOp('get', bucket, async () => {
-      try {
-        const command = new GetObjectCommand({
-          Bucket: bucket,
-          Key: key,
-        });
-        const res = await this.client.send(command);
-        if (!res.Body) {
-          throw new Error('Empty response body received from S3');
-        }
-        const stream = res.Body as AsyncIterable<Uint8Array | Buffer | string>;
+  async getObject(bucket: string, key: string): Promise<Result<Buffer, StorageUnavailable>> {
+    return measureStorageOp('get', bucket, async () =>
+      fromPromise(async () => {
+        const res = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+        if (!res.Body) throw new Error('Empty response body received from S3');
+
         const chunks: Buffer[] = [];
-        for await (const chunk of stream) {
+        for await (const chunk of res.Body as AsyncIterable<Uint8Array | Buffer | string>) {
           chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
         }
         return Buffer.concat(chunks);
-      } catch (err: unknown) {
-        throw new StorageError(`Failed to get object ${key}: ${(err as Error).message}`, {
-          cause: err,
-        });
-      }
-    });
+      }, this.unavailable('getObject'))
+    );
   }
 
-  async downloadObject(bucket: string, key: string, targetFilePath: string): Promise<boolean> {
-    return measureStorageOp('get', bucket, async () => {
-      try {
-        const command = new GetObjectCommand({
-          Bucket: bucket,
-          Key: key,
-        });
-        const res = await this.client.send(command);
-        if (!res.Body) {
-          return false;
-        }
-        const readStream = res.Body as NodeJS.ReadableStream;
-        const writeStream = fs.createWriteStream(targetFilePath);
-        await pipeline(readStream, writeStream);
+  async downloadObject(
+    bucket: string,
+    key: string,
+    targetFilePath: string
+  ): Promise<Result<boolean, StorageUnavailable>> {
+    return measureStorageOp('get', bucket, () =>
+      this.absentOr('downloadObject', false, async () => {
+        const res = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+        if (!res.Body) return false;
+        await pipeline(res.Body as NodeJS.ReadableStream, fs.createWriteStream(targetFilePath));
         return true;
-      } catch (err: unknown) {
-        const error = err as { name?: string; $metadata?: { httpStatusCode?: number } };
-        if (
-          error.name === 'NotFound' ||
-          error.name === 'NoSuchKey' ||
-          error.$metadata?.httpStatusCode === 404
-        ) {
-          return false;
-        }
-        throw new StorageError(`Failed to download object ${key}: ${(err as Error).message}`, {
-          cause: err,
-        });
-      }
-    });
+      })
+    );
   }
 
-  async deleteObject(bucket: string, key: string): Promise<void> {
+  async deleteObject(bucket: string, key: string): Promise<Result<void, StorageUnavailable>> {
     return measureStorageOp('delete', bucket, async () => {
-      try {
-        const command = new DeleteObjectCommand({
-          Bucket: bucket,
-          Key: key,
-        });
-        await this.client.send(command);
-      } catch (err: unknown) {
-        throw new StorageError(`Failed to delete object ${key}: ${(err as Error).message}`, {
-          cause: err,
-        });
-      }
+      const sent = await fromPromise(
+        () => this.client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key })),
+        this.unavailable('deleteObject')
+      );
+      return map(sent, () => undefined);
     });
   }
 
-  async deleteObjects(bucket: string, keys: string[]): Promise<StorageDeleteObjectsResult> {
-    if (keys.length === 0) {
-      return { deletedKeys: [] };
-    }
+  async deleteObjects(
+    bucket: string,
+    keys: string[]
+  ): Promise<Result<StorageDeleteObjectsResult, StorageUnavailable>> {
+    if (keys.length === 0) return ok({ deletedKeys: [] });
+
     return measureStorageOp('delete', bucket, async () => {
-      try {
-        const chunks: string[][] = [];
-        for (let i = 0; i < keys.length; i += 1000) {
-          chunks.push(keys.slice(i, i + 1000));
-        }
-        const deleted: string[] = [];
-        for (const chunk of chunks) {
-          const command = new DeleteObjectsCommand({
-            Bucket: bucket,
-            Delete: {
-              Objects: chunk.map((Key) => ({ Key })),
-              Quiet: true,
-            },
-          });
-          await this.client.send(command);
-          deleted.push(...chunk);
-        }
-        return { deletedKeys: deleted };
-      } catch (err: unknown) {
-        throw new StorageError(`Failed to delete objects: ${(err as Error).message}`, {
-          cause: err,
-        });
-      }
-    });
-  }
-
-  async listObjects(params: StorageListObjectsParams): Promise<StorageListObjectsResult> {
-    return measureStorageOp('list', params.bucket, async () => {
-      try {
-        const command = new ListObjectsV2Command({
-          Bucket: params.bucket,
-          Prefix: params.prefix,
-          ContinuationToken: params.continuationToken,
-          MaxKeys: params.maxKeys,
-        });
-        const res = await this.client.send(command);
-        const keys = (res.Contents ?? [])
-          .map((obj) => obj.Key)
-          .filter((k): k is string => typeof k === 'string' && k.length > 0);
-        return {
-          keys,
-          nextContinuationToken: res.NextContinuationToken,
-          isTruncated: res.IsTruncated ?? false,
-        };
-      } catch (err: unknown) {
-        throw new StorageError(
-          `Failed to list objects in bucket ${params.bucket}: ${(err as Error).message}`,
-          { cause: err }
+      const deleted: string[] = [];
+      for (let i = 0; i < keys.length; i += DELETE_BATCH) {
+        const chunk = keys.slice(i, i + DELETE_BATCH);
+        const sent = await fromPromise(
+          () =>
+            this.client.send(
+              new DeleteObjectsCommand({
+                Bucket: bucket,
+                Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
+              })
+            ),
+          this.unavailable('deleteObjects')
         );
+        if (!sent.ok) return sent;
+        deleted.push(...chunk);
       }
+      return ok({ deletedKeys: deleted });
     });
   }
 
-  async purgePrefix(bucket: string, prefix: string): Promise<number> {
+  async listObjects(
+    params: StorageListObjectsParams
+  ): Promise<Result<StorageListObjectsResult, StorageUnavailable>> {
+    return measureStorageOp('list', params.bucket, async () => {
+      const sent = await fromPromise(
+        () =>
+          this.client.send(
+            new ListObjectsV2Command({
+              Bucket: params.bucket,
+              Prefix: params.prefix,
+              ContinuationToken: params.continuationToken,
+              MaxKeys: params.maxKeys,
+            })
+          ),
+        this.unavailable('listObjects')
+      );
+
+      return map(sent, (res) => ({
+        keys: (res.Contents ?? [])
+          .map((obj) => obj.Key)
+          .filter((k): k is string => typeof k === 'string' && k.length > 0),
+        nextContinuationToken: res.NextContinuationToken,
+        isTruncated: res.IsTruncated ?? false,
+      }));
+    });
+  }
+
+  async purgePrefix(bucket: string, prefix: string): Promise<Result<number, StorageUnavailable>> {
     let totalDeleted = 0;
     let continuationToken: string | undefined;
     do {
-      const page = await this.listObjects({
-        bucket,
-        prefix,
-        continuationToken,
-        maxKeys: 1000,
-      });
+      const listed = await this.listObjects({ bucket, prefix, continuationToken, maxKeys: 1000 });
+      if (!listed.ok) return listed;
+
+      const page = listed.value;
       if (page.keys.length > 0) {
-        await this.deleteObjects(bucket, page.keys);
+        const removed = await this.deleteObjects(bucket, page.keys);
+        if (!removed.ok) return removed;
         totalDeleted += page.keys.length;
       }
       continuationToken = page.isTruncated ? page.nextContinuationToken : undefined;
     } while (continuationToken);
-    return totalDeleted;
+
+    return ok(totalDeleted);
   }
 
   async createPresignedPutUrl(
     params: StoragePresignedPutParams
-  ): Promise<StoragePresignedPutResult> {
-    try {
-      const expiresIn = params.expiresInSeconds ?? 900;
-      const command = new PutObjectCommand({
-        Bucket: params.bucket,
-        Key: params.key,
-        ContentType: params.contentType,
-        ContentLength: params.contentLength,
-      });
+  ): Promise<Result<StoragePresignedPutResult, StorageUnavailable>> {
+    const expiresIn = params.expiresInSeconds ?? 900;
+    const signed = await fromPromise(
+      () =>
+        getSignedUrl(
+          this.client,
+          new PutObjectCommand({
+            Bucket: params.bucket,
+            Key: params.key,
+            ContentType: params.contentType,
+            ContentLength: params.contentLength,
+          }),
+          { expiresIn }
+        ),
+      this.unavailable('createPresignedPutUrl')
+    );
 
-      const url = await getSignedUrl(this.client, command, {
-        expiresIn,
-      });
-
-      return {
-        url,
-        headers: {
-          'content-type': params.contentType,
-          'content-length': String(params.contentLength ?? 0),
-        },
-        expiresAt: new Date(Date.now() + expiresIn * 1000),
-      };
-    } catch (err: unknown) {
-      throw new StorageError(
-        `Failed to create presigned PUT url for ${params.key}: ${(err as Error).message}`,
-        {
-          cause: err,
-        }
-      );
-    }
+    return map(signed, (url) => ({
+      url,
+      headers: {
+        'content-type': params.contentType,
+        'content-length': String(params.contentLength ?? 0),
+      },
+      expiresAt: new Date(Date.now() + expiresIn * 1000),
+    }));
   }
 
-  async createPresignedGetUrl(params: StoragePresignedGetParams): Promise<string> {
-    try {
-      const expiresIn = params.expiresInSeconds ?? 900;
-      const command = new GetObjectCommand({
-        Bucket: params.bucket,
-        Key: params.key,
-      });
-
-      return await getSignedUrl(this.client, command, {
-        expiresIn,
-      });
-    } catch (err: unknown) {
-      throw new StorageError(
-        `Failed to create presigned GET url for ${params.key}: ${(err as Error).message}`,
-        {
-          cause: err,
-        }
-      );
-    }
+  async createPresignedGetUrl(
+    params: StoragePresignedGetParams
+  ): Promise<Result<string, StorageUnavailable>> {
+    return fromPromise(
+      () =>
+        getSignedUrl(
+          this.client,
+          new GetObjectCommand({ Bucket: params.bucket, Key: params.key }),
+          { expiresIn: params.expiresInSeconds ?? 900 }
+        ),
+      this.unavailable('createPresignedGetUrl')
+    );
   }
 
-  async close(): Promise<void> {
+  async close(): Promise<Result<void, StorageUnavailable>> {
     this.client.destroy();
+    return ok();
   }
 }

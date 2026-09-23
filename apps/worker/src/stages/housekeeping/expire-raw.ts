@@ -1,6 +1,8 @@
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
+import { type Result, isErr, ok } from '@vp/result';
 
 export interface ExpireRawOptions {
   repositories: Repositories;
@@ -21,7 +23,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * Delete raw/ sources of READY videos older than RAW_RETENTION_DAYS
  * (lifecycle rule is the primary mechanism; this is the audit trail).
  */
-export async function runExpireRaw(options: ExpireRawOptions): Promise<ExpireRawResult> {
+export async function runExpireRaw(
+  options: ExpireRawOptions
+): Promise<Result<ExpireRawResult, DatabaseUnavailable>> {
   const {
     repositories,
     storage,
@@ -39,7 +43,9 @@ export async function runExpireRaw(options: ExpireRawOptions): Promise<ExpireRaw
     idleFor: { since: 'readyAt', ms: retentionDays * DAY_MS },
     without: { event: 'video.raw_expired' },
   });
-  for (const video of expiredVideos) {
+  if (isErr(expiredVideos)) return expiredVideos;
+
+  for (const video of expiredVideos.value) {
     if (video.sourceKey) {
       logger?.info(
         { videoId: video.id, sourceKey: video.sourceKey, retentionDays },
@@ -63,5 +69,5 @@ export async function runExpireRaw(options: ExpireRawOptions): Promise<ExpireRaw
     }
   }
 
-  return { expiredCount };
+  return ok({ expiredCount });
 }

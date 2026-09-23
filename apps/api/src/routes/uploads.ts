@@ -5,25 +5,20 @@ import {
   issueUploadParts,
   startUpload,
 } from '@vp/api-contracts';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { isErr, map } from '@vp/result';
+import { ALLOWED_CONTENT_TYPES, type UploadLimits, validateStartUpload } from '@vp/validation';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { UploadService } from '../services/upload-service';
 import { contractPaths, contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
 
 export interface UploadsRouteOptions {
   uploadService: UploadService;
   maxUploadBytes?: number;
   rateLimitMax?: number;
 }
-
-const ALLOWED_CONTENT_TYPES = new Set([
-  'video/mp4',
-  'video/webm',
-  'video/quicktime',
-  'video/x-matroska',
-]);
 
 /**
  * Fastify routes plugin for video uploads (SDD §3.1, §6.1).
@@ -35,6 +30,11 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
     maxUploadBytes = 5 * 1024 * 1024 * 1024, // 5 GB default cap
     rateLimitMax = 30,
   } = options;
+
+  const limits: UploadLimits = {
+    maxBytes: maxUploadBytes,
+    allowedContentTypes: ALLOWED_CONTENT_TYPES,
+  };
 
   const server = app.withTypeProvider<ZodTypeProvider>();
 
@@ -59,19 +59,8 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
         const { filename, sizeBytes, contentType, strategy, sha256, title, visibility } =
           request.body;
 
-        if (sizeBytes > maxUploadBytes) {
-          throw new PermanentError(
-            ErrorCodes.UPLOAD_TOO_LARGE,
-            `File exceeds maximum upload size of ${maxUploadBytes} bytes`
-          );
-        }
-
-        if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
-          throw new PermanentError(
-            ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
-            `Content type ${contentType} is not supported. Allowed: ${Array.from(ALLOWED_CONTENT_TYPES).join(', ')}`
-          );
-        }
+        const validated = validateStartUpload({ filename, sizeBytes, contentType, title }, limits);
+        if (isErr(validated)) return sendResult(reply, request, validated);
 
         const result = await uploadService.initiate(user, {
           filename,
@@ -83,7 +72,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
           visibility,
         });
 
-        return reply.status(201).send(result);
+        return sendResult(reply, request, result, { status: 201 });
       }
     );
   }
@@ -100,8 +89,7 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
       async (request, reply) => {
         const user = requireAuth(request);
         const { uploadId } = request.params;
-        const result = await uploadService.getResumeInfo(user, uploadId);
-        return reply.status(200).send(result);
+        return sendResult(reply, request, await uploadService.getResumeInfo(user, uploadId));
       }
     );
   }
@@ -120,8 +108,13 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
         const user = requireAuth(request);
         const { uploadId } = request.params;
         const { from, count } = request.query;
-        const parts = await uploadService.issuePartUrls(user, uploadId, from, count);
-        return reply.status(200).send({ parts });
+        const issued = await uploadService.issuePartUrls(user, uploadId, from, count);
+
+        return sendResult(
+          reply,
+          request,
+          map(issued, (parts) => ({ parts }))
+        );
       }
     );
   }
@@ -143,7 +136,8 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
         const result = await uploadService.complete(user, uploadId, request.body?.parts, {
           testCrashAfterCommit,
         });
-        return reply.status(202).send(result);
+
+        return sendResult(reply, request, result, { status: 202 });
       }
     );
   }
@@ -160,8 +154,9 @@ export function registerUploadsRoutes(app: FastifyInstance, options: UploadsRout
       async (request, reply) => {
         const user = requireAuth(request);
         const { uploadId } = request.params;
-        await uploadService.abort(user, uploadId);
-        return reply.status(204).send(null);
+        return sendResult(reply, request, await uploadService.abort(user, uploadId), {
+          status: 204,
+        });
       }
     );
   }

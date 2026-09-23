@@ -1,6 +1,7 @@
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
@@ -63,7 +64,7 @@ describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)
         status: 'READY',
         sourceKey: `raw/${vid}/source.mp4`,
       });
-      const stored = await repositories.videos.findById(vid);
+      const stored = expectOk(await repositories.videos.findById(vid));
       if (stored) {
         stored.createdAt = new Date(baseTime + i * 1000);
       }
@@ -126,7 +127,7 @@ describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)
         status: 'READY',
         sourceKey: `raw/${vid}/source.mp4`,
       });
-      const stored = await repositories.videos.findById(vid);
+      const stored = expectOk(await repositories.videos.findById(vid));
       if (stored) {
         stored.createdAt = new Date(baseTime + i * 1000);
       }
@@ -152,7 +153,7 @@ describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)
       status: 'READY',
       sourceKey: `raw/${newId}/source.mp4`,
     });
-    const newStored = await repositories.videos.findById(newId);
+    const newStored = expectOk(await repositories.videos.findById(newId));
     if (newStored) {
       newStored.createdAt = new Date(baseTime + 100000);
     }
@@ -295,7 +296,7 @@ describe('Videos API: Keyset pagination, metadata edits & visibility (Ticket 19)
     expect(patch1.version).toBe(2);
 
     // Verify video.metadata_updated event was recorded
-    const events = await repositories.events.findByVideoId(videoId);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
     const metaEvent = events.find((e) => e.type === 'video.metadata_updated');
     expect(metaEvent).toBeDefined();
     expect((metaEvent?.payload as { newVersion: number }).newVersion).toBe(2);

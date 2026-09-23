@@ -1,3 +1,5 @@
+import type { StorageUnavailable } from '@vp/errors';
+import type { Result } from '@vp/result';
 import type { HealthCheckable } from './health-checkable';
 
 export interface StoragePresignedPartParams {
@@ -31,27 +33,35 @@ export interface StorageMultipartUploadInfo {
   initiated?: Date;
 }
 
-export abstract class MultipartStorage implements HealthCheckable {
-  abstract checkHealth(): Promise<boolean>;
-  abstract createMultipartUpload(bucket: string, key: string, contentType: string): Promise<string>;
+export abstract class MultipartStorage implements HealthCheckable<StorageUnavailable> {
+  abstract checkHealth(): Promise<Result<void, StorageUnavailable>>;
+  abstract createMultipartUpload(
+    bucket: string,
+    key: string,
+    contentType: string
+  ): Promise<Result<string, StorageUnavailable>>;
   abstract createPresignedPartUrl(
     params: StoragePresignedPartParams
-  ): Promise<StoragePresignedPartInfo>;
+  ): Promise<Result<StoragePresignedPartInfo, StorageUnavailable>>;
   abstract listMultipartParts(
     bucket: string,
     key: string,
     uploadId: string
-  ): Promise<StorageUploadedPartInfo[]>;
+  ): Promise<Result<StorageUploadedPartInfo[], StorageUnavailable>>;
   abstract listMultipartUploads(
     bucket: string,
     prefix?: string
-  ): Promise<StorageMultipartUploadInfo[]>;
+  ): Promise<Result<StorageMultipartUploadInfo[], StorageUnavailable>>;
   abstract completeMultipartUpload(
     bucket: string,
     key: string,
     uploadId: string,
     parts: StorageCompletePartInput[]
-  ): Promise<void>;
-  abstract abortMultipartUpload(bucket: string, key: string, uploadId: string): Promise<void>;
-  abstract close(): Promise<void>;
+  ): Promise<Result<void, StorageUnavailable>>;
+  abstract abortMultipartUpload(
+    bucket: string,
+    key: string,
+    uploadId: string
+  ): Promise<Result<void, StorageUnavailable>>;
+  abstract close(): Promise<Result<void, StorageUnavailable>>;
 }

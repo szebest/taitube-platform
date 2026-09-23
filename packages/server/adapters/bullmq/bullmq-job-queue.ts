@@ -2,14 +2,14 @@ import {
   JobQueue,
   type JobSchedulerInfo,
   type JobSchedulerTemplate,
-  QueueError,
   type QueueJob,
   type QueueJobCounts,
   type QueueJobOptions,
   type QueueWorkerOptions,
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
-
+import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
+import { type Result, err, fromPromise, map, ok, tryCatch } from '@vp/result';
 import {
   type ConnectionOptions,
   type Job,
@@ -17,22 +17,12 @@ import {
   type JobsOptions,
   Queue,
   type QueueOptions,
-  UnrecoverableError,
   Worker,
   type WorkerOptions,
 } from 'bullmq';
+import { bullMqProcessor } from './bullmq-processor';
 import { getRedisConnectionOptions } from './connection';
-
-class CustomUnrecoverableError extends UnrecoverableError {
-  code?: string;
-  override cause?: unknown;
-}
-
-interface ErrorWithDetails {
-  isRetryable?: boolean;
-  code?: string;
-  message: string;
-}
+import { toQueueJob } from './job-mapping';
 
 export type WorkerFactory = (
   name: string,
@@ -57,8 +47,7 @@ export class BullMqJobQueue extends JobQueue {
   constructor(config: BullMqJobQueueConfig) {
     super();
     this.createWorker =
-      config.createWorker ??
-      ((name, processor, options) => new Worker(name, processor, options));
+      config.createWorker ?? ((name, processor, options) => new Worker(name, processor, options));
     this.queue =
       config.queue ??
       new Queue(config.name, {
@@ -68,17 +57,20 @@ export class BullMqJobQueue extends JobQueue {
       });
   }
 
-  async checkHealth(): Promise<boolean> {
-    try {
+  private unavailable(operation: string) {
+    return (cause: unknown): QueueUnavailable => queueUnavailable(operation, cause);
+  }
+
+  async checkHealth(): Promise<Result<void, QueueUnavailable>> {
+    const pinged = await fromPromise(async () => {
       const client = await (
-        this.queue as unknown as { client: Promise<{ ping(): Promise<string> }> }
+        this.queue as unknown as { client: Promise<{ ping(): Promise<string> } | undefined> }
       ).client;
-      if (!client) return true;
-      const res = await client.ping();
-      return res === 'PONG';
-    } catch {
-      return false;
-    }
+      return client ? await client.ping() : 'PONG';
+    }, this.unavailable('checkHealth'));
+
+    if (!pinged.ok) return pinged;
+    return pinged.value === 'PONG' ? ok() : err(queueUnavailable('checkHealth', pinged.value));
   }
 
   getName(): string {
@@ -89,294 +81,159 @@ export class BullMqJobQueue extends JobQueue {
     return this.queue;
   }
 
-  async getJobState(jobId: string): Promise<string | undefined> {
-    try {
+  async getJobState(jobId: string): Promise<Result<string | undefined, QueueUnavailable>> {
+    return fromPromise(async () => {
       const job = await this.queue.getJob(jobId);
-      if (!job) return undefined;
-      return await job.getState();
-    } catch (err: unknown) {
-      throw new QueueError(`Failed to get job state for "${jobId}": ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+      return job ? await job.getState() : undefined;
+    }, this.unavailable('getJobState'));
   }
 
   onFailed(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void {
     this.failedHandler = handler;
-    if (this.worker) {
-      this.worker.on('failed', (job: Job | undefined, err: Error) => {
-        if (job) {
-          handler(
-            {
-              id: job.id ?? '',
-              name: job.name,
-              data: job.data,
-              attemptsMade: job.attemptsMade,
-            },
-            err
-          );
-        }
-      });
-    }
+    if (this.worker) this.listenForFailures(this.worker);
   }
 
-  async add<T = unknown>(name: string, data: T, options?: QueueJobOptions): Promise<QueueJob<T>> {
-    try {
-      const job = await this.queue.add(name, data, {
-        jobId: options?.jobId,
-        attempts: options?.attempts,
-        priority: options?.priority,
-        backoff: options?.backoff as JobsOptions['backoff'],
-        removeOnComplete: options?.removeOnComplete as JobsOptions['removeOnComplete'],
-        removeOnFail: options?.removeOnFail as JobsOptions['removeOnFail'],
-      });
+  private listenForFailures(worker: Worker): void {
+    worker.on('failed', (job: Job | undefined, err: Error) => {
+      if (job) this.failedHandler?.(toQueueJob(job), err);
+    });
+  }
 
-      return {
-        id: job.id ?? '',
-        name: job.name,
-        data: job.data as T,
-        opts: {
-          jobId: job.id,
-          attempts: job.opts?.attempts,
-          priority: job.opts?.priority,
-        },
-        attemptsMade: job.attemptsMade,
-      };
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to enqueue job "${name}" on queue "${this.queue.name}": ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+  async add<T = unknown>(
+    name: string,
+    data: T,
+    options?: QueueJobOptions
+  ): Promise<Result<QueueJob<T>, QueueUnavailable>> {
+    const added = await fromPromise(
+      () =>
+        this.queue.add(name, data, {
+          jobId: options?.jobId,
+          attempts: options?.attempts,
+          priority: options?.priority,
+          backoff: options?.backoff as JobsOptions['backoff'],
+          removeOnComplete: options?.removeOnComplete as JobsOptions['removeOnComplete'],
+          removeOnFail: options?.removeOnFail as JobsOptions['removeOnFail'],
+        }),
+      this.unavailable('add')
+    );
+
+    return map(added, (job) => toQueueJob<T>(job));
   }
 
   async process<T = unknown>(
     handler: (job: QueueJob<T>) => Promise<unknown>,
     options?: QueueWorkerOptions
-  ): Promise<void> {
-    try {
-      const connection =
-        (this.queue.opts.connection as ConnectionOptions | undefined) ??
-        getRedisConnectionOptions();
-
-      this.worker = this.createWorker(
-        this.queue.name,
-        async (job: Job) => {
-          try {
-            return await handler({
-              id: job.id ?? '',
-              name: job.name,
-              data: job.data as T,
-              opts: {
-                jobId: job.id,
-                attempts: job.opts?.attempts,
-                priority: job.opts?.priority,
-              },
-              attemptsMade: job.attemptsMade,
-              updateProgress: async (progress: number | object) => {
-                await job.updateProgress(progress);
-              },
-              getChildrenValues: async <R = Record<string, unknown>>() => {
-                const values = await job.getChildrenValues();
-                return (values ?? {}) as R;
-              },
-              getState: async () => {
-                return await job.getState();
-              },
-            });
-          } catch (err: unknown) {
-            const errObj = err as ErrorWithDetails;
-            // If the error is marked permanent (non-retryable), signal BullMQ via UnrecoverableError
-            if (errObj.isRetryable === false) {
-              const unrec = new CustomUnrecoverableError(errObj.message);
-              if (errObj.code) unrec.code = errObj.code;
-              unrec.cause = err;
-              throw unrec;
-            }
-            // Unknown errors treated as transient with cap 3 (AC 2)
-            const isTransient = errObj.isRetryable === true;
-            if (!isTransient) {
-              if ((job.attemptsMade ?? 0) + 1 >= 3) {
-                const unrec = new CustomUnrecoverableError(errObj.message);
-                if (errObj.code) unrec.code = errObj.code;
-                unrec.cause = err;
-                throw unrec;
-              }
-            }
-            throw err;
-          }
-        },
-        {
-          connection,
+  ): Promise<Result<void, QueueUnavailable>> {
+    const started = tryCatch(
+      () =>
+        this.createWorker(this.queue.name, bullMqProcessor<T>(handler), {
+          connection:
+            (this.queue.opts.connection as ConnectionOptions | undefined) ??
+            getRedisConnectionOptions(),
           prefix: this.queue.opts.prefix,
           concurrency: options?.concurrency,
           lockDuration: options?.lockDurationMs,
           lockRenewTime: options?.lockRenewTimeMs,
           stalledInterval: options?.stalledIntervalMs,
           maxStalledCount: options?.maxStalledCount,
-        }
-      );
+        }),
+      this.unavailable('process')
+    );
 
-      if (this.failedHandler) {
-        this.worker.on('failed', (job: Job | undefined, err: Error) => {
-          if (job && this.failedHandler) {
-            this.failedHandler(
-              {
-                id: job.id ?? '',
-                name: job.name,
-                data: job.data,
-                attemptsMade: job.attemptsMade,
-              },
-              err
-            );
-          }
-        });
-      }
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to start worker on queue "${this.queue.name}": ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+    return map(started, (worker) => {
+      this.worker = worker;
+      if (this.failedHandler) this.listenForFailures(worker);
+    });
   }
 
-  async isPaused(): Promise<boolean> {
-    try {
-      return await this.queue.isPaused();
-    } catch (err: unknown) {
-      throw new QueueError(`Failed to check pause status: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+  async isPaused(): Promise<Result<boolean, QueueUnavailable>> {
+    return fromPromise(() => this.queue.isPaused(), this.unavailable('isPaused'));
   }
 
-  async pause(): Promise<void> {
-    try {
-      await this.queue.pause();
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to pause queue "${this.queue.name}": ${(err as Error).message}`,
-        {
-          cause: err,
-        }
-      );
-    }
+  async pause(): Promise<Result<void, QueueUnavailable>> {
+    return fromPromise(() => this.queue.pause(), this.unavailable('pause'));
   }
 
-  async resume(): Promise<void> {
-    try {
-      await this.queue.resume();
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to resume queue "${this.queue.name}": ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+  async resume(): Promise<Result<void, QueueUnavailable>> {
+    return fromPromise(() => this.queue.resume(), this.unavailable('resume'));
   }
 
-  async getJobCounts(): Promise<QueueJobCounts> {
-    try {
-      const counts = await this.queue.getJobCounts(
-        'waiting',
-        'active',
-        'completed',
-        'failed',
-        'delayed',
-        'paused' as JobType
-      );
-      return {
-        waiting: counts.waiting ?? 0,
-        active: counts.active ?? 0,
-        completed: counts.completed ?? 0,
-        failed: counts.failed ?? 0,
-        delayed: counts.delayed ?? 0,
-        paused: counts.paused ?? 0,
-      };
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to get job counts for queue "${this.queue.name}": ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+  async getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>> {
+    const counted = await fromPromise(
+      () =>
+        this.queue.getJobCounts(
+          'waiting',
+          'active',
+          'completed',
+          'failed',
+          'delayed',
+          'paused' as JobType
+        ),
+      this.unavailable('getJobCounts')
+    );
+
+    return map(counted, (counts) => ({
+      waiting: counts.waiting ?? 0,
+      active: counts.active ?? 0,
+      completed: counts.completed ?? 0,
+      failed: counts.failed ?? 0,
+      delayed: counts.delayed ?? 0,
+      paused: counts.paused ?? 0,
+    }));
   }
 
   async getJobs(
     types: JobType[] = ['waiting', 'active', 'completed', 'failed']
-  ): Promise<QueueJob<unknown>[]> {
-    try {
-      const jobs = await this.queue.getJobs(types);
-      return jobs.map((j) => ({
-        id: j.id ?? '',
-        name: j.name,
-        data: j.data,
-        attemptsMade: j.attemptsMade,
-      }));
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to get jobs for queue "${this.queue.name}": ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+  ): Promise<Result<QueueJob<unknown>[], QueueUnavailable>> {
+    const jobs = await fromPromise(() => this.queue.getJobs(types), this.unavailable('getJobs'));
+
+    return map(jobs, (found) => found.map((job) => toQueueJob(job)));
   }
 
-  async upsertJobScheduler<T = unknown>(
+  override async upsertJobScheduler<T = unknown>(
     id: string,
     repeatOpts: UpsertJobSchedulerOptions,
     template?: JobSchedulerTemplate<T>
-  ): Promise<unknown> {
-    try {
-      return await this.queue.upsertJobScheduler(
-        id,
-        {
-          pattern: repeatOpts.pattern,
-          every: repeatOpts.every,
-        },
-        template
-          ? {
-              name: template.name,
-              data: template.data as Record<string, unknown>,
-              opts: template.opts as JobsOptions,
-            }
-          : undefined
-      );
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to upsert job scheduler "${id}" on queue "${this.queue.name}": ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+  ): Promise<Result<unknown, QueueUnavailable>> {
+    return fromPromise(
+      () =>
+        this.queue.upsertJobScheduler(
+          id,
+          { pattern: repeatOpts.pattern, every: repeatOpts.every },
+          template
+            ? {
+                name: template.name,
+                data: template.data as Record<string, unknown>,
+                opts: template.opts as JobsOptions,
+              }
+            : undefined
+        ),
+      this.unavailable('upsertJobScheduler')
+    );
   }
 
-  async getJobSchedulers(): Promise<JobSchedulerInfo[]> {
-    try {
-      const schedulers = await this.queue.getJobSchedulers();
-      return schedulers.map((s) => ({
+  override async getJobSchedulers(): Promise<Result<JobSchedulerInfo[], QueueUnavailable>> {
+    const schedulers = await fromPromise(
+      () => this.queue.getJobSchedulers(),
+      this.unavailable('getJobSchedulers')
+    );
+
+    return map(schedulers, (found) =>
+      found.map((s) => ({
         id: s.id ?? s.name ?? s.key,
         name: s.name ?? s.id ?? '',
         pattern: s.pattern,
         every: s.every,
         data: s.template?.data,
-      }));
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to get job schedulers for queue "${this.queue.name}": ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+      }))
+    );
   }
 
-  async close(): Promise<void> {
-    try {
-      if (this.worker) {
-        // Explicitly wait for active jobs to finish within grace period (Ticket 26 / ADR-12)
-        await this.worker.close(false);
-      }
+  async close(): Promise<Result<void, QueueUnavailable>> {
+    return fromPromise(async () => {
+      // Explicitly wait for active jobs to finish within grace period (Ticket 26 / ADR-12)
+      if (this.worker) await this.worker.close(false);
       await this.queue.close();
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to close queue/worker "${this.queue.name}": ${(err as Error).message}`,
-        { cause: err }
-      );
-    }
+    }, this.unavailable('close'));
   }
 }

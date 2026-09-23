@@ -1,15 +1,20 @@
+import { ErrorCodes, type InputFailure } from '@vp/errors';
+import { type Result, err, ok, tryCatch } from '@vp/result';
+
 /**
  * The keyset a cursor carries: the sort key and tiebreaker of the last row on
  * a page. Deliberately flat so any codec can render it.
  */
 export type CursorPayload = Record<string, string | number>;
 
-export class InvalidCursorError extends Error {
-  constructor(message = 'Invalid pagination cursor') {
-    super(message);
-    this.name = 'InvalidCursorError';
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
+/**
+ * An input failure: it repeats only what the caller sent, so it is wire-safe by construction and
+ * `problemFor` may project it into `Problem.errors`.
+ */
+export type InvalidCursor = InputFailure<typeof ErrorCodes.INVALID_CURSOR>;
+
+export function invalidCursor(field = 'cursor'): InvalidCursor {
+  return { code: ErrorCodes.INVALID_CURSOR, message: 'Invalid pagination cursor', field };
 }
 
 /**
@@ -18,14 +23,12 @@ export class InvalidCursorError extends Error {
  */
 export interface CursorCodec {
   encode(payload: CursorPayload): string;
-  decode(cursor: string): CursorPayload;
+  decode(cursor: string): Result<CursorPayload, InvalidCursor>;
 }
 
-function assertPayload(parsed: unknown): CursorPayload {
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new InvalidCursorError();
-  }
-  return parsed as CursorPayload;
+function asPayload(parsed: unknown): Result<CursorPayload, InvalidCursor> {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return err(invalidCursor());
+  return ok(parsed as CursorPayload);
 }
 
 /** Readable JSON, useful in tests and when debugging a paginated endpoint. */
@@ -34,12 +37,12 @@ export class JsonCursorCodec implements CursorCodec {
     return JSON.stringify(payload);
   }
 
-  decode(cursor: string): CursorPayload {
-    try {
-      return assertPayload(JSON.parse(cursor));
-    } catch {
-      throw new InvalidCursorError();
-    }
+  decode(cursor: string): Result<CursorPayload, InvalidCursor> {
+    const parsed = tryCatch(
+      () => JSON.parse(cursor) as unknown,
+      () => invalidCursor()
+    );
+    return parsed.ok ? asPayload(parsed.value) : parsed;
   }
 }
 
@@ -54,15 +57,18 @@ export class Base64UrlCursorCodec implements CursorCodec {
     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 
-  decode(cursor: string): CursorPayload {
-    try {
-      const base64 = cursor.replace(/-/g, '+').replace(/_/g, '/');
-      const binary = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='));
-      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-      return assertPayload(JSON.parse(new TextDecoder().decode(bytes)));
-    } catch {
-      throw new InvalidCursorError();
-    }
+  decode(cursor: string): Result<CursorPayload, InvalidCursor> {
+    const parsed = tryCatch(
+      () => {
+        const base64 = cursor.replace(/-/g, '+').replace(/_/g, '/');
+        const binary = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='));
+        const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+        return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+      },
+      () => invalidCursor()
+    );
+
+    return parsed.ok ? asPayload(parsed.value) : parsed;
   }
 }
 

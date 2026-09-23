@@ -1,0 +1,40 @@
+{
+  "name": "@vp/domain-rules",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
+    "test": "vitest run && vitest run --config vitest.jsdom.config.ts",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@vp/domain": "workspace:*",
+    "@vp/errors": "workspace:*",
+    "@vp/permissions": "workspace:*",
+    "@vp/result": "workspace:*",
+    "@vp/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@vp/testing": "workspace:*",
+    "@vp/tsconfig": "workspace:*",
+    "jsdom": "^26.0.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  },
+  "vp": {
+    "layer": 3
+  }
+}

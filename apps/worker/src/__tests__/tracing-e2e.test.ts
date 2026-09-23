@@ -16,6 +16,7 @@ import {
 import type { QueueJob } from '@vp/core/ports';
 import type { NotifyJob, ProbeJob } from '@vp/job-contracts';
 import { createLogger, getActiveSpanContext } from '@vp/observability';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
@@ -227,7 +228,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
     const tracedProbeProcessor = withTelemetry('probe', rawProbeProcessor);
 
     const probeQueue = getQueue('probe');
-    const [probeQueueJob] = await probeQueue.getJobs(['waiting']);
+    const [probeQueueJob] = expectOk(await probeQueue.getJobs(['waiting']));
     expect(probeQueueJob).toBeDefined();
     if (!probeQueueJob) throw new Error('probeQueueJob missing');
 
@@ -278,12 +279,12 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
 
     // Check package status
     const packageJobId = `${videoId}--package--g1`;
-    const packageState = await packageQueue.getJobState(packageJobId);
+    const packageState = expectOk(await packageQueue.getJobState(packageJobId));
     expect(packageState).toBe('completed');
 
     // 6. Worker runs notify stage
     const notifyQueue = getQueue('notify');
-    const [notifyJob] = await notifyQueue.getJobs(['waiting']);
+    const [notifyJob] = expectOk(await notifyQueue.getJobs(['waiting']));
     expect(notifyJob).toBeDefined();
     if (!notifyJob) throw new Error('notifyJob missing');
 
@@ -345,7 +346,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
     }
 
     // Verify database events correlation: video_events has trace_id
-    const events = await repositories.events.findByVideoId(videoId);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.length).toBeGreaterThanOrEqual(1);
     const completedEvent = events.find((e) => e.type === 'upload.completed');
     expect(completedEvent).toBeDefined();

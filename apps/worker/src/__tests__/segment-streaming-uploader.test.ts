@@ -1,7 +1,9 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
-import { ErrorCodes, TransientError } from '@vp/errors';
+import { ErrorCodes, storageUnavailable } from '@vp/errors';
+import { err, ok } from '@vp/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTranscodeProcessor } from '../stages/transcode';
@@ -233,7 +235,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       vi.spyOn(storage, 'uploadObject').mockImplementation(async (params) => {
         if (params.key.endsWith('seg_00000.ts') && failCount > 0) {
           failCount--;
-          throw new Error('Simulated transient storage network glitch');
+          return err(storageUnavailable('uploadObject', 'Simulated transient network glitch'));
         }
         uploadedSequence.push(params.key);
         return origUpload(params);
@@ -253,7 +255,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       });
 
       const processor = createTranscodeProcessor({ repositories, storage, logger });
-      const res = await processor(makeJob(videoId, '720p'));
+      const res = expectOk(await processor(makeJob(videoId, '720p')));
 
       expect(res.segmentCount).toBe(2);
       expect(uploadedSequence.length).toBe(3); // 2 segments + 1 playlist
@@ -282,9 +284,9 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       // Storage permanently fails on segment uploads
       vi.spyOn(storage, 'uploadObject').mockImplementation(async (params) => {
         if (params.key.endsWith('.ts')) {
-          throw new Error('Storage bucket unavailable');
+          return err(storageUnavailable('uploadObject', 'Storage bucket unavailable'));
         }
-        return { key: params.key };
+        return ok({ key: params.key });
       });
 
       const ffmpegModule = await import('@vp/ffmpeg');
@@ -300,20 +302,14 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       });
 
       const processor = createTranscodeProcessor({ repositories, storage, logger });
-      let caughtError: any;
-      try {
-        await processor(makeJob(videoId, '720p'));
-      } catch (err) {
-        caughtError = err;
-      }
 
-      expect(caughtError).toBeInstanceOf(TransientError);
-      expect(caughtError.code).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
+      expect(expectErr(await processor(makeJob(videoId, '720p'))).code).toBe(
+        ErrorCodes.STORAGE_UNAVAILABLE
+      );
 
       // Verify playlist was NEVER written to storage
-      const headPlaylist = await storage.headObject(
-        'public',
-        `videos/${videoId}/hls/720p/index.m3u8`
+      const headPlaylist = expectOk(
+        await storage.headObject('public', `videos/${videoId}/hls/720p/index.m3u8`)
       );
       expect(headPlaylist).toBeNull();
     });
@@ -372,9 +368,9 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       // Source file was NOT downloaded to local disk
       expect(downloadSpy).not.toHaveBeenCalled();
       expect(transcodeSourcePassed).toContain('http://localhost:9000/raw/raw/source.mp4');
-      expect(res.segmentCount).toBe(1);
+      expect(expectOk(res).segmentCount).toBe(1);
 
-      const rend = await repositories.renditions.findByVideoId(videoId);
+      const rend = expectOk(await repositories.renditions.findByVideoId(videoId));
       expect(rend[0]?.status).toBe('DONE');
     });
   });
@@ -408,19 +404,14 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       });
 
       const processor = createTranscodeProcessor({ repositories, storage, logger });
-      let caughtError: any;
-      try {
-        await processor(makeJob(videoId, '720p'));
-      } catch (err) {
-        caughtError = err;
-      }
 
-      expect(caughtError).toBeInstanceOf(TransientError);
-      expect(caughtError.code).toBe(ErrorCodes.DISK_FULL);
-      expect(caughtError.details?.['hint']).toBe('DISK_FULL');
+      expect(expectErr(await processor(makeJob(videoId, '720p')))).toMatchObject({
+        code: ErrorCodes.DISK_FULL,
+        stage: 'transcode-720p',
+      });
 
       // Check step recorded as FAILED with DISK_FULL
-      const steps = await repositories.steps.findByVideoId(videoId);
+      const steps = expectOk(await repositories.steps.findByVideoId(videoId));
       const transcodeStep = steps.find((s) => s.step === 'transcode');
       expect(transcodeStep?.status).toBe('FAILED');
       expect(transcodeStep?.errorCode).toBe('DISK_FULL');
@@ -504,7 +495,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       });
 
       const processor = createTranscodeProcessor({ repositories, storage, logger });
-      const result = await processor(makeJob(videoId, '720p'));
+      const result = expectOk(await processor(makeJob(videoId, '720p')));
 
       expect(result.segmentCount).toBe(totalSegments);
 
@@ -547,7 +538,9 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         simulateFailureRendition: '720p',
       });
 
-      await expect(processor(makeJob(videoId, '720p'))).rejects.toThrow();
+      expect(expectErr(await processor(makeJob(videoId, '720p'))).code).toBe(
+        ErrorCodes.FFMPEG_FAILED
+      );
     });
 
     it('AC 1: real FFmpeg transcode on s60 streams every segment and its playlist to storage', async () => {
@@ -615,11 +608,11 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
 
       const result = await processor(job as any);
 
-      expect(result.segmentCount).toBeGreaterThanOrEqual(10);
-      expect(result.bytes).toBeGreaterThan(50000);
+      expect(expectOk(result).segmentCount).toBeGreaterThanOrEqual(10);
+      expect(expectOk(result).bytes).toBeGreaterThan(50000);
 
       // Verify all segments exist in storage
-      for (let i = 0; i < result.segmentCount; i++) {
+      for (let i = 0; i < expectOk(result).segmentCount; i++) {
         const segKey = `videos/${videoId}/hls/720p/seg_${String(i).padStart(5, '0')}.ts`;
         const head = await storage.headObject('public', segKey);
         expect(head).not.toBeNull();

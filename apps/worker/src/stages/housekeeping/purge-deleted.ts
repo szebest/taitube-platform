@@ -1,6 +1,8 @@
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
+import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 
 export interface PurgeDeletedOptions {
   repositories: Repositories;
@@ -22,7 +24,9 @@ export interface PurgeDeletedResult {
  *    then hard-delete DB rows.
  * 2. Purge old generation prefixes (e.g. videos/{id}/hls/g1/) once generation > 1 is READY.
  */
-export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<PurgeDeletedResult> {
+export async function runPurgeDeleted(
+  options: PurgeDeletedOptions
+): Promise<Result<PurgeDeletedResult, DatabaseUnavailable>> {
   const {
     repositories,
     storage,
@@ -42,30 +46,33 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
     status: 'DELETED',
     idleFor: { since: 'deletedAt', ms: thresholdMs },
   });
-  for (const video of softDeletedVideos) {
+  if (isErr(softDeletedVideos)) return softDeletedVideos;
+
+  for (const video of softDeletedVideos.value) {
     logger?.info({ videoId: video.id }, 'Purging objects and hard-deleting soft-deleted video');
 
-    try {
-      // (a) Purge raw objects
-      if (video.sourceKey) {
-        await storage.deleteObject(rawBucket, video.sourceKey).catch(() => {});
-      }
-      await storage.purgePrefix(rawBucket, `raw/${video.id}/`).catch(() => {});
+    // (a) Raw objects. A leftover raw object costs storage, not correctness, so a failure here is
+    // dropped and the next run picks it up.
+    if (video.sourceKey) await storage.deleteObject(rawBucket, video.sourceKey);
+    await storage.purgePrefix(rawBucket, `raw/${video.id}/`);
 
-      // (b) Purge public objects (paginated delete)
-      await storage.purgePrefix(publicBucket, `videos/${video.id}/`);
-
-      // (c) Hard-delete video row only if storage purge succeeded
-      const deleted = await repositories.videos.hardDelete(video.id);
-      if (deleted) {
-        purgedVideosCount += 1;
-        logger?.info({ videoId: video.id }, 'Hard-deleted video row from database');
-      }
-    } catch (err: unknown) {
+    // (b) Public objects have to be gone before the row is, or the video stops being reachable
+    // while its segments are still served. A failure leaves the row for the next run.
+    const purged = await storage.purgePrefix(publicBucket, `videos/${video.id}/`);
+    if (isErr(purged)) {
       logger?.warn(
-        { videoId: video.id, err: (err as Error).message },
-        'Failed to purge storage objects for soft-deleted video; will retry on next run'
+        { videoId: video.id, storage: purged.error.operation },
+        'Public objects not purged; the video row is kept for the next run'
       );
+      continue;
+    }
+
+    // (c) Hard-delete video row only if storage purge succeeded
+    const deleted = await repositories.videos.hardDelete(video.id);
+    if (isErr(deleted)) return deleted;
+    if (deleted.value) {
+      purgedVideosCount += 1;
+      logger?.info({ videoId: video.id }, 'Hard-deleted video row from database');
     }
   }
 
@@ -75,23 +82,22 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
     minGeneration: 2,
     without: { event: 'video.generation_purged', forCurrentGeneration: true },
   });
-  for (const video of readyVideosWithOldGen) {
+  if (isErr(readyVideosWithOldGen)) return readyVideosWithOldGen;
+
+  for (const video of readyVideosWithOldGen.value) {
     const currentGen = video.generation;
 
     for (let oldGen = 1; oldGen < currentGen; oldGen += 1) {
-      const oldGenPrefix = `videos/${video.id}/hls/g${oldGen}/`;
-      const deletedCount = await storage.purgePrefix(publicBucket, oldGenPrefix);
+      const deletedCount = unwrapOr(
+        await storage.purgePrefix(publicBucket, `videos/${video.id}/hls/g${oldGen}/`),
+        0
+      );
 
-      // If generation 1 was written without g1 prefix in earlier versions:
+      // Generation 1 predates the g1 prefix, so its legacy layout is swept too.
       if (oldGen === 1) {
-        // Also delete legacy non-prefixed master and renditions if present
-        await storage
-          .deleteObject(publicBucket, `videos/${video.id}/hls/master.m3u8`)
-          .catch(() => {});
+        await storage.deleteObject(publicBucket, `videos/${video.id}/hls/master.m3u8`);
         for (const rend of ['1080p', '720p', '480p']) {
-          await storage
-            .purgePrefix(publicBucket, `videos/${video.id}/hls/${rend}/`)
-            .catch(() => {});
+          await storage.purgePrefix(publicBucket, `videos/${video.id}/hls/${rend}/`);
         }
       }
 
@@ -103,22 +109,19 @@ export async function runPurgeDeleted(options: PurgeDeletedOptions): Promise<Pur
     }
 
     // Record audit event to prevent redundant hourly purges & starvation (Ticket 17 AC 5)
-    await repositories.events.create({
+    const recorded = await repositories.events.create({
       videoId: video.id,
       type: 'video.generation_purged',
       payload: { generation: currentGen, purgedAt: new Date().toISOString() },
     });
+    if (isErr(recorded)) return recorded;
   }
 
   // 3. Prune published outbox rows older than 7 days (Ticket 30 AC 3)
-  try {
-    const prunedOutboxCount = await repositories.outbox.prune(7);
-    if (prunedOutboxCount > 0) {
-      logger?.info({ prunedOutboxCount }, 'Pruned published outbox rows older than 7 days');
-    }
-  } catch (err: unknown) {
-    logger?.warn({ err: (err as Error).message }, 'Failed to prune published outbox rows');
+  const prunedOutboxCount = unwrapOr(await repositories.outbox.prune(7), 0);
+  if (prunedOutboxCount > 0) {
+    logger?.info({ prunedOutboxCount }, 'Pruned published outbox rows older than 7 days');
   }
 
-  return { purgedVideosCount, purgedGenerationsCount };
+  return ok({ purgedVideosCount, purgedGenerationsCount });
 }

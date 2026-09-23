@@ -4,6 +4,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
@@ -13,12 +14,12 @@ const MB = 1024 * 1024;
 
 describe('apps/api/services: upload parts', () => {
   let repositories: InMemoryRepositories;
+  let storage: InMemoryStorageClient;
   let service: UploadService;
+  let expiredService: UploadService;
 
-  beforeEach(() => {
-    repositories = new InMemoryRepositories();
-    const storage = new InMemoryStorageClient();
-    service = new UploadService({
+  const build = (uploadSessionTtlSeconds?: number) =>
+    new UploadService({
       uploads: repositories.uploads,
       videos: repositories.videos,
       events: repositories.events,
@@ -26,7 +27,14 @@ describe('apps/api/services: upload parts', () => {
       multipart: new InMemoryMultipartStorage(storage),
       rawBucket: 'raw',
       multipartThresholdBytes: 10 * MB,
+      ...(uploadSessionTtlSeconds === undefined ? {} : { uploadSessionTtlSeconds }),
     });
+
+  beforeEach(() => {
+    repositories = new InMemoryRepositories();
+    storage = new InMemoryStorageClient();
+    service = build();
+    expiredService = build(0);
   });
 
   const startMultipart = () =>
@@ -45,9 +53,9 @@ describe('apps/api/services: upload parts', () => {
 
   describe('getResumeInfo', () => {
     it('reports the multipart layout and what storage already holds', async () => {
-      const { uploadId, partsExpected } = await startMultipart();
+      const { uploadId, partsExpected } = expectOk(await startMultipart());
 
-      await expect(service.getResumeInfo(OWNER, uploadId)).resolves.toMatchObject({
+      expect(expectOk(await service.getResumeInfo(OWNER, uploadId))).toMatchObject({
         status: 'OPEN',
         strategy: 'multipart',
         partsExpected,
@@ -56,60 +64,90 @@ describe('apps/api/services: upload parts', () => {
     });
 
     it('answers a single PUT upload without consulting storage', async () => {
-      const { uploadId } = await startSingle();
+      const { uploadId } = expectOk(await startSingle());
 
-      await expect(service.getResumeInfo(OWNER, uploadId)).resolves.toEqual({
+      expect(expectOk(await service.getResumeInfo(OWNER, uploadId))).toEqual({
         status: 'OPEN',
         strategy: 'single',
       });
     });
 
     it('refuses a caller who does not own the upload', async () => {
-      const { uploadId } = await startMultipart();
+      const { uploadId } = expectOk(await startMultipart());
 
-      await expect(service.getResumeInfo(STRANGER, uploadId)).rejects.toThrow('Not authorized');
+      expect(expectErr(await service.getResumeInfo(STRANGER, uploadId)).message).toContain(
+        'Not authorized'
+      );
     });
 
     it('refuses an upload that is no longer open', async () => {
-      const { uploadId } = await startMultipart();
-      await service.abort(OWNER, uploadId);
+      const { uploadId } = expectOk(await startMultipart());
+      expectOk(await service.abort(OWNER, uploadId));
 
-      await expect(service.getResumeInfo(OWNER, uploadId)).rejects.toMatchObject({
-        code: ErrorCodes.UPLOAD_NOT_OPEN,
-      });
+      expect(expectErr(await service.getResumeInfo(OWNER, uploadId)).code).toBe(
+        ErrorCodes.UPLOAD_NOT_OPEN
+      );
+    });
+
+    it('refuses an upload whose session has expired', async () => {
+      const { uploadId } = expectOk(
+        await expiredService.initiate(OWNER, {
+          filename: 'big.mp4',
+          sizeBytes: 50 * MB,
+          contentType: 'video/mp4',
+        })
+      );
+
+      expect(expectErr(await service.getResumeInfo(OWNER, uploadId)).code).toBe(
+        ErrorCodes.UPLOAD_EXPIRED
+      );
     });
   });
 
   describe('issuePartUrls', () => {
     it('issues the requested window of part URLs', async () => {
-      const { uploadId } = await startMultipart();
+      const { uploadId } = expectOk(await startMultipart());
 
-      const parts = await service.issuePartUrls(OWNER, uploadId, 2, 3);
+      const parts = expectOk(await service.issuePartUrls(OWNER, uploadId, 2, 3));
 
       expect(parts.map((part) => part.partNumber)).toEqual([2, 3, 4]);
     });
 
     it('stops at the last expected part rather than inventing extras', async () => {
-      const { uploadId, partsExpected = 0 } = await startMultipart();
+      const { uploadId, partsExpected = 0 } = expectOk(await startMultipart());
 
-      const parts = await service.issuePartUrls(OWNER, uploadId, partsExpected, 50);
+      const parts = expectOk(await service.issuePartUrls(OWNER, uploadId, partsExpected, 50));
 
       expect(parts.map((part) => part.partNumber)).toEqual([partsExpected]);
     });
 
     it('refuses part URLs for a single PUT upload', async () => {
-      const { uploadId } = await startSingle();
+      const { uploadId } = expectOk(await startSingle());
 
-      await expect(service.issuePartUrls(OWNER, uploadId, 1, 1)).rejects.toMatchObject({
-        code: ErrorCodes.VALIDATION_FAILED,
-      });
+      expect(expectErr(await service.issuePartUrls(OWNER, uploadId, 1, 1)).code).toBe(
+        ErrorCodes.VALIDATION_FAILED
+      );
     });
 
     it('refuses a caller who does not own the upload', async () => {
-      const { uploadId } = await startMultipart();
+      const { uploadId } = expectOk(await startMultipart());
 
-      await expect(service.issuePartUrls(STRANGER, uploadId, 1, 1)).rejects.toThrow(
+      expect(expectErr(await service.issuePartUrls(STRANGER, uploadId, 1, 1)).message).toContain(
         'Not authorized'
+      );
+    });
+
+    it('refuses to issue parts once the session has expired', async () => {
+      const { uploadId } = expectOk(
+        await expiredService.initiate(OWNER, {
+          filename: 'big.mp4',
+          sizeBytes: 50 * MB,
+          contentType: 'video/mp4',
+        })
+      );
+
+      expect(expectErr(await service.issuePartUrls(OWNER, uploadId, 1, 1)).code).toBe(
+        ErrorCodes.UPLOAD_EXPIRED
       );
     });
   });

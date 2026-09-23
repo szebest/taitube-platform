@@ -1,6 +1,14 @@
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { type UploadOpenFailure, decideUploadOpen } from '@vp/domain-rules';
+import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
+import { type Result, isErr, map } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
-import { type UploadContext, loadOwnedUpload } from './upload-context';
+import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
+
+export type AbortUploadFailure =
+  | LoadOwnedUploadFailure
+  | UploadOpenFailure
+  | StorageUnavailable
+  | DatabaseUnavailable;
 
 /**
  * Aborts an in-flight upload, cancels the multipart session or removes the
@@ -10,35 +18,37 @@ export async function abortUpload(
   ctx: UploadContext,
   user: AuthUser,
   uploadId: string
-): Promise<void> {
-  const { upload, video } = await loadOwnedUpload(ctx, user, uploadId, 'abort this upload');
+): Promise<Result<void, AbortUploadFailure>> {
+  const owned = await loadOwnedUpload(ctx, user, uploadId, 'abort this upload');
+  if (isErr(owned)) return owned;
 
-  if (upload.status === 'COMPLETED') {
-    throw new PermanentError(
-      ErrorCodes.UPLOAD_NOT_OPEN,
-      'Cannot abort an already completed upload'
-    );
-  }
+  const { upload, video } = owned.value;
+  const open = decideUploadOpen({ upload, now: new Date() });
+  if (isErr(open)) return open;
 
-  if (upload.strategy === 'multipart' && upload.multipartUploadId) {
-    await ctx.multipart.abortMultipartUpload(
-      ctx.rawBucket,
-      video.sourceKey,
-      upload.multipartUploadId
-    );
-  } else {
-    await ctx.storage.deleteObject(ctx.rawBucket, video.sourceKey);
-  }
+  const removed =
+    upload.strategy === 'multipart' && upload.multipartUploadId
+      ? await ctx.multipart.abortMultipartUpload(
+          ctx.rawBucket,
+          video.sourceKey,
+          upload.multipartUploadId
+        )
+      : await ctx.storage.deleteObject(ctx.rawBucket, video.sourceKey);
+  if (isErr(removed)) return removed;
 
-  await ctx.uploads.updateStatus(uploadId, 'ABORTED');
+  const aborted = await ctx.uploads.updateStatus(uploadId, 'ABORTED');
+  if (isErr(aborted)) return aborted;
 
-  if (video.status === 'UPLOADING') {
+  if (video.status !== 'UPLOADING') return map(aborted, () => undefined);
+
+  return map(
     await ctx.videos.transition({
       videoId: video.id,
       from: 'UPLOADING',
       to: 'ABANDONED',
       eventType: 'upload.aborted',
       eventPayload: { uploadId, strategy: upload.strategy },
-    });
-  }
+    }),
+    () => undefined
+  );
 }

@@ -25,28 +25,27 @@ export async function runTmpSweep(options: TmpSweepOptions = {}): Promise<TmpSwe
     logger,
   } = options;
 
+  const entries = await fs.readdir(tmpDir, { withFileTypes: true }).catch(() => []);
+  const cutoff = Date.now() - thresholdMs;
+
   let sweptCount = 0;
 
-  try {
-    const entries = await fs.readdir(tmpDir, { withFileTypes: true }).catch(() => []);
-    const cutoff = Date.now() - thresholdMs;
+  for (const entry of entries) {
+    const fullPath = path.join(tmpDir, entry.name);
+    const stats = await fs.stat(fullPath).catch(() => null);
+    if (!stats || stats.mtimeMs >= cutoff) continue;
 
-    for (const entry of entries) {
-      const fullPath = path.join(tmpDir, entry.name);
-      try {
-        const stats = await fs.stat(fullPath);
-        const mtime = stats.mtimeMs;
-        if (mtime < cutoff) {
-          await fs.rm(fullPath, { recursive: true, force: true });
-          sweptCount += 1;
-          logger?.info({ path: fullPath }, 'Swept stale temp directory/file');
-        }
-      } catch (err: unknown) {
-        logger?.warn({ path: fullPath, err: (err as Error).message }, 'Failed to sweep temp path');
-      }
+    const removed = await fs
+      .rm(fullPath, { recursive: true, force: true })
+      .then(() => true)
+      .catch(() => false);
+
+    if (removed) {
+      sweptCount += 1;
+      logger?.info({ path: fullPath }, 'Swept stale temp directory/file');
+    } else {
+      logger?.warn({ path: fullPath }, 'Failed to sweep temp path');
     }
-  } catch (err: unknown) {
-    logger?.warn({ tmpDir, err: (err as Error).message }, 'Failed to read tmpDir for sweep');
   }
 
   return { sweptCount };

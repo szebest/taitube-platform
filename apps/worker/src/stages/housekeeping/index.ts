@@ -8,6 +8,7 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import { HousekeepingJob, type QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
+import { assertNever } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runPurgeDeleted } from './purge-deleted';
 import { runReconcileProcessing } from './reconcile-processing';
@@ -88,7 +89,7 @@ export function createHousekeepingProcessor(
         });
 
       default:
-        throw new Error(`Unknown housekeeping task: ${(data as { task: string }).task}`);
+        return assertNever(data.task, 'createHousekeepingProcessor');
     }
   };
 }

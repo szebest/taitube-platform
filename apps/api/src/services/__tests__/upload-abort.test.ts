@@ -4,6 +4,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { UploadService } from '../upload-service';
 
@@ -16,10 +17,8 @@ describe('apps/api/services: abort upload', () => {
   let storage: InMemoryStorageClient;
   let service: UploadService;
 
-  beforeEach(() => {
-    repositories = new InMemoryRepositories();
-    storage = new InMemoryStorageClient();
-    service = new UploadService({
+  const build = (uploadSessionTtlSeconds?: number) =>
+    new UploadService({
       uploads: repositories.uploads,
       videos: repositories.videos,
       events: repositories.events,
@@ -27,7 +26,13 @@ describe('apps/api/services: abort upload', () => {
       multipart: new InMemoryMultipartStorage(storage),
       rawBucket: 'raw',
       multipartThresholdBytes: 10 * MB,
+      ...(uploadSessionTtlSeconds === undefined ? {} : { uploadSessionTtlSeconds }),
     });
+
+  beforeEach(() => {
+    repositories = new InMemoryRepositories();
+    storage = new InMemoryStorageClient();
+    service = build();
   });
 
   const start = (sizeBytes: number) =>
@@ -37,24 +42,24 @@ describe('apps/api/services: abort upload', () => {
     ['a single PUT upload', MB],
     ['a multipart upload', 50 * MB],
   ])('abandons the video behind %s', async (_label, sizeBytes) => {
-    const { uploadId, videoId } = await start(sizeBytes);
+    const { uploadId, videoId } = expectOk(await start(sizeBytes));
 
-    await service.abort(OWNER, uploadId);
+    expectOk(await service.abort(OWNER, uploadId));
 
-    await expect(repositories.videos.findById(videoId)).resolves.toMatchObject({
+    expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
       status: 'ABANDONED',
     });
-    await expect(repositories.uploads.findById(uploadId)).resolves.toMatchObject({
+    expect(expectOk(await repositories.uploads.findById(uploadId))).toMatchObject({
       status: 'ABORTED',
     });
   });
 
   it('records the abort as a video event', async () => {
-    const { uploadId, videoId } = await start(MB);
+    const { uploadId, videoId } = expectOk(await start(MB));
 
-    await service.abort(OWNER, uploadId);
+    expectOk(await service.abort(OWNER, uploadId));
 
-    const events = await repositories.events.findByVideoId(videoId);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.find((event) => event.type === 'upload.aborted')?.payload).toMatchObject({
       uploadId,
       strategy: 'single',
@@ -62,17 +67,34 @@ describe('apps/api/services: abort upload', () => {
   });
 
   it('refuses a caller who does not own the upload', async () => {
-    const { uploadId, videoId } = await start(MB);
+    const { uploadId, videoId } = expectOk(await start(MB));
 
-    await expect(service.abort(STRANGER, uploadId)).rejects.toThrow('Not authorized');
-    await expect(repositories.videos.findById(videoId)).resolves.toMatchObject({
+    expect(expectErr(await service.abort(STRANGER, uploadId)).message).toContain('Not authorized');
+    expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
       status: 'UPLOADING',
     });
   });
 
   it('reports an unknown upload as not found', async () => {
-    await expect(service.abort(OWNER, 'missing')).rejects.toMatchObject({
-      code: ErrorCodes.VIDEO_NOT_FOUND,
-    });
+    expect(expectErr(await service.abort(OWNER, 'missing')).code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
+  });
+
+  it('refuses a second abort of the same upload', async () => {
+    const { uploadId } = expectOk(await start(MB));
+    expectOk(await service.abort(OWNER, uploadId));
+
+    expect(expectErr(await service.abort(OWNER, uploadId)).code).toBe(ErrorCodes.UPLOAD_NOT_OPEN);
+  });
+
+  it('refuses an upload whose session has expired', async () => {
+    const { uploadId } = expectOk(
+      await build(0).initiate(OWNER, {
+        filename: 'clip.mp4',
+        sizeBytes: MB,
+        contentType: 'video/mp4',
+      })
+    );
+
+    expect(expectErr(await service.abort(OWNER, uploadId)).code).toBe(ErrorCodes.UPLOAD_EXPIRED);
   });
 });

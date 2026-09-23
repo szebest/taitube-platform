@@ -1,11 +1,6 @@
 import { videos } from '@vp/db';
 import { type UserContext, getUserPermissions } from '@vp/permissions';
-import {
-  accessibleBy,
-  ownerScope,
-  publicVisibilityScope,
-  videoReadScope,
-} from '../accessible-by';
+import { accessibleBy, ownerScope, publicVisibilityScope, videoReadScope } from '../accessible-by';
 import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: accessible-by adapter', () => {

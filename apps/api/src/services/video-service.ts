@@ -1,16 +1,25 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters';
-import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
 import type { AuthorizationPort, JobQueue, ReactionCachePort } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import type { VideoStatus, VideoVisibility } from '@vp/domain';
-import { ErrorCodes, PermanentError } from '@vp/errors';
-import { type Paginator, defaultPaginator } from '@vp/pagination';
-import { canAccessAdmin, canReadVideo, canUpdateVideo } from '@vp/permissions';
+import {
+  type ReadVideoFailure,
+  type UpdateVideoMetadataFailure,
+  decideVideoMetadataUpdate,
+  decideVideoRead,
+  videoNotFound,
+} from '@vp/domain-rules';
+import { DEFAULT_CDN_BASE_URL } from '@vp/env-schema';
+import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
+import { type InvalidCursor, type Paginator, defaultPaginator } from '@vp/pagination';
+import { canAccessAdmin } from '@vp/permissions';
+import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 import {
   type ReprocessResult,
   type SoftDeleteResult,
   type VideoLifecycleDeps,
+  type VideoLifecycleServiceFailure,
   reprocessVideo,
   softDeleteVideo,
 } from './video-lifecycle';
@@ -45,6 +54,15 @@ import {
 /**
  * VideoService — Deep domain module for video operations and projections (SDD §6.1, §6.3).
  */
+export type ListVideosFailure = DatabaseUnavailable | InvalidCursor;
+
+export type ReadVideoServiceFailure = ReadVideoFailure | DatabaseUnavailable;
+
+export type UpdateVideoServiceFailure =
+  | UpdateVideoMetadataFailure
+  | ReadVideoServiceFailure
+  | VersionConflict;
+
 export class VideoService {
   private readonly videos: VideoRepository;
   private readonly cleanCdnBase: string;
@@ -60,7 +78,6 @@ export class VideoService {
     this.paginator = deps.paginator ?? defaultPaginator;
     this.lifecycle = {
       videos: this.videos,
-      auth: this.auth,
       ...(deps.probeQueue ? { probeQueue: deps.probeQueue } : {}),
     };
     const cdnBase = deps.cdnBaseUrl || process.env['CDN_BASE_URL'] || DEFAULT_CDN_BASE_URL;
@@ -73,21 +90,25 @@ export class VideoService {
   async list(
     user: AuthUser,
     options: { cursor?: string; limit?: number; status?: VideoStatus }
-  ): Promise<{ items: VideoSummaryView[]; nextCursor: string | null }> {
+  ): Promise<Result<{ items: VideoSummaryView[]; nextCursor: string | null }, ListVideosFailure>> {
     const limit = this.paginator.limit(options.limit);
+    const cursor = decodeCreatedAtCursor(options.cursor, this.paginator);
+    if (isErr(cursor)) return cursor;
 
     const rows = await this.videos.listByOwner({
       ownerId: user.id,
       viewer: user,
-      cursor: decodeCreatedAtCursor(options.cursor, this.paginator),
+      cursor: cursor.value,
       limit,
       status: options.status,
     });
 
-    return this.paginator.paginate(rows, limit, {
-      cursorOf: createdAtCursorPayload,
-      toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
-    });
+    return map(rows, (found) =>
+      this.paginator.paginate(found, limit, {
+        cursorOf: createdAtCursorPayload,
+        toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
+      })
+    );
   }
 
   /**
@@ -99,66 +120,79 @@ export class VideoService {
     categoryId?: string;
     cursor?: string;
     limit?: number;
-  }): Promise<{ items: VideoSummaryView[]; nextCursor: string | null; total: number }> {
+  }): Promise<
+    Result<
+      { items: VideoSummaryView[]; nextCursor: string | null; total: number },
+      ListVideosFailure
+    >
+  > {
     const sort = options.sort ?? 'recent';
     const limit = this.paginator.limit(options.limit);
+    const cursor = decodeFeedCursor(options.cursor, this.paginator);
+    if (isErr(cursor)) return cursor;
 
-    const result = await this.videos.listPublic({
+    const found = await this.videos.listPublic({
       sort,
       categoryId: options.categoryId,
-      cursor: decodeFeedCursor(options.cursor, this.paginator),
+      cursor: cursor.value,
       limit,
     });
 
-    const page = this.paginator.paginate(result.items, limit, {
-      cursorOf: (row) => feedCursorPayload(row, result.instant),
-      toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
-    });
-
-    return { ...page, total: result.total };
+    return map(found, (result) => ({
+      ...this.paginator.paginate(result.items, limit, {
+        cursorOf: (row) => feedCursorPayload(row, result.instant),
+        toItem: (v) => toVideoSummaryView(v, this.cleanCdnBase),
+      }),
+      total: result.total,
+    }));
   }
 
   /**
-   * Retrieves video details and enforces visibility access control (SDD §6.1, §11).
+   * Absent and forbidden stay distinct all the way out. The public route renders both as 404 and
+   * the admin route renders the second as 403; this service is never asked to choose, which is the
+   * whole point of ADR-24.
    */
-  async get(user: AuthUser | null, videoId: string): Promise<VideoDetailView> {
-    const details = await this.videos.findWithDetails(videoId);
-    if (!details)
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+  async get(
+    viewer: AuthUser | null,
+    videoId: string
+  ): Promise<Result<VideoDetailView, ReadVideoServiceFailure>> {
+    const found = await this.videos.findWithDetails(videoId);
+    if (isErr(found)) return found;
 
-    const { video, renditions: videoRenditions } = details;
+    const decided = decideVideoRead({
+      viewer,
+      video: found.value?.video ?? null,
+      videoId,
+    });
+    if (isErr(decided)) return decided;
 
-    const canRead = this.auth.can(canReadVideo, { user: user, video });
-    if (!canRead) {
-      if (!user) {
-        this.auth.assertCan(
-          canReadVideo,
-          { user: null, video },
-          {
-            action: 'read',
-            subject: 'Video',
-            message: 'Authentication required to view private video',
-          }
-        );
-      }
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-    }
+    const details = found.value;
+    if (!details) return err(videoNotFound(videoId));
 
-    const view = toVideoDetailView(video, videoRenditions, this.cleanCdnBase, details.events);
+    const view = toVideoDetailView(
+      decided.value,
+      details.renditions,
+      this.cleanCdnBase,
+      details.events
+    );
+
     if (this.reactionCache) {
-      const counts = await this.reactionCache.getCounts(videoId, async () => ({
-        likesCount: video.likesCount ?? 0,
-        dislikesCount: video.dislikesCount ?? 0,
-      }));
+      const stored = {
+        likesCount: decided.value.likesCount ?? 0,
+        dislikesCount: decided.value.dislikesCount ?? 0,
+      };
+      // A dead cache costs the stored counters their refresh, not the video its response.
+      const counts = unwrapOr(
+        await this.reactionCache.getCounts(videoId, async () => ok(stored)),
+        stored
+      );
       view.likesCount = counts.likesCount;
       view.dislikesCount = counts.dislikesCount;
     }
-    return view;
+
+    return ok(view);
   }
 
-  /**
-   * Updates video metadata with optimistic locking on version (SDD §6.1).
-   */
   async updateMetadata(
     user: AuthUser,
     videoId: string,
@@ -168,56 +202,33 @@ export class VideoService {
       visibility?: VideoVisibility;
       version: number;
     }
-  ): Promise<VideoDetailView> {
+  ): Promise<Result<VideoDetailView, UpdateVideoServiceFailure>> {
     const existing = await this.videos.findById(videoId);
-    if (!existing)
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+    if (isErr(existing)) return existing;
 
-    if (!this.auth.can(canReadVideo, { user: user, video: existing })) {
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
+    const { version, ...patch } = input;
+    const decided = decideVideoMetadataUpdate({
+      editor: user,
+      video: existing.value,
+      videoId,
+      patch,
+    });
+    if (isErr(decided)) return decided;
+
+    if (existing.value && existing.value.version !== version) {
+      return err(versionConflict(videoId, version));
     }
 
-    this.auth.assertCan(
-      canUpdateVideo,
-      { user: user, video: existing },
-      {
-        action: 'update',
-        subject: 'Video',
-        message: 'Only the video owner or an admin may edit video metadata',
-      }
-    );
+    const updated = await this.videos.updateMetadata({
+      videoId,
+      expectedVersion: version,
+      patch,
+      userId: user.id,
+    });
+    if (isErr(updated)) return updated;
+    if (!updated.value) return err(videoNotFound(videoId));
 
-    if (existing.version !== input.version) {
-      throw new PermanentError(
-        ErrorCodes.VERSION_CONFLICT,
-        `Version conflict on video ${videoId}: expected version ${input.version}, got ${existing.version}`
-      );
-    }
-
-    const patch: {
-      title?: string;
-      description?: string;
-      visibility?: VideoVisibility;
-    } = {};
-    if (input.title !== undefined) patch.title = input.title;
-    if (input.description !== undefined) patch.description = input.description;
-    if (input.visibility !== undefined) patch.visibility = input.visibility;
-
-    try {
-      await this.videos.updateMetadata({
-        videoId,
-        expectedVersion: input.version,
-        patch,
-        userId: user.id,
-      });
-    } catch (err: unknown) {
-      if ((err as { code?: string })?.code === 'VERSION_CONFLICT') {
-        throw new PermanentError(ErrorCodes.VERSION_CONFLICT, (err as Error).message);
-      }
-      throw err;
-    }
-
-    return this.get(user, videoId);
+    return await this.get(user, videoId);
   }
 
   /**
@@ -231,11 +242,14 @@ export class VideoService {
     user: AuthUser,
     videoId: string,
     options: { traceparent?: string } = {}
-  ): Promise<ReprocessResult> {
+  ): Promise<Result<ReprocessResult, VideoLifecycleServiceFailure>> {
     return reprocessVideo(this.lifecycle, user, videoId, options);
   }
 
-  softDelete(user: AuthUser, videoId: string): Promise<SoftDeleteResult> {
+  softDelete(
+    user: AuthUser,
+    videoId: string
+  ): Promise<Result<SoftDeleteResult, VideoLifecycleServiceFailure>> {
     return softDeleteVideo(this.lifecycle, user, videoId);
   }
 }

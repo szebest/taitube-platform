@@ -1,5 +1,6 @@
 import { InMemoryRepositories } from '@vp/adapters';
 import { ErrorCodes } from '@vp/errors';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { VideoService } from '../video-service';
 
@@ -32,12 +33,17 @@ describe('apps/api/services: VideoService', () => {
   });
 
   describe('get', () => {
-    it('hides a private video from a stranger behind VIDEO_NOT_FOUND', async () => {
-      await seed('private');
+    it.each([
+      { name: 'an absent video', setup: async () => {}, code: ErrorCodes.VIDEO_NOT_FOUND },
+      {
+        name: 'a private video a stranger may not see',
+        setup: () => seed('private'),
+        code: ErrorCodes.FORBIDDEN,
+      },
+    ])('keeps $name distinct, leaving the rendering to the route', async ({ setup, code }) => {
+      await setup();
 
-      await expect(service.get(STRANGER, VIDEO_ID)).rejects.toMatchObject({
-        code: ErrorCodes.VIDEO_NOT_FOUND,
-      });
+      expect(expectErr(await service.get(STRANGER, VIDEO_ID)).code).toBe(code);
     });
 
     it('exposes the thumbnail assets a packaged video carries', async () => {
@@ -46,7 +52,7 @@ describe('apps/api/services: VideoService', () => {
         spriteKey: `videos/${VIDEO_ID}/thumbs/sprite.jpg`,
       });
 
-      await expect(service.get(null, VIDEO_ID)).resolves.toMatchObject({
+      expect(expectOk(await service.get(null, VIDEO_ID))).toMatchObject({
         posterUrl: `http://localhost:9000/public/videos/${VIDEO_ID}/thumbs/poster.jpg`,
         spriteUrl: `http://localhost:9000/public/videos/${VIDEO_ID}/thumbs/sprite.jpg`,
         spriteVttUrl: `http://localhost:9000/public/videos/${VIDEO_ID}/thumbs/sprite.vtt`,

@@ -1,17 +1,6 @@
+import type { QueueUnavailable } from '@vp/errors';
+import { type Result, ok } from '@vp/result';
 import type { HealthCheckable } from './health-checkable';
-
-export class QueueError extends Error {
-  readonly code?: string;
-  override readonly cause?: unknown;
-
-  constructor(message: string, options?: { code?: string; cause?: unknown }) {
-    super(message);
-    this.name = 'QueueError';
-    this.code = options?.code;
-    this.cause = options?.cause;
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-}
 
 export interface QueueJob<T = unknown> {
   id: string;
@@ -69,30 +58,35 @@ export interface JobSchedulerTemplate<T = unknown> {
   opts?: QueueJobOptions;
 }
 
-export abstract class JobQueue implements HealthCheckable {
-  abstract checkHealth(): Promise<boolean>;
+export abstract class JobQueue implements HealthCheckable<QueueUnavailable> {
+  abstract checkHealth(): Promise<Result<void, QueueUnavailable>>;
   abstract getName(): string;
-  abstract add<T = unknown>(name: string, data: T, options?: QueueJobOptions): Promise<QueueJob<T>>;
+  abstract add<T = unknown>(
+    name: string,
+    data: T,
+    options?: QueueJobOptions
+  ): Promise<Result<QueueJob<T>, QueueUnavailable>>;
   abstract process<T = unknown>(
     handler: (job: QueueJob<T>) => Promise<unknown>,
     options?: QueueWorkerOptions
-  ): Promise<void>;
-  abstract getJobState(jobId: string): Promise<string | undefined>;
-  abstract isPaused(): Promise<boolean>;
-  abstract pause(): Promise<void>;
-  abstract resume(): Promise<void>;
-  abstract getJobCounts(): Promise<QueueJobCounts>;
-  abstract getJobs(types?: string[]): Promise<QueueJob<unknown>[]>;
+  ): Promise<Result<void, QueueUnavailable>>;
+  /** An unknown job is `ok(undefined)`: absence is not a failure. */
+  abstract getJobState(jobId: string): Promise<Result<string | undefined, QueueUnavailable>>;
+  abstract isPaused(): Promise<Result<boolean, QueueUnavailable>>;
+  abstract pause(): Promise<Result<void, QueueUnavailable>>;
+  abstract resume(): Promise<Result<void, QueueUnavailable>>;
+  abstract getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>>;
+  abstract getJobs(types?: string[]): Promise<Result<QueueJob<unknown>[], QueueUnavailable>>;
   async upsertJobScheduler<T = unknown>(
     _id: string,
     _repeatOpts: UpsertJobSchedulerOptions,
     _template?: JobSchedulerTemplate<T>
-  ): Promise<unknown> {
-    return undefined;
+  ): Promise<Result<unknown, QueueUnavailable>> {
+    return ok(undefined);
   }
-  async getJobSchedulers(): Promise<JobSchedulerInfo[]> {
-    return [];
+  async getJobSchedulers(): Promise<Result<JobSchedulerInfo[], QueueUnavailable>> {
+    return ok([]);
   }
-  abstract close(): Promise<void>;
+  abstract close(): Promise<Result<void, QueueUnavailable>>;
   onFailed?(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void;
 }

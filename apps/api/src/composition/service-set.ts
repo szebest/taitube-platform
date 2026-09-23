@@ -1,5 +1,7 @@
 import { CoreEnvSchema } from '@vp/env-schema';
+import { toPipelineError } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
+import { isErr } from '@vp/result';
 import { CategoryService } from '../services/category-service';
 import { ChannelService } from '../services/channel-service';
 import { DlqService } from '../services/dlq-service';
@@ -77,7 +79,8 @@ export async function createServiceSet(
     ...(limits.sseHeartbeatMs === undefined ? {} : { heartbeatMs: limits.sseHeartbeatMs }),
     ...(limits.sseIdleTimeoutMs === undefined ? {} : { idleTimeoutMs: limits.sseIdleTimeoutMs }),
   });
-  await sseHub.init();
+  const subscribed = await sseHub.init();
+  if (isErr(subscribed)) throw toPipelineError(subscribed.error);
 
   return {
     videoService,
@@ -90,7 +93,6 @@ export async function createServiceSet(
       storage: adapters.storage,
       multipart: adapters.multipart,
       rawBucket: config.rawBucket,
-      authorization,
       ...(adapters.probeQueue ? { probeQueue: adapters.probeQueue } : {}),
       ...(limits.multipartThresholdBytes === undefined
         ? {}
@@ -104,7 +106,6 @@ export async function createServiceSet(
       categories: repositories.categories,
       categoryCacheService: adapters.categoryCache,
       httpCacheService,
-      authorization,
     }),
     channelService: new ChannelService({
       users: repositories.users,
@@ -114,7 +115,6 @@ export async function createServiceSet(
       videoReactions: repositories.videoReactions,
       reactionCache: adapters.reactionCache,
       videos: repositories.videos,
-      authorization,
     }),
     subscriptionService: new SubscriptionService({
       subscriptions: repositories.subscriptions,
@@ -122,14 +122,12 @@ export async function createServiceSet(
       subscriptionCache: adapters.subscriptionCache,
       cdnBaseUrl,
       paginator,
-      authorization,
     }),
-    queueService: new QueueService({ queues: adapters.queues, authorization }),
+    queueService: new QueueService({ queues: adapters.queues }),
     dlqService: new DlqService({
       dlq: repositories.dlq,
       events: repositories.events,
       queues: adapters.queues,
-      authorization,
       paginator,
     }),
     sseService: new SseService({
@@ -137,7 +135,6 @@ export async function createServiceSet(
       renditions: repositories.renditions,
       events: repositories.events,
       cdnBaseUrl,
-      authorization,
     }),
   };
 }

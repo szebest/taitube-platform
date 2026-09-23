@@ -1,4 +1,6 @@
 import type { JobQueue } from '@vp/core/ports';
+import type { QueueUnavailable } from '@vp/errors';
+import { type Result, isErr, ok } from '@vp/result';
 
 export interface HousekeepingSchedulerConfig {
   id: string;
@@ -15,16 +17,16 @@ export const HOUSEKEEPING_SCHEDULER_CONFIGS: readonly HousekeepingSchedulerConfi
 ] as const;
 
 /**
- * Register BullMQ Job Schedulers for Housekeeping (SDD §9.8, AC 1).
- * Upserted idempotently by the API on boot.
+ * Registers the housekeeping Job Schedulers the API upserts idempotently on boot. A queue that
+ * cannot take one is returned to the composition root, which decides whether to boot without it.
  */
 export async function registerHousekeepingSchedulers(
   queue: JobQueue,
   overrides?: Partial<Record<string, string>>
-): Promise<void> {
+): Promise<Result<void, QueueUnavailable>> {
   for (const config of HOUSEKEEPING_SCHEDULER_CONFIGS) {
     const pattern = overrides?.[config.id] ?? config.pattern;
-    await queue.upsertJobScheduler(
+    const upserted = await queue.upsertJobScheduler(
       config.id,
       { pattern },
       {
@@ -32,5 +34,8 @@ export async function registerHousekeepingSchedulers(
         data: { task: config.id },
       }
     );
+    if (isErr(upserted)) return upserted;
   }
+
+  return ok();
 }

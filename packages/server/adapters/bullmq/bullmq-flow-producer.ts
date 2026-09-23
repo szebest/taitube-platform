@@ -1,5 +1,7 @@
-import { type FlowJobNode, FlowProducerPort, QueueError } from '@vp/core/ports';
-import { type ConnectionOptions, FlowProducer } from 'bullmq';
+import { type FlowJobNode, FlowProducerPort } from '@vp/core/ports';
+import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
+import { type Result, err, fromPromise, ok } from '@vp/result';
+import { type ConnectionOptions, type FlowJob, FlowProducer } from 'bullmq';
 import { getRedisConnectionOptions } from './connection';
 
 export interface BullMqFlowProducerConfig {
@@ -12,50 +14,38 @@ export class BullMqFlowProducer extends FlowProducerPort {
 
   constructor(config: BullMqFlowProducerConfig = {}) {
     super();
-    if (config.producer) {
-      this.producer = config.producer;
-      return;
-    }
-
-    const connection = getRedisConnectionOptions(config.connection);
-
-    this.producer = new FlowProducer({
-      connection,
-      prefix: 'bull',
-    });
-  }
-
-  async checkHealth(): Promise<boolean> {
-    try {
-      const client = await (this.producer as any).client;
-      if (!client) return true;
-      const res = await client.ping();
-      return res === 'PONG';
-    } catch {
-      return false;
-    }
-  }
-
-  async add<T = unknown>(node: FlowJobNode<T>): Promise<unknown> {
-    try {
-      return await this.producer.add(node as any);
-    } catch (err: unknown) {
-      throw new QueueError(
-        `Failed to add flow for parent "${node.name}": ${(err as Error).message}`,
-        {
-          cause: err,
-        }
-      );
-    }
-  }
-
-  async close(): Promise<void> {
-    try {
-      await this.producer.close();
-    } catch (err: unknown) {
-      throw new QueueError(`Failed to close FlowProducer: ${(err as Error).message}`, {
-        cause: err,
+    this.producer =
+      config.producer ??
+      new FlowProducer({
+        connection: getRedisConnectionOptions(config.connection),
+        prefix: 'bull',
       });
-    }
+  }
+
+  private unavailable(operation: string) {
+    return (cause: unknown): QueueUnavailable => queueUnavailable(operation, cause);
+  }
+
+  async checkHealth(): Promise<Result<void, QueueUnavailable>> {
+    const pinged = await fromPromise(async () => {
+      const client = await (
+        this.producer as unknown as { client: Promise<{ ping(): Promise<string> } | undefined> }
+      ).client;
+      return client ? await client.ping() : 'PONG';
+    }, this.unavailable('checkHealth'));
+
+    if (!pinged.ok) return pinged;
+    return pinged.value === 'PONG' ? ok() : err(queueUnavailable('checkHealth', pinged.value));
+  }
+
+  async add<T = unknown>(node: FlowJobNode<T>): Promise<Result<unknown, QueueUnavailable>> {
+    return fromPromise(
+      () => this.producer.add(node as unknown as FlowJob),
+      this.unavailable('add')
+    );
+  }
+
+  async close(): Promise<Result<void, QueueUnavailable>> {
+    return fromPromise(() => this.producer.close(), this.unavailable('close'));
   }
 }

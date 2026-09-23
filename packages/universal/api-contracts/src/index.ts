@@ -1,5 +1,6 @@
 import * as adminCategories from './admin-categories.js';
 import * as adminDlq from './admin-dlq.js';
+import * as adminVideos from './admin-videos.js';
 import * as categories from './categories.js';
 import * as channels from './channels.js';
 import { type EndpointContract, isEndpoint } from './endpoint.js';
@@ -13,6 +14,7 @@ import * as uploads from './uploads.js';
 import * as videos from './videos.js';
 
 export * from './admin-categories.js';
+export * from './admin-videos.js';
 export * from './admin-dlq.js';
 export * from './categories.js';
 export * from './channels.js';
@@ -23,6 +25,7 @@ export * from './health.js';
 export * from './me.js';
 export * from './pagination.js';
 export * from './problem.js';
+export * from './problem-for.js';
 export * from './reactions.js';
 export * from './subscriptions.js';
 export * from './uploads.js';
@@ -32,6 +35,7 @@ export * from './videos.js';
 export const contracts = {
   adminCategories,
   adminDlq,
+  adminVideos,
   categories,
   channels,
   events,

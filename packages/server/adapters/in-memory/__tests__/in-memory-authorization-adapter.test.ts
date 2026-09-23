@@ -32,20 +32,6 @@ describe('in-memory-authorization-adapter', () => {
       expect(adapter.can(canUpdateVideo, { user, video: foreignVideo })).toBe(true);
     });
 
-    it('assertCan does not throw', () => {
-      expect(() => {
-        adapter.assertCan(
-          canUpdateVideo,
-          { user, video: foreignVideo },
-          { action: 'update', subject: 'Video' }
-        );
-      }).not.toThrow();
-
-      expect(() => {
-        adapter.assertCan('delete', 'Video');
-      }).not.toThrow();
-    });
-
     it('forUser returns the adapter instance', () => {
       expect(adapter.forUser(user)).toBe(adapter);
     });
@@ -61,27 +47,6 @@ describe('in-memory-authorization-adapter', () => {
     it('always denies actions with can()', () => {
       expect(adapter.can('delete', 'Video')).toBe(false);
       expect(adapter.can(canUpdateVideo, { user, video: ownedVideo })).toBe(false);
-    });
-
-    it('always throws on assertCan', () => {
-      expect(() => {
-        adapter.assertCan(
-          canUpdateVideo,
-          { user, video: ownedVideo },
-          { action: 'update', subject: 'Video' }
-        );
-      }).toThrowError(/Forbidden/);
-
-      expect(() => {
-        adapter.assertCan('delete', 'Video');
-      }).toThrowError(/Forbidden/);
-    });
-
-    it('throws UNAUTHORIZED when user is null', () => {
-      const guestAdapter = new StrictAuthorizationAdapter(null);
-      expect(() => {
-        guestAdapter.assertCan('read', 'Video');
-      }).toThrowError(/Authentication required/);
     });
 
     it('forUser returns a new StrictAuthorizationAdapter with the user set', () => {

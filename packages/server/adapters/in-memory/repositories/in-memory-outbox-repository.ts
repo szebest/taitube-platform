@@ -1,10 +1,12 @@
 import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export class InMemoryOutboxRepository extends OutboxRepository {
   private readonly items = new Map<string, OutboxRecord>();
 
-  async enqueue(item: NewOutboxInput): Promise<OutboxRecord> {
+  async enqueue(item: NewOutboxInput): Promise<Result<OutboxRecord, DatabaseUnavailable>> {
     const id = item.id || uuidv7();
     const record: OutboxRecord = {
       id,
@@ -15,10 +17,10 @@ export class InMemoryOutboxRepository extends OutboxRepository {
       attempts: 0,
     };
     this.items.set(id, record);
-    return { ...record };
+    return ok({ ...record });
   }
 
-  async claimBatch(limit = 50): Promise<OutboxRecord[]> {
+  async claimBatch(limit = 50): Promise<Result<OutboxRecord[], DatabaseUnavailable>> {
     const results: OutboxRecord[] = [];
     const sorted = Array.from(this.items.values())
       .filter((r) => r.publishedAt === null)
@@ -28,24 +30,24 @@ export class InMemoryOutboxRepository extends OutboxRepository {
       if (results.length >= limit) break;
       results.push({ ...item });
     }
-    return results;
+    return ok(results);
   }
 
-  async markPublished(id: string): Promise<boolean> {
+  async markPublished(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
     const item = this.items.get(id);
-    if (!item) return false;
+    if (!item) return ok(false);
     item.publishedAt = new Date();
-    return true;
+    return ok(true);
   }
 
-  async recordAttempt(id: string): Promise<boolean> {
+  async recordAttempt(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
     const item = this.items.get(id);
-    if (!item) return false;
+    if (!item) return ok(false);
     item.attempts += 1;
-    return true;
+    return ok(true);
   }
 
-  async prune(retentionDays = 7): Promise<number> {
+  async prune(retentionDays = 7): Promise<Result<number, DatabaseUnavailable>> {
     const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
     let count = 0;
     for (const [id, item] of this.items.entries()) {
@@ -54,12 +56,12 @@ export class InMemoryOutboxRepository extends OutboxRepository {
         count += 1;
       }
     }
-    return count;
+    return ok(count);
   }
 
-  async findById(id: string): Promise<OutboxRecord | null> {
+  async findById(id: string): Promise<Result<OutboxRecord | null, DatabaseUnavailable>> {
     const item = this.items.get(id);
-    return item ? { ...item } : null;
+    return ok(item ? { ...item } : null);
   }
 
   seedPublished(id: string, publishedAt: Date): void {

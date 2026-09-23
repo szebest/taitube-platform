@@ -11,6 +11,7 @@ import {
 } from '@vp/adapters';
 import { buildApp } from '@vp/api';
 import { mintToken } from '@vp/dev-token';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ClientCrashedError, UploadClient } from '../client';
@@ -276,7 +277,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     expect(resumed.status).toBe('UPLOADED');
 
     // 3. Database assertion: video reaches UPLOADED status
-    const video = await repositories.videos.findById(resumed.videoId);
+    const video = expectOk(await repositories.videos.findById(resumed.videoId));
     expect(video).toBeDefined();
     expect(video?.status).toBe('UPLOADED');
     expect(video?.sourceSizeBytes).toBe(TOTAL_SIZE);

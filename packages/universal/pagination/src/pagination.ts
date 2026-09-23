@@ -1,8 +1,9 @@
+import { type Result, ok } from '@vp/result';
 import {
   type CursorCodec,
   type CursorPayload,
+  type InvalidCursor,
   defaultCursorCodec,
-  InvalidCursorError,
 } from './cursor-codec.js';
 
 /**
@@ -77,9 +78,9 @@ export class Paginator {
     return this.cursorCodec.encode(payload);
   }
 
-  /** Returns null for an absent cursor; throws `InvalidCursorError` for a broken one. */
-  decodeCursor(cursor?: string | null): CursorPayload | null {
-    if (!cursor) return null;
+  /** An absent cursor is `ok(null)`; a broken one is the only failure this can report. */
+  decodeCursor(cursor?: string | null): Result<CursorPayload | null, InvalidCursor> {
+    if (!cursor) return ok(null);
     return this.cursorCodec.decode(cursor);
   }
 
@@ -99,8 +100,6 @@ export class Paginator {
     };
   }
 }
-
-export { InvalidCursorError };
 
 /** Shared instance for callers with no configured override. */
 export const defaultPaginator = new Paginator();

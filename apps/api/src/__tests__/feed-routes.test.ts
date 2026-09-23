@@ -2,6 +2,7 @@ import * as http from 'node:http';
 import { InMemoryCacheClient, InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
@@ -381,7 +382,7 @@ describe('Public Video Feed API & Anonymous Access (Ticket 36)', () => {
     });
     expect(res.statusCode).toBe(200);
 
-    const cached = await cache.get('taitube:feed:public:recent:all');
+    const cached = expectOk(await cache.get('taitube:feed:public:recent:all'));
     expect(cached).not.toBeNull();
     const parsed = JSON.parse(cached ?? '{}');
     expect(parsed.data.items[0]?.title).toBe('Cache Test Video');

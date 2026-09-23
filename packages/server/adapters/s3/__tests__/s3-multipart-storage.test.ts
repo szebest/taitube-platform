@@ -1,4 +1,5 @@
-import { StorageError } from '@vp/core/ports';
+import { ErrorCodes } from '@vp/errors';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { S3MultipartStorage } from '../s3-multipart-storage';
 import { S3StorageClient } from '../s3-storage-client';
 import { type FakeS3, fakeS3Client } from './fake-s3-client';
@@ -16,9 +17,9 @@ describe('S3MultipartStorage', () => {
     it('returns the upload id the driver minted', async () => {
       const fake = fakeS3Client({ CreateMultipartUploadCommand: () => ({ UploadId: UPLOAD_ID }) });
 
-      expect(await multipartOver(fake).createMultipartUpload(BUCKET, KEY, 'video/mp4')).toBe(
-        UPLOAD_ID
-      );
+      expect(
+        expectOk(await multipartOver(fake).createMultipartUpload(BUCKET, KEY, 'video/mp4'))
+      ).toBe(UPLOAD_ID);
       expect(fake.sent[0]).toMatchObject({
         name: 'CreateMultipartUploadCommand',
         input: { Bucket: BUCKET, Key: KEY, ContentType: 'video/mp4' },
@@ -28,9 +29,9 @@ describe('S3MultipartStorage', () => {
     it('fails when the driver returns no upload id', async () => {
       const fake = fakeS3Client({ CreateMultipartUploadCommand: () => ({}) });
 
-      await expect(
-        multipartOver(fake).createMultipartUpload(BUCKET, KEY, 'video/mp4')
-      ).rejects.toThrow(StorageError);
+      expect(
+        expectErr(await multipartOver(fake).createMultipartUpload(BUCKET, KEY, 'video/mp4')).code
+      ).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
     });
   });
 
@@ -43,13 +44,15 @@ describe('S3MultipartStorage', () => {
         secretAccessKey: 'minioadmin',
       });
 
-      const part = await multipart.createPresignedPartUrl({
-        bucket: BUCKET,
-        key: KEY,
-        uploadId: UPLOAD_ID,
-        partNumber: 3,
-        expiresInSeconds: 600,
-      });
+      const part = expectOk(
+        await multipart.createPresignedPartUrl({
+          bucket: BUCKET,
+          key: KEY,
+          uploadId: UPLOAD_ID,
+          partNumber: 3,
+          expiresInSeconds: 600,
+        })
+      );
 
       expect(part.partNumber).toBe(3);
       expect(part.url).toContain('partNumber=3');
@@ -71,7 +74,9 @@ describe('S3MultipartStorage', () => {
         }),
       });
 
-      expect(await multipartOver(fake).listMultipartParts(BUCKET, KEY, UPLOAD_ID)).toEqual([
+      expect(
+        expectOk(await multipartOver(fake).listMultipartParts(BUCKET, KEY, UPLOAD_ID))
+      ).toEqual([
         { partNumber: 1, etag: 'aaa', size: 512 },
         { partNumber: 2, etag: 'bbb', size: 256 },
         { partNumber: 0, etag: '', size: 0 },
@@ -80,7 +85,9 @@ describe('S3MultipartStorage', () => {
 
     it('treats a missing Parts as no parts', async () => {
       const fake = fakeS3Client({ ListPartsCommand: () => ({}) });
-      expect(await multipartOver(fake).listMultipartParts(BUCKET, KEY, UPLOAD_ID)).toEqual([]);
+      expect(
+        expectOk(await multipartOver(fake).listMultipartParts(BUCKET, KEY, UPLOAD_ID))
+      ).toEqual([]);
     });
   });
 
@@ -93,7 +100,7 @@ describe('S3MultipartStorage', () => {
         }),
       });
 
-      expect(await multipartOver(fake).listMultipartUploads(BUCKET, 'raw/')).toEqual([
+      expect(expectOk(await multipartOver(fake).listMultipartUploads(BUCKET, 'raw/'))).toEqual([
         { uploadId: UPLOAD_ID, key: KEY, initiated },
         { uploadId: '', key: '', initiated: undefined },
       ]);
@@ -118,18 +125,23 @@ describe('S3MultipartStorage', () => {
       });
     });
 
-    it('wraps a driver failure in a StorageError naming the upload', async () => {
+    it('reports a driver failure as STORAGE_UNAVAILABLE naming the operation', async () => {
       const fake = fakeS3Client({
         CompleteMultipartUploadCommand: () => {
           throw new Error('part missing');
         },
       });
 
-      await expect(
-        multipartOver(fake).completeMultipartUpload(BUCKET, KEY, UPLOAD_ID, [
-          { partNumber: 1, etag: 'aaa' },
-        ])
-      ).rejects.toThrow(new RegExp(UPLOAD_ID));
+      expect(
+        expectErr(
+          await multipartOver(fake).completeMultipartUpload(BUCKET, KEY, UPLOAD_ID, [
+            { partNumber: 1, etag: 'aaa' },
+          ])
+        )
+      ).toMatchObject({
+        code: ErrorCodes.STORAGE_UNAVAILABLE,
+        operation: 'completeMultipartUpload',
+      });
     });
   });
 
@@ -144,16 +156,16 @@ describe('S3MultipartStorage', () => {
       });
     });
 
-    it('wraps a driver failure in a StorageError', async () => {
+    it('reports a driver failure as STORAGE_UNAVAILABLE', async () => {
       const fake = fakeS3Client({
         AbortMultipartUploadCommand: () => {
           throw new Error('already gone');
         },
       });
 
-      await expect(
-        multipartOver(fake).abortMultipartUpload(BUCKET, KEY, UPLOAD_ID)
-      ).rejects.toThrow(StorageError);
+      expect(
+        expectErr(await multipartOver(fake).abortMultipartUpload(BUCKET, KEY, UPLOAD_ID)).code
+      ).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
     });
   });
 
@@ -164,16 +176,18 @@ describe('S3MultipartStorage', () => {
       const bucket = process.env['STORAGE_RAW_BUCKET'] || BUCKET;
       const multipart = new S3MultipartStorage();
 
-      const uploadId = await multipart.createMultipartUpload(bucket, KEY, 'video/mp4');
+      const uploadId = expectOk(await multipart.createMultipartUpload(bucket, KEY, 'video/mp4'));
       expect(uploadId).toBeDefined();
 
-      const part = await multipart.createPresignedPartUrl({
-        bucket,
-        key: KEY,
-        uploadId,
-        partNumber: 1,
-        expiresInSeconds: 600,
-      });
+      const part = expectOk(
+        await multipart.createPresignedPartUrl({
+          bucket,
+          key: KEY,
+          uploadId,
+          partNumber: 1,
+          expiresInSeconds: 600,
+        })
+      );
       expect(part.url).toContain('partNumber=1');
       expect(part.url).toContain('uploadId=');
 

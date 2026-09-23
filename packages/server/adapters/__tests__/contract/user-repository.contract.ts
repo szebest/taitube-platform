@@ -1,4 +1,5 @@
 import type { UserRepository } from '@vp/core/repositories';
+import { expectOk } from '@vp/testing/result';
 import { OWNER_ID } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -16,34 +17,38 @@ export function describeUserRepositoryContract(makeSubject: MakeRepositoriesSubj
       users = subject.repositories.users;
     });
 
-    it('returns null for an unknown user', async () => {
-      expect(await users.findById(OWNER_ID)).toBeNull();
+    it('answers ok(null) for an unknown user, because absence is not a failure', async () => {
+      expect(expectOk(await users.findById(OWNER_ID))).toBeNull();
     });
 
     it('inserts on the first upsert and reads back the defaults', async () => {
-      const created = await users.upsert({ id: OWNER_ID, email: 'owner@video-pipeline.local' });
+      const created = expectOk(
+        await users.upsert({ id: OWNER_ID, email: 'owner@video-pipeline.local' })
+      );
 
-      expect(created.id).toBe(OWNER_ID);
-      expect(created.tier).toBe('free');
-      expect(created.role).toBe('USER');
-      expect(await users.findById(OWNER_ID)).toMatchObject({
+      expect(created).toMatchObject({ id: OWNER_ID, tier: 'free', role: 'USER' });
+      expect(expectOk(await users.findById(OWNER_ID))).toMatchObject({
         email: 'owner@video-pipeline.local',
       });
     });
 
     it('updates in place on a second upsert of the same id', async () => {
-      await users.upsert({ id: OWNER_ID, email: 'owner@video-pipeline.local' });
-      const updated = await users.upsert({
-        id: OWNER_ID,
+      expectOk(await users.upsert({ id: OWNER_ID, email: 'owner@video-pipeline.local' }));
+      const updated = expectOk(
+        await users.upsert({
+          id: OWNER_ID,
+          email: 'renamed@video-pipeline.local',
+          tier: 'pro',
+          role: 'CREATOR',
+        })
+      );
+
+      expect(updated).toMatchObject({
         email: 'renamed@video-pipeline.local',
         tier: 'pro',
         role: 'CREATOR',
       });
-
-      expect(updated.email).toBe('renamed@video-pipeline.local');
-      expect(updated.tier).toBe('pro');
-      expect(updated.role).toBe('CREATOR');
-      expect((await users.findById(OWNER_ID))?.email).toBe('renamed@video-pipeline.local');
+      expect(expectOk(await users.findById(OWNER_ID))?.email).toBe('renamed@video-pipeline.local');
     });
   });
 }

@@ -1,6 +1,13 @@
 import type { FlowProducerPort, JobQueue } from '@vp/core/ports';
-import type { Repositories } from '@vp/core/repositories';
+import type { OutboxPayload, Repositories } from '@vp/core/repositories';
+import {
+  type DatabaseUnavailable,
+  ErrorCodes,
+  type Failure,
+  type QueueUnavailable,
+} from '@vp/errors';
 import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
+import { type Result, err, isErr, map, ok } from '@vp/result';
 
 export interface OutboxRelayOptions {
   repositories: Repositories;
@@ -18,6 +25,35 @@ export interface DrainOutboxResult {
   failureCount: number;
 }
 
+/** A payload naming a transport this relay was not wired with. Configuration, not a dead queue. */
+type RelayNotConfigured = Failure<typeof ErrorCodes.INTERNAL, { payloadType: string }>;
+
+function relayNotConfigured(payloadType: string): RelayNotConfigured {
+  return {
+    code: ErrorCodes.INTERNAL,
+    message: `Outbox relay has no transport configured for a "${payloadType}" payload`,
+    payloadType,
+  };
+}
+
+async function publish(
+  payload: OutboxPayload,
+  getQueue: ((name: string) => JobQueue) | undefined,
+  flowProducer: FlowProducerPort | undefined
+): Promise<Result<void, RelayNotConfigured | QueueUnavailable>> {
+  if (payload.type === 'queue') {
+    if (!getQueue) return err(relayNotConfigured('queue'));
+    const queue = getQueue(payload.queueName);
+    return map(
+      await queue.add(payload.job.name, payload.job.data, payload.job.opts),
+      () => undefined
+    );
+  }
+
+  if (!flowProducer) return err(relayNotConfigured('flow'));
+  return map(await flowProducer.add(payload.flow), () => undefined);
+}
+
 export async function drainOutboxOnce(
   repositories: Repositories,
   options: {
@@ -26,60 +62,43 @@ export async function drainOutboxOnce(
     batchSize?: number;
     logger?: Logger;
   }
-): Promise<DrainOutboxResult> {
+): Promise<Result<DrainOutboxResult, DatabaseUnavailable>> {
   const { getQueue, flowProducer, batchSize = 50, logger } = options;
   const startMs = Date.now();
-  const items = await repositories.outbox.claimBatch(batchSize);
+  const claimed = await repositories.outbox.claimBatch(batchSize);
+  if (isErr(claimed)) return claimed;
 
+  const items = claimed.value;
   let successCount = 0;
   let failureCount = 0;
 
   for (const item of items) {
-    try {
-      const payload = item.payload;
-      if (payload.type === 'queue') {
-        if (!getQueue) {
-          throw new Error(`getQueue not configured for queue: ${payload.queueName}`);
-        }
-        const q = getQueue(payload.queueName);
-        await q.add(payload.job.name, payload.job.data, payload.job.opts);
-      } else if (payload.type === 'flow') {
-        if (!flowProducer) {
-          throw new Error('flowProducer not configured for outbox flow item');
-        }
-        await flowProducer.add(payload.flow);
-      } else {
-        throw new Error('Unknown outbox payload type');
-      }
+    const published = await publish(item.payload, getQueue, flowProducer);
 
-      await repositories.outbox.markPublished(item.id);
-      successCount += 1;
-      try {
-        getMetrics().outboxEventsPublished.inc({ kind: item.kind });
-      } catch {}
-      logger?.debug({ id: item.id, kind: item.kind }, 'Outbox item published successfully');
-    } catch (err) {
+    if (isErr(published)) {
       failureCount += 1;
-      await repositories.outbox.recordAttempt(item.id);
+      const recorded = await repositories.outbox.recordAttempt(item.id);
+      if (isErr(recorded)) return recorded;
       logger?.error(
-        { id: item.id, kind: item.kind, err: (err as Error).message },
+        { id: item.id, kind: item.kind, code: published.error.code },
         'Failed to publish outbox item'
       );
+      continue;
     }
+
+    const marked = await repositories.outbox.markPublished(item.id);
+    if (isErr(marked)) return marked;
+
+    successCount += 1;
+    getMetrics().outboxEventsPublished.inc({ kind: item.kind });
+    logger?.debug({ id: item.id, kind: item.kind }, 'Outbox item published successfully');
   }
 
   if (items.length > 0) {
-    try {
-      const durationSec = (Date.now() - startMs) / 1000;
-      getMetrics().outboxDrainDuration.observe(durationSec);
-    } catch {}
+    getMetrics().outboxDrainDuration.observe((Date.now() - startMs) / 1000);
   }
 
-  return {
-    processedCount: items.length,
-    successCount,
-    failureCount,
-  };
+  return ok({ processedCount: items.length, successCount, failureCount });
 }
 
 export class OutboxRelay {
@@ -98,18 +117,18 @@ export class OutboxRelay {
       if (!this.running) return;
       if (!this.draining) {
         this.draining = true;
-        try {
-          await drainOutboxOnce(this.options.repositories, {
-            getQueue: this.options.getQueue,
-            flowProducer: this.options.flowProducer,
-            batchSize: this.options.batchSize,
-            logger: this.options.logger,
-          });
-        } catch (err) {
-          this.options.logger?.error({ err: (err as Error).message }, 'Outbox relay loop error');
-        } finally {
-          this.draining = false;
+        // A drain that could not read the outbox leaves the rows claimed for the next tick; the
+        // loop must keep ticking, so its failure is reported and dropped rather than returned.
+        const drained = await drainOutboxOnce(this.options.repositories, {
+          getQueue: this.options.getQueue,
+          flowProducer: this.options.flowProducer,
+          batchSize: this.options.batchSize,
+          logger: this.options.logger,
+        });
+        if (isErr(drained)) {
+          this.options.logger?.error({ code: drained.error.code }, 'Outbox relay loop error');
         }
+        this.draining = false;
       }
       if (this.running) {
         this.timer = setTimeout(loop, intervalMs);

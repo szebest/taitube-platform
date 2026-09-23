@@ -1,5 +1,6 @@
 import { DegradedSchema, liveness, livenessAlias, readiness } from '@vp/api-contracts';
 import type { CacheClient, DatabaseClient, HealthCheckable, StorageClient } from '@vp/core/ports';
+import { isOk } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';
@@ -10,15 +11,9 @@ export interface HealthRouteOptions {
   storage?: StorageClient | null;
 }
 
+/** An unwired dependency is not a dependency, so it cannot be unreachable. */
 async function isReachable(dependency?: HealthCheckable | null): Promise<boolean> {
-  if (!dependency) {
-    return true;
-  }
-  try {
-    return await dependency.checkHealth();
-  } catch {
-    return false;
-  }
+  return dependency ? isOk(await dependency.checkHealth()) : true;
 }
 
 export function registerHealthRoutes(app: FastifyInstance, options: HealthRouteOptions): void {

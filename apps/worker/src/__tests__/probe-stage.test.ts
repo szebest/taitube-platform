@@ -5,6 +5,7 @@ import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { validateJobId, validateQueueName } from '../registry';
@@ -73,10 +74,10 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       traceparent: '00-01-01-01',
     });
 
-    await expect(processor(job)).rejects.toThrow();
+    expect(expectErr(await processor(job)).code).toBe(ErrorCodes.SOURCE_MISSING);
 
     // Verify video in DB became FAILED with SOURCE_MISSING
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('FAILED');
     expect(video?.errorCode).toBe(ErrorCodes.SOURCE_MISSING);
   });
@@ -97,8 +98,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       workerId: workerId1,
       lockToken: lockToken1,
     });
-    expect(claim1.fenced).toBe(false);
-    expect(claim1.lockToken).toBe(lockToken1);
+    expect(expectOk(claim1).fenced).toBe(false);
+    expect(expectOk(claim1).lockToken).toBe(lockToken1);
 
     // Worker 2 (or retry) claims step with NEW token
     const lockToken2 = uuidv7();
@@ -112,8 +113,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       workerId: 'worker-2',
       lockToken: lockToken2,
     });
-    expect(claim2.fenced).toBe(false);
-    expect(claim2.lockToken).toBe(lockToken2);
+    expect(expectOk(claim2).fenced).toBe(false);
+    expect(expectOk(claim2).lockToken).toBe(lockToken2);
 
     // Worker 1 tries to complete step with stale lockToken1 -> FENCED!
     const comp1 = await repositories.steps.complete({
@@ -122,8 +123,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       rendition: '-',
       lockToken: lockToken1, // Stale!
     });
-    expect(comp1.fenced).toBe(true);
-    expect(comp1.completed).toBe(false);
+    expect(expectOk(comp1).fenced).toBe(true);
+    expect(expectOk(comp1).completed).toBe(false);
 
     // Worker 2 completes step with current lockToken2 -> SUCCEEDS!
     const comp2 = await repositories.steps.complete({
@@ -132,8 +133,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       rendition: '-',
       lockToken: lockToken2,
     });
-    expect(comp2.fenced).toBe(false);
-    expect(comp2.completed).toBe(true);
+    expect(expectOk(comp2).fenced).toBe(false);
+    expect(expectOk(comp2).completed).toBe(true);
   });
 
   it('AC 18: hostile zero-bytes file fails on attempt 1 with CORRUPT_CONTAINER', async () => {
@@ -164,10 +165,10 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       traceparent: '00-01-01-01',
     });
 
-    await expect(processor(job)).rejects.toThrow();
+    expect(expectErr(await processor(job)).code).toBe(ErrorCodes.CORRUPT_CONTAINER);
 
     // Verify video in DB became FAILED with CORRUPT_CONTAINER
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('FAILED');
     expect(video?.errorCode).toBe(ErrorCodes.CORRUPT_CONTAINER);
 
@@ -246,26 +247,26 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       traceparent: '00-01-01-01',
     });
 
-    const result = await processor(job);
+    const result = expectOk(await processor(job));
     expect(result.status).toBe('PROCESSING');
     expect(result.durationMs).toBe(60000);
 
     // 1. Verify video in DB is PROCESSING with duration and ladder
-    const video = await repositories.videos.findById(videoId);
+    const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('PROCESSING');
     expect(video?.durationMs).toBe(60000);
     expect(video?.width).toBe(1920);
     expect(video?.height).toBe(1080);
 
     // 2. Verify renditions table has PENDING rows for 1080p, 720p, 480p (AC 17)
-    const rends = await repositories.renditions.findByVideoId(videoId);
+    const rends = expectOk(await repositories.renditions.findByVideoId(videoId));
     expect(rends.length).toBe(3);
     const rendNames = rends.map((r: any) => r.name).sort();
     expect(rendNames).toEqual(['1080p', '480p', '720p']);
     expect(rends.every((r: any) => r.status === 'PENDING')).toBe(true);
 
     // 3. Verify video_events contains probe.started and probe.completed (AC 17)
-    const events = await repositories.events.findByVideoId(videoId);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.some((e: any) => e.type === 'probe.started')).toBe(true);
     expect(events.some((e: any) => e.type === 'probe.completed')).toBe(true);
 
@@ -355,7 +356,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       })
     );
 
-    const p720Rends = await repositories.renditions.findByVideoId(p720Id);
+    const p720Rends = expectOk(await repositories.renditions.findByVideoId(p720Id));
     expect(p720Rends.map((r: any) => r.name).sort()).toEqual(['480p', '720p']);
 
     // 2. Test sd360 (keeps lowest rung 480p)
@@ -393,7 +394,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       })
     );
 
-    const sd360Rends = await repositories.renditions.findByVideoId(sd360Id);
+    const sd360Rends = expectOk(await repositories.renditions.findByVideoId(sd360Id));
     expect(sd360Rends.map((r: any) => r.name)).toEqual(['480p']);
 
     // 3. Test portrait video with 90° rotation
@@ -453,7 +454,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       })
     );
 
-    const portraitVideo = await repositories.videos.findById(portraitId);
+    const portraitVideo = expectOk(await repositories.videos.findById(portraitId));
     expect(portraitVideo?.width).toBe(1080); // rotation-aware effective dimensions
     expect(portraitVideo?.height).toBe(1920);
   });
@@ -494,18 +495,20 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     vi.spyOn(ffmpegModule, 'runFfprobe').mockRejectedValueOnce(
       new PermanentError(ErrorCodes.CORRUPT_CONTAINER, 'Source file contains no video stream')
     );
-    await expect(
-      processor(
-        createMockJob(`${audioOnlyId}--probe--g1`, {
-          videoId: audioOnlyId,
-          sourceKey: 'raw/audio-only.mp4',
-          generation: 1,
-          traceparent: '00-1',
-        })
-      )
-    ).rejects.toThrow();
+    expect(
+      expectErr(
+        await processor(
+          createMockJob(`${audioOnlyId}--probe--g1`, {
+            videoId: audioOnlyId,
+            sourceKey: 'raw/audio-only.mp4',
+            generation: 1,
+            traceparent: '00-1',
+          })
+        )
+      ).code
+    ).toBe(ErrorCodes.CORRUPT_CONTAINER);
 
-    const audioVideo = await repositories.videos.findById(audioOnlyId);
+    const audioVideo = expectOk(await repositories.videos.findById(audioOnlyId));
     expect(audioVideo?.status).toBe('FAILED');
     expect(audioVideo?.errorCode).toBe(ErrorCodes.CORRUPT_CONTAINER);
 
@@ -513,18 +516,20 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     vi.spyOn(ffmpegModule, 'runFfprobe').mockRejectedValueOnce(
       new PermanentError(ErrorCodes.UNSUPPORTED_CODEC, 'Unsupported video codec "prores"')
     );
-    await expect(
-      processor(
-        createMockJob(`${badCodecId}--probe--g1`, {
-          videoId: badCodecId,
-          sourceKey: 'raw/bad-codec.mp4',
-          generation: 1,
-          traceparent: '00-1',
-        })
-      )
-    ).rejects.toThrow();
+    expect(
+      expectErr(
+        await processor(
+          createMockJob(`${badCodecId}--probe--g1`, {
+            videoId: badCodecId,
+            sourceKey: 'raw/bad-codec.mp4',
+            generation: 1,
+            traceparent: '00-1',
+          })
+        )
+      ).code
+    ).toBe(ErrorCodes.UNSUPPORTED_CODEC);
 
-    const codecVideo = await repositories.videos.findById(badCodecId);
+    const codecVideo = expectOk(await repositories.videos.findById(badCodecId));
     expect(codecVideo?.status).toBe('FAILED');
     expect(codecVideo?.errorCode).toBe(ErrorCodes.UNSUPPORTED_CODEC);
 
@@ -532,18 +537,20 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     vi.spyOn(ffmpegModule, 'runFfprobe').mockRejectedValueOnce(
       new PermanentError(ErrorCodes.DURATION_EXCEEDED, 'Video duration exceeds maximum allowed')
     );
-    await expect(
-      processor(
-        createMockJob(`${overDurationId}--probe--g1`, {
-          videoId: overDurationId,
-          sourceKey: 'raw/over-duration.mp4',
-          generation: 1,
-          traceparent: '00-1',
-        })
-      )
-    ).rejects.toThrow();
+    expect(
+      expectErr(
+        await processor(
+          createMockJob(`${overDurationId}--probe--g1`, {
+            videoId: overDurationId,
+            sourceKey: 'raw/over-duration.mp4',
+            generation: 1,
+            traceparent: '00-1',
+          })
+        )
+      ).code
+    ).toBe(ErrorCodes.DURATION_EXCEEDED);
 
-    const durVideo = await repositories.videos.findById(overDurationId);
+    const durVideo = expectOk(await repositories.videos.findById(overDurationId));
     expect(durVideo?.status).toBe('FAILED');
     expect(durVideo?.errorCode).toBe(ErrorCodes.DURATION_EXCEEDED);
   });

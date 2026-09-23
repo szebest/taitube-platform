@@ -8,7 +8,11 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
+import { storageUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
+import type { Result } from '@vp/result';
+import { err } from '@vp/result';
+import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createWorkerRunner } from '../runner';
@@ -50,17 +54,21 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       // Create video in UPLOADING state with old updatedAt (2 hours ago)
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey,
-        status: 'UPLOADING',
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey,
+          status: 'UPLOADING',
+        })
+      );
       // Force old timestamp
       video.updatedAt = twoHoursAgo;
 
       // Create in-flight multipart upload
-      const uploadId = await multipart.createMultipartUpload('raw', sourceKey, 'video/mp4');
+      const uploadId = expectOk(
+        await multipart.createMultipartUpload('raw', sourceKey, 'video/mp4')
+      );
       multipart.seedPart(uploadId, 1, Buffer.from('part 1 content'));
 
       await repositories.uploads.create({
@@ -75,33 +83,35 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       // Verify multipart is active before reconciler runs
-      const beforeList = await multipart.listMultipartUploads('raw');
+      const beforeList = expectOk(await multipart.listMultipartUploads('raw'));
       expect(beforeList.some((u) => u.uploadId === uploadId)).toBe(true);
 
       // Run reconcile-uploads with 1 hour threshold (so 2 hours ago is stale)
-      const result = await runReconcileUploads({
-        repositories,
-        multipart,
-        rawBucket: 'raw',
-        uploadingThresholdMs: 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileUploads({
+          repositories,
+          multipart,
+          rawBucket: 'raw',
+          uploadingThresholdMs: 60 * 60 * 1000,
+        })
+      );
 
       expect(result.abandonedCount).toBe(1);
 
       // Video must be ABANDONED
-      const updatedVideo = await repositories.videos.findById(videoId);
+      const updatedVideo = expectOk(await repositories.videos.findById(videoId));
       expect(updatedVideo?.status).toBe('ABANDONED');
 
       // Upload record must be ABORTED
-      const uploadRecord = await repositories.uploads.findByVideoId(videoId);
+      const uploadRecord = expectOk(await repositories.uploads.findByVideoId(videoId));
       expect(uploadRecord?.status).toBe('ABORTED');
 
       // Multipart upload on storage must be aborted (listMultipartUploads empty)
-      const afterList = await multipart.listMultipartUploads('raw');
+      const afterList = expectOk(await multipart.listMultipartUploads('raw'));
       expect(afterList.filter((u) => u.uploadId === uploadId)).toHaveLength(0);
 
       // Event must be logged
-      const events = await repositories.events.findByVideoId(videoId);
+      const events = expectOk(await repositories.events.findByVideoId(videoId));
       expect(events.some((e) => e.type === 'video.abandoned')).toBe(true);
     });
 
@@ -114,14 +124,16 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         status: 'UPLOADING',
       });
 
-      const result = await runReconcileUploads({
-        repositories,
-        multipart,
-        uploadingThresholdMs: 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileUploads({
+          repositories,
+          multipart,
+          uploadingThresholdMs: 60 * 60 * 1000,
+        })
+      );
 
       expect(result.abandonedCount).toBe(0);
-      const video = await repositories.videos.findById(videoId);
+      const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('UPLOADING');
     });
 
@@ -131,13 +143,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       // Upload completed 10 minutes ago, but Redis probe job was lost
       const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey,
-        status: 'UPLOADED',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey,
+          status: 'UPLOADED',
+          generation: 1,
+        })
+      );
       video.updatedAt = tenMinutesAgo;
 
       // Seed a test video file into storage so probe can actually download it
@@ -152,12 +166,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(probeQueue.enqueuedJobs).toHaveLength(0);
 
       // Run reconciler with 5 min threshold
-      const result = await runReconcileUploads({
-        repositories,
-        multipart,
-        probeQueue,
-        uploadedThresholdMs: 5 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileUploads({
+          repositories,
+          multipart,
+          probeQueue,
+          uploadedThresholdMs: 5 * 60 * 1000,
+        })
+      );
 
       expect(result.reenqueuedCount).toBe(1);
 
@@ -176,7 +192,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         eventType: 'video.ready',
       });
 
-      const readyVideo = await repositories.videos.findById(videoId);
+      const readyVideo = expectOk(await repositories.videos.findById(videoId));
       expect(readyVideo?.status).toBe('READY');
     });
   });
@@ -186,13 +202,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'PROCESSING',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'PROCESSING',
+          generation: 1,
+        })
+      );
       video.updatedAt = fourHoursAgo;
 
       const token = uuidv7();
@@ -214,21 +232,23 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       // No jobs in queues
-      const result = await runReconcileProcessing({
-        repositories,
-        getQueue,
-        thresholdMs: 3 * 60 * 60 * 1000, // 3h
-      });
+      const result = expectOk(
+        await runReconcileProcessing({
+          repositories,
+          getQueue,
+          thresholdMs: 3 * 60 * 60 * 1000, // 3h
+        })
+      );
 
       expect(result.orphanedCount).toBe(1);
 
       // Video must be FAILED with ORPHANED
-      const updatedVideo = await repositories.videos.findById(videoId);
+      const updatedVideo = expectOk(await repositories.videos.findById(videoId));
       expect(updatedVideo?.status).toBe('FAILED');
       expect(updatedVideo?.errorCode).toBe('ORPHANED');
 
       // dlq_entries must have a row
-      const dlqEntries = await repositories.dlq.list({ limit: 100 });
+      const dlqEntries = expectOk(await repositories.dlq.list({ limit: 100 }));
       expect(dlqEntries).toHaveLength(1);
       const dlqEntry = dlqEntries[0];
       expect(dlqEntry?.videoId).toBe(videoId);
@@ -241,13 +261,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'PROCESSING',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'PROCESSING',
+          generation: 1,
+        })
+      );
       video.updatedAt = fourHoursAgo;
 
       // Active RUNNING step
@@ -262,14 +284,16 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         lockToken: uuidv7(),
       });
 
-      const result = await runReconcileProcessing({
-        repositories,
-        getQueue,
-        thresholdMs: 3 * 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileProcessing({
+          repositories,
+          getQueue,
+          thresholdMs: 3 * 60 * 60 * 1000,
+        })
+      );
 
       expect(result.orphanedCount).toBe(0);
-      const checkVideo = await repositories.videos.findById(videoId);
+      const checkVideo = expectOk(await repositories.videos.findById(videoId));
       expect(checkVideo?.status).toBe('PROCESSING');
     });
 
@@ -277,27 +301,31 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'PROCESSING',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'PROCESSING',
+          generation: 1,
+        })
+      );
       video.updatedAt = fourHoursAgo;
 
       // Add a waiting job to transcode-720p
       const transcodeQueue = getQueue('transcode-720p') as InMemoryJobQueue;
       await transcodeQueue.add('transcode', { videoId, rendition: '720p' });
 
-      const result = await runReconcileProcessing({
-        repositories,
-        getQueue,
-        thresholdMs: 3 * 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileProcessing({
+          repositories,
+          getQueue,
+          thresholdMs: 3 * 60 * 60 * 1000,
+        })
+      );
 
       expect(result.orphanedCount).toBe(0);
-      const checkVideo = await repositories.videos.findById(videoId);
+      const checkVideo = expectOk(await repositories.videos.findById(videoId));
       expect(checkVideo?.status).toBe('PROCESSING');
     });
 
@@ -305,27 +333,31 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'PROCESSING',
-        generation: 1,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'PROCESSING',
+          generation: 1,
+        })
+      );
       video.updatedAt = fourHoursAgo;
 
       // Add a prioritized job to probe queue
       const probeQueue = getQueue('probe') as InMemoryJobQueue;
       await probeQueue.add('probe', { videoId }, { priority: 5 });
 
-      const result = await runReconcileProcessing({
-        repositories,
-        getQueue,
-        thresholdMs: 3 * 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runReconcileProcessing({
+          repositories,
+          getQueue,
+          thresholdMs: 3 * 60 * 60 * 1000,
+        })
+      );
 
       expect(result.orphanedCount).toBe(0);
-      const checkVideo = await repositories.videos.findById(videoId);
+      const checkVideo = expectOk(await repositories.videos.findById(videoId));
       expect(checkVideo?.status).toBe('PROCESSING');
     });
   });
@@ -336,14 +368,16 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
       // Create video soft-deleted 2h ago
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'DELETED',
-        readyAt: twoHoursAgo,
-        deletedAt: twoHoursAgo,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'DELETED',
+          readyAt: twoHoursAgo,
+          deletedAt: twoHoursAgo,
+        })
+      );
       video.updatedAt = twoHoursAgo;
 
       // Seed raw object
@@ -378,21 +412,23 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         prefix: `videos/${videoId}/`,
         maxKeys: 1500,
       });
-      expect(initialPublicList.keys.length).toBe(TOTAL_OBJECTS + 1);
+      expect(expectOk(initialPublicList).keys.length).toBe(TOTAL_OBJECTS + 1);
 
       // Run purge-deleted with 1 hour threshold
-      const result = await runPurgeDeleted({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        publicBucket: 'public',
-        thresholdMs: 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runPurgeDeleted({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          publicBucket: 'public',
+          thresholdMs: 60 * 60 * 1000,
+        })
+      );
 
       expect(result.purgedVideosCount).toBe(1);
 
       // Verify raw source is deleted
-      const rawMeta = await storage.headObject('raw', `raw/${videoId}/source.mp4`);
+      const rawMeta = expectOk(await storage.headObject('raw', `raw/${videoId}/source.mp4`));
       expect(rawMeta).toBeNull();
 
       // Verify ALL public objects (> 1000) are gone
@@ -401,10 +437,10 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         prefix: `videos/${videoId}/`,
         maxKeys: 1500,
       });
-      expect(remainingPublic.keys).toHaveLength(0);
+      expect(expectOk(remainingPublic).keys).toHaveLength(0);
 
       // Verify video row is hard-deleted from database
-      const hardDeletedVideo = await repositories.videos.findById(videoId);
+      const hardDeletedVideo = expectOk(await repositories.videos.findById(videoId));
       expect(hardDeletedVideo).toBeNull();
     });
 
@@ -422,25 +458,25 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
 
       // Spy on purgePrefix to simulate storage outage
       const originalPurge = storage.purgePrefix.bind(storage);
-      storage.purgePrefix = async (bucket, prefix) => {
-        if (bucket === 'public') {
-          throw new Error('503 Service Unavailable: S3 outage');
-        }
-        return originalPurge(bucket, prefix);
-      };
+      storage.purgePrefix = async (bucket, prefix) =>
+        bucket === 'public'
+          ? err(storageUnavailable('purgePrefix', '503 Service Unavailable: S3 outage'))
+          : originalPurge(bucket, prefix);
 
-      const result = await runPurgeDeleted({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        publicBucket: 'public',
-        thresholdMs: 60 * 60 * 1000,
-      });
+      const result = expectOk(
+        await runPurgeDeleted({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          publicBucket: 'public',
+          thresholdMs: 60 * 60 * 1000,
+        })
+      );
 
       expect(result.purgedVideosCount).toBe(0);
 
       // Video row MUST remain in database so it can be retried without leaking storage objects!
-      const stillExistingVideo = await repositories.videos.findById(videoId);
+      const stillExistingVideo = expectOk(await repositories.videos.findById(videoId));
       expect(stillExistingVideo).not.toBeNull();
       expect(stillExistingVideo?.status).toBe('DELETED');
     });
@@ -496,12 +532,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       });
 
       // Run purge-deleted
-      const result = await runPurgeDeleted({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        publicBucket: 'public',
-      });
+      const result = expectOk(
+        await runPurgeDeleted({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          publicBucket: 'public',
+        })
+      );
 
       expect(result.purgedGenerationsCount).toBeGreaterThanOrEqual(1);
 
@@ -510,24 +548,32 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         bucket: 'public',
         prefix: `videos/${videoId}/hls/g1/`,
       });
-      expect(g1List.keys).toHaveLength(0);
+      expect(expectOk(g1List).keys).toHaveLength(0);
 
-      const legacyMaster = await storage.headObject('public', `videos/${videoId}/hls/master.m3u8`);
+      const legacyMaster = expectOk(
+        await storage.headObject('public', `videos/${videoId}/hls/master.m3u8`)
+      );
       expect(legacyMaster).toBeNull();
 
       // Active g2 objects MUST still exist!
-      const g2Master = await storage.headObject('public', `videos/${videoId}/hls/g2/master.m3u8`);
+      const g2Master = expectOk(
+        await storage.headObject('public', `videos/${videoId}/hls/g2/master.m3u8`)
+      );
       expect(g2Master).not.toBeNull();
-      const g2Rend = await storage.headObject('public', `videos/${videoId}/hls/g2/720p/index.m3u8`);
+      const g2Rend = expectOk(
+        await storage.headObject('public', `videos/${videoId}/hls/g2/720p/index.m3u8`)
+      );
       expect(g2Rend).not.toBeNull();
 
       // On a second run, old generations MUST NOT be re-purged (starvation prevention)
-      const secondRunResult = await runPurgeDeleted({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        publicBucket: 'public',
-      });
+      const secondRunResult = expectOk(
+        await runPurgeDeleted({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          publicBucket: 'public',
+        })
+      );
       expect(secondRunResult.purgedGenerationsCount).toBe(0);
     });
   });
@@ -538,15 +584,19 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const sourceKey = `raw/${videoId}/source.mp4`;
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey,
-        status: 'UPLOADING',
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey,
+          status: 'UPLOADING',
+        })
+      );
       video.updatedAt = twoHoursAgo;
 
-      const uploadId = await multipart.createMultipartUpload('raw', sourceKey, 'video/mp4');
+      const uploadId = expectOk(
+        await multipart.createMultipartUpload('raw', sourceKey, 'video/mp4')
+      );
       await repositories.uploads.create({
         id: uuidv7(),
         videoId,
@@ -573,16 +623,17 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       ]);
 
       // Exactly ONE worker must have transitioned/abandoned the video
-      const totalAbandoned = worker1Result.abandonedCount + worker2Result.abandonedCount;
+      const totalAbandoned =
+        expectOk(worker1Result).abandonedCount + expectOk(worker2Result).abandonedCount;
       expect(totalAbandoned).toBe(1);
 
       // Final video status is ABANDONED
-      const updatedVideo = await repositories.videos.findById(videoId);
+      const updatedVideo = expectOk(await repositories.videos.findById(videoId));
       expect(updatedVideo?.status).toBe('ABANDONED');
 
       // Only one video.abandoned event recorded
       const events = await repositories.events.findByVideoId(videoId);
-      const abandonedEvents = events.filter((e) => e.type === 'video.abandoned');
+      const abandonedEvents = expectOk(events).filter((e) => e.type === 'video.abandoned');
       expect(abandonedEvents).toHaveLength(1);
     });
 
@@ -590,13 +641,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const videoId = uuidv7();
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'DELETED',
-        deletedAt: twoHoursAgo,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey: `raw/${videoId}/source.mp4`,
+          status: 'DELETED',
+          deletedAt: twoHoursAgo,
+        })
+      );
       video.updatedAt = twoHoursAgo;
 
       await storage.uploadObject({
@@ -621,8 +674,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       ]);
 
       // Exactly one worker performed the hard-delete
-      expect(w1.purgedVideosCount + w2.purgedVideosCount).toBe(1);
-      const checkVideo = await repositories.videos.findById(videoId);
+      expect(expectOk(w1).purgedVideosCount + expectOk(w2).purgedVideosCount).toBe(1);
+      const checkVideo = expectOk(await repositories.videos.findById(videoId));
       expect(checkVideo).toBeNull();
     });
   });
@@ -633,13 +686,15 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const sourceKey = `raw/${videoId}/source.mp4`;
       const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 
-      const video = await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey,
-        status: 'READY',
-        readyAt: tenDaysAgo,
-      });
+      const video = expectOk(
+        await repositories.videos.create({
+          id: videoId,
+          ownerId: uuidv7(),
+          sourceKey,
+          status: 'READY',
+          readyAt: tenDaysAgo,
+        })
+      );
       video.updatedAt = tenDaysAgo;
 
       await storage.uploadObject({
@@ -649,33 +704,37 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         contentType: 'video/mp4',
       });
 
-      const result = await runExpireRaw({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        retentionDays: 7,
-      });
+      const result = expectOk(
+        await runExpireRaw({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          retentionDays: 7,
+        })
+      );
 
       expect(result.expiredCount).toBe(1);
 
       // Raw object is gone
-      const head = await storage.headObject('raw', sourceKey);
+      const head = expectOk(await storage.headObject('raw', sourceKey));
       expect(head).toBeNull();
 
       // Audit event exists exactly once
-      const events = await repositories.events.findByVideoId(videoId);
+      const events = expectOk(await repositories.events.findByVideoId(videoId));
       expect(events.filter((e) => e.type === 'video.raw_expired')).toHaveLength(1);
 
       // On a second run, video MUST NOT be re-expired (starvation and duplicate prevention)
-      const secondRun = await runExpireRaw({
-        repositories,
-        storage,
-        rawBucket: 'raw',
-        retentionDays: 7,
-      });
+      const secondRun = expectOk(
+        await runExpireRaw({
+          repositories,
+          storage,
+          rawBucket: 'raw',
+          retentionDays: 7,
+        })
+      );
       expect(secondRun.expiredCount).toBe(0);
 
-      const eventsAfter = await repositories.events.findByVideoId(videoId);
+      const eventsAfter = expectOk(await repositories.events.findByVideoId(videoId));
       expect(eventsAfter.filter((e) => e.type === 'video.raw_expired')).toHaveLength(1);
     });
 
@@ -736,8 +795,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         data: { task: 'reconcile-uploads' },
       } as QueueJob<unknown>);
 
-      expect(res).toBeDefined();
-      expect(res).toHaveProperty('abandonedCount');
+      expect(expectOk(res as Result<unknown, unknown>)).toHaveProperty('abandonedCount');
     });
 
     it('starts a worker runner for housekeeping stage successfully', async () => {

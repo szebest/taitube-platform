@@ -25,11 +25,27 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 - Step completions verify `lock_token` via `completeStep` to reject zombie workers if a job was re-queued.
 - State transitions on `videos` execute via Compare-and-Set and atomically log audit records in `video_events`.
 
-### Rule 3: Bounded Temp File Cleanup
+### Rule 3: The Runner Is the Only Throw
+- A stage returns `Result<T, E>` and decides nothing about retries (SDD ADR-24). `runner.ts` converts:
+  `if (isErr(outcome)) throw toPipelineError(outcome.error)`, because BullMQ's retry contract *is* the exception
+  - a stage that returns normally is a completed job.
+- `toPipelineError` lives in `@vp/errors` and reads `RETRY_CLASS`, so ADR-18's classification is decided once
+  per code in the vocabulary and the throw site has no judgement left to make. Never classify by inspecting
+  a message or a class name.
+- **There is no unwrap helper.** `unwrapOrThrow` existed as a migration shim and is gone: it was a third
+  unwrap site that neither ADR-24 nor this file's Rule 3 sanctioned, and the throw sweep could not see it
+  (`unwrapOrThrow` matched no part of a pattern looking for a literal `throw`). A stage that is not yet
+  converted converts inline, where `no-domain-throw.test.ts` counts it and
+  `throwing-domain-sources.ts` names the file.
+- The unknown-error default is unchanged: anything that escapes a stage as a raw throw is transient with an
+  attempt cap of 3.
+- Dual-runtime parity is unaffected: `@vp/result` is plain TypeScript with no `Bun.*` and no `node:*`.
+
+### Rule 4: Bounded Temp File Cleanup
 - All FFmpeg file processing occurs inside `os.tmpdir()` subdirectories.
 - Handlers must use `finally` blocks to guarantee temporary files are unlinked on both success and error paths to prevent disk leaks.
 
-### Rule 4: Graceful Shutdown & Liveness
+### Rule 5: Graceful Shutdown & Liveness
 - Handle `SIGTERM` and `SIGINT` to allow active transcoding jobs to finish or abort cleanly within bounded timeouts.
 - Periodically touch the heartbeat file (`WORKER_HEARTBEAT_PATH`) to prevent watchdog kills.
 

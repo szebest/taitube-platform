@@ -20,6 +20,7 @@ import type {
   StorageClient,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { type AnyFailure, toPipelineError } from '@vp/errors';
 import {
   type Logger,
   type PipelineMetrics,
@@ -28,6 +29,7 @@ import {
   initTracing,
   startMetricsServer,
 } from '@vp/observability';
+import { type Result, isErr } from '@vp/result';
 import { getWorkerStage } from './config';
 import { createFailureHandler } from './failure-handler';
 import { STAGE_REGISTRY, validateQueueName } from './registry';
@@ -203,11 +205,16 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
     }
 
     try {
-      const result = await processor(job);
+      const outcome = (await processor(job)) as Result<unknown, AnyFailure>;
+      // The one place in apps/worker a Result becomes a throw: BullMQ reads a normal return as a
+      // completed job, so a stage that returned a failure has to raise one here (ADR-24).
+      if (isErr(outcome)) throw toPipelineError(outcome.error);
+
       const durationSec = (Date.now() - startTime) / 1000;
       metrics.jobDuration.observe({ queue: config.queue }, durationSec);
       metrics.jobsProcessed.inc({ queue: config.queue, result: 'completed' });
-      return result;
+      // A parent flow job reads its children's return values, so the `Result` wrapper stops here.
+      return outcome.value;
     } catch (err) {
       const durationSec = (Date.now() - startTime) / 1000;
       metrics.jobDuration.observe({ queue: config.queue }, durationSec);

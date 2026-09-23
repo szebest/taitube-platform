@@ -1,195 +1,161 @@
+import type { CategoryRepositoryPort } from '@vp/core/repositories';
+import { categories, videos } from '@vp/db';
 import type {
   Category,
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
 } from '@vp/domain';
-import { DatabaseError } from '@vp/core/ports';
-import type { CategoryRepositoryPort } from '@vp/core/repositories';
-import { categories, videos } from '@vp/db';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import {
+  type CategorySlugConflict,
+  type DatabaseUnavailable,
+  categorySlugConflict,
+  databaseUnavailable,
+} from '@vp/errors';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
+import { isUniqueViolation } from '../pg-errors';
+
+function mapRow(row: typeof categories.$inferSelect): Category {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    description: row.description,
+    iconUrl: row.iconUrl,
+    sortOrder: row.sortOrder,
+    isActive: row.isActive,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
 
 export class PostgresCategoryRepository implements CategoryRepositoryPort {
   constructor(private readonly db: PostgresJsDatabase<Record<string, unknown>>) {}
 
-  private mapRow(row: typeof categories.$inferSelect): Category {
-    return {
-      id: row.id,
-      slug: row.slug,
-      name: row.name,
-      description: row.description,
-      iconUrl: row.iconUrl,
-      sortOrder: row.sortOrder,
-      isActive: row.isActive,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    };
+  private unavailable(operation: string) {
+    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
   }
 
-  async findAll(options?: ListCategoriesOptions): Promise<Category[]> {
-    try {
-      let query = this.db.select().from(categories).$dynamic();
-      if (options?.activeOnly) {
-        query = query.where(eq(categories.isActive, true));
-      }
-      const rows = await query.orderBy(asc(categories.sortOrder), asc(categories.name));
-      return rows.map((r) => this.mapRow(r));
-    } catch (err) {
-      throw new DatabaseError(`Failed to find categories: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+  /** A unique index on `slug` is the only conflict this table can report. */
+  private conflict(slug: string, operation: string) {
+    return (cause: unknown): DatabaseUnavailable | CategorySlugConflict =>
+      isUniqueViolation(cause) ? categorySlugConflict(slug) : databaseUnavailable(operation, cause);
   }
 
-  async findById(id: string): Promise<Category | null> {
-    try {
-      const [row] = await this.db.select().from(categories).where(eq(categories.id, id)).limit(1);
-      return row ? this.mapRow(row) : null;
-    } catch (err) {
-      throw new DatabaseError(`Failed to find category by ID: ${(err as Error).message}`, {
-        cause: err,
-      });
+  async findAll(options?: ListCategoriesOptions): Promise<Result<Category[], DatabaseUnavailable>> {
+    let query = this.db.select().from(categories).$dynamic();
+    if (options?.activeOnly) {
+      query = query.where(eq(categories.isActive, true));
     }
+
+    const rows = await fromPromise(
+      () => query.orderBy(asc(categories.sortOrder), asc(categories.name)),
+      this.unavailable('findAll')
+    );
+
+    return map(rows, (found) => found.map(mapRow));
   }
 
-  async findBySlug(slug: string): Promise<Category | null> {
-    try {
-      const [row] = await this.db
-        .select()
-        .from(categories)
-        .where(eq(categories.slug, slug))
-        .limit(1);
-      return row ? this.mapRow(row) : null;
-    } catch (err) {
-      throw new DatabaseError(`Failed to find category by slug: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+  async findById(id: string): Promise<Result<Category | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () => this.db.select().from(categories).where(eq(categories.id, id)).limit(1),
+      this.unavailable('findById')
+    );
+
+    return map(rows, ([row]) => (row ? mapRow(row) : null));
   }
 
-  async create(input: CreateCategoryInput): Promise<Category> {
-    try {
-      const [row] = await this.db
-        .insert(categories)
-        .values({
-          id: input.id ?? uuidv7(),
-          slug: input.slug,
-          name: input.name,
-          description: input.description ?? null,
-          iconUrl: input.iconUrl ?? null,
-          sortOrder: input.sortOrder ?? 0,
-          isActive: input.isActive ?? true,
-        })
-        .returning();
+  async findBySlug(slug: string): Promise<Result<Category | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () => this.db.select().from(categories).where(eq(categories.slug, slug)).limit(1),
+      this.unavailable('findBySlug')
+    );
 
-      if (!row) {
-        throw new DatabaseError('Failed to insert category: no row returned');
-      }
-      return this.mapRow(row);
-    } catch (err: unknown) {
-      const pgErr = err as { code?: string; message?: string };
-      if (pgErr.code === '23505') {
-        throw new PermanentError(
-          ErrorCodes.CATEGORY_SLUG_CONFLICT,
-          `Category with slug "${input.slug}" already exists`
-        );
-      }
-      if (err instanceof PermanentError) throw err;
-      throw new DatabaseError(`Failed to create category: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+    return map(rows, ([row]) => (row ? mapRow(row) : null));
   }
 
-  async update(id: string, input: UpdateCategoryInput): Promise<Category> {
-    try {
-      if (input.slug) {
-        const [conflict] = await this.db
-          .select({ id: categories.id })
-          .from(categories)
-          .where(and(eq(categories.slug, input.slug), ne(categories.id, id)))
-          .limit(1);
-        if (conflict) {
-          throw new PermanentError(
-            ErrorCodes.CATEGORY_SLUG_CONFLICT,
-            `Category with slug "${input.slug}" already exists`
-          );
-        }
-      }
+  async create(
+    input: CreateCategoryInput
+  ): Promise<Result<Category, DatabaseUnavailable | CategorySlugConflict>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .insert(categories)
+          .values({
+            id: input.id ?? uuidv7(),
+            slug: input.slug,
+            name: input.name,
+            description: input.description ?? null,
+            iconUrl: input.iconUrl ?? null,
+            sortOrder: input.sortOrder ?? 0,
+            isActive: input.isActive ?? true,
+          })
+          .returning(),
+      this.conflict(input.slug, 'create')
+    );
 
-      const updateValues: Partial<typeof categories.$inferInsert> = {
-        updatedAt: new Date(),
-      };
-      if (input.slug !== undefined) updateValues.slug = input.slug;
-      if (input.name !== undefined) updateValues.name = input.name;
-      if (input.description !== undefined) updateValues.description = input.description;
-      if (input.iconUrl !== undefined) updateValues.iconUrl = input.iconUrl;
-      if (input.sortOrder !== undefined) updateValues.sortOrder = input.sortOrder;
-      if (input.isActive !== undefined) updateValues.isActive = input.isActive;
-
-      const [row] = await this.db
-        .update(categories)
-        .set(updateValues)
-        .where(eq(categories.id, id))
-        .returning();
-
-      if (!row) {
-        throw new PermanentError(ErrorCodes.CATEGORY_NOT_FOUND, `Category "${id}" not found`);
-      }
-      return this.mapRow(row);
-    } catch (err: unknown) {
-      const pgErr = err as { code?: string; message?: string };
-      if (pgErr.code === '23505') {
-        throw new PermanentError(
-          ErrorCodes.CATEGORY_SLUG_CONFLICT,
-          `Category with slug "${input.slug}" already exists`
-        );
-      }
-      if (err instanceof PermanentError) throw err;
-      throw new DatabaseError(`Failed to update category: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+    if (!rows.ok) return rows;
+    const [row] = rows.value;
+    return row ? ok(mapRow(row)) : err(databaseUnavailable('create', 'insert returned no row'));
   }
 
-  async delete(id: string): Promise<void> {
-    try {
-      const existing = await this.findById(id);
-      if (!existing) {
-        throw new PermanentError(ErrorCodes.CATEGORY_NOT_FOUND, `Category "${id}" not found`);
-      }
-
-      const count = await this.countVideos(id);
-      if (count > 0) {
-        throw new PermanentError(
-          ErrorCodes.CATEGORY_IN_USE,
-          `Cannot delete category "${id}" because it is referenced by ${count} video(s)`
-        );
-      }
-
-      await this.db.delete(categories).where(eq(categories.id, id));
-    } catch (err) {
-      if (err instanceof PermanentError) throw err;
-      throw new DatabaseError(`Failed to delete category: ${(err as Error).message}`, {
-        cause: err,
-      });
+  async update(
+    id: string,
+    input: UpdateCategoryInput
+  ): Promise<Result<Category | null, DatabaseUnavailable | CategorySlugConflict>> {
+    const slug = input.slug;
+    if (slug) {
+      const conflicting = await fromPromise(
+        () =>
+          this.db
+            .select({ id: categories.id })
+            .from(categories)
+            .where(and(eq(categories.slug, slug), ne(categories.id, id)))
+            .limit(1),
+        this.unavailable('update')
+      );
+      if (!conflicting.ok) return conflicting;
+      if (conflicting.value[0]) return err(categorySlugConflict(slug));
     }
+
+    const values: Partial<typeof categories.$inferInsert> = { updatedAt: new Date() };
+    if (input.slug !== undefined) values.slug = input.slug;
+    if (input.name !== undefined) values.name = input.name;
+    if (input.description !== undefined) values.description = input.description;
+    if (input.iconUrl !== undefined) values.iconUrl = input.iconUrl;
+    if (input.sortOrder !== undefined) values.sortOrder = input.sortOrder;
+    if (input.isActive !== undefined) values.isActive = input.isActive;
+
+    const rows = await fromPromise(
+      () => this.db.update(categories).set(values).where(eq(categories.id, id)).returning(),
+      this.conflict(input.slug ?? '', 'update')
+    );
+
+    return map(rows, ([row]) => (row ? mapRow(row) : null));
   }
 
-  async countVideos(categoryId: string): Promise<number> {
-    try {
-      const [res] = await this.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(videos)
-        .where(and(eq(videos.categoryId, categoryId), sql`${videos.deletedAt} IS NULL`));
-      return res?.count ?? 0;
-    } catch (err) {
-      throw new DatabaseError(`Failed to count videos for category: ${(err as Error).message}`, {
-        cause: err,
-      });
-    }
+  async delete(id: string): Promise<Result<void, DatabaseUnavailable>> {
+    const deleted = await fromPromise(
+      () => this.db.delete(categories).where(eq(categories.id, id)),
+      this.unavailable('delete')
+    );
+
+    return map(deleted, () => undefined);
+  }
+
+  async countVideos(categoryId: string): Promise<Result<number, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(videos)
+          .where(and(eq(videos.categoryId, categoryId), sql`${videos.deletedAt} IS NULL`)),
+      this.unavailable('countVideos')
+    );
+
+    return map(rows, ([row]) => row?.count ?? 0);
   }
 }

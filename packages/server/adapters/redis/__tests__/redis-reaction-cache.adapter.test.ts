@@ -1,4 +1,6 @@
 import type { ReactionCounts } from '@vp/domain';
+import { ok } from '@vp/result';
+import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { RedisReactionCacheAdapter } from '../redis-reaction-cache.adapter';
 import { FakeRedis } from './fake-redis';
@@ -8,6 +10,9 @@ const USER_ID = 'user-1';
 const VIDEO_KEY = `taitube:video:${VIDEO_ID}:reactions`;
 
 const COUNTS: ReactionCounts = { likesCount: 7, dislikesCount: 2 };
+
+/** The background refresh is fire-and-forget, so let the microtask queue and one timer tick drain. */
+const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
 describe('RedisReactionCacheAdapter', () => {
   describe('over a redis connection', () => {
@@ -27,11 +32,11 @@ describe('RedisReactionCacheAdapter', () => {
       let fetches = 0;
       const fetcher = async () => {
         fetches += 1;
-        return COUNTS;
+        return ok(COUNTS);
       };
 
-      expect(await adapter.getCounts(VIDEO_ID, fetcher)).toEqual(COUNTS);
-      expect(await adapter.getCounts(VIDEO_ID, fetcher)).toEqual(COUNTS);
+      expect(expectOk(await adapter.getCounts(VIDEO_ID, fetcher))).toEqual(COUNTS);
+      expect(expectOk(await adapter.getCounts(VIDEO_ID, fetcher))).toEqual(COUNTS);
       expect(fetches).toBe(1);
       expect(redis.ttls.get(VIDEO_KEY)).toBe(3600);
     });
@@ -40,7 +45,7 @@ describe('RedisReactionCacheAdapter', () => {
       let fetches = 0;
       const fetcher = async () => {
         fetches += 1;
-        return COUNTS;
+        return ok(COUNTS);
       };
 
       const [a, b] = await Promise.all([
@@ -48,8 +53,8 @@ describe('RedisReactionCacheAdapter', () => {
         adapter.getCounts(VIDEO_ID, fetcher),
       ]);
 
-      expect(a).toEqual(COUNTS);
-      expect(b).toEqual(COUNTS);
+      expect(expectOk(a)).toEqual(COUNTS);
+      expect(expectOk(b)).toEqual(COUNTS);
       expect(fetches).toBe(1);
     });
 
@@ -66,7 +71,7 @@ describe('RedisReactionCacheAdapter', () => {
       await adapter.setCounts(VIDEO_ID, COUNTS);
       await adapter.adjustCounters(VIDEO_ID, 1, -1);
 
-      expect(await adapter.getCounts(VIDEO_ID, async () => COUNTS)).toEqual({
+      expect(expectOk(await adapter.getCounts(VIDEO_ID, async () => ok(COUNTS)))).toEqual({
         likesCount: 8,
         dislikesCount: 1,
       });
@@ -88,15 +93,15 @@ describe('RedisReactionCacheAdapter', () => {
       let fetches = 0;
       const fetcher = async () => {
         fetches += 1;
-        return 'LIKE' as const;
+        return ok('LIKE' as const);
       };
 
-      expect(await adapter.getUserReaction(USER_ID, VIDEO_ID, fetcher)).toBe('LIKE');
-      expect(await adapter.getUserReaction(USER_ID, VIDEO_ID, fetcher)).toBe('LIKE');
+      expect(expectOk(await adapter.getUserReaction(USER_ID, VIDEO_ID, fetcher))).toBe('LIKE');
+      expect(expectOk(await adapter.getUserReaction(USER_ID, VIDEO_ID, fetcher))).toBe('LIKE');
       expect(fetches).toBe(1);
 
       await adapter.setUserReaction(USER_ID, VIDEO_ID, null);
-      expect(await adapter.getUserReaction(USER_ID, VIDEO_ID, fetcher)).toBeNull();
+      expect(expectOk(await adapter.getUserReaction(USER_ID, VIDEO_ID, fetcher))).toBeNull();
       expect(fetches).toBe(1);
     });
 
@@ -107,7 +112,7 @@ describe('RedisReactionCacheAdapter', () => {
         },
       });
 
-      expect(await adapter.getCounts(VIDEO_ID, async () => COUNTS)).toEqual(COUNTS);
+      expect(expectOk(await adapter.getCounts(VIDEO_ID, async () => ok(COUNTS)))).toEqual(COUNTS);
     });
   });
 
@@ -128,34 +133,75 @@ describe('RedisReactionCacheAdapter', () => {
       let fetches = 0;
       const fetcher = async () => {
         fetches += 1;
-        return COUNTS;
+        return ok(COUNTS);
       };
 
-      expect(await adapter.getCounts(VIDEO_ID, fetcher)).toEqual(COUNTS);
-      expect(await adapter.getCounts(VIDEO_ID, fetcher)).toEqual(COUNTS);
+      expect(expectOk(await adapter.getCounts(VIDEO_ID, fetcher))).toEqual(COUNTS);
+      expect(expectOk(await adapter.getCounts(VIDEO_ID, fetcher))).toEqual(COUNTS);
       expect(fetches).toBe(1);
     });
 
     it('serialises concurrent adjustments so none is lost', async () => {
       await adapter.setCounts(VIDEO_ID, { likesCount: 0, dislikesCount: 0 });
 
-      await Promise.all([
-        adapter.adjustCounters(VIDEO_ID, 1, 0),
-        adapter.adjustCounters(VIDEO_ID, 1, 0),
-        adapter.adjustCounters(VIDEO_ID, 1, 0),
-      ]);
+      await Promise.all(
+        Array.from({ length: 50 }, (_, i) =>
+          Promise.all([
+            adapter.adjustCounters(VIDEO_ID, 1, 0),
+            adapter.setUserReaction(`user-${i}`, VIDEO_ID, 'LIKE'),
+          ])
+        )
+      );
 
-      expect(await adapter.getCounts(VIDEO_ID, async () => COUNTS)).toEqual({
-        likesCount: 3,
+      expect(expectOk(await adapter.getCounts(VIDEO_ID, async () => ok(COUNTS)))).toEqual({
+        likesCount: 50,
         dislikesCount: 0,
       });
+      expect(expectOk(await adapter.getUserReaction('user-49', VIDEO_ID, async () => ok(null)))).toBe(
+        'LIKE'
+      );
     });
+
+    it.each([
+      { draw: 'unlucky', random: 1e-9, expected: 2 },
+      { draw: 'lucky', random: 0.999999, expected: 1 },
+    ])(
+      'serves the cached entry and refreshes early only on an $draw draw',
+      async ({ random, expected }) => {
+        let fetches = 0;
+        const fetcher = async () => {
+          fetches += 1;
+          return ok({ likesCount: 100 * fetches, dislikesCount: 5 });
+        };
+
+        await adapter.getCounts(VIDEO_ID, fetcher);
+        expect(fetches).toBe(1);
+
+        const realRandom = Math.random;
+        Math.random = () => random;
+
+        try {
+          const eager = new RedisReactionCacheAdapter({ cache, ttlSeconds: 1, beta: 1000 });
+
+          expect(expectOk(await eager.getCounts(VIDEO_ID, fetcher))).toEqual({
+            likesCount: 100,
+            dislikesCount: 5,
+          });
+
+          await settle();
+          expect(fetches).toBe(expected);
+          eager.clear();
+        } finally {
+          Math.random = realRandom;
+        }
+      }
+    );
 
     it('never drives a counter below zero', async () => {
       await adapter.setCounts(VIDEO_ID, { likesCount: 1, dislikesCount: 0 });
       await adapter.adjustCounters(VIDEO_ID, -5, -5);
 
-      expect(await adapter.getCounts(VIDEO_ID, async () => COUNTS)).toEqual({
+      expect(expectOk(await adapter.getCounts(VIDEO_ID, async () => ok(COUNTS)))).toEqual({
         likesCount: 0,
         dislikesCount: 0,
       });
@@ -165,9 +211,11 @@ describe('RedisReactionCacheAdapter', () => {
       await adapter.setUserReaction(USER_ID, VIDEO_ID, 'DISLIKE');
 
       expect(
-        await adapter.getUserReaction(USER_ID, VIDEO_ID, async () => {
-          throw new Error('should not be reached');
-        })
+        expectOk(
+          await adapter.getUserReaction(USER_ID, VIDEO_ID, async () => {
+            throw new Error('should not be reached');
+          })
+        )
       ).toBe('DISLIKE');
     });
 
@@ -175,7 +223,7 @@ describe('RedisReactionCacheAdapter', () => {
       await adapter.setCounts(VIDEO_ID, COUNTS);
       await adapter.invalidate(VIDEO_ID);
 
-      expect(await cache.get(VIDEO_KEY)).toBeNull();
+      expect(expectOk(await cache.get(VIDEO_KEY))).toBeNull();
     });
   });
 
@@ -184,10 +232,12 @@ describe('RedisReactionCacheAdapter', () => {
     let fetches = 0;
 
     expect(
-      await adapter.getCounts(VIDEO_ID, async () => {
-        fetches += 1;
-        return COUNTS;
-      })
+      expectOk(
+        await adapter.getCounts(VIDEO_ID, async () => {
+          fetches += 1;
+          return ok(COUNTS);
+        })
+      )
     ).toEqual(COUNTS);
     expect(fetches).toBe(1);
   });

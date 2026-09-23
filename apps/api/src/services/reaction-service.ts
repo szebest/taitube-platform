@@ -1,17 +1,15 @@
-import { CaslAuthorizationAdapter } from '@vp/adapters';
+import type { ReactionCachePort } from '@vp/core/ports';
+import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import type { ReactionCounts, ReactionInputType, ReactionType } from '@vp/domain';
-import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
-import type { VideoRepository } from '@vp/core/repositories';
-import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError } from '@vp/errors';
-import { canReactVideo } from '@vp/permissions';
+import { type ReactFailure, decideReact } from '@vp/domain-rules';
+import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import { type Result, err, isErr, isOk, ok } from '@vp/result';
 import type { AuthUser } from '../plugins/auth';
 
 export interface ReactionServiceDeps {
   videoReactions: VideoReactionRepositoryPort;
   reactionCache?: ReactionCachePort;
   videos: VideoRepository;
-  authorization?: AuthorizationPort;
 }
 
 export interface SetReactionOutput {
@@ -26,97 +24,78 @@ export interface GetUserReactionOutput {
   reaction: ReactionType | null;
 }
 
+export type ReactionServiceFailure = ReactFailure | DatabaseUnavailable;
+
 /**
- * ReactionService — Deep domain module for video reactions and counter caching (Ticket 40, SDD §6.1).
+ * Reactions on a video. `CacheUnavailable` is absent from every signature: a dead cache costs a
+ * query, not an answer, so this service narrows it away and the repository remains the authority.
  */
 export class ReactionService {
   private readonly videoReactions: VideoReactionRepositoryPort;
   private readonly reactionCache?: ReactionCachePort;
   private readonly videos: VideoRepository;
-  private readonly auth: AuthorizationPort;
 
   constructor(deps: ReactionServiceDeps) {
     this.videoReactions = deps.videoReactions;
     this.reactionCache = deps.reactionCache;
     this.videos = deps.videos;
-    this.auth = deps.authorization ?? new CaslAuthorizationAdapter();
   }
 
-  /**
-   * Sets or clears a reaction on a video for the authenticated caller.
-   */
+  private async reactableVideo(
+    user: AuthUser | null,
+    videoId: string
+  ): Promise<Result<unknown, ReactionServiceFailure>> {
+    const found = await this.videos.findById(videoId);
+    if (isErr(found)) return found;
+
+    return decideReact({ reactor: user, video: found.value, videoId });
+  }
+
   async setReaction(
     user: AuthUser,
     videoId: string,
     type: ReactionInputType
-  ): Promise<SetReactionOutput> {
-    this.auth.assertCan(
-      canReactVideo,
-      { user: user },
-      {
-        action: 'react',
-        subject: 'Video',
-        user: user,
-        message: 'Your role is not allowed to react to videos',
-      }
-    );
+  ): Promise<Result<SetReactionOutput, ReactionServiceFailure>> {
+    const allowed = await this.reactableVideo(user, videoId);
+    if (isErr(allowed)) return allowed;
 
-    const video = await this.videos.findById(videoId);
-    if (!video) {
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-    }
+    const written = await this.videoReactions.setReaction(videoId, user.id, type);
+    if (isErr(written)) return written;
 
-    const result = await this.videoReactions.setReaction(videoId, user.id, type);
+    const { newType, likesCount, dislikesCount } = written.value;
+    await this.reactionCache?.setCounts(videoId, { likesCount, dislikesCount });
+    await this.reactionCache?.setUserReaction(user.id, videoId, newType);
 
-    if (this.reactionCache) {
-      await this.reactionCache.setCounts(videoId, {
-        likesCount: result.likesCount,
-        dislikesCount: result.dislikesCount,
-      });
-      await this.reactionCache.setUserReaction(user.id, videoId, result.newType);
-    }
-
-    return {
-      videoId,
-      reaction: result.newType,
-      likesCount: result.likesCount,
-      dislikesCount: result.dislikesCount,
-    };
+    return ok({ videoId, reaction: newType, likesCount, dislikesCount });
   }
 
-  /**
-   * Retrieves the reaction for the authenticated caller on a given video.
-   */
-  async getUserReaction(user: AuthUser, videoId: string): Promise<GetUserReactionOutput> {
-    const video = await this.videos.findById(videoId);
-    if (!video) {
-      throw new PermanentError(ErrorCodes.VIDEO_NOT_FOUND, `Video ${videoId} not found`);
-    }
+  async getUserReaction(
+    user: AuthUser,
+    videoId: string
+  ): Promise<Result<GetUserReactionOutput, ReactionServiceFailure>> {
+    const allowed = await this.reactableVideo(user, videoId);
+    if (isErr(allowed)) return allowed;
 
-    let reaction: ReactionType | null = null;
-    if (this.reactionCache) {
-      reaction = await this.reactionCache.getUserReaction(user.id, videoId, () =>
-        this.videoReactions.getUserReaction(videoId, user.id)
-      );
-    } else {
-      reaction = await this.videoReactions.getUserReaction(videoId, user.id);
-    }
+    const reaction = this.reactionCache
+      ? await this.reactionCache.getUserReaction(user.id, videoId, () =>
+          this.videoReactions.getUserReaction(videoId, user.id)
+        )
+      : await this.videoReactions.getUserReaction(videoId, user.id);
 
-    return {
-      videoId,
-      reaction,
-    };
+    if (isOk(reaction)) return ok({ videoId, reaction: reaction.value });
+    if (reaction.error.code !== ErrorCodes.CACHE_UNAVAILABLE) return err(reaction.error);
+
+    const direct = await this.videoReactions.getUserReaction(videoId, user.id);
+    return isErr(direct) ? direct : ok({ videoId, reaction: direct.value });
   }
 
-  /**
-   * Retrieves current cached or computed reaction counters for a video.
-   */
-  async getCounts(videoId: string): Promise<ReactionCounts> {
-    if (this.reactionCache) {
-      return await this.reactionCache.getCounts(videoId, () =>
-        this.videoReactions.getReactionCounts(videoId)
-      );
-    }
-    return await this.videoReactions.getReactionCounts(videoId);
+  async getCounts(videoId: string): Promise<Result<ReactionCounts, DatabaseUnavailable>> {
+    const fetch = () => this.videoReactions.getReactionCounts(videoId);
+    if (!this.reactionCache) return await fetch();
+
+    const cached = await this.reactionCache.getCounts(videoId, fetch);
+    if (isOk(cached)) return cached;
+    if (cached.error.code === ErrorCodes.CACHE_UNAVAILABLE) return await fetch();
+    return err(cached.error);
   }
 }

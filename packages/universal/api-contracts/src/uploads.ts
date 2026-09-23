@@ -104,6 +104,7 @@ export const getUpload = defineEndpoint({
     401: [ErrorCodes.UNAUTHORIZED],
     403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
+    410: [ErrorCodes.UPLOAD_NOT_OPEN, ErrorCodes.UPLOAD_EXPIRED],
   },
 });
 
@@ -149,7 +150,7 @@ export const completeUpload = defineEndpoint({
     401: [ErrorCodes.UNAUTHORIZED],
     403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
-    410: [ErrorCodes.UPLOAD_NOT_OPEN],
+    410: [ErrorCodes.UPLOAD_NOT_OPEN, ErrorCodes.UPLOAD_EXPIRED],
     422: [
       ErrorCodes.UPLOAD_SIZE_MISMATCH,
       ErrorCodes.UPLOAD_TOO_LARGE,
@@ -173,6 +174,7 @@ export const abortUpload = defineEndpoint({
     401: [ErrorCodes.UNAUTHORIZED],
     403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
+    410: [ErrorCodes.UPLOAD_NOT_OPEN, ErrorCodes.UPLOAD_EXPIRED],
   },
 });
 

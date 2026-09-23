@@ -1,13 +1,12 @@
 import {
-  CaslAuthorizationAdapter,
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters';
-import type { UploadRecord } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
-import { type UploadContext, assertUploadOpen, loadOwnedUpload } from '../upload-context';
+import { type UploadContext, loadOwnedUpload } from '../upload-context';
 
 const OWNER: AuthUser = { id: '00000000-0000-7000-8000-00000000a001', role: 'CREATOR' };
 const STRANGER: AuthUser = { id: '00000000-0000-7000-8000-00000000a002', role: 'CREATOR' };
@@ -31,8 +30,8 @@ describe('apps/api/services: upload context', () => {
       rawBucket: 'raw',
       multipartThresholdBytes: 1024,
       presignedUrlTtlSeconds: 900,
+      uploadSessionTtlSeconds: 86_400,
       maxInflightPerUser: 3,
-      auth: new CaslAuthorizationAdapter(),
     };
 
     await repositories.videos.create({
@@ -61,33 +60,24 @@ describe('apps/api/services: upload context', () => {
       ['the owner', () => OWNER],
       ['an admin', () => ADMIN],
     ])('hands %s the upload with its video', async (_label, user) => {
-      const record = await loadOwnedUpload(ctx, user(), UPLOAD_ID, 'view this upload');
+      const record = expectOk(await loadOwnedUpload(ctx, user(), UPLOAD_ID, 'view this upload'));
 
       expect(record.upload.id).toBe(UPLOAD_ID);
       expect(record.video.id).toBe(VIDEO_ID);
     });
 
     it('refuses a caller who does not own the upload', async () => {
-      await expect(loadOwnedUpload(ctx, STRANGER, UPLOAD_ID, 'abort this upload')).rejects.toThrow(
-        'Not authorized to abort this upload'
+      const refused = expectErr(
+        await loadOwnedUpload(ctx, STRANGER, UPLOAD_ID, 'abort this upload')
       );
+
+      expect(refused.code).toBe(ErrorCodes.FORBIDDEN);
+      expect(refused.message).toBe('Not authorized to abort this upload');
     });
 
     it('reports an unknown upload as not found', async () => {
-      await expect(
-        loadOwnedUpload(ctx, OWNER, 'missing', 'view this upload')
-      ).rejects.toMatchObject({ code: ErrorCodes.VIDEO_NOT_FOUND });
-    });
-  });
-
-  describe('assertUploadOpen', () => {
-    it('passes an open upload through', () => {
-      expect(() => assertUploadOpen({ status: 'OPEN' } as UploadRecord)).not.toThrow();
-    });
-
-    it.each([['COMPLETED'], ['ABORTED']])('refuses a %s upload', (status) => {
-      expect(() => assertUploadOpen({ status } as UploadRecord)).toThrow(
-        expect.objectContaining({ code: ErrorCodes.UPLOAD_NOT_OPEN })
+      expect(expectErr(await loadOwnedUpload(ctx, OWNER, 'missing', 'view this upload')).code).toBe(
+        ErrorCodes.VIDEO_NOT_FOUND
       );
     });
   });

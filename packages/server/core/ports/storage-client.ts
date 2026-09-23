@@ -1,17 +1,6 @@
+import type { StorageUnavailable } from '@vp/errors';
+import type { Result } from '@vp/result';
 import type { HealthCheckable } from './health-checkable';
-
-export class StorageError extends Error {
-  readonly code?: string;
-  override readonly cause?: unknown;
-
-  constructor(message: string, options?: { code?: string; cause?: unknown }) {
-    super(message);
-    this.name = 'StorageError';
-    this.code = options?.code;
-    this.cause = options?.cause;
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-}
 
 export type StorageBody = Buffer | Uint8Array | NodeJS.ReadableStream | string;
 
@@ -72,19 +61,36 @@ export interface StorageDeleteObjectsResult {
   deletedKeys: string[];
 }
 
-export abstract class StorageClient implements HealthCheckable {
-  abstract checkHealth(): Promise<boolean>;
-  abstract uploadObject(params: StorageUploadParams): Promise<StorageUploadResult>;
-  abstract downloadObject(bucket: string, key: string, targetFilePath: string): Promise<boolean>;
-  abstract headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null>;
-  abstract deleteObject(bucket: string, key: string): Promise<void>;
-  abstract deleteObjects(bucket: string, keys: string[]): Promise<StorageDeleteObjectsResult>;
-  abstract listObjects(params: StorageListObjectsParams): Promise<StorageListObjectsResult>;
-  abstract purgePrefix(bucket: string, prefix: string): Promise<number>;
-  abstract getObject(bucket: string, key: string): Promise<Buffer>;
+export abstract class StorageClient implements HealthCheckable<StorageUnavailable> {
+  abstract checkHealth(): Promise<Result<void, StorageUnavailable>>;
+  abstract uploadObject(
+    params: StorageUploadParams
+  ): Promise<Result<StorageUploadResult, StorageUnavailable>>;
+  abstract downloadObject(
+    bucket: string,
+    key: string,
+    targetFilePath: string
+  ): Promise<Result<boolean, StorageUnavailable>>;
+  /** A missing object is `ok(null)`: absence is not a failure. */
+  abstract headObject(
+    bucket: string,
+    key: string
+  ): Promise<Result<StorageObjectMetadata | null, StorageUnavailable>>;
+  abstract deleteObject(bucket: string, key: string): Promise<Result<void, StorageUnavailable>>;
+  abstract deleteObjects(
+    bucket: string,
+    keys: string[]
+  ): Promise<Result<StorageDeleteObjectsResult, StorageUnavailable>>;
+  abstract listObjects(
+    params: StorageListObjectsParams
+  ): Promise<Result<StorageListObjectsResult, StorageUnavailable>>;
+  abstract purgePrefix(bucket: string, prefix: string): Promise<Result<number, StorageUnavailable>>;
+  abstract getObject(bucket: string, key: string): Promise<Result<Buffer, StorageUnavailable>>;
   abstract createPresignedPutUrl(
     params: StoragePresignedPutParams
-  ): Promise<StoragePresignedPutResult>;
-  abstract createPresignedGetUrl(params: StoragePresignedGetParams): Promise<string>;
-  abstract close(): Promise<void>;
+  ): Promise<Result<StoragePresignedPutResult, StorageUnavailable>>;
+  abstract createPresignedGetUrl(
+    params: StoragePresignedGetParams
+  ): Promise<Result<string, StorageUnavailable>>;
+  abstract close(): Promise<Result<void, StorageUnavailable>>;
 }

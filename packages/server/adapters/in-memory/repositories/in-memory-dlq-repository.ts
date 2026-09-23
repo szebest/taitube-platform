@@ -8,6 +8,8 @@ import {
   type OutboxRepository,
 } from '@vp/core/repositories';
 
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 
@@ -28,7 +30,7 @@ export class InMemoryDlqRepository extends DlqRepository {
     this.entriesMap.clear();
   }
 
-  async create(entry: NewDlqEntryInput): Promise<DlqEntryRecord> {
+  async create(entry: NewDlqEntryInput): Promise<Result<DlqEntryRecord, DatabaseUnavailable>> {
     for (const existing of this.entriesMap.values()) {
       if (
         existing.queue === entry.queue &&
@@ -39,7 +41,7 @@ export class InMemoryDlqRepository extends DlqRepository {
         existing.errorMessage = entry.errorMessage ?? existing.errorMessage;
         existing.stack = entry.stack ?? existing.stack;
         existing.workerId = entry.workerId ?? existing.workerId;
-        return { ...existing };
+        return ok({ ...existing });
       }
     }
 
@@ -60,29 +62,33 @@ export class InMemoryDlqRepository extends DlqRepository {
     };
 
     this.entriesMap.set(record.id, record);
-    return { ...record };
+    return ok({ ...record });
   }
 
-  async findById(id: string): Promise<DlqEntryRecord | null> {
+  async findById(id: string): Promise<Result<DlqEntryRecord | null, DatabaseUnavailable>> {
     const entry = this.entriesMap.get(id);
-    return entry ? { ...entry } : null;
+    return ok(entry ? { ...entry } : null);
   }
 
-  async list(options: ListDlqEntriesOptions): Promise<DlqEntryRecord[]> {
+  async list(
+    options: ListDlqEntriesOptions
+  ): Promise<Result<DlqEntryRecord[], DatabaseUnavailable>> {
     const { cursor, limit, status } = options;
     const keyset = cursor && { sort: cursor.createdAt, tie: cursor.id };
 
-    return Array.from(this.entriesMap.values())
-      .filter(
-        (entry) =>
-          (!status || entry.status === status) &&
-          isKeysetBefore({ sort: entry.createdAt, tie: entry.id }, keyset)
-      )
-      .sort((a, b) =>
-        byKeysetDesc({ sort: a.createdAt, tie: a.id }, { sort: b.createdAt, tie: b.id })
-      )
-      .slice(0, limit + 1)
-      .map((entry) => ({ ...entry }));
+    return ok(
+      Array.from(this.entriesMap.values())
+        .filter(
+          (entry) =>
+            (!status || entry.status === status) &&
+            isKeysetBefore({ sort: entry.createdAt, tie: entry.id }, keyset)
+        )
+        .sort((a, b) =>
+          byKeysetDesc({ sort: a.createdAt, tie: a.id }, { sort: b.createdAt, tie: b.id })
+        )
+        .slice(0, limit + 1)
+        .map((entry) => ({ ...entry }))
+    );
   }
 
   setOutboxRepo(repo: OutboxRepository): void {
@@ -94,9 +100,9 @@ export class InMemoryDlqRepository extends DlqRepository {
     status: DlqStatus,
     patch?: { replayedAt?: Date },
     outbox?: NewOutboxInput
-  ): Promise<DlqEntryRecord | null> {
+  ): Promise<Result<DlqEntryRecord | null, DatabaseUnavailable>> {
     const entry = this.entriesMap.get(id);
-    if (!entry) return null;
+    if (!entry) return ok(null);
 
     entry.status = status;
     if (patch?.replayedAt !== undefined) {
@@ -107,6 +113,6 @@ export class InMemoryDlqRepository extends DlqRepository {
       await this.outboxRepo.enqueue(outbox);
     }
 
-    return { ...entry };
+    return ok({ ...entry });
   }
 }

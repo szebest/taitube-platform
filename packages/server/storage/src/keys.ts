@@ -60,11 +60,8 @@ export function metaKey(videoId: string): string {
 }
 
 export function sanitizeStorageUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    parsed.search = '';
-    return parsed.toString();
-  } catch {
-    return url;
-  }
+  if (!URL.canParse(url)) return url;
+  const parsed = new URL(url);
+  parsed.search = '';
+  return parsed.toString();
 }

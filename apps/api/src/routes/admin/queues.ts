@@ -1,7 +1,6 @@
-import { PipelineError } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { PROBLEM_CONTENT_TYPE, domainProblem } from '../../plugins/errors';
 import type { QueueService } from '../../services/queue-service';
+import { sendResult } from '../send-result';
 
 export interface AdminQueuesOptions {
   queueService: QueueService;
@@ -21,17 +20,12 @@ export async function registerAdminQueuesRoutes(
 
   await app.register(
     async (adminScope) => {
+      // Bull Board serves its own UI, so the gate is a hook rather than a handler; it still hands
+      // the verdict to the one seam that renders a `Problem`.
       adminScope.addHook('onRequest', async (request, reply) => {
-        try {
-          queueService.assertAdmin(request.user);
-        } catch (err) {
-          if (!(err instanceof PipelineError)) throw err;
-          const problem = domainProblem(err.code, err.message, request.url);
-          return reply
-            .status(problem.status)
-            .header('content-type', PROBLEM_CONTENT_TYPE)
-            .send(problem);
-        }
+        const admitted = queueService.requireAdmin(request.user);
+        if (!admitted.ok) return sendResult(reply, request, admitted);
+        return undefined;
       });
 
       adminScope.register(boardPlugin);

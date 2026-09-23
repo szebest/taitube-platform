@@ -10,7 +10,11 @@ describe('adapters/postgres/scoping: soft-delete scope', () => {
   });
 
   it.each([
-    { name: 'deletedAt only', table: { deletedAt: videos.deletedAt }, sql: '"videos"."deleted_at" IS NULL' },
+    {
+      name: 'deletedAt only',
+      table: { deletedAt: videos.deletedAt },
+      sql: '"videos"."deleted_at" IS NULL',
+    },
     { name: 'status only', table: { status: videos.status }, sql: '"videos"."status" <> $1' },
   ])('emits just the available condition given $name', ({ table, sql }) => {
     expect(sqlText(notDeletedScope(table))).toBe(sql);

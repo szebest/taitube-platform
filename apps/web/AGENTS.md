@@ -101,7 +101,31 @@ and the endpoints' `serializeQueryArgs` / `merge` / `forceRefetch` triple own in
 `globals: true`, **so do not import `describe` / `it` / `expect` / `vi` from `vitest`** — they are globals
 here. Type-only imports are still needed.
 
-### Rule 4: Nothing phones home
+### Rule 4: Rules come from a package, and the component holds none
+
+Documented now, built by tickets 53, 70 and 71. The authority is
+[docs/standards/error-handling.md](../../docs/standards/error-handling.md).
+
+- **`@vp/validation` is where a form check comes from.** It is universal, it takes the input and nothing else,
+  and the API re-runs the identical function as the authority. The browser copy is a latency and UX
+  optimisation, never the decision. The hardcoded `{ 'video/mp4': ['.mp4'] }` at
+  `src/modules/Upload/components/video-form/upload/upload-video-form.tsx:23` is the thing ticket 53 deletes:
+  the API accepts four container types, so that literal is both a duplicate and wrong.
+- **`@vp/domain-rules` is where an entity-dependent decision comes from** - the same rule the API runs, against
+  an entity already in the query cache. That is what `<Can>` and `canReadVideo` already do here today.
+- **Limits are data.** A rule receives the ceiling and the allowed types; it never reads them. Where the
+  frontend gets them - a field on an existing response or a small `GET /v1/config` - is ticket 53's call.
+- **A hook unwraps the `Result`, a component never does.** The hook owns validation, submission, the
+  failure-to-presentation mapping **and** the success path, and returns a `ViewState`:
+  `{ status: 'idle' | 'loading' | 'success' | 'error'; data?; failure?; fieldErrors? }`. The component is
+  `(viewState) => JSX`.
+- **Forbidden in a component:** an API call, a `try/catch`, `if (failure.code === ...)`, a validation literal,
+  and a success-path decision (navigate, invalidate, reset). If a component needs a rule, it needs a hook.
+- **`present(failure)` is a total `switch` with `assertNever` in the `default`** - the mirror of the backend
+  presenter, and the reason a new failure variant breaks this build too. The frontend and the backend share
+  the **rule**, never the presenter: a `Problem` and a toast are different answers to the same failure.
+
+### Rule 5: Nothing phones home
 No absolute third-party host in source, no analytics beacon, no font CDN. Everything resolves against
 `API_BASE_URL`. See [docs/LOCAL_FIRST.md](../../docs/LOCAL_FIRST.md).
 

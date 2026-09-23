@@ -1,10 +1,12 @@
 import { streamMyEvents, streamVideoEvents } from '@vp/api-contracts';
+import { isErr } from '@vp/result';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
 import type { SseHub } from '../services/sse-hub';
 import type { SseService, SseSession } from '../services/sse-service';
 import { contractPaths, contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
 
 export interface EventsRouteOptions {
   sseHub: SseHub;
@@ -28,34 +30,50 @@ function resumeFrom(request: FastifyRequest): number | null {
   return Number.isNaN(afterId) ? null : afterId;
 }
 
+/**
+ * Registration subscribes before any state is read, and the snapshot is taken before the 200 goes
+ * out, so a failure on either still renders as a `Problem` rather than as a half-open stream.
+ */
 async function stream(
   hub: SseHub,
   session: SseSession,
   request: FastifyRequest,
   reply: FastifyReply
-): Promise<void> {
-  const connection = hub.register({
+): Promise<FastifyReply | undefined> {
+  const registered = hub.register({
     channel: session.channel,
     ...(session.userId ? { userId: session.userId } : {}),
     rawResponse: reply.raw,
   });
+  if (isErr(registered)) return sendResult(reply, request, registered);
+
+  const connection = registered.value;
+  const snapshot = await session.snapshot();
+  if (isErr(snapshot)) {
+    connection.close();
+    return sendResult(reply, request, snapshot);
+  }
+
+  const afterId = resumeFrom(request);
+  const replayed = afterId === null ? null : await session.replay(afterId);
+  if (replayed && isErr(replayed)) {
+    connection.close();
+    return sendResult(reply, request, replayed);
+  }
 
   reply.raw.writeHead(200, SSE_HEADERS);
   reply.raw.flushHeaders?.();
 
-  const snapshot = await session.snapshot();
-  connection.sendSnapshot(snapshot.data, snapshot.lastEventId);
+  connection.sendSnapshot(snapshot.value.data, snapshot.value.lastEventId);
 
-  let lastSentId = snapshot.lastEventId;
-  const afterId = resumeFrom(request);
-  if (afterId !== null) {
-    for (const event of await session.replay(afterId)) {
-      connection.sendReplayEvent(event.id, event.event, event.data);
-      lastSentId = Math.max(lastSentId, event.id);
-    }
+  let lastSentId = snapshot.value.lastEventId;
+  for (const event of replayed?.value ?? []) {
+    connection.sendReplayEvent(event.id, event.event, event.data);
+    lastSentId = Math.max(lastSentId, event.id);
   }
 
   connection.markLive(lastSentId);
+  return undefined;
 }
 
 export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteOptions): void {
@@ -74,7 +92,9 @@ export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteO
       },
       async (request, reply) => {
         const session = await sseService.openVideoStream(request.user ?? null, request.params.id);
-        await stream(sseHub, session, request, reply);
+        if (isErr(session)) return sendResult(reply, request, session);
+
+        return stream(sseHub, session.value, request, reply);
       }
     );
   }
@@ -90,7 +110,7 @@ export function registerEventsRoutes(app: FastifyInstance, options: EventsRouteO
       },
       async (request, reply) => {
         const session = sseService.openUserStream(requireAuth(request));
-        await stream(sseHub, session, request, reply);
+        return stream(sseHub, session, request, reply);
       }
     );
   }

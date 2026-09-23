@@ -1,5 +1,6 @@
 import { InMemoryRepositories } from '@vp/adapters';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes } from '@vp/errors';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { ReactionService } from '../reaction-service';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000a1';
@@ -34,41 +35,42 @@ describe('apps/api/services: ReactionService', () => {
   });
 
   it('records a reaction for a role that holds the react permission', async () => {
-    const result = await service.setReaction({ id: OWNER_ID, role: 'USER' }, VIDEO_ID, 'LIKE');
+    const recorded = expectOk(
+      await service.setReaction({ id: OWNER_ID, role: 'USER' }, VIDEO_ID, 'LIKE')
+    );
 
-    expect(result).toMatchObject({ videoId: VIDEO_ID, reaction: 'LIKE', likesCount: 1 });
+    expect(recorded).toMatchObject({ videoId: VIDEO_ID, reaction: 'LIKE', likesCount: 1 });
   });
 
   it('refuses a guest caller with FORBIDDEN and writes nothing', async () => {
-    const caller = { id: OWNER_ID, role: 'GUEST' } as const;
+    const refused = expectErr(
+      await service.setReaction({ id: OWNER_ID, role: 'GUEST' }, VIDEO_ID, 'LIKE')
+    );
 
-    await expect(service.setReaction(caller, VIDEO_ID, 'LIKE')).rejects.toMatchObject({
-      code: ErrorCodes.FORBIDDEN,
-    });
-    await expect(
-      repositories.videoReactions.getUserReaction(VIDEO_ID, OWNER_ID)
-    ).resolves.toBeNull();
+    expect(refused.code).toBe(ErrorCodes.FORBIDDEN);
+    expect(
+      expectOk(await repositories.videoReactions.getUserReaction(VIDEO_ID, OWNER_ID))
+    ).toBeNull();
   });
 
-  it('refuses before looking the video up, so an unknown video still reads as FORBIDDEN', async () => {
-    await expect(
-      service.setReaction({ id: OWNER_ID, role: 'GUEST' }, 'missing-video', 'LIKE')
-    ).rejects.toMatchObject({ code: ErrorCodes.FORBIDDEN });
-  });
+  it.each([{ role: 'USER' as const }, { role: 'GUEST' as const }])(
+    'reports a missing video as VIDEO_NOT_FOUND for a $role, because the read decides before the permission',
+    async ({ role }) => {
+      const failure = expectErr(
+        await service.setReaction({ id: OWNER_ID, role }, 'missing-video', 'LIKE')
+      );
 
-  it('reports a missing video as VIDEO_NOT_FOUND for a permitted caller', async () => {
-    await expect(
-      service.setReaction({ id: OWNER_ID, role: 'USER' }, 'missing-video', 'LIKE')
-    ).rejects.toBeInstanceOf(PermanentError);
-  });
+      expect(failure.code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
+    }
+  );
 
   it('reads back the caller reaction and the aggregate counts', async () => {
     await service.setReaction({ id: OWNER_ID, role: 'USER' }, VIDEO_ID, 'DISLIKE');
 
-    await expect(
-      service.getUserReaction({ id: OWNER_ID, role: 'USER' }, VIDEO_ID)
-    ).resolves.toEqual({ videoId: VIDEO_ID, reaction: 'DISLIKE' });
-    await expect(service.getCounts(VIDEO_ID)).resolves.toMatchObject({
+    expect(
+      expectOk(await service.getUserReaction({ id: OWNER_ID, role: 'USER' }, VIDEO_ID))
+    ).toEqual({ videoId: VIDEO_ID, reaction: 'DISLIKE' });
+    expect(expectOk(await service.getCounts(VIDEO_ID))).toMatchObject({
       likesCount: 0,
       dislikesCount: 1,
     });

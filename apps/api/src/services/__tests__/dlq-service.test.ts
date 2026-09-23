@@ -1,6 +1,7 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters';
 import type { JobQueue } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { AuthUser } from '../../plugins/auth';
 import { DlqService } from '../dlq-service';
 
@@ -33,54 +34,52 @@ describe('DlqService', () => {
       status: 'PARKED',
     });
 
-    const result = await dlqService.list(ADMIN, {});
+    const result = expectOk(await dlqService.list(ADMIN, {}));
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.jobId).toBe('job-1');
   });
 
   it('replays a dead-letter job and records event', async () => {
-    const entry = await repositories.dlq.create({
-      id: '018f0000-0000-7000-8000-000000000002',
-      queue: 'probe',
-      jobId: 'vid-1--probe--g1',
-      videoId: '018f0000-0000-7000-8000-000000000099',
-      payload: { videoId: 'vid-1' },
-      attemptsMade: 3,
-      status: 'PARKED',
-    });
+    const entry = expectOk(
+      await repositories.dlq.create({
+        id: '018f0000-0000-7000-8000-000000000002',
+        queue: 'probe',
+        jobId: 'vid-1--probe--g1',
+        videoId: '018f0000-0000-7000-8000-000000000099',
+        payload: { videoId: 'vid-1' },
+        attemptsMade: 3,
+        status: 'PARKED',
+      })
+    );
 
-    const replayResult = await dlqService.replay(ADMIN, entry.id);
+    const replayResult = expectOk(await dlqService.replay(ADMIN, entry.id));
     expect(replayResult.status).toBe('REPLAYED');
     expect(replayResult.dlqEntryId).toBe(entry.id);
     expect(replayResult.replayJobId).toMatch(/--r1$/);
 
-    const updated = await repositories.dlq.findById(entry.id);
-    expect(updated?.status).toBe('REPLAYED');
+    expect(expectOk(await repositories.dlq.findById(entry.id))?.status).toBe('REPLAYED');
   });
 
   it('discards a dead-letter job', async () => {
-    const entry = await repositories.dlq.create({
-      id: '018f0000-0000-7000-8000-000000000003',
-      queue: 'probe',
-      jobId: 'job-discard',
-      payload: {},
-      attemptsMade: 3,
-      status: 'PARKED',
-    });
-
-    await dlqService.discard(ADMIN, entry.id);
-    const updated = await repositories.dlq.findById(entry.id);
-    expect(updated?.status).toBe('DISCARDED');
-  });
-
-  it('throws DLQ_ENTRY_NOT_FOUND when entry does not exist', async () => {
-    await expect(
-      dlqService.replay(ADMIN, '018f0000-0000-7000-8000-000000000999')
-    ).rejects.toThrowError(
-      expect.objectContaining({
-        code: ErrorCodes.DLQ_ENTRY_NOT_FOUND,
+    const entry = expectOk(
+      await repositories.dlq.create({
+        id: '018f0000-0000-7000-8000-000000000003',
+        queue: 'probe',
+        jobId: 'job-discard',
+        payload: {},
+        attemptsMade: 3,
+        status: 'PARKED',
       })
     );
+
+    expectOk(await dlqService.discard(ADMIN, entry.id));
+    expect(expectOk(await repositories.dlq.findById(entry.id))?.status).toBe('DISCARDED');
+  });
+
+  it('reports DLQ_ENTRY_NOT_FOUND when the entry does not exist', async () => {
+    const replayed = await dlqService.replay(ADMIN, '018f0000-0000-7000-8000-000000000999');
+
+    expect(expectErr(replayed).code).toBe(ErrorCodes.DLQ_ENTRY_NOT_FOUND);
   });
 
   it.each([
@@ -91,8 +90,8 @@ describe('DlqService', () => {
       code: ErrorCodes.FORBIDDEN,
     },
   ])('refuses $scenario', async ({ caller, code }) => {
-    await expect(dlqService.list(caller, {})).rejects.toMatchObject({ code });
-    await expect(dlqService.replay(caller, 'any')).rejects.toMatchObject({ code });
-    await expect(dlqService.discard(caller, 'any')).rejects.toMatchObject({ code });
+    expect(expectErr(await dlqService.list(caller, {})).code).toBe(code);
+    expect(expectErr(await dlqService.replay(caller, 'any')).code).toBe(code);
+    expect(expectErr(await dlqService.discard(caller, 'any')).code).toBe(code);
   });
 });

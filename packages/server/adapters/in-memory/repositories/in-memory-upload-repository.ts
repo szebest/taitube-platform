@@ -6,6 +6,8 @@ import {
   type VideoRecord,
   type VideoRepository,
 } from '@vp/core/repositories';
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, ok, unwrapOr } from '@vp/result';
 
 export interface InMemoryUploadRepositoryOptions {
   uploadsMap?: Map<string, UploadRecord>;
@@ -37,35 +39,37 @@ export class InMemoryUploadRepository extends UploadRepository {
     this.videosRepo = repo;
   }
 
-  async findById(id: string): Promise<UploadRecord | null> {
-    return this.uploadsMap.get(id) ?? null;
+  async findById(id: string): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {
+    return ok(this.uploadsMap.get(id) ?? null);
   }
 
-  async findByVideoId(videoId: string): Promise<UploadRecord | null> {
+  async findByVideoId(videoId: string): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {
     for (const upload of this.uploadsMap.values()) {
       if (upload.videoId === videoId) {
-        return upload;
+        return ok(upload);
       }
     }
-    return null;
+    return ok(null);
   }
 
-  async findWithVideo(uploadId: string): Promise<UploadWithVideo | null> {
+  async findWithVideo(
+    uploadId: string
+  ): Promise<Result<UploadWithVideo | null, DatabaseUnavailable>> {
     const upload = this.uploadsMap.get(uploadId);
-    if (!upload) return null;
+    if (!upload) return ok(null);
 
     let video: VideoRecord | null = null;
     if (this.videosRepo) {
-      video = await this.videosRepo.findById(upload.videoId);
+      video = unwrapOr(await this.videosRepo.findById(upload.videoId), null);
     } else if (this.videosMap) {
       video = this.videosMap.get(upload.videoId) ?? null;
     }
 
-    if (!video) return null;
-    return { upload, video };
+    if (!video) return ok(null);
+    return ok({ upload, video });
   }
 
-  async create(data: NewUploadInput): Promise<UploadRecord> {
+  async create(data: NewUploadInput): Promise<Result<UploadRecord, DatabaseUnavailable>> {
     const now = new Date();
     const record: UploadRecord = {
       id: data.id,
@@ -83,17 +87,20 @@ export class InMemoryUploadRepository extends UploadRepository {
       createdAt: now,
     };
     this.uploadsMap.set(record.id, record);
-    return record;
+    return ok(record);
   }
 
-  async updateStatus(uploadId: string, status: string): Promise<UploadRecord | null> {
+  async updateStatus(
+    uploadId: string,
+    status: string
+  ): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {
     const upload = this.uploadsMap.get(uploadId);
-    if (!upload) return null;
+    if (!upload) return ok(null);
     upload.status = status as UploadRecord['status'];
     if (status === 'COMPLETED') {
       upload.completedAt = new Date();
     }
-    return upload;
+    return ok(upload);
   }
 
   clear(): void {
