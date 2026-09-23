@@ -77,7 +77,7 @@ export async function runReconcileUploads(
       if (upload) {
         await repositories.uploads.updateStatus(upload.id, 'ABORTED');
         if (upload.multipartUploadId && multipart) {
-          // A session storage will expire on its own is not worth holding the sweep for.
+          // A session that storage will expire on its own is not worth holding the sweep for.
           const aborted = await multipart.abortMultipartUpload(
             rawBucket,
             video.sourceKey,

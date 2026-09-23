@@ -1,5 +1,6 @@
 import { InMemoryRepositories } from '@vp/adapters';
-import { ErrorCodes } from '@vp/errors';
+import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelService } from '../channel-service';
 
@@ -184,6 +185,20 @@ describe('ChannelService', () => {
       expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toMatchObject({
         handle: 'u_admin',
       });
+    });
+
+    it('surfaces a dead store rather than leaving the caller without a channel', async () => {
+      const broken = new ChannelService({
+        users: repositories.users,
+        channels: Object.assign(Object.create(repositories.channels), {
+          findByUserId: async () => err(databaseUnavailable('findByUserId')),
+        }),
+      });
+
+      const provisioned = await broken.ensureProvisioned(NEW_USER_ID, 'ada@example.com');
+
+      expect(expectErr(provisioned).code).toBe(ErrorCodes.DATABASE_UNAVAILABLE);
+      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toBeNull();
     });
   });
 });
