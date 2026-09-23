@@ -82,6 +82,18 @@ export function registerErrorHandler(app: FastifyInstance): void {
         );
       }
 
+      if (errorStatusCode !== undefined && errorStatusCode >= 400 && errorStatusCode < 500) {
+        return reply.status(errorStatusCode).send(
+          problemDetails({
+            code: ErrorCodes.VALIDATION_FAILED,
+            title: 'Bad Request',
+            status: errorStatusCode,
+            detail: error.message,
+            instance: request.url,
+          })
+        );
+      }
+
       request.log.error(
         { err: error, requestId: request.id || 'req-unknown' },
         'Unhandled exception'

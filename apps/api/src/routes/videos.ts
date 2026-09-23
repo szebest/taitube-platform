@@ -95,7 +95,7 @@ export async function videosRoutes(app: FastifyInstance): Promise<void> {
             max: 5,
             timeWindow: '1 minute',
             keyGenerator: (req: FastifyRequest) => req.user?.id || req.ip,
-            skip: (req: FastifyRequest) =>
+            allowList: (req: FastifyRequest) =>
               req.user ? videoService.isRateLimitExempt(req.user) : false,
           },
         },

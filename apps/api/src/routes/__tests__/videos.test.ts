@@ -1,6 +1,6 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../../app';
@@ -136,4 +136,26 @@ describe('video routes', () => {
     expect(res.statusCode).toBe(202);
     expect(res.json()).toMatchObject({ videoId: PUBLIC_VIDEO, status: 'PROBING', generation: 2 });
   });
+
+  it.each([
+    { role: 'user', sub: '00000000-0000-7000-8000-0000000000d1', limited: true },
+    { role: 'admin', sub: '00000000-0000-7000-8000-0000000000d2', limited: false },
+  ])(
+    'limits the sixth reprocess in a minute from a $role: $limited',
+    async ({ role, sub, limited }) => {
+      const headers = { authorization: `Bearer ${mintToken({ sub, role, ttl: '1h' })}` };
+      const statuses: number[] = [];
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const res = await app.inject({
+          method: 'POST',
+          url: `/v1/videos/${PUBLIC_VIDEO}/reprocess`,
+          headers,
+        });
+        statuses.push(res.statusCode);
+      }
+
+      expect(statuses.slice(0, 5)).not.toContain(429);
+      expect(statuses[5] === 429).toBe(limited);
+    }
+  );
 });
