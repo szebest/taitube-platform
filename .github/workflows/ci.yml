@@ -48,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Set up kustomize
+        uses: ./.github/actions/setup-kustomize
+
       - name: Check package boundaries (tiers, layers, CLAUDE.md symlinks)
         run: pnpm boundaries
 
@@ -116,6 +119,9 @@ jobs:
 
       - name: Build packages
         run: pnpm build
+
+      - name: Set up kustomize
+        uses: ./.github/actions/setup-kustomize
 
       - name: Generate video fixtures
         run: pnpm gen-video
