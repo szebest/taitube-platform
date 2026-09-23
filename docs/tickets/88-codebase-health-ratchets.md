@@ -211,13 +211,13 @@ Handlers are installed before `container.start()`. One `Heartbeat` owner, one re
 connection.
 
 **ACs**
-1. With a metrics port already bound, the worker exits non-zero **without having consumed a job**. Proof: `apps/worker/src/__tests__/main.test.ts`, asserting zero processed.
-2. `SIGTERM` delivered during `container.start()` runs `shutdownOnce` and exits 0. Proof: main specs for both deployables.
-3. `start-order.test.ts` asserts, for both composition roots, that every consumer starts after metrics and heartbeat. Proof: architecture test over the registration order, with a fixture that fires.
-4. Worker liveness fails when the heartbeat file is missing or older than `3 x` its interval; every worker deployment has a readiness probe that fails when Redis is down. Proof: `k8s-manifests` spec; a toxiproxy chaos run named in the PR.
-5. The heartbeat is written by one `Heartbeat` module, in one format: integer epoch seconds and a newline, which is what the probe's arithmetic reads. Proof: `Heartbeat` spec asserts the file matches `^\d+\n$` after every write path; zero-matches row `heartbeatPath` outside the `Heartbeat` module and composition, 0.
-6. A transcode whose step heartbeat returns `Err` (lost fencing) aborts FFmpeg and commits nothing. Today the `Result` is discarded (`transcode.ts:231`). Proof: stage spec.
-7. Compose's API healthcheck uses `/readyz`; workers have a compose healthcheck. Proof: compose spec.
+1. With a metrics port already bound, the worker exits non-zero **without having consumed a job**. Proof: `apps/worker/src/__tests__/main.test.ts`, asserting zero processed. **Done in 88b: the metrics server starts before the consumer, a bind failure fails `start()`, `run()` exits 1 and `InMemoryJobQueue#process` is never called.**
+2. `SIGTERM` delivered during `container.start()` runs `shutdownOnce` and exits 0. Proof: main specs for both deployables. **Done in 88b: both mains take a `ProcessHost` and call `exitOnSignals` before `start()`; a dispose during start answers `interrupted`. `apps/{api,worker}/src/__tests__/main.test.ts`.**
+3. `start-order.test.ts` asserts, for both composition roots, that every consumer starts after metrics and heartbeat. Proof: architecture test over the registration order, with a fixture that fires. **Done in 88b: `tests/architecture/start-order.test.ts` composes both roots in-memory and reads `container.started()`.**
+4. Worker liveness fails when the heartbeat file is missing or older than `3 x` its interval; every worker deployment has a readiness probe that fails when Redis is down. Proof: `k8s-manifests` spec; a toxiproxy chaos run named in the PR. **Done in 88b: liveness is `test -f ... && ... -lt 45`, readiness is `/readyz` on the metrics port; `k8s-manifests.test.ts` runs the liveness command against a fresh, a 45 s old and a missing file. The chaos run is in the PR.**
+5. The heartbeat is written by one `Heartbeat` module, in one format: integer epoch seconds and a newline, which is what the probe's arithmetic reads. Proof: `Heartbeat` spec asserts the file matches `^\d+\n$` after every write path; zero-matches row `heartbeatPath` outside the `Heartbeat` module and composition, 0. **Done in 88b: `apps/worker/src/heartbeat.ts`, `heartbeat.test.ts`; the stages no longer write the file.**
+6. A transcode whose step heartbeat returns `Err` (lost fencing) aborts FFmpeg and commits nothing. Today the `Result` is discarded (`transcode.ts:231`). Proof: stage spec. **Done in 88b: a lost lease aborts FFmpeg through an `AbortSignal` (`runFfmpeg` now takes one); `apps/worker/src/stages/__tests__/transcode.test.ts` for a refused renewal and a fenced step.**
+7. Compose's API healthcheck uses `/readyz`; workers have a compose healthcheck. Proof: compose spec. **Done in 88b: `packages/server/testing/src/__tests__/compose-manifests.test.ts`.**
 
 ### W4 - Dependency injection
 
@@ -233,12 +233,12 @@ collaborator a service needs per call arrives as a factory. Bull Board is built 
 the services directory imports no transport library. One metrics server.
 
 **ACs**
-1. `getMetrics` does not exist. Proof: zero-matches row `getMetrics` over `apps` and `packages`, 0.
-2. No module-scope `let`/`var`, no module-scope `new` of a class with instance state, and no top-level call statement in any production module outside `ENTRYPOINTS` (`entrypoints.ts`), which is what lets `migrate.ts`, the CLIs and `apps/web/src/index.tsx` run. Proof: `tests/architecture/no-module-state.test.ts` (AST), fixtures for each of the three shapes.
-3. `total-dependencies` also fails on a default parameter or destructuring default whose value is a constructed object, a call, or a `default*` identifier, and it scans `app.ts`, `runner.ts` and `packages/server/adapters`. Proof: the widened test, with one fixture per shape.
-4. No `new` of a non-value class inside `apps/api/src/services` or `apps/worker/src/stages`. `Date`, `Map`, `Set`, `URL`, `Error` subclasses and `SseConnection` (a per-request value) are the only allowed constructions, listed in the test by name. Proof: `adapter-instantiation` widened.
-5. Bull Board is built in the API composition module. Proof: zero-matches row `@bull-board` over `apps/api/src/services`, 0.
-6. `startMetricsServer` exists once; `collectDefaultMetrics` is called once per process, with one prefix. Proof: zero-matches rows `function startMetricsServer` and `collectDefaultMetrics(` over production source, 1 each; a spec that the metrics endpoint has no duplicated `process_*` series.
+1. `getMetrics` does not exist. Proof: zero-matches row `getMetrics` over `apps` and `packages`, 0. **Done in 88b: `Adapters.Metrics` is the registry; stages take it in `StageDeps`, storage is metered by `MeteredStorageClient` / `MeteredMultipartStorage`.**
+2. No module-scope `let`/`var`, no module-scope `new` of a class with instance state, and no top-level call statement in any production module outside `ENTRYPOINTS` (`entrypoints.ts`), which is what lets `migrate.ts`, the CLIs and `apps/web/src/index.tsx` run. Proof: `tests/architecture/no-module-state.test.ts` (AST), fixtures for each of the three shapes. **Done in 88b: `defaultPaginator`, `defaultCursorCodec`, the tracing SDK, the import-time propagator and `time-ago`'s locale registration are gone.**
+3. `total-dependencies` also fails on a default parameter or destructuring default whose value is a constructed object, a call, or a `default*` identifier, and it scans `app.ts`, `runner.ts` and `packages/server/adapters`. Proof: the widened test, with one fixture per shape. **Done in 88b.**
+4. No `new` of a non-value class inside `apps/api/src/services` or `apps/worker/src/stages`. `Date`, `Map`, `Set`, `URL`, `Error` subclasses and `SseConnection` (a per-request value) are the only allowed constructions, listed in the test by name. Proof: `adapter-instantiation` widened. **Done in 88b, with `Promise` and `AbortController` on the list (see *Decided in 88b*).**
+5. Bull Board is built in the API composition module. Proof: zero-matches row `@bull-board` over `apps/api/src/services`, 0. **Done in 88b: `apps/api/src/composition/bull-board.ts`.**
+6. `startMetricsServer` exists once; `collectDefaultMetrics` is called once per process, with one prefix. Proof: zero-matches rows `function startMetricsServer` and `collectDefaultMetrics(` over production source, 1 each; a spec that the metrics endpoint has no duplicated `process_*` series. **Done in 88b, the first row as `class MetricsServer|function startMetricsServer` (see *Decided in 88b*).**
 
 ### W5 - Errors
 
@@ -256,22 +256,34 @@ become 500.
 of every persisted error code. Fastify's own 4xx errors map to a problem with their status.
 
 **ACs**
-1. `ignore(result, reason)` exists in `@vp/result`, returns `void`, and requires a non-empty literal `reason`. Proof: `result` spec; a type test that `ignore(r, someVar)` fails to compile.
-2. No expression statement anywhere in production source has type `Result` or `Promise<Result>` after unwrapping `await`, `void`, parentheses and `.catch/.finally`. Proof: `tests/architecture/no-discarded-result.test.ts` using the TypeScript checker, sharing one `ts.Program` with the other type-aware tests; fixtures for the bare, `void` and `.catch` shapes.
-3. `expire-raw` with a failing `deleteObject` writes no event and does not count the video; `reconcile-uploads` with a failing `add` does not increment `reconciler_repairs_total`; `purge-deleted` with every purge failing writes no `generation_purged`. Proof: one spec per stage, named after the stage.
-4. `catch-confinement` matches `.catch(` and `?.catch?.(`; `legacy-catch-sites.ts` is deleted, and so is `shrinkOnly` in `repo-files.ts` once W6 and W8 delete theirs. Proof: the test, with a `.catch(() => {})` fixture in a service.
-5. `no-domain-throw` also fails on `.parse(` of a zod schema inside its roots, and `validateJobId` returns a `Result`. Proof: fixture; zero-matches row `\.parse\(` over `apps/worker/src/stages` and `apps/api/src/services`, 0.
-6. Every persisted error code is typed `ErrorCode`: `step-repository`, `dlq-repository`, `probe-failure`, `failure-handler`. `ORPHANED` is added to the vocabulary with its SDD §6.2 line or replaced. Proof: `tests/architecture/error-vocabulary.test.ts` (no string literal assigned to a `code`/`errorCode` that is not an `ErrorCode`), and `error-code-drift` still green.
-7. No failure is classified by `message.includes`. Proof: zero-matches row `message\.includes` over production source, 0.
-8. `POST /v1/uploads/:id/complete` with `content-type: application/json` and no body answers 400 problem+json; an unsupported media type answers 415. Proof: route spec, one `it.each`.
-9. `publishVideoEvent` returns a `Result`; `notify` and the progress reporter decide on it. Proof: `result-returning-ports` extended to `@vp/events`.
-10. No `as unknown as` in production source (14 today; `registry.ts:51` erases every stage's type). Proof: zero-matches row `as unknown as` over production source, web included, 0.
+1. `ignore(result, reason)` exists in `@vp/result`, returns `void`, and requires a non-empty literal `reason`. Proof: `result` spec; a type test that `ignore(r, someVar)` fails to compile. **Done in 88b: `type-fixtures/ignore-reason.ts`.**
+2. No expression statement anywhere in production source has type `Result` or `Promise<Result>` after unwrapping `await`, `void`, parentheses and `.catch/.finally`. Proof: `tests/architecture/no-discarded-result.test.ts` using the TypeScript checker, sharing one `ts.Program` with the other type-aware tests; fixtures for the bare, `void` and `.catch` shapes. **Done in 88b.**
+3. `expire-raw` with a failing `deleteObject` writes no event and does not count the video; `reconcile-uploads` with a failing `add` does not increment `reconciler_repairs_total`; `purge-deleted` with every purge failing writes no `generation_purged`. Proof: one spec per stage, named after the stage. **Done in 88b: `stages/housekeeping/__tests__/{expire-raw,reconcile-uploads,purge-deleted}.test.ts`.**
+4. `catch-confinement` matches `.catch(` and `?.catch?.(`; `legacy-catch-sites.ts` is deleted, and so is `shrinkOnly` in `repo-files.ts` once W6 and W8 delete theirs. Proof: the test, with a `.catch(() => {})` fixture in a service. **Done in 88b: homes are `@vp/result`, the adapters and `ENTRYPOINTS`; `legacy-catch-sites.ts` is deleted. `shrinkOnly` stays for the two lists W6 and W8 own.**
+5. `no-domain-throw` also fails on `.parse(` of a zod schema inside its roots, and `validateJobId` returns a `Result`. Proof: fixture; zero-matches row `\.parse\(` over `apps/worker/src/stages` and `apps/api/src/services`, 0. **Done in 88b: payloads are parsed once at the registry edge, JSON through `parseJson` in `@vp/result`.**
+6. Every persisted error code is typed `ErrorCode`: `step-repository`, `dlq-repository`, `probe-failure`, `failure-handler`. `ORPHANED` is added to the vocabulary with its SDD §6.2 line or replaced. Proof: `tests/architecture/error-vocabulary.test.ts` (no string literal assigned to a `code`/`errorCode` that is not an `ErrorCode`), and `error-code-drift` still green. **Done in 88b: `ORPHANED` is a pipeline code in SDD §6.2; the failure handler persists `errorCodeOf(err)`.**
+7. No failure is classified by `message.includes`. Proof: zero-matches row `message\.includes` over production source, 0. **Done in 88b: a full disk is read from its errno; `pg-errors` reads the SQLSTATE only, which PGlite sets too.**
+8. `POST /v1/uploads/:id/complete` with `content-type: application/json` and no body answers 400 problem+json; an unsupported media type answers 415. Proof: route spec, one `it.each`. **Done in 88b: `apps/api/src/routes/__tests__/uploads.test.ts`.**
+9. `publishVideoEvent` returns a `Result`; `notify` and the progress reporter decide on it. Proof: `result-returning-ports` extended to `@vp/events`. **Done in 88b: notify retries a status it could not publish, the progress reporter drops a refused sample.**
+10. No `as unknown as` in production source (14 today; `registry.ts:51` erases every stage's type). Proof: zero-matches row `as unknown as` over production source, web included, 0. **Done in 88b.**
 11. No `'literal' in value` narrowing in production source, web included. Three cases, three answers:
     - **our own unions** carry one literal `type` discriminant and an exhaustive `switch` ending in `assertNever`: `package.ts`'s child results, `rules-to-sql.ts`, `failure-handler.ts`'s duck typing, `page-merge.ts`, `can.tsx`;
     - **RTK Query results** (`"data" in result`, `"status" in response.error` in `edit-page.tsx` and `video-settings-dropdown.tsx`) cannot carry a tag we own, so those call sites use `.unwrap()` inside `tryCatch` and get a `Result`;
     - **guards over `unknown`**, including `packages/universal/api-contracts/src/endpoint.ts:63-65`, parse through a zod schema instead of probing keys.
 
-    Proof: `tests/architecture/no-in-probes.test.ts` (AST), no allowlist.
+    Proof: `tests/architecture/no-in-probes.test.ts` (AST), no allowlist. **Done in 88b: `ChildResult` is a discriminated union in `@vp/job-contracts`, `Can` switches on `type`, RTK results go through `fromPromise(...unwrap())`.**
+
+**Decided in 88b.**
+- The container starts what it built in the order it built it, so each composition root resolves its probes first (`resolveBackground` in the API, `resolveStartOrder` in the worker) and `start-order.test.ts` holds the result. The API's HTTP listener opens after `start()`; a shutdown that lands before it skips the drain delay, since nothing is routing to it yet.
+- The heartbeat is written by the `Heartbeat` timer only. The stages' ISO writes are gone rather than reformatted: the timer runs whenever the event loop does, which is what liveness is for. A first beat that cannot be written fails the boot.
+- W4 AC 6's first row counts `class MetricsServer|function startMetricsServer`. The server is a class a composition root builds with the graph and `listen()`s in `start()`, so there is no free `startMetricsServer` left to count. Default process metrics carry the `vp_` prefix on every deployable.
+- Storage metrics moved from a helper both adapters called into a decorator both families are wrapped in, and a call that returns `Err` now counts as an error (the helper counted any resolved promise as a success).
+- W4 AC 4's list gains `Promise` and `AbortController`: both are per-call values like `Date`. The transcode's lease signal is an `AbortController`.
+- `METRICS_PORT` and `PORT` accept `0`, and `inProcessAppConfig()` binds the metrics port to `0`, so two in-process apps never contend for one port.
+- The failure handler persists `errorCodeOf(err)`: the error's own vocabulary code, or its cause's, else `INTERNAL`. `UNRECOVERABLE_ERROR` is gone; the DLQ copy still carries `unrecoverable`.
+- `validateJobId` returns a `Result` and runs once, in `instrument()`, instead of first thing in five stages.
+- The observability package moved from T1 to T2 to depend on `@vp/result`; the CLIs that now use `@vp/result` moved the same way.
+- The reprocess fast-path enqueue is `ignore`d, not returned: the outbox row committed with the transition delivers the probe. `upload-complete` still answers its enqueue failure, which is unchanged behaviour.
 
 ### W6 - Boundaries & file discipline
 

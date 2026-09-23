@@ -322,10 +322,13 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 | `test-correspondence.test.ts` | every production source with runtime code has `__tests__/<name>.test.ts` beside it | a new source file with no spec; a constant, a function or an abstract class with a concrete method still counts |
 | `esm-specifiers.test.ts` | relative imports in `universal` and `client` packages carry an explicit extension | an extensionless relative import |
 | `core-barrels.test.ts` | each `@vp/core` barrel re-exports only its own folder; no `*.port.ts` anywhere | a barrel re-exporting a sibling folder |
-| `no-domain-throw.test.ts` | no `throw` in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` or `apps/worker/src/stages/`, except a `throw assertNever` | `throw new Error` added to a rule |
+| `no-domain-throw.test.ts` | no `throw`, `*OrThrow(` helper or throwing `Schema.parse(` / `JSON.parse(` in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` or `apps/worker/src/stages/`, except a `throw assertNever` | `NotifyJob.parse({...})` in a stage |
 | `validation-is-input-only.test.ts` | `@vp/validation` imports no `@vp/domain` or `@vp/core`, in source **and** in its manifest | a predicate taking a `Video` added to `@vp/validation` |
-| `catch-confinement.test.ts` | `catch` appears only in `@vp/result`, `packages/server/adapters/`, the two composition roots and the two edges | a `try/catch` added to a service |
-| `result-returning-ports.test.ts` | every I/O method on a `@vp/core` port or repository returns `Promise<Result<…>>` | a port method returning a bare `Promise<T>` |
+| `catch-confinement.test.ts` | a `try/catch` or a `.catch(` appears only in `@vp/result`, `packages/server/adapters/` and an entrypoint's exit-code handler; no exception list | `storage.deleteObject(...).catch(() => {})` in a stage |
+| `result-returning-ports.test.ts` | every I/O method on a `@vp/core` port or repository, and every exported async function of `@vp/events`, returns `Promise<Result<…>>` | a port method returning a bare `Promise<T>` |
+| `no-discarded-result.test.ts` | no statement in production source leaves a `Result` or a promise of one unread, through `await`, `void`, parentheses or a trailing `.catch`/`.finally` (type-aware, on the shared `ts.Program`); a deliberate drop is `ignore(result, 'reason')` | `await cache.set(key, value)` with its failure dropped |
+| `error-vocabulary.test.ts` | no string literal assigned to a `code` / `errorCode` in server source is outside `ErrorCode`, and every repository write types its `errorCode` as `ErrorCode` | `errorCode: 'ORPHANED'` before it was a code |
+| `no-in-probes.test.ts` | no `'literal' in value` narrowing in production source, the browser tier included (AST) | `if ('rendition' in child)` |
 | `error-code-drift.test.ts` | every `ErrorCode` has a `PROBLEM_STATUS` entry, a `RETRY_CLASS` entry and a line in SDD §6.2 | a code added to `ApiErrorCodes` only |
 | `env-key-closure.test.ts` | every key the deployables read is declared in `@vp/env-schema`; every schema key is uncommented in `.env.example`; every key compose, the k8s base and overlays (patches and `ExternalSecret` entries included), CI and `make` hand the apps is declared | an overlay patch adding `/data/HOUSEKEEPING_INTERVAL_MS` |
 | `env-confinement.test.ts` | `process.env` appears only in the `ENTRYPOINTS` and `ENV_HOMES` `entrypoints.ts` lists, over `.ts`, `.tsx`, `.mts`, `.js` and `.mjs` in `apps`, `packages`, `scripts` and `tests` | a `process.env` read in a service, or in a `.mjs` helper |
@@ -335,8 +338,10 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 | `no-test-hooks.test.ts` | no fault-injection flag or header in production source or a job contract | `request.headers['x-test-crash-after-commit']` |
 | `production-secrets.test.ts` | `kustomize build` of the base fails `loadEnv()` under production until every secret is overridden; the cloud overlay renders no Secret value, one `ExternalSecret` entry per `SECRET_KEYS` member and no local credential | `S3_ACCESS_KEY_ID: minioadmin` rendered into the cloud overlay |
 | `zero-matches.test.ts` | each counted pattern stays at the count the change that moved it left it | a second `worker-${process.pid}` default |
-| `adapter-instantiation.test.ts` | a concrete adapter is **constructed** only in a composition module or inside `@vp/adapters` | `new CaslAuthorizationAdapter()` inside a service, whose import alone would be legal |
-| `total-dependencies.test.ts` | no service, stage or composition root recovers from a missing dependency (`?? new`, `\|\| new`, `?? default*`, `?? inProcessAppConfig()`) | `options.config ?? inProcessAppConfig()` in `app.ts` |
+| `adapter-instantiation.test.ts` | a concrete adapter is **constructed** only in a composition module or inside `@vp/adapters`, and a service or a stage constructs values only (`Date`, `Map`, `Set`, `URL`, `Promise`, `AbortController`, an `*Error`, `SseConnection`) | `new Singleflight()` inside a service |
+| `total-dependencies.test.ts` | no service, stage, adapter or composition root recovers from a missing dependency: `?? new`, `\|\| new`, `?? default*`, `?? inProcessAppConfig()`, or a default parameter or destructuring default that is constructed, called or `default*` (AST) | `paginator: Paginator = defaultPaginator` |
+| `no-module-state.test.ts` | outside `ENTRYPOINTS`, no module-scope `let`/`var`, no module-scope `new` other than an immutable value or a `Readonly` collection, and no top-level call statement (AST) | `export const defaultPaginator = new Paginator()` |
+| `start-order.test.ts` | both composition roots start every consumer after the metrics server, and the worker's after its heartbeat, read from `container.started()` | a consumer resolved before the metrics server |
 | `route-plugins.test.ts` | every route module exports a Fastify plugin, carries no options interface and appears in `routes/index.ts` | a route module exporting a bare `void` registrar |
 | `drain-before-close.test.ts` | the shared shutdown flips readiness before it closes, both mains use it, and `/readyz` reads the drain flag before any dependency | a shutdown that closes the server before flipping readiness |
 | `shutdown-closure.test.ts` | every resource a composition module constructs registers a disposer; `dispose()` releases in reverse construction order | an adapter registered with no disposer |
@@ -347,11 +352,10 @@ The contract-drift assertion stays in `apps/api` because it has to boot the app:
 instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
 depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/api` can answer.
 
-**Five exception lists, all shrink-only.** `tests/architecture/oversized-sources.ts` and
+**Two exception lists, both shrink-only.** `tests/architecture/oversized-sources.ts` and
 `untested-sources.ts` record the files that already breached the ceiling and the 1:1 test mandate when those
-rules became executable; `throwing-domain-sources.ts`, `legacy-catch-sites.ts` and `non-result-port-methods.ts`
-record what ADR-24 has not converted yet. Each assertion fails on a *new* breach **and** on a listed entry
-that no longer breaches, so the lists can only get shorter. None may be appended to.
+rules became executable. Each assertion fails on a *new* breach **and** on a listed entry that no longer
+breaches, so the lists can only get shorter. None may be appended to.
 
 Three further mechanisms sit outside the suite:
 

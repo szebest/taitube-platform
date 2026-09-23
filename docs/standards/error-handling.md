@@ -309,10 +309,27 @@ gone and their assertions are flat:
 |---|---|
 | Every I/O method on a `@vp/core` port or repository returns `Promise<Result<T, InfraFailure>>` | `result-returning-ports.test.ts` |
 | No rule, service or stage throws its failure, and no helper converts one into a throw | `no-domain-throw.test.ts` |
-| `catch` appears only in `@vp/result`, in an adapter, or at a boundary the list still names | `catch-confinement.test.ts` |
+| `catch` - a `try` block or a `.catch(` - appears only in `@vp/result`, in an adapter, or in an entrypoint's exit-code handler | `catch-confinement.test.ts` |
 | `sendResult` is the only unwrap point under `routes/`, and a route imports no port | `routes-unwrap-at-send-result.test.ts` |
+| No statement drops a `Result`; a deliberate drop is `ignore(result, 'reason')` | `no-discarded-result.test.ts` |
+| Every persisted error code is an `ErrorCode` | `error-vocabulary.test.ts` |
 
-`legacy-catch-sites.ts` is the one list left, and nothing on it is waiting on a conversion: it holds
-the `@vp/ffmpeg` process boundary and telemetry setup. The CLIs, `apps/web` and the build and
-migration entrypoints convert through `tryCatch` / `fromPromise`; a CLI keeps only its
-`main().catch(...)` exit-code handler.
+There is no exception list left. The `@vp/ffmpeg` process boundary, telemetry, the CLIs, `apps/web`
+and the build and migration entrypoints convert through `tryCatch` / `fromPromise`; an entrypoint
+(`tests/architecture/entrypoints.ts`) keeps only its `main().catch(...)` exit-code handler.
+
+### Dropping a Result on purpose
+
+A cache write, a best-effort notice or an early refresh can fail without changing what the caller
+does next. Say so where it happens:
+
+```ts
+ignore(
+  await this.deps.reactionCache.setCounts(videoId, counts),
+  'the reaction is written; the counts reconciler repairs the cache'
+);
+```
+
+The reason is a string literal, checked by the type (`ignore(r, someVar)` and `ignore(r, '')` do not
+compile). Anything else that leaves a `Result` unread - a bare `await`, a `void`, a trailing
+`.catch()` - fails `no-discarded-result.test.ts`.

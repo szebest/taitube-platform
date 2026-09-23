@@ -9,7 +9,8 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 `apps/worker` executes asynchronous BullMQ processing stages across the video ingestion and transcoding pipeline.
 - **Composition Root:** `apps/worker/src/runner.ts` composes one `Container` over the same `registerAdapters` the API uses, so `config.kind` is the only switch between adapter families; `composition/stages.module.ts` binds the stage's processor to its queue as a Startable.
 - **Stage Registry:** `STAGE_REGISTRY` in `registry.ts` carries each stage's worker options and its processor factory, keyed by `config.worker.stage` (`WORKER_STAGE`). Adding a stage is one registry entry.
-- **Configuration is a value:** `main.ts` calls `loadEnv()` and hands `toAppConfig()`'s result to the runner. Stages take buckets, the CDN base, the heartbeat path and ffmpeg settings from their deps; nothing below `main.ts` reads `process.env`.
+- **Configuration is a value:** `main.ts` calls `loadEnv()` and hands `toAppConfig()`'s result to the runner. Stages take buckets, the CDN base and ffmpeg settings from their deps; nothing below `main.ts` reads `process.env`.
+- **Collaborators are values too:** a stage gets `metrics` and `media` (the FFmpeg processes, `MediaTools` from `@vp/ffmpeg`) in `StageDeps`, and a transcode gets its progress reporter and segment uploader as factories. A spec fails a stage by handing it a `MediaTools` double, never by spying on `@vp/ffmpeg`.
 
 ---
 
@@ -34,10 +35,10 @@ Instructions for any coding agent working on the Taitube distributed worker runt
   per code in the vocabulary and the throw site has no judgement left to make. Never classify by inspecting
   a message or a class name.
 - **There is no unwrap helper.** `unwrapOrThrow` existed as a migration shim and is gone: it was a third
-  unwrap site that neither ADR-24 nor this file's Rule 3 sanctioned, and the throw sweep could not see it
-  (`unwrapOrThrow` matched no part of a pattern looking for a literal `throw`). A stage that is not yet
-  converted converts inline, where `no-domain-throw.test.ts` counts it and
-  `throwing-domain-sources.ts` names the file.
+  unwrap site that neither ADR-24 nor this file's Rule 3 sanctioned. `no-domain-throw.test.ts` fails on a
+  `throw`, an `*OrThrow(` helper and a throwing `Schema.parse(` / `JSON.parse(` in a stage.
+- **A job's payload is parsed once, at the edge.** The registry reads each queue's contract with
+  `safeParse` before the stage runs, and `instrument` validates the job id; a stage receives a typed job.
 - The unknown-error default is unchanged: anything that escapes a stage as a raw throw is transient with an
   attempt cap of 3.
 - Dual-runtime parity is unaffected: `@vp/result` is plain TypeScript with no `Bun.*` and no `node:*`.
@@ -48,7 +49,8 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 
 ### Rule 5: Graceful Shutdown & Liveness
 - `SIGTERM` and `SIGINT` run `shutdownOnce` from `@vp/composition`, the same drained shutdown as the API: the runner's container disposes in reverse construction order and a close that outlives the stage's `shutdownTimeoutMs` is abandoned with the pending disposer named. `shutdownTimeoutMs` is the pod's `terminationGracePeriodSeconds` less the 5 s preStop and a 5 s margin; `registry.test.ts` reads the manifests to hold them together.
-- Periodically touch the heartbeat file (`WORKER_HEARTBEAT_PATH`) to prevent watchdog kills.
+- The handlers are installed before `start()`, so a signal while the worker boots drains too. `start()` runs the metrics server and the heartbeat before the consumer (`start-order.test.ts`), so a bound metrics port fails the boot before a job is taken.
+- `Heartbeat` (`src/heartbeat.ts`) is the only writer of `WORKER_HEARTBEAT_PATH`: integer epoch seconds and a newline, every 15 s. Liveness fails when the file is missing or 45 s old; readiness is `/readyz` on the metrics port, which asks the consume queue's Redis connection.
 
 ---
 

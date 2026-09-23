@@ -684,9 +684,9 @@ one and no second consumer could choose differently.
 **Consequences.** Every port, repository, service and stage is converted. The three shrink-only allowlists
 that carried the migration are gone and their assertions are flat: `result-returning-ports.test.ts`,
 `no-domain-throw.test.ts` and `routes-unwrap-at-send-result.test.ts` simply fail on an offender.
-`legacy-catch-sites.ts` is the one list left and holds only the boundaries this ADR does not reach - process
-spawning, CLI exit-code handlers, telemetry setup, build and migration entrypoints, `apps/web`, and the two
-pre-handlers with no reply to render into. Wire format is unchanged: a client cannot tell that the server
+No exception list is left: `catch-confinement.test.ts` allows a `catch` only in `@vp/result`, an adapter and
+an entrypoint's exit-code handler, and `no-discarded-result.test.ts` fails on a `Result` left unread unless it
+goes through `ignore(result, reason)`. Wire format is unchanged: a client cannot tell that the server
 stopped throwing, apart from four additive codes.
 
 `@vp/pagination` composes `@vp/result` to answer `Result<CursorPayload, InvalidCursor>` from its codec, which
