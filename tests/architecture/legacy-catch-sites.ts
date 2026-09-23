@@ -11,7 +11,6 @@
 export const LEGACY_CATCH_SITES: readonly string[] = [
   // Spawns FFmpeg and reads its exit code - a process boundary, not a port.
   'packages/server/ffmpeg/src/probe.ts',
-  'packages/server/ffmpeg/src/transcode.ts',
   'packages/server/gen-video/src/generator.ts',
   'packages/server/gen-video/src/probe.ts',
 
@@ -22,9 +21,6 @@ export const LEGACY_CATCH_SITES: readonly string[] = [
   'packages/server/compose-autoscaler/src/runner.ts',
 
   // Telemetry setup, which must never fail the process it is instrumenting.
-  'packages/server/observability/src/server.ts',
-  'packages/server/observability/src/tracing.ts',
-  'apps/api/src/plugins/metrics.ts',
   'apps/worker/src/with-telemetry.ts',
 
   // W9 is documentation only and the ticket forbids any apps/web change; tickets 53, 70 and 71 own

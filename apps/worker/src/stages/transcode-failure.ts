@@ -1,24 +1,17 @@
 import { ErrorCodes, type MediaFailure, mediaFailure, mediaFailureFrom } from '@vp/errors';
 
 /**
- * A full disk arrives from `node:fs` or from FFmpeg as an ENOSPC, never as a pipeline error, and it
- * is transient - the next pod has room. Everything else keeps whatever code it already reported.
+ * A full disk is transient - the next pod has room. FFmpeg reports it as a `DISK_FULL` pipeline
+ * error read from its stderr; `node:fs` reports it as an `ENOSPC` errno, which is translated here.
+ * Everything else keeps whatever code it already reported.
  */
 export function transcodeFailure(rendition: string, cause: unknown): MediaFailure {
   const stage = `transcode-${rendition}`;
-  return isDiskFull(cause)
-    ? mediaFailure(stage, ErrorCodes.DISK_FULL, `ENOSPC disk exhaustion: ${messageOf(cause)}`)
+  return (cause as NodeJS.ErrnoException | null)?.code === 'ENOSPC'
+    ? mediaFailure(
+        stage,
+        ErrorCodes.DISK_FULL,
+        `ENOSPC disk exhaustion: ${(cause as Error).message}`
+      )
     : mediaFailureFrom(stage, cause);
-}
-
-function messageOf(cause: unknown): string {
-  return (cause as Error)?.message ?? String(cause);
-}
-
-function isDiskFull(cause: unknown): boolean {
-  const details = cause as { code?: string; hint?: string } | null;
-  if (details?.code === 'ENOSPC' || details?.hint === 'DISK_FULL') return true;
-
-  const message = messageOf(cause);
-  return message.includes('ENOSPC') || message.toLowerCase().includes('no space left on device');
 }

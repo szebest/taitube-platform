@@ -2,17 +2,17 @@ import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { queueUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
-import { getMetrics } from '@vp/observability';
+import { createMetricsRegistry } from '@vp/observability';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it } from 'vitest';
 import { OutboxRelay, drainOutboxOnce } from '../stages/housekeeping/outbox-relay';
 import { TASKS } from './stage-settings';
 
 describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
   let repositories: InMemoryRepositories;
   let queues: Map<string, InMemoryJobQueue>;
+  const metrics = createMetricsRegistry();
 
   const getQueue = (name: string): JobQueue => {
     let q = queues.get(name);
@@ -52,7 +52,11 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
       // Drain outbox
       const result = expectOk(
-        await drainOutboxOnce(repositories, { batchSize: TASKS.outbox.batchSize, getQueue })
+        await drainOutboxOnce(repositories, {
+          batchSize: TASKS.outbox.batchSize,
+          getQueue,
+          metrics,
+        })
       );
       expect(result.processedCount).toBe(1);
       expect(result.successCount).toBe(1);
@@ -64,7 +68,11 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
       // Second drain finds nothing (already published)
       const secondResult = expectOk(
-        await drainOutboxOnce(repositories, { batchSize: TASKS.outbox.batchSize, getQueue })
+        await drainOutboxOnce(repositories, {
+          batchSize: TASKS.outbox.batchSize,
+          getQueue,
+          metrics,
+        })
       );
       expect(secondResult.processedCount).toBe(0);
     });
@@ -88,6 +96,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
         ({ add: async () => err(queueUnavailable('add')) }) as unknown as InMemoryJobQueue;
 
       const result = await drainOutboxOnce(repositories, {
+        metrics,
         batchSize: TASKS.outbox.batchSize,
         getQueue: failingGetQueue,
       });
@@ -148,7 +157,11 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
       // Outbox relay runs (e.g. housekeeping worker loop)
       const relayResult = expectOk(
-        await drainOutboxOnce(repositories, { batchSize: TASKS.outbox.batchSize, getQueue })
+        await drainOutboxOnce(repositories, {
+          batchSize: TASKS.outbox.batchSize,
+          getQueue,
+          metrics,
+        })
       );
       expect(relayResult.successCount).toBe(1);
 
@@ -199,6 +212,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
       // Relay drains outbox and attempts to add job
       const result = await drainOutboxOnce(repositories, {
+        metrics,
         batchSize: TASKS.outbox.batchSize,
         getQueue,
       });
@@ -244,7 +258,6 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
   describe('AC 4: Reconciler repairs metric stays 0 under normal operation', () => {
     it('verifies reconciler_repairs_total stays 0 when outbox relay functions', async () => {
-      const metrics = getMetrics();
       const repairsMetric = metrics.reconcilerRepairsTotal;
 
       // Ensure initial counter state
@@ -267,7 +280,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
         },
       });
 
-      await drainOutboxOnce(repositories, { batchSize: TASKS.outbox.batchSize, getQueue });
+      await drainOutboxOnce(repositories, { batchSize: TASKS.outbox.batchSize, getQueue, metrics });
 
       // Metric must still have no repairs
       const afterVal =
@@ -279,7 +292,13 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
   describe('OutboxRelay timer loop', () => {
     it('starts and stops gracefully', async () => {
-      const relay = new OutboxRelay({ ...TASKS.outbox, repositories, getQueue, intervalMs: 50 });
+      const relay = new OutboxRelay({
+        ...TASKS.outbox,
+        repositories,
+        getQueue,
+        metrics,
+        intervalMs: 50,
+      });
 
       relay.start();
       expect(relay.isRunning()).toBe(true);
@@ -314,6 +333,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       const start = Date.now();
       const drainResult = expectOk(
         await drainOutboxOnce(repositories, {
+          metrics,
           getQueue,
           batchSize: 50,
         })
@@ -379,7 +399,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
         jobId,
         videoId: uuidv7(),
         payload: { test: true },
-        errorCode: 'ERR',
+        errorCode: 'INTERNAL',
         errorMessage: 'failed',
         attemptsMade: 3,
         status: 'PARKED',

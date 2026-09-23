@@ -90,6 +90,7 @@ describe('apps/worker: DLQ failure handler', () => {
       repositories: { ...repositories, ...overrides },
       getQueue,
       logger: recordingLogger(lines),
+      metrics: STAGE_SETTINGS.metrics,
     });
 
   beforeEach(() => {

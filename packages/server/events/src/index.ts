@@ -1,4 +1,5 @@
-import { type Result, unwrapOr } from '@vp/result';
+import type { CacheUnavailable } from '@vp/errors';
+import { type Result, all, map } from '@vp/result';
 import { z } from 'zod';
 
 export { SseEvent } from '@vp/job-contracts';
@@ -23,17 +24,22 @@ export const SseMessageEnvelope = z.object({
 export type SseMessageEnvelope = z.infer<typeof SseMessageEnvelope>;
 
 export interface PublishVideoEventOptions {
-  cache: { publish(channel: string, message: string): Promise<Result<number, unknown>> };
+  cache: {
+    publish(channel: string, message: string): Promise<Result<number, CacheUnavailable>>;
+  };
   videoId: string;
   userId?: string;
   event: 'snapshot' | 'progress' | 'status';
   data: Record<string, unknown>;
   id?: number;
-  ts?: number;
+  ts: number;
 }
 
-export async function publishVideoEvent(options: PublishVideoEventOptions): Promise<number> {
-  const { cache, videoId, userId, event, data, id, ts = Date.now() } = options;
+/** Publishes to the video's channel and its owner's; a channel that refused is the caller's call. */
+export async function publishVideoEvent(
+  options: PublishVideoEventOptions
+): Promise<Result<number, CacheUnavailable>> {
+  const { cache, videoId, userId, event, data, id, ts } = options;
   const payload: SseMessageEnvelope = {
     event,
     data,
@@ -46,7 +52,7 @@ export async function publishVideoEvent(options: PublishVideoEventOptions): Prom
     channels.push(userChannel(userId));
   }
   const published = await Promise.all(channels.map((ch) => cache.publish(ch, message)));
-  return published.reduce((sum, result) => sum + unwrapOr(result, 0), 0);
+  return map(all(published), (receivers) => receivers.reduce((sum, count) => sum + count, 0));
 }
 
 export function formatSseFrame(options: {

@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { Logger } from '@vp/observability';
+import { fromPromise, isOk, unwrapOr } from '@vp/result';
 
 export interface TmpSweepOptions {
   tmpDir: string;
@@ -13,28 +14,37 @@ export interface TmpSweepResult {
 }
 
 /**
- * Sweeps orphaned temp directories on the housekeeping pod (SDD §9.8):
- * Remove orphaned /tmp/vp/* dirs older than 2 h (worker pods clean their own on exit).
+ * Removes scratch directories older than the threshold that a worker left behind on the shared tmp
+ * root (SDD §9.8); a worker removes its own on exit, so what is left here was orphaned by a crash.
  */
 export async function runTmpSweep(options: TmpSweepOptions): Promise<TmpSweepResult> {
   const { tmpDir, thresholdMs, logger } = options;
 
-  const entries = await fs.readdir(tmpDir, { withFileTypes: true }).catch(() => []);
+  const entries = unwrapOr(
+    await fromPromise(
+      () => fs.readdir(tmpDir, { withFileTypes: true }),
+      (cause) => cause
+    ),
+    []
+  );
   const cutoff = Date.now() - thresholdMs;
 
   let sweptCount = 0;
 
   for (const entry of entries) {
     const fullPath = path.join(tmpDir, entry.name);
-    const stats = await fs.stat(fullPath).catch(() => null);
-    if (!stats || stats.mtimeMs >= cutoff) continue;
+    const stats = await fromPromise(
+      () => fs.stat(fullPath),
+      (cause) => cause
+    );
+    if (!isOk(stats) || stats.value.mtimeMs >= cutoff) continue;
 
-    const removed = await fs
-      .rm(fullPath, { recursive: true, force: true })
-      .then(() => true)
-      .catch(() => false);
+    const removed = await fromPromise(
+      () => fs.rm(fullPath, { recursive: true, force: true }),
+      (cause) => cause
+    );
 
-    if (removed) {
+    if (isOk(removed)) {
       sweptCount += 1;
       logger?.info({ path: fullPath }, 'Swept stale temp directory/file');
     } else {

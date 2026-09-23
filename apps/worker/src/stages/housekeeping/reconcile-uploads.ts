@@ -3,13 +3,14 @@ import type { Repositories } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
-import { type Logger, getMetrics } from '@vp/observability';
+import type { Logger, PipelineMetrics } from '@vp/observability';
 import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 
 export interface ReconcileUploadsOptions {
   repositories: Repositories;
   multipart: MultipartStorage;
   probeQueue: JobQueue;
+  metrics: PipelineMetrics;
   rawBucket: string;
   uploadingThresholdMs: number;
   uploadedThresholdMs: number;
@@ -23,10 +24,9 @@ export interface ReconcileUploadsResult {
 }
 
 /**
- * Reconciler for upload lifecycle (SDD §9.8, §5.3, ADR-09, ADR-16):
- * 1. Abort uploads stuck in UPLOADING for > threshold (default 24h) -> ABANDONED, abort multipart.
- * 2. Re-enqueue videos left UPLOADED with no probe step for > threshold (default 5m) -> probe job.
- *    Only releases videos if owner's active in-flight count < MAX_INFLIGHT_PER_USER (Ticket 18).
+ * Abandons uploads stuck in UPLOADING, aborting their multipart session, and re-enqueues the probe
+ * of a video left UPLOADED with no probe step, while its owner is under the in-flight limit
+ * (SDD §9.8, §5.3, ADR-09, ADR-16).
  */
 export async function runReconcileUploads(
   options: ReconcileUploadsOptions
@@ -35,6 +35,7 @@ export async function runReconcileUploads(
     repositories,
     multipart,
     probeQueue,
+    metrics,
     rawBucket,
     uploadingThresholdMs,
     uploadedThresholdMs,
@@ -45,7 +46,6 @@ export async function runReconcileUploads(
   let abandonedCount = 0;
   let reenqueuedCount = 0;
 
-  // 1. Stale UPLOADING -> ABANDONED
   const staleUploading = await repositories.videos.scan({
     status: 'UPLOADING',
     idleFor: { since: 'updatedAt', ms: uploadingThresholdMs },
@@ -66,10 +66,10 @@ export async function runReconcileUploads(
       abandonedCount += 1;
       logger?.info({ videoId: video.id }, 'Reconciler abandoned stale UPLOADING video');
 
-      // Check upload record to abort multipart if active
       const upload = unwrapOr(await repositories.uploads.findByVideoId(video.id), null);
       if (upload) {
-        await repositories.uploads.updateStatus(upload.id, 'ABORTED');
+        const marked = await repositories.uploads.updateStatus(upload.id, 'ABORTED');
+        if (isErr(marked)) return marked;
         if (upload.multipartUploadId) {
           // A session that storage will expire on its own is not worth holding the sweep for.
           const aborted = await multipart.abortMultipartUpload(
@@ -88,7 +88,6 @@ export async function runReconcileUploads(
     }
   }
 
-  // 2. Stale UPLOADED without probe step -> re-enqueue probe if under in-flight limit
   const staleUploaded = await repositories.videos.scan({
     status: 'UPLOADED',
     idleFor: { since: 'updatedAt', ms: uploadedThresholdMs },
@@ -121,7 +120,7 @@ export async function runReconcileUploads(
     );
 
     const probeJobId = ids.probe(video.id, video.generation ?? 1);
-    await probeQueue.add(
+    const enqueued = await probeQueue.add(
       'probe',
       {
         videoId: video.id,
@@ -136,10 +135,17 @@ export async function runReconcileUploads(
         priority,
       }
     );
+    if (isErr(enqueued)) {
+      logger?.warn(
+        { videoId: video.id, probeJobId, queue: enqueued.error.operation },
+        'Reconciler could not re-enqueue the probe; the video is kept for the next run'
+      );
+      continue;
+    }
 
     ownerInflightCounts.set(video.ownerId, currentInflight + 1);
     reenqueuedCount += 1;
-    getMetrics().reconcilerRepairsTotal.inc({ type: 'missing_probe' });
+    metrics.reconcilerRepairsTotal.inc({ type: 'missing_probe' });
     logger?.info(
       { videoId: video.id, probeJobId, priority },
       'Reconciler released held video and enqueued probe job'

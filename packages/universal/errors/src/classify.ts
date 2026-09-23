@@ -1,4 +1,4 @@
-import type { ErrorCode } from './error-codes.js';
+import { type ErrorCode, ErrorCodes } from './error-codes.js';
 import { type AnyFailure, failureDetails } from './failure.js';
 import { PermanentError, PipelineError, TransientError } from './pipeline-error.js';
 import { RETRY_CLASS, type RetryClass, retryClass } from './retry-class.js';
@@ -34,6 +34,21 @@ export function classifyError(error: unknown): ErrorClassification {
   }
 
   return 'unknown';
+}
+
+export function isErrorCode(code: unknown): code is ErrorCode {
+  return typeof code === 'string' && Object.hasOwn(RETRY_CLASS, code);
+}
+
+/**
+ * The code to persist for an error that reached a queue boundary: its own when it carries one from
+ * the vocabulary, directly or as its `cause`, and `INTERNAL` otherwise. Never a string of its own.
+ */
+export function errorCodeOf(error: unknown): ErrorCode {
+  const shaped = (error ?? {}) as { code?: unknown; cause?: { code?: unknown } };
+  if (isErrorCode(shaped.code)) return shaped.code;
+  if (isErrorCode(shaped.cause?.code)) return shaped.cause.code;
+  return ErrorCodes.INTERNAL;
 }
 
 export function isPermanentError(error: unknown): boolean {

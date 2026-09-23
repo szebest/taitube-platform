@@ -3,13 +3,13 @@ import * as path from 'node:path';
 import type { StorageClient } from '@vp/core/ports';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
 import type { Logger } from '@vp/observability';
-import { type Result, err, isErr, ok } from '@vp/result';
+import { type Result, err, fromPromise, ignore, isErr, ok, unwrapOr } from '@vp/result';
 import { getHeaderMapping, renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
 
 export interface SegmentUploaderOptions {
   outputDir: string;
   videoId: string;
-  generation?: number;
+  generation: number;
   rendition: string;
   publicBucket: string;
   storage: StorageClient;
@@ -25,12 +25,37 @@ export interface UploaderResult {
   playlistKey: string;
 }
 
+/** What one transcode names; the storage, the bucket and the retry policy come from composition. */
+export type SegmentUploaderTarget = Pick<
+  SegmentUploaderOptions,
+  'outputDir' | 'videoId' | 'generation' | 'rendition' | 'logger'
+>;
+
+export interface SegmentUploader {
+  start(): void;
+  stop(success: boolean): Promise<Result<UploaderResult | null, MediaFailure>>;
+}
+
+const unreadable = () => null;
+
+/** A file mid-rename, or already removed, reads as absent and is retried on the next scan. */
+async function readOrNull<T>(read: () => Promise<T>): Promise<T | null> {
+  return unwrapOr(await fromPromise(read, unreadable), null);
+}
+
+async function removeUploaded(filePath: string): Promise<void> {
+  ignore(
+    await fromPromise(() => fs.unlink(filePath), unreadable),
+    'the object is uploaded; a local copy left behind goes with the scratch directory'
+  );
+}
+
 /**
- * StreamingSegmentUploader watches the transcode output directory, uploads each completed
- * .ts segment as soon as FFmpeg renames it from .tmp (bounded concurrency 4), deletes it locally,
- * and uploads index.m3u8 ONLY after every segment upload has succeeded (SDD §8.2, §9.7, Ticket 14 AC 1, 2).
+ * Watches the transcode output directory, uploads each completed `.ts` segment as soon as FFmpeg
+ * renames it from `.tmp`, deletes it locally, and uploads `index.m3u8` only after every segment
+ * upload has succeeded (SDD §8.2, §9.7).
  */
-export class StreamingSegmentUploader {
+export class StreamingSegmentUploader implements SegmentUploader {
   private readonly outputDir: string;
   private readonly videoId: string;
   private readonly generation: number;
@@ -46,7 +71,7 @@ export class StreamingSegmentUploader {
   private pollTimer: NodeJS.Timeout | null = null;
   private queue: string[] = [];
   private readonly queuedSet = new Set<string>();
-  private readonly uploaded = new Map<string, number>(); // filename -> sizeBytes
+  private readonly uploadedBytes = new Map<string, number>();
   private fatalError: MediaFailure | null = null;
   private activeWorkers = 0;
   private idleResolvers: Array<() => void> = [];
@@ -54,7 +79,7 @@ export class StreamingSegmentUploader {
   constructor(options: SegmentUploaderOptions) {
     this.outputDir = options.outputDir;
     this.videoId = options.videoId;
-    this.generation = options.generation ?? 1;
+    this.generation = options.generation;
     this.rendition = options.rendition;
     this.publicBucket = options.publicBucket;
     this.storage = options.storage;
@@ -80,11 +105,10 @@ export class StreamingSegmentUploader {
   private async scanDirectory(): Promise<void> {
     if (this.fatalError) return;
 
-    const files = await fs.readdir(this.outputDir).catch(() => null);
+    const files = await readOrNull(() => fs.readdir(this.outputDir));
     if (!files) return;
 
     for (const file of files) {
-      // FFmpeg writes seg_%05d.ts.tmp then renames to seg_%05d.ts
       if (file.endsWith('.ts') && !file.endsWith('.tmp') && !this.queuedSet.has(file)) {
         this.queuedSet.add(file);
         this.queue.push(file);
@@ -115,28 +139,27 @@ export class StreamingSegmentUploader {
     let lastMessage = 'unknown';
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
-      const stat = await fs.stat(filePath).catch(() => null);
-      const body = stat ? await fs.readFile(filePath).catch(() => null) : null;
+      const stat = await readOrNull(() => fs.stat(filePath));
+      const body = stat ? await readOrNull(() => fs.readFile(filePath)) : null;
 
-      const uploaded =
-        stat && body
-          ? await this.storage.uploadObject({
-              bucket: this.publicBucket,
-              key,
-              body,
-              contentType: headers.contentType,
-              cacheControl: headers.cacheControl,
-            })
-          : err({ message: `Segment ${filename} could not be read` });
-
-      if (!isErr(uploaded)) {
-        // Delete immediately after successful upload to keep local disk bounded
-        await fs.unlink(filePath).catch(() => {});
-        this.uploaded.set(filename, (stat as { size: number }).size);
-        return ok();
+      if (stat && body) {
+        const uploaded = await this.storage.uploadObject({
+          bucket: this.publicBucket,
+          key,
+          body,
+          contentType: headers.contentType,
+          cacheControl: headers.cacheControl,
+        });
+        if (!isErr(uploaded)) {
+          await removeUploaded(filePath);
+          this.uploadedBytes.set(filename, stat.size);
+          return ok();
+        }
+        lastMessage = uploaded.error.message;
+      } else {
+        lastMessage = `Segment ${filename} could not be read`;
       }
 
-      lastMessage = uploaded.error.message;
       this.logger.warn(
         { filename, attempt, maxRetries: this.maxRetries, error: lastMessage },
         `Segment upload attempt ${attempt} failed, retrying...`
@@ -181,15 +204,13 @@ export class StreamingSegmentUploader {
 
     if (!success) return ok(null);
 
-    // Drain remaining completed segments
     await this.scanDirectory();
     await this.waitForIdle();
 
     if (this.fatalError) return err(this.fatalError);
 
-    // Playlist object is written ONLY after every segment upload succeeded (AC 2, SDD §9.7)
     const playlistPath = path.join(this.outputDir, 'index.m3u8');
-    const playlistContent = await fs.readFile(playlistPath).catch(() => null);
+    const playlistContent = await readOrNull(() => fs.readFile(playlistPath));
     if (!playlistContent) {
       return err(
         mediaFailure(
@@ -220,13 +241,13 @@ export class StreamingSegmentUploader {
       );
     }
 
-    await fs.unlink(playlistPath).catch(() => {});
+    await removeUploaded(playlistPath);
 
     let totalBytes = playlistContent.byteLength;
-    for (const size of this.uploaded.values()) {
+    for (const size of this.uploadedBytes.values()) {
       totalBytes += size;
     }
 
-    return ok({ segmentCount: this.uploaded.size, totalBytes, playlistKey });
+    return ok({ segmentCount: this.uploadedBytes.size, totalBytes, playlistKey });
   }
 }

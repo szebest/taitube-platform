@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createNotifyProcessor } from '../stages/notify';
 import { createPackageProcessor } from '../stages/package';
 import { createTranscodeProcessor } from '../stages/transcode';
-import { STAGE_SETTINGS } from './stage-settings';
+import { STAGE_SETTINGS, transcodeDeps } from './stage-settings';
 
 describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23)', () => {
   let repositories: InMemoryRepositories;
@@ -122,52 +122,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
         };
       });
 
-    const enqueuedJobs: Array<{ queue: string; data: unknown }> = [];
-    class MockTranscodeQueue extends JobQueue {
-      async checkHealth() {
-        return ok();
-      }
-      getName() {
-        return 'package';
-      }
-      async add<T = unknown>(name: string, data: T): Promise<any> {
-        enqueuedJobs.push({ queue: name, data });
-        return ok({ id: 'mock-id', name, data });
-      }
-      async process() {
-        return ok();
-      }
-      async getJobState() {
-        return ok(undefined);
-      }
-      async isPaused() {
-        return ok(false);
-      }
-      async pause() {
-        return ok();
-      }
-      async resume() {
-        return ok();
-      }
-      async getJobCounts() {
-        return ok({ active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 });
-      }
-      async getJobs() {
-        return ok([]);
-      }
-      async close() {
-        return ok();
-      }
-    }
-    const mockQueue = new MockTranscodeQueue();
-
-    const processor = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue: () => mockQueue,
-    });
+    const processor = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
 
     const job = createMockJob<TranscodeJob>(`${videoId}--transcode--720p--g1`, {
       videoId,
@@ -373,6 +328,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
       repositories,
       cache,
       logger,
+      metrics: STAGE_SETTINGS.metrics,
     });
 
     const job = createMockJob<NotifyJob>(`${videoId}--notify--video.ready--1`, {

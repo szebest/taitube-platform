@@ -1,5 +1,6 @@
 import type { JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CdnBase } from '@vp/env-schema';
 import {
   type DatabaseUnavailable,
@@ -11,25 +12,23 @@ import {
 } from '@vp/errors';
 import { generateMasterPlaylist } from '@vp/ffmpeg';
 import {
-  NotifyJob,
+  ChildResult,
+  type NotifyJob,
   type PackageJob,
   type ThumbnailResult,
-  type TranscodeResult,
   defaultJobOptions,
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import { type Logger, getMetrics } from '@vp/observability';
-import { type Result, err, isErr, ok } from '@vp/result';
+import type { Logger, PipelineMetrics } from '@vp/observability';
+import { type Result, assertNever, err, isErr, ok } from '@vp/result';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
-
-import { MS_PER_SECOND } from '@vp/domain/time';
-import { validateJobId } from '../job-identity';
 
 export interface PackageProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
+  metrics: PipelineMetrics;
   publicBucket: string;
   cdn: CdnBase;
   workerId: string;
@@ -50,13 +49,11 @@ export type PackageStageFailure =
   | QueueUnavailable;
 
 export function createPackageProcessor(deps: PackageProcessorDeps) {
-  const { repositories, storage, publicBucket, cdn, workerId, logger, getQueue } = deps;
+  const { repositories, storage, metrics, publicBucket, cdn, workerId, logger, getQueue } = deps;
 
   return async function processPackageJob(
     job: QueueJob<PackageJob>
   ): Promise<Result<PackageStageResult, PackageStageFailure>> {
-    validateJobId(job.id || '');
-
     const { videoId, generation, ladder } = job.data;
     const log = logger.child({
       videoId,
@@ -67,14 +64,13 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
     log.info({ ladder: ladder.map((r) => r.name) }, 'Package job started');
 
-    // 1. Claim processing step (SDD §5.3, §9.5, AC 20)
     const lockToken = uuidv7();
     const claim = await repositories.steps.claim({
       id: uuidv7(),
       videoId,
       step: 'package',
       rendition: '-',
-      jobId: job.id || '',
+      jobId: job.id,
       attempt: (job.attemptsMade ?? 0) + 1,
       workerId,
       lockToken,
@@ -109,32 +105,31 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       return isErr(recorded) ? recorded : err(failure);
     };
 
-    // 2. Read children values from Flow transcode jobs (SDD §9.3, Ticket 12 AC 6)
-    const rawChildren = job.getChildrenValues ? await job.getChildrenValues() : {};
-    const childrenValues = rawChildren ? Object.values(rawChildren) : [];
+    const children = job.getChildrenValues ? await job.getChildrenValues() : {};
     const measuredResults: Record<
       string,
       { bytes?: number; durationMs?: number; avgBitrateBps?: number }
     > = {};
-
     let thumbResult: ThumbnailResult | undefined;
 
-    for (const val of childrenValues) {
-      if (val && typeof val === 'object') {
-        if ('rendition' in val) {
-          const res = val as unknown as TranscodeResult;
-          measuredResults[res.rendition] = {
-            bytes: res.bytes,
-            durationMs: res.durationMs,
-            avgBitrateBps: res.avgBitrateBps,
-          };
-        } else if ('posterKey' in val) {
-          thumbResult = val as unknown as ThumbnailResult;
+    for (const value of Object.values(children ?? {})) {
+      const child = ChildResult.safeParse(value);
+      if (!child.success) continue;
+
+      switch (child.data.type) {
+        case 'transcode': {
+          const { rendition, bytes, durationMs, avgBitrateBps } = child.data;
+          measuredResults[rendition] = { bytes, durationMs, avgBitrateBps };
+          break;
         }
+        case 'thumbnail':
+          thumbResult = child.data;
+          break;
+        default:
+          return assertNever(child.data, 'package child result');
       }
     }
 
-    // 3. AC 19: Verify every rendition playlist exists via HEAD before writing master
     for (const r of ladder) {
       const rendKey = renditionPlaylistKey(videoId, r.name, generation);
       const head = await storage.headObject(publicBucket, rendKey);
@@ -152,18 +147,16 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       }
     }
 
-    // Query video metadata for fps
     const videoResult = await repositories.videos.findById(videoId);
     if (isErr(videoResult)) return videoResult;
     const video = videoResult.value;
     const fps = video?.fps ?? undefined;
 
-    // 4. Generate master playlist content with measured AVERAGE-BANDWIDTH (SDD §8.4, AC 6)
     const masterContent = generateMasterPlaylist({ ladder, fps, measuredResults });
     const masterKey = masterPlaylistKey(videoId, generation);
     const headers = getHeaderMapping('master.m3u8');
 
-    // 4. AC 19: Master is written LAST (presence == READY)
+    // The master is written last: its presence is what READY means to a player.
     const uploaded = await storage.uploadObject({
       bucket: publicBucket,
       key: masterKey,
@@ -175,7 +168,6 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
     const playbackUrl = `${cdn}/${masterKey}`;
 
-    // 5. Complete step in DB with fencing token (AC 20)
     const comp = await repositories.steps.complete({
       videoId,
       step: 'package',
@@ -194,7 +186,6 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       return ok({ videoId, masterKey, playbackUrl });
     }
 
-    // 6. AC 19: CAS-flip PROCESSING -> READY (happens once, writes video.ready event)
     const patch: Record<string, unknown> = {
       masterPlaylistKey: masterKey,
       readyAt: new Date(),
@@ -207,15 +198,15 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
     }
 
     const notifyJobId = ids.notify(videoId, 'video.ready', 1);
-    const notifyJobData = video
-      ? NotifyJob.parse({
+    const notifyJobData: NotifyJob | undefined = video
+      ? {
           videoId,
           userId: video.ownerId,
           event: 'video.ready',
           eventSeq: 1,
           payload: { status: 'READY', playbackUrl },
           traceparent: job.data.traceparent,
-        })
+        }
       : undefined;
     const notifyJobOpts = {
       jobId: notifyJobId,
@@ -247,7 +238,6 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
     log.info({ videoId, playbackUrl, transitioned }, 'Video transitioned to READY');
 
-    // Record time_to_ready_seconds metric (Ticket 22 / SDD §13.1)
     if (transitioned && video) {
       const durationSec = (video.durationMs || 0) / MS_PER_SECOND;
       let bucket = '<1min';
@@ -261,10 +251,9 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
       const createdAtTime = video.createdAt ? new Date(video.createdAt).getTime() : Date.now();
       const timeToReadySec = Math.max(0, (Date.now() - createdAtTime) / MS_PER_SECOND);
-      getMetrics().timeToReady.observe({ bucket }, timeToReadySec);
+      metrics.timeToReady.observe({ bucket }, timeToReadySec);
     }
 
-    // 7. Enqueue notify job if this was the successful CAS transition (AC 19, AC 20)
     if (transitioned && getQueue && notifyJobData) {
       const notifyQueue = getQueue('notify');
       const enqueued = await notifyQueue.add('notify', notifyJobData, notifyJobOpts);

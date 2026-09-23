@@ -9,10 +9,11 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
-import type { JobQueue, QueueJob } from '@vp/core/ports';
+import type { JobQueue } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { queueUnavailable, storageUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
+import { createLogger } from '@vp/observability';
 import type { Result } from '@vp/result';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
@@ -823,7 +824,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         id: 'job-1',
         name: 'reconcile-uploads',
         data: { task: 'reconcile-uploads' },
-      } as QueueJob<unknown>);
+      });
 
       expect(expectOk(res as Result<unknown, unknown>)).toHaveProperty('abandonedCount');
     });
@@ -832,6 +833,9 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       const runner = await createWorkerRunner({
         config: inProcessAppConfig({ worker: { stage: 'housekeeping' } }),
         adapters: { repositories, storage, multipart, getQueue },
+        logger: createLogger({ service: 'housekeeping-spec', level: 'silent' }),
+        media: STAGE_SETTINGS.media,
+        workerId: STAGE_SETTINGS.workerId,
       });
 
       expect(runner.worker.name).toBe('housekeeping');

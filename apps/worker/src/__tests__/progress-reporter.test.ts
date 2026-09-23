@@ -1,5 +1,5 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { createLogger } from '@vp/observability';
+import { createLogger, createMetricsRegistry } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -20,6 +20,7 @@ describe('TranscodeProgressReporter (Ticket 15: AC 4)', () => {
     const reporter = new TranscodeProgressReporter({
       cache,
       repositories,
+      metrics: createMetricsRegistry(),
       videoId,
       rendition: '720p',
       logger,

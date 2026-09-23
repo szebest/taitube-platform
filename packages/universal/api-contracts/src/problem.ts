@@ -59,6 +59,7 @@ export const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.FFMPEG_OOM]: 500,
   [ErrorCodes.FFMPEG_TIMEOUT]: 500,
   [ErrorCodes.DISK_FULL]: 500,
+  [ErrorCodes.ORPHANED]: 500,
   [ErrorCodes.STORAGE_UNAVAILABLE]: 503,
   [ErrorCodes.DATABASE_UNAVAILABLE]: 503,
   [ErrorCodes.CACHE_UNAVAILABLE]: 503,

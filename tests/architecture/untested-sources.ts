@@ -7,7 +7,6 @@
 export const UNTESTED_SOURCES: readonly string[] = [
   'apps/api/src/migrate.ts',
   'apps/api/src/plugins/http-metrics.ts',
-  'apps/api/src/plugins/metrics.ts',
   'apps/api/src/services/sse-connection.ts',
   'apps/web/src/App.tsx',
   'apps/web/src/auth-token.ts',

@@ -1,5 +1,5 @@
 /**
- * Ticket 18 / SDD §9.4, §14.2 — Fairness Simulation Script
+ * Fairness simulation (SDD §9.4, §14.2).
  *
  * Demonstrates per-user admission control and tier-based queue priorities:
  * - User A (free tier) submits 50 videos with priority 5
@@ -13,13 +13,15 @@
  */
 
 import * as crypto from 'node:crypto';
+import { runReconcileUploads } from '../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
 } from '../packages/server/adapters/index';
-import { runReconcileUploads } from '../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import { ids } from '../packages/server/job-contracts/src/index';
+import { createMetricsRegistry } from '../packages/server/observability/src/index';
+import { isErr } from '../packages/universal/result/src/index';
 
 async function runFairnessSimulation() {
   console.log('================================================================');
@@ -42,16 +44,20 @@ async function runFairnessSimulation() {
   const startHrTime = process.hrtime.bigint();
   const getElapsedMs = () => Number((process.hrtime.bigint() - startHrTime) / 1000000n);
 
-  // Helper to trigger reconciler to release held uploads
+  const metrics = createMetricsRegistry();
+
   async function triggerReconciler() {
-    await runReconcileUploads({
+    const reconciled = await runReconcileUploads({
       rawBucket: 'raw',
       repositories,
       multipart,
       probeQueue,
+      metrics,
+      uploadingThresholdMs: Number.MAX_SAFE_INTEGER,
       uploadedThresholdMs: 0,
       maxInflightPerUser: MAX_INFLIGHT,
     });
+    if (isErr(reconciled)) throw new Error(`reconciler failed: ${reconciled.error.message}`);
   }
 
   // Worker stages simulation

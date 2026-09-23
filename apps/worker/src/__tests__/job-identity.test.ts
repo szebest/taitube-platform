@@ -1,3 +1,4 @@
+import { err, ok } from '@vp/result';
 import { validateJobId, validateQueueName } from '../job-identity';
 
 describe('apps/worker: job identity', () => {
@@ -13,10 +14,12 @@ describe('apps/worker: job identity', () => {
   });
 
   it('refuses a job id carrying the separator BullMQ rejects', () => {
-    expect(() => validateJobId('video1:probe:g1')).toThrow("Job ID must not contain ':'");
+    expect(validateJobId('video1:probe:g1')).toEqual(
+      err(expect.objectContaining({ code: 'VALIDATION_FAILED', field: 'jobId' }))
+    );
   });
 
   it('accepts a job id joined by --', () => {
-    expect(validateJobId('video1--probe--g1')).toBe('video1--probe--g1');
+    expect(validateJobId('video1--probe--g1')).toEqual(ok('video1--probe--g1'));
   });
 });
