@@ -26,7 +26,7 @@ export async function recordProbeFailure(
   const { repositories, job, lockToken, getQueue } = ctx;
   const { videoId } = job.data;
 
-  await repositories.steps.fail({
+  const failed = await repositories.steps.fail({
     videoId,
     step: 'probe',
     rendition: '-',
@@ -34,6 +34,7 @@ export async function recordProbeFailure(
     errorCode,
     errorMessage,
   });
+  if (isErr(failed)) return failed;
 
   const transitioned = await repositories.videos.transition({
     videoId,
@@ -50,24 +51,22 @@ export async function recordProbeFailure(
   const video = unwrapOr(await repositories.videos.findById(videoId), null);
   if (!video) return ok();
 
-  await getQueue('notify')
-    .add(
-      'notify',
-      NotifyJob.parse({
-        videoId,
-        userId: video.ownerId,
-        event: 'video.failed',
-        eventSeq: 1,
-        payload: { status: 'FAILED', errorCode, errorMessage },
-        traceparent: job.data.traceparent || '',
-      }),
-      {
-        jobId: ids.notify(videoId, 'video.failed', 1),
-        ...stagePolicies.notify,
-        ...defaultJobOptions,
-      }
-    )
-    .catch(() => {});
+  await getQueue('notify').add(
+    'notify',
+    NotifyJob.parse({
+      videoId,
+      userId: video.ownerId,
+      event: 'video.failed',
+      eventSeq: 1,
+      payload: { status: 'FAILED', errorCode, errorMessage },
+      traceparent: job.data.traceparent || '',
+    }),
+    {
+      jobId: ids.notify(videoId, 'video.failed', 1),
+      ...stagePolicies.notify,
+      ...defaultJobOptions,
+    }
+  );
 
   return ok();
 }

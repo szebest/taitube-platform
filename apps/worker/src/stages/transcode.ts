@@ -3,15 +3,24 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { CacheClient, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError, PipelineError, TransientError } from '@vp/errors';
+import {
+  type DatabaseUnavailable,
+  ErrorCodes,
+  type MediaFailure,
+  type StorageUnavailable,
+  mediaFailure,
+} from '@vp/errors';
 import { computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
-import type { TranscodeJob } from '@vp/job-contracts';
+import type { TranscodeJob, TranscodeResult } from '@vp/job-contracts';
 import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
+import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { getHeartbeatPath } from '../config';
 import { validateJobId } from '../registry';
 import { TranscodeProgressReporter } from './progress-reporter';
 import { StreamingSegmentUploader } from './segment-uploader';
+import { transcodeFailure } from './transcode-failure';
+import { resolveTranscodeSource } from './transcode-source';
 
 export interface TranscodeProcessorDeps {
   repositories: Repositories;
@@ -27,6 +36,14 @@ export interface TranscodeProcessorDeps {
   simulateFailureRendition?: string;
   streamingInput?: boolean;
 }
+
+export interface TranscodeStageResult extends TranscodeResult {
+  videoId: string;
+  playlistKey: string;
+  processingMs: number;
+}
+
+export type TranscodeStageFailure = MediaFailure | StorageUnavailable | DatabaseUnavailable;
 
 export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
   const {
@@ -44,27 +61,21 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
 
   const metrics = depsMetrics ?? getMetrics();
 
-  return async function processTranscodeJob(job: QueueJob<TranscodeJob>): Promise<{
-    videoId: string;
-    rendition: string;
-    playlistKey: string;
-    segmentCount: number;
-    bytes: number;
-    durationMs: number;
-    avgBitrateBps: number;
-    processingMs: number;
-  }> {
+  return async function processTranscodeJob(
+    job: QueueJob<TranscodeJob>
+  ): Promise<Result<TranscodeStageResult, TranscodeStageFailure>> {
     validateJobId(job.id || '');
 
     const { videoId, sourceKey, rendition, fps, durationMs } = job.data;
     const attempt = (job.attemptsMade ?? 0) + 1;
     const baseThreads = Number(process.env.FFMPEG_THREADS || '2');
     const threads = computeFfmpegThreads(baseThreads, attempt);
+    const stage = `transcode-${rendition.name}`;
 
     const log = logger.child({
       videoId,
       jobId: job.id,
-      stage: `transcode-${rendition.name}`,
+      stage,
       rendition: rendition.name,
       attempt,
       threads,
@@ -100,10 +111,11 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       workerId,
       lockToken,
     });
+    if (isErr(claim)) return claim;
 
-    if (claim.fenced) {
+    if (claim.value.fenced) {
       log.warn({ lockToken }, 'Transcode step already completed; fenced out');
-      return {
+      return ok({
         videoId,
         rendition: rendition.name,
         playlistKey: '',
@@ -112,29 +124,46 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         durationMs,
         avgBitrateBps: 0,
         processingMs: 0,
-      };
+      });
     }
 
-    await repositories.renditions.update(videoId, rendition.name, {
+    const running = await repositories.renditions.update(videoId, rendition.name, {
       status: 'RUNNING',
     });
+    if (isErr(running)) return running;
 
-    // Simulated permanent failure check for resilience tests
-    if (simulateFailureRendition === rendition.name) {
-      const errorMsg = `Simulated permanent failure in transcode-${rendition.name}`;
-      log.error({ rendition: rendition.name }, errorMsg);
-      await repositories.steps.fail({
+    /** One place records how a transcode ended, so every exit reports the same way. */
+    const failTranscode = async (
+      failure: MediaFailure
+    ): Promise<Result<never, TranscodeStageFailure>> => {
+      metrics.ffmpegExitTotal.inc({ stage, code: failure.code });
+
+      const recorded = await repositories.steps.fail({
         videoId,
         step: 'transcode',
         rendition: rendition.name,
         lockToken,
-        errorCode: ErrorCodes.FFMPEG_FAILED,
-        errorMessage: errorMsg,
+        errorCode: failure.code,
+        errorMessage: failure.message,
       });
-      await repositories.renditions.update(videoId, rendition.name, {
+      if (isErr(recorded)) return recorded;
+
+      const marked = await repositories.renditions.update(videoId, rendition.name, {
         status: 'FAILED',
       });
-      throw new PermanentError(ErrorCodes.FFMPEG_FAILED, errorMsg);
+      return isErr(marked) ? marked : err(failure);
+    };
+
+    // Simulated permanent failure check for resilience tests
+    if (simulateFailureRendition === rendition.name) {
+      log.error({ rendition: rendition.name }, 'Simulated permanent transcode failure');
+      return failTranscode(
+        mediaFailure(
+          stage,
+          ErrorCodes.FFMPEG_FAILED,
+          `Simulated permanent failure in transcode-${rendition.name}`
+        )
+      );
     }
 
     // 2. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
@@ -147,62 +176,33 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     // Track temporary disk usage (worker_tmp_bytes metric)
     const srcBytes = (job.data as unknown as { sourceSizeBytes?: number }).sourceSizeBytes ?? 0;
     if (srcBytes > 0) {
-      metrics.workerTmpBytes.set({ stage: `transcode-${rendition.name}` }, srcBytes);
+      metrics.workerTmpBytes.set({ stage }, srcBytes);
     }
 
     let lastProgressHeartbeat = 0;
 
     try {
-      // 3. Determine input source: download locally or use presigned URL streaming input (Ticket 14 AC 5)
-      const useStreamingInput =
-        depsStreamingInput ??
-        (process.env['TRANSCODE_STREAMING_INPUT'] === 'true' ||
-          process.env['STREAMING_INPUT'] === 'true' ||
-          job.data.streamingInput === true);
-
-      let sourcePath: string;
-      if (useStreamingInput) {
-        log.info({ sourceKey }, 'Using presigned URL streaming input mode for transcode');
-        sourcePath = await storage.createPresignedGetUrl({
-          bucket: rawBucket,
-          key: sourceKey,
-          expiresInSeconds: 7200,
-        });
-      } else {
-        const localSourcePath = path.join(tmpDir, path.basename(sourceKey));
-        const head = await storage.headObject(rawBucket, sourceKey);
-        if (!head) {
-          const errorMsg = `Source object not found in storage at ${sourceKey}`;
-          log.error({ sourceKey }, errorMsg);
-          await repositories.steps.fail({
-            videoId,
-            step: 'transcode',
-            rendition: rendition.name,
-            lockToken,
-            errorCode: ErrorCodes.SOURCE_MISSING,
-            errorMessage: errorMsg,
-          });
-          throw new PermanentError(ErrorCodes.SOURCE_MISSING, errorMsg);
-        }
-
-        const downloaded = await storage.downloadObject(rawBucket, sourceKey, localSourcePath);
-        if (!downloaded) {
-          const errorMsg = `Failed to download source object from ${sourceKey}`;
-          log.error({ sourceKey }, errorMsg);
-          await repositories.steps.fail({
-            videoId,
-            step: 'transcode',
-            rendition: rendition.name,
-            lockToken,
-            errorCode: 'SOURCE_MISSING',
-            errorMessage: errorMsg,
-          });
-          throw new PermanentError('SOURCE_MISSING', errorMsg);
-        }
-        sourcePath = localSourcePath;
+      // 3. Determine input source: download locally or use presigned URL (Ticket 14 AC 5)
+      const source = await resolveTranscodeSource({
+        storage,
+        rawBucket,
+        sourceKey,
+        tmpDir,
+        rendition: rendition.name,
+        streaming:
+          depsStreamingInput ??
+          (process.env['TRANSCODE_STREAMING_INPUT'] === 'true' ||
+            process.env['STREAMING_INPUT'] === 'true' ||
+            job.data.streamingInput === true),
+        log,
+      });
+      if (isErr(source)) {
+        return source.error.code === ErrorCodes.SOURCE_MISSING
+          ? failTranscode(source.error as MediaFailure)
+          : source;
       }
 
-      // 4. Start StreamingSegmentUploader to tail output dir and upload as FFmpeg encodes (Ticket 14 AC 1, 2)
+      // 4. Tail the output dir and upload as FFmpeg encodes (Ticket 14 AC 1, 2)
       const uploader = new StreamingSegmentUploader({
         outputDir: outDir,
         videoId,
@@ -216,64 +216,60 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       });
       uploader.start();
 
-      let ffmpegError: Error | null = null;
-      try {
-        await runFfmpegTranscode({
-          sourcePath,
-          outputDir: outDir,
-          rendition,
-          fps,
-          durationMs,
-          threads,
-          attempt,
-          onProgress: ({ percent }) => {
-            const now = Date.now();
-            if (now - lastProgressHeartbeat >= 2000 || percent === 100) {
-              lastProgressHeartbeat = now;
-              job.updateProgress?.(percent)?.catch?.(() => {});
-              repositories.steps.heartbeat(lockToken).catch(() => {});
-              fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
-              progressReporter.report(percent).catch(() => {});
-            }
-          },
-        });
-        await progressReporter.report(100).catch(() => {});
-      } catch (err) {
-        ffmpegError = err as Error;
-      }
+      const encoded = await fromPromise(
+        async () => {
+          await runFfmpegTranscode({
+            sourcePath: source.value,
+            outputDir: outDir,
+            rendition,
+            fps,
+            durationMs,
+            threads,
+            attempt,
+            onProgress: ({ percent }) => {
+              const now = Date.now();
+              if (now - lastProgressHeartbeat >= 2000 || percent === 100) {
+                lastProgressHeartbeat = now;
+                job.updateProgress?.(percent)?.catch?.(() => {});
+                void repositories.steps.heartbeat(lockToken);
+                fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
+                void progressReporter.report(percent);
+              }
+            },
+          });
+          await progressReporter.report(100);
+        },
+        (cause) => transcodeFailure(rendition.name, cause)
+      );
 
       // 5. Complete uploader: drain segments, wait for idle, upload playlist LAST (AC 2)
-      const uploadResult = await uploader.stop(!ffmpegError);
-      if (ffmpegError) {
-        throw ffmpegError;
-      }
-      if (!uploadResult) {
-        throw new Error('Segment upload returned no result');
+      const uploadResult = await uploader.stop(encoded.ok);
+      if (isErr(encoded)) return failTranscode(encoded.error);
+
+      if (isErr(uploadResult)) return failTranscode(uploadResult.error);
+      if (!uploadResult.value) {
+        return failTranscode(
+          mediaFailure(stage, ErrorCodes.FFMPEG_FAILED, 'Segment upload returned no result')
+        );
       }
 
-      const totalBytes = uploadResult.totalBytes;
-      const segmentCount = uploadResult.segmentCount;
-      const playlistKey = uploadResult.playlistKey;
+      const { totalBytes, segmentCount, playlistKey } = uploadResult.value;
       const processingMs = Date.now() - startTime;
 
       log.info(
-        {
-          rendition: rendition.name,
-          segmentCount,
-          bytes: totalBytes,
-          processingMs,
-        },
+        { rendition: rendition.name, segmentCount, bytes: totalBytes, processingMs },
         'Uploaded rendition segments and playlist to public storage'
       );
 
       // 6. Update renditions table to DONE
-      await repositories.renditions.update(videoId, rendition.name, {
+      const done = await repositories.renditions.update(videoId, rendition.name, {
         status: 'DONE',
         playlistKey,
         segmentCount,
         bytes: totalBytes,
         processingMs,
       });
+      if (isErr(done)) return done;
 
       // 7. Complete step with fencing check
       const comp = await repositories.steps.complete({
@@ -281,44 +277,41 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         step: 'transcode',
         rendition: rendition.name,
         lockToken,
-        result: {
-          segmentCount,
-          bytes: totalBytes,
-          playlistKey,
-          processingMs,
-        },
+        result: { segmentCount, bytes: totalBytes, playlistKey, processingMs },
       });
+      if (isErr(comp)) return comp;
 
       const avgBitrateBps = durationMs > 0 ? Math.round((totalBytes * 8) / (durationMs / 1000)) : 0;
 
       // Transcode-specific metrics (Ticket 22 AC 1)
       if (durationMs > 0 && processingMs > 0) {
-        const realtimeFactor = durationMs / processingMs; // video_duration / encode_duration
         metrics.transcodeRealtimeFactor.observe(
           { rendition: rendition.name, preset: 'ultrafast' },
-          realtimeFactor
+          durationMs / processingMs
         );
       }
       if (totalBytes > 0) {
         metrics.transcodeOutputBytes.inc({ rendition: rendition.name }, totalBytes);
       }
 
-      if (comp.fenced) {
+      const outcome: TranscodeStageResult = {
+        videoId,
+        rendition: rendition.name,
+        playlistKey,
+        segmentCount,
+        bytes: totalBytes,
+        durationMs,
+        avgBitrateBps,
+        processingMs,
+      };
+
+      if (comp.value.fenced) {
         log.warn({ lockToken, event: 'FENCED_OUT' }, 'Fenced out on transcode completion');
-        return {
-          videoId,
-          rendition: rendition.name,
-          playlistKey,
-          segmentCount,
-          bytes: totalBytes,
-          durationMs,
-          avgBitrateBps,
-          processingMs,
-        };
+        return ok(outcome);
       }
 
       // 8. Record transcode.completed in video_events
-      await repositories.events.create({
+      const recorded = await repositories.events.create({
         videoId,
         type: 'transcode.completed',
         payload: {
@@ -330,62 +323,14 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
           processingMs,
         },
       });
+      if (isErr(recorded)) return recorded;
 
-      return {
-        videoId,
-        rendition: rendition.name,
-        playlistKey,
-        segmentCount,
-        bytes: totalBytes,
-        durationMs,
-        avgBitrateBps,
-        processingMs,
-      };
-    } catch (err: unknown) {
-      let classifiedErr = err as Error;
-      const errorWithCode = err as { code?: string; hint?: string };
-      const isEnospc =
-        errorWithCode?.code === 'ENOSPC' ||
-        (err as Error).message?.includes('ENOSPC') ||
-        (err as Error).message?.toLowerCase().includes('no space left on device') ||
-        errorWithCode?.hint === 'DISK_FULL';
-
-      if (isEnospc && !(err instanceof PipelineError)) {
-        classifiedErr = new TransientError(
-          ErrorCodes.DISK_FULL,
-          `ENOSPC disk exhaustion: ${(err as Error).message}`,
-          { hint: 'DISK_FULL' }
-        );
-      }
-
-      const errorCode =
-        classifiedErr instanceof PipelineError
-          ? (classifiedErr as PipelineError).code
-          : isEnospc
-            ? ErrorCodes.DISK_FULL
-            : 'FFMPEG_FAILED';
-
-      // ffmpeg_exit_total counter — classify transcode failures
-      metrics.ffmpegExitTotal.inc({
-        stage: `transcode-${rendition.name}`,
-        code: errorCode,
-      });
-
-      await repositories.steps.fail({
-        videoId,
-        step: 'transcode',
-        rendition: rendition.name,
-        lockToken,
-        errorCode,
-        errorMessage: classifiedErr.message || 'Transcode failed',
-      });
-
-      throw classifiedErr;
+      return ok(outcome);
     } finally {
       // Guaranteed temp directory removal on every exit path (AC 21, Ticket 14 AC 1, 6)
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
       // Clear tmp bytes metric once disk is freed
-      metrics.workerTmpBytes.set({ stage: `transcode-${rendition.name}` }, 0);
+      metrics.workerTmpBytes.set({ stage }, 0);
     }
   };
 }

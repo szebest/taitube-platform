@@ -6,6 +6,7 @@ import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
+import { ok } from '@vp/result';
 
 describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 17, 18)', () => {
   let repositories: InMemoryRepositories;
@@ -68,7 +69,7 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
       workerId: 'worker-zombie',
       lockToken: lockToken1,
     });
-    expect(claim1.fenced).toBe(false);
+    expect(expectOk(claim1).fenced).toBe(false);
 
     // 2. Worker 2 (fresh) claims step with lockToken2 (e.g. after worker 1 crashed/stalled)
     const lockToken2 = uuidv7();
@@ -82,7 +83,7 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
       workerId: 'worker-fresh',
       lockToken: lockToken2,
     });
-    expect(claim2.fenced).toBe(false);
+    expect(expectOk(claim2).fenced).toBe(false);
 
     // 3. Worker 2 completes successfully with lockToken2
     const complete2 = await repositories.steps.complete({
@@ -92,8 +93,8 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
       lockToken: lockToken2,
       result: { segmentCount: 10, bytes: 50000 },
     });
-    expect(complete2.fenced).toBe(false);
-    expect(complete2.completed).toBe(true);
+    expect(expectOk(complete2).fenced).toBe(false);
+    expect(expectOk(complete2).completed).toBe(true);
 
     // 4. Worker 1 (zombie) wakes up from partition/hang and attempts to complete with stale lockToken1
     const complete1 = await repositories.steps.complete({
@@ -105,12 +106,12 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     });
 
     // Fencing guarantee: stale token affects 0 rows and reports fenced: true
-    expect(complete1.fenced).toBe(true);
-    expect(complete1.completed).toBe(false);
+    expect(expectOk(complete1).fenced).toBe(true);
+    expect(expectOk(complete1).completed).toBe(false);
 
     // Verify step remains completed by worker 2
     const steps = await repositories.steps.findByVideoId(videoId);
-    const step = steps.find((s: any) => s.step === 'transcode' && s.rendition === '720p');
+    const step = expectOk(steps).find((s: any) => s.step === 'transcode' && s.rendition === '720p');
     expect(step?.workerId).toBe('worker-fresh');
     expect(step?.attempt).toBe(2);
     expect(step?.status).toBe('DONE');
@@ -129,31 +130,39 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     const enqueuedJobs: string[] = [];
     class MockCrashQueue extends JobQueue {
       async checkHealth() {
-        return true;
+        return ok();
       }
       getName() {
         return 'notify';
       }
       async add<_T = unknown>(name: string): Promise<any> {
         enqueuedJobs.push(name);
-        return { id: 'mock-id', name };
+        return ok({ id: 'mock-id', name });
       }
-      async process() {}
+      async process() {
+        return ok();
+      }
       async getJobState() {
-        return undefined;
+        return ok(undefined);
       }
       async isPaused() {
-        return false;
+        return ok(false);
       }
-      async pause() {}
-      async resume() {}
+      async pause() {
+        return ok();
+      }
+      async resume() {
+        return ok();
+      }
       async getJobCounts() {
-        return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
+        return ok({ active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 });
       }
       async getJobs() {
-        return [];
+        return ok([]);
       }
-      async close() {}
+      async close() {
+        return ok();
+      }
     }
     const mockQueue = new MockCrashQueue();
 
@@ -191,7 +200,7 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     expect(v1?.status).toBe('READY');
 
     const events1 = await repositories.events.findByVideoId(videoId);
-    const readyEvents1 = events1.filter((e: any) => e.type === 'video.ready');
+    const readyEvents1 = expectOk(events1).filter((e: any) => e.type === 'video.ready');
     expect(readyEvents1.length).toBe(1);
 
     // Simulate duplicate/zombie re-execution of package job (attempt 2)
@@ -200,7 +209,7 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
 
     // Invariant: count(video_events where type='video.ready') MUST REMAIN EXACTLY 1
     const events2 = await repositories.events.findByVideoId(videoId);
-    const readyEvents2 = events2.filter((e: any) => e.type === 'video.ready');
+    const readyEvents2 = expectOk(events2).filter((e: any) => e.type === 'video.ready');
     expect(readyEvents2.length).toBe(1);
 
     // Invariant: notify enqueued exactly once

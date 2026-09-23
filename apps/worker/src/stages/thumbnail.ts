@@ -3,11 +3,18 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError, toPipelineError } from '@vp/errors';
-import { isErr } from '@vp/result';
+import {
+  type DatabaseUnavailable,
+  ErrorCodes,
+  type MediaFailure,
+  type StorageUnavailable,
+  mediaFailure,
+  mediaFailureFrom,
+} from '@vp/errors';
 import { runFfmpegThumbnail } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
+import { type Result, err, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
 import {
   getHeaderMapping,
   posterKey as getPosterKey,
@@ -30,6 +37,8 @@ export interface ThumbnailProcessorDeps {
   spriteIntervalSec?: number;
 }
 
+export type ThumbnailStageFailure = MediaFailure | StorageUnavailable | DatabaseUnavailable;
+
 export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
   const {
     repositories,
@@ -42,16 +51,20 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     spriteIntervalSec,
   } = deps;
 
-  return async function processThumbnailJob(job: QueueJob<ThumbnailJob>): Promise<ThumbnailResult> {
+  return async function processThumbnailJob(
+    job: QueueJob<ThumbnailJob>
+  ): Promise<Result<ThumbnailResult, ThumbnailStageFailure>> {
     validateJobId(job.id || '');
 
     const { videoId, sourceKey, durationMs, forceFailure } = job.data;
-    const log = logger.child({
-      videoId,
-      jobId: job.id,
-      stage: 'thumbnail',
-      attempt: (job.attemptsMade ?? 0) + 1,
-    });
+    const attempt = (job.attemptsMade ?? 0) + 1;
+    const log = logger.child({ videoId, jobId: job.id, stage: 'thumbnail', attempt });
+
+    const keys: ThumbnailResult = {
+      posterKey: getPosterKey(videoId),
+      spriteKey: getSpriteKey(videoId),
+      spriteVttKey: getSpriteVttKey(videoId),
+    };
 
     log.info({ sourceKey, durationMs }, 'Thumbnail job started');
 
@@ -66,39 +79,42 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       step: 'thumbnail',
       rendition: '-',
       jobId: job.id || '',
-      attempt: (job.attemptsMade ?? 0) + 1,
+      attempt,
       workerId,
       lockToken,
     });
+    if (isErr(claim)) return claim;
 
-    if (claim.fenced) {
+    if (claim.value.fenced) {
       log.warn({ lockToken }, 'Thumbnail step already completed; fenced out');
-      return {
-        posterKey: getPosterKey(videoId),
-        spriteKey: getSpriteKey(videoId),
-        spriteVttKey: getSpriteVttKey(videoId),
-      };
+      return ok(keys);
     }
 
-    await repositories.steps.heartbeat(lockToken);
+    const beat = await repositories.steps.heartbeat(lockToken);
+    if (isErr(beat)) return beat;
 
-    // Forced failure check for test verification (AC 3)
-    const shouldFail = forceFailure || process.env['FORCE_THUMBNAIL_FAILURE'] === 'true';
-    if (shouldFail) {
-      const permErr = new PermanentError(
-        ErrorCodes.FFMPEG_FAILED,
-        'Forced thumbnail failure for testing'
-      );
-      log.warn({ errorCode: permErr.code }, 'Forced thumbnail failure requested');
-      await repositories.steps.fail({
+    /** One place records how a thumbnail ended, so every exit reports the same way. */
+    const failThumbnail = async (
+      failure: MediaFailure
+    ): Promise<Result<never, ThumbnailStageFailure>> => {
+      log.error({ errorCode: failure.code, errorMessage: failure.message }, 'Thumbnail job failed');
+      const recorded = await repositories.steps.fail({
         videoId,
         step: 'thumbnail',
         rendition: '-',
         lockToken,
-        errorCode: permErr.code,
-        errorMessage: permErr.message,
+        errorCode: failure.code,
+        errorMessage: failure.message,
       });
-      throw permErr;
+      return isErr(recorded) ? recorded : err(failure);
+    };
+
+    // Forced failure check for test verification (AC 3)
+    if (forceFailure || process.env['FORCE_THUMBNAIL_FAILURE'] === 'true') {
+      log.warn({ errorCode: ErrorCodes.FFMPEG_FAILED }, 'Forced thumbnail failure requested');
+      return failThumbnail(
+        mediaFailure('thumbnail', ErrorCodes.FFMPEG_FAILED, 'Forced thumbnail failure for testing')
+      );
     }
 
     // Per-job temp directory with guaranteed cleanup on every exit path
@@ -108,81 +124,46 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       // 1. Download source from S3
       const localSourcePath = path.join(tmpDir, path.basename(sourceKey));
       const downloaded = await storage.downloadObject(rawBucket, sourceKey, localSourcePath);
+      if (isErr(downloaded)) return downloaded;
 
-      if (!downloaded) {
-        const errorMsg = `Source object not found in storage at ${sourceKey}`;
-        log.error({ sourceKey }, errorMsg);
-        await repositories.steps.fail({
-          videoId,
-          step: 'thumbnail',
-          rendition: '-',
-          lockToken,
-          errorCode: ErrorCodes.SOURCE_MISSING,
-          errorMessage: errorMsg,
-        });
-        throw new PermanentError(ErrorCodes.SOURCE_MISSING, errorMsg);
+      if (!downloaded.value) {
+        return failThumbnail(
+          mediaFailure(
+            'thumbnail',
+            ErrorCodes.SOURCE_MISSING,
+            `Source object not found in storage at ${sourceKey}`
+          )
+        );
       }
 
-      const head = await storage.headObject(rawBucket, sourceKey);
+      const head = unwrapOr(await storage.headObject(rawBucket, sourceKey), null);
       if (head?.contentLength) {
         getMetrics().workerTmpBytes.set({ stage: 'thumbnail' }, head.contentLength);
       }
 
       // 2. Generate poster, sprite, and WebVTT using FFmpeg
-      const intervalSec =
-        spriteIntervalSec ?? Number(process.env['SPRITE_INTERVAL_SECONDS'] || '5');
+      const generated = await fromPromise(
+        () =>
+          runFfmpegThumbnail({
+            sourcePath: localSourcePath,
+            outputDir: tmpDir,
+            durationMs,
+            intervalSec: spriteIntervalSec ?? Number(process.env['SPRITE_INTERVAL_SECONDS'] || '5'),
+          }),
+        (cause) => mediaFailureFrom('thumbnail', cause)
+      );
 
-      let result: Awaited<ReturnType<typeof runFfmpegThumbnail>>;
-      try {
-        result = await runFfmpegThumbnail({
-          sourcePath: localSourcePath,
-          outputDir: tmpDir,
-          durationMs,
-          intervalSec,
-        });
-        getMetrics().ffmpegExitTotal.inc({ stage: 'thumbnail', code: '0' });
-      } catch (thumbErr) {
+      if (isErr(generated)) {
         getMetrics().ffmpegExitTotal.inc({ stage: 'thumbnail', code: '1' });
-        throw thumbErr;
+        return failThumbnail(generated.error);
       }
+      getMetrics().ffmpegExitTotal.inc({ stage: 'thumbnail', code: '0' });
 
       // 3. Upload generated files to public storage (SDD §7)
-      const posterKey = getPosterKey(videoId);
-      const spriteKey = getSpriteKey(videoId);
-      const spriteVttKey = getSpriteVttKey(videoId);
+      const uploaded = await uploadAssets(storage, publicBucket, keys, generated.value);
+      if (isErr(uploaded)) return uploaded;
 
-      const posterBuffer = await fs.readFile(result.posterPath);
-      const spriteBuffer = await fs.readFile(result.spritePath);
-      const vttContent = await fs.readFile(result.vttPath, 'utf-8');
-
-      const posterHeaders = getHeaderMapping('poster.jpg');
-      await storage.uploadObject({
-        bucket: publicBucket,
-        key: posterKey,
-        body: posterBuffer,
-        contentType: posterHeaders.contentType,
-        cacheControl: posterHeaders.cacheControl,
-      });
-
-      const spriteHeaders = getHeaderMapping('sprite.jpg');
-      await storage.uploadObject({
-        bucket: publicBucket,
-        key: spriteKey,
-        body: spriteBuffer,
-        contentType: spriteHeaders.contentType,
-        cacheControl: spriteHeaders.cacheControl,
-      });
-
-      const vttHeaders = getHeaderMapping('sprite.vtt');
-      await storage.uploadObject({
-        bucket: publicBucket,
-        key: spriteVttKey,
-        body: vttContent,
-        contentType: vttHeaders.contentType,
-        cacheControl: vttHeaders.cacheControl,
-      });
-
-      log.info({ posterKey, spriteKey, spriteVttKey }, 'Uploaded thumbnail assets to storage');
+      log.info(keys, 'Uploaded thumbnail assets to storage');
 
       // 4. Complete processing step with fencing token (SDD §5.3, §9.5, AC 20)
       const comp = await repositories.steps.complete({
@@ -190,59 +171,70 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
         step: 'thumbnail',
         rendition: '-',
         lockToken,
-        result: { posterKey, spriteKey, spriteVttKey },
+        result: { ...keys },
       });
+      if (isErr(comp)) return comp;
 
-      if (comp.fenced) {
+      if (comp.value.fenced) {
         log.warn(
           { lockToken, event: 'FENCED_OUT' },
           'Fenced out on thumbnail completion; discarding update'
         );
-        return {
-          posterKey,
-          spriteKey,
-          spriteVttKey,
-        };
+        return ok(keys);
       }
 
       // 5. Update video row with posterKey and spriteKey (AC 1, AC 3) only if not fenced out
-      const committed = await repositories.videos.transition({
-        videoId,
-        from: 'PROCESSING',
-        to: 'PROCESSING',
-        eventType: 'thumbnail.completed',
-        eventPayload: { posterKey, spriteKey, spriteVttKey },
-        patch: { posterKey, spriteKey },
-      });
-      if (isErr(committed)) throw toPipelineError(committed.error);
-
-      return {
-        posterKey,
-        spriteKey,
-        spriteVttKey,
-      };
-    } catch (err: unknown) {
-      const isPermanent = err instanceof PermanentError;
-      const errorCode = isPermanent
-        ? (err as PermanentError).code
-        : (err as { code?: string })?.code || ErrorCodes.INTERNAL;
-      const errorMessage = (err as Error).message || 'Thumbnail generation failed';
-
-      log.error({ errorCode, errorMessage }, 'Thumbnail job failed');
-
-      await repositories.steps.fail({
-        videoId,
-        step: 'thumbnail',
-        rendition: '-',
-        lockToken,
-        errorCode,
-        errorMessage,
-      });
-
-      throw err;
+      return map(
+        await repositories.videos.transition({
+          videoId,
+          from: 'PROCESSING',
+          to: 'PROCESSING',
+          eventType: 'thumbnail.completed',
+          eventPayload: { ...keys },
+          patch: { posterKey: keys.posterKey, spriteKey: keys.spriteKey },
+        }),
+        () => keys
+      );
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
       getMetrics().workerTmpBytes.set({ stage: 'thumbnail' }, 0);
     }
   };
+}
+
+interface GeneratedThumbnails {
+  posterPath: string;
+  spritePath: string;
+  vttPath: string;
+}
+
+async function uploadAssets(
+  storage: StorageClient,
+  bucket: string,
+  keys: ThumbnailResult,
+  generated: GeneratedThumbnails
+): Promise<Result<void, StorageUnavailable>> {
+  const assets = [
+    { key: keys.posterKey, name: 'poster.jpg', body: await fs.readFile(generated.posterPath) },
+    { key: keys.spriteKey, name: 'sprite.jpg', body: await fs.readFile(generated.spritePath) },
+    {
+      key: keys.spriteVttKey,
+      name: 'sprite.vtt',
+      body: await fs.readFile(generated.vttPath, 'utf-8'),
+    },
+  ];
+
+  for (const asset of assets) {
+    const headers = getHeaderMapping(asset.name);
+    const uploaded = await storage.uploadObject({
+      bucket,
+      key: asset.key,
+      body: asset.body,
+      contentType: headers.contentType,
+      cacheControl: headers.cacheControl,
+    });
+    if (isErr(uploaded)) return uploaded;
+  }
+
+  return ok();
 }

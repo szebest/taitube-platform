@@ -1,6 +1,7 @@
 import { InMemoryJobQueue } from '@vp/adapters';
 import type { QueueJob } from '@vp/core/ports';
 import { describe, expect, it, vi } from 'vitest';
+import { expectOk } from '@vp/testing/result';
 
 describe('Worker Graceful Shutdown & Scale-in Semantics (Ticket 26)', () => {
   it('allows active job to finish during graceful shutdown without stalling', async () => {
@@ -23,7 +24,7 @@ describe('Worker Graceful Shutdown & Scale-in Semantics (Ticket 26)', () => {
 
     // Enqueue a job
     const job = await queue.add('test-job', { videoId: 'video-123' });
-    expect(job.id).toBeDefined();
+    expect(expectOk(job).id).toBeDefined();
 
     // Allow microtask to run so drain() picks up the job
     await new Promise((r) => setTimeout(r, 10));
@@ -34,7 +35,7 @@ describe('Worker Graceful Shutdown & Scale-in Semantics (Ticket 26)', () => {
 
     // Verify job is marked active in queue counts
     const countsWhileActive = await queue.getJobCounts();
-    expect(countsWhileActive.active).toBe(1);
+    expect(expectOk(countsWhileActive).active).toBe(1);
 
     // Simulate scale-in signal (SIGTERM): queue.close() is called
     // In BullMQ, worker.close(false) stops accepting new jobs from the queue,
@@ -52,9 +53,7 @@ describe('Worker Graceful Shutdown & Scale-in Semantics (Ticket 26)', () => {
 
     // After shutdown, no active jobs remain
     const counts = await queue.getJobCounts();
-    expect(counts.active).toBe(0);
-    expect(counts.failed).toBe(0);
-    expect(counts.completed).toBe(1);
+    expect(expectOk(counts)).toMatchObject({ active: 0, failed: 0, completed: 1 });
   });
 
   it('verifies BullMQ worker close(false) contract', () => {

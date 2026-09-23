@@ -49,9 +49,9 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
       // Drain outbox
       const result = await drainOutboxOnce(repositories, { getQueue });
-      expect(result.processedCount).toBe(1);
-      expect(result.successCount).toBe(1);
-      expect(result.failureCount).toBe(0);
+      expect(expectOk(result).processedCount).toBe(1);
+      expect(expectOk(result).successCount).toBe(1);
+      expect(expectOk(result).failureCount).toBe(0);
 
       // Verify job was published
       expect(probeQueue.enqueuedJobs).toHaveLength(1);
@@ -59,7 +59,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
       // Second drain finds nothing (already published)
       const secondResult = await drainOutboxOnce(repositories, { getQueue });
-      expect(secondResult.processedCount).toBe(0);
+      expect(expectOk(secondResult).processedCount).toBe(0);
     });
 
     it('records attempts on failure to publish to queue', async () => {
@@ -82,11 +82,11 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       };
 
       const result = await drainOutboxOnce(repositories, { getQueue: failingGetQueue });
-      expect(result.processedCount).toBe(1);
-      expect(result.failureCount).toBe(1);
+      expect(expectOk(result).processedCount).toBe(1);
+      expect(expectOk(result).failureCount).toBe(1);
 
       // Verify attempt count increased
-      const pending = await repositories.outbox.claimBatch(10);
+      const pending = expectOk(await repositories.outbox.claimBatch(10));
       expect(pending[0]?.attempts).toBe(1);
     });
   });
@@ -139,7 +139,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
       // Outbox relay runs (e.g. housekeeping worker loop)
       const relayResult = await drainOutboxOnce(repositories, { getQueue });
-      expect(relayResult.successCount).toBe(1);
+      expect(expectOk(relayResult).successCount).toBe(1);
 
       // Job is now enqueued by the relay
       expect(probeQueue.enqueuedJobs).toHaveLength(1);
@@ -188,7 +188,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
 
       // Relay drains outbox and attempts to add job
       const result = await drainOutboxOnce(repositories, { getQueue });
-      expect(result.successCount).toBe(1);
+      expect(expectOk(result).successCount).toBe(1);
 
       // Queue length stays 1 because InMemoryJobQueue deduplicates by jobId
       expect(probeQueue.enqueuedJobs).toHaveLength(1);
@@ -200,7 +200,10 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
         kind: 'probe',
         payload: { type: 'queue', queueName: 'probe', job: { name: 'probe', data: {}, opts: {} } },
       });
-      repositories.outbox.seedPublished(item1.id, new Date(Date.now() - 8 * 24 * 60 * 60 * 1000));
+      repositories.outbox.seedPublished(
+        expectOk(item1).id,
+        new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+      );
 
       // Create a fresh published outbox row (1 day ago)
       const item2 = await repositories.outbox.enqueue({
@@ -211,16 +214,19 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
           job: { name: 'notify', data: {}, opts: {} },
         },
       });
-      repositories.outbox.seedPublished(item2.id, new Date(Date.now() - 1 * 24 * 60 * 60 * 1000));
+      repositories.outbox.seedPublished(
+        expectOk(item2).id,
+        new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      );
 
       // Prune with 7 days retention
       const prunedCount = await repositories.outbox.prune(7);
       expect(prunedCount).toBe(1);
 
       // Fresh one remains
-      const freshItem = await repositories.outbox.findById(item2.id);
+      const freshItem = await repositories.outbox.findById(expectOk(item2).id);
       expect(freshItem).not.toBeNull();
-      const oldItem = await repositories.outbox.findById(item1.id);
+      const oldItem = await repositories.outbox.findById(expectOk(item1).id);
       expect(oldItem).toBeNull();
     });
   });
@@ -302,7 +308,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       const drainResult = await drainOutboxOnce(repositories, { getQueue, batchSize: 50 });
       const elapsedMs = Date.now() - start;
 
-      expect(drainResult.successCount).toBe(20);
+      expect(expectOk(drainResult).successCount).toBe(20);
       expect(elapsedMs).toBeLessThan(1000); // p95 < 1 s locally (typically < 20 ms in-memory)
     });
   });
@@ -344,7 +350,7 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
       expect(video?.status).toBe('READY');
 
       const pending = await repositories.outbox.claimBatch(10);
-      const notifyItem = pending.find((p) => p.kind === 'notify');
+      const notifyItem = expectOk(pending).find((p) => p.kind === 'notify');
       expect(notifyItem).toBeDefined();
       expect(notifyItem?.payload.type).toBe('queue');
       if (notifyItem?.payload.type === 'queue') {
@@ -386,11 +392,11 @@ describe('Ticket 30: Transactional Outbox Relay & Crash Recovery', () => {
         }
       );
 
-      const updated = await repositories.dlq.findById(dlqId);
+      const updated = expectOk(await repositories.dlq.findById(dlqId));
       expect(updated?.status).toBe('REPLAYED');
 
       const pending = await repositories.outbox.claimBatch(10);
-      const replayItem = pending.find((p) => p.kind === 'dlq_replay');
+      const replayItem = expectOk(pending).find((p) => p.kind === 'dlq_replay');
       expect(replayItem).toBeDefined();
     });
   });

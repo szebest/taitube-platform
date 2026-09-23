@@ -70,7 +70,9 @@ describe('apps/worker: recordProbeFailure', () => {
     );
 
     const steps = await repositories.steps.findByVideoId(videoId);
-    expect(steps.find((step) => step.step === 'probe')).toMatchObject({ status: 'FAILED' });
+    expect(expectOk(steps).find((step) => step.step === 'probe')).toMatchObject({
+      status: 'FAILED',
+    });
   });
 
   it('records the failure as a video event, so the audit trail has it', async () => {
@@ -81,7 +83,7 @@ describe('apps/worker: recordProbeFailure', () => {
     );
 
     const events = await repositories.events.findByVideoId(videoId);
-    expect(events.some((event) => event.type === 'video.failed')).toBe(true);
+    expect(expectOk(events).some((event) => event.type === 'video.failed')).toBe(true);
   });
 
   it('tells the owner, so a failed probe does not go unnoticed', async () => {

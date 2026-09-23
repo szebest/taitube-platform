@@ -160,17 +160,11 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     // 6. With failParentOnFailure, parent fails and video becomes FAILED with first child's error code (AC 3)
     if (stage === 'package' && videoId) {
       // Find first failed child step to adopt its error code
-      let videoErrorCode = errorCode;
-      try {
-        const steps = await repositories.steps.findByVideoId(videoId);
-        const failedChild = steps.find(
-          (s) =>
-            (s.status === 'DEAD' || s.status === 'FAILED') && s.errorCode && s.step !== 'package'
-        );
-        if (failedChild?.errorCode) {
-          videoErrorCode = failedChild.errorCode;
-        }
-      } catch {}
+      const steps = unwrapOr(await repositories.steps.findByVideoId(videoId), []);
+      const failedChild = steps.find(
+        (s) => (s.status === 'DEAD' || s.status === 'FAILED') && s.errorCode && s.step !== 'package'
+      );
+      const videoErrorCode = failedChild?.errorCode ?? errorCode;
 
       const video = unwrapOr(await repositories.videos.findById(videoId), null);
       const notifyJobId = ids.notify(videoId, 'video.failed', 1);

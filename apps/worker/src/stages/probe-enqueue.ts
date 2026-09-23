@@ -9,7 +9,9 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
+import type { QueueUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
+import { type Result, isErr, ok } from '@vp/result';
 
 export interface EnqueueFollowUpsParams {
   job: QueueJob<ProbeJob>;
@@ -20,13 +22,15 @@ export interface EnqueueFollowUpsParams {
   log: Logger;
 }
 
-export async function enqueueFollowUpJobs(params: EnqueueFollowUpsParams): Promise<void> {
+export async function enqueueFollowUpJobs(
+  params: EnqueueFollowUpsParams
+): Promise<Result<void, QueueUnavailable>> {
   const { job, metadata, priority, flowProducer, getQueue, log } = params;
   const { videoId, sourceKey } = job.data;
 
   if (flowProducer) {
     const packageJobId = ids.package(videoId, job.data.generation);
-    await flowProducer.add({
+    const flow = await flowProducer.add({
       name: 'package',
       queueName: 'package',
       data: PackageJob.parse({
@@ -89,17 +93,22 @@ export async function enqueueFollowUpJobs(params: EnqueueFollowUpsParams): Promi
         },
       ],
     });
+    if (isErr(flow)) return flow;
+
     log.info(
       { packageJobId, ladder: metadata.ladder.map((r) => r.name), priority },
       'Created BullMQ flow with package parent and transcode children'
     );
-  } else if (getQueue) {
+    return ok();
+  }
+
+  if (getQueue) {
     const r720 = metadata.ladder.find((r) => r.name === '720p') || metadata.ladder[0];
     if (r720) {
       const transcodeQueueName = `transcode-${r720.name}`;
       const transcodeJobId = ids.transcode(videoId, r720.name, job.data.generation);
       const queue = getQueue(transcodeQueueName);
-      await queue.add(
+      const enqueued = await queue.add(
         transcodeQueueName,
         TranscodeJob.parse({
           videoId,
@@ -117,6 +126,8 @@ export async function enqueueFollowUpJobs(params: EnqueueFollowUpsParams): Promi
           ...defaultJobOptions,
         }
       );
+      if (isErr(enqueued)) return enqueued;
+
       log.info(
         { transcodeJobId, queue: transcodeQueueName, priority },
         'Enqueued transcode follow-up job'
@@ -126,7 +137,7 @@ export async function enqueueFollowUpJobs(params: EnqueueFollowUpsParams): Promi
     const thumbnailQueue = getQueue('thumbnail');
     if (thumbnailQueue) {
       const thumbnailJobId = ids.thumbnail(videoId, job.data.generation);
-      await thumbnailQueue.add(
+      const enqueued = await thumbnailQueue.add(
         'thumbnail',
         ThumbnailJob.parse({
           videoId,
@@ -143,10 +154,14 @@ export async function enqueueFollowUpJobs(params: EnqueueFollowUpsParams): Promi
           ...defaultJobOptions,
         }
       );
+      if (isErr(enqueued)) return enqueued;
+
       log.info(
         { thumbnailJobId, queue: 'thumbnail', priority },
         'Enqueued thumbnail follow-up job'
       );
     }
   }
+
+  return ok();
 }

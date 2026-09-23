@@ -77,22 +77,18 @@ export async function runReconcileUploads(
       if (upload) {
         await repositories.uploads.updateStatus(upload.id, 'ABORTED');
         if (upload.multipartUploadId && multipart) {
-          try {
-            await multipart.abortMultipartUpload(
-              rawBucket,
-              video.sourceKey,
-              upload.multipartUploadId
-            );
-            logger?.info(
-              { videoId: video.id, uploadId: upload.multipartUploadId },
-              'Aborted multipart upload on storage'
-            );
-          } catch (err: unknown) {
-            logger?.warn(
-              { videoId: video.id, err: (err as Error).message },
-              'Failed to abort multipart upload on storage'
-            );
-          }
+          // A session storage will expire on its own is not worth holding the sweep for.
+          const aborted = await multipart.abortMultipartUpload(
+            rawBucket,
+            video.sourceKey,
+            upload.multipartUploadId
+          );
+          logger?.[isErr(aborted) ? 'warn' : 'info'](
+            { videoId: video.id, uploadId: upload.multipartUploadId },
+            isErr(aborted)
+              ? 'Failed to abort multipart upload on storage'
+              : 'Aborted multipart upload on storage'
+          );
         }
       }
     }
@@ -155,9 +151,7 @@ export async function runReconcileUploads(
 
       ownerInflightCounts.set(video.ownerId, currentInflight + 1);
       reenqueuedCount += 1;
-      try {
-        getMetrics().reconcilerRepairsTotal.inc({ type: 'missing_probe' });
-      } catch {}
+      getMetrics().reconcilerRepairsTotal.inc({ type: 'missing_probe' });
       logger?.info(
         { videoId: video.id, probeJobId, priority },
         'Reconciler released held video and enqueued probe job'

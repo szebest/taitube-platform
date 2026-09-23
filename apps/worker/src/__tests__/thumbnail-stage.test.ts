@@ -94,41 +94,42 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
 
     const result = await processor(job);
 
-    expect(result.posterKey).toBe(`videos/${videoId}/thumbs/poster.jpg`);
-    expect(result.spriteKey).toBe(`videos/${videoId}/thumbs/sprite.jpg`);
-    expect(result.spriteVttKey).toBe(`videos/${videoId}/thumbs/sprite.vtt`);
+    expect(expectOk(result).posterKey).toBe(`videos/${videoId}/thumbs/poster.jpg`);
+    expect(expectOk(result).spriteKey).toBe(`videos/${videoId}/thumbs/sprite.jpg`);
+    expect(expectOk(result).spriteVttKey).toBe(`videos/${videoId}/thumbs/sprite.vtt`);
 
     // Verify storage uploads
-    const posterHead = await storage.headObject('public', result.posterKey);
+    const posterHead = expectOk(await storage.headObject('public', expectOk(result).posterKey));
     expect(posterHead).toBeTruthy();
     expect(posterHead?.contentType).toBe('image/jpeg');
     expect(posterHead?.cacheControl).toBe('public, max-age=31536000, immutable');
 
-    const spriteHead = await storage.headObject('public', result.spriteKey);
+    const spriteHead = expectOk(await storage.headObject('public', expectOk(result).spriteKey));
     expect(spriteHead).toBeTruthy();
     expect(spriteHead?.contentType).toBe('image/jpeg');
     expect(spriteHead?.cacheControl).toBe('public, max-age=31536000, immutable');
 
-    const vttHead = await storage.headObject('public', result.spriteVttKey);
+    const vttHead = expectOk(await storage.headObject('public', expectOk(result).spriteVttKey));
     expect(vttHead).toBeTruthy();
     expect(vttHead?.contentType).toBe('text/vtt');
     expect(vttHead?.cacheControl).toBe('public, max-age=31536000, immutable');
 
     // Verify VTT contents
-    const vttObj = await storage.getObject('public', result.spriteVttKey);
-    const vttText = typeof vttObj === 'string' ? vttObj : new TextDecoder('utf-8').decode(vttObj);
+    const vttObj = await storage.getObject('public', expectOk(result).spriteVttKey);
+    const vttText =
+      typeof vttObj === 'string' ? vttObj : new TextDecoder('utf-8').decode(expectOk(vttObj));
     const cues = parseSpriteVtt(vttText);
     expect(cues.length).toBeGreaterThanOrEqual(11);
     expect(cues.length).toBeLessThanOrEqual(13);
 
     // Verify video record has posterKey and spriteKey
     const video = expectOk(await repositories.videos.findById(videoId));
-    expect(video?.posterKey).toBe(result.posterKey);
-    expect(video?.spriteKey).toBe(result.spriteKey);
+    expect(video?.posterKey).toBe(expectOk(result).posterKey);
+    expect(video?.spriteKey).toBe(expectOk(result).spriteKey);
 
     // Verify processing_steps
     const steps = await repositories.steps.findByVideoId(videoId);
-    const thumbStep = steps.find((s) => s.step === 'thumbnail');
+    const thumbStep = expectOk(steps).find((s) => s.step === 'thumbnail');
     expect(thumbStep?.status).toBe('DONE');
     expect(thumbStep?.lockToken).toBeDefined();
     expect(thumbStep?.finishedAt).toBeDefined();
@@ -253,8 +254,8 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
 
     // Verify AC 2: start times overlap in processing_steps
     const steps = await repositories.steps.findByVideoId(videoId);
-    const thumbStep = steps.find((s) => s.step === 'thumbnail');
-    const transcodeSteps = steps.filter(
+    const thumbStep = expectOk(steps).find((s) => s.step === 'thumbnail');
+    const transcodeSteps = expectOk(steps).filter(
       (s) => s.step.startsWith('transcode') || s.step === 'transcode'
     );
 
@@ -399,14 +400,14 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
 
     // - thumbnail step in processing_steps is FAILED with error code
     const steps = await repositories.steps.findByVideoId(videoId);
-    const thumbStep = steps.find((s) => s.step === 'thumbnail');
+    const thumbStep = expectOk(steps).find((s) => s.step === 'thumbnail');
     expect(thumbStep?.status).toBe('FAILED');
     expect(thumbStep?.errorCode).toBe('FFMPEG_FAILED');
 
     // - renditions are completely unaffected (all DONE)
     const renditions = await repositories.renditions.findByVideoId(videoId);
     expect(renditions).toHaveLength(3);
-    for (const r of renditions) {
+    for (const r of expectOk(renditions)) {
       expect(r.status).toBe('DONE');
     }
 
@@ -438,7 +439,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     await expect(processor(job)).rejects.toThrow(/Source object not found/);
 
     const steps = await repositories.steps.findByVideoId(videoId);
-    const thumbStep = steps.find((s) => s.step === 'thumbnail');
+    const thumbStep = expectOk(steps).find((s) => s.step === 'thumbnail');
     expect(thumbStep?.status).toBe('FAILED');
     expect(thumbStep?.errorCode).toBe('SOURCE_MISSING');
   });

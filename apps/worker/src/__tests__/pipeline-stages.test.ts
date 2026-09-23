@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createNotifyProcessor } from '../stages/notify';
 import { createPackageProcessor } from '../stages/package';
 import { createTranscodeProcessor } from '../stages/transcode';
+import { ok } from '@vp/result';
 
 describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23)', () => {
   let repositories: InMemoryRepositories;
@@ -119,31 +120,39 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     const enqueuedJobs: Array<{ queue: string; data: unknown }> = [];
     class MockTranscodeQueue extends JobQueue {
       async checkHealth() {
-        return true;
+        return ok();
       }
       getName() {
         return 'package';
       }
       async add<T = unknown>(name: string, data: T): Promise<any> {
         enqueuedJobs.push({ queue: name, data });
-        return { id: 'mock-id', name, data };
+        return ok({ id: 'mock-id', name, data });
       }
-      async process() {}
+      async process() {
+        return ok();
+      }
       async getJobState() {
-        return undefined;
+        return ok(undefined);
       }
       async isPaused() {
-        return false;
+        return ok(false);
       }
-      async pause() {}
-      async resume() {}
+      async pause() {
+        return ok();
+      }
+      async resume() {
+        return ok();
+      }
       async getJobCounts() {
-        return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
+        return ok({ active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 });
       }
       async getJobs() {
-        return [];
+        return ok([]);
       }
-      async close() {}
+      async close() {
+        return ok();
+      }
     }
     const mockQueue = new MockTranscodeQueue();
 
@@ -175,8 +184,8 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     });
 
     const result = await processor(job);
-    expect(result.segmentCount).toBe(10);
-    expect(result.bytes).toBeGreaterThan(10000);
+    expect(expectOk(result).segmentCount).toBe(10);
+    expect(expectOk(result).bytes).toBeGreaterThan(10000);
 
     // 1. Verify 10 TS segments uploaded with immutable cache control (AC 17)
     const tsUploads = uploadedObjects.filter((o) => o.key.endsWith('.ts'));
@@ -194,16 +203,16 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
 
     // 3. Verify renditions row is DONE with segmentCount=10 and bytes (AC 17)
     const rends = await repositories.renditions.findByVideoId(videoId);
-    const rend = rends.find((r: any) => r.name === '720p');
+    const rend = expectOk(rends).find((r: any) => r.name === '720p');
     expect(rend?.status).toBe('DONE');
     expect(rend?.segmentCount).toBe(10);
     expect(rend?.bytes).toBeGreaterThan(10000);
     expect(rend?.playlistKey).toBe(`videos/${videoId}/hls/720p/index.m3u8`);
 
     // 4. Verify transcode returns TranscodeResult with playlistKey and avgBitrateBps for the Flow parent
-    expect(result.rendition).toBe('720p');
-    expect(result.playlistKey).toBe(`videos/${videoId}/hls/720p/index.m3u8`);
-    expect(result.avgBitrateBps).toBeGreaterThan(0);
+    expect(expectOk(result).rendition).toBe('720p');
+    expect(expectOk(result).playlistKey).toBe(`videos/${videoId}/hls/720p/index.m3u8`);
+    expect(expectOk(result).avgBitrateBps).toBeGreaterThan(0);
 
     transcodeSpy.mockRestore();
   });
@@ -228,31 +237,39 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     const enqueuedJobs: Array<{ queue: string; data: unknown }> = [];
     class MockPackageQueue extends JobQueue {
       async checkHealth() {
-        return true;
+        return ok();
       }
       getName() {
         return 'notify';
       }
       async add<T = unknown>(name: string, data: T): Promise<any> {
         enqueuedJobs.push({ queue: name, data });
-        return { id: 'mock-id', name, data };
+        return ok({ id: 'mock-id', name, data });
       }
-      async process() {}
+      async process() {
+        return ok();
+      }
       async getJobState() {
-        return undefined;
+        return ok(undefined);
       }
       async isPaused() {
-        return false;
+        return ok(false);
       }
-      async pause() {}
-      async resume() {}
+      async pause() {
+        return ok();
+      }
+      async resume() {
+        return ok();
+      }
       async getJobCounts() {
-        return { active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 };
+        return ok({ active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 });
       }
       async getJobs() {
-        return [];
+        return ok([]);
       }
-      async close() {}
+      async close() {
+        return ok();
+      }
     }
     const mockQueue = new MockPackageQueue();
 
@@ -283,7 +300,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     });
 
     const result = await processor(job);
-    expect(result.masterKey).toBe(`videos/${videoId}/hls/master.m3u8`);
+    expect(expectOk(result).masterKey).toBe(`videos/${videoId}/hls/master.m3u8`);
     expect(uploadedObjects).toContain(`videos/${videoId}/hls/master.m3u8`);
 
     // 1. Verify video transitioned to READY (AC 19)
@@ -294,7 +311,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
 
     // 2. Verify video_events has exactly ONE video.ready (AC 19)
     const events = await repositories.events.findByVideoId(videoId);
-    const readyEvents = events.filter((e: any) => e.type === 'video.ready');
+    const readyEvents = expectOk(events).filter((e: any) => e.type === 'video.ready');
     expect(readyEvents.length).toBe(1);
 
     // 3. Verify notify job was enqueued (AC 19)
@@ -334,7 +351,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
 
     // Verify step recorded SEGMENT_VERIFY_FAILED
     const steps = await repositories.steps.findByVideoId(videoId);
-    const step = steps.find((s: any) => s.step === 'package');
+    const step = expectOk(steps).find((s: any) => s.step === 'package');
     expect(step?.errorCode).toBe(ErrorCodes.SEGMENT_VERIFY_FAILED);
   });
 
@@ -346,7 +363,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     const publishedMessages: Array<{ channel: string; message: string }> = [];
     vi.spyOn(cache, 'publish').mockImplementation(async (channel: string, message: string) => {
       publishedMessages.push({ channel, message });
-      return 1;
+      return ok(1);
     });
 
     const processor = createNotifyProcessor({
@@ -368,7 +385,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     });
 
     const result = await processor(job);
-    expect(result.published).toBe(true);
+    expect(expectOk(result).published).toBe(true);
 
     expect(publishedMessages.length).toBe(2);
 
@@ -390,7 +407,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
 
     // Verify step completed in DB
     const steps = await repositories.steps.findByVideoId(videoId);
-    const step = steps.find((s: any) => s.step === 'notify');
+    const step = expectOk(steps).find((s: any) => s.step === 'notify');
     expect(step?.status).toBe('DONE');
   });
 });

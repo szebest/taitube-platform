@@ -23,6 +23,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { withTelemetry } from '../with-telemetry';
+import { expectOk } from '@vp/testing/result';
 
 describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', () => {
   let exporter: InMemorySpanExporter;
@@ -227,7 +228,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
     const tracedProbeProcessor = withTelemetry('probe', rawProbeProcessor);
 
     const probeQueue = getQueue('probe');
-    const [probeQueueJob] = await probeQueue.getJobs(['waiting']);
+    const [probeQueueJob] = expectOk(await probeQueue.getJobs(['waiting']));
     expect(probeQueueJob).toBeDefined();
     if (!probeQueueJob) throw new Error('probeQueueJob missing');
 
@@ -283,7 +284,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
 
     // 6. Worker runs notify stage
     const notifyQueue = getQueue('notify');
-    const [notifyJob] = await notifyQueue.getJobs(['waiting']);
+    const [notifyJob] = expectOk(await notifyQueue.getJobs(['waiting']));
     expect(notifyJob).toBeDefined();
     if (!notifyJob) throw new Error('notifyJob missing');
 
@@ -345,7 +346,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
     }
 
     // Verify database events correlation: video_events has trace_id
-    const events = await repositories.events.findByVideoId(videoId);
+    const events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.length).toBeGreaterThanOrEqual(1);
     const completedEvent = events.find((e) => e.type === 'upload.completed');
     expect(completedEvent).toBeDefined();

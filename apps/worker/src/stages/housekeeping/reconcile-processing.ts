@@ -56,36 +56,30 @@ export async function runReconcileProcessing(
   for (const video of staleProcessing.value) {
     // 1. Check if any step is currently RUNNING
     const steps = await repositories.steps.findByVideoId(video.id);
-    const hasRunningStep = steps.some((s) => s.status === 'RUNNING');
-    if (hasRunningStep) {
+    if (isErr(steps)) return steps;
+    if (steps.value.some((s) => s.status === 'RUNNING')) {
       continue;
     }
 
     // 2. Check if any waiting/active jobs exist in the processing queues
+    // A queue that cannot be inspected is assumed to still hold the job, which errs on the side of
+    // leaving a live video alone rather than failing it.
     let hasWaitingJob = false;
-    if (getQueue) {
-      for (const queueName of ACTIVE_PROCESSING_QUEUES) {
-        try {
-          const queue = getQueue(queueName);
-          const jobs = await queue.getJobs([
-            'waiting',
-            'active',
-            'delayed',
-            'prioritized',
-            'paused',
-          ]);
-          const matchingJob = jobs.find((j) => {
-            const data = j.data as { videoId?: string } | undefined;
-            return data?.videoId === video.id || j.id.startsWith(video.id);
-          });
-          if (matchingJob) {
-            hasWaitingJob = true;
-            break;
-          }
-        } catch {
-          // If queue inspection fails, err on the side of safety
-        }
-      }
+    for (const queueName of getQueue ? ACTIVE_PROCESSING_QUEUES : []) {
+      const jobs = await getQueue?.(queueName).getJobs([
+        'waiting',
+        'active',
+        'delayed',
+        'prioritized',
+        'paused',
+      ]);
+      if (!jobs || isErr(jobs)) continue;
+
+      hasWaitingJob = jobs.value.some((j) => {
+        const data = j.data as { videoId?: string } | undefined;
+        return data?.videoId === video.id || j.id.startsWith(video.id);
+      });
+      if (hasWaitingJob) break;
     }
 
     if (hasWaitingJob) {

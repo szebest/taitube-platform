@@ -3,11 +3,20 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { ErrorCodes, PermanentError, toPipelineError } from '@vp/errors';
+import {
+  type CacheUnavailable,
+  type DatabaseUnavailable,
+  ErrorCodes,
+  type MediaFailure,
+  type QueueUnavailable,
+  type StorageUnavailable,
+  mediaFailure,
+  mediaFailureFrom,
+} from '@vp/errors';
 import { type ProbeMetadata, runFfprobe } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
-import { isErr, unwrapOr } from '@vp/result';
+import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { getHeartbeatPath } from '../config';
 
@@ -26,6 +35,33 @@ export interface ProbeProcessorDeps {
   flowProducer?: FlowProducerPort;
 }
 
+export interface ProbeStageResult {
+  videoId: string;
+  status: string;
+  durationMs: number;
+}
+
+export type ProbeStageFailure =
+  | MediaFailure
+  | DatabaseUnavailable
+  | StorageUnavailable
+  | QueueUnavailable
+  | CacheUnavailable;
+
+const PRIORITY_PAID = 1;
+const PRIORITY_FREE = 5;
+
+/** A tier lookup that cannot answer costs the job its priority, not its place in the queue. */
+async function probePriority(repositories: Repositories, videoId: string): Promise<number> {
+  if (!repositories.users) return PRIORITY_FREE;
+
+  const video = unwrapOr(await repositories.videos.findById(videoId), null);
+  if (!video?.ownerId) return PRIORITY_FREE;
+
+  const owner = unwrapOr(await repositories.users.findById(video.ownerId), null);
+  return owner?.tier === 'pro' || owner?.tier === 'enterprise' ? PRIORITY_PAID : PRIORITY_FREE;
+}
+
 export function createProbeProcessor(deps: ProbeProcessorDeps) {
   const {
     repositories,
@@ -40,7 +76,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
 
   return async function processProbeJob(
     job: QueueJob<ProbeJob>
-  ): Promise<{ videoId: string; status: string; durationMs: number }> {
+  ): Promise<Result<ProbeStageResult, ProbeStageFailure>> {
     // 1. Validate Job ID (AC 22)
     validateJobId(job.id || '');
 
@@ -65,24 +101,23 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       eventType: 'probe.started',
       eventPayload: { jobId: job.id, attempt: (job.attemptsMade ?? 0) + 1 },
     });
-    if (isErr(startedResult)) throw toPipelineError(startedResult.error);
-    const started = startedResult.value;
+    if (isErr(startedResult)) return startedResult;
 
-    if (!started) {
+    if (!startedResult.value) {
       // Check current video state
       const currentResult = await repositories.videos.findById(videoId);
-      if (isErr(currentResult)) throw toPipelineError(currentResult.error);
+      if (isErr(currentResult)) return currentResult;
       const current = currentResult.value;
       if (current && ['PROCESSING', 'READY', 'FAILED', 'DELETED'].includes(current.status)) {
         log.info(
           { status: current.status },
           'Video already past PROBING; skipping redundant execution'
         );
-        return {
+        return ok({
           videoId,
           status: current.status,
           durationMs: current.durationMs || 0,
-        };
+        });
       }
     }
 
@@ -99,64 +134,83 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       lockToken,
     });
 
-    if (claim.fenced) {
+    if (isErr(claim)) return claim;
+
+    if (claim.value.fenced) {
       log.warn({ lockToken }, 'Probe step already completed; fenced out');
-      return { videoId, status: 'DONE', durationMs: 0 };
+      return ok({ videoId, status: 'DONE', durationMs: 0 });
     }
 
     // Heartbeat update on processing_steps (AC 20)
-    await repositories.steps.heartbeat(lockToken);
+    const beat = await repositories.steps.heartbeat(lockToken);
+    if (isErr(beat)) return beat;
 
     // 4. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `vp-probe-${videoId}-`));
 
-    const failProbe = async (code: string, msg: string): Promise<never> => {
-      await recordProbeFailure({ repositories, job, lockToken, getQueue }, code, msg);
-      throw new PermanentError(code, msg);
+    /** One place decides how a probe ends: record it, then report the media verdict upward. */
+    const failProbe = async (failure: MediaFailure): Promise<Result<never, ProbeStageFailure>> => {
+      const recorded = await recordProbeFailure(
+        { repositories, job, lockToken, getQueue },
+        failure.code,
+        failure.message
+      );
+      return isErr(recorded) ? recorded : err(failure);
     };
 
     try {
       // 5. Verify source in S3 (AC 19)
       const head = await storage.headObject(rawBucket, sourceKey);
-      if (!head) {
-        const errorMsg = `Source object not found in storage at ${sourceKey}`;
-        log.error({ sourceKey }, errorMsg);
-        return await failProbe(ErrorCodes.SOURCE_MISSING, errorMsg);
+      if (isErr(head)) return head;
+      if (!head.value) {
+        log.error({ sourceKey }, 'Source object not found in storage');
+        return await failProbe(
+          mediaFailure(
+            'probe',
+            ErrorCodes.SOURCE_MISSING,
+            `Source object not found in storage at ${sourceKey}`
+          )
+        );
       }
 
       // Download source to local file for ffprobe analysis
       const localSourcePath = path.join(tmpDir, path.basename(sourceKey));
       const downloaded = await storage.downloadObject(rawBucket, sourceKey, localSourcePath);
+      if (isErr(downloaded)) return downloaded;
 
-      if (!downloaded) {
-        const errorMsg = `Failed to download source object from ${sourceKey}`;
-        log.error({ sourceKey }, errorMsg);
-        return await failProbe(ErrorCodes.SOURCE_MISSING, errorMsg);
+      if (!downloaded.value) {
+        log.error({ sourceKey }, 'Failed to download source object');
+        return await failProbe(
+          mediaFailure(
+            'probe',
+            ErrorCodes.SOURCE_MISSING,
+            `Failed to download source object from ${sourceKey}`
+          )
+        );
       }
 
-      if (head.contentLength) {
-        getMetrics().workerTmpBytes.set({ stage: 'probe' }, head.contentLength);
+      if (head.value.contentLength) {
+        getMetrics().workerTmpBytes.set({ stage: 'probe' }, head.value.contentLength);
       }
 
-      // 6. Run ffprobe and validate media (AC 17, AC 18)
-      let metadata: ProbeMetadata;
-      try {
-        metadata = await runFfprobe(localSourcePath);
-        getMetrics().ffmpegExitTotal.inc({ stage: 'probe', code: '0' });
-      } catch (err: unknown) {
-        const permError =
-          err instanceof PermanentError
-            ? err
-            : new PermanentError(ErrorCodes.CORRUPT_CONTAINER, (err as Error).message);
+      // 6. Run ffprobe and validate media (AC 17, AC 18). `@vp/ffmpeg` spawns a process and still
+      // throws, so this is the line that converts it.
+      const probed = await fromPromise(
+        () => runFfprobe(localSourcePath),
+        (cause) => mediaFailureFrom('probe', cause, ErrorCodes.CORRUPT_CONTAINER)
+      );
 
-        getMetrics().ffmpegExitTotal.inc({ stage: 'probe', code: permError.code });
-
+      if (isErr(probed)) {
+        getMetrics().ffmpegExitTotal.inc({ stage: 'probe', code: probed.error.code });
         log.warn(
-          { errorCode: permError.code, err: permError.message },
+          { errorCode: probed.error.code, err: probed.error.message },
           'Probe validation failed with permanent error'
         );
-        return await failProbe(permError.code, permError.message);
+        return await failProbe(probed.error);
       }
+
+      getMetrics().ffmpegExitTotal.inc({ stage: 'probe', code: '0' });
+      const metadata: ProbeMetadata = probed.value;
 
       log.info(
         {
@@ -169,7 +223,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
 
       // 7. Insert pending renditions rows for each ladder entry (AC 17)
       for (const entry of metadata.ladder) {
-        await repositories.renditions.create({
+        const created = await repositories.renditions.create({
           id: uuidv7(),
           videoId,
           name: entry.name,
@@ -179,6 +233,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           audioBitrateKbps: entry.audioKbps,
           status: 'PENDING',
         });
+        if (isErr(created)) return created;
       }
 
       // 8. Complete step with fencing token check (AC 20)
@@ -196,13 +251,15 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         },
       });
 
-      if (comp.fenced) {
+      if (isErr(comp)) return comp;
+
+      if (comp.value.fenced) {
         log.warn({ lockToken }, 'Fenced out on step completion (another worker reclaimed step)');
-        return {
+        return ok({
           videoId,
           status: 'FENCED',
           durationMs: metadata.durationMs,
-        };
+        });
       }
 
       // 9. CAS transition: PROBING -> PROCESSING with metadata patch (AC 17)
@@ -223,40 +280,24 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           ladder: metadata.ladder,
         },
       });
-      if (isErr(committed)) throw toPipelineError(committed.error);
-
-      // Determine priority from job opts or user tier (SDD §9.4, AC 3)
-      let priority = job.opts?.priority;
-      if (priority === undefined && repositories.users) {
-        try {
-          const videoRec = unwrapOr(await repositories.videos.findById(videoId), null);
-          if (videoRec?.ownerId) {
-            const userRec = unwrapOr(await repositories.users.findById(videoRec.ownerId), null);
-            if (userRec?.tier === 'pro' || userRec?.tier === 'enterprise') {
-              priority = 1;
-            }
-          }
-        } catch {}
-      }
-      if (priority === undefined) {
-        priority = 5;
-      }
+      if (isErr(committed)) return committed;
 
       // 10. Enqueue fan-out / fan-in Flow (SDD §3.2, §9.3, Ticket 12)
-      await enqueueFollowUpJobs({
+      const enqueued = await enqueueFollowUpJobs({
         job,
         metadata,
-        priority,
+        priority: job.opts?.priority ?? (await probePriority(repositories, videoId)),
         flowProducer,
         getQueue,
         log,
       });
+      if (isErr(enqueued)) return enqueued;
 
-      return {
+      return ok({
         videoId,
         status: 'PROCESSING',
         durationMs: metadata.durationMs,
-      };
+      });
     } finally {
       // Guaranteed temp directory removal on every exit path (AC 21)
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});

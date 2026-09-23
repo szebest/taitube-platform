@@ -179,7 +179,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     };
 
     const probeResult = await probeProcessor(probeJob);
-    expect(probeResult.status).toBe('PROCESSING');
+    expect(expectOk(probeResult).status).toBe('PROCESSING');
 
     // Verify AC 3: package is in waiting-children
     const packageQueue = getQueue('package');
@@ -251,8 +251,10 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     expect(await storage.headObject('public', `videos/${videoId}/hls/master.m3u8`)).toBeTruthy();
 
     // 5. Verify master playlist contents (AC 1, AC 6)
-    const masterObj = await storage.getObject('public', `videos/${videoId}/hls/master.m3u8`);
-    const masterText = masterObj?.toString('utf-8') ?? '';
+    const masterObj = expectOk(
+      await storage.getObject('public', `videos/${videoId}/hls/master.m3u8`)
+    );
+    const masterText = masterObj.toString('utf-8');
 
     // Three EXT-X-STREAM-INF entries
     const streamInfLines = masterText
@@ -360,7 +362,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
 
     // 2. Verify p720 renditions start PENDING
     let p720Rends = await repositories.renditions.findByVideoId(p720Id);
-    expect(p720Rends.map((r: any) => r.status)).toEqual(['PENDING', 'PENDING']);
+    expect(expectOk(p720Rends).map((r: any) => r.status)).toEqual(['PENDING', 'PENDING']);
 
     // Mock sd360 probe: 360p height -> 480p (lowest rung kept, upscaled by rule)
     vi.spyOn(ffmpegModule, 'runFfprobe').mockResolvedValueOnce({
@@ -404,7 +406,9 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     vi.spyOn(ffmpegModule, 'runFfmpegTranscode').mockImplementation(async (options) => {
       // While running, verify rendition status is RUNNING
       const inFlightRends = await repositories.renditions.findByVideoId(p720Id);
-      const currentRend = inFlightRends.find((r: any) => r.name === options.rendition.name);
+      const currentRend = expectOk(inFlightRends).find(
+        (r: any) => r.name === options.rendition.name
+      );
       expect(currentRend?.status).toBe('RUNNING');
 
       await fs.writeFile(path.join(options.outputDir, 'seg_00001.ts'), Buffer.alloc(100));
@@ -421,8 +425,8 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     await getQueue('transcode-720p').process(transcode720);
 
     p720Rends = await repositories.renditions.findByVideoId(p720Id);
-    const r720 = p720Rends.find((r) => r.name === '720p');
-    const r480 = p720Rends.find((r) => r.name === '480p');
+    const r720 = expectOk(p720Rends).find((r) => r.name === '720p');
+    const r480 = expectOk(p720Rends).find((r) => r.name === '480p');
     expect(r720?.status).toBe('DONE');
     expect(r480?.status).toBe('PENDING'); // 480p is still PENDING independently!
   });
@@ -628,7 +632,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
       await storage.headObject('public', `videos/${videoId}/hls/720p/index.m3u8`)
     ).toBeTruthy();
     const rendsBeforeFail = await repositories.renditions.findByVideoId(videoId);
-    expect(rendsBeforeFail.find((r: any) => r.name === '720p')?.status).toBe('DONE');
+    expect(expectOk(rendsBeforeFail).find((r: any) => r.name === '720p')?.status).toBe('DONE');
 
     // 2. Process 480p with simulated permanent failure
     const transcode480 = createTranscodeProcessor({
@@ -653,7 +657,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
       await storage.headObject('public', `videos/${videoId}/hls/720p/index.m3u8`)
     ).toBeTruthy();
     const finalRends = await repositories.renditions.findByVideoId(videoId);
-    expect(finalRends.find((r: any) => r.name === '720p')?.status).toBe('DONE');
-    expect(finalRends.find((r: any) => r.name === '480p')?.status).toBe('FAILED');
+    expect(expectOk(finalRends).find((r: any) => r.name === '720p')?.status).toBe('DONE');
+    expect(expectOk(finalRends).find((r: any) => r.name === '480p')?.status).toBe('FAILED');
   });
 });

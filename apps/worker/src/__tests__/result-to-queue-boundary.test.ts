@@ -5,6 +5,7 @@ import { err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
 import { failedResult } from '../queue-error';
+import { expectOk } from '@vp/testing/result';
 
 const logger = createLogger({ service: 'queue-boundary-test', level: 'error' });
 const metrics = createMetricsRegistry({ env: 'test' });
@@ -81,7 +82,7 @@ describe('the worker edge: a stage Result becomes the queue throw', () => {
         thrown
       );
 
-      const parked = await repositories.dlq.list({ limit: 10 });
+      const parked = expectOk(await repositories.dlq.list({ limit: 10 }));
       expect(parked[0]).toMatchObject({
         queue: 'probe',
         jobId,
@@ -89,7 +90,7 @@ describe('the worker edge: a stage Result becomes the queue throw', () => {
         status: 'PARKED',
       });
 
-      const [copy] = await getQueue('dlq').getJobs();
+      const [copy] = expectOk(await getQueue('dlq').getJobs());
       expect((copy?.data as { error: { unrecoverable: boolean } }).error.unrecoverable).toBe(
         unrecoverable
       );

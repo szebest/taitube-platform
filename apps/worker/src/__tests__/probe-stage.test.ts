@@ -98,8 +98,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       workerId: workerId1,
       lockToken: lockToken1,
     });
-    expect(claim1.fenced).toBe(false);
-    expect(claim1.lockToken).toBe(lockToken1);
+    expect(expectOk(claim1).fenced).toBe(false);
+    expect(expectOk(claim1).lockToken).toBe(lockToken1);
 
     // Worker 2 (or retry) claims step with NEW token
     const lockToken2 = uuidv7();
@@ -113,8 +113,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       workerId: 'worker-2',
       lockToken: lockToken2,
     });
-    expect(claim2.fenced).toBe(false);
-    expect(claim2.lockToken).toBe(lockToken2);
+    expect(expectOk(claim2).fenced).toBe(false);
+    expect(expectOk(claim2).lockToken).toBe(lockToken2);
 
     // Worker 1 tries to complete step with stale lockToken1 -> FENCED!
     const comp1 = await repositories.steps.complete({
@@ -123,8 +123,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       rendition: '-',
       lockToken: lockToken1, // Stale!
     });
-    expect(comp1.fenced).toBe(true);
-    expect(comp1.completed).toBe(false);
+    expect(expectOk(comp1).fenced).toBe(true);
+    expect(expectOk(comp1).completed).toBe(false);
 
     // Worker 2 completes step with current lockToken2 -> SUCCEEDS!
     const comp2 = await repositories.steps.complete({
@@ -133,8 +133,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
       rendition: '-',
       lockToken: lockToken2,
     });
-    expect(comp2.fenced).toBe(false);
-    expect(comp2.completed).toBe(true);
+    expect(expectOk(comp2).fenced).toBe(false);
+    expect(expectOk(comp2).completed).toBe(true);
   });
 
   it('AC 18: hostile zero-bytes file fails on attempt 1 with CORRUPT_CONTAINER', async () => {
@@ -248,8 +248,8 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     });
 
     const result = await processor(job);
-    expect(result.status).toBe('PROCESSING');
-    expect(result.durationMs).toBe(60000);
+    expect(expectOk(result).status).toBe('PROCESSING');
+    expect(expectOk(result).durationMs).toBe(60000);
 
     // 1. Verify video in DB is PROCESSING with duration and ladder
     const video = expectOk(await repositories.videos.findById(videoId));
@@ -260,15 +260,17 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
 
     // 2. Verify renditions table has PENDING rows for 1080p, 720p, 480p (AC 17)
     const rends = await repositories.renditions.findByVideoId(videoId);
-    expect(rends.length).toBe(3);
-    const rendNames = rends.map((r: any) => r.name).sort();
+    expect(expectOk(rends).length).toBe(3);
+    const rendNames = expectOk(rends)
+      .map((r: any) => r.name)
+      .sort();
     expect(rendNames).toEqual(['1080p', '480p', '720p']);
-    expect(rends.every((r: any) => r.status === 'PENDING')).toBe(true);
+    expect(expectOk(rends).every((r: any) => r.status === 'PENDING')).toBe(true);
 
     // 3. Verify video_events contains probe.started and probe.completed (AC 17)
     const events = await repositories.events.findByVideoId(videoId);
-    expect(events.some((e: any) => e.type === 'probe.started')).toBe(true);
-    expect(events.some((e: any) => e.type === 'probe.completed')).toBe(true);
+    expect(expectOk(events).some((e: any) => e.type === 'probe.started')).toBe(true);
+    expect(expectOk(events).some((e: any) => e.type === 'probe.completed')).toBe(true);
 
     // AC 21: Verify temp dir cleanup
     const tmpContents = await fs.readdir(os.tmpdir());
@@ -357,7 +359,11 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     );
 
     const p720Rends = await repositories.renditions.findByVideoId(p720Id);
-    expect(p720Rends.map((r: any) => r.name).sort()).toEqual(['480p', '720p']);
+    expect(
+      expectOk(p720Rends)
+        .map((r: any) => r.name)
+        .sort()
+    ).toEqual(['480p', '720p']);
 
     // 2. Test sd360 (keeps lowest rung 480p)
     vi.spyOn(ffmpegModule, 'runFfprobe').mockResolvedValueOnce({
@@ -395,7 +401,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     );
 
     const sd360Rends = await repositories.renditions.findByVideoId(sd360Id);
-    expect(sd360Rends.map((r: any) => r.name)).toEqual(['480p']);
+    expect(expectOk(sd360Rends).map((r: any) => r.name)).toEqual(['480p']);
 
     // 3. Test portrait video with 90° rotation
     vi.spyOn(ffmpegModule, 'runFfprobe').mockResolvedValueOnce({
