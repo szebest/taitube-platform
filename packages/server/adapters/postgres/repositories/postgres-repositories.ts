@@ -16,8 +16,10 @@ import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
 
+/** A `drizzle` handle or a `sql` pool is borrowed; a `url` opens a pool the bundle ends. */
 export type PostgresRepositoriesConfig =
-  | { type: 'drizzle'; db: PostgresJsDatabase<typeof schema>; sql?: Sql }
+  | { type: 'drizzle'; db: PostgresJsDatabase<typeof schema> }
+  | { type: 'sql'; sql: Sql }
   | { type: 'url'; url: string; max: number };
 
 export class PostgresRepositories implements Repositories {
@@ -34,11 +36,11 @@ export class PostgresRepositories implements Repositories {
   readonly videoReactions: PostgresVideoReactionRepository;
   readonly subscriptions: PostgresSubscriptionRepository;
 
-  private readonly sql?: Sql;
+  private readonly ownedPool: Sql | undefined;
 
   constructor(config: PostgresRepositoriesConfig) {
-    const { db, sql } = PostgresRepositories.connect(config);
-    this.sql = sql;
+    const { db, ownedPool } = PostgresRepositories.connect(config);
+    this.ownedPool = ownedPool;
 
     this.videos = new PostgresVideoRepository(db);
     this.uploads = new PostgresUploadRepository(db);
@@ -56,14 +58,16 @@ export class PostgresRepositories implements Repositories {
 
   private static connect(config: PostgresRepositoriesConfig): {
     db: PostgresJsDatabase<typeof schema>;
-    sql: Sql | undefined;
+    ownedPool: Sql | undefined;
   } {
     switch (config.type) {
       case 'drizzle':
-        return { db: config.db, sql: config.sql };
+        return { db: config.db, ownedPool: undefined };
+      case 'sql':
+        return { db: drizzle(config.sql, { schema }), ownedPool: undefined };
       case 'url': {
         const sql = postgres(config.url, { max: config.max });
-        return { db: drizzle(sql, { schema }), sql };
+        return { db: drizzle(sql, { schema }), ownedPool: sql };
       }
       default:
         return assertNever(config, 'PostgresRepositoriesConfig');
@@ -71,8 +75,6 @@ export class PostgresRepositories implements Repositories {
   }
 
   async close(): Promise<void> {
-    if (this.sql) {
-      await this.sql.end();
-    }
+    await this.ownedPool?.end();
   }
 }

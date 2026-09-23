@@ -9,7 +9,7 @@ import { Adapters } from '../adapter-tokens';
 import { registerFamily } from '../external-family';
 
 function family(): Container {
-  const config = { ...inProcessAppConfig(), kind: 'external' as const };
+  const config = inProcessAppConfig({ kind: 'external', postgres: { poolMax: 3 } });
   const c = new Container().provide(Adapters.Config, () => config);
   registerFamily(c);
   return c;
@@ -25,6 +25,17 @@ describe('external adapter family', () => {
       'us-east-1'
     );
     await c.dispose();
+  });
+
+  it('opens one postgres pool, sized as configured, and ends it once', async () => {
+    const c = family();
+    c.get(Adapters.Repositories);
+    const pool = (c.get(Adapters.DbClient) as PostgresDatabaseClient).getRawSql();
+    const end = vi.spyOn(pool, 'end');
+
+    expect(pool.options.max).toBe(3);
+    await c.dispose();
+    expect(end).toHaveBeenCalledTimes(1);
   });
 
   it('builds multipart over the one S3 client, and closes that client once', async () => {

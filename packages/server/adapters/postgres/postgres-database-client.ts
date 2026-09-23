@@ -1,21 +1,27 @@
 import { DatabaseClient } from '@vp/core/ports';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, assertNever, fromPromise, map } from '@vp/result';
+import { type Result, assertNever, fromPromise, map, ok } from '@vp/result';
 import postgres, { type Sql } from 'postgres';
 
-export type PostgresDatabaseClientConfig = { type: 'sql'; sql: Sql } | { type: 'url'; url: string };
+/** A `sql` pool is borrowed and stays open on close; a `url` opens a pool the client ends. */
+export type PostgresDatabaseClientConfig =
+  | { type: 'sql'; sql: Sql }
+  | { type: 'url'; url: string; max: number };
 
 export class PostgresDatabaseClient extends DatabaseClient {
   private readonly sql: Sql;
+  private readonly ownsPool: boolean;
 
   constructor(config: PostgresDatabaseClientConfig) {
     super();
     switch (config.type) {
       case 'sql':
         this.sql = config.sql;
+        this.ownsPool = false;
         return;
       case 'url':
-        this.sql = postgres(config.url, { max: 10, idle_timeout: 20, connect_timeout: 10 });
+        this.sql = postgres(config.url, { max: config.max, idle_timeout: 20, connect_timeout: 10 });
+        this.ownsPool = true;
         return;
       default:
         assertNever(config, 'PostgresDatabaseClientConfig');
@@ -74,6 +80,7 @@ export class PostgresDatabaseClient extends DatabaseClient {
   }
 
   async close(): Promise<Result<void, DatabaseUnavailable>> {
+    if (!this.ownsPool) return ok();
     const closed = await fromPromise(() => this.sql.end(), this.unavailable('close'));
     return map(closed, () => undefined);
   }

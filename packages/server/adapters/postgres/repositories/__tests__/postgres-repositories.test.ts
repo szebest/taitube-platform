@@ -1,6 +1,6 @@
 import type * as schema from '@vp/db';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import type { Sql } from 'postgres';
+import postgres from 'postgres';
 import { PostgresRepositories } from '../postgres-repositories';
 
 const REPOSITORIES = [
@@ -29,21 +29,17 @@ describe('PostgresRepositories', () => {
     }
   });
 
-  it('ends the pool it was handed on close, and closes cleanly without one', async () => {
-    const end = vi.fn(async () => {});
-    const handed = new PostgresRepositories({
-      type: 'drizzle',
-      db,
-      sql: { end } as unknown as Sql,
-    });
+  it('leaves a pool it was handed open on close, for its owner to end', async () => {
+    const pool = postgres('postgres://vp:vp@127.0.0.1:9/vp', { max: 1 });
+    const end = vi.spyOn(pool, 'end');
 
-    await handed.close();
-    await new PostgresRepositories({ type: 'drizzle', db }).close();
+    await new PostgresRepositories({ type: 'sql', sql: pool }).close();
 
-    expect(end).toHaveBeenCalledTimes(1);
+    expect(end).not.toHaveBeenCalled();
+    await pool.end();
   });
 
-  it('opens its own pool from a url, sized as configured', async () => {
+  it('ends the pool it opened from a url', async () => {
     const repositories = new PostgresRepositories({
       type: 'url',
       url: 'postgres://vp:vp@127.0.0.1:9/vp',

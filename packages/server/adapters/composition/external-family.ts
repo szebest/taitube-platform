@@ -1,4 +1,5 @@
 import { type Container, closeOnDispose, token } from '@vp/composition';
+import type { Repositories } from '@vp/core/repositories';
 import { bullBoardQueues } from '../bullmq/bull-board-queues';
 import { BullMqFlowProducer } from '../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../bullmq/bullmq-job-queue';
@@ -12,7 +13,8 @@ import { S3StorageClient } from '../s3/s3-storage-client';
 import { Adapters } from './adapter-tokens';
 import { LazyQueueRegistry } from './queue-registry';
 
-/** Overriding `Cache` or `Storage` must not take the connection a sibling adapter shares. */
+/** Overriding `Cache`, `Storage` or `DbClient` must not take the connection a sibling shares. */
+const Postgres = token<PostgresDatabaseClient>('PostgresDatabaseClient');
 const Redis = token<RedisCacheClient>('RedisCacheClient');
 const S3 = token<S3StorageClient>('S3StorageClient');
 
@@ -21,18 +23,19 @@ export function registerFamily(c: Container): void {
   const connection = redisConnectionOptions(config.redis.url, config.redis.password);
 
   c.provide(
-    Adapters.DbClient,
-    () => new PostgresDatabaseClient({ type: 'url', url: config.postgres.url }),
+    Postgres,
+    () =>
+      new PostgresDatabaseClient({
+        type: 'url',
+        url: config.postgres.url,
+        max: config.postgres.poolMax,
+      }),
     closeOnDispose
   )
-    .provide(
+    .provide(Adapters.DbClient, (c) => c.get(Postgres))
+    .provide<Repositories, PostgresRepositories>(
       Adapters.Repositories,
-      () =>
-        new PostgresRepositories({
-          type: 'url',
-          url: config.postgres.url,
-          max: config.postgres.poolMax,
-        }),
+      (c) => new PostgresRepositories({ type: 'sql', sql: c.get(Postgres).getRawSql() }),
       closeOnDispose
     )
     .provide(
