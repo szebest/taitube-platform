@@ -1,9 +1,8 @@
-import { Adapters } from '@vp/adapters/composition';
+import { Adapters, queueNamed } from '@vp/adapters/composition';
 import { type Container, token } from '@vp/composition';
 import type { JobQueue } from '@vp/core/ports';
 import { getMetrics } from '@vp/observability';
 import { Paginator } from '@vp/pagination';
-import { ok } from '@vp/result';
 import { CategoryService } from '../services/category-service';
 import { ChannelService } from '../services/channel-service';
 import { DlqService } from '../services/dlq-service';
@@ -52,7 +51,7 @@ export const Services = {
   Readiness: token<ReadinessService>('Readiness'),
   QueuePoller: token<Poller>('QueuePoller'),
   SqlPoller: token<Poller>('SqlPoller'),
-  HousekeepingQueue: token<JobQueue | undefined>('HousekeepingQueue'),
+  HousekeepingQueue: token<JobQueue>('HousekeepingQueue'),
   ServiceSet: token<ServiceSet>('ServiceSet'),
 } as const;
 
@@ -96,6 +95,7 @@ export function registerServices(c: Container): Container {
           rawBucket: config().buckets.raw,
           multipartThresholdBytes: config().limits.multipartThresholdBytes,
           presignedUrlTtlSeconds: config().limits.presignTtlSeconds,
+          uploadSessionTtlSeconds: config().limits.uploadSessionTtlSeconds,
           maxInflightPerUser: config().limits.maxInflightPerUser,
         })
     )
@@ -201,9 +201,11 @@ export function registerServices(c: Container): Container {
       () => new Poller(() => pollSqlMetrics(repositories(), getMetrics()), SQL_POLL_INTERVAL_MS),
       { start: (poller) => poller.start(), dispose: (poller) => poller.stop() }
     )
-    .provide(Services.HousekeepingQueue, (c) => c.get(Adapters.Queues).get('housekeeping'), {
-      start: async (queue) => (queue ? registerHousekeepingSchedulers(queue) : ok()),
-    })
+    .provide(
+      Services.HousekeepingQueue,
+      (c) => queueNamed(c.get(Adapters.Queues), 'housekeeping'),
+      { start: (queue) => registerHousekeepingSchedulers(queue) }
+    )
     .provide(Services.ServiceSet, (c) => ({
       videoService: c.get(Services.VideoService),
       uploadService: c.get(Services.UploadService),

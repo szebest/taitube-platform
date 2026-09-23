@@ -192,7 +192,6 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
         storage: s3Client,
         multipart,
         probeQueue: mockProbeQueue,
-        queues: new Map(),
       },
       config: inProcessAppConfig({ limits: { multipartThresholdBytes: 10 * 1024 * 1024 } }),
     });

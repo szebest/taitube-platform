@@ -36,10 +36,9 @@ export interface HousekeepingSettings {
 export interface HousekeepingProcessorOptions extends HousekeepingSettings {
   repositories: Repositories;
   storage: StorageClient;
-  multipart?: MultipartStorage;
-  reactionCache?: ReactionCachePort;
-  getQueue?: (name: QueueName) => JobQueue;
-  probeQueue?: JobQueue;
+  multipart: MultipartStorage;
+  reactionCache: ReactionCachePort;
+  getQueue: (name: QueueName) => JobQueue;
   workerId?: string;
   logger?: Logger;
 }
@@ -47,9 +46,9 @@ export interface HousekeepingProcessorOptions extends HousekeepingSettings {
 export function createHousekeepingProcessor(
   options: HousekeepingProcessorOptions
 ): (job: QueueJob<unknown>) => Promise<Result<unknown, AnyFailure>> {
-  const { repositories, storage, multipart, getQueue, workerId, logger } = options;
+  const { repositories, storage, multipart, reactionCache, getQueue, workerId, logger } = options;
   const { rawBucket, publicBucket, retentionDays, maxInflightPerUser, tmpDir } = options;
-  const probeQueue = options.probeQueue ?? (getQueue ? getQueue('probe') : undefined);
+  const probeQueue = getQueue('probe');
 
   return async (job: QueueJob<unknown>): Promise<Result<unknown, AnyFailure>> => {
     const data = HousekeepingJob.parse(job.data);
@@ -98,7 +97,7 @@ export function createHousekeepingProcessor(
       case 'reconcile-reaction-counters':
         return await runReconcileReactionCounters({
           repositories,
-          reactionCache: options.reactionCache,
+          reactionCache,
           logger,
         });
 

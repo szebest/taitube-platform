@@ -2,20 +2,21 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import {
+  InMemoryCacheClient,
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
+import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { storageUnavailable } from '@vp/errors';
+import { queueUnavailable, storageUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { Result } from '@vp/result';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it } from 'vitest';
 import { createWorkerRunner } from '../runner';
 import {
   createHousekeepingProcessor,
@@ -94,6 +95,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
           ...STAGE_SETTINGS,
           repositories,
           multipart,
+          probeQueue: getQueue('probe'),
           rawBucket: 'raw',
           uploadingThresholdMs: 60 * 60 * 1000,
         })
@@ -132,6 +134,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
           ...STAGE_SETTINGS,
           repositories,
           multipart,
+          probeQueue: getQueue('probe'),
           uploadingThresholdMs: 60 * 60 * 1000,
         })
       );
@@ -302,10 +305,29 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
       expect(checkVideo?.status).toBe('PROCESSING');
     });
 
-    it('does NOT mark as orphaned if a job is waiting in a processing queue', async () => {
+    it.each([
+      {
+        scenario: 'a job is waiting in a processing queue',
+        arrange: async (videoId: string) => {
+          await getQueue('transcode-720p').add('transcode', { videoId, rendition: '720p' });
+        },
+      },
+      {
+        scenario: 'a job is in prioritized state',
+        arrange: async (videoId: string) => {
+          await getQueue('probe').add('probe', { videoId }, { priority: 5 });
+        },
+      },
+      {
+        scenario: 'a processing queue cannot be inspected',
+        arrange: async () => {
+          vi.spyOn(getQueue('probe'), 'getJobs').mockResolvedValue(
+            err(queueUnavailable('getJobs', 'redis down'))
+          );
+        },
+      },
+    ])('does NOT mark as orphaned if $scenario', async ({ arrange }) => {
       const videoId = uuidv7();
-      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
-
       const video = expectOk(
         await repositories.videos.create({
           id: videoId,
@@ -315,43 +337,8 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
           generation: 1,
         })
       );
-      video.updatedAt = fourHoursAgo;
-
-      // Add a waiting job to transcode-720p
-      const transcodeQueue = getQueue('transcode-720p') as InMemoryJobQueue;
-      await transcodeQueue.add('transcode', { videoId, rendition: '720p' });
-
-      const result = expectOk(
-        await runReconcileProcessing({
-          repositories,
-          getQueue,
-          thresholdMs: 3 * 60 * 60 * 1000,
-        })
-      );
-
-      expect(result.orphanedCount).toBe(0);
-      const checkVideo = expectOk(await repositories.videos.findById(videoId));
-      expect(checkVideo?.status).toBe('PROCESSING');
-    });
-
-    it('does NOT mark as orphaned if a job is in prioritized state', async () => {
-      const videoId = uuidv7();
-      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
-
-      const video = expectOk(
-        await repositories.videos.create({
-          id: videoId,
-          ownerId: uuidv7(),
-          sourceKey: `raw/${videoId}/source.mp4`,
-          status: 'PROCESSING',
-          generation: 1,
-        })
-      );
-      video.updatedAt = fourHoursAgo;
-
-      // Add a prioritized job to probe queue
-      const probeQueue = getQueue('probe') as InMemoryJobQueue;
-      await probeQueue.add('probe', { videoId }, { priority: 5 });
+      video.updatedAt = new Date(Date.now() - 4 * 60 * 60 * 1000);
+      await arrange(videoId);
 
       const result = expectOk(
         await runReconcileProcessing({
@@ -623,12 +610,14 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
           ...STAGE_SETTINGS,
           repositories,
           multipart,
+          probeQueue: getQueue('probe'),
           uploadingThresholdMs: 60 * 60 * 1000,
         }),
         runReconcileUploads({
           ...STAGE_SETTINGS,
           repositories,
           multipart,
+          probeQueue: getQueue('probe'),
           uploadingThresholdMs: 60 * 60 * 1000,
         }),
       ]);
@@ -792,6 +781,9 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         repositories,
         storage,
         multipart,
+        reactionCache: new RedisReactionCacheAdapter({
+          backend: { type: 'cache', cache: new InMemoryCacheClient() },
+        }),
         getQueue,
       });
 

@@ -1,12 +1,9 @@
-import {
-  InMemoryMultipartStorage,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { type UploadContext, loadOwnedUpload } from '../upload-context';
+import { uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000a001', role: 'CREATOR' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000a002', role: 'CREATOR' };
@@ -21,18 +18,7 @@ describe('apps/api/services: upload context', () => {
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
     const storage = new InMemoryStorageClient();
-    ctx = {
-      uploads: repositories.uploads,
-      videos: repositories.videos,
-      events: repositories.events,
-      storage,
-      multipart: new InMemoryMultipartStorage(storage),
-      rawBucket: 'raw',
-      multipartThresholdBytes: 1024,
-      presignedUrlTtlSeconds: 900,
-      uploadSessionTtlSeconds: 86_400,
-      maxInflightPerUser: 3,
-    };
+    ctx = uploadContext(repositories, storage, { multipartThresholdBytes: 1024 });
 
     await repositories.videos.create({
       id: VIDEO_ID,

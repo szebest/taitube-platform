@@ -30,9 +30,6 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
       ttl: '2h',
     });
 
-    const adminQueues = new Map();
-    adminQueues.set('probe', probeQueue);
-
     app = await buildApp({
       adapters: {
         repositories,
@@ -40,7 +37,6 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
         multipart,
         cache,
         probeQueue,
-        queues: adminQueues,
       },
       config: inProcessAppConfig({
         buckets: { raw: 'raw-bucket' },

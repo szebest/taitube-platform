@@ -7,6 +7,13 @@ export interface QueueRegistry {
   close(): Promise<Result<void, QueueUnavailable>>;
 }
 
+/** A queue the composition needs and the map lacks is a wiring error, raised at compose time. */
+export function queueNamed(queues: ReadonlyMap<string, JobQueue>, name: string): JobQueue {
+  const queue = queues.get(name);
+  if (!queue) throw new Error(`No queue named ${name}`);
+  return queue;
+}
+
 /** Opens a queue on first use, so a worker holds a connection only for the queues it touches. */
 export class LazyQueueRegistry implements QueueRegistry {
   private readonly opened = new Map<string, JobQueue>();

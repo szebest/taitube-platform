@@ -16,11 +16,11 @@ export interface UploadContext {
   uploads: UploadRepository;
   videos: VideoRepository;
   events: EventRepository;
-  users?: UserRepository;
+  users: UserRepository;
   storage: StorageClient;
   multipart: MultipartStorage;
   rawBucket: string;
-  probeQueue?: JobQueue;
+  probeQueue: JobQueue;
   multipartThresholdBytes: number;
   presignedUrlTtlSeconds: number;
   uploadSessionTtlSeconds: number;

@@ -6,6 +6,9 @@ export type AdapterKind = 'in-memory' | 'external';
 /** SDD §10: an idle stream closes after 30 minutes and the client reconnects with Last-Event-ID. */
 const SSE_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
+/** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
+const UPLOAD_SESSION_TTL_SECONDS = 24 * 60 * 60;
+
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
 
 export interface AppConfig {
@@ -19,6 +22,7 @@ export interface AppConfig {
     uploadRateLimitMax: number;
     multipartThresholdBytes: number;
     presignTtlSeconds: number;
+    uploadSessionTtlSeconds: number;
     rawRetentionDays: number;
   };
   pagination: { defaultLimit: number; maxLimit: number };
@@ -67,6 +71,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       uploadRateLimitMax: env.UPLOAD_RATE_LIMIT_MAX,
       multipartThresholdBytes: env.S3_MULTIPART_THRESHOLD_BYTES,
       presignTtlSeconds: env.S3_PRESIGN_TTL_SEC,
+      uploadSessionTtlSeconds: UPLOAD_SESSION_TTL_SECONDS,
       rawRetentionDays: env.RAW_RETENTION_DAYS,
     },
     pagination: { defaultLimit: env.PAGE_SIZE_DEFAULT, maxLimit: env.PAGE_SIZE_MAX },

@@ -1,6 +1,6 @@
 import { expectOk } from '@vp/testing/result';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
-import { LazyQueueRegistry } from '../queue-registry';
+import { LazyQueueRegistry, queueNamed } from '../queue-registry';
 
 describe('LazyQueueRegistry', () => {
   it('opens a queue on first use and hands the same one back after that', () => {
@@ -22,5 +22,17 @@ describe('LazyQueueRegistry', () => {
 
     expect(close).toHaveBeenCalledTimes(1);
     expect(open).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('queueNamed', () => {
+  it('hands back the queue the map holds under that name', () => {
+    const probe = new InMemoryJobQueue('probe');
+
+    expect(queueNamed(new Map([['probe', probe]]), 'probe')).toBe(probe);
+  });
+
+  it('refuses a name the map does not hold', () => {
+    expect(() => queueNamed(new Map(), 'housekeeping')).toThrow('No queue named housekeeping');
   });
 });

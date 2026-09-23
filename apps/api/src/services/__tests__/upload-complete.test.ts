@@ -1,6 +1,5 @@
 import {
   InMemoryJobQueue,
-  InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
@@ -8,7 +7,9 @@ import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
+import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';
+import { uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000d001', role: 'CREATOR' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000d002', role: 'CREATOR' };
@@ -21,21 +22,8 @@ describe('apps/api/services: complete upload', () => {
   let probeQueue: InMemoryJobQueue;
   let service: UploadService;
 
-  function build(maxInflightPerUser = 3, uploadSessionTtlSeconds?: number): UploadService {
-    return new UploadService({
-      uploads: repositories.uploads,
-      videos: repositories.videos,
-      events: repositories.events,
-      users: repositories.users,
-      storage,
-      multipart: new InMemoryMultipartStorage(storage),
-      rawBucket: 'raw',
-      probeQueue,
-      multipartThresholdBytes: 10 * MB,
-      maxInflightPerUser,
-      presignedUrlTtlSeconds: 900,
-      uploadSessionTtlSeconds,
-    });
+  function build(overrides: Partial<UploadContext> = {}): UploadService {
+    return new UploadService(uploadContext(repositories, storage, { probeQueue, ...overrides }));
   }
 
   async function startSingle(sizeBytes = SIZE) {
@@ -81,7 +69,7 @@ describe('apps/api/services: complete upload', () => {
   });
 
   it('holds the probe once the owner is at their in-flight limit', async () => {
-    service = build(0);
+    service = build({ maxInflightPerUser: 0 });
     const started = await startSingle();
     await store(started.sourceKey, SIZE);
 
@@ -142,7 +130,7 @@ describe('apps/api/services: complete upload', () => {
   });
 
   it('refuses to complete an upload whose session has expired', async () => {
-    const expired = build(3, 0);
+    const expired = build({ uploadSessionTtlSeconds: 0 });
     const started = expectOk(
       await expired.initiate(OWNER, {
         filename: 'clip.mp4',

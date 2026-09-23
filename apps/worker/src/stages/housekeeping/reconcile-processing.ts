@@ -8,7 +8,7 @@ import { uuidv7 } from 'uuidv7';
 
 export interface ReconcileProcessingOptions {
   repositories: Repositories;
-  getQueue?: (name: QueueName) => JobQueue;
+  getQueue: (name: QueueName) => JobQueue;
   thresholdMs?: number;
   workerId?: string;
   logger?: Logger;
@@ -63,15 +63,18 @@ export async function runReconcileProcessing(
     // A queue that cannot be inspected is assumed to still hold the job, which errs on the side of
     // leaving a live video alone rather than failing it.
     let hasWaitingJob = false;
-    for (const queueName of getQueue ? ACTIVE_PROCESSING_QUEUES : []) {
-      const jobs = await getQueue?.(queueName).getJobs([
+    for (const queueName of ACTIVE_PROCESSING_QUEUES) {
+      const jobs = await getQueue(queueName).getJobs([
         'waiting',
         'active',
         'delayed',
         'prioritized',
         'paused',
       ]);
-      if (!jobs || isErr(jobs)) continue;
+      if (isErr(jobs)) {
+        hasWaitingJob = true;
+        break;
+      }
 
       hasWaitingJob = jobs.value.some((j) => {
         const data = j.data as { videoId?: string } | undefined;

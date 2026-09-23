@@ -2,12 +2,17 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
-import type { MultipartStorage, Repositories, StorageClient } from '../../packages/server/core/ports/index';
-import { ErrorCodes } from '../../packages/universal/errors/src/index';
-import { UploadClient } from '../../packages/server/upload-client/src/index';
-import type { VideoTestResult, VideoTestSpec } from './specs';
-import { unwrapOr } from '../../packages/universal/result/src/index';
+import { InMemoryJobQueue } from '../../packages/server/adapters/in-memory/in-memory-job-queue';
+import type {
+  MultipartStorage,
+  Repositories,
+  StorageClient,
+} from '../../packages/server/core/ports/index';
 import { expectOk } from '../../packages/server/testing/src/result';
+import { UploadClient } from '../../packages/server/upload-client/src/index';
+import { ErrorCodes } from '../../packages/universal/errors/src/index';
+import { unwrapOr } from '../../packages/universal/result/src/index';
+import type { VideoTestResult, VideoTestSpec } from './specs';
 
 const uuidv7 = () => crypto.randomUUID();
 
@@ -138,6 +143,7 @@ export async function runAbandonedUploadTest(ctx: DlqCheckContext): Promise<{
       maxInflightPerUser: 3,
       repositories,
       multipart,
+      probeQueue: new InMemoryJobQueue('probe'),
       uploadingThresholdMs: 10,
     });
   }

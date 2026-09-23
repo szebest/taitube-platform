@@ -124,17 +124,10 @@ async function rejectSizeMismatch(
   return err(uploadSizeMismatch(video.id, video.sourceSizeBytes ?? null, actualSizeBytes));
 }
 
-async function probePriority(
-  ctx: UploadContext,
-  user: UserContext,
-  ownerId: string
-): Promise<number> {
-  if (ctx.users) {
-    // A tier lookup that cannot answer costs the job its priority, not its admission.
-    const record = unwrapOr(await ctx.users.findById(ownerId), null);
-    return record?.tier === 'pro' || record?.tier === 'enterprise' ? PRIORITY_PAID : PRIORITY_FREE;
-  }
-  return (user as { tier?: string }).tier === 'pro' ? PRIORITY_PAID : PRIORITY_FREE;
+/** A tier lookup that cannot answer costs the job its priority, not its admission. */
+async function probePriority(ctx: UploadContext, ownerId: string): Promise<number> {
+  const record = unwrapOr(await ctx.users.findById(ownerId), null);
+  return record?.tier === 'pro' || record?.tier === 'enterprise' ? PRIORITY_PAID : PRIORITY_FREE;
 }
 
 /**
@@ -182,7 +175,7 @@ export async function completeUpload(
     sourceKey: video.sourceKey,
     generation: 1,
     traceparent,
-    priority: await probePriority(ctx, user, video.ownerId),
+    priority: await probePriority(ctx, video.ownerId),
   });
 
   const transitioned = await ctx.videos.transition({

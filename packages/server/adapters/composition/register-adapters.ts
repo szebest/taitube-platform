@@ -6,6 +6,7 @@ import { CaslAuthorizationAdapter } from '../authorization/casl-authorization-ad
 import { RedisCategoryCacheAdapter } from '../redis/redis-category-cache.adapter';
 import { RedisReactionCacheAdapter } from '../redis/redis-reaction-cache.adapter';
 import { Adapters } from './adapter-tokens';
+import { queueNamed } from './queue-registry';
 
 /**
  * The only place the platform chooses between the in-memory and the external adapter family.
@@ -24,7 +25,7 @@ export async function registerAdapters(c: Container, config: AppConfig): Promise
       const registry = c.get(Adapters.QueueRegistry);
       return new Map<string, JobQueue>(QUEUES.map((name) => [name, registry.get(name)]));
     })
-    .provide(Adapters.ProbeQueue, (c) => c.get(Adapters.Queues).get('probe'))
+    .provide(Adapters.ProbeQueue, (c) => queueNamed(c.get(Adapters.Queues), 'probe'))
     .provide(Adapters.Authorization, () => new CaslAuthorizationAdapter())
     .provide(
       Adapters.ReactionCache,

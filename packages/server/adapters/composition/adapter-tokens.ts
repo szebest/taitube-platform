@@ -25,7 +25,7 @@ export const Adapters = {
   Multipart: token<MultipartStorage>('Multipart'),
   QueueRegistry: token<QueueRegistry>('QueueRegistry'),
   Queues: token<Map<string, JobQueue>>('Queues'),
-  ProbeQueue: token<JobQueue | undefined>('ProbeQueue'),
+  ProbeQueue: token<JobQueue>('ProbeQueue'),
   FlowProducer: token<FlowProducerPort>('FlowProducer'),
   ReactionCache: token<ReactionCachePort>('ReactionCache'),
   SubscriptionCache: token<SubscriptionCachePort>('SubscriptionCache'),

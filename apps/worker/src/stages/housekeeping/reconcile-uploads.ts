@@ -7,8 +7,8 @@ import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 
 export interface ReconcileUploadsOptions {
   repositories: Repositories;
-  multipart?: MultipartStorage;
-  probeQueue?: JobQueue;
+  multipart: MultipartStorage;
+  probeQueue: JobQueue;
   rawBucket: string;
   uploadingThresholdMs?: number;
   uploadedThresholdMs?: number;
@@ -69,7 +69,7 @@ export async function runReconcileUploads(
       const upload = unwrapOr(await repositories.uploads.findByVideoId(video.id), null);
       if (upload) {
         await repositories.uploads.updateStatus(upload.id, 'ABORTED');
-        if (upload.multipartUploadId && multipart) {
+        if (upload.multipartUploadId) {
           // A session that storage will expire on its own is not worth holding the sweep for.
           const aborted = await multipart.abortMultipartUpload(
             rawBucket,
@@ -98,58 +98,51 @@ export async function runReconcileUploads(
   const ownerInflightCounts = new Map<string, number>();
 
   for (const video of staleUploaded.value) {
-    if (probeQueue) {
-      let currentInflight = ownerInflightCounts.get(video.ownerId);
-      if (currentInflight === undefined) {
-        const counted = await repositories.videos.countInFlightByOwner(video.ownerId);
-        if (isErr(counted)) return counted;
+    let currentInflight = ownerInflightCounts.get(video.ownerId);
+    if (currentInflight === undefined) {
+      const counted = await repositories.videos.countInFlightByOwner(video.ownerId);
+      if (isErr(counted)) return counted;
 
-        currentInflight = counted.value;
-        ownerInflightCounts.set(video.ownerId, currentInflight);
-      }
-
-      if (currentInflight >= maxInflightPerUser) {
-        logger?.info(
-          { videoId: video.id, ownerId: video.ownerId, currentInflight, maxInflightPerUser },
-          'Reconciler skipping held video: owner in-flight limit reached'
-        );
-        continue;
-      }
-
-      let priority = 5;
-      if (repositories.users) {
-        // A tier lookup that cannot answer costs the job its priority, not its admission.
-        const user = unwrapOr(await repositories.users.findById(video.ownerId), null);
-        if (user?.tier === 'pro' || user?.tier === 'enterprise') {
-          priority = 1;
-        }
-      }
-
-      const probeJobId = ids.probe(video.id, video.generation ?? 1);
-      await probeQueue.add(
-        'probe',
-        {
-          videoId: video.id,
-          sourceKey: video.sourceKey,
-          generation: video.generation ?? 1,
-          traceparent: '00-00000000000000000000000000000001-0000000000000001-01',
-        },
-        {
-          jobId: probeJobId,
-          ...stagePolicies.probe,
-          ...defaultJobOptions,
-          priority,
-        }
-      );
-
-      ownerInflightCounts.set(video.ownerId, currentInflight + 1);
-      reenqueuedCount += 1;
-      getMetrics().reconcilerRepairsTotal.inc({ type: 'missing_probe' });
-      logger?.info(
-        { videoId: video.id, probeJobId, priority },
-        'Reconciler released held video and enqueued probe job'
-      );
+      currentInflight = counted.value;
+      ownerInflightCounts.set(video.ownerId, currentInflight);
     }
+
+    if (currentInflight >= maxInflightPerUser) {
+      logger?.info(
+        { videoId: video.id, ownerId: video.ownerId, currentInflight, maxInflightPerUser },
+        'Reconciler skipping held video: owner in-flight limit reached'
+      );
+      continue;
+    }
+
+    // A tier lookup that cannot answer costs the job its priority, not its admission.
+    const user = unwrapOr(await repositories.users.findById(video.ownerId), null);
+    const priority = user?.tier === 'pro' || user?.tier === 'enterprise' ? 1 : 5;
+
+    const probeJobId = ids.probe(video.id, video.generation ?? 1);
+    await probeQueue.add(
+      'probe',
+      {
+        videoId: video.id,
+        sourceKey: video.sourceKey,
+        generation: video.generation ?? 1,
+        traceparent: '00-00000000000000000000000000000001-0000000000000001-01',
+      },
+      {
+        jobId: probeJobId,
+        ...stagePolicies.probe,
+        ...defaultJobOptions,
+        priority,
+      }
+    );
+
+    ownerInflightCounts.set(video.ownerId, currentInflight + 1);
+    reenqueuedCount += 1;
+    getMetrics().reconcilerRepairsTotal.inc({ type: 'missing_probe' });
+    logger?.info(
+      { videoId: video.id, probeJobId, priority },
+      'Reconciler released held video and enqueued probe job'
+    );
   }
 
   return ok({ abandonedCount, reenqueuedCount });

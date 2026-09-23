@@ -29,27 +29,13 @@ export * from './upload-context';
 export * from './upload-initiate';
 export * from './upload-parts';
 
-/** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
-const UPLOAD_SESSION_TTL_SECONDS = 24 * 60 * 60;
-
-export type UploadServiceDeps = Omit<UploadContext, 'uploadSessionTtlSeconds'> & {
-  uploadSessionTtlSeconds?: number;
-};
-
 /**
  * UploadService — the upload lifecycle (SDD §3.1, §6.1). Each use case lives in
  * its own module beside this one; the class is the seam routes depend on and the
  * owner of the shared collaborator set.
  */
 export class UploadService {
-  private readonly ctx: UploadContext;
-
-  constructor(deps: UploadServiceDeps) {
-    this.ctx = {
-      ...deps,
-      uploadSessionTtlSeconds: deps.uploadSessionTtlSeconds ?? UPLOAD_SESSION_TTL_SECONDS,
-    };
-  }
+  constructor(private readonly ctx: UploadContext) {}
 
   initiate(
     user: UserContext,

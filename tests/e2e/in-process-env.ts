@@ -1,5 +1,7 @@
-import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
 import type { FastifyInstance } from 'fastify';
+import { buildApp } from '../../apps/api/src/app';
+import { createWorkerRunner } from '../../apps/worker/src/runner';
+import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import {
   InMemoryCacheClient,
   InMemoryFlowProducer,
@@ -8,9 +10,6 @@ import {
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '../../packages/server/adapters/in-memory/index';
-import { buildApp } from '../../apps/api/src/app';
-import { createWorkerRunner } from '../../apps/worker/src/runner';
-import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import type {
   CacheClient,
   FlowProducerPort,
@@ -19,6 +18,7 @@ import type {
   Repositories,
   StorageClient,
 } from '../../packages/server/core/ports/index';
+import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
 import { createLogger, createMetricsRegistry } from '../../packages/server/observability/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
@@ -106,10 +106,14 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
       storage,
       multipart,
       cache,
-      probeQueue: queuesMap.get('probe'),
+      probeQueue: getQueue('probe'),
       queues: queuesMap,
     },
-    config: inProcessAppConfig({ cdn: `${s3Instance.baseUrl}/public`, limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 }, sse: { heartbeatMs: 2000 } }),
+    config: inProcessAppConfig({
+      cdn: `${s3Instance.baseUrl}/public`,
+      limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 },
+      sse: { heartbeatMs: 2000 },
+    }),
   });
 
   const reconcilerTimer = setInterval(() => {
@@ -117,7 +121,7 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
       rawBucket: 'raw',
       repositories,
       multipart,
-      probeQueue: queuesMap.get('probe'),
+      probeQueue: getQueue('probe'),
       maxInflightPerUser: 100,
       uploadedThresholdMs: 500,
     }).catch(() => {});

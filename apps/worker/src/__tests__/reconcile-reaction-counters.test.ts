@@ -1,12 +1,13 @@
 import {
   InMemoryCacheClient,
+  InMemoryJobQueue,
+  InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { type Result, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
-import { beforeEach, describe, expect, it } from 'vitest';
 import { createHousekeepingProcessor, runReconcileReactionCounters } from '../stages/housekeeping';
 import { STAGE_SETTINGS } from './stage-settings';
 
@@ -83,7 +84,9 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
       ...STAGE_SETTINGS,
       repositories: repos,
       storage,
+      multipart: new InMemoryMultipartStorage(storage),
       reactionCache,
+      getQueue: (name) => new InMemoryJobQueue(name),
     });
 
     const videoId = '22222222-2222-7222-8222-222222222222';

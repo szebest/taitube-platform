@@ -17,7 +17,7 @@ export { DELETABLE_STATUSES, REPROCESSABLE_STATUSES };
 
 export interface VideoLifecycleDeps {
   videos: VideoRepository;
-  probeQueue?: JobQueue;
+  probeQueue: JobQueue;
 }
 
 export interface ReprocessResult {

@@ -1,12 +1,10 @@
-import {
-  InMemoryMultipartStorage,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { UserContext } from '@vp/permissions';
 import { MULTIPART_THRESHOLD_BYTES } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
-import { UploadService, type UploadServiceDeps } from '../upload-service';
+import type { UploadContext } from '../upload-context';
+import { UploadService } from '../upload-service';
+import { uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'CREATOR' };
 
@@ -14,19 +12,13 @@ describe('apps/api/services: UploadService', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
 
-  function build(overrides: Partial<UploadServiceDeps> = {}): UploadService {
-    return new UploadService({
-      uploads: repositories.uploads,
-      videos: repositories.videos,
-      events: repositories.events,
-      storage,
-      multipart: new InMemoryMultipartStorage(storage),
-      rawBucket: 'raw',
-      multipartThresholdBytes: MULTIPART_THRESHOLD_BYTES,
-      presignedUrlTtlSeconds: 900,
-      maxInflightPerUser: 3,
-      ...overrides,
-    });
+  function build(overrides: Partial<UploadContext> = {}): UploadService {
+    return new UploadService(
+      uploadContext(repositories, storage, {
+        multipartThresholdBytes: MULTIPART_THRESHOLD_BYTES,
+        ...overrides,
+      })
+    );
   }
 
   beforeEach(() => {

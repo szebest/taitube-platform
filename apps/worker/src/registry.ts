@@ -4,6 +4,7 @@ import type {
   JobQueue,
   MultipartStorage,
   QueueJob,
+  ReactionCachePort,
   StorageClient,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
@@ -25,6 +26,7 @@ export interface StageDeps {
   storage: StorageClient;
   multipart: MultipartStorage;
   cache: CacheClient;
+  reactionCache: ReactionCachePort;
   getQueue: (name: string) => JobQueue;
   flowProducer: FlowProducerPort;
   logger: Logger;
@@ -184,6 +186,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           repositories: d.repositories,
           storage: d.storage,
           multipart: d.multipart,
+          reactionCache: d.reactionCache,
           getQueue: d.getQueue,
           workerId: d.workerId,
           logger: d.logger,

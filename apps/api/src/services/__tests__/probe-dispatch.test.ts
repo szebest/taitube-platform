@@ -12,7 +12,7 @@ function dispatch(overrides: { generation?: number; priority?: number } = {}) {
     sourceKey: `raw/${VIDEO_ID}/source.mp4`,
     generation: overrides.generation ?? 1,
     traceparent: TRACEPARENT,
-    ...(overrides.priority === undefined ? {} : { priority: overrides.priority }),
+    priority: overrides.priority,
   });
 }
 
@@ -45,9 +45,5 @@ describe('apps/api/services: probe dispatch', () => {
       job: { name: 'probe', data: built.data, opts: built.opts },
     });
     expect(job).toMatchObject({ name: 'probe', data: built.data });
-  });
-
-  it('is a no-op when no queue is wired, leaving the outbox as the only publisher', async () => {
-    expect(expectOk(await enqueueProbe(undefined, dispatch()))).toBeUndefined();
   });
 });
