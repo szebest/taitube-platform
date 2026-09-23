@@ -1,4 +1,24 @@
+import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
+import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
 import type { ConnectionOptions } from 'bullmq';
+
+/** What a BullMQ `Queue` and `FlowProducer` both expose over the Redis backend they own. */
+export interface RedisBackendOwner {
+  getBackend(): { readonly client: PromiseLike<{ readonly status: string }> };
+}
+
+export async function checkBackendHealth(
+  owner: RedisBackendOwner
+): Promise<Result<void, QueueUnavailable>> {
+  const client = await fromPromise(
+    () => owner.getBackend().client,
+    (cause) => queueUnavailable('checkHealth', cause)
+  );
+  if (isErr(client)) return client;
+  return client.value.status === 'ready'
+    ? ok()
+    : err(queueUnavailable('checkHealth', client.value.status));
+}
 
 /** A password the URL carries wins over the separate one, which exists for a URL without it. */
 export function redisConnectionOptions(url: string, password?: string): ConnectionOptions {

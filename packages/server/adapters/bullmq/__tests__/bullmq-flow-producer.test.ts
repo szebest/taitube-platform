@@ -5,7 +5,7 @@ import type { FlowProducer } from 'bullmq';
 import { BullMqFlowProducer } from '../bullmq-flow-producer';
 
 interface FakeFlowProducerInit {
-  pingResult?: string;
+  status?: string;
   failClient?: boolean;
   addError?: Error;
   closeError?: Error;
@@ -17,9 +17,9 @@ class FakeFlowProducer {
 
   constructor(private readonly init: FakeFlowProducerInit = {}) {}
 
-  get client(): Promise<{ ping(): Promise<string> }> {
-    if (this.init.failClient) return Promise.reject(new Error('no connection'));
-    return Promise.resolve({ ping: async () => this.init.pingResult ?? 'PONG' });
+  getBackend(): { client: Promise<{ status: string }> } {
+    if (this.init.failClient) return { client: Promise.reject(new Error('no connection')) };
+    return { client: Promise.resolve({ status: this.init.status ?? 'ready' }) };
   }
 
   async add(node: unknown): Promise<unknown> {
@@ -46,7 +46,7 @@ const FLOW = {
 };
 
 describe('BullMqFlowProducer', () => {
-  it('passes the flow tree straight to the driver', async () => {
+  it('hands the driver the flow tree, children and all', async () => {
     const fake = new FakeFlowProducer();
     const producer = new BullMqFlowProducer({ type: 'producer', producer: fake.asProducer() });
 
@@ -67,8 +67,8 @@ describe('BullMqFlowProducer', () => {
   });
 
   it.each([
-    { scenario: 'the client answers PONG', init: {}, expected: true },
-    { scenario: 'the client answers otherwise', init: { pingResult: 'NOPE' }, expected: false },
+    { scenario: 'the client is ready', init: {}, expected: true },
+    { scenario: 'the client is reconnecting', init: { status: 'reconnecting' }, expected: false },
     { scenario: 'there is no connection', init: { failClient: true }, expected: false },
   ])('reports health as $expected when $scenario', async ({ init, expected }) => {
     const producer = new BullMqFlowProducer({

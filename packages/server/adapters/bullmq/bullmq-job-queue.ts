@@ -9,7 +9,7 @@ import {
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
 import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
-import { type Result, assertNever, err, fromPromise, map, ok, tryCatch } from '@vp/result';
+import { type Result, assertNever, fromPromise, map, tryCatch } from '@vp/result';
 import {
   type ConnectionOptions,
   type Job,
@@ -21,7 +21,8 @@ import {
   type WorkerOptions,
 } from 'bullmq';
 import { bullMqProcessor } from './bullmq-processor';
-import { toQueueJob } from './job-mapping';
+import { checkBackendHealth } from './connection';
+import { toJobsOptions, toQueueJob } from './job-mapping';
 
 export type WorkerFactory = (
   name: string,
@@ -75,15 +76,7 @@ export class BullMqJobQueue extends JobQueue {
   }
 
   async checkHealth(): Promise<Result<void, QueueUnavailable>> {
-    const pinged = await fromPromise(async () => {
-      const client = await (
-        this.queue as unknown as { client: Promise<{ ping(): Promise<string> } | undefined> }
-      ).client;
-      return client ? await client.ping() : 'PONG';
-    }, this.unavailable('checkHealth'));
-
-    if (!pinged.ok) return pinged;
-    return pinged.value === 'PONG' ? ok() : err(queueUnavailable('checkHealth', pinged.value));
+    return checkBackendHealth(this.queue);
   }
 
   getName(): string {
@@ -118,15 +111,7 @@ export class BullMqJobQueue extends JobQueue {
     options?: QueueJobOptions
   ): Promise<Result<QueueJob<T>, QueueUnavailable>> {
     const added = await fromPromise(
-      () =>
-        this.queue.add(name, data, {
-          jobId: options?.jobId,
-          attempts: options?.attempts,
-          priority: options?.priority,
-          backoff: options?.backoff as JobsOptions['backoff'],
-          removeOnComplete: options?.removeOnComplete as JobsOptions['removeOnComplete'],
-          removeOnFail: options?.removeOnFail as JobsOptions['removeOnFail'],
-        }),
+      () => this.queue.add(name, data, toJobsOptions(options)),
       this.unavailable('add')
     );
 

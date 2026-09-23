@@ -94,13 +94,12 @@ export function problemDetails(input: ProblemInput): Problem {
 }
 
 export function problemResponse(
-  codes: readonly ErrorCode[] | readonly string[],
+  codes: readonly string[],
   description = 'Problem Details (RFC 9457)'
 ): z.ZodTypeAny {
+  const [first, ...rest] = codes;
+  const code = first === undefined ? z.string() : z.enum([first, ...rest]);
   return ProblemSchema.extend({
-    code:
-      codes.length > 0
-        ? z.enum(codes as unknown as [string, ...string[]]).describe('Machine-readable error code')
-        : z.string().describe('Machine-readable error code'),
+    code: code.describe('Machine-readable error code'),
   }).describe(description);
 }

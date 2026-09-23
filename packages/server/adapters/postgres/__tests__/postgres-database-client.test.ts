@@ -1,3 +1,4 @@
+import { DatabaseClient } from '@vp/core/ports';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
@@ -13,9 +14,13 @@ function fakeSql(outcome: 'resolves' | 'rejects' = 'resolves') {
   const sql = Object.assign(() => settle([{ '?column?': 1 }]), {
     unsafe: vi.fn(() => settle(rows)),
     begin: vi.fn((fn: (tx: unknown) => unknown) => settle(null).then(() => fn(sql))),
+    savepoint: vi.fn((fn: (tx: unknown) => unknown) => settle(null).then(() => fn(sql))),
     end: vi.fn(() => settle(undefined)),
   });
-  return sql as unknown as Sql & { end: ReturnType<typeof vi.fn> };
+  return sql as unknown as Sql & {
+    end: ReturnType<typeof vi.fn>;
+    savepoint: ReturnType<typeof vi.fn>;
+  };
 }
 
 describe('PostgresDatabaseClient', () => {
@@ -31,11 +36,22 @@ describe('PostgresDatabaseClient', () => {
     const client = new PostgresDatabaseClient({ type: 'sql', sql: fakeSql() });
 
     const result = await client.transaction(async (tx) => {
-      expect(tx).toBeInstanceOf(PostgresDatabaseClient);
+      expect(tx).toBeInstanceOf(DatabaseClient);
+      expect(tx).not.toBe(client);
       return ok('committed');
     });
 
     expect(expectOk(result)).toBe('committed');
+  });
+
+  it('nests a transaction inside another as a savepoint', async () => {
+    const sql = fakeSql();
+    const client = new PostgresDatabaseClient({ type: 'sql', sql });
+
+    const result = await client.transaction((tx) => tx.transaction(async () => ok('inner')));
+
+    expect(expectOk(result)).toBe('inner');
+    expect(sql.savepoint).toHaveBeenCalledTimes(1);
   });
 
   it.each([
