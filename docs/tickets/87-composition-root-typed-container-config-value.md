@@ -342,7 +342,7 @@ and the part that is the rule's own fault, and ticket 88 takes the rest.
   shape: **≈19 entries**, each paid for with a real spec, not a smoke test.
 - **The two new packages are 1:1 from birth** and never appear on the list.
 - Net: **188 → ≈138**, correspondence **61% → ≈72%**. The residue is 73 in `packages/server` adapters and 55 in
-  `apps/web`; both are [88](88-test-correspondence-burn-down.md), because writing ~130 specs is a bigger job
+  `apps/web`; both are [88](88-codebase-health-ratchets.md), because writing ~130 specs is a bigger job
   than everything above it put together and hiding it inside this ticket would make neither deliverable.
 
 ---
@@ -361,7 +361,7 @@ implementer, not a claim.
 | Boundaries & structure | 7 | **9** | W6, and instantiation asserted rather than only imports |
 | Drift resistance | 8 | **9** | W7: nine assertions, no new exception list |
 | Error handling | 9 | 9 | unchanged — 84 did this |
-| Test discipline | 6 | **7.5** | W8; reaching 9 is [88](88-test-correspondence-burn-down.md) |
+| Test discipline | 6 | **7.5** | W8; reaching 9 is [88](88-codebase-health-ratchets.md) |
 
 ---
 
@@ -458,7 +458,7 @@ implementer, not a claim.
 - **Moving authorization, caching or pagination behaviour.** This ticket changes how collaborators arrive, never
   what they do. Any behavioural difference is a bug in this ticket.
 - **The other ~138 exempt sources.** 73 in `packages/server` adapters and 55 in `apps/web`. That is
-  [ticket 88](88-test-correspondence-burn-down.md), which this ticket unblocks by narrowing the rule first so
+  [ticket 88](88-codebase-health-ratchets.md), which this ticket unblocks by narrowing the rule first so
   88 is not writing 31 specs that assert nothing.
 - **Rotating or re-scoping the `x-admin-token` path.** W2 makes the credential real; whether a shared admin
   header should exist beside JWKS at all is a design question with its own blast radius.

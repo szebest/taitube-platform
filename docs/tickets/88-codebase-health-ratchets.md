@@ -1,4 +1,4 @@
-# 88: Test correspondence burn-down — the sources the 1:1 rule was never applied to
+# 88: Codebase health to nine - every scorecard dimension at 9+, each one held by a ratchet
 
 | Field | Value |
 |---|---|
@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD ADR-19 Hexagonal architecture](../SDD.md#adr-19-hexagonal-architecture-interface-segregation-and-modular-repository-boundaries) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23-package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-24 Result-typed error handling](../SDD.md#adr-24-result-typed-error-handling-domain-returns-the-edge-decides) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
 
-**Status:** blocked
+**Status:** ready
 
 ---
 

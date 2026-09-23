@@ -112,7 +112,7 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 | 85 | [Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md) | 5 | L | 84 | 86 | ready |
 | 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85 | — | blocked |
 | 87 | [One composition root — a typed container, configuration as a value, and no hidden dependencies](87-composition-root-typed-container-config-value.md) | 5 | L | 84 | 88 | done |
-| 88 | [Test correspondence burn-down — the sources the 1:1 rule was never applied to](88-test-correspondence-burn-down.md) | 5 | L | 87 | — | ready |
+| 88 | [Codebase health to nine - every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | L | 87 | — | ready |
 
 > Board statuses derive from each ticket's `**Status:**` line: `ready` = all blockers done (the frontier) · `blocked` · `in-progress` · `done` · `blocked-by-date` (34 waits for Node 26 LTS on 2026-10-28).
 
@@ -217,7 +217,7 @@ flowchart LR
         T85["85 Universal Intl formatting core"]
         T86["86 Localisation rollout"]
         T87["87 One composition root"]
-        T88["88 Test correspondence burn-down"]
+        T88["88 Codebase health to nine - every scorecar…"]
     end
     subgraph 3_Developer_Velocity_Operational_Excellence["3 — Developer Velocity & Operational Excellence"]
         T80["80 Full-spectrum developer experience"]
@@ -443,7 +443,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 6 | [08](08-containerise-compose-smoke-images.md) Containerise everything · [09](09-crash-safety-effectively-once.md) Crash safety · [12](12-ladder-flows-fanout-fanin.md) Fan-out / fan-in · [15](15-sse-progress-events.md) Live status · [18](18-admission-control-priorities.md) Admission control · [45](45-legacy-frontend-compatibility-adapter-layer.md) Frontend API modernization & contract al… · [47](47-multi-resource-search-engine.md) Multi-resource search engine · [82](82-architecture-remediation-package-scoping-contract-seams.md) Architecture remediation |
 | 7 | [13](13-thumbnails-flow-child.md) Thumbnails as a non-blocking Flow child · [14](14-segment-streaming-uploader-disk-bounds.md) Stream segments to storage while encoding · [16](16-retries-dlq-admin-replay-reprocess.md) Retries · [21](21-observability-stack-local.md) Local observability stack · [25](25-kubernetes-local-k3d.md) Kubernetes locally · [34](34-node26-upgrade-deps.md) Node 26 LTS upgrade · [35](35-local-first-offline-mode.md) Local-first proof · [36](36-public-video-feed-api.md) Public video feed · [83](83-granular-container-topology-full-stack-deployment.md) Granular container topology · [84](84-result-typed-error-handling-shared-domain-rules.md) Result-typed error handling |
 | 8 | [20](20-phase2-acceptance-e2e-suite.md) Phase 2 acceptance · [22](22-metrics-catalogue-dashboards.md) Metrics catalogue populated + queue poll… · [23](23-otel-tracing-e2e.md) OpenTelemetry tracing end-to-end · [30](30-transactional-outbox.md) Transactional outbox · [49](49-nextgen-frontend-api-gateway-bootstrap.md) Next-Gen frontend direct API gateway & C… · [79](79-offline-smoke-runner-refactor-cleanup.md) Offline smoke test runner refactor & CI … · [80](80-ci-test-pipeline-optimization-speed.md) Full-spectrum developer experience · [85](85-universal-intl-formatting-message-core.md) Universal Intl formatting core · [87](87-composition-root-typed-container-config-value.md) One composition root |
-| 9 | [24](24-alert-rules-alertmanager.md) Alert rules + Alertmanager · [26](26-keda-autoscaling-graceful-shutdown.md) KEDA autoscaling on queue depth · [27](27-compose-autoscaler.md) Compose-level autoscaler · [32](32-cloud-overlay-deploy.md) Cloud reference deployment · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app · [88](88-test-correspondence-burn-down.md) Test correspondence burn-down |
+| 9 | [24](24-alert-rules-alertmanager.md) Alert rules + Alertmanager · [26](26-keda-autoscaling-graceful-shutdown.md) KEDA autoscaling on queue depth · [27](27-compose-autoscaler.md) Compose-level autoscaler · [32](32-cloud-overlay-deploy.md) Cloud reference deployment · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app · [88](88-codebase-health-ratchets.md) Codebase health to nine - every scorecar… |
 | 10 | [28](28-k6-s1-s3-nightly-load-smoke.md) Load tests S1–S3 · [33](33-cost-guardrails-runbooks.md) Cost guardrails · [53](53-frontend-architecture-modernization-tanstack-query.md) Frontend architecture modernization |
 | 11 | [29](29-chaos-tooling-k6-s4-s7.md) Chaos tooling · [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) Frontend testing infrastructure & integr… |
 | 12 | [55](55-design-system-tailwind-radix-dark-theme.md) Modern design system foundation |
