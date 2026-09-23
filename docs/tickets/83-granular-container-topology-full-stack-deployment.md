@@ -125,31 +125,33 @@ than sleeps, and finishes by printing what is running and where to reach it.
   waits for `READY` and plays it back through the web container.
 - Ticket 75 owns the full Playwright suite; this ticket lands the one path that proves the topology works.
 
-### F - Delete the extensionless-import loader shim
+### F - Bundle each app, and retire the extensionless-import loader shim
 
 `packages/server/config/src/loader.mjs` is a `register()` hook whose only job is to catch
 `ERR_MODULE_NOT_FOUND` and retry the specifier with `.js` appended. Every app boots through it
-(`node --import @vp/config/register dist/main.js`), which is why 570 extensionless relative imports under
-`packages/server/` do not crash. They are still broken on their own:
+(`node --import @vp/config/register dist/main.js`), because every package builds with plain `tsc`, is
+`"type": "module"`, and `tsc` emits relative specifiers verbatim while Node does no extension resolution.
 
-```
-node -e "import('./packages/server/ffmpeg/dist/index.js')"   -> ERR_MODULE_NOT_FOUND
-node -e "import('./packages/universal/errors/dist/index.js')" -> OK
-```
+The fix is not to change the source. **Relative imports stay extensionless in every tier**, and nothing in this
+ticket adds an extension anywhere. What changes is what Node is handed: each deployable is bundled.
 
-Nothing in this repo bundles - every package builds with plain `tsc` and is `"type": "module"`, so `tsc` emits
-the specifier verbatim and Node does no extension resolution. `universal` (118 imports) and `client` (4) carry
-their extensions and are machine-checked; `server` is the tier held up by the shim.
+- `apps/api` and `apps/worker` build with esbuild (a devDependency) into one ESM file per entrypoint -
+  `dist/main.js` for both, `dist/migrate.js` for the API. Workspace `@vp/*` packages are inlined; npm
+  dependencies stay external and come from `pnpm deploy --prod`, as today. esbuild resolves extensionless
+  specifiers itself, so the bundle has none left for Node to resolve.
+- The per-app images (A-D) copy the bundle, not `dist/` trees of every workspace package, which also shrinks
+  the `COPY` list D asks for.
+- `loader.mjs` is deleted and `@vp/config/register` loses its resolver duty; if nothing else is left in it,
+  it is deleted and `NODE_OPTIONS` in the Dockerfiles and compose drops the `--import`.
+- The CLIs keep running through `bun`, which resolves extensionless imports; vitest and `bun test` already do.
+- `tsc` stays the typecheck and declaration build for packages. `moduleResolution: "bundler"` in
+  `packages/universal/tsconfig/base.json` is now accurate rather than a convenience, so it stays.
+- `esm-specifiers.test.ts` is not widened. [Ticket 88](88-codebase-health-ratchets.md) W6 inverts it: no
+  relative import in any tier carries an extension, and `apps/web` gets `resolve.fullySpecified: false` for the
+  workspace packages it consumes. Either ticket can land first - until 83 lands, the loader covers an
+  extensionless `universal` package exactly as it covers `server` today.
 
 This lands here because the shim sits in the entrypoint this ticket is rewriting anyway.
-
-- Add the `.js` extension to every relative import under `packages/server/`.
-- Delete `loader.mjs` and drop the resolver duty from `@vp/config/register`, keeping whatever else that
-  entrypoint does.
-- Widen `tests/architecture/esm-specifiers.test.ts` from the two browser tiers to all three, so the rule has
-  one owner instead of two conventions and a shim.
-- `moduleResolution: "bundler"` in `packages/universal/tsconfig/base.json` is what lets `tsc` stay quiet about
-  this. Decide whether it changes, and if it stays say why in the PR.
 
 ---
 
@@ -172,11 +174,13 @@ This lands here because the shim sits in the entrypoint this ticket is rewriting
 - [ ] A frontend-only change does not invalidate the API or worker image layers — demonstrated.
 - [ ] `make smoke-offline` covers `apps/web`; the web container serves with zero external egress.
 - [ ] A browser-driven check uploads, waits for `READY` and plays back through the deployed web container.
-- [ ] No relative import under `packages/server/` is extensionless, and `esm-specifiers.test.ts` scans all
-      three tiers rather than two.
-- [ ] `loader.mjs` is deleted, `@vp/config/register` no longer resolves specifiers, and every app still boots
-      from `dist`.
-- [ ] `node -e "import('./packages/server/ffmpeg/dist/index.js')"` resolves with no loader registered.
+- [ ] `apps/api` and `apps/worker` ship an esbuild bundle per entrypoint; the images contain no workspace
+      package `dist/` tree and boot with no `--import` loader.
+- [ ] `loader.mjs` is deleted and nothing registers a resolve hook; `grep -rn "register(" packages/server/config`
+      returns nothing, or the package is gone.
+- [ ] No relative import in any tier gains an extension in this ticket, and `esm-specifiers.test.ts` is not
+      widened.
+- [ ] `make smoke-offline` passes from the bundled images; migrate runs from `dist/migrate.js` in the Job.
 - [ ] **Docs:** SDD §12.1/§12.2 updated with the `web` service and the profile map; `README.md` quick-start
       updated to the new entrypoint; `Makefile` help text accurate; `docs/LOCAL_FIRST.md` covers the frontend.
 - [ ] `python3 docs/tickets/gen-index.py` re-run.

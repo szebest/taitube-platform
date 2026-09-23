@@ -1,4 +1,4 @@
-# 88: Codebase health to nine - every scorecard dimension at 9+, each one held by a ratchet
+# 88: Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet
 
 | Field | Value |
 |---|---|
@@ -47,7 +47,7 @@ It ships in the first PR (88a), ahead of everything else.
 | Finding | Where |
 |---|---|
 | `x-test-crash-after-commit: true` makes any authenticated client crash an upload after commit, in production | `apps/api/src/routes/uploads.ts:121`, `services/upload-complete.ts:185` |
-| The migrate Job seeds the dev user and a READY video into every database, production included | `apps/api/src/migrate.ts:11-12`, `infra/k8s/base/migrate-job.yaml:20` |
+| The migrate Job seeds the dev user and a READY video into every database, production included | `apps/api/src/migrate.ts:3,12` (imports `@vp/db/seed`), run by the Job as `node dist/migrate.js` |
 | The cloud overlay never includes its secrets; the "encrypted" file is plaintext in fake `ENC[...]` wrappers | `infra/k8s/overlays/cloud/kustomization.yaml:6-10`, `secrets.enc.yaml` |
 | The API writes no logs at all - `fastify({ logger: false })`, so an unhandled 500 goes nowhere | `apps/api/src/app.ts:47`, `plugins/errors.ts:85` |
 | Each worker sets `bullmq_queue_jobs{state="active"}=1` and never resets it, so KEDA cannot scale it to zero | `apps/worker/src/composition/stages.module.ts:46`, `infra/k8s/base/scaled-objects.yaml` |
@@ -93,6 +93,23 @@ Targets are derived from the ACs, not claimed. If an AC is dropped in review, it
 
 Each workstream names the target design first and the ACs second. An AC is ticked only with pasted output.
 
+Two shared mechanisms, both built in 88a and extended by every later PR:
+
+- **`tests/architecture/zero-matches.test.ts`** - one `it.each` over `[name, pattern, scope, expected]`. An AC
+  whose proof says *zero-matches row* is a row there, not a one-off grep, so it runs on every pipeline after the
+  PR that ticks it. `scope` is a glob list over tracked files; production source means `apps`, `packages` and
+  `scripts` without specs, `__tests__` and `__mocks__`.
+- **`tests/architecture/entrypoints.ts`** - the one list of process entrypoints, read by `env-confinement`
+  (W2 AC 3), `no-module-state` (W4 AC 2) and the `console` row (W9 AC 4). It holds `apps/api/src/main.ts`,
+  `apps/api/src/migrate.ts`, `apps/worker/src/main.ts`, `apps/web/src/index.tsx`,
+  `packages/server/db/src/bin/migrate.ts`, `packages/server/db/src/bin/seed.ts`, `scripts/*.ts`,
+  `tests/e2e/e2e-runner.ts`, and one `src/main.ts` per CLI package. **The CLIs are renamed to that:**
+  `compose-autoscaler/src/cli.ts`, `upload-client/src/cli.ts`, `dev-token/src/index.ts` and `gen-video/src/index.ts`
+  become `src/main.ts`, and db's migrate and seed runners move out of the library modules into `src/bin/`. Beside
+  it, `ENV_HOMES` names the non-entrypoint files allowed to touch `process.env`: `@vp/config`'s `load-env.ts`,
+  `@vp/testing`'s `withEnv`, `apps/web/src/config/index.ts` and the `apps/web/src/Globals.d.ts` declaration.
+  Together they cover the 15 files that read or declare it today, less the ones W2 moves behind `loadEnv()`.
+
 ### W1 - Security & authorization
 
 **Problem.** A forgeable admin token (above), a verifier that checks no issuer or audience, a crash hook reachable
@@ -124,20 +141,20 @@ only knows the string `change-me`.
 2. A token with a valid signature and the wrong `iss`, the wrong `aud`, `alg: none`, an `alg` the JWK does not declare, or no `kid` while the JWKS holds two keys, is each 401. Proof: one `it.each` in the same suite.
 3. An ES256 token signed by a JWKS key verifies (today it always fails, `dsaEncoding` is missing). Proof: same suite.
 4. An unknown `kid` triggers one JWKS refetch, rate-limited to one per 30 s, and a rotated key is accepted without waiting for the TTL. Proof: adapter spec with a fake clock.
-5. `ADMIN_TOKEN` set under `production` fails `loadEnv()`. The string `000000000003` appears nowhere in production source. Proof: `load-env` spec; `grep -rn 000000000003 apps packages --include='*.ts' | grep -v __tests__ | wc -l` = 0.
+5. `ADMIN_TOKEN` set under `production` fails `loadEnv()`. The string `000000000003` appears nowhere in production source. Proof: `load-env` spec; zero-matches row `000000000003` over production source, 0.
 6. `forceFailure|forceThumbnailFailure|simulateFailure|testCrash|x-test-|killAtPercent` appear in no production source and no job-contract schema. Proof: `tests/architecture/no-test-hooks.test.ts`, with a fixture that fires.
-7. The migrate Job's command runs no seed; `pnpm db:seed` under `production` refuses. Proof: spec on the seed entrypoint; `grep -n seed infra/k8s/base/migrate-job.yaml` = 0.
+7. `apps/api/src/migrate.ts` migrates only; `pnpm db:seed` under `production` refuses. Proof: zero-matches row `@vp/db/seed` in `apps/api/src/migrate.ts`, 0; spec on `db/src/bin/seed.ts` refusing `production`.
 8. `Origin: https://evil.example` gets no `access-control-allow-origin` when `CORS_ORIGINS=http://localhost:5173`. Proof: route spec.
-9. `infra/k8s/base` under `production` fails `loadEnv()` until every secret is overridden, and the cloud overlay's rendered manifests (`kustomize build`) contain none of the denylisted values. Proof: `tests/architecture/production-secrets.test.ts` renders both.
-10. The cloud overlay includes its secret source, and no file named `*.enc.yaml` holds plaintext. Proof: same test decodes each `ENC[...]` payload and fails if it parses as a known key's value; or the overlay moves to an `ExternalSecret` and the fake file is deleted - say which.
-11. The `videos` rate-limit admin exemption works (`skip` is not an option of `@fastify/rate-limit` 11; use `allowList`), `trustProxy` comes from config, and `bodyLimit` is set explicitly. Proof: route spec that the 101st admin request is 200 and the 101st user request is 429.
+9. `infra/k8s/base` under `production` fails `loadEnv()` until every secret is overridden, and the cloud overlay's rendered manifests (`kustomize build`) contain none of the denylisted values. Proof: `tests/architecture/production-secrets.test.ts` renders both with `kustomize build`. `lint-typecheck` installs a pinned kustomize, cached by version; the test fails, not skips, when the binary is missing.
+10. **Decided: `ExternalSecret`, not SOPS.** The repo then holds no ciphertext and no key to leak, and the rendered overlay can be asserted offline to carry no secret value at all; SOPS would need a real key in CI to prove the same. Local-first is unaffected: the operator is cloud-only like R2, and the local overlay keeps its dev secrets. The cloud overlay declares an `ExternalSecret` per secret-shaped key, and `secrets.enc.yaml` is deleted. Proof: `production-secrets` asserts the rendered cloud overlay contains no `Secret` with `data` or `stringData`, and one `ExternalSecret` entry per `SECRET_KEYS` member.
+11. The `videos` rate-limit admin exemption works (`skip` is not an option of `@fastify/rate-limit` 11; use `allowList`), `trustProxy` comes from config, and `bodyLimit` is set explicitly. Proof: route spec that the 6th reprocess request in a minute is 200 for an admin and 429 for a user (`max: 5`, `routes/videos.ts:95`).
 
 ### W2 - Configuration
 
 **Problem.** 25 of 68 declared keys reach no reader. `redis.pubsubUrl` is mapped and consumed by nothing,
 `redis.password` reaches BullMQ but not the cache client, `worker.tmpDir` reaches housekeeping but not probe or
-transcode. About 40 tuning values are literals inside services, stages and adapters, so the production value is
-whatever the default parameter says. Migrate and seed read `process.env` directly, the composition roots default
+transcode. Tuning values are literals inside services, stages and adapters (17 non-identity `??` fallbacks, plus
+default parameters and destructuring defaults), so the production value is whatever the default says. Migrate and seed read `process.env` directly, the composition roots default
 config with `?? inProcessAppConfig()`, and three URL keys default to password-bearing values.
 
 **Target.** Two schemas with named consumers. `AppEnv` is what `toAppConfig` reads, and every key in it reaches a
@@ -158,12 +175,12 @@ The unread keys get a decision each, recorded in the PR:
 **ACs**
 1. Every `AppEnv` key is read by `toAppConfig`, and every leaf of `AppConfig` is read by at least one production source outside `packages/server/env-schema`. Proof: `tests/architecture/env-keys-consumed.test.ts`, type-aware, with a fixture key that fires.
 2. Every `PlatformEnv` key names its consumer, and no key is in both schemas. Proof: same test.
-3. `env-confinement` has no `ENTRYPOINTS` list: `process.env` is read in `apps/*/src/main.ts`, `@vp/config` and one `main.ts` per CLI package, and nowhere else - scanning `.ts`, `.mts`, `.js` and `.mjs` under `apps`, `packages`, `scripts` and `tests`. `apps/web` reads its build-time config in `src/config/index.ts` only. Proof: the test, and `grep` for `process\.env` outside those homes = 0.
+3. `env-confinement` reads `ENTRYPOINTS` and `ENV_HOMES` from `entrypoints.ts` and keeps no list of its own: `process.env` appears in those files and nowhere else, scanning `.ts`, `.tsx`, `.mts`, `.js` and `.mjs` under `apps`, `packages`, `scripts` and `tests`. Proof: the test, with a fixture read in a service and one in a `.mjs` file.
 4. Migrate, seed and `drizzle.config.ts` go through `loadEnv()`. Proof: the same test, with the three files no longer special.
-5. No schema default and no production literal contains URL userinfo. Proof: `no-defaulted-secrets` widened to `://[^/@\s]+:[^@\s]+@`; `grep` over production source = 0.
-6. `app.ts` and `runner.ts` require `config`; `inProcessAppConfig` is imported only by specs and `@vp/testing`. Proof: `grep -rn "?? inProcessAppConfig" apps packages` = 0, and a `total-dependencies` fixture.
-7. No numeric literal fallback (`?? 1000`, `= 3600` default parameter, destructuring default) in `apps/api/src/services`, `apps/worker/src`, `packages/server/adapters`. Proof: `tests/architecture/no-tuning-literals.test.ts` (AST, not regex), with a fixture. Named constants in `env-schema` are the only home.
-8. The worker's `workerId` is required in `StageDeps`; `worker-${process.pid}` appears once, in composition. Proof: `grep -c 'worker-\${process.pid}'` over production source = 1.
+5. No schema default and no production literal contains URL userinfo. Proof: `no-defaulted-secrets` widened to `://[^/@\s]*:[^@\s]+@` (the empty username in `redis://:vp@` is the case `+` would miss), with that URL as its fixture.
+6. `app.ts` and `runner.ts` require `config`; `inProcessAppConfig` is imported only by specs and `@vp/testing`. Proof: zero-matches row `?? inProcessAppConfig` over production source, 0; a `total-dependencies` fixture.
+7. No numeric default on a field of an options, deps or config object (`options.ttlMs ?? 3600`, `{ concurrency = 4 } = deps`) and no numeric default parameter in `apps/api/src/services`, `apps/worker/src`, `packages/server/adapters`. The identity fallbacks `?? 0` and `?? 1` are not tuning and are excluded. The audit's command finds 56 numeric `??` fallbacks there, 17 of them other than `0`/`1`; the destructuring and default-parameter shapes are counted by the test. Proof: `tests/architecture/no-tuning-literals.test.ts` (AST, not regex), a fixture per shape and one `viewsCount ?? 0` that must not fire. Named constants in `env-schema` are the only home.
+8. The worker's `workerId` is required in `StageDeps`; `worker-${process.pid}` appears once, in composition. Proof: zero-matches row `worker-${process.pid}` over production source, 1.
 9. `env-key-closure` reads every overlay, not only `infra/k8s/base`; `HOUSEKEEPING_INTERVAL_MS` in the cloud overlay is declared or removed. Proof: test, with an overlay fixture.
 10. `MAX_DURATION_SEC=10` rejects the `l30` fixture at probe with a stable `ErrorCode`. Proof: stage spec.
 
@@ -173,7 +190,9 @@ The unread keys get a decision each, recorded in the PR:
 liveness signal, and a metrics bind failure calls `process.exit(1)` mid-job. Both mains install signal handlers
 only after `main()` resolves, so a `SIGTERM` during start is a hard kill. Liveness treats a missing heartbeat as
 healthy (`test -f … || exit 0`), and no worker has a readiness probe. The heartbeat write is copied into five
-files.
+files, in two formats: `main.ts:22` writes epoch seconds, the four stage sites write `new Date().toISOString()`,
+and the probe computes `$(( $(date +%s) - $(cat heartbeat) ))`. After a stage writes, the arithmetic is a syntax
+error and liveness fails until the timer overwrites the file.
 
 **Target.** Consumers are the last `Startable` in the container; metrics, heartbeat and readiness start first.
 Handlers are installed before `container.start()`. One `Heartbeat` owner, one readiness check that asks the BullMQ
@@ -184,7 +203,7 @@ connection.
 2. `SIGTERM` delivered during `container.start()` runs `shutdownOnce` and exits 0. Proof: main specs for both deployables.
 3. `start-order.test.ts` asserts, for both composition roots, that every consumer starts after metrics and heartbeat. Proof: architecture test over the registration order, with a fixture that fires.
 4. Worker liveness fails when the heartbeat file is missing or older than `3 x` its interval; every worker deployment has a readiness probe that fails when Redis is down. Proof: `k8s-manifests` spec; a toxiproxy chaos run named in the PR.
-5. The heartbeat file is written from one module. Proof: `grep -rln heartbeatPath apps/worker/src --include='*.ts' | grep -v __tests__ | wc -l` = 1 (plus composition).
+5. The heartbeat is written by one `Heartbeat` module, in one format: integer epoch seconds and a newline, which is what the probe's arithmetic reads. Proof: `Heartbeat` spec asserts the file matches `^\d+\n$` after every write path; zero-matches row `heartbeatPath` outside the `Heartbeat` module and composition, 0.
 6. A transcode whose step heartbeat returns `Err` (lost fencing) aborts FFmpeg and commits nothing. Today the `Result` is discarded (`transcode.ts:231`). Proof: stage spec.
 7. Compose's API healthcheck uses `/readyz`; workers have a compose healthcheck. Proof: compose spec.
 
@@ -202,12 +221,12 @@ collaborator a service needs per call arrives as a factory. Bull Board is built 
 the services directory imports no transport library. One metrics server.
 
 **ACs**
-1. `getMetrics` does not exist. Proof: `grep -rn "getMetrics" apps packages` = 0.
-2. No module-scope `let`/`var`, no module-scope `new` of a class with instance state, and no top-level call statement in any production module other than a `main.ts`. Proof: `tests/architecture/no-module-state.test.ts` (AST), fixtures for each of the three shapes.
+1. `getMetrics` does not exist. Proof: zero-matches row `getMetrics` over `apps` and `packages`, 0.
+2. No module-scope `let`/`var`, no module-scope `new` of a class with instance state, and no top-level call statement in any production module outside `ENTRYPOINTS` (`entrypoints.ts`), which is what lets `migrate.ts`, the CLIs and `apps/web/src/index.tsx` run. Proof: `tests/architecture/no-module-state.test.ts` (AST), fixtures for each of the three shapes.
 3. `total-dependencies` also fails on a default parameter or destructuring default whose value is a constructed object, a call, or a `default*` identifier, and it scans `app.ts`, `runner.ts` and `packages/server/adapters`. Proof: the widened test, with one fixture per shape.
 4. No `new` of a non-value class inside `apps/api/src/services` or `apps/worker/src/stages`. `Date`, `Map`, `Set`, `URL`, `Error` subclasses and `SseConnection` (a per-request value) are the only allowed constructions, listed in the test by name. Proof: `adapter-instantiation` widened.
-5. `grep -rn "@bull-board" apps/api/src/services` = 0.
-6. `startMetricsServer` exists once; `collectDefaultMetrics` is called once per process, with one prefix. Proof: `grep -c` = 1 each, and the metrics endpoint has no duplicated `process_*` series (spec).
+5. Bull Board is built in the API composition module. Proof: zero-matches row `@bull-board` over `apps/api/src/services`, 0.
+6. `startMetricsServer` exists once; `collectDefaultMetrics` is called once per process, with one prefix. Proof: zero-matches rows `function startMetricsServer` and `collectDefaultMetrics(` over production source, 1 each; a spec that the metrics endpoint has no duplicated `process_*` series.
 
 ### W5 - Errors
 
@@ -229,13 +248,18 @@ of every persisted error code. Fastify's own 4xx errors map to a problem with th
 2. No expression statement anywhere in production source has type `Result` or `Promise<Result>` after unwrapping `await`, `void`, parentheses and `.catch/.finally`. Proof: `tests/architecture/no-discarded-result.test.ts` using the TypeScript checker, sharing one `ts.Program` with the other type-aware tests; fixtures for the bare, `void` and `.catch` shapes.
 3. `expire-raw` with a failing `deleteObject` writes no event and does not count the video; `reconcile-uploads` with a failing `add` does not increment `reconciler_repairs_total`; `purge-deleted` with every purge failing writes no `generation_purged`. Proof: one spec per stage, named after the stage.
 4. `catch-confinement` matches `.catch(` and `?.catch?.(`; `legacy-catch-sites.ts` is deleted, and so is `shrinkOnly` in `repo-files.ts` once W6 and W8 delete theirs. Proof: the test, with a `.catch(() => {})` fixture in a service.
-5. `no-domain-throw` also fails on `.parse(` of a zod schema inside its roots, and `validateJobId` returns a `Result`. Proof: fixture; `grep -n "\.parse(" apps/worker/src/stages apps/api/src/services` = 0.
+5. `no-domain-throw` also fails on `.parse(` of a zod schema inside its roots, and `validateJobId` returns a `Result`. Proof: fixture; zero-matches row `\.parse\(` over `apps/worker/src/stages` and `apps/api/src/services`, 0.
 6. Every persisted error code is typed `ErrorCode`: `step-repository`, `dlq-repository`, `probe-failure`, `failure-handler`. `ORPHANED` is added to the vocabulary with its SDD §6.2 line or replaced. Proof: `tests/architecture/error-vocabulary.test.ts` (no string literal assigned to a `code`/`errorCode` that is not an `ErrorCode`), and `error-code-drift` still green.
-7. No failure is classified by `message.includes`. Proof: `grep -rn "message.includes" apps packages --include='*.ts' | grep -v __tests__` = 0.
+7. No failure is classified by `message.includes`. Proof: zero-matches row `message\.includes` over production source, 0.
 8. `POST /v1/uploads/:id/complete` with `content-type: application/json` and no body answers 400 problem+json; an unsupported media type answers 415. Proof: route spec, one `it.each`.
 9. `publishVideoEvent` returns a `Result`; `notify` and the progress reporter decide on it. Proof: `result-returning-ports` extended to `@vp/events`.
-10. No `as unknown as` in production source (14 today; `registry.ts:51` erases every stage's type). Proof: `grep -rn "as unknown as" apps packages --include='*.ts' --include='*.tsx' | grep -v __tests__ | wc -l` = 0.
-11. No `'literal' in value` narrowing in production source, web included. Unions carry one literal `type` discriminant and an exhaustive `switch` ending in `assertNever`. `package.ts`'s child results, `rules-to-sql.ts`, `failure-handler.ts`'s duck typing and the five `apps/web` sites are converted. Proof: `tests/architecture/no-in-probes.test.ts` (AST), no allowlist.
+10. No `as unknown as` in production source (14 today; `registry.ts:51` erases every stage's type). Proof: zero-matches row `as unknown as` over production source, web included, 0.
+11. No `'literal' in value` narrowing in production source, web included. Three cases, three answers:
+    - **our own unions** carry one literal `type` discriminant and an exhaustive `switch` ending in `assertNever`: `package.ts`'s child results, `rules-to-sql.ts`, `failure-handler.ts`'s duck typing, `page-merge.ts`, `can.tsx`;
+    - **RTK Query results** (`"data" in result`, `"status" in response.error` in `edit-page.tsx` and `video-settings-dropdown.tsx`) cannot carry a tag we own, so those call sites use `.unwrap()` inside `tryCatch` and get a `Result`;
+    - **guards over `unknown`**, including `packages/universal/api-contracts/src/endpoint.ts:63-65`, parse through a zod schema instead of probing keys.
+
+    Proof: `tests/architecture/no-in-probes.test.ts` (AST), no allowlist.
 
 ### W6 - Boundaries & file discipline
 
@@ -251,9 +275,9 @@ tier, with no exceptions. A manifest declares what its source imports, and nothi
 
 **ACs**
 1. `file-ceiling` scans specs and `tests/`; no tracked `.ts`/`.tsx` file is over 400 lines or 10 KB; `oversized-sources.ts` is deleted. Proof: the test, with a spec-file fixture.
-2. No relative import in any tier carries a `.js`, `.mjs` or `.ts` extension. `esm-specifiers.test.ts` asserts the inverse of what it asserts today, over every tier, specs included. Proof: the test, and `grep -rE "from '\.{1,2}/[^']*\.js'" apps packages tests --include='*.ts' --include='*.tsx' | wc -l` = 0.
+2. No relative import in any tier carries a `.js`, `.mjs` or `.ts` extension. `esm-specifiers.test.ts` asserts the inverse of what it asserts today, over every tier, specs included. Proof: the test, with a `.js` fixture. [83 F](83-granular-container-topology-full-stack-deployment.md) is rewritten in the same direction: apps are bundled, nothing adds an extension.
 3. `apps/web` builds and its tests pass with extensionless `@vp/*` dist: CRA's webpack gets `resolve.fullySpecified: false` for the workspace packages through the smallest override that does it (craco is the expected one, as a devDependency). Proof: `pnpm --filter @vp/web build` green in CI; the override is the only webpack change.
-4. `ARCHITECTURE.md` §5 tier section, `packages/universal/AGENTS.md`, `domain/`, `api-contracts/`, `pagination/` and `packages/client/AGENTS.md` say relative imports are extensionless everywhere. Proof: `grep -rniE "\.js (extension|specifier)" ARCHITECTURE.md packages/universal packages/client --include=AGENTS.md` = 0.
+4. `ARCHITECTURE.md` §5 tier section, `packages/universal/AGENTS.md`, `domain/`, `api-contracts/`, `pagination/` and `packages/client/AGENTS.md` say relative imports are extensionless everywhere. Proof: zero-matches row `\.js (extension|specifier)` over `ARCHITECTURE.md` and the `AGENTS.md` files under `packages/universal` and `packages/client`, 0.
 5. Every declared dependency is imported by its package's source or config, and every import is declared. Proof: `knip` (W7) at zero for `dependencies`, `devDependencies` and `unlisted`.
 6. `pnpm boundaries` and `sdk-confinement` stay green with no new exception.
 
@@ -273,13 +297,13 @@ used only by tests, about 280 barrel values with no outside importer. 64 biome w
 zero. Biome runs with warnings as errors.
 
 **ACs**
-1. `upload-complete.ts` calls `decidePartManifest` and `decideSizeMatch`; its inline copies and its `UploadPart` redeclaration are gone. Proof: `grep` for the rule names in `apps/api/src/services` >= 1 each; spec for the mismatch paths unchanged.
-2. One `PROBLEM_CONTENT_TYPE`; one `unavailable` factory (`@vp/errors` `infra-failures`) and zero `private unavailable(` in adapters; one BullMQ health helper. Proof: `grep -c` = 1, 0, 1.
+1. `upload-complete.ts` calls `decidePartManifest` and `decideSizeMatch`; its inline copies and its `UploadPart` redeclaration are gone. Proof: zero-matches rows `decidePartManifest(` and `decideSizeMatch(` in `apps/api/src/services/upload-complete.ts`, 1 each; spec for the mismatch paths unchanged.
+2. One `PROBLEM_CONTENT_TYPE`; one `unavailable` factory (`@vp/errors` `infra-failures`) and zero `private unavailable(` in adapters; one BullMQ health helper. Proof: zero-matches rows `PROBLEM_CONTENT_TYPE =` 1, `private unavailable\(` 0, BullMQ `async checkHealth` 1.
 3. Every Redis key and channel is built by one module per family (`adapters/redis/keys.ts`, `@vp/events` channels); `sse-hub` parses channels through it. Proof: `tests/architecture/redis-keys-owner.test.ts` - a template literal starting `taitube:`, `video:` or `user:` outside the owners fails.
-4. `keys.ts` exports the prefix helpers; no production source builds `raw/` or `videos/` by hand. Proof: `grep -rnE "\`(raw|videos)/\\\$\{" apps packages scripts | grep -v keys.ts` = 0.
-5. One rendition ladder, in `@vp/job-contracts`; `DEFAULT_LADDER` is deleted; `purge-deleted` iterates `RENDITIONS`. Proof: `grep -rn "'1080p', '720p'" apps packages | grep -v __tests__` = 0.
+4. `keys.ts` exports the prefix helpers; no production source builds `raw/` or `videos/` by hand. Proof: zero-matches row for a template literal starting `raw/` or `videos/` over production source outside `storage/src/keys.ts`, 0.
+5. One rendition ladder, in `@vp/job-contracts`; `DEFAULT_LADDER` is deleted; `purge-deleted` iterates `RENDITIONS`. Proof: zero-matches row `'1080p', '720p'` over production source, 0.
 6. Zero ticket, AC, `Step N` and numbered-step comments in production source **and** specs, including test titles (141 `it`/`describe` titles start with `AC N`). Proof: `tests/architecture/no-process-comments.test.ts` with the regexes from the audit, no allowlist. `ADR-NN` and `SDD §` references stay allowed: they point at a durable decision, not a work item.
-7. `pnpm knip` runs in `lint-typecheck` and reports zero unused files, exports, types, dependencies and unlisted imports, with no ignore list beyond generated files and tool configs. Proof: CI step output.
+7. `pnpm knip` runs in `lint-typecheck` twice and both runs report zero: the default run (unused files, exports, types, dependencies, unlisted imports) and `knip --production`, which is the mode that reports the 135 exports only specs use. `knip.json` sets `includeEntryExports: true`, without which the ~468 barrel exports nobody imports are never reported. No ignore list beyond generated files and tool configs. Proof: CI step output of both runs.
 8. `biome lint --error-on-warnings` exits 0 and `noExplicitAny` is `error`. Proof: CI step output.
 9. `apps/worker/src/__mocks__/job.mock.ts` (0 importers) and every other file knip reports is deleted, not suppressed. Proof: knip.
 
@@ -305,7 +329,7 @@ Bun-only flake is on record (`redis-reaction-cache.adapter.test.ts` patches `Mat
   plan: they sit behind about twenty blocked tickets. A component that is dead is deleted instead.
 
 **ACs**
-1. `untested-sources.ts` is deleted and `test-correspondence` is a flat assertion over every tier, `apps/web` included. Proof: the test; `ls tests/architecture/untested-sources.ts` fails.
+1. `untested-sources.ts` is deleted and `test-correspondence` is a flat assertion over every tier, `apps/web` included. Proof: the test; zero-matches row for the path `tests/architecture/untested-sources.ts`, 0 files.
 2. Every repository and cache contract runs from the per-file spec of each implementation; `repositories.contract.test.ts` is gone. A deliberately drifted double (off-by-one in the feed rank) fails both the double's spec and the Postgres spec. Proof: fixture run pasted in the PR.
 3. `in-memory-flow-producer.ts` has no `instanceof InMemoryJobQueue`; a flow whose parent queue is not in-memory returns `Err` instead of never running. Proof: spec (carried from the previous 88).
 4. The `integration` job starts Postgres, Redis and MinIO, and the Postgres, Redis, S3 and BullMQ contract specs run against them. A spec there that silently falls back to PGlite or an in-memory double fails. Proof: CI log shows the service containers and the suite count; `test:integration` differs from `test`.
@@ -318,7 +342,7 @@ Bun-only flake is on record (`redis-reaction-cache.adapter.test.ts` patches `Mat
    - `console.log` - 7 today;
    - `.skip`, `.only`, `.todo`, `skipIf`, `runIf` - 1 today (the R2 suite becomes an opt-in `make` target, not a skip).
 6. The shared vitest config sets `restoreMocks: true` and `unstubEnvs: true`. Proof: config spec in `@vp/testing`.
-7. `createMockJob`, `setupUploadedVideo`, a `buildTestApp`, and the seeded user, channel and video ids live in `@vp/testing` and are imported; the local copies are gone; `freePort` is replaced by `listen({ port: 0 })`. Proof: `grep -rn "function (createMockJob|setupUploadedVideo|freePort)" apps packages` = 0; `grep -c "00000000-0000-7000-8000-000000000001"` over specs = 0.
+7. `createMockJob`, `setupUploadedVideo`, a `buildTestApp`, and the seeded user, channel and video ids live in `@vp/testing` and are imported; the local copies are gone; `freePort` is replaced by `listen({ port: 0 })`. Proof: zero-matches rows `function (createMockJob|setupUploadedVideo|freePort)` over `apps` and `packages` outside `@vp/testing`, 0, and `00000000-0000-7000-8000-000000000001` over specs, 0.
 8. The five named `it.each` folds land (subscriptions-routes' five 401s, admin-dlq-and-reprocess' duplicated 403/404 pairs, `api.test.ts` healthz/livez against `health.test.ts`, the upload ownership refusal repeated across five service specs, the reaction adapter and its store asserting the same three cases). Proof: the duplicate-title check in AC 5 green.
 9. `pnpm test:bun` covers `apps/api` as well as `apps/worker` and `packages`, and stays green 20 runs in a row under `--rerun-each 20` for the two known timing suites. Proof: CI log.
 10. The 12 misnamed or misplaced specs are renamed or moved to the name rule 12 expects. Proof: `test-correspondence` green with no list.
@@ -343,7 +367,7 @@ says so.
 1. The API logs one structured line per request with method, route, status, duration and request id; an `Authorization` header never appears in a log line. Proof: spec capturing the log stream.
 2. An unhandled error in a route produces one `error` log line with the request id, and a problem response. Proof: spec.
 3. The request id of `POST /v1/uploads/:id/complete` appears in the probe job's log lines. Proof: in-process e2e spec.
-4. No `console.*` in production source outside CLI `main.ts` files. Proof: `grep` = 0.
+4. No `console.*` in production source outside `ENTRYPOINTS`. Proof: zero-matches row `console\.` over production source minus `entrypoints.ts`, 0.
 5. Every label value used in `infra/observability/**`, `infra/k8s/base/scaled-objects.yaml` and alert rules is emitted by some code path: `state="prioritized"` is polled, `result="stalled"` is recorded from the BullMQ `stalled` event. Proof: `tests/architecture/promql-labels-emitted.test.ts`, with a fixture query that fires.
 6. Workers do not write `bullmq_queue_jobs`; after one job and an idle period, the KEDA trigger query returns 0 for that queue. Proof: spec on the stage metrics plus the k3d run named in the PR.
 7. A 404 records `route="unmatched"`. Proof: `http-metrics` spec.
@@ -358,7 +382,8 @@ Rule 11 says a cycle-time regression is a blocking defect, and the current pipel
 run 35842380274: lint-typecheck 1m36, unit 4m17, unit-bun 2m34, integration 2m41, e2e-smoke 5m43, wall 10m07. About
 seven builds per run, `pnpm boundaries` six times, `gen-video` four times, apt ffmpeg four times uncached, Docker
 with no layer cache, architecture tests twice, no path filter (a docs-only commit ran the full 9m15), and no
-`timeout-minutes` anywhere.
+`timeout-minutes` anywhere. `unit` and `unit-bun` also start a Postgres service and run `pnpm db:migrate`, and no
+spec there connects to it - they use PGlite.
 
 **Target.** Build once, cache everything that has an input hash, run e2e from cached images, and skip what a change
 cannot affect.
@@ -367,14 +392,15 @@ cannot affect.
 1. Workspace packages are built once per run and shared (artifact or per-job cache key with `restore-keys`); no job logs `0 cached` for a package another job already built in the same run. Proof: the turbo summaries of one run pasted.
 2. FFmpeg and the generated fixtures are cached, keyed on the generator source and `manifest.json`; e2e generates only the fixtures its reduced set uses. Proof: CI log shows a cache hit on a second run.
 3. `docker buildx` uses `cache-from`/`cache-to: type=gha` in `ci.yml` and `images.yml`, with a pnpm store cache mount and a pinned turbo instead of `npx turbo`. Proof: a second run's build step under 45 s.
-4. Every job has `timeout-minutes`; architecture tests run once per pipeline; `pnpm boundaries` runs once per job at most. Proof: `ci.yml` review plus a `ci-shape` spec in `@vp/testing` that parses the workflow.
-5. A PR touching only `**/*.md` or `docs/**` completes CI in under 90 s, with required checks reported. Proof: this ticket's own delivery PRs for W11.
-6. On a code PR, CI wall-clock is **under 6 minutes** and `unit` under 2m30, from 10m07 and 4m17. Proof: `gh run view --json jobs` of the last delivery PR pasted.
+4. Every job's `timeout-minutes` **is its budget**, so a regression fails the run instead of waiting for someone to notice: build 2, lint-typecheck 2, unit 3, unit-bun 3, integration 3, e2e-smoke 4. `e2e-smoke` needs the build job only, not the test jobs. Architecture tests run once per pipeline; `pnpm boundaries` at most once per job. Proof: `tests/architecture/ci-shape.test.ts` parses `ci.yml` and asserts each of these, with a fixture workflow that fires.
+5. A PR touching only `**/*.md` or `docs/**` completes CI in under 90 s, with required checks reported. Proof: `ci-shape` asserts the path filter; the run of the first docs-only PR merged after 88d, pasted.
+6. On a code PR, CI wall-clock is **under 6 minutes** and `unit` under 2m30, from 10m07 and 4m17. Proof: `ci-shape` asserts that the `timeout-minutes` along the longest `needs` chain sum to 6 or less, which holds it; `gh run view --json jobs` of the last delivery PR pasted.
 7. The FFmpeg-heavy specs use the `s2`/`s15` fixtures: `keyframe-alignment.test.ts` under 10 s (39.9 s today), `segment-streaming-uploader` under 5 s (21.5 s). Proof: vitest timings in the CI log.
 8. `pnpm test:architecture` stays under 4 s with the type-aware assertions added, because they share one `ts.Program`. Proof: timing pasted.
 9. `test:integration` is `cache: false` in `turbo.json`, and turbo tasks declare `inputs` that exclude `*.md` and `AGENTS.md`. Proof: a docs-only change replays every build from cache.
 10. `sync-tickets` goes green on `main`: it opens a PR or updates issues, it does not push to a protected branch. Proof: last five runs green.
 11. Trivy is pinned to a SHA and fails the image workflow on a HIGH or CRITICAL finding with a fix available. Proof: workflow file and one run.
+12. `unit` and `unit-bun` start no service container and run no migration; Postgres, with the migration, is the `integration` job's service from W8 AC 4. Proof: `ci-shape` asserts no `services:` outside `integration` and `e2e-smoke`.
 
 ### W11 - Documentation & drift
 
@@ -394,8 +420,8 @@ computed, not written.
 2. `tests/architecture/doc-commands.test.ts`: every `pnpm <script>` and `make <target>` in `README.md`, `ARCHITECTURE.md`, `CONTEXT.md`, `docs/standards/`, `docs/runbooks/`, `docs/SDD.md` and every `AGENTS.md` exists. Tickets and reviews are exempt as historical. Proof: test with a fixture.
 3. `tests/architecture/architecture-table.test.ts`: the §6 table lists exactly the `*.test.ts` files in `tests/architecture/`. Proof: test.
 4. Every backticked repo path in the documents from AC 2 exists. Proof: the same test as AC 2.
-5. The Makefile's load and chaos targets use `pnpm dev-token`, and `make load-smoke` runs locally. Proof: `grep -c "tools/dev-token" Makefile .env.example` = 0; the run pasted.
-6. `gen-index.py` derives the frontier from ticket status and writes it into `docs/tickets/README.md`; root `AGENTS.md` links there instead of restating it. Proof: `grep -n "Frontier Priority Policy" AGENTS.md` shows a link only; changing a status and re-running moves the frontier.
+5. The Makefile's load and chaos targets use `pnpm dev-token`, and `make load-smoke` runs locally. Proof: zero-matches row `tools/dev-token` over `Makefile`, `.env.example` and `tests/load`, 0; the run pasted.
+6. `gen-index.py` derives the frontier from ticket status and writes it into `docs/tickets/README.md`: the hard-coded frontier sentence in its README template (`gen-index.py:44`, still naming 83 and 85) is deleted. Root `AGENTS.md`'s Frontier Priority Policy (still preferring 87) is replaced by a link to the generated list. Proof: zero-matches row `Frontier Priority Policy:\*\* Ticket` over `AGENTS.md` and `docs/tickets/gen-index.py`, 0; changing a status and re-running moves the frontier.
 7. SDD §11, §13.3-13.5, §15.1 and §16, `ARCHITECTURE.md`, the README tree, `docs/standards/file-discipline.md`'s example tree and `apps/api/src/services/README.md` match the code. Proof: the three doc tests green, and the README tree asserted against `packages/*/*` by `doc-commands`.
 8. Ticket status uses one vocabulary; `gen-index.py` rejects anything else. Proof: script run.
 
@@ -407,11 +433,12 @@ Every one is a flat assertion with a fixture that proves it fires, and none has 
 
 | Assertion | Holds |
 |---|---|
+| `zero-matches` | every one-off count in this ticket stays where the PR that moved it left it |
 | `no-discarded-result` | no `Result` is dropped without `ignore(result, reason)` |
 | `no-module-state` | no module-level mutable state or import-time side effect outside a `main.ts` |
 | `no-tuning-literals` | tuning values live in `AppConfig`, declared once |
 | `env-keys-consumed` | every declared key is read; every config leaf is consumed |
-| `env-confinement` (no entrypoint list) | `process.env` only in `main.ts`, `@vp/config`, one CLI `main.ts` each |
+| `env-confinement` (reads `entrypoints.ts`) | `process.env` only in the entrypoints and the named env homes |
 | `file-ceiling` (specs included) | 400 lines / 10 KB for every tracked `.ts`/`.tsx` |
 | `test-correspondence` (no list) | every source with runtime code has its spec, every tier |
 | `spec-discipline` | no vitest-global imports, sleeps, elapsed-time asserts, duplicate titles, skips |
@@ -423,6 +450,7 @@ Every one is a flat assertion with a fixture that proves it fires, and none has 
 | `production-secrets` | rendered production manifests carry no local credential |
 | `promql-labels-emitted` | every label value a query needs is emitted |
 | `start-order` | consumers start last |
+| `ci-shape` | per-job budgets as `timeout-minutes`, critical path at 6 min, path filter, services only where specs use them |
 | `redis-keys-owner` | one owner per key family |
 | `doc-links`, `doc-commands`, `architecture-table` | documents name only what exists |
 | `knip` in CI | no unused file, export, type or dependency |

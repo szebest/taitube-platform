@@ -12,7 +12,7 @@ checked against the code, and several claims in the previous scorecard were wron
 | Dimension | Previous | Today | Main reason for the change |
 |---|---|---|---|
 | Security & authorization | 8 | 4 | a forgeable admin token in production, a crash hook over HTTP, dev seed in the migrate Job |
-| Configuration | 6.5 | 6 | 25 unread keys (not 24), ~40 tuning literals, overlays unchecked |
+| Configuration | 6.5 | 6 | 25 unread keys (not 24), 17 non-identity tuning fallbacks plus default parameters, overlays unchecked |
 | Lifecycle | 9 | 8 | handlers installed after start, liveness passes on a missing heartbeat, no worker readiness |
 | Dependency injection | 8 | 7 | `total-dependencies` cannot see default params or `?? call()`; 5 `new` inside services |
 | Boundaries & file discipline | 8 | 7.5 | 19 specs over 400 lines, ~20 unused dependencies |
@@ -35,7 +35,7 @@ checked against the code, and several claims in the previous scorecard were wron
 | Every admin-token request is one hard-coded user, never provisioned | `apps/api/src/plugins/auth.ts:12-15,46-48` | `grep -rn 000000000003 apps packages --include='*.ts' \| grep -v __tests__` |
 | `x-test-crash-after-commit` honoured in production | `apps/api/src/routes/uploads.ts:121`, `services/upload-complete.ts:185` | `grep -rn "x-test-" apps/api/src` |
 | Fault flags in wire contracts | `ThumbnailJob.forceFailure`, `ProbeJob.forceThumbnailFailure` in `packages/server/job-contracts/src/index.ts:41,59`; `simulateFailureRendition` in `apps/worker/src/stages/transcode.ts:36,59,158` | `grep -rnE "forceFailure\|forceThumbnailFailure\|simulateFailure\|testCrash\|killAtPercent" apps packages --include='*.ts' \| grep -v __tests__` |
-| Migrate Job seeds dev data | `apps/api/src/migrate.ts:11-12`, `infra/k8s/base/migrate-job.yaml:20-21` | `grep -n seedDatabase apps/api/src/migrate.ts` |
+| Migrate Job seeds dev data | `apps/api/src/migrate.ts:3,12` (imports `@vp/db/seed`, calls `seedDatabase`), run by the Job as `node dist/migrate.js` | `grep -n seedDatabase apps/api/src/migrate.ts` |
 | CORS reflects any origin | `apps/api/src/app.ts:54` | `grep -n "register(cors" apps/api/src/app.ts` |
 | Base secrets pass the `^change-me` check | `configmap-secret.yaml:57-64` (`vp`, `minioadmin`, `vp:vp@`, `:vp@`) | `grep -nE '"(vp\|minioadmin)"\|:vp@\|vp:vp' infra/k8s/base/configmap-secret.yaml` |
 | Cloud overlay never includes its secrets; `secrets.enc.yaml` is plaintext in fake wrappers | `infra/k8s/overlays/cloud/kustomization.yaml:6-10` | read |
@@ -54,9 +54,9 @@ and not behind the ingress.
 | Mapped and consumed by nothing | `redis.pubsubUrl` | `grep -rn pubsubUrl apps packages --include='*.ts' \| grep -v __tests__` |
 | Partly consumed | `redis.password` (BullMQ only), `worker.tmpDir` (housekeeping only) | `external-family.ts:23,43`; `stages/probe.ts:145`, `transcode.ts:170` |
 | URL defaults with a password | 3 schema + 1 `inProcessAppConfig` + 3 db scripts | `grep -nE "(postgres(ql)?\|redis)://[^\"' ]*:[^@\"' ]+@\|minioadmin"` over production source = 9 lines |
-| `process.env` outside the two mains | 14 files, 9 of them sanctioned by name in `env-confinement.test.ts:15-25` | see ticket W2 AC 3 |
+| `process.env` outside the two mains | 15 files (including `@vp/testing`, `tests/e2e/e2e-runner.ts`, `scripts/run-e2e.ts` and the `apps/web/src/Globals.d.ts` declaration), 9 sanctioned by name in `env-confinement.test.ts:15-25` | see ticket W2 AC 3 |
 | Composition roots defaulting config | 2 (`app.ts:37`, `runner.ts:67`) | `grep -rn "?? inProcessAppConfig" apps packages` |
-| Tuning literals in services, stages, adapters | ~40 | `grep -rnE '\?\? *[0-9][0-9_]*' apps/api/src/services apps/worker/src packages/server/adapters/redis packages/server/adapters/s3 --include='*.ts' \| grep -v __tests__` |
+| Numeric `??` fallbacks in services, stages, adapters | 56, 17 excluding the identity `?? 0`/`?? 1` | `grep -rnE '\?\? *[0-9][0-9_]*' apps/api/src/services apps/worker/src packages/server/adapters/redis packages/server/adapters/s3 --include='*.ts' \| grep -v __tests__` |
 | Overlay keys unchecked | `HOUSEKEEPING_INTERVAL_MS` in `infra/k8s/overlays/cloud/kustomization.yaml:48` | `env-key-closure.test.ts:90` reads `base` only |
 
 The 25 unread keys: `ALLOWED_CONTENT_TYPES`, `AUTH_AUDIENCE`, `AUTH_DEV_USER_ID`, `AUTH_ISSUER`, `BULLMQ_PREFIX`,
@@ -72,7 +72,7 @@ The 25 unread keys: `ALLOWED_CONTENT_TYPES`, `AUTH_AUDIENCE`, `AUTH_DEV_USER_ID`
 - Both mains attach signal handlers after `main()` resolves (`apps/worker/src/main.ts:69`, `apps/api/src/main.ts:71-73`).
 - API drain order is correct: readiness flips, 2 s drain, close, dispose, all inside a 20 s grace window (`packages/server/composition/src/shutdown.ts:17,36-57`).
 - Worker liveness is `test -f /tmp/vp/heartbeat || exit 0` - a missing file is healthy. Zero readiness probes across 8 worker manifests.
-- Heartbeat file written from 5 places: `probe.ts:90`, `transcode.ts:100,232`, `thumbnail.ts:71`, `main.ts:22`.
+- Heartbeat file written from 5 places: `probe.ts:90`, `transcode.ts:100,232`, `thumbnail.ts:71`, `main.ts:22`, in two formats. `main.ts:22` writes epoch seconds, the stages write ISO strings, and the probe's `$(( $(date +%s) - $(cat heartbeat) ))` is a syntax error on an ISO string.
 
 ## Dependency injection
 
@@ -187,6 +187,7 @@ assertion races a real 100 ms interval against a 10 ms sampler.
 - `sync-tickets.yml` red on every main push since 09-19 (`GH006: Protected branch update failed`, run 35869663909).
 - `images.yml`: Trivy `@master`, `exit-code 0`, `continue-on-error`.
 - Slowest specs: `keyframe-alignment.test.ts` 39.9 s, `segment-streaming-uploader.test.ts` 21.5 s, `thumbnail-stage.test.ts` 9.7 s.
+- `unit` and `unit-bun` start a Postgres service and run `pnpm db:migrate`; no spec there connects (PGlite).
 - `turbo.json`: no `inputs` on any task; `test:integration` cacheable although it runs against live infra.
 
 Reproduce: `GH_CONFIG_DIR="$HOME/.config/gh-szebest" gh run view <id> --json jobs --jq '.jobs[]|[.name,.startedAt,.completedAt]|@tsv'`.
