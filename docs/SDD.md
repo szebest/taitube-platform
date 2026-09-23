@@ -2118,6 +2118,7 @@ The schema is **closed over what the code reads**: every key the deployables rea
 | `CORS_ORIGINS` | api | `http://localhost:5173` | comma list of frontend origins |
 | `PORT` / `METRICS_PORT` | both | `3000` / `9464` | metrics bound to a separate port |
 | `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | both (dev + images) | `1` / `1` | no phone-home from tooling/libraries (P9) |
+| `NODE_OPTIONS` | both (images + compose) | unset; `--import @vp/config/register` in the images and compose | read by Node itself, never by this code; declared so the schema is closed over every key the platform sets |
 
 ### 16.2 PostgreSQL
 

@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories, UserRecord } from '@vp/core/repositories';
-import { jobPriorityFor } from '@vp/domain-rules';
+import { jobPriorityFor } from '@vp/domain';
 import {
   type CacheUnavailable,
   type DatabaseUnavailable,

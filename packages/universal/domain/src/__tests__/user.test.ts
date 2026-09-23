@@ -1,6 +1,6 @@
-import { JOB_PRIORITY, jobPriorityFor } from '../job-priority.rule.js';
+import { JOB_PRIORITY, jobPriorityFor } from '../user.js';
 
-describe('domain-rules/priority: jobPriorityFor', () => {
+describe('domain/user: jobPriorityFor', () => {
   it.each([
     { tier: 'free', expected: JOB_PRIORITY.free },
     { tier: 'pro', expected: JOB_PRIORITY.paid },

@@ -1,5 +1,5 @@
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import { JOB_PRIORITY } from '@vp/domain-rules';
+import { JOB_PRIORITY } from '@vp/domain';
 import { ids, stagePolicies } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';

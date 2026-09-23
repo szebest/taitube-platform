@@ -307,6 +307,9 @@ importers:
       '@vp/db':
         specifier: workspace:*
         version: link:../../packages/server/db
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../packages/universal/domain
       '@vp/domain-rules':
         specifier: workspace:*
         version: link:../../packages/universal/domain-rules

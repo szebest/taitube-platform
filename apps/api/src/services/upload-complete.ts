@@ -1,4 +1,5 @@
 import type { UploadRecord, VideoRecord } from '@vp/core/repositories';
+import { jobPriorityFor } from '@vp/domain';
 import {
   type NotMultipart,
   type PartManifestMismatch,
@@ -6,7 +7,6 @@ import {
   type UploadOpenFailure,
   type UploadSizeMismatch,
   decideUploadOpen,
-  jobPriorityFor,
   notMultipart,
   partManifestMismatch,
   sourceMissing,
