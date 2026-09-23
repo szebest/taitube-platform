@@ -638,6 +638,9 @@ importers:
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../job-contracts
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       zod:
         specifier: ^3.24.2
         version: 3.25.76
@@ -969,6 +972,13 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   packages/universal/pagination:
+    dependencies:
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../result
     devDependencies:
       '@vp/testing':
         specifier: workspace:*

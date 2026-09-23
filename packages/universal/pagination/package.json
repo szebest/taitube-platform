@@ -19,6 +19,10 @@
     "test": "vitest run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
+  "dependencies": {
+    "@vp/errors": "workspace:*",
+    "@vp/result": "workspace:*"
+  },
   "devDependencies": {
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
@@ -27,6 +31,6 @@
     "vitest": "^3.0.7"
   },
   "vp": {
-    "layer": 1
+    "layer": 2
   }
 }

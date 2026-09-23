@@ -2,6 +2,7 @@ export * from './api-error-codes.js';
 export * from './pipeline-error-codes.js';
 export * from './error-codes.js';
 export * from './pipeline-error.js';
+export * from './pipeline-failures.js';
 export * from './failure.js';
 export * from './infra-failures.js';
 export * from './conflict-failures.js';

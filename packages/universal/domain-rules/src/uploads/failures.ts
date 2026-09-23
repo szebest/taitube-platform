@@ -20,6 +20,16 @@ export type UploadSizeMismatch = Failure<
   { videoId: string; declaredSizeBytes: number | null; actualSizeBytes: number }
 >;
 
+export type UploadNotFound = Failure<typeof ErrorCodes.VIDEO_NOT_FOUND, { uploadId: string }>;
+
+export type SourceMissing = Failure<
+  typeof ErrorCodes.SOURCE_MISSING,
+  { videoId: string; sourceKey: string }
+>;
+
+/** A part URL or a part manifest only means something for a multipart session. */
+export type NotMultipart = Failure<typeof ErrorCodes.VALIDATION_FAILED, { uploadId: string }>;
+
 export type UploadOpenFailure = UploadNotOpen | UploadExpired;
 
 export function uploadNotOpen(uploadId: string, status: string): UploadNotOpen {
@@ -63,5 +73,26 @@ export function uploadSizeMismatch(
     videoId,
     declaredSizeBytes,
     actualSizeBytes,
+  };
+}
+
+export function uploadNotFound(uploadId: string): UploadNotFound {
+  return { code: ErrorCodes.VIDEO_NOT_FOUND, message: 'Upload not found', uploadId };
+}
+
+export function sourceMissing(videoId: string, sourceKey: string): SourceMissing {
+  return {
+    code: ErrorCodes.SOURCE_MISSING,
+    message: `Source file not found at ${sourceKey}`,
+    videoId,
+    sourceKey,
+  };
+}
+
+export function notMultipart(uploadId: string): NotMultipart {
+  return {
+    code: ErrorCodes.VALIDATION_FAILED,
+    message: 'This upload is a single PUT, not a multipart session',
+    uploadId,
   };
 }

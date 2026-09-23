@@ -1,3 +1,4 @@
+import { ok } from '@vp/result';
 import { JsonCursorCodec } from '../cursor-codec';
 import {
   DEFAULT_PAGINATION,
@@ -77,15 +78,15 @@ describe('packages/pagination: Paginator', () => {
     it('round-trips its own cursor through the configured codec', () => {
       const page = defaultPaginator.paginate(rows(3), 2, { cursorOf, toItem });
 
-      expect(defaultPaginator.decodeCursor(page.nextCursor)).toEqual({ id: 'r1' });
+      expect(defaultPaginator.decodeCursor(page.nextCursor)).toEqual(ok({ id: 'r1' }));
     });
   });
 
   describe('decodeCursor', () => {
     it('treats an absent cursor as the first page', () => {
-      expect(defaultPaginator.decodeCursor(undefined)).toBeNull();
-      expect(defaultPaginator.decodeCursor(null)).toBeNull();
-      expect(defaultPaginator.decodeCursor('')).toBeNull();
+      expect(defaultPaginator.decodeCursor(undefined)).toEqual(ok(null));
+      expect(defaultPaginator.decodeCursor(null)).toEqual(ok(null));
+      expect(defaultPaginator.decodeCursor('')).toEqual(ok(null));
     });
   });
 
