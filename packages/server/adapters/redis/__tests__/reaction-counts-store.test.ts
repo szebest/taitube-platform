@@ -15,7 +15,10 @@ describe('ReactionCountsStore', () => {
 
     beforeEach(() => {
       redis = new FakeRedis();
-      store = new ReactionCountsStore({ redis: redis.asRedis(), ttlSeconds: 60 });
+      store = new ReactionCountsStore({
+        backend: { type: 'redis', redis: redis.asRedis() },
+        ttlSeconds: 60,
+      });
     });
 
     it('writes the counters with their freshness metadata and a ttl', async () => {
@@ -87,7 +90,7 @@ describe('ReactionCountsStore', () => {
 
     beforeEach(() => {
       cache = new InMemoryCacheClient();
-      store = new ReactionCountsStore({ cache, ttlSeconds: 60 });
+      store = new ReactionCountsStore({ backend: { type: 'cache', cache }, ttlSeconds: 60 });
     });
 
     afterEach(() => {
@@ -126,25 +129,6 @@ describe('ReactionCountsStore', () => {
       expectOk(await store.invalidate(VIDEO_ID));
 
       expect(expectOk(await cache.get(KEY))).toBeNull();
-    });
-  });
-
-  describe('with nothing wired up', () => {
-    const store = new ReactionCountsStore({ ttlSeconds: 60 });
-
-    it.each([{ operation: 'read', run: () => store.read(VIDEO_ID) }])(
-      'reports a miss from $operation',
-      async ({ run }) => {
-        expect(await run()).toBeNull();
-      }
-    );
-
-    it.each([
-      { operation: 'write', run: () => store.write(VIDEO_ID, COUNTS, 1) },
-      { operation: 'adjust', run: () => store.adjust(VIDEO_ID, 1, 0) },
-      { operation: 'invalidate', run: () => store.invalidate(VIDEO_ID) },
-    ])('succeeds silently on $operation', async ({ run }) => {
-      expectOk(await run());
     });
   });
 });

@@ -91,7 +91,7 @@ export async function runReconcileUploads(
   const staleUploaded = await repositories.videos.scan({
     status: 'UPLOADED',
     idleFor: { since: 'updatedAt', ms: uploadedThresholdMs },
-    without: { step: 'probe' },
+    without: { type: 'step', step: 'probe' },
   });
   if (isErr(staleUploaded)) return staleUploaded;
 

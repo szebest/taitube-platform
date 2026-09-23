@@ -19,7 +19,7 @@ describe('Scheduled Reaction Counter Drift Reconciler (Ticket 40 AC 48-49)', () 
     repos = new InMemoryRepositories();
     cacheClient = new InMemoryCacheClient();
     reactionCache = new RedisReactionCacheAdapter({
-      cache: cacheClient,
+      backend: { type: 'cache', cache: cacheClient },
     });
   });
 

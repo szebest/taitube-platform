@@ -33,7 +33,7 @@ export async function runExpireRaw(
   const expiredVideos = await repositories.videos.scan({
     status: 'READY',
     idleFor: { since: 'readyAt', ms: retentionDays * DAY_MS },
-    without: { event: 'video.raw_expired' },
+    without: { type: 'event', event: 'video.raw_expired' },
   });
   if (isErr(expiredVideos)) return expiredVideos;
 

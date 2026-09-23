@@ -21,7 +21,9 @@ describe('RedisReactionCacheAdapter', () => {
 
     beforeEach(() => {
       redis = new FakeRedis();
-      adapter = new RedisReactionCacheAdapter({ redis: redis.asRedis() });
+      adapter = new RedisReactionCacheAdapter({
+        backend: { type: 'redis', redis: redis.asRedis() },
+      });
     });
 
     afterEach(() => {
@@ -122,7 +124,7 @@ describe('RedisReactionCacheAdapter', () => {
 
     beforeEach(() => {
       cache = new InMemoryCacheClient();
-      adapter = new RedisReactionCacheAdapter({ cache });
+      adapter = new RedisReactionCacheAdapter({ backend: { type: 'cache', cache } });
     });
 
     afterEach(() => {
@@ -181,7 +183,11 @@ describe('RedisReactionCacheAdapter', () => {
         Math.random = () => random;
 
         try {
-          const eager = new RedisReactionCacheAdapter({ cache, ttlSeconds: 1, beta: 1000 });
+          const eager = new RedisReactionCacheAdapter({
+            backend: { type: 'cache', cache },
+            ttlSeconds: 1,
+            beta: 1000,
+          });
 
           expect(expectOk(await eager.getCounts(VIDEO_ID, fetcher))).toEqual({
             likesCount: 100,
@@ -225,20 +231,5 @@ describe('RedisReactionCacheAdapter', () => {
 
       expect(expectOk(await cache.get(VIDEO_KEY))).toBeNull();
     });
-  });
-
-  it('serves reads straight from the source when no cache is wired up', async () => {
-    const adapter = new RedisReactionCacheAdapter();
-    let fetches = 0;
-
-    expect(
-      expectOk(
-        await adapter.getCounts(VIDEO_ID, async () => {
-          fetches += 1;
-          return ok(COUNTS);
-        })
-      )
-    ).toEqual(COUNTS);
-    expect(fetches).toBe(1);
   });
 });

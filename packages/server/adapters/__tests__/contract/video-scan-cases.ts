@@ -48,7 +48,7 @@ export const SCAN_CASES: ScanCase[] = [
         lockToken: STEP_LOCK_TOKEN,
       });
     },
-    filter: { status: 'UPLOADED', idleFor: IDLE_NOW, without: { step: 'probe' } },
+    filter: { status: 'UPLOADED', idleFor: IDLE_NOW, without: { type: 'step', step: 'probe' } },
   },
   {
     scenario: 'soft-deleted videos, measured from deletedAt rather than updatedAt',
@@ -72,7 +72,7 @@ export const SCAN_CASES: ScanCase[] = [
     filter: {
       status: 'READY',
       idleFor: { since: 'readyAt', ms: HOUR_MS },
-      without: { event: 'video.raw_expired' },
+      without: { type: 'event', event: 'video.raw_expired' },
     },
   },
   {
@@ -90,7 +90,7 @@ export const SCAN_CASES: ScanCase[] = [
     filter: {
       status: 'READY',
       minGeneration: 2,
-      without: { event: 'video.generation_purged', forCurrentGeneration: true },
+      without: { type: 'event', event: 'video.generation_purged', forCurrentGeneration: true },
     },
   },
 ];

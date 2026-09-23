@@ -15,7 +15,9 @@ export function videoServiceDeps(
   return {
     videos,
     cdn: TEST_CDN,
-    reactionCache: new RedisReactionCacheAdapter({ cache: new InMemoryCacheClient() }),
+    reactionCache: new RedisReactionCacheAdapter({
+      backend: { type: 'cache', cache: new InMemoryCacheClient() },
+    }),
     authorization: new CaslAuthorizationAdapter(),
     paginator: defaultPaginator,
     ...overrides,

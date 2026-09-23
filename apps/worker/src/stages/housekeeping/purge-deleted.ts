@@ -78,7 +78,7 @@ export async function runPurgeDeleted(
   const readyVideosWithOldGen = await repositories.videos.scan({
     status: 'READY',
     minGeneration: 2,
-    without: { event: 'video.generation_purged', forCurrentGeneration: true },
+    without: { type: 'event', event: 'video.generation_purged', forCurrentGeneration: true },
   });
   if (isErr(readyVideosWithOldGen)) return readyVideosWithOldGen;
 

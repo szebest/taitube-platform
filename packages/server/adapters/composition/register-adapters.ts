@@ -28,7 +28,8 @@ export async function registerAdapters(c: Container, config: AppConfig): Promise
     .provide(Adapters.Authorization, () => new CaslAuthorizationAdapter())
     .provide(
       Adapters.ReactionCache,
-      (c) => new RedisReactionCacheAdapter({ cache: c.get(Adapters.Cache) })
+      (c) =>
+        new RedisReactionCacheAdapter({ backend: { type: 'cache', cache: c.get(Adapters.Cache) } })
     )
     .provide(
       Adapters.CategoryCache,
