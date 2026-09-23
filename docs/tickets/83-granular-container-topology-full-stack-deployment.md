@@ -117,6 +117,32 @@ than sleeps, and finishes by printing what is running and where to reach it.
   waits for `READY` and plays it back through the web container.
 - Ticket 75 owns the full Playwright suite; this ticket lands the one path that proves the topology works.
 
+### F - Delete the extensionless-import loader shim
+
+`packages/server/config/src/loader.mjs` is a `register()` hook whose only job is to catch
+`ERR_MODULE_NOT_FOUND` and retry the specifier with `.js` appended. Every app boots through it
+(`node --import @vp/config/register dist/main.js`), which is why 570 extensionless relative imports under
+`packages/server/` do not crash. They are still broken on their own:
+
+```
+node -e "import('./packages/server/ffmpeg/dist/index.js')"   -> ERR_MODULE_NOT_FOUND
+node -e "import('./packages/universal/errors/dist/index.js')" -> OK
+```
+
+Nothing in this repo bundles - every package builds with plain `tsc` and is `"type": "module"`, so `tsc` emits
+the specifier verbatim and Node does no extension resolution. `universal` (118 imports) and `client` (4) carry
+their extensions and are machine-checked; `server` is the tier held up by the shim.
+
+This lands here because the shim sits in the entrypoint this ticket is rewriting anyway.
+
+- Add the `.js` extension to every relative import under `packages/server/`.
+- Delete `loader.mjs` and drop the resolver duty from `@vp/config/register`, keeping whatever else that
+  entrypoint does.
+- Widen `tests/architecture/esm-specifiers.test.ts` from the two browser tiers to all three, so the rule has
+  one owner instead of two conventions and a shim.
+- `moduleResolution: "bundler"` in `packages/universal/tsconfig/base.json` is what lets `tsc` stay quiet about
+  this. Decide whether it changes, and if it stays say why in the PR.
+
 ---
 
 ## Acceptance criteria
@@ -138,6 +164,11 @@ than sleeps, and finishes by printing what is running and where to reach it.
 - [ ] A frontend-only change does not invalidate the API or worker image layers — demonstrated.
 - [ ] `make smoke-offline` covers `apps/web`; the web container serves with zero external egress.
 - [ ] A browser-driven check uploads, waits for `READY` and plays back through the deployed web container.
+- [ ] No relative import under `packages/server/` is extensionless, and `esm-specifiers.test.ts` scans all
+      three tiers rather than two.
+- [ ] `loader.mjs` is deleted, `@vp/config/register` no longer resolves specifiers, and every app still boots
+      from `dist`.
+- [ ] `node -e "import('./packages/server/ffmpeg/dist/index.js')"` resolves with no loader registered.
 - [ ] **Docs:** SDD §12.1/§12.2 updated with the `web` service and the profile map; `README.md` quick-start
       updated to the new entrypoint; `Makefile` help text accurate; `docs/LOCAL_FIRST.md` covers the frontend.
 - [ ] `python3 docs/tickets/gen-index.py` re-run.

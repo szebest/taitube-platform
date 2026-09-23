@@ -12,7 +12,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 ## How work is organised
 - Work items are tracer-bullet tickets in `docs/tickets/NN-slug.md`; the index `docs/tickets/README.md` shows the frontier (tickets whose blockers are done). Use the `vp-work-ticket` skill to pick one up.
 - Numbering represents dependency order, not priority. Never start a ticket whose blockers are not `done`.
-- **Frontier Priority Policy:** Ticket **84** (Result-typed error handling — domain code returns, the edge decides) takes absolute precedence over every other frontier ticket, including 83 and the Phase 5 frontend tickets (`36`+). Every ticket from 42 onward adds a domain service, so the cost of 84 grows with each ticket taken before it. Tickets 79 (offline smoke runner refactor & CI cleanup) and 80 (developer experience, local dev setup & CI/CD acceleration) are done; take 84 next, then ticket 82's outstanding workstreams and 83.
+- **Frontier Priority Policy:** Ticket **84** (Result-typed error handling - domain code returns, the edge decides) takes absolute precedence over every other frontier ticket, including 83 and the Phase 5 frontend tickets (`36`+). Every ticket from 42 onward adds a domain service, so the cost of 84 grows with each ticket taken before it. Tickets 79 (offline smoke runner refactor & CI cleanup), 80 (developer experience, local dev setup & CI/CD acceleration) and 82 (architecture remediation) are done. 84 is in progress on PR #101 with W4 and W5 outstanding, so finish it before starting anything else; after it take 83, then 85.
 - Ticket status lives in the ticket's `**Status:**` line; run `python3 docs/tickets/gen-index.py` after changing it.
 
 ---
