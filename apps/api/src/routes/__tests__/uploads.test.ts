@@ -99,4 +99,33 @@ describe('upload routes', () => {
     expect(res.statusCode).toBe(404);
     expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
   });
+
+  it.each([
+    {
+      body: 'no body under a JSON content type',
+      contentType: 'application/json',
+      payload: undefined,
+      status: 400,
+    },
+    {
+      body: 'a body in an unsupported media type',
+      contentType: 'text/csv',
+      payload: 'a,b',
+      status: 415,
+    },
+  ])(
+    'answers $status problem+json for $body on complete',
+    async ({ contentType, payload, status }) => {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/v1/uploads/${ABSENT_UPLOAD}/complete`,
+        headers: { ...auth, 'content-type': contentType },
+        payload,
+      });
+
+      expect(res.statusCode).toBe(status);
+      expect(res.headers['content-type']).toContain('application/problem+json');
+      expect(res.json()).toMatchObject({ status });
+    }
+  );
 });
