@@ -19,7 +19,7 @@ at the throw site.
 | **1a. Validation** | `@vp/validation` | `universal` · T2 | the input, nothing else | `Result<T, InputFailure union>` |
 | **1b. Domain rules** | `@vp/domain-rules` | `universal` · T3 | input **+** an entity **+** policy | `Result<T, Failure union>` |
 | **2. Services** | `apps/api/src/services/`, `apps/worker/src/stages/` | `server` | ports and rules | `Result<T, rule + infra failures>` |
-| **3. Edge** | `apps/api/src/routes/`, `apps/worker/src/runner.ts`, later `apps/web` | `server` / `client` | HTTP, BullMQ, the DOM | a response, a throw at the queue boundary, a view state |
+| **3. Edge** | `apps/api/src/routes/`, `apps/worker/src/composition/stages.module.ts`, later `apps/web` | `server` / `client` | HTTP, BullMQ, the DOM | a response, a throw at the queue boundary, a view state |
 
 Layers 1 and 2 never log a failure, never format one and never `throw`. Layer 3 never contains a
 rule. All four are asserted in `tests/architecture/`, not just written here.

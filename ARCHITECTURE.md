@@ -8,7 +8,7 @@ This document describes the architectural boundaries, ports, and adapters layer 
 
 1. **Dependency Inversion:** High-level policy (domain services, routes, worker pipeline stages) must never import, instantiate, or depend directly on low-level details (concrete SDKs like `@aws-sdk/client-s3`, `ioredis`, `bullmq`, or Postgres/Drizzle drivers).
 2. **Ports as Abstract Classes:** Every boundary is defined by an abstract class in `@vp/core/ports`. Abstract classes are used instead of pure TypeScript interfaces to allow `instanceof` checks, centralized error wrapping, and runtime health check contract enforcement.
-3. **Single Injection Seam:** Concrete adapters are instantiated exclusively at composition roots (`apps/api/src/app.ts` and `apps/worker/src/runner.ts`) and injected down into domain services and worker stage processors.
+3. **Single Injection Seam:** Concrete adapters are constructed only inside `@vp/adapters` and by composition modules; `registerAdapters` picks the family, and the composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`) resolve one `Container` over it and inject its values down into domain services and worker stage processors.
 4. **Interface Segregation:** Distinct responsibilities are separated into dedicated ports rather than god-objects:
    - Standard object operations live in `StorageClient`; multi-part lifecycle operations live in `MultipartStorage`.
    - Low-level database connection/transaction execution lives in `DatabaseClient`; domain entity data access lives in dedicated domain repositories (`VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, `CategoryRepositoryPort`, `VideoReactionRepositoryPort`).
@@ -260,7 +260,7 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 
 A failure is part of every signature below the edge. Domain code returns `Result<T, E>` from `@vp/result`
 instead of throwing it (SDD ADR-24), and only two places unwrap one: `sendResult` in `apps/api/src/routes/`
-and `runner.ts` in `apps/worker`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
+and `instrument` in `apps/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
 the exception.
 
 - **Rules are pure and universal.** `@vp/validation` (T2) sees the submitted input and nothing else;

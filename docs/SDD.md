@@ -532,7 +532,7 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 Decided once per code, in the vocabulary, not at the throw site: `RETRY_CLASS` in
 `@vp/errors/src/retry-class.ts` is a `Readonly<Record<ErrorCode, 'permanent' | 'transient'>>`, so a new code
-does not compile until it is classified. `apps/worker/src/runner.ts` reads it to turn a stage's failed `Result`
+does not compile until it is classified. `instrument` in `apps/worker/src/composition/stages.module.ts` reads it to turn a stage's failed `Result`
 into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by regex on messages.
 
 ---
@@ -660,7 +660,7 @@ one and no second consumer could choose differently.
 - **The discriminant is the existing `ErrorCode`.** No second error vocabulary. `PROBLEM_STATUS` and
   `RETRY_CLASS` are both `Readonly<Record<ErrorCode, ...>>`, so a new code is a compile error until both edges
   have been told what it means.
-- **Two edges.** `sendResult` in `apps/api/src/routes/` renders a `Problem`; `runner.ts` converts to the BullMQ
+- **Two edges.** `sendResult` in `apps/api/src/routes/` renders a `Problem`; `instrument` in `apps/worker/src/composition/stages.module.ts` converts to the BullMQ
   throw via `toPipelineError`, which reads `RETRY_CLASS`. `PermanentError` / `TransientError` remain, as the
   queue-boundary representation only (ADR-18).
 - **A disguise is a rule, not a rendering.** The public route answers "you may not read this" with the same
@@ -1044,7 +1044,7 @@ FOR UPDATE SKIP LOCKED LIMIT 100;
 
 ## 6. API Contract
 
-Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; `AUTH_DEV_USER_ID` bypass when `NODE_ENV=development`). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
+Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>` (RS256/EdDSA, verified against `AUTH_JWKS_URL`; a token signed with the public `packages/server/dev-token` seed is accepted only outside production). Errors follow RFC 9457 `application/problem+json` with a stable `code`.
 
 ### 6.1 Endpoints
 
@@ -1541,7 +1541,7 @@ flowchart LR
 
 | Area | Control |
 |---|---|
-| Authentication | JWT bearer verified with `@fastify/jwt` against `AUTH_JWKS_URL` (RS256/EdDSA); `sub` → `users.id` (auto-provision on first sight). Dev bypass only when `NODE_ENV=development` **and** `AUTH_DEV_USER_ID` set. Admin routes require role claim `admin` or `x-admin-token` (constant-time compare). |
+| Authentication | JWT bearer verified with `@fastify/jwt` against `AUTH_JWKS_URL` (RS256/EdDSA); `sub` → `users.id` (auto-provision on first sight). A token signed with the public `packages/server/dev-token` seed is accepted only where `AppConfig.auth.devTokens` is set, which is every `NODE_ENV` but `production`; in production an EdDSA token verifies against `AUTH_JWKS_URL` like any other. Admin routes require role claim `admin` or `x-admin-token` (constant-time compare). |
 | Authorisation | Declarative RBAC & ABAC permission engine powered by pure functional `@casl/ability` in `packages/universal/permissions` (`@vp/permissions`), decoupled from backend repository/port internals for full backend (`apps/api`) and frontend (`apps/web`) sharing without framework bloat. Strictly typed `Role = 'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'` with boundary-only `parseRole` sanitization. Modular rule sets composed via global `getUserPermissions(user)` builder. Formalized through clean adapters: Postgres Scopes adapter in `packages/server/adapters/postgres/scopes/` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`, `traits`) for row-level database security with CASL `rulesToAST` compilation; `FastifyAuthorizationAdapter` for HTTP preHandlers and memoized `request.ability`; `ProblemDetailsErrorAdapter` for standardized RFC 9457 (401 UNAUTHORIZED vs 403 FORBIDDEN with structured error context); and `ReactPermissionsAdapter` (`useCan`, `PermissionsProvider`, `<Can />` headless slot) for reactive frontend gating. Consumed strictly via library-agnostic `canX({ user, resource })` action helpers and `assertCan(...)` guards; manual hand-checking of roles, user IDs, or ownership in routes/services/repositories is strictly forbidden. Video queries scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
 | Upload safety | Presigned URLs TTL 15 min; `Content-Type` and `Content-Length` are signed into the single-PUT URL; multipart verified via `HeadObject` after completion; server deletes and `REJECT`s on mismatch. Content-type allowlist (`video/mp4, video/quicktime, video/webm, video/x-matroska`). Per-user quota (`MAX_UPLOAD_BYTES`, `MAX_INFLIGHT_PER_USER`). |
 | Storage | Buckets private; CDN reads `public` via R2 custom domain (no public bucket URL exposed). Least-privilege access keys: API key may `Put/Get/Head/Multipart*` on `raw` only; worker key may `Get` on `raw` and `Put/Delete` on `public`. |
