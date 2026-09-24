@@ -25,7 +25,12 @@ xdg-open tools/hls-test-page/index.html
 start tools/hls-test-page/index.html
 ```
 
-Or serve via any static file server:
+Or serve it from the compose stack, which is what the sample button needs (a browser will not fetch a
+playlist from a `file://` page):
 ```bash
-npx serve tools/hls-test-page
+make hls-sample
+docker compose -f infra/compose/docker-compose.yml --profile tools up -d hls-test-page   # http://localhost:8080
 ```
+
+**Play Local Sample** plays `sample/index.m3u8` beside the page, which `make hls-sample` cuts from the
+`s15` fixture; nothing is fetched from another host.

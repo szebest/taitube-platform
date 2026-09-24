@@ -45,13 +45,14 @@ describe('architecture: local-first', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('loads nothing from another host in the page the web app ships', () => {
-    const pages = trackedFiles(':(glob)apps/web/public/*.html');
+  it('loads nothing from another host in the web app page or the HLS test page', () => {
+    const pages = trackedFiles(':(glob)apps/web/public/*.html', ':(glob)tools/hls-test-page/*.html');
     const offenders = pages.flatMap((file) =>
       externalHosts(read(file)).map((url) => `${file}: ${url}`)
     );
 
     expect(pages).toContain('apps/web/public/index.html');
+    expect(pages).toContain('tools/hls-test-page/index.html');
     expect(offenders).toEqual([]);
   });
 

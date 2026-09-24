@@ -37,6 +37,7 @@ tmp/
 # Video fixtures
 fixtures/
 tests/fixtures/
+tools/hls-test-page/sample/
 
 # Output
 out/
