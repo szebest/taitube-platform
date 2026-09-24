@@ -1,5 +1,5 @@
-import { type Logger, createLogger } from '../packages/server/logger/src/index';
-import { E2ERunner } from '../tests/e2e/e2e-runner';
+import { type Logger, createLogger } from '../../packages/server/logger/src/index';
+import { E2ERunner } from './e2e-runner';
 
 async function main(log: Logger) {
   const args = process.argv.slice(2);

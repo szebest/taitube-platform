@@ -27,7 +27,7 @@
     "upload-client": "tsx packages/server/upload-client/src/main.ts",
     "compose-autoscaler": "tsx packages/server/compose-autoscaler/src/main.ts",
     "fairness": "tsx scripts/fairness-simulation.ts",
-    "e2e": "tsx scripts/run-e2e.ts",
+    "e2e": "tsx tests/e2e/run-e2e.ts",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
     "db:migrate": "tsx apps/api/src/migrate.ts",
     "db:seed": "tsx apps/api/src/seed.ts",

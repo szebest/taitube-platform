@@ -271,7 +271,7 @@ describe('architecture: zero-matches', () => {
     const files = trackedFiles(...(consoleRow?.scope ?? []));
 
     expect(files).toContain('apps/api/src/main.ts');
-    expect(files).toContain('scripts/run-e2e.ts');
+    expect(files).toContain('tests/e2e/run-e2e.ts');
     expect(files).toContain('tests/e2e/e2e-runner.ts');
   });
 

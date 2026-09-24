@@ -4,7 +4,7 @@ import { createMockJob, definePackageTestConfig, withEnv } from '../index';
 
 const ROOT = resolve(import.meta.dirname, '../../../../..');
 const PROJECT_DIRS = ['apps', 'packages/universal', 'packages/server', 'packages/client'];
-const STANDALONE_PROJECTS = ['tests/architecture', 'tests/in-process'];
+const STANDALONE_PROJECTS = ['tests/architecture', 'tests/in-process', 'scripts'];
 
 function subdirectories(parent: string): string[] {
   return readdirSync(join(ROOT, parent), { withFileTypes: true })

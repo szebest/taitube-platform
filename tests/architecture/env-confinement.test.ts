@@ -25,12 +25,13 @@ describe('architecture: process.env is read only where a process starts', () => 
     expect(readsEnvOutsideAHome(file, source)).toBe(true);
   });
 
-  it.each(['apps/api/src/main.ts', 'scripts/run-e2e.ts', 'packages/server/config/src/load-env.ts'])(
-    'allows %s, which is listed in entrypoints.ts',
-    (file) => {
-      expect(readsEnvOutsideAHome(file, 'process.env.NODE_ENV')).toBe(false);
-    }
-  );
+  it.each([
+    'apps/api/src/main.ts',
+    'tests/e2e/run-e2e.ts',
+    'packages/server/config/src/load-env.ts',
+  ])('allows %s, which is listed in entrypoints.ts', (file) => {
+    expect(readsEnvOutsideAHome(file, 'process.env.NODE_ENV')).toBe(false);
+  });
 
   it('scans .mjs and .js as well as TypeScript', () => {
     expect(['a.mjs', 'b.js', 'c.mts', 'd.tsx'].every((file) => SCANNED.test(file))).toBe(true);
