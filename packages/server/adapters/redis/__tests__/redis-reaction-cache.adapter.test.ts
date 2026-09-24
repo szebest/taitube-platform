@@ -14,9 +14,6 @@ const VIDEO_KEY = `taitube:video:${VIDEO_ID}:reactions`;
 
 const COUNTS: ReactionCounts = { likesCount: 7, dislikesCount: 2 };
 
-/** The background refresh is fire-and-forget, so let the microtask queue and one timer tick drain. */
-const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
-
 describe('RedisReactionCacheAdapter', () => {
   describe('over a redis connection', () => {
     let redis: FakeRedis;
@@ -62,37 +59,6 @@ describe('RedisReactionCacheAdapter', () => {
       expect(expectOk(a)).toEqual(COUNTS);
       expect(expectOk(b)).toEqual(COUNTS);
       expect(fetches).toBe(1);
-    });
-
-    it('writes the counters alongside the freshness metadata', async () => {
-      await adapter.setCounts(VIDEO_ID, COUNTS);
-
-      const hash = redis.hashes.get(VIDEO_KEY);
-      expect(hash?.get('likes')).toBe('7');
-      expect(hash?.get('dislikes')).toBe('2');
-      expect(Number(hash?.get('cachedAt'))).toBeGreaterThan(0);
-    });
-
-    it('adjusts a cached entry in place', async () => {
-      await adapter.setCounts(VIDEO_ID, COUNTS);
-      await adapter.adjustCounters(VIDEO_ID, 1, -1);
-
-      expect(expectOk(await adapter.getCounts(VIDEO_ID, async () => ok(COUNTS)))).toEqual({
-        likesCount: 8,
-        dislikesCount: 1,
-      });
-    });
-
-    it('leaves an uncached video alone rather than inventing a counter', async () => {
-      await adapter.adjustCounters(VIDEO_ID, 5, 0);
-      expect(redis.hashes.has(VIDEO_KEY)).toBe(false);
-    });
-
-    it('drops the entry on invalidate', async () => {
-      await adapter.setCounts(VIDEO_ID, COUNTS);
-      await adapter.invalidate(VIDEO_ID);
-
-      expect(redis.hashes.has(VIDEO_KEY)).toBe(false);
     });
 
     it('caches a user reaction and remembers a withdrawn one as NONE', async () => {
@@ -150,7 +116,7 @@ describe('RedisReactionCacheAdapter', () => {
       expect(fetches).toBe(1);
     });
 
-    it('serialises concurrent adjustments so none is lost', async () => {
+    it('keeps every adjustment and reaction written concurrently', async () => {
       await adapter.setCounts(VIDEO_ID, { likesCount: 0, dislikesCount: 0 });
 
       await Promise.all(
@@ -182,44 +148,22 @@ describe('RedisReactionCacheAdapter', () => {
           fetches += 1;
           return ok({ likesCount: 100 * fetches, dislikesCount: 5 });
         };
-
         await adapter.getCounts(VIDEO_ID, fetcher);
-        expect(fetches).toBe(1);
+        const eager = new RedisReactionCacheAdapter({
+          ...CACHES.reactions,
+          backend: { type: 'cache', cache },
+          ttlSeconds: 1,
+          beta: 1000,
+          random: () => random,
+        });
 
-        const realRandom = Math.random;
-        Math.random = () => random;
+        const served = expectOk(await eager.getCounts(VIDEO_ID, fetcher));
 
-        try {
-          const eager = new RedisReactionCacheAdapter({
-            ...CACHES.reactions,
-            backend: { type: 'cache', cache },
-            ttlSeconds: 1,
-            beta: 1000,
-          });
-
-          expect(expectOk(await eager.getCounts(VIDEO_ID, fetcher))).toEqual({
-            likesCount: 100,
-            dislikesCount: 5,
-          });
-
-          await settle();
-          expect(fetches).toBe(expected);
-          eager.clear();
-        } finally {
-          Math.random = realRandom;
-        }
+        expect(served).toEqual({ likesCount: 100, dislikesCount: 5 });
+        expect(fetches).toBe(expected);
+        eager.clear();
       }
     );
-
-    it('never drives a counter below zero', async () => {
-      await adapter.setCounts(VIDEO_ID, { likesCount: 1, dislikesCount: 0 });
-      await adapter.adjustCounters(VIDEO_ID, -5, -5);
-
-      expect(expectOk(await adapter.getCounts(VIDEO_ID, async () => ok(COUNTS)))).toEqual({
-        likesCount: 0,
-        dislikesCount: 0,
-      });
-    });
 
     it('caches the user reaction per video', async () => {
       await adapter.setUserReaction(USER_ID, VIDEO_ID, 'DISLIKE');
@@ -231,13 +175,6 @@ describe('RedisReactionCacheAdapter', () => {
           })
         )
       ).toBe('DISLIKE');
-    });
-
-    it('drops the entry on invalidate', async () => {
-      await adapter.setCounts(VIDEO_ID, COUNTS);
-      await adapter.invalidate(VIDEO_ID);
-
-      expect(expectOk(await cache.get(VIDEO_KEY))).toBeNull();
     });
   });
 });

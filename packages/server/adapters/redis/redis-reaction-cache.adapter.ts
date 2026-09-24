@@ -15,6 +15,8 @@ export interface RedisReactionCacheAdapterConfig {
   ttlSeconds: number;
   userReactionTtlSeconds: number;
   beta?: number;
+  /** The draw XFetch compares against, uniform on [0, 1). */
+  random?: () => number;
 }
 
 export class RedisReactionCacheAdapter implements ReactionCachePort {
@@ -23,6 +25,7 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
   private readonly ttlSeconds: number;
   private readonly userReactionTtlSeconds: number;
   private readonly beta: number;
+  private readonly random: () => number;
   readonly singleflight = new Singleflight();
 
   constructor(config: RedisReactionCacheAdapterConfig) {
@@ -30,6 +33,7 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     this.ttlSeconds = config.ttlSeconds;
     this.userReactionTtlSeconds = config.userReactionTtlSeconds;
     this.beta = config.beta ?? 1.0;
+    this.random = config.random ?? Math.random;
     this.counts = new ReactionCountsStore({ backend: config.backend, ttlSeconds: this.ttlSeconds });
   }
 
@@ -81,7 +85,7 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     const remaining = this.ttlSeconds * 1000 - (Date.now() - cached.cachedAt);
     if (remaining <= 0) return;
 
-    const xfetch = -cached.delta * this.beta * Math.log(Math.max(0.0001, Math.random()));
+    const xfetch = -cached.delta * this.beta * Math.log(Math.max(0.0001, this.random()));
     if (xfetch <= remaining) return;
 
     ignore(
