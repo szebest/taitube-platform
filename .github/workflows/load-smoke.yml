@@ -81,7 +81,7 @@ jobs:
           API: http://localhost:3000
           LOAD_FACTOR: 6
         run: |
-          k6 run --quiet --vus 1 --iterations 10 --no-thresholds \
+          k6 run --quiet --vus 1 --iterations 20 --no-thresholds --summary-trend-stats "p(95),p(99)" \
             --summary-export "$RUNNER_TEMP/baseline.json" tests/load/s1-upload-storm.js
           p95=$(jq '.metrics["http_req_duration{name:presign}"]["p(95)"]' "$RUNNER_TEMP/baseline.json")
           p99=$(jq '.metrics["http_req_duration{name:presign}"]["p(99)"]' "$RUNNER_TEMP/baseline.json")
