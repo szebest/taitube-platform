@@ -22,7 +22,9 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter
  && cp -r packages/server/db/drizzle /out/node_modules/@vp/db/drizzle
 
 FROM node:24-slim AS runtime
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tini curl \
+# The runtime runs the app, not a package manager: npm and corepack only carry CVEs in here.
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ca-certificates tini curl \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -r -u 10001 -m appuser
 
