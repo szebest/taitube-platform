@@ -1,5 +1,4 @@
 import ts from 'typescript';
-import { parseSource } from './parsed-sources';
 import { read, trackedFiles } from './repo-files';
 
 /** The e2e runners poll a deployed stack on its own clock, so only the e2e specs are read. */
@@ -22,20 +21,31 @@ const SLEEP_NAMES = new Set(['sleep', 'settle', 'delay']);
 const TIMER_WAITS = new Set(['setTimeout', 'setImmediate']);
 const CLOCKS = new Set(['Date.now', 'performance.now']);
 
-interface Rule {
-  name: string;
-  /** Every node of one file, walked once and shared by the rules. */
-  offenders: (nodes: readonly ts.Node[]) => ts.Node[];
+interface ParsedSpec {
+  file: ts.SourceFile;
+  /** Every node of the file by its kind, walked once and shared by the rules. */
+  byKind: ReadonlyMap<ts.SyntaxKind, readonly ts.Node[]>;
 }
 
-function descendants(node: ts.Node): ts.Node[] {
-  const found: ts.Node[] = [];
-  const visit = (child: ts.Node): void => {
-    found.push(child);
-    ts.forEachChild(child, visit);
+interface Rule {
+  name: string;
+  offenders: (spec: ParsedSpec) => ts.Node[];
+}
+
+function nodesByKind(file: ts.SourceFile): Map<ts.SyntaxKind, ts.Node[]> {
+  const byKind = new Map<ts.SyntaxKind, ts.Node[]>();
+  const visit = (node: ts.Node): void => {
+    const sameKind = byKind.get(node.kind);
+    if (sameKind === undefined) byKind.set(node.kind, [node]);
+    else sameKind.push(node);
+    ts.forEachChild(node, visit);
   };
-  ts.forEachChild(node, visit);
-  return found;
+  ts.forEachChild(file, visit);
+  return byKind;
+}
+
+function ofKind(spec: ParsedSpec, kinds: readonly ts.SyntaxKind[]): ts.Node[] {
+  return kinds.flatMap((kind) => spec.byKind.get(kind) ?? []);
 }
 
 /** `a.b.c` for a chain of plain names, `undefined` for anything else. */
@@ -68,9 +78,13 @@ function isTimerWait(node: ts.Node): boolean {
   if (!ts.isNewExpression(node) || dottedName(node.expression) !== 'Promise') return false;
   const executor = node.arguments?.[0];
   if (executor === undefined) return false;
-  return descendants(executor).some(
-    (child) => ts.isCallExpression(child) && TIMER_WAITS.has(calleeName(child))
-  );
+  let waits = false;
+  const visit = (child: ts.Node): void => {
+    if (ts.isCallExpression(child) && TIMER_WAITS.has(calleeName(child))) waits = true;
+    ts.forEachChild(child, visit);
+  };
+  visit(executor);
+  return waits;
 }
 
 function isSleepHelper(node: ts.Node): boolean {
@@ -85,9 +99,9 @@ function isClockRead(node: ts.Node | undefined): boolean {
   return node !== undefined && ts.isCallExpression(node) && CLOCKS.has(calleeName(node));
 }
 
-function clockSnapshots(nodes: readonly ts.Node[]): Set<string> {
+function clockSnapshots(spec: ParsedSpec): Set<string> {
   const names = new Set<string>();
-  for (const node of nodes) {
+  for (const node of ofKind(spec, [ts.SyntaxKind.VariableDeclaration])) {
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
       if (isClockRead(node.initializer)) names.add(node.name.text);
     }
@@ -95,9 +109,9 @@ function clockSnapshots(nodes: readonly ts.Node[]): Set<string> {
   return names;
 }
 
-function elapsedTimeReads(nodes: readonly ts.Node[]): ts.Node[] {
-  const snapshots = clockSnapshots(nodes);
-  return nodes.filter(
+function elapsedTimeReads(spec: ParsedSpec): ts.Node[] {
+  const snapshots = clockSnapshots(spec);
+  return ofKind(spec, [ts.SyntaxKind.BinaryExpression]).filter(
     (node) =>
       ts.isBinaryExpression(node) &&
       node.operatorToken.kind === ts.SyntaxKind.MinusToken &&
@@ -135,65 +149,84 @@ function isConsoleCall(node: ts.Node): boolean {
   return ts.isCallExpression(node) && calleeName(node).startsWith('console.');
 }
 
-function titleOf(call: ts.CallExpression): string | undefined {
+function titleOf(call: ts.CallExpression, file: ts.SourceFile): string | undefined {
   const title = call.arguments[0];
   if (title === undefined) return undefined;
   if (ts.isStringLiteralLike(title)) return title.text;
-  if (ts.isTemplateExpression(title)) return title.getText();
+  if (ts.isTemplateExpression(title)) return title.getText(file);
   return undefined;
 }
 
-/** The title a reporter prints: every enclosing `describe` title, then the test's own. */
-function fullTitle(call: ts.CallExpression): string | undefined {
-  const own = titleOf(call);
-  if (own === undefined) return undefined;
-  const path = [own];
-  let parent: ts.Node | undefined = call.parent;
-  while (parent !== undefined) {
-    if (ts.isCallExpression(parent) && testCallName(parent) === 'describe') {
-      path.unshift(titleOf(parent) ?? '');
+/** Each test with the title a reporter prints: every enclosing `describe` title, then its own. */
+function testTitles(file: ts.SourceFile): { test: ts.Node; title: string }[] {
+  const found: { test: ts.Node; title: string }[] = [];
+  const visit = (node: ts.Node, describes: string[]): void => {
+    let inside = describes;
+    if (ts.isCallExpression(node)) {
+      const name = testCallName(node);
+      const title = titleOf(node, file);
+      if (title !== undefined && name === 'describe') inside = [...describes, title];
+      if (title !== undefined && (name === 'it' || name === 'test')) {
+        found.push({ test: node, title: [...describes, title].join(' > ') });
+      }
     }
-    parent = parent.parent;
-  }
-  return path.join(' > ');
+    ts.forEachChild(node, (child) => visit(child, inside));
+  };
+  visit(file, []);
+  return found;
 }
 
-function repeatedTitles(nodes: readonly ts.Node[]): ts.Node[] {
+function repeatedTitles({ file }: ParsedSpec): ts.Node[] {
   const seen = new Set<string>();
   const repeats: ts.Node[] = [];
-  for (const node of nodes) {
-    if (!ts.isCallExpression(node)) continue;
-    const name = testCallName(node);
-    if (name !== 'it' && name !== 'test') continue;
-    const title = fullTitle(node);
-    if (title === undefined) continue;
-    if (seen.has(title)) repeats.push(node);
+  for (const { test, title } of testTitles(file)) {
+    if (seen.has(title)) repeats.push(test);
     seen.add(title);
   }
   return repeats;
 }
 
-function matching(predicate: (node: ts.Node) => boolean): Rule['offenders'] {
-  return (nodes) => nodes.filter(predicate);
+function matching(
+  kinds: readonly ts.SyntaxKind[],
+  predicate: (node: ts.Node) => boolean
+): Rule['offenders'] {
+  return (spec) => ofKind(spec, kinds).filter(predicate);
 }
 
+const { CallExpression, FunctionDeclaration, ImportDeclaration, ImportType, NewExpression } =
+  ts.SyntaxKind;
+const { PropertyAccessExpression, VariableDeclaration } = ts.SyntaxKind;
+
 const RULES: Rule[] = [
-  { name: 'imports a runtime value from vitest', offenders: matching(isRuntimeVitestImport) },
-  { name: 'waits on a timer', offenders: matching(isTimerWait) },
-  { name: 'declares a sleep helper', offenders: matching(isSleepHelper) },
+  {
+    name: 'imports a runtime value from vitest',
+    offenders: matching([ImportDeclaration], isRuntimeVitestImport),
+  },
+  { name: 'waits on a timer', offenders: matching([NewExpression], isTimerWait) },
+  {
+    name: 'declares a sleep helper',
+    offenders: matching([FunctionDeclaration, VariableDeclaration], isSleepHelper),
+  },
   { name: 'reads elapsed wall-clock time', offenders: elapsedTimeReads },
-  { name: 'types a module import', offenders: matching(isTypedModuleImport) },
+  {
+    name: 'types a module import',
+    offenders: matching([ImportType, CallExpression], isTypedModuleImport),
+  },
   { name: 'repeats a test title', offenders: repeatedTitles },
-  { name: 'logs to the console', offenders: matching(isConsoleCall) },
-  { name: 'skips or narrows the run', offenders: matching(isExclusiveModifier) },
+  { name: 'logs to the console', offenders: matching([CallExpression], isConsoleCall) },
+  {
+    name: 'skips or narrows the run',
+    offenders: matching([PropertyAccessExpression], isExclusiveModifier),
+  },
 ];
 
 function violations(path: string, source: string): string[] {
-  const file = parseSource(path, source);
-  const nodes = descendants(file);
+  const kind = path.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const file = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, false, kind);
+  const spec = { file, byKind: nodesByKind(file) };
   return RULES.flatMap((rule) =>
-    rule.offenders(nodes).map((node) => {
-      const { line } = file.getLineAndCharacterOfPosition(node.getStart());
+    rule.offenders(spec).map((node) => {
+      const { line } = file.getLineAndCharacterOfPosition(node.getStart(file));
       return `${path}:${line + 1}: ${rule.name}`;
     })
   );
