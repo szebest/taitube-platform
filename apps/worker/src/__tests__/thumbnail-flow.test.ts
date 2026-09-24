@@ -14,6 +14,7 @@ import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
+import { encodeSegments } from './flow-harness';
 import { throughRunner } from './queue-boundary';
 import { STAGE_SETTINGS, failingThumbnails, transcodeDeps } from './stage-settings';
 
@@ -24,15 +25,7 @@ function fakeTranscode(delayMs: number): MediaTools {
     ...STAGE_SETTINGS.media,
     transcode: async (options) => {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
-      const playlistPath = path.join(options.outputDir, 'index.m3u8');
-      await fs.writeFile(playlistPath, '#EXTM3U\n#EXT-X-VERSION:6\n');
-      for (let i = 0; i < 5; i++) {
-        await fs.writeFile(
-          path.join(options.outputDir, `seg_${String(i).padStart(5, '0')}.ts`),
-          Buffer.alloc(100)
-        );
-      }
-      return { outputDir: options.outputDir, playlistPath, segmentCount: 5, durationMs: 15_000 };
+      return encodeSegments(options, 5);
     },
   };
 }

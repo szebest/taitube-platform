@@ -98,8 +98,11 @@ export async function encodeSegments(
   segmentBytes = 100
 ): Promise<TranscodeExecutionResult> {
   for (let i = 1; i <= count; i++) {
-    const segment = `seg_${String(i).padStart(5, '0')}.ts`;
-    await fs.writeFile(path.join(options.outputDir, segment), Buffer.alloc(segmentBytes));
+    const segment = path.join(options.outputDir, `seg_${String(i).padStart(5, '0')}.ts`);
+    // Renamed into place as FFmpeg's `temp_file` flag does: the uploader polls the directory and
+    // would otherwise read a segment that is still being written.
+    await fs.writeFile(`${segment}.tmp`, Buffer.alloc(segmentBytes));
+    await fs.rename(`${segment}.tmp`, segment);
   }
   const playlistPath = path.join(options.outputDir, 'index.m3u8');
   await fs.writeFile(

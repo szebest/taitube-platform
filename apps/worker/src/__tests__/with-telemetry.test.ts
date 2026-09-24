@@ -25,6 +25,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { withTelemetry } from '../with-telemetry';
+import { encodeSegments } from './flow-harness';
 import { STAGE_SETTINGS, transcodeDeps } from './stage-settings';
 
 const logger = createLogger({ format: 'json', service: 'tracing-e2e-test', level: 'silent' });
@@ -61,18 +62,7 @@ function tracedMedia(tracer: Tracer): MediaTools {
         'ffmpeg.command': `ffmpeg -y -i ${opts.sourcePath} output.m3u8`,
         'ffmpeg.duration_ms': 1200,
       });
-      for (let i = 1; i <= 3; i++) {
-        await fs.writeFile(
-          path.join(opts.outputDir, `seg_${String(i).padStart(5, '0')}.ts`),
-          Buffer.alloc(1000)
-        );
-      }
-      const playlistPath = path.join(opts.outputDir, 'index.m3u8');
-      await fs.writeFile(
-        playlistPath,
-        '#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-TARGETDURATION:6\n#EXTINF:6.0,\nseg_00001.ts\n#EXT-X-ENDLIST\n'
-      );
-      return { outputDir: opts.outputDir, playlistPath, segmentCount: 3, durationMs: 1200 };
+      return encodeSegments(opts, 3, 1000);
     },
     thumbnail: async (opts) => {
       endFfmpegSpan(tracer, {
