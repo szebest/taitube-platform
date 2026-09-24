@@ -1,13 +1,14 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "includeEntryExports": true,
+  "ignoreBinaries": ["ffmpeg", "ffprobe", "kubectl", "kustomize"],
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.ts!", "tests/e2e/e2e-runner.ts", "tests/load/*.js"],
-      "project": ["scripts/**/*.ts!", "tests/**/*.{ts,js}"]
+      "entry": ["scripts/*.ts!", "tests/e2e/e2e-runner.ts"],
+      "project": ["scripts/**/*.ts!", "tests/**/*.ts"]
     },
     "apps/api": {
-      "entry": ["src/main.ts!", "src/migrate.ts!", "src/seed.ts!"],
+      "entry": ["src/main.ts!", "src/migrate.ts!", "src/seed.ts!", "src/**/type-fixtures/*.ts"],
       "project": ["src/**/*.ts!", "!src/**/__tests__/**!", "!src/**/*.test.ts!"]
     },
     "apps/worker": {
@@ -23,8 +24,11 @@
       "entry": ["src/index.tsx!", "craco.config.js"],
       "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!", "!src/**/*.test.{ts,tsx}!"]
     },
+    "packages/server/testing": {
+      "project": ["src/**/*.ts"]
+    },
     "packages/*/*": {
-      "entry": ["src/main.ts!", "src/bin/*.ts!"],
+      "entry": ["src/main.ts!", "src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",

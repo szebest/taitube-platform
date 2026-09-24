@@ -20,7 +20,7 @@ async function createWithGrownRule(
   return isErr(decided) ? decided : created;
 }
 
-export async function theWidenedUnionNoLongerFitsTheOldSignature(): Promise<
+async function _theWidenedUnionNoLongerFitsTheOldSignature(): Promise<
   Result<Category, CreateCategoryServiceFailure>
 > {
   // @ts-expect-error the rule's new variant is inferred into the union and the old one cannot hold it

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@craco/craco": "^7.1.0",
     "@reduxjs/toolkit": "^1.9.7",
     "@uidotdev/usehooks": "^2.4.1",
     "@vp/api-client": "workspace:*",
@@ -58,7 +59,6 @@
     ]
   },
   "devDependencies": {
-    "@craco/craco": "^7.1.0",
     "@types/jest": "^27.5.2",
     "@types/lodash.debounce": "^4.0.7",
     "@types/node": "^24.0.0",
