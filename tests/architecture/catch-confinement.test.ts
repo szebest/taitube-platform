@@ -1,3 +1,4 @@
+import ts from 'typescript';
 import { ENTRYPOINTS, isListed } from './entrypoints';
 import { productionSources, read } from './repo-files';
 
@@ -13,6 +14,26 @@ const CATCH = /(^|[^\w.])catch\s*[({]|\.catch\s*\(|\?\.catch\?\.\s*\(/;
 
 function catches(source: string): boolean {
   return CATCH.test(source);
+}
+
+/** `.then(onFulfilled, onRejected)` is a `.catch(` by another name; the second argument gives it away. */
+function rejectionHandlers(file: string, source: string): string[] {
+  const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind);
+  const found: string[] = [];
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === 'then' &&
+      node.arguments.length >= 2
+    ) {
+      found.push(`${file}: ${node.getText().split('\n')[0]}`);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return found;
 }
 
 function isHome(file: string): boolean {
@@ -36,11 +57,38 @@ describe('architecture: catch is confined to the boundary that converts a throw'
     expect(catches(source)).toBe(false);
   });
 
+  it.each([
+    {
+      shape: 'an undefined success handler',
+      source: 'const n = await load().then(undefined, () => 0);',
+    },
+    {
+      shape: 'a handler pair across lines',
+      source: 'void run()\n  .then(\n    (v) => v,\n    (cause) => report(cause)\n  );',
+    },
+  ])('recognises a rejection handler passed to then: $shape', ({ source }) => {
+    expect(rejectionHandlers('fixture.ts', source)).toHaveLength(1);
+  });
+
+  it('leaves a then with only a success handler alone', () => {
+    expect(rejectionHandlers('fixture.ts', 'const v = await load().then((x) => x + 1);')).toEqual(
+      []
+    );
+  });
+
   it('still sees the catches the boundary legitimately makes', () => {
     expect(catches(read('packages/universal/result/src/try-catch.ts'))).toBe(true);
   });
 
   it('finds no catch outside @vp/result, an adapter or an entrypoint', () => {
     expect(productionSources().filter((file) => !isHome(file) && catches(read(file)))).toEqual([]);
+  });
+
+  it('finds no rejection handler passed to then outside an entrypoint', () => {
+    const offenders = productionSources()
+      .filter((file) => !isListed(file, ENTRYPOINTS))
+      .flatMap((file) => rejectionHandlers(file, read(file)));
+
+    expect(offenders).toEqual([]);
   });
 });
