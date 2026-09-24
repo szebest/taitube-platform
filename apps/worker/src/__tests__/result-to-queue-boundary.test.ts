@@ -1,13 +1,14 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { type AnyFailure, ErrorCodes, storageUnavailable, toPipelineError } from '@vp/errors';
-import { createLogger, createMetricsRegistry } from '@vp/observability';
+import { createMetricsRegistry } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { type Result, err, isErr, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';
 import { STAGE_SETTINGS } from './stage-settings';
 
-const logger = createLogger({ service: 'queue-boundary-test', level: 'error' });
+const logger = createLogger({ format: 'json', service: 'queue-boundary-test', level: 'error' });
 const metrics = createMetricsRegistry();
 
 const corruptContainer = {

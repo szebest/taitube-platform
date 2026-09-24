@@ -5,7 +5,8 @@ import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import * as ffmpeg from '@vp/ffmpeg';
 import type { MediaTools } from '@vp/ffmpeg';
-import { type Logger, createMetricsRegistry } from '@vp/observability';
+import type { Logger } from '@vp/logger';
+import { createMetricsRegistry } from '@vp/observability';
 import { housekeepingTasks } from '../stages/housekeeping/index';
 import type { TranscodeProcessorDeps } from '../stages/transcode';
 import { transcodeCollaborators } from '../transcode-collaborators';
@@ -49,6 +50,7 @@ export const STAGE_SETTINGS = {
   workerId: 'worker-spec',
   metrics: createMetricsRegistry(),
   media: mediaTools,
+  now: Date.now,
 };
 
 export const TASKS = housekeepingTasks(config.housekeeping);

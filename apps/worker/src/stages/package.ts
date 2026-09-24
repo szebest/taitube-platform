@@ -20,10 +20,12 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { Logger, PipelineMetrics } from '@vp/observability';
-import { type Result, assertNever, err, isErr, ok } from '@vp/result';
+import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
+import { type Result, assertNever, err, isErr, ok, unwrapOr } from '@vp/result';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
+import { durationBucket } from './duration-bucket';
 
 export interface PackageProcessorDeps {
   repositories: Repositories;
@@ -33,6 +35,7 @@ export interface PackageProcessorDeps {
   cdn: CdnBase;
   workerId: string;
   logger: Logger;
+  now: () => number;
   getQueue?: (name: string) => JobQueue;
 }
 
@@ -48,8 +51,12 @@ export type PackageStageFailure =
   | DatabaseUnavailable
   | QueueUnavailable;
 
+/** A re-process packages generation 2 and up, long after the upload, so only the first is timed. */
+const FIRST_GENERATION = 1;
+
 export function createPackageProcessor(deps: PackageProcessorDeps) {
-  const { repositories, storage, metrics, publicBucket, cdn, workerId, logger, getQueue } = deps;
+  const { repositories, storage, metrics, publicBucket, cdn, workerId, logger, now, getQueue } =
+    deps;
 
   return async function processPackageJob(
     job: QueueJob<PackageJob>
@@ -62,7 +69,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       attempt: (job.attemptsMade ?? 0) + 1,
     });
 
-    log.info({ ladder: ladder.map((r) => r.name) }, 'Package job started');
+    log.info({ ladder: ladder.map((r) => r.name) }, 'package job started');
 
     const lockToken = uuidv7();
     const claim = await repositories.steps.claim({
@@ -79,7 +86,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
     if (isErr(claim)) return claim;
 
     if (claim.value.fenced) {
-      log.warn({ lockToken }, 'Package step already completed; fenced out');
+      log.warn({ lockToken }, 'package step already completed; fenced out');
       return ok({
         videoId,
         masterKey: masterPlaylistKey(videoId, generation),
@@ -136,7 +143,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
       if (isErr(head)) return head;
 
       if (!head.value) {
-        log.error({ rendKey }, 'Rendition playlist missing');
+        log.error({ rendKey }, 'rendition playlist missing');
         return failPackage(
           mediaFailure(
             'package',
@@ -181,14 +188,14 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
     if (comp.value.fenced) {
       log.warn(
         { lockToken, event: 'FENCED_OUT' },
-        'Fenced out on package completion; not flipping video to READY'
+        'fenced out on package completion; not flipping video to READY'
       );
       return ok({ videoId, masterKey, playbackUrl });
     }
 
     const patch: Record<string, unknown> = {
       masterPlaylistKey: masterKey,
-      readyAt: new Date(),
+      readyAt: new Date(now()),
     };
     if (thumbResult?.posterKey) {
       patch['posterKey'] = thumbResult.posterKey;
@@ -206,6 +213,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
           eventSeq: 1,
           payload: { status: 'READY', playbackUrl },
           traceparent: job.data.traceparent,
+          requestId: job.data.requestId,
         }
       : undefined;
     const notifyJobOpts = {
@@ -236,22 +244,16 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
     if (isErr(transitionedResult)) return transitionedResult;
     const transitioned = transitionedResult.value;
 
-    log.info({ videoId, playbackUrl, transitioned }, 'Video transitioned to READY');
+    log.info({ videoId, playbackUrl, transitioned }, 'video transitioned to READY');
 
-    if (transitioned && video) {
-      const durationSec = (video.durationMs || 0) / MS_PER_SECOND;
-      let bucket = '<1min';
-      if (durationSec >= 900) {
-        bucket = '15-60';
-      } else if (durationSec >= 300) {
-        bucket = '5-15';
-      } else if (durationSec >= 60) {
-        bucket = '1-5';
+    if (transitioned && video && generation === FIRST_GENERATION) {
+      const upload = unwrapOr(await repositories.uploads.findByVideoId(videoId), null);
+      if (upload?.completedAt) {
+        metrics.timeToReady.observe(
+          { bucket: durationBucket(video.durationMs ?? 0) },
+          Math.max(0, (now() - upload.completedAt.getTime()) / MS_PER_SECOND)
+        );
       }
-
-      const createdAtTime = video.createdAt ? new Date(video.createdAt).getTime() : Date.now();
-      const timeToReadySec = Math.max(0, (Date.now() - createdAtTime) / MS_PER_SECOND);
-      metrics.timeToReady.observe({ bucket }, timeToReadySec);
     }
 
     if (transitioned && getQueue && notifyJobData) {
@@ -261,7 +263,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
       log.info(
         { notifyJobId, priority: job.opts?.priority },
-        'Enqueued notify job for video.ready'
+        'enqueued notify job for video.ready'
       );
     }
 

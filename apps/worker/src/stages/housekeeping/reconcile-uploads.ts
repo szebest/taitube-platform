@@ -3,7 +3,8 @@ import type { Repositories } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import { type PipelineMetrics, rootTraceparent } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 
 export interface ReconcileUploadsOptions {
@@ -64,7 +65,7 @@ export async function runReconcileUploads(
 
     if (transitioned.value) {
       abandonedCount += 1;
-      logger?.info({ videoId: video.id }, 'Reconciler abandoned stale UPLOADING video');
+      logger?.info({ videoId: video.id }, 'reconciler abandoned stale UPLOADING video');
 
       const upload = unwrapOr(await repositories.uploads.findByVideoId(video.id), null);
       if (upload) {
@@ -110,7 +111,7 @@ export async function runReconcileUploads(
     if (currentInflight >= maxInflightPerUser) {
       logger?.info(
         { videoId: video.id, ownerId: video.ownerId, currentInflight, maxInflightPerUser },
-        'Reconciler skipping held video: owner in-flight limit reached'
+        'reconciler skipping held video: owner in-flight limit reached'
       );
       continue;
     }
@@ -126,7 +127,7 @@ export async function runReconcileUploads(
         videoId: video.id,
         sourceKey: video.sourceKey,
         generation: video.generation ?? 1,
-        traceparent: '00-00000000000000000000000000000001-0000000000000001-01',
+        traceparent: rootTraceparent('housekeeping.reconcile-uploads.repair'),
       },
       {
         jobId: probeJobId,
@@ -138,7 +139,7 @@ export async function runReconcileUploads(
     if (isErr(enqueued)) {
       logger?.warn(
         { videoId: video.id, probeJobId, queue: enqueued.error.operation },
-        'Reconciler could not re-enqueue the probe; the video is kept for the next run'
+        'reconciler could not re-enqueue the probe; the video is kept for the next run'
       );
       continue;
     }
@@ -148,7 +149,7 @@ export async function runReconcileUploads(
     metrics.reconcilerRepairsTotal.inc({ type: 'missing_probe' });
     logger?.info(
       { videoId: video.id, probeJobId, priority },
-      'Reconciler released held video and enqueued probe job'
+      'reconciler released held video and enqueued probe job'
     );
   }
 

@@ -1,0 +1,10 @@
+# infra/compose/docker-compose.chaos.yml - the readiness chaos run (make chaos-readiness).
+# worker-notify reaches Redis through toxiproxy, so the run can cut that one connection.
+
+services:
+  worker-notify:
+    environment:
+      REDIS_URL: redis://toxiproxy:6380/0
+    depends_on:
+      toxiproxy:
+        condition: service_started

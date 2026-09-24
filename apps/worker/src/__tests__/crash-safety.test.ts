@@ -1,7 +1,7 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { JobQueue, type QueueJob } from '@vp/core/ports';
 import type { PackageJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -12,7 +12,7 @@ describe('crash safety and effectively-once completion', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-  const logger = createLogger({ service: 'worker-crash-test', level: 'silent' });
+  const logger = createLogger({ format: 'json', service: 'worker-crash-test', level: 'silent' });
 
   function createMockJob<T>(id: string, data: T, attemptsMade = 0): QueueJob<T> {
     return {
@@ -149,7 +149,14 @@ describe('crash safety and effectively-once completion', () => {
         return ok();
       }
       async getJobCounts() {
-        return ok({ active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 });
+        return ok({
+          active: 0,
+          completed: 0,
+          failed: 0,
+          delayed: 0,
+          waiting: 0,
+          prioritized: 0,
+        });
       }
       async getJobs() {
         return ok([]);

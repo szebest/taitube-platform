@@ -1,26 +1,15 @@
 import { PRODUCTION_ENV } from '@vp/testing/env';
-import { loadEnv } from '../load-env';
+import { expectErr } from '@vp/testing/result';
+import { loadEnv, parseEnv } from '../load-env';
 
 const LOCAL_ENV = { DATABASE_URL: 'postgres://localhost:5432/vp' };
 
 function captureFailure(env: Record<string, string>): string {
-  const exitSpy = vi
-    .spyOn(process, 'exit')
-    .mockImplementation((() => {}) as unknown as typeof process.exit);
-  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-  try {
-    expect(() => loadEnv(env)).toThrow();
-    expect(exitSpy).toHaveBeenCalledWith(1);
-    return errorSpy.mock.calls[0]?.[0] as string;
-  } finally {
-    exitSpy.mockRestore();
-    errorSpy.mockRestore();
-  }
+  return expectErr(parseEnv(env)).issues.join('\n');
 }
 
 describe('packages/config: loadEnv', () => {
-  it('reports every invalid key, redacts the sensitive ones and exits 1', () => {
+  it('reports every invalid key and redacts the sensitive ones', () => {
     const message = captureFailure({ ADMIN_TOKEN: 'super-secret-token' });
 
     expect(message).toContain('DATABASE_URL');
@@ -50,6 +39,12 @@ describe('packages/config: loadEnv', () => {
     },
   ])('refuses a production boot with $scenario', ({ env, refusal }) => {
     expect(captureFailure(env)).toContain(refusal);
+  });
+
+  it('throws the same report, one key a line, for an entrypoint to log', () => {
+    expect(() => loadEnv({})).toThrow(
+      /^\[FATAL\] Invalid environment configuration:\n {2}- DATABASE_URL: .*details redacted/
+    );
   });
 
   it('boots the same environment under development', () => {

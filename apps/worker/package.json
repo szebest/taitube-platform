@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --import @vp/config/register dist/main.js",
+    "dev": "node --import @vp/config/register --import ./dist/instrument.js dist/main.js",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -23,6 +23,7 @@
     "@vp/events": "workspace:*",
     "@vp/ffmpeg": "workspace:*",
     "@vp/job-contracts": "workspace:*",
+    "@vp/logger": "workspace:*",
     "@vp/observability": "workspace:*",
     "@vp/result": "workspace:*",
     "@vp/storage": "workspace:*",

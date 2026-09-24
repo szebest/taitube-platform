@@ -55,9 +55,19 @@ export async function seedTranscode(
 
 export function transcodeJob(
   videoId: string,
-  overrides: { attemptsMade?: number; streamingInput?: boolean; sourceKey?: string } = {}
+  overrides: {
+    attemptsMade?: number;
+    streamingInput?: boolean;
+    sourceKey?: string;
+    durationMs?: number;
+  } = {}
 ): QueueJob<TranscodeJob> {
-  const { attemptsMade = 0, streamingInput, sourceKey = 'raw/source.mp4' } = overrides;
+  const {
+    attemptsMade = 0,
+    streamingInput,
+    sourceKey = 'raw/source.mp4',
+    durationMs = 60_000,
+  } = overrides;
   return {
     id: `${videoId}--transcode--720p--g1`,
     name: 'transcode',
@@ -68,7 +78,7 @@ export function transcodeJob(
       generation: 1,
       rendition: { ...RENDITION_720P },
       fps: 24,
-      durationMs: 60_000,
+      durationMs,
       traceparent: '00-test-01-01',
       streamingInput,
     },

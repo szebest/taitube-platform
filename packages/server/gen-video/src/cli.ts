@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 import { parseArgs } from 'node:util';
+import type { Logger } from '@vp/logger';
 import { checkFixture } from './check-fixture';
 import { generateAllFixtures, selectFixtures } from './generator';
 import { loadManifest } from './probe';
@@ -32,8 +33,8 @@ function readArgs(argv: readonly string[]): {
   };
 }
 
-function printHelp(): void {
-  console.log(`
+function printHelp(host: CliHost): void {
+  host.print(`
 gen-video: Synthetic deterministic test-video generator for video-pipeline
 
 Usage:
@@ -50,29 +51,33 @@ Options:
 
 export interface CliHost {
   argv: readonly string[];
+  print: (text: string) => void;
+  log: Logger;
 }
 
-export async function run({ argv }: CliHost): Promise<void> {
-  const { options, check, help } = readArgs(argv);
+export async function run(host: CliHost): Promise<void> {
+  const { log } = host;
+  const { options, check, help } = readArgs(host.argv);
 
   if (help) {
-    printHelp();
+    printHelp(host);
     return;
   }
 
   const manifest = loadManifest();
 
   if (check) {
-    console.log(`[gen-video] Checking fixtures in ${options.outputDir}...`);
+    log.info({ outputDir: options.outputDir }, 'checking fixtures');
     const targets = selectFixtures(manifest, options);
 
     let failedCount = 0;
     for (const fixture of targets) {
       const result = checkFixture(fixture, options.outputDir);
+      const fields = { fixture: result.id, file: result.filename, detail: result.message };
       if (result.passed) {
-        console.log(`  ✓ [${result.id}] ${result.filename}: ${result.message}`);
+        log.info(fields, 'fixture verified');
       } else {
-        console.error(`  ✗ [${result.id}] ${result.filename}: ${result.message}`);
+        log.error(fields, 'fixture invalid or missing');
         failedCount++;
       }
     }
@@ -80,21 +85,21 @@ export async function run({ argv }: CliHost): Promise<void> {
     if (failedCount > 0) {
       throw new Error(`verification failed: ${failedCount} fixture(s) invalid or missing`);
     }
-    console.log(`\n[gen-video] All ${targets.length} checked fixtures verified successfully.`);
+    log.info({ checked: targets.length }, 'every fixture verified');
     return;
   }
 
-  console.log(`[gen-video] Generating fixtures into ${options.outputDir}...`);
+  log.info({ outputDir: options.outputDir }, 'generating fixtures');
   const start = Date.now();
-  const { generated, errors } = await generateAllFixtures(options);
-  const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+  const onFixture = (id: string) => log.info({ fixture: id }, 'generating fixture');
+  const { generated, errors } = await generateAllFixtures(options, onFixture);
+  const seconds = (Date.now() - start) / 1000;
 
-  console.log(`\n[gen-video] Generated ${generated.length} fixture(s) in ${elapsed}s.`);
+  log.info({ generated: generated.length, seconds }, 'fixtures generated');
+  for (const error of errors) {
+    log.error({ detail: error }, 'fixture not generated');
+  }
   if (errors.length > 0) {
-    console.error(`[gen-video] Encountered ${errors.length} error(s):`);
-    for (const err of errors) {
-      console.error(`  - ${err}`);
-    }
     throw new Error(`${errors.length} fixture(s) failed to generate`);
   }
 }

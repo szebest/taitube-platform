@@ -1,17 +1,17 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
 import {
   InMemoryCacheClient,
   InMemoryDatabaseClient,
   InMemoryRepositories,
 } from '@vp/adapters/in-memory';
+import { S3MultipartStorage, S3StorageClient } from '@vp/adapters/s3';
 import { composeApp } from '@vp/api';
 import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { UploadClient } from '../client';
@@ -172,6 +172,7 @@ describe('upload-client reference upload client', () => {
 
     const storage = new S3StorageClient({
       type: 'connection',
+      healthBucket: 'raw',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',
@@ -181,6 +182,7 @@ describe('upload-client reference upload client', () => {
 
     const multipart = new S3MultipartStorage({
       type: 'connection',
+      healthBucket: 'raw',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',

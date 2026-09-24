@@ -5,7 +5,7 @@ import * as path from 'node:path';
 import type { FixtureManifest, ProbeResult } from './types';
 
 export function loadManifest(): FixtureManifest {
-  const manifestPath = path.resolve(__dirname, '..', 'manifest.json');
+  const manifestPath = path.resolve(import.meta.dirname, '..', 'manifest.json');
   const content = fs.readFileSync(manifestPath, 'utf-8');
   return JSON.parse(content) as FixtureManifest;
 }

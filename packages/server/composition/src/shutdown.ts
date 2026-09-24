@@ -1,12 +1,18 @@
 import { fromPromise, isErr } from '@vp/result';
 
+/** The part of a `@vp/logger` logger a shutdown writes to. */
+interface ShutdownLog {
+  info(fields: Record<string, unknown>, message: string): void;
+  error(fields: Record<string, unknown>, message: string): void;
+}
+
 export interface ShutdownPlan {
   drain(): void;
   drainDelayMs: number;
   close(): Promise<unknown>;
   graceMs: number;
   pending(): string | undefined;
-  log(message: string): void;
+  log: ShutdownLog;
 }
 
 export type ShutdownOutcome = 'drained' | 'failed' | 'forced';
@@ -20,12 +26,10 @@ async function drainThenClose(plan: ShutdownPlan): Promise<ShutdownOutcome> {
     (cause) => cause
   );
   if (isErr(closed)) {
-    plan.log(
-      `shutdown failed: ${closed.error instanceof Error ? closed.error.message : closed.error}`
-    );
+    plan.log.error({ err: closed.error }, 'shutdown failed');
     return 'failed';
   }
-  plan.log('shutdown complete');
+  plan.log.info({}, 'shutdown complete');
   return 'drained';
 }
 
@@ -37,7 +41,7 @@ export function shutdownOnce(plan: ShutdownPlan): () => Promise<ShutdownOutcome>
   let running: Promise<ShutdownOutcome> | undefined;
 
   const run = async (): Promise<ShutdownOutcome> => {
-    plan.log('shutdown: draining');
+    plan.log.info({}, 'shutdown draining');
     plan.drain();
 
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -49,9 +53,8 @@ export function shutdownOnce(plan: ShutdownPlan): () => Promise<ShutdownOutcome>
     clearTimeout(timer);
 
     if (outcome === 'forced') {
-      plan.log(
-        `shutdown forced after ${plan.graceMs} ms, still waiting on ${plan.pending() ?? 'the server close'}`
-      );
+      const waitingOn = plan.pending() ?? 'the server close';
+      plan.log.error({ graceMs: plan.graceMs, waitingOn }, 'shutdown forced');
     }
     return outcome;
   };

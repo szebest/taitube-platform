@@ -118,7 +118,9 @@ export async function uploadsRoutes(app: FastifyInstance): Promise<void> {
       async (request, reply) => {
         const user = requireAuth(request);
         const { uploadId } = request.params;
-        const result = await uploadService.complete(user, uploadId, request.body?.parts);
+        const result = await uploadService.complete(user, uploadId, request.body?.parts, {
+          requestId: request.id,
+        });
 
         return sendResult(reply, request, result, { status: 202 });
       }

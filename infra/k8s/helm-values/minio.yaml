@@ -1,4 +1,12 @@
 # infra/k8s/helm-values/minio.yaml
+# `-dev` carries the shell and `docker-entrypoint.sh` the chart runs.
+image:
+  repository: cgr.dev/chainguard/minio
+  tag: latest-dev@sha256:4b862594d23cb20ae0fbeb93311ed312a5b566ecba2293220b204c89ef3c1fe2
+mcImage:
+  repository: cgr.dev/chainguard/minio-client
+  tag: latest-dev@sha256:614e083a12c6dc779f13f97e01b13afda4021a8ce3f4021a2fcf23ec86f46837
+
 rootUser: minioadmin
 rootPassword: minioadmin
 
@@ -17,7 +25,14 @@ resources:
     cpu: 1000m
     memory: 1Gi
 
-defaultBuckets: "raw,public"
+# charts.min.io creates these in its post-install job; `defaultBuckets` is the Bitnami chart's key.
+buckets:
+  - name: raw
+    policy: none
+    purge: false
+  - name: public
+    policy: download
+    purge: false
 
 postJob:
   podAnnotations: {}

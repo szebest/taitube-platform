@@ -14,25 +14,29 @@ export function createDbClient(
   return { db: drizzle(sql, { schema }), sql };
 }
 
+/** Where a library function reports progress: the entrypoint hands it its `@vp/logger` logger. */
+export interface Log {
+  info(fields: Record<string, unknown>, message: string): void;
+  warn(fields: Record<string, unknown>, message: string): void;
+}
+
 export interface WaitOptions {
   label: string;
+  log: Log;
   attempts?: number;
   delayMs?: number;
 }
 
-function messageOf(cause: unknown): string {
-  return cause instanceof Error ? cause.message : String(cause);
-}
-
 export async function waitForDatabase(
   probe: () => PromiseLike<unknown>,
-  { label, attempts = 15, delayMs = 1_000 }: WaitOptions
+  { label, log, attempts = 15, delayMs = 1_000 }: WaitOptions
 ): Promise<Result<void, Error>> {
   for (let attempt = 1; attempt <= attempts; attempt++) {
-    const reached = await fromPromise(probe, messageOf);
+    const reached = await fromPromise(probe, (cause) => cause);
     if (isOk(reached)) return ok();
-    console.warn(
-      `[${label}] Database connection attempt ${attempt}/${attempts} failed (${reached.error}), retrying in ${delayMs / 1000}s...`
+    log.warn(
+      { label, attempt, attempts, retryInMs: delayMs, err: reached.error },
+      'database not reachable yet'
     );
     if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, delayMs));
   }

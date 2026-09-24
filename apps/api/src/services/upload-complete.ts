@@ -14,10 +14,10 @@ import {
   sourceMissing,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
-import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
+import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, ok, unwrapOr } from '@vp/result';
-import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
+import { type DispatchOrigin, buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
 
 export interface CompleteUploadResult {
@@ -99,7 +99,8 @@ export async function completeUpload(
   ctx: UploadContext,
   user: UserContext,
   uploadId: string,
-  parts?: readonly UploadPart[]
+  parts?: readonly UploadPart[],
+  origin: DispatchOrigin = {}
 ): Promise<Result<CompleteUploadResult, CompleteUploadFailure>> {
   const owned = await loadOwnedUpload(ctx, user, uploadId, 'complete this upload');
   if (isErr(owned)) return owned;
@@ -126,14 +127,14 @@ export async function completeUpload(
   const completed = await ctx.uploads.updateStatus(uploadId, 'COMPLETED');
   if (isErr(completed)) return completed;
 
-  const activeCtx = getActiveSpanContext();
-  const traceparent = activeCtx.traceparent || getActiveTraceparent() || createTraceparent();
+  const traceparent = getActiveTraceparent() ?? createTraceparent();
 
   const dispatch = buildProbeDispatch({
     videoId: video.id,
     sourceKey: video.sourceKey,
     generation: 1,
     traceparent,
+    requestId: origin.requestId,
     priority: jobPriorityFor(unwrapOr(await ctx.users.findById(video.ownerId), null)?.tier),
   });
 
@@ -143,7 +144,7 @@ export async function completeUpload(
     to: 'UPLOADED',
     eventType: 'upload.completed',
     eventPayload: { uploadId, sizeBytes: actualSizeBytes },
-    traceId: activeCtx.traceId || traceparent.split('-')[1],
+    traceId: traceparent.split('-')[1],
     outbox: dispatch.outbox,
   });
   if (isErr(transitioned)) return transitioned;

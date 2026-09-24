@@ -43,6 +43,7 @@ export class FakeQueue {
   readonly added: Array<{ name: string; data: unknown; opts: Record<string, unknown> }> = [];
 
   paused = false;
+  countedStates: string[] = [];
   closed = false;
 
   constructor(private readonly init: FakeQueueInit = {}) {
@@ -71,7 +72,8 @@ export class FakeQueue {
     return this.init.jobs ?? [];
   }
 
-  async getJobCounts(): Promise<Record<string, number>> {
+  async getJobCounts(...states: string[]): Promise<Record<string, number>> {
+    this.countedStates = states;
     return this.init.counts ?? {};
   }
 

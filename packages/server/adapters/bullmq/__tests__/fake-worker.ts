@@ -1,12 +1,14 @@
 import type { Job, Worker, WorkerOptions } from 'bullmq';
 
 export type WorkerHandler = (job: Job) => Promise<unknown>;
-export type FailedListener = (job: Job | undefined, err: Error) => void;
+type FailedListener = (job: Job | undefined, err: Error) => void;
+type StalledListener = (jobId: string) => void;
+type Listener = FailedListener | StalledListener;
 
 export const workers: FakeWorker[] = [];
 
 export class FakeWorker {
-  private readonly listeners = new Map<string, FailedListener[]>();
+  private readonly listeners = new Map<string, Listener[]>();
   closedWaiting: boolean | undefined;
 
   constructor(
@@ -17,7 +19,7 @@ export class FakeWorker {
     workers.push(this);
   }
 
-  on(event: string, listener: FailedListener): this {
+  on(event: string, listener: Listener): this {
     const existing = this.listeners.get(event) ?? [];
     existing.push(listener);
     this.listeners.set(event, existing);
@@ -25,7 +27,13 @@ export class FakeWorker {
   }
 
   emitFailed(job: Job | undefined, err: Error): void {
-    for (const listener of this.listeners.get('failed') ?? []) listener(job, err);
+    for (const listener of this.listeners.get('failed') ?? [])
+      (listener as FailedListener)(job, err);
+  }
+
+  emitStalled(jobId: string): void {
+    for (const listener of this.listeners.get('stalled') ?? [])
+      (listener as StalledListener)(jobId);
   }
 
   async close(waitForActive?: boolean): Promise<void> {

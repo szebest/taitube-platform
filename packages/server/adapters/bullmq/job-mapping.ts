@@ -44,5 +44,6 @@ export function toQueueJob<T = unknown>(job: Job): QueueJob<T> {
       priority: job.opts?.priority,
     },
     attemptsMade: job.attemptsMade,
+    enqueuedAt: job.timestamp,
   };
 }

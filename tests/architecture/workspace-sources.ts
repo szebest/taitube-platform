@@ -28,3 +28,13 @@ export function workspaceSources(): WorkspaceSource[] {
       })
   );
 }
+
+/** `@vp/*` mapped to source, for a Vite config that runs specs against the workspace unbuilt. */
+export function sourceAliases(): { find: RegExp; replacement: string }[] {
+  return workspaceSources().flatMap(({ name, src }) => [
+    ...(existsSync(join(src, 'index.ts'))
+      ? [{ find: new RegExp(`^${name}$`), replacement: join(src, 'index.ts') }]
+      : []),
+    { find: new RegExp(`^${name}/(.+)$`), replacement: join(src, '$1') },
+  ]);
+}

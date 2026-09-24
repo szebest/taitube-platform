@@ -37,9 +37,12 @@ export const JWS_ALGORITHMS = [
   'EdDSA',
 ] as const;
 
+/** What `LOG_LEVEL` is when unset, and what a process logs at before it has read it. */
+export const DEFAULT_LOG_LEVEL = 'debug';
+
 const CoreEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default('debug'),
+  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default(DEFAULT_LOG_LEVEL),
   SERVICE_VERSION: z.string().default('dev'),
   ADAPTER_FAMILY: z.enum(['external', 'in-memory']).default('external'),
   CORS_ORIGINS: commaList(z.string()).default('http://localhost:5173,http://localhost:8080'),

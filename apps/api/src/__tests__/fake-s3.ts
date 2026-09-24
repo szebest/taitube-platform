@@ -1,6 +1,6 @@
 import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
+import { S3MultipartStorage, S3StorageClient } from '@vp/adapters/s3';
 
 interface StoredObject {
   size: number;
@@ -147,6 +147,7 @@ export async function startFakeS3(): Promise<FakeS3> {
   const endpoint = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const storage = new S3StorageClient({
     type: 'connection',
+    healthBucket: 'raw',
     endpoint,
     region: 'us-east-1',
     accessKeyId: 'test-key',

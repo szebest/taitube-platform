@@ -21,6 +21,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@vp/logger": "workspace:*",
     "@vp/result": "workspace:*"
   },
   "devDependencies": {

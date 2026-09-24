@@ -1,4 +1,3 @@
-import { JOB_PRIORITY } from '@vp/domain';
 import {
   JobQueue,
   type JobSchedulerInfo,
@@ -9,6 +8,7 @@ import {
   type QueueWorkerOptions,
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
+import { JOB_PRIORITY } from '@vp/domain';
 import { type QueueUnavailable, classifyError, queueUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 
@@ -18,6 +18,7 @@ export class InMemoryJobQueue extends JobQueue {
   private isHealthy = true;
   private processor?: (job: QueueJob<unknown>) => Promise<unknown>;
   private failedHandler?: (job: QueueJob<unknown>, err: Error) => Promise<void> | void;
+  private stalledHandler?: (jobId: string) => void;
   private readonly allJobs = new Map<string, QueueJob<unknown>>();
   private readonly jobStates = new Map<string, string>();
   private readonly schedulers = new Map<string, JobSchedulerInfo>();
@@ -54,9 +55,17 @@ export class InMemoryJobQueue extends JobQueue {
     this.failedHandler = handler;
   }
 
+  onStalled(handler: (jobId: string) => void): void {
+    this.stalledHandler = handler;
+  }
+
+  /** A spec drives what BullMQ reports when a job's lock lapses; nothing here times out. */
+  stall(jobId: string): void {
+    this.stalledHandler?.(jobId);
+  }
+
   private getJobPriority(job: QueueJob<unknown>): number {
-    const opts = (job as QueueJob<unknown> & { opts?: QueueJobOptions }).opts;
-    return opts?.priority ?? JOB_PRIORITY.free;
+    return job.opts?.priority ?? JOB_PRIORITY.free;
   }
 
   enqueueWaiting(job: QueueJob<unknown>): void {
@@ -83,12 +92,13 @@ export class InMemoryJobQueue extends JobQueue {
       return ok(existing as QueueJob<T>);
     }
 
-    const job: QueueJob<T> & { opts?: QueueJobOptions } = {
+    const job: QueueJob<T> = {
       id: jobId,
       name,
       data,
       attemptsMade: 0,
       opts: options,
+      enqueuedAt: Date.now(),
       getState: async () => this.jobStates.get(jobId) ?? 'unknown',
     };
 
@@ -98,7 +108,6 @@ export class InMemoryJobQueue extends JobQueue {
 
     if (initialState === 'waiting') {
       this.enqueueWaiting(job);
-      // If a worker is listening and we are not paused, execute
       if (this.processor && !this.paused) {
         queueMicrotask(() => {
           this.drain().catch(() => {});
@@ -124,7 +133,6 @@ export class InMemoryJobQueue extends JobQueue {
   async executeJob(job: QueueJob<unknown>): Promise<void> {
     const currentState = this.jobStates.get(job.id);
     if (currentState === 'waiting-children') {
-      // Still waiting for children to finish
       return;
     }
 
@@ -150,8 +158,7 @@ export class InMemoryJobQueue extends JobQueue {
       return;
     } catch (err: unknown) {
       const classification = classifyError(err);
-      const opts = (job as QueueJob<unknown> & { opts?: QueueJobOptions }).opts;
-      let maxAttempts = opts?.attempts ?? 1;
+      let maxAttempts = job.opts?.attempts ?? 1;
       if (classification === 'permanent') {
         maxAttempts = 1;
       } else if (classification === 'unknown') {
@@ -206,7 +213,6 @@ export class InMemoryJobQueue extends JobQueue {
     _options?: QueueWorkerOptions
   ): Promise<Result<void, QueueUnavailable>> {
     this.processor = handler as (job: QueueJob<unknown>) => Promise<unknown>;
-    // Process pending jobs if not paused
     if (!this.paused) {
       await this.drain();
     }
@@ -273,13 +279,14 @@ export class InMemoryJobQueue extends JobQueue {
   }
 
   async getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>> {
+    const prioritized = this.enqueuedJobs.filter((job) => (job.opts?.priority ?? 0) > 0).length;
     return ok({
-      waiting: this.enqueuedJobs.length,
+      waiting: this.enqueuedJobs.length - prioritized,
+      prioritized,
       active: Array.from(this.jobStates.values()).filter((s) => s === 'active').length,
       completed: this.completedJobs.length,
       failed: this.failedJobs.length,
       delayed: 0,
-      paused: this.paused ? this.enqueuedJobs.length : 0,
     });
   }
 

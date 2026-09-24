@@ -12,7 +12,8 @@ import {
 } from '@vp/errors';
 import type { MediaTools, SpriteLayout } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, err, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
 import {
   getHeaderMapping,
@@ -70,7 +71,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       spriteVttKey: getSpriteVttKey(videoId),
     };
 
-    log.info({ sourceKey, durationMs }, 'Thumbnail job started');
+    log.info({ sourceKey, durationMs }, 'thumbnail job started');
 
     const lockToken = uuidv7();
     const claim = await repositories.steps.claim({
@@ -86,7 +87,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     if (isErr(claim)) return claim;
 
     if (claim.value.fenced) {
-      log.warn({ lockToken }, 'Thumbnail step already completed; fenced out');
+      log.warn({ lockToken }, 'thumbnail step already completed; fenced out');
       return ok(keys);
     }
 
@@ -97,7 +98,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     const failThumbnail = async (
       failure: MediaFailure
     ): Promise<Result<never, ThumbnailStageFailure>> => {
-      log.error({ errorCode: failure.code, errorMessage: failure.message }, 'Thumbnail job failed');
+      log.error({ err: failure }, 'thumbnail job failed');
       const recorded = await repositories.steps.fail({
         videoId,
         step: 'thumbnail',
@@ -154,7 +155,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       const uploaded = await uploadAssets(storage, publicBucket, keys, generated.value);
       if (isErr(uploaded)) return uploaded;
 
-      log.info(keys, 'Uploaded thumbnail assets to storage');
+      log.info(keys, 'uploaded thumbnail assets to storage');
 
       const comp = await repositories.steps.complete({
         videoId,
@@ -168,7 +169,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       if (comp.value.fenced) {
         log.warn(
           { lockToken, event: 'FENCED_OUT' },
-          'Fenced out on thumbnail completion; discarding update'
+          'fenced out on thumbnail completion; discarding update'
         );
         return ok(keys);
       }

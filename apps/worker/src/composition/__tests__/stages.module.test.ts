@@ -1,12 +1,13 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { registerAdapters } from '@vp/adapters/composition';
+import { Adapters, registerAdapters } from '@vp/adapters/composition';
+import type { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { Container } from '@vp/composition';
 import type { WorkerStageName } from '@vp/env-schema';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
-import { createLogger } from '@vp/observability';
+import { LogContext, createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { OutboxRelay } from '../../stages/housekeeping/outbox-relay';
 import { Worker, registerStages } from '../stages.module';
@@ -17,7 +18,8 @@ async function stageContainer(stage: WorkerStageName, tmpDir = os.tmpdir(), outb
     inProcessAppConfig({ worker: { stage, tmpDir } })
   );
   return registerStages(c, {
-    logger: createLogger({ service: 'stages-test', level: 'silent' }),
+    logger: createLogger({ format: 'json', service: 'stages-test', level: 'silent' }),
+    logContext: new LogContext(),
     media: mediaTools,
     workerId: 'stages-test',
     outboxRelay: { enabled: outbox },
@@ -50,6 +52,38 @@ describe('apps/worker/composition: stages module', () => {
 
     await c.dispose();
     await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('leaves queue depth to the API poller and times how long the job waited', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vp-stages-'));
+    const c = await stageContainer('housekeeping', tmpDir);
+    const { queue } = c.get(Worker.Consumer);
+    expectOk(await c.start());
+    await queue.add('tmp-sweep', { task: 'tmp-sweep' });
+    expect((await settled(c)).completed).toBe(1);
+
+    const metrics = c.get(Adapters.Metrics);
+    const { values } = await metrics.bullmqQueueJobs.get();
+    expect(values).toEqual([]);
+    const waits = await metrics.jobWaitDuration.get();
+    const waitCount = waits.values.find((sample) => sample.metricName === 'job_wait_seconds_count');
+    expect(waitCount?.value).toBe(1);
+    await c.dispose();
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('counts a stalled job as result="stalled"', async () => {
+    const c = await stageContainer('notify');
+    const queue = c.get(Worker.Consumer).queue as InMemoryJobQueue;
+    expectOk(await c.start());
+
+    queue.stall('job-1');
+
+    const { values } = await c.get(Adapters.Metrics).jobsProcessed.get();
+    expect(values).toEqual([
+      expect.objectContaining({ labels: { queue: 'notify', result: 'stalled' }, value: 1 }),
+    ]);
+    await c.dispose();
   });
 
   it('fails a job whose stage returned a failure', async () => {

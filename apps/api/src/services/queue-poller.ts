@@ -1,24 +1,17 @@
-import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
+import { type JobQueue, QUEUE_JOB_STATES, type QueueJob } from '@vp/core/ports';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PipelineMetrics } from '@vp/observability';
 import { isOk } from '@vp/result';
 
-const QUEUE_STATE_KEYS: ReadonlyArray<keyof QueueJobCounts> = [
-  'waiting',
-  'active',
-  'completed',
-  'failed',
-  'delayed',
-  'paused',
-];
+/** A pipeline job has a priority, so BullMQ keeps it in `prioritized`; both hold jobs not started. */
+const NOT_STARTED = ['waiting', 'prioritized'];
 
-/** BullMQ stamps a job with `timestamp`; the port shape does not carry it, so it is read defensively. */
-function oldestWaitingAgeSeconds(waiting: readonly unknown[]): number {
-  const oldest = waiting[0];
-  if (!oldest) return 0;
-
-  const enqueuedAt = (oldest as { timestamp?: number }).timestamp ?? Date.now();
-  return Math.max(0, (Date.now() - enqueuedAt) / MS_PER_SECOND);
+function oldestAgeSeconds(jobs: readonly QueueJob[], now: number): number {
+  let oldest = now;
+  for (const job of jobs) {
+    if (job.enqueuedAt !== undefined && job.enqueuedAt < oldest) oldest = job.enqueuedAt;
+  }
+  return Math.max(0, (now - oldest) / MS_PER_SECOND);
 }
 
 /**
@@ -27,20 +20,19 @@ function oldestWaitingAgeSeconds(waiting: readonly unknown[]): number {
  */
 export async function pollQueueMetrics(
   queues: ReadonlyMap<string, JobQueue>,
-  metrics: PipelineMetrics
+  metrics: PipelineMetrics,
+  now: () => number
 ): Promise<void> {
   for (const [name, queue] of queues) {
     const counts = await queue.getJobCounts();
     if (isOk(counts)) {
-      for (const state of QUEUE_STATE_KEYS) {
-        metrics.bullmqQueueJobs.set({ queue: name, state }, counts.value[state] ?? 0);
+      for (const state of QUEUE_JOB_STATES) {
+        metrics.bullmqQueueJobs.set({ queue: name, state }, counts.value[state]);
       }
     }
 
-    const waiting = await queue.getJobs(['waiting']);
-    metrics.bullmqQueueOldestWaitingAge.set(
-      { queue: name },
-      isOk(waiting) ? oldestWaitingAgeSeconds(waiting.value) : 0
-    );
+    const notStarted = await queue.getJobs(NOT_STARTED);
+    const age = isOk(notStarted) ? oldestAgeSeconds(notStarted.value, now()) : 0;
+    metrics.bullmqQueueOldestWaitingAge.set({ queue: name }, age);
   }
 }

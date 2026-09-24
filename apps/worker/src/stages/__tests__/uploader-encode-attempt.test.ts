@@ -2,7 +2,8 @@ import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
+import { captureLog } from '@vp/testing/log-capture';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS, transcodeDeps } from '../../__tests__/stage-settings';
 import { createTranscodeProcessor } from '../transcode';
@@ -14,7 +15,11 @@ import {
   transcodeJob,
 } from './uploader-harness';
 
-const logger = createLogger({ service: 'uploader-encode-attempt-test', level: 'silent' });
+const logger = createLogger({
+  format: 'json',
+  service: 'uploader-encode-attempt-test',
+  level: 'silent',
+});
 
 describe('transcode attempt around the segment uploader', () => {
   let repositories: InMemoryRepositories;
@@ -33,19 +38,28 @@ describe('transcode attempt around the segment uploader', () => {
     'backs FFmpeg threads off to one on a retry after %i failed attempts',
     async (attemptsMade) => {
       const videoId = await seedTranscode(repositories, storage);
-      const info = vi.spyOn(logger, 'info');
+      const log = captureLog();
+      const recorded = createLogger({
+        format: 'json',
+        service: 'uploader-encode-attempt-test',
+        level: 'info',
+        destination: log.destination,
+      });
       const seen: EncoderInput = {};
       const processor = createTranscodeProcessor(
-        transcodeDeps({ repositories, storage, logger, media: fakeEncoder(1, seen) })
+        transcodeDeps({ repositories, storage, logger: recorded, media: fakeEncoder(1, seen) })
       );
 
       await processor(transcodeJob(videoId, { attemptsMade }));
 
       expect(STAGE_SETTINGS.ffmpeg.threads).toBe(2);
       expect(seen.threads).toBe(1);
-      expect(info).toHaveBeenCalledWith(
-        expect.objectContaining({ attempt: attemptsMade + 1, threads: 1 }),
-        expect.stringContaining('threads = 1')
+      expect(log.lines()).toContainEqual(
+        expect.objectContaining({
+          attempt: attemptsMade + 1,
+          threads: 1,
+          msg: 'transcode attempt starting',
+        })
       );
     }
   );

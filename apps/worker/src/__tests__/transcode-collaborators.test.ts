@@ -4,12 +4,13 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createLogger, createMetricsRegistry } from '@vp/observability';
+import { createLogger } from '@vp/logger';
+import { createMetricsRegistry } from '@vp/observability';
 import { TranscodeProgressReporter } from '../stages/progress-reporter';
 import { StreamingSegmentUploader } from '../stages/segment-uploader';
 import { transcodeCollaborators } from '../transcode-collaborators';
 
-const logger = createLogger({ service: 'collaborators-spec', level: 'silent' });
+const logger = createLogger({ format: 'json', service: 'collaborators-spec', level: 'silent' });
 
 describe('apps/worker: transcode collaborators', () => {
   const collaborators = transcodeCollaborators({

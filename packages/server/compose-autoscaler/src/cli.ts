@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import { parseArgs } from 'node:util';
+import type { Logger } from '@vp/logger';
 import { type AutoscalerOptions, ComposeAutoscaler } from './runner';
 import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler';
 
@@ -14,6 +15,8 @@ export interface CliHost {
   fetcher: AutoscalerOptions['fetcher'];
   onSignal: (signal: 'SIGINT' | 'SIGTERM', handler: () => void) => void;
   exit: (code: number) => void;
+  print: (text: string) => void;
+  log: Logger;
 }
 
 interface CliArgs {
@@ -51,8 +54,8 @@ function parseCliArgs(argv: readonly string[], env: Env): CliArgs {
   };
 }
 
-function printHelp(): void {
-  console.log(`
+function printHelp(host: CliHost): void {
+  host.print(`
 @vp/compose-autoscaler — Docker Compose Queue-Depth Autoscaler
 
 Polls Prometheus metrics (/metrics) from the API and dynamically scales
@@ -93,7 +96,7 @@ export function run(host: CliHost): void {
   const args = parseCliArgs(host.argv, host.env);
 
   if (args.help) {
-    printHelp();
+    printHelp(host);
     return;
   }
 
@@ -105,7 +108,7 @@ export function run(host: CliHost): void {
     dryRun: args.dryRun || host.env.AUTOSCALER_DRY_RUN === 'true',
     pollIntervalMs: args.intervalSec * 1000,
     stageConfigs: { ...DEFAULT_STAGE_CONFIGS, ...overrides },
-    onLog: console.log,
+    logger: host.log,
     executor: host.executor,
     fetcher: host.fetcher,
   });

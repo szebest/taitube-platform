@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
 /**
@@ -7,8 +8,7 @@ import { productionSources, read } from './repo-files';
  * a value we do not own is parsed through a schema, or unwrapped into a `Result`.
  */
 function inProbes(file: string, source: string): string[] {
-  const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind);
+  const sourceFile = parseSource(file, source);
   const found: string[] = [];
   const visit = (node: ts.Node): void => {
     if (

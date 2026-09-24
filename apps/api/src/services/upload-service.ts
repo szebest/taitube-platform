@@ -2,6 +2,7 @@ import type { StoragePresignedPartInfo } from '@vp/core/ports';
 import type { UploadPart } from '@vp/domain-rules';
 import type { UserContext } from '@vp/permissions';
 import type { Result } from '@vp/result';
+import type { DispatchOrigin } from './probe-dispatch';
 import { type AbortUploadFailure, abortUpload } from './upload-abort';
 import {
   type CompleteUploadFailure,
@@ -62,9 +63,10 @@ export class UploadService {
   complete(
     user: UserContext,
     uploadId: string,
-    parts?: readonly UploadPart[]
+    parts?: readonly UploadPart[],
+    origin: DispatchOrigin = {}
   ): Promise<Result<CompleteUploadResult, CompleteUploadFailure>> {
-    return completeUpload(this.ctx, user, uploadId, parts);
+    return completeUpload(this.ctx, user, uploadId, parts, origin);
   }
 
   abort(user: UserContext, uploadId: string): Promise<Result<void, AbortUploadFailure>> {

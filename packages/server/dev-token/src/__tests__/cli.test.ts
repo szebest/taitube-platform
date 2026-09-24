@@ -1,6 +1,23 @@
-import { run } from '../cli';
+import { createLogger } from '@vp/logger';
+import { captureLog } from '@vp/testing/log-capture';
+import { type CliHost, run } from '../cli';
 import { mintToken } from '../jwt';
 import { DEV_KEY_ID } from '../keys';
+
+function recordingHost(argv: string[]) {
+  const printed: string[] = [];
+  const host: CliHost = {
+    argv,
+    print: (text) => printed.push(text),
+    log: createLogger({
+      service: 'dev-token',
+      level: 'info',
+      format: 'pretty',
+      destination: captureLog().destination,
+    }),
+  };
+  return { host, printed };
+}
 
 describe('packages/dev-token: run', () => {
   afterEach(() => {
@@ -8,27 +25,30 @@ describe('packages/dev-token: run', () => {
   });
 
   it('prints the dev JWKS for `jwks`', async () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { host, printed } = recordingHost(['jwks']);
 
-    await run({ argv: ['jwks'] });
+    await run(host);
 
-    expect(JSON.parse(String(log.mock.calls[0]?.[0])).keys[0].kid).toBe(DEV_KEY_ID);
+    expect(JSON.parse(printed[0] ?? '').keys[0].kid).toBe(DEV_KEY_ID);
   });
 
   it('prints only the token for `mint --raw`', async () => {
     const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
-    await run({ argv: ['mint', '--role', 'admin', '--raw'] });
+    await run(recordingHost(['mint', '--role', 'admin', '--raw']).host);
 
     expect(String(write.mock.calls[0]?.[0]).split('.')).toHaveLength(3);
   });
 
   it('prints the payload of a valid token for `verify`', async () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { host, printed } = recordingHost([
+      'verify',
+      mintToken({ sub: 'usr-1', role: 'admin', ttl: '1h' }),
+    ]);
 
-    await run({ argv: ['verify', mintToken({ sub: 'usr-1', role: 'admin', ttl: '1h' })] });
+    await run(host);
 
-    expect(log).toHaveBeenCalledWith('✓ Token valid:');
+    expect(JSON.parse(printed[0] ?? '')).toMatchObject({ sub: 'usr-1', role: 'admin' });
   });
 
   it.each([
@@ -39,6 +59,6 @@ describe('packages/dev-token: run', () => {
     },
     { input: 'no token', argv: ['verify'], error: /needs a token/ },
   ])('rejects `verify` given $input', async ({ argv, error }) => {
-    await expect(run({ argv })).rejects.toThrow(error);
+    await expect(run(recordingHost(argv).host)).rejects.toThrow(error);
   });
 });

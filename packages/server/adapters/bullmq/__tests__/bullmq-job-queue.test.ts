@@ -1,4 +1,4 @@
-import type { QueueJob } from '@vp/core/ports';
+import { QUEUE_JOB_STATES, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { isOk } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
@@ -112,20 +112,18 @@ describe('BullMqJobQueue', () => {
     });
 
     it('fills in the counts the queue does not report', async () => {
-      const subject = new BullMqJobQueue({
-        type: 'queue',
-        name: 'probe',
-        queue: new FakeQueue({ counts: { waiting: 3, failed: 1 } }).asQueue(),
-      });
+      const queue = new FakeQueue({ counts: { waiting: 3, prioritized: 2, failed: 1 } });
+      const subject = new BullMqJobQueue({ type: 'queue', name: 'probe', queue: queue.asQueue() });
 
       expect(expectOk(await subject.getJobCounts())).toEqual({
         waiting: 3,
+        prioritized: 2,
         active: 0,
         completed: 0,
         failed: 1,
         delayed: 0,
-        paused: 0,
       });
+      expect(queue.countedStates).toEqual(QUEUE_JOB_STATES);
     });
   });
 
@@ -261,6 +259,22 @@ describe('BullMqJobQueue', () => {
 
       workers[0]?.emitFailed(undefined, new Error('orphan'));
       expect(seen).toEqual([]);
+    });
+  });
+
+  describe('stalled handler', () => {
+    it.each([
+      { scenario: 'set before the worker starts', setFirst: true },
+      { scenario: 'set on a worker that is already running', setFirst: false },
+    ])('hears a stalled job when $scenario', async ({ setFirst }) => {
+      const stalled: string[] = [];
+      if (setFirst) jobQueue.onStalled((jobId) => stalled.push(jobId));
+      await jobQueue.process(async () => 'ok');
+      if (!setFirst) jobQueue.onStalled((jobId) => stalled.push(jobId));
+
+      workers[0]?.emitStalled('job-3');
+
+      expect(stalled).toEqual(['job-3']);
     });
   });
 

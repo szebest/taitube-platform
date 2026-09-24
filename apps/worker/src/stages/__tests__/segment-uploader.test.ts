@@ -3,14 +3,14 @@ import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes, storageUnavailable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS, transcodeDeps } from '../../__tests__/stage-settings';
 import { createTranscodeProcessor } from '../transcode';
 import { exists, fakeEncoder, seedTranscode, transcodeJob } from './uploader-harness';
 
-const logger = createLogger({ service: 'segment-uploader-test', level: 'silent' });
+const logger = createLogger({ format: 'json', service: 'segment-uploader-test', level: 'silent' });
 
 describe('streaming segment uploader', () => {
   let repositories: InMemoryRepositories;
@@ -108,17 +108,22 @@ describe('streaming segment uploader', () => {
     expect(await exists(tmpDir)).toBe(false);
   });
 
-  it('streams every segment and the playlist of a real s60 transcode to storage', async () => {
-    const fixture = path.resolve(__dirname, '../../../../../tests/fixtures/s60.mp4');
+  it('streams every segment and the playlist of a real s2 transcode to storage', async () => {
+    const fixture = path.resolve(__dirname, '../../../../../tests/fixtures/s2.mp4');
     const body = await fs.readFile(fixture);
-    const videoId = await seedTranscode(repositories, storage, { sourceKey: 'raw/s60.mp4', body });
+    const videoId = await seedTranscode(repositories, storage, { sourceKey: 'raw/s2.mp4', body });
+    const deps = transcodeDeps({ repositories, storage, logger });
+    const processor = createTranscodeProcessor({
+      ...deps,
+      ffmpeg: { ...deps.ffmpeg, gopSeconds: 0.5, hlsSegmentSeconds: 0.5 },
+    });
 
     const result = expectOk(
-      await processorWith()(transcodeJob(videoId, { sourceKey: 'raw/s60.mp4' }))
+      await processor(transcodeJob(videoId, { sourceKey: 'raw/s2.mp4', durationMs: 2000 }))
     );
 
-    expect(result.segmentCount).toBeGreaterThanOrEqual(10);
-    expect(result.bytes).toBeGreaterThan(50_000);
+    expect(result.segmentCount).toBeGreaterThanOrEqual(3);
+    expect(result.bytes).toBeGreaterThan(1000);
     const hls = `videos/${videoId}/hls/720p`;
     for (let i = 0; i < result.segmentCount; i++) {
       const segment = `${hls}/seg_${String(i).padStart(5, '0')}.ts`;

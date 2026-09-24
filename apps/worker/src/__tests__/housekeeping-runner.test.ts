@@ -4,7 +4,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/observability';
+import { LogContext, createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { composeWorker } from '../runner';
 import { inMemoryQueues } from '../stages/housekeeping/__tests__/housekeeping-harness';
@@ -21,7 +21,8 @@ describe('housekeeping worker runner', () => {
         multipart: new InMemoryMultipartStorage(storage),
         getQueue: inMemoryQueues(),
       },
-      logger: createLogger({ service: 'housekeeping-spec', level: 'silent' }),
+      logger: createLogger({ format: 'json', service: 'housekeeping-spec', level: 'silent' }),
+      logContext: new LogContext(),
       media: STAGE_SETTINGS.media,
       workerId: STAGE_SETTINGS.workerId,
     });

@@ -105,10 +105,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
           .send(transportProblem(errorStatusCode, error.message, request.url));
       }
 
-      request.log.error(
-        { err: error, requestId: request.id || 'req-unknown' },
-        'Unhandled exception'
-      );
+      request.log.error({ err: error }, 'unhandled exception');
       return reply.status(500).send(
         problemDetails({
           code: ErrorCodes.INTERNAL,

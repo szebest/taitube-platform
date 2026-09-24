@@ -1,7 +1,7 @@
 import type { ReactionCachePort } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Logger } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, ignore, isErr, isOk, ok } from '@vp/result';
 
 export interface ReconcileReactionCountersOptions {
@@ -60,7 +60,7 @@ export async function runReconcileReactionCounters(
       hasDrift = true;
       logger?.warn(
         { videoId, groundTruth, cached: cached.value },
-        'Reaction counter drift detected in Redis cache; repairing'
+        'reaction counter drift detected in Redis cache; repairing'
       );
     }
 
@@ -68,7 +68,7 @@ export async function runReconcileReactionCounters(
       hasDrift = true;
       logger?.warn(
         { videoId, groundTruth, denormalized },
-        'Reaction counter drift detected in Postgres denormalized counters; repairing'
+        'reaction counter drift detected in Postgres denormalized counters; repairing'
       );
       const repaired = await repositories.videoReactions.updateVideoCounters(
         videoId,
@@ -87,7 +87,7 @@ export async function runReconcileReactionCounters(
     }
   }
 
-  logger?.info({ checkedCount, repairedCount }, 'Completed video reaction counter reconciliation');
+  logger?.info({ checkedCount, repairedCount }, 'completed video reaction counter reconciliation');
 
   return ok({ checkedCount, repairedCount });
 }

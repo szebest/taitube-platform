@@ -11,7 +11,8 @@ import {
 } from '@vp/errors';
 import { type FfmpegProcessLimits, type MediaTools, computeFfmpegThreads } from '@vp/ffmpeg';
 import type { TranscodeJob, TranscodeResult } from '@vp/job-contracts';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { ProgressReporter, ProgressTarget } from './progress-reporter';
@@ -81,10 +82,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     });
 
     const startTime = Date.now();
-    log.info(
-      { rendition: rendition.name, sourceKey, threads, attempt },
-      `Transcode attempt ${attempt}: threads = ${threads}`
-    );
+    log.info({ sourceKey }, 'transcode attempt starting');
 
     const fencedOut: TranscodeStageResult = {
       type: 'transcode',
@@ -112,7 +110,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     if (isErr(claim)) return claim;
 
     if (claim.value.fenced) {
-      log.warn({ lockToken }, 'Transcode step already completed; fenced out');
+      log.warn({ lockToken }, 'transcode step already completed; fenced out');
       return ok(fencedOut);
     }
 
@@ -228,7 +226,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       await renewal;
       const uploadResult = await uploader.stop(encoded.ok && !lostLease);
       if (lostLease) {
-        log.warn({ lockToken, lease: lostLease.type }, 'Step lease lost; the encode was aborted');
+        log.warn({ lockToken, lease: lostLease.type }, 'step lease lost; the encode was aborted');
         return lostLease.type === 'fenced' ? ok(fencedOut) : err(lostLease.failure);
       }
       if (isErr(encoded)) return failTranscode(encoded.error);
@@ -244,8 +242,8 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       const processingMs = Date.now() - startTime;
 
       log.info(
-        { rendition: rendition.name, segmentCount, bytes: totalBytes, processingMs },
-        'Uploaded rendition segments and playlist to public storage'
+        { segmentCount, bytes: totalBytes, processingMs },
+        'uploaded rendition segments and playlist to public storage'
       );
 
       const done = await repositories.renditions.update(videoId, rendition.name, {
@@ -291,7 +289,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       };
 
       if (comp.value.fenced) {
-        log.warn({ lockToken, event: 'FENCED_OUT' }, 'Fenced out on transcode completion');
+        log.warn({ lockToken, event: 'FENCED_OUT' }, 'fenced out on transcode completion');
         return ok(outcome);
       }
 

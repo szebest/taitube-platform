@@ -1,5 +1,7 @@
 import * as net from 'node:net';
 import type { ProcessHost } from '@vp/composition';
+import { createLogger } from '@vp/logger';
+import { captureLog } from '@vp/testing/log-capture';
 import { run } from '../process';
 
 function host(env: Record<string, string>): ProcessHost & { exit: ReturnType<typeof vi.fn> } {
@@ -17,6 +19,15 @@ function refusesConnections(port: number): Promise<boolean> {
   });
 }
 
+function loggerTo(log: ReturnType<typeof captureLog>) {
+  return createLogger({
+    format: 'json',
+    service: 'vp-api',
+    level: 'info',
+    destination: log.destination,
+  });
+}
+
 async function freePort(): Promise<number> {
   const server = net.createServer();
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -26,29 +37,23 @@ async function freePort(): Promise<number> {
 }
 
 describe('apps/api: process', () => {
-  beforeEach(() => {
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-  });
-
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   it('refuses a production boot without its secrets before it binds a port', async () => {
     const port = await freePort();
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const log = captureLog();
     const production = host({
       NODE_ENV: 'production',
       DATABASE_URL: 'postgres://localhost:5432/vp',
       PORT: String(port),
     });
 
-    expect(await run(production)).toBeUndefined();
+    expect(await run(production, loggerTo(log))).toBeUndefined();
 
     expect(production.exit).toHaveBeenCalledWith(1);
-    expect(String(error.mock.calls.at(-1)?.[1])).toContain(
-      'S3_ACCESS_KEY_ID: is required in production'
-    );
+    expect(log.text()).toContain('S3_ACCESS_KEY_ID: is required in production');
     expect(await refusesConnections(port)).toBe(true);
   });
 
@@ -57,7 +62,7 @@ describe('apps/api: process', () => {
     await new Promise<void>((resolve) => taken.listen(0, '0.0.0.0', resolve));
     const metricsPort = (taken.address() as net.AddressInfo).port;
     const port = await freePort();
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const log = captureLog();
     const booting = host({
       NODE_ENV: 'test',
       ADAPTER_FAMILY: 'in-memory',
@@ -66,10 +71,13 @@ describe('apps/api: process', () => {
       METRICS_PORT: String(metricsPort),
     });
 
-    expect(await run(booting)).toBeUndefined();
+    expect(await run(booting, loggerTo(log))).toBeUndefined();
 
     expect(booting.exit).toHaveBeenCalledWith(1);
-    expect(error.mock.calls.at(-1)?.[1]).toMatchObject({ code: 'EADDRINUSE' });
+    expect(log.lines().at(-1)).toMatchObject({
+      msg: 'api could not start',
+      err: { code: 'EADDRINUSE' },
+    });
     expect(await refusesConnections(port)).toBe(true);
     await new Promise<void>((resolve) => taken.close(() => resolve()));
   });
@@ -87,7 +95,7 @@ describe('apps/api: process', () => {
       if (signal === 'SIGTERM') handler();
     };
 
-    const api = await run(booting);
+    const api = await run(booting, loggerTo(captureLog()));
     await api?.shutdown();
 
     expect(api).toBeDefined();

@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
 const ROOTS = [
@@ -75,7 +76,7 @@ function inlinesUnit(node: ts.Node): boolean {
 }
 
 function tuningLiterals(file: string, source: string): string[] {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const sourceFile = parseSource(file, source);
   const found: string[] = [];
   const report = (node: ts.Node, shape: string) => {
     const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());

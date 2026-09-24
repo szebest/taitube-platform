@@ -2,6 +2,7 @@ import {
   JobQueue,
   type JobSchedulerInfo,
   type JobSchedulerTemplate,
+  QUEUE_JOB_STATES,
   type QueueJob,
   type QueueJobCounts,
   type QueueJobOptions,
@@ -48,6 +49,7 @@ export class BullMqJobQueue extends JobQueue {
   private readonly createWorker: WorkerFactory;
   private worker?: Worker;
   private failedHandler?: (job: QueueJob<unknown>, err: Error) => Promise<void> | void;
+  private stalledHandler?: (jobId: string) => void;
 
   constructor(config: BullMqJobQueueConfig) {
     super();
@@ -92,13 +94,18 @@ export class BullMqJobQueue extends JobQueue {
 
   onFailed(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void {
     this.failedHandler = handler;
-    if (this.worker) this.listenForFailures(this.worker);
   }
 
-  private listenForFailures(worker: Worker): void {
+  onStalled(handler: (jobId: string) => void): void {
+    this.stalledHandler = handler;
+  }
+
+  /** Handlers are read when the event fires, so one set after `process()` still hears it. */
+  private listen(worker: Worker): void {
     worker.on('failed', (job: Job | undefined, err: Error) => {
       if (job) this.failedHandler?.(toQueueJob(job), err);
     });
+    worker.on('stalled', (jobId: string) => this.stalledHandler?.(jobId));
   }
 
   async add<T = unknown>(
@@ -134,7 +141,7 @@ export class BullMqJobQueue extends JobQueue {
 
     return map(started, (worker) => {
       this.worker = worker;
-      if (this.failedHandler) this.listenForFailures(worker);
+      this.listen(worker);
     });
   }
 
@@ -152,25 +159,17 @@ export class BullMqJobQueue extends JobQueue {
 
   async getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>> {
     const counted = await fromPromise(
-      () =>
-        this.queue.getJobCounts(
-          'waiting',
-          'active',
-          'completed',
-          'failed',
-          'delayed',
-          'paused' as JobType
-        ),
+      () => this.queue.getJobCounts(...QUEUE_JOB_STATES),
       queueUnavailable.during('getJobCounts')
     );
 
     return map(counted, (counts) => ({
       waiting: counts.waiting ?? 0,
+      prioritized: counts.prioritized ?? 0,
       active: counts.active ?? 0,
       completed: counts.completed ?? 0,
       failed: counts.failed ?? 0,
       delayed: counts.delayed ?? 0,
-      paused: counts.paused ?? 0,
     }));
   }
 

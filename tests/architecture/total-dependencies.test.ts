@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
 const ROOTS = [
@@ -27,7 +28,7 @@ function inventsADependency(value: ts.Expression): boolean {
 }
 
 function defaultedDependencies(file: string, source: string): string[] {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const sourceFile = parseSource(file, source);
   const found: string[] = [];
 
   const visit = (node: ts.Node): void => {

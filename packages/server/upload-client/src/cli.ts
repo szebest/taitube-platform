@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import { parseArgs } from 'node:util';
+import type { Logger } from '@vp/logger';
 import { UploadClient } from './client';
 
 type Env = Readonly<Record<string, string | undefined>>;
@@ -7,6 +8,8 @@ type Env = Readonly<Record<string, string | undefined>>;
 export interface CliHost {
   argv: readonly string[];
   env: Env;
+  print: (text: string) => void;
+  log: Logger;
 }
 
 function readArgs(argv: readonly string[]) {
@@ -27,8 +30,8 @@ function readArgs(argv: readonly string[]) {
   return { file, flags: values };
 }
 
-function printHelp(): void {
-  console.log(`
+function printHelp(host: CliHost): void {
+  host.print(`
 @vp/upload-client — Reference resumable multipart upload client
 
 Usage:
@@ -47,11 +50,12 @@ Options:
 `);
 }
 
-export async function run({ argv, env }: CliHost): Promise<void> {
-  const { file, flags } = readArgs(argv);
+export async function run(host: CliHost): Promise<void> {
+  const { env, log } = host;
+  const { file, flags } = readArgs(host.argv);
 
   if (flags.help || !(file || flags.abort)) {
-    printHelp();
+    printHelp(host);
     return;
   }
 
@@ -61,18 +65,14 @@ export async function run({ argv, env }: CliHost): Promise<void> {
   const client = new UploadClient({ apiBaseUrl, token });
 
   if (flags.abort) {
-    console.log(`[upload-client] Aborting upload ${flags.abort}...`);
     await client.abortUpload(flags.abort);
-    console.log(`[upload-client] Upload ${flags.abort} aborted successfully.`);
+    log.info({ uploadId: flags.abort }, 'upload aborted');
     return;
   }
 
   if (!(file && fs.existsSync(file))) throw new Error(`File not found at "${file}"`);
 
-  console.log(
-    `[upload-client] Starting upload of ${file} (concurrency: ${concurrency}, target: ${apiBaseUrl})...`
-  );
-  if (flags.resume) console.log(`[upload-client] Resuming upload ${flags.resume}...`);
+  log.info({ file, concurrency, apiBaseUrl, resuming: flags.resume }, 'upload starting');
 
   const result = await client.uploadFile({
     filePath: file,
@@ -81,13 +81,13 @@ export async function run({ argv, env }: CliHost): Promise<void> {
     existingUploadId: flags.resume,
     onProgress: (completed, total) => {
       const pct = ((completed / total) * 100).toFixed(1);
-      process.stdout.write(`\r[upload-client] Progress: ${completed}/${total} parts (${pct}%)`);
+      process.stderr.write(`\rprogress ${completed}/${total} parts (${pct}%)`);
     },
   });
 
-  console.log('');
-  console.log('[upload-client] Upload completed successfully!');
-  console.log(`  Video ID:  ${result.videoId}`);
-  console.log(`  Upload ID: ${result.uploadId}`);
-  console.log(`  Status:    ${result.status}`);
+  process.stderr.write('\n');
+  log.info(
+    { videoId: result.videoId, uploadId: result.uploadId, status: result.status },
+    'upload completed'
+  );
 }

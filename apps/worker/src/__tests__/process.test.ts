@@ -4,6 +4,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { ProcessHost } from '@vp/composition';
+import { createLogger } from '@vp/logger';
+import { captureLog } from '@vp/testing/log-capture';
 import { run } from '../process';
 
 type Signal = Parameters<ProcessHost['onSignal']>[0];
@@ -36,8 +38,17 @@ function host(heartbeatPath: string, overrides: Record<string, string> = {}) {
   return { processHost, handlers, exit };
 }
 
+function loggerTo(log: ReturnType<typeof captureLog>) {
+  return createLogger({
+    service: 'vp-worker',
+    level: 'info',
+    format: 'json',
+    destination: log.destination,
+  });
+}
+
 async function started(processHost: ProcessHost) {
-  const worker = await run(processHost);
+  const worker = await run(processHost, loggerTo(captureLog()));
   if (!worker) throw new Error('the worker exited instead of starting');
   return worker;
 }
@@ -49,8 +60,6 @@ describe('apps/worker: process', () => {
   beforeEach(async () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), 'vp-worker-main-'));
     heartbeat = path.join(dir, 'heartbeat');
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(async () => {
@@ -93,9 +102,14 @@ describe('apps/worker: process', () => {
     const consume = vi.spyOn(InMemoryJobQueue.prototype, 'process');
     const { processHost, exit } = host(heartbeat, { METRICS_PORT: String(taken.port) });
 
-    expect(await run(processHost)).toBeUndefined();
+    const log = captureLog();
+    expect(await run(processHost, loggerTo(log))).toBeUndefined();
 
     expect(exit).toHaveBeenCalledWith(1);
+    expect(log.lines().at(-1)).toMatchObject({
+      msg: 'worker could not start',
+      err: { code: 'EADDRINUSE' },
+    });
     expect(consume).not.toHaveBeenCalled();
     await expect(fs.stat(heartbeat)).rejects.toMatchObject({ code: 'ENOENT' });
     await taken.release();

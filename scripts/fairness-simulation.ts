@@ -8,8 +8,7 @@
  * - User B's videos reach READY before User A's 50 videos finish
  *
  * Usage:
- *   pnpm tsx scripts/fairness-simulation.ts
- *   bun scripts/fairness-simulation.ts
+ *   pnpm fairness
  */
 
 import * as crypto from 'node:crypto';
@@ -18,16 +17,22 @@ import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
-} from '../packages/server/adapters/index';
+} from '../packages/server/adapters/in-memory/index';
+import type { QueueJob } from '../packages/server/core/ports/index';
 import { ids } from '../packages/server/job-contracts/src/index';
+import { type Logger, createLogger } from '../packages/server/logger/src/index';
 import { createMetricsRegistry } from '../packages/server/observability/src/index';
 import { rawSourceKey } from '../packages/server/storage/src/index';
-import { isErr } from '../packages/universal/result/src/index';
+import { type Result, isErr } from '../packages/universal/result/src/index';
 
-async function runFairnessSimulation() {
-  console.log('================================================================');
-  console.log('VIDEO-PIPELINE: Admission Control & Fairness Benchmark');
-  console.log('================================================================');
+/** The simulation has nothing to recover from, so a failed step ends it. */
+function required<T>(result: Result<T, { message: string }>, step: string): T {
+  if (isErr(result)) throw new Error(`${step} failed: ${result.error.message}`);
+  return result.value;
+}
+
+async function runFairnessSimulation(log: Logger) {
+  log.info('starting admission control and fairness benchmark');
 
   const repositories = new InMemoryRepositories();
   const multipart = new InMemoryMultipartStorage();
@@ -58,70 +63,83 @@ async function runFairnessSimulation() {
       uploadedThresholdMs: 0,
       maxInflightPerUser: MAX_INFLIGHT,
     });
-    if (isErr(reconciled)) throw new Error(`reconciler failed: ${reconciled.error.message}`);
+    required(reconciled, 'reconciler');
   }
 
-  // Worker stages simulation
-  await probeQueue.process(async (job) => {
+  const probe = async (job: QueueJob<unknown>) => {
     const { videoId } = job.data as { videoId: string };
-    await repositories.videos.transition({
-      videoId,
-      from: 'UPLOADED',
-      to: 'PROBING',
-      eventType: 'probe.started',
-    });
+    required(
+      await repositories.videos.transition({
+        videoId,
+        from: 'UPLOADED',
+        to: 'PROBING',
+        eventType: 'probe.started',
+      }),
+      'probe.started'
+    );
+    required(
+      await repositories.steps.claim({
+        id: crypto.randomUUID(),
+        videoId,
+        step: 'probe',
+        rendition: '-',
+        jobId: job.id,
+        attempt: 1,
+        workerId: 'worker-probe',
+        lockToken: crypto.randomUUID(),
+      }),
+      'probe claim'
+    );
+    required(
+      await repositories.videos.transition({
+        videoId,
+        from: 'PROBING',
+        to: 'PROCESSING',
+        eventType: 'probe.completed',
+      }),
+      'probe.completed'
+    );
 
-    await repositories.steps.claim({
-      id: crypto.randomUUID(),
-      videoId,
-      step: 'probe',
-      rendition: '-',
-      jobId: job.id,
-      attempt: 1,
-      workerId: 'worker-probe',
-      lockToken: crypto.randomUUID(),
-    });
-
-    await repositories.videos.transition({
-      videoId,
-      from: 'PROBING',
-      to: 'PROCESSING',
-      eventType: 'probe.completed',
-    });
-
-    // Small simulated work
     await new Promise((r) => setTimeout(r, 2));
 
-    await transcodeQueue.add(
-      'transcode-720p',
-      { videoId, generation: 1 },
-      { jobId: ids.transcode(videoId, '720p', 1), priority: job.opts?.priority }
+    required(
+      await transcodeQueue.add(
+        'transcode-720p',
+        { videoId, generation: 1 },
+        { jobId: ids.transcode(videoId, '720p', 1), priority: job.opts?.priority }
+      ),
+      'transcode enqueue'
     );
-  });
+  };
 
-  await transcodeQueue.process(async (job) => {
+  const transcode = async (job: QueueJob<unknown>) => {
     const { videoId } = job.data as { videoId: string };
-    // Small simulated transcode work
     await new Promise((r) => setTimeout(r, 5));
 
-    await packageQueue.add(
-      'package',
-      { videoId, generation: 1 },
-      { jobId: ids.package(videoId, 1), priority: job.opts?.priority }
+    required(
+      await packageQueue.add(
+        'package',
+        { videoId, generation: 1 },
+        { jobId: ids.package(videoId, 1), priority: job.opts?.priority }
+      ),
+      'package enqueue'
     );
-  });
+  };
 
-  await packageQueue.process(async (job) => {
+  const packageVideo = async (job: QueueJob<unknown>) => {
     const { videoId } = job.data as { videoId: string };
-    const video = await repositories.videos.findById(videoId);
+    const video = required(await repositories.videos.findById(videoId), 'video lookup');
     if (!video) return;
 
-    await repositories.videos.transition({
-      videoId,
-      from: 'PROCESSING',
-      to: 'READY',
-      eventType: 'video.ready',
-    });
+    required(
+      await repositories.videos.transition({
+        videoId,
+        from: 'PROCESSING',
+        to: 'READY',
+        eventType: 'video.ready',
+      }),
+      'video.ready'
+    );
 
     const elapsedMs = getElapsedMs();
     if (video.ownerId === USER_A_ID) {
@@ -130,46 +148,57 @@ async function runFairnessSimulation() {
       userBReadyTimes.push({ index: userBReadyTimes.length + 1, elapsedMs });
     }
 
-    // Immediately trigger reconciler on completion of in-flight video
     await triggerReconciler();
-  });
+  };
+
+  required(await probeQueue.process(probe), 'probe consumer');
+  required(await transcodeQueue.process(transcode), 'transcode consumer');
+  required(await packageQueue.process(packageVideo), 'package consumer');
 
   async function submitUpload(ownerId: string, index: number, priority: number) {
     const videoId = crypto.randomUUID();
     const sourceKey = rawSourceKey(videoId);
 
-    const video = await repositories.videos.create({
-      id: videoId,
-      ownerId,
-      title: `video-${index}`,
-      status: 'UPLOADED',
-      sourceKey,
-      sourceSizeBytes: 1000,
-    });
+    const video = required(
+      await repositories.videos.create({
+        id: videoId,
+        ownerId,
+        title: `video-${index}`,
+        status: 'UPLOADED',
+        sourceKey,
+        sourceSizeBytes: 1000,
+      }),
+      'video create'
+    );
     video.updatedAt = new Date(Date.now() - 5000);
 
-    const inFlight = await repositories.videos.countInFlightByOwner(ownerId);
+    const inFlight = required(
+      await repositories.videos.countInFlightByOwner(ownerId),
+      'in-flight count'
+    );
     if (inFlight < MAX_INFLIGHT) {
-      await probeQueue.add(
-        'probe',
-        { videoId, sourceKey, generation: 1 },
-        { jobId: ids.probe(videoId, 1), priority }
+      required(
+        await probeQueue.add(
+          'probe',
+          { videoId, sourceKey, generation: 1 },
+          { jobId: ids.probe(videoId, 1), priority }
+        ),
+        'probe enqueue'
       );
     }
-    return videoId;
   }
 
-  console.log('[1/3] Submitting 50 uploads for User A (free tier, priority 5)...');
+  log.info({ user: 'A', tier: 'free', uploads: 50, priority: 5 }, 'submitting uploads');
   for (let i = 1; i <= 50; i++) {
     await submitUpload(USER_A_ID, i, 5);
   }
 
-  console.log('[2/3] Submitting 5 uploads for User B (pro tier, priority 1)...');
+  log.info({ user: 'B', tier: 'pro', uploads: 5, priority: 1 }, 'submitting uploads');
   for (let i = 1; i <= 5; i++) {
     await submitUpload(USER_B_ID, i, 1);
   }
 
-  console.log('[3/3] Processing pipeline jobs with admission control and priority scheduling...');
+  log.info('processing pipeline jobs with admission control and priority scheduling');
   const maxWaitMs = 30000;
   const pollStart = Date.now();
   while (userAReadyTimes.length < 50 || userBReadyTimes.length < 5) {
@@ -188,18 +217,22 @@ async function runFairnessSimulation() {
     (t) => t.elapsedMs <= userBLast.elapsedMs
   ).length;
 
-  console.log('\n================== SIMULATION RESULTS ==================');
-  console.log(`MAX_INFLIGHT_PER_USER:               ${MAX_INFLIGHT}`);
-  console.log(`User B (Pro, 5 videos) finished in:  ${userBLast.elapsedMs.toFixed(2)} ms`);
-  console.log(`User A (Free, 50 videos) finished in: ${userALast.elapsedMs.toFixed(2)} ms`);
-  console.log(`User A progress when User B finished: ${userAAtBCompletion} / 50 videos`);
-  console.log(
-    `Fairness assertion verified:         ${userBLast.elapsedMs < userALast.elapsedMs ? 'PASSED ✓' : 'FAILED ✗'}`
-  );
-  console.log('========================================================\n');
+  const verdict = userBLast.elapsedMs < userALast.elapsedMs ? 'PASSED' : 'FAILED';
+  const report = [
+    '================== SIMULATION RESULTS ==================',
+    `MAX_INFLIGHT_PER_USER:               ${MAX_INFLIGHT}`,
+    `User B (Pro, 5 videos) finished in:  ${userBLast.elapsedMs.toFixed(2)} ms`,
+    `User A (Free, 50 videos) finished in: ${userALast.elapsedMs.toFixed(2)} ms`,
+    `User A progress when User B finished: ${userAAtBCompletion} / 50 videos`,
+    `Fairness assertion verified:         ${verdict}`,
+    '========================================================',
+  ];
+  process.stdout.write(`${report.join('\n')}\n`);
 }
 
-runFairnessSimulation().catch((err) => {
-  console.error('Fairness simulation failed:', err);
+const log = createLogger({ service: 'fairness-simulation', level: 'info', format: 'pretty' });
+
+runFairnessSimulation(log).catch((err) => {
+  log.error({ err }, 'fairness simulation failed');
   process.exit(1);
 });

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../../apps/api/src/app';
-import { createWorkerRunner } from '../../apps/worker/src/runner';
+import { composeWorker } from '../../apps/worker/src/runner';
 import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import {
   InMemoryCacheClient,
@@ -19,7 +19,9 @@ import type {
   StorageClient,
 } from '../../packages/server/core/ports/index';
 import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
-import { createLogger, createMetricsRegistry } from '../../packages/server/observability/src/index';
+import { mediaTools } from '../../packages/server/ffmpeg/src/index';
+import { LogContext, type Logger, createLogger } from '../../packages/server/logger/src/index';
+import { createMetricsRegistry } from '../../packages/server/observability/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
 export interface InProcessEnv {
@@ -35,7 +37,7 @@ export interface InProcessEnv {
   teardown: () => Promise<void>;
 }
 
-export async function setupInProcessEnv(): Promise<InProcessEnv> {
+export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
   const repositories = new InMemoryRepositories();
   const storage = new InMemoryStorageClient();
   const multipart = new InMemoryMultipartStorage(storage);
@@ -78,11 +80,17 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
     'notify',
     'housekeeping',
   ] as const;
-  const logger = createLogger({ service: 'e2e-worker', level: 'warn' });
-  const metrics = createMetricsRegistry({ env: 'test' });
+  const logContext = new LogContext();
+  const logger = createLogger({
+    format: 'json',
+    service: 'e2e-worker',
+    level: 'warn',
+    context: logContext,
+  });
+  const metrics = createMetricsRegistry();
 
   for (const stage of workerStages) {
-    const runner = await createWorkerRunner({
+    const runner = await composeWorker({
       config: inProcessAppConfig({ cdn: `${s3Instance.baseUrl}/public`, worker: { stage } }),
       adapters: {
         repositories,
@@ -92,29 +100,35 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
         jobQueue: queuesMap.get(stage),
         getQueue,
         flowProducer,
+        metrics,
       },
       logger,
-      metrics,
+      logContext,
+      media: mediaTools,
       workerId: `e2e-worker-${stage}`,
     });
+    const started = await runner.start();
+    if (!started.ok) throw new Error(`the ${stage} worker did not start`, { cause: started.error });
     workerClosers.push(runner.close);
   }
 
-  const app = (await composeApp({
-    adapters: {
-      repositories,
-      storage,
-      multipart,
-      cache,
-      probeQueue: getQueue('probe'),
-      queues: queuesMap,
-    },
-    config: inProcessAppConfig({
-      cdn: `${s3Instance.baseUrl}/public`,
-      limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 },
-      sse: { heartbeatMs: 2000 },
-    }),
-  })).app;
+  const app = (
+    await composeApp({
+      adapters: {
+        repositories,
+        storage,
+        multipart,
+        cache,
+        probeQueue: getQueue('probe'),
+        queues: queuesMap,
+      },
+      config: inProcessAppConfig({
+        cdn: `${s3Instance.baseUrl}/public`,
+        limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 },
+        sse: { heartbeatMs: 2000 },
+      }),
+    })
+  ).app;
 
   const reconcilerTimer = setInterval(() => {
     runReconcileUploads({
@@ -129,9 +143,7 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
   workerClosers.push(async () => clearInterval(reconcilerTimer));
 
   const apiUrl = await app.listen({ port: 0, host: '127.0.0.1' });
-  console.log(
-    `[e2e-runner] In-process environment ready. API: ${apiUrl}, S3: ${s3Instance.baseUrl}`
-  );
+  log.info({ apiUrl, s3BaseUrl: s3Instance.baseUrl }, 'in-process environment ready');
 
   const teardown = async (): Promise<void> => {
     for (const closeWorker of workerClosers) await closeWorker().catch(() => {});

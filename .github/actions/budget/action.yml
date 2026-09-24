@@ -1,0 +1,36 @@
+name: Budget
+description: Fails the job when the time from started-at to finished-at is over its budget.
+
+inputs:
+  what:
+    description: What the budget is for, as the error names it
+    required: true
+  seconds:
+    description: The budget
+    required: true
+  started-at:
+    description: Epoch milliseconds
+    required: true
+  finished-at:
+    description: Epoch milliseconds, now when empty
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Hold ${{ inputs.what }} to ${{ inputs.seconds }} s
+      shell: bash
+      env:
+        WHAT: ${{ inputs.what }}
+        BUDGET_SECONDS: ${{ inputs.seconds }}
+        STARTED_AT: ${{ inputs.started-at }}
+        FINISHED_AT: ${{ inputs.finished-at }}
+      run: |
+        finished_at="${FINISHED_AT:-$(date +%s%3N)}"
+        elapsed_ms=$((finished_at - STARTED_AT))
+        budget_ms=$((BUDGET_SECONDS * 1000))
+        echo "$WHAT took ${elapsed_ms} ms of its ${budget_ms} ms budget"
+        if [ "$elapsed_ms" -gt "$budget_ms" ]; then
+          echo "::error::$WHAT took ${elapsed_ms} ms, over its ${BUDGET_SECONDS} s budget"
+          exit 1
+        fi

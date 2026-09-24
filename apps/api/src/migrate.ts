@@ -1,35 +1,39 @@
-import { loadEnv } from '@vp/config';
+import { loadEnvOrExit } from '@vp/config';
 import { runMigrations } from '@vp/db/migrate';
-import { toAppConfig } from '@vp/env-schema';
+import { type AppConfig, toAppConfig } from '@vp/env-schema';
+import { type Logger, createLogger } from '@vp/logger';
 import { fromPromise, isOk } from '@vp/result';
 
 const MAX_ATTEMPTS = 10;
 const RETRY_DELAY_MS = 2_000;
 
-async function main(): Promise<void> {
-  const { postgres } = toAppConfig(loadEnv());
+async function migrate({ postgres }: AppConfig, log: Logger): Promise<void> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const migrated = await fromPromise(
-      () => runMigrations(postgres.migrationsUrl),
+      () => runMigrations(postgres.migrationsUrl, log),
       (cause) => cause
     );
     if (isOk(migrated)) {
-      console.log('[api:migrate] Database migration finished.');
+      log.info({ attempt }, 'database migrated');
       return;
     }
     if (attempt === MAX_ATTEMPTS) throw migrated.error;
-    const reason =
-      migrated.error instanceof Error ? migrated.error.message : String(migrated.error);
-    console.warn(
-      `[api:migrate] Migration attempt ${attempt}/${MAX_ATTEMPTS} failed: ${reason}. Retrying in ${RETRY_DELAY_MS / 1000}s...`
+    log.warn(
+      { err: migrated.error, attempt, attempts: MAX_ATTEMPTS, retryInMs: RETRY_DELAY_MS },
+      'migration failed, retrying'
     );
     await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
   }
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error('[api:migrate] Database migration failed:', err);
-    process.exit(1);
-  });
+const env = loadEnvOrExit('vp-migrate', process);
+if (env) {
+  const config = toAppConfig(env);
+  const log = createLogger({ service: 'vp-migrate', level: config.logLevel, format: 'json' });
+  migrate(config, log)
+    .then(() => process.exit(0))
+    .catch((err) => {
+      log.fatal({ err }, 'database migration failed');
+      process.exit(1);
+    });
+}

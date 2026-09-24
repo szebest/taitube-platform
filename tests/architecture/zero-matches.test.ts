@@ -23,86 +23,235 @@ function productionUnder(dir: string): string[] {
   ];
 }
 
-type Row = readonly [name: string, pattern: RegExp, scope: readonly string[], expected: number];
+interface Row {
+  name: string;
+  pattern: RegExp;
+  /** Git pathspecs; `expected` counts matches across them, not files. */
+  scope: readonly string[];
+  expected: number;
+  /** Source the pattern must match, so a row that can never fire fails instead of passing. */
+  fires: string;
+}
 
-/** `scope` is a list of git pathspecs; `expected` counts matches across it, not files. */
 const ROWS: readonly Row[] = [
-  ['the hard-coded admin-token user id', /000000000003/g, PRODUCTION_SOURCE, 0],
-  ['the dev seed in the migrate Job', /@vp\/db\/seed/g, ['apps/api/src/migrate.ts'], 0],
-  ['a composition root defaulting its config', /\?\? inProcessAppConfig/g, PRODUCTION_SOURCE, 0],
-  [
-    'the worker id default, outside composition',
-    /worker-\$\{process\.pid\}/g,
-    PRODUCTION_SOURCE,
-    1,
-  ],
-  ['the module-level metrics singleton', /(?<!async )\bgetMetrics\(/g, PRODUCTION_SOURCE, 0],
-  [
-    'a metrics server',
-    /\bclass MetricsServer\b|\bfunction startMetricsServer\b/g,
-    PRODUCTION_SOURCE,
-    1,
-  ],
-  ['a default-metrics collector', /\bcollectDefaultMetrics\(/g, PRODUCTION_SOURCE, 1],
-  ['Bull Board inside a service', /@bull-board/g, productionUnder('apps/api/src/services'), 0],
-  [
-    'the heartbeat path outside the Heartbeat and composition',
-    /\bheartbeatPath\b/g,
-    [
+  {
+    name: 'the hard-coded admin-token user id',
+    pattern: /000000000003/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: "const ADMIN = '00000000-0000-7000-8000-000000000003';",
+  },
+  {
+    name: 'the dev seed in the migrate Job',
+    pattern: /@vp\/db\/seed/g,
+    scope: ['apps/api/src/migrate.ts'],
+    expected: 0,
+    fires: "import { seedDatabase } from '@vp/db/seed';",
+  },
+  {
+    name: 'a composition root defaulting its config',
+    pattern: /\?\? inProcessAppConfig/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: 'const config = options.config ?? inProcessAppConfig();',
+  },
+  {
+    name: 'the worker id default, outside composition',
+    pattern: /worker-\$\{process\.pid\}/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 1,
+    fires: 'workerId: `worker-${process.pid}`',
+  },
+  {
+    name: 'the module-level metrics singleton',
+    pattern: /(?<!async )\bgetMetrics\(/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: 'getMetrics().jobsProcessed.inc();',
+  },
+  {
+    name: 'a metrics server',
+    pattern: /\bclass MetricsServer\b|\bfunction startMetricsServer\b/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 1,
+    fires: 'export function startMetricsServer(port: number) {}',
+  },
+  {
+    name: 'a default-metrics collector',
+    pattern: /\bcollectDefaultMetrics\(/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 1,
+    fires: 'collectDefaultMetrics({ register });',
+  },
+  {
+    name: 'Bull Board inside a service',
+    pattern: /@bull-board/g,
+    scope: productionUnder('apps/api/src/services'),
+    expected: 0,
+    fires: "import { createBullBoard } from '@bull-board/api';",
+  },
+  {
+    name: 'the heartbeat path outside the Heartbeat and composition',
+    pattern: /\bheartbeatPath\b/g,
+    scope: [
       ...PRODUCTION_SOURCE,
       ':(exclude)apps/worker/src/composition',
       ':(exclude)packages/server/env-schema',
     ],
-    0,
-  ],
-  ['a throwing parse in a stage', /\.parse\(/g, productionUnder('apps/worker/src/stages'), 0],
-  ['a throwing parse in a service', /\.parse\(/g, productionUnder('apps/api/src/services'), 0],
-  ['a failure classified by its message', /message\.includes/g, PRODUCTION_SOURCE, 0],
-  ['a cast through unknown', /as unknown as/g, PRODUCTION_SOURCE, 0],
-  [
-    'the part-manifest rule, called by upload-complete',
-    /\bdecidePartManifest\(/g,
-    ['apps/api/src/services/upload-complete.ts'],
-    1,
-  ],
-  [
-    'the size-match rule, called by upload-complete',
-    /\bdecideSizeMatch\(/g,
-    ['apps/api/src/services/upload-complete.ts'],
-    1,
-  ],
-  ['a problem content type', /\bPROBLEM_CONTENT_TYPE =/g, PRODUCTION_SOURCE, 1],
-  ['an adapter-local unavailable helper', /private unavailable\(/g, PRODUCTION_SOURCE, 0],
-  ['an unavailable factory', /\bfunction unavailable\b/g, PRODUCTION_SOURCE, 1],
-  [
-    'a BullMQ health body',
-    /status === 'ready'/g,
-    productionUnder('packages/server/adapters/bullmq'),
-    1,
-  ],
-  [
-    'a hand-built object key',
-    /`(raw|videos)\//g,
-    [...PRODUCTION_SOURCE, ':(exclude)packages/server/storage/src/keys.ts'],
-    0,
-  ],
-  [
-    'the rendition names, listed once in the ladder module',
-    /'1080p', '720p'/g,
-    PRODUCTION_SOURCE,
-    1,
-  ],
-  ['the dead default ladder', /\bDEFAULT_LADDER\b/g, PRODUCTION_SOURCE, 0],
-  [
-    'a doc asking for an import extension',
-    /\.js`? (extension|specifier)|carr(y|ies) `\.js`/g,
-    [
+    expected: 0,
+    fires: 'await fs.writeFile(config.worker.heartbeatPath, now);',
+  },
+  {
+    name: 'a throwing parse in a stage',
+    pattern: /\.parse\(/g,
+    scope: productionUnder('apps/worker/src/stages'),
+    expected: 0,
+    fires: 'const data = ProbeJob.parse(job.data);',
+  },
+  {
+    name: 'a throwing parse in a service',
+    pattern: /\.parse\(/g,
+    scope: productionUnder('apps/api/src/services'),
+    expected: 0,
+    fires: 'const body = JSON.parse(raw);',
+  },
+  {
+    name: 'a failure classified by its message',
+    pattern: /message\.includes/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: "if (err.message.includes('ENOSPC')) return 'disk';",
+  },
+  {
+    name: 'a cast through unknown',
+    pattern: /as unknown as/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: 'const job = raw as unknown as QueueJob;',
+  },
+  {
+    name: 'console, anywhere a process runs',
+    pattern: /\bconsole\./g,
+    scope: [...PRODUCTION_SOURCE, 'tests/e2e'],
+    expected: 0,
+    fires: "console.error('fatal', err);",
+  },
+  {
+    name: 'pino outside @vp/logger',
+    pattern: /from 'pino'/g,
+    scope: [...PRODUCTION_SOURCE, 'tests/e2e', ':(exclude)packages/server/logger'],
+    expected: 0,
+    fires: "import pino from 'pino';",
+  },
+  {
+    name: 'logging re-exported from @vp/observability',
+    pattern: /createLogger|LogContext|from 'pino'/g,
+    scope: productionUnder('packages/server/observability'),
+    expected: 0,
+    fires: "export { createLogger } from './logger';",
+  },
+  {
+    name: 'an error logged as its message',
+    pattern: /\berr:\s*[\w.]+\.message\b/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: "log.error({ err: added.error.message }, 'could not add');",
+  },
+  {
+    name: 'a MinIO image from the registries upstream stopped publishing to',
+    pattern: /quay\.io\/minio|\bminio\/(minio|mc):/g,
+    scope: ['infra', '.github', 'scripts', 'Makefile'],
+    expected: 0,
+    fires: 'image: quay.io/minio/minio:latest',
+  },
+  {
+    name: 'an error turned into text by hand',
+    pattern: /instanceof\s+Error\s*\?/g,
+    scope: [...PRODUCTION_SOURCE, 'tests/e2e'],
+    expected: 0,
+    fires: 'const text =\n  cause instanceof Error\n    ? cause.message\n    : String(cause);',
+  },
+  {
+    name: 'the part-manifest rule, called by upload-complete',
+    pattern: /\bdecidePartManifest\(/g,
+    scope: ['apps/api/src/services/upload-complete.ts'],
+    expected: 1,
+    fires: 'const manifest = decidePartManifest({ upload, parts });',
+  },
+  {
+    name: 'the size-match rule, called by upload-complete',
+    pattern: /\bdecideSizeMatch\(/g,
+    scope: ['apps/api/src/services/upload-complete.ts'],
+    expected: 1,
+    fires: 'const size = decideSizeMatch({ video, actualSizeBytes });',
+  },
+  {
+    name: 'a problem content type',
+    pattern: /\bPROBLEM_CONTENT_TYPE =/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 1,
+    fires: "export const PROBLEM_CONTENT_TYPE = 'application/problem+json';",
+  },
+  {
+    name: 'an adapter-local unavailable helper',
+    pattern: /private unavailable\(/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: 'private unavailable(operation: string) {',
+  },
+  {
+    name: 'an unavailable factory',
+    pattern: /\bfunction unavailable\b/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 1,
+    fires: 'function unavailable(code: ErrorCode) {',
+  },
+  {
+    name: 'a BullMQ health body',
+    pattern: /status === 'ready'/g,
+    scope: productionUnder('packages/server/adapters/bullmq'),
+    expected: 1,
+    fires: "if (this.connection.status === 'ready') return ok();",
+  },
+  {
+    name: 'a hand-built object key',
+    pattern: /`(raw|videos)\//g,
+    scope: [...PRODUCTION_SOURCE, ':(exclude)packages/server/storage/src/keys.ts'],
+    expected: 0,
+    fires: 'const key = `videos/${videoId}/hls/master.m3u8`;',
+  },
+  {
+    name: 'the rendition names, listed once in the ladder module',
+    pattern: /'1080p', '720p'/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 1,
+    fires: "export const RENDITIONS = ['1080p', '720p', '480p'] as const;",
+  },
+  {
+    name: 'the dead default ladder',
+    pattern: /\bDEFAULT_LADDER\b/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: 'ladder: DEFAULT_LADDER,',
+  },
+  {
+    name: 'a script run by Bun instead of tsx',
+    pattern: /\bbun (?!test\b)[\w./-]+\.ts\b/g,
+    scope: ['package.json', 'Makefile', '.github'],
+    expected: 0,
+    fires: '"e2e": "bun scripts/run-e2e.ts",',
+  },
+  {
+    name: 'a doc asking for an import extension',
+    pattern: /\.js`? (extension|specifier)|carr(y|ies) `\.js`/g,
+    scope: [
       'ARCHITECTURE.md',
       ':(glob)packages/universal/**/AGENTS.md',
       ':(glob)packages/client/**/AGENTS.md',
     ],
-    0,
-  ],
+    expected: 0,
+    fires: 'Relative imports carry `.js` so Node resolves them.',
+  },
 ];
 
 function countMatches(pattern: RegExp, sources: readonly string[]): number {
@@ -117,6 +266,15 @@ describe('architecture: zero-matches', () => {
     );
   });
 
+  it('reads the console row over entrypoints, scripts and the e2e runner too', () => {
+    const consoleRow = ROWS.find((row) => row.name.startsWith('console'));
+    const files = trackedFiles(...(consoleRow?.scope ?? []));
+
+    expect(files).toContain('apps/api/src/main.ts');
+    expect(files).toContain('scripts/run-e2e.ts');
+    expect(files).toContain('tests/e2e/e2e-runner.ts');
+  });
+
   it('reads production source without specs, __tests__ or __mocks__', () => {
     const files = trackedFiles(...PRODUCTION_SOURCE);
 
@@ -124,11 +282,14 @@ describe('architecture: zero-matches', () => {
     expect(files.filter((file) => /\.test\.tsx?$|__(tests|mocks)__/.test(file))).toEqual([]);
   });
 
-  it.each(ROWS)('finds files to read for %s', (_name, _pattern, scope) => {
-    expect(trackedFiles(...scope)).not.toEqual([]);
+  it.each(ROWS)('fires on its own fixture: $name', ({ pattern, fires }) => {
+    expect(countMatches(pattern, [fires])).toBeGreaterThan(0);
   });
 
-  it.each(ROWS)('holds %s at the expected count', (_name, pattern, scope, expected) => {
-    expect(countMatches(pattern, trackedFiles(...scope).map(read))).toBe(expected);
+  it.each(ROWS)('holds $name at the expected count', ({ pattern, scope, expected }) => {
+    const files = trackedFiles(...scope);
+
+    expect(files.length).toBeGreaterThan(0);
+    expect(countMatches(pattern, files.map(read))).toBe(expected);
   });
 });

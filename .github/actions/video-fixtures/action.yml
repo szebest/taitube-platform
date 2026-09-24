@@ -1,0 +1,28 @@
+name: Video fixtures
+description: The generated test videos, cached on the generator's source and manifest; FFmpeg is set up only when they have to be generated again.
+
+inputs:
+  only:
+    description: One fixture id, for a job that reads a single video
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Restore the fixtures
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: tests/fixtures
+        key: fixtures-${{ inputs.only || 'all' }}-${{ hashFiles('packages/server/gen-video/src/**', 'packages/server/gen-video/manifest.json') }}
+
+    - name: Set up FFmpeg
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: ./.github/actions/setup-ffmpeg
+
+    - name: Generate the fixtures
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        ONLY: ${{ inputs.only }}
+      run: pnpm gen-video ${ONLY:+--only "$ONLY"}

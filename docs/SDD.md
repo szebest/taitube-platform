@@ -388,7 +388,7 @@ The brief asked explicitly: transient task queue vs event-streaming log vs hybri
 | 2 | Backblaze B2 | 10 GB | free up to 3× storage/month, then $0.01/GB; **unlimited free to Cloudflare** via Bandwidth Alliance | Full S3 API incl. notifications. Best fallback if R2 free tier changes; put Cloudflare CDN in front. |
 | 3 | Supabase Storage | 1 GB, 5 GB egress | | Too small; egress capped. |
 | 4 | AWS S3 | 5 GB / 12 months | $0.09/GB | Egress pricing is the exact thing we must avoid. |
-| Local | **MinIO** (`minio/minio`) | — | — | Faithful S3 emulation incl. multipart, presigned URLs, lifecycle rules, bucket notifications (webhook) for dev. |
+| Local | **MinIO** (`cgr.dev/chainguard/minio`, pinned by digest) | — | — | Faithful S3 emulation incl. multipart, presigned URLs, lifecycle rules, bucket notifications (webhook) for dev. |
 
 **Consequences.** One `packages/server/storage` module over `@aws-sdk/client-s3` v3 with `forcePathStyle` for MinIO and `region: 'auto'` for R2. Two buckets: `raw` (private) and `public` (CDN-fronted). Object keys are deterministic (§7).
 
@@ -1582,16 +1582,15 @@ services:
     volumes: [redisdata:/data]
 
   minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+    image: cgr.dev/chainguard/minio@sha256:<index digest>
+    command: ["server", "/data", "--console-address", ":9001"]   # the binary is the entrypoint, no shell
     environment: { MINIO_ROOT_USER: minioadmin, MINIO_ROOT_PASSWORD: minioadmin }
     ports: ["9000:9000", "9001:9001"]
     volumes: [miniodata:/data]
-    healthcheck: { test: ["CMD", "mc", "ready", "local"], interval: 5s }
 
   minio-init:                      # creates buckets, lifecycle rules, anonymous read on `public`, optional webhook
-    image: minio/mc
-    depends_on: { minio: { condition: service_healthy } }
+    image: cgr.dev/chainguard/minio-client@sha256:<latest-dev index digest>   # -dev carries the shell the script needs
+    depends_on: [minio]            # the script retries `mc alias set` until MinIO answers
     entrypoint: ["/bin/sh", "/init/minio-init.sh"]
     volumes: ["./minio-init.sh:/init/minio-init.sh:ro"]
 
@@ -1800,7 +1799,7 @@ spec:
       metadata:
         serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
         query: |
-          sum(bullmq_queue_jobs{queue="transcode-1080p", state=~"waiting|prioritized|active"})
+          sum(max by (state) (bullmq_queue_jobs{queue="transcode-1080p", state=~"waiting|prioritized|active"}))
         threshold: "1"               # one pod per outstanding job (concurrency = 1)
         activationThreshold: "0"     # any job wakes the deployment from zero
 ```
@@ -1818,19 +1817,21 @@ Fallback trigger (no Prometheus dependency):
         databaseIndex: "0"
 ```
 
-Why `waiting + active` and threshold 1: with concurrency 1 per pod, `desired = ceil(outstanding / 1)` means every queued job gets a pod and no busy pod is counted as free capacity. KEDA scales the Deployment; the HPA behaviour block prevents flapping and the long `terminationGracePeriodSeconds` plus `worker.close()` makes scale-in safe. Because the queue is *pulled*, over-provisioning during a burst is harmless — surplus pods idle and are removed after cooldown.
+Every API replica polls every queue and exports the same depth, so the query takes the `max` per state before it sums; a plain `sum` counts each job once per replica, and two replicas started two pods for one job. Why `waiting + prioritized + active` and threshold 1: every pipeline job carries a priority, and BullMQ keeps a job with one in `prioritized`, not `waiting`, so the API poller reads all three (`QUEUE_JOB_STATES` in `@vp/core/ports`). Workers never write `bullmq_queue_jobs`: a worker has no view of its queue's depth, and a gauge it set would outlive the job and hold the deployment above zero. And threshold 1: with concurrency 1 per pod, `desired = ceil(outstanding / 1)` means every queued job gets a pod and no busy pod is counted as free capacity. KEDA scales the Deployment; the HPA behaviour block prevents flapping and the long `terminationGracePeriodSeconds` plus `worker.close()` makes scale-in safe. Because the queue is *pulled*, over-provisioning during a burst is harmless — surplus pods idle and are removed after cooldown.
 
 **Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose up -d --scale worker-transcode-1080p=N --no-recreate` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
 
 ### 13.3 Tracing (OpenTelemetry)
 
-- `packages/server/observability/otel.ts` bootstraps `@opentelemetry/sdk-node` with OTLP/HTTP exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`), auto-instrumentation for Fastify, `pg`/`postgres`, `ioredis`, `http`, plus a manual BullMQ instrumentation: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. `ffmpeg` runs are child spans with argv (redacted URLs) and exit code.
+- `initTracing` in `@vp/observability` starts `@opentelemetry/sdk-node` with the OTLP/HTTP trace exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`) and the Node auto-instrumentations, `fs`, `dns` and `net` off. It is **preloaded**: each app's `src/instrument.ts` is the first module the process loads (`node --import ./dist/instrument.js dist/main.js`, the same flag under Bun), because the instrumentations patch only what is imported after them. The ESM hook wraps third-party modules only; this repo's own modules are excluded, since the hook cannot resolve their extensionless `export *`. The SDK exports traces only - metrics stay with Prometheus, logs with pino.
+- The API's HTTP server span is its own Fastify hook, `plugins/request-span.ts`: named `{method} {route template}`, parented on the caller's `traceparent`, and started from the root context, because the HTTP instrumentation hands a request it ignores over with tracing suppressed. The handler runs inside it, so `ioredis` spans and the `traceparent` a handler writes into a job both belong to the request's trace. `postgres` (postgres.js) has no OpenTelemetry instrumentation, so SQL is not a span.
+- BullMQ is instrumented by hand: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. Work nothing traced asked for, such as a reconciler repair, starts a root span of its own (`rootTraceparent`). `ffmpeg` runs are child spans with argv (redacted URLs) and exit code.
 - Result: one trace = `POST /uploads/:id/complete` → `probe` → three `transcode-*` → `thumbnail` → `package` → `notify`, viewable in Tempo; `trace_id` is also written to `video_events` so an operator can go from a video row to its trace.
 - Sampling: parent-based, 100 % in dev, 20 % in cloud (Grafana Cloud 50 GB/month is generous, but transcode spans are long-lived).
 
 ### 13.4 Logging
 
-pino JSON to stdout; base bindings `{ service, stage, version, pod }`; every job log line carries `{ videoId, jobId, attempt, traceId, spanId }` via `AsyncLocalStorage` child loggers. Loki/Grafana Cloud Logs via Alloy/otel-collector; `ffmpeg` stderr is captured and attached to the failure record (last 50 lines) instead of being streamed as logs.
+pino JSON to stdout through one `createLogger` in `@vp/observability`, which redacts `authorization`, `cookie` and `x-admin-token` wherever a headers object is logged. The API hands it to Fastify: the request id is the caller's `x-request-id` when it is a plain token, otherwise a UUID, and is echoed back on the response; each request writes one `request completed` line with `method`, `route` (the template, `unmatched` on a 404), `status` and `durationMs`, and an unhandled error one `error` line, both carrying `reqId`. The id travels into job payloads as `requestId` beside `traceparent`, and a worker's `LogContext` puts it on every line of that job. Job lines also carry `{ videoId, jobId, attempt, traceId, spanId }`. Loki/Grafana Cloud Logs via Alloy/otel-collector; `ffmpeg` stderr is captured and attached to the failure record (last 50 lines) instead of being streamed as logs.
 
 ### 13.5 Dashboards & alerts (committed under `observability/`)
 
@@ -2058,7 +2059,7 @@ Package naming: `@vp/api`, `@vp/worker`, `@vp/job-contracts`, `@vp/db`, … Depe
 | Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
 | Validation | zod 4 | | |
 | IDs | `uuidv7` | | |
-| Logging | pino 9 + pino-pretty (dev) | | |
+| Logging | pino 10 through `@vp/logger`, JSON or its own pretty destination | | |
 | Metrics | prom-client 15 | | |
 | Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
 | Testing | vitest 3 (unit/integration), `@testcontainers/postgresql`, `@testcontainers/redis`, `testcontainers` (MinIO), `bun test` for worker parity, supertest-style via `app.inject()` | | |

@@ -1,52 +1,41 @@
-#!/usr/bin/env bun
+import { type Logger, createLogger } from '../packages/server/logger/src/index';
 import { E2ERunner } from '../tests/e2e/e2e-runner';
 
-async function main() {
+async function main(log: Logger) {
   const args = process.argv.slice(2);
   const reduced = args.includes('--reduced') || process.env['E2E_REDUCED'] === 'true';
   const apiUrl = process.env['API_URL'];
 
-  console.log('================================================================');
-  console.log('==> Starting Phase 2 E2E Acceptance Suite');
-  console.log(`==> Mode: ${reduced ? 'Reduced set (CI)' : 'Full 20-video concurrent suite'}`);
-  if (apiUrl) console.log(`==> Target API URL: ${apiUrl}`);
-  console.log('================================================================');
+  log.info({ reduced, apiUrl }, 'starting e2e acceptance suite');
 
-  const runner = new E2ERunner({
-    apiUrl,
-    reduced,
-  });
-
+  const runner = new E2ERunner({ apiUrl, reduced }, log);
   const result = await runner.executeSuite();
 
-  console.log('================================================================');
   if (result.allPassed) {
-    console.log(
-      `==> PHASE 2 E2E SUITE PASSED SUCCESSFULLY in ${(result.totalTimeMs / 1000).toFixed(1)}s!`
-    );
-    console.log('================================================================');
+    log.info({ totalTimeMs: result.totalTimeMs }, 'e2e suite passed');
     process.exit(0);
-  } else {
-    console.error(`==> PHASE 2 E2E SUITE FAILED after ${(result.totalTimeMs / 1000).toFixed(1)}s`);
-    const failedVideos = result.videoResults.filter((r) => !r.passed);
-    for (const f of failedVideos) {
-      console.error(`  - [${f.spec.name}] ${f.failureReason}`);
-    }
-    if (!result.dlqReplayResult.passed) {
-      console.error('  - DLQ forced-transient replay failed');
-    }
-    if (!result.abandonedUploadResult.passed) {
-      console.error('  - Abandoned upload reconciler cleanup failed');
-    }
-    if (!result.dlqHostileAudit.passed) {
-      console.error('  - Hostile files DLQ audit failed');
-    }
-    console.log('================================================================');
-    process.exit(1);
   }
+
+  log.error({ totalTimeMs: result.totalTimeMs }, 'e2e suite failed');
+  const failedVideos = result.videoResults.filter((r) => !r.passed);
+  for (const failed of failedVideos) {
+    log.error({ spec: failed.spec.name, reason: failed.failureReason }, 'video spec failed');
+  }
+  if (!result.dlqReplayResult.passed) {
+    log.error('dlq forced-transient replay failed');
+  }
+  if (!result.abandonedUploadResult.passed) {
+    log.error('abandoned upload reconciler cleanup failed');
+  }
+  if (!result.dlqHostileAudit.passed) {
+    log.error('hostile files dlq audit failed');
+  }
+  process.exit(1);
 }
 
-main().catch((err) => {
-  console.error('Fatal E2E error:', err);
+const log = createLogger({ service: 'run-e2e', level: 'info', format: 'pretty' });
+
+main(log).catch((err) => {
+  log.error({ err }, 'e2e suite crashed');
   process.exit(1);
 });

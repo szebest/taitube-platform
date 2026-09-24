@@ -1,0 +1,37 @@
+name: Set up the workspace
+description: pnpm, Node 24 and optionally Bun, the locked install, and the build the `build` job left in the turbo cache for this commit.
+
+inputs:
+  bun:
+    description: Install Bun 1.4 as well
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Set up Node.js 24
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: pnpm
+
+    - name: Set up Bun 1.4
+      if: inputs.bun == 'true'
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: 1.4.0
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Restore the turbo cache
+      uses: actions/cache/restore@v4
+      with:
+        path: .turbo/cache
+        key: turbo-${{ runner.os }}-${{ github.sha }}
+        restore-keys: |
+          turbo-${{ runner.os }}-

@@ -16,9 +16,17 @@ interface Manifest {
   spec?: { data?: { secretKey: string }[] };
 }
 
+const rendered = new Map<string, Manifest[]>();
+
+/** Each overlay rendered once per process: a `kustomize build` is most of what this file costs. */
 function render(overlay: string): Manifest[] {
-  const output = execFileSync('kustomize', ['build', join(ROOT, overlay)], { encoding: 'utf8' });
-  return loadAll(output) as Manifest[];
+  let manifests = rendered.get(overlay);
+  if (!manifests) {
+    const output = execFileSync('kustomize', ['build', join(ROOT, overlay)], { encoding: 'utf8' });
+    manifests = loadAll(output) as Manifest[];
+    rendered.set(overlay, manifests);
+  }
+  return manifests;
 }
 
 function named(manifests: Manifest[], kind: string, name: string): Manifest | undefined {

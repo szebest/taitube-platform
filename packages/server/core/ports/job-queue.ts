@@ -8,6 +8,8 @@ export interface QueueJob<T = unknown> {
   data: T;
   opts?: QueueJobOptions;
   attemptsMade?: number;
+  /** When the job was added, epoch milliseconds, as the queue recorded it. */
+  enqueuedAt?: number;
   updateProgress?: (progress: number | object) => Promise<void>;
   getChildrenValues?: <R = Record<string, unknown>>() => Promise<R>;
   getState?: () => Promise<string>;
@@ -22,14 +24,21 @@ export interface QueueJobOptions {
   removeOnFail?: unknown;
 }
 
-export interface QueueJobCounts {
-  waiting: number;
-  active: number;
-  completed: number;
-  failed: number;
-  delayed: number;
-  paused: number;
-}
+/**
+ * The states a queue is counted in. BullMQ keeps a job with a priority in `prioritized`, not
+ * `waiting`, and every pipeline job carries one, so a depth that leaves it out reads an idle queue.
+ */
+export const QUEUE_JOB_STATES = [
+  'waiting',
+  'prioritized',
+  'active',
+  'completed',
+  'failed',
+  'delayed',
+] as const;
+type QueueJobState = (typeof QUEUE_JOB_STATES)[number];
+
+export type QueueJobCounts = Record<QueueJobState, number>;
 
 export interface QueueWorkerOptions {
   concurrency?: number;
@@ -89,4 +98,6 @@ export abstract class JobQueue implements HealthCheckable<QueueUnavailable> {
   }
   abstract close(): Promise<Result<void, QueueUnavailable>>;
   onFailed?(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void;
+  /** A job whose lock expired before its worker finished: it goes back to waiting, or fails. */
+  onStalled?(handler: (jobId: string) => void): void;
 }

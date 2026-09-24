@@ -118,7 +118,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(bullmq_queue_jobs{state=~\"waiting|prioritized|active\"}) by (queue)",
+          "expr": "sum by (queue) (max by (queue, state) (bullmq_queue_jobs{state=~\"waiting|prioritized|active\"}))",
           "legendFormat": "Outstanding Jobs: {{queue}}",
           "range": true,
           "refId": "A"
@@ -129,7 +129,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(kube_deployment_status_replicas{deployment=~\"worker-.*\"}) by (deployment)",
+          "expr": "sum(kube_deployment_status_replicas{deployment=~\"vp-worker-.*\"}) by (deployment)",
           "legendFormat": "Replicas: {{deployment}}",
           "range": true,
           "refId": "B"

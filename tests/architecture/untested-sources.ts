@@ -6,7 +6,6 @@
  */
 export const UNTESTED_SOURCES: readonly string[] = [
   'apps/api/src/migrate.ts',
-  'apps/api/src/plugins/http-metrics.ts',
   'apps/web/src/App.tsx',
   'apps/web/src/auth-token.ts',
   'apps/web/src/index.tsx',
@@ -102,7 +101,6 @@ export const UNTESTED_SOURCES: readonly string[] = [
   'packages/server/ffmpeg/src/ladder.ts',
   'packages/server/gen-video/src/generator.ts',
   'packages/server/job-contracts/src/policies.ts',
-  'packages/server/observability/src/logger.ts',
   'packages/server/observability/src/metrics.ts',
   'packages/server/upload-client/src/client.ts',
   'packages/universal/domain/src/reaction.ts',

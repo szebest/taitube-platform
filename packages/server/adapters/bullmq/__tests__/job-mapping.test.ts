@@ -8,6 +8,7 @@ function bullJob(overrides: Partial<Job> = {}): Job {
     data: { videoId: 'v1' },
     attemptsMade: 2,
     opts: { attempts: 5, priority: 3 },
+    timestamp: 1_700_000_000_000,
     ...overrides,
   } as unknown as Job;
 }
@@ -20,6 +21,7 @@ describe('bullmq adapter: job mapping', () => {
       data: { videoId: 'v1' },
       attemptsMade: 2,
       opts: { jobId: 'v1--probe', attempts: 5, priority: 3 },
+      enqueuedAt: 1_700_000_000_000,
     });
   });
 

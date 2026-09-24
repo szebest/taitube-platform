@@ -7,32 +7,25 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import type { MediaTools } from '@vp/ffmpeg';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
+import { encodeSegments } from './flow-harness';
 import { throughRunner } from './queue-boundary';
 import { STAGE_SETTINGS, failingThumbnails, transcodeDeps } from './stage-settings';
 
-const logger = createLogger({ service: 'thumbnail-test', level: 'silent' });
+const logger = createLogger({ format: 'json', service: 'thumbnail-test', level: 'silent' });
 
 function fakeTranscode(delayMs: number): MediaTools {
   return {
     ...STAGE_SETTINGS.media,
     transcode: async (options) => {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
-      const playlistPath = path.join(options.outputDir, 'index.m3u8');
-      await fs.writeFile(playlistPath, '#EXTM3U\n#EXT-X-VERSION:6\n');
-      for (let i = 0; i < 5; i++) {
-        await fs.writeFile(
-          path.join(options.outputDir, `seg_${String(i).padStart(5, '0')}.ts`),
-          Buffer.alloc(100)
-        );
-      }
-      return { outputDir: options.outputDir, playlistPath, segmentCount: 5, durationMs: 60_000 };
+      return encodeSegments(options, 5);
     },
   };
 }
@@ -60,7 +53,7 @@ describe('thumbnail stage as a non-blocking flow child', () => {
   });
 
   async function runFlow(transcode: MediaTools, thumbnails?: MediaTools): Promise<string> {
-    const sourceKey = 'raw/s60.mp4';
+    const sourceKey = 'raw/s15.mp4';
     const videoId = uuidv7();
     await repositories.videos.create({
       id: videoId,
@@ -72,7 +65,7 @@ describe('thumbnail stage as a non-blocking flow child', () => {
     await storage.uploadObject({
       bucket: 'raw',
       key: sourceKey,
-      body: await fs.readFile(path.resolve(__dirname, '../../../../tests/fixtures/s60.mp4')),
+      body: await fs.readFile(path.resolve(__dirname, '../../../../tests/fixtures/s15.mp4')),
       contentType: 'video/mp4',
     });
 

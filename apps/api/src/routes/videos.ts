@@ -108,9 +108,7 @@ export async function videosRoutes(app: FastifyInstance): Promise<void> {
       async (request, reply) => {
         const user = requireAuth(request);
         const { id } = request.params;
-        const reprocessed = await videoService.reprocess(user, id, {
-          traceparent: request.headers['traceparent'] as string | undefined,
-        });
+        const reprocessed = await videoService.reprocess(user, id, { requestId: request.id });
         return sendResult(reply, request, reprocessed, { status: 202 });
       }
     );

@@ -1,6 +1,8 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { createLogger } from '@vp/logger';
+import { captureLog } from '@vp/testing/log-capture';
 import { type CliHost, run } from '../cli';
 
 function host(argv: string[]): CliHost {
@@ -11,6 +13,13 @@ function host(argv: string[]): CliHost {
     fetcher: vi.fn(async () => ({ type: 'done' as const, value: '' })),
     onSignal: vi.fn(),
     exit: vi.fn(),
+    print: vi.fn(),
+    log: createLogger({
+      service: 'compose-autoscaler',
+      level: 'info',
+      format: 'pretty',
+      destination: captureLog().destination,
+    }),
   };
 }
 
@@ -27,12 +36,13 @@ describe('packages/compose-autoscaler: run', () => {
   });
 
   it('prints its usage for --help and starts nothing', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     const cli = host(['--help']);
 
     run(cli);
 
-    expect(String(log.mock.calls[0]?.[0])).toContain('pnpm compose-autoscaler [options]');
+    expect(cli.print).toHaveBeenCalledWith(
+      expect.stringContaining('pnpm compose-autoscaler [options]')
+    );
     expect(cli.onSignal).not.toHaveBeenCalled();
   });
 

@@ -2,13 +2,18 @@ import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { queueUnavailable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
-import { createLogger } from '@vp/observability';
+import { LogContext, createLogger } from '@vp/logger';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { type WorkerRunnerOptions, composeWorker } from '../runner';
 
-const logger = createLogger({ service: 'runner-test', level: 'silent' });
-const collaborators = { logger, media: mediaTools, workerId: 'runner-spec' };
+const logger = createLogger({ format: 'json', service: 'runner-test', level: 'silent' });
+const collaborators = {
+  logger,
+  logContext: new LogContext(),
+  media: mediaTools,
+  workerId: 'runner-spec',
+};
 
 async function started(options: WorkerRunnerOptions) {
   const runner = await composeWorker(options);

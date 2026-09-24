@@ -1,5 +1,6 @@
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createLogger } from '@vp/logger';
 import { run } from './cli';
 import type { Attempt } from './runner';
 
@@ -20,6 +21,8 @@ async function fetchMetricsText(url: string): Promise<string> {
   return res.text();
 }
 
+const log = createLogger({ service: 'compose-autoscaler', level: 'info', format: 'pretty' });
+
 try {
   run({
     argv: process.argv.slice(2),
@@ -28,8 +31,10 @@ try {
     fetcher: (url) => attempt(() => fetchMetricsText(url)),
     onSignal: (signal, handler) => process.on(signal, handler),
     exit: (code) => process.exit(code),
+    print: (text) => process.stdout.write(`${text}\n`),
+    log,
   });
 } catch (err) {
-  console.error('compose-autoscaler:', err instanceof Error ? err.message : err);
+  log.fatal({ err }, 'compose-autoscaler failed');
   process.exit(1);
 }

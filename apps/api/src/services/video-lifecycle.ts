@@ -11,7 +11,7 @@ import { type DatabaseUnavailable, type VersionConflict, versionConflict } from 
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, ok } from '@vp/result';
-import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
+import { type DispatchOrigin, buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
 export interface VideoLifecycleDeps {
   videos: VideoRepository;
@@ -42,7 +42,7 @@ export async function reprocessVideo(
   deps: VideoLifecycleDeps,
   user: UserContext,
   videoId: string,
-  options: { traceparent?: string } = {}
+  origin: DispatchOrigin = {}
 ): Promise<Result<ReprocessResult, VideoLifecycleServiceFailure>> {
   const found = await deps.videos.findById(videoId);
   if (isErr(found)) return found;
@@ -55,7 +55,8 @@ export async function reprocessVideo(
     videoId,
     sourceKey: decided.value.sourceKey,
     generation,
-    traceparent: options.traceparent || getActiveTraceparent() || createTraceparent(),
+    traceparent: getActiveTraceparent() ?? createTraceparent(),
+    requestId: origin.requestId,
   });
 
   const transitioned = await deps.videos.transition({

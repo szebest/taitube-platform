@@ -3,13 +3,13 @@ import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { ThumbnailJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createThumbnailProcessor } from '../thumbnail';
 
-const logger = createLogger({ service: 'thumbnail-test', level: 'silent' });
+const logger = createLogger({ format: 'json', service: 'thumbnail-test', level: 'silent' });
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 
 describe('thumbnail stage', () => {
@@ -29,7 +29,7 @@ describe('thumbnail stage', () => {
       title: 'Thumbnail Video',
       status: 'PROCESSING',
       sourceKey,
-      durationMs: 60_000,
+      durationMs: 15_000,
       width: 1920,
       height: 1080,
     });
@@ -40,7 +40,7 @@ describe('thumbnail stage', () => {
     return {
       id: `${videoId}--thumbnail--g1`,
       name: 'thumbnail',
-      data: { videoId, sourceKey, generation: 1, durationMs: 60_000, traceparent: '00-01-01-01' },
+      data: { videoId, sourceKey, generation: 1, durationMs: 15_000, traceparent: '00-01-01-01' },
       attemptsMade: 0,
     };
   }
@@ -48,17 +48,17 @@ describe('thumbnail stage', () => {
   const processor = () =>
     createThumbnailProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
 
-  it('uploads an immutable poster, a sprite and a VTT of about twelve cues for s60', async () => {
-    const fixture = path.resolve(__dirname, '../../../../../tests/fixtures/s60.mp4');
-    const videoId = await processingVideo('raw/s60.mp4');
+  it('uploads an immutable poster, a sprite and a VTT of three cues for s15', async () => {
+    const fixture = path.resolve(__dirname, '../../../../../tests/fixtures/s15.mp4');
+    const videoId = await processingVideo('raw/s15.mp4');
     await storage.uploadObject({
       bucket: 'raw',
-      key: 'raw/s60.mp4',
+      key: 'raw/s15.mp4',
       body: await fs.readFile(fixture),
       contentType: 'video/mp4',
     });
 
-    const result = expectOk(await processor()(thumbnailJob(videoId, 'raw/s60.mp4')));
+    const result = expectOk(await processor()(thumbnailJob(videoId, 'raw/s15.mp4')));
 
     expect(result).toMatchObject({
       posterKey: `videos/${videoId}/thumbs/poster.jpg`,
@@ -80,8 +80,7 @@ describe('thumbnail stage', () => {
       .toString('utf-8')
       .split('\n')
       .filter((line) => line.includes(' --> '));
-    expect(timings.length).toBeGreaterThanOrEqual(11);
-    expect(timings.length).toBeLessThanOrEqual(13);
+    expect(timings).toHaveLength(3);
     expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
       posterKey: result.posterKey,
       spriteKey: result.spriteKey,

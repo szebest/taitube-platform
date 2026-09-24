@@ -6,12 +6,12 @@ import {
   ErrorCodes,
   PermanentError,
   type QueueUnavailable,
-  databaseUnavailable,
   TransientError,
+  databaseUnavailable,
   queueUnavailable,
 } from '@vp/errors';
 import { ids, stagePolicies } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -104,7 +104,7 @@ describe('apps/worker: DLQ failure handler', () => {
       name: 'an insert a dead database refused',
       overrides: () => ({ dlq: new UnreachableDlqRepository() }),
       stage: QUEUE_NAME,
-      message: 'Failed to insert dlq_entries row',
+      message: 'failed to insert dlq_entries row',
     },
     {
       name: 'a dlq queue that will not take the copy',
@@ -113,13 +113,13 @@ describe('apps/worker: DLQ failure handler', () => {
         return {};
       },
       stage: QUEUE_NAME,
-      message: 'Failed to add copy of job to dlq queue',
+      message: 'failed to add copy of job to dlq queue',
     },
     {
       name: 'an origin queue the job contract does not know',
       overrides: () => ({}),
       stage: 'not-a-queue',
-      message: 'Failed to build copy of job for dlq queue',
+      message: 'failed to build copy of job for dlq queue',
     },
   ])('logs $name instead of losing it', async ({ overrides, stage, message }) => {
     await handlerOver(overrides(), stage)(JOB, FAILURE());

@@ -16,7 +16,8 @@ import {
 import type { QueueJob } from '@vp/core/ports';
 import type { MediaTools } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type NotifyJob, type ProbeJob } from '@vp/job-contracts';
-import { createLogger, getActiveSpanContext } from '@vp/observability';
+import { createLogger } from '@vp/logger';
+import { getActiveTraceparent } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createPackageProcessor } from '../stages/package';
@@ -24,9 +25,10 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { withTelemetry } from '../with-telemetry';
+import { encodeSegments } from './flow-harness';
 import { STAGE_SETTINGS, transcodeDeps } from './stage-settings';
 
-const logger = createLogger({ service: 'tracing-e2e-test', level: 'silent' });
+const logger = createLogger({ format: 'json', service: 'tracing-e2e-test', level: 'silent' });
 
 function endFfmpegSpan(tracer: Tracer, attributes: Record<string, string | number>): void {
   const span = tracer.startSpan('ffmpeg', {
@@ -60,18 +62,7 @@ function tracedMedia(tracer: Tracer): MediaTools {
         'ffmpeg.command': `ffmpeg -y -i ${opts.sourcePath} output.m3u8`,
         'ffmpeg.duration_ms': 1200,
       });
-      for (let i = 1; i <= 3; i++) {
-        await fs.writeFile(
-          path.join(opts.outputDir, `seg_${String(i).padStart(5, '0')}.ts`),
-          Buffer.alloc(1000)
-        );
-      }
-      const playlistPath = path.join(opts.outputDir, 'index.m3u8');
-      await fs.writeFile(
-        playlistPath,
-        '#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-TARGETDURATION:6\n#EXTINF:6.0,\nseg_00001.ts\n#EXT-X-ENDLIST\n'
-      );
-      return { outputDir: opts.outputDir, playlistPath, segmentCount: 3, durationMs: 1200 };
+      return encodeSegments(opts, 3, 1000);
     },
     thumbnail: async (opts) => {
       endFfmpegSpan(tracer, {
@@ -154,7 +145,8 @@ describe('withTelemetry across the pipeline', () => {
     });
     let apiTraceId = '';
     await context.with(trace.setSpan(context.active(), apiSpan), async () => {
-      const { traceId, traceparent } = getActiveSpanContext();
+      const traceparent = getActiveTraceparent();
+      const traceId = traceparent?.split('-')[1];
       if (!(traceId && traceparent)) throw new Error('Trace context not initialized');
       apiTraceId = traceId;
       await repositories.videos.transition({

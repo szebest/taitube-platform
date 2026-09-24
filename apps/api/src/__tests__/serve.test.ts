@@ -1,7 +1,9 @@
 import { Adapters } from '@vp/adapters/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
+import { createLogger } from '@vp/logger';
 import type { Tracing } from '@vp/observability';
 import { err, ok } from '@vp/result';
+import { captureLog } from '@vp/testing/log-capture';
 import { composeApp } from '../app';
 import { Services } from '../composition/services.module';
 import { serve } from '../serve';
@@ -13,11 +15,16 @@ function config(): AppConfig {
   return inProcessAppConfig({ http: { port: 0, metricsPort: 0 } });
 }
 
-describe('apps/api: serve', () => {
-  beforeEach(() => {
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+function loggerTo(log: ReturnType<typeof captureLog>) {
+  return createLogger({
+    format: 'json',
+    service: 'vp-api',
+    level: 'info',
+    destination: log.destination,
   });
+}
 
+describe('apps/api: serve', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -112,15 +119,16 @@ describe('apps/api: serve', () => {
   });
 
   it('fails the shutdown when a disposer returns an error, and names it', async () => {
-    const composed = await composeApp({ config: config() });
+    const log = captureLog();
+    const composed = await composeApp({ config: config(), logger: loggerTo(log) });
     vi.spyOn(composed.container.get(Adapters.Storage), 'close').mockResolvedValue(
       err('bucket gone') as never
     );
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     const api = await serve(composed, config(), TIMINGS);
 
     expect(await api.shutdown()).toBe('failed');
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('Storage'));
+    expect(log.text()).toContain('shutdown failed');
+    expect(log.text()).toContain('Storage');
   });
 
   it('flushes buffered spans once the servers have closed', async () => {
@@ -135,17 +143,17 @@ describe('apps/api: serve', () => {
   });
 
   it('gives up on a disposer that never resolves, and names it', async () => {
-    const composed = await composeApp({ config: config() });
+    const log = captureLog();
+    const composed = await composeApp({ config: config(), logger: loggerTo(log) });
     vi.spyOn(composed.container.get(Adapters.Storage), 'close').mockImplementation(
       () => new Promise(() => {})
     );
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     const api = await serve(composed, config(), {
       tracing,
       timings: { drainDelayMs: 0, graceMs: 100 },
     });
 
     expect(await api.shutdown()).toBe('forced');
-    expect(log).toHaveBeenLastCalledWith(expect.stringContaining('still waiting on Storage'));
+    expect(log.lines().at(-1)).toMatchObject({ msg: 'shutdown forced', waitingOn: 'Storage' });
   });
 });

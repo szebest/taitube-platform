@@ -8,7 +8,7 @@ The following CI jobs from `.github/workflows/ci.yml` MUST pass before merging:
 1. `lint-typecheck` — Biome linter + formatter check and Turborepo TypeScript compilation across all packages and apps.
 2. `unit` — Vitest unit test suite executed under Node 24 LTS.
 3. `unit-bun` — Bun 1.4 unit test suite executed across `apps/worker` and `packages/*`, enforcing dual-runtime parity and runtime neutrality (forbidding `Bun.*` APIs in worker code).
-4. `integration` — Integration tests running against real service containers (`postgres:16-alpine`, `redis:7-alpine`, `minio/minio`), verifying container connectivity (`psql`, `redis-cli PING`, `mc ls`), infrastructure smoke test (`infra/compose/test.sh`), and `pnpm test:integration`.
+4. `integration` — Integration tests running against real service containers (`postgres:16-alpine`, `redis:7-alpine`, `cgr.dev/chainguard/minio`), verifying container connectivity (`psql`, `redis-cli PING`, `mc ls`), infrastructure smoke test (`infra/compose/test.sh`), and `pnpm test:integration`.
 
 ## Branch Protection Rules
 - **Require a pull request before merging**: Enabled

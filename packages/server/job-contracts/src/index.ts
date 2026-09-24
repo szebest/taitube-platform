@@ -21,6 +21,8 @@ const Base = z.object({
   videoId: z.string().uuid(),
   generation: z.number().int().min(1),
   traceparent: z.string(),
+  /** The API request that started the work, so its lines and the worker's can be joined. */
+  requestId: z.string().optional(),
 });
 
 export const ProbeJob = Base.extend({
@@ -57,6 +59,7 @@ export const NotifyJob = z.object({
   eventSeq: z.number().int(),
   payload: z.record(z.unknown()),
   traceparent: z.string(),
+  requestId: z.string().optional(),
 });
 export type NotifyJob = z.infer<typeof NotifyJob>;
 

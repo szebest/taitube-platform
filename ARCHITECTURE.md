@@ -204,8 +204,8 @@ portability.
 
 | Layer | Meaning | Packages |
 |---|---|---|
-| T1 | Foundation — no `@vp/*` dependency, including the CLIs that run from source before a build | `domain`, `errors`, `result`, `tsconfig`, `compose-autoscaler`, `concurrency`, `dev-token`, `gen-video`, `job-contracts`, `storage` |
-| T2 | Contracts and policy | `composition`, `db`, `events`, `ffmpeg`, `observability`, `pagination`, `permissions`, `testing`, `validation` |
+| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `job-contracts`, `logger`, `storage` |
+| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `db`, `events`, `ffmpeg`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video` |
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value | `api-contracts`, `core`, `domain-rules`, `env-schema` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config` |
 | T5 | Applications | `apps/api`, `apps/worker`, `apps/web` |
@@ -344,7 +344,7 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 | `adapter-instantiation.test.ts` | a concrete adapter is **constructed** only in a composition module or inside `@vp/adapters`, and a service or a stage constructs values only (`Date`, `Map`, `Set`, `URL`, `Promise`, `AbortController`, an `*Error`, `SseConnection`) | `new Singleflight()` inside a service |
 | `total-dependencies.test.ts` | no service, stage, adapter or composition root recovers from a missing dependency: `?? new`, `\|\| new`, `?? default*`, `?? inProcessAppConfig()`, or a default parameter or destructuring default that is constructed, called or `default*` (AST) | `paginator: Paginator = defaultPaginator` |
 | `no-module-state.test.ts` | outside `ENTRYPOINTS`, no module-scope `let`/`var`, no module-scope `new` other than an immutable value or a `Readonly` collection, and no top-level call statement (AST) | `export const defaultPaginator = new Paginator()` |
-| `start-order.test.ts` | both composition roots start every consumer after the metrics server, and the worker's after its heartbeat, read from `container.started()` | a consumer resolved before the metrics server |
+| `tests/in-process/start-order.test.ts` | both composition roots start every consumer after the metrics server, and the worker's after its heartbeat, read from `container.started()` | a consumer resolved before the metrics server |
 | `route-plugins.test.ts` | every route module exports a Fastify plugin, carries no options interface and appears in `routes/index.ts` | a route module exporting a bare `void` registrar |
 | `drain-before-close.test.ts` | the shared shutdown flips readiness before it closes, both mains use it, and `/readyz` reads the drain flag before any dependency | a shutdown that closes the server before flipping readiness |
 | `shutdown-closure.test.ts` | every resource a composition module constructs registers a disposer; `dispose()` releases in reverse construction order | an adapter registered with no disposer |

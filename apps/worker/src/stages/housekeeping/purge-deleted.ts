@@ -2,7 +2,7 @@ import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import { RENDITIONS } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, ignore, isErr, ok, unwrapOr } from '@vp/result';
 import {
   masterPlaylistKey,
@@ -45,7 +45,7 @@ export async function runPurgeDeleted(
   if (isErr(softDeletedVideos)) return softDeletedVideos;
 
   for (const video of softDeletedVideos.value) {
-    logger?.info({ videoId: video.id }, 'Purging objects and hard-deleting soft-deleted video');
+    logger?.info({ videoId: video.id }, 'purging objects and hard-deleting soft-deleted video');
 
     if (video.sourceKey) {
       ignore(
@@ -63,7 +63,7 @@ export async function runPurgeDeleted(
     if (isErr(purged)) {
       logger?.warn(
         { videoId: video.id, storage: purged.error.operation },
-        'Public objects not purged; the video row is kept for the next run'
+        'public objects not purged; the video row is kept for the next run'
       );
       continue;
     }
@@ -72,7 +72,7 @@ export async function runPurgeDeleted(
     if (isErr(deleted)) return deleted;
     if (deleted.value) {
       purgedVideosCount += 1;
-      logger?.info({ videoId: video.id }, 'Hard-deleted video row from database');
+      logger?.info({ videoId: video.id }, 'hard-deleted video row from database');
     }
   }
 
@@ -88,7 +88,7 @@ export async function runPurgeDeleted(
     if (isErr(purged)) {
       logger?.warn(
         { videoId: video.id, storage: purged.error.operation },
-        'Old generations not purged; the video is kept for the next run'
+        'old generations not purged; the video is kept for the next run'
       );
       continue;
     }
@@ -96,7 +96,7 @@ export async function runPurgeDeleted(
     purgedGenerationsCount += video.generation - 1;
     logger?.info(
       { videoId: video.id, currentGen: video.generation },
-      'Purged old generation prefixes'
+      'purged old generation prefixes'
     );
 
     const recorded = await repositories.events.create({
@@ -109,7 +109,7 @@ export async function runPurgeDeleted(
 
   const prunedOutboxCount = unwrapOr(await repositories.outbox.prune(7), 0);
   if (prunedOutboxCount > 0) {
-    logger?.info({ prunedOutboxCount }, 'Pruned published outbox rows older than 7 days');
+    logger?.info({ prunedOutboxCount }, 'pruned published outbox rows older than 7 days');
   }
 
   return ok({ purgedVideosCount, purgedGenerationsCount });

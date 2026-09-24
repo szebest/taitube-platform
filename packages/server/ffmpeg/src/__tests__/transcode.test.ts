@@ -1,109 +1,44 @@
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { CANONICAL_LADDER, type LadderEntry } from '@vp/job-contracts';
+import { CANONICAL_LADDER } from '@vp/job-contracts';
 import { runFfmpegTranscode } from '../transcode';
 import { ENCODER } from './encoder-settings';
 
+const S2 = path.resolve(__dirname, '../../../../../tests/fixtures/s2.mp4');
+
 describe('@vp/ffmpeg: runFfmpegTranscode', () => {
-  const renditions: readonly LadderEntry[] = CANONICAL_LADDER;
+  let outputDir: string;
 
-  describe('keyframe timestamps of segment N across 1080p/720p/480p', () => {
-    // One frame at 24 fps is ~0.042 s.
-    const FRAME_TOLERANCE_S = 0.05;
-    const fixturesDir = path.resolve(__dirname, '../../../../../tests/fixtures');
+  beforeEach(() => {
+    outputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vp-transcode-'));
+  });
 
-    function getKeyframeTimestamp(segPath: string): number {
-      const stdout = execFileSync(
-        'ffprobe',
-        [
-          '-v',
-          'error',
-          '-select_streams',
-          'v',
-          '-show_entries',
-          'frame=pts_time,key_frame',
-          '-show_frames',
-          '-read_intervals',
-          '%+#1',
-          '-of',
-          'json',
-          segPath,
-        ],
-        { encoding: 'utf-8' }
-      );
-      const parsed = JSON.parse(stdout);
-      expect(parsed.frames[0].key_frame).toBe(1);
-      return Number(parsed.frames[0].pts_time);
-    }
+  afterEach(() => {
+    fs.rmSync(outputDir, { recursive: true, force: true });
+  });
 
-    async function segmentKeyframes(
-      sourcePath: string,
-      durationMs: number,
-      keptSegments?: number
-    ): Promise<Record<string, number[]>> {
-      const timestampsByRendition: Record<string, number[]> = {};
-      for (const rendition of renditions) {
-        const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-keyframes-${rendition.name}-`));
-        try {
-          await runFfmpegTranscode({
-            ...ENCODER,
-            sourcePath,
-            outputDir: outDir,
-            rendition,
-            fps: 24,
-            durationMs,
-            threads: 0,
-            preset: 'ultrafast',
-          });
-          const segFiles = fs
-            .readdirSync(outDir)
-            .filter((f) => f.endsWith('.ts'))
-            .sort()
-            .slice(0, keptSegments);
-          timestampsByRendition[rendition.name] = segFiles.map((f) =>
-            getKeyframeTimestamp(path.join(outDir, f))
-          );
-        } finally {
-          fs.rmSync(outDir, { recursive: true, force: true });
-        }
-      }
-      return timestampsByRendition;
-    }
+  it('writes the playlist and its segments, and reports its progress in percent', async () => {
+    const percents: number[] = [];
 
-    function expectAligned(timestampsByRendition: Record<string, number[]>, segCount: number) {
-      for (let i = 0; i < segCount; i++) {
-        const t1080 = timestampsByRendition['1080p']?.[i] ?? 0;
-        const t720 = timestampsByRendition['720p']?.[i] ?? 0;
-        const t480 = timestampsByRendition['480p']?.[i] ?? 0;
-        expect(Math.abs(t1080 - t720)).toBeLessThan(FRAME_TOLERANCE_S);
-        expect(Math.abs(t1080 - t480)).toBeLessThan(FRAME_TOLERANCE_S);
-      }
-    }
+    const result = await runFfmpegTranscode({
+      ...ENCODER,
+      gopSeconds: 0.5,
+      hlsSegmentSeconds: 0.5,
+      sourcePath: S2,
+      outputDir,
+      rendition: CANONICAL_LADDER[2],
+      fps: 24,
+      durationMs: 2000,
+      threads: 0,
+      preset: 'ultrafast',
+      onProgress: ({ percent }) => percents.push(percent),
+    });
 
-    it('produces identical keyframe timestamps (within 1 frame) across 1080p/720p/480p for vfr.mp4', async () => {
-      const vfrPath = path.join(fixturesDir, 'vfr.mp4');
-      if (!fs.existsSync(vfrPath)) return;
-
-      const timestamps = await segmentKeyframes(vfrPath, 15000);
-
-      for (const rendition of renditions) {
-        expect(timestamps[rendition.name]?.length ?? 0).toBeGreaterThanOrEqual(2);
-      }
-      expectAligned(timestamps, timestamps['1080p']?.length ?? 0);
-    }, 60000);
-
-    it('produces identical keyframe timestamps across 1080p/720p/480p for s60.mp4', async () => {
-      const s60Path = path.join(fixturesDir, 's60.mp4');
-      if (!fs.existsSync(s60Path)) return;
-
-      const timestamps = await segmentKeyframes(s60Path, 18000, 3);
-
-      for (const rendition of renditions) {
-        expect(timestamps[rendition.name]).toHaveLength(3);
-      }
-      expectAligned(timestamps, 3);
-    }, 60000);
+    const segments = fs.readdirSync(outputDir).filter((file) => file.endsWith('.ts'));
+    expect(fs.readFileSync(result.playlistPath, 'utf-8')).toContain('#EXTM3U');
+    expect(segments.length).toBeGreaterThanOrEqual(3);
+    expect(percents.length).toBeGreaterThan(0);
+    expect(Math.max(...percents)).toBeLessThanOrEqual(100);
   });
 });

@@ -28,7 +28,7 @@ spec:
       containers:
         - name: worker
           image: ghcr.io/szebest/vp-worker:latest
-          command: ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} dist/main.js"]
+          command: ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} --import ./dist/instrument.js dist/main.js"]
           lifecycle:
             preStop:
               exec:

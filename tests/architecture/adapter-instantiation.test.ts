@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { parseSource } from './parsed-sources';
 import { productionSources, read, trackedFiles } from './repo-files';
 
 /**
@@ -72,7 +73,7 @@ const VALUES: ReadonlySet<string> = new Set([
 ]);
 
 function collaboratorsBuilt(file: string, source: string): string[] {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const sourceFile = parseSource(file, source);
   const found: string[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isNewExpression(node)) {

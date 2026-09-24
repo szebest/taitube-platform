@@ -5,14 +5,18 @@ import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { Container, DisposeFailed } from '@vp/composition';
 import type { AppConfig } from '@vp/env-schema';
 import { isErr } from '@vp/result';
-import fastify, { type FastifyInstance } from 'fastify';
+import type { Logger } from '@vp/logger';
+import fastify, { type FastifyBaseLogger, type FastifyInstance, LogController } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { type AdapterOverrides, overrideAdapters } from './composition/adapter-set';
 import { registerOpenApi } from './composition/openapi';
 import { Services, registerServices, resolveBackground } from './composition/services.module';
+import { registerAccessLog } from './plugins/access-log';
 import { registerAuth } from './plugins/auth';
 import { rateLimitProblem, registerErrorHandler } from './plugins/errors';
 import { registerHttpMetricsPlugin } from './plugins/http-metrics';
+import { requestIdFrom } from './plugins/request-id';
+import { registerRequestSpan } from './plugins/request-span';
 import { routesFor } from './routes/index';
 
 export * from './composition/adapter-set';
@@ -22,6 +26,8 @@ export * from './services/index';
 export interface BuildAppOptions {
   config: AppConfig;
   adapters?: AdapterOverrides;
+  /** The one the configuration's log level would build, unless a spec reads the lines back. */
+  logger?: Logger;
 }
 
 export interface ComposedApp {
@@ -40,11 +46,15 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
     options.adapters
   );
   registerServices(container);
+  if (options.logger) container.override(Services.Logger, options.logger);
   resolveBackground(container);
   const services = container.get(Services.ServiceSet);
+  const loggerInstance: FastifyBaseLogger = container.get(Services.Logger);
 
   const app = fastify({
-    logger: false,
+    loggerInstance,
+    logController: new LogController({ disableRequestLogging: true }),
+    genReqId: (request) => requestIdFrom(request.headers),
     trustProxy: [...config.http.trustProxy],
     bodyLimit: config.http.bodyLimitBytes,
   });
@@ -62,6 +72,8 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
   });
 
   registerErrorHandler(app);
+  await app.register(registerRequestSpan);
+  await app.register(registerAccessLog);
 
   await app.register(registerAuth, {
     channelService: services.channelService,

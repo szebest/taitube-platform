@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "dev": "node --import @vp/config/register dist/main.js",
+    "dev": "node --import @vp/config/register --import ./dist/instrument.js dist/main.js",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -27,6 +27,7 @@
     "@fastify/helmet": "^13.1.1",
     "@fastify/rate-limit": "^11.2.0",
     "@fastify/swagger": "^9.8.1",
+    "@opentelemetry/api": "^1.9.1",
     "@scalar/fastify-api-reference": "^1.67.0",
     "@vp/adapters": "workspace:*",
     "@vp/api-contracts": "workspace:*",
@@ -42,6 +43,7 @@
     "@vp/errors": "workspace:*",
     "@vp/events": "workspace:*",
     "@vp/job-contracts": "workspace:*",
+    "@vp/logger": "workspace:*",
     "@vp/observability": "workspace:*",
     "@vp/pagination": "workspace:*",
     "@vp/permissions": "workspace:*",
@@ -55,6 +57,9 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@opentelemetry/context-async-hooks": "^2.11.0",
+    "@opentelemetry/core": "^2.11.0",
+    "@opentelemetry/sdk-trace-base": "^2.11.0",
     "@types/node": "^24.0.0",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",

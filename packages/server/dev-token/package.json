@@ -26,6 +26,9 @@
     "vitest": "^3.0.7"
   },
   "vp": {
-    "layer": 1
+    "layer": 2
+  },
+  "dependencies": {
+    "@vp/logger": "workspace:*"
   }
 }

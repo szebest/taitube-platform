@@ -9,7 +9,8 @@ import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
 import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runPurgeDeleted } from './purge-deleted';
@@ -75,7 +76,7 @@ export function createHousekeepingProcessor(
 
   return async (job: QueueJob<HousekeepingJob>): Promise<Result<unknown, AnyFailure>> => {
     const { data } = job;
-    logger?.info({ task: data.task, jobId: job.id }, 'Executing housekeeping task');
+    logger?.info({ task: data.task, jobId: job.id }, 'executing housekeeping task');
 
     switch (data.task) {
       case 'reconcile-uploads':

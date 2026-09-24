@@ -8,11 +8,17 @@
       "project": ["scripts/**/*.ts", "tests/**/*.ts"]
     },
     "apps/api": {
-      "entry": ["src/main.ts!", "src/migrate.ts!", "src/seed.ts!", "src/**/type-fixtures/*.ts"],
+      "entry": [
+        "src/main.ts!",
+        "src/instrument.ts!",
+        "src/migrate.ts!",
+        "src/seed.ts!",
+        "src/**/type-fixtures/*.ts"
+      ],
       "project": ["src/**/*.ts!", "!src/**/__tests__/**!", "!src/**/*.test.ts!"]
     },
     "apps/worker": {
-      "entry": ["src/main.ts!"],
+      "entry": ["src/main.ts!", "src/instrument.ts!"],
       "project": [
         "src/**/*.ts!",
         "!src/**/__tests__/**!",

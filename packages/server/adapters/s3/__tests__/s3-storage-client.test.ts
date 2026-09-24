@@ -12,10 +12,32 @@ const KEY = '018f0000-0000-7000-8000-000000000001/source.mp4';
 
 function fakeStorage(handlers?: Record<string, CommandHandler>) {
   const fake = fakeS3Client(handlers);
-  return { fake, storage: new S3StorageClient({ type: 'client', client: fake.client }) };
+  return {
+    fake,
+    storage: new S3StorageClient({ type: 'client', client: fake.client, healthBucket: BUCKET }),
+  };
 }
 
 describe('S3StorageClient', () => {
+  describe('checkHealth', () => {
+    it('asks for the bucket it was handed', async () => {
+      const { fake, storage } = fakeStorage();
+
+      expectOk(await storage.checkHealth());
+      expect(fake.sent).toEqual([{ name: 'HeadBucketCommand', input: { Bucket: BUCKET } }]);
+    });
+
+    it('is unavailable when the bucket does not answer', async () => {
+      const { storage } = fakeStorage({
+        HeadBucketCommand: () => {
+          throw new Error('connect ECONNREFUSED');
+        },
+      });
+
+      expect(expectErr(await storage.checkHealth()).code).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
+    });
+  });
+
   describe('uploadObject', () => {
     it('sends the body with its content headers and returns the etag', async () => {
       const { fake, storage } = fakeStorage({ PutObjectCommand: () => ({ ETag: '"abc"' }) });

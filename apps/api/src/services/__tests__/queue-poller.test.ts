@@ -16,12 +16,43 @@ describe('apps/api/services: pollQueueMetrics', () => {
     await probe.add('probe', { videoId: 'v1' });
     const metrics = createMetricsRegistry();
 
-    await pollQueueMetrics(new Map<string, JobQueue>([['probe', probe]]), metrics);
+    await pollQueueMetrics(new Map<string, JobQueue>([['probe', probe]]), metrics, Date.now);
 
     const waiting = (await gauge(metrics, 'bullmq_queue_jobs')).find(
       (sample) => sample.labels.queue === 'probe' && sample.labels.state === 'waiting'
     );
     expect(waiting?.value).toBe(1);
+  });
+
+  it('counts a job with a priority as prioritized, which is where BullMQ keeps it', async () => {
+    const probe = new InMemoryJobQueue('probe');
+    await probe.add('probe', { videoId: 'v1' }, { priority: 5 });
+    const metrics = createMetricsRegistry();
+
+    await pollQueueMetrics(new Map<string, JobQueue>([['probe', probe]]), metrics, Date.now);
+
+    const samples = await gauge(metrics, 'bullmq_queue_jobs');
+    expect(samples.find((sample) => sample.labels.state === 'prioritized')?.value).toBe(1);
+    expect(samples.find((sample) => sample.labels.state === 'waiting')?.value).toBe(0);
+  });
+
+  it('ages the oldest job not started, prioritized ones included, past the starvation alert', async () => {
+    const start = Date.UTC(2026, 0, 1);
+    vi.useFakeTimers({ now: start });
+    const probe = new InMemoryJobQueue('probe');
+    await probe.add('probe', { videoId: 'first' }, { priority: 5 });
+    vi.setSystemTime(start + 60_000);
+    await probe.add('probe', { videoId: 'second' });
+    vi.useRealTimers();
+    const metrics = createMetricsRegistry();
+
+    const now = () => start + 901_000;
+    await pollQueueMetrics(new Map<string, JobQueue>([['probe', probe]]), metrics, now);
+
+    const [age] = await gauge(metrics, 'bullmq_queue_oldest_waiting_age_seconds');
+    const starvationThresholdSeconds = 900;
+    expect(age?.value).toBe(901);
+    expect(age?.value).toBeGreaterThan(starvationThresholdSeconds);
   });
 
   it('costs an unreachable queue its own sample and nothing else', async () => {
@@ -38,7 +69,8 @@ describe('apps/api/services: pollQueueMetrics', () => {
         ['probe', broken],
         ['notify', healthy],
       ]),
-      metrics
+      metrics,
+      Date.now
     );
 
     const samples = await gauge(metrics, 'bullmq_queue_jobs');

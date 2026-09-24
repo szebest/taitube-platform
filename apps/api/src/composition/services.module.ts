@@ -3,6 +3,7 @@ import { type Container, token } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
 import type { JobQueue } from '@vp/core/ports';
 import { MetricsServer } from '@vp/observability';
+import { type Logger, createLogger } from '@vp/logger';
 import { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
 import { CategoryService } from '../services/category-service';
@@ -40,6 +41,7 @@ export interface ServiceSet {
 }
 
 export const Services = {
+  Logger: token<Logger>('Logger'),
   Paginator: token<Paginator>('Paginator'),
   VideoService: token<VideoService>('VideoService'),
   UploadService: token<UploadService>('UploadService'),
@@ -78,6 +80,9 @@ export function registerServices(c: Container): Container {
   const repositories = () => c.get(Adapters.Repositories);
 
   return c
+    .provide(Services.Logger, () =>
+      createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
+    )
     .provide(Services.Paginator, () => new Paginator(config().pagination))
     .provide(
       Services.VideoService,
@@ -216,7 +221,7 @@ export function registerServices(c: Container): Container {
         const queues = c.get(Adapters.Queues);
         const metrics = c.get(Adapters.Metrics);
         return new Poller(
-          () => pollQueueMetrics(queues, metrics),
+          () => pollQueueMetrics(queues, metrics, Date.now),
           config().pollers.queueIntervalMs
         );
       },

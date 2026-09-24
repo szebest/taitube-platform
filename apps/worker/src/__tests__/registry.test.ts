@@ -13,7 +13,8 @@ import type { QueueJob } from '@vp/core/ports';
 import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { QUEUES } from '@vp/job-contracts';
-import { createLogger, createMetricsRegistry } from '@vp/observability';
+import { createMetricsRegistry } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { STAGE_REGISTRY, type StageDefinition } from '../registry';
@@ -52,10 +53,11 @@ function deps(): StageDeps {
     }),
     getQueue,
     flowProducer: new InMemoryFlowProducer(getQueue),
-    logger: createLogger({ service: 'registry-test', level: 'silent' }),
+    logger: createLogger({ format: 'json', service: 'registry-test', level: 'silent' }),
     metrics: createMetricsRegistry(),
     media: mediaTools,
     workerId: 'registry-test',
+    now: Date.now,
   };
 }
 

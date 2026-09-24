@@ -1,14 +1,10 @@
-import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import { runEntrypoint } from '@vp/testing/run-entrypoint';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../main.ts');
 
 function uploadClient(...argv: string[]) {
-  return spawnSync('bun', [ENTRYPOINT, ...argv], {
-    env: { PATH: process.env.PATH },
-    encoding: 'utf8',
-    timeout: 20_000,
-  });
+  return runEntrypoint(ENTRYPOINT, argv, { PATH: process.env.PATH });
 }
 
 describe('packages/upload-client: pnpm upload-client', () => {
@@ -19,10 +15,11 @@ describe('packages/upload-client: pnpm upload-client', () => {
     expect(help.stdout).toContain('pnpm upload-client <file>');
   });
 
-  it('prints why the upload failed and exits 1', () => {
+  it('logs why the upload failed and exits 1', () => {
     const missing = uploadClient('/no/such/video.mp4');
 
     expect(missing.status).toBe(1);
-    expect(missing.stderr).toContain('[upload-client] File not found at "/no/such/video.mp4"');
+    expect(missing.stderr).toContain('fatal upload failed');
+    expect(missing.stderr).toContain('File not found at "/no/such/video.mp4"');
   });
 });

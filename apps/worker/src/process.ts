@@ -8,7 +8,8 @@ import { loadEnv } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
 import { asThrowable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
-import { createLogger, initTracing } from '@vp/observability';
+import { LogContext, type Logger, createLogger } from '@vp/logger';
+import { registeredTracing } from '@vp/observability';
 import { fromPromise, ignore, isErr } from '@vp/result';
 import { STAGE_REGISTRY } from './registry';
 import { type WorkerRunner, composeWorker } from './runner';
@@ -20,19 +21,21 @@ interface WorkerProcess {
 }
 
 async function start(host: ProcessHost): Promise<WorkerProcess> {
-  const config = toAppConfig(loadEnv(host.env, { exitOnError: false }));
+  const config = toAppConfig(loadEnv(host.env));
   const { stage } = config.worker;
-
-  const tracing = initTracing({ serviceName: `vp-worker-${stage}`, ...config.otel });
-  if (isErr(tracing)) console.warn(`[worker] tracing disabled: ${tracing.error.message}`);
+  const logContext = new LogContext();
+  const logger = createLogger({
+    format: 'json',
+    service: `worker-${stage}`,
+    level: config.logLevel,
+    bindings: { stage },
+    context: logContext,
+  });
 
   const runner = await composeWorker({
     config,
-    logger: createLogger({
-      service: `worker-${stage}`,
-      level: config.logLevel,
-      bindings: { stage },
-    }),
+    logger,
+    logContext,
     media: mediaTools,
     workerId: `worker-${process.pid}`,
   });
@@ -42,16 +45,14 @@ async function start(host: ProcessHost): Promise<WorkerProcess> {
     drainDelayMs: 0,
     close: async () => {
       await runner.close();
-      if (tracing.ok) {
-        ignore(
-          await tracing.value.shutdown(),
-          'spans that could not be flushed are lost either way; the close is what decides the exit'
-        );
-      }
+      ignore(
+        await registeredTracing.shutdown(),
+        'spans that could not be flushed are lost either way; the close is what decides the exit'
+      );
     },
     graceMs: STAGE_REGISTRY[stage].shutdownTimeoutMs,
     pending: () => runner.disposing(),
-    log: (message) => console.log(`[worker] ${message}`),
+    log: logger,
   });
 
   exitOnSignals(host, shutdown);
@@ -59,19 +60,24 @@ async function start(host: ProcessHost): Promise<WorkerProcess> {
   const started = await runner.start();
   if (isErr(started) && started.error.type === 'failed') throw asThrowable(started.error.cause);
 
-  console.log(`[worker] Started ${runner.started().join(', ')}; consuming "${runner.worker.name}"`);
-  console.log(`[worker] Metrics on http://0.0.0.0:${runner.metricsPort()}/metrics`);
+  logger.info(
+    { started: runner.started(), queue: runner.worker.name, metricsPort: runner.metricsPort() },
+    'worker consuming'
+  );
   return { runner, metricsPort: runner.metricsPort(), shutdown };
 }
 
-/** Resolves to `undefined` once a fatal boot error has asked the host to exit 1. */
-export async function run(host: ProcessHost): Promise<WorkerProcess | undefined> {
+/**
+ * `log` is for a start that fails before the worker has a logger of its own. Resolves to
+ * `undefined` once a fatal boot error has asked the host to exit 1.
+ */
+export async function run(host: ProcessHost, log: Logger): Promise<WorkerProcess | undefined> {
   const started = await fromPromise(
     () => start(host),
     (cause) => cause
   );
   if (isErr(started)) {
-    console.error('Fatal worker error:', started.error);
+    log.fatal({ err: started.error }, 'worker could not start');
     host.exit(1);
     return undefined;
   }

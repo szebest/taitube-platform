@@ -10,7 +10,8 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { LogContext, Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
 import { Worker, registerStages, resolveStartOrder } from './composition/stages.module';
 import type { OutboxRelay } from './stages/housekeeping/outbox-relay';
@@ -29,6 +30,7 @@ interface WorkerAdapterOverrides {
 export interface WorkerRunnerOptions {
   config: AppConfig;
   logger: Logger;
+  logContext: LogContext;
   media: MediaTools;
   workerId: string;
   adapters?: WorkerAdapterOverrides;
@@ -73,6 +75,7 @@ export async function composeWorker(options: WorkerRunnerOptions): Promise<Worke
   );
   registerStages(container, {
     logger,
+    logContext: options.logContext,
     workerId: options.workerId,
     media: options.media,
     outboxRelay: { enabled: !options.disableOutboxRelay },
@@ -90,13 +93,13 @@ export async function composeWorker(options: WorkerRunnerOptions): Promise<Worke
     start: async () => {
       const started = await container.start();
       if (isErr(started) && started.error.type === 'failed') {
-        logger.error({ token: started.error.token, cause: started.error.cause }, 'Startup failed');
+        logger.error({ token: started.error.token, cause: started.error.cause }, 'startup failed');
       }
       return started;
     },
     started: () => container.started(),
     close: async () => {
-      logger.info('Shutting down worker...');
+      logger.info('shutting down worker...');
       const disposed = await container.dispose();
       if (isErr(disposed)) throw new DisposeFailed(disposed.error);
     },

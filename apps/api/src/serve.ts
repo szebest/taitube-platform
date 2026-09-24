@@ -37,6 +37,7 @@ export async function serve(
   { tracing, timings = API_SHUTDOWN, signals }: ServeOptions
 ): Promise<ApiProcess> {
   const lifecycle: { phase: 'starting' | 'listening' | 'stopping' } = { phase: 'starting' };
+  const logger = container.get(Services.Logger);
   const shutdown = shutdownOnce({
     graceMs: timings.graceMs,
     get drainDelayMs() {
@@ -58,7 +59,7 @@ export async function serve(
       if (isErr(closed)) throw closed.error;
     },
     pending: () => container.disposing(),
-    log: (message) => console.log(`[api] ${message}`),
+    log: logger,
   });
   if (signals) exitOnSignals(signals, shutdown);
 
@@ -70,7 +71,7 @@ export async function serve(
       case 'interrupted':
         return { address: '', metricsPort: metricsPort(), shutdown };
       case 'failed':
-        console.error(`[api] startup failed at ${started.error.token}:`, started.error.cause);
+        logger.error({ token: started.error.token, err: started.error.cause }, 'startup failed');
         await app.close();
         throw asThrowable(started.error.cause);
       default:
@@ -80,8 +81,7 @@ export async function serve(
 
   const address = await app.listen({ port: config.http.port, host: '0.0.0.0' });
   lifecycle.phase = 'listening';
-  console.log(`[api] Fastify server listening on ${address}`);
-  console.log(`[api] Metrics on http://0.0.0.0:${metricsPort()}/metrics`);
+  logger.info({ address, metricsPort: metricsPort() }, 'API listening');
 
   return { address, metricsPort: metricsPort(), shutdown };
 }

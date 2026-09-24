@@ -1,16 +1,12 @@
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { runEntrypoint } from '@vp/testing/run-entrypoint';
 
 const ENTRYPOINT = path.resolve(import.meta.dirname, '../main.ts');
 
 function genVideo(...argv: string[]) {
-  return spawnSync('bun', [ENTRYPOINT, ...argv], {
-    env: { PATH: process.env.PATH },
-    encoding: 'utf8',
-    timeout: 20_000,
-  });
+  return runEntrypoint(ENTRYPOINT, argv, { PATH: process.env.PATH });
 }
 
 describe('packages/gen-video: pnpm gen-video', () => {
@@ -21,7 +17,7 @@ describe('packages/gen-video: pnpm gen-video', () => {
     expect(help.stdout).toContain('pnpm gen-video [options]');
   });
 
-  it('prints why generation failed and exits 1', () => {
+  it('logs why generation failed and exits 1', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vp-gen-video-'));
     const blocker = path.join(dir, 'a-file');
     fs.writeFileSync(blocker, '');
@@ -34,7 +30,8 @@ describe('packages/gen-video: pnpm gen-video', () => {
     );
 
     expect(blocked.status).toBe(1);
-    expect(blocked.stderr).toContain('[gen-video] ENOTDIR');
+    expect(blocked.stderr).toContain('fatal fixture generator failed');
+    expect(blocked.stderr).toContain('ENOTDIR');
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });

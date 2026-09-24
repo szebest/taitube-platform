@@ -136,7 +136,7 @@ taitube-platform/
 
 - **Node.js**: 24.x LTS (`node -v`)
 - **pnpm**: >= 10.0.0 (`pnpm -v`)
-- **Bun**: >= 1.4.0 (`bun -v`, optional for Bun worker runtime)
+- **Bun**: >= 1.4.0 (`bun -v`, optional: only `pnpm test:bun` and `make test-bun` need it; every script runs through `tsx`)
 - **Docker**: Docker Engine with Docker Compose v2 (`docker compose version`)
 - **FFmpeg**: must include the `drawtext` filter (`ffmpeg -filters | grep drawtext`)
 
@@ -302,7 +302,7 @@ pnpm upload-client --abort <uploadId>
 Query the video record via the REST API:
 
 ```bash
-curl -H "Authorization: Bearer $(pnpm dev-token mint --role admin)" \
+curl -H "Authorization: Bearer $(pnpm --silent dev-token mint --raw --role admin)" \
   http://localhost:3000/v1/videos/<VIDEO_ID>
 ```
 
@@ -384,7 +384,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 
 | Command | Description |
 |---|---|
-| `make doctor` | Run environment pre-flight checks (Node, Bun, Docker, FFmpeg) |
+| `make doctor` | Run environment pre-flight checks (Node, pnpm, Docker, FFmpeg) |
 | `make setup` | One-command fast bootstrap: creates .env, starts services, runs migrations |
 | `make dev` | Start infrastructure and run API/workers in dev mode |
 | `make up` | Start local Postgres, Redis, and MinIO containers |

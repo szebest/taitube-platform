@@ -1,5 +1,5 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -32,7 +32,7 @@ describe('apps/worker/stages: notify', () => {
       workerId: STAGE_SETTINGS.workerId,
       repositories,
       cache,
-      logger: createLogger({ service: 'notify-spec', level: 'silent' }),
+      logger: createLogger({ format: 'json', service: 'notify-spec', level: 'silent' }),
       metrics: STAGE_SETTINGS.metrics,
     });
     const result = await notify({

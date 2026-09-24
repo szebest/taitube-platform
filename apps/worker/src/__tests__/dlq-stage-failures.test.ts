@@ -12,10 +12,20 @@ import { STAGE_SETTINGS, failingTranscodeOf, transcodeDeps } from './stage-setti
 describe('apps/worker: stage failures that end in the DLQ', () => {
   let world: FlowWorld;
 
-  const parkFailuresOf = (queueName: string) =>
-    world
-      .getQueue(queueName)
-      .onFailed(createFailureHandler({ ...STAGE_SETTINGS, ...world, stage: queueName, queueName }));
+  const parkFailuresOf = (queueName: string) => {
+    const parked = Promise.withResolvers<void>();
+    const handleFailure = createFailureHandler({
+      ...STAGE_SETTINGS,
+      ...world,
+      stage: queueName,
+      queueName,
+    });
+    world.getQueue(queueName).onFailed(async (job, error) => {
+      await handleFailure(job, error);
+      parked.resolve();
+    });
+    return parked.promise;
+  };
 
   beforeEach(() => {
     world = flowWorld();
@@ -32,7 +42,7 @@ describe('apps/worker: stage failures that end in the DLQ', () => {
         eventType: 'video.processing',
       })
     );
-    parkFailuresOf('package');
+    const packageParked = parkFailuresOf('package');
     parkFailuresOf('transcode-720p');
 
     const transcode720 = createTranscodeProcessor(
@@ -67,7 +77,7 @@ describe('apps/worker: stage failures that end in the DLQ', () => {
         },
       })),
     });
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await packageParked;
 
     const video = expectOk(await world.repositories.videos.findById(videoId));
     expect(video?.status).toBe('FAILED');

@@ -112,6 +112,7 @@ function unconsumedLeaves(
 
   const root = checker.getTypeAtLocation(appConfig.name);
   const paths = configPaths(checker, root);
+  const configNames = new Set([...paths.keys()].map((symbol) => symbol.name));
   const leaves = new Set(leavesTaken(checker, '', root, undefined).map((leaf) => leaf.slice(1)));
   const consumed = new Set<string>();
 
@@ -127,10 +128,14 @@ function unconsumedLeaves(
     }
   };
   const visit = (node: ts.Node): void => {
-    if (ts.isPropertyAccessExpression(node)) consume(checker.getSymbolAtLocation(node.name), node);
+    // Only a name AppConfig declares can reach a leaf; asking the checker about the rest is waste.
+    if (ts.isPropertyAccessExpression(node) && configNames.has(node.name.text)) {
+      consume(checker.getSymbolAtLocation(node.name), node);
+    }
     if (ts.isBindingElement(node) && ts.isObjectBindingPattern(node.parent)) {
       const name = (node.propertyName ?? node.name).getText();
-      consume(checker.getTypeAtLocation(node.parent).getProperty(name), node);
+      if (configNames.has(name))
+        consume(checker.getTypeAtLocation(node.parent).getProperty(name), node);
     }
     ts.forEachChild(node, visit);
   };

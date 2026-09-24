@@ -7,6 +7,7 @@ const KEY = '018f0000-0000-7000-8000-000000000001/source.mp4';
 function localClient(): S3StorageClient {
   return new S3StorageClient({
     type: 'connection',
+    healthBucket: BUCKET,
     endpoint: 'http://localhost:9000',
     region: 'us-east-1',
     accessKeyId: 'minioadmin',

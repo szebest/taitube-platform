@@ -7,7 +7,7 @@ import {
   renditionPlaylistKey,
   spriteKey,
 } from '@vp/storage';
-import { createDbClient, waitForDatabase } from './client';
+import { type Log, createDbClient, waitForDatabase } from './client';
 import { renditions, users, videos } from './schema';
 
 const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
@@ -27,13 +27,13 @@ const SEED_RENDITIONS: Record<RenditionName, { id: string; bytes: number; proces
     '480p': { id: '018f0000-0000-7000-8000-000000000012', bytes: 9000000, processingMs: 3200 },
   };
 
-export async function seedDatabase(connectionUrl: string): Promise<void> {
+export async function seedDatabase(connectionUrl: string, log: Log): Promise<void> {
   const { db, sql } = createDbClient(connectionUrl);
 
-  const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:seed' });
+  const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:seed', log });
   if (isErr(reached)) throw reached.error;
 
-  console.log('[db:seed] Seeding database...');
+  log.info({}, 'seeding the database');
 
   for (const { id, email, tier } of SEED_USERS) {
     await db
@@ -129,6 +129,6 @@ export async function seedDatabase(connectionUrl: string): Promise<void> {
       },
     });
 
-  console.log('[db:seed] Seed completed successfully: Dev user + READY video created.');
+  log.info({}, 'database seeded with the dev user and a ready video');
   await sql.end();
 }
