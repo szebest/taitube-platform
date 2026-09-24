@@ -21,6 +21,8 @@ export interface MarkdownDocument {
   anchors: ReadonlySet<string>;
   /** The text of every inline code span, in order. */
   codeSpans: readonly string[];
+  /** The text of every fenced or indented code block, in order. */
+  codeBlocks: readonly string[];
 }
 
 const markdownIt = new MarkdownIt();
@@ -53,12 +55,14 @@ export function parseMarkdown(text: string): MarkdownDocument {
   const headings: MarkdownHeading[] = [];
   const links: MarkdownLink[] = [];
   const codeSpans: string[] = [];
+  const codeBlocks: string[] = [];
 
   for (const [index, token] of tokens.entries()) {
     const inline = tokens[index + 1];
     if (token.type === 'heading_open' && inline) {
       headings.push({ depth: Number(token.tag.slice(1)), text: plainText(inline) });
     }
+    if (token.type === 'fence' || token.type === 'code_block') codeBlocks.push(token.content);
     if (token.type === 'inline') {
       links.push(...linksIn(token));
       for (const child of token.children ?? []) {
@@ -68,7 +72,7 @@ export function parseMarkdown(text: string): MarkdownDocument {
   }
 
   const anchors = new Set(headings.map((heading) => slugger.slug(heading.text)));
-  return { tokens, headings, links, anchors, codeSpans };
+  return { tokens, headings, links, anchors, codeSpans, codeBlocks };
 }
 
 const documents = new Map<string, MarkdownDocument>();

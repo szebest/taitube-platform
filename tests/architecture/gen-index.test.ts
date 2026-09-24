@@ -53,7 +53,7 @@ function ticketText({ number, status, blockedBy }: TicketFixture): string {
   ].join('\n');
 }
 
-/** A tickets directory beside empty specs, so the fixture never reads the real SDD. */
+/** An index directory with empty specs beside it, so the fixture never reads the real SDD. */
 function ticketsDirectory(tickets: readonly TicketFixture[]): string {
   const docs = mkdtempSync(join(tmpdir(), 'gen-index-'));
   const dir = join(docs, 'tickets');
@@ -73,8 +73,8 @@ function frontierLines(dir: string): string[] {
   return section.split('\n').filter((line) => line.startsWith('- '));
 }
 
-describe('architecture: ticket-index', () => {
-  it('holds the ticket index current, every status in the vocabulary and every spec anchor real', () => {
+describe('architecture: gen-index', () => {
+  it('holds the index current, every status in the vocabulary and every spec anchor real', () => {
     const run = genIndex(['--check']);
 
     expect(run.output).toMatch(/^ok: /);

@@ -22,7 +22,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 ---
 
 ## How work is organised
-- Work items are tracer-bullet tickets in `docs/tickets/NN-slug.md`. Use the `vp-work-ticket` skill to pick one up.
+- Work items are tracer-bullet tickets in `docs/tickets/<NN>-<slug>.md`. Use the `vp-work-ticket` skill to pick one up.
 - Numbering represents dependency order, not priority. Never start a ticket whose blockers are not `done`.
 - The frontier is computed: [docs/tickets/README.md#frontier](docs/tickets/README.md#frontier) lists every ticket whose blockers are done and which nobody has started. Pick from it.
 - Ticket status lives in the ticket's `**Status:**` line; run `python3 docs/tickets/gen-index.py` after changing it.
@@ -40,7 +40,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 7. **Errors classified at throw site:** Classify errors as `PermanentError` vs `TransientError` from `@vp/errors` (ADR-18).
 8. **Declarative authorization & zero hand-checked permissions:** Centralized in `@vp/permissions` evaluated via CASL rules. Never hand-check user IDs or roles inline. See [docs/standards/authorization.md](docs/standards/authorization.md).
 9. **Prove, don't claim:** Run typecheck, lint, and relevant test suites and paste output before declaring work done (`verification-before-completion`). See [docs/standards/testing.md](docs/standards/testing.md).
-10. **Branch protection & squash-only PR merges:** Direct pushes to `main` are blocked. Work on `ticket/NN-slug` or `<type>/<slug>` branches, require PR approval and green CI checks, and squash merge (`NN: <ticket title> (#<pr_number>)`). See [docs/standards/git-workflow.md](docs/standards/git-workflow.md).
+10. **Branch protection & squash-only PR merges:** Direct pushes to `main` are blocked. Work on `ticket/<NN>-<slug>` or `<type>/<slug>` branches, require PR approval and green CI checks, and squash merge (`NN: <ticket title> (#<pr_number>)`). See [docs/standards/git-workflow.md](docs/standards/git-workflow.md).
 11. **Enforce optimal execution & zero-waste workflows:** All developer setups, Docker builds, CI jobs, test suites, and scripts must be engineered for speed and caching. Performance or cycle-time regressions are treated as blocking defects.
 12. **Mandatory 1:1 test file correspondence:** Every single source file, helper, util, rule, normalizer, or adapter MUST map to at least one dedicated test file matching its name; grouping tests for multiple separate source files into a single bundled test file is a strict architectural violation. See [docs/standards/testing.md](docs/standards/testing.md).
 13. **Package tiers & dependency layers:** A shared package's **directory** declares where its code may run — `packages/universal/` (browser and server), `packages/server/` (Node/Bun only), `packages/client/` (browser only) — and `vp.layer` in its `package.json` declares which way its dependencies may point (strictly down; a same-layer edge is a violation). `server` and `client` never see each other, so no path leads from `apps/web` to a server package. `pnpm boundaries` runs ahead of `pnpm build` and `pnpm typecheck` and fails on a violation. See [packages/AGENTS.md](packages/AGENTS.md).

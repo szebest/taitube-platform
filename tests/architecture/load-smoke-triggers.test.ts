@@ -1,26 +1,20 @@
+import { load } from 'js-yaml';
 import { read } from './repo-files';
 import { workspaceClosure } from './workspace-closure';
 
 const WORKFLOW = '.github/workflows/load-smoke.yml';
 const EXERCISED = ['apps/api', 'apps/worker'];
 
+function field(value: unknown, key: string): unknown {
+  if (typeof value !== 'object' || value === null) return undefined;
+  return new Map(Object.entries(value)).get(key);
+}
+
 function triggerPaths(): string[] {
-  const paths: string[] = [];
-  let inPaths = false;
-
-  for (const line of read(WORKFLOW).split('\n')) {
-    if (/^ {4}paths:\s*$/.test(line)) {
-      inPaths = true;
-      continue;
-    }
-    if (!inPaths) continue;
-
-    const entry = /^ {6}- "([^"]+)"\s*$/.exec(line);
-    if (!entry) break;
-    paths.push(entry[1] as string);
-  }
-
-  return paths;
+  const workflow: unknown = load(read(WORKFLOW));
+  const paths = field(field(field(workflow, 'on'), 'pull_request'), 'paths');
+  if (!Array.isArray(paths)) return [];
+  return paths.filter((path): path is string => typeof path === 'string');
 }
 
 function covers(pattern: string, dir: string): boolean {
@@ -30,6 +24,10 @@ function covers(pattern: string, dir: string): boolean {
 describe('architecture: the load smoke reruns on what it exercises', () => {
   it('still reads the trigger list out of the workflow', () => {
     expect(triggerPaths()).toContain('tests/load/**');
+  });
+
+  it('skips a pull request that changes documents only', () => {
+    expect(triggerPaths().at(-1)).toBe('!**/*.md');
   });
 
   it('covers every workspace package the API and the worker resolve at runtime', () => {

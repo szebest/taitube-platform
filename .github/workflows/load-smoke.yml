@@ -12,6 +12,7 @@ on:
       - "packages/universal/**"
       - "infra/compose/docker-compose.yml"
       - ".github/workflows/load-smoke.yml"
+      - "!**/*.md"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
