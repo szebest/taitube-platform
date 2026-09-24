@@ -16,7 +16,6 @@ const PRODUCTION_SOURCE = [
 
 const SPEC_EXCLUSIONS = PRODUCTION_SOURCE.filter((spec) => spec.startsWith(':(exclude'));
 
-/** One directory per call: with two include globs in one pathspec list, the exclusions stop applying. */
 function productionUnder(dir: string): string[] {
   return [`:(glob)${dir}/**/*.ts`, ...SPEC_EXCLUSIONS];
 }
@@ -95,6 +94,9 @@ describe('architecture: zero-matches', () => {
   });
 
   it.each(ROWS)('holds %s at the expected count', (_name, pattern, scope, expected) => {
-    expect(countMatches(pattern, trackedFiles(...scope).map(read))).toBe(expected);
+    const files = trackedFiles(...scope);
+
+    expect(files.length).toBeGreaterThan(0);
+    expect(countMatches(pattern, files.map(read))).toBe(expected);
   });
 });

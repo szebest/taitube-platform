@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import ts from 'typescript';
 import { ROOT, productionSources } from './repo-files';
 import { workspaceSources } from './workspace-sources';
@@ -33,12 +33,31 @@ export interface SharedProgram {
 
 let shared: SharedProgram | undefined;
 
+const LIB_DIR = dirname(ts.getDefaultLibFilePath(OPTIONS));
+const libSources = new Map<string, ts.SourceFile>();
+
+/** The `lib.*.d.ts` files, parsed once per process: every fixture program would parse them again. */
+function libSource(file: string, version: ts.ScriptTarget): ts.SourceFile | undefined {
+  if (!file.startsWith(LIB_DIR)) return undefined;
+  let source = libSources.get(file);
+  if (!source) {
+    const text = ts.sys.readFile(file);
+    if (text === undefined) return undefined;
+    source = ts.createSourceFile(file, text, version, true);
+    libSources.set(file, source);
+  }
+  return source;
+}
+
 /**
  * Only this repo's modules and Fastify resolve: a third-party import reads as `any`, which keeps the
  * SDK declarations out of the program. Fastify stays, because `app.config` is typed by augmenting it.
  */
 function workspaceOnlyHost(): ts.CompilerHost {
   const host = ts.createCompilerHost(OPTIONS);
+  const parse = host.getSourceFile.bind(host);
+  host.getSourceFile = (file, version, ...rest) =>
+    libSource(file, ts.ScriptTarget.ES2022) ?? parse(file, version, ...rest);
   host.resolveModuleNameLiterals = (literals, containingFile, redirected, options) =>
     literals.map(({ text }) =>
       text.startsWith('.') || text.startsWith('@vp/') || text === 'fastify'
@@ -71,6 +90,8 @@ export function fixtureProgram(files: Record<string, string>): ts.Program {
   host.directoryExists = (dir) =>
     Object.keys(files).some((file) => file.startsWith(`${dir}/`)) || ts.sys.directoryExists(dir);
   host.getSourceFile = (file, version) => {
+    const lib = files[file] === undefined ? libSource(file, ts.ScriptTarget.ES2022) : undefined;
+    if (lib) return lib;
     const text = files[file] ?? ts.sys.readFile(file);
     return text === undefined ? undefined : ts.createSourceFile(file, text, version, true);
   };

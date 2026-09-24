@@ -59,14 +59,13 @@ export class InMemoryJobQueue extends JobQueue {
     this.stalledHandler = handler;
   }
 
-  /** What BullMQ reports when a job's lock lapses; a spec drives it, nothing here times out. */
+  /** A spec drives what BullMQ reports when a job's lock lapses; nothing here times out. */
   stall(jobId: string): void {
     this.stalledHandler?.(jobId);
   }
 
   private getJobPriority(job: QueueJob<unknown>): number {
-    const opts = (job as QueueJob<unknown> & { opts?: QueueJobOptions }).opts;
-    return opts?.priority ?? JOB_PRIORITY.free;
+    return job.opts?.priority ?? JOB_PRIORITY.free;
   }
 
   enqueueWaiting(job: QueueJob<unknown>): void {

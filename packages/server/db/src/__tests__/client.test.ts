@@ -25,7 +25,7 @@ describe('packages/db: waitForDatabase', () => {
 
     expectOk(await waitForDatabase(probe, { label: 'db:test', log, delayMs: 0 }));
     expect(probe).toHaveBeenCalledTimes(2);
-    expect(log).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('attempt 1/15 failed'));
+    expect(log.mock.calls).toEqual([[expect.stringContaining('attempt 1/15 failed')]]);
   });
 
   it('gives up after the last attempt, naming the label', async () => {
