@@ -76,9 +76,9 @@ groups:
       # 7. ScaleToZeroBroken (Kubernetes-only)
       - alert: ScaleToZeroBroken
         expr: |
-          (bullmq_queue_jobs{state="waiting"} > 0)
+          (sum(bullmq_queue_jobs{state=~"waiting|prioritized"}) > 0)
           and on()
-          (sum(kube_deployment_status_replicas{deployment=~"worker-.*"}) == 0)
+          (sum(kube_deployment_status_replicas{deployment=~"vp-worker-.*"}) == 0)
         for: 3m
         labels:
           severity: critical

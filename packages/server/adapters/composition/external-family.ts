@@ -52,7 +52,16 @@ export function registerFamily(c: Container): void {
       closeOnDispose
     )
     .provide(Adapters.Cache, (c) => c.get(Redis))
-    .provide(S3, () => new S3StorageClient({ type: 'connection', ...config.s3 }), closeOnDispose)
+    .provide(
+      S3,
+      () =>
+        new S3StorageClient({
+          type: 'connection',
+          healthBucket: config.buckets.raw,
+          ...config.s3,
+        }),
+      closeOnDispose
+    )
     .provide(
       Adapters.Storage,
       (c) => new MeteredStorageClient(c.get(S3), c.get(Adapters.Metrics)),

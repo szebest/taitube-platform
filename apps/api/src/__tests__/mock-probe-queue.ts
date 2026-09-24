@@ -49,7 +49,15 @@ export class MockProbeJobQueue extends JobQueue {
   }
 
   async getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>> {
-    return ok({ active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 });
+    return ok({
+      active: 0,
+      completed: 0,
+      failed: 0,
+      delayed: 0,
+      waiting: 0,
+      prioritized: 0,
+      paused: 0,
+    });
   }
 
   async getJobs(): Promise<Result<QueueJob<unknown>[], QueueUnavailable>> {

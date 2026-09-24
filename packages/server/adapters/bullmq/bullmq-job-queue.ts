@@ -1,5 +1,6 @@
 import {
   JobQueue,
+  QUEUE_JOB_STATES,
   type JobSchedulerInfo,
   type JobSchedulerTemplate,
   type QueueJob,
@@ -162,26 +163,17 @@ export class BullMqJobQueue extends JobQueue {
 
   async getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>> {
     const counted = await fromPromise(
-      () =>
-        this.queue.getJobCounts(
-          'waiting',
-          'active',
-          'completed',
-          'failed',
-          'delayed',
-          'paused' as JobType
-        ),
+      () => this.queue.getJobCounts(...([...QUEUE_JOB_STATES] as JobType[])),
       this.unavailable('getJobCounts')
     );
 
-    return map(counted, (counts) => ({
-      waiting: counts.waiting ?? 0,
-      active: counts.active ?? 0,
-      completed: counts.completed ?? 0,
-      failed: counts.failed ?? 0,
-      delayed: counts.delayed ?? 0,
-      paused: counts.paused ?? 0,
-    }));
+    return map(
+      counted,
+      (counts) =>
+        Object.fromEntries(
+          QUEUE_JOB_STATES.map((state) => [state, counts[state] ?? 0])
+        ) as QueueJobCounts
+    );
   }
 
   async getJobs(

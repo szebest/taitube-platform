@@ -4,6 +4,7 @@ import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
+  HeadBucketCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
@@ -28,16 +29,20 @@ import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result'
 import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
 import { type S3ConnectionConfig, isNotFound, s3ClientFrom } from './s3-config';
 
-export type S3StorageClientConfig =
+/** `healthBucket` is what readiness asks for: a `HeadBucket` proves both reachability and access. */
+export type S3StorageClientConfig = { healthBucket: string } & (
   | { type: 'client'; client: S3Client }
-  | ({ type: 'connection' } & S3ConnectionConfig);
+  | ({ type: 'connection' } & S3ConnectionConfig)
+);
 
 export class S3StorageClient extends StorageClient {
   private readonly client: S3Client;
+  private readonly healthBucket: string;
 
   constructor(config: S3StorageClientConfig) {
     super();
     this.client = S3StorageClient.clientFor(config);
+    this.healthBucket = config.healthBucket;
   }
 
   private static clientFor(config: S3StorageClientConfig): S3Client {
@@ -73,7 +78,11 @@ export class S3StorageClient extends StorageClient {
   }
 
   async checkHealth(): Promise<Result<void, StorageUnavailable>> {
-    return ok();
+    const answered = await fromPromise(
+      () => this.client.send(new HeadBucketCommand({ Bucket: this.healthBucket })),
+      this.unavailable('checkHealth')
+    );
+    return map(answered, () => undefined);
   }
 
   async uploadObject(

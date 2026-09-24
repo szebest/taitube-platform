@@ -39,7 +39,7 @@ type Generation =
 
 async function generate(options: GeneratorOptions): Promise<Generation> {
   try {
-    return { type: 'done', ...(await generateAllFixtures(options)) };
+    return { type: 'done', ...(await generateAllFixtures(options, console.log)) };
   } catch (cause) {
     return { type: 'failed', reason: cause instanceof Error ? cause.message : String(cause) };
   }

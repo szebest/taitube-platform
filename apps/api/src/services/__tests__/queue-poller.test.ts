@@ -24,6 +24,18 @@ describe('apps/api/services: pollQueueMetrics', () => {
     expect(waiting?.value).toBe(1);
   });
 
+  it('counts a job with a priority as prioritized, which is where BullMQ keeps it', async () => {
+    const probe = new InMemoryJobQueue('probe');
+    await probe.add('probe', { videoId: 'v1' }, { priority: 5 });
+    const metrics = createMetricsRegistry();
+
+    await pollQueueMetrics(new Map<string, JobQueue>([['probe', probe]]), metrics);
+
+    const samples = await gauge(metrics, 'bullmq_queue_jobs');
+    expect(samples.find((sample) => sample.labels.state === 'prioritized')?.value).toBe(1);
+    expect(samples.find((sample) => sample.labels.state === 'waiting')?.value).toBe(0);
+  });
+
   it('costs an unreachable queue its own sample and nothing else', async () => {
     const broken = Object.assign(new InMemoryJobQueue('probe'), {
       getJobCounts: async () => err(queueUnavailable('getJobCounts')),

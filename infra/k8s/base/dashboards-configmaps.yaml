@@ -60,7 +60,10 @@ data:
           "id": 2,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -112,7 +115,10 @@ data:
           "id": 3,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -164,7 +170,11 @@ data:
           "id": 4,
           "options": {
             "legend": {
-              "calcs": ["mean", "max", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -250,7 +260,10 @@ data:
           "id": 6,
           "options": {
             "legend": {
-              "calcs": ["max", "lastNotNull"],
+              "calcs": [
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -302,7 +315,10 @@ data:
           "id": 7,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -354,7 +370,10 @@ data:
           "id": 8,
           "options": {
             "legend": {
-              "calcs": ["max", "lastNotNull"],
+              "calcs": [
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -380,7 +399,10 @@ data:
       "refresh": "5s",
       "schemaVersion": 38,
       "style": "dark",
-      "tags": ["video-pipeline", "api"],
+      "tags": [
+        "video-pipeline",
+        "api"
+      ],
       "templating": {
         "list": []
       },
@@ -394,7 +416,6 @@ data:
       "uid": "vp-api",
       "version": 1
     }
-    
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -449,16 +470,22 @@ data:
           },
           "id": 2,
           "options": {
-            "displayLabels": ["percent"],
+            "displayLabels": [
+              "percent"
+            ],
             "legend": {
               "displayMode": "table",
               "placement": "right",
               "showLegend": true,
-              "values": ["value"]
+              "values": [
+                "value"
+              ]
             },
             "pieType": "pie",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             }
@@ -509,7 +536,10 @@ data:
           "id": 3,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -576,7 +606,11 @@ data:
           "id": 4,
           "options": {
             "legend": {
-              "calcs": ["mean", "max", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -639,7 +673,10 @@ data:
           "id": 5,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "right",
               "showLegend": true
@@ -665,7 +702,10 @@ data:
       "refresh": "5s",
       "schemaVersion": 38,
       "style": "dark",
-      "tags": ["video-pipeline", "overview"],
+      "tags": [
+        "video-pipeline",
+        "overview"
+      ],
       "templating": {
         "list": []
       },
@@ -679,7 +719,6 @@ data:
       "uid": "vp-pipeline-overview",
       "version": 1
     }
-    
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -745,7 +784,9 @@ data:
           "id": 2,
           "options": {
             "legend": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "right",
               "showLegend": true
@@ -797,7 +838,10 @@ data:
           "id": 3,
           "options": {
             "legend": {
-              "calcs": ["lastNotNull", "max"],
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -821,7 +865,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(kube_deployment_status_replicas{deployment=~\"worker-.*\"}) by (deployment)",
+              "expr": "sum(kube_deployment_status_replicas{deployment=~\"vp-worker-.*\"}) by (deployment)",
               "legendFormat": "Replicas: {{deployment}}",
               "range": true,
               "refId": "B"
@@ -872,7 +916,10 @@ data:
           "id": 5,
           "options": {
             "legend": {
-              "calcs": ["max", "lastNotNull"],
+              "calcs": [
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "right",
               "showLegend": true
@@ -924,7 +971,11 @@ data:
           "id": 6,
           "options": {
             "legend": {
-              "calcs": ["mean", "max", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "right",
               "showLegend": true
@@ -950,7 +1001,10 @@ data:
       "refresh": "5s",
       "schemaVersion": 38,
       "style": "dark",
-      "tags": ["video-pipeline", "queues"],
+      "tags": [
+        "video-pipeline",
+        "queues"
+      ],
       "templating": {
         "list": []
       },
@@ -964,7 +1018,6 @@ data:
       "uid": "vp-queues",
       "version": 1
     }
-    
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -1028,7 +1081,10 @@ data:
           "id": 2,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1103,7 +1159,9 @@ data:
           "options": {
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -1168,7 +1226,10 @@ data:
           "id": 5,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1220,7 +1281,11 @@ data:
           "id": 6,
           "options": {
             "legend": {
-              "calcs": ["mean", "max", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1241,12 +1306,95 @@ data:
           ],
           "title": "Storage Operation Duration (p95)",
           "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 18
+          },
+          "id": 7,
+          "title": "Observability Cost Guardrails (Grafana Cloud)",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 7500
+                  },
+                  {
+                    "color": "red",
+                    "value": 10000
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 19
+          },
+          "id": 9,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": true,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(scrape_samples_scraped) or sum(prometheus_tsdb_head_series) or count({__name__=~\".+\"})",
+              "legendFormat": "Active Metric Series Count (Free Tier: 10,000 series)",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Grafana Cloud Active Metric Series Count (10k Free Tier Budget)",
+          "type": "gauge"
         }
       ],
       "refresh": "5s",
       "schemaVersion": 38,
       "style": "dark",
-      "tags": ["video-pipeline", "storage", "cost"],
+      "tags": [
+        "video-pipeline",
+        "storage",
+        "cost"
+      ],
       "templating": {
         "list": []
       },
@@ -1260,7 +1408,6 @@ data:
       "uid": "vp-storage-cost",
       "version": 1
     }
-    
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -1324,7 +1471,11 @@ data:
           "id": 2,
           "options": {
             "legend": {
-              "calcs": ["mean", "max", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1387,7 +1538,10 @@ data:
           "id": 3,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull"],
+              "calcs": [
+                "mean",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1461,7 +1615,9 @@ data:
           "id": 5,
           "options": {
             "legend": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1513,7 +1669,10 @@ data:
           "id": 6,
           "options": {
             "legend": {
-              "calcs": ["max", "lastNotNull"],
+              "calcs": [
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1564,7 +1723,9 @@ data:
           "id": 7,
           "options": {
             "legend": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1590,7 +1751,10 @@ data:
       "refresh": "5s",
       "schemaVersion": 38,
       "style": "dark",
-      "tags": ["video-pipeline", "workers"],
+      "tags": [
+        "video-pipeline",
+        "workers"
+      ],
       "templating": {
         "list": []
       },
@@ -1604,4 +1768,3 @@ data:
       "uid": "vp-workers",
       "version": 1
     }
-    

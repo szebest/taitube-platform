@@ -11,11 +11,28 @@ const UPLOAD_ID = 's3-upload-1';
 function multipartOver(fake: FakeS3): S3MultipartStorage {
   return new S3MultipartStorage({
     type: 'storage',
-    storageClient: new S3StorageClient({ type: 'client', client: fake.client }),
+    storageClient: new S3StorageClient({
+      type: 'client',
+      client: fake.client,
+      healthBucket: BUCKET,
+    }),
   });
 }
 
 describe('S3MultipartStorage', () => {
+  it('answers readiness with the storage client it shares', async () => {
+    const fake = fakeS3Client({
+      HeadBucketCommand: () => {
+        throw new Error('connect ECONNREFUSED');
+      },
+    });
+
+    expect(expectErr(await multipartOver(fake).checkHealth()).code).toBe(
+      ErrorCodes.STORAGE_UNAVAILABLE
+    );
+    expect(fake.sent.map(({ name }) => name)).toEqual(['HeadBucketCommand']);
+  });
+
   describe('createMultipartUpload', () => {
     it('returns the upload id the driver minted', async () => {
       const fake = fakeS3Client({ CreateMultipartUploadCommand: () => ({ UploadId: UPLOAD_ID }) });
@@ -42,6 +59,7 @@ describe('S3MultipartStorage', () => {
     it('signs a part upload with an ISO expiry', async () => {
       const multipart = new S3MultipartStorage({
         type: 'connection',
+        healthBucket: BUCKET,
         endpoint: 'http://localhost:9000',
         region: 'us-east-1',
         accessKeyId: 'minioadmin',
@@ -180,6 +198,7 @@ describe('S3MultipartStorage', () => {
       const bucket = process.env['S3_BUCKET_RAW'] || BUCKET;
       const multipart = new S3MultipartStorage({
         type: 'connection',
+        healthBucket: BUCKET,
         endpoint: process.env['S3_ENDPOINT'] ?? '',
         region: process.env['S3_REGION'] ?? 'auto',
         accessKeyId: process.env['S3_ACCESS_KEY_ID'],

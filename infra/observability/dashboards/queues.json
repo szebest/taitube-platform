@@ -129,7 +129,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(kube_deployment_status_replicas{deployment=~\"worker-.*\"}) by (deployment)",
+          "expr": "sum(kube_deployment_status_replicas{deployment=~\"vp-worker-.*\"}) by (deployment)",
           "legendFormat": "Replicas: {{deployment}}",
           "range": true,
           "refId": "B"

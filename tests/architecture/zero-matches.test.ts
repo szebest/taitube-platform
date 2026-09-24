@@ -1,3 +1,4 @@
+import { ENTRYPOINTS } from './entrypoints';
 import { read, trackedFiles } from './repo-files';
 
 /** `apps`, `packages` and `scripts`, without specs, `__tests__` or `__mocks__`. */
@@ -56,6 +57,12 @@ const ROWS: readonly Row[] = [
   ['a throwing parse in a service', /\.parse\(/g, productionUnder('apps/api/src/services'), 0],
   ['a failure classified by its message', /message\.includes/g, PRODUCTION_SOURCE, 0],
   ['a cast through unknown', /as unknown as/g, PRODUCTION_SOURCE, 0],
+  [
+    'console outside a process entrypoint',
+    /\bconsole\./g,
+    [...PRODUCTION_SOURCE, ...ENTRYPOINTS.map((entrypoint) => `:(exclude,glob)${entrypoint}`)],
+    0,
+  ],
 ];
 
 function countMatches(pattern: RegExp, sources: readonly string[]): number {
@@ -68,6 +75,16 @@ describe('architecture: zero-matches', () => {
     expect(countMatches(/000000000003/g, ["'000000000003' '000000000003'", "'000000000003'"])).toBe(
       3
     );
+  });
+
+  it('reads the console row over no entrypoint and every other production file', () => {
+    const [, , scope] = ROWS.find(([name]) => name.startsWith('console')) as Row;
+    const files = trackedFiles(...scope);
+
+    expect(files).not.toContain('apps/api/src/main.ts');
+    expect(files).not.toContain('scripts/run-e2e.ts');
+    expect(files).toContain('packages/server/config/src/load-env.ts');
+    expect(countMatches(/\bconsole\./g, ["console.warn('x'); console.log(1)"])).toBe(2);
   });
 
   it('reads production source without specs, __tests__ or __mocks__', () => {

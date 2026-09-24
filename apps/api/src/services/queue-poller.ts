@@ -1,16 +1,7 @@
-import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
+import { type JobQueue, QUEUE_JOB_STATES } from '@vp/core/ports';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PipelineMetrics } from '@vp/observability';
 import { isOk } from '@vp/result';
-
-const QUEUE_STATE_KEYS: ReadonlyArray<keyof QueueJobCounts> = [
-  'waiting',
-  'active',
-  'completed',
-  'failed',
-  'delayed',
-  'paused',
-];
 
 /** BullMQ stamps a job with `timestamp`; the port shape does not carry it, so it is read defensively. */
 function oldestWaitingAgeSeconds(waiting: readonly unknown[]): number {
@@ -32,8 +23,8 @@ export async function pollQueueMetrics(
   for (const [name, queue] of queues) {
     const counts = await queue.getJobCounts();
     if (isOk(counts)) {
-      for (const state of QUEUE_STATE_KEYS) {
-        metrics.bullmqQueueJobs.set({ queue: name, state }, counts.value[state] ?? 0);
+      for (const state of QUEUE_JOB_STATES) {
+        metrics.bullmqQueueJobs.set({ queue: name, state }, counts.value[state]);
       }
     }
 

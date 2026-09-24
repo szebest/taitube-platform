@@ -19,7 +19,12 @@ import type {
   StorageClient,
 } from '../../packages/server/core/ports/index';
 import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
-import { createLogger, createMetricsRegistry } from '../../packages/server/observability/src/index';
+import { mediaTools } from '../../packages/server/ffmpeg/src/index';
+import {
+  LogContext,
+  createLogger,
+  createMetricsRegistry,
+} from '../../packages/server/observability/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
 export interface InProcessEnv {
@@ -78,8 +83,9 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
     'notify',
     'housekeeping',
   ] as const;
-  const logger = createLogger({ service: 'e2e-worker', level: 'warn' });
-  const metrics = createMetricsRegistry({ env: 'test' });
+  const logContext = new LogContext();
+  const logger = createLogger({ service: 'e2e-worker', level: 'warn', context: logContext });
+  const metrics = createMetricsRegistry();
 
   for (const stage of workerStages) {
     const runner = await createWorkerRunner({
@@ -92,9 +98,11 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
         jobQueue: queuesMap.get(stage),
         getQueue,
         flowProducer,
+        metrics,
       },
       logger,
-      metrics,
+      logContext,
+      media: mediaTools,
       workerId: `e2e-worker-${stage}`,
     });
     workerClosers.push(runner.close);

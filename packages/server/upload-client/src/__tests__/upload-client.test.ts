@@ -176,6 +176,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
 
     const storage = new S3StorageClient({
       type: 'connection',
+      healthBucket: 'raw',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',
@@ -185,6 +186,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
 
     const multipart = new S3MultipartStorage({
       type: 'connection',
+      healthBucket: 'raw',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',

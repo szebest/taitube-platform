@@ -2,8 +2,9 @@ import * as net from 'node:net';
 import { Adapters } from '@vp/adapters/composition';
 import type { ProcessHost } from '@vp/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
-import type { Tracing } from '@vp/observability';
+import { type Tracing, createLogger } from '@vp/observability';
 import { err, ok } from '@vp/result';
+import { captureLog } from '@vp/testing/log-capture';
 import { composeApp } from '../app';
 import { Services } from '../composition/services.module';
 import { main, run, serve } from '../main';
@@ -13,6 +14,10 @@ const TIMINGS = { tracing, timings: { drainDelayMs: 50, graceMs: 2_000 } };
 
 function host(env: Record<string, string>): ProcessHost & { exit: ReturnType<typeof vi.fn> } {
   return { env, onSignal: () => {}, exit: vi.fn() };
+}
+
+function loggerTo(log: ReturnType<typeof captureLog>) {
+  return createLogger({ service: 'vp-api', level: 'info', destination: log.destination });
 }
 
 function config(): AppConfig {
@@ -39,10 +44,6 @@ async function freePort(): Promise<number> {
 }
 
 describe('apps/api: main', () => {
-  beforeEach(() => {
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-  });
-
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -177,15 +178,15 @@ describe('apps/api: main', () => {
   });
 
   it('fails the shutdown when a disposer returns an error, and names it', async () => {
-    const composed = await composeApp({ config: config() });
+    const log = captureLog();
+    const composed = await composeApp({ config: config(), logger: loggerTo(log) });
     vi.spyOn(composed.container.get(Adapters.Storage), 'close').mockResolvedValue(
       err('bucket gone') as never
     );
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     const api = await serve(composed, config(), TIMINGS);
 
     expect(await api.shutdown()).toBe('failed');
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('Storage'));
+    expect(log.lines().map((line) => line.msg)).toContainEqual(expect.stringContaining('Storage'));
   });
 
   it('flushes buffered spans once the servers have closed', async () => {
@@ -220,17 +221,17 @@ describe('apps/api: main', () => {
   });
 
   it('gives up on a disposer that never resolves, and names it', async () => {
-    const composed = await composeApp({ config: config() });
+    const log = captureLog();
+    const composed = await composeApp({ config: config(), logger: loggerTo(log) });
     vi.spyOn(composed.container.get(Adapters.Storage), 'close').mockImplementation(
       () => new Promise(() => {})
     );
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     const api = await serve(composed, config(), {
       tracing,
       timings: { drainDelayMs: 0, graceMs: 100 },
     });
 
     expect(await api.shutdown()).toBe('forced');
-    expect(log).toHaveBeenLastCalledWith(expect.stringContaining('still waiting on Storage'));
+    expect(log.lines().at(-1)?.msg).toContain('still waiting on Storage');
   });
 });

@@ -88,6 +88,7 @@ export class E2ERunner {
           if (S3_ENDPOINT) {
             const s3 = new S3StorageClient({
               type: 'connection',
+              healthBucket: process.env['S3_BUCKET_RAW'] ?? 'raw',
               endpoint: S3_ENDPOINT,
               region: process.env['S3_REGION'] ?? 'us-east-1',
               accessKeyId: process.env['S3_ACCESS_KEY_ID'] ?? 'minioadmin',

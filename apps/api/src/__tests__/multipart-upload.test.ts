@@ -175,6 +175,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
 
     const s3Client = new S3StorageClient({
       type: 'connection',
+      healthBucket: 'raw',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test',

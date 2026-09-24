@@ -22,14 +22,22 @@ export interface QueueJobOptions {
   removeOnFail?: unknown;
 }
 
-export interface QueueJobCounts {
-  waiting: number;
-  active: number;
-  completed: number;
-  failed: number;
-  delayed: number;
-  paused: number;
-}
+/**
+ * The states a queue is counted in. BullMQ keeps a job with a priority in `prioritized`, not
+ * `waiting`, and every pipeline job carries one, so a depth that leaves it out reads an idle queue.
+ */
+export const QUEUE_JOB_STATES = [
+  'waiting',
+  'prioritized',
+  'active',
+  'completed',
+  'failed',
+  'delayed',
+  'paused',
+] as const;
+export type QueueJobState = (typeof QUEUE_JOB_STATES)[number];
+
+export type QueueJobCounts = Record<QueueJobState, number>;
 
 export interface QueueWorkerOptions {
   concurrency?: number;

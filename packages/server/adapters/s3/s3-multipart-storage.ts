@@ -27,19 +27,20 @@ export type S3MultipartStorageConfig =
 
 export class S3MultipartStorage extends MultipartStorage {
   private readonly client: S3Client;
+  private readonly storage: S3StorageClient;
 
   constructor(config: S3MultipartStorageConfig) {
     super();
-    const storage = config.type === 'storage' ? config.storageClient : new S3StorageClient(config);
-    this.client = storage.getRawClient();
+    this.storage = config.type === 'storage' ? config.storageClient : new S3StorageClient(config);
+    this.client = this.storage.getRawClient();
   }
 
   private unavailable(operation: string) {
     return (cause: unknown): StorageUnavailable => storageUnavailable(operation, cause);
   }
 
-  async checkHealth(): Promise<Result<void, StorageUnavailable>> {
-    return ok();
+  checkHealth(): Promise<Result<void, StorageUnavailable>> {
+    return this.storage.checkHealth();
   }
 
   async createMultipartUpload(

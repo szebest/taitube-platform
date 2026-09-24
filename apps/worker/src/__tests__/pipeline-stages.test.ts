@@ -223,7 +223,15 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
         return ok();
       }
       async getJobCounts() {
-        return ok({ active: 0, completed: 0, failed: 0, delayed: 0, waiting: 0, paused: 0 });
+        return ok({
+          active: 0,
+          completed: 0,
+          failed: 0,
+          delayed: 0,
+          waiting: 0,
+          prioritized: 0,
+          paused: 0,
+        });
       }
       async getJobs() {
         return ok([]);

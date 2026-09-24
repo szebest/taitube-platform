@@ -7,7 +7,8 @@ export { generateFixture } from './generate-fixture';
 export { checkFixture } from './check-fixture';
 
 export async function generateAllFixtures(
-  options: GeneratorOptions
+  options: GeneratorOptions,
+  log: (message: string) => void
 ): Promise<{ generated: string[]; errors: string[] }> {
   const manifest = loadManifest();
   const generated: string[] = [];
@@ -24,9 +25,7 @@ export async function generateAllFixtures(
   });
 
   for (const fixture of targets) {
-    if (!options.quiet) {
-      console.log(`[gen-video] Generating ${fixture.id} (${fixture.filename})...`);
-    }
+    log(`[gen-video] Generating ${fixture.id} (${fixture.filename})...`);
     const outcome = generateFixture(fixture, options.outputDir);
     switch (outcome.type) {
       case 'generated':

@@ -115,11 +115,12 @@ describe('BullMqJobQueue', () => {
       const subject = new BullMqJobQueue({
         type: 'queue',
         name: 'probe',
-        queue: new FakeQueue({ counts: { waiting: 3, failed: 1 } }).asQueue(),
+        queue: new FakeQueue({ counts: { waiting: 3, prioritized: 2, failed: 1 } }).asQueue(),
       });
 
       expect(expectOk(await subject.getJobCounts())).toEqual({
         waiting: 3,
+        prioritized: 2,
         active: 0,
         completed: 0,
         failed: 1,

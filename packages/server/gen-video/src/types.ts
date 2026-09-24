@@ -26,7 +26,6 @@ export interface GeneratorOptions {
   outputDir: string;
   includeSlow?: boolean;
   only?: string;
-  quiet?: boolean;
 }
 
 export interface ProbeStream {

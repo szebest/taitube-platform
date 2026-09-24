@@ -106,6 +106,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     // 2. Build Fastify API with storage client pointing to local test S3 server
     const s3Client = new S3StorageClient({
       type: 'connection',
+      healthBucket: 'raw',
       endpoint: `http://127.0.0.1:${s3Port}`,
       region: 'us-east-1',
       accessKeyId: 'test-key',

@@ -280,8 +280,10 @@ export class InMemoryJobQueue extends JobQueue {
   }
 
   async getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>> {
+    const prioritized = this.enqueuedJobs.filter((job) => (job.opts?.priority ?? 0) > 0).length;
     return ok({
-      waiting: this.enqueuedJobs.length,
+      waiting: this.enqueuedJobs.length - prioritized,
+      prioritized,
       active: Array.from(this.jobStates.values()).filter((s) => s === 'active').length,
       completed: this.completedJobs.length,
       failed: this.failedJobs.length,
