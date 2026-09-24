@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { FIXTURES, createMockJob, withEnv } from '../index';
 
 describe('@vp/testing smoke test', () => {

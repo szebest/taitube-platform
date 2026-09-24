@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { normalizeUploadResource } from '../upload.normalizer';
 
 describe('normalizers/upload: normalizeUploadResource', () => {

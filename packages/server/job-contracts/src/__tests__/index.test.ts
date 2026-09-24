@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { ProbeJob, QUEUES, ids } from '../index';
 
 describe('@vp/job-contracts smoke test', () => {

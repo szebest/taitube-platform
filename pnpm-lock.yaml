@@ -620,6 +620,9 @@ importers:
         specifier: workspace:*
         version: link:../../universal/result
     devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../../universal/tsconfig
