@@ -58,9 +58,9 @@ services:
       start_period: 1s
 
   minio:
-    image: quay.io/minio/minio:latest
+    image: cgr.dev/chainguard/minio@sha256:bd014394a80898e68c149f2311fdf8d5a2c2f3bb2c33b9327ae6d02b4b065ae1
     container_name: vp-minio
-    command: server /data --console-address ":9001"
+    command: ["server", "/data", "--console-address", ":9001"]
     environment:
       MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY_ID:-minioadmin}
       MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_ACCESS_KEY:-minioadmin}
@@ -71,7 +71,7 @@ services:
       - miniodata:/data
 
   minio-init:
-    image: quay.io/minio/mc:latest
+    image: cgr.dev/chainguard/minio-client@sha256:614e083a12c6dc779f13f97e01b13afda4021a8ce3f4021a2fcf23ec86f46837
     container_name: vp-minio-init
     depends_on:
       - minio

@@ -26,7 +26,7 @@ The internet is **never** contacted during normal operation or test execution. E
 
 1. **One-time Initial Setup**:
    - `pnpm install` (fetching npm packages).
-   - Base Docker image downloads (`node:24-slim`, `postgres:16-alpine`, `redis:7-alpine`, `minio/minio`).
+   - Base Docker image downloads (`node:24-slim`, `postgres:16-alpine`, `redis:7-alpine`, `cgr.dev/chainguard/minio`).
 2. **Optional Cloud Reference Deployment (Phase 4, Tickets 31–33)**:
    - Cloudflare R2 object storage and CDN custom domain.
    - Neon serverless PostgreSQL.

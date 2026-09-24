@@ -388,7 +388,7 @@ The brief asked explicitly: transient task queue vs event-streaming log vs hybri
 | 2 | Backblaze B2 | 10 GB | free up to 3× storage/month, then $0.01/GB; **unlimited free to Cloudflare** via Bandwidth Alliance | Full S3 API incl. notifications. Best fallback if R2 free tier changes; put Cloudflare CDN in front. |
 | 3 | Supabase Storage | 1 GB, 5 GB egress | | Too small; egress capped. |
 | 4 | AWS S3 | 5 GB / 12 months | $0.09/GB | Egress pricing is the exact thing we must avoid. |
-| Local | **MinIO** (`minio/minio`) | — | — | Faithful S3 emulation incl. multipart, presigned URLs, lifecycle rules, bucket notifications (webhook) for dev. |
+| Local | **MinIO** (`cgr.dev/chainguard/minio`, pinned by digest) | — | — | Faithful S3 emulation incl. multipart, presigned URLs, lifecycle rules, bucket notifications (webhook) for dev. |
 
 **Consequences.** One `packages/server/storage` module over `@aws-sdk/client-s3` v3 with `forcePathStyle` for MinIO and `region: 'auto'` for R2. Two buckets: `raw` (private) and `public` (CDN-fronted). Object keys are deterministic (§7).
 
@@ -1581,17 +1581,16 @@ services:
     ports: ["6379:6379"]
     volumes: [redisdata:/data]
 
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+  minio:                           # upstream stopped publishing images; Chainguard's, pinned by digest
+    image: cgr.dev/chainguard/minio@sha256:<index digest>
+    command: ["server", "/data", "--console-address", ":9001"]   # the binary is the entrypoint, no shell
     environment: { MINIO_ROOT_USER: minioadmin, MINIO_ROOT_PASSWORD: minioadmin }
     ports: ["9000:9000", "9001:9001"]
     volumes: [miniodata:/data]
-    healthcheck: { test: ["CMD", "mc", "ready", "local"], interval: 5s }
 
   minio-init:                      # creates buckets, lifecycle rules, anonymous read on `public`, optional webhook
-    image: minio/mc
-    depends_on: { minio: { condition: service_healthy } }
+    image: cgr.dev/chainguard/minio-client@sha256:<latest-dev index digest>   # -dev carries the shell the script needs
+    depends_on: [minio]            # the script retries `mc alias set` until MinIO answers
     entrypoint: ["/bin/sh", "/init/minio-init.sh"]
     volumes: ["./minio-init.sh:/init/minio-init.sh:ro"]
 
