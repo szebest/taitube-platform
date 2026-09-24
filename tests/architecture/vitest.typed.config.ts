@@ -10,8 +10,8 @@ export const TYPE_AWARE = readdirSync(HERE)
   .filter((file) => readFileSync(`${HERE}/${file}`, 'utf8').includes("from './program'"));
 
 /**
- * One process with modules kept between files, so the program is built and checked once and
- * each assertion after the first reads types the checker already resolved.
+ * A fork per assertion, side by side with the AST thread. Each builds the smallest program it needs
+ * (`serverProgram` or `productionProgram`), which costs less than waiting in one fork for the others.
  */
 export default defineConfig({
   resolve: { alias: sourceAliases() },
@@ -22,6 +22,6 @@ export default defineConfig({
     include: TYPE_AWARE,
     testTimeout: 30_000,
     pool: 'forks',
-    poolOptions: { forks: { singleFork: true, isolate: false } },
+    poolOptions: { forks: { isolate: false } },
   },
 });

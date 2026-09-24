@@ -36,7 +36,10 @@ export interface SharedProgram {
   roots: ReadonlySet<string>;
 }
 
-let shared: SharedProgram | undefined;
+/** Where a process runs: `apps/web` and the universal packages are only reached through imports. */
+export const SERVER_ROOTS = ['apps/api/src/', 'apps/worker/src/', 'packages/server/'];
+
+const shared = new Map<string, SharedProgram>();
 
 const LIB_DIR = dirname(ts.getDefaultLibFilePath(OPTIONS));
 const libSources = new Map<string, ts.SourceFile>();
@@ -73,19 +76,28 @@ function workspaceOnlyHost(): ts.CompilerHost {
   return host;
 }
 
-/**
- * Every production source, the browser tier included, in one program the type-aware assertions
- * share: building one per test file is what would put the suite over its time budget.
- */
-export function productionProgram(): SharedProgram {
-  if (shared) return shared;
+function programOver(scope: string, files: readonly string[]): SharedProgram {
+  let program = shared.get(scope);
+  if (!program) {
+    const roots = files.map((file) => join(ROOT, file));
+    program = {
+      program: ts.createProgram(roots, OPTIONS, workspaceOnlyHost()),
+      roots: new Set(roots),
+    };
+    shared.set(scope, program);
+  }
+  return program;
+}
 
-  const roots = productionSources().map((file) => join(ROOT, file));
-  shared = {
-    program: ts.createProgram(roots, OPTIONS, workspaceOnlyHost()),
-    roots: new Set(roots),
-  };
-  return shared;
+/** Every production source, the browser tier included, built once per process. */
+export function productionProgram(): SharedProgram {
+  return programOver('production', productionSources());
+}
+
+/** The production sources a server process runs, for an assertion that asks nothing of the browser. */
+export function serverProgram(): SharedProgram {
+  const onServer = (file: string) => SERVER_ROOTS.some((root) => file.startsWith(root));
+  return programOver('server', productionSources().filter(onServer));
 }
 
 export function fixtureProgram(files: Record<string, string>): ts.Program {
