@@ -26,12 +26,9 @@ import { canReadVideo } from '@vp/permissions';
 import { type Result, assertNever, err, isErr, map, ok, unwrapOr } from '@vp/result';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';
+import { newVideoRecord } from './new-video-record';
 import { selectPublicFeed } from './public-feed-query';
-import {
-  DEFAULT_VIDEO_RECORD,
-  type InMemoryVideoRepositoryOptions,
-  type UploadLookup,
-} from './types';
+import type { InMemoryVideoRepositoryOptions, UploadLookup } from './types';
 
 export type { InMemoryVideoRepositoryOptions };
 
@@ -99,18 +96,7 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   async create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>> {
-    const now = new Date();
-    const record: VideoRecord = {
-      ...DEFAULT_VIDEO_RECORD,
-      ...data,
-      visibility: data.visibility ?? 'private',
-      status: data.status ?? 'UPLOADING',
-      generation: data.generation ?? 1,
-      version: 1,
-      createdAt: now,
-      updatedAt: now,
-      readyAt: data.readyAt ?? (data.status === 'READY' ? now : null),
-    } as VideoRecord;
+    const record = newVideoRecord(data, new Date());
     this.videosMap.set(record.id, record);
     return ok(record);
   }

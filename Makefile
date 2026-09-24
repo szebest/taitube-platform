@@ -7,7 +7,7 @@ CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 DEV_TOKEN := pnpm --silent dev-token mint --raw
 
-.PHONY: help up down logs psql redis-cli mc check-redis nuke test check-bun test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill chaos-readiness obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-local-secrets k8s-validate load-s1 load-s2 load-s3 load-smoke
+.PHONY: help up down logs psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill chaos-readiness obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-local-secrets k8s-validate load-s1 load-s2 load-s3 load-smoke
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -74,6 +74,9 @@ check-bun: ## Check for Bun 1.4, which only the Bun test run needs
 
 test-bun: check-bun ## Run Bun tests for worker runtime parity
 	pnpm test:bun
+
+test-r2: ## Run the S3 contracts against Cloudflare R2 (export the full app env with S3_* naming the R2 bucket)
+	pnpm exec vitest run --config tests/integration/vitest.config.ts packages/server/adapters/s3
 
 lint: ## Run Biome linter across workspace
 	pnpm lint

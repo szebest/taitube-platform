@@ -1,9 +1,9 @@
 import type { Category } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { cacheUnavailable } from '@vp/errors';
+import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { err, ok } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { RedisCategoryCacheAdapter } from '../redis-category-cache.adapter';
 
@@ -154,6 +154,14 @@ describe('RedisCategoryCacheAdapter', () => {
 
     await cache.publish(CacheKeys.categoriesInvalidated, JSON.stringify({ invalidatedAt: 1 }));
     expect(replica.getL1Size()).toBe(1);
+  });
+
+  it('passes a source failure through without caching it', async () => {
+    const failure = databaseUnavailable('findAll');
+
+    expect(expectErr(await service.getCategories(async () => err(failure)))).toBe(failure);
+    expect(service.getL1Size()).toBe(0);
+    expect(expectOk(await cache.get(CacheKeys.categories))).toBeNull();
   });
 
   it('falls back to the source when the distributed cache is unusable', async () => {

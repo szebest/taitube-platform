@@ -17,8 +17,10 @@ describe('adapters/postgres: video scan SQL query', () => {
       NOW
     );
 
-    expect(sqlText(scope)).toContain('COALESCE("videos"."deleted_at", "videos"."updated_at") < $2');
-    expect(sqlParams(scope)).toContainEqual(new Date(NOW.getTime() - 60_000));
+    expect(sqlText(scope)).toContain(
+      'COALESCE("videos"."deleted_at", "videos"."updated_at") < $2::timestamptz'
+    );
+    expect(sqlParams(scope)).toContainEqual('2025-12-31T23:59:00.000Z');
   });
 
   it('keeps videos from a minimum generation up', () => {

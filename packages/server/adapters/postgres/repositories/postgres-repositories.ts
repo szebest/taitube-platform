@@ -1,7 +1,7 @@
 import type { Repositories } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { assertNever } from '@vp/result';
-import { type PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import { PostgresCategoryRepository } from './postgres-category-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
@@ -15,10 +15,11 @@ import { PostgresUploadRepository } from './postgres-upload-repository';
 import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
+import type { PostgresDatabase } from './types';
 
 /** A `drizzle` handle or a `sql` pool is borrowed; a `url` opens a pool the bundle ends. */
 export type PostgresRepositoriesConfig =
-  | { type: 'drizzle'; db: PostgresJsDatabase<typeof schema> }
+  | { type: 'drizzle'; db: PostgresDatabase }
   | { type: 'sql'; sql: Sql }
   | { type: 'url'; url: string; max: number };
 
@@ -57,7 +58,7 @@ export class PostgresRepositories implements Repositories {
   }
 
   private static connect(config: PostgresRepositoriesConfig): {
-    db: PostgresJsDatabase<typeof schema>;
+    db: PostgresDatabase;
     ownedPool: Sql | undefined;
   } {
     switch (config.type) {

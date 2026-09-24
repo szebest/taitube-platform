@@ -4,14 +4,14 @@ import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, asc, eq, isNull, lt, sql } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
 import { toOutboxRecord } from '../mappers/index';
+import type { PostgresDatabase } from './types';
 
 const { outbox: o } = schema;
 
 export class PostgresOutboxRepository extends OutboxRepository {
-  constructor(private readonly db: PostgresJsDatabase<typeof schema>) {
+  constructor(private readonly db: PostgresDatabase) {
     super();
   }
 

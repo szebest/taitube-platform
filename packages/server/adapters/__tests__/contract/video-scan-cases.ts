@@ -3,7 +3,8 @@ import { HOUR_MS, VIDEO_IDS, publicVideo } from './fixtures';
 
 const STEP_ID = '00000000-0000-7000-8000-000000000301';
 const STEP_LOCK_TOKEN = '00000000-0000-7000-8000-000000000302';
-const IDLE_NOW = { since: 'updatedAt', ms: -1 } as const;
+/** Idle as of now, with an hour of slack for a database clock that runs ahead of this one. */
+const IDLE_NOW = { since: 'updatedAt', ms: -HOUR_MS } as const;
 
 function hoursAgo(hours: number): Date {
   return new Date(Date.now() - hours * HOUR_MS);

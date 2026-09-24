@@ -6,6 +6,8 @@ import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { S3StorageClient } from '../s3-storage-client';
 import { type CommandHandler, fakeS3Client, notFound } from './fake-s3-client';
+import { s3StorageClientSubject } from '../../__tests__/contract/s3-subjects';
+import { describeStorageClientContract } from '../../__tests__/contract/storage-client.contract';
 
 const BUCKET = 'raw';
 const KEY = '018f0000-0000-7000-8000-000000000001/source.mp4';
@@ -17,6 +19,8 @@ function fakeStorage(handlers?: Record<string, CommandHandler>) {
     storage: new S3StorageClient({ type: 'client', client: fake.client, healthBucket: BUCKET }),
   };
 }
+
+describeStorageClientContract(s3StorageClientSubject);
 
 describe('S3StorageClient', () => {
   describe('checkHealth', () => {

@@ -71,10 +71,6 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
       }
     });
 
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
     it.each(SORTS)('orders the feed by $sort', async ({ sort }) => {
       const result = expectOk(await ctx.videos.listPublic({ limit: 10, sort }));
 

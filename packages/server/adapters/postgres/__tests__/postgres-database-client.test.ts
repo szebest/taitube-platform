@@ -6,16 +6,16 @@ import type { Sql } from 'postgres';
 import { PostgresDatabaseClient } from '../postgres-database-client';
 
 function fakeSql(outcome: 'resolves' | 'rejects' = 'resolves') {
-  const settle = <T>(value: T) =>
+  const answer = <T>(value: T) =>
     outcome === 'resolves'
       ? Promise.resolve(value)
       : Promise.reject(new Error('connection refused'));
   const rows = Object.assign([{ id: 1 }], { count: 3 });
-  const sql = Object.assign(() => settle([{ '?column?': 1 }]), {
-    unsafe: vi.fn(() => settle(rows)),
-    begin: vi.fn((fn: (tx: unknown) => unknown) => settle(null).then(() => fn(sql))),
-    savepoint: vi.fn((fn: (tx: unknown) => unknown) => settle(null).then(() => fn(sql))),
-    end: vi.fn(() => settle(undefined)),
+  const sql = Object.assign(() => answer([{ '?column?': 1 }]), {
+    unsafe: vi.fn(() => answer(rows)),
+    begin: vi.fn((fn: (tx: unknown) => unknown) => answer(null).then(() => fn(sql))),
+    savepoint: vi.fn((fn: (tx: unknown) => unknown) => answer(null).then(() => fn(sql))),
+    end: vi.fn(() => answer(undefined)),
   });
   return sql as unknown as Sql & {
     end: ReturnType<typeof vi.fn>;

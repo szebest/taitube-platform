@@ -9,9 +9,9 @@ import {
 } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, eq, ne } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';
+import type { PostgresDatabase } from './types';
 
 function mapRow(row: typeof channels.$inferSelect): Channel {
   return {
@@ -29,7 +29,7 @@ function mapRow(row: typeof channels.$inferSelect): Channel {
 }
 
 export class PostgresChannelRepository implements ChannelRepositoryPort {
-  constructor(private readonly db: PostgresJsDatabase<Record<string, unknown>>) {}
+  constructor(private readonly db: PostgresDatabase) {}
 
   /** `channels` is unique on both `handle` and `user_id`; either collision is a taken handle. */
   private conflict(handle: string, operation: string) {

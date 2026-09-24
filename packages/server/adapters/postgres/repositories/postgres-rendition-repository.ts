@@ -7,11 +7,11 @@ import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, eq, inArray } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { toRenditionInsert, toRenditionUpdate } from '../mappers/index';
+import type { PostgresDatabase } from './types';
 
 export class PostgresRenditionRepository extends RenditionRepository {
-  constructor(private readonly db: PostgresJsDatabase<typeof schema>) {
+  constructor(private readonly db: PostgresDatabase) {
     super();
   }
 

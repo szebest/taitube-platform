@@ -12,6 +12,10 @@ export function describeUserRepositoryContract(makeSubject: MakeRepositoriesSubj
       subject = await makeSubject();
     });
 
+    afterAll(async () => {
+      await subject.close();
+    });
+
     beforeEach(async () => {
       await subject.reset();
       users = subject.repositories.users;
