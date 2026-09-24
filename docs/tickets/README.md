@@ -124,7 +124,8 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 85 | [Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md) | 5 | L | 84 | 86 | ready |
 | 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85 | — | blocked |
 | 87 | [One composition root — a typed container, configuration as a value, and no hidden dependencies](87-composition-root-typed-container-config-value.md) | 5 | L | 84 | 88 | done |
-| 88 | [Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | XL (delivered as six PRs, see *Delivery*) | 87 | — | in-progress |
+| 88 | [Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | XL (delivered as six PRs, see *Delivery*) | 87 | 90 | in-progress |
+| 90 | [Cloud Terraform on the Cloudflare v5 provider, validated in CI](90-cloud-terraform-provider-v5.md) | 5 | M | 88 | — | blocked |
 
 > Board statuses derive from each ticket's `**Status:**` line and its blockers: `ready` = all blockers done (the frontier) · `blocked` · `in-progress` · `done` · `blocked-by-date` (blockers done, waiting for a date the ticket names).
 
@@ -230,6 +231,7 @@ flowchart LR
         T86["86 Localisation rollout"]
         T87["87 One composition root"]
         T88["88 Codebase health to nine"]
+        T90["90 Cloud Terraform on the Cloudflare v5 pro…"]
     end
     subgraph 3_Developer_Velocity_Operational_Excellence["3 — Developer Velocity & Operational Excellence"]
         T80["80 Full-spectrum developer experience"]
@@ -438,6 +440,7 @@ flowchart LR
     T85 --> T86
     T84 --> T87
     T87 --> T88
+    T88 --> T90
 ```
 
 ## Parallel lanes (frontier levels)
@@ -456,7 +459,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 7 | [13](13-thumbnails-flow-child.md) Thumbnails as a non-blocking Flow child · [14](14-segment-streaming-uploader-disk-bounds.md) Stream segments to storage while encoding · [16](16-retries-dlq-admin-replay-reprocess.md) Retries · [21](21-observability-stack-local.md) Local observability stack · [25](25-kubernetes-local-k3d.md) Kubernetes locally · [34](34-node26-upgrade-deps.md) Node 26 LTS upgrade · [35](35-local-first-offline-mode.md) Local-first proof · [36](36-public-video-feed-api.md) Public video feed · [83](83-granular-container-topology-full-stack-deployment.md) Granular container topology · [84](84-result-typed-error-handling-shared-domain-rules.md) Result-typed error handling |
 | 8 | [20](20-phase2-acceptance-e2e-suite.md) Phase 2 acceptance · [22](22-metrics-catalogue-dashboards.md) Metrics catalogue populated + queue poll… · [23](23-otel-tracing-e2e.md) OpenTelemetry tracing end-to-end · [30](30-transactional-outbox.md) Transactional outbox · [49](49-nextgen-frontend-api-gateway-bootstrap.md) Next-Gen frontend direct API gateway & C… · [79](79-offline-smoke-runner-refactor-cleanup.md) Offline smoke test runner refactor & CI … · [80](80-ci-test-pipeline-optimization-speed.md) Full-spectrum developer experience · [85](85-universal-intl-formatting-message-core.md) Universal Intl formatting core · [87](87-composition-root-typed-container-config-value.md) One composition root |
 | 9 | [24](24-alert-rules-alertmanager.md) Alert rules + Alertmanager · [26](26-keda-autoscaling-graceful-shutdown.md) KEDA autoscaling on queue depth · [27](27-compose-autoscaler.md) Compose-level autoscaler · [32](32-cloud-overlay-deploy.md) Cloud reference deployment · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app · [88](88-codebase-health-ratchets.md) Codebase health to nine |
-| 10 | [28](28-k6-s1-s3-nightly-load-smoke.md) Load tests S1–S3 · [33](33-cost-guardrails-runbooks.md) Cost guardrails · [53](53-frontend-architecture-modernization-tanstack-query.md) Frontend architecture modernization |
+| 10 | [28](28-k6-s1-s3-nightly-load-smoke.md) Load tests S1–S3 · [33](33-cost-guardrails-runbooks.md) Cost guardrails · [53](53-frontend-architecture-modernization-tanstack-query.md) Frontend architecture modernization · [90](90-cloud-terraform-provider-v5.md) Cloud Terraform on the Cloudflare v5 pro… |
 | 11 | [29](29-chaos-tooling-k6-s4-s7.md) Chaos tooling · [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) Frontend testing infrastructure & integr… |
 | 12 | [55](55-design-system-tailwind-radix-dark-theme.md) Modern design system foundation |
 | 13 | [56](56-frontend-universal-auth-session-security.md) Frontend universal auth · [57](57-production-video-player-hls-streaming-controls.md) Production video player · [58](58-modern-browse-layout-microinteractions-motion.md) Modern browse layout · [69](69-frontend-url-state-search-params-modal-routing.md) Frontend URL-driven state architecture · [70](70-frontend-resilient-error-handling-retry-policy.md) Frontend resilient error handling |

@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | XL (delivered as six PRs, see *Delivery*) |
 | Blocked by | 87 — One composition root, a typed container and configuration as a value |
-| Blocks | — |
+| Blocks | 90 |
 | Spec | [SDD ADR-19 Hexagonal architecture](../SDD.md#adr-19--hexagonal-architecture-interface-segregation-and-modular-repository-boundaries) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-24 Result-typed error handling](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes--domain-services) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13 Autoscaling & Observability](../SDD.md#13-autoscaling--observability) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §16 Environment variables](../SDD.md#16-environment-variables) |
 
 **Status:** in-progress
@@ -517,7 +517,7 @@ computed, not written.
 - The web app's page loaded `bootstrap-icons` from jsdelivr and preconnected to Google Fonts and two Facebook hosts. The icons are an `apps/web` dependency now, bundled by CRA, and `local-first` fails on an off-machine host in `apps/web/public/*.html`.
 - `tools/hls-test-page`'s sample button fetched a stream from `test-streams.mux.dev`. It plays `sample/index.m3u8` beside the page now, which `make hls-sample` cuts from the `s15` fixture, and `local-first` holds `tools/hls-test-page/*.html` with the web app's page.
 - `infra/terraform/terraform.tfvars`, `*.tfstate` and `.terraform/` are git-ignored; `docker-compose.toxiproxy.yml` is deleted (nothing referenced it, the `chaos` profile replaced it).
-- Not done, and why: CI does not run `terraform fmt -check` or `terraform validate`. Both fail today: `main.tf` is not formatted, and `validate -backend=false` refuses `cloudflare_r2_bucket_lifecycle`, `cloudflare_r2_custom_domain` and `cloudflare_tunnel`, which the pinned `cloudflare ~> 4.35` provider does not have (the first two are v5 resources). Making them pass means porting the cloud stack to provider v5, which is its own ticket, and a check that is red from its first run is not a ratchet.
+- Out of 88: CI does not run `terraform fmt -check` or `terraform validate`. `validate -backend=false` refuses `cloudflare_r2_bucket_lifecycle`, `cloudflare_r2_custom_domain` and `cloudflare_tunnel`, which the pinned `cloudflare ~> 4.35` provider does not have, so a check would be red from its first run. The port to provider v5 and the CI step are [ticket 90](90-cloud-terraform-provider-v5.md). `main.tf` is `terraform fmt`-clean here, and `terraform fmt -check -recursive` passes.
 - Three defects found while reading the docs against the code became ACs: W1 AC 12 (the worker's R2 token), W9 AC 17 (the trace sampler) and W9 AC 18 (the KEDA Redis fallback).
 
 ---

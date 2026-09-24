@@ -37,8 +37,9 @@ function plainText(inline: Token): string {
     .join('');
 }
 
-function linksIn(inline: Token): MarkdownLink[] {
-  const firstLine = (inline.map?.[0] ?? 0) + 1;
+/** `blockLine` is the line of the block around it: an inline token in a table cell carries none. */
+function linksIn(inline: Token, blockLine: number): MarkdownLink[] {
+  const firstLine = (inline.map?.[0] ?? blockLine) + 1;
   let breaks = 0;
   const links: MarkdownLink[] = [];
   for (const child of inline.children ?? []) {
@@ -57,14 +58,16 @@ export function parseMarkdown(text: string): MarkdownDocument {
   const codeSpans: string[] = [];
   const codeBlocks: string[] = [];
 
+  let blockLine = 0;
   for (const [index, token] of tokens.entries()) {
+    blockLine = token.map?.[0] ?? blockLine;
     const inline = tokens[index + 1];
     if (token.type === 'heading_open' && inline) {
       headings.push({ depth: Number(token.tag.slice(1)), text: plainText(inline) });
     }
     if (token.type === 'fence' || token.type === 'code_block') codeBlocks.push(token.content);
     if (token.type === 'inline') {
-      links.push(...linksIn(token));
+      links.push(...linksIn(token, blockLine));
       for (const child of token.children ?? []) {
         if (child.type === 'code_inline') codeSpans.push(child.content);
       }
