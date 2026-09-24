@@ -598,9 +598,15 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
+      '@vp/job-contracts':
+        specifier: workspace:*
+        version: link:../job-contracts
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result
+      '@vp/storage':
+        specifier: workspace:*
+        version: link:../storage
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)

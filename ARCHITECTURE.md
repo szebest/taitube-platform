@@ -155,8 +155,8 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 
 ### Invariant 2: File Length & Sizing Discipline
 - Target size: `<= 250 lines` of code per file.
-- Strict limit: `400 lines` or `10 KB` per file, asserted by `tests/architecture/file-ceiling.test.ts`
-  against a shrink-only exception list (section 6).
+- Strict limit: `400 lines` or `10 KB` per file, specs and `tests/` included, asserted by
+  `tests/architecture/file-ceiling.test.ts` with no exception list (section 6).
 - See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
 
 ### Invariant 3: Autonomous In-Memory Test Doubles
@@ -319,7 +319,9 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 | `sdk-confinement.test.ts` | `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are imported only under `packages/server/adapters/` and `packages/server/db/`, and **declared** in no other manifest; `@vp/adapters` is imported only from a composition module | `import { Queue } from 'bullmq'` in `apps/api/src/app.ts`; `import { CaslAuthorizationAdapter } from '@vp/adapters'` in a service |
 | `lockfile-closure.test.ts` | `apps/web`'s resolved runtime closure holds no `server`-tier package — read from the lockfile, so a transitive edge is caught too | a `server` package linked into a `universal` package two hops from `apps/web` |
 | `local-first.test.ts` | no production source names an off-machine host; every uncommented `.env.example` default is local | a hardcoded `https://…onrender.com` |
-| `file-ceiling.test.ts` | no production source over 400 lines or 10 KB | 450 lines appended to a domain module |
+| `file-ceiling.test.ts` | no tracked `.ts`/`.tsx`/`.mts` file, specs and `tests/` included, over 400 lines or 10 KB; no exception list | a spec of 401 lines |
+| `no-process-comments.test.ts` | no comment and no `it`/`describe` title names a ticket, an AC, a workstream, a PR number or a numbered step, in production source, specs and `tests/` (AST); `ADR-NN` and `SDD §` stay allowed | `// AC 3` above a test, `describe('Outbox relay (Ticket 30)')` |
+| `redis-keys-owner.test.ts` | every Redis key and channel is built in `@vp/events` (`keys.ts`, `channels.ts`): no template literal starting `taitube:`, `video:` or `user:` and no `taitube:` string elsewhere in production source (AST) | `` `taitube:user:${userId}:reactions` `` in an adapter |
 | `test-correspondence.test.ts` | every production source with runtime code has `__tests__/<name>.test.ts` beside it | a new source file with no spec; a constant, a function or an abstract class with a concrete method still counts |
 | `esm-specifiers.test.ts` | no relative import in any tracked TypeScript source, specs included, carries an extension (`.js`, `.mjs`, `.ts`, `.tsx`); `apps/web` resolves extensionless workspace output through `craco.config.js` | `import { ok } from './result.js'` |
 | `core-barrels.test.ts` | each `@vp/core` barrel re-exports only its own folder; no `*.port.ts` anywhere | a barrel re-exporting a sibling folder |
@@ -353,10 +355,9 @@ The contract-drift assertion stays in `apps/api` because it has to boot the app:
 instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
 depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/api` can answer.
 
-**Two exception lists, both shrink-only.** `tests/architecture/oversized-sources.ts` and
-`untested-sources.ts` record the files that already breached the ceiling and the 1:1 test mandate when those
-rules became executable. Each assertion fails on a *new* breach **and** on a listed entry that no longer
-breaches, so the lists can only get shorter. None may be appended to.
+**One exception list left, shrink-only.** `tests/architecture/untested-sources.ts` records the sources that
+already breached the 1:1 test mandate when it became executable. The assertion fails on a *new* breach **and**
+on a listed entry that has gained its spec, so the list can only get shorter. Nothing may be appended to it.
 
 Three further mechanisms sit outside the suite:
 
@@ -364,5 +365,8 @@ Three further mechanisms sit outside the suite:
    SDK import in either composition root — is `error TS2307: Cannot find module`, not a lint warning.
 2. **`pnpm boundaries`** runs `scripts/check-boundaries.ts` plus the `CLAUDE.md` symlink check ahead of both
    `pnpm build` and `pnpm typecheck`, so a bad manifest fails before turbo starts.
-3. **Dual-runtime parity.** `pnpm test` (vitest) and `pnpm test:bun` (bun) must both pass; Biome lint reports
-   zero errors.
+3. **Dual-runtime parity.** `pnpm test` (vitest) and `pnpm test:bun` (bun) must both pass; Biome lint runs
+   with `--error-on-warnings`, and every rule it enables is at `error`.
+4. **`pnpm knip`**, twice in `lint-typecheck`: the default run (unused files, exports, types, dependencies,
+   unlisted imports) and `--production` (exports only a spec imports), both at zero, with
+   `includeEntryExports` on so a barrel export nobody imports is reported too.

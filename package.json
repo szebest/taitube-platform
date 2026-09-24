@@ -17,6 +17,7 @@
     "test:integration": "turbo run test:integration",
     "test:bun": "bun test --timeout 30000 apps/worker packages",
     "lint": "biome lint --error-on-warnings .",
+    "knip": "knip",
     "format": "biome format --write .",
     "typecheck": "pnpm boundaries && turbo run typecheck",
     "clean": "turbo run clean && rimraf node_modules",

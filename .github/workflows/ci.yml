@@ -57,11 +57,17 @@ jobs:
       - name: Check architectural invariants (tiers, SDK confinement, local-first, ceilings)
         run: pnpm test:architecture
 
-      - name: Run Biome lint
+      - name: Run Biome lint (warnings are errors)
         run: pnpm lint
 
       - name: Run TypeScript typecheck
         run: pnpm typecheck
+
+      - name: Find unused files, exports and dependencies (knip)
+        run: pnpm knip
+
+      - name: Find exports only specs use (knip --production)
+        run: pnpm knip --production
 
   unit:
     name: unit
