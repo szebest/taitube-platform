@@ -126,6 +126,14 @@ jobs:
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
 
+      - name: Restore the last run's spec durations, so the slowest specs start first
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.vite/vitest
+          key: vitest-results-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            vitest-results-${{ runner.os }}-
+
       - name: Run unit tests (Node 24)
         run: pnpm test:unit --pool=threads --maxWorkers=4
 
