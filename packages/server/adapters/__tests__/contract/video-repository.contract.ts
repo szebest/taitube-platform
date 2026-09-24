@@ -34,6 +34,10 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
       subject = await makeSubject();
     });
 
+    afterAll(async () => {
+      await subject.close();
+    });
+
     beforeEach(async () => {
       await subject.reset();
       videos = subject.repositories.videos;

@@ -3,10 +3,10 @@ import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { eq } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type { PostgresDatabase } from './types';
 
 export class PostgresUserRepository extends UserRepository {
-  constructor(private readonly db: PostgresJsDatabase<typeof schema>) {
+  constructor(private readonly db: PostgresDatabase) {
     super();
   }
 

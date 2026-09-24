@@ -9,7 +9,6 @@ import type { SubscribedChannelItem, SubscriptionChangeResult } from '@vp/domain
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, isErr, map } from '@vp/result';
 import { and, desc, eq, sql } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
 import {
   drizzleWhere,
@@ -17,11 +16,12 @@ import {
   notDeletedScope,
   publicVisibilityScope,
 } from '../scopes/index';
+import type { PostgresDatabase } from './types';
 
 const { channelSubscriptions: cs, channels: ch, videos: v } = schema;
 
 export class PostgresSubscriptionRepository implements SubscriptionRepositoryPort {
-  constructor(private readonly db: PostgresJsDatabase<typeof schema>) {}
+  constructor(private readonly db: PostgresDatabase) {}
 
   /**
    * Pure I/O. Whether an absent channel or a self-subscribe is an error is `decideSubscribe`'s

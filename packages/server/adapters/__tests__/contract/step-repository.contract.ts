@@ -29,6 +29,10 @@ export function describeStepRepositoryContract(makeSubject: MakeRepositoriesSubj
       subject = await makeSubject();
     });
 
+    afterAll(async () => {
+      await subject.close();
+    });
+
     beforeEach(async () => {
       await subject.reset();
       await seedOwners(subject.repositories);
@@ -75,6 +79,20 @@ export function describeStepRepositoryContract(makeSubject: MakeRepositoriesSubj
         })
       );
       expect(fresh).toEqual({ completed: true, fenced: false });
+    });
+
+    it('stamps the finish time on the step it completes', async () => {
+      await claimProbe(STEP_ID, TOKEN_A, 1);
+      await steps.complete({
+        videoId: VIDEO_IDS.a,
+        step: 'probe',
+        rendition: '-',
+        lockToken: TOKEN_A,
+      });
+
+      const [stored] = expectOk(await steps.findByVideoId(VIDEO_IDS.a));
+      expect(stored).toMatchObject({ status: 'DONE' });
+      expect(stored?.finishedAt).toBeInstanceOf(Date);
     });
 
     it('refuses to re-claim a finished step', async () => {

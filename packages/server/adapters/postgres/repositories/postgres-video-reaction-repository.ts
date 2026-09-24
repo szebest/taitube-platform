@@ -10,11 +10,11 @@ import type {
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, map } from '@vp/result';
 import { and, eq, sql } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
+import type { PostgresDatabase } from './types';
 
 export class PostgresVideoReactionRepository implements VideoReactionRepositoryPort {
-  constructor(private readonly db: PostgresJsDatabase<typeof schema>) {}
+  constructor(private readonly db: PostgresDatabase) {}
 
   async getUserReaction(
     videoId: string,

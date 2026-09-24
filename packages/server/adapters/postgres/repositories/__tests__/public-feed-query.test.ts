@@ -1,6 +1,6 @@
 import { TRENDING_GRAVITY } from '@vp/domain';
-import { sqlParams, sqlText } from '../../scopes/__tests__/sql-text';
 import type { PublicFeedSort } from '@vp/domain';
+import { sqlParams, sqlText } from '../../scopes/__tests__/sql-text';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from '../public-feed-query';
 
 const INSTANT = new Date('2026-01-01T00:00:00.000Z');

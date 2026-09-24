@@ -14,6 +14,10 @@ export function describeVideoReactionRepositoryContract(
       subject = await makeSubject();
     });
 
+    afterAll(async () => {
+      await subject.close();
+    });
+
     beforeEach(async () => {
       await subject.reset();
       await seedOwners(subject.repositories);

@@ -14,6 +14,7 @@ import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 const SUBSCRIBER_ID = '00000000-0000-7000-8000-000000000103';
 const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
 const OTHER_CHANNEL_ID = '00000000-0000-7000-8000-000000000902';
+const ABSENT_CHANNEL_ID = '00000000-0000-7000-8000-0000000009ff';
 
 export function describeSubscriptionRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
   describe('SubscriptionRepository contract', () => {
@@ -22,6 +23,10 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
 
     beforeAll(async () => {
       subject = await makeSubject();
+    });
+
+    afterAll(async () => {
+      await subject.close();
     });
 
     beforeEach(async () => {
@@ -72,6 +77,25 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
       expect(expectOk(await subscriptions.isSubscribed(SUBSCRIBER_ID, CHANNEL_ID))).toBe(false);
     });
 
+    it.each([
+      {
+        name: 'subscribing to',
+        write: (s: SubscriptionRepositoryPort) => s.subscribe(SUBSCRIBER_ID, ABSENT_CHANNEL_ID),
+      },
+      {
+        name: 'unsubscribing from',
+        write: (s: SubscriptionRepositoryPort) => s.unsubscribe(SUBSCRIBER_ID, ABSENT_CHANNEL_ID),
+      },
+    ])(
+      'reports $name a channel that is not there as a write that changed nothing',
+      async ({ write }) => {
+        expect(expectOk(await write(subscriptions))).toEqual({
+          changed: false,
+          subscriberCount: 0,
+        });
+      }
+    );
+
     it('lists the channel ids a user follows', async () => {
       await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
       await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
@@ -90,6 +114,40 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
       expect(page[0]?.id).toBe(OTHER_CHANNEL_ID);
       expect(page[0]?.handle).toBe('other-channel');
       expect(page[0]?.subscribedAt).toBeInstanceOf(Date);
+    });
+
+    it('carries the channel profile and its count on each listed subscription', async () => {
+      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+
+      const [row] = expectOk(
+        await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 10 })
+      );
+
+      expect(row).toMatchObject({
+        id: CHANNEL_ID,
+        userId: OWNER_ID,
+        handle: 'owner-channel',
+        displayName: 'Owner Channel',
+        subscriberCount: 1,
+      });
+    });
+
+    it('resumes the subscription listing from a keyset cursor without repeating a channel', async () => {
+      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+      await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
+      const [first] = expectOk(
+        await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 1 })
+      );
+      if (!first) throw new Error('the first page is empty');
+
+      const next = expectOk(
+        await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, {
+          limit: 1,
+          cursor: { createdAt: first.subscribedAt, channelId: first.id },
+        })
+      );
+
+      expect(next.map((row) => row.id)).toEqual([CHANNEL_ID]);
     });
 
     it('feeds the public videos of the subscribed channels only', async () => {

@@ -22,7 +22,6 @@ import {
 } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
   drizzleWhere,
   keysetBefore,
@@ -31,13 +30,13 @@ import {
   videoReadScope,
 } from '../scopes/index';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
-import type { VideoInsert } from './types';
+import type { PostgresDatabase, VideoInsert } from './types';
 import { videoScanScope } from './video-scan-query';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 
 export class PostgresVideoRepository extends VideoRepository {
-  constructor(private readonly db: PostgresJsDatabase<typeof schema>) {
+  constructor(private readonly db: PostgresDatabase) {
     super();
   }
 

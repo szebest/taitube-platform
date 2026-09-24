@@ -12,13 +12,13 @@ import {
 import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, map } from '@vp/result';
-import { and, eq, sql } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { and, eq, ne, sql } from 'drizzle-orm';
+import type { PostgresDatabase } from './types';
 
 const CLAIMED = { id: schema.processingSteps.id };
 
 export class PostgresStepRepository extends StepRepository {
-  constructor(private readonly db: PostgresJsDatabase<typeof schema>) {
+  constructor(private readonly db: PostgresDatabase) {
     super();
   }
 
@@ -26,30 +26,45 @@ export class PostgresStepRepository extends StepRepository {
     const { id, videoId, step, rendition = '-', jobId, attempt, workerId, lockToken } = options;
     const claimed = await fromPromise(
       () =>
-        this.db.execute<{ lock_token: string }>(sql`
-        INSERT INTO processing_steps (
-          id, video_id, step, rendition, job_id, attempt, status, worker_id, lock_token, started_at, heartbeat_at
-        )
-        VALUES (
-          ${id}::uuid, ${videoId}::uuid, ${step}, ${rendition}, ${jobId}, ${attempt}, 'RUNNING'::step_status, ${workerId}, ${lockToken}::uuid, now(), now()
-        )
-        ON CONFLICT (video_id, step, rendition) DO UPDATE
-          SET attempt = EXCLUDED.attempt,
-              status = 'RUNNING'::step_status,
-              worker_id = EXCLUDED.worker_id,
-              lock_token = EXCLUDED.lock_token,
-              started_at = now(),
-              heartbeat_at = now(),
-              error_code = NULL,
-              error_message = NULL
-          WHERE processing_steps.status <> 'DONE'::step_status
-        RETURNING lock_token;
-      `),
+        this.db
+          .insert(schema.processingSteps)
+          .values({
+            id,
+            videoId,
+            step,
+            rendition,
+            jobId,
+            attempt,
+            status: 'RUNNING',
+            workerId,
+            lockToken,
+            startedAt: sql`now()`,
+            heartbeatAt: sql`now()`,
+          })
+          .onConflictDoUpdate({
+            target: [
+              schema.processingSteps.videoId,
+              schema.processingSteps.step,
+              schema.processingSteps.rendition,
+            ],
+            set: {
+              attempt,
+              status: 'RUNNING',
+              workerId,
+              lockToken,
+              startedAt: sql`now()`,
+              heartbeatAt: sql`now()`,
+              errorCode: null,
+              errorMessage: null,
+            },
+            setWhere: ne(schema.processingSteps.status, 'DONE'),
+          })
+          .returning({ lockToken: schema.processingSteps.lockToken }),
       databaseUnavailable.during('claim')
     );
 
     return map(claimed, (rows) => {
-      const token = rows[0]?.lock_token;
+      const token = rows[0]?.lockToken;
       return token
         ? { stepId: id, lockToken: token, fenced: false }
         : { stepId: id, lockToken: '', fenced: true };
@@ -66,9 +81,9 @@ export class PostgresStepRepository extends StepRepository {
           .update(schema.processingSteps)
           .set({
             status: 'DONE',
-            completedAt: new Date(),
+            finishedAt: new Date(),
             result,
-          } as Partial<typeof schema.processingSteps.$inferInsert>)
+          })
           .where(this.fencedStep(videoId, step, rendition, lockToken))
           .returning(CLAIMED),
       databaseUnavailable.during('complete')
@@ -87,10 +102,10 @@ export class PostgresStepRepository extends StepRepository {
           .update(schema.processingSteps)
           .set({
             status: 'FAILED',
-            completedAt: new Date(),
+            finishedAt: new Date(),
             errorCode,
             errorMessage: errorMessage || null,
-          } as Partial<typeof schema.processingSteps.$inferInsert>)
+          })
           .where(this.fencedStep(videoId, step, rendition, lockToken))
           .returning(CLAIMED),
       databaseUnavailable.during('fail')
@@ -109,10 +124,10 @@ export class PostgresStepRepository extends StepRepository {
           .update(schema.processingSteps)
           .set({
             status: 'DEAD',
-            completedAt: new Date(),
+            finishedAt: new Date(),
             errorCode: errorCode || null,
             errorMessage: errorMessage || null,
-          } as Partial<typeof schema.processingSteps.$inferInsert>)
+          })
           .where(
             and(
               eq(schema.processingSteps.videoId, videoId),
