@@ -17,7 +17,14 @@ resources:
     cpu: 1000m
     memory: 1Gi
 
-defaultBuckets: "raw,public"
+# charts.min.io creates these in its post-install job; `defaultBuckets` is the Bitnami chart's key.
+buckets:
+  - name: raw
+    policy: none
+    purge: false
+  - name: public
+    policy: download
+    purge: false
 
 postJob:
   podAnnotations: {}
