@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RENDITIONS, type RenditionName } from './ladder';
+import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 
 export * from './ladder';
 export * from './policies';
@@ -16,19 +16,6 @@ export const QUEUES = [
   'dlq',
 ] as const;
 export type QueueName = (typeof QUEUES)[number];
-
-export const LadderEntry = z.object({
-  name: z.enum(RENDITIONS),
-  width: z.number().int().positive(),
-  height: z.number().int().positive(),
-  videoKbps: z.number().int().positive(),
-  maxrateKbps: z.number().int().positive(),
-  bufsizeKbps: z.number().int().positive(),
-  audioKbps: z.number().int().positive(),
-  profile: z.enum(['main', 'high']),
-  level: z.string(),
-});
-export type LadderEntry = z.infer<typeof LadderEntry>;
 
 const Base = z.object({
   videoId: z.string().uuid(),

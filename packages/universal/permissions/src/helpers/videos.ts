@@ -17,12 +17,6 @@ export function canReadVideo({
   return ability.can('read', videoSubject);
 }
 
-export function canCreateVideo({ user }: { user: UserContext | null }): boolean {
-  if (!user) return false;
-  const ability = getUserPermissions(user);
-  return ability.can('create', 'Video');
-}
-
 export function canUpdateVideo({
   user,
   video,

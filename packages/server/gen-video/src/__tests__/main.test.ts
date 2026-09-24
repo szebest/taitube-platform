@@ -1,41 +1,40 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { main } from '../main';
 
-describe('packages/gen-video: main', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
+const ENTRYPOINT = path.resolve(import.meta.dirname, '../main.ts');
+
+function genVideo(...argv: string[]) {
+  return spawnSync('bun', [ENTRYPOINT, ...argv], {
+    env: { PATH: process.env.PATH },
+    encoding: 'utf8',
+    timeout: 20_000,
+  });
+}
+
+describe('packages/gen-video: pnpm gen-video', () => {
+  it('runs the command it is given', () => {
+    const help = genVideo('--help');
+
+    expect(help.status).toBe(0);
+    expect(help.stdout).toContain('pnpm gen-video [options]');
   });
 
-  it('prints its usage for --help and generates nothing', async () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-    await main(['--help']);
-
-    expect(log).toHaveBeenCalledTimes(1);
-    expect(String(log.mock.calls[0]?.[0])).toContain('pnpm gen-video [options]');
-  });
-
-  it('prints why the output directory cannot be written and exits 1', async () => {
+  it('prints why generation failed and exits 1', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vp-gen-video-'));
     const blocker = path.join(dir, 'a-file');
     fs.writeFileSync(blocker, '');
-    const outputDir = path.join(blocker, 'fixtures');
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const exit = vi.spyOn(process, 'exit').mockImplementation((() => {
-      throw new Error('exited');
-    }) as () => never);
 
-    await expect(main(['--output-dir', outputDir, '--only', 'zero-bytes'])).rejects.toThrow(
-      'exited'
+    const blocked = genVideo(
+      '--output-dir',
+      path.join(blocker, 'fixtures'),
+      '--only',
+      'zero-bytes'
     );
 
-    expect(String(error.mock.calls[0]?.[0])).toContain(
-      `[gen-video] Could not write fixtures into ${outputDir}: `
-    );
-    expect(exit).toHaveBeenCalledWith(1);
+    expect(blocked.status).toBe(1);
+    expect(blocked.stderr).toContain('[gen-video] ENOTDIR');
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });

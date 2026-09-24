@@ -1,9 +1,8 @@
 import { InMemoryChannelRepository } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { isReservedHandle, isValidHandleFormat, normalizeHandle } from '@vp/validation';
 
-describe('Channel Domain & InMemoryChannelRepository', () => {
+describe('apps/api: channel repository', () => {
   let channelRepo: InMemoryChannelRepository;
 
   const USER_ONE = '11111111-1111-7000-8000-000000000001';
@@ -11,37 +10,6 @@ describe('Channel Domain & InMemoryChannelRepository', () => {
 
   beforeEach(() => {
     channelRepo = new InMemoryChannelRepository();
-  });
-
-  describe('Handle Validation & Sanitization', () => {
-    it.each([
-      { handle: 'johndoe', valid: true },
-      { handle: 'john_doe-123.tv', valid: true },
-      { handle: 'ab', valid: false },
-      { handle: 'a'.repeat(31), valid: false },
-      { handle: 'john doe', valid: false },
-      { handle: 'john@doe', valid: false },
-    ])('validates the format of $handle as $valid', ({ handle, valid }) => {
-      expect(isValidHandleFormat(handle)).toBe(valid);
-    });
-
-    it.each([
-      { handle: 'admin', reserved: true },
-      { handle: 'ADMIN', reserved: true },
-      { handle: 'api', reserved: true },
-      { handle: 'studio', reserved: true },
-      { handle: 'feed', reserved: true },
-      { handle: 'regularuser', reserved: false },
-    ])('reports $handle as reserved=$reserved', ({ handle, reserved }) => {
-      expect(isReservedHandle(handle)).toBe(reserved);
-    });
-
-    it.each([
-      { input: '@JohnDoe', expected: 'johndoe' },
-      { input: 'Creator_01 ', expected: 'creator_01' },
-    ])('normalizes $input to $expected', ({ input, expected }) => {
-      expect(normalizeHandle(input)).toBe(expected);
-    });
   });
 
   describe('InMemoryChannelRepository CRUD', () => {

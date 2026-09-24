@@ -8,7 +8,6 @@ import {
 import type { UserContext, VideoResource } from '../../types/index';
 import {
   canAccessAdmin,
-  canCreateVideo,
   canDeleteVideo,
   canManageCategory,
   canReactVideo,
@@ -21,7 +20,6 @@ type Check = (user: UserContext | null, resource?: VideoResource) => boolean;
 
 const CHECKS = {
   'video:read': (user, video) => canReadVideo({ user, video }),
-  'video:create': (user) => canCreateVideo({ user }),
   'video:update': (user, video) => canUpdateVideo({ user, video }),
   'video:delete': (user, video) => canDeleteVideo({ user, video }),
   'video:react': (user) => canReactVideo({ user }),
@@ -39,7 +37,6 @@ const GUEST: Row[] = [
   ['reads a public video', 'video:read', true, { visibility: 'public' }],
   ['reads an unlisted video', 'video:read', true, { visibility: 'unlisted' }],
   ['reads a private video', 'video:read', false, { visibility: 'private', ownerId: 'usr-1' }],
-  ['creates a video', 'video:create', false],
   ['updates a video', 'video:update', false, { ownerId: 'usr-1' }],
   ['deletes a video', 'video:delete', false, { ownerId: 'usr-1' }],
   ['reacts to a video', 'video:react', false],
@@ -49,7 +46,6 @@ const GUEST: Row[] = [
 ];
 
 const USER: Row[] = [
-  ['creates a video', 'video:create', true],
   ['reacts to a video', 'video:react', true],
   ['subscribes to a channel', 'channel:subscribe', true],
   ['reads a foreign public video', 'video:read', true, { visibility: 'public', ownerId: 'usr-2' }],

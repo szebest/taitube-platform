@@ -10,13 +10,7 @@ import {
   unlistedVideo,
 } from '../../__mocks__/fixtures';
 import type { UserContext, VideoResource } from '../../types/index';
-import {
-  canCreateVideo,
-  canDeleteVideo,
-  canReactVideo,
-  canReadVideo,
-  canUpdateVideo,
-} from '../videos';
+import { canDeleteVideo, canReactVideo, canReadVideo, canUpdateVideo } from '../videos';
 
 type VideoCase = {
   scenario: string;
@@ -82,17 +76,14 @@ describe('helpers/videos: Video Action Helpers', () => {
     });
   });
 
-  describe.each([
-    { helper: 'canCreateVideo', check: canCreateVideo },
-    { helper: 'canReactVideo', check: canReactVideo },
-  ])('$helper', ({ check }) => {
+  describe('canReactVideo', () => {
     it.each<ViewerCase>([
       { scenario: 'a guest', user: guestUser, expected: false },
       { scenario: 'a standard user', user: standardUser, expected: true },
       { scenario: 'a creator', user: creatorUser, expected: true },
       { scenario: 'an admin', user: adminUser, expected: true },
     ])('$scenario: $expected', ({ user, expected }) => {
-      expect(check({ user })).toBe(expected);
+      expect(canReactVideo({ user })).toBe(expected);
     });
   });
 

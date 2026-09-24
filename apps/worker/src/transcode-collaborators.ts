@@ -2,9 +2,9 @@ import type { CacheClient, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { PipelineMetrics } from '@vp/observability';
-import { TranscodeProgressReporter } from './progress-reporter';
-import { StreamingSegmentUploader } from './segment-uploader';
-import type { TranscodeProcessorDeps } from './transcode';
+import { TranscodeProgressReporter } from './stages/progress-reporter';
+import { StreamingSegmentUploader } from './stages/segment-uploader';
+import type { TranscodeProcessorDeps } from './stages/transcode';
 
 interface CollaboratorDeps {
   config: AppConfig;

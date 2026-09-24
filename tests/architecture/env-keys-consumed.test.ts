@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import ts from 'typescript';
+import { platformKeys } from './env-keys';
 import { fixtureProgram, productionProgram } from './program';
 import { ROOT, read } from './repo-files';
 
@@ -181,7 +182,7 @@ describe('architecture: every declared key is read and every config leaf is cons
     const appEnv = new Set(declaredKeys(read(`${ENV_SCHEMA}app-env.ts`)));
 
     expect(
-      declaredKeys(read(`${ENV_SCHEMA}platform-env.ts`)).filter((key) => appEnv.has(key))
+      platformKeys().filter((key) => appEnv.has(key))
     ).toEqual([]);
   });
 

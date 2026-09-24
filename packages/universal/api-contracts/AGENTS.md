@@ -27,7 +27,7 @@ from here; `@vp/api-client` derives its typed fetchers from here. Neither re-dec
 3. **One file per route group**, named after the group (`videos.ts`, `feed.ts`, `channels.ts`) — never
    after the artefact (`schemas.ts`, `types.ts`).
 4. **Relative imports are extensionless**, as in every tier (`esm-specifiers.test.ts`).
-5. Every endpoint is registered in `index.ts` (`API_ENDPOINTS` / `findEndpoint`).
+5. Every endpoint is registered in `index.ts`, in its route group's slot of `contracts`.
 
 ---
 

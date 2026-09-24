@@ -86,7 +86,12 @@ const ROWS: readonly Row[] = [
     [...PRODUCTION_SOURCE, ':(exclude)packages/server/storage/src/keys.ts'],
     0,
   ],
-  ['a hand-listed rendition ladder', /'1080p', '720p'/g, PRODUCTION_SOURCE, 0],
+  [
+    'the rendition names, listed once in the ladder module',
+    /'1080p', '720p'/g,
+    PRODUCTION_SOURCE,
+    1,
+  ],
   ['the dead default ladder', /\bDEFAULT_LADDER\b/g, PRODUCTION_SOURCE, 0],
   [
     'a doc asking for an import extension',

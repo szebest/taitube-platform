@@ -1,6 +1,7 @@
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
 import { z } from 'zod';
 import { heldLocalCredentials } from './local-credentials';
+import { SECRET_KEYS } from './secret-keys';
 
 /**
  * A secret has no default: an unset one is absent, and `AppEnvSchema` refuses a production boot
@@ -25,14 +26,6 @@ const commaList = <T extends z.ZodTypeAny>(item: T) =>
         .filter(Boolean)
     )
     .pipe(z.array(item));
-
-/** What a production boot cannot start without, and what the cloud overlay's `ExternalSecret` supplies. */
-export const SECRET_KEYS = [
-  'DATABASE_URL',
-  'S3_ACCESS_KEY_ID',
-  'S3_SECRET_ACCESS_KEY',
-  'REDIS_PASSWORD',
-] as const;
 
 export const JWS_ALGORITHMS = [
   'RS256',

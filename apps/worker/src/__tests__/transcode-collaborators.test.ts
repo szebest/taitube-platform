@@ -5,8 +5,8 @@ import {
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
-import { TranscodeProgressReporter } from '../progress-reporter';
-import { StreamingSegmentUploader } from '../segment-uploader';
+import { TranscodeProgressReporter } from '../stages/progress-reporter';
+import { StreamingSegmentUploader } from '../stages/segment-uploader';
 import { transcodeCollaborators } from '../transcode-collaborators';
 
 const logger = createLogger({ service: 'collaborators-spec', level: 'silent' });

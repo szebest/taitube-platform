@@ -1,8 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
-import { AppEnvSchema, SECRET_KEYS } from '../app-env';
-import { PLATFORM_ENV } from '../platform-env';
+import { AppEnvSchema } from '../app-env';
+import { SECRET_KEYS } from '../secret-keys';
+
+const PLATFORM_ENV: Record<string, string> = JSON.parse(
+  readFileSync(new URL('../platform-env.json', import.meta.url), 'utf8')
+);
 
 const SHAPE = AppEnvSchema.innerType().shape;
 

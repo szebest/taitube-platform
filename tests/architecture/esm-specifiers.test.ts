@@ -1,3 +1,5 @@
+import { extname } from 'node:path';
+import ts from 'typescript';
 import { read, trackedFiles } from './repo-files';
 
 const TYPESCRIPT_SOURCES = [
@@ -10,35 +12,62 @@ const TYPESCRIPT_SOURCES = [
   ':(glob)tests/**/*.ts',
 ];
 
-const RELATIVE_SPECIFIER =
-  /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|\bvi\.mock\s*\(\s*)['"](\.{1,2}\/[^'"]*)['"]/g;
-const EXTENSION = /\.(?:[cm]?js|[cm]?ts|tsx|jsx)$/;
+const EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.jsx', '.ts', '.mts', '.cts', '.tsx']);
+const CALLS_TAKING_A_MODULE = new Set(['import', 'require', 'mock']);
 
-function extensioned(source: string): string[] {
-  return [...source.matchAll(RELATIVE_SPECIFIER)]
-    .map((match) => match[1] as string)
-    .filter((specifier) => EXTENSION.test(specifier));
+function calleeName(call: ts.CallExpression): string | undefined {
+  if (call.expression.kind === ts.SyntaxKind.ImportKeyword) return 'import';
+  if (ts.isIdentifier(call.expression)) return call.expression.text;
+  if (ts.isPropertyAccessExpression(call.expression)) return call.expression.name.text;
+  return undefined;
+}
+
+function moduleSpecifier(node: ts.Node): string | undefined {
+  if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier) {
+    return ts.isStringLiteral(node.moduleSpecifier) ? node.moduleSpecifier.text : undefined;
+  }
+  if (ts.isCallExpression(node) && CALLS_TAKING_A_MODULE.has(calleeName(node) ?? '')) {
+    const [first] = node.arguments;
+    if (first && ts.isStringLiteral(first)) return first.text;
+  }
+  return undefined;
+}
+
+function extensioned(name: string, source: string): string[] {
+  const kind = name.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true, kind);
+  const found: string[] = [];
+  const visit = (node: ts.Node) => {
+    const specifier = moduleSpecifier(node);
+    if (specifier?.startsWith('.') && EXTENSIONS.has(extname(specifier))) found.push(specifier);
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return found;
 }
 
 describe('architecture: extensionless relative imports', () => {
   it.each([
-    ['import { ok } from ', './result', '.js', ';'],
-    ['export * from ', '../errors', '.mjs', ';'],
-    ['const lazy = await import(', './lazy', '.ts', ');'],
-    ['vi.mock(', './adapter', '.js', ', () => ({}));'],
-    ['import ', './side-effect', '.tsx', ';'],
-  ])('fires on %s%s%s', (head, path, extension, tail) => {
-    expect(extensioned(`${head}'${path}${extension}'${tail}`)).toEqual([`${path}${extension}`]);
+    ['an import', "import { ok } from './result.js';", './result.js'],
+    ['a re-export', "export * from '../errors.mjs';", '../errors.mjs'],
+    ['a dynamic import', "const lazy = await import('./lazy.ts');", './lazy.ts'],
+    ['a vi.mock of a path', "vi.mock('./adapter.js', () => ({}));", './adapter.js'],
+    ['a vi.mock of an import', "vi.mock(import('./adapter.js'));", './adapter.js'],
+    ['a side-effect import', "import './side-effect.tsx';", './side-effect.tsx'],
+  ])('fires on %s', (_name, source, specifier) => {
+    expect(extensioned('fixture.ts', source)).toEqual([specifier]);
   });
 
   it('passes an extensionless relative import and a bare package specifier', () => {
-    expect(extensioned("import { ok } from './result';\nimport { z } from 'zod';")).toEqual([]);
+    expect(
+      extensioned('fixture.ts', "import { ok } from './result';\nimport { z } from 'zod.js';")
+    ).toEqual([]);
   });
 
   it('finds no extension on a relative import in any tier, specs included', () => {
     const files = trackedFiles(...TYPESCRIPT_SOURCES);
     const offenders = files.flatMap((file) =>
-      extensioned(read(file)).map((specifier) => `${file}: '${specifier}'`)
+      extensioned(file, read(file)).map((specifier) => `${file}: '${specifier}'`)
     );
 
     expect(files.length).toBeGreaterThan(500);

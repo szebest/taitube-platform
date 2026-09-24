@@ -4,8 +4,8 @@
   "ignoreBinaries": ["ffmpeg", "ffprobe", "kubectl", "kustomize"],
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.ts!", "tests/e2e/e2e-runner.ts"],
-      "project": ["scripts/**/*.ts!", "tests/**/*.ts"]
+      "entry": ["scripts/*.ts", "tests/e2e/e2e-runner.ts"],
+      "project": ["scripts/**/*.ts", "tests/**/*.ts"]
     },
     "apps/api": {
       "entry": ["src/main.ts!", "src/migrate.ts!", "src/seed.ts!", "src/**/type-fixtures/*.ts"],
@@ -22,14 +22,49 @@
     },
     "apps/web": {
       "entry": ["src/index.tsx!"],
-      "ignore": ["craco.config.js"],
       "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!", "!src/**/*.test.{ts,tsx}!"]
     },
     "packages/server/testing": {
+      "includeEntryExports": false,
       "project": ["src/**/*.ts"]
     },
+    "packages/server/dev-token": {
+      "entry": ["src/main.ts!"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/server/gen-video": {
+      "entry": ["src/main.ts!"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/universal/errors": {
+      "entry": ["src/**/type-fixtures/*.ts"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/universal/result": {
+      "entry": ["src/**/type-fixtures/*.ts"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
     "packages/*/*": {
-      "entry": ["src/main.ts!", "src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",

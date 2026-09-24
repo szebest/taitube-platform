@@ -30,7 +30,7 @@ import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
 import { createThumbnailProcessor } from './stages/thumbnail';
 import { createTranscodeProcessor } from './stages/transcode';
-import { transcodeCollaborators } from './stages/transcode-collaborators';
+import { transcodeCollaborators } from './transcode-collaborators';
 
 interface StageDeps {
   config: AppConfig;

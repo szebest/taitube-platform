@@ -44,6 +44,20 @@ describe('rules/video.rules: Declarative Video Ability Rules', () => {
       expected: false,
     },
     {
+      scenario: 'a guest creates a video',
+      user: guestUser,
+      action: 'create',
+      target: 'Video',
+      expected: false,
+    },
+    {
+      scenario: 'a signed-in user creates a video',
+      user: standardUser,
+      action: 'create',
+      target: 'Video',
+      expected: true,
+    },
+    {
       scenario: 'the owner reads their private video',
       user: creatorUser,
       action: 'read',

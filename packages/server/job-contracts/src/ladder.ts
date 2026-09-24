@@ -1,7 +1,22 @@
-/**
- * Authoritative HLS rendition ladder matching SDD §8.1, tallest first.
- * Bitrates and profiles follow Apple HLS Authoring Specifications.
- */
+import { z } from 'zod';
+
+export const RENDITIONS = ['1080p', '720p', '480p'] as const;
+export type RenditionName = (typeof RENDITIONS)[number];
+
+export const LadderEntry = z.object({
+  name: z.enum(RENDITIONS),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  videoKbps: z.number().int().positive(),
+  maxrateKbps: z.number().int().positive(),
+  bufsizeKbps: z.number().int().positive(),
+  audioKbps: z.number().int().positive(),
+  profile: z.enum(['main', 'high']),
+  level: z.string(),
+});
+export type LadderEntry = z.infer<typeof LadderEntry>;
+
+/** SDD §8.1, tallest first: a source shorter than every rung keeps the last one. */
 export const CANONICAL_LADDER = [
   {
     name: '1080p',
@@ -36,10 +51,4 @@ export const CANONICAL_LADDER = [
     profile: 'main',
     level: '3.1',
   },
-] as const;
-
-const [fullHd, hd, sd] = CANONICAL_LADDER;
-
-export const RENDITIONS = [fullHd.name, hd.name, sd.name] as const;
-
-export type RenditionName = (typeof RENDITIONS)[number];
+] as const satisfies readonly LadderEntry[];

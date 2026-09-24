@@ -4,17 +4,23 @@ import {
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
-import { API_ENDPOINTS, endpointKey, findEndpoint } from '@vp/api-contracts';
+import { contracts, endpointKey, isEndpoint } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 
 /** Mounted by third-party plugins (@fastify/swagger, Scalar, Bull Board), not by this repo. */
 const VENDOR_PREFIXES = ['/docs', '/openapi.json', '/admin/queues'];
 
+const ENDPOINTS = Object.values(contracts).flatMap((group) =>
+  Object.values(group).filter(isEndpoint)
+);
+
+const ENDPOINT_KEYS = new Set(
+  ENDPOINTS.map((endpoint) => endpointKey(endpoint.method, endpoint.path))
+);
+
 const UNVERSIONED_PATHS = new Set(
-  API_ENDPOINTS.filter((endpoint) => !endpoint.path.startsWith('/v1/')).map(
-    (endpoint) => endpoint.path
-  )
+  ENDPOINTS.filter((endpoint) => !endpoint.path.startsWith('/v1/')).map((endpoint) => endpoint.path)
 );
 
 interface RegisteredRoute {
@@ -102,7 +108,7 @@ describe('apps/api: contract drift', () => {
   });
 
   it('finds the routes it is meant to police', () => {
-    expect(registered.length).toBeGreaterThan(API_ENDPOINTS.length);
+    expect(registered.length).toBeGreaterThan(ENDPOINTS.length);
     expect(registered).toContainEqual({ method: 'GET', path: '/v1/feed' });
     expect(registered).toContainEqual({ method: 'PUT', path: '/v1/videos/:id/reactions' });
   });
@@ -112,7 +118,9 @@ describe('apps/api: contract drift', () => {
       .filter(({ path }) => !VENDOR_PREFIXES.some((prefix) => path.startsWith(prefix)))
       .filter(
         ({ method, path }) =>
-          !canonicalPaths(path).some((candidate) => findEndpoint(method, candidate))
+          !canonicalPaths(path).some((candidate) =>
+            ENDPOINT_KEYS.has(endpointKey(method, candidate))
+          )
       )
       .map(({ method, path }) => endpointKey(method, path));
 
@@ -120,7 +128,7 @@ describe('apps/api: contract drift', () => {
   });
 
   it('routes every endpoint the contract promises', () => {
-    const unrouted = API_ENDPOINTS.filter(
+    const unrouted = ENDPOINTS.filter(
       (endpoint) => !app.hasRoute({ method: endpoint.method, url: endpoint.path })
     ).map((endpoint) => endpointKey(endpoint.method, endpoint.path));
 
@@ -128,7 +136,7 @@ describe('apps/api: contract drift', () => {
   });
 
   it('documents each endpoint with the contract prose, not a parallel copy', () => {
-    const drifted = API_ENDPOINTS.filter((endpoint) => {
+    const drifted = ENDPOINTS.filter((endpoint) => {
       const documentedPath = endpoint.path.replace(/:([A-Za-z0-9_]+)/g, '{$1}');
       const operation = spec.paths[documentedPath]?.[endpoint.method.toLowerCase()];
       return (

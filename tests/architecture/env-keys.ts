@@ -1,13 +1,18 @@
+import { AppEnvSchema } from '../../packages/server/env-schema/src/index';
 import { read } from './repo-files';
 
 const KEY = /^[A-Z][A-Z0-9_]*$/;
 
-/** Every key the environment schema declares, read off its zod object literals. */
+const ENV_SCHEMA = 'packages/server/env-schema/src/';
+
+/** The keys this repo hands to something other than its own code, each with the consumer that reads it. */
+export function platformKeys(): string[] {
+  return Object.keys(JSON.parse(read(`${ENV_SCHEMA}platform-env.json`)));
+}
+
+/** Every key the environment schema declares. */
 export function schemaKeys(): Set<string> {
-  const source = ['app-env.ts', 'platform-env.ts']
-    .map((file) => read(`packages/server/env-schema/src/${file}`))
-    .join('\n');
-  return new Set([...source.matchAll(/^\s{2}([A-Z][A-Z0-9_]+):/gm)].map((m) => m[1] as string));
+  return new Set([...Object.keys(AppEnvSchema.innerType().shape), ...platformKeys()]);
 }
 
 export function exampleKeys(): Set<string> {

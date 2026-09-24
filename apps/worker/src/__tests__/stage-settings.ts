@@ -8,7 +8,7 @@ import type { MediaTools } from '@vp/ffmpeg';
 import { type Logger, createMetricsRegistry } from '@vp/observability';
 import { housekeepingTasks } from '../stages/housekeeping/index';
 import type { TranscodeProcessorDeps } from '../stages/transcode';
-import { transcodeCollaborators } from '../stages/transcode-collaborators';
+import { transcodeCollaborators } from '../transcode-collaborators';
 
 const config = inProcessAppConfig();
 

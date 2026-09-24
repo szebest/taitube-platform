@@ -1,10 +1,8 @@
-import { LadderEntry } from '../index';
-import { CANONICAL_LADDER, RENDITIONS } from '../ladder';
+import { CANONICAL_LADDER, LadderEntry, RENDITIONS } from '../ladder';
 
 describe('@vp/job-contracts rendition ladder', () => {
-  it('names every rung of the ladder, tallest first', () => {
-    expect(RENDITIONS).toEqual(CANONICAL_LADDER.map((rung) => rung.name));
-    expect(RENDITIONS).toEqual(['1080p', '720p', '480p']);
+  it('has one rung per rendition, in rendition order', () => {
+    expect(CANONICAL_LADDER.map((rung) => rung.name)).toEqual(RENDITIONS);
   });
 
   it('orders the rungs by height, so the last one is the rung a short source keeps', () => {
