@@ -179,7 +179,7 @@ export class PostgresStepRepository extends StepRepository {
           .where(
             and(
               eq(schema.processingSteps.status, 'RUNNING'),
-              sql`COALESCE(${schema.processingSteps.heartbeatAt}, ${schema.processingSteps.startedAt}) < ${cutoff}`
+              sql`COALESCE(${schema.processingSteps.heartbeatAt}, ${schema.processingSteps.startedAt}) < ${cutoff.toISOString()}::timestamptz`
             )
           ),
       databaseUnavailable.during('countRunningStale')

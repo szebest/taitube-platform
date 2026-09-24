@@ -26,10 +26,11 @@ function absenceScope(absence: VideoScanAbsence): SQL {
 
 export function videoScanScope(filter: VideoScan, now: Date): SQL | undefined {
   const { status, idleFor, minGeneration, without } = filter;
+  const idleSince = idleFor && new Date(now.getTime() - idleFor.ms).toISOString();
   return drizzleWhere(
     eq(videos.status, status),
     idleFor &&
-      sql`COALESCE(${videos[idleFor.since]}, ${videos.updatedAt}) < ${new Date(now.getTime() - idleFor.ms)}`,
+      sql`COALESCE(${videos[idleFor.since]}, ${videos.updatedAt}) < ${idleSince}::timestamptz`,
     minGeneration !== undefined ? sql`${videos.generation} >= ${minGeneration}` : undefined,
     without && absenceScope(without)
   );

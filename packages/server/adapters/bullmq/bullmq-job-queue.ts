@@ -44,6 +44,20 @@ export type BullMqJobQueueConfig = {
     }
 );
 
+/**
+ * BullMQ merges these over its defaults, so an option the caller left unset has to be absent:
+ * an explicit `undefined` replaces the default and the Worker constructor rejects it.
+ */
+function workerTuning(options: QueueWorkerOptions | undefined): Partial<WorkerOptions> {
+  const tuning: Partial<WorkerOptions> = {};
+  if (options?.concurrency !== undefined) tuning.concurrency = options.concurrency;
+  if (options?.lockDurationMs !== undefined) tuning.lockDuration = options.lockDurationMs;
+  if (options?.lockRenewTimeMs !== undefined) tuning.lockRenewTime = options.lockRenewTimeMs;
+  if (options?.stalledIntervalMs !== undefined) tuning.stalledInterval = options.stalledIntervalMs;
+  if (options?.maxStalledCount !== undefined) tuning.maxStalledCount = options.maxStalledCount;
+  return tuning;
+}
+
 export class BullMqJobQueue extends JobQueue {
   private readonly queue: Queue;
   private readonly createWorker: WorkerFactory;
@@ -130,11 +144,7 @@ export class BullMqJobQueue extends JobQueue {
         this.createWorker(this.queue.name, bullMqProcessor<T>(handler), {
           connection: this.queue.opts.connection as ConnectionOptions,
           prefix: this.queue.opts.prefix,
-          concurrency: options?.concurrency,
-          lockDuration: options?.lockDurationMs,
-          lockRenewTime: options?.lockRenewTimeMs,
-          stalledInterval: options?.stalledIntervalMs,
-          maxStalledCount: options?.maxStalledCount,
+          ...workerTuning(options),
         }),
       queueUnavailable.during('process')
     );
@@ -214,8 +224,8 @@ export class BullMqJobQueue extends JobQueue {
 
     return map(schedulers, (found) =>
       found.map((s) => ({
-        id: s.id ?? s.name ?? s.key,
-        name: s.name ?? s.id ?? '',
+        id: s.key,
+        name: s.name,
         pattern: s.pattern,
         every: s.every,
         data: s.template?.data,

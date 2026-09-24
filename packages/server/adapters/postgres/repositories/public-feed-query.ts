@@ -24,7 +24,7 @@ function constant(value: number): SQL {
 }
 
 function ageHours(createdAt: SQL, instant: Date): SQL {
-  return sql`greatest(0, extract(epoch from (${instant}::timestamptz - ${createdAt})) / 3600.0)`;
+  return sql`greatest(0, extract(epoch from (${instant.toISOString()}::timestamptz - ${createdAt})) / 3600.0)`;
 }
 
 function rankExpression(
@@ -45,7 +45,7 @@ function rankExpression(
  */
 function cursorRankInput(cursor: PublicFeedCursor): RankInput {
   return {
-    createdAt: sql`${cursor.createdAt}::timestamptz`,
+    createdAt: sql`${cursor.createdAt.toISOString()}::timestamptz`,
     viewsCount: sql`${cursor.viewsCount ?? 0}::integer`,
   };
 }

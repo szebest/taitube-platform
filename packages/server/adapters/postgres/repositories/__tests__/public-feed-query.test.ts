@@ -4,6 +4,7 @@ import { sqlParams, sqlText } from '../../scopes/__tests__/sql-text';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from '../public-feed-query';
 
 const INSTANT = new Date('2026-01-01T00:00:00.000Z');
+const INSTANT_TEXT = INSTANT.toISOString();
 
 function rankOrder(sort: PublicFeedSort | undefined) {
   return publicFeedOrderBy({ limit: 10, sort }, INSTANT)[0];
@@ -42,7 +43,7 @@ describe('adapters/postgres: public feed SQL query', () => {
       expect(sqlText(rankOrder('trending'))).toBe(
         `("videos"."views_count"::double precision + ${TRENDING_GRAVITY.viewsOffset}) / power(${age} + ${TRENDING_GRAVITY.ageOffsetHours}, ${TRENDING_GRAVITY.exponent}) desc`
       );
-      expect(sqlParams(rankOrder('trending'))).toEqual([INSTANT]);
+      expect(sqlParams(rankOrder('trending'))).toEqual([INSTANT_TEXT]);
     });
 
     it('scores against the supplied instant rather than the database clock', () => {
@@ -85,7 +86,7 @@ describe('adapters/postgres: public feed SQL query', () => {
     );
 
     it.each([
-      { sort: 'recent' as const, key: CURSOR_CREATED_AT },
+      { sort: 'recent' as const, key: CURSOR_CREATED_AT.toISOString() },
       { sort: 'popular' as const, key: 42 },
     ])('binds the $sort keyset off the cursor row', ({ sort, key }) => {
       const scope = publicFeedCursorScope({ limit: 10, sort, cursor: CURSOR }, INSTANT);
@@ -99,14 +100,14 @@ describe('adapters/postgres: public feed SQL query', () => {
 
       expect(sqlText(scope)).toContain(`< ${bound}`);
       expect(sqlParams(scope)).toEqual([
-        INSTANT,
+        INSTANT_TEXT,
         42,
-        INSTANT,
-        CURSOR_CREATED_AT,
-        INSTANT,
+        INSTANT_TEXT,
+        CURSOR_CREATED_AT.toISOString(),
+        INSTANT_TEXT,
         42,
-        INSTANT,
-        CURSOR_CREATED_AT,
+        INSTANT_TEXT,
+        CURSOR_CREATED_AT.toISOString(),
         'v1',
       ]);
     });
