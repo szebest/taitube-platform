@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
+import { S3MultipartStorage, S3StorageClient } from '@vp/adapters/s3';
 import {
   InMemoryCacheClient,
   InMemoryDatabaseClient,

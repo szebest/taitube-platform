@@ -127,8 +127,8 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
     ).toThrow(/Invalid WebVTT cue payload/);
   });
 
-  it('AC 1 & SDD §8.3: runs real FFmpeg on s60.mp4 and validates outputs', async () => {
-    const fixturePath = path.resolve(__dirname, '../../../../../tests/fixtures/s60.mp4');
+  it('AC 1 & SDD §8.3: runs real FFmpeg on s15.mp4 and validates outputs', async () => {
+    const fixturePath = path.resolve(__dirname, '../../../../../tests/fixtures/s15.mp4');
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vp-thumb-test-'));
 
     try {
@@ -136,14 +136,14 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
         ffmpegPath: ENCODER.ffmpegPath,
         sourcePath: fixturePath,
         outputDir: tmpDir,
-        durationMs: 60000,
+        durationMs: 15000,
         layout: SPRITE,
         timeoutMs: 60_000,
         limits: LIMITS,
       });
 
-      expect(result.frameCount).toBe(12);
-      expect(result.rows).toBe(2);
+      expect(result.frameCount).toBe(3);
+      expect(result.rows).toBe(1);
       expect(result.columns).toBe(10);
 
       // Verify files exist
@@ -155,7 +155,7 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
 
       const vttContent = await fs.readFile(result.vttPath, 'utf-8');
       const parsedCues = parseSpriteVtt(vttContent);
-      expect(parsedCues).toHaveLength(12);
+      expect(parsedCues).toHaveLength(3);
 
       // Verify dimensions using ffprobe
       const posterDims = execSync(
@@ -168,7 +168,7 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
         `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${result.spritePath}"`,
         { encoding: 'utf-8' }
       ).trim();
-      expect(spriteDims).toBe('1600x180');
+      expect(spriteDims).toBe('1600x90');
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     }

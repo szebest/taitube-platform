@@ -54,17 +54,17 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
       title,
       status: 'PROCESSING',
       sourceKey,
-      durationMs: 60_000,
+      durationMs: 15_000,
       width: 1920,
       height: 1080,
     });
     return videoId;
   }
 
-  it('AC 1: generates poster, 12-frame sprite, and VTT with 12 cues for s60; uploads with immutable headers', async () => {
-    const fixturePath = path.resolve(__dirname, '../../../../tests/fixtures/s60.mp4');
+  it('AC 1: generates poster, a 3-frame sprite and a VTT with 3 cues for s15; uploads with immutable headers', async () => {
+    const fixturePath = path.resolve(__dirname, '../../../../tests/fixtures/s15.mp4');
     const fixtureBytes = await fs.readFile(fixturePath);
-    const sourceKey = 'raw/s60.mp4';
+    const sourceKey = 'raw/s15.mp4';
     const videoId = await setupUploadedVideo(sourceKey);
 
     await storage.uploadObject({
@@ -88,7 +88,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
         videoId,
         sourceKey,
         generation: 1,
-        durationMs: 60_000,
+        durationMs: 15_000,
         traceparent: '00-01-01-01',
       },
       attemptsMade: 0,
@@ -120,8 +120,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     const vttObj = expectOk(await storage.getObject('public', result.spriteVttKey));
     const vttText = typeof vttObj === 'string' ? vttObj : new TextDecoder('utf-8').decode(vttObj);
     const cues = parseSpriteVtt(vttText);
-    expect(cues.length).toBeGreaterThanOrEqual(11);
-    expect(cues.length).toBeLessThanOrEqual(13);
+    expect(cues).toHaveLength(3);
 
     // Verify video record has posterKey and spriteKey
     const video = expectOk(await repositories.videos.findById(videoId));
@@ -137,9 +136,9 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
   });
 
   it('AC 2: Thumbnail child runs concurrently with transcodes in BullMQ Flow', async () => {
-    const fixturePath = path.resolve(__dirname, '../../../../tests/fixtures/s60.mp4');
+    const fixturePath = path.resolve(__dirname, '../../../../tests/fixtures/s15.mp4');
     const fixtureBytes = await fs.readFile(fixturePath);
-    const sourceKey = 'raw/s60.mp4';
+    const sourceKey = 'raw/s15.mp4';
     const videoId = uuidv7();
 
     await repositories.videos.create({
@@ -222,7 +221,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
           outputDir: options.outputDir,
           playlistPath: path.join(options.outputDir, 'index.m3u8'),
           segmentCount: 5,
-          durationMs: 60_000,
+          durationMs: 15_000,
         };
       });
 
@@ -266,9 +265,9 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
   });
 
   it('AC 3: A thumbnail FFmpeg failure -> package still runs, video READY, posterKey null, step FAILED with code, renditions unaffected', async () => {
-    const fixturePath = path.resolve(__dirname, '../../../../tests/fixtures/s60.mp4');
+    const fixturePath = path.resolve(__dirname, '../../../../tests/fixtures/s15.mp4');
     const fixtureBytes = await fs.readFile(fixturePath);
-    const sourceKey = 'raw/s60.mp4';
+    const sourceKey = 'raw/s15.mp4';
     const videoId = uuidv7();
 
     await repositories.videos.create({
@@ -304,7 +303,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
           outputDir: options.outputDir,
           playlistPath: path.join(options.outputDir, 'index.m3u8'),
           segmentCount: 5,
-          durationMs: 60_000,
+          durationMs: 15_000,
         };
       });
 
@@ -410,7 +409,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
         videoId,
         sourceKey: 'raw/missing.mp4',
         generation: 1,
-        durationMs: 60_000,
+        durationMs: 15_000,
         traceparent: '00-01',
       },
       attemptsMade: 0,

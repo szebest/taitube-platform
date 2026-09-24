@@ -1,5 +1,5 @@
 import * as http from 'node:http';
-import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
+import { S3MultipartStorage, S3StorageClient } from '@vp/adapters/s3';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
