@@ -2,9 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { sendResult } from '../send-result';
 
 export async function adminQueuesRoutes(app: FastifyInstance): Promise<void> {
-  const { queueService } = app.services;
-
-  const boardPlugin = queueService.getBoardPlugin('/admin/queues');
+  const { queueService, queueBoard } = app.services;
 
   await app.register(
     async (adminScope) => {
@@ -16,7 +14,7 @@ export async function adminQueuesRoutes(app: FastifyInstance): Promise<void> {
         return undefined;
       });
 
-      adminScope.register(boardPlugin);
+      adminScope.register(queueBoard);
     },
     { prefix: '/admin/queues' }
   );

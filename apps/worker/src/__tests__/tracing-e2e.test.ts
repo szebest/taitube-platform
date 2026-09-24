@@ -24,7 +24,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { withTelemetry } from '../with-telemetry';
-import { STAGE_SETTINGS } from './stage-settings';
+import { STAGE_SETTINGS, transcodeDeps } from './stage-settings';
 
 describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', () => {
   let exporter: InMemorySpanExporter;
@@ -253,13 +253,9 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
     await packageQueue.process(tracedPackageProcessor);
 
     // 4. Worker processes transcode children (1080p, 720p, 480p)
-    const rawTranscodeProcessor = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
+    const rawTranscodeProcessor = createTranscodeProcessor(
+      transcodeDeps({ repositories, storage, logger })
+    );
 
     const transcodeRenditions = ['1080p', '720p', '480p'];
     for (const rend of transcodeRenditions) {

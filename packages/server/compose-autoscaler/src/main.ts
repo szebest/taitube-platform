@@ -1,5 +1,7 @@
+import { exec } from 'node:child_process';
 import * as fs from 'node:fs';
-import { ComposeAutoscaler } from './runner';
+import { promisify } from 'node:util';
+import { type Attempt, ComposeAutoscaler } from './runner';
 import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler';
 
 interface CliArgs {
@@ -46,7 +48,7 @@ function parseCliArgs(args: string[]): CliArgs {
 
 function printHelp(): void {
   console.log(`
-@vp/compose-autoscaler — Docker Compose Queue-Depth Autoscaler (Ticket 27)
+@vp/compose-autoscaler — Docker Compose Queue-Depth Autoscaler
 
 Polls Prometheus metrics (/metrics) from the API and dynamically scales
 worker stages via 'docker compose up -d --scale <service>=N --no-recreate'.
@@ -71,32 +73,56 @@ Environment Variables:
 `);
 }
 
-export async function main(): Promise<void> {
-  const args = parseCliArgs(process.argv.slice(2));
+type StageOverrides = Record<string, ScalerStageConfig>;
+
+const execAsync = promisify(exec);
+
+/** The one place a thrown SDK or process failure becomes an answer the runner reads. */
+async function attempt<T>(run: () => Promise<T>): Promise<Attempt<T>> {
+  try {
+    return { type: 'done', value: await run() };
+  } catch (cause) {
+    return { type: 'failed', reason: String(cause) };
+  }
+}
+
+async function fetchMetricsText(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch metrics: ${res.status} ${res.statusText}`);
+  return res.text();
+}
+
+function parseOverrides(label: string, read: () => string): Attempt<StageOverrides> {
+  try {
+    return { type: 'done', value: JSON.parse(read()) as StageOverrides };
+  } catch (cause) {
+    return { type: 'failed', reason: `Failed to load ${label}: ${String(cause)}` };
+  }
+}
+
+function readStageOverrides(configFile?: string): Attempt<StageOverrides> {
+  if (configFile) {
+    return parseOverrides(`config file ${configFile}`, () => fs.readFileSync(configFile, 'utf-8'));
+  }
+  const inline = process.env.AUTOSCALER_CONFIG;
+  if (inline) return parseOverrides('AUTOSCALER_CONFIG JSON', () => inline);
+  return { type: 'done', value: {} };
+}
+
+export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<void> {
+  const args = parseCliArgs([...argv]);
 
   if (args.help) {
     printHelp();
     return;
   }
 
-  let stageConfigs: Record<string, ScalerStageConfig> = { ...DEFAULT_STAGE_CONFIGS };
-
-  if (args.configFile) {
-    try {
-      const raw = fs.readFileSync(args.configFile, 'utf-8');
-      stageConfigs = { ...stageConfigs, ...JSON.parse(raw) };
-    } catch (err) {
-      console.error(`Failed to load config file ${args.configFile}:`, err);
-      process.exit(1);
-    }
-  } else if (process.env.AUTOSCALER_CONFIG) {
-    try {
-      stageConfigs = { ...stageConfigs, ...JSON.parse(process.env.AUTOSCALER_CONFIG) };
-    } catch (err) {
-      console.error('Failed to parse AUTOSCALER_CONFIG JSON:', err);
-      process.exit(1);
-    }
+  const overrides = readStageOverrides(args.configFile);
+  if (overrides.type === 'failed') {
+    console.error(overrides.reason);
+    process.exit(1);
   }
+  const stageConfigs = { ...DEFAULT_STAGE_CONFIGS, ...overrides.value };
 
   const dryRun = args.dryRun || process.env.AUTOSCALER_DRY_RUN === 'true';
 
@@ -106,6 +132,9 @@ export async function main(): Promise<void> {
     dryRun,
     pollIntervalMs: args.intervalSec * 1000,
     stageConfigs,
+    onLog: console.log,
+    executor: (cmd) => attempt(() => execAsync(cmd)),
+    fetcher: (url) => attempt(() => fetchMetricsText(url)),
   });
 
   process.on('SIGINT', () => {

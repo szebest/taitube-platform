@@ -7,7 +7,7 @@ import {
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
 } from '@vp/domain/time';
-import { type FfmpegProcessLimits, runFfmpeg } from './transcode';
+import { type FfmpegProcessLimits, runFfmpeg } from './run-ffmpeg';
 
 /** The sprite sheet's geometry; the WebVTT cues and the tiling filter both read it. */
 export interface SpriteLayout {

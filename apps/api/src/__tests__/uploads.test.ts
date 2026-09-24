@@ -457,14 +457,15 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     const initialProbeCount = probeJobs.length;
 
     vi.spyOn(mockProbeQueue, 'add').mockResolvedValueOnce(err(queueUnavailable('probe.add')));
-    const crashRes = await app.inject({
+    const completed = await app.inject({
       method: 'POST',
       url: `/v1/uploads/${uploadId}/complete`,
       headers: { authorization: `Bearer ${authToken}` },
       payload: {},
     });
 
-    expect(crashRes.statusCode).toBe(503);
+    expect(completed.statusCode).toBe(202);
+    expect(completed.json()).toMatchObject({ videoId, status: 'UPLOADED' });
 
     const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('UPLOADED');

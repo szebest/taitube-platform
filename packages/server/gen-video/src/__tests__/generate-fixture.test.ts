@@ -24,7 +24,9 @@ describe('gen-video: fixture generation', () => {
       slow: false,
     };
 
-    const outPath = await generateFixture(fixture, tmpDir);
+    const outcome = generateFixture(fixture, tmpDir);
+    if (outcome.type !== 'generated') throw new Error(outcome.reason);
+    const outPath = outcome.path;
 
     expect(fs.existsSync(outPath)).toBe(true);
     expect(fs.statSync(outPath).size).toBe(0);
@@ -40,7 +42,7 @@ describe('gen-video: fixture generation', () => {
       slow: false,
     };
 
-    await generateFixture(fixture, nested);
+    expect(generateFixture(fixture, nested).type).toBe('generated');
 
     expect(fs.existsSync(nested)).toBe(true);
   });

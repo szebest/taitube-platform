@@ -26,4 +26,13 @@ describe('adapters/bullmq: port board queues', () => {
 
     expect(await board?.getJobs(['waiting'])).toEqual([]);
   });
+
+  it.each(['empty', 'promoteAll', 'obliterate'] as const)(
+    'refuses %s, which only a BullMQ queue can honour',
+    async (operation) => {
+      const [board] = portBoardQueues([new InMemoryJobQueue('probe')]);
+
+      await expect(board?.[operation]()).rejects.toThrow(/not backed by BullMQ/);
+    }
+  );
 });

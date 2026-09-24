@@ -8,6 +8,8 @@ import { InMemoryMultipartStorage } from '../in-memory/in-memory-multipart-stora
 import { InMemoryStorageClient } from '../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../in-memory/in-memory-subscription-cache';
 import { InMemoryRepositories } from '../in-memory/repositories/in-memory-repositories';
+import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
+import { MeteredStorageClient } from '../metered/metered-storage-client';
 import { Adapters } from './adapter-tokens';
 import { LazyQueueRegistry } from './queue-registry';
 
@@ -15,10 +17,18 @@ export function registerFamily(c: Container): void {
   c.provide(Adapters.DbClient, () => new InMemoryDatabaseClient(), closeOnDispose)
     .provide(Adapters.Repositories, () => new InMemoryRepositories())
     .provide(Adapters.Cache, () => new InMemoryCacheClient(), closeOnDispose)
-    .provide(Adapters.Storage, () => new InMemoryStorageClient(), closeOnDispose)
+    .provide(
+      Adapters.Storage,
+      (c) => new MeteredStorageClient(new InMemoryStorageClient(), c.get(Adapters.Metrics)),
+      closeOnDispose
+    )
     .provide(
       Adapters.Multipart,
-      (c) => new InMemoryMultipartStorage(c.get(Adapters.Storage)),
+      (c) =>
+        new MeteredMultipartStorage(
+          new InMemoryMultipartStorage(c.get(Adapters.Storage)),
+          c.get(Adapters.Metrics)
+        ),
       closeOnDispose
     )
     .provide(

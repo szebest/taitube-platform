@@ -7,7 +7,7 @@ import {
   type Failure,
   type QueueUnavailable,
 } from '@vp/errors';
-import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
+import type { Logger, PipelineMetrics } from '@vp/observability';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 
 export interface OutboxRelayOptions {
@@ -17,7 +17,7 @@ export interface OutboxRelayOptions {
   batchSize: number;
   intervalMs: number;
   logger?: Logger;
-  metrics?: PipelineMetrics;
+  metrics: PipelineMetrics;
 }
 
 export interface DrainOutboxResult {
@@ -61,10 +61,11 @@ export async function drainOutboxOnce(
     getQueue?: (name: string) => JobQueue;
     flowProducer?: FlowProducerPort;
     batchSize: number;
+    metrics: PipelineMetrics;
     logger?: Logger;
   }
 ): Promise<Result<DrainOutboxResult, DatabaseUnavailable>> {
-  const { getQueue, flowProducer, batchSize, logger } = options;
+  const { getQueue, flowProducer, batchSize, metrics, logger } = options;
   const startMs = Date.now();
   const claimed = await repositories.outbox.claimBatch(batchSize);
   if (isErr(claimed)) return claimed;
@@ -91,12 +92,12 @@ export async function drainOutboxOnce(
     if (isErr(marked)) return marked;
 
     successCount += 1;
-    getMetrics().outboxEventsPublished.inc({ kind: item.kind });
+    metrics.outboxEventsPublished.inc({ kind: item.kind });
     logger?.debug({ id: item.id, kind: item.kind }, 'Outbox item published successfully');
   }
 
   if (items.length > 0) {
-    getMetrics().outboxDrainDuration.observe((Date.now() - startMs) / MS_PER_SECOND);
+    metrics.outboxDrainDuration.observe((Date.now() - startMs) / MS_PER_SECOND);
   }
 
   return ok({ processedCount: items.length, successCount, failureCount });
@@ -124,6 +125,7 @@ export class OutboxRelay {
           getQueue: this.options.getQueue,
           flowProducer: this.options.flowProducer,
           batchSize: this.options.batchSize,
+          metrics: this.options.metrics,
           logger: this.options.logger,
         });
         if (isErr(drained)) {

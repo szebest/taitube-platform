@@ -8,8 +8,8 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
-import { HousekeepingJob, type QueueName } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
+import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
+import type { Logger, PipelineMetrics } from '@vp/observability';
 import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runPurgeDeleted } from './purge-deleted';
@@ -42,6 +42,7 @@ export interface HousekeepingProcessorOptions extends HousekeepingSettings {
   reactionCache: ReactionCachePort;
   getQueue: (name: QueueName) => JobQueue;
   workerId: string;
+  metrics: PipelineMetrics;
   logger?: Logger;
 }
 
@@ -64,15 +65,16 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
 
 export function createHousekeepingProcessor(
   options: HousekeepingProcessorOptions
-): (job: QueueJob<unknown>) => Promise<Result<unknown, AnyFailure>> {
-  const { repositories, storage, multipart, reactionCache, getQueue, workerId, logger } = options;
+): (job: QueueJob<HousekeepingJob>) => Promise<Result<unknown, AnyFailure>> {
+  const { repositories, storage, multipart, reactionCache, getQueue, workerId, metrics, logger } =
+    options;
   const { rawBucket, publicBucket, retentionDays, maxInflightPerUser, tmpDir, housekeeping } =
     options;
   const probeQueue = getQueue('probe');
   const tasks = housekeepingTasks(housekeeping);
 
-  return async (job: QueueJob<unknown>): Promise<Result<unknown, AnyFailure>> => {
-    const data = HousekeepingJob.parse(job.data);
+  return async (job: QueueJob<HousekeepingJob>): Promise<Result<unknown, AnyFailure>> => {
+    const { data } = job;
     logger?.info({ task: data.task, jobId: job.id }, 'Executing housekeeping task');
 
     switch (data.task) {
@@ -81,6 +83,7 @@ export function createHousekeepingProcessor(
           repositories,
           multipart,
           probeQueue,
+          metrics,
           rawBucket,
           maxInflightPerUser,
           ...tasks.uploads,

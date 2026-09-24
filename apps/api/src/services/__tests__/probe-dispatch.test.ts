@@ -1,6 +1,8 @@
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { JOB_PRIORITY } from '@vp/domain';
+import { queueUnavailable } from '@vp/errors';
 import { ids, stagePolicies } from '@vp/job-contracts';
+import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { buildProbeDispatch, enqueueProbe } from '../probe-dispatch';
 
@@ -35,6 +37,13 @@ describe('apps/api/services: probe dispatch', () => {
 
   it('falls back to the same lane a free owner gets', () => {
     expect(stagePolicies.probe.priority).toBe(JOB_PRIORITY.free);
+  });
+
+  it('answers nothing when the fast path is refused, since the outbox row delivers the job', async () => {
+    const queue = new InMemoryJobQueue('probe');
+    vi.spyOn(queue, 'add').mockResolvedValue(err(queueUnavailable('add')));
+
+    await expect(enqueueProbe(queue, dispatch({}))).resolves.toBeUndefined();
   });
 
   it('commits the same job to the outbox that the fast path enqueues', async () => {

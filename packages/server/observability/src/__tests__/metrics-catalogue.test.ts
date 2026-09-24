@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { describe, expect, it } from 'vitest';
-import { createMetricsRegistry, getMetrics } from '../metrics';
+import { createMetricsRegistry } from '../metrics';
+import { MetricsServer } from '../server';
 
 /**
  * Extracts metric names from the markdown table in docs/SDD.md §13.1.
@@ -61,10 +61,7 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     const metrics = createMetricsRegistry();
     const registered = await metrics.registry.getMetricsAsJSON();
 
-    // Filter out prom-client default nodejs/process metrics
-    const codeMetricNames = registered
-      .map((m) => m.name)
-      .filter((name) => !(name.startsWith('process_') || name.startsWith('nodejs_')));
+    const codeMetricNames = registered.map((m) => m.name).filter((name) => !name.startsWith('vp_'));
 
     const sddSet = new Set(sddMetricNames);
     const codeSet = new Set(codeMetricNames);
@@ -140,18 +137,9 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     }
   );
 
-  it('provides singleton getMetrics() returning initialized registry', () => {
-    const m1 = getMetrics();
-    const m2 = getMetrics();
-    expect(m1).toBe(m2);
-    expect(m1.bullmqQueueJobs).toBeDefined();
-  });
+  it('exposes every §13.1 metric on /metrics, and each process series once', async () => {
+    const metrics = createMetricsRegistry();
 
-  it('exposes every §13.1 metric on /metrics via startMetricsServer', async () => {
-    const { startMetricsServer } = await import('../server');
-    const metrics = getMetrics();
-
-    // Populate a sample for every metric
     metrics.httpRequestDuration.observe(
       { method: 'GET', route: '/v1/videos', status: '200' },
       0.05
@@ -175,17 +163,19 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     metrics.processingStepsRunningStale.set(1);
     metrics.timeToReady.observe({ bucket: '<1min' }, 25);
 
-    const testPort = 19475;
-    const server = await startMetricsServer({ port: testPort, registry: metrics.registry });
+    const server = new MetricsServer({ port: 0, host: '127.0.0.1', registry: metrics.registry });
+    expect((await server.listen()).ok).toBe(true);
 
     try {
-      const res = await fetch(`http://127.0.0.1:${testPort}/metrics`);
+      const res = await fetch(`http://127.0.0.1:${server.port}/metrics`);
       expect(res.status).toBe(200);
       const text = await res.text();
 
       for (const expected of EXPECTED_METRICS) {
         expect(text, `Expected /metrics to expose ${expected.name}`).toContain(expected.name);
       }
+      const processSeries = text.match(/^# TYPE \S*process_cpu_seconds_total /gm) ?? [];
+      expect(processSeries).toEqual(['# TYPE vp_process_cpu_seconds_total ']);
     } finally {
       await server.close();
     }

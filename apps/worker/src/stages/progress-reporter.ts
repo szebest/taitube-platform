@@ -1,42 +1,42 @@
 import type { CacheClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { publishVideoEvent } from '@vp/events';
-import { type Logger, getMetrics } from '@vp/observability';
+import type { Logger, PipelineMetrics } from '@vp/observability';
 import { isOk, unwrapOr } from '@vp/result';
 
 export interface ProgressReporterDeps {
-  cache?: CacheClient;
+  cache: CacheClient;
   repositories: Repositories;
+  metrics: PipelineMetrics;
   videoId: string;
   rendition: string;
   logger: Logger;
 }
 
+/** What one transcode names; the cache, the store and the metrics come from composition. */
+export type ProgressTarget = Pick<ProgressReporterDeps, 'videoId' | 'rendition' | 'logger'>;
+
+export interface ProgressReporter {
+  report(percent: number): Promise<void>;
+}
+
 /**
- * TranscodeProgressReporter — Manages progress throttling and persistence (SDD §10.1, AC 4).
+ * Throttles live progress to one publish per two seconds per rendition, persists a `progress`
+ * event only at each 10 % decile, and reports the ladder's overall progress (SDD §10.1).
  *
- * Rules:
- * - Throttles pub/sub progress notifications to at most 1 per 2 seconds per rendition.
- * - Persists progress events to Postgres video_events only at 10% decile boundaries.
- * - Computes overall ladder progress across all renditions.
+ * Progress is advisory: a store or a cache that cannot take a sample costs the client one
+ * update, never the transcode, so every failure here is dropped.
  */
-export class TranscodeProgressReporter {
+export class TranscodeProgressReporter implements ProgressReporter {
   private lastPublishTime = 0;
   private lastPersistedDecile = 0;
 
   constructor(private readonly deps: ProgressReporterDeps) {}
 
-  /**
-   * Progress is advisory: a store or a cache that cannot take a sample costs the client one
-   * update, never the transcode. Every failure here is deliberately dropped.
-   */
   async report(percent: number): Promise<void> {
     const now = Date.now();
     if (now - this.lastPublishTime < 2000 && percent < 100) return;
     this.lastPublishTime = now;
-
-    const cache = this.deps.cache;
-    if (!cache) return;
 
     const currentDecile = Math.floor(percent / 10);
     const shouldPersist = currentDecile > this.lastPersistedDecile && percent >= 10;
@@ -67,15 +67,14 @@ export class TranscodeProgressReporter {
       if (isOk(record)) eventId = record.value.id;
     }
 
-    await publishVideoEvent({
-      cache,
+    const published = await publishVideoEvent({
+      cache: this.deps.cache,
       videoId: this.deps.videoId,
       event: 'progress',
       data: { rendition: this.deps.rendition, percent, overall },
       id: eventId,
       ts: now,
     });
-
-    getMetrics().sseEventsPublished.inc({ event: 'progress' });
+    if (isOk(published)) this.deps.metrics.sseEventsPublished.inc({ event: 'progress' });
   }
 }

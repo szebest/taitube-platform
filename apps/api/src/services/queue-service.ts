@@ -1,6 +1,3 @@
-import { createBullBoard } from '@bull-board/api';
-import type { BaseAdapter } from '@bull-board/api/baseAdapter';
-import { FastifyAdapter } from '@bull-board/fastify';
 import type { JobQueue } from '@vp/core/ports';
 import {
   type AuthorizationFailure,
@@ -12,11 +9,9 @@ import type { QueueUnavailable } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { type Result, all, err, isErr, map, ok } from '@vp/result';
-import type { FastifyPluginCallback } from 'fastify';
 
 export interface QueueServiceDeps {
   queues: Map<string, JobQueue>;
-  boardQueues: (queues: Iterable<JobQueue>) => BaseAdapter[];
 }
 
 export interface QueueCountMetrics {
@@ -45,11 +40,9 @@ const IDLE_COUNTS: QueueCountMetrics = {
 
 export class QueueService {
   private readonly queuesMap: Map<string, JobQueue>;
-  private readonly boardQueues: QueueServiceDeps['boardQueues'];
 
   constructor(deps: QueueServiceDeps) {
     this.queuesMap = deps.queues;
-    this.boardQueues = deps.boardQueues;
   }
 
   /**
@@ -100,17 +93,5 @@ export class QueueService {
   ): Promise<Result<void, ReplayQueueUnknown | QueueUnavailable>> {
     const queue = this.queuesMap.get(queueName);
     return queue ? queue.resume() : err(replayQueueUnknown(queueName));
-  }
-
-  getBoardPlugin(basePath: string): FastifyPluginCallback {
-    const serverAdapter = new FastifyAdapter();
-    serverAdapter.setBasePath(basePath);
-
-    createBullBoard({
-      queues: this.boardQueues(this.queuesMap.values()),
-      serverAdapter,
-    });
-
-    return serverAdapter.registerPlugin();
   }
 }

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import ts from 'typescript';
-import { ROOT } from './repo-files';
+import { ROOT, productionSources } from './repo-files';
 import { workspaceSources } from './workspace-sources';
 
 function workspacePaths(): Record<string, string[]> {
@@ -16,6 +16,7 @@ const OPTIONS: ts.CompilerOptions = {
   target: ts.ScriptTarget.ES2022,
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
+  jsx: ts.JsxEmit.ReactJSX,
   strict: true,
   noEmit: true,
   skipLibCheck: true,
@@ -24,7 +25,13 @@ const OPTIONS: ts.CompilerOptions = {
   paths: workspacePaths(),
 };
 
-const programs = new Map<string, ts.Program>();
+export interface SharedProgram {
+  program: ts.Program;
+  /** The files the program was built over, as the checker names them. */
+  roots: ReadonlySet<string>;
+}
+
+let shared: SharedProgram | undefined;
 
 /**
  * Only this repo's modules and Fastify resolve: a third-party import reads as `any`, which keeps the
@@ -41,19 +48,19 @@ function workspaceOnlyHost(): ts.CompilerHost {
   return host;
 }
 
-/** Built once per set of roots, so the type-aware assertions over the same sources share it. */
-export function serverProgram(roots: readonly string[]): ts.Program {
-  const key = [...roots].sort().join('\n');
-  const built = programs.get(key);
-  if (built) return built;
+/**
+ * Every production source, the browser tier included, in one program the type-aware assertions
+ * share: building one per test file is what would put the suite over its time budget.
+ */
+export function productionProgram(): SharedProgram {
+  if (shared) return shared;
 
-  const program = ts.createProgram(
-    roots.map((file) => join(ROOT, file)),
-    OPTIONS,
-    workspaceOnlyHost()
-  );
-  programs.set(key, program);
-  return program;
+  const roots = productionSources().map((file) => join(ROOT, file));
+  shared = {
+    program: ts.createProgram(roots, OPTIONS, workspaceOnlyHost()),
+    roots: new Set(roots),
+  };
+  return shared;
 }
 
 export function fixtureProgram(files: Record<string, string>): ts.Program {

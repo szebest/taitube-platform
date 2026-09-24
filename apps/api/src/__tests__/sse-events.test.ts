@@ -9,6 +9,7 @@ import type { CacheClient } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { publishVideoEvent, videoChannel } from '@vp/events';
+import { createMetricsRegistry } from '@vp/observability';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
@@ -21,6 +22,7 @@ const SSE_TIMERS = { heartbeatMs, idleTimeoutMs };
 function hubOptions(cache: CacheClient, overrides: Partial<SseHubOptions> = {}): SseHubOptions {
   return {
     cache,
+    metrics: createMetricsRegistry(),
     maxConnectionsPerUser: 20,
     maxPodConnections: 5000,
     heartbeatMs: 15_000,
@@ -137,6 +139,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
           if (totalText.includes('event: snapshot') && totalText.includes(': ping')) {
             // Publish progress event
             publishVideoEvent({
+              ts: Date.now(),
               cache,
               videoId: PUBLIC_VIDEO_ID,
               event: 'progress',
@@ -146,6 +149,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
 
             // Publish status event
             publishVideoEvent({
+              ts: Date.now(),
               cache,
               videoId: PUBLIC_VIDEO_ID,
               event: 'status',
@@ -623,6 +627,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
 
     // Worker publishes to shared cache
     await publishVideoEvent({
+      ts: Date.now(),
       cache: sharedCache,
       videoId: PUBLIC_VIDEO_ID,
       event: 'progress',
@@ -657,6 +662,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
               published = true;
               // Publish event to user's channel
               publishVideoEvent({
+                ts: Date.now(),
                 cache,
                 videoId: PUBLIC_VIDEO_ID,
                 userId: OWNER_USER_ID,

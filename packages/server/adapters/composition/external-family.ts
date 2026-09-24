@@ -4,6 +4,8 @@ import { bullBoardQueues } from '../bullmq/bull-board-queues';
 import { BullMqFlowProducer } from '../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../bullmq/bullmq-job-queue';
 import { redisConnectionOptions } from '../bullmq/connection';
+import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
+import { MeteredStorageClient } from '../metered/metered-storage-client';
 import { PostgresDatabaseClient } from '../postgres/postgres-database-client';
 import { PostgresRepositories } from '../postgres/repositories/postgres-repositories';
 import { RedisCacheClient } from '../redis/redis-cache-client';
@@ -51,10 +53,19 @@ export function registerFamily(c: Container): void {
     )
     .provide(Adapters.Cache, (c) => c.get(Redis))
     .provide(S3, () => new S3StorageClient({ type: 'connection', ...config.s3 }), closeOnDispose)
-    .provide(Adapters.Storage, (c) => c.get(S3))
+    .provide(
+      Adapters.Storage,
+      (c) => new MeteredStorageClient(c.get(S3), c.get(Adapters.Metrics)),
+      // S3 above owns the client this wraps and closes it; closing it here too would close it twice.
+      { dispose: () => undefined }
+    )
     .provide(
       Adapters.Multipart,
-      (c) => new S3MultipartStorage({ type: 'storage', storageClient: c.get(S3) }),
+      (c) =>
+        new MeteredMultipartStorage(
+          new S3MultipartStorage({ type: 'storage', storageClient: c.get(S3) }),
+          c.get(Adapters.Metrics)
+        ),
       closeOnDispose
     )
     .provide(

@@ -1,8 +1,7 @@
 import type { JobQueue, QueueJobOptions } from '@vp/core/ports';
 import type { NewOutboxInput } from '@vp/core/repositories';
-import type { QueueUnavailable } from '@vp/errors';
-import { ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
-import { type Result, map } from '@vp/result';
+import { type ProbeJob, defaultJobOptions, ids, stagePolicies } from '@vp/job-contracts';
+import { ignore } from '@vp/result';
 
 const PROBE_QUEUE = 'probe';
 
@@ -27,12 +26,12 @@ export interface ProbeDispatch {
  * a different id.
  */
 export function buildProbeDispatch(input: ProbeDispatchInput): ProbeDispatch {
-  const data = ProbeJob.parse({
+  const data: ProbeJob = {
     videoId: input.videoId,
     sourceKey: input.sourceKey,
     generation: input.generation,
     traceparent: input.traceparent,
-  });
+  };
 
   const opts: QueueJobOptions = {
     jobId: ids.probe(input.videoId, input.generation),
@@ -55,9 +54,10 @@ export function buildProbeDispatch(input: ProbeDispatchInput): ProbeDispatch {
   };
 }
 
-export async function enqueueProbe(
-  queue: JobQueue,
-  dispatch: ProbeDispatch
-): Promise<Result<void, QueueUnavailable>> {
-  return map(await queue.add(PROBE_QUEUE, dispatch.data, dispatch.opts), () => undefined);
+/** The fast path only: the dispatch's outbox row is committed with the transition, so it is the delivery. */
+export async function enqueueProbe(queue: JobQueue, dispatch: ProbeDispatch): Promise<void> {
+  ignore(
+    await queue.add(PROBE_QUEUE, dispatch.data, dispatch.opts),
+    'the outbox row committed with the transition delivers the probe if this fast path fails'
+  );
 }

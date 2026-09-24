@@ -50,8 +50,8 @@ adapters and the composition module; the doubles are reached only through `@vp/a
   permission are rules; they live in `@vp/domain-rules`. An adapter that decides one of those has put a copy
   of the rule in every adapter.
 - Classify a driver error through `postgres/pg-errors.ts`, never by reading `code` off the top-level object:
-  Drizzle wraps the driver error and puts the real one on `cause`, and PGLite (which the contract suite runs
-  against) raises the same duplicate key with no SQLSTATE at all.
+  Drizzle wraps the driver error and puts the real one on `cause`. The SQLSTATE is the only signal read -
+  PGLite, which the contract suites run against, sets it too - and never the message text.
 - The in-memory doubles return the **same** `Result` types as the real adapters, and the contract conformance
   suite asserts they agree on failures as well as on values - the `channels.handle` unique violation surfaces
   as `HANDLE_ALREADY_TAKEN` from both.

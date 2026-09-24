@@ -11,7 +11,7 @@ import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, map, ok, unwrapOr } from '@vp/result';
+import { type Result, ignore, isErr, map, ok, unwrapOr } from '@vp/result';
 import {
   createdAtCursorPayload,
   decodeCreatedAtCursor,
@@ -64,8 +64,14 @@ export class SubscriptionService {
 
     const { subscriberCount, changed } = written.value;
     if (changed) {
-      await this.deps.subscriptionCache.addSubscription(user.id, channelId);
-      await this.deps.subscriptionCache.setSubscriberCount(channelId, subscriberCount);
+      ignore(
+        await this.deps.subscriptionCache.addSubscription(user.id, channelId),
+        'the subscription is written; the cache heals on its TTL'
+      );
+      ignore(
+        await this.deps.subscriptionCache.setSubscriberCount(channelId, subscriberCount),
+        'the count is written; the cache heals on its TTL'
+      );
     }
     return ok({ channelId, subscribed: true, subscriberCount });
   }
@@ -85,8 +91,14 @@ export class SubscriptionService {
 
     const { subscriberCount, changed } = written.value;
     if (changed) {
-      await this.deps.subscriptionCache.removeSubscription(user.id, channelId);
-      await this.deps.subscriptionCache.setSubscriberCount(channelId, subscriberCount);
+      ignore(
+        await this.deps.subscriptionCache.removeSubscription(user.id, channelId),
+        'the unsubscription is written; the cache heals on its TTL'
+      );
+      ignore(
+        await this.deps.subscriptionCache.setSubscriberCount(channelId, subscriberCount),
+        'the count is written; the cache heals on its TTL'
+      );
     }
     return ok({ channelId, subscribed: false, subscriberCount });
   }
@@ -112,7 +124,10 @@ export class SubscriptionService {
     const channelIds = await this.deps.subscriptions.getUserSubscriptionChannelIds(user.id);
     if (isErr(channelIds)) return channelIds;
 
-    await this.deps.subscriptionCache.setUserSubscriptions(user.id, channelIds.value);
+    ignore(
+      await this.deps.subscriptionCache.setUserSubscriptions(user.id, channelIds.value),
+      'the set was read; a cold cache costs the next call one query'
+    );
     return ok({ channelId, subscribed: channelIds.value.includes(channelId) });
   }
 

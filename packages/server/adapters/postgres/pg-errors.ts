@@ -19,30 +19,10 @@ function hasSqlState(error: unknown, state: string): boolean {
   return causes(error).some((link) => (link as { code?: unknown }).code === state);
 }
 
-/**
- * PGLite, which the contract suite runs the Postgres adapter against, raises the same error as the
- * `postgres` driver but without the `code` field, so the SQLSTATE alone would classify a duplicate
- * key as a dead connection under test and as a conflict in production. The message is Postgres's
- * own fixed wording and is only consulted when no SQLSTATE is present.
- */
-function hasMessage(error: unknown, needle: string): boolean {
-  return causes(error).some(
-    (link) =>
-      typeof (link as { message?: unknown }).message === 'string' &&
-      (link as { message: string }).message.includes(needle)
-  );
-}
-
 export function isUniqueViolation(error: unknown): boolean {
-  return (
-    hasSqlState(error, UNIQUE_VIOLATION) ||
-    hasMessage(error, 'duplicate key value violates unique constraint')
-  );
+  return hasSqlState(error, UNIQUE_VIOLATION);
 }
 
 export function isForeignKeyViolation(error: unknown): boolean {
-  return (
-    hasSqlState(error, FOREIGN_KEY_VIOLATION) ||
-    hasMessage(error, 'violates foreign key constraint')
-  );
+  return hasSqlState(error, FOREIGN_KEY_VIOLATION);
 }

@@ -24,15 +24,17 @@ export async function generateAllFixtures(
   });
 
   for (const fixture of targets) {
-    try {
-      if (!options.quiet) {
-        console.log(`[gen-video] Generating ${fixture.id} (${fixture.filename})...`);
-      }
-      const out = await generateFixture(fixture, options.outputDir);
-      generated.push(out);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      errors.push(`Failed to generate ${fixture.id}: ${msg}`);
+    if (!options.quiet) {
+      console.log(`[gen-video] Generating ${fixture.id} (${fixture.filename})...`);
+    }
+    const outcome = generateFixture(fixture, options.outputDir);
+    switch (outcome.type) {
+      case 'generated':
+        generated.push(outcome.path);
+        break;
+      case 'failed':
+        errors.push(`Failed to generate ${fixture.id}: ${outcome.reason}`);
+        break;
     }
   }
 

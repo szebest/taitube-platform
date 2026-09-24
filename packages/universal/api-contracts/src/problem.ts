@@ -59,6 +59,7 @@ export const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.FFMPEG_OOM]: 500,
   [ErrorCodes.FFMPEG_TIMEOUT]: 500,
   [ErrorCodes.DISK_FULL]: 500,
+  [ErrorCodes.ORPHANED]: 500,
   [ErrorCodes.STORAGE_UNAVAILABLE]: 503,
   [ErrorCodes.DATABASE_UNAVAILABLE]: 503,
   [ErrorCodes.CACHE_UNAVAILABLE]: 503,
@@ -93,13 +94,12 @@ export function problemDetails(input: ProblemInput): Problem {
 }
 
 export function problemResponse(
-  codes: readonly ErrorCode[] | readonly string[],
+  codes: readonly string[],
   description = 'Problem Details (RFC 9457)'
 ): z.ZodTypeAny {
+  const [first, ...rest] = codes;
+  const code = first === undefined ? z.string() : z.enum([first, ...rest]);
   return ProblemSchema.extend({
-    code:
-      codes.length > 0
-        ? z.enum(codes as unknown as [string, ...string[]]).describe('Machine-readable error code')
-        : z.string().describe('Machine-readable error code'),
+    code: code.describe('Machine-readable error code'),
   }).describe(description);
 }

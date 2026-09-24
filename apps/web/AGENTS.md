@@ -32,12 +32,13 @@ provider under `src/modules/shared/providers/`, or in the query cache.
 
 ### The one seam that matters
 
-`apps/web` is **tier `client`, layer T5**. Its entire runtime closure is three packages:
+`apps/web` is **tier `client`, layer T5**. It depends on four workspace packages:
 
 ```
 @vp/api-client      (client, T4) — the typed HTTP client
-@vp/api-contracts   (universal, T2) — request/response shapes
+@vp/api-contracts   (universal, T3) — request/response shapes
 @vp/permissions     (universal, T2) — CASL rules
+@vp/result          (universal, T1) — Result, tryCatch / fromPromise and assertNever
 ```
 
 It cannot import `@vp/core`, `@vp/adapters`, `@vp/db` or anything else under `packages/server/` — pnpm never
@@ -83,8 +84,8 @@ No component hand-checks a user id, a role or ownership. Permission decisions go
 memoized CASL ability from `PermissionsProvider`. Both call shapes are supported:
 
 ```tsx
-<Can do="create" on="Video">…</Can>
-<Can I={canUpdateVideo} this={{ video: { id, ownerId } }}>…</Can>
+<Can type="ability" do="create" on="Video">…</Can>
+<Can type="rule" I={canUpdateVideo} this={{ video: { id, ownerId } }}>…</Can>
 ```
 
 The rule builders themselves live in `@vp/permissions` and are shared verbatim with the API. If a check you

@@ -1,4 +1,3 @@
-import { bullBoardQueues } from '@vp/adapters/bullmq';
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { ErrorCodes, queueUnavailable } from '@vp/errors';
@@ -10,7 +9,7 @@ import { QueueService } from '../queue-service';
 function serviceWith(...names: string[]): { service: QueueService; queues: InMemoryJobQueue[] } {
   const queues = names.map((name) => new InMemoryJobQueue(name));
   const registry = new Map<string, JobQueue>(queues.map((queue, i) => [names[i] as string, queue]));
-  return { service: new QueueService({ queues: registry, boardQueues: bullBoardQueues }), queues };
+  return { service: new QueueService({ queues: registry }), queues };
 }
 
 describe('apps/api: QueueService', () => {
@@ -41,7 +40,6 @@ describe('apps/api: QueueService', () => {
     } as unknown as JobQueue;
     const service = new QueueService({
       queues: new Map<string, JobQueue>([['probe', stub]]),
-      boardQueues: bullBoardQueues,
     });
 
     expect(expectErr(await service.getQueueMetrics()).code).toBe(ErrorCodes.QUEUE_UNAVAILABLE);
@@ -69,10 +67,4 @@ describe('apps/api: QueueService', () => {
       expect(refused.message).toContain('invalid-queue');
     }
   );
-
-  it('builds the Bull Board plugin over whatever queues are registered', () => {
-    const { service } = serviceWith('probe');
-
-    expect(typeof service.getBoardPlugin('/admin/queues')).toBe('function');
-  });
 });

@@ -13,6 +13,13 @@ const PRODUCTION_SOURCE = [
   ':(exclude,glob)**/__mocks__/**',
 ];
 
+const SPEC_EXCLUSIONS = PRODUCTION_SOURCE.filter((spec) => spec.startsWith(':(exclude'));
+
+/** One directory per call: with two include globs in one pathspec list, the exclusions stop applying. */
+function productionUnder(dir: string): string[] {
+  return [`:(glob)${dir}/**/*.ts`, ...SPEC_EXCLUSIONS];
+}
+
 type Row = readonly [name: string, pattern: RegExp, scope: readonly string[], expected: number];
 
 /** `scope` is a list of git pathspecs; `expected` counts matches across it, not files. */
@@ -26,6 +33,29 @@ const ROWS: readonly Row[] = [
     PRODUCTION_SOURCE,
     1,
   ],
+  ['the module-level metrics singleton', /(?<!async )\bgetMetrics\(/g, PRODUCTION_SOURCE, 0],
+  [
+    'a metrics server',
+    /\bclass MetricsServer\b|\bfunction startMetricsServer\b/g,
+    PRODUCTION_SOURCE,
+    1,
+  ],
+  ['a default-metrics collector', /\bcollectDefaultMetrics\(/g, PRODUCTION_SOURCE, 1],
+  ['Bull Board inside a service', /@bull-board/g, productionUnder('apps/api/src/services'), 0],
+  [
+    'the heartbeat path outside the Heartbeat and composition',
+    /\bheartbeatPath\b/g,
+    [
+      ...PRODUCTION_SOURCE,
+      ':(exclude)apps/worker/src/composition',
+      ':(exclude)packages/server/env-schema',
+    ],
+    0,
+  ],
+  ['a throwing parse in a stage', /\.parse\(/g, productionUnder('apps/worker/src/stages'), 0],
+  ['a throwing parse in a service', /\.parse\(/g, productionUnder('apps/api/src/services'), 0],
+  ['a failure classified by its message', /message\.includes/g, PRODUCTION_SOURCE, 0],
+  ['a cast through unknown', /as unknown as/g, PRODUCTION_SOURCE, 0],
 ];
 
 function countMatches(pattern: RegExp, sources: readonly string[]): number {

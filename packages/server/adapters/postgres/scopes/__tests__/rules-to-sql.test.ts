@@ -1,6 +1,6 @@
 import { videos } from '@vp/db';
 import type { UserContext } from '@vp/permissions';
-import { getConditionSql, rulesToSql } from '../rules-to-sql';
+import { type AstCondition, getConditionSql, rulesToSql } from '../rules-to-sql';
 import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: rules-to-sql compiler', () => {
@@ -55,25 +55,25 @@ describe('adapters/postgres/scoping: rules-to-sql compiler', () => {
   });
 
   describe('operator compilation', () => {
-    it.each([
+    it.each<{ name: string; condition: AstCondition; sql: string }>([
       {
         name: 'in',
-        condition: { operator: 'in', field: 'status', value: ['READY', 'FAILED'] },
+        condition: { type: 'field', operator: 'in', field: 'status', value: ['READY', 'FAILED'] },
         sql: '"videos"."status" in ($1, $2)',
       },
       {
         name: 'ne',
-        condition: { operator: 'ne', field: 'status', value: 'DELETED' },
+        condition: { type: 'field', operator: 'ne', field: 'status', value: 'DELETED' },
         sql: '"videos"."status" <> $1',
       },
       {
         name: 'exists false',
-        condition: { operator: 'exists', field: 'deletedAt', value: false },
+        condition: { type: 'field', operator: 'exists', field: 'deletedAt', value: false },
         sql: '"videos"."deleted_at" is null',
       },
       {
         name: 'exists true',
-        condition: { operator: 'exists', field: 'deletedAt', value: true },
+        condition: { type: 'field', operator: 'exists', field: 'deletedAt', value: true },
         sql: '"videos"."deleted_at" is not null',
       },
     ])('compiles a $name condition', ({ condition, sql }) => {
@@ -82,13 +82,16 @@ describe('adapters/postgres/scoping: rules-to-sql compiler', () => {
 
     it('rejects a condition on a column the table does not have', () => {
       expect(() =>
-        getConditionSql({ operator: 'eq', field: 'userId', value: 'usr-1' }, videos)
+        getConditionSql({ type: 'field', operator: 'eq', field: 'userId', value: 'usr-1' }, videos)
       ).toThrow(/unknown column "userId"/);
     });
 
-    it.each([
-      { kind: 'field', condition: { operator: 'regex', field: 'title', value: '^a' } },
-      { kind: 'compound', condition: { operator: 'nor', value: [] } },
+    it.each<{ kind: string; condition: AstCondition }>([
+      {
+        kind: 'field',
+        condition: { type: 'field', operator: 'regex', field: 'title', value: '^a' },
+      },
+      { kind: 'compound', condition: { type: 'compound', operator: 'nor', value: [] } },
     ])('rejects an unsupported $kind operator', ({ condition }) => {
       expect(() => getConditionSql(condition, videos)).toThrow(/Unsupported/);
     });

@@ -36,6 +36,7 @@ describe('apps/api/composition: services module', () => {
       'channelService',
       'dlqService',
       'feedService',
+      'queueBoard',
       'queueService',
       'reactionService',
       'readiness',
@@ -88,7 +89,10 @@ describe('apps/api/composition: services module', () => {
 
     const failed = expectErr(await c.start());
 
-    expect(failed.token).toBe('SseHub');
-    expect(failed.cause).toMatchObject({ code: ErrorCodes.CACHE_UNAVAILABLE });
+    expect(failed).toMatchObject({
+      type: 'failed',
+      token: 'SseHub',
+      cause: { code: ErrorCodes.CACHE_UNAVAILABLE },
+    });
   });
 });

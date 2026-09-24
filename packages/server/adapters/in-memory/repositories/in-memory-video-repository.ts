@@ -23,53 +23,33 @@ import {
 } from '@vp/core/repositories';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { canReadVideo } from '@vp/permissions';
-import { type Result, assertNever, err, ok, unwrapOr } from '@vp/result';
+import { type Result, assertNever, err, isErr, map, ok, unwrapOr } from '@vp/result';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { selectPublicFeed } from './public-feed-query';
 import {
   DEFAULT_VIDEO_RECORD,
   type InMemoryVideoRepositoryOptions,
-  type InternalStep,
   type UploadLookup,
 } from './types';
 
 export type { InMemoryVideoRepositoryOptions };
 
 export class InMemoryVideoRepository extends VideoRepository {
-  private readonly videosMap: Map<string, VideoRecord>;
-  private readonly eventsList?: VideoEventRecord[];
-  private readonly renditionsMap?: Map<string, RenditionRecord>;
-  private readonly stepsMap?: Map<string, InternalStep>;
-  private readonly uploadsMap?: Map<string, UploadRecord>;
+  private readonly videosMap = new Map<string, VideoRecord>();
   private readonly eventsRepo?: EventRepository;
   private readonly renditionsRepo?: RenditionRepository;
   private readonly stepsRepo?: StepRepository;
   private readonly uploadsRepo?: UploadLookup;
   private readonly outboxRepo?: OutboxRepository;
 
-  constructor(
-    optsOrMap?: InMemoryVideoRepositoryOptions | Map<string, VideoRecord>,
-    eventsList?: VideoEventRecord[],
-    renditionsMap?: Map<string, RenditionRecord>,
-    stepsMap?: Map<string, InternalStep>,
-    uploadsMap?: Map<string, UploadRecord>
-  ) {
+  constructor(options: InMemoryVideoRepositoryOptions = {}) {
     super();
-    if (optsOrMap instanceof Map) {
-      this.videosMap = optsOrMap;
-      this.eventsList = eventsList;
-      this.renditionsMap = renditionsMap;
-      this.stepsMap = stepsMap;
-      this.uploadsMap = uploadsMap;
-    } else {
-      this.videosMap = optsOrMap?.videosMap ?? new Map();
-      this.eventsRepo = optsOrMap?.eventsRepo;
-      this.renditionsRepo = optsOrMap?.renditionsRepo;
-      this.stepsRepo = optsOrMap?.stepsRepo;
-      this.uploadsRepo = optsOrMap?.uploadsRepo;
-      this.outboxRepo = optsOrMap?.outboxRepo;
-    }
+    this.eventsRepo = options.eventsRepo;
+    this.renditionsRepo = options.renditionsRepo;
+    this.stepsRepo = options.stepsRepo;
+    this.uploadsRepo = options.uploadsRepo;
+    this.outboxRepo = options.outboxRepo;
   }
 
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
@@ -81,27 +61,19 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   private async getEvents(id: string): Promise<VideoEventRecord[]> {
-    if (this.eventsRepo) return unwrapOr(await this.eventsRepo.findByVideoId(id), []);
-    return this.eventsList ? this.eventsList.filter((e) => e.videoId === id) : [];
+    return this.eventsRepo ? unwrapOr(await this.eventsRepo.findByVideoId(id), []) : [];
   }
 
   private async getSteps(id: string): Promise<ProcessingStepRecord[]> {
-    if (this.stepsRepo) return unwrapOr(await this.stepsRepo.findByVideoId(id), []);
-    return this.stepsMap ? Array.from(this.stepsMap.values()).filter((s) => s.videoId === id) : [];
+    return this.stepsRepo ? unwrapOr(await this.stepsRepo.findByVideoId(id), []) : [];
   }
 
   private async getRenditions(id: string): Promise<RenditionRecord[]> {
-    if (this.renditionsRepo) return unwrapOr(await this.renditionsRepo.findByVideoId(id), []);
-    return this.renditionsMap
-      ? Array.from(this.renditionsMap.values()).filter((r) => r.videoId === id)
-      : [];
+    return this.renditionsRepo ? unwrapOr(await this.renditionsRepo.findByVideoId(id), []) : [];
   }
 
   private async getUpload(id: string): Promise<UploadRecord | null> {
-    if (this.uploadsRepo) return unwrapOr(await this.uploadsRepo.findByVideoId(id), null);
-    return this.uploadsMap
-      ? (Array.from(this.uploadsMap.values()).find((u) => u.videoId === id) ?? null)
-      : null;
+    return this.uploadsRepo ? unwrapOr(await this.uploadsRepo.findByVideoId(id), null) : null;
   }
 
   private async emitEvent(
@@ -109,19 +81,9 @@ export class InMemoryVideoRepository extends VideoRepository {
     type: string,
     payload: Record<string, unknown>,
     traceId?: string | null
-  ): Promise<void> {
-    if (this.eventsRepo) {
-      await this.eventsRepo.create({ videoId, type, payload, traceId });
-    } else if (this.eventsList) {
-      this.eventsList.push({
-        id: this.eventsList.length + 1,
-        videoId,
-        type,
-        payload,
-        traceId: traceId ?? null,
-        createdAt: new Date(),
-      });
-    }
+  ): Promise<Result<void, DatabaseUnavailable>> {
+    if (!this.eventsRepo) return ok();
+    return map(await this.eventsRepo.create({ videoId, type, payload, traceId }), () => undefined);
   }
 
   async findWithDetails(id: string): Promise<Result<VideoWithDetails | null, DatabaseUnavailable>> {
@@ -195,13 +157,13 @@ export class InMemoryVideoRepository extends VideoRepository {
     if (patch.title !== undefined) video.title = patch.title;
     if (patch.description !== undefined) video.description = patch.description;
     if (patch.visibility !== undefined) video.visibility = patch.visibility;
-    await this.emitEvent(videoId, 'video.metadata_updated', {
+    const recorded = await this.emitEvent(videoId, 'video.metadata_updated', {
       patch,
       expectedVersion,
       newVersion: video.version,
       ...(userId ? { requestedBy: userId } : {}),
     });
-    return ok(video);
+    return map(recorded, () => video);
   }
 
   async transition(options: TransitionVideoOptions): Promise<Result<boolean, DatabaseUnavailable>> {
@@ -221,14 +183,16 @@ export class InMemoryVideoRepository extends VideoRepository {
       updatedAt: now,
       readyAt: to === 'READY' ? now : video.readyAt,
     });
-    await this.emitEvent(
+    const recorded = await this.emitEvent(
       videoId,
       eventType || `video.${to.toLowerCase()}`,
       eventPayload,
       effectiveTraceId
     );
+    if (isErr(recorded)) return recorded;
     if (options.outbox && this.outboxRepo) {
-      await this.outboxRepo.enqueue(options.outbox);
+      const enqueued = await this.outboxRepo.enqueue(options.outbox);
+      if (isErr(enqueued)) return enqueued;
     }
     return ok(true);
   }

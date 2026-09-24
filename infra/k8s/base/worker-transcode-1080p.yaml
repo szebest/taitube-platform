@@ -71,10 +71,17 @@ spec:
               command:
                 - sh
                 - -c
-                - test -f /tmp/vp/heartbeat || exit 0; test $(( $(date +%s) - $(cat /tmp/vp/heartbeat 2>/dev/null || stat -c %Y /tmp/vp/heartbeat 2>/dev/null || date +%s) )) -lt 120
+                - test -f /tmp/vp/heartbeat && test $(( $(date +%s) - $(cat /tmp/vp/heartbeat) )) -lt 45
             periodSeconds: 30
             initialDelaySeconds: 15
             timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: metrics
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 3
       volumes:
         - name: tmp
           emptyDir:

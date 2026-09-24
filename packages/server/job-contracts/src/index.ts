@@ -103,6 +103,7 @@ export type DlqJob = z.infer<typeof DlqJob>;
 
 // Return values
 export const TranscodeResult = z.object({
+  type: z.literal('transcode'),
   rendition: z.enum(RENDITIONS),
   playlistKey: z.string(),
   segmentCount: z.number().int(),
@@ -114,11 +115,16 @@ export const TranscodeResult = z.object({
 export type TranscodeResult = z.infer<typeof TranscodeResult>;
 
 export const ThumbnailResult = z.object({
+  type: z.literal('thumbnail'),
   posterKey: z.string(),
   spriteKey: z.string(),
   spriteVttKey: z.string(),
 });
 export type ThumbnailResult = z.infer<typeof ThumbnailResult>;
+
+/** What a package job reads back from its flow children, told apart by the stage that wrote it. */
+export const ChildResult = z.discriminatedUnion('type', [TranscodeResult, ThumbnailResult]);
+export type ChildResult = z.infer<typeof ChildResult>;
 
 // Deterministic job IDs
 export const ids = {

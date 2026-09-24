@@ -1,4 +1,4 @@
-import type { DatabaseUnavailable } from '@vp/errors';
+import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
 import type { Result } from '@vp/result';
 import type { NewOutboxInput } from './outbox-repository';
 
@@ -26,7 +26,7 @@ export interface NewDlqEntryInput {
   jobId: string;
   videoId?: string | null;
   payload: unknown;
-  errorCode?: string | null;
+  errorCode?: ErrorCode | null;
   errorMessage?: string | null;
   stack?: string | null;
   attemptsMade: number;

@@ -86,14 +86,15 @@ export async function main(args: readonly string[] = process.argv.slice(2)): Pro
         console.error('Error: token argument required for verify');
         process.exit(1);
       }
+      let verified: ReturnType<typeof verifyToken>;
       try {
-        const payload = verifyToken(token);
-        console.log('✓ Token valid:');
-        console.log(JSON.stringify(payload, null, 2));
-      } catch (err) {
-        console.error('✗ Token invalid:', err instanceof Error ? err.message : err);
+        verified = verifyToken(token);
+      } catch (cause) {
+        console.error('✗ Token invalid:', cause instanceof Error ? cause.message : cause);
         process.exit(1);
       }
+      console.log('✓ Token valid:');
+      console.log(JSON.stringify(verified, null, 2));
       break;
     }
 

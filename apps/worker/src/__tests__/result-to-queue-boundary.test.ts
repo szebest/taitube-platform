@@ -8,7 +8,7 @@ import { createFailureHandler } from '../failure-handler';
 import { STAGE_SETTINGS } from './stage-settings';
 
 const logger = createLogger({ service: 'queue-boundary-test', level: 'error' });
-const metrics = createMetricsRegistry({ env: 'test' });
+const metrics = createMetricsRegistry();
 
 const corruptContainer = {
   code: ErrorCodes.CORRUPT_CONTAINER,

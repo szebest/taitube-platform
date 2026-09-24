@@ -3,6 +3,7 @@ import type { JobQueue, TokenVerifier } from '@vp/core/ports';
 import { getDevJwks } from '@vp/dev-token';
 import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
+import { createMetricsRegistry } from '@vp/observability';
 import { assertNever } from '@vp/result';
 import { DevTokenVerifier } from '../auth/dev-token-verifier';
 import { JwksTokenVerifier } from '../auth/jwks-token-verifier';
@@ -37,7 +38,11 @@ export async function registerAdapters(c: Container, config: AppConfig): Promise
       ? await import('./in-memory-family')
       : await import('./external-family');
 
-  family.registerFamily(c.provide(Adapters.Config, () => config));
+  family.registerFamily(
+    c
+      .provide(Adapters.Config, () => config)
+      .provide(Adapters.Metrics, () => createMetricsRegistry())
+  );
 
   return c
     .provide(Adapters.Queues, (c) => {

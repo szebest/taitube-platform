@@ -1,4 +1,4 @@
-import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
+import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
 import type { Token } from './token';
 
 export interface Startable {
@@ -16,13 +16,21 @@ export interface Closable {
 
 export const closeOnDispose: Lifecycle<Closable> = { dispose: (resource) => resource.close() };
 
-export interface StartupFailed {
+export interface TokenFailed {
   readonly token: string;
   readonly cause: unknown;
 }
 
+/**
+ * Why `start()` did not finish: a start that failed, or a `dispose()` that arrived first - a
+ * `SIGTERM` during boot - which is a shutdown already in hand, not a boot failure to report.
+ */
+export type StartupFailed =
+  | ({ readonly type: 'failed' } & TokenFailed)
+  | { readonly type: 'interrupted' };
+
 export interface ShutdownFailed {
-  readonly failed: readonly StartupFailed[];
+  readonly failed: readonly TokenFailed[];
 }
 
 export class DisposeFailed extends Error {
@@ -57,7 +65,9 @@ export class Container {
   private readonly constructed: Constructed[] = [];
   private readonly path: Key[] = [];
   private disposal: Promise<Result<void, ShutdownFailed>> | undefined;
+  private starting: Promise<Result<void, StartupFailed>> | undefined;
   private pendingDisposer: string | undefined;
+  private readonly startedTokens: string[] = [];
 
   provide<T, V extends T = T>(t: Token<T>, make: Factory<V>, lifecycle?: Lifecycle<V>): this {
     if (make instanceof AsyncFunction) {
@@ -96,24 +106,43 @@ export class Container {
     return this.remember(t, value);
   }
 
-  async start(): Promise<Result<void, StartupFailed>> {
+  start(): Promise<Result<void, StartupFailed>> {
+    this.starting ??= this.startAll();
+    return this.starting;
+  }
+
+  /** What has started so far, in the order it started. */
+  started(): readonly string[] {
+    return [...this.startedTokens];
+  }
+
+  /** A dispose during `start()` lets the start in flight finish, then starts nothing more. */
+  dispose(): Promise<Result<void, ShutdownFailed>> {
+    this.disposal ??= this.afterStart().then(() => this.disposeAll());
+    return this.disposal;
+  }
+
+  private async afterStart(): Promise<void> {
+    if (this.starting) ignore(await this.starting, 'the disposal that follows reports its own');
+  }
+
+  private async startAll(): Promise<Result<void, StartupFailed>> {
     for (const { name, value, lifecycle } of [...this.constructed]) {
+      if (this.disposal) return err({ type: 'interrupted' });
+
       const start = lifecycle?.start;
       if (!start) continue;
 
       const started = await fromPromise(() => start(value), toCause);
       const failure = isErr(started) ? started.error : !started.value.ok && started.value.error;
       if (failure !== false) {
-        await this.dispose();
-        return err({ token: name, cause: failure });
+        this.disposal ??= this.disposeAll();
+        ignore(await this.disposal, 'the start failure is what the caller acts on');
+        return err({ type: 'failed', token: name, cause: failure });
       }
+      this.startedTokens.push(name);
     }
-    return ok();
-  }
-
-  dispose(): Promise<Result<void, ShutdownFailed>> {
-    this.disposal ??= this.disposeAll();
-    return this.disposal;
+    return this.disposal ? err({ type: 'interrupted' }) : ok();
   }
 
   disposing(): string | undefined {
@@ -121,7 +150,7 @@ export class Container {
   }
 
   private async disposeAll(): Promise<Result<void, ShutdownFailed>> {
-    const failed: StartupFailed[] = [];
+    const failed: TokenFailed[] = [];
 
     for (const { name, value, lifecycle } of [...this.constructed].reverse()) {
       const dispose = lifecycle?.dispose;

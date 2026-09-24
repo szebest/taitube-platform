@@ -17,8 +17,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { throughRunner } from './queue-boundary';
-import { failTranscodeOf } from './ffmpeg-failures';
-import { STAGE_SETTINGS } from './stage-settings';
+import { STAGE_SETTINGS, failingTranscodeOf, transcodeDeps } from './stage-settings';
 
 describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', () => {
   let repositories: InMemoryRepositories;
@@ -212,27 +211,11 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     const q480 = getQueue('transcode-480p');
     const qThumb = getQueue('thumbnail');
 
-    const transcode1080 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
-    const transcode720 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
-    const transcode480 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
+    const transcode1080 = createTranscodeProcessor(
+      transcodeDeps({ repositories, storage, logger })
+    );
+    const transcode720 = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
+    const transcode480 = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
     const thumbnailProcessor = createThumbnailProcessor({
       ...STAGE_SETTINGS,
       repositories,
@@ -448,13 +431,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
       };
     });
 
-    const transcode720 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
+    const transcode720 = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
     await getQueue('transcode-720p').process(throughRunner(transcode720));
 
     p720Rends = expectOk(await repositories.renditions.findByVideoId(p720Id));
@@ -659,13 +636,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     });
 
     // 1. Process 720p successfully
-    const transcode720 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
+    const transcode720 = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
     await getQueue('transcode-720p').process(throughRunner(transcode720));
 
     // Verify 720p output was uploaded to storage
@@ -675,14 +646,9 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
     const rendsBeforeFail = expectOk(await repositories.renditions.findByVideoId(videoId));
     expect(rendsBeforeFail.find((r: any) => r.name === '720p')?.status).toBe('DONE');
 
-    failTranscodeOf('480p');
-    const transcode480 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
+    const transcode480 = createTranscodeProcessor(
+      transcodeDeps({ repositories, storage, logger, media: failingTranscodeOf('480p') })
+    );
 
     await expect(getQueue('transcode-480p').process(throughRunner(transcode480))).rejects.toThrow(
       'FFmpeg failed for transcode-480p'

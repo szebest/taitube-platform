@@ -1,5 +1,5 @@
 import type { Job } from 'bullmq';
-import { toQueueJob } from '../job-mapping';
+import { toFlowJobNode, toQueueJob } from '../job-mapping';
 
 function bullJob(overrides: Partial<Job> = {}): Job {
   return {
@@ -37,5 +37,37 @@ describe('bullmq adapter: job mapping', () => {
     };
 
     expect(path === 'id' ? mapped['id'] : mapped.opts[path]).toBe(expected);
+  });
+
+  it('carries a flow tree into the driver vocabulary, dependency options included', () => {
+    const backoff = { type: 'exponential', delay: 5000 };
+
+    expect(
+      toFlowJobNode({
+        name: 'package',
+        queueName: 'package',
+        data: { videoId: 'v1' },
+        children: [
+          {
+            name: 'transcode',
+            queueName: 'transcode-720p',
+            data: { rendition: '720p' },
+            opts: { jobId: 'v1--720p', attempts: 3, backoff, failParentOnFailure: true },
+          },
+        ],
+      })
+    ).toEqual({
+      name: 'package',
+      queueName: 'package',
+      data: { videoId: 'v1' },
+      children: [
+        {
+          name: 'transcode',
+          queueName: 'transcode-720p',
+          data: { rendition: '720p' },
+          opts: { jobId: 'v1--720p', attempts: 3, backoff, failParentOnFailure: true },
+        },
+      ],
+    });
   });
 });

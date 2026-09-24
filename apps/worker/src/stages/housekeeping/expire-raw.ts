@@ -18,9 +18,9 @@ export interface ExpireRawResult {
 }
 
 /**
- * Expire raw sources past retention period (SDD §9.8, §7):
- * Delete raw/ sources of READY videos older than RAW_RETENTION_DAYS
- * (lifecycle rule is the primary mechanism; this is the audit trail).
+ * Deletes the raw source of a READY video past retention (SDD §9.8, §7). The bucket lifecycle rule
+ * is the primary mechanism; this is the audit trail, so an event is written only for a source that
+ * is actually gone, and a failed delete leaves the video for the next run.
  */
 export async function runExpireRaw(
   options: ExpireRawOptions
@@ -37,27 +37,37 @@ export async function runExpireRaw(
   if (isErr(expiredVideos)) return expiredVideos;
 
   for (const video of expiredVideos.value) {
-    if (video.sourceKey) {
-      logger?.info(
-        { videoId: video.id, sourceKey: video.sourceKey, retentionDays },
-        'Expiring raw source video past retention'
+    if (!video.sourceKey) continue;
+
+    logger?.info(
+      { videoId: video.id, sourceKey: video.sourceKey, retentionDays },
+      'Expiring raw source video past retention'
+    );
+
+    const deleted = await storage.deleteObject(rawBucket, video.sourceKey);
+    const purged = isErr(deleted)
+      ? deleted
+      : await storage.purgePrefix(rawBucket, `raw/${video.id}/`);
+    if (isErr(purged)) {
+      logger?.warn(
+        { videoId: video.id, storage: purged.error.operation },
+        'Raw source not removed; the video is kept for the next run'
       );
-
-      await storage.deleteObject(rawBucket, video.sourceKey).catch(() => {});
-      await storage.purgePrefix(rawBucket, `raw/${video.id}/`).catch(() => {});
-
-      await repositories.events.create({
-        videoId: video.id,
-        type: 'video.raw_expired',
-        payload: {
-          sourceKey: video.sourceKey,
-          retentionDays,
-          expiredAt: new Date().toISOString(),
-        },
-      });
-
-      expiredCount += 1;
+      continue;
     }
+
+    const recorded = await repositories.events.create({
+      videoId: video.id,
+      type: 'video.raw_expired',
+      payload: {
+        sourceKey: video.sourceKey,
+        retentionDays,
+        expiredAt: new Date().toISOString(),
+      },
+    });
+    if (isErr(recorded)) return recorded;
+
+    expiredCount += 1;
   }
 
   return ok({ expiredCount });

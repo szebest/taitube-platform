@@ -5,14 +5,13 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
-import { describe, expect, it } from 'vitest';
 import {
   createTraceparent,
   extractContextFromTraceparent,
   getActiveSpanContext,
   getActiveTraceparent,
+  initTracing,
   injectTraceparent,
-  redactCommand,
 } from '../tracing';
 
 describe('OpenTelemetry Tracing Module (packages/observability)', () => {
@@ -24,27 +23,19 @@ describe('OpenTelemetry Tracing Module (packages/observability)', () => {
     expect(customTp).toBe('00-0123456789abcdef0123456789abcdef-fedcba9876543210-01');
   });
 
-  it('redacts sensitive presigned URLs and query params from command argv', () => {
-    const argv = [
-      'ffmpeg',
-      '-y',
-      '-i',
-      'https://minio.local:9000/raw-bucket/raw/test.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE&X-Amz-Signature=secret',
-      '-c:v',
-      'libx264',
-      'http://localhost:9000/output/seg-001.ts?token=supersecret',
-      '/tmp/local-path/file.mp4',
-    ];
+  it('hands back a handle whose shutdown succeeds when tracing is disabled', async () => {
+    const tracing = initTracing({
+      serviceName: 'vp-test',
+      enabled: false,
+      serviceVersion: 'test',
+      endpoint: 'http://localhost:4318',
+      sampler: 'always_on',
+      samplerArg: 1,
+      resourceAttributes: '',
+    });
 
-    const redacted = redactCommand(argv);
-    expect(redacted[0]).toBe('ffmpeg');
-    expect(redacted[1]).toBe('-y');
-    expect(redacted[2]).toBe('-i');
-    expect(redacted[3]).toBe('https://minio.local:9000/raw-bucket/raw/test.mp4');
-    expect(redacted[4]).toBe('-c:v');
-    expect(redacted[5]).toBe('libx264');
-    expect(redacted[6]).toBe('http://localhost:9000/output/seg-001.ts');
-    expect(redacted[7]).toBe('/tmp/local-path/file.mp4');
+    expect(tracing.ok).toBe(true);
+    expect(tracing.ok && (await tracing.value.shutdown())).toEqual({ ok: true, value: undefined });
   });
 
   it('extracts context from traceparent and allows child span hierarchy', () => {

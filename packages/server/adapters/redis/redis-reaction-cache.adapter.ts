@@ -2,7 +2,7 @@ import { Singleflight } from '@vp/concurrency';
 import type { ReactionCachePort } from '@vp/core/ports';
 import type { ReactionCounts, ReactionType } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
-import { type Result, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
+import { type Result, fromPromise, ignore, isErr, map, ok, unwrapOr } from '@vp/result';
 import {
   type CachedCounts,
   type ReactionCacheBackend,
@@ -71,7 +71,10 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     const fresh = await fetcher();
     if (isErr(fresh)) return fresh;
 
-    await this.counts.write(videoId, fresh.value, Math.max(1, Date.now() - start));
+    ignore(
+      await this.counts.write(videoId, fresh.value, Math.max(1, Date.now() - start)),
+      'the counts were read; a missed cache write costs the next reader one query'
+    );
     return fresh;
   }
 
@@ -92,9 +95,13 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     const xfetch = -cached.delta * this.beta * Math.log(Math.max(0.0001, Math.random()));
     if (xfetch <= remaining) return;
 
-    void this.singleflight
-      .do(`counts:${videoId}`, () => this.fetchAndStore(videoId, fetcher))
-      .catch(() => {});
+    ignore(
+      fromPromise(
+        () => this.singleflight.do(`counts:${videoId}`, () => this.fetchAndStore(videoId, fetcher)),
+        this.unavailable('refreshCounts')
+      ),
+      'an early refresh is a best effort; the cached counts already answered'
+    );
   }
 
   async setCounts(
@@ -130,7 +137,10 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
       const fetched = await fetcher();
       if (isErr(fetched)) return fetched;
 
-      await this.setUserReaction(userId, videoId, fetched.value);
+      ignore(
+        await this.setUserReaction(userId, videoId, fetched.value),
+        'the reaction was read; a missed cache write costs the next reader one query'
+      );
       return fetched;
     });
   }

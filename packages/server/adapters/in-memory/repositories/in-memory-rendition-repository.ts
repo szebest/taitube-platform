@@ -7,12 +7,7 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
 
 export class InMemoryRenditionRepository extends RenditionRepository {
-  private readonly renditionsMap: Map<string, RenditionRecord>;
-
-  constructor(renditionsMap: Map<string, RenditionRecord> = new Map()) {
-    super();
-    this.renditionsMap = renditionsMap;
-  }
+  private readonly renditionsMap = new Map<string, RenditionRecord>();
 
   async create(data: NewRenditionInput): Promise<Result<RenditionRecord, DatabaseUnavailable>> {
     const now = new Date();

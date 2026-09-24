@@ -1,12 +1,13 @@
 import { Adapters } from '@vp/adapters/composition';
 import { type Container, token } from '@vp/composition';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
-import { MS_PER_SECOND } from '@vp/domain/time';
 import { toPipelineError } from '@vp/errors';
-import type { Logger, PipelineMetrics } from '@vp/observability';
-import { fromPromise, isErr, ok } from '@vp/result';
+import type { MediaTools } from '@vp/ffmpeg';
+import { type Logger, MetricsServer, type PipelineMetrics } from '@vp/observability';
+import { fromPromise, isErr, isOk, ok } from '@vp/result';
 import { createFailureHandler } from '../failure-handler';
-import { validateQueueName } from '../job-identity';
+import { Heartbeat, everyInterval } from '../heartbeat';
+import { validateJobId, validateQueueName } from '../job-identity';
 import { STAGE_REGISTRY, type StageDefinition, type StageProcessor } from '../registry';
 import { housekeepingTasks } from '../stages/housekeeping/index';
 import { OutboxRelay } from '../stages/housekeeping/outbox-relay';
@@ -14,8 +15,8 @@ import { withTelemetry } from '../with-telemetry';
 
 export interface StageRuntime {
   logger: Logger;
-  metrics: PipelineMetrics;
   workerId: string;
+  media: MediaTools;
   outboxRelay: { enabled: boolean };
 }
 
@@ -28,9 +29,22 @@ export const Worker = {
   Stage: token<StageDefinition>('Stage'),
   GetQueue: token<(name: string) => JobQueue>('GetQueue'),
   ConsumeQueue: token<JobQueue>('ConsumeQueue'),
+  MetricsServer: token<MetricsServer>('MetricsServer'),
+  Heartbeat: token<Heartbeat>('Heartbeat'),
   Consumer: token<StageConsumer>('Consumer'),
   OutboxRelay: token<OutboxRelay | undefined>('OutboxRelay'),
 } as const;
+
+/**
+ * The order `start()` runs them in, which is the order they are resolved: the scrape endpoint and
+ * the liveness file exist before the first job is taken, so no job runs without either.
+ */
+export function resolveStartOrder(c: Container): void {
+  c.get(Worker.MetricsServer);
+  c.get(Worker.Heartbeat);
+  c.get(Worker.Consumer);
+  c.get(Worker.OutboxRelay);
+}
 
 /**
  * The one place a stage result becomes a BullMQ outcome: a normal return is a completed job, so a
@@ -49,18 +63,18 @@ function instrument(
 
     const enqueuedAt = (job as { timestamp?: number }).timestamp;
     if (enqueuedAt && enqueuedAt > 0) {
-      metrics.jobWaitDuration.observe(
-        { queue },
-        Math.max(0, (startTime - enqueuedAt) / MS_PER_SECOND)
-      );
+      metrics.jobWaitDuration.observe({ queue }, Math.max(0, (startTime - enqueuedAt) / 1000));
     }
+
+    const identified = validateJobId(job.id);
+    if (isErr(identified)) throw toPipelineError(identified.error);
 
     const settled = await fromPromise(
       () => processor(job),
       (cause) => cause
     );
     const failed = isErr(settled) || isErr(settled.value);
-    metrics.jobDuration.observe({ queue }, (Date.now() - startTime) / MS_PER_SECOND);
+    metrics.jobDuration.observe({ queue }, (Date.now() - startTime) / 1000);
     metrics.jobsProcessed.inc({ queue, result: failed ? 'failed' : 'completed' });
 
     if (isErr(settled)) throw settled.error;
@@ -70,9 +84,11 @@ function instrument(
 }
 
 export function registerStages(c: Container, runtime: StageRuntime): Container {
+  const config = () => c.get(Adapters.Config);
+
   return c
-    .provide(Worker.Stage, (c) => {
-      const stage = STAGE_REGISTRY[c.get(Adapters.Config).worker.stage];
+    .provide(Worker.Stage, () => {
+      const stage = STAGE_REGISTRY[config().worker.stage];
       validateQueueName(stage.queue);
       return stage;
     })
@@ -82,11 +98,35 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
     })
     .provide(Worker.ConsumeQueue, (c) => c.get(Worker.GetQueue)(c.get(Worker.Stage).queue))
     .provide(
+      Worker.MetricsServer,
+      (c) => {
+        const queue = c.get(Worker.ConsumeQueue);
+        return new MetricsServer({
+          port: config().http.metricsPort,
+          host: '0.0.0.0',
+          registry: c.get(Adapters.Metrics).registry,
+          ready: async () => isOk(await queue.checkHealth()),
+        });
+      },
+      { start: (server) => server.listen(), dispose: (server) => server.close() }
+    )
+    .provide(
+      Worker.Heartbeat,
+      () =>
+        new Heartbeat({
+          path: config().worker.heartbeatPath,
+          intervalMs: config().worker.heartbeatIntervalMs,
+          now: Date.now,
+          every: everyInterval,
+        }),
+      { start: (heartbeat) => heartbeat.start(), dispose: (heartbeat) => heartbeat.stop() }
+    )
+    .provide(
       Worker.Consumer,
       (c) => ({
         queue: c.get(Worker.ConsumeQueue),
         processor: c.get(Worker.Stage).createProcessor({
-          config: c.get(Adapters.Config),
+          config: config(),
           repositories: c.get(Adapters.Repositories),
           storage: c.get(Adapters.Storage),
           multipart: c.get(Adapters.Multipart),
@@ -95,12 +135,15 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
           getQueue: c.get(Worker.GetQueue),
           flowProducer: c.get(Adapters.FlowProducer),
           logger: runtime.logger,
+          metrics: c.get(Adapters.Metrics),
+          media: runtime.media,
           workerId: runtime.workerId,
         }),
       }),
       {
         start: async ({ queue, processor }) => {
           const stage = c.get(Worker.Stage);
+          const metrics = c.get(Adapters.Metrics);
           queue.onFailed?.(
             createFailureHandler({
               stage: stage.stage,
@@ -108,14 +151,14 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
               repositories: c.get(Adapters.Repositories),
               getQueue: c.get(Worker.GetQueue),
               logger: runtime.logger,
-              metrics: runtime.metrics,
+              metrics,
               workerId: runtime.workerId,
             })
           );
           return queue.process(
-            instrument(stage, processor, runtime.metrics) as Parameters<JobQueue['process']>[0],
+            instrument(stage, processor, metrics) as Parameters<JobQueue['process']>[0],
             {
-              concurrency: c.get(Adapters.Config).worker.concurrency ?? stage.concurrency,
+              concurrency: config().worker.concurrency ?? stage.concurrency,
               lockDurationMs: stage.lockDurationMs,
               lockRenewTimeMs: stage.lockRenewTimeMs,
               stalledIntervalMs: stage.stalledIntervalMs,
@@ -134,8 +177,8 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
               getQueue: c.get(Worker.GetQueue),
               flowProducer: c.get(Adapters.FlowProducer),
               logger: runtime.logger,
-              metrics: runtime.metrics,
-              ...housekeepingTasks(c.get(Adapters.Config).housekeeping).outbox,
+              metrics: c.get(Adapters.Metrics),
+              ...housekeepingTasks(config().housekeeping).outbox,
             })
           : undefined,
       {

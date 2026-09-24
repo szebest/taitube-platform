@@ -684,9 +684,9 @@ one and no second consumer could choose differently.
 **Consequences.** Every port, repository, service and stage is converted. The three shrink-only allowlists
 that carried the migration are gone and their assertions are flat: `result-returning-ports.test.ts`,
 `no-domain-throw.test.ts` and `routes-unwrap-at-send-result.test.ts` simply fail on an offender.
-`legacy-catch-sites.ts` is the one list left and holds only the boundaries this ADR does not reach - process
-spawning, CLI exit-code handlers, telemetry setup, build and migration entrypoints, `apps/web`, and the two
-pre-handlers with no reply to render into. Wire format is unchanged: a client cannot tell that the server
+No exception list is left: `catch-confinement.test.ts` allows a `catch` only in `@vp/result`, an adapter and
+an entrypoint's exit-code handler, and `no-discarded-result.test.ts` fails on a `Result` left unread unless it
+goes through `ignore(result, reason)`. Wire format is unchanged: a client cannot tell that the server
 stopped throwing, apart from four additive codes.
 
 `@vp/pagination` composes `@vp/result` to answer `Result<CursorPayload, InvalidCursor>` from its codec, which
@@ -1125,7 +1125,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL` (pipeline).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 

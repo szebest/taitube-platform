@@ -1,4 +1,10 @@
-import { type ShutdownPlan, shutdownOnce } from '../shutdown';
+import {
+  type ProcessHost,
+  type ShutdownOutcome,
+  type ShutdownPlan,
+  exitOnSignals,
+  shutdownOnce,
+} from '../shutdown';
 
 function plan(overrides: Partial<ShutdownPlan> = {}) {
   const events: string[] = [];
@@ -62,4 +68,31 @@ describe('packages/composition: shutdownOnce', () => {
     expect(await shutdownOnce(p)()).toBe('failed');
     expect(events.at(-1)).toContain('socket hang up');
   });
+});
+
+describe('packages/composition: exitOnSignals', () => {
+  it.each([
+    { signal: 'SIGTERM', outcome: 'drained', code: 0 },
+    { signal: 'SIGINT', outcome: 'drained', code: 0 },
+    { signal: 'SIGTERM', outcome: 'failed', code: 1 },
+    { signal: 'SIGTERM', outcome: 'forced', code: 1 },
+  ] as const)(
+    'exits $code once a $signal shutdown ends $outcome',
+    async ({ signal, outcome, code }) => {
+      const handlers = new Map<string, () => void>();
+      const exit = vi.fn<(code: number) => void>();
+      const host: ProcessHost = {
+        env: {},
+        onSignal: (name, handler) => void handlers.set(name, handler),
+        exit,
+      };
+      const settled = Promise.resolve<ShutdownOutcome>(outcome);
+      exitOnSignals(host, () => settled);
+
+      handlers.get(signal)?.();
+      await settled;
+
+      expect(exit).toHaveBeenCalledWith(code);
+    }
+  );
 });

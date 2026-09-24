@@ -1,9 +1,9 @@
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { classifyError } from '@vp/errors';
+import { classifyError, errorCodeOf, isErrorCode } from '@vp/errors';
 import {
   DlqJob,
-  NotifyJob,
+  type NotifyJob,
   type QueueName,
   defaultJobOptions,
   ids,
@@ -19,7 +19,7 @@ export interface FailureHandlerDeps {
   repositories: Repositories;
   getQueue?: (name: string) => JobQueue;
   logger: Logger;
-  metrics?: PipelineMetrics;
+  metrics: PipelineMetrics;
   workerId: string;
 }
 
@@ -32,32 +32,11 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     const videoId = (payload.videoId as string) || null;
     const attemptsMade = job.attemptsMade ?? 1;
 
-    interface ErrorWithDetails {
-      code?: string;
-      errorCode?: string;
-      cause?: unknown;
-    }
-    const errObj = err as ErrorWithDetails;
-    const causeObj =
-      errObj.cause && typeof errObj.cause === 'object'
-        ? (errObj.cause as ErrorWithDetails)
-        : undefined;
-    let errorCode: string =
-      (typeof errObj.code === 'string' && errObj.code) ||
-      (typeof errObj.errorCode === 'string' && errObj.errorCode) ||
-      (typeof causeObj?.code === 'string' && causeObj.code) ||
-      '';
-
-    if (!errorCode) {
-      errorCode = classifyError(err) === 'permanent' ? 'UNRECOVERABLE_ERROR' : 'INTERNAL';
-    }
-
+    const errorCode = errorCodeOf(err);
     const errorMessage = err.message || 'Job failed';
     const stack = err.stack ?? null;
 
-    if (metrics?.dlqEntriesTotal) {
-      metrics.dlqEntriesTotal.inc({ queue: queueName, error_code: errorCode });
-    }
+    metrics.dlqEntriesTotal.inc({ queue: queueName, error_code: errorCode });
     logger.warn(
       { queue: queueName, error_code: errorCode, jobId, attemptsMade },
       `dlq_entries_total{queue="${queueName}", error_code="${errorCode}"} incremented`
@@ -165,19 +144,20 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       const failedChild = steps.find(
         (s) => (s.status === 'DEAD' || s.status === 'FAILED') && s.errorCode && s.step !== 'package'
       );
-      const videoErrorCode = failedChild?.errorCode ?? errorCode;
+      const childCode = failedChild?.errorCode;
+      const videoErrorCode = isErrorCode(childCode) ? childCode : errorCode;
 
       const video = unwrapOr(await repositories.videos.findById(videoId), null);
       const notifyJobId = ids.notify(videoId, 'video.failed', 1);
-      const notifyJobData = video
-        ? NotifyJob.parse({
+      const notifyJobData: NotifyJob | undefined = video
+        ? {
             videoId,
             userId: video.ownerId,
             event: 'video.failed',
             eventSeq: 1,
             payload: { status: 'FAILED', errorCode: videoErrorCode, errorMessage },
             traceparent: (payload.traceparent as string) || '',
-          })
+          }
         : undefined;
       const notifyJobOpts = {
         jobId: notifyJobId,

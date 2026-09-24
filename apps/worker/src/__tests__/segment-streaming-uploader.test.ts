@@ -2,13 +2,13 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes, storageUnavailable } from '@vp/errors';
+import type { MediaTools } from '@vp/ffmpeg';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTranscodeProcessor } from '../stages/transcode';
-import { failTranscodeOf } from './ffmpeg-failures';
-import { STAGE_SETTINGS } from './stage-settings';
+import { STAGE_SETTINGS, failingTranscodeOf, transcodeDeps } from './stage-settings';
 
 describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off', () => {
   let repositories: InMemoryRepositories;
@@ -182,12 +182,9 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
           };
         });
 
-        const processor = createTranscodeProcessor({
-          ...STAGE_SETTINGS,
-          repositories,
-          storage,
-          logger,
-        });
+        const processor = createTranscodeProcessor(
+          transcodeDeps({ repositories, storage, logger })
+        );
 
         // Attempt 2 (attemptsMade = 1)
         loggedMessages.length = 0;
@@ -261,12 +258,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         };
       });
 
-      const processor = createTranscodeProcessor({
-        ...STAGE_SETTINGS,
-        repositories,
-        storage,
-        logger,
-      });
+      const processor = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
       const res = expectOk(await processor(makeJob(videoId, '720p')));
 
       expect(res.segmentCount).toBe(2);
@@ -313,12 +305,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         };
       });
 
-      const processor = createTranscodeProcessor({
-        ...STAGE_SETTINGS,
-        repositories,
-        storage,
-        logger,
-      });
+      const processor = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
 
       expect(expectErr(await processor(makeJob(videoId, '720p'))).code).toBe(
         ErrorCodes.STORAGE_UNAVAILABLE
@@ -354,29 +341,27 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       const presignSpy = vi.spyOn(storage, 'createPresignedGetUrl');
       const downloadSpy = vi.spyOn(storage, 'downloadObject');
 
-      const ffmpegModule = await import('@vp/ffmpeg');
       let transcodeSourcePassed = '';
-      vi.spyOn(ffmpegModule, 'runFfmpegTranscode').mockImplementation(async (opts) => {
-        transcodeSourcePassed = opts.sourcePath;
-        await fs.writeFile(path.join(opts.outputDir, 'seg_00000.ts'), Buffer.alloc(100));
-        await fs.writeFile(path.join(opts.outputDir, 'index.m3u8'), '#EXTM3U\n');
-        return {
-          outputDir: opts.outputDir,
-          playlistPath: path.join(opts.outputDir, 'index.m3u8'),
-          segmentCount: 1,
-          durationMs: 60000,
-        };
-      });
+      const media: MediaTools = {
+        ...STAGE_SETTINGS.media,
+        transcode: async (opts) => {
+          transcodeSourcePassed = opts.sourcePath;
+          await fs.writeFile(path.join(opts.outputDir, 'seg_00000.ts'), Buffer.alloc(100));
+          await fs.writeFile(path.join(opts.outputDir, 'index.m3u8'), '#EXTM3U\n');
+          return {
+            outputDir: opts.outputDir,
+            playlistPath: path.join(opts.outputDir, 'index.m3u8'),
+            segmentCount: 1,
+            durationMs: 60000,
+          };
+        },
+      };
 
-      const processor = createTranscodeProcessor({
-        ...STAGE_SETTINGS,
-        repositories,
-        storage,
-        logger,
-        streamingInput: true,
-      });
+      const processor = createTranscodeProcessor(
+        transcodeDeps({ repositories, storage, logger, media })
+      );
 
-      const res = await processor(makeJob(videoId, '720p'));
+      const res = await processor(makeJob(videoId, '720p', 0, true));
 
       expect(presignSpy).toHaveBeenCalledWith({
         bucket: 'raw',
@@ -421,12 +406,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         throw enospcError;
       });
 
-      const processor = createTranscodeProcessor({
-        ...STAGE_SETTINGS,
-        repositories,
-        storage,
-        logger,
-      });
+      const processor = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
 
       expect(expectErr(await processor(makeJob(videoId, '720p')))).toMatchObject({
         code: ErrorCodes.DISK_FULL,
@@ -517,12 +497,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         };
       });
 
-      const processor = createTranscodeProcessor({
-        ...STAGE_SETTINGS,
-        repositories,
-        storage,
-        logger,
-      });
+      const processor = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
       const result = expectOk(await processor(makeJob(videoId, '720p')));
 
       expect(result.segmentCount).toBe(totalSegments);
@@ -559,13 +534,9 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         audioBitrateKbps: 128,
       });
 
-      failTranscodeOf('720p');
-      const processor = createTranscodeProcessor({
-        ...STAGE_SETTINGS,
-        repositories,
-        storage,
-        logger,
-      });
+      const processor = createTranscodeProcessor(
+        transcodeDeps({ repositories, storage, logger, media: failingTranscodeOf('720p') })
+      );
 
       expect(expectErr(await processor(makeJob(videoId, '720p'))).code).toBe(
         ErrorCodes.FFMPEG_FAILED
@@ -605,12 +576,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         audioBitrateKbps: 128,
       });
 
-      const processor = createTranscodeProcessor({
-        ...STAGE_SETTINGS,
-        repositories,
-        storage,
-        logger,
-      });
+      const processor = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
 
       const job = {
         id: `${videoId}--transcode--720p--g1`,

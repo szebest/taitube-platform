@@ -2,7 +2,7 @@ import type { ReactionCachePort } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
-import { type Result, isErr, isOk, ok } from '@vp/result';
+import { type Result, ignore, isErr, isOk, ok } from '@vp/result';
 
 export interface ReconcileReactionCountersOptions {
   repositories: Repositories;
@@ -80,7 +80,10 @@ export async function runReconcileReactionCounters(
     }
 
     if (hasDrift) {
-      await reactionCache.setCounts(videoId, groundTruth);
+      ignore(
+        await reactionCache.setCounts(videoId, groundTruth),
+        'the counters are repaired in Postgres; the cache heals on its TTL'
+      );
       repairedCount++;
     }
   }

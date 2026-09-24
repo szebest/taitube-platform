@@ -55,10 +55,7 @@ function graph(): Container {
         })
     )
     .provide(Repo.uploads, (c) => new InMemoryUploadRepository({ videosRepo: c.get(Repo.videos) }))
-    .provide(
-      Repo.dlq,
-      (c) => new InMemoryDlqRepository(undefined, { outboxRepo: c.get(Repo.outbox) })
-    )
+    .provide(Repo.dlq, (c) => new InMemoryDlqRepository({ outboxRepo: c.get(Repo.outbox) }))
     .provide(
       Repo.categories,
       (c) => new InMemoryCategoryRepository({ videosRepo: c.get(Repo.videos) })

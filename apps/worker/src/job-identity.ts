@@ -1,4 +1,6 @@
 import { QUEUES, type QueueName } from '@vp/job-contracts';
+import { type Result, err, ok } from '@vp/result';
+import { type InvalidField, invalidField } from '@vp/validation';
 
 /** BullMQ throws on `:` in either, so the separator is `--` (SDD §9.1). */
 export function validateQueueName(name: string): QueueName {
@@ -11,11 +13,14 @@ export function validateQueueName(name: string): QueueName {
   return name as QueueName;
 }
 
-export function validateJobId(jobId: string): string {
-  if (jobId.includes(':')) {
-    throw new Error(
-      `Job ID must not contain ':' (got "${jobId}"). Use '--' separator per SDD §9.1`
-    );
-  }
-  return jobId;
+export function validateJobId(jobId: string): Result<string, InvalidField> {
+  return jobId.includes(':')
+    ? err(
+        invalidField(
+          'jobId',
+          `Job ID must not contain ':' (got "${jobId}"). Use '--' separator per SDD §9.1`,
+          {}
+        )
+      )
+    : ok(jobId);
 }

@@ -114,6 +114,7 @@ describe('packages/composition: Container', () => {
     expectOk(await c.start());
 
     expect(calls).toEqual(['start Storage', 'start Multipart']);
+    expect(c.started()).toEqual(['Storage', 'Multipart']);
   });
 
   it('disposes what it started when a start fails, and returns the failure', async () => {
@@ -125,13 +126,37 @@ describe('packages/composition: Container', () => {
 
     const failed = expectErr(await c.start());
 
-    expect(failed).toEqual({ token: 'Multipart', cause: 'Multipart is down' });
+    expect(failed).toEqual({ type: 'failed', token: 'Multipart', cause: 'Multipart is down' });
     expect(calls).toEqual([
       'start Storage',
       'start Multipart',
       'dispose Multipart',
       'dispose Storage',
     ]);
+  });
+
+  it('lets a dispose during start finish the start in flight, then starts nothing more', async () => {
+    const { calls, lifecycle } = recorder();
+    let release: () => void = () => {};
+    const c = new Container()
+      .provide(Storage, () => 'raw', {
+        start: () =>
+          new Promise((resolve) => {
+            release = () => resolve(ok());
+          }),
+        dispose: () => void calls.push('dispose Storage'),
+      })
+      .provide(Multipart, (c) => `${c.get(Storage)}-parts`, lifecycle('Multipart'));
+    c.get(Multipart);
+
+    const starting = c.start();
+    const disposing = c.dispose();
+    release();
+
+    expect(expectErr(await starting)).toEqual({ type: 'interrupted' });
+    expectOk(await disposing);
+    expect(calls).toEqual(['dispose Multipart', 'dispose Storage']);
+    expect(c.started()).toEqual(['Storage']);
   });
 
   it('disposes in reverse construction order, and only what a factory built', async () => {

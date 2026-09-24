@@ -1,13 +1,14 @@
 import type { FeedQuery, FeedResponse } from '@vp/api-contracts';
-import { Singleflight } from '@vp/concurrency';
+import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
-import { type Result, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
+import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';
 
 export interface FeedServiceDeps {
   videoService: VideoService;
   cache: CacheClient;
+  singleflight: Singleflight;
   maxAgeSeconds: number;
   staleWhileRevalidateSeconds: number;
 }
@@ -25,7 +26,7 @@ interface CachedFeedPage {
 }
 
 /**
- * FeedService — the public feed read path: Redis page cache for the first page,
+ * The public feed read path: Redis page cache for the first page,
  * singleflight coalescing behind it, and conditional-request evaluation.
  */
 export class FeedService {
@@ -33,11 +34,12 @@ export class FeedService {
   private readonly cache: CacheClient;
   private readonly maxAgeSeconds: number;
   private readonly staleWhileRevalidateSeconds: number;
-  private readonly singleflight = new Singleflight();
+  private readonly singleflight: Singleflight;
 
   constructor(deps: FeedServiceDeps) {
     this.videoService = deps.videoService;
     this.cache = deps.cache;
+    this.singleflight = deps.singleflight;
     this.maxAgeSeconds = deps.maxAgeSeconds;
     this.staleWhileRevalidateSeconds = deps.staleWhileRevalidateSeconds;
   }
@@ -114,15 +116,14 @@ export class FeedService {
     const raw = unwrapOr(await this.cache.get(this.cacheKey(variant)), null);
     if (!raw) return undefined;
 
-    const parsed = tryCatch(
-      () => JSON.parse(raw) as CachedFeedPage,
-      () => null
-    );
-    return isOk(parsed) ? parsed.value : undefined;
+    const parsed = parseJson(raw);
+    return isOk(parsed) ? (parsed.value as CachedFeedPage) : undefined;
   }
 
-  /** A cold page cache costs latency, never correctness, so the write's failure is dropped here. */
   private async writeCache(variant: string, page: CachedFeedPage): Promise<void> {
-    await this.cache.set(this.cacheKey(variant), JSON.stringify(page), this.maxAgeSeconds);
+    ignore(
+      await this.cache.set(this.cacheKey(variant), JSON.stringify(page), this.maxAgeSeconds),
+      'a cold page cache costs latency, never correctness'
+    );
   }
 }

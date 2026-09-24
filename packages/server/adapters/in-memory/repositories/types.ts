@@ -30,7 +30,6 @@ export interface InternalStep {
 }
 
 export interface InMemoryVideoRepositoryOptions {
-  videosMap?: Map<string, VideoRecord>;
   eventsRepo?: EventRepository;
   renditionsRepo?: RenditionRepository;
   stepsRepo?: StepRepository;

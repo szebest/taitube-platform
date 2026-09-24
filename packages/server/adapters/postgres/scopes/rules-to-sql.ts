@@ -1,12 +1,13 @@
 import { rulesToAST } from '@casl/ability/extra';
-import type { Condition } from '@ucast/core';
 import type { AppAbility, AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { getUserPermissions } from '@vp/permissions';
+import { assertNever } from '@vp/result';
 import {
   type Column,
   type SQL,
   and,
   eq,
+  getTableColumns,
   inArray,
   isNotNull,
   isNull,
@@ -15,28 +16,33 @@ import {
   sql,
 } from 'drizzle-orm';
 import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
+import { z } from 'zod';
 
-export interface AstCompoundCondition {
-  operator: 'and' | 'or' | string;
-  value: (AstCompoundCondition | AstFieldCondition)[];
-}
+export type AstCondition =
+  | { type: 'field'; operator: string; field: string; value: unknown }
+  | { type: 'compound'; operator: string; value: AstCondition[] };
 
-export interface AstFieldCondition {
-  operator: 'eq' | 'ne' | 'in' | 'exists' | string;
-  field: string;
-  value: unknown;
-}
+const FieldConditionSchema = z
+  .object({ operator: z.string(), field: z.string(), value: z.unknown() })
+  .transform(({ operator, field, value }) => ({ type: 'field' as const, operator, field, value }));
 
-export type AstCondition = AstCompoundCondition | AstFieldCondition;
+/**
+ * rulesToAST returns condition classes from whichever `@ucast/core` CASL resolves, so the tree is
+ * parsed by shape rather than matched by `instanceof`. A field condition is tried first because an
+ * `in` condition also carries an array value.
+ */
+const AstConditionSchema: z.ZodType<AstCondition, z.ZodTypeDef, unknown> = z.lazy(() =>
+  z.union([
+    FieldConditionSchema,
+    z
+      .object({ operator: z.string(), value: z.array(AstConditionSchema) })
+      .transform((condition) => ({ type: 'compound' as const, ...condition })),
+  ])
+);
 
-export type Viewer = AppAbility | UserContext | null | undefined;
+const InValuesSchema = z.array(z.unknown());
 
-function toAbility(viewer: Viewer): AppAbility {
-  if (viewer != null && 'can' in viewer) {
-    return viewer;
-  }
-  return getUserPermissions(viewer ?? null);
-}
+export type Viewer = UserContext | null;
 
 /**
  * Compiles CASL rules into Drizzle SQL WHERE conditions via @casl/ability/extra rulesToAST,
@@ -51,7 +57,7 @@ export function rulesToSql<T extends TableConfig>(
   viewer: Viewer,
   table: PgTableWithColumns<T>
 ): SQL | undefined {
-  const ability = toAbility(viewer);
+  const ability = getUserPermissions(viewer);
   const ast = rulesToAST(ability, action, subject as Parameters<typeof rulesToAST<AppAbility>>[2]);
 
   // A null AST means no rule grants the action; returning undefined would leave the query unfiltered.
@@ -59,51 +65,59 @@ export function rulesToSql<T extends TableConfig>(
     return sql`false`;
   }
 
-  return getConditionSql(ast as unknown as AstCondition, table);
+  return getConditionSql(AstConditionSchema.parse(ast), table);
 }
 
 export function getConditionSql<T extends TableConfig>(
-  condition: AstCondition | Condition,
+  condition: AstCondition,
   table: PgTableWithColumns<T>
 ): SQL | undefined {
-  // Field conditions are tested first: an `in` condition also carries an array value.
-  if ('field' in condition) {
-    const fieldCond = condition as AstFieldCondition;
-    const column = resolveColumn(fieldCond.field, table);
-
-    switch (fieldCond.operator) {
-      case 'eq':
-        return eq(column, fieldCond.value);
-      case 'ne':
-        return ne(column, fieldCond.value);
-      case 'in':
-        return inArray(column, fieldCond.value as unknown[]);
-      case 'exists':
-        return fieldCond.value === false ? isNull(column) : isNotNull(column);
-      default:
-        throw new Error(`Unsupported field condition operator: ${fieldCond.operator}`);
-    }
+  switch (condition.type) {
+    case 'field':
+      return fieldSql(condition, resolveColumn(condition.field, table));
+    case 'compound':
+      return compoundSql(condition, table);
+    default:
+      return assertNever(condition, 'AstCondition');
   }
+}
 
-  if (Array.isArray(condition.value)) {
-    const compound = condition as AstCompoundCondition;
-    const parts = compileParts(compound, table);
-
-    switch (compound.operator) {
-      case 'and':
-        return parts.length > 0 ? and(...parts) : undefined;
-      case 'or':
-        return parts.length > 0 ? or(...parts) : undefined;
-      default:
-        throw new Error(`Unsupported compound condition operator: ${compound.operator}`);
-    }
+function fieldSql(condition: Extract<AstCondition, { type: 'field' }>, column: Column): SQL {
+  switch (condition.operator) {
+    case 'eq':
+      return eq(column, condition.value);
+    case 'ne':
+      return ne(column, condition.value);
+    case 'in':
+      return inArray(column, InValuesSchema.parse(condition.value));
+    case 'exists':
+      return condition.value === false ? isNull(column) : isNotNull(column);
+    default:
+      throw new Error(`Unsupported field condition operator: ${condition.operator}`);
   }
+}
 
-  return undefined;
+function compoundSql<T extends TableConfig>(
+  condition: Extract<AstCondition, { type: 'compound' }>,
+  table: PgTableWithColumns<T>
+): SQL | undefined {
+  const parts = condition.value
+    .map((part) => getConditionSql(part, table))
+    .filter((part): part is SQL => part !== undefined);
+
+  switch (condition.operator) {
+    case 'and':
+      return parts.length > 0 ? and(...parts) : undefined;
+    case 'or':
+      return parts.length > 0 ? or(...parts) : undefined;
+    default:
+      throw new Error(`Unsupported compound condition operator: ${condition.operator}`);
+  }
 }
 
 function resolveColumn<T extends TableConfig>(field: string, table: PgTableWithColumns<T>): Column {
-  const column = (table as unknown as Record<string, Column>)[field];
+  const columns: Record<string, Column> = getTableColumns(table);
+  const column = columns[field];
 
   // Skipping an unmappable field would widen an `and` branch into an unintended grant.
   if (!column) {
@@ -111,13 +125,4 @@ function resolveColumn<T extends TableConfig>(field: string, table: PgTableWithC
   }
 
   return column;
-}
-
-function compileParts<T extends TableConfig>(
-  condition: AstCompoundCondition,
-  table: PgTableWithColumns<T>
-): SQL[] {
-  return condition.value
-    .map((cond) => getConditionSql(cond, table))
-    .filter((c): c is SQL => c !== undefined);
 }

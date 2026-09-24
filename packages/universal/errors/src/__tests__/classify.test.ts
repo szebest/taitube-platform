@@ -1,4 +1,11 @@
-import { classifyError, isPermanentError, isTransientError, toPipelineError } from '../classify';
+import {
+  asThrowable,
+  classifyError,
+  errorCodeOf,
+  isPermanentError,
+  isTransientError,
+  toPipelineError,
+} from '../classify';
 import { ErrorCodes } from '../error-codes';
 import { databaseUnavailable } from '../infra-failures';
 import { PermanentError, TransientError } from '../pipeline-error';
@@ -90,5 +97,52 @@ describe('@vp/errors: toPipelineError', () => {
 
   it('round-trips: what it throws, classifyError puts back in the same class', () => {
     expect(classifyError(toPipelineError(databaseUnavailable('findById')))).toBe('transient');
+  });
+});
+
+describe('@vp/errors: errorCodeOf', () => {
+  it.each([
+    { shape: 'a pipeline error', error: new PermanentError(ErrorCodes.UNSUPPORTED_CODEC, 'av1') },
+    {
+      shape: 'a wrapped cause',
+      error: new Error('job failed', {
+        cause: new TransientError(ErrorCodes.UNSUPPORTED_CODEC, 'x'),
+      }),
+    },
+  ])('keeps the vocabulary code carried by $shape', ({ error }) => {
+    expect(errorCodeOf(error)).toBe(ErrorCodes.UNSUPPORTED_CODEC);
+  });
+
+  it.each([
+    { shape: 'a plain error', error: new Error('boom') },
+    {
+      shape: 'a code outside the vocabulary',
+      error: Object.assign(new Error('x'), { code: 'ECONNRESET' }),
+    },
+    { shape: 'nothing at all', error: undefined },
+  ])('persists INTERNAL for $shape', ({ error }) => {
+    expect(errorCodeOf(error)).toBe(ErrorCodes.INTERNAL);
+  });
+});
+
+describe('@vp/errors: asThrowable', () => {
+  it('keeps an Error it was handed, EADDRINUSE included', () => {
+    const bound = Object.assign(new Error('listen EADDRINUSE'), { code: 'EADDRINUSE' });
+
+    expect(asThrowable(bound)).toBe(bound);
+  });
+
+  it('raises a vocabulary failure through its retry class', () => {
+    const thrown = asThrowable({
+      code: ErrorCodes.CACHE_UNAVAILABLE,
+      message: 'Cache unavailable',
+    });
+
+    expect(thrown).toBeInstanceOf(TransientError);
+    expect((thrown as TransientError).code).toBe(ErrorCodes.CACHE_UNAVAILABLE);
+  });
+
+  it('wraps anything else in a plain Error', () => {
+    expect(asThrowable('down')).toEqual(new Error('down'));
   });
 });

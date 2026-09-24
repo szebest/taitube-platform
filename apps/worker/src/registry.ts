@@ -10,15 +10,28 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig, WorkerStageName } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
-import type { QueueName } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
-import type { Result } from '@vp/result';
+import type { MediaTools } from '@vp/ffmpeg';
+import {
+  HousekeepingJob,
+  NotifyJob,
+  PackageJob,
+  ProbeJob,
+  type QueueName,
+  ThumbnailJob,
+  TranscodeJob,
+} from '@vp/job-contracts';
+import type { Logger, PipelineMetrics } from '@vp/observability';
+import { type Result, err } from '@vp/result';
+import { invalidField } from '@vp/validation';
+import type { ZodType } from 'zod';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
+import { TranscodeProgressReporter } from './stages/progress-reporter';
+import { StreamingSegmentUploader } from './stages/segment-uploader';
 import { createThumbnailProcessor } from './stages/thumbnail';
-import { createTranscodeProcessor } from './stages/transcode';
+import { type TranscodeProcessorDeps, createTranscodeProcessor } from './stages/transcode';
 
 export interface StageDeps {
   config: AppConfig;
@@ -30,6 +43,8 @@ export interface StageDeps {
   getQueue: (name: string) => JobQueue;
   flowProducer: FlowProducerPort;
   logger: Logger;
+  metrics: PipelineMetrics;
+  media: MediaTools;
   workerId: string;
 }
 
@@ -48,17 +63,33 @@ export interface StageDefinition {
   createProcessor: (deps: StageDeps) => StageProcessor;
 }
 
-const asStage = (processor: unknown) => processor as StageProcessor;
+/**
+ * A payload is `unknown` until its contract says otherwise, so each stage reads the one its queue
+ * carries here, and a job that does not match fails permanently instead of reaching the stage.
+ */
+function consuming<T>(
+  payload: ZodType<T>,
+  process: (job: QueueJob<T>) => Promise<Result<unknown, AnyFailure>>
+): StageProcessor {
+  return async (job) => {
+    const parsed = payload.safeParse(job.data);
+    return parsed.success
+      ? process({ ...job, data: parsed.data })
+      : err(invalidField('data', `${job.name} payload rejected: ${parsed.error.message}`, {}));
+  };
+}
 
 const probe = (d: StageDeps) =>
-  asStage(
+  consuming(
+    ProbeJob,
     createProbeProcessor({
       repositories: d.repositories,
       storage: d.storage,
+      media: d.media,
+      metrics: d.metrics,
       rawBucket: d.config.buckets.raw,
       workerId: d.workerId,
       logger: d.logger,
-      heartbeatPath: d.config.worker.heartbeatPath,
       tmpDir: d.config.worker.tmpDir,
       ffprobePath: d.config.worker.ffprobePath,
       maxDurationSeconds: d.config.limits.maxDurationSeconds,
@@ -67,17 +98,39 @@ const probe = (d: StageDeps) =>
     })
   );
 
+/** The per-job collaborators a transcode builds from what the stage was handed. */
+export function transcodeCollaborators(
+  d: Pick<StageDeps, 'config' | 'cache' | 'repositories' | 'storage' | 'metrics'>
+): Pick<TranscodeProcessorDeps, 'progressReporter' | 'segmentUploader'> {
+  return {
+    progressReporter: (target) =>
+      new TranscodeProgressReporter({
+        cache: d.cache,
+        repositories: d.repositories,
+        metrics: d.metrics,
+        ...target,
+      }),
+    segmentUploader: (target) =>
+      new StreamingSegmentUploader({
+        storage: d.storage,
+        publicBucket: d.config.buckets.public,
+        ...d.config.worker.segmentUpload,
+        ...target,
+      }),
+  };
+}
+
 const transcode = (d: StageDeps) =>
-  asStage(
+  consuming(
+    TranscodeJob,
     createTranscodeProcessor({
       repositories: d.repositories,
       storage: d.storage,
-      cache: d.cache,
+      media: d.media,
+      metrics: d.metrics,
       rawBucket: d.config.buckets.raw,
-      publicBucket: d.config.buckets.public,
       workerId: d.workerId,
       logger: d.logger,
-      heartbeatPath: d.config.worker.heartbeatPath,
       tmpDir: d.config.worker.tmpDir,
       ffmpeg: {
         path: d.config.worker.ffmpegPath,
@@ -89,8 +142,7 @@ const transcode = (d: StageDeps) =>
         minTimeoutMs: d.config.worker.ffmpegProcess.minTranscodeTimeoutMs,
         limits: d.config.worker.ffmpegProcess,
       },
-      segmentUpload: d.config.worker.segmentUpload,
-      getQueue: d.getQueue,
+      ...transcodeCollaborators(d),
     })
   );
 
@@ -131,15 +183,17 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
     maxStalledCount: 2,
     shutdownTimeoutMs: 110_000,
     createProcessor: (d) =>
-      asStage(
+      consuming(
+        ThumbnailJob,
         createThumbnailProcessor({
           repositories: d.repositories,
           storage: d.storage,
+          media: d.media,
+          metrics: d.metrics,
           rawBucket: d.config.buckets.raw,
           publicBucket: d.config.buckets.public,
           workerId: d.workerId,
           logger: d.logger,
-          heartbeatPath: d.config.worker.heartbeatPath,
           tmpDir: d.config.worker.tmpDir,
           ffmpegPath: d.config.worker.ffmpegPath,
           sprite: d.config.worker.sprite,
@@ -157,10 +211,12 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
     maxStalledCount: 2,
     shutdownTimeoutMs: 110_000,
     createProcessor: (d) =>
-      asStage(
+      consuming(
+        PackageJob,
         createPackageProcessor({
           repositories: d.repositories,
           storage: d.storage,
+          metrics: d.metrics,
           publicBucket: d.config.buckets.public,
           cdn: d.config.cdn,
           workerId: d.workerId,
@@ -179,10 +235,12 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
     maxStalledCount: 2,
     shutdownTimeoutMs: 20_000,
     createProcessor: (d) =>
-      asStage(
+      consuming(
+        NotifyJob,
         createNotifyProcessor({
           repositories: d.repositories,
           cache: d.cache,
+          metrics: d.metrics,
           workerId: d.workerId,
           logger: d.logger,
         })
@@ -198,7 +256,8 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
     maxStalledCount: 2,
     shutdownTimeoutMs: 50_000,
     createProcessor: (d) =>
-      asStage(
+      consuming(
+        HousekeepingJob,
         createHousekeepingProcessor({
           repositories: d.repositories,
           storage: d.storage,
@@ -206,6 +265,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           reactionCache: d.reactionCache,
           getQueue: d.getQueue,
           workerId: d.workerId,
+          metrics: d.metrics,
           logger: d.logger,
           rawBucket: d.config.buckets.raw,
           publicBucket: d.config.buckets.public,

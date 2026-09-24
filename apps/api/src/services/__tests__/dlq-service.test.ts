@@ -1,7 +1,7 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
-import { defaultPaginator } from '@vp/pagination';
+import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { DlqService } from '../dlq-service';
@@ -22,7 +22,7 @@ describe('DlqService', () => {
       dlq: repositories.dlq,
       events: repositories.events,
       queues,
-      paginator: defaultPaginator,
+      paginator: new Paginator(),
     });
   });
 

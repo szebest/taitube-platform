@@ -3,36 +3,22 @@ import {
   type UploadRecord,
   UploadRepository,
   type UploadWithVideo,
-  type VideoRecord,
   type VideoRepository,
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok, unwrapOr } from '@vp/result';
 
 export interface InMemoryUploadRepositoryOptions {
-  uploadsMap?: Map<string, UploadRecord>;
-  videosMap?: Map<string, VideoRecord>;
   videosRepo?: VideoRepository;
 }
 
 export class InMemoryUploadRepository extends UploadRepository {
-  private readonly uploadsMap: Map<string, UploadRecord>;
-  private readonly videosMap?: Map<string, VideoRecord>;
+  private readonly uploadsMap = new Map<string, UploadRecord>();
   private readonly videosRepo?: VideoRepository;
 
-  constructor(
-    optionsOrUploadsMap?: InMemoryUploadRepositoryOptions | Map<string, UploadRecord>,
-    legacyVideosMap?: Map<string, VideoRecord>
-  ) {
+  constructor(options: InMemoryUploadRepositoryOptions = {}) {
     super();
-    if (optionsOrUploadsMap instanceof Map) {
-      this.uploadsMap = optionsOrUploadsMap;
-      this.videosMap = legacyVideosMap;
-    } else {
-      this.uploadsMap = optionsOrUploadsMap?.uploadsMap ?? new Map();
-      this.videosMap = optionsOrUploadsMap?.videosMap;
-      this.videosRepo = optionsOrUploadsMap?.videosRepo;
-    }
+    this.videosRepo = options.videosRepo;
   }
 
   async findById(id: string): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {
@@ -54,13 +40,9 @@ export class InMemoryUploadRepository extends UploadRepository {
     const upload = this.uploadsMap.get(uploadId);
     if (!upload) return ok(null);
 
-    let video: VideoRecord | null = null;
-    if (this.videosRepo) {
-      video = unwrapOr(await this.videosRepo.findById(upload.videoId), null);
-    } else if (this.videosMap) {
-      video = this.videosMap.get(upload.videoId) ?? null;
-    }
-
+    const video = this.videosRepo
+      ? unwrapOr(await this.videosRepo.findById(upload.videoId), null)
+      : null;
     if (!video) return ok(null);
     return ok({ upload, video });
   }

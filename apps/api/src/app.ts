@@ -40,9 +40,8 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
     options.adapters
   );
   registerServices(container);
-
-  const services = container.get(Services.ServiceSet);
   resolveBackground(container);
+  const services = container.get(Services.ServiceSet);
 
   const app = fastify({
     logger: false,
@@ -69,7 +68,7 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
     verifier: container.get(Adapters.TokenVerifier),
     auth: config.auth,
   });
-  await app.register(registerHttpMetricsPlugin);
+  await app.register(registerHttpMetricsPlugin, { metrics: container.get(Adapters.Metrics) });
   await registerOpenApi(app);
 
   for (const routes of routesFor(config.auth)) {

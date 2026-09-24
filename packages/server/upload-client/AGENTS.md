@@ -14,8 +14,8 @@ This is a **workspace package with a CLI**, not a loose script — which is why 
 
 - **Tier `server`** — Node/Bun only.
 - **Layer T6** — above the applications, because the acceptance suite boots `apps/api` and a stub S3 to
-  drive a real resumable upload end to end. What the package *ships* is `@vp/errors` and `@vp/storage`;
-  the layer records the whole manifest, devDependencies included.
+  drive a real resumable upload end to end. What the package *ships* is `@vp/errors`, `@vp/result` and
+  `@vp/storage`; the layer records the whole manifest, devDependencies included.
 
 ---
 

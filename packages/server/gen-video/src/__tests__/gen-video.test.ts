@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { checkFixture, generateFixture, loadManifest, probeFile } from '../generator';
 
 describe('tools/gen-video: deterministic fixture generator', () => {
@@ -51,7 +50,9 @@ describe('tools/gen-video: deterministic fixture generator', () => {
     expect(fixture).toBeDefined();
     if (!fixture) return;
 
-    const outPath = await generateFixture(fixture, tmpDir);
+    const outcome = generateFixture(fixture, tmpDir);
+    if (outcome.type !== 'generated') throw new Error(outcome.reason);
+    const outPath = outcome.path;
 
     expect(fs.existsSync(outPath)).toBe(true);
     expect(fs.statSync(outPath).size).toBe(0);
@@ -66,7 +67,9 @@ describe('tools/gen-video: deterministic fixture generator', () => {
     expect(fixture).toBeDefined();
     if (!fixture) return;
 
-    const outPath = await generateFixture(fixture, tmpDir);
+    const outcome = generateFixture(fixture, tmpDir);
+    if (outcome.type !== 'generated') throw new Error(outcome.reason);
+    const outPath = outcome.path;
 
     expect(fs.existsSync(outPath)).toBe(true);
     expect(fs.statSync(outPath).size).toBeGreaterThan(0);
@@ -86,7 +89,9 @@ describe('tools/gen-video: deterministic fixture generator', () => {
       ...base,
       durationSeconds: 2,
     };
-    const outPath = await generateFixture(fixture, tmpDir);
+    const outcome = generateFixture(fixture, tmpDir);
+    if (outcome.type !== 'generated') throw new Error(outcome.reason);
+    const outPath = outcome.path;
 
     expect(fs.existsSync(outPath)).toBe(true);
     const probe = probeFile(outPath);

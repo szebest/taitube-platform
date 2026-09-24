@@ -2,10 +2,10 @@ import type { FlowProducerPort, JobQueue, QueueJob } from '@vp/core/ports';
 import type { QueueUnavailable } from '@vp/errors';
 import type { ProbeMetadata } from '@vp/ffmpeg';
 import {
-  PackageJob,
+  type PackageJob,
   type ProbeJob,
-  ThumbnailJob,
-  TranscodeJob,
+  type ThumbnailJob,
+  type TranscodeJob,
   defaultJobOptions,
   ids,
   stagePolicies,
@@ -33,12 +33,12 @@ export async function enqueueFollowUpJobs(
     const flow = await flowProducer.add({
       name: 'package',
       queueName: 'package',
-      data: PackageJob.parse({
+      data: {
         videoId,
         generation: job.data.generation,
         ladder: metadata.ladder,
         traceparent: job.data.traceparent,
-      }),
+      } satisfies PackageJob,
       opts: {
         jobId: packageJobId,
         priority,
@@ -52,7 +52,7 @@ export async function enqueueFollowUpJobs(
           return {
             name: queueName,
             queueName,
-            data: TranscodeJob.parse({
+            data: {
               videoId,
               sourceKey,
               generation: job.data.generation,
@@ -60,7 +60,7 @@ export async function enqueueFollowUpJobs(
               fps: metadata.fps,
               durationMs: metadata.durationMs,
               traceparent: job.data.traceparent,
-            }),
+            } satisfies TranscodeJob,
             opts: {
               jobId: transcodeJobId,
               priority,
@@ -74,13 +74,13 @@ export async function enqueueFollowUpJobs(
         {
           name: 'thumbnail',
           queueName: 'thumbnail',
-          data: ThumbnailJob.parse({
+          data: {
             videoId,
             sourceKey,
             generation: job.data.generation,
             durationMs: metadata.durationMs,
             traceparent: job.data.traceparent,
-          }),
+          } satisfies ThumbnailJob,
           opts: {
             jobId: ids.thumbnail(videoId, job.data.generation),
             priority,
@@ -109,7 +109,7 @@ export async function enqueueFollowUpJobs(
       const queue = getQueue(transcodeQueueName);
       const enqueued = await queue.add(
         transcodeQueueName,
-        TranscodeJob.parse({
+        {
           videoId,
           sourceKey,
           generation: job.data.generation,
@@ -117,7 +117,7 @@ export async function enqueueFollowUpJobs(
           fps: metadata.fps,
           durationMs: metadata.durationMs,
           traceparent: job.data.traceparent,
-        }),
+        } satisfies TranscodeJob,
         {
           jobId: transcodeJobId,
           priority,
@@ -138,13 +138,13 @@ export async function enqueueFollowUpJobs(
       const thumbnailJobId = ids.thumbnail(videoId, job.data.generation);
       const enqueued = await thumbnailQueue.add(
         'thumbnail',
-        ThumbnailJob.parse({
+        {
           videoId,
           sourceKey,
           generation: job.data.generation,
           durationMs: metadata.durationMs,
           traceparent: job.data.traceparent,
-        }),
+        } satisfies ThumbnailJob,
         {
           jobId: thumbnailJobId,
           priority,

@@ -15,10 +15,12 @@ import type {
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
+import type { PipelineMetrics } from '@vp/observability';
 import type { QueueRegistry } from './queue-registry';
 
 export const Adapters = {
   Config: token<AppConfig>('Config'),
+  Metrics: token<PipelineMetrics>('Metrics'),
   DbClient: token<DatabaseClient>('DbClient'),
   Repositories: token<Repositories>('Repositories'),
   Cache: token<CacheClient>('Cache'),

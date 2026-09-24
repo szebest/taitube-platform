@@ -1,10 +1,10 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryCacheClient, InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type {
   JobSchedulerTemplate,
   PatternMessageListener,
   UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   type CacheUnavailable,
   ErrorCodes,
@@ -57,7 +57,7 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
 
     const failed = expectErr(await container.start());
 
-    expect(failed.cause).toMatchObject({ code: ErrorCodes.CACHE_UNAVAILABLE });
+    expect(failed).toMatchObject({ type: 'failed', cause: { code: ErrorCodes.CACHE_UNAVAILABLE } });
     await app.close();
   });
 
@@ -70,6 +70,7 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
     const failed = expectErr(await container.start());
 
     expect(failed).toMatchObject({
+      type: 'failed',
       token: 'HousekeepingQueue',
       cause: { code: ErrorCodes.QUEUE_UNAVAILABLE },
     });

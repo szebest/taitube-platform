@@ -27,7 +27,7 @@ export function isInputFailure(failure: AnyFailure): failure is AnyInputFailure 
   return typeof (failure as Partial<AnyInputFailure>).field === 'string';
 }
 
-const OFF_THE_WIRE = new Set(['code', 'message', 'cause']);
+const OFF_THE_WIRE: ReadonlySet<string> = new Set(['code', 'message', 'cause']);
 
 /**
  * Everything a failure carries beyond the three fields every failure has. Widely typed because

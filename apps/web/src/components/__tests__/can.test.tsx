@@ -1,58 +1,53 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { canCreateVideo } from '@vp/permissions';
+import { canCreateVideo, type UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '../../modules/shared/providers/permissions-provider';
-import { Can } from '../can';
+import { Can, type CanProps } from '../can';
+
+type Props = CanProps<{ user: UserContext | null }>;
+type Gate = Props extends infer G ? (G extends Props ? Omit<G, 'children' | 'fallback'> : never) : never;
+
+const USER: UserContext = { id: 'usr-1', role: 'USER' };
 
 describe('Can Slot Component', () => {
-  it('renders children when allowed via do/on for guest', () => {
+  it.each<{ scenario: string; user: UserContext | null; gate: Gate; shown: string; hidden: string }>([
+    {
+      scenario: 'children when a guest may read via an ability',
+      user: null,
+      gate: { type: 'ability', do: 'read', on: 'Video' },
+      shown: 'ALLOWED',
+      hidden: 'DENIED',
+    },
+    {
+      scenario: 'the fallback when a guest may not create via an ability',
+      user: null,
+      gate: { type: 'ability', do: 'create', on: 'Video' },
+      shown: 'DENIED',
+      hidden: 'ALLOWED',
+    },
+    {
+      scenario: 'the fallback when a guest fails a rule',
+      user: null,
+      gate: { type: 'rule', I: canCreateVideo, this: {} },
+      shown: 'DENIED',
+      hidden: 'ALLOWED',
+    },
+    {
+      scenario: 'children when an authenticated user passes a rule',
+      user: USER,
+      gate: { type: 'rule', I: canCreateVideo, this: {} },
+      shown: 'ALLOWED',
+      hidden: 'DENIED',
+    },
+  ])('renders $scenario', ({ user, gate, shown, hidden }) => {
     const html = renderToStaticMarkup(
-      <PermissionsProvider userContext={null}>
-        <Can do="read" on="Video" fallback={<span>DENIED</span>}>
+      <PermissionsProvider userContext={user}>
+        <Can {...gate} fallback={<span>DENIED</span>}>
           <span>ALLOWED</span>
         </Can>
       </PermissionsProvider>
     );
 
-    expect(html).toContain('ALLOWED');
-    expect(html).not.toContain('DENIED');
-  });
-
-  it('renders fallback when denied via helper I/this for guest', () => {
-    const html = renderToStaticMarkup(
-      <PermissionsProvider userContext={null}>
-        <Can I={canCreateVideo} this={{}} fallback={<span>DENIED</span>}>
-          <span>ALLOWED</span>
-        </Can>
-      </PermissionsProvider>
-    );
-
-    expect(html).toContain('DENIED');
-    expect(html).not.toContain('ALLOWED');
-  });
-
-  it('renders fallback when denied via do/on for guest', () => {
-    const html = renderToStaticMarkup(
-      <PermissionsProvider userContext={null}>
-        <Can do="create" on="Video" fallback={<span>DENIED</span>}>
-          <span>ALLOWED</span>
-        </Can>
-      </PermissionsProvider>
-    );
-
-    expect(html).toContain('DENIED');
-    expect(html).not.toContain('ALLOWED');
-  });
-
-  it('renders children when authenticated user has permission', () => {
-    const html = renderToStaticMarkup(
-      <PermissionsProvider userContext={{ id: 'usr-1', role: 'USER' }}>
-        <Can I={canCreateVideo} this={{}} fallback={<span>DENIED</span>}>
-          <span>ALLOWED</span>
-        </Can>
-      </PermissionsProvider>
-    );
-
-    expect(html).toContain('ALLOWED');
-    expect(html).not.toContain('DENIED');
+    expect(html).toContain(shown);
+    expect(html).not.toContain(hidden);
   });
 });

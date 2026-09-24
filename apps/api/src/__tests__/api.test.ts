@@ -1,4 +1,3 @@
-import * as http from 'node:http';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -6,10 +5,10 @@ import {
 } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
+import { ok } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app';
-import { startMetricsServer } from '../plugins/metrics';
+import { buildApp, composeApp } from '../app';
+import { serve } from '../main';
 
 describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
   let app: FastifyInstance;
@@ -268,36 +267,22 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     expect(resRecovered.json().status).toBe('ok');
   });
 
-  it('AC 6: /metrics is served on METRICS_PORT, not on API port', async () => {
-    // 1. Verify Fastify API does NOT serve /metrics on the main port
-    const resApi = await app.inject({
-      method: 'GET',
-      url: '/metrics',
+  it('serves /metrics on the metrics port, never on the API port, with each process series once', async () => {
+    expect((await app.inject({ method: 'GET', url: '/metrics' })).statusCode).toBe(404);
+
+    const config = inProcessAppConfig({ http: { port: 0 } });
+    const api = await serve(await composeApp({ config }), config, {
+      tracing: { shutdown: async () => ok() },
+      timings: { drainDelayMs: 0, graceMs: 2_000 },
     });
-    expect(resApi.statusCode).toBe(404);
 
-    // 2. Verify standalone metrics server serves Prometheus metrics on its port
-    const testMetricsPort = 19464;
-    const metricsServer = await startMetricsServer(testMetricsPort);
+    const scraped = await fetch(`http://127.0.0.1:${api.metricsPort}/metrics`);
+    expect(scraped.status).toBe(200);
+    expect(scraped.headers.get('content-type')).toContain('text/plain');
+    const text = await scraped.text();
+    expect(text).toContain('http_request_duration_seconds');
+    expect(text.match(/^# TYPE \S*process_cpu_seconds_total /gm)).toHaveLength(1);
 
-    try {
-      const metricsResponse = await new Promise<string>((resolve, reject) => {
-        http.get(`http://127.0.0.1:${testMetricsPort}/metrics`, (res) => {
-          expect(res.statusCode).toBe(200);
-          expect(res.headers['content-type']).toContain('text/plain');
-          let data = '';
-          res.on('data', (chunk) => {
-            data += chunk;
-          });
-          res.on('end', () => resolve(data));
-          res.on('error', reject);
-        });
-      });
-
-      expect(metricsResponse).toContain('process_cpu_user_seconds_total');
-      expect(metricsResponse).toContain('vp_api_');
-    } finally {
-      await metricsServer.close();
-    }
+    expect(await api.shutdown()).toBe('drained');
   });
 });

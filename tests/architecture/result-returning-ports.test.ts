@@ -7,12 +7,20 @@ import { read, trackedFiles } from './repo-files';
  * Ticket 84 converted the last of them, so this is a flat assertion now: the shrink-only list it
  * used to read from is gone, and a port method that hides its failures is simply a failure here.
  */
-const PORT_ROOTS = ['packages/server/core/ports/', 'packages/server/core/repositories/'];
-const METHOD = /^\s*(?:abstract\s+)?(\w+)\s*(?:<[^>]*>)?\([^;]*?\):\s*(Promise<[^;]+)/gm;
+const PORT_ROOTS = [
+  'packages/server/core/ports/',
+  'packages/server/core/repositories/',
+  'packages/server/events/src/',
+];
+const METHOD =
+  /^\s*(?:abstract\s+|export\s+async\s+function\s+)?(\w+)\s*(?:<[^>]*>)?\([^;]*?\):\s*(Promise<[^;]+)/gm;
 
 function portFiles(): string[] {
   return trackedFiles(...PORT_ROOTS).filter(
-    (file) => file.endsWith('.ts') && !file.endsWith('index.ts')
+    (file) =>
+      file.endsWith('.ts') &&
+      !file.includes('/__tests__/') &&
+      (file.startsWith('packages/server/events/') || !file.endsWith('index.ts'))
   );
 }
 
@@ -32,6 +40,13 @@ function offenders(): string[] {
 }
 
 describe('architecture: every I/O port method returns a Result', () => {
+  it('reads an exported async function, not only a port method', () => {
+    expect(asyncMethods('packages/server/events/src/index.ts')).toContainEqual({
+      name: 'publishVideoEvent',
+      returns: expect.stringMatching(/^Promise<Result</),
+    });
+  });
+
   it('parses the port files it is asserting about', () => {
     expect(portFiles().length).toBeGreaterThan(15);
     expect(asyncMethods('packages/server/core/repositories/category-repository.ts')).not.toEqual(

@@ -1,5 +1,5 @@
 import type { StepStatus } from '@vp/domain';
-import type { DatabaseUnavailable } from '@vp/errors';
+import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
 import type { Result } from '@vp/result';
 
 export interface ProcessingStepRecord {
@@ -57,7 +57,7 @@ export interface FailStepOptions {
   step: string;
   rendition: string;
   lockToken: string;
-  errorCode: string;
+  errorCode: ErrorCode;
   errorMessage: string;
 }
 
@@ -70,7 +70,7 @@ export interface MarkDeadOptions {
   videoId: string;
   step: string;
   rendition?: string;
-  errorCode?: string;
+  errorCode?: ErrorCode;
   errorMessage?: string;
 }
 

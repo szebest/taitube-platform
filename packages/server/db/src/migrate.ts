@@ -3,7 +3,9 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { isErr } from '@vp/result';
 import postgres from 'postgres';
+import { waitForDatabase } from './client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,22 +14,8 @@ export async function runMigrations(url: string): Promise<void> {
   console.log(`[db:migrate] Connecting to ${url.replace(/:[^:@]+@/, ':***@')}...`);
   const sql = postgres(url, { max: 1 });
 
-  let connected = false;
-  for (let attempt = 1; attempt <= 15; attempt++) {
-    try {
-      await sql`SELECT 1`;
-      connected = true;
-      break;
-    } catch (err) {
-      console.warn(
-        `[db:migrate] Database connection attempt ${attempt}/15 failed (${(err as Error).message}), retrying in 1s...`
-      );
-      await new Promise((r) => setTimeout(r, 1000));
-    }
-  }
-  if (!connected) {
-    throw new Error('[db:migrate] Failed to connect to database after 15 attempts');
-  }
+  const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:migrate' });
+  if (isErr(reached)) throw reached.error;
 
   const db = drizzle(sql);
 

@@ -5,7 +5,6 @@ import {
   type CursorCodec,
   type CursorPayload,
   JsonCursorCodec,
-  defaultCursorCodec,
 } from '../cursor-codec';
 
 describe('packages/pagination: cursor codecs', () => {
@@ -47,12 +46,11 @@ describe('packages/pagination: cursor codecs', () => {
     });
   });
 
-  it('defaults to the opaque base64url format', () => {
-    expect(defaultCursorCodec).toBeInstanceOf(Base64UrlCursorCodec);
-  });
-
   it('produces a URL-safe token carrying no padding or reserved characters', () => {
-    const cursor = defaultCursorCodec.encode({ createdAt: '2026-01-01T00:00:00.000Z', id: 'v1' });
+    const cursor = new Base64UrlCursorCodec().encode({
+      createdAt: '2026-01-01T00:00:00.000Z',
+      id: 'v1',
+    });
 
     expect(cursor).toMatch(/^[A-Za-z0-9_-]+$/);
     expect(encodeURIComponent(cursor)).toBe(cursor);

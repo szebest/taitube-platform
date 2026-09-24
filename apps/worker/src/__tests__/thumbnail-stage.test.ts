@@ -18,8 +18,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { throughRunner } from './queue-boundary';
-import { failThumbnails } from './ffmpeg-failures';
-import { STAGE_SETTINGS } from './stage-settings';
+import { STAGE_SETTINGS, failingThumbnails, transcodeDeps } from './stage-settings';
 
 describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', () => {
   let repositories: InMemoryRepositories;
@@ -193,27 +192,11 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     });
     await qPackage.process(throughRunner(packageProcessor));
 
-    const transcode1080 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
-    const transcode720 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
-    const transcode480 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
+    const transcode1080 = createTranscodeProcessor(
+      transcodeDeps({ repositories, storage, logger })
+    );
+    const transcode720 = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
+    const transcode480 = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
     const thumbProcessor = createThumbnailProcessor({
       ...STAGE_SETTINGS,
       repositories,
@@ -326,7 +309,6 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
         };
       });
 
-    failThumbnails();
     const probeProcessor = createProbeProcessor({
       ...STAGE_SETTINGS,
       repositories,
@@ -364,32 +346,17 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     });
     await qPackage.process(throughRunner(packageProcessor));
 
-    const transcode1080 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
-    const transcode720 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
-    const transcode480 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
+    const transcode1080 = createTranscodeProcessor(
+      transcodeDeps({ repositories, storage, logger })
+    );
+    const transcode720 = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
+    const transcode480 = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
     const thumbProcessor = createThumbnailProcessor({
       ...STAGE_SETTINGS,
       repositories,
       storage,
       logger,
+      media: failingThumbnails,
     });
 
     await Promise.all([

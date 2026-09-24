@@ -189,6 +189,9 @@ importers:
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../packages/universal/permissions
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../packages/universal/result
       axios:
         specifier: ^1.6.2
         version: 1.20.0
@@ -258,6 +261,9 @@ importers:
       web-vitals:
         specifier: ^2.1.4
         version: 2.1.4
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^5.16.5
@@ -349,6 +355,9 @@ importers:
       uuidv7:
         specifier: ^1.2.1
         version: 1.2.1
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@electric-sql/pglite':
         specifier: ^0.5.8
@@ -429,9 +438,6 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
-      '@ucast/core':
-        specifier: ^2.0.0
-        version: 2.0.0
       '@vp/composition':
         specifier: workspace:*
         version: link:../composition
@@ -489,6 +495,9 @@ importers:
       uuidv7:
         specifier: ^1.2.1
         version: 1.2.1
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@electric-sql/pglite':
         specifier: ^0.5.8
@@ -631,6 +640,9 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)
@@ -717,6 +729,9 @@ importers:
 
   packages/server/events:
     dependencies:
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../../universal/errors
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../job-contracts
@@ -757,6 +772,9 @@ importers:
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../job-contracts
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
     devDependencies:
       '@vp/testing':
         specifier: workspace:*
@@ -843,6 +861,9 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: ^1.43.0
         version: 1.43.0
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -917,6 +938,9 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       '@vp/storage':
         specifier: workspace:*
         version: link:../storage
@@ -4222,9 +4246,6 @@ packages:
 
   '@ucast/core@1.10.2':
     resolution: {integrity: sha512-ons5CwXZ/51wrUPfoduC+cO7AS1/wRb0ybpQJ9RrssossDxVy4t49QxWoWgfBDvVKsz9VXzBk9z0wqTdZ+Cq8g==}
-
-  '@ucast/core@2.0.0':
-    resolution: {integrity: sha512-4XVx6LzPXZGvnZO5jp39cm/G4UvuwvEdtmg+9+4+zl6uFkCcB7UJacvtMYeBE56GJVT99Zqy6Pii7dGJq3Kz9Q==}
 
   '@ucast/js@3.1.0':
     resolution: {integrity: sha512-eJ7yQeYtMK85UZjxoxBEbTWx6UMxEXKbjVyp+NlzrT5oMKV5Gpo/9bjTl3r7msaXTVC8iD9NJacqJ8yp7joX+Q==}
@@ -13169,8 +13190,6 @@ snapshots:
       eslint-visitor-keys: 3.4.3
 
   '@ucast/core@1.10.2': {}
-
-  '@ucast/core@2.0.0': {}
 
   '@ucast/js@3.1.0':
     dependencies:

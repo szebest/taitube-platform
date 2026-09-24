@@ -4,15 +4,13 @@ import { transcodeFailure } from '../transcode-failure';
 describe('apps/worker/stages: transcode failure classification', () => {
   it.each([
     {
-      shape: 'an ENOSPC errno',
+      shape: 'an ENOSPC errno from node:fs',
       cause: Object.assign(new Error('write failed'), { code: 'ENOSPC' }),
     },
     {
-      shape: 'a DISK_FULL hint',
-      cause: Object.assign(new Error('write failed'), { hint: 'DISK_FULL' }),
+      shape: 'the DISK_FULL FFmpeg read off its stderr',
+      cause: new TransientError(ErrorCodes.DISK_FULL, 'No space left on device'),
     },
-    { shape: 'the errno in the message', cause: new Error('ENOSPC: no space left') },
-    { shape: 'the phrase in the message', cause: new Error('No space left on device') },
   ])('reads $shape as DISK_FULL', ({ cause }) => {
     expect(transcodeFailure('720p', cause)).toMatchObject({
       code: ErrorCodes.DISK_FULL,
@@ -33,10 +31,10 @@ describe('apps/worker/stages: transcode failure classification', () => {
     expect(transcodeFailure('1080p', cause).code).toBe(cause.code);
   });
 
-  it('falls back to FFMPEG_FAILED for anything unclassified', () => {
-    expect(transcodeFailure('480p', new Error('who knows'))).toEqual({
+  it('falls back to FFMPEG_FAILED for anything unclassified, whatever its message says', () => {
+    expect(transcodeFailure('480p', new Error('No space left on device'))).toEqual({
       code: ErrorCodes.FFMPEG_FAILED,
-      message: 'who knows',
+      message: 'No space left on device',
       stage: 'transcode-480p',
     });
   });

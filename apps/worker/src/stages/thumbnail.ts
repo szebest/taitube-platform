@@ -10,9 +10,9 @@ import {
   mediaFailure,
   mediaFailureFrom,
 } from '@vp/errors';
-import { type SpriteLayout, runFfmpegThumbnail } from '@vp/ffmpeg';
+import type { MediaTools, SpriteLayout } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
-import { type Logger, getMetrics } from '@vp/observability';
+import type { Logger, PipelineMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
 import {
   getHeaderMapping,
@@ -21,17 +21,17 @@ import {
   spriteVttKey as getSpriteVttKey,
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
-
-import { validateJobId } from '../job-identity';
+import { createScratchDir, removeScratchDir } from './scratch-dir';
 
 export interface ThumbnailProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
+  media: MediaTools;
+  metrics: PipelineMetrics;
   rawBucket: string;
   publicBucket: string;
   workerId: string;
   logger: Logger;
-  heartbeatPath: string;
   tmpDir: string;
   ffmpegPath: string;
   sprite: SpriteLayout;
@@ -44,11 +44,12 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
   const {
     repositories,
     storage,
+    media,
+    metrics,
     rawBucket,
     publicBucket,
     workerId,
     logger,
-    heartbeatPath,
     tmpDir: tmpRoot,
     ffmpegPath,
     sprite,
@@ -58,13 +59,12 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
   return async function processThumbnailJob(
     job: QueueJob<ThumbnailJob>
   ): Promise<Result<ThumbnailResult, ThumbnailStageFailure>> {
-    validateJobId(job.id || '');
-
     const { videoId, sourceKey, durationMs } = job.data;
     const attempt = (job.attemptsMade ?? 0) + 1;
     const log = logger.child({ videoId, jobId: job.id, stage: 'thumbnail', attempt });
 
     const keys: ThumbnailResult = {
+      type: 'thumbnail',
       posterKey: getPosterKey(videoId),
       spriteKey: getSpriteKey(videoId),
       spriteVttKey: getSpriteVttKey(videoId),
@@ -72,10 +72,6 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
 
     log.info({ sourceKey, durationMs }, 'Thumbnail job started');
 
-    // Update heartbeat file for container liveness (SDD §9.4, AC 20)
-    await fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
-
-    // Claim processing step with fresh fencing token (SDD §5.3, §9.5, AC 20)
     const lockToken = uuidv7();
     const claim = await repositories.steps.claim({
       id: uuidv7(),
@@ -113,12 +109,9 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       return isErr(recorded) ? recorded : err(failure);
     };
 
-    // Per-job temp directory with guaranteed cleanup on every exit path
-    await fs.mkdir(tmpRoot, { recursive: true });
-    const tmpDir = await fs.mkdtemp(path.join(tmpRoot, `vp-thumb-${videoId}-`));
+    const tmpDir = await createScratchDir(tmpRoot, `vp-thumb-${videoId}-`);
 
     try {
-      // 1. Download source from S3
       const localSourcePath = path.join(tmpDir, path.basename(sourceKey));
       const downloaded = await storage.downloadObject(rawBucket, sourceKey, localSourcePath);
       if (isErr(downloaded)) return downloaded;
@@ -135,13 +128,12 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
 
       const head = unwrapOr(await storage.headObject(rawBucket, sourceKey), null);
       if (head?.contentLength) {
-        getMetrics().workerTmpBytes.set({ stage: 'thumbnail' }, head.contentLength);
+        metrics.workerTmpBytes.set({ stage: 'thumbnail' }, head.contentLength);
       }
 
-      // 2. Generate poster, sprite, and WebVTT using FFmpeg
       const generated = await fromPromise(
         () =>
-          runFfmpegThumbnail({
+          media.thumbnail({
             ffmpegPath,
             sourcePath: localSourcePath,
             outputDir: tmpDir,
@@ -154,18 +146,16 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       );
 
       if (isErr(generated)) {
-        getMetrics().ffmpegExitTotal.inc({ stage: 'thumbnail', code: '1' });
+        metrics.ffmpegExitTotal.inc({ stage: 'thumbnail', code: '1' });
         return failThumbnail(generated.error);
       }
-      getMetrics().ffmpegExitTotal.inc({ stage: 'thumbnail', code: '0' });
+      metrics.ffmpegExitTotal.inc({ stage: 'thumbnail', code: '0' });
 
-      // 3. Upload generated files to public storage (SDD §7)
       const uploaded = await uploadAssets(storage, publicBucket, keys, generated.value);
       if (isErr(uploaded)) return uploaded;
 
       log.info(keys, 'Uploaded thumbnail assets to storage');
 
-      // 4. Complete processing step with fencing token (SDD §5.3, §9.5, AC 20)
       const comp = await repositories.steps.complete({
         videoId,
         step: 'thumbnail',
@@ -183,7 +173,6 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
         return ok(keys);
       }
 
-      // 5. Update video row with posterKey and spriteKey (AC 1, AC 3) only if not fenced out
       return map(
         await repositories.videos.transition({
           videoId,
@@ -196,8 +185,8 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
         () => keys
       );
     } finally {
-      await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
-      getMetrics().workerTmpBytes.set({ stage: 'thumbnail' }, 0);
+      await removeScratchDir(tmpDir);
+      metrics.workerTmpBytes.set({ stage: 'thumbnail' }, 0);
     }
   };
 }

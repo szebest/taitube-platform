@@ -1,11 +1,5 @@
-import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
-import {
-  buildTranscodeArgs,
-  classifyFfmpegError,
-  generateMasterPlaylist,
-  getAvcCodecString,
-} from '../index';
+import { buildTranscodeArgs, generateMasterPlaylist, getAvcCodecString } from '../index';
 import { ENCODER } from './encoder-settings';
 
 describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', () => {
@@ -110,32 +104,6 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     });
     const gIndex30 = args30.indexOf('-g');
     expect(args30[gIndex30 + 1]).toBe('60');
-  });
-
-  it('AC 23: classifyFfmpegError classifies exit 137, timeout, and corrupt containers accurately', () => {
-    // Exit 137 = OOM (TransientError)
-    const oomErr = classifyFfmpegError(137, null, 'Killed');
-    expect(oomErr).toBeInstanceOf(TransientError);
-    expect((oomErr as TransientError).code).toBe(ErrorCodes.FFMPEG_OOM);
-
-    // Timeout (SIGTERM / SIGALRM) (TransientError)
-    const timeoutErr = classifyFfmpegError(null, 'SIGTERM', 'Terminated');
-    expect(timeoutErr).toBeInstanceOf(TransientError);
-    expect((timeoutErr as TransientError).code).toBe(ErrorCodes.FFMPEG_TIMEOUT);
-
-    // Hostile corrupt container (PermanentError)
-    const corruptErr = classifyFfmpegError(
-      1,
-      null,
-      '[mov,mp4,m4a,3gp,3g2,mj2 @ 0x123] Invalid data found when processing input'
-    );
-    expect(corruptErr).toBeInstanceOf(PermanentError);
-    expect((corruptErr as PermanentError).code).toBe(ErrorCodes.CORRUPT_CONTAINER);
-
-    // General ffmpeg transcode error
-    const genericErr = classifyFfmpegError(1, null, 'Unknown error during encode');
-    expect(genericErr).toBeInstanceOf(TransientError);
-    expect((genericErr as TransientError).code).toBe(ErrorCodes.FFMPEG_FAILED);
   });
 
   it('generates master playlist matching SDD §8.4 with correct BANDWIDTH, RESOLUTION, and CODECS', () => {

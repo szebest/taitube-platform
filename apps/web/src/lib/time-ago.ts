@@ -1,7 +1,8 @@
 import TimeAgo from 'javascript-time-ago'
-
 import en from 'javascript-time-ago/locale/en'
 
-TimeAgo.addDefaultLocale(en)
-
-export const timeAgo = new TimeAgo('en-US')
+/** Registering a locale twice is a no-op, so formatting stays free of import-time state. */
+export function formatTimeAgo(date: Date | number): string {
+	TimeAgo.addLocale(en)
+	return new TimeAgo('en').format(date)
+}

@@ -9,7 +9,7 @@ import {
   InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
-import { defaultPaginator } from '@vp/pagination';
+import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
@@ -56,7 +56,7 @@ describe('SubscriptionService', () => {
       channels,
       subscriptionCache: cache,
       cdn: TEST_CDN,
-      paginator: defaultPaginator,
+      paginator: new Paginator(),
     });
 
     await channels.create({
@@ -238,7 +238,7 @@ describe('SubscriptionService', () => {
         subscriptions,
         channels,
         cdn: TEST_CDN,
-        paginator: defaultPaginator,
+        paginator: new Paginator(),
         subscriptionCache: Object.assign(new InMemorySubscriptionCache(), {
           isSubscribed: async () => err(cacheUnavailable('isSubscribed')),
         }),

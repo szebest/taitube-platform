@@ -1,6 +1,6 @@
 import type { JobQueue } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import type { DatabaseUnavailable } from '@vp/errors';
+import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
@@ -28,9 +28,8 @@ const ACTIVE_PROCESSING_QUEUES: QueueName[] = [
 ];
 
 /**
- * Reconciler for processing lifecycle (SDD §9.8, AC 3):
- * Videos PROCESSING > 3h with no RUNNING step and no waiting jobs ->
- * mark FAILED('ORPHANED') + dlq_entries row.
+ * Fails a video left PROCESSING past the threshold with no RUNNING step and no job waiting in any
+ * processing queue, as `ORPHANED`, and parks a DLQ entry for it (SDD §9.8).
  */
 export async function runReconcileProcessing(
   options: ReconcileProcessingOptions
@@ -46,14 +45,12 @@ export async function runReconcileProcessing(
   if (isErr(staleProcessing)) return staleProcessing;
 
   for (const video of staleProcessing.value) {
-    // 1. Check if any step is currently RUNNING
     const steps = await repositories.steps.findByVideoId(video.id);
     if (isErr(steps)) return steps;
     if (steps.value.some((s) => s.status === 'RUNNING')) {
       continue;
     }
 
-    // 2. Check if any waiting/active jobs exist in the processing queues
     // A queue that cannot be inspected is assumed to still hold the job, which errs on the side of
     // leaving a live video alone rather than failing it.
     let hasWaitingJob = false;
@@ -81,15 +78,14 @@ export async function runReconcileProcessing(
       continue;
     }
 
-    // 3. CAS transition to FAILED with errorCode 'ORPHANED'
     const transitioned = await repositories.videos.transition({
       videoId: video.id,
       from: 'PROCESSING',
       to: 'FAILED',
       eventType: 'video.failed',
-      eventPayload: { code: 'ORPHANED', message: 'Processing orphaned' },
+      eventPayload: { code: ErrorCodes.ORPHANED, message: 'Processing orphaned' },
       patch: {
-        errorCode: 'ORPHANED',
+        errorCode: ErrorCodes.ORPHANED,
         errorMessage: 'Processing timed out with no active steps or waiting jobs',
       },
     });
@@ -102,13 +98,12 @@ export async function runReconcileProcessing(
         'Marked orphaned PROCESSING video as FAILED and creating DLQ entry'
       );
 
-      // 4. Record row in dlq_entries
-      await repositories.dlq.create({
+      const parked = await repositories.dlq.create({
         id: uuidv7(),
         queue: 'housekeeping',
         jobId: `reconcile-processing--${video.id}`,
         videoId: video.id,
-        errorCode: 'ORPHANED',
+        errorCode: ErrorCodes.ORPHANED,
         errorMessage: 'Processing timed out with no active steps or waiting jobs',
         attemptsMade: 1,
         workerId,
@@ -120,6 +115,7 @@ export async function runReconcileProcessing(
           generation: video.generation,
         },
       });
+      if (isErr(parked)) return parked;
     }
   }
 

@@ -28,8 +28,8 @@ describe('BullMqJobQueue', () => {
     });
 
     it.each([
-      { scenario: 'the client answers PONG', init: {}, expected: true },
-      { scenario: 'the client answers otherwise', init: { pingResult: 'NOPE' }, expected: false },
+      { scenario: 'the client is ready', init: {}, expected: true },
+      { scenario: 'the client is reconnecting', init: { status: 'reconnecting' }, expected: false },
       { scenario: 'there is no connection', init: { failClient: true }, expected: false },
     ])('reports health as $expected when $scenario', async ({ init, expected }) => {
       const subject = new BullMqJobQueue({

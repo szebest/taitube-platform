@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { ServerResponse } from 'node:http';
 import { SSE_PING_COMMENT, type SseMessageEnvelope, formatSseFrame } from '@vp/events';
-import { isOk, tryCatch } from '@vp/result';
+import { ignore, isOk, tryCatch } from '@vp/result';
 
 export interface SseConnectionOptions {
   channel: string;
@@ -207,10 +207,12 @@ export class SseConnection extends EventEmitter {
     }
 
     if (!(this.res.writableEnded || this.res.destroyed)) {
-      // The peer may already be gone, and a torn-down socket must not fail the shutdown.
-      tryCatch(
-        () => this.res.end(),
-        () => null
+      ignore(
+        tryCatch(
+          () => this.res.end(),
+          () => null
+        ),
+        'the peer may already be gone, and a torn-down socket must not fail the shutdown'
       );
     }
 

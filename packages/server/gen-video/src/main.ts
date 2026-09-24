@@ -33,6 +33,18 @@ function parseArgs(args: string[]): { options: GeneratorOptions; check: boolean;
   };
 }
 
+type Generation =
+  | { readonly type: 'done'; readonly generated: string[]; readonly errors: string[] }
+  | { readonly type: 'failed'; readonly reason: string };
+
+async function generate(options: GeneratorOptions): Promise<Generation> {
+  try {
+    return { type: 'done', ...(await generateAllFixtures(options)) };
+  } catch (cause) {
+    return { type: 'failed', reason: cause instanceof Error ? cause.message : String(cause) };
+  }
+}
+
 function printHelp(): void {
   console.log(`
 gen-video: Synthetic deterministic test-video generator for video-pipeline
@@ -91,7 +103,14 @@ export async function main(args: readonly string[] = process.argv.slice(2)): Pro
 
   console.log(`[gen-video] Generating fixtures into ${options.outputDir}...`);
   const start = Date.now();
-  const { generated, errors } = await generateAllFixtures(options);
+  const generation = await generate(options);
+  if (generation.type === 'failed') {
+    console.error(
+      `[gen-video] Could not write fixtures into ${options.outputDir}: ${generation.reason}`
+    );
+    process.exit(1);
+  }
+  const { generated, errors } = generation;
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
   console.log(`\n[gen-video] Generated ${generated.length} fixture(s) in ${elapsed}s.`);

@@ -1,4 +1,12 @@
-import { type Context, type Tracer, context, propagation, trace } from '@opentelemetry/api';
+import {
+  type Context,
+  type Tracer,
+  context,
+  defaultTextMapGetter,
+  defaultTextMapSetter,
+  propagation,
+  trace,
+} from '@opentelemetry/api';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -12,9 +20,7 @@ import {
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
-
-// Ensure standard W3C traceparent propagator is configured as default
-propagation.setGlobalPropagator(new W3CTraceContextPropagator());
+import { type Result, fromPromise, map, ok, tryCatch } from '@vp/result';
 
 export interface TracingConfig {
   serviceName: string;
@@ -32,7 +38,13 @@ export interface TracingContext {
   traceId?: string;
 }
 
-let sdkInstance: NodeSDK | null = null;
+/** What `initTracing` hands its composition root, so shutting the SDK down needs no module state. */
+export interface Tracing {
+  shutdown(): Promise<Result<void, Error>>;
+}
+
+const toError = (cause: unknown): Error =>
+  cause instanceof Error ? cause : new Error(String(cause));
 
 function parseResourceAttributes(raw?: string): Record<string, string> {
   if (!raw) return {};
@@ -56,60 +68,41 @@ function resolveSampler(st: string, ratio: number): Sampler {
   if (st === 'ratio') {
     return new TraceIdRatioBasedSampler(ratio);
   }
-  // default: parentbased_always_on
   return new ParentBasedSampler({
     root: new AlwaysOnSampler(),
   });
 }
 
 /**
- * Initializes OpenTelemetry SDK for Node and Bun runtimes.
+ * Starts the OpenTelemetry SDK for Node and Bun. Disabled tracing is a handle whose shutdown does
+ * nothing, and an SDK that cannot start is a failure the caller reports and runs on without.
  */
-export function initTracing(config: TracingConfig): NodeSDK | null {
-  if (!config.enabled) return null;
-  if (sdkInstance) return sdkInstance;
+export function initTracing(config: TracingConfig): Result<Tracing, Error> {
+  if (!config.enabled) return ok({ shutdown: async () => ok() });
 
-  const resource = resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: config.serviceName,
-    [ATTR_SERVICE_VERSION]: config.serviceVersion,
-    ...parseResourceAttributes(config.resourceAttributes),
-  });
-
-  const traceExporter = new OTLPTraceExporter({
-    url: `${config.endpoint.replace(/\/$/, '')}/v1/traces`,
-  });
-
-  const sampler = resolveSampler(config.sampler, config.samplerArg);
+  propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
   const sdk = new NodeSDK({
-    resource,
-    traceExporter,
-    sampler,
+    resource: resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: config.serviceName,
+      [ATTR_SERVICE_VERSION]: config.serviceVersion,
+      ...parseResourceAttributes(config.resourceAttributes),
+    }),
+    traceExporter: new OTLPTraceExporter({
+      url: `${config.endpoint.replace(/\/$/, '')}/v1/traces`,
+    }),
+    sampler: resolveSampler(config.sampler, config.samplerArg),
     instrumentations: [
       getNodeAutoInstrumentations({
-        // Disable fs instrumentation to keep traces uncluttered
         '@opentelemetry/instrumentation-fs': { enabled: false },
       }),
     ],
   });
 
-  try {
-    sdk.start();
-    sdkInstance = sdk;
-  } catch (err) {
-    // If native auto-instrumentation fails (e.g. on certain platforms), fail gracefully
-    console.warn(`[otel] Warning: Failed to start NodeSDK: ${(err as Error).message}`);
-    return null;
-  }
-
-  return sdk;
-}
-
-export async function shutdownTracing(): Promise<void> {
-  if (sdkInstance) {
-    await sdkInstance.shutdown().catch(() => {});
-    sdkInstance = null;
-  }
+  return map(
+    tryCatch(() => sdk.start(), toError),
+    (): Tracing => ({ shutdown: () => fromPromise(() => sdk.shutdown(), toError) })
+  );
 }
 
 export function getTracer(name = 'video-pipeline', version = '1.0.0'): Tracer {
@@ -145,26 +138,22 @@ export function getActiveSpanContext(): TracingContext {
 }
 
 /**
- * Parses W3C traceparent and returns an OpenTelemetry Context with the extracted Remote SpanContext.
+ * Parses a W3C traceparent into a Context carrying the remote span. The W3C propagator is used
+ * directly rather than the global one, which is a no-op until `initTracing` runs.
  */
 export function extractContextFromTraceparent(
   traceparent?: string,
   parentCtx: Context = context.active()
 ): Context {
   if (!traceparent) return parentCtx;
-
-  const carrier: Record<string, string> = { traceparent };
-  return propagation.extract(parentCtx, carrier);
+  return new W3CTraceContextPropagator().extract(parentCtx, { traceparent }, defaultTextMapGetter);
 }
 
-/**
- * Injects W3C traceparent into an object carrier.
- */
 export function injectTraceparent(
   carrier: Record<string, unknown> = {},
   ctx: Context = context.active()
 ): Record<string, unknown> {
-  propagation.inject(ctx, carrier);
+  new W3CTraceContextPropagator().inject(ctx, carrier, defaultTextMapSetter);
   return carrier;
 }
 
@@ -179,22 +168,4 @@ export function createTraceparent(traceId?: string, spanId?: string): string {
     spanId ||
     Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
   return `00-${tId}-${sId}-01`;
-}
-
-/**
- * Sanitizes command-line arguments removing presigned / sensitive URLs (SDD §13.3).
- */
-export function redactCommand(argv: string[]): string[] {
-  return argv.map((arg) => {
-    try {
-      if (arg.startsWith('http://') || arg.startsWith('https://')) {
-        const u = new URL(arg);
-        u.search = '';
-        return u.toString();
-      }
-    } catch {
-      // Not a valid URL, leave as is
-    }
-    return arg;
-  });
 }

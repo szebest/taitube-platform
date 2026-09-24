@@ -15,15 +15,14 @@ import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { throughRunner } from './queue-boundary';
-import { failTranscodeOf } from './ffmpeg-failures';
-import { STAGE_SETTINGS } from './stage-settings';
+import { STAGE_SETTINGS, failingTranscodeOf, transcodeDeps } from './stage-settings';
 
 describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
   let queues: Map<string, InMemoryJobQueue>;
   let flowProducer: InMemoryFlowProducer;
-  const metrics = createMetricsRegistry({ env: 'test' });
+  const metrics = createMetricsRegistry();
   const logger = createLogger({ service: 'dlq-test', level: 'info' });
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
 
@@ -321,14 +320,9 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       body: Buffer.from('source'),
       contentType: 'video/mp4',
     });
-    failTranscodeOf('720p');
-    const transcode720 = createTranscodeProcessor({
-      ...STAGE_SETTINGS,
-      repositories,
-      storage,
-      logger,
-      getQueue,
-    });
+    const transcode720 = createTranscodeProcessor(
+      transcodeDeps({ repositories, storage, logger, media: failingTranscodeOf('720p') })
+    );
     await q720.process(throughRunner(transcode720));
 
     // Package processor

@@ -38,7 +38,7 @@ export interface ReactionCountsStoreConfig {
 export class ReactionCountsStore {
   private readonly backend: ReactionCacheBackend;
   private readonly ttlSeconds: number;
-  private readonly adjustMutexes = new Map<string, Promise<void>>();
+  private readonly adjustMutexes = new Map<string, Promise<Result<void, CacheUnavailable>>>();
 
   constructor(config: ReactionCountsStoreConfig) {
     this.backend = config.backend;
@@ -187,15 +187,15 @@ export class ReactionCountsStore {
     deltaLikes: number,
     deltaDislikes: number
   ): Promise<Result<void, CacheUnavailable>> {
-    const prev = this.adjustMutexes.get(key) ?? Promise.resolve();
+    const prev = this.adjustMutexes.get(key) ?? Promise.resolve(ok());
     const next = prev
-      .then(async () => {
+      .then(async (): Promise<Result<void, CacheUnavailable>> => {
         const parsed = await this.readJson(cache, key);
-        if (!parsed) return;
+        if (!parsed) return ok();
 
         const likes = Math.max(0, Number(parsed['likes'] ?? 0) + deltaLikes);
         const dislikes = Math.max(0, Number(parsed['dislikes'] ?? 0) + deltaDislikes);
-        await cache.set(
+        return cache.set(
           key,
           JSON.stringify({ ...parsed, likes, dislikes, cachedAt: Date.now() }),
           this.ttlSeconds
@@ -206,7 +206,8 @@ export class ReactionCountsStore {
       });
     this.adjustMutexes.set(key, next);
 
-    return map(await fromPromise(() => next, this.unavailable('adjust')), () => undefined);
+    const settled = await fromPromise(() => next, this.unavailable('adjust'));
+    return isErr(settled) ? settled : settled.value;
   }
 
   async invalidate(videoId: string): Promise<Result<void, CacheUnavailable>> {

@@ -1,7 +1,7 @@
 import type { CacheClient, CategoryCachePort } from '@vp/core/ports';
 import type { Category } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
-import { type Result, isErr, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
+import { type Result, ignore, isErr, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
 
 export const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';
 export const CATEGORIES_INVALIDATION_CHANNEL = 'taitube:events:cache:categories:invalidated';
@@ -60,7 +60,12 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
    * entries expire on their own TTL instead of being cleared early.
    */
   async start(): Promise<Result<void, never>> {
-    await this.cache?.subscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage);
+    if (this.cache) {
+      ignore(
+        await this.cache.subscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage),
+        'a pod that cannot subscribe falls back to its L1 TTL'
+      );
+    }
     return ok();
   }
 
@@ -110,13 +115,11 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
   async getCategories<E>(
     fetcher: () => Promise<Result<Category[], E>>
   ): Promise<Result<Category[], E>> {
-    // 1. Check L1 In-Memory LRU Cache
     const l1 = this.getL1(CATEGORIES_CACHE_KEY);
     if (l1) {
       return ok(l1.value);
     }
 
-    // 2. Check L2 Distributed Redis Cache
     if (this.cache) {
       const cachedJson = unwrapOr(await this.cache.get(CATEGORIES_CACHE_KEY), null);
       const categories = cachedJson ? parseCategories(cachedJson) : null;
@@ -126,7 +129,6 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
       }
     }
 
-    // 3. Cache Miss: Fetch from source
     const fetched = await fetcher();
     if (!isOk(fetched)) return fetched;
 
@@ -137,10 +139,16 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
       return a.name.localeCompare(b.name);
     });
 
-    // 4. Populate L2 Distributed Redis Cache
-    await this.cache?.set(CATEGORIES_CACHE_KEY, JSON.stringify({ categories }), this.l2TtlSeconds);
-
-    // 5. Populate L1 In-Memory LRU Cache
+    if (this.cache) {
+      ignore(
+        await this.cache.set(
+          CATEGORIES_CACHE_KEY,
+          JSON.stringify({ categories }),
+          this.l2TtlSeconds
+        ),
+        'the categories were read; a missed L2 write costs the next pod one query'
+      );
+    }
     this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
 
     return ok(categories);
@@ -160,7 +168,12 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
   }
 
   async close(): Promise<void> {
-    await this.cache?.unsubscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage);
+    if (this.cache) {
+      ignore(
+        await this.cache.unsubscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage),
+        'the connection closes next, which drops the subscription anyway'
+      );
+    }
     this.clearL1();
   }
 }

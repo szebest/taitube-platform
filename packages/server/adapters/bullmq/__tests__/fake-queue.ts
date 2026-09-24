@@ -32,7 +32,7 @@ export interface FakeQueueInit {
   jobs?: Job[];
   counts?: Record<string, number>;
   schedulers?: Array<Record<string, unknown>>;
-  pingResult?: string;
+  status?: string;
   failClient?: boolean;
 }
 
@@ -53,9 +53,9 @@ export class FakeQueue {
     };
   }
 
-  get client(): Promise<{ ping(): Promise<string> }> {
-    if (this.init.failClient) return Promise.reject(new Error('no connection'));
-    return Promise.resolve({ ping: async () => this.init.pingResult ?? 'PONG' });
+  getBackend(): { client: Promise<{ status: string }> } {
+    if (this.init.failClient) return { client: Promise.reject(new Error('no connection')) };
+    return { client: Promise.resolve({ status: this.init.status ?? 'ready' }) };
   }
 
   async add(name: string, data: unknown, opts: Record<string, unknown>): Promise<Job> {

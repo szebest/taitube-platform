@@ -9,20 +9,16 @@ import {
 } from '@vp/core/repositories';
 
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 
 export class InMemoryDlqRepository extends DlqRepository {
-  private readonly entriesMap: Map<string, DlqEntryRecord>;
+  private readonly entriesMap = new Map<string, DlqEntryRecord>();
   private readonly outboxRepo?: OutboxRepository;
 
-  constructor(
-    entriesMap?: Map<string, DlqEntryRecord>,
-    options?: { outboxRepo?: OutboxRepository }
-  ) {
+  constructor(options?: { outboxRepo?: OutboxRepository }) {
     super();
-    this.entriesMap = entriesMap ?? new Map();
     this.outboxRepo = options?.outboxRepo;
   }
 
@@ -106,7 +102,8 @@ export class InMemoryDlqRepository extends DlqRepository {
     }
 
     if (outbox && this.outboxRepo) {
-      await this.outboxRepo.enqueue(outbox);
+      const enqueued = await this.outboxRepo.enqueue(outbox);
+      if (isErr(enqueued)) return enqueued;
     }
 
     return ok({ ...entry });

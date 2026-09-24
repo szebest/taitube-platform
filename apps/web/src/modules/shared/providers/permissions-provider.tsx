@@ -14,7 +14,7 @@ import {
   getUserPermissions,
   parseRole,
 } from '@vp/permissions';
-import { useAuth } from './auth-provider';
+import { useOptionalAuth } from './auth-provider';
 
 export interface PermissionsContextValue {
   ability: AppAbility;
@@ -30,25 +30,21 @@ export interface PermissionsProviderProps extends PropsWithChildren {
 
 const PermissionsContext = createContext<PermissionsContextValue | undefined>(undefined);
 
-function useSafeAuthUser(): UserContext | null {
-  try {
-    const { account } = useAuth();
-    if (!account) return null;
-    return {
-      id: account.user.id,
-      role: parseRole((account as { role?: unknown }).role),
-      email: account.user.email,
-    };
-  } catch {
-    return null;
-  }
+function useAuthUser(): UserContext | null {
+  const account = useOptionalAuth()?.account;
+  if (!account) return null;
+  return {
+    id: account.user.id,
+    role: parseRole((account as { role?: unknown }).role),
+    email: account.user.email,
+  };
 }
 
 export function PermissionsProvider({
   userContext: explicitUserContext,
   children,
 }: PermissionsProviderProps) {
-  const authUserContext = useSafeAuthUser();
+  const authUserContext = useAuthUser();
 
   const userContext =
     explicitUserContext !== undefined ? explicitUserContext : authUserContext;

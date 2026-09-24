@@ -3,14 +3,14 @@ import type { Repositories } from '@vp/core/repositories';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { publishVideoEvent, userChannel, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
-import { type Logger, getMetrics } from '@vp/observability';
+import type { Logger, PipelineMetrics } from '@vp/observability';
 import { type Result, isErr, map, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { validateJobId } from '../job-identity';
 
 export interface NotifyProcessorDeps {
   repositories: Repositories;
   cache: CacheClient;
+  metrics: PipelineMetrics;
   workerId: string;
   logger: Logger;
 }
@@ -23,13 +23,11 @@ export interface NotifyResult {
 export type NotifyFailure = DatabaseUnavailable | CacheUnavailable;
 
 export function createNotifyProcessor(deps: NotifyProcessorDeps) {
-  const { repositories, cache, workerId, logger } = deps;
+  const { repositories, cache, metrics, workerId, logger } = deps;
 
   return async function processNotifyJob(
     job: QueueJob<NotifyJob>
   ): Promise<Result<NotifyResult, NotifyFailure>> {
-    validateJobId(job.id || '');
-
     const { videoId, userId, payload } = job.data;
     const attempt = (job.attemptsMade ?? 0) + 1;
     const log = logger.child({ videoId, jobId: job.id, stage: 'notify', attempt });
@@ -42,7 +40,7 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
       videoId,
       step: 'notify',
       rendition: '-',
-      jobId: job.id || '',
+      jobId: job.id,
       attempt,
       workerId,
       lockToken,
@@ -61,7 +59,7 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
     const latestId = unwrapOr(await repositories.events.getLatestEventId(videoId), 0);
     const now = Date.now();
 
-    await publishVideoEvent({
+    const published = await publishVideoEvent({
       cache,
       videoId,
       userId,
@@ -73,11 +71,12 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
       id: latestId > 0 ? latestId : undefined,
       ts: now,
     });
+    if (isErr(published)) return published;
 
     const channels = [videoChannel(videoId), userChannel(userId)];
     log.info({ channels, latestId }, 'Published status update to Redis channels');
 
-    getMetrics().sseEventsPublished.inc({ event: 'status' });
+    metrics.sseEventsPublished.inc({ event: 'status' });
 
     return map(
       await repositories.steps.complete({

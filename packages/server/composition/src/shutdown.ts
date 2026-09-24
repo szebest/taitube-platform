@@ -14,7 +14,7 @@ export type ShutdownOutcome = 'drained' | 'failed' | 'forced';
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function drainThenClose(plan: ShutdownPlan): Promise<ShutdownOutcome> {
-  await sleep(plan.drainDelayMs);
+  if (plan.drainDelayMs > 0) await sleep(plan.drainDelayMs);
   const closed = await fromPromise(
     () => plan.close(),
     (cause) => cause
@@ -60,4 +60,23 @@ export function shutdownOnce(plan: ShutdownPlan): () => Promise<ShutdownOutcome>
     running ??= run();
     return running;
   };
+}
+
+/** What a deployable takes from the process it runs in, so a spec can stand in for that process. */
+export interface ProcessHost {
+  env: Record<string, string | undefined>;
+  onSignal: (signal: 'SIGTERM' | 'SIGINT', handler: () => void) => void;
+  exit: (code: number) => void;
+}
+
+/**
+ * Installed before the first start, so a `SIGTERM` while the process boots runs the same drained
+ * shutdown as one that arrives later, instead of killing it.
+ */
+export function exitOnSignals(host: ProcessHost, shutdown: () => Promise<ShutdownOutcome>): void {
+  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+    host.onSignal(signal, () => {
+      void shutdown().then((outcome) => host.exit(outcome === 'drained' ? 0 : 1));
+    });
+  }
 }

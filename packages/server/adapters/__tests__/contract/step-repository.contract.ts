@@ -99,7 +99,7 @@ export function describeStepRepositoryContract(makeSubject: MakeRepositoriesSubj
             step: 'probe',
             rendition: '-',
             lockToken: TOKEN_B,
-            errorCode: 'PROBE_FAILED',
+            errorCode: 'CORRUPT_CONTAINER',
             errorMessage: 'nope',
           })
         )
@@ -112,14 +112,14 @@ export function describeStepRepositoryContract(makeSubject: MakeRepositoriesSubj
             step: 'probe',
             rendition: '-',
             lockToken: TOKEN_A,
-            errorCode: 'PROBE_FAILED',
+            errorCode: 'CORRUPT_CONTAINER',
             errorMessage: 'nope',
           })
         )
       ).toEqual({ failed: true, fenced: false });
 
       const [stored] = expectOk(await steps.findByVideoId(VIDEO_IDS.a));
-      expect(stored).toMatchObject({ status: 'FAILED', errorCode: 'PROBE_FAILED' });
+      expect(stored).toMatchObject({ status: 'FAILED', errorCode: 'CORRUPT_CONTAINER' });
     });
 
     it('marks a known step dead and reports an unknown one as false', async () => {

@@ -16,11 +16,10 @@ describe('apps/web: api query', () => {
     });
   });
 
-  it('reports a transport failure as status 0 rather than swallowing it', () => {
-    expect(toQueryError(new TypeError('Failed to fetch'))).toEqual({
-      status: 0,
-      code: 'NETWORK_ERROR',
-      message: 'Failed to fetch',
-    });
+  it.each([
+    { scenario: 'a transport failure', thrown: new TypeError('Failed to fetch'), message: 'Failed to fetch' },
+    { scenario: 'a throw that is not an Error', thrown: 'socket closed', message: 'Request failed' },
+  ])('reports $scenario as status 0 rather than swallowing it', ({ thrown, message }) => {
+    expect(toQueryError(thrown)).toEqual({ status: 0, code: 'NETWORK_ERROR', message });
   });
 });

@@ -33,6 +33,7 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.CORRUPT_CONTAINER]: 'permanent',
   [ErrorCodes.DURATION_EXCEEDED]: 'permanent',
   [ErrorCodes.SOURCE_MISSING]: 'permanent',
+  [ErrorCodes.ORPHANED]: 'permanent',
   [ErrorCodes.RATE_LIMITED]: 'transient',
   [ErrorCodes.DATABASE_UNAVAILABLE]: 'transient',
   [ErrorCodes.CACHE_UNAVAILABLE]: 'transient',

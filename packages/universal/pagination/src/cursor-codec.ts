@@ -71,5 +71,3 @@ export class Base64UrlCursorCodec implements CursorCodec {
     return parsed.ok ? asPayload(parsed.value) : parsed;
   }
 }
-
-export const defaultCursorCodec: CursorCodec = new Base64UrlCursorCodec();

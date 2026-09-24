@@ -4,6 +4,7 @@ import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { videoChannel } from '@vp/events';
+import { createMetricsRegistry } from '@vp/observability';
 import { type Result, err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { SseHub } from '../sse-hub';
@@ -32,6 +33,7 @@ describe('apps/api/services: SseHub', () => {
     cache = new UnsubscribableCache();
     hub = new SseHub({
       cache,
+      metrics: createMetricsRegistry(),
       maxConnectionsPerUser: 20,
       maxPodConnections: 5000,
       heartbeatMs: 10_000,

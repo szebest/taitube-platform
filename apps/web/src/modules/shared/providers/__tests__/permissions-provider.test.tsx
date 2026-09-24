@@ -1,3 +1,4 @@
+import type { UserContext } from '@vp/permissions';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PermissionsProvider, usePermissions } from '../permissions-provider';
 
@@ -13,31 +14,34 @@ function TestConsumer() {
   );
 }
 
+const GUEST_ABILITY = ['ROLE:NONE', 'READ_VIDEO:YES', 'CANNOT_MANAGE_ALL:YES', 'MANAGE_ALL:NO'];
+
 describe('PermissionsProvider', () => {
-  it('provides guest permissions when unauthenticated (null userContext)', () => {
+  it.each([
+    { scenario: 'guest permissions for a null userContext', userContext: null, expected: GUEST_ABILITY },
+    {
+      scenario: 'the admin superuser ability for an admin',
+      userContext: { id: 'admin-1', role: 'ADMIN', email: 'admin@example.com' } as UserContext,
+      expected: ['ROLE:ADMIN', 'READ_VIDEO:YES', 'CANNOT_MANAGE_ALL:NO', 'MANAGE_ALL:YES'],
+    },
+  ])('provides $scenario', ({ userContext, expected }) => {
     const html = renderToStaticMarkup(
-      <PermissionsProvider userContext={null}>
+      <PermissionsProvider userContext={userContext}>
         <TestConsumer />
       </PermissionsProvider>
     );
 
-    expect(html).toContain('ROLE:NONE');
-    expect(html).toContain('READ_VIDEO:YES');
-    expect(html).toContain('CANNOT_MANAGE_ALL:YES');
-    expect(html).toContain('MANAGE_ALL:NO');
+    for (const fragment of expected) expect(html).toContain(fragment);
   });
 
-  it('provides admin superuser ability when authenticated as admin', () => {
+  it('falls back to guest permissions when neither a userContext nor an AuthProvider is given', () => {
     const html = renderToStaticMarkup(
-      <PermissionsProvider userContext={{ id: 'admin-1', role: 'ADMIN', email: 'admin@example.com' }}>
+      <PermissionsProvider>
         <TestConsumer />
       </PermissionsProvider>
     );
 
-    expect(html).toContain('ROLE:ADMIN');
-    expect(html).toContain('READ_VIDEO:YES');
-    expect(html).toContain('CANNOT_MANAGE_ALL:NO');
-    expect(html).toContain('MANAGE_ALL:YES');
+    for (const fragment of GUEST_ABILITY) expect(html).toContain(fragment);
   });
 
   it('throws error when usePermissions is invoked outside PermissionsProvider', () => {
