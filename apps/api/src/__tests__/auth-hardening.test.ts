@@ -2,6 +2,7 @@ import * as http from 'node:http';
 import { loadEnv } from '@vp/config';
 import { mintToken } from '@vp/dev-token';
 import { toAppConfig } from '@vp/env-schema';
+import { createLogger } from '@vp/logger';
 import { PRODUCTION_ENV } from '@vp/testing/env';
 import { signJwt, signingKey } from '@vp/testing/jwt';
 import type { FastifyInstance } from 'fastify';
@@ -43,7 +44,8 @@ describe('apps/api: authentication under a production configuration', () => {
       AUTH_ALGORITHMS: 'RS256,RS512,ES256',
       AUTH_JWKS_URL: `http://127.0.0.1:${port}/.well-known/jwks.json`,
     });
-    ({ app } = await buildTestApp({ config: toAppConfig(env) }));
+    const logger = createLogger({ service: 'vp-api', level: 'silent', format: 'json' });
+    ({ app } = await buildTestApp({ config: toAppConfig(env), logger }));
   });
 
   afterAll(async () => {

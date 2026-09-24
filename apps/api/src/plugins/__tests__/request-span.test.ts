@@ -16,6 +16,8 @@ import { abortMidRequest } from './abort-mid-request';
 const CALLER_TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
 
 function exportSpans(): InMemorySpanExporter {
+  trace.disable();
+  context.disable();
   const exporter = new InMemorySpanExporter();
   context.setGlobalContextManager(new AsyncLocalStorageContextManager().enable());
   trace.setGlobalTracerProvider(
