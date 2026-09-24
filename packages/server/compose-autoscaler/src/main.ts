@@ -1,6 +1,7 @@
+import { exec } from 'node:child_process';
 import * as fs from 'node:fs';
-import { type Result, isErr, ok, tryCatch } from '@vp/result';
-import { ComposeAutoscaler } from './runner';
+import { promisify } from 'node:util';
+import { type Attempt, ComposeAutoscaler } from './runner';
 import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler';
 
 interface CliArgs {
@@ -74,27 +75,32 @@ Environment Variables:
 
 type StageOverrides = Record<string, ScalerStageConfig>;
 
-interface OverridesUnreadable {
-  message: string;
-  cause: unknown;
-}
+const execAsync = promisify(exec);
 
-function parseOverrides(
-  read: () => string,
-  label: string
-): Result<StageOverrides, OverridesUnreadable> {
-  return tryCatch(
-    (): StageOverrides => JSON.parse(read()),
-    (cause) => ({ message: `Failed to load ${label}:`, cause })
-  );
-}
-
-function readStageOverrides(configFile?: string): Result<StageOverrides, OverridesUnreadable> {
-  if (configFile) {
-    return parseOverrides(() => fs.readFileSync(configFile, 'utf-8'), `config file ${configFile}`);
+/** The one place a thrown SDK or process failure becomes an answer the runner reads. */
+async function attempt<T>(run: () => Promise<T>): Promise<Attempt<T>> {
+  try {
+    return { type: 'done', value: await run() };
+  } catch (cause) {
+    return { type: 'failed', reason: String(cause) };
   }
-  const inline = process.env.AUTOSCALER_CONFIG;
-  return inline ? parseOverrides(() => inline, 'AUTOSCALER_CONFIG JSON') : ok({});
+}
+
+async function fetchMetricsText(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch metrics: ${res.status} ${res.statusText}`);
+  return res.text();
+}
+
+function readStageOverrides(configFile?: string): Attempt<StageOverrides> {
+  const label = configFile ? `config file ${configFile}` : 'AUTOSCALER_CONFIG JSON';
+  const text = configFile ? fs.readFileSync(configFile, 'utf-8') : process.env.AUTOSCALER_CONFIG;
+  if (!text) return { type: 'done', value: {} };
+  try {
+    return { type: 'done', value: JSON.parse(text) as StageOverrides };
+  } catch (cause) {
+    return { type: 'failed', reason: `Failed to load ${label}: ${String(cause)}` };
+  }
 }
 
 export async function main(): Promise<void> {
@@ -106,8 +112,8 @@ export async function main(): Promise<void> {
   }
 
   const overrides = readStageOverrides(args.configFile);
-  if (isErr(overrides)) {
-    console.error(overrides.error.message, overrides.error.cause);
+  if (overrides.type === 'failed') {
+    console.error(overrides.reason);
     process.exit(1);
   }
   const stageConfigs = { ...DEFAULT_STAGE_CONFIGS, ...overrides.value };
@@ -120,6 +126,9 @@ export async function main(): Promise<void> {
     dryRun,
     pollIntervalMs: args.intervalSec * 1000,
     stageConfigs,
+    onLog: console.log,
+    executor: (cmd) => attempt(() => execAsync(cmd)),
+    fetcher: (url) => attempt(() => fetchMetricsText(url)),
   });
 
   process.on('SIGINT', () => {

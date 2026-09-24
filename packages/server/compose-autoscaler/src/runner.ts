@@ -1,6 +1,3 @@
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-import { fromPromise, isErr } from '@vp/result';
 import {
   DEFAULT_STAGE_CONFIGS,
   type ScalerStageConfig,
@@ -9,7 +6,10 @@ import {
   parsePrometheusQueueMetrics,
 } from './scaler';
 
-const execAsync = promisify(exec);
+/** How a call to the outside world went, answered rather than thrown. */
+export type Attempt<T> =
+  | { readonly type: 'done'; readonly value: T }
+  | { readonly type: 'failed'; readonly reason: string };
 
 export interface AutoscalerOptions {
   metricsUrl: string;
@@ -17,9 +17,9 @@ export interface AutoscalerOptions {
   dryRun?: boolean;
   pollIntervalMs?: number;
   stageConfigs?: Record<string, ScalerStageConfig>;
-  onLog?: (msg: string) => void;
-  executor?: (cmd: string) => Promise<{ stdout: string; stderr: string }>;
-  fetcher?: (url: string) => Promise<string>;
+  onLog: (msg: string) => void;
+  executor: (cmd: string) => Promise<Attempt<unknown>>;
+  fetcher: (url: string) => Promise<Attempt<string>>;
 }
 
 export class ComposeAutoscaler {
@@ -30,8 +30,8 @@ export class ComposeAutoscaler {
   private readonly configs: Record<string, ScalerStageConfig>;
   private readonly states: Map<string, StageScalingState> = new Map();
   private readonly log: (msg: string) => void;
-  private readonly execCmd: (cmd: string) => Promise<{ stdout: string; stderr: string }>;
-  private readonly fetchMetrics: (url: string) => Promise<string>;
+  private readonly execCmd: AutoscalerOptions['executor'];
+  private readonly fetchMetrics: AutoscalerOptions['fetcher'];
   private isRunning = false;
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -41,17 +41,9 @@ export class ComposeAutoscaler {
     this.dryRun = options.dryRun ?? false;
     this.pollIntervalMs = options.pollIntervalMs ?? 10_000;
     this.configs = options.stageConfigs ?? DEFAULT_STAGE_CONFIGS;
-    this.log = options.onLog ?? console.log;
-    this.execCmd = options.executor ?? (async (cmd) => execAsync(cmd));
-    this.fetchMetrics =
-      options.fetcher ??
-      (async (url) => {
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`Failed to fetch metrics: ${res.status} ${res.statusText}`);
-        }
-        return res.text();
-      });
+    this.log = options.onLog;
+    this.execCmd = options.executor;
+    this.fetchMetrics = options.fetcher;
 
     for (const serviceName of Object.keys(this.configs)) {
       this.states.set(serviceName, {
@@ -67,15 +59,14 @@ export class ComposeAutoscaler {
   }
 
   public async tick(nowMs: number = Date.now()): Promise<void> {
-    const metrics = await fromPromise(() => this.fetchMetrics(this.metricsUrl), String);
-    if (isErr(metrics)) {
-      this.log(`[WARN] Autoscaler poll iteration failed: ${metrics.error}`);
+    const metrics = await this.fetchMetrics(this.metricsUrl);
+    if (metrics.type === 'failed') {
+      this.log(`[WARN] Autoscaler poll iteration failed: ${metrics.reason}`);
       return;
     }
     const queueDepths = parsePrometheusQueueMetrics(metrics.value);
 
     for (const [serviceName, config] of Object.entries(this.configs)) {
-      // Compose service 'worker-transcode-1080p' drains queue 'transcode-1080p'.
       const queueName = serviceName.replace(/^worker-/, '');
       const depth = queueDepths[queueName] ?? { waiting: 0, prioritized: 0, active: 0 };
       const currentState = this.states.get(serviceName) ?? {
@@ -108,9 +99,9 @@ export class ComposeAutoscaler {
       this.log(
         `[SCALING] [${serviceName}] ${decision.reason} -> Target: ${decision.targetReplicas}`
       );
-      const scaled = await fromPromise(() => this.execCmd(cmd), String);
-      if (isErr(scaled)) {
-        this.log(`[ERROR] Failed to execute scale command for ${serviceName}: ${scaled.error}`);
+      const scaled = await this.execCmd(cmd);
+      if (scaled.type === 'failed') {
+        this.log(`[ERROR] Failed to execute scale command for ${serviceName}: ${scaled.reason}`);
       }
     }
   }

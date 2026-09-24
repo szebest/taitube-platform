@@ -94,6 +94,8 @@ is stale — fix it.
 | `@vp/concurrency` | server | `packages/server/concurrency` |
 | `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/storage` | server | `packages/server/storage` |
+| `@vp/compose-autoscaler` | server | `packages/server/compose-autoscaler` |
+| `@vp/dev-token` | server | `packages/server/dev-token` |
 | `@vp/gen-video` | server | `packages/server/gen-video` |
 
 ### T2 — Contracts & policy
@@ -103,10 +105,8 @@ is stale — fix it.
 | `@vp/pagination` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/permissions` | universal | `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
-| `@vp/compose-autoscaler` | server | `@vp/result` |
 | `@vp/composition` | server | `@vp/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/errors`, `@vp/result` |
-| `@vp/dev-token` | server | `@vp/result` |
 | `@vp/events` | server | `@vp/errors`, `@vp/job-contracts`, `@vp/result` |
 | `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result` |
 | `@vp/observability` | server | `@vp/result` |

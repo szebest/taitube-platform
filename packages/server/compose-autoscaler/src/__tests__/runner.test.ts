@@ -1,4 +1,4 @@
-import { ComposeAutoscaler } from '../runner';
+import { type Attempt, ComposeAutoscaler } from '../runner';
 import type { ScalerStageConfig } from '../scaler';
 
 describe('ComposeAutoscaler runner integration', () => {
@@ -26,10 +26,10 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} 0
       dryRun: true,
       stageConfigs: customConfig,
       composeFile: 'infra/compose/docker-compose.yml',
-      fetcher: async () => sampleMetrics,
+      fetcher: async () => ({ type: 'done', value: sampleMetrics }),
       executor: async (cmd) => {
         executedCommands.push(cmd);
-        return { stdout: '', stderr: '' };
+        return { type: 'done', value: '' };
       },
       onLog: (msg) => loggedMessages.push(msg),
     });
@@ -59,10 +59,10 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} 1
       metricsUrl: 'http://mock-api:9464/metrics',
       dryRun: false,
       stageConfigs: customConfig,
-      fetcher: async () => sampleMetrics,
+      fetcher: async () => ({ type: 'done', value: sampleMetrics }),
       executor: async (cmd) => {
         executedCommands.push(cmd);
-        return { stdout: '', stderr: '' };
+        return { type: 'done', value: '' };
       },
       onLog: () => {},
     });
@@ -84,10 +84,14 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} 1
       metricsUrl: 'http://mock-api:9464/metrics',
       dryRun: true,
       stageConfigs: customConfig,
-      fetcher: async () => `
+      fetcher: async () => ({
+        type: 'done',
+        value: `
 bullmq_queue_jobs{queue="transcode-1080p",state="waiting"} ${currentWaiting}
 bullmq_queue_jobs{queue="transcode-1080p",state="active"} ${currentActive}
 `,
+      }),
+      executor: async () => ({ type: 'done', value: '' }),
       onLog: (msg) => logs.push(msg),
     });
 
@@ -111,18 +115,23 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} ${currentActive}
   it.each([
     {
       scenario: 'the metrics endpoint is unreachable',
-      fetcher: async (): Promise<string> => {
-        throw new Error('ECONNREFUSED');
-      },
-      executor: async () => ({ stdout: '', stderr: '' }),
+      fetcher: async (): Promise<Attempt<string>> => ({
+        type: 'failed',
+        reason: 'Error: ECONNREFUSED',
+      }),
+      executor: async (): Promise<Attempt<unknown>> => ({ type: 'done', value: '' }),
       logged: '[WARN] Autoscaler poll iteration failed: Error: ECONNREFUSED',
     },
     {
       scenario: 'the scale command fails',
-      fetcher: async () => 'bullmq_queue_jobs{queue="transcode-1080p",state="waiting"} 2',
-      executor: async (): Promise<{ stdout: string; stderr: string }> => {
-        throw new Error('compose binary missing');
-      },
+      fetcher: async (): Promise<Attempt<string>> => ({
+        type: 'done',
+        value: 'bullmq_queue_jobs{queue="transcode-1080p",state="waiting"} 2',
+      }),
+      executor: async (): Promise<Attempt<unknown>> => ({
+        type: 'failed',
+        reason: 'Error: compose binary missing',
+      }),
       logged:
         '[ERROR] Failed to execute scale command for worker-transcode-1080p: Error: compose binary missing',
     },

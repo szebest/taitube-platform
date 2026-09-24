@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as path from 'node:path';
-import { isErr, tryCatch } from '@vp/result';
 import { mintToken, verifyToken } from './jwt';
 import { getDevJwks } from './keys';
 
@@ -87,16 +86,15 @@ export async function main(args: readonly string[] = process.argv.slice(2)): Pro
         console.error('Error: token argument required for verify');
         process.exit(1);
       }
-      const verified = tryCatch(
-        () => verifyToken(token),
-        (cause) => (cause instanceof Error ? cause.message : cause)
-      );
-      if (isErr(verified)) {
-        console.error('✗ Token invalid:', verified.error);
+      let verified: ReturnType<typeof verifyToken>;
+      try {
+        verified = verifyToken(token);
+      } catch (cause) {
+        console.error('✗ Token invalid:', cause instanceof Error ? cause.message : cause);
         process.exit(1);
       }
       console.log('✓ Token valid:');
-      console.log(JSON.stringify(verified.value, null, 2));
+      console.log(JSON.stringify(verified, null, 2));
       break;
     }
 
