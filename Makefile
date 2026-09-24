@@ -5,8 +5,9 @@ REDIS_IMAGE ?= redis:7-alpine
 CLUSTER_TOOL ?= k3d
 CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
+DEV_TOKEN := pnpm --silent dev-token mint --raw
 
-.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill chaos-readiness obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-local-secrets k8s-validate load-s1 load-s2 load-s3 load-smoke
+.PHONY: help up down logs psql redis-cli mc check-redis nuke test check-bun test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill chaos-readiness obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-local-secrets k8s-validate load-s1 load-s2 load-s3 load-smoke
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -17,7 +18,6 @@ up: ## Start local infrastructure (Postgres, Redis, MinIO, minio-init)
 doctor: ## Check developer prerequisites
 	@echo "Checking prerequisites..."
 	@node -v | grep -q 'v24' || (echo "Node.js 24 required"; exit 1)
-	@bun -v | grep -q '^1.4' || (echo "Bun 1.4 required"; exit 1)
 	@pnpm -v | grep -q '10.' || (echo "pnpm 10 required"; exit 1)
 	@docker -v >/dev/null || (echo "Docker required"; exit 1)
 	@docker compose version >/dev/null || (echo "Docker Compose required"; exit 1)
@@ -69,7 +69,10 @@ nuke: ## Teardown all containers and delete all persistent volumes
 test: ## Run Vitest tests across all workspace packages
 	pnpm test
 
-test-bun: ## Run Bun tests for worker runtime parity
+check-bun: ## Check for Bun 1.4, which only the Bun test run needs
+	@bun -v | grep -q '^1.4' || (echo "Bun 1.4 required"; exit 1)
+
+test-bun: check-bun ## Run Bun tests for worker runtime parity
 	pnpm test:bun
 
 lint: ## Run Biome linter across workspace
@@ -102,7 +105,7 @@ smoke-offline: ## Run smoke tests in offline mode (internal network with zero in
 	API_URL=http://127.0.0.1:3000 bash scripts/e2e-smoke.sh
 
 e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostile set; E2E_REDUCED=true for the CI set)
-	bun scripts/run-e2e.ts
+	pnpm e2e
 
 chaos-kill: ## Run crash-safety chaos test (kill worker mid-transcode, assert effectively-once READY)
 	bash scripts/chaos-kill.sh 5
@@ -170,20 +173,16 @@ k3d-down: ## Delete local k3d (or kind) cluster
 
 
 load-s1: ## Run S1 Upload Storm load test (requires Compose stack)
-	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
-	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s1-upload-storm.js
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s1-upload-storm.js
 
 load-s2: ## Run S2 Large File load test (requires Compose stack)
-	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
-	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s2-large-file.js
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s2-large-file.js
 
 load-s3: ## Run S3 Backlog Burst load test (requires Compose stack)
-	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
-	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s3-backlog-burst.js
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s3-backlog-burst.js
 
 load-smoke: ## Run reduced S1 Load Smoke Test
-	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
-	API="http://localhost:3000" TOKEN=$$TOKEN k6 run --vus 60 --duration 2m tests/load/s1-upload-storm.js
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run --vus 60 --duration 2m tests/load/s1-upload-storm.js
 
 chaos-readiness: ## Stop MinIO and cut a worker's Redis via toxiproxy; /readyz must answer 503, then 200
 	bash scripts/chaos-readiness.sh
@@ -192,18 +191,14 @@ toxiproxy-up: ## Start toxiproxy service fronting MinIO for chaos testing
 	docker compose -f $(COMPOSE_FILE) --profile chaos up -d toxiproxy
 
 chaos-s4: ## Run S4 Worker Kills chaos test (50 videos with worker kills)
-	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
-	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s4-worker-kills.js
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s4-worker-kills.js
 
 chaos-s5: ## Run S5 Dependency Outage chaos test
-	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
-	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s5-dependency-outage.js
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s5-dependency-outage.js
 
 chaos-s6: ## Run S6 SSE Fan-out load & reconnect test
-	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
-	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s6-sse-fanout.js
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s6-sse-fanout.js
 
 chaos-s7: ## Run S7 Soak test (4h duration, configurable with SOAK_DURATION)
-	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
-	API="http://localhost:3000" TOKEN=$$TOKEN k6 run tests/load/s7-soak.js
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s7-soak.js
 

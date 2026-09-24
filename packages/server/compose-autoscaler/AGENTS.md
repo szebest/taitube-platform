@@ -20,7 +20,7 @@ This is a **workspace package with a CLI**, not a loose script — which is why 
 ## 2. Invariants
 
 1. **Local-first (Rule 1):** runs fully offline, no external host, nothing phones home.
-2. **Dual runtime (Rule 2):** must run cleanly under both `tsx` (Node) and `bun`.
+2. **Dual runtime (Rule 2):** its `pnpm` script runs it through `tsx`, and it must still run cleanly under `bun`, which `pnpm test:bun` proves.
 3. **1:1 tests (Rule 12):** every source file has a name-matching test file.
 
 ---

@@ -37,7 +37,7 @@ Their root scripts are unchanged: `pnpm gen-video`, `pnpm dev-token`, `pnpm uplo
 
 1. **Local-First & Offline:** All tools must execute completely offline without cloud dependencies.
 2. **Deterministic Outputs:** `gen-video` generates bit-for-bit identical test media fixtures matching the JSON manifest checksums.
-3. **No Proprietary Runtime Locks:** CLI tools written in TypeScript must run cleanly with both `tsx` (Node) and `bun`.
+3. **One script runner:** TypeScript here runs through `tsx`, never `bun <file>.ts`. Bun is a test runtime only.
 
 ---
 

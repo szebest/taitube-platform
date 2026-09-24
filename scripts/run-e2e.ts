@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import { type Logger, createLogger } from '../packages/server/logger/src/index';
 import { E2ERunner } from '../tests/e2e/e2e-runner';
 

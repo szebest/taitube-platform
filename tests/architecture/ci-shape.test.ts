@@ -45,6 +45,8 @@ const SECOND_BUDGETS = [
   { job: 'lint-typecheck', what: 'test:architecture', seconds: 6 },
 ];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
+/** Bun is a test runtime only: every script runs through `tsx`, so only `bun test` needs it. */
+const WITH_BUN = new Set(['unit-bun']);
 const DOCS_ONLY_FILTER = { code: ['**', '!**/*.md', '!docs/**'] };
 
 /** The scripts that run `pnpm boundaries` themselves, as `package.json` defines them. */
@@ -55,6 +57,11 @@ function needsOf(job: Job): string[] {
   if (typeof job.needs === 'string') return [job.needs];
   return job.needs;
 }
+
+const setsUpBun = (job: Job): boolean =>
+  (job.steps ?? []).some(
+    (step) => step.uses?.startsWith('oven-sh/setup-bun@') || step.with?.bun === 'true'
+  );
 
 const runs = (job: Job): string => (job.steps ?? []).map((step) => step.run ?? '').join('\n');
 
@@ -123,6 +130,8 @@ function shapeFindings(source: string): string[] {
       findings.push(`${name}: starts a service container`);
     if (/\bdb:migrate\b/.test(script) && !WITH_SERVICES.has(name))
       findings.push(`${name}: runs a migration`);
+    if (setsUpBun(job) && !WITH_BUN.has(name)) findings.push(`${name}: sets up Bun`);
+    if (!setsUpBun(job) && WITH_BUN.has(name)) findings.push(`${name}: does not set up Bun`);
 
     const chain = longestChain(workflow, key);
     if (chain > CRITICAL_PATH_MINUTES)
@@ -170,6 +179,9 @@ jobs:
     services:
       postgres: { image: postgres }
     steps:
+      - uses: ./.github/actions/setup-workspace
+        with:
+          bun: 'true'
       - run: pnpm db:migrate
       - run: pnpm test
       - run: pnpm test:architecture
@@ -178,6 +190,13 @@ jobs:
           what: unit
           seconds: 150
           started-at: 0
+  unit-bun:
+    name: unit-bun
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
+    timeout-minutes: 3
+    steps:
+      - run: pnpm test:bun
   e2e:
     name: e2e-smoke
     needs: [build, unit]
@@ -204,6 +223,8 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'the workflow grants packages: write to every job',
     'lint-typecheck: test:architecture is not held to 6 s',
     'unit: its budget does not run from the first step to the last',
+    'unit: sets up Bun',
+    'unit-bun: does not set up Bun',
   ])('fires on a workflow where %s', (finding) => {
     expect(shapeFindings(BAD_WORKFLOW)).toContain(finding);
   });

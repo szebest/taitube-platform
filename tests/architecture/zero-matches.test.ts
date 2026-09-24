@@ -235,6 +235,13 @@ const ROWS: readonly Row[] = [
     fires: 'ladder: DEFAULT_LADDER,',
   },
   {
+    name: 'a script run by Bun instead of tsx',
+    pattern: /\bbun (?!test\b)[\w./-]+\.ts\b/g,
+    scope: ['package.json', 'Makefile', '.github'],
+    expected: 0,
+    fires: '"e2e": "bun scripts/run-e2e.ts",',
+  },
+  {
     name: 'a doc asking for an import extension',
     pattern: /\.js`? (extension|specifier)|carr(y|ies) `\.js`/g,
     scope: [

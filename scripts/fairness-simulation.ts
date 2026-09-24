@@ -8,8 +8,7 @@
  * - User B's videos reach READY before User A's 50 videos finish
  *
  * Usage:
- *   pnpm tsx scripts/fairness-simulation.ts
- *   bun scripts/fairness-simulation.ts
+ *   pnpm fairness
  */
 
 import * as crypto from 'node:crypto';
@@ -18,12 +17,19 @@ import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   InMemoryRepositories,
-} from '../packages/server/adapters/index';
+} from '../packages/server/adapters/in-memory/index';
+import type { QueueJob } from '../packages/server/core/ports/index';
 import { ids } from '../packages/server/job-contracts/src/index';
 import { type Logger, createLogger } from '../packages/server/logger/src/index';
 import { createMetricsRegistry } from '../packages/server/observability/src/index';
 import { rawSourceKey } from '../packages/server/storage/src/index';
-import { isErr } from '../packages/universal/result/src/index';
+import { type Result, isErr } from '../packages/universal/result/src/index';
+
+/** The simulation has nothing to recover from, so a failed step ends it. */
+function required<T>(result: Result<T, { message: string }>, step: string): T {
+  if (isErr(result)) throw new Error(`${step} failed: ${result.error.message}`);
+  return result.value;
+}
 
 async function runFairnessSimulation(log: Logger) {
   log.info('starting admission control and fairness benchmark');
@@ -57,70 +63,83 @@ async function runFairnessSimulation(log: Logger) {
       uploadedThresholdMs: 0,
       maxInflightPerUser: MAX_INFLIGHT,
     });
-    if (isErr(reconciled)) throw new Error(`reconciler failed: ${reconciled.error.message}`);
+    required(reconciled, 'reconciler');
   }
 
-  // Worker stages simulation
-  await probeQueue.process(async (job) => {
+  const probe = async (job: QueueJob<unknown>) => {
     const { videoId } = job.data as { videoId: string };
-    await repositories.videos.transition({
-      videoId,
-      from: 'UPLOADED',
-      to: 'PROBING',
-      eventType: 'probe.started',
-    });
+    required(
+      await repositories.videos.transition({
+        videoId,
+        from: 'UPLOADED',
+        to: 'PROBING',
+        eventType: 'probe.started',
+      }),
+      'probe.started'
+    );
+    required(
+      await repositories.steps.claim({
+        id: crypto.randomUUID(),
+        videoId,
+        step: 'probe',
+        rendition: '-',
+        jobId: job.id,
+        attempt: 1,
+        workerId: 'worker-probe',
+        lockToken: crypto.randomUUID(),
+      }),
+      'probe claim'
+    );
+    required(
+      await repositories.videos.transition({
+        videoId,
+        from: 'PROBING',
+        to: 'PROCESSING',
+        eventType: 'probe.completed',
+      }),
+      'probe.completed'
+    );
 
-    await repositories.steps.claim({
-      id: crypto.randomUUID(),
-      videoId,
-      step: 'probe',
-      rendition: '-',
-      jobId: job.id,
-      attempt: 1,
-      workerId: 'worker-probe',
-      lockToken: crypto.randomUUID(),
-    });
-
-    await repositories.videos.transition({
-      videoId,
-      from: 'PROBING',
-      to: 'PROCESSING',
-      eventType: 'probe.completed',
-    });
-
-    // Small simulated work
     await new Promise((r) => setTimeout(r, 2));
 
-    await transcodeQueue.add(
-      'transcode-720p',
-      { videoId, generation: 1 },
-      { jobId: ids.transcode(videoId, '720p', 1), priority: job.opts?.priority }
+    required(
+      await transcodeQueue.add(
+        'transcode-720p',
+        { videoId, generation: 1 },
+        { jobId: ids.transcode(videoId, '720p', 1), priority: job.opts?.priority }
+      ),
+      'transcode enqueue'
     );
-  });
+  };
 
-  await transcodeQueue.process(async (job) => {
+  const transcode = async (job: QueueJob<unknown>) => {
     const { videoId } = job.data as { videoId: string };
-    // Small simulated transcode work
     await new Promise((r) => setTimeout(r, 5));
 
-    await packageQueue.add(
-      'package',
-      { videoId, generation: 1 },
-      { jobId: ids.package(videoId, 1), priority: job.opts?.priority }
+    required(
+      await packageQueue.add(
+        'package',
+        { videoId, generation: 1 },
+        { jobId: ids.package(videoId, 1), priority: job.opts?.priority }
+      ),
+      'package enqueue'
     );
-  });
+  };
 
-  await packageQueue.process(async (job) => {
+  const packageVideo = async (job: QueueJob<unknown>) => {
     const { videoId } = job.data as { videoId: string };
-    const video = await repositories.videos.findById(videoId);
+    const video = required(await repositories.videos.findById(videoId), 'video lookup');
     if (!video) return;
 
-    await repositories.videos.transition({
-      videoId,
-      from: 'PROCESSING',
-      to: 'READY',
-      eventType: 'video.ready',
-    });
+    required(
+      await repositories.videos.transition({
+        videoId,
+        from: 'PROCESSING',
+        to: 'READY',
+        eventType: 'video.ready',
+      }),
+      'video.ready'
+    );
 
     const elapsedMs = getElapsedMs();
     if (video.ownerId === USER_A_ID) {
@@ -129,33 +148,44 @@ async function runFairnessSimulation(log: Logger) {
       userBReadyTimes.push({ index: userBReadyTimes.length + 1, elapsedMs });
     }
 
-    // Immediately trigger reconciler on completion of in-flight video
     await triggerReconciler();
-  });
+  };
+
+  required(await probeQueue.process(probe), 'probe consumer');
+  required(await transcodeQueue.process(transcode), 'transcode consumer');
+  required(await packageQueue.process(packageVideo), 'package consumer');
 
   async function submitUpload(ownerId: string, index: number, priority: number) {
     const videoId = crypto.randomUUID();
     const sourceKey = rawSourceKey(videoId);
 
-    const video = await repositories.videos.create({
-      id: videoId,
-      ownerId,
-      title: `video-${index}`,
-      status: 'UPLOADED',
-      sourceKey,
-      sourceSizeBytes: 1000,
-    });
+    const video = required(
+      await repositories.videos.create({
+        id: videoId,
+        ownerId,
+        title: `video-${index}`,
+        status: 'UPLOADED',
+        sourceKey,
+        sourceSizeBytes: 1000,
+      }),
+      'video create'
+    );
     video.updatedAt = new Date(Date.now() - 5000);
 
-    const inFlight = await repositories.videos.countInFlightByOwner(ownerId);
+    const inFlight = required(
+      await repositories.videos.countInFlightByOwner(ownerId),
+      'in-flight count'
+    );
     if (inFlight < MAX_INFLIGHT) {
-      await probeQueue.add(
-        'probe',
-        { videoId, sourceKey, generation: 1 },
-        { jobId: ids.probe(videoId, 1), priority }
+      required(
+        await probeQueue.add(
+          'probe',
+          { videoId, sourceKey, generation: 1 },
+          { jobId: ids.probe(videoId, 1), priority }
+        ),
+        'probe enqueue'
       );
     }
-    return videoId;
   }
 
   log.info({ user: 'A', tier: 'free', uploads: 50, priority: 5 }, 'submitting uploads');
