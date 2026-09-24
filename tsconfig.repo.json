@@ -1,0 +1,20 @@
+{
+  "extends": "./packages/universal/tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "types": ["node", "vitest/globals"],
+    "paths": {
+      "@vp/adapters": ["./packages/server/adapters"],
+      "@vp/adapters/*": ["./packages/server/adapters/*"],
+      "@vp/core/*": ["./packages/server/core/*"],
+      "@vp/db/*": ["./packages/server/db/src/*"],
+      "@vp/domain/*": ["./packages/universal/domain/src/*"],
+      "@vp/storage/*": ["./packages/server/storage/src/*"],
+      "@vp/testing/*": ["./packages/server/testing/src/*"],
+      "@vp/*": ["./packages/universal/*/src", "./packages/server/*/src", "./packages/client/*/src"]
+    }
+  },
+  "include": ["scripts/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["tests/load"]
+}

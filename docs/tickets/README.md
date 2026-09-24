@@ -1,10 +1,22 @@
 # Tickets — video-pipeline
 
-Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers always have lower numbers), not priority. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). Change a ticket's `**Status:**` line and re-run to update the board.
+Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers always have lower numbers), not priority. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the frontier, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). Change a ticket's `**Status:**` line and re-run to update the board.
+
+## Frontier
+
+Every ticket whose blockers are all `done` and which nobody has started, computed from the `**Status:**` lines.
+
+- [42: Threaded video comments with keyset pagination & moderation](42-threaded-comments-keyset-pagination-moderation.md)
+- [43: High-scale video views buffer (Redis batch flush) & creator studio analytics](43-high-scale-video-views-buffer-reconciler.md)
+- [46: YouTube-grade playlists & watch history domain engine (Public/private, Watch Later, drag-and-drop reorder & resume sync)](46-youtube-playlists-watch-history-engine.md)
+- [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
+- [50: Shared API contracts package (`@taitube/api-contracts`) & automated OpenAPI TypeScript codegen](50-shared-api-contracts-zod-openapi-codegen.md)
+- [83: Granular container topology — per-app images, a one-app dev loop and a single orchestrated launch](83-granular-container-topology-full-stack-deployment.md)
+- [85: Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md)
 
 ## How to work a ticket (humans and agents)
 
-1. Pick any ticket whose blockers are all `done` (the **frontier**). Prefer the lowest number in the current phase; parallel work is fine across lanes. **Frontier Priority Policy:** Ticket **84** (Result-typed error handling) is done, along with 79, 80 and 82, so the frontier is **83** (granular container topology) and **85** (the universal `Intl` formatting core). Ticket 86 is unreachable: it is blocked by 63 and 72, which sit behind roughly twenty blocked frontend tickets, whatever its own prose claims.
+1. Pick a ticket from the [frontier](#frontier). Prefer the lowest number in the current phase; parallel work is fine across lanes.
 2. Read the ticket, then **only** the PRD/SDD sections it links. Do not read the whole SDD — the links are the context budget.
 3. Create a branch `ticket/NN-slug`. Implement the *whole* slice: schema → code → tests → docs. Keep `.env.example`, `packages/job-contracts` and the SDD in sync if you touch them (the drift tests will tell you).
 4. Every acceptance criterion becomes a test or a recorded demo (screenshot/GIF/result table in the PR).
@@ -112,9 +124,9 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 | 85 | [Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md) | 5 | L | 84 | 86 | ready |
 | 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85 | — | blocked |
 | 87 | [One composition root — a typed container, configuration as a value, and no hidden dependencies](87-composition-root-typed-container-config-value.md) | 5 | L | 84 | 88 | done |
-| 88 | [Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | XL (delivered as six PRs, see *Delivery*) | 87 | — | ready |
+| 88 | [Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | XL (delivered as six PRs, see *Delivery*) | 87 | — | in-progress |
 
-> Board statuses derive from each ticket's `**Status:**` line: `ready` = all blockers done (the frontier) · `blocked` · `in-progress` · `done` · `blocked-by-date` (34 waits for Node 26 LTS on 2026-10-28).
+> Board statuses derive from each ticket's `**Status:**` line and its blockers: `ready` = all blockers done (the frontier) · `blocked` · `in-progress` · `done` · `blocked-by-date` (blockers done, waiting for a date the ticket names).
 
 ## Dependency graph
 
@@ -494,7 +506,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | Blocks | _auto_ |
 | Spec | [PRD …](../PRD.md#…) · [SDD …](../SDD.md#…) |
 
-**Status:** ready-for-agent
+**Status:** ready
 
 ## What to build
 End-to-end behaviour from the user's/operator's perspective — not a layer list.

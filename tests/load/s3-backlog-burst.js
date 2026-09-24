@@ -4,7 +4,7 @@ import { SharedArray } from 'k6/data';
 import { STORAGE_HOSTS, completeUpload, initUpload, uploadPart } from './common.js';
 
 const videoData = new SharedArray('video-s15', () => {
-  return open('../../tools/gen-video/fixtures/s15.mp4', 'b');
+  return open('../fixtures/s15.mp4', 'b');
 });
 
 export const options = {

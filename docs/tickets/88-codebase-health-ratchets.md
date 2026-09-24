@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD ADR-19 Hexagonal architecture](../SDD.md#adr-19--hexagonal-architecture-interface-segregation-and-modular-repository-boundaries) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-24 Result-typed error handling](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes--domain-services) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13 Autoscaling & Observability](../SDD.md#13-autoscaling--observability) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §16 Environment variables](../SDD.md#16-environment-variables) |
 
-**Status:** ready
+**Status:** in-progress
 
 > Audit behind this ticket: [docs/reviews/88-codebase-health-audit.md](../reviews/88-codebase-health-audit.md),
 > read at `64eff79` (87 merged). Every count below was re-measured there, with the command that reproduces it.

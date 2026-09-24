@@ -73,4 +73,4 @@ Burst 30 uploads → `kubectl get scaledobject -w`, `kubectl get hpa -w`; Grafan
 - Flapping → raise `scaleDown.stabilizationWindowSeconds`; never lower `cooldownPeriod` below the typical job length.
 
 ## Non-Kubernetes path
-`tools/compose-autoscaler` polls `/metrics` and runs `docker compose up -d --scale worker-<stage>=N --no-recreate` with the same min/max/cooldown semantics (ticket 27). Compose stops the *newest* containers on scale-in — rely on idempotent redo.
+`pnpm compose-autoscaler` (`packages/server/compose-autoscaler`) polls `/metrics` and runs `docker compose up -d --scale worker-<stage>=N --no-recreate` with the same min/max/cooldown semantics (ticket 27). Compose stops the *newest* containers on scale-in — rely on idempotent redo.

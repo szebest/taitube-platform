@@ -38,7 +38,7 @@
 | Blocks | _auto_ |
 | Spec | [PRD …](../PRD.md#…) · [SDD …](../SDD.md#…) |
 
-**Status:** ready-for-agent
+**Status:** ready
 
 ## What to build
 End-to-end behaviour from the user's/operator's perspective — not a layer list.
