@@ -1,32 +1,29 @@
 name: Set up FFmpeg
-description: The pinned, checksum-verified static FFmpeg and FFprobe (ffmpeg-static b6.1.1, FFmpeg 6.1.1), cached by version.
+description: Ubuntu's FFmpeg and the fonts its drawtext filter needs, installed from .deb files cached per runner image.
 
 runs:
   using: composite
   steps:
-    - name: Restore FFmpeg
+    - name: Restore the FFmpeg packages
       id: cache
       uses: actions/cache@v4
       with:
-        path: ~/.local/ffmpeg
-        key: ffmpeg-static-b6.1.1-linux-x64
+        path: ~/ffmpeg-debs
+        key: ffmpeg-debs-${{ env.ImageOS }}-${{ env.ImageVersion }}
 
-    - name: Download and verify FFmpeg
+    - name: Download the FFmpeg packages
       if: steps.cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        release=https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1
-        mkdir -p ~/.local/ffmpeg
-        curl -fsSL -o "$RUNNER_TEMP/ffmpeg.gz" "$release/ffmpeg-linux-x64.gz"
-        curl -fsSL -o "$RUNNER_TEMP/ffprobe.gz" "$release/ffprobe-linux-x64.gz"
-        echo "bfe8a8fc511530457b528c48d77b5737527b504a3797a9bc4866aeca69c2dffa  $RUNNER_TEMP/ffmpeg.gz" | sha256sum -c -
-        echo "25d9b6ccb05e3d9de9e04e31e2506d8dd7f9f0418981965ac6df12e8d3afd067  $RUNNER_TEMP/ffprobe.gz" | sha256sum -c -
-        gunzip -c "$RUNNER_TEMP/ffmpeg.gz" > ~/.local/ffmpeg/ffmpeg
-        gunzip -c "$RUNNER_TEMP/ffprobe.gz" > ~/.local/ffmpeg/ffprobe
-        chmod +x ~/.local/ffmpeg/ffmpeg ~/.local/ffmpeg/ffprobe
+        sudo rm -f /var/lib/man-db/auto-update
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq --download-only --no-install-recommends ffmpeg fonts-dejavu-core fontconfig
+        mkdir -p ~/ffmpeg-debs
+        cp /var/cache/apt/archives/*.deb ~/ffmpeg-debs/
 
-    - name: Put FFmpeg on PATH
+    - name: Install FFmpeg and fonts
       shell: bash
       run: |
-        echo "$HOME/.local/ffmpeg" >> "$GITHUB_PATH"
-        "$HOME/.local/ffmpeg/ffmpeg" -hide_banner -version | head -1
+        sudo rm -f /var/lib/man-db/auto-update
+        sudo dpkg -i ~/ffmpeg-debs/*.deb > /dev/null
+        ffmpeg -hide_banner -version | head -1
