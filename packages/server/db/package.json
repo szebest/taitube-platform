@@ -36,7 +36,6 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run",
     "generate": "drizzle-kit generate",
     "check": "drizzle-kit check",
     "clean": "rimraf dist tsconfig.tsbuildinfo"

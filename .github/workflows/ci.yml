@@ -215,10 +215,13 @@ jobs:
           docker compose -f infra/compose/docker-compose.yml up minio-init
           DATABASE_URL="postgres://vp:vp@localhost:5432/vp" pnpm db:migrate
 
+      - name: Show the service containers the contract specs run against
+        run: docker compose -f infra/compose/docker-compose.yml ps postgres redis minio
+
       - name: Run infrastructure smoke test (infra/compose/test.sh)
         run: bash infra/compose/test.sh
 
-      - name: Run integration tests
+      - name: Run the FFmpeg specs and the adapter contracts against the real services
         env:
           NODE_ENV: test
           DATABASE_URL: postgres://vp:vp@localhost:5432/vp
