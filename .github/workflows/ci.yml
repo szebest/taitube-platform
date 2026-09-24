@@ -127,7 +127,7 @@ jobs:
         uses: ./.github/actions/video-fixtures
 
       - name: Run unit tests (Node 24)
-        run: pnpm test:unit
+        run: pnpm test:unit --maxWorkers=4
 
       - name: Hold unit to its budget
         uses: ./.github/actions/budget
