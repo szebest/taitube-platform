@@ -1,127 +1,138 @@
+import type { SyntaxNode } from '@lezer/common';
+import { parser } from '@prometheus-io/lezer-promql';
 import { loadAll } from 'js-yaml';
 import { read, trackedFiles } from './repo-files';
 
 export interface Query {
-  /** Where the query is written, as `file: panel or rule`. */
   where: string;
   expr: string;
 }
 
+export type MatchOperator = '=' | '!=' | '=~' | '!~';
+
 export interface Matcher {
-  metric: string;
   label: string;
-  op: '=' | '=~' | '!=' | '!~';
+  op: MatchOperator;
   value: string;
 }
 
-function dashboardQueries(file: string): Query[] {
-  const found: Query[] = [];
-  const walk = (node: unknown, title: string): void => {
-    if (Array.isArray(node)) {
-      for (const item of node) walk(item, title);
-      return;
-    }
-    if (typeof node !== 'object' || node === null) return;
-    const record = node as Record<string, unknown>;
-    const here = typeof record.title === 'string' ? record.title : title;
-    if (typeof record.expr === 'string')
-      found.push({ where: `${file}: ${here}`, expr: record.expr });
-    for (const value of Object.values(record)) walk(value, here);
-  };
-  walk(JSON.parse(read(file)), '');
-  return found;
+export interface Selector {
+  /** Empty for a selector that names no metric, such as `{job="api"}`. */
+  metric: string;
+  matchers: Matcher[];
 }
 
-function alertQueries(file: string): Query[] {
-  const [doc] = loadAll(read(file)) as [{ groups: { rules: { alert: string; expr: string }[] }[] }];
-  return doc.groups.flatMap(({ rules }) =>
-    rules.map(({ alert, expr }) => ({ where: `${file}: ${alert}`, expr }))
-  );
+export interface ParsedQuery {
+  parses: boolean;
+  selectors: Selector[];
+}
+
+interface Dashboard {
+  panels: { title?: string; targets?: { expr?: string }[] }[];
+}
+
+interface AlertRules {
+  groups: { rules: { alert: string; expr: string }[] }[];
 }
 
 interface ScaledObject {
   metadata: { name: string };
-  spec?: { triggers?: { type: string; metadata: { query?: string } }[] };
+  spec?: { triggers?: { metadata: { query?: string } }[] };
+}
+
+function dashboardQueries(file: string): Query[] {
+  const dashboard: Dashboard = JSON.parse(read(file));
+  const queries: Query[] = [];
+  for (const panel of dashboard.panels) {
+    for (const target of panel.targets ?? []) {
+      if (target.expr) queries.push({ where: `${file}: ${panel.title}`, expr: target.expr });
+    }
+  }
+  return queries;
+}
+
+function alertQueries(file: string): Query[] {
+  const documents = loadAll(read(file)) as AlertRules[];
+  const queries: Query[] = [];
+  for (const document of documents) {
+    for (const group of document.groups) {
+      for (const rule of group.rules) {
+        queries.push({ where: `${file}: ${rule.alert}`, expr: rule.expr });
+      }
+    }
+  }
+  return queries;
 }
 
 function scalerQueries(file: string): Query[] {
-  return (loadAll(read(file)) as ScaledObject[]).flatMap((doc) =>
-    (doc.spec?.triggers ?? [])
-      .filter((trigger) => trigger.metadata.query !== undefined)
-      .map((trigger) => ({
-        where: `${file}: ${doc.metadata.name}`,
-        expr: trigger.metadata.query as string,
-      }))
-  );
-}
-
-/** Every PromQL expression a dashboard, an alert or an autoscaler depends on. */
-export function repoQueries(): Query[] {
-  return trackedFiles('infra/observability/dashboards')
-    .filter((file) => file.endsWith('.json'))
-    .flatMap(dashboardQueries)
-    .concat(trackedFiles('infra/observability/alerts').flatMap(alertQueries))
-    .concat(scalerQueries('infra/k8s/base/scaled-objects.yaml'));
-}
-
-const SELECTOR = /([a-zA-Z_:][\w:]*)\s*\{([^}]*)\}/g;
-const MATCHER = /(\w+)\s*(=~|!~|!=|=)\s*"([^"]*)"/g;
-
-export function matchers(expr: string): Matcher[] {
-  return [...expr.matchAll(SELECTOR)].flatMap(([, metric, body]) =>
-    [...(body ?? '').matchAll(MATCHER)].map(([, label, op, value]) => ({
-      metric: metric as string,
-      label: label as string,
-      op: op as Matcher['op'],
-      value: value as string,
-    }))
-  );
-}
-
-/** The PromQL vocabulary: functions, aggregations and operators, never a metric. */
-const PROMQL_WORDS = new Set([
-  'sum',
-  'avg',
-  'min',
-  'max',
-  'count',
-  'topk',
-  'bottomk',
-  'rate',
-  'irate',
-  'increase',
-  'delta',
-  'histogram_quantile',
-  'predict_linear',
-  'vector',
-  'scalar',
-  'abs',
-  'clamp_min',
-  'clamp_max',
-  'or',
-  'and',
-  'unless',
-  'offset',
-  'bool',
-  'time',
-  'label_replace',
-  'absent',
-]);
-
-const QUOTED = /"[^"]*"/g;
-const LABEL_SET = /\{[^}]*\}/g;
-const RANGE = /\[[^\]]*\]/g;
-const GROUPING = /\b(by|without|on|ignoring|group_left|group_right)\s*\([^)]*\)/g;
-const DASHBOARD_VARIABLE = /\$\{?\w+\}?/g;
-const NUMBER = /(?<![\w:])\d[\d.]*(e\d+)?/g;
-const IDENTIFIER = /[a-zA-Z_:][\w:]*/g;
-
-/** The metric names an expression reads: what is left once labels, ranges and numbers are gone. */
-export function metricNames(expr: string): string[] {
-  let bare = expr;
-  for (const noise of [QUOTED, LABEL_SET, RANGE, GROUPING, DASHBOARD_VARIABLE, NUMBER]) {
-    bare = bare.replace(noise, '');
+  const scaledObjects = loadAll(read(file)) as ScaledObject[];
+  const queries: Query[] = [];
+  for (const scaledObject of scaledObjects) {
+    for (const trigger of scaledObject.spec?.triggers ?? []) {
+      const { query } = trigger.metadata;
+      if (query) queries.push({ where: `${file}: ${scaledObject.metadata.name}`, expr: query });
+    }
   }
-  const identifiers = bare.match(IDENTIFIER) ?? [];
-  return identifiers.filter((name) => !PROMQL_WORDS.has(name));
+  return queries;
+}
+
+export function repoQueries(): Query[] {
+  const dashboards = trackedFiles('infra/observability/dashboards').filter((file) =>
+    file.endsWith('.json')
+  );
+  const alerts = trackedFiles('infra/observability/alerts');
+  return [
+    ...dashboards.flatMap(dashboardQueries),
+    ...alerts.flatMap(alertQueries),
+    ...scalerQueries('infra/k8s/base/scaled-objects.yaml'),
+  ];
+}
+
+/** `$__rate_interval` and `${queue}` are Grafana's, not PromQL, and do not parse. */
+const GRAFANA_VARIABLE = /\$\{?\w+\}?/g;
+
+const OPERATORS: Record<string, MatchOperator> = {
+  EqlSingle: '=',
+  Neq: '!=',
+  EqlRegex: '=~',
+  NeqRegex: '!~',
+};
+
+function unquote(literal: string): string {
+  if (literal.startsWith('"')) return JSON.parse(literal);
+  return literal.slice(1, -1);
+}
+
+function matcherOf(node: SyntaxNode, expr: string): Matcher {
+  const matcher: Matcher = { label: '', op: '=', value: '' };
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    const text = expr.slice(child.from, child.to);
+    const op = OPERATORS[child.name];
+    if (child.name === 'LabelName') matcher.label = text;
+    if (child.name === 'StringLiteral') matcher.value = unquote(text);
+    if (op) matcher.op = op;
+  }
+  return matcher;
+}
+
+export function parseQuery(expr: string): ParsedQuery {
+  const promql = expr.replace(GRAFANA_VARIABLE, '5m');
+  const parsed: ParsedQuery = { parses: true, selectors: [] };
+
+  parser.parse(promql).iterate({
+    enter: (ref) => {
+      if (ref.type.isError) parsed.parses = false;
+      if (ref.name !== 'VectorSelector') return;
+
+      const metric = ref.node.getChild('Identifier');
+      const matcherList = ref.node.getChild('LabelMatchers');
+      const matchers = matcherList?.getChildren('UnquotedLabelMatcher') ?? [];
+      parsed.selectors.push({
+        metric: metric ? promql.slice(metric.from, metric.to) : '',
+        matchers: matchers.map((matcher) => matcherOf(matcher, promql)),
+      });
+    },
+  });
+
+  return parsed;
 }
