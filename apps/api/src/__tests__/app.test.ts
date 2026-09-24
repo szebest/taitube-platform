@@ -1,7 +1,7 @@
 import { Adapters } from '@vp/adapters/composition';
 import { InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { buildApp, composeApp } from '../app';
+import { composeApp } from '../app';
 
 describe('apps/api: composeApp', () => {
   it('hands routes the services and the configuration it composed', async () => {
@@ -15,7 +15,7 @@ describe('apps/api: composeApp', () => {
   });
 
   it('registers every plugin in the route table', async () => {
-    const app = await buildApp({ config: inProcessAppConfig() });
+    const app = (await composeApp({ config: inProcessAppConfig() })).app;
     await app.ready();
 
     const registered = app.printRoutes({ commonPrefix: false });
@@ -55,9 +55,11 @@ describe('apps/api: composeApp', () => {
     { origin: 'http://localhost:5173', allowed: 'http://localhost:5173' },
     { origin: 'https://evil.example', allowed: undefined },
   ])('answers CORS for $origin with $allowed', async ({ origin, allowed }) => {
-    const app = await buildApp({
-      config: inProcessAppConfig({ http: { corsOrigins: ['http://localhost:5173'] } }),
-    });
+    const app = (
+      await composeApp({
+        config: inProcessAppConfig({ http: { corsOrigins: ['http://localhost:5173'] } }),
+      })
+    ).app;
 
     const res = await app.inject({ method: 'GET', url: '/healthz', headers: { origin } });
 
@@ -66,7 +68,8 @@ describe('apps/api: composeApp', () => {
   });
 
   it('refuses a JSON body over the configured limit with 413', async () => {
-    const app = await buildApp({ config: inProcessAppConfig({ http: { bodyLimitBytes: 64 } }) });
+    const app = (await composeApp({ config: inProcessAppConfig({ http: { bodyLimitBytes: 64 } }) }))
+      .app;
 
     const res = await app.inject({
       method: 'POST',
@@ -81,10 +84,12 @@ describe('apps/api: composeApp', () => {
   });
 
   it('takes the client address from X-Forwarded-For only from a configured proxy', async () => {
-    const trusting = await buildApp({
-      config: inProcessAppConfig({ http: { trustProxy: ['127.0.0.1'] } }),
-    });
-    const untrusting = await buildApp({ config: inProcessAppConfig() });
+    const trusting = (
+      await composeApp({
+        config: inProcessAppConfig({ http: { trustProxy: ['127.0.0.1'] } }),
+      })
+    ).app;
+    const untrusting = (await composeApp({ config: inProcessAppConfig() })).app;
     for (const app of [trusting, untrusting]) {
       app.get('/ip', async (request) => ({ ip: request.ip }));
     }

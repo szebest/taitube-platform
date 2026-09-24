@@ -21,15 +21,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@vp/errors": "workspace:*",
-    "@vp/result": "workspace:*",
-    "@vp/storage": "workspace:*"
+    "@vp/result": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@vp/adapters": "workspace:*",
     "@vp/api": "workspace:*",
-    "@vp/core": "workspace:*",
     "@vp/dev-token": "workspace:*",
     "@vp/env-schema": "workspace:*",
     "@vp/testing": "workspace:*",

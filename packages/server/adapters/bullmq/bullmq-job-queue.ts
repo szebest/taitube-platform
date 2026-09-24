@@ -71,10 +71,6 @@ export class BullMqJobQueue extends JobQueue {
     }
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): QueueUnavailable => queueUnavailable(operation, cause);
-  }
-
   async checkHealth(): Promise<Result<void, QueueUnavailable>> {
     return checkBackendHealth(this.queue);
   }
@@ -91,7 +87,7 @@ export class BullMqJobQueue extends JobQueue {
     return fromPromise(async () => {
       const job = await this.queue.getJob(jobId);
       return job ? await job.getState() : undefined;
-    }, this.unavailable('getJobState'));
+    }, queueUnavailable.during('getJobState'));
   }
 
   onFailed(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void {
@@ -112,7 +108,7 @@ export class BullMqJobQueue extends JobQueue {
   ): Promise<Result<QueueJob<T>, QueueUnavailable>> {
     const added = await fromPromise(
       () => this.queue.add(name, data, toJobsOptions(options)),
-      this.unavailable('add')
+      queueUnavailable.during('add')
     );
 
     return map(added, (job) => toQueueJob<T>(job));
@@ -133,7 +129,7 @@ export class BullMqJobQueue extends JobQueue {
           stalledInterval: options?.stalledIntervalMs,
           maxStalledCount: options?.maxStalledCount,
         }),
-      this.unavailable('process')
+      queueUnavailable.during('process')
     );
 
     return map(started, (worker) => {
@@ -143,15 +139,15 @@ export class BullMqJobQueue extends JobQueue {
   }
 
   async isPaused(): Promise<Result<boolean, QueueUnavailable>> {
-    return fromPromise(() => this.queue.isPaused(), this.unavailable('isPaused'));
+    return fromPromise(() => this.queue.isPaused(), queueUnavailable.during('isPaused'));
   }
 
   async pause(): Promise<Result<void, QueueUnavailable>> {
-    return fromPromise(() => this.queue.pause(), this.unavailable('pause'));
+    return fromPromise(() => this.queue.pause(), queueUnavailable.during('pause'));
   }
 
   async resume(): Promise<Result<void, QueueUnavailable>> {
-    return fromPromise(() => this.queue.resume(), this.unavailable('resume'));
+    return fromPromise(() => this.queue.resume(), queueUnavailable.during('resume'));
   }
 
   async getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>> {
@@ -165,7 +161,7 @@ export class BullMqJobQueue extends JobQueue {
           'delayed',
           'paused' as JobType
         ),
-      this.unavailable('getJobCounts')
+      queueUnavailable.during('getJobCounts')
     );
 
     return map(counted, (counts) => ({
@@ -181,7 +177,10 @@ export class BullMqJobQueue extends JobQueue {
   async getJobs(
     types: JobType[] = ['waiting', 'active', 'completed', 'failed']
   ): Promise<Result<QueueJob<unknown>[], QueueUnavailable>> {
-    const jobs = await fromPromise(() => this.queue.getJobs(types), this.unavailable('getJobs'));
+    const jobs = await fromPromise(
+      () => this.queue.getJobs(types),
+      queueUnavailable.during('getJobs')
+    );
 
     return map(jobs, (found) => found.map((job) => toQueueJob(job)));
   }
@@ -204,14 +203,14 @@ export class BullMqJobQueue extends JobQueue {
               }
             : undefined
         ),
-      this.unavailable('upsertJobScheduler')
+      queueUnavailable.during('upsertJobScheduler')
     );
   }
 
   override async getJobSchedulers(): Promise<Result<JobSchedulerInfo[], QueueUnavailable>> {
     const schedulers = await fromPromise(
       () => this.queue.getJobSchedulers(),
-      this.unavailable('getJobSchedulers')
+      queueUnavailable.during('getJobSchedulers')
     );
 
     return map(schedulers, (found) =>
@@ -227,9 +226,9 @@ export class BullMqJobQueue extends JobQueue {
 
   async close(): Promise<Result<void, QueueUnavailable>> {
     return fromPromise(async () => {
-      // Explicitly wait for active jobs to finish within grace period (Ticket 26 / ADR-12)
+      // `close(false)` waits for active jobs; `true` would abandon them mid-commit (ADR-12).
       if (this.worker) await this.worker.close(false);
       await this.queue.close();
-    }, this.unavailable('close'));
+    }, queueUnavailable.during('close'));
   }
 }

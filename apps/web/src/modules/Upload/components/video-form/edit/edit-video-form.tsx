@@ -54,5 +54,3 @@ export const EditVideoForm = ({ isError, isLoading, defaultValues, submit }: Edi
 		</Form>
 	);
 }
-
-export default EditVideoForm;

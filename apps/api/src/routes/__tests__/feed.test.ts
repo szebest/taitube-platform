@@ -1,7 +1,7 @@
 import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../app';
+import { composeApp } from '../../app';
 
 const OWNER = '00000000-0000-7000-8000-000000000001';
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000001';
@@ -26,7 +26,7 @@ describe('public feed route', () => {
         sourceKey: `raw/${id}/source.mp4`,
       });
     }
-    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
+    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
     await app.ready();
   });
 

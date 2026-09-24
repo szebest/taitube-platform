@@ -1,9 +1,8 @@
-import { all, andThen, ignore, map, mapErr, match, unwrapOr } from '../combinators';
+import { all, andThen, ignore, map, unwrapOr } from '../combinators';
 import { type Result, err, ok } from '../result';
 
 type Boom = { readonly code: 'BOOM'; readonly at: string };
 type Gone = { readonly code: 'GONE' };
-type Failure = Boom | Gone;
 
 const boom: Boom = { code: 'BOOM', at: 'here' };
 const gone: Gone = { code: 'GONE' };
@@ -15,14 +14,6 @@ describe('@vp/result: synchronous combinators', () => {
 
   it('leaves a failure untouched when mapping the value', () => {
     expect(map(err('nope') as Result<number, string>, (n) => n * 3)).toEqual(err('nope'));
-  });
-
-  it('maps the error of a failure', () => {
-    expect(mapErr(err('nope'), (e) => e.length)).toEqual(err(4));
-  });
-
-  it('leaves a success untouched when mapping the error', () => {
-    expect(mapErr(ok(2) as Result<number, string>, (e) => e.length)).toEqual(ok(2));
   });
 
   it('chains a success into the next result', () => {
@@ -66,24 +57,6 @@ describe('@vp/result: all', () => {
 
   it('collects nothing from an empty list', () => {
     expect(all([])).toEqual(ok([]));
-  });
-});
-
-describe('@vp/result: match', () => {
-  const handlers = {
-    BOOM: (failure: Boom) => `boom at ${failure.at}`,
-    GONE: () => 'gone',
-  };
-
-  it('applies the success handler to a value', () => {
-    expect(match(ok(3) as Result<number, Failure>, (n) => `got ${n}`, handlers)).toBe('got 3');
-  });
-
-  it.each([
-    { name: 'BOOM', failure: boom as Failure, expected: 'boom at here' },
-    { name: 'GONE', failure: gone as Failure, expected: 'gone' },
-  ])('routes $name to its own handler with the narrowed payload', ({ failure, expected }) => {
-    expect(match(err(failure) as Result<number, Failure>, () => 'unused', handlers)).toBe(expected);
   });
 });
 

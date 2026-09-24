@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import ts from 'typescript';
+import { platformKeys } from './env-keys';
 import { fixtureProgram, productionProgram } from './program';
 import { ROOT, read } from './repo-files';
 
@@ -66,7 +67,7 @@ function leavesTaken(
   const open = !receiving || (receiving.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) !== 0;
   return propertiesOf(type).flatMap((property) => {
     const taken = open ? undefined : receivingProperty(checker, receiving, property.name);
-    if (!open && !taken) return [];
+    if (!(open || taken)) return [];
     return leavesTaken(
       checker,
       `${path}.${property.name}`,
@@ -181,7 +182,7 @@ describe('architecture: every declared key is read and every config leaf is cons
     const appEnv = new Set(declaredKeys(read(`${ENV_SCHEMA}app-env.ts`)));
 
     expect(
-      declaredKeys(read(`${ENV_SCHEMA}platform-env.ts`)).filter((key) => appEnv.has(key))
+      platformKeys().filter((key) => appEnv.has(key))
     ).toEqual([]);
   });
 

@@ -1,7 +1,7 @@
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { LadderEntry } from '@vp/job-contracts';
 
-export function getAvcCodecString(profile: 'main' | 'high' | string, level: string): string {
+function getAvcCodecString(profile: 'main' | 'high' | string, level: string): string {
   const profileHex = profile === 'high' ? '6400' : '4d40';
   const levelNum = Math.round(Number.parseFloat(level) * 10);
   const levelHex = levelNum.toString(16).padStart(2, '0');
@@ -23,7 +23,6 @@ export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
 
   const lines: string[] = ['#EXTM3U', '#EXT-X-VERSION:6', '#EXT-X-INDEPENDENT-SEGMENTS'];
 
-  // Sort renditions from highest resolution to lowest per HLS conventions
   const sorted = [...ladder].sort((a, b) => b.height - a.height);
 
   for (const r of sorted) {

@@ -29,7 +29,6 @@ export class InMemoryFlowProducer extends FlowProducerPort {
     let pendingChildrenCount = children.length;
     let parentFailed = false;
 
-    // 1. Add parent in 'waiting-children' state if children exist, or 'waiting' if no children
     const initialState = children.length > 0 ? 'waiting-children' : 'waiting';
     const added =
       parentQueue instanceof InMemoryJobQueue
@@ -45,14 +44,12 @@ export class InMemoryFlowProducer extends FlowProducerPort {
     if (!added.ok) return added;
     const parentJob = added.value;
 
-    // Provide getChildrenValues to parent
     parentJob.getChildrenValues = async <R = Record<string, unknown>>() => childrenValues as R;
 
     if (children.length === 0) {
       return ok({ job: parentJob, children: [] });
     }
 
-    // 2. Add each child and hook into completion / failure
     const childJobs: QueueJob<unknown>[] = [];
 
     for (const childNode of children) {

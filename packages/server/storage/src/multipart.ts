@@ -1,5 +1,3 @@
-/** S3 refuses an upload of more than 10 000 parts. */
-export const MULTIPART_MAX_PARTS = 10000;
 export const MULTIPART_URL_BATCH_SIZE = 100;
 
 /** ListObjectsV2 pages and DeleteObjects batches both stop at 1000 keys. */

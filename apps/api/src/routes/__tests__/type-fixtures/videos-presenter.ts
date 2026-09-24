@@ -9,7 +9,7 @@ type Grown = PublicVideoFailure | VideoQuarantined;
 
 declare const grown: Grown;
 
-export function rejectsAVariantTheRouteHasNotDecidedAbout(): Problem {
+function _rejectsAVariantTheRouteHasNotDecidedAbout(): Problem {
   // @ts-expect-error a rule that grew a variant no longer fits the presenter's parameter
   return presentPublicVideoFailure(grown, '/v1/videos/v1');
 }
@@ -17,9 +17,9 @@ export function rejectsAVariantTheRouteHasNotDecidedAbout(): Problem {
 /**
  * The same presenter written over the grown union: the new variant still reaches `default`, so
  * `failure` is not `never` and the file stops compiling until someone says what it looks like
- * over HTTP. That is the guarantee W6 promises, asserted by the compiler rather than at runtime.
+ * over HTTP. The exhaustiveness guarantee is asserted by the compiler rather than at runtime.
  */
-export function presentGrownVideoFailure(failure: Grown, instance: string): Problem {
+function _presentGrownVideoFailure(failure: Grown, instance: string): Problem {
   switch (failure.code) {
     case 'FORBIDDEN':
       return problemFor(publicReadFailure(failure), instance);

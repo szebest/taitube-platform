@@ -9,7 +9,7 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 `apps/worker` executes asynchronous BullMQ processing stages across the video ingestion and transcoding pipeline.
 - **Composition Root:** `apps/worker/src/runner.ts` composes one `Container` over the same `registerAdapters` the API uses, so `config.kind` is the only switch between adapter families; `composition/stages.module.ts` binds the stage's processor to its queue as a Startable.
 - **Stage Registry:** `STAGE_REGISTRY` in `registry.ts` carries each stage's worker options and its processor factory, keyed by `config.worker.stage` (`WORKER_STAGE`). Adding a stage is one registry entry.
-- **Configuration is a value:** `main.ts` calls `loadEnv()` and hands `toAppConfig()`'s result to the runner. Stages take buckets, the CDN base and ffmpeg settings from their deps; nothing below `main.ts` reads `process.env`.
+- **Configuration is a value:** `main.ts` hands `process.env` to `run` in `process.ts`, which calls `loadEnv()` on it and hands `toAppConfig()`'s result to the runner. Stages take buckets, the CDN base and ffmpeg settings from their deps; nothing below `main.ts` reads `process.env`.
 - **Collaborators are values too:** a stage gets `metrics` and `media` (the FFmpeg processes, `MediaTools` from `@vp/ffmpeg`) in `StageDeps`, and a transcode gets its progress reporter and segment uploader as factories. A spec fails a stage by handing it a `MediaTools` double, never by spying on `@vp/ffmpeg`.
 
 ---

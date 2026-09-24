@@ -1,6 +1,7 @@
 import type { FeedQuery, FeedResponse } from '@vp/api-contracts';
 import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
+import { CacheKeys } from '@vp/events';
 import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';
@@ -108,12 +109,8 @@ export class FeedService {
     };
   }
 
-  private cacheKey(variant: string): string {
-    return `taitube:feed:public:${variant}`;
-  }
-
   private async readCache(variant: string): Promise<CachedFeedPage | undefined> {
-    const raw = unwrapOr(await this.cache.get(this.cacheKey(variant)), null);
+    const raw = unwrapOr(await this.cache.get(CacheKeys.publicFeed(variant)), null);
     if (!raw) return undefined;
 
     const parsed = parseJson(raw);
@@ -122,7 +119,7 @@ export class FeedService {
 
   private async writeCache(variant: string, page: CachedFeedPage): Promise<void> {
     ignore(
-      await this.cache.set(this.cacheKey(variant), JSON.stringify(page), this.maxAgeSeconds),
+      await this.cache.set(CacheKeys.publicFeed(variant), JSON.stringify(page), this.maxAgeSeconds),
       'a cold page cache costs latency, never correctness'
     );
   }

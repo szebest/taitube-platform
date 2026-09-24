@@ -9,5 +9,3 @@ export function LoadingSpinner() {
     </span>
   );
 }
-
-export default LoadingSpinner;

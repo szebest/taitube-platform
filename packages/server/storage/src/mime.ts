@@ -3,7 +3,7 @@ export interface HeaderMapping {
   cacheControl: string;
 }
 
-export const HEADER_MAPPINGS: Record<string, HeaderMapping> = {
+const HEADER_MAPPINGS: Record<string, HeaderMapping> = {
   '.m3u8': {
     contentType: 'application/vnd.apple.mpegurl',
     cacheControl: 'public, max-age=60',

@@ -1,7 +1,7 @@
 import { VIDEO_STATUSES, VIDEO_VISIBILITIES } from '@vp/domain';
 import { z } from 'zod';
 
-export { VIDEO_STATUSES, VIDEO_VISIBILITIES };
+export { VIDEO_VISIBILITIES };
 
 export const VideoStatusSchema = z
   .enum(VIDEO_STATUSES)
@@ -9,7 +9,7 @@ export const VideoStatusSchema = z
 
 export const VideoVisibilitySchema = z.enum(VIDEO_VISIBILITIES).describe('Access visibility level');
 
-export const VideoLadderEntrySchema = z
+const VideoLadderEntrySchema = z
   .object({
     name: z.string().describe('Rendition name'),
     width: z.number().describe('Width in pixels'),
@@ -19,7 +19,7 @@ export const VideoLadderEntrySchema = z
   })
   .describe('Transcoding ladder entry');
 
-export const VideoProgressSchema = z
+const VideoProgressSchema = z
   .object({
     overall: z.number().min(0).max(100).describe('Overall encoding progress percentage 0-100'),
     byRendition: z
@@ -28,14 +28,14 @@ export const VideoProgressSchema = z
   })
   .describe('Encoding progress');
 
-export const VideoErrorSchema = z
+const VideoErrorSchema = z
   .object({
     code: z.string().describe('Machine-readable failure error code'),
     message: z.string().describe('Human-readable error details'),
   })
   .describe('Failure error details');
 
-export const RenditionViewSchema = z.object({
+const RenditionViewSchema = z.object({
   name: z.string().describe('Rendition name (e.g. 1080p, 720p, 480p)'),
   status: z.string().describe('Rendition encoding status (PENDING, RUNNING, DONE, FAILED)'),
   playlistUrl: z.string().optional().describe('URL to the rendition HLS playlist index.m3u8'),
@@ -113,11 +113,6 @@ export const VideoIdParamSchema = z.object({
   id: z.string().uuid({ message: 'Invalid video ID format' }),
 });
 
-export type VideoStatus = z.infer<typeof VideoStatusSchema>;
-export type VideoVisibility = z.infer<typeof VideoVisibilitySchema>;
-export type VideoLadderEntry = z.infer<typeof VideoLadderEntrySchema>;
-export type VideoProgress = z.infer<typeof VideoProgressSchema>;
-export type VideoRendition = z.infer<typeof RenditionViewSchema>;
 export type Video = z.infer<typeof VideoSchema>;
 export type VideoSummary = z.infer<typeof VideoSummarySchema>;
 export type VideoListResponse = z.infer<typeof VideoListResponseSchema>;

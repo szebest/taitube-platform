@@ -1,10 +1,14 @@
 import { generateFixture } from './generate-fixture';
 import { loadManifest } from './probe';
-import type { GeneratorOptions } from './types';
+import type { FixtureDefinition, FixtureManifest, GeneratorOptions } from './types';
 
-export { calculateSha256, loadManifest, probeFile } from './probe';
-export { generateFixture } from './generate-fixture';
-export { checkFixture } from './check-fixture';
+export function selectFixtures(
+  manifest: FixtureManifest,
+  options: GeneratorOptions
+): FixtureDefinition[] {
+  if (options.only) return manifest.fixtures.filter((fixture) => fixture.id === options.only);
+  return manifest.fixtures.filter((fixture) => options.includeSlow || !fixture.slow);
+}
 
 export async function generateAllFixtures(
   options: GeneratorOptions
@@ -13,15 +17,7 @@ export async function generateAllFixtures(
   const generated: string[] = [];
   const errors: string[] = [];
 
-  const targets = manifest.fixtures.filter((f) => {
-    if (options.only) {
-      return f.id === options.only;
-    }
-    if (f.slow && !options.includeSlow) {
-      return false;
-    }
-    return true;
-  });
+  const targets = selectFixtures(manifest, options);
 
   for (const fixture of targets) {
     if (!options.quiet) {

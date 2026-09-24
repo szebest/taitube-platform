@@ -39,7 +39,7 @@ export async function channelsRoutes(app: FastifyInstance): Promise<void> {
 }
 ```
 
-Register it by adding it to the `ROUTES` table in `routes/index.ts`; `buildApp` registers every entry
+Register it by adding it to the `ROUTES` table in `routes/index.ts`; `composeApp` registers every entry
 `routesFor(config.auth)` returns
 with one uniform `await app.register(plugin)`. `route-plugins.test.ts` fails on a route module that
 exports anything else or is missing from the table.

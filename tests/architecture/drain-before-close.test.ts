@@ -37,7 +37,7 @@ describe('architecture: a process drains before it closes', () => {
     );
   });
 
-  it.each(['apps/api/src/main.ts', 'apps/worker/src/main.ts'])(
+  it.each(['apps/api/src/serve.ts', 'apps/worker/src/process.ts'])(
     'shuts %s down through it',
     (file) => {
       expect(read(file)).toMatch(/shutdownOnce\(\{[\s\S]*drain: /);
@@ -46,6 +46,6 @@ describe('architecture: a process drains before it closes', () => {
 
   it('answers /readyz from the drain flag before it asks any dependency', () => {
     expect(readinessFailsFirst(read('apps/api/src/services/readiness-service.ts'))).toBe(true);
-    expect(read('apps/api/src/main.ts')).toContain('readiness.beginDrain()');
+    expect(read('apps/api/src/serve.ts')).toContain('readiness.beginDrain()');
   });
 });

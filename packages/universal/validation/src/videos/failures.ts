@@ -1,4 +1,4 @@
-import { type InvalidField, type LengthBounds, invalidField, invalidLength } from '../failures.js';
+import { type InvalidField, type LengthBounds, invalidField, invalidLength } from '../failures';
 
 export type InvalidVideoTitle = InvalidField<LengthBounds>;
 export type InvalidVideoDescription = InvalidField<{ maxLength: number }>;

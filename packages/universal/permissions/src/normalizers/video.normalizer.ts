@@ -1,4 +1,4 @@
-import type { VideoResource } from '../types/index.js';
+import type { VideoResource } from '../types/index';
 
 /**
  * Normalizes any video-like input into a canonical VideoResource.

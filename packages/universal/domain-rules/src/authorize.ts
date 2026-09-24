@@ -2,12 +2,9 @@ import { ErrorCodes, type Failure } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ok } from '@vp/result';
 
-export type Unauthorized = Failure<
-  typeof ErrorCodes.UNAUTHORIZED,
-  { action: string; subject: string }
->;
+type Unauthorized = Failure<typeof ErrorCodes.UNAUTHORIZED, { action: string; subject: string }>;
 
-export type Forbidden = Failure<
+type Forbidden = Failure<
   typeof ErrorCodes.FORBIDDEN,
   { action: string; subject: string; userId: string }
 >;

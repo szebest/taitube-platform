@@ -8,8 +8,8 @@
     "rules": {
       "recommended": true,
       "complexity": {
-        "noForEach": "warn",
-        "useSimplifiedLogicExpression": "warn",
+        "noForEach": "error",
+        "useSimplifiedLogicExpression": "error",
         "useLiteralKeys": "off"
       },
       "correctness": {
@@ -17,7 +17,7 @@
         "noUnusedImports": "error"
       },
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "error"
       },
       "style": {
         "useConst": "error"

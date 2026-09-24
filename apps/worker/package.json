@@ -17,9 +17,7 @@
     "@vp/composition": "workspace:*",
     "@vp/config": "workspace:*",
     "@vp/core": "workspace:*",
-    "@vp/db": "workspace:*",
     "@vp/domain": "workspace:*",
-    "@vp/domain-rules": "workspace:*",
     "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/events": "workspace:*",
@@ -33,7 +31,6 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.8",
     "@opentelemetry/context-async-hooks": "^2.11.0",
     "@opentelemetry/sdk-trace-base": "^2.11.0",
     "@types/node": "^24.0.0",

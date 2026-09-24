@@ -1,6 +1,6 @@
-import { getUserPermissions } from '../ability.js';
-import { toUploadSubject } from '../normalizers/index.js';
-import type { UploadResource, UserContext, VideoResource } from '../types/index.js';
+import { getUserPermissions } from '../ability';
+import { toUploadSubject } from '../normalizers/index';
+import type { UploadResource, UserContext, VideoResource } from '../types/index';
 
 export function canAccessUpload({
   user,

@@ -1,4 +1,4 @@
-import type { UploadStatus } from './status-vocabulary.js';
+import type { UploadStatus } from './status-vocabulary';
 
 export type UploadStrategy = 'single' | 'multipart';
 

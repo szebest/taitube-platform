@@ -7,10 +7,10 @@ import {
   publicVideo,
   standardUser,
   unlistedVideo,
-} from '../../__mocks__/fixtures.js';
-import type { AppAction, AppSubjects, UserContext } from '../../types/index.js';
+} from '../../__mocks__/fixtures';
+import type { AppAction, AppSubjects, UserContext } from '../../types/index';
 import { defineVideoRules } from '../video.rules';
-import { buildAbility } from './build-ability.js';
+import { buildAbility } from './build-ability';
 
 const ownPrivate = subject('Video', privateVideo);
 
@@ -42,6 +42,20 @@ describe('rules/video.rules: Declarative Video Ability Rules', () => {
       action: 'read',
       target: ownPrivate,
       expected: false,
+    },
+    {
+      scenario: 'a guest creates a video',
+      user: guestUser,
+      action: 'create',
+      target: 'Video',
+      expected: false,
+    },
+    {
+      scenario: 'a signed-in user creates a video',
+      user: standardUser,
+      action: 'create',
+      target: 'Video',
+      expected: true,
     },
     {
       scenario: 'the owner reads their private video',

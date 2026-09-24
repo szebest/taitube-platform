@@ -1,11 +1,31 @@
+import { CANONICAL_LADDER, type RenditionName } from '@vp/job-contracts';
 import { isErr } from '@vp/result';
+import {
+  masterPlaylistKey,
+  posterKey,
+  rawSourceKey,
+  renditionPlaylistKey,
+  spriteKey,
+} from '@vp/storage';
 import { createDbClient, waitForDatabase } from './client';
 import { renditions, users, videos } from './schema';
 
-export const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-export const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
-export const SEED_VIDEO_ID = '018f0000-0000-7000-8000-000000000001';
-export const OTHER_PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000002';
+const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
+const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
+const SEED_VIDEO_ID = '018f0000-0000-7000-8000-000000000001';
+const OTHER_PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000002';
+
+const SEED_USERS = [
+  { id: DEV_USER_ID, email: 'dev@video-pipeline.local', tier: 'pro' },
+  { id: OTHER_USER_ID, email: 'other@video-pipeline.local', tier: 'free' },
+] as const;
+
+const SEED_RENDITIONS: Record<RenditionName, { id: string; bytes: number; processingMs: number }> =
+  {
+    '1080p': { id: '018f0000-0000-7000-8000-000000000010', bytes: 32000000, processingMs: 8400 },
+    '720p': { id: '018f0000-0000-7000-8000-000000000011', bytes: 18000000, processingMs: 5100 },
+    '480p': { id: '018f0000-0000-7000-8000-000000000012', bytes: 9000000, processingMs: 3200 },
+  };
 
 export async function seedDatabase(connectionUrl: string): Promise<void> {
   const { db, sql } = createDbClient(connectionUrl);
@@ -15,41 +35,20 @@ export async function seedDatabase(connectionUrl: string): Promise<void> {
 
   console.log('[db:seed] Seeding database...');
 
-  await db
-    .insert(users)
-    .values({
-      id: DEV_USER_ID,
-      email: 'dev@video-pipeline.local',
-      tier: 'pro',
-    })
-    .onConflictDoUpdate({
-      target: users.id,
-      set: {
-        email: 'dev@video-pipeline.local',
-        tier: 'pro',
-      },
-    });
+  for (const { id, email, tier } of SEED_USERS) {
+    await db
+      .insert(users)
+      .values({ id, email, tier })
+      .onConflictDoUpdate({ target: users.id, set: { email, tier } });
+  }
 
-  await db
-    .insert(users)
-    .values({
-      id: OTHER_USER_ID,
-      email: 'other@video-pipeline.local',
-      tier: 'free',
-    })
-    .onConflictDoUpdate({
-      target: users.id,
-      set: {
-        email: 'other@video-pipeline.local',
-        tier: 'free',
-      },
-    });
-
-  const ladder = [
-    { name: '1080p', width: 1920, height: 1080, videoKbps: 5000, audioKbps: 128 },
-    { name: '720p', width: 1280, height: 720, videoKbps: 2800, audioKbps: 128 },
-    { name: '480p', width: 854, height: 480, videoKbps: 1400, audioKbps: 96 },
-  ];
+  const ladder = CANONICAL_LADDER.map(({ name, width, height, videoKbps, audioKbps }) => ({
+    name,
+    width,
+    height,
+    videoKbps,
+    audioKbps,
+  }));
 
   await db
     .insert(videos)
@@ -61,7 +60,7 @@ export async function seedDatabase(connectionUrl: string): Promise<void> {
         description: 'Open-source Blender movie trailer sample',
         visibility: 'public',
         status: 'READY',
-        sourceKey: `raw/${SEED_VIDEO_ID}/source.mp4`,
+        sourceKey: rawSourceKey(SEED_VIDEO_ID),
         sourceSizeBytes: 15200000,
         sourceContentType: 'video/mp4',
         durationMs: 52000,
@@ -71,9 +70,9 @@ export async function seedDatabase(connectionUrl: string): Promise<void> {
         videoCodec: 'h264',
         audioCodec: 'aac',
         ladder,
-        masterPlaylistKey: `videos/${SEED_VIDEO_ID}/hls/master.m3u8`,
-        posterKey: `videos/${SEED_VIDEO_ID}/thumbs/poster.jpg`,
-        spriteKey: `videos/${SEED_VIDEO_ID}/thumbs/sprite.jpg`,
+        masterPlaylistKey: masterPlaylistKey(SEED_VIDEO_ID),
+        posterKey: posterKey(SEED_VIDEO_ID),
+        spriteKey: spriteKey(SEED_VIDEO_ID),
         version: 1,
         readyAt: new Date(),
       },
@@ -84,7 +83,7 @@ export async function seedDatabase(connectionUrl: string): Promise<void> {
         description: 'Should not be visible to DEV_USER_ID',
         visibility: 'private',
         status: 'READY',
-        sourceKey: `raw/${OTHER_PRIVATE_VIDEO_ID}/source.mp4`,
+        sourceKey: rawSourceKey(OTHER_PRIVATE_VIDEO_ID),
         sourceSizeBytes: 10000000,
         sourceContentType: 'video/mp4',
         durationMs: 30000,
@@ -94,7 +93,7 @@ export async function seedDatabase(connectionUrl: string): Promise<void> {
         videoCodec: 'h264',
         audioCodec: 'aac',
         ladder: ladder.slice(1),
-        masterPlaylistKey: `videos/${OTHER_PRIVATE_VIDEO_ID}/hls/master.m3u8`,
+        masterPlaylistKey: masterPlaylistKey(OTHER_PRIVATE_VIDEO_ID),
         version: 1,
         readyAt: new Date(),
       },
@@ -109,50 +108,20 @@ export async function seedDatabase(connectionUrl: string): Promise<void> {
 
   await db
     .insert(renditions)
-    .values([
-      {
-        id: '018f0000-0000-7000-8000-000000000010',
+    .values(
+      CANONICAL_LADDER.map((rung) => ({
+        ...SEED_RENDITIONS[rung.name],
         videoId: SEED_VIDEO_ID,
-        name: '1080p',
-        width: 1920,
-        height: 1080,
-        videoBitrateKbps: 5000,
-        audioBitrateKbps: 128,
-        status: 'DONE',
-        playlistKey: `videos/${SEED_VIDEO_ID}/hls/1080p/index.m3u8`,
+        name: rung.name,
+        width: rung.width,
+        height: rung.height,
+        videoBitrateKbps: rung.videoKbps,
+        audioBitrateKbps: rung.audioKbps,
+        status: 'DONE' as const,
+        playlistKey: renditionPlaylistKey(SEED_VIDEO_ID, rung.name),
         segmentCount: 9,
-        bytes: 32000000,
-        processingMs: 8400,
-      },
-      {
-        id: '018f0000-0000-7000-8000-000000000011',
-        videoId: SEED_VIDEO_ID,
-        name: '720p',
-        width: 1280,
-        height: 720,
-        videoBitrateKbps: 2800,
-        audioBitrateKbps: 128,
-        status: 'DONE',
-        playlistKey: `videos/${SEED_VIDEO_ID}/hls/720p/index.m3u8`,
-        segmentCount: 9,
-        bytes: 18000000,
-        processingMs: 5100,
-      },
-      {
-        id: '018f0000-0000-7000-8000-000000000012',
-        videoId: SEED_VIDEO_ID,
-        name: '480p',
-        width: 854,
-        height: 480,
-        videoBitrateKbps: 1400,
-        audioBitrateKbps: 96,
-        status: 'DONE',
-        playlistKey: `videos/${SEED_VIDEO_ID}/hls/480p/index.m3u8`,
-        segmentCount: 9,
-        bytes: 9000000,
-        processingMs: 3200,
-      },
-    ])
+      }))
+    )
     .onConflictDoUpdate({
       target: renditions.id,
       set: {

@@ -24,5 +24,3 @@ export function VideoPage() {
 		</div>
 	)
 }
-
-export default VideoPage;

@@ -54,7 +54,7 @@ export function renderMarkdownReport(data: ReportData): string {
     table += `| ${idx + 1} | ${r.spec.name} | ${r.spec.fixtureFile} | ${r.spec.strategy} | ${r.spec.durationSec}s | ${variants} | ${r.segmentCount} | ${r.terminalStatus} | ${code} | ${playable} | ${total} | ${pass} |\n`;
   });
 
-  return `# Phase 2 Acceptance — Pipeline E2E Suite Results (Ticket 20)
+  return `# Phase 2 Acceptance — Pipeline E2E Suite Results
 
 **Date:** ${new Date().toISOString().slice(0, 10)}  
 **Overall Status:** ${data.allPassed ? `PASSED (${passedCount}/${videoCount} Videos + DLQ Replay + Abandoned Cleanup)` : `FAILED (${passedCount}/${videoCount} videos passed)`}  

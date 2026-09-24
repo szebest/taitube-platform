@@ -3,7 +3,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../app';
+import { composeApp } from '../../app';
 
 const VIEWER = '11111111-1111-7111-8111-111111111111';
 const VIDEO = '33333333-3333-7333-8333-333333333333';
@@ -29,7 +29,7 @@ describe('reaction routes', () => {
       status: 'READY',
       sourceKey: 'raw/video.mp4',
     });
-    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
+    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
     await app.ready();
   });
 

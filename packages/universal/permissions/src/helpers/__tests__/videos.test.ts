@@ -8,16 +8,9 @@ import {
   publicVideo,
   standardUser,
   unlistedVideo,
-} from '../../__mocks__/fixtures.js';
-import type { UserContext, VideoResource } from '../../types/index.js';
-import {
-  canCreateVideo,
-  canDeleteVideo,
-  canPublishVideo,
-  canReactVideo,
-  canReadVideo,
-  canUpdateVideo,
-} from '../videos.js';
+} from '../../__mocks__/fixtures';
+import type { UserContext, VideoResource } from '../../types/index';
+import { canDeleteVideo, canReactVideo, canReadVideo, canUpdateVideo } from '../videos';
 
 type VideoCase = {
   scenario: string;
@@ -83,17 +76,14 @@ describe('helpers/videos: Video Action Helpers', () => {
     });
   });
 
-  describe.each([
-    { helper: 'canCreateVideo', check: canCreateVideo },
-    { helper: 'canReactVideo', check: canReactVideo },
-  ])('$helper', ({ check }) => {
+  describe('canReactVideo', () => {
     it.each<ViewerCase>([
       { scenario: 'a guest', user: guestUser, expected: false },
       { scenario: 'a standard user', user: standardUser, expected: true },
       { scenario: 'a creator', user: creatorUser, expected: true },
       { scenario: 'an admin', user: adminUser, expected: true },
     ])('$scenario: $expected', ({ user, expected }) => {
-      expect(check({ user })).toBe(expected);
+      expect(canReactVideo({ user })).toBe(expected);
     });
   });
 
@@ -113,33 +103,6 @@ describe('helpers/videos: Video Action Helpers', () => {
       },
     ])('$scenario: $expected', ({ user, video, expected }) => {
       expect(check({ user, video })).toBe(expected);
-    });
-  });
-
-  describe('canPublishVideo', () => {
-    it.each<VideoCase>([
-      { scenario: 'a guest', user: guestUser, expected: false },
-      { scenario: 'a standard user', user: standardUser, video: publicVideo, expected: false },
-      {
-        scenario: 'a creator on their own video',
-        user: creatorUser,
-        video: publicVideo,
-        expected: true,
-      },
-      {
-        scenario: 'a creator on a foreign video',
-        user: creatorUser,
-        video: foreignVideo,
-        expected: false,
-      },
-      {
-        scenario: 'an admin on a foreign video',
-        user: adminUser,
-        video: foreignVideo,
-        expected: true,
-      },
-    ])('$scenario: $expected', ({ user, video, expected }) => {
-      expect(canPublishVideo({ user, video })).toBe(expected);
     });
   });
 });

@@ -1,7 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { categories, videos } from '../schema';
 
-describe('Categories Schema (Ticket 37)', () => {
+describe('categories schema', () => {
   it('defines categories table with correct columns and defaults', () => {
     expect(categories).toBeDefined();
     expect(categories.id).toBeDefined();

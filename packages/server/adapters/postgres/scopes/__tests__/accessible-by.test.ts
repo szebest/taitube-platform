@@ -1,6 +1,6 @@
 import { videos } from '@vp/db';
 import type { UserContext } from '@vp/permissions';
-import { accessibleBy, ownerScope, publicVisibilityScope, videoReadScope } from '../accessible-by';
+import { ownerScope, publicVisibilityScope, videoReadScope } from '../accessible-by';
 import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: accessible-by adapter', () => {
@@ -31,18 +31,6 @@ describe('adapters/postgres/scoping: accessible-by adapter', () => {
       { name: 'admin', user: admin },
     ])('imposes no restriction for a $name', ({ user }) => {
       expect(videoReadScope(user)).toBeUndefined();
-    });
-  });
-
-  describe('accessibleBy', () => {
-    it('compiles a non-default action against the given table', () => {
-      const scope = accessibleBy(standardUser, 'Video', videos, 'update');
-      expect(sqlText(scope)).toBe('"videos"."owner_id" = $1');
-      expect(sqlParams(scope)).toEqual(['usr-123']);
-    });
-
-    it('matches no rows when the action is forbidden', () => {
-      expect(sqlText(accessibleBy(guest, 'Video', videos, 'delete'))).toBe('false');
     });
   });
 

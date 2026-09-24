@@ -46,5 +46,3 @@ export const VideosContainer = memo(({
 		</>
 	)
 });
-
-export default VideosContainer;

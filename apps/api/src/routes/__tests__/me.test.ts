@@ -3,7 +3,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../app';
+import { composeApp } from '../../app';
 
 const USER = '00000000-0000-7000-8000-000000000077';
 
@@ -15,7 +15,7 @@ describe('me routes', () => {
 
   beforeAll(async () => {
     repositories = new InMemoryRepositories();
-    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
+    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
     await app.ready();
   });
 

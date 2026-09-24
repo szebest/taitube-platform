@@ -5,27 +5,23 @@ import {
   type ListPublicVideosResult,
   type ListVideosOptions,
   type NewVideoInput,
-  type ProcessingStepRecord,
-  type RenditionRecord,
   type TransitionVideoOptions,
   type UpdateVideoMetadataOptions,
-  type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
   type VideoScan,
-  type VideoScanAbsence,
   type VideoWithDetails,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { type VideoStatus, publicFeedWalkInstant } from '@vp/domain';
+import { publicFeedWalkInstant } from '@vp/domain';
 import {
   type DatabaseUnavailable,
   type VersionConflict,
   databaseUnavailable,
   versionConflict,
 } from '@vp/errors';
-import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result';
-import { type SQL, and, desc, eq, inArray, notExists, sql } from 'drizzle-orm';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
+import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import {
   drizzleWhere,
@@ -35,7 +31,8 @@ import {
   videoReadScope,
 } from '../scopes/index';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
-import type { VideoEventInsert, VideoInsert } from './types';
+import type { VideoInsert } from './types';
+import { videoScanScope } from './video-scan-query';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
 
@@ -44,14 +41,10 @@ export class PostgresVideoRepository extends VideoRepository {
     super();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.select().from(v).where(eq(v.id, id)).limit(1),
-      this.unavailable('findById')
+      databaseUnavailable.during('findById')
     );
 
     return map(rows, ([row]) => row ?? null);
@@ -62,49 +55,24 @@ export class PostgresVideoRepository extends VideoRepository {
     if (!found.ok) return found;
     if (!found.value) return ok(null);
 
-    const [renditions, steps, events] = await Promise.all([
-      fromPromise(
-        () => this.db.select().from(rn).where(eq(rn.videoId, id)),
-        this.unavailable('findWithDetails')
-      ),
-      fromPromise(
-        () => this.db.select().from(ps).where(eq(ps.videoId, id)),
-        this.unavailable('findWithDetails')
-      ),
-      fromPromise(
-        () => this.db.select().from(ve).where(eq(ve.videoId, id)),
-        this.unavailable('findWithDetails')
-      ),
-    ]);
+    const video = found.value;
+    const details = await fromPromise(
+      () =>
+        Promise.all([
+          this.db.select().from(rn).where(eq(rn.videoId, id)),
+          this.db.select().from(ps).where(eq(ps.videoId, id)),
+          this.db.select().from(ve).where(eq(ve.videoId, id)),
+        ]),
+      databaseUnavailable.during('findWithDetails')
+    );
 
-    if (!renditions.ok) return renditions;
-    if (!steps.ok) return steps;
-    if (!events.ok) return events;
-
-    return ok({
-      video: found.value,
-      renditions: renditions.value as RenditionRecord[],
-      steps: steps.value as ProcessingStepRecord[],
-      events: events.value as VideoEventRecord[],
-    });
+    return map(details, ([renditions, steps, events]) => ({ video, renditions, steps, events }));
   }
 
   async create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>> {
-    const vals = {
-      ...data,
-      visibility: data.visibility || 'private',
-      status: data.status || 'UPLOADING',
-      generation: data.generation ?? 1,
-      ...(data.fps !== undefined ? { fps: data.fps !== null ? String(data.fps) : null } : {}),
-    };
-
     const rows = await fromPromise(
-      () =>
-        this.db
-          .insert(v)
-          .values(vals as VideoInsert)
-          .returning(),
-      this.unavailable('create')
+      () => this.db.insert(v).values(data).returning(),
+      databaseUnavailable.during('create')
     );
 
     if (!rows.ok) return rows;
@@ -119,7 +87,7 @@ export class PostgresVideoRepository extends VideoRepository {
     const whereClause = drizzleWhere(
       ownerScope(v, ownerId),
       videoReadScope(viewer ?? null),
-      status ? eq(v.status, status as VideoStatus) : notDeletedScope(v),
+      status ? eq(v.status, status) : notDeletedScope(v),
       keysetBefore(v.createdAt, v.id, cursor && { sort: cursor.createdAt, tie: cursor.id })
     );
 
@@ -131,7 +99,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .where(whereClause)
           .orderBy(desc(v.createdAt), desc(v.id))
           .limit(limit + 1),
-      this.unavailable('listByOwner')
+      databaseUnavailable.during('listByOwner')
     );
   }
 
@@ -142,11 +110,8 @@ export class PostgresVideoRepository extends VideoRepository {
     const instantMs = publicFeedWalkInstant(options.cursor);
     const instant = new Date(instantMs);
 
-    const counted = await fromPromise(
-      () => this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(scope),
-      this.unavailable('listPublic')
-    );
-    if (!counted.ok) return counted;
+    const total = await this.count('listPublic', scope);
+    if (!total.ok) return total;
 
     const rows = await fromPromise(
       () =>
@@ -156,12 +121,12 @@ export class PostgresVideoRepository extends VideoRepository {
           .where(drizzleWhere(scope, publicFeedCursorScope(options, instant)))
           .orderBy(...publicFeedOrderBy(options, instant))
           .limit(options.limit + 1),
-      this.unavailable('listPublic')
+      databaseUnavailable.during('listPublic')
     );
 
     return map(rows, (found) => ({
-      items: found as VideoRecord[],
-      total: counted.value[0]?.count ?? 0,
+      items: found,
+      total: total.value,
       instant: instantMs,
     }));
   }
@@ -207,7 +172,7 @@ export class PostgresVideoRepository extends VideoRepository {
           });
           return ok(updated);
         }),
-      this.unavailable('updateMetadata')
+      databaseUnavailable.during('updateMetadata')
     );
 
     return committed.ok ? committed.value : committed;
@@ -215,16 +180,12 @@ export class PostgresVideoRepository extends VideoRepository {
 
   async transition(options: TransitionVideoOptions): Promise<Result<boolean, DatabaseUnavailable>> {
     const { videoId, from, to, patch = {}, eventType, eventPayload = {}, traceId } = options;
-    const effectiveEventType = eventType || `video.${to.toLowerCase()}`;
-    const activeSpan = trace.getActiveSpan();
-    const effectiveTraceId = traceId || (activeSpan ? activeSpan.spanContext().traceId : null);
+    const effectiveTraceId = traceId || trace.getActiveSpan()?.spanContext().traceId || null;
 
-    return await fromPromise(
+    return fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          const statusCond = Array.isArray(from)
-            ? inArray(v.status, from as VideoStatus[])
-            : eq(v.status, from as VideoStatus);
+          const statusCond = Array.isArray(from) ? inArray(v.status, from) : eq(v.status, from);
 
           const rows = await tx
             .update(v)
@@ -241,11 +202,11 @@ export class PostgresVideoRepository extends VideoRepository {
 
           await tx.insert(ve).values({
             videoId,
-            type: effectiveEventType,
+            type: eventType || `video.${to.toLowerCase()}`,
             payload: eventPayload,
             traceId: effectiveTraceId,
             createdAt: new Date(),
-          } as VideoEventInsert);
+          });
 
           if (options.outbox) {
             await tx.insert(schema.outbox).values({
@@ -259,61 +220,23 @@ export class PostgresVideoRepository extends VideoRepository {
 
           return true;
         }),
-      this.unavailable('transition')
+      databaseUnavailable.during('transition')
     );
-  }
-
-  private absenceScope(absence: VideoScanAbsence): SQL {
-    switch (absence.type) {
-      case 'step':
-        return notExists(
-          this.db
-            .select({ present: sql`1` })
-            .from(ps)
-            .where(and(eq(ps.videoId, v.id), eq(ps.step, absence.step)))
-        );
-      case 'event':
-        return notExists(
-          this.db
-            .select({ present: sql`1` })
-            .from(ve)
-            .where(
-              drizzleWhere(
-                eq(ve.videoId, v.id),
-                eq(ve.type, absence.event),
-                absence.forCurrentGeneration
-                  ? sql`(${ve.payload}->>'generation')::int >= ${v.generation}`
-                  : undefined
-              )
-            )
-        );
-      default:
-        return assertNever(absence, 'VideoScanAbsence');
-    }
   }
 
   async scan(filter: VideoScan): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
-    const { status, idleFor, minGeneration, without, limit = DEFAULT_VIDEO_SCAN_LIMIT } = filter;
-    const whereClause = drizzleWhere(
-      eq(v.status, status as VideoStatus),
-      idleFor &&
-        sql`COALESCE(${v[idleFor.since]}, ${v.updatedAt}) < ${new Date(Date.now() - idleFor.ms)}`,
-      minGeneration !== undefined ? sql`${v.generation} >= ${minGeneration}` : undefined,
-      without && this.absenceScope(without)
-    );
-
     const rows = await fromPromise(
       () =>
         this.db
           .select()
           .from(v)
-          .where(whereClause)
+          .where(videoScanScope(filter, new Date()))
           .for('update', { skipLocked: true })
-          .limit(limit),
-      this.unavailable('scan')
+          .limit(filter.limit ?? DEFAULT_VIDEO_SCAN_LIMIT),
+      databaseUnavailable.during('scan')
     );
 
-    return map(rows, (found) => found as VideoRecord[]);
+    return rows;
   }
 
   async hardDelete(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
@@ -323,24 +246,31 @@ export class PostgresVideoRepository extends VideoRepository {
           .delete(v)
           .where(and(eq(v.id, id), eq(v.status, 'DELETED')))
           .returning({ id: v.id }),
-      this.unavailable('hardDelete')
+      databaseUnavailable.during('hardDelete')
     );
 
     return map(rows, (found) => found.length > 0);
   }
 
   async countInFlightByOwner(ownerId: string): Promise<Result<number, DatabaseUnavailable>> {
-    const whereClause = drizzleWhere(
-      ownerScope(v, ownerId),
-      inArray(v.status, ['PROBING', 'PROCESSING']),
-      notDeletedScope(v)
+    return this.count(
+      'countInFlightByOwner',
+      drizzleWhere(
+        ownerScope(v, ownerId),
+        inArray(v.status, ['PROBING', 'PROCESSING']),
+        notDeletedScope(v)
+      )
     );
+  }
 
+  private async count(
+    operation: string,
+    where: SQL | undefined
+  ): Promise<Result<number, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      () => this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(whereClause),
-      this.unavailable('countInFlightByOwner')
+      () => this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(where),
+      databaseUnavailable.during(operation)
     );
-
     return map(rows, ([row]) => row?.count ?? 0);
   }
 
@@ -351,16 +281,10 @@ export class PostgresVideoRepository extends VideoRepository {
           .select({ status: v.status, count: sql<number>`count(*)::int` })
           .from(v)
           .groupBy(v.status),
-      this.unavailable('countByStatus')
+      databaseUnavailable.during('countByStatus')
     );
 
-    return map(rows, (found) => {
-      const result: Record<string, number> = {};
-      for (const row of found) {
-        result[row.status] = row.count;
-      }
-      return result;
-    });
+    return map(rows, (found) => Object.fromEntries(found.map((row) => [row.status, row.count])));
   }
 
   async updateReactionCounters(
@@ -374,7 +298,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .update(v)
           .set({ likesCount, dislikesCount, updatedAt: new Date() })
           .where(eq(v.id, videoId)),
-      this.unavailable('updateReactionCounters')
+      databaseUnavailable.during('updateReactionCounters')
     );
 
     return map(updated, () => undefined);

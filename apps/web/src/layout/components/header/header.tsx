@@ -36,5 +36,3 @@ export const Header = memo(() => {
 		</header>
 	);
 });
-
-export default Header;

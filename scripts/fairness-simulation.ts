@@ -21,11 +21,12 @@ import {
 } from '../packages/server/adapters/index';
 import { ids } from '../packages/server/job-contracts/src/index';
 import { createMetricsRegistry } from '../packages/server/observability/src/index';
+import { rawSourceKey } from '../packages/server/storage/src/index';
 import { isErr } from '../packages/universal/result/src/index';
 
 async function runFairnessSimulation() {
   console.log('================================================================');
-  console.log('VIDEO-PIPELINE: Ticket 18 Admission Control & Fairness Benchmark');
+  console.log('VIDEO-PIPELINE: Admission Control & Fairness Benchmark');
   console.log('================================================================');
 
   const repositories = new InMemoryRepositories();
@@ -135,7 +136,7 @@ async function runFairnessSimulation() {
 
   async function submitUpload(ownerId: string, index: number, priority: number) {
     const videoId = crypto.randomUUID();
-    const sourceKey = `raw/${videoId}/source.mp4`;
+    const sourceKey = rawSourceKey(videoId);
 
     const video = await repositories.videos.create({
       id: videoId,

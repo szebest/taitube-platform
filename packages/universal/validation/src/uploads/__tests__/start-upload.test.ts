@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { isOk } from '@vp/result';
 import { ALLOWED_CONTENT_TYPES } from '../allowed-content-type';
-import { DEFAULT_UPLOAD_LIMITS, type UploadLimits, validateStartUpload } from '../start-upload';
+import { type UploadLimits, validateStartUpload } from '../start-upload';
 
 const input = {
   filename: 'clip.mp4',
@@ -62,10 +62,5 @@ describe('@vp/validation: validateStartUpload', () => {
     );
 
     expect(!isOk(result) && result.error.code).toBe(ErrorCodes.UPLOAD_TOO_LARGE);
-  });
-
-  it('reads no environment of its own: the default limits are data, not a lookup', () => {
-    expect(DEFAULT_UPLOAD_LIMITS.maxBytes).toBe(5 * 1024 * 1024 * 1024);
-    expect(DEFAULT_UPLOAD_LIMITS.allowedContentTypes).toEqual(ALLOWED_CONTENT_TYPES);
   });
 });

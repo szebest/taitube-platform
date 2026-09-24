@@ -3,9 +3,9 @@ import { z } from 'zod';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const;
 
-export type HttpMethod = (typeof HTTP_METHODS)[number];
+type HttpMethod = (typeof HTTP_METHODS)[number];
 
-export type ErrorResponses = Readonly<Record<number, readonly ErrorCode[]>>;
+type ErrorResponses = Readonly<Record<number, readonly ErrorCode[]>>;
 
 export interface EndpointContract {
   readonly method: HttpMethod;

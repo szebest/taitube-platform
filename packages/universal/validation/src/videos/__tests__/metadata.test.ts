@@ -1,9 +1,5 @@
 import { isOk } from '@vp/result';
-import {
-  VIDEO_DESCRIPTION_MAX_LENGTH,
-  VIDEO_TITLE_BOUNDS,
-  validateVideoMetadata,
-} from '../metadata';
+import { validateVideoMetadata } from '../metadata';
 
 describe('@vp/validation: validateVideoMetadata', () => {
   it.each([
@@ -19,12 +15,12 @@ describe('@vp/validation: validateVideoMetadata', () => {
     { name: 'an empty title', input: { title: '' }, field: 'title' },
     {
       name: 'a title over the ceiling',
-      input: { title: 'a'.repeat(VIDEO_TITLE_BOUNDS.maxLength + 1) },
+      input: { title: 'a'.repeat(201) },
       field: 'title',
     },
     {
       name: 'a description over the ceiling',
-      input: { description: 'a'.repeat(VIDEO_DESCRIPTION_MAX_LENGTH + 1) },
+      input: { description: 'a'.repeat(5001) },
       field: 'description',
     },
   ])('rejects $name and names the field', ({ input, field }) => {

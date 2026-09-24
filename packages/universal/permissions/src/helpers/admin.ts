@@ -1,5 +1,5 @@
-import { getUserPermissions } from '../ability.js';
-import type { UserContext } from '../types/index.js';
+import { getUserPermissions } from '../ability';
+import type { UserContext } from '../types/index';
 
 export function canAccessAdmin({ user }: { user: UserContext | null }): boolean {
   if (!user) return false;

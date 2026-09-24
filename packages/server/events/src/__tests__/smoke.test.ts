@@ -1,17 +1,11 @@
 import { cacheUnavailable } from '@vp/errors';
 import { err, ok } from '@vp/result';
-import { VIDEO_WILDCARD_CHANNEL, publishVideoEvent, userChannel, videoChannel } from '../index';
+import { publishVideoEvent, userChannel, videoChannel } from '../index';
 
 const VIDEO_ID = '11111111-1111-7111-8111-111111111111';
 const USER_ID = '22222222-2222-7222-8222-222222222222';
 
 describe('@vp/events', () => {
-  it('formats Redis channels correctly', () => {
-    expect(videoChannel(VIDEO_ID)).toBe(`video:${VIDEO_ID}`);
-    expect(userChannel(USER_ID)).toBe(`user:${USER_ID}`);
-    expect(VIDEO_WILDCARD_CHANNEL).toBe('video:*');
-  });
-
   it('publishes to the video and its owner, and sums who heard it', async () => {
     const publish = vi.fn(async (_channel: string, _message: string) => ok(2));
 

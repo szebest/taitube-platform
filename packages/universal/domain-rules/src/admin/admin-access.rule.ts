@@ -1,6 +1,6 @@
 import { type UserContext, canAccessAdmin } from '@vp/permissions';
 import type { Result } from '@vp/result';
-import { type AuthorizationFailure, authorize } from '../authorize.js';
+import { type AuthorizationFailure, authorize } from '../authorize';
 
 const ADMIN_REQUIRED =
   'Authentication required: provide an admin Bearer token or valid x-admin-token header';

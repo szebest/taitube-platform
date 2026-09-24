@@ -1,4 +1,4 @@
-import { AccountSchema, UpdateChannelSchema, getAccount, updateMyChannel } from '../me';
+import { getAccount, updateMyChannel } from '../me';
 
 const channel = {
   id: '00000000-0000-7000-8000-0000000000a1',
@@ -27,12 +27,12 @@ describe('packages/api-contracts: me', () => {
   });
 
   it('nests the user and the channel inside the account payload', () => {
-    expect(AccountSchema.parse({ ...user, user, channel }).channel.handle).toBe('creator');
+    expect(getAccount.result.parse({ ...user, user, channel }).channel.handle).toBe('creator');
   });
 
   it('treats every channel edit field as optional but rejects a non-url avatar', () => {
-    expect(UpdateChannelSchema.parse({})).toEqual({});
-    expect(UpdateChannelSchema.safeParse({ avatarUrl: 'not-a-url' }).success).toBe(false);
-    expect(UpdateChannelSchema.safeParse({ avatarUrl: null }).success).toBe(true);
+    expect(updateMyChannel.body.parse({})).toEqual({});
+    expect(updateMyChannel.body.safeParse({ avatarUrl: 'not-a-url' }).success).toBe(false);
+    expect(updateMyChannel.body.safeParse({ avatarUrl: null }).success).toBe(true);
   });
 });

@@ -1,11 +1,9 @@
-import { productionSources, read, shrinkOnly } from './repo-files';
-import { ROUTES_OUTSIDE_SEND_RESULT } from './routes-outside-send-result';
+import { productionSources, read } from './repo-files';
 
 /**
- * W6: `sendResult` is the only place a route unwraps a `Result`, and a route holds no rule. The
- * acceptance criterion said "asserted by W8", and nothing asserted it: `no-domain-throw`'s roots
- * are `services/` and `stages/`, so `routes/uploads.ts` turned a validation failure into a
- * `throw new PermanentError` and `routes/admin/queues.ts` caught one, both unremarked.
+ * `sendResult` is the only place a route unwraps a `Result`, and a route holds no rule.
+ * `no-domain-throw`'s roots are `services/` and `stages/`, so without this a route could turn a
+ * failure into a throw or catch one unremarked.
  */
 const ROUTES = 'apps/api/src/routes/';
 
@@ -39,13 +37,7 @@ describe('architecture: a route hands its Result to sendResult and renders nothi
   it('finds no route turning a Result into a throw or a catch', () => {
     const offenders = routeSources().filter((file) => unwrapsOutsideSendResult(read(file)));
 
-    expect(shrinkOnly(offenders, ROUTES_OUTSIDE_SEND_RESULT).unlisted).toEqual([]);
-  });
-
-  it('keeps the exception list shrinking: no entry that no longer unwraps', () => {
-    const offenders = routeSources().filter((file) => unwrapsOutsideSendResult(read(file)));
-
-    expect(shrinkOnly(offenders, ROUTES_OUTSIDE_SEND_RESULT).stale).toEqual([]);
+    expect(offenders).toEqual([]);
   });
 
   it('finds no route importing a port, a repository or an adapter', () => {

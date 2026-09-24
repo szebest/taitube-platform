@@ -3,7 +3,7 @@ import type { VideoStatus, VideoVisibility } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
 import { masterPlaylistKey } from '@vp/storage';
 
-export interface VideoLadderEntry {
+interface VideoLadderEntry {
   name: string;
   width: number;
   height: number;
@@ -11,17 +11,17 @@ export interface VideoLadderEntry {
   audioKbps?: number;
 }
 
-export interface VideoProgressView {
+interface VideoProgressView {
   overall: number;
   byRendition: Record<string, number>;
 }
 
-export interface VideoErrorView {
+interface VideoErrorView {
   code: string;
   message: string;
 }
 
-export interface VideoRenditionView {
+interface VideoRenditionView {
   name: string;
   status: string;
   playlistUrl?: string;

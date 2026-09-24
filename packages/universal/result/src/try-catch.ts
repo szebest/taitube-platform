@@ -1,4 +1,4 @@
-import { type Result, err, ok } from './result.js';
+import { type Result, err, ok } from './result';
 
 export function tryCatch<T, E>(fn: () => T, onThrow: (cause: unknown) => E): Result<T, E> {
   try {
@@ -14,13 +14,6 @@ export function parseJson(text: string): Result<unknown, SyntaxError> {
     (): unknown => JSON.parse(text),
     (cause) => cause as SyntaxError
   );
-}
-
-export function fromThrowable<A extends readonly unknown[], T, E>(
-  fn: (...args: A) => T,
-  onThrow: (cause: unknown) => E
-): (...args: A) => Result<T, E> {
-  return (...args: A) => tryCatch(() => fn(...args), onThrow);
 }
 
 /**

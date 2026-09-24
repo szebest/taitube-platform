@@ -10,7 +10,7 @@ const LINK = /^ {8}version: link:(\S+)$/;
  * the exemption safe: it holds only on a dev edge. A *runtime* dependency on either would
  * ship, so it stays in the closure and the tier assertions get to see it.
  */
-export const BUILD_TOOLING = ['packages/server/testing', 'packages/universal/tsconfig'];
+const BUILD_TOOLING = ['packages/server/testing', 'packages/universal/tsconfig'];
 
 export type DependencyGroup = 'runtime' | 'dev';
 

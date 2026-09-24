@@ -3,9 +3,6 @@ import { read, trackedFiles } from './repo-files';
 /**
  * An I/O method that types as `Promise<T>` hides every way it can fail. `Promise<Result<T, E>>`
  * puts the narrow failure union for that port in the signature, where a caller has to answer it.
- *
- * Ticket 84 converted the last of them, so this is a flat assertion now: the shrink-only list it
- * used to read from is gone, and a port method that hides its failures is simply a failure here.
  */
 const PORT_ROOTS = [
   'packages/server/core/ports/',

@@ -1,8 +1,6 @@
 import type { VideoStatus } from '@vp/domain';
 import { ErrorCodes, type Failure } from '@vp/errors';
 
-export { type VersionConflict, versionConflict } from '@vp/errors';
-
 export type VideoNotFound = Failure<typeof ErrorCodes.VIDEO_NOT_FOUND, { videoId: string }>;
 /**
  * `readable` records what the caller could already see. A refusal on a video they cannot read has

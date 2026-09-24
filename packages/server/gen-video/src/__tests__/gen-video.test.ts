@@ -1,7 +1,9 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { checkFixture, generateFixture, loadManifest, probeFile } from '../generator';
+import { checkFixture } from '../check-fixture';
+import { generateFixture } from '../generate-fixture';
+import { loadManifest, probeFile } from '../probe';
 
 describe('tools/gen-video: deterministic fixture generator', () => {
   let tmpDir: string;
@@ -84,7 +86,6 @@ describe('tools/gen-video: deterministic fixture generator', () => {
     expect(base).toBeDefined();
     if (!base) return;
 
-    // Test with sd360 with a short duration to keep test fast
     const fixture = {
       ...base,
       durationSeconds: 2,

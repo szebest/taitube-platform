@@ -67,5 +67,3 @@ export function Sidebar() {
 		</ReactSidebar>
 	);
 }
-
-export default Sidebar;

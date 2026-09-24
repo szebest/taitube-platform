@@ -31,21 +31,6 @@ function asPayload(parsed: unknown): Result<CursorPayload, InvalidCursor> {
   return ok(parsed as CursorPayload);
 }
 
-/** Readable JSON, useful in tests and when debugging a paginated endpoint. */
-export class JsonCursorCodec implements CursorCodec {
-  encode(payload: CursorPayload): string {
-    return JSON.stringify(payload);
-  }
-
-  decode(cursor: string): Result<CursorPayload, InvalidCursor> {
-    const parsed = tryCatch(
-      () => JSON.parse(cursor) as unknown,
-      () => invalidCursor()
-    );
-    return parsed.ok ? asPayload(parsed.value) : parsed;
-  }
-}
-
 /**
  * Default wire format: base64url JSON, opaque enough that clients treat the
  * cursor as a token. Uses `btoa`/`atob` rather than `Buffer` so the codec runs

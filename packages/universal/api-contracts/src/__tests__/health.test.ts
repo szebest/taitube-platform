@@ -1,4 +1,4 @@
-import { ReadinessSchema, jwks, liveness, livenessAlias, readiness } from '../health';
+import { jwks, liveness, livenessAlias, readiness } from '../health';
 
 describe('packages/api-contracts: health', () => {
   it.each([
@@ -14,9 +14,9 @@ describe('packages/api-contracts: health', () => {
 
   it('reports a per-dependency check map on readiness', () => {
     expect(
-      ReadinessSchema.parse({ status: 'ok', checks: { postgres: 'ok', redis: 'failed' } })
+      readiness.result.parse({ status: 'ok', checks: { postgres: 'ok', redis: 'failed' } })
     ).toMatchObject({ checks: { redis: 'failed' } });
-    expect(ReadinessSchema.safeParse({ status: 'ok', checks: { redis: 'unknown' } }).success).toBe(
+    expect(readiness.result.safeParse({ status: 'ok', checks: { redis: 'unknown' } }).success).toBe(
       false
     );
   });

@@ -13,11 +13,14 @@ const PRODUCTION_SOURCE = [
   ':(exclude,glob)**/__mocks__/**',
 ];
 
-const SPEC_EXCLUSIONS = PRODUCTION_SOURCE.filter((spec) => spec.startsWith(':(exclude'));
-
-/** One directory per call: with two include globs in one pathspec list, the exclusions stop applying. */
+/** git drops every file when an exclusion does not share the include's directory prefix. */
 function productionUnder(dir: string): string[] {
-  return [`:(glob)${dir}/**/*.ts`, ...SPEC_EXCLUSIONS];
+  return [
+    `:(glob)${dir}/**/*.ts`,
+    `:(exclude,glob)${dir}/**/*.test.ts`,
+    `:(exclude,glob)${dir}/**/__tests__/**`,
+    `:(exclude,glob)${dir}/**/__mocks__/**`,
+  ];
 }
 
 type Row = readonly [name: string, pattern: RegExp, scope: readonly string[], expected: number];
@@ -56,6 +59,50 @@ const ROWS: readonly Row[] = [
   ['a throwing parse in a service', /\.parse\(/g, productionUnder('apps/api/src/services'), 0],
   ['a failure classified by its message', /message\.includes/g, PRODUCTION_SOURCE, 0],
   ['a cast through unknown', /as unknown as/g, PRODUCTION_SOURCE, 0],
+  [
+    'the part-manifest rule, called by upload-complete',
+    /\bdecidePartManifest\(/g,
+    ['apps/api/src/services/upload-complete.ts'],
+    1,
+  ],
+  [
+    'the size-match rule, called by upload-complete',
+    /\bdecideSizeMatch\(/g,
+    ['apps/api/src/services/upload-complete.ts'],
+    1,
+  ],
+  ['a problem content type', /\bPROBLEM_CONTENT_TYPE =/g, PRODUCTION_SOURCE, 1],
+  ['an adapter-local unavailable helper', /private unavailable\(/g, PRODUCTION_SOURCE, 0],
+  ['an unavailable factory', /\bfunction unavailable\b/g, PRODUCTION_SOURCE, 1],
+  [
+    'a BullMQ health body',
+    /status === 'ready'/g,
+    productionUnder('packages/server/adapters/bullmq'),
+    1,
+  ],
+  [
+    'a hand-built object key',
+    /`(raw|videos)\//g,
+    [...PRODUCTION_SOURCE, ':(exclude)packages/server/storage/src/keys.ts'],
+    0,
+  ],
+  [
+    'the rendition names, listed once in the ladder module',
+    /'1080p', '720p'/g,
+    PRODUCTION_SOURCE,
+    1,
+  ],
+  ['the dead default ladder', /\bDEFAULT_LADDER\b/g, PRODUCTION_SOURCE, 0],
+  [
+    'a doc asking for an import extension',
+    /\.js`? (extension|specifier)|carr(y|ies) `\.js`/g,
+    [
+      'ARCHITECTURE.md',
+      ':(glob)packages/universal/**/AGENTS.md',
+      ':(glob)packages/client/**/AGENTS.md',
+    ],
+    0,
+  ],
 ];
 
 function countMatches(pattern: RegExp, sources: readonly string[]): number {
@@ -75,6 +122,10 @@ describe('architecture: zero-matches', () => {
 
     expect(files.length).toBeGreaterThan(100);
     expect(files.filter((file) => /\.test\.tsx?$|__(tests|mocks)__/.test(file))).toEqual([]);
+  });
+
+  it.each(ROWS)('finds files to read for %s', (_name, _pattern, scope) => {
+    expect(trackedFiles(...scope)).not.toEqual([]);
   });
 
   it.each(ROWS)('holds %s at the expected count', (_name, pattern, scope, expected) => {

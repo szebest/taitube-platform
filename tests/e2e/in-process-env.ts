@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../apps/api/src/app';
+import { composeApp } from '../../apps/api/src/app';
 import { createWorkerRunner } from '../../apps/worker/src/runner';
 import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import {
@@ -100,7 +100,7 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
     workerClosers.push(runner.close);
   }
 
-  const app = await buildApp({
+  const app = (await composeApp({
     adapters: {
       repositories,
       storage,
@@ -114,7 +114,7 @@ export async function setupInProcessEnv(): Promise<InProcessEnv> {
       limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 },
       sse: { heartbeatMs: 2000 },
     }),
-  });
+  })).app;
 
   const reconcilerTimer = setInterval(() => {
     runReconcileUploads({

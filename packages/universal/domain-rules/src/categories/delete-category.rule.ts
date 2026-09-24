@@ -1,13 +1,13 @@
 import type { Category } from '@vp/domain';
 import { type UserContext, canManageCategory } from '@vp/permissions';
 import { type Result, andThen, err, ok } from '@vp/result';
-import { type AuthorizationFailure, authorize } from '../authorize.js';
+import { type AuthorizationFailure, authorize } from '../authorize';
 import {
   type CategoryInUse,
   type CategoryNotFound,
   categoryInUse,
   categoryNotFound,
-} from './failures.js';
+} from './failures';
 
 export interface DeleteCategoryInput {
   readonly actor: UserContext | null;

@@ -155,8 +155,8 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 
 ### Invariant 2: File Length & Sizing Discipline
 - Target size: `<= 250 lines` of code per file.
-- Strict limit: `400 lines` or `10 KB` per file, asserted by `tests/architecture/file-ceiling.test.ts`
-  against a shrink-only exception list (section 6).
+- Strict limit: `400 lines` or `10 KB` per file, specs and `tests/` included, asserted by
+  `tests/architecture/file-ceiling.test.ts` with no exception list (section 6).
 - See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
 
 ### Invariant 3: Autonomous In-Memory Test Doubles
@@ -233,7 +233,8 @@ Three mechanisms, strongest first:
    devDependencies alike. Both `pnpm build` and `pnpm typecheck` run
    it first, so a bad *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
 3. **The type system.** The matching `@vp/tsconfig` preset gives `universal` and `client` packages `lib` with
-   `DOM` and `types: []`, so a Node builtin or global is a type error. Specs run under
+   `DOM` and `types: []`, so a Node builtin or global is a type error. Relative imports are extensionless in
+   every tier; `apps/web`'s webpack resolves them through the one override in `craco.config.js`. Specs run under
    `@vp/tsconfig/spec.json` via a package's own `tsconfig.spec.json`, so importing `vitest` cannot leak
    `@types/node` back into the package's program.
 
@@ -318,9 +319,11 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 | `sdk-confinement.test.ts` | `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are imported only under `packages/server/adapters/` and `packages/server/db/`, and **declared** in no other manifest; `@vp/adapters` is imported only from a composition module | `import { Queue } from 'bullmq'` in `apps/api/src/app.ts`; `import { CaslAuthorizationAdapter } from '@vp/adapters'` in a service |
 | `lockfile-closure.test.ts` | `apps/web`'s resolved runtime closure holds no `server`-tier package — read from the lockfile, so a transitive edge is caught too | a `server` package linked into a `universal` package two hops from `apps/web` |
 | `local-first.test.ts` | no production source names an off-machine host; every uncommented `.env.example` default is local | a hardcoded `https://…onrender.com` |
-| `file-ceiling.test.ts` | no production source over 400 lines or 10 KB | 450 lines appended to a domain module |
+| `file-ceiling.test.ts` | no tracked `.ts`/`.tsx`/`.mts` file, specs and `tests/` included, over 400 lines or 10 KB; no exception list | a spec of 401 lines |
+| `no-process-comments.test.ts` | no comment and no `it`/`describe` title names a ticket, an AC, a workstream, a PR number or a numbered step, in production source, specs and `tests/` (AST); `ADR-NN` and `SDD §` stay allowed | `// AC 3` above a test, `describe('Outbox relay (Ticket 30)')` |
+| `redis-keys-owner.test.ts` | every Redis key and channel is built in `@vp/events` (`keys.ts`, `channels.ts`): no template literal starting `taitube:`, `video:` or `user:` and no `taitube:` string elsewhere in production source (AST) | `` `taitube:user:${userId}:reactions` `` in an adapter |
 | `test-correspondence.test.ts` | every production source with runtime code has `__tests__/<name>.test.ts` beside it | a new source file with no spec; a constant, a function or an abstract class with a concrete method still counts |
-| `esm-specifiers.test.ts` | relative imports in `universal` and `client` packages carry an explicit extension | an extensionless relative import |
+| `esm-specifiers.test.ts` | no relative import in any tracked TypeScript source, specs included, carries an extension (`.js`, `.mjs`, `.ts`, `.tsx`); `apps/web` resolves extensionless workspace output through `craco.config.js` | `import { ok } from './result.js'` |
 | `core-barrels.test.ts` | each `@vp/core` barrel re-exports only its own folder; no `*.port.ts` anywhere | a barrel re-exporting a sibling folder |
 | `no-domain-throw.test.ts` | no `throw`, `*OrThrow(` helper or throwing `Schema.parse(` / `JSON.parse(` in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` or `apps/worker/src/stages/`, except a `throw assertNever` | `NotifyJob.parse({...})` in a stage |
 | `validation-is-input-only.test.ts` | `@vp/validation` imports no `@vp/domain` or `@vp/core`, in source **and** in its manifest | a predicate taking a `Video` added to `@vp/validation` |
@@ -333,7 +336,7 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 | `env-key-closure.test.ts` | every key the deployables read is declared in `@vp/env-schema`; every schema key is uncommented in `.env.example`; every key compose, the k8s base and overlays (patches and `ExternalSecret` entries included), CI and `make` hand the apps is declared | an overlay patch adding `/data/HOUSEKEEPING_INTERVAL_MS` |
 | `env-confinement.test.ts` | `process.env` appears only in the `ENTRYPOINTS` and `ENV_HOMES` `entrypoints.ts` lists, over `.ts`, `.tsx`, `.mts`, `.js` and `.mjs` in `apps`, `packages`, `scripts` and `tests` | a `process.env` read in a service, or in a `.mjs` helper |
 | `no-defaulted-secrets.test.ts` | no `TOKEN\|SECRET\|PASSWORD\|ACCESS_KEY` key carries a `.default()`, no production source holds a literal fallback for one, and no schema default or production literal carries URL userinfo | `REDIS_URL: z.string().default('redis://:vp@localhost:6379/0')` |
-| `env-keys-consumed.test.ts` | every `AppEnv` key is read by `toAppConfig`, every `AppConfig` leaf is read by production source outside `env-schema` (type-aware), and no `PLATFORM_ENV` key is also an `AppEnv` key | a config leaf nothing reads |
+| `env-keys-consumed.test.ts` | every `AppEnv` key is read by `toAppConfig`, every `AppConfig` leaf is read by production source outside `env-schema` (type-aware), and no `platform-env.json` key is also an `AppEnv` key | a config leaf nothing reads |
 | `no-tuning-literals.test.ts` | no numeric `??` fallback other than `0`/`1`, destructuring default or default parameter in `apps/api/src/services`, `apps/worker/src` or `packages/server/adapters` (AST) | `const { thresholdMs = 60 * 60 * 1000 } = options` |
 | `no-test-hooks.test.ts` | no fault-injection flag or header in production source or a job contract | `request.headers['x-test-crash-after-commit']` |
 | `production-secrets.test.ts` | `kustomize build` of the base fails `loadEnv()` under production until every secret is overridden; the cloud overlay renders no Secret value, one `ExternalSecret` entry per `SECRET_KEYS` member and no local credential | `S3_ACCESS_KEY_ID: minioadmin` rendered into the cloud overlay |
@@ -352,10 +355,9 @@ The contract-drift assertion stays in `apps/api` because it has to boot the app:
 instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
 depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/api` can answer.
 
-**Two exception lists, both shrink-only.** `tests/architecture/oversized-sources.ts` and
-`untested-sources.ts` record the files that already breached the ceiling and the 1:1 test mandate when those
-rules became executable. Each assertion fails on a *new* breach **and** on a listed entry that no longer
-breaches, so the lists can only get shorter. None may be appended to.
+**One exception list left, shrink-only.** `tests/architecture/untested-sources.ts` records the sources that
+already breached the 1:1 test mandate when it became executable. The assertion fails on a *new* breach **and**
+on a listed entry that has gained its spec, so the list can only get shorter. Nothing may be appended to it.
 
 Three further mechanisms sit outside the suite:
 
@@ -363,5 +365,8 @@ Three further mechanisms sit outside the suite:
    SDK import in either composition root — is `error TS2307: Cannot find module`, not a lint warning.
 2. **`pnpm boundaries`** runs `scripts/check-boundaries.ts` plus the `CLAUDE.md` symlink check ahead of both
    `pnpm build` and `pnpm typecheck`, so a bad manifest fails before turbo starts.
-3. **Dual-runtime parity.** `pnpm test` (vitest) and `pnpm test:bun` (bun) must both pass; Biome lint reports
-   zero errors.
+3. **Dual-runtime parity.** `pnpm test` (vitest) and `pnpm test:bun` (bun) must both pass; Biome lint runs
+   with `--error-on-warnings`, and every rule it enables is at `error`.
+4. **`pnpm knip`**, twice in `lint-typecheck`: the default run (unused files, exports, types, dependencies,
+   unlisted imports) and `--production` (exports only a spec imports), both at zero, with
+   `includeEntryExports` on so a barrel export nobody imports is reported too.

@@ -1,7 +1,7 @@
 import { loadEnv } from '@vp/config';
 import { mintToken } from '@vp/dev-token';
 import { toAppConfig } from '@vp/env-schema';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 
 const token = mintToken({ sub: '00000000-0000-7000-8000-00000000b001', role: 'user', ttl: '1h' });
 
@@ -15,7 +15,7 @@ describe('apps/api: the raw bucket is the one the environment declares', () => {
         S3_BUCKET_RAW: 'vp-raw',
       })
     );
-    const app = await buildApp({ config });
+    const app = (await composeApp({ config })).app;
 
     const res = await app.inject({
       method: 'POST',

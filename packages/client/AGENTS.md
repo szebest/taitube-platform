@@ -23,7 +23,8 @@ Current member: `api-client`.
    contract. Keep that property for anything added here.
 4. **No host literals.** URLs are injected from config — a hardcoded host breaks local-first (Rule 1) and
    is asserted against.
-5. **Relative imports carry `.js`** for CRA's webpack.
+5. **Relative imports are extensionless**, as in every tier. `apps/web` resolves them through the one
+   webpack override in its `craco.config.js` (`resolve.fullySpecified: false` for workspace packages).
 6. **Declare `"sideEffects": false`**, or webpack keeps every module the frontend touches whole and an
    unused export still ships. `tests/architecture/frontend-vocabulary.test.ts` asserts it.
 

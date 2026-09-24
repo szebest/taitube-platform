@@ -2,10 +2,8 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import { storageUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
-import { uuidv7 } from 'uuidv7';
 import { runExpireRaw } from '../expire-raw';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+import { DAY_MS, seedVideo } from './housekeeping-harness';
 
 describe('housekeeping: expire-raw', () => {
   let repositories: InMemoryRepositories;
@@ -20,17 +18,10 @@ describe('housekeeping: expire-raw', () => {
     );
 
   async function seedReadyVideo(): Promise<{ videoId: string; sourceKey: string }> {
-    const videoId = uuidv7();
-    const sourceKey = `raw/${videoId}/source.mp4`;
-    expectOk(
-      await repositories.videos.create({
-        id: videoId,
-        ownerId: uuidv7(),
-        sourceKey,
-        status: 'READY',
-        readyAt: new Date(Date.now() - 10 * DAY_MS),
-      })
-    );
+    const { id: videoId, sourceKey } = await seedVideo(repositories, {
+      status: 'READY',
+      readyAt: new Date(Date.now() - 10 * DAY_MS),
+    });
     expectOk(
       await storage.uploadObject({
         bucket: 'raw',

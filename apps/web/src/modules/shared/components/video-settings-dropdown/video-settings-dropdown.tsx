@@ -63,5 +63,3 @@ export const VideoSettingsDropdown = memo(({ video, shouldRedirectOnDelete }: Vi
 		</Dropdown>
 	);
 });
-
-export default VideoSettingsDropdown;

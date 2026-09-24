@@ -34,10 +34,6 @@ export class S3MultipartStorage extends MultipartStorage {
     this.client = storage.getRawClient();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): StorageUnavailable => storageUnavailable(operation, cause);
-  }
-
   async checkHealth(): Promise<Result<void, StorageUnavailable>> {
     return ok();
   }
@@ -53,7 +49,7 @@ export class S3MultipartStorage extends MultipartStorage {
       );
       if (!res.UploadId) throw new Error('No UploadId returned from S3 createMultipartUpload');
       return res.UploadId;
-    }, this.unavailable('createMultipartUpload'));
+    }, storageUnavailable.during('createMultipartUpload'));
   }
 
   async createPresignedPartUrl(
@@ -72,7 +68,7 @@ export class S3MultipartStorage extends MultipartStorage {
           }),
           { expiresIn }
         ),
-      this.unavailable('createPresignedPartUrl')
+      storageUnavailable.during('createPresignedPartUrl')
     );
 
     return map(signed, (url) => ({
@@ -90,7 +86,7 @@ export class S3MultipartStorage extends MultipartStorage {
     const listed = await fromPromise(
       () =>
         this.client.send(new ListPartsCommand({ Bucket: bucket, Key: key, UploadId: uploadId })),
-      this.unavailable('listMultipartParts')
+      storageUnavailable.during('listMultipartParts')
     );
 
     return map(
@@ -110,7 +106,7 @@ export class S3MultipartStorage extends MultipartStorage {
   ): Promise<Result<StorageMultipartUploadInfo[], StorageUnavailable>> {
     const listed = await fromPromise(
       () => this.client.send(new ListMultipartUploadsCommand({ Bucket: bucket, Prefix: prefix })),
-      this.unavailable('listMultipartUploads')
+      storageUnavailable.during('listMultipartUploads')
     );
 
     return map(
@@ -128,7 +124,7 @@ export class S3MultipartStorage extends MultipartStorage {
     bucket: string,
     key: string,
     uploadId: string,
-    parts: StorageCompletePartInput[]
+    parts: readonly StorageCompletePartInput[]
   ): Promise<Result<void, StorageUnavailable>> {
     const sorted = [...parts].sort((a, b) => a.partNumber - b.partNumber);
     const sent = await fromPromise(
@@ -146,7 +142,7 @@ export class S3MultipartStorage extends MultipartStorage {
             },
           })
         ),
-      this.unavailable('completeMultipartUpload')
+      storageUnavailable.during('completeMultipartUpload')
     );
 
     return map(sent, () => undefined);
@@ -162,7 +158,7 @@ export class S3MultipartStorage extends MultipartStorage {
         this.client.send(
           new AbortMultipartUploadCommand({ Bucket: bucket, Key: key, UploadId: uploadId })
         ),
-      this.unavailable('abortMultipartUpload')
+      storageUnavailable.during('abortMultipartUpload')
     );
 
     return map(sent, () => undefined);

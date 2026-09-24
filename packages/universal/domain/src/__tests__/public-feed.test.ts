@@ -1,7 +1,5 @@
 import {
-  DEFAULT_PUBLIC_FEED_SORT,
   PUBLIC_FEED_INSTANT_GRANULARITY_MS,
-  PUBLIC_FEED_RANKINGS,
   type PublicFeedCandidate,
   type PublicFeedSort,
   TRENDING_GRAVITY,
@@ -11,11 +9,17 @@ import {
   publicFeedInstant,
   publicFeedRanking,
   publicFeedWalkInstant,
-  trendingScore,
-  videoAgeHours,
 } from '../public-feed';
 
 const NOW = Date.parse('2026-01-01T00:00:00.000Z');
+const HOUR_MS = 3_600_000;
+
+function trending(viewsCount: number, ageHours: number): number {
+  return publicFeedRanking('trending')(
+    video({ viewsCount, createdAt: new Date(NOW - ageHours * HOUR_MS) }),
+    NOW
+  );
+}
 
 function video(overrides: Partial<PublicFeedCandidate> = {}): PublicFeedCandidate {
   return {
@@ -62,25 +66,25 @@ describe('packages/domain: public feed rules', () => {
 
   describe('trending gravity', () => {
     it('matches the documented (views + 1) / (ageHours + 2) ** 1.5 curve', () => {
-      expect(trendingScore(9, 2)).toBeCloseTo(10 / 4 ** 1.5, 10);
+      expect(trending(9, 2)).toBeCloseTo(10 / 4 ** 1.5, 10);
       expect(TRENDING_GRAVITY).toEqual({ viewsOffset: 1, ageOffsetHours: 2, exponent: 1.5 });
     });
 
     it('decays with age and grows with views', () => {
-      expect(trendingScore(100, 1)).toBeGreaterThan(trendingScore(100, 10));
-      expect(trendingScore(100, 1)).toBeGreaterThan(trendingScore(10, 1));
+      expect(trending(100, 1)).toBeGreaterThan(trending(100, 10));
+      expect(trending(100, 1)).toBeGreaterThan(trending(10, 1));
     });
 
     it('clamps a future creation date to zero age', () => {
-      expect(videoAgeHours(new Date(NOW + 3_600_000), NOW)).toBe(0);
-      expect(videoAgeHours(new Date(NOW - 7_200_000), NOW)).toBe(2);
+      expect(trending(0, -1)).toBe(trending(0, 0));
+      expect(trending(0, 2)).toBeCloseTo(1 / 4 ** 1.5, 10);
     });
   });
 
   describe('rankings', () => {
     it('defaults to the recent ranking', () => {
-      expect(publicFeedRanking()).toBe(PUBLIC_FEED_RANKINGS[DEFAULT_PUBLIC_FEED_SORT]);
-      expect(publicFeedRanking(null)).toBe(PUBLIC_FEED_RANKINGS.recent);
+      expect(publicFeedRanking()).toBe(publicFeedRanking('recent'));
+      expect(publicFeedRanking(null)).toBe(publicFeedRanking('recent'));
     });
 
     it('ranks recent on creation time', () => {
@@ -94,19 +98,12 @@ describe('packages/domain: public feed rules', () => {
       expect(rankOf(video({ viewsCount: null }), NOW)).toBe(0);
     });
 
-    it('ranks trending on the gravity score', () => {
-      const created = new Date(NOW - 2 * 3_600_000);
-      expect(
-        publicFeedRanking('trending')(video({ viewsCount: 9, createdAt: created }), NOW)
-      ).toBeCloseTo(trendingScore(9, 2), 10);
-    });
-
     it.each<{ sort: PublicFeedSort }>([
       { sort: 'recent' },
       { sort: 'popular' },
       { sort: 'trending' },
     ])('ranks a $sort cursor by the same function as a row', ({ sort }) => {
-      const row = video({ viewsCount: 9, createdAt: new Date(NOW - 2 * 3_600_000) });
+      const row = video({ viewsCount: 9, createdAt: new Date(NOW - 2 * HOUR_MS) });
       const rankOf = publicFeedRanking(sort);
 
       expect(rankOf({ createdAt: row.createdAt, viewsCount: row.viewsCount }, NOW)).toBe(

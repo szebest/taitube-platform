@@ -50,5 +50,3 @@ export function IsVisibleContainer({ children, inView, rootMargin = '100px' }: I
 		</div>
 	);
 }
-
-export default IsVisibleContainer;

@@ -1,7 +1,12 @@
 import type { ServerResponse } from 'node:http';
 import type { CacheClient } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
-import { SseMessageEnvelope, USER_WILDCARD_CHANNEL, VIDEO_WILDCARD_CHANNEL } from '@vp/events';
+import {
+  SseMessageEnvelope,
+  USER_WILDCARD_CHANNEL,
+  VIDEO_WILDCARD_CHANNEL,
+  channelType,
+} from '@vp/events';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err, ignore, isErr, isOk, ok, parseJson, tryCatch } from '@vp/result';
 import { SseConnection } from './sse-connection';
@@ -107,8 +112,7 @@ export class SseHub {
     set.add(connection);
     this.activeConnections++;
 
-    const channelType = channel.startsWith('video:') ? 'video' : 'user';
-    this.metrics.sseConnections.inc({ channel_type: channelType });
+    this.metrics.sseConnections.inc({ channel_type: channelType(channel) });
 
     connection.once('close', () => {
       this.unregister(connection);
@@ -137,8 +141,7 @@ export class SseHub {
 
     this.activeConnections = Math.max(0, this.activeConnections - 1);
 
-    const channelType = connection.channel.startsWith('video:') ? 'video' : 'user';
-    this.metrics.sseConnections.dec({ channel_type: channelType });
+    this.metrics.sseConnections.dec({ channel_type: channelType(connection.channel) });
   }
 
   private handlePubSubMessage(channel: string, rawMessage: string): void {

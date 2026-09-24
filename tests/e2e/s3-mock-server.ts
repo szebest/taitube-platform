@@ -1,5 +1,8 @@
 import * as http from 'node:http';
-import type { InMemoryMultipartStorage, InMemoryStorageClient } from '../../packages/server/adapters/in-memory/index';
+import type {
+  InMemoryMultipartStorage,
+  InMemoryStorageClient,
+} from '../../packages/server/adapters/in-memory/index';
 import { isErr, ok, unwrapOr } from '../../packages/universal/result/src/index';
 
 export interface MockS3ServerInstance {
@@ -115,8 +118,7 @@ export async function startMockS3Server(options: {
     });
   };
 
-  storage.createPresignedGetUrl = async (params) =>
-    ok(`${baseUrl}/${params.bucket}/${params.key}`);
+  storage.createPresignedGetUrl = async (params) => ok(`${baseUrl}/${params.bucket}/${params.key}`);
 
   const close = async (): Promise<void> => {
     await new Promise<void>((resolve) => {

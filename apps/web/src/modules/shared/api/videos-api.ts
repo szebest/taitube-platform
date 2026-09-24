@@ -4,7 +4,7 @@ import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
 import { appendPage } from "./page-merge";
 
-export const videosApi = baseApi.injectEndpoints({
+const videosApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		video: builder.query<Video, string>({
 			providesTags: (_result, _error, id) => [{ type: 'VIDEO', id }],

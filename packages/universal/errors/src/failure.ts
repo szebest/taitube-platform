@@ -1,4 +1,4 @@
-import type { ErrorCode } from './error-codes.js';
+import type { ErrorCode } from './error-codes';
 
 export type Failure<C extends ErrorCode, D extends object = Record<never, never>> = Readonly<
   { code: C; message: string } & D

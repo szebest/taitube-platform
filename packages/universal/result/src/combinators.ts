@@ -1,11 +1,7 @@
-import { type Result, err, ok } from './result.js';
+import { type Result, ok } from './result';
 
 export function map<T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E> {
   return result.ok ? ok(fn(result.value)) : result;
-}
-
-export function mapErr<T, E, F>(result: Result<T, E>, fn: (error: E) => F): Result<T, F> {
-  return result.ok ? result : err(fn(result.error));
 }
 
 export function andThen<T, U, E, F>(
@@ -26,22 +22,6 @@ export function all<T, E>(results: readonly Result<T, E>[]): Result<T[], E> {
     values.push(result.value);
   }
   return ok(values);
-}
-
-export type Coded = { readonly code: string };
-
-export type FailureHandlers<E extends Coded, R> = {
-  readonly [C in E['code']]: (failure: Extract<E, { readonly code: C }>) => R;
-};
-
-export function match<T, E extends Coded, R>(
-  result: Result<T, E>,
-  onOk: (value: T) => R,
-  onFailure: FailureHandlers<E, R>
-): R {
-  if (result.ok) return onOk(result.value);
-  const handle = onFailure[result.error.code as E['code']] as (failure: E) => R;
-  return handle(result.error);
 }
 
 /** A reason held in a variable could say anything, so only a spelled-out one justifies a drop. */

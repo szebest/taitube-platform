@@ -20,7 +20,7 @@ export interface OutboxRelayOptions {
   metrics: PipelineMetrics;
 }
 
-export interface DrainOutboxResult {
+interface DrainOutboxResult {
   processedCount: number;
   successCount: number;
   failureCount: number;
@@ -55,54 +55,6 @@ async function publish(
   return map(await flowProducer.add(payload.flow), () => undefined);
 }
 
-export async function drainOutboxOnce(
-  repositories: Repositories,
-  options: {
-    getQueue?: (name: string) => JobQueue;
-    flowProducer?: FlowProducerPort;
-    batchSize: number;
-    metrics: PipelineMetrics;
-    logger?: Logger;
-  }
-): Promise<Result<DrainOutboxResult, DatabaseUnavailable>> {
-  const { getQueue, flowProducer, batchSize, metrics, logger } = options;
-  const startMs = Date.now();
-  const claimed = await repositories.outbox.claimBatch(batchSize);
-  if (isErr(claimed)) return claimed;
-
-  const items = claimed.value;
-  let successCount = 0;
-  let failureCount = 0;
-
-  for (const item of items) {
-    const published = await publish(item.payload, getQueue, flowProducer);
-
-    if (isErr(published)) {
-      failureCount += 1;
-      const recorded = await repositories.outbox.recordAttempt(item.id);
-      if (isErr(recorded)) return recorded;
-      logger?.error(
-        { id: item.id, kind: item.kind, code: published.error.code },
-        'Failed to publish outbox item'
-      );
-      continue;
-    }
-
-    const marked = await repositories.outbox.markPublished(item.id);
-    if (isErr(marked)) return marked;
-
-    successCount += 1;
-    metrics.outboxEventsPublished.inc({ kind: item.kind });
-    logger?.debug({ id: item.id, kind: item.kind }, 'Outbox item published successfully');
-  }
-
-  if (items.length > 0) {
-    metrics.outboxDrainDuration.observe((Date.now() - startMs) / MS_PER_SECOND);
-  }
-
-  return ok({ processedCount: items.length, successCount, failureCount });
-}
-
 export class OutboxRelay {
   private timer?: NodeJS.Timeout;
   private running = false;
@@ -121,13 +73,7 @@ export class OutboxRelay {
         this.draining = true;
         // A drain that could not read the outbox leaves the rows claimed for the next tick; the
         // loop must keep ticking, so its failure is reported and dropped rather than returned.
-        const drained = await drainOutboxOnce(this.options.repositories, {
-          getQueue: this.options.getQueue,
-          flowProducer: this.options.flowProducer,
-          batchSize: this.options.batchSize,
-          metrics: this.options.metrics,
-          logger: this.options.logger,
-        });
+        const drained = await this.drainOnce();
         if (isErr(drained)) {
           this.options.logger?.error({ code: drained.error.code }, 'Outbox relay loop error');
         }
@@ -139,6 +85,45 @@ export class OutboxRelay {
     };
 
     loop();
+  }
+
+  async drainOnce(): Promise<Result<DrainOutboxResult, DatabaseUnavailable>> {
+    const { repositories, getQueue, flowProducer, batchSize, metrics, logger } = this.options;
+    const startMs = Date.now();
+    const claimed = await repositories.outbox.claimBatch(batchSize);
+    if (isErr(claimed)) return claimed;
+
+    const items = claimed.value;
+    let successCount = 0;
+    let failureCount = 0;
+
+    for (const item of items) {
+      const published = await publish(item.payload, getQueue, flowProducer);
+
+      if (isErr(published)) {
+        failureCount += 1;
+        const recorded = await repositories.outbox.recordAttempt(item.id);
+        if (isErr(recorded)) return recorded;
+        logger?.error(
+          { id: item.id, kind: item.kind, code: published.error.code },
+          'Failed to publish outbox item'
+        );
+        continue;
+      }
+
+      const marked = await repositories.outbox.markPublished(item.id);
+      if (isErr(marked)) return marked;
+
+      successCount += 1;
+      metrics.outboxEventsPublished.inc({ kind: item.kind });
+      logger?.debug({ id: item.id, kind: item.kind }, 'Outbox item published successfully');
+    }
+
+    if (items.length > 0) {
+      metrics.outboxDrainDuration.observe((Date.now() - startMs) / MS_PER_SECOND);
+    }
+
+    return ok({ processedCount: items.length, successCount, failureCount });
   }
 
   isRunning(): boolean {

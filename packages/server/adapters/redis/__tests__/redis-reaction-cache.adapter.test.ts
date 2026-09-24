@@ -1,5 +1,5 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import type { ReactionCounts } from '@vp/domain';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';

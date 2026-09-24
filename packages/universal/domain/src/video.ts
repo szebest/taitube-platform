@@ -1,4 +1,4 @@
-import type { VideoStatus, VideoVisibility } from './status-vocabulary.js';
+import type { VideoStatus, VideoVisibility } from './status-vocabulary';
 
 /**
  * The canonical video entity. `@vp/core`'s `VideoRecord` aliases this rather than restating it,

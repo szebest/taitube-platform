@@ -20,10 +20,6 @@ export class PostgresDlqRepository extends DlqRepository {
     super();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async create(entry: NewDlqEntryInput): Promise<Result<DlqEntryRecord, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
@@ -52,7 +48,7 @@ export class PostgresDlqRepository extends DlqRepository {
             },
           })
           .returning(),
-      this.unavailable('create')
+      databaseUnavailable.during('create')
     );
 
     if (!rows.ok) return rows;
@@ -63,7 +59,7 @@ export class PostgresDlqRepository extends DlqRepository {
   async findById(id: string): Promise<Result<DlqEntryRecord | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.select().from(dlq).where(eq(dlq.id, id)).limit(1),
-      this.unavailable('findById')
+      databaseUnavailable.during('findById')
     );
 
     return map(rows, ([row]) => row ?? null);
@@ -90,7 +86,7 @@ export class PostgresDlqRepository extends DlqRepository {
           )
           .orderBy(desc(dlq.createdAt), desc(dlq.id))
           .limit(limit + 1),
-      this.unavailable('list')
+      databaseUnavailable.during('list')
     );
 
     return map(rows, (found) => found as DlqEntryRecord[]);
@@ -110,7 +106,7 @@ export class PostgresDlqRepository extends DlqRepository {
     if (!outbox) {
       const rows = await fromPromise(
         () => this.db.update(dlq).set(updateData).where(eq(dlq.id, id)).returning(),
-        this.unavailable('updateStatus')
+        databaseUnavailable.during('updateStatus')
       );
 
       return map(rows, ([row]) => row ?? null);
@@ -131,7 +127,7 @@ export class PostgresDlqRepository extends DlqRepository {
 
           return rows[0] ?? null;
         }),
-      this.unavailable('updateStatus')
+      databaseUnavailable.during('updateStatus')
     );
 
     return committed;

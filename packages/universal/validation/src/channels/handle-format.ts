@@ -1,13 +1,13 @@
 import { type Result, err, ok } from '@vp/result';
-import { type InvalidHandleFormat, invalidHandleFormat } from './failures.js';
+import { type InvalidHandleFormat, invalidHandleFormat } from './failures';
 
 const HANDLE_REGEX = /^[a-zA-Z0-9_.-]{3,30}$/;
 
-export const HANDLE_MIN_LENGTH = 3;
-export const HANDLE_MAX_LENGTH = 30;
+const HANDLE_MIN_LENGTH = 3;
+const HANDLE_MAX_LENGTH = 30;
 
 /** How many suffixed handles a caller may try before giving up on a collision run. */
-export const HANDLE_CANDIDATE_ATTEMPTS = 1000;
+const HANDLE_CANDIDATE_ATTEMPTS = 1000;
 
 const RESERVED_HANDLES: ReadonlySet<string> = new Set([
   'admin',
@@ -48,17 +48,12 @@ const RESERVED_HANDLES: ReadonlySet<string> = new Set([
 
 const BOUNDS = { minLength: HANDLE_MIN_LENGTH, maxLength: HANDLE_MAX_LENGTH };
 
-export function isValidHandleFormat(handle: string): boolean {
+function isValidHandleFormat(handle: string): boolean {
   return HANDLE_REGEX.test(handle);
 }
 
 export function isReservedHandle(handle: string): boolean {
   return RESERVED_HANDLES.has(handle.toLowerCase());
-}
-
-export function normalizeHandle(handle: string): string {
-  const clean = handle.startsWith('@') ? handle.slice(1) : handle;
-  return clean.toLowerCase().trim();
 }
 
 /**
@@ -68,7 +63,7 @@ export function normalizeHandle(handle: string): string {
  */
 export function validateHandle(handle: string): Result<string, InvalidHandleFormat> {
   return isValidHandleFormat(handle)
-    ? ok(normalizeHandle(handle))
+    ? ok(handle.toLowerCase())
     : err(invalidHandleFormat(handle, BOUNDS));
 }
 
@@ -98,7 +93,7 @@ function handleDiscriminator(sub: string): string {
 /**
  * Handles a new channel may claim, most desirable first: the identity's own name, then the same
  * name disambiguated by part of the subject, then numbered variants. Every candidate already
- * satisfies `isValidHandleFormat` and is not reserved, so a caller only has to test availability.
+ * satisfies `validateHandle` and is not reserved, so a caller only has to test availability.
  */
 export function* handleCandidates(email: string, sub: string): Generator<string> {
   const base = handleBase(email, sub);

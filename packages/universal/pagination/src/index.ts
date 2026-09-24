@@ -1,2 +1,2 @@
-export * from './cursor-codec.js';
-export * from './pagination.js';
+export * from './cursor-codec';
+export * from './pagination';

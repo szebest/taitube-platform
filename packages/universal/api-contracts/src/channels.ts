@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint.js';
+import { defineEndpoint } from './endpoint';
 
 export const ChannelSchema = z.object({
   id: z.string().uuid(),
@@ -19,7 +19,7 @@ export const ChannelIdParamSchema = z.object({
   id: z.string().uuid({ message: 'Invalid channel ID format' }),
 });
 
-export const ChannelHandleParamSchema = z.object({
+const ChannelHandleParamSchema = z.object({
   idOrHandle: z.string().min(1),
 });
 
@@ -41,4 +41,3 @@ export const getChannel = defineEndpoint({
 });
 
 export type Channel = z.infer<typeof ChannelSchema>;
-export type ChannelIdParam = z.infer<typeof ChannelIdParamSchema>;

@@ -3,7 +3,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../app';
+import { composeApp } from '../../app';
 
 const CREATOR = '11111111-1111-7111-8111-111111111111';
 const CHANNEL = '22222222-2222-7222-8222-222222222222';
@@ -36,7 +36,7 @@ describe('subscription routes', () => {
       handle: 'creator1',
       displayName: 'Creator One',
     });
-    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
+    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
     await app.ready();
   });
 

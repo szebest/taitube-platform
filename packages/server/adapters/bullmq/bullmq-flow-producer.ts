@@ -26,19 +26,18 @@ export class BullMqFlowProducer extends FlowProducerPort {
     }
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): QueueUnavailable => queueUnavailable(operation, cause);
-  }
-
   async checkHealth(): Promise<Result<void, QueueUnavailable>> {
     return checkBackendHealth(this.producer);
   }
 
   async add<T = unknown>(node: FlowJobNode<T>): Promise<Result<unknown, QueueUnavailable>> {
-    return fromPromise(() => this.producer.add(toFlowJobNode(node)), this.unavailable('add'));
+    return fromPromise(
+      () => this.producer.add(toFlowJobNode(node)),
+      queueUnavailable.during('add')
+    );
   }
 
   async close(): Promise<Result<void, QueueUnavailable>> {
-    return fromPromise(() => this.producer.close(), this.unavailable('close'));
+    return fromPromise(() => this.producer.close(), queueUnavailable.during('close'));
   }
 }

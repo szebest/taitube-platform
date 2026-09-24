@@ -21,7 +21,7 @@ export interface RepositoriesSubject {
 
 export type MakeRepositoriesSubject = () => Promise<RepositoriesSubject>;
 
-export async function inMemorySubject(): Promise<RepositoriesSubject> {
+async function inMemorySubject(): Promise<RepositoriesSubject> {
   const repositories = new InMemoryRepositories();
   return {
     repositories,
@@ -72,7 +72,7 @@ function withPostgresJsExecuteShape(db: PgliteDatabase<typeof schema>): void {
   });
 }
 
-export async function pgliteSubject(): Promise<RepositoriesSubject> {
+async function pgliteSubject(): Promise<RepositoriesSubject> {
   const client = new PGlite();
   const db = drizzle(client, { schema });
   await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });

@@ -38,17 +38,3 @@ export const stagePolicies = {
     backoff: { type: 'fixed', delay: 60000 },
   },
 } as const;
-
-export function calculateBackoffDelay(
-  backoff: { type: string; delay: number; jitter?: number },
-  attemptsMade: number
-): { minDelay: number; maxDelay: number; delay: number } {
-  if (backoff.type === 'fixed') {
-    return { minDelay: backoff.delay, maxDelay: backoff.delay, delay: backoff.delay };
-  }
-  const jitter = backoff.jitter ?? 0;
-  const maxDelay = Math.round(2 ** (attemptsMade - 1) * backoff.delay);
-  const minDelay = jitter > 0 ? Math.round(maxDelay * (1 - jitter)) : maxDelay;
-  const delay = jitter > 0 ? Math.floor(Math.random() * maxDelay * jitter + minDelay) : maxDelay;
-  return { minDelay, maxDelay, delay };
-}

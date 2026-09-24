@@ -1,5 +1,5 @@
 import { AbilityBuilder, createMongoAbility } from '@casl/ability';
-import type { AppAbility, UserContext } from '../../types/index.js';
+import type { AppAbility, UserContext } from '../../types/index';
 
 type DefineRules = (user: UserContext | null, builder: AbilityBuilder<AppAbility>) => void;
 

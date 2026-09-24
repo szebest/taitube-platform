@@ -1,4 +1,4 @@
-import { FEED_SORTS, FeedQuerySchema, getFeed } from '../feed';
+import { getFeed } from '../feed';
 
 describe('packages/api-contracts: feed', () => {
   it('is an anonymous GET /v1/feed', () => {
@@ -11,15 +11,15 @@ describe('packages/api-contracts: feed', () => {
   });
 
   it('defaults sort to recent and limit to 20', () => {
-    expect(FeedQuerySchema.parse({})).toEqual({ sort: 'recent', limit: 20 });
+    expect(getFeed.query.parse({})).toEqual({ sort: 'recent', limit: 20 });
   });
 
-  it.each(FEED_SORTS)('accepts sort=%s', (sort) => {
-    expect(FeedQuerySchema.parse({ sort }).sort).toBe(sort);
+  it.each(['recent', 'popular', 'trending'])('accepts sort=%s', (sort) => {
+    expect(getFeed.query.parse({ sort }).sort).toBe(sort);
   });
 
   it('rejects an unknown sort and a non-uuid category', () => {
-    expect(FeedQuerySchema.safeParse({ sort: 'oldest' }).success).toBe(false);
-    expect(FeedQuerySchema.safeParse({ categoryId: 'games' }).success).toBe(false);
+    expect(getFeed.query.safeParse({ sort: 'oldest' }).success).toBe(false);
+    expect(getFeed.query.safeParse({ categoryId: 'games' }).success).toBe(false);
   });
 });

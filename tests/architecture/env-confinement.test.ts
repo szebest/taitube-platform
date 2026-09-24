@@ -12,7 +12,7 @@ function readsEnvOutsideAHome(file: string, source: string): boolean {
 function scannedSources(): string[] {
   return trackedFiles('apps', 'packages', 'scripts', 'tests')
     .filter((file) => SCANNED.test(file))
-    .filter((file) => !isSpec(file) && !/\/__(tests|mocks)__\//.test(file));
+    .filter((file) => !(isSpec(file) || /\/__(tests|mocks)__\//.test(file)));
 }
 
 describe('architecture: process.env is read only where a process starts', () => {

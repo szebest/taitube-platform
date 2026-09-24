@@ -3,7 +3,7 @@ import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../app';
+import { composeApp } from '../../app';
 
 const USER = '00000000-0000-7000-8000-000000000001';
 const ABSENT_UPLOAD = '018f0000-0000-7000-8000-0000000000ff';
@@ -14,10 +14,12 @@ describe('upload routes', () => {
   const auth = { authorization: `Bearer ${mintToken({ sub: USER, role: 'user', ttl: '1h' })}` };
 
   beforeEach(async () => {
-    app = await buildApp({
-      adapters: { repositories: new InMemoryRepositories() },
-      config: inProcessAppConfig({ limits: { uploadRateLimitMax: 2 } }),
-    });
+    app = (
+      await composeApp({
+        adapters: { repositories: new InMemoryRepositories() },
+        config: inProcessAppConfig({ limits: { uploadRateLimitMax: 2 } }),
+      })
+    ).app;
     await app.ready();
   });
 

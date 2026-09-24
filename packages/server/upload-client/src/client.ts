@@ -33,7 +33,7 @@ export interface InitUploadResult {
   expiresAt: string;
 }
 
-export interface UploadedPartStatus {
+interface UploadedPartStatus {
   partNumber: number;
   etag: string;
   size: number;
@@ -47,7 +47,7 @@ export interface ResumeInfoResult {
   uploadedParts?: UploadedPartStatus[];
 }
 
-export class UploadAbortedError extends Error {
+class UploadAbortedError extends Error {
   constructor(message = 'Upload aborted before every part was sent') {
     super(message);
     this.name = 'UploadAbortedError';

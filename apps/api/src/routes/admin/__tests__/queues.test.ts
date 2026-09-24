@@ -5,7 +5,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../../app';
+import { composeApp } from '../../../app';
 
 const ADMIN_TOKEN = 'operator-token-for-tests';
 const USER = '00000000-0000-7000-8000-000000000001';
@@ -17,12 +17,16 @@ describe('admin queues board', () => {
   const operatorToken = mintToken({ sub: OPERATOR, role: 'admin', ttl: '1h' });
 
   beforeAll(async () => {
-    app = await buildApp({
-      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
-      adapters: {
-        queues: new Map<string, JobQueue>(QUEUES.map((name) => [name, new InMemoryJobQueue(name)])),
-      },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+        adapters: {
+          queues: new Map<string, JobQueue>(
+            QUEUES.map((name) => [name, new InMemoryJobQueue(name)])
+          ),
+        },
+      })
+    ).app;
     await app.ready();
   });
 

@@ -1,7 +1,7 @@
 import type { Channel } from '@vp/domain';
 import { type Result, andThen, err, ok } from '@vp/result';
 import { type InvalidHandleFormat, isReservedHandle, validateHandle } from '@vp/validation';
-import { type HandleTaken, handleTaken } from './failures.js';
+import { type HandleTaken, handleTaken } from './failures';
 
 export interface ClaimHandleInput {
   readonly handle: string;

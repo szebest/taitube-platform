@@ -34,11 +34,10 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "vitest": "^3.0.7",
-    "@vp/result": "workspace:*"
+    "@vp/result": "workspace:*",
+    "vitest": "^3.0.7"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.0.0",
     "@vp/tsconfig": "workspace:*",
     "js-yaml": "^5.4.1",

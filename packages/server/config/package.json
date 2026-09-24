@@ -11,8 +11,7 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./register": "./src/register.js",
-    "./loader": "./src/loader.mjs"
+    "./register": "./src/register.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

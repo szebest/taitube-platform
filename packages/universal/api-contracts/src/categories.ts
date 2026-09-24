@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint.js';
+import { defineEndpoint } from './endpoint';
 
 export const CategorySchema = z.object({
   id: z.string().uuid().describe('Category unique identifier (UUID)'),
@@ -13,7 +13,7 @@ export const CategorySchema = z.object({
   updatedAt: z.union([z.string(), z.date()]).describe('Last update timestamp'),
 });
 
-export const CategoriesListSchema = z.array(CategorySchema);
+const CategoriesListSchema = z.array(CategorySchema);
 
 export const CategoryIdParamSchema = z.object({
   id: z.string().uuid().describe('Category UUID'),
@@ -32,6 +32,4 @@ export const listCategories = defineEndpoint({
   errors: {},
 });
 
-export type Category = z.infer<typeof CategorySchema>;
 export type CategoriesList = z.infer<typeof CategoriesListSchema>;
-export type CategoryIdParam = z.infer<typeof CategoryIdParamSchema>;

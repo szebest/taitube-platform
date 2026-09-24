@@ -1,13 +1,13 @@
 import { TRENDING_GRAVITY } from '@vp/domain';
 import { sqlParams, sqlText } from '../../scopes/__tests__/sql-text';
-import {
-  publicFeedCursorScope,
-  publicFeedOrderBy,
-  publicFeedRank,
-  publicFeedScope,
-} from '../public-feed-query';
+import type { PublicFeedSort } from '@vp/domain';
+import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from '../public-feed-query';
 
 const INSTANT = new Date('2026-01-01T00:00:00.000Z');
+
+function rankOrder(sort: PublicFeedSort | undefined) {
+  return publicFeedOrderBy({ limit: 10, sort }, INSTANT)[0];
+}
 
 describe('adapters/postgres: public feed SQL query', () => {
   describe('scope', () => {
@@ -29,24 +29,24 @@ describe('adapters/postgres: public feed SQL query', () => {
 
   describe('rank expression', () => {
     it.each([
-      { sort: undefined, expected: '"videos"."created_at"' },
-      { sort: 'recent' as const, expected: '"videos"."created_at"' },
-      { sort: 'popular' as const, expected: '"videos"."views_count"' },
+      { sort: undefined, expected: '"videos"."created_at" desc' },
+      { sort: 'recent' as const, expected: '"videos"."created_at" desc' },
+      { sort: 'popular' as const, expected: '"videos"."views_count" desc' },
     ])('keys $sort on $expected', ({ sort, expected }) => {
-      expect(sqlText(publicFeedRank(sort, INSTANT))).toBe(expected);
+      expect(sqlText(rankOrder(sort))).toBe(expected);
     });
 
     it('spells the trending gravity curve out of the shared constants', () => {
       const age =
         'greatest(0, extract(epoch from ($1::timestamptz - "videos"."created_at")) / 3600.0)';
-      expect(sqlText(publicFeedRank('trending', INSTANT))).toBe(
-        `("videos"."views_count"::double precision + ${TRENDING_GRAVITY.viewsOffset}) / power(${age} + ${TRENDING_GRAVITY.ageOffsetHours}, ${TRENDING_GRAVITY.exponent})`
+      expect(sqlText(rankOrder('trending'))).toBe(
+        `("videos"."views_count"::double precision + ${TRENDING_GRAVITY.viewsOffset}) / power(${age} + ${TRENDING_GRAVITY.ageOffsetHours}, ${TRENDING_GRAVITY.exponent}) desc`
       );
-      expect(sqlParams(publicFeedRank('trending', INSTANT))).toEqual([INSTANT]);
+      expect(sqlParams(rankOrder('trending'))).toEqual([INSTANT]);
     });
 
     it('scores against the supplied instant rather than the database clock', () => {
-      expect(sqlText(publicFeedRank('trending', INSTANT))).not.toContain('now()');
+      expect(sqlText(rankOrder('trending'))).not.toContain('now()');
     });
   });
 

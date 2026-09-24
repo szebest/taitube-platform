@@ -2,8 +2,8 @@ import type { Video, VideoVisibility } from '@vp/domain';
 import { type UserContext, canUpdateVideo } from '@vp/permissions';
 import { type Result, err, isErr, map } from '@vp/result';
 import { type VideoMetadataFailure, validateVideoMetadata } from '@vp/validation';
-import { type ReadVideoFailure, videoEditForbidden } from './failures.js';
-import { decideVideoRead } from './read-video.rule.js';
+import { type ReadVideoFailure, videoEditForbidden } from './failures';
+import { decideVideoRead } from './read-video.rule';
 
 export interface VideoMetadataPatch {
   readonly title?: string | null;

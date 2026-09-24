@@ -4,5 +4,3 @@ export interface UploadResource {
   readonly userId?: string;
   readonly videoId?: string;
 }
-
-export type UploadAction = 'upload:create' | 'upload:access';

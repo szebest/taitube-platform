@@ -26,7 +26,7 @@ export * from './expire-raw';
 export * from './tmp-sweep';
 export * from './outbox-relay';
 
-export interface HousekeepingSettings {
+interface HousekeepingSettings {
   rawBucket: string;
   publicBucket: string;
   retentionDays: number;

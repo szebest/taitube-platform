@@ -1,23 +1,23 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint.js';
-import { VideoVisibilitySchema } from './video-resource.js';
+import { defineEndpoint } from './endpoint';
+import { VideoVisibilitySchema } from './video-resource';
 
-export const UPLOAD_STRATEGIES = ['single', 'multipart'] as const;
+const UPLOAD_STRATEGIES = ['single', 'multipart'] as const;
 
-export const UploadStrategySchema = z.enum(UPLOAD_STRATEGIES);
+const UploadStrategySchema = z.enum(UPLOAD_STRATEGIES);
 
-export const UploadIdParamSchema = z.object({
+const UploadIdParamSchema = z.object({
   uploadId: z.string().uuid(),
 });
 
-export const PresignedPartSchema = z.object({
+const PresignedPartSchema = z.object({
   partNumber: z.number(),
   url: z.string(),
   expiresAt: z.string(),
 });
 
-export const StartUploadSchema = z.object({
+const StartUploadSchema = z.object({
   filename: z.string().min(1).max(255),
   sizeBytes: z.number().int().min(0),
   contentType: z.string(),
@@ -27,7 +27,7 @@ export const StartUploadSchema = z.object({
   visibility: VideoVisibilitySchema.optional(),
 });
 
-export const StartedUploadSchema = z.object({
+const StartedUploadSchema = z.object({
   videoId: z.string().uuid(),
   uploadId: z.string().uuid(),
   strategy: UploadStrategySchema,
@@ -39,7 +39,7 @@ export const StartedUploadSchema = z.object({
   expiresAt: z.string(),
 });
 
-export const UploadResumeSchema = z.object({
+const UploadResumeSchema = z.object({
   status: z.string(),
   strategy: z.string(),
   partSizeBytes: z.number().nullable().optional(),
@@ -55,7 +55,7 @@ export const UploadResumeSchema = z.object({
     .optional(),
 });
 
-export const CompleteUploadSchema = z
+const CompleteUploadSchema = z
   .object({
     parts: z
       .array(
@@ -178,8 +178,5 @@ export const abortUpload = defineEndpoint({
   },
 });
 
-export type UploadStrategy = z.infer<typeof UploadStrategySchema>;
 export type StartUpload = z.infer<typeof StartUploadSchema>;
-export type StartedUpload = z.infer<typeof StartedUploadSchema>;
-export type UploadResume = z.infer<typeof UploadResumeSchema>;
 export type PresignedPart = z.infer<typeof PresignedPartSchema>;

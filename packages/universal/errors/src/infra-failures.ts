@@ -1,5 +1,5 @@
-import { ErrorCodes } from './error-codes.js';
-import type { Failure } from './failure.js';
+import { ErrorCodes } from './error-codes';
+import type { Failure } from './failure';
 
 type UnavailableCode =
   | typeof ErrorCodes.DATABASE_UNAVAILABLE
@@ -20,12 +20,20 @@ export type InfraFailure =
   | QueueUnavailable
   | StorageUnavailable;
 
-function unavailable<C extends UnavailableCode>(code: C, subject: string) {
-  return (operation: string, cause?: unknown): Unavailable<C> => ({
+interface UnavailableFactory<C extends UnavailableCode> {
+  (operation: string, cause?: unknown): Unavailable<C>;
+  during(operation: string): (cause: unknown) => Unavailable<C>;
+}
+
+function unavailable<C extends UnavailableCode>(code: C, subject: string): UnavailableFactory<C> {
+  const build = (operation: string, cause?: unknown): Unavailable<C> => ({
     code,
     message: `${subject} unavailable`,
     operation,
     ...(cause === undefined ? {} : { cause }),
+  });
+  return Object.assign(build, {
+    during: (operation: string) => (cause: unknown) => build(operation, cause),
   });
 }
 

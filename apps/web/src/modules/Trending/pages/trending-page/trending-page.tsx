@@ -29,5 +29,3 @@ export function TrendingPage() {
 		</div>
 	)
 }
-
-export default TrendingPage;

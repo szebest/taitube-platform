@@ -7,7 +7,7 @@ import {
   cannotSubscribeToSelf,
   channelForbidden,
   channelNotFound,
-} from './failures.js';
+} from './failures';
 
 export interface SubscribeInput {
   readonly subscriber: UserContext | null;

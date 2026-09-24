@@ -3,7 +3,6 @@ import {
   type Tracer,
   context,
   defaultTextMapGetter,
-  defaultTextMapSetter,
   propagation,
   trace,
 } from '@opentelemetry/api';
@@ -147,14 +146,6 @@ export function extractContextFromTraceparent(
 ): Context {
   if (!traceparent) return parentCtx;
   return new W3CTraceContextPropagator().extract(parentCtx, { traceparent }, defaultTextMapGetter);
-}
-
-export function injectTraceparent(
-  carrier: Record<string, unknown> = {},
-  ctx: Context = context.active()
-): Record<string, unknown> {
-  new W3CTraceContextPropagator().inject(ctx, carrier, defaultTextMapSetter);
-  return carrier;
 }
 
 /**

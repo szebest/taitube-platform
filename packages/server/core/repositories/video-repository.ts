@@ -20,8 +20,8 @@ export type VideoRecord = Video;
 export interface NewVideoInput {
   id: string;
   ownerId: string;
-  title?: string | null;
-  description?: string | null;
+  title?: string;
+  description?: string;
   visibility?: VideoVisibility;
   status?: VideoStatus;
   sourceKey: string;
@@ -34,10 +34,6 @@ export interface NewVideoInput {
   masterPlaylistKey?: string | null;
   posterKey?: string | null;
   spriteKey?: string | null;
-  playbackUrl?: string | null;
-  posterUrl?: string | null;
-  spriteUrl?: string | null;
-  spriteVttUrl?: string | null;
   viewsCount?: number;
   likesCount?: number;
   dislikesCount?: number;
@@ -101,7 +97,7 @@ export interface TransitionVideoOptions {
   outbox?: NewOutboxInput;
 }
 
-export type VideoIdleClock = 'updatedAt' | 'deletedAt' | 'readyAt';
+type VideoIdleClock = 'updatedAt' | 'deletedAt' | 'readyAt';
 
 export type VideoScanAbsence =
   | { type: 'step'; step: string }

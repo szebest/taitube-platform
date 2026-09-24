@@ -1,11 +1,4 @@
-import {
-  createSubject,
-  toChannelSubject,
-  toCommentSubject,
-  toUploadSubject,
-  toVideoSubject,
-} from '../subject-wrapper.js';
-import { normalizeVideoResource } from '../video.normalizer';
+import { toUploadSubject, toVideoSubject } from '../subject-wrapper';
 
 describe('normalizers/subject-wrapper: CASL Subject Wrappers', () => {
   it.each<{
@@ -19,16 +12,6 @@ describe('normalizers/subject-wrapper: CASL Subject Wrappers', () => {
       expected: { ownerId: 'u1', visibility: 'public' },
     },
     {
-      scenario: 'toChannelSubject resolves ownerId from userId',
-      build: () => toChannelSubject({ id: 'c1', userId: 'u1' }),
-      expected: { ownerId: 'u1' },
-    },
-    {
-      scenario: 'toCommentSubject takes the video owner passed alongside',
-      build: () => toCommentSubject({ id: 'cm1' }, 'video-owner'),
-      expected: { videoOwnerId: 'video-owner' },
-    },
-    {
       scenario: 'toUploadSubject falls back to the owner of the video',
       build: () => toUploadSubject(null, { ownerId: 'owner-1' }),
       expected: { ownerId: 'owner-1' },
@@ -37,7 +20,7 @@ describe('normalizers/subject-wrapper: CASL Subject Wrappers', () => {
     expect(build()).toMatchObject(expected);
   });
 
-  it('createSubject returns undefined when the resource normalized away', () => {
-    expect(createSubject('Video', normalizeVideoResource(null))).toBeUndefined();
+  it('returns no subject when the resource normalized away', () => {
+    expect(toVideoSubject(null)).toBeUndefined();
   });
 });

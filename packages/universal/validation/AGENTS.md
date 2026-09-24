@@ -27,8 +27,7 @@ fixture that proves it: a `client`-tier compilation unit importing and calling t
   source **or** the manifest. That is the machine-checked form of "input only".
 - **Limits are arguments, not lookups.** `validateStartUpload(input, limits)`. Nothing here reads
   `MAX_UPLOAD_BYTES`, an env var, a config module or a hardcoded ceiling, because the backend takes
-  its limits from env and the browser from a config endpoint. `DEFAULT_UPLOAD_LIMITS` is data a
-  caller may pass, not a value a rule reads.
+  its limits from env and the browser from a config endpoint.
 - **Pure.** No `await`, no port, no `Date.now()` that was not passed in, no logging, no `throw`.
 - **Failures are `InputFailure`**, so they name a `field` and repeat only what the caller sent.
   `problemFor` projects that into `Problem.errors`; nothing here decides how a failure is shown.

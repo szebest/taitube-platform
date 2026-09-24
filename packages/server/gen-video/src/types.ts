@@ -1,4 +1,4 @@
-export type FixtureCategory = 'standard' | 'hostile';
+type FixtureCategory = 'standard' | 'hostile';
 
 export interface FixtureDefinition {
   id: string;
@@ -29,7 +29,7 @@ export interface GeneratorOptions {
   quiet?: boolean;
 }
 
-export interface ProbeStream {
+interface ProbeStream {
   codec_type: 'video' | 'audio';
   codec_name?: string;
   width?: number;
@@ -40,7 +40,7 @@ export interface ProbeStream {
   side_data_list?: Array<{ rotation?: number }>;
 }
 
-export interface ProbeFormat {
+interface ProbeFormat {
   filename?: string;
   format_name?: string;
   duration?: string;

@@ -1,457 +1,188 @@
-import * as http from 'node:http';
-import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
-import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../app';
+import { type FakeS3, startFakeS3 } from './fake-s3';
+import { bearer, buildInMemoryApp } from './in-memory-app';
 import { MockProbeJobQueue } from './mock-probe-queue';
+import { completeUpload, postUpload } from './upload-requests';
 
-describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18, 19, 20)', () => {
+const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
+const MB = 1024 * 1024;
+const PART_SIZE = 8 * MB;
+const BOTH_PARTS = [
+  { partNumber: 1, etag: 'etag-1' },
+  { partNumber: 2, etag: 'etag-2' },
+];
+
+describe('multipart upload with resume and abort', () => {
   let app: FastifyInstance;
-  let s3Server: http.Server;
-  let s3Port: number;
-  const repositories = new InMemoryRepositories();
-  const cache = new InMemoryCacheClient();
+  let repositories: InMemoryRepositories;
+  let s3: FakeS3;
+  const probeQueue = new MockProbeJobQueue();
+  const token = mintToken({ sub: DEV_USER_ID, role: 'user', ttl: '2h' });
 
-  const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-  let authToken: string;
-
-  // Mock S3 multipart storage state
-  interface MockPart {
-    partNumber: number;
-    etag: string;
-    size: number;
+  function s3UploadOf(partUrl: string) {
+    const upload = s3.multipartUploads.get(new URL(partUrl).searchParams.get('uploadId') ?? '');
+    if (!upload) throw new Error('multipart upload was not initiated in storage');
+    return upload;
   }
-  const multipartUploads = new Map<string, { key: string; parts: MockPart[] }>();
-  const completedObjects = new Map<string, { size: number; contentType: string }>();
-
-  // Probe queue recording
-  const mockProbeQueue = new MockProbeJobQueue();
-  const probeJobs = mockProbeQueue.jobs;
 
   beforeAll(async () => {
-    authToken = mintToken({
-      sub: DEV_USER_ID,
-      role: 'user',
-      ttl: '2h',
-    });
-
-    // 1. Mock S3 server handling CreateMultipartUpload, UploadPart, ListParts, CompleteMultipartUpload, AbortMultipartUpload, HeadObject, DeleteObject
-    s3Server = http.createServer((req, res) => {
-      const url = new URL(req.url || '/', `http://localhost:${s3Port}`);
-      const pathname = url.pathname; // e.g. /raw/videoId/source.mp4
-      const key = pathname.replace(/^\/raw\//, '');
-
-      // CreateMultipartUpload: POST /raw/... ?uploads
-      if (req.method === 'POST' && url.searchParams.has('uploads')) {
-        const uploadId = `mp-${Date.now()}`;
-        multipartUploads.set(uploadId, { key, parts: [] });
-        res.writeHead(200, { 'content-type': 'application/xml' });
-        res.end(
-          `<InitiateMultipartUploadResult><UploadId>${uploadId}</UploadId></InitiateMultipartUploadResult>`
-        );
-        return;
-      }
-
-      // UploadPart: PUT /raw/... ?partNumber=N&uploadId=X
-      if (
-        req.method === 'PUT' &&
-        url.searchParams.has('partNumber') &&
-        url.searchParams.has('uploadId')
-      ) {
-        const uploadId = url.searchParams.get('uploadId') || '';
-        const partNumber = Number(url.searchParams.get('partNumber') || 1);
-        const etag = `"etag-${partNumber}"`;
-
-        let bodyLen = 0;
-        req.on('data', (chunk) => {
-          bodyLen += chunk.length;
-        });
-        req.on('end', () => {
-          const up = multipartUploads.get(uploadId);
-          if (up) {
-            up.parts.push({ partNumber, etag: etag.replace(/"/g, ''), size: bodyLen || 8388608 });
-          }
-          res.writeHead(200, { ETag: etag });
-          res.end();
-        });
-        return;
-      }
-
-      // ListParts: GET /raw/... ?uploadId=X
-      if (req.method === 'GET' && url.searchParams.has('uploadId')) {
-        const uploadId = url.searchParams.get('uploadId') || '';
-        const up = multipartUploads.get(uploadId);
-        if (!up) {
-          res.writeHead(404);
-          res.end();
-          return;
-        }
-
-        const partsXml = up.parts
-          .map(
-            (p) =>
-              `<Part><PartNumber>${p.partNumber}</PartNumber><ETag>"${p.etag}"</ETag><Size>${p.size}</Size></Part>`
-          )
-          .join('');
-        res.writeHead(200, { 'content-type': 'application/xml' });
-        res.end(`<ListPartsResult><IsTruncated>false</IsTruncated>${partsXml}</ListPartsResult>`);
-        return;
-      }
-
-      // CompleteMultipartUpload: POST /raw/... ?uploadId=X
-      if (req.method === 'POST' && url.searchParams.has('uploadId')) {
-        const uploadId = url.searchParams.get('uploadId') || '';
-        const up = multipartUploads.get(uploadId);
-        if (!up) {
-          res.writeHead(404);
-          res.end();
-          return;
-        }
-
-        let totalSize = 0;
-        for (const p of up.parts) totalSize += p.size;
-
-        completedObjects.set(key, {
-          size: totalSize,
-          contentType: 'video/mp4',
-        });
-
-        res.writeHead(200, { 'content-type': 'application/xml' });
-        res.end(
-          `<CompleteMultipartUploadResult><Location>http://localhost/raw/${key}</Location><ETag>"final-etag"</ETag></CompleteMultipartUploadResult>`
-        );
-        return;
-      }
-
-      // AbortMultipartUpload: DELETE /raw/... ?uploadId=X
-      if (req.method === 'DELETE' && url.searchParams.has('uploadId')) {
-        const uploadId = url.searchParams.get('uploadId') || '';
-        multipartUploads.delete(uploadId);
-        res.writeHead(204);
-        res.end();
-        return;
-      }
-
-      // HeadObject: HEAD /raw/...
-      if (req.method === 'HEAD') {
-        const obj = completedObjects.get(key);
-        if (!obj) {
-          res.writeHead(404);
-          res.end();
-          return;
-        }
-        res.writeHead(200, {
-          'content-length': String(obj.size),
-          'content-type': obj.contentType,
-          ETag: '"final-etag"',
-        });
-        res.end();
-        return;
-      }
-
-      // DeleteObject: DELETE /raw/...
-      if (req.method === 'DELETE') {
-        completedObjects.delete(key);
-        res.writeHead(204);
-        res.end();
-        return;
-      }
-
-      res.writeHead(404);
-      res.end();
-    });
-
-    await new Promise<void>((resolve) => {
-      s3Server.listen(0, '127.0.0.1', () => {
-        s3Port = (s3Server.address() as import('node:net').AddressInfo).port;
-        resolve();
-      });
-    });
-
-    const s3Client = new S3StorageClient({
-      type: 'connection',
-      endpoint: `http://127.0.0.1:${s3Port}`,
-      region: 'us-east-1',
-      accessKeyId: 'test',
-      secretAccessKey: 'test',
-      forcePathStyle: true,
-    });
-
-    const multipart = new S3MultipartStorage({ type: 'storage', storageClient: s3Client });
-
-    app = await buildApp({
-      adapters: {
-        repositories,
-        cache,
-        storage: s3Client,
-        multipart,
-        probeQueue: mockProbeQueue,
-      },
-      config: inProcessAppConfig({ limits: { multipartThresholdBytes: 10 * 1024 * 1024 } }),
-    });
-    await app.ready();
+    s3 = await startFakeS3();
+    ({ app, repositories } = await buildInMemoryApp({
+      config: inProcessAppConfig({ limits: { multipartThresholdBytes: 10 * MB } }),
+      adapters: { storage: s3.storage, multipart: s3.multipart, probeQueue },
+    }));
   });
 
   afterAll(async () => {
     await app.close();
-    await new Promise((resolve) => s3Server.close(resolve));
+    await s3.close();
   });
 
-  it('AC 17: POST /v1/uploads selects multipart strategy for files > 100 MB with clamped part size and batched URLs', async () => {
-    // 4 GB file (4294967296 bytes)
-    const fourGb = 4 * 1024 * 1024 * 1024;
-    const res = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {
-        filename: 'large-movie.mp4',
-        sizeBytes: fourGb,
-        contentType: 'video/mp4',
-        title: '4GB Movie',
-      },
+  it('picks the multipart strategy for a large file, with a clamped part size and a first batch of URLs', async () => {
+    const fourGb = 4 * 1024 * MB;
+    const res = await postUpload(app, token, {
+      filename: 'large-movie.mp4',
+      sizeBytes: fourGb,
+      title: '4GB Movie',
     });
 
     expect(res.statusCode).toBe(201);
-    const data = JSON.parse(res.body);
+    const data = res.json();
     expect(data.strategy).toBe('multipart');
     expect(data.partSizeBytes).toBe(inProcessAppConfig().limits.partSizeMinBytes);
-    expect(data.partsExpected).toBe(512); // 4GB / 8MB = 512 parts
-    expect(data.parts.length).toBe(100); // Batched to first 100 parts (AC 17)
+    expect(data.partsExpected).toBe(512);
+    expect(data.parts).toHaveLength(100);
 
-    // Verify part URL format and expiry
     const firstPart = data.parts[0];
     expect(firstPart.partNumber).toBe(1);
     expect(firstPart.url).toContain('partNumber=1');
     expect(firstPart.url).toContain('uploadId=');
     expect(firstPart.expiresAt).toBeDefined();
 
-    // Verify video in DB is UPLOADING
     const video = expectOk(await repositories.videos.findById(data.videoId));
     expect(video?.status).toBe('UPLOADING');
     expect(video?.sourceSizeBytes).toBe(fourGb);
   });
 
-  it('AC 17: POST /v1/uploads/:id/parts returns next batch of presigned part URLs', async () => {
-    // Start 1.6 GB upload (200 parts)
-    const size = 200 * 8 * 1024 * 1024;
-    const initRes = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: { authorization: `Bearer ${authToken}` },
-      payload: {
-        filename: 'large.mp4',
-        sizeBytes: size,
-        contentType: 'video/mp4',
-      },
+  it('returns the next batch of presigned part URLs', async () => {
+    const initRes = await postUpload(app, token, {
+      filename: 'large.mp4',
+      sizeBytes: 200 * PART_SIZE,
     });
-    const { uploadId } = JSON.parse(initRes.body);
+    const { uploadId } = initRes.json();
 
-    // Request parts 101 to 200
     const partsRes = await app.inject({
       method: 'POST',
       url: `/v1/uploads/${uploadId}/parts?from=101&count=100`,
-      headers: { authorization: `Bearer ${authToken}` },
+      headers: bearer(token),
     });
 
     expect(partsRes.statusCode).toBe(200);
-    const data = JSON.parse(partsRes.body);
-    expect(data.parts.length).toBe(100);
-    expect(data.parts[0].partNumber).toBe(101);
-    expect(data.parts[99].partNumber).toBe(200);
+    const { parts } = partsRes.json();
+    expect(parts).toHaveLength(100);
+    expect(parts[0].partNumber).toBe(101);
+    expect(parts[99].partNumber).toBe(200);
   });
 
-  it('AC 18: GET /v1/uploads/:id returns uploaded parts for resume inspection', async () => {
-    // 16 MB file (2 parts of 8 MB)
-    const partSize = 8 * 1024 * 1024;
-    const size = 2 * partSize;
-
-    const initRes = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: { authorization: `Bearer ${authToken}` },
-      payload: {
-        filename: 'resume-test.mp4',
-        sizeBytes: size,
-        contentType: 'video/mp4',
-      },
+  it('reports the uploaded parts for a resume and completes once the rest arrive', async () => {
+    const initRes = await postUpload(app, token, {
+      filename: 'resume-test.mp4',
+      sizeBytes: 2 * PART_SIZE,
     });
-    const { uploadId, parts } = JSON.parse(initRes.body);
+    const { uploadId, parts } = initRes.json();
+    const upload = s3UploadOf(parts[0].url);
+    upload.parts.push({ partNumber: 1, etag: 'etag-1', size: PART_SIZE });
 
-    // Simulate client uploading part 1
-    const part1Url = new URL(parts[0].url);
-    const s3UploadId = part1Url.searchParams.get('uploadId') || '';
-    const up = multipartUploads.get(s3UploadId);
-    expect(up).toBeDefined();
-    up?.parts.push({ partNumber: 1, etag: 'etag-1', size: partSize });
-
-    // Client crashes and later calls GET /v1/uploads/:id to resume (AC 18)
     const getRes = await app.inject({
       method: 'GET',
       url: `/v1/uploads/${uploadId}`,
-      headers: { authorization: `Bearer ${authToken}` },
+      headers: bearer(token),
     });
 
     expect(getRes.statusCode).toBe(200);
-    const resumeData = JSON.parse(getRes.body);
-    expect(resumeData.status).toBe('OPEN');
-    expect(resumeData.strategy).toBe('multipart');
-    expect(resumeData.partsExpected).toBe(2);
-    expect(resumeData.uploadedParts.length).toBe(1);
-    expect(resumeData.uploadedParts[0]).toEqual({
-      partNumber: 1,
-      etag: 'etag-1',
-      size: partSize,
-    });
+    const resumeData = getRes.json();
+    expect(resumeData).toMatchObject({ status: 'OPEN', strategy: 'multipart', partsExpected: 2 });
+    expect(resumeData.uploadedParts).toEqual([{ partNumber: 1, etag: 'etag-1', size: PART_SIZE }]);
 
-    // Client uploads part 2 and completes upload
-    up?.parts.push({ partNumber: 2, etag: 'etag-2', size: partSize });
+    upload.parts.push({ partNumber: 2, etag: 'etag-2', size: PART_SIZE });
 
-    const completeRes = await app.inject({
-      method: 'POST',
-      url: `/v1/uploads/${uploadId}/complete`,
-      headers: { authorization: `Bearer ${authToken}` },
-      payload: {
-        parts: [
-          { partNumber: 1, etag: 'etag-1' },
-          { partNumber: 2, etag: 'etag-2' },
-        ],
-      },
-    });
+    const completeRes = await completeUpload(app, token, uploadId, BOTH_PARTS);
 
     expect(completeRes.statusCode).toBe(202);
-    const compData = JSON.parse(completeRes.body);
+    const compData = completeRes.json();
     expect(compData.status).toBe('UPLOADED');
-
-    // Probe job enqueued
-    expect(probeJobs.some((j) => j.data['videoId'] === compData.videoId)).toBe(true);
+    expect(probeQueue.jobs.some((j) => j.data.videoId === compData.videoId)).toBe(true);
   });
 
-  it('AC 19: complete with missing parts returns 422 VALIDATION_FAILED', async () => {
-    const size = 16 * 1024 * 1024;
-    const initRes = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: { authorization: `Bearer ${authToken}` },
-      payload: {
-        filename: 'missing-parts.mp4',
-        sizeBytes: size,
-        contentType: 'video/mp4',
-      },
+  it('rejects a completion that lists fewer parts than expected with 422 VALIDATION_FAILED', async () => {
+    const initRes = await postUpload(app, token, {
+      filename: 'missing-parts.mp4',
+      sizeBytes: 2 * PART_SIZE,
     });
-    const { uploadId } = JSON.parse(initRes.body);
+    const { uploadId } = initRes.json();
 
-    const completeRes = await app.inject({
-      method: 'POST',
-      url: `/v1/uploads/${uploadId}/complete`,
-      headers: { authorization: `Bearer ${authToken}` },
-      payload: {
-        parts: [
-          // Missing part 2!
-          { partNumber: 1, etag: 'etag-1' },
-        ],
-      },
-    });
+    const completeRes = await completeUpload(app, token, uploadId, [
+      { partNumber: 1, etag: 'etag-1' },
+    ]);
 
     expect(completeRes.statusCode).toBe(422);
-    const body = JSON.parse(completeRes.body);
-    expect(body.code).toBe(ErrorCodes.VALIDATION_FAILED);
+    expect(completeRes.json().code).toBe(ErrorCodes.VALIDATION_FAILED);
   });
 
-  it('AC 19: HeadObject size mismatch rejects upload and marks video REJECTED', async () => {
-    const size = 16 * 1024 * 1024; // 16 MB declared
-    const initRes = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: { authorization: `Bearer ${authToken}` },
-      payload: {
-        filename: 'mismatch.mp4',
-        sizeBytes: size,
-        contentType: 'video/mp4',
-      },
+  it('rejects the upload and marks the video REJECTED when the stored size differs', async () => {
+    const initRes = await postUpload(app, token, {
+      filename: 'mismatch.mp4',
+      sizeBytes: 2 * PART_SIZE,
     });
-    const { uploadId, parts, videoId } = JSON.parse(initRes.body);
+    const { uploadId, parts, videoId } = initRes.json();
+    const upload = s3UploadOf(parts[0].url);
+    upload.parts.push({ partNumber: 1, etag: 'etag-1', size: 4 * MB });
+    upload.parts.push({ partNumber: 2, etag: 'etag-2', size: 4 * MB });
 
-    // Simulate parts uploaded with corrupted/smaller size (e.g. only 8 MB instead of 16 MB)
-    const part1Url = new URL(parts[0].url);
-    const s3UploadId = part1Url.searchParams.get('uploadId') || '';
-    const up = multipartUploads.get(s3UploadId);
-    up?.parts.push({ partNumber: 1, etag: 'etag-1', size: 4 * 1024 * 1024 });
-    up?.parts.push({ partNumber: 2, etag: 'etag-2', size: 4 * 1024 * 1024 });
-
-    const completeRes = await app.inject({
-      method: 'POST',
-      url: `/v1/uploads/${uploadId}/complete`,
-      headers: { authorization: `Bearer ${authToken}` },
-      payload: {
-        parts: [
-          { partNumber: 1, etag: 'etag-1' },
-          { partNumber: 2, etag: 'etag-2' },
-        ],
-      },
-    });
+    const completeRes = await completeUpload(app, token, uploadId, BOTH_PARTS);
 
     expect(completeRes.statusCode).toBe(422);
-    const body = JSON.parse(completeRes.body);
-    expect(body.code).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
+    expect(completeRes.json().code).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
 
-    // Verify video is marked REJECTED in database
     const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('REJECTED');
     expect(video?.errorCode).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
   });
 
-  it('AC 20: DELETE /v1/uploads/:id aborts multipart and marks video ABANDONED', async () => {
-    const size = 16 * 1024 * 1024;
-    const initRes = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: { authorization: `Bearer ${authToken}` },
-      payload: {
-        filename: 'abort-test.mp4',
-        sizeBytes: size,
-        contentType: 'video/mp4',
-      },
+  it('aborts the multipart upload and marks the video ABANDONED on DELETE', async () => {
+    const initRes = await postUpload(app, token, {
+      filename: 'abort-test.mp4',
+      sizeBytes: 2 * PART_SIZE,
     });
-    const { uploadId, videoId, parts } = JSON.parse(initRes.body);
-    const s3UploadId = new URL(parts[0].url).searchParams.get('uploadId') || '';
+    const { uploadId, videoId, parts } = initRes.json();
+    const s3UploadId = new URL(parts[0].url).searchParams.get('uploadId') ?? '';
+    expect(s3.multipartUploads.has(s3UploadId)).toBe(true);
 
-    expect(multipartUploads.has(s3UploadId)).toBe(true);
-
-    // Abort upload
     const deleteRes = await app.inject({
       method: 'DELETE',
       url: `/v1/uploads/${uploadId}`,
-      headers: { authorization: `Bearer ${authToken}` },
+      headers: bearer(token),
     });
     expect(deleteRes.statusCode).toBe(204);
+    expect(s3.multipartUploads.has(s3UploadId)).toBe(false);
 
-    // Invariant: Multipart upload aborted in storage
-    expect(multipartUploads.has(s3UploadId)).toBe(false);
-
-    // Invariant: Video status marked ABANDONED in DB
     const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('ABANDONED');
 
-    // Invariant: video_events has upload.aborted event
     const events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.some((e) => e.type === 'upload.aborted')).toBe(true);
 
-    // Subsequent GET returns 410 with UPLOAD_NOT_OPEN
     const getRes = await app.inject({
       method: 'GET',
       url: `/v1/uploads/${uploadId}`,
-      headers: { authorization: `Bearer ${authToken}` },
+      headers: bearer(token),
     });
     expect(getRes.statusCode).toBe(410);
-    const getBody = JSON.parse(getRes.body);
-    expect(getBody.code).toBe(ErrorCodes.UPLOAD_NOT_OPEN);
+    expect(getRes.json().code).toBe(ErrorCodes.UPLOAD_NOT_OPEN);
   });
 });

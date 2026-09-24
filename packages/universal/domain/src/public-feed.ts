@@ -2,7 +2,7 @@ import { MS_PER_HOUR } from '@vp/domain/time';
 
 export type PublicFeedSort = 'recent' | 'popular' | 'trending';
 
-export const DEFAULT_PUBLIC_FEED_SORT: PublicFeedSort = 'recent';
+const DEFAULT_PUBLIC_FEED_SORT: PublicFeedSort = 'recent';
 
 export const PUBLIC_FEED_VISIBILITY = 'public';
 export const PUBLIC_FEED_STATUS = 'READY';
@@ -30,11 +30,11 @@ export function publicFeedWalkInstant(cursor?: PublicFeedCursor | null): number 
   return cursor ? cursor.instant : publicFeedInstant();
 }
 
-export function videoAgeHours(createdAt: Date, nowMs: number): number {
+function videoAgeHours(createdAt: Date, nowMs: number): number {
   return Math.max(0, (nowMs - createdAt.getTime()) / MS_PER_HOUR);
 }
 
-export function trendingScore(viewsCount: number, ageHours: number): number {
+function trendingScore(viewsCount: number, ageHours: number): number {
   return (
     (viewsCount + TRENDING_GRAVITY.viewsOffset) /
     (ageHours + TRENDING_GRAVITY.ageOffsetHours) ** TRENDING_GRAVITY.exponent
@@ -42,7 +42,7 @@ export function trendingScore(viewsCount: number, ageHours: number): number {
 }
 
 /** Everything a rank is derived from, whether it is read off a row or off a cursor. */
-export interface PublicFeedRankInput {
+interface PublicFeedRankInput {
   createdAt: Date;
   viewsCount?: number | null;
 }
@@ -68,7 +68,7 @@ export interface PublicFeedCursor extends PublicFeedRankInput {
 
 export type PublicFeedRank = (input: PublicFeedRankInput, nowMs: number) => number;
 
-export const PUBLIC_FEED_RANKINGS: Record<PublicFeedSort, PublicFeedRank> = {
+const PUBLIC_FEED_RANKINGS: Record<PublicFeedSort, PublicFeedRank> = {
   recent: (input) => input.createdAt.getTime(),
   popular: (input) => input.viewsCount ?? 0,
   trending: (input, nowMs) =>
