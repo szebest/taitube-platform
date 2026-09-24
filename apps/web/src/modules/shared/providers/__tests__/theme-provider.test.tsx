@@ -1,0 +1,66 @@
+import { renderToStaticMarkup } from 'react-dom/server';
+import { stubBrowser } from '../../../../__tests__/browser';
+import { clearStoredValues, storeValue } from '../../../../__tests__/stored-value';
+import { ThemeProvider, useTheme } from '../theme-provider';
+
+vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  useLocalStorage: (await import('../../../../__tests__/stored-value')).useStoredValue,
+}));
+
+type ThemeControls = Partial<ReturnType<typeof useTheme>>;
+
+function renderTheme(controls: ThemeControls = {}): string {
+  function ThemeProbe() {
+    const theme = useTheme();
+    Object.assign(controls, theme);
+    return <span>{`theme=${theme.theme}`}</span>;
+  }
+
+  return renderToStaticMarkup(
+    <ThemeProvider>
+      <ThemeProbe />
+    </ThemeProvider>
+  );
+}
+
+describe('apps/web: theme provider', () => {
+  beforeEach(() => {
+    clearStoredValues();
+  });
+
+  it.each([
+    { prefersDark: true, theme: 'dark' },
+    { prefersDark: false, theme: 'light' },
+  ])('follows the system preference on a first visit: dark=$prefersDark', ({ prefersDark, theme }) => {
+    stubBrowser({ prefersDark });
+
+    expect(renderTheme()).toContain(`theme=${theme}`);
+  });
+
+  it('keeps the theme the viewer chose over the system preference', () => {
+    stubBrowser({ prefersDark: true });
+    storeValue('THEME', 'light');
+
+    expect(renderTheme()).toContain('theme=light');
+  });
+
+  it('remembers a changed theme', () => {
+    stubBrowser();
+    const controls: ThemeControls = {};
+    renderTheme(controls);
+
+    controls.changeTheme?.('dark');
+
+    expect(renderTheme()).toContain('theme=dark');
+  });
+
+  it('refuses useTheme outside the provider', () => {
+    function Orphan() {
+      useTheme();
+      return null;
+    }
+
+    expect(() => renderToStaticMarkup(<Orphan />)).toThrow('useTheme must be used within ThemeProvider');
+  });
+});

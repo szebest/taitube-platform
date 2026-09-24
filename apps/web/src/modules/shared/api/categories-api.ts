@@ -2,7 +2,8 @@ import type { CategoriesList } from "@vp/api-contracts";
 
 import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
-const categoriesApi = baseApi.injectEndpoints({
+/** @internal */
+export const categoriesApi =baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		categories: builder.query<CategoriesList, void>({
 			keepUnusedDataFor: 300,
