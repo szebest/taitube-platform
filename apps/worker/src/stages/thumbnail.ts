@@ -98,7 +98,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     const failThumbnail = async (
       failure: MediaFailure
     ): Promise<Result<never, ThumbnailStageFailure>> => {
-      log.error({ errorCode: failure.code, errorMessage: failure.message }, 'thumbnail job failed');
+      log.error({ err: failure }, 'thumbnail job failed');
       const recorded = await repositories.steps.fail({
         videoId,
         step: 'thumbnail',

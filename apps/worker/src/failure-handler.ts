@@ -58,7 +58,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     });
     if (isErr(created)) {
       logger.error(
-        { err: created.error.message, jobId, queueName },
+        { err: created.error, jobId, queueName },
         'failed to insert dlq_entries row'
       );
     }
@@ -84,7 +84,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
 
       if (!dlqPayload.success) {
         logger.error(
-          { err: dlqPayload.error.message, jobId, queueName },
+          { err: dlqPayload.error, jobId, queueName },
           'failed to build copy of job for dlq queue'
         );
       } else {
@@ -95,7 +95,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         });
         if (isErr(added)) {
           logger.error(
-            { err: added.error.message, jobId },
+            { err: added.error, jobId },
             'failed to add copy of job to dlq queue'
           );
         } else {
@@ -122,7 +122,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       });
       if (isErr(marked)) {
         logger.error(
-          { err: marked.error.message, videoId, step: stepName },
+          { err: marked.error, videoId, step: stepName },
           'failed to mark processing step DEAD'
         );
       }
@@ -133,7 +133,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         });
         if (isErr(failed)) {
           logger.error(
-            { err: failed.error.message, videoId, rendition: renditionName },
+            { err: failed.error, videoId, rendition: renditionName },
             'failed to mark rendition FAILED'
           );
         }
@@ -202,7 +202,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
           const notified = await getQueue('notify').add('notify', notifyJobData, notifyJobOpts);
           if (isErr(notified)) {
             logger.error(
-              { err: notified.error.message, videoId },
+              { err: notified.error, videoId },
               'failed to publish video.failed to the notify queue'
             );
           }

@@ -20,9 +20,24 @@ describe('@vp/logger: serializeError', () => {
     expect(serialized.stack).toContain('upload failed');
   });
 
+  it('reads a returned Failure as its code, message and cause', () => {
+    const failure = {
+      code: 'STORAGE_UNAVAILABLE',
+      message: 'put failed',
+      cause: new Error('ECONNRESET'),
+    };
+
+    expect(serializeError(failure)).toMatchObject({
+      type: 'Failure',
+      code: 'STORAGE_UNAVAILABLE',
+      message: 'put failed',
+      cause: { type: 'Error', message: 'ECONNRESET' },
+    });
+  });
+
   it.each([
     ['a string', 'disk full', 'disk full'],
-    ['an object', { code: 'X', reason: 'y' }, '{"code":"X","reason":"y"}'],
+    ['an object', { status: 'X', reason: 'y' }, '{"status":"X","reason":"y"}'],
     ['undefined', undefined, 'undefined'],
   ])('keeps the content of %s that was thrown instead of an Error', (_name, thrown, message) => {
     expect(serializeError(thrown)).toEqual({ type: typeof thrown, message });

@@ -21,19 +21,44 @@ function describeNonError(value: unknown): string {
   return json ?? String(value);
 }
 
-function serializeAt(value: unknown, depth: number): SerializedError {
-  if (!(value instanceof Error)) {
-    return { type: typeof value, message: describeNonError(value) };
-  }
+/** A `Failure` from `@vp/errors`: a returned value with a code and a message, not a thrown one. */
+interface FailureLike {
+  code: string;
+  message: string;
+  cause?: unknown;
+}
 
-  const serialized: SerializedError = { type: value.name, message: value.message };
+function isFailureLike(value: unknown): value is FailureLike {
+  if (typeof value !== 'object' || value === null) return false;
   const code: unknown = Reflect.get(value, 'code');
-  if (typeof code === 'string') serialized.code = code;
-  if (value.stack) serialized.stack = value.stack;
-  if (value.cause !== undefined && depth < MAX_CAUSE_DEPTH) {
-    serialized.cause = serializeAt(value.cause, depth + 1);
+  const message: unknown = Reflect.get(value, 'message');
+  return typeof code === 'string' && typeof message === 'string';
+}
+
+function withCause(serialized: SerializedError, cause: unknown, depth: number): SerializedError {
+  if (cause !== undefined && depth < MAX_CAUSE_DEPTH) {
+    serialized.cause = serializeAt(cause, depth + 1);
   }
   return serialized;
+}
+
+function serializeAt(value: unknown, depth: number): SerializedError {
+  if (value instanceof Error) {
+    const serialized: SerializedError = { type: value.name, message: value.message };
+    const code: unknown = Reflect.get(value, 'code');
+    if (typeof code === 'string') serialized.code = code;
+    if (value.stack) serialized.stack = value.stack;
+    return withCause(serialized, value.cause, depth);
+  }
+  if (isFailureLike(value)) {
+    const serialized: SerializedError = {
+      type: 'Failure',
+      message: value.message,
+      code: value.code,
+    };
+    return withCause(serialized, value.cause, depth);
+  }
+  return { type: typeof value, message: describeNonError(value) };
 }
 
 /**

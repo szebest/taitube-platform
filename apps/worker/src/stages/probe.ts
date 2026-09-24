@@ -190,7 +190,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       if (isErr(probed)) {
         metrics.ffmpegExitTotal.inc({ stage: 'probe', code: probed.error.code });
         log.warn(
-          { errorCode: probed.error.code, err: probed.error.message },
+          { err: probed.error },
           'probe validation failed with permanent error'
         );
         return await failProbe(probed.error);
