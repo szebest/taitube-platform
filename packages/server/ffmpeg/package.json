@@ -16,7 +16,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.ts",
+    "test:integration": "vitest run --config integration.config.ts",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
