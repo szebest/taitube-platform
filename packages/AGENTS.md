@@ -94,6 +94,7 @@ is stale — fix it.
 | `@vp/concurrency` | server | `packages/server/concurrency` |
 | `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/storage` | server | `packages/server/storage` |
+| `@vp/gen-video` | server | `packages/server/gen-video` |
 
 ### T2 — Contracts & policy
 
@@ -108,7 +109,6 @@ is stale — fix it.
 | `@vp/dev-token` | server | `@vp/result` |
 | `@vp/events` | server | `@vp/errors`, `@vp/job-contracts`, `@vp/result` |
 | `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result` |
-| `@vp/gen-video` | server | `@vp/result` |
 | `@vp/observability` | server | `@vp/result` |
 | `@vp/testing` | server | `@vp/result` |
 
