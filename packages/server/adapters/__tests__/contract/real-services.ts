@@ -5,8 +5,8 @@ export interface RealServices {
     readonly endpoint: string;
     readonly region: string;
     readonly forcePathStyle: boolean;
-    readonly accessKeyId: string;
-    readonly secretAccessKey: string;
+    readonly accessKeyId: string | undefined;
+    readonly secretAccessKey: string | undefined;
     readonly bucket: string;
   };
 }

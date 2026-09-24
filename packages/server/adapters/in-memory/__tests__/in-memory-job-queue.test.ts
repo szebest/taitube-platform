@@ -1,7 +1,7 @@
 import { JOB_PRIORITY } from '@vp/domain';
 import { PermanentError, TransientError } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
-import { inMemoryJobQueueSubject } from '../../__tests__/contract/in-memory-queue-subjects';
+import { inMemoryJobQueueSubject } from '../../__tests__/contract/in-memory-port-subjects';
 import { describeJobQueueContract } from '../../__tests__/contract/job-queue.contract';
 import { InMemoryJobQueue } from '../in-memory-job-queue';
 

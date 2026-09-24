@@ -81,13 +81,12 @@ export class InMemoryMultipartStorage extends MultipartStorage {
     if (!upload) {
       return ok([]);
     }
-    return ok(
-      Array.from(upload.parts.values()).map((p) => ({
-        partNumber: p.partNumber,
-        etag: p.etag,
-        size: p.data.length,
-      }))
-    );
+    const parts = Array.from(upload.parts.values()).map((p) => ({
+      partNumber: p.partNumber,
+      etag: p.etag,
+      size: p.data.length,
+    }));
+    return ok(parts.sort((a, b) => a.partNumber - b.partNumber));
   }
 
   async listMultipartUploads(

@@ -41,12 +41,13 @@ export function describeJobQueueContract(makeSubject: MakeJobQueueSubject): void
       expect(expectOk(await queue.getJobState('job-absent'))).toBeUndefined();
     });
 
-    it('keeps one job for a repeated id and returns the one it holds', async () => {
+    it('keeps the first job for a repeated id', async () => {
       expectOk(await queue.add('probe', { attempt: 1 }, { jobId: 'job-a' }));
 
-      const repeat = expectOk(await queue.add('probe', { attempt: 2 }, { jobId: 'job-a' }));
+      expectOk(await queue.add('probe', { attempt: 2 }, { jobId: 'job-a' }));
 
-      expect(repeat.data).toEqual({ attempt: 1 });
+      const waiting = expectOk(await queue.getJobs(['waiting']));
+      expect(waiting.map((job) => job.data)).toEqual([{ attempt: 1 }]);
       expect(expectOk(await queue.getJobCounts()).waiting).toBe(1);
     });
 

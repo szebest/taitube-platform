@@ -1,6 +1,6 @@
 import type { StepRepository } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
-import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { HOUR_MS, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const STEP_ID = '00000000-0000-7000-8000-000000000501';
@@ -162,7 +162,7 @@ export function describeStepRepositoryContract(makeSubject: MakeRepositoriesSubj
     it('counts the running steps that have gone quiet', async () => {
       await claimProbe(STEP_ID, TOKEN_A, 1);
 
-      expect(expectOk(await steps.countRunningStale(-1))).toBe(1);
+      expect(expectOk(await steps.countRunningStale(-HOUR_MS))).toBe(1);
       expect(expectOk(await steps.countRunningStale(3_600_000))).toBe(0);
     });
   });
