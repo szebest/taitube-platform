@@ -4,17 +4,10 @@ import { sourceAliases } from './workspace-sources';
 
 const HERE = import.meta.dirname;
 
-const importing = (module: string) =>
-  readdirSync(HERE)
-    .filter((file) => file.endsWith('.test.ts'))
-    .filter((file) => readFileSync(`${HERE}/${file}`, 'utf8').includes(`from './${module}'`));
-
-/**
- * The assertions that ask the type checker (every one that imports the shared `ts.Program`), and
- * the ones over documents, which parse no TypeScript: they even the two lanes out, since the AST
- * thread is the longer one without them.
- */
-export const FORK_ASSERTIONS = [...importing('program'), ...importing('markdown')];
+/** The assertions that ask the type checker: every one that imports the shared `ts.Program`. */
+export const TYPE_AWARE = readdirSync(HERE)
+  .filter((file) => file.endsWith('.test.ts'))
+  .filter((file) => readFileSync(`${HERE}/${file}`, 'utf8').includes("from './program'"));
 
 /**
  * One process with modules kept between files, so the program is built and checked once and
@@ -26,7 +19,7 @@ export default defineConfig({
     name: 'architecture-typed',
     globals: true,
     environment: 'node',
-    include: FORK_ASSERTIONS,
+    include: TYPE_AWARE,
     testTimeout: 30_000,
     pool: 'forks',
     poolOptions: { forks: { singleFork: true, isolate: false } },
