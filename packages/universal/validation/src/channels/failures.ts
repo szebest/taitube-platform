@@ -1,5 +1,5 @@
 import { ErrorCodes, type InputFailure } from '@vp/errors';
-import { type InvalidField, type LengthBounds, invalidLength } from '../failures.js';
+import { type InvalidField, type LengthBounds, invalidLength } from '../failures';
 
 export type InvalidHandleFormat = InputFailure<
   typeof ErrorCodes.INVALID_HANDLE_FORMAT,

@@ -26,8 +26,7 @@ from here; `@vp/api-client` derives its typed fetchers from here. Neither re-dec
    summary/description/tag come from the contract.
 3. **One file per route group**, named after the group (`videos.ts`, `feed.ts`, `channels.ts`) — never
    after the artefact (`schemas.ts`, `types.ts`).
-4. **Relative imports carry `.js`**, as `@vp/permissions` does, because CRA's webpack refuses
-   extensionless ESM.
+4. **Relative imports are extensionless**, as in every tier (`esm-specifiers.test.ts`).
 5. Every endpoint is registered in `index.ts` (`API_ENDPOINTS` / `findEndpoint`).
 
 ---

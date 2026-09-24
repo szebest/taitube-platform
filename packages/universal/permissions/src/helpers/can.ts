@@ -1,9 +1,9 @@
-import type { Action, Resource, UserContext } from '../types/index.js';
-import { canAccessAdmin } from './admin.js';
-import { canViewAllAnalytics } from './analytics.js';
-import { canManageCategory } from './categories.js';
-import { canManageChannel, canSubscribeChannel, canUpdateChannel } from './channels.js';
-import { canCreateComment, canDeleteComment, canPinComment } from './comments.js';
+import type { Action, Resource, UserContext } from '../types/index';
+import { canAccessAdmin } from './admin';
+import { canViewAllAnalytics } from './analytics';
+import { canManageCategory } from './categories';
+import { canManageChannel, canSubscribeChannel, canUpdateChannel } from './channels';
+import { canCreateComment, canDeleteComment, canPinComment } from './comments';
 import {
   canCreateVideo,
   canDeleteVideo,
@@ -11,7 +11,7 @@ import {
   canReactVideo,
   canReadVideo,
   canUpdateVideo,
-} from './videos.js';
+} from './videos';
 
 type ActionCheck = (user: UserContext | null, resource?: Resource) => boolean;
 

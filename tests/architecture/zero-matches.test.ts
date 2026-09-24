@@ -56,6 +56,16 @@ const ROWS: readonly Row[] = [
   ['a throwing parse in a service', /\.parse\(/g, productionUnder('apps/api/src/services'), 0],
   ['a failure classified by its message', /message\.includes/g, PRODUCTION_SOURCE, 0],
   ['a cast through unknown', /as unknown as/g, PRODUCTION_SOURCE, 0],
+  [
+    'a doc asking for an import extension',
+    /\.js`? (extension|specifier)|carr(y|ies) `\.js`/g,
+    [
+      'ARCHITECTURE.md',
+      ':(glob)packages/universal/**/AGENTS.md',
+      ':(glob)packages/client/**/AGENTS.md',
+    ],
+    0,
+  ],
 ];
 
 function countMatches(pattern: RegExp, sources: readonly string[]): number {

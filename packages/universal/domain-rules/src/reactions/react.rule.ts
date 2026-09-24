@@ -1,8 +1,8 @@
 import type { Video } from '@vp/domain';
 import { type UserContext, canReactVideo } from '@vp/permissions';
 import { type Result, andThen, err, ok } from '@vp/result';
-import { type ReadVideoFailure, decideVideoRead } from '../videos/index.js';
-import { type ReactionForbidden, reactionForbidden } from './failures.js';
+import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
+import { type ReactionForbidden, reactionForbidden } from './failures';
 
 export interface ReactInput {
   readonly reactor: UserContext | null;

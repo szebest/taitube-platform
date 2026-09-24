@@ -1,4 +1,4 @@
-import type { ErrorCode } from './error-codes.js';
+import type { ErrorCode } from './error-codes';
 
 export abstract class PipelineError extends Error {
   abstract readonly isRetryable: boolean;

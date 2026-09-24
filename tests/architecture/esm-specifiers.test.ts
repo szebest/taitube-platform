@@ -1,33 +1,47 @@
-import { readFileSync } from 'node:fs';
-import { glob } from 'node:fs/promises';
-import { extname, join, resolve } from 'node:path';
+import { read, trackedFiles } from './repo-files';
 
-const ROOT = resolve(import.meta.dirname, '../..');
-const BROWSER_TIERS = ['universal', 'client'];
-const RELATIVE_IMPORT = /(?:from|import)\s*\(?\s*['"](\.[^'"]*)['"]/g;
+const TYPESCRIPT_SOURCES = [
+  ':(glob)apps/**/*.ts',
+  ':(glob)apps/**/*.tsx',
+  ':(glob)packages/**/*.ts',
+  ':(glob)packages/**/*.tsx',
+  ':(glob)packages/**/*.mts',
+  ':(glob)scripts/**/*.ts',
+  ':(glob)tests/**/*.ts',
+];
 
-async function browserTierSources(): Promise<string[]> {
-  const files: string[] = [];
-  for (const tier of BROWSER_TIERS) {
-    for await (const entry of glob(`packages/${tier}/*/src/**/*.ts`, { cwd: ROOT })) {
-      if (!entry.includes('__tests__') && !entry.endsWith('.test.ts')) files.push(entry);
-    }
-  }
-  return files;
+const RELATIVE_SPECIFIER =
+  /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|\bvi\.mock\s*\(\s*)['"](\.{1,2}\/[^'"]*)['"]/g;
+const EXTENSION = /\.(?:[cm]?js|[cm]?ts|tsx|jsx)$/;
+
+function extensioned(source: string): string[] {
+  return [...source.matchAll(RELATIVE_SPECIFIER)]
+    .map((match) => match[1] as string)
+    .filter((specifier) => EXTENSION.test(specifier));
 }
 
-describe('architecture: ESM specifiers in browser-bound packages', () => {
-  it('gives every relative import an explicit extension', async () => {
-    const offenders: string[] = [];
+describe('architecture: extensionless relative imports', () => {
+  it.each([
+    ['import { ok } from ', './result', '.js', ';'],
+    ['export * from ', '../errors', '.mjs', ';'],
+    ['const lazy = await import(', './lazy', '.ts', ');'],
+    ['vi.mock(', './adapter', '.js', ', () => ({}));'],
+    ['import ', './side-effect', '.tsx', ';'],
+  ])('fires on %s%s%s', (head, path, extension, tail) => {
+    expect(extensioned(`${head}'${path}${extension}'${tail}`)).toEqual([`${path}${extension}`]);
+  });
 
-    for (const file of await browserTierSources()) {
-      const source = readFileSync(join(ROOT, file), 'utf8');
-      for (const match of source.matchAll(RELATIVE_IMPORT)) {
-        const specifier = match[1] as string;
-        if (extname(specifier) === '') offenders.push(`${file}: '${specifier}'`);
-      }
-    }
+  it('passes an extensionless relative import and a bare package specifier', () => {
+    expect(extensioned("import { ok } from './result';\nimport { z } from 'zod';")).toEqual([]);
+  });
 
+  it('finds no extension on a relative import in any tier, specs included', () => {
+    const files = trackedFiles(...TYPESCRIPT_SOURCES);
+    const offenders = files.flatMap((file) =>
+      extensioned(read(file)).map((specifier) => `${file}: '${specifier}'`)
+    );
+
+    expect(files.length).toBeGreaterThan(500);
     expect(offenders).toEqual([]);
   });
 });

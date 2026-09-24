@@ -1,8 +1,8 @@
 import { subject } from '@casl/ability';
-import { creatorUser, guestUser, sampleChannel, standardUser } from '../../__mocks__/fixtures.js';
-import type { AppAction, AppSubjects, UserContext } from '../../types/index.js';
+import { creatorUser, guestUser, sampleChannel, standardUser } from '../../__mocks__/fixtures';
+import type { AppAction, AppSubjects, UserContext } from '../../types/index';
 import { defineChannelRules } from '../channel.rules';
-import { buildAbility } from './build-ability.js';
+import { buildAbility } from './build-ability';
 
 describe('rules/channel.rules: Declarative Channel Ability Rules', () => {
   it.each<{

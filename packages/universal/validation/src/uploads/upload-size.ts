@@ -1,5 +1,5 @@
 import { type Result, err, ok } from '@vp/result';
-import { type UploadTooLarge, uploadTooLarge } from './failures.js';
+import { type UploadTooLarge, uploadTooLarge } from './failures';
 
 export function validateUploadSize(
   sizeBytes: number,

@@ -1,6 +1,6 @@
 import type { Upload } from '@vp/domain';
 import { type Result, err, ok } from '@vp/result';
-import { type PartManifestMismatch, partManifestMismatch } from './failures.js';
+import { type PartManifestMismatch, partManifestMismatch } from './failures';
 
 export interface UploadPart {
   readonly partNumber: number;

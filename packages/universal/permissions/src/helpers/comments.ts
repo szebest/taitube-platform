@@ -1,6 +1,6 @@
-import { getUserPermissions } from '../ability.js';
-import { toCommentSubject } from '../normalizers/index.js';
-import type { CommentResource, UserContext } from '../types/index.js';
+import { getUserPermissions } from '../ability';
+import { toCommentSubject } from '../normalizers/index';
+import type { CommentResource, UserContext } from '../types/index';
 
 export function canCreateComment({ user }: { user: UserContext | null }): boolean {
   if (!user) return false;

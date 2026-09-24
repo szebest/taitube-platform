@@ -1,16 +1,16 @@
-import type { AdminAction, CategoryResource } from './category.js';
-import type { ChannelAction, ChannelResource } from './channel.js';
-import type { CommentAction, CommentResource } from './comment.js';
-import type { UploadResource } from './upload.js';
-import type { VideoAction, VideoResource } from './video.js';
+import type { AdminAction, CategoryResource } from './category';
+import type { ChannelAction, ChannelResource } from './channel';
+import type { CommentAction, CommentResource } from './comment';
+import type { UploadResource } from './upload';
+import type { VideoAction, VideoResource } from './video';
 
-export * from './user.js';
-export * from './video.js';
-export * from './comment.js';
-export * from './channel.js';
-export * from './upload.js';
-export * from './category.js';
-export * from './ability.js';
+export * from './user';
+export * from './video';
+export * from './comment';
+export * from './channel';
+export * from './upload';
+export * from './category';
+export * from './ability';
 
 export type Resource =
   | VideoResource

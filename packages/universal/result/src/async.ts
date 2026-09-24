@@ -1,4 +1,4 @@
-import { type Result, ok } from './result.js';
+import { type Result, ok } from './result';
 
 export type Awaitable<T> = T | Promise<T>;
 

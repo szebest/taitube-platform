@@ -1,5 +1,5 @@
 import { type Result, err, ok } from '@vp/result';
-import { type InvalidDisplayName, invalidDisplayName } from './failures.js';
+import { type InvalidDisplayName, invalidDisplayName } from './failures';
 
 export const DISPLAY_NAME_MIN_LENGTH = 1;
 export const DISPLAY_NAME_MAX_LENGTH = 100;

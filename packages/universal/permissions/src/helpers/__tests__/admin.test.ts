@@ -1,5 +1,5 @@
-import type { UserContext } from '../../types/index.js';
-import { canAccessAdmin } from '../admin.js';
+import type { UserContext } from '../../types/index';
+import { canAccessAdmin } from '../admin';
 
 describe('permissions/helpers: canAccessAdmin', () => {
   it('grants an admin', () => {

@@ -1,4 +1,4 @@
-import { type ErrorCode, ErrorCodes } from './error-codes.js';
+import { type ErrorCode, ErrorCodes } from './error-codes';
 
 export type RetryClass = 'permanent' | 'transient';
 

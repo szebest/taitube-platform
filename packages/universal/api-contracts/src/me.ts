@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { ChannelSchema } from './channels.js';
-import { defineEndpoint } from './endpoint.js';
+import { ChannelSchema } from './channels';
+import { defineEndpoint } from './endpoint';
 
 export const UserSchema = z.object({
   id: z.string().uuid(),

@@ -1,7 +1,7 @@
 import { type Result, andThen, err, map, ok } from '@vp/result';
-import { ALLOWED_CONTENT_TYPES, validateContentType } from './allowed-content-type.js';
-import { type StartUploadFailure, invalidTitle } from './failures.js';
-import { validateUploadSize } from './upload-size.js';
+import { ALLOWED_CONTENT_TYPES, validateContentType } from './allowed-content-type';
+import { type StartUploadFailure, invalidTitle } from './failures';
+import { validateUploadSize } from './upload-size';
 
 export const MAX_TITLE_LENGTH = 200;
 

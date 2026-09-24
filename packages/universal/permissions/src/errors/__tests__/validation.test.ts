@@ -5,7 +5,7 @@ import {
   createValidationError,
   formatZodError,
   zodValidationAdapter,
-} from '../validation-adapter.js';
+} from '../validation-adapter';
 
 describe('errors/validation: Zod Schema RFC 9457 Validation Adapter', () => {
   const schema = z.object({

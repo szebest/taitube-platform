@@ -1,4 +1,4 @@
-import { type Result, err, ok } from './result.js';
+import { type Result, err, ok } from './result';
 
 export function tryCatch<T, E>(fn: () => T, onThrow: (cause: unknown) => E): Result<T, E> {
   try {

@@ -1,5 +1,5 @@
 import { type Result, err, ok } from '@vp/result';
-import { type UnsupportedContentType, unsupportedContentType } from './failures.js';
+import { type UnsupportedContentType, unsupportedContentType } from './failures';
 
 /**
  * The container formats the pipeline can probe and transcode. It lives here rather than in a

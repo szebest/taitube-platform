@@ -1,9 +1,9 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { ChannelIdParamSchema } from './channels.js';
-import { defineEndpoint } from './endpoint.js';
-import { FeedResponseSchema } from './feed.js';
-import { KeysetQuerySchema } from './pagination.js';
+import { ChannelIdParamSchema } from './channels';
+import { defineEndpoint } from './endpoint';
+import { FeedResponseSchema } from './feed';
+import { KeysetQuerySchema } from './pagination';
 
 export const SubscriptionStateSchema = z.object({
   channelId: z.string().uuid(),

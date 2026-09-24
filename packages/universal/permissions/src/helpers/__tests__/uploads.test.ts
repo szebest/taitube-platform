@@ -7,9 +7,9 @@ import {
   publicVideo,
   sampleUpload,
   standardUser,
-} from '../../__mocks__/fixtures.js';
-import type { UploadResource, UserContext, VideoResource } from '../../types/index.js';
-import { canAccessUpload } from '../uploads.js';
+} from '../../__mocks__/fixtures';
+import type { UploadResource, UserContext, VideoResource } from '../../types/index';
+import { canAccessUpload } from '../uploads';
 
 describe('helpers/uploads: canAccessUpload', () => {
   it.each<{

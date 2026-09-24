@@ -233,7 +233,8 @@ Three mechanisms, strongest first:
    devDependencies alike. Both `pnpm build` and `pnpm typecheck` run
    it first, so a bad *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
 3. **The type system.** The matching `@vp/tsconfig` preset gives `universal` and `client` packages `lib` with
-   `DOM` and `types: []`, so a Node builtin or global is a type error. Specs run under
+   `DOM` and `types: []`, so a Node builtin or global is a type error. Relative imports are extensionless in
+   every tier; `apps/web`'s webpack resolves them through the one override in `craco.config.js`. Specs run under
    `@vp/tsconfig/spec.json` via a package's own `tsconfig.spec.json`, so importing `vitest` cannot leak
    `@types/node` back into the package's program.
 
@@ -320,7 +321,7 @@ left as decoration** — a rule a human has to remember to check is a rule that 
 | `local-first.test.ts` | no production source names an off-machine host; every uncommented `.env.example` default is local | a hardcoded `https://…onrender.com` |
 | `file-ceiling.test.ts` | no production source over 400 lines or 10 KB | 450 lines appended to a domain module |
 | `test-correspondence.test.ts` | every production source with runtime code has `__tests__/<name>.test.ts` beside it | a new source file with no spec; a constant, a function or an abstract class with a concrete method still counts |
-| `esm-specifiers.test.ts` | relative imports in `universal` and `client` packages carry an explicit extension | an extensionless relative import |
+| `esm-specifiers.test.ts` | no relative import in any tracked TypeScript source, specs included, carries an extension (`.js`, `.mjs`, `.ts`, `.tsx`); `apps/web` resolves extensionless workspace output through `craco.config.js` | `import { ok } from './result.js'` |
 | `core-barrels.test.ts` | each `@vp/core` barrel re-exports only its own folder; no `*.port.ts` anywhere | a barrel re-exporting a sibling folder |
 | `no-domain-throw.test.ts` | no `throw`, `*OrThrow(` helper or throwing `Schema.parse(` / `JSON.parse(` in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` or `apps/worker/src/stages/`, except a `throw assertNever` | `NotifyJob.parse({...})` in a stage |
 | `validation-is-input-only.test.ts` | `@vp/validation` imports no `@vp/domain` or `@vp/core`, in source **and** in its manifest | a predicate taking a `Video` added to `@vp/validation` |

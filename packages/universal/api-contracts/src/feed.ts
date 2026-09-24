@@ -1,8 +1,8 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint.js';
-import { CursorSchema, PageLimitSchema } from './pagination.js';
-import { VideoSummarySchema } from './video-resource.js';
+import { defineEndpoint } from './endpoint';
+import { CursorSchema, PageLimitSchema } from './pagination';
+import { VideoSummarySchema } from './video-resource';
 
 export const FEED_SORTS = ['recent', 'popular', 'trending'] as const;
 

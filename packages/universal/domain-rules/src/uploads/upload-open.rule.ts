@@ -1,6 +1,6 @@
 import type { Upload } from '@vp/domain';
 import { type Result, err, ok } from '@vp/result';
-import { type UploadOpenFailure, uploadExpired, uploadNotOpen } from './failures.js';
+import { type UploadOpenFailure, uploadExpired, uploadNotOpen } from './failures';
 
 export interface UploadOpenInput {
   readonly upload: Upload;

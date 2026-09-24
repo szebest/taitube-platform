@@ -4,7 +4,7 @@ import {
   type CursorCodec,
   type CursorPayload,
   type InvalidCursor,
-} from './cursor-codec.js';
+} from './cursor-codec';
 
 /**
  * Bounds for a keyset-paginated endpoint. Resolved once at application start

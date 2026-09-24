@@ -1,5 +1,5 @@
 import { type EndpointContract, buildPath, endpointKey } from '@vp/api-contracts';
-import { ApiContractError, toApiError } from './api-error.js';
+import { ApiContractError, toApiError } from './api-error';
 
 export interface ApiClientOptions {
   /** Root of the API, e.g. `http://localhost:3000`. No trailing slash required. */

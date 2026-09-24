@@ -23,7 +23,8 @@ client without existing in the contract**. Base URL, credentials and bearer toke
    `ApiContractError`; a non-2xx raises `ApiError` carrying the parsed RFC 9457 problem document.
 3. **No base URL literal.** The host is injected from config — a hardcoded host breaks local-first
    (Rule 1) and is asserted against in `apps/web`.
-4. **Relative imports carry `.js`** for CRA's webpack.
+4. **Relative imports are extensionless**, as in every tier. `apps/web` resolves them through the one
+   webpack override in its `craco.config.js` (`resolve.fullySpecified: false` for workspace packages).
 
 ---
 

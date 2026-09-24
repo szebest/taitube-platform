@@ -33,7 +33,7 @@ inbound cursor with it and the API mints one with it; before the split, a server
    `[1, maxLimit]`, so a deployment running below the advertised maximum serves a shorter page and
    keeps walking with `nextCursor`. That is deliberate — the maximum protects the database, and the
    published contract is not a per-deployment document. `PageLimitSchema`'s description says so.
-6. **Relative imports carry `.js`** (`./cursor-codec.js`), because CRA's webpack refuses extensionless ESM.
+6. **Relative imports are extensionless** (`./cursor-codec`), as in every tier (`esm-specifiers.test.ts`).
 
 ---
 

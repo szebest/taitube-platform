@@ -1,6 +1,6 @@
-import { getUserPermissions } from '../ability.js';
-import { toChannelSubject } from '../normalizers/index.js';
-import type { ChannelResource, UserContext } from '../types/index.js';
+import { getUserPermissions } from '../ability';
+import { toChannelSubject } from '../normalizers/index';
+import type { ChannelResource, UserContext } from '../types/index';
 
 export function canUpdateChannel({
   user,

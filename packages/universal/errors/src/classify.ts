@@ -1,7 +1,7 @@
-import { type ErrorCode, ErrorCodes } from './error-codes.js';
-import { type AnyFailure, failureDetails } from './failure.js';
-import { PermanentError, PipelineError, TransientError } from './pipeline-error.js';
-import { RETRY_CLASS, type RetryClass, retryClass } from './retry-class.js';
+import { type ErrorCode, ErrorCodes } from './error-codes';
+import { type AnyFailure, failureDetails } from './failure';
+import { PermanentError, PipelineError, TransientError } from './pipeline-error';
+import { RETRY_CLASS, type RetryClass, retryClass } from './retry-class';
 
 /**
  * `unknown` is a third answer on purpose: ADR-18 retries an unrecognised error a little and then

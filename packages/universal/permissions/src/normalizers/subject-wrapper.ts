@@ -4,11 +4,11 @@ import type {
   CommentResource,
   UploadResource,
   VideoResource,
-} from '../types/index.js';
-import { normalizeChannelResource } from './channel.normalizer.js';
-import { normalizeCommentResource } from './comment.normalizer.js';
-import { normalizeUploadResource } from './upload.normalizer.js';
-import { normalizeVideoResource } from './video.normalizer.js';
+} from '../types/index';
+import { normalizeChannelResource } from './channel.normalizer';
+import { normalizeCommentResource } from './comment.normalizer';
+import { normalizeUploadResource } from './upload.normalizer';
+import { normalizeVideoResource } from './video.normalizer';
 
 export function createSubject<TName extends string, TNormalized extends object>(
   subjectName: TName,

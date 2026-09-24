@@ -1,5 +1,5 @@
-import { ErrorCodes } from './error-codes.js';
-import type { Failure } from './failure.js';
+import { ErrorCodes } from './error-codes';
+import type { Failure } from './failure';
 
 type UnavailableCode =
   | typeof ErrorCodes.DATABASE_UNAVAILABLE

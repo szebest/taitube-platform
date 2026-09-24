@@ -1,5 +1,5 @@
 import { type Result, err, ok } from '@vp/result';
-import { type InvalidSlug, invalidSlug } from './failures.js';
+import { type InvalidSlug, invalidSlug } from './failures';
 
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const SLUG_MAX_LENGTH = 100;

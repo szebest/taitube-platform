@@ -10,7 +10,7 @@ import {
   videoForbidden,
   videoNotFound,
   videoReadRequiresAuth,
-} from './failures.js';
+} from './failures';
 
 export interface ReadVideoInput {
   readonly viewer: UserContext | null;

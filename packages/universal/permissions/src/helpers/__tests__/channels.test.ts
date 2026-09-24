@@ -4,9 +4,9 @@ import {
   guestUser,
   sampleChannel,
   standardUser,
-} from '../../__mocks__/fixtures.js';
-import type { ChannelResource, UserContext } from '../../types/index.js';
-import { canManageChannel, canUpdateChannel } from '../channels.js';
+} from '../../__mocks__/fixtures';
+import type { ChannelResource, UserContext } from '../../types/index';
+import { canManageChannel, canUpdateChannel } from '../channels';
 
 type ChannelCase = {
   scenario: string;

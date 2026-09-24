@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint.js';
-import { CursorSchema, PageLimitSchema } from './pagination.js';
+import { defineEndpoint } from './endpoint';
+import { CursorSchema, PageLimitSchema } from './pagination';
 
 export const DLQ_STATUSES = ['PARKED', 'REPLAYED', 'DISCARDED'] as const;
 

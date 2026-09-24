@@ -1,1 +1,1 @@
-export * from './admin-access.rule.js';
+export * from './admin-access.rule';

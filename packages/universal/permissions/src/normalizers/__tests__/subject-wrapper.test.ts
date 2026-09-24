@@ -4,7 +4,7 @@ import {
   toCommentSubject,
   toUploadSubject,
   toVideoSubject,
-} from '../subject-wrapper.js';
+} from '../subject-wrapper';
 import { normalizeVideoResource } from '../video.normalizer';
 
 describe('normalizers/subject-wrapper: CASL Subject Wrappers', () => {

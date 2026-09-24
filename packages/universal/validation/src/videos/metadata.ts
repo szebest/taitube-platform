@@ -1,10 +1,10 @@
 import { type Result, andThen, err, map, ok } from '@vp/result';
-import type { LengthBounds } from '../failures.js';
+import type { LengthBounds } from '../failures';
 import {
   type VideoMetadataFailure,
   invalidVideoDescription,
   invalidVideoTitle,
-} from './failures.js';
+} from './failures';
 
 export const VIDEO_TITLE_BOUNDS: LengthBounds = { minLength: 1, maxLength: 200 };
 export const VIDEO_DESCRIPTION_MAX_LENGTH = 5000;

@@ -1,7 +1,7 @@
 import { type Result, andThen, err, map, ok } from '@vp/result';
-import type { LengthBounds } from '../failures.js';
-import { type CategoryFormFailure, invalidCategoryName } from './failures.js';
-import { validateSlug } from './slug-format.js';
+import type { LengthBounds } from '../failures';
+import { type CategoryFormFailure, invalidCategoryName } from './failures';
+import { validateSlug } from './slug-format';
 
 export const CATEGORY_NAME_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };
 export const CATEGORY_DESCRIPTION_MAX_LENGTH = 500;

@@ -6,8 +6,8 @@ import {
   type CategoryFormInput,
   validateCategoryForm,
 } from '@vp/validation';
-import { type AuthorizationFailure, authorize } from '../authorize.js';
-import { type CategorySlugConflict, categorySlugConflict } from './failures.js';
+import { type AuthorizationFailure, authorize } from '../authorize';
+import { type CategorySlugConflict, categorySlugConflict } from './failures';
 
 export interface CreateCategoryInput {
   readonly actor: UserContext | null;
