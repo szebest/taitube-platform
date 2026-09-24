@@ -5,24 +5,20 @@ import {
   type PartManifestMismatch,
   type SourceMissing,
   type UploadOpenFailure,
+  type UploadPart,
   type UploadSizeMismatch,
+  decidePartManifest,
+  decideSizeMatch,
   decideUploadOpen,
   notMultipart,
-  partManifestMismatch,
   sourceMissing,
-  uploadSizeMismatch,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
 import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
+import { type Result, err, isErr, ok, unwrapOr } from '@vp/result';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
-
-export interface UploadPart {
-  partNumber: number;
-  etag: string;
-}
 
 export interface CompleteUploadResult {
   videoId: string;
@@ -44,22 +40,17 @@ async function finishMultipart(
   ctx: UploadContext,
   upload: UploadRecord,
   video: VideoRecord,
-  parts?: UploadPart[]
+  parts?: readonly UploadPart[]
 ): Promise<Result<void, PartManifestMismatch | NotMultipart | StorageUnavailable>> {
-  const received = parts?.length ?? 0;
-  if (received === 0 || upload.partsExpected === null || received !== upload.partsExpected) {
-    return err(partManifestMismatch(upload.id, upload.partsExpected, received));
-  }
+  const manifest = decidePartManifest({ upload, parts });
+  if (isErr(manifest)) return manifest;
   if (!upload.multipartUploadId) return err(notMultipart(upload.id));
 
-  return map(
-    await ctx.multipart.completeMultipartUpload(
-      ctx.rawBucket,
-      video.sourceKey,
-      upload.multipartUploadId,
-      parts as UploadPart[]
-    ),
-    () => undefined
+  return ctx.multipart.completeMultipartUpload(
+    ctx.rawBucket,
+    video.sourceKey,
+    upload.multipartUploadId,
+    manifest.value
   );
 }
 
@@ -71,8 +62,9 @@ async function rejectSizeMismatch(
   ctx: UploadContext,
   uploadId: string,
   video: VideoRecord,
-  actualSizeBytes: number
+  mismatch: UploadSizeMismatch
 ): Promise<Result<never, UploadSizeMismatch | StorageUnavailable | DatabaseUnavailable>> {
+  const { actualSizeBytes } = mismatch;
   const removed = await ctx.storage.deleteObject(ctx.rawBucket, video.sourceKey);
   if (isErr(removed)) return removed;
 
@@ -85,18 +77,18 @@ async function rejectSizeMismatch(
     to: 'REJECTED',
     eventType: 'upload.rejected',
     eventPayload: {
-      declaredSizeBytes: video.sourceSizeBytes,
+      declaredSizeBytes: mismatch.declaredSizeBytes,
       actualSizeBytes,
       reason: 'Uploaded size does not match declared size',
     },
     patch: {
       errorCode: ErrorCodes.UPLOAD_SIZE_MISMATCH,
-      errorMessage: `Declared size ${video.sourceSizeBytes} bytes but received ${actualSizeBytes} bytes`,
+      errorMessage: `Declared size ${mismatch.declaredSizeBytes} bytes but received ${actualSizeBytes} bytes`,
     },
   });
   if (isErr(transitioned)) return transitioned;
 
-  return err(uploadSizeMismatch(video.id, video.sourceSizeBytes ?? null, actualSizeBytes));
+  return err(mismatch);
 }
 
 /**
@@ -107,7 +99,7 @@ export async function completeUpload(
   ctx: UploadContext,
   user: UserContext,
   uploadId: string,
-  parts?: UploadPart[]
+  parts?: readonly UploadPart[]
 ): Promise<Result<CompleteUploadResult, CompleteUploadFailure>> {
   const owned = await loadOwnedUpload(ctx, user, uploadId, 'complete this upload');
   if (isErr(owned)) return owned;
@@ -127,10 +119,9 @@ export async function completeUpload(
   if (isErr(head)) return head;
   if (!head.value) return err(sourceMissing(video.id, video.sourceKey));
 
-  const actualSizeBytes = head.value.contentLength;
-  if (video.sourceSizeBytes && actualSizeBytes !== video.sourceSizeBytes) {
-    return rejectSizeMismatch(ctx, uploadId, video, actualSizeBytes);
-  }
+  const size = decideSizeMatch({ video, actualSizeBytes: head.value.contentLength });
+  if (isErr(size)) return rejectSizeMismatch(ctx, uploadId, video, size.error);
+  const actualSizeBytes = size.value;
 
   const completed = await ctx.uploads.updateStatus(uploadId, 'COMPLETED');
   if (isErr(completed)) return completed;

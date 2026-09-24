@@ -12,7 +12,7 @@ import {
 } from '../index';
 import { ENCODER } from './encoder-settings';
 
-describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
+describe('FFmpeg keyframe alignment and thread back-off', () => {
   const defaultRendition: LadderEntry = {
     name: '1080p',
     width: 1920,
@@ -51,19 +51,18 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
     },
   ];
 
-  describe('AC 3: Thread back-off calculation (SDD §9.6 rule 6)', () => {
-    it('computes threads per attempt correctly: attempt 1 = FFMPEG_THREADS, attempt 2 = FFMPEG_THREADS - 1, attempt >= FFMPEG_THREADS = 1', () => {
-      // With baseThreads = 2
-      expect(computeFfmpegThreads(2, 1)).toBe(2);
-      expect(computeFfmpegThreads(2, 2)).toBe(1);
-      expect(computeFfmpegThreads(2, 3)).toBe(1);
-
-      // With baseThreads = 4
-      expect(computeFfmpegThreads(4, 1)).toBe(4);
-      expect(computeFfmpegThreads(4, 2)).toBe(3);
-      expect(computeFfmpegThreads(4, 3)).toBe(2);
-      expect(computeFfmpegThreads(4, 4)).toBe(1);
-      expect(computeFfmpegThreads(4, 5)).toBe(1);
+  describe('thread back-off (SDD §9.6 rule 6)', () => {
+    it.each([
+      { base: 2, attempt: 1, expected: 2 },
+      { base: 2, attempt: 2, expected: 1 },
+      { base: 2, attempt: 3, expected: 1 },
+      { base: 4, attempt: 1, expected: 4 },
+      { base: 4, attempt: 2, expected: 3 },
+      { base: 4, attempt: 3, expected: 2 },
+      { base: 4, attempt: 4, expected: 1 },
+      { base: 4, attempt: 5, expected: 1 },
+    ])('computes $expected threads from base $base on attempt $attempt', ({ base, attempt, expected }) => {
+      expect(computeFfmpegThreads(base, attempt)).toBe(expected);
     });
 
     it.each([
@@ -101,27 +100,23 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
     });
   });
 
-  describe('AC 6: ENOSPC error classification', () => {
-    it('classifies "No space left on device" as TransientError with hint DISK_FULL', () => {
-      const err = classifyFfmpegError(
-        1,
-        null,
-        'av_interleaved_write_frame(): No space left on device\nError writing trailer: No space left on device'
-      );
-      expect(err).toBeInstanceOf(TransientError);
-      expect((err as TransientError).code).toBe(ErrorCodes.DISK_FULL);
-      expect((err as TransientError).details?.['hint']).toBe('DISK_FULL');
-    });
-
-    it('classifies enospc in stderr as TransientError with hint DISK_FULL', () => {
-      const err = classifyFfmpegError(1, null, 'Error: ENOSPC: cannot write segment to disk');
+  describe('ENOSPC error classification', () => {
+    it.each([
+      'av_interleaved_write_frame(): No space left on device\nError writing trailer: No space left on device',
+      'Error: ENOSPC: cannot write segment to disk',
+    ])('classifies %j as TransientError with hint DISK_FULL', (stderr) => {
+      const err = classifyFfmpegError(1, null, stderr);
       expect(err).toBeInstanceOf(TransientError);
       expect((err as TransientError).code).toBe(ErrorCodes.DISK_FULL);
       expect((err as TransientError).details?.['hint']).toBe('DISK_FULL');
     });
   });
 
-  describe('AC 4: Keyframe timestamps of segment N across 1080p/720p/480p', () => {
+  describe('keyframe timestamps of segment N across 1080p/720p/480p', () => {
+    // One frame at 24 fps is ~0.042 s.
+    const FRAME_TOLERANCE_S = 0.05;
+    const fixturesDir = path.resolve(__dirname, '../../../../../tests/fixtures');
+
     function getKeyframeTimestamp(segPath: string): number {
       const stdout = execFileSync(
         'ffprobe',
@@ -146,82 +141,30 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
       return Number(parsed.frames[0].pts_time);
     }
 
-    it('produces identical keyframe timestamps (within 1 frame / 0.05s) across 1080p/720p/480p for vfr.mp4', async () => {
-      const rootDir = path.resolve(__dirname, '../../../../../');
-      const vfrPath = path.join(rootDir, 'tests/fixtures/vfr.mp4');
-      if (!fs.existsSync(vfrPath)) return;
-
+    async function segmentKeyframes(
+      sourcePath: string,
+      durationMs: number,
+      keptSegments?: number
+    ): Promise<Record<string, number[]>> {
       const timestampsByRendition: Record<string, number[]> = {};
-
       for (const rendition of renditions) {
-        const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-vfr-${rendition.name}-`));
+        const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-keyframes-${rendition.name}-`));
         try {
           await runFfmpegTranscode({
             ...ENCODER,
-            sourcePath: vfrPath,
+            sourcePath,
             outputDir: outDir,
             rendition,
             fps: 24,
-            durationMs: 15000,
+            durationMs,
             threads: 0,
             preset: 'ultrafast',
           });
-
-          const segFiles = fs
-            .readdirSync(outDir)
-            .filter((f) => f.endsWith('.ts'))
-            .sort();
-          expect(segFiles.length).toBeGreaterThanOrEqual(2);
-
-          timestampsByRendition[rendition.name] = segFiles.map((f) =>
-            getKeyframeTimestamp(path.join(outDir, f))
-          );
-        } finally {
-          fs.rmSync(outDir, { recursive: true, force: true });
-        }
-      }
-
-      // Assert keyframe timestamps match across all 3 renditions for each segment N
-      const segCount = timestampsByRendition['1080p']?.length ?? 0;
-      for (let i = 0; i < segCount; i++) {
-        const t1080 = timestampsByRendition['1080p']?.[i] ?? 0;
-        const t720 = timestampsByRendition['720p']?.[i] ?? 0;
-        const t480 = timestampsByRendition['480p']?.[i] ?? 0;
-
-        // Within 1 frame tolerance (at 24fps, 1 frame is ~0.042s)
-        expect(Math.abs(t1080 - t720)).toBeLessThan(0.05);
-        expect(Math.abs(t1080 - t480)).toBeLessThan(0.05);
-      }
-    }, 60000);
-
-    it('produces identical keyframe timestamps across 1080p/720p/480p for s60.mp4', async () => {
-      const rootDir = path.resolve(__dirname, '../../../../../');
-      const s60Path = path.join(rootDir, 'tests/fixtures/s60.mp4');
-      if (!fs.existsSync(s60Path)) return;
-
-      const timestampsByRendition: Record<string, number[]> = {};
-
-      for (const rendition of renditions) {
-        const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-s60-${rendition.name}-`));
-        try {
-          await runFfmpegTranscode({
-            ...ENCODER,
-            sourcePath: s60Path,
-            outputDir: outDir,
-            rendition,
-            fps: 24,
-            durationMs: 18000, // 3 segments
-            threads: 0,
-            preset: 'ultrafast',
-          });
-
           const segFiles = fs
             .readdirSync(outDir)
             .filter((f) => f.endsWith('.ts'))
             .sort()
-            .slice(0, 3);
-          expect(segFiles.length).toBe(3);
-
+            .slice(0, keptSegments);
           timestampsByRendition[rendition.name] = segFiles.map((f) =>
             getKeyframeTimestamp(path.join(outDir, f))
           );
@@ -229,16 +172,41 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
           fs.rmSync(outDir, { recursive: true, force: true });
         }
       }
+      return timestampsByRendition;
+    }
 
-      // Assert keyframe timestamps match across all 3 renditions for each segment N
-      for (let i = 0; i < 3; i++) {
+    function expectAligned(timestampsByRendition: Record<string, number[]>, segCount: number) {
+      for (let i = 0; i < segCount; i++) {
         const t1080 = timestampsByRendition['1080p']?.[i] ?? 0;
         const t720 = timestampsByRendition['720p']?.[i] ?? 0;
         const t480 = timestampsByRendition['480p']?.[i] ?? 0;
-
-        expect(Math.abs(t1080 - t720)).toBeLessThan(0.05);
-        expect(Math.abs(t1080 - t480)).toBeLessThan(0.05);
+        expect(Math.abs(t1080 - t720)).toBeLessThan(FRAME_TOLERANCE_S);
+        expect(Math.abs(t1080 - t480)).toBeLessThan(FRAME_TOLERANCE_S);
       }
+    }
+
+    it('produces identical keyframe timestamps (within 1 frame) across 1080p/720p/480p for vfr.mp4', async () => {
+      const vfrPath = path.join(fixturesDir, 'vfr.mp4');
+      if (!fs.existsSync(vfrPath)) return;
+
+      const timestamps = await segmentKeyframes(vfrPath, 15000);
+
+      for (const rendition of renditions) {
+        expect(timestamps[rendition.name]?.length ?? 0).toBeGreaterThanOrEqual(2);
+      }
+      expectAligned(timestamps, timestamps['1080p']?.length ?? 0);
+    }, 60000);
+
+    it('produces identical keyframe timestamps across 1080p/720p/480p for s60.mp4', async () => {
+      const s60Path = path.join(fixturesDir, 's60.mp4');
+      if (!fs.existsSync(s60Path)) return;
+
+      const timestamps = await segmentKeyframes(s60Path, 18000, 3);
+
+      for (const rendition of renditions) {
+        expect(timestamps[rendition.name]).toHaveLength(3);
+      }
+      expectAligned(timestamps, 3);
     }, 60000);
   });
 });

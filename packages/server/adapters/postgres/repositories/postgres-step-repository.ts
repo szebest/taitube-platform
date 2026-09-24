@@ -22,10 +22,6 @@ export class PostgresStepRepository extends StepRepository {
     super();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async claim(options: ClaimStepOptions): Promise<Result<ClaimStepResult, DatabaseUnavailable>> {
     const { id, videoId, step, rendition = '-', jobId, attempt, workerId, lockToken } = options;
     const claimed = await fromPromise(
@@ -49,7 +45,7 @@ export class PostgresStepRepository extends StepRepository {
           WHERE processing_steps.status <> 'DONE'::step_status
         RETURNING lock_token;
       `),
-      this.unavailable('claim')
+      databaseUnavailable.during('claim')
     );
 
     return map(claimed, (rows) => {
@@ -75,7 +71,7 @@ export class PostgresStepRepository extends StepRepository {
           } as Partial<typeof schema.processingSteps.$inferInsert>)
           .where(this.fencedStep(videoId, step, rendition, lockToken))
           .returning(CLAIMED),
-      this.unavailable('complete')
+      databaseUnavailable.during('complete')
     );
 
     return map(updated, (rows) =>
@@ -97,7 +93,7 @@ export class PostgresStepRepository extends StepRepository {
           } as Partial<typeof schema.processingSteps.$inferInsert>)
           .where(this.fencedStep(videoId, step, rendition, lockToken))
           .returning(CLAIMED),
-      this.unavailable('fail')
+      databaseUnavailable.during('fail')
     );
 
     return map(updated, (rows) =>
@@ -125,7 +121,7 @@ export class PostgresStepRepository extends StepRepository {
             )
           )
           .returning(CLAIMED),
-      this.unavailable('markDead')
+      databaseUnavailable.during('markDead')
     );
 
     return map(updated, (rows) => rows.length > 0);
@@ -139,7 +135,7 @@ export class PostgresStepRepository extends StepRepository {
           .set({ heartbeatAt: new Date() })
           .where(eq(schema.processingSteps.lockToken, lockToken))
           .returning(CLAIMED),
-      this.unavailable('heartbeat')
+      databaseUnavailable.during('heartbeat')
     );
 
     return map(updated, (rows) => rows.length > 0);
@@ -154,7 +150,7 @@ export class PostgresStepRepository extends StepRepository {
           .select()
           .from(schema.processingSteps)
           .where(eq(schema.processingSteps.videoId, videoId)),
-      this.unavailable('findByVideoId')
+      databaseUnavailable.during('findByVideoId')
     );
   }
 
@@ -171,7 +167,7 @@ export class PostgresStepRepository extends StepRepository {
               sql`COALESCE(${schema.processingSteps.heartbeatAt}, ${schema.processingSteps.startedAt}) < ${cutoff}`
             )
           ),
-      this.unavailable('countRunningStale')
+      databaseUnavailable.during('countRunningStale')
     );
 
     return map(counted, ([row]) => row?.count ?? 0);

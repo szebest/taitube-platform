@@ -1,9 +1,7 @@
-import { type Problem, problemFor } from '@vp/api-contracts';
+import { PROBLEM_CONTENT_TYPE, type Problem, problemFor } from '@vp/api-contracts';
 import type { AnyFailure } from '@vp/errors';
 import type { Result } from '@vp/result';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-
-export const PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
 
 /**
  * Typed from the service's own error union, so an override for a code the service cannot return is

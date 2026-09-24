@@ -1,8 +1,7 @@
 import { USER_ROLES } from '@vp/domain';
-import { describe, expect, it } from 'vitest';
 import { userRoleEnum, users } from '../schema';
 
-describe('Users Schema (Ticket 39)', () => {
+describe('users schema', () => {
   it('builds userRoleEnum from the domain vocabulary', () => {
     expect(userRoleEnum.enumValues).toEqual([...USER_ROLES]);
   });

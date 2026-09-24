@@ -1,5 +1,6 @@
 import type { SubscriptionCachePort } from '@vp/core/ports';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
+import { CacheKeys } from '@vp/events';
 import { type Result, andThenAsync, fromPromise, map, ok } from '@vp/result';
 import type { Redis } from 'ioredis';
 
@@ -26,27 +27,15 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
     this.subscriberCountTtlSeconds = config.subscriberCountTtlSeconds;
   }
 
-  private userKey(userId: string): string {
-    return `taitube:user:${userId}:subscriptions`;
-  }
-
-  private channelCountKey(channelId: string): string {
-    return `taitube:channel:${channelId}:subscriber_count`;
-  }
-
-  private unavailable(operation: string) {
-    return (cause: unknown): CacheUnavailable => cacheUnavailable(operation, cause);
-  }
-
   async isSubscribed(
     userId: string,
     channelId: string
   ): Promise<Result<boolean | null, CacheUnavailable>> {
-    const key = this.userKey(userId);
+    const key = CacheKeys.userSubscriptions(userId);
 
     const exists = await fromPromise(
       () => this.redis.exists(key),
-      this.unavailable('isSubscribed')
+      cacheUnavailable.during('isSubscribed')
     );
 
     return await andThenAsync(
@@ -55,7 +44,7 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
         if (present === 0) return ok(null);
         const member = await fromPromise(
           () => this.redis.sismember(key, channelId),
-          this.unavailable('isSubscribed')
+          cacheUnavailable.during('isSubscribed')
         );
         return map(member, (hit) => hit === 1);
       }
@@ -66,7 +55,7 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
     userId: string,
     channelId: string
   ): Promise<Result<void, CacheUnavailable>> {
-    const key = this.userKey(userId);
+    const key = CacheKeys.userSubscriptions(userId);
     const done = await fromPromise(
       () =>
         this.redis
@@ -75,7 +64,7 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
           .sadd(key, channelId)
           .expire(key, this.userSubscriptionsTtlSeconds)
           .exec(),
-      this.unavailable('addSubscription')
+      cacheUnavailable.during('addSubscription')
     );
 
     return map(done, () => undefined);
@@ -86,8 +75,8 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
     channelId: string
   ): Promise<Result<void, CacheUnavailable>> {
     const done = await fromPromise(
-      () => this.redis.srem(this.userKey(userId), channelId),
-      this.unavailable('removeSubscription')
+      () => this.redis.srem(CacheKeys.userSubscriptions(userId), channelId),
+      cacheUnavailable.during('removeSubscription')
     );
 
     return map(done, () => undefined);
@@ -97,7 +86,7 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
     userId: string,
     channelIds: string[]
   ): Promise<Result<void, CacheUnavailable>> {
-    const key = this.userKey(userId);
+    const key = CacheKeys.userSubscriptions(userId);
     const done = await fromPromise(
       () =>
         this.redis
@@ -106,7 +95,7 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
           .sadd(key, ...(channelIds.length > 0 ? channelIds : [EMPTY_SENTINEL]))
           .expire(key, this.userSubscriptionsTtlSeconds)
           .exec(),
-      this.unavailable('setUserSubscriptions')
+      cacheUnavailable.during('setUserSubscriptions')
     );
 
     return map(done, () => undefined);
@@ -114,8 +103,8 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
 
   async getSubscriberCount(channelId: string): Promise<Result<number | null, CacheUnavailable>> {
     const raw = await fromPromise(
-      () => this.redis.get(this.channelCountKey(channelId)),
-      this.unavailable('getSubscriberCount')
+      () => this.redis.get(CacheKeys.channelSubscriberCount(channelId)),
+      cacheUnavailable.during('getSubscriberCount')
     );
 
     return map(raw, (value) => {
@@ -132,12 +121,12 @@ export class RedisSubscriptionCacheAdapter implements SubscriptionCachePort {
     const done = await fromPromise(
       () =>
         this.redis.set(
-          this.channelCountKey(channelId),
+          CacheKeys.channelSubscriberCount(channelId),
           String(count),
           'EX',
           this.subscriberCountTtlSeconds
         ),
-      this.unavailable('setSubscriberCount')
+      cacheUnavailable.during('setSubscriberCount')
     );
 
     return map(done, () => undefined);

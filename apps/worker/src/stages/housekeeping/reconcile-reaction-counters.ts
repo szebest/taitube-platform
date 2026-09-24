@@ -26,9 +26,8 @@ function drifted(left: Counts, right: Counts): boolean {
 }
 
 /**
- * Drift reconciler for video reaction counters (Ticket 40, SDD §9.8, AC 48-49).
- * Verifies that denormalized and cached reaction counters match ground-truth COUNT(*) from video_reactions,
- * repairing any detected drift automatically.
+ * Repairs denormalized and cached reaction counters that drift from COUNT(*) over
+ * video_reactions (SDD §9.8).
  *
  * `CacheUnavailable` is narrowed away: a cache that cannot answer reports no drift and a cache that
  * cannot be written is repaired by the next run, so only the database's failures reach the queue.

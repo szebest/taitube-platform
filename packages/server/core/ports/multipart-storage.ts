@@ -56,7 +56,7 @@ export abstract class MultipartStorage implements HealthCheckable<StorageUnavail
     bucket: string,
     key: string,
     uploadId: string,
-    parts: StorageCompletePartInput[]
+    parts: readonly StorageCompletePartInput[]
   ): Promise<Result<void, StorageUnavailable>>;
   abstract abortMultipartUpload(
     bucket: string,

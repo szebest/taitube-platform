@@ -2,13 +2,31 @@
  * Deterministic S3 Object Keys as specified in SDD §7.
  */
 
+export function rawPrefix(videoId: string): string {
+  return `raw/${videoId}/`;
+}
+
 export function rawSourceKey(videoId: string, ext = 'mp4'): string {
   const cleanExt = ext.startsWith('.') ? ext.slice(1) : ext;
-  return `raw/${videoId}/source.${cleanExt}`;
+  return `${rawPrefix(videoId)}source.${cleanExt}`;
+}
+
+export function videoPrefix(videoId: string): string {
+  return `videos/${videoId}/`;
 }
 
 function hlsPrefix(videoId: string, generation: number): string {
-  return generation > 1 ? `videos/${videoId}/hls/g${generation}` : `videos/${videoId}/hls`;
+  const hls = `${videoPrefix(videoId)}hls`;
+  return generation > 1 ? `${hls}/g${generation}` : hls;
+}
+
+/** Generation 1 has no directory of its own, so its prefix would also cover every later one. */
+export function reprocessGenerationPrefix(videoId: string, generation: number): string | null {
+  return generation > 1 ? `${hlsPrefix(videoId, generation)}/` : null;
+}
+
+export function renditionPrefix(videoId: string, rendition: string, generation = 1): string {
+  return `${hlsPrefix(videoId, generation)}/${rendition}/`;
 }
 
 export function masterPlaylistKey(videoId: string, generation = 1): string {
@@ -22,7 +40,7 @@ export function renditionObjectKey(
   filename: string,
   generation = 1
 ): string {
-  return `${hlsPrefix(videoId, generation)}/${rendition}/${filename}`;
+  return `${renditionPrefix(videoId, rendition, generation)}${filename}`;
 }
 
 export function renditionPlaylistKey(videoId: string, rendition: string, generation = 1): string {
@@ -44,19 +62,19 @@ export function segmentKey(
 }
 
 export function posterKey(videoId: string): string {
-  return `videos/${videoId}/thumbs/poster.jpg`;
+  return `${videoPrefix(videoId)}thumbs/poster.jpg`;
 }
 
 export function spriteKey(videoId: string): string {
-  return `videos/${videoId}/thumbs/sprite.jpg`;
+  return `${videoPrefix(videoId)}thumbs/sprite.jpg`;
 }
 
 export function spriteVttKey(videoId: string): string {
-  return `videos/${videoId}/thumbs/sprite.vtt`;
+  return `${videoPrefix(videoId)}thumbs/sprite.vtt`;
 }
 
 export function metaKey(videoId: string): string {
-  return `videos/${videoId}/meta.json`;
+  return `${videoPrefix(videoId)}meta.json`;
 }
 
 export function sanitizeStorageUrl(url: string): string {

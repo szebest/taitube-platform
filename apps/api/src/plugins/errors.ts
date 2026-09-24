@@ -1,5 +1,10 @@
 import { STATUS_CODES } from 'node:http';
-import { type Problem, problemDetails, problemStatus } from '@vp/api-contracts';
+import {
+  PROBLEM_CONTENT_TYPE,
+  type Problem,
+  problemDetails,
+  problemStatus,
+} from '@vp/api-contracts';
 import { type ErrorCode, ErrorCodes, PipelineError } from '@vp/errors';
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
@@ -15,8 +20,6 @@ interface ErrorWithValidation {
 interface ErrorWithStatusCode {
   statusCode?: number;
 }
-
-export const PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
 
 /** The vocabulary's name for a Fastify 4xx; a status with none reads as a request that failed validation. */
 const TRANSPORT_CODES: ReadonlyMap<number, ErrorCode> = new Map([

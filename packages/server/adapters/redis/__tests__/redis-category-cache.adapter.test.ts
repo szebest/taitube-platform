@@ -1,14 +1,11 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import type { Category } from '@vp/domain';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { cacheUnavailable } from '@vp/errors';
+import { CacheKeys } from '@vp/events';
 import { err, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
-import {
-  CATEGORIES_CACHE_KEY,
-  CATEGORIES_INVALIDATION_CHANNEL,
-  RedisCategoryCacheAdapter,
-} from '../redis-category-cache.adapter';
+import { RedisCategoryCacheAdapter } from '../redis-category-cache.adapter';
 
 const CACHES = inProcessAppConfig().caches;
 
@@ -88,7 +85,7 @@ describe('RedisCategoryCacheAdapter', () => {
 
   it('writes L2 under the shared key with the configured ttl', async () => {
     expectOk(await service.getCategories(fetcher));
-    expect(await cache.get(CATEGORIES_CACHE_KEY)).not.toBeNull();
+    expect(await cache.get(CacheKeys.categories)).not.toBeNull();
   });
 
   it('expires an L1 entry once its ttl has passed', async () => {
@@ -122,15 +119,15 @@ describe('RedisCategoryCacheAdapter', () => {
     await service.invalidate();
 
     expect(service.getL1Size()).toBe(0);
-    expect(expectOk(await cache.get(CATEGORIES_CACHE_KEY))).toBeNull();
-    expect(cache.publishedMessages.at(-1)?.channel).toBe(CATEGORIES_INVALIDATION_CHANNEL);
+    expect(expectOk(await cache.get(CacheKeys.categories))).toBeNull();
+    expect(cache.publishedMessages.at(-1)?.channel).toBe(CacheKeys.categoriesInvalidated);
   });
 
   it('opens no subscription until it is started', async () => {
     const replica = new RedisCategoryCacheAdapter({ ...CACHES.categories, cache });
     expectOk(await replica.getCategories(fetcher));
 
-    await cache.publish(CATEGORIES_INVALIDATION_CHANNEL, JSON.stringify({ invalidatedAt: 1 }));
+    await cache.publish(CacheKeys.categoriesInvalidated, JSON.stringify({ invalidatedAt: 1 }));
 
     expect(replica.getL1Size()).toBe(1);
     await replica.close();
@@ -142,7 +139,7 @@ describe('RedisCategoryCacheAdapter', () => {
     expectOk(await replica.getCategories(fetcher));
     expect(replica.getL1Size()).toBe(1);
 
-    await cache.publish(CATEGORIES_INVALIDATION_CHANNEL, JSON.stringify({ invalidatedAt: 1 }));
+    await cache.publish(CacheKeys.categoriesInvalidated, JSON.stringify({ invalidatedAt: 1 }));
 
     expect(replica.getL1Size()).toBe(0);
     await replica.close();
@@ -155,7 +152,7 @@ describe('RedisCategoryCacheAdapter', () => {
     await replica.close();
     expectOk(await replica.getCategories(fetcher));
 
-    await cache.publish(CATEGORIES_INVALIDATION_CHANNEL, JSON.stringify({ invalidatedAt: 1 }));
+    await cache.publish(CacheKeys.categoriesInvalidated, JSON.stringify({ invalidatedAt: 1 }));
     expect(replica.getL1Size()).toBe(1);
   });
 

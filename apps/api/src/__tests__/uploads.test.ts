@@ -1,421 +1,97 @@
-import * as http from 'node:http';
-import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { ErrorCodes, queueUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
-import { MockProbeJobQueue } from './mock-probe-queue';
+import { type FakeS3, startFakeS3 } from './fake-s3';
+import { buildInMemoryApp } from './in-memory-app';
+import { postUpload, putObject } from './upload-requests';
 
-describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
+const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
+
+describe('apps/api single-part upload initiation', () => {
   let app: FastifyInstance;
-  const repositories = new InMemoryRepositories();
-  const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
+  let s3: FakeS3;
   const authToken = mintToken({ sub: DEV_USER_ID, role: 'user', ttl: '1h' });
 
-  // In-memory mock S3 HTTP Server simulating MinIO
-  let s3Server: http.Server;
-  let s3Port: number;
-  const storageMap = new Map<Buffer | string, { bytes: Buffer; contentType: string }>();
-  const signedLengths = new Map<string, number>();
-
-  // Mock queue for probe
-  const mockProbeQueue = new MockProbeJobQueue();
-  const probeJobs = mockProbeQueue.jobs;
-
   beforeAll(async () => {
-    // 1. Start lightweight S3 mock server with signature / length checks
-    s3Server = http.createServer((req, res) => {
-      const url = new URL(req.url ?? '/', `http://127.0.0.1:${s3Port}`);
-      // In path-style S3: /bucket/key -> strip bucket
-      const pathSegments = url.pathname.replace(/^\/+/, '').split('/');
-      const key = pathSegments.slice(1).join('/'); // e.g. "raw/{videoId}/source.mp4"
-
-      if (req.method === 'PUT') {
-        const declaredLength = Number(req.headers['content-length'] ?? -1);
-        const contentType = req.headers['content-type'] || 'application/octet-stream';
-        const chunks: Buffer[] = [];
-
-        req.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
-        req.on('end', () => {
-          const body = Buffer.concat(chunks);
-
-          // AC 18: Uploading body of different length fails at storage level
-          const expected = signedLengths.get(key);
-          if (
-            (expected !== undefined && (declaredLength !== expected || body.length !== expected)) ||
-            (declaredLength !== -1 && body.length !== declaredLength)
-          ) {
-            res.writeHead(400, { 'Content-Type': 'application/xml' });
-            res.end(
-              '<Error><Code>SignatureDoesNotMatch</Code><Message>The request signature we calculated does not match the signature you provided.</Message></Error>'
-            );
-            return;
-          }
-
-          storageMap.set(key, { bytes: body, contentType });
-          res.writeHead(200, {
-            ETag: '"d41d8cd98f00b204e9800998ecf8427e"',
-            'Content-Length': '0',
-          });
-          res.end();
-        });
-        return;
-      }
-
-      if (req.method === 'HEAD') {
-        const found = storageMap.get(key);
-        if (!found) {
-          res.writeHead(404);
-          res.end();
-          return;
-        }
-        res.writeHead(200, {
-          'Content-Length': String(found.bytes.length),
-          'Content-Type': found.contentType,
-          ETag: '"d41d8cd98f00b204e9800998ecf8427e"',
-        });
-        res.end();
-        return;
-      }
-
-      if (req.method === 'DELETE') {
-        storageMap.delete(key);
-        res.writeHead(204);
-        res.end();
-        return;
-      }
-
-      res.writeHead(404);
-      res.end();
-    });
-
-    await new Promise<void>((resolve) => {
-      s3Server.listen(0, '127.0.0.1', () => {
-        const addr = s3Server.address();
-        if (typeof addr === 'object' && addr) {
-          s3Port = addr.port;
-        }
-        resolve();
-      });
-    });
-
-    // 2. Build Fastify API with storage client pointing to local test S3 server
-    const s3Client = new S3StorageClient({
-      type: 'connection',
-      endpoint: `http://127.0.0.1:${s3Port}`,
-      region: 'us-east-1',
-      accessKeyId: 'test-key',
-      secretAccessKey: 'test-secret',
-      forcePathStyle: true,
-    });
-
-    const multipart = new S3MultipartStorage({ type: 'storage', storageClient: s3Client });
-
-    app = await buildApp({
-      adapters: {
-        repositories,
-        storage: s3Client,
-        multipart,
-        probeQueue: mockProbeQueue,
-      },
+    s3 = await startFakeS3();
+    ({ app } = await buildInMemoryApp({
+      adapters: { storage: s3.storage, multipart: s3.multipart },
       config: inProcessAppConfig({ limits: { maxUploadBytes: 100 * 1024 * 1024 } }),
-    });
-    await app.ready();
+    }));
   });
 
   afterAll(async () => {
     await app.close();
-    await new Promise<void>((resolve) => s3Server.close(() => resolve()));
+    await s3.close();
   });
 
-  it('AC 17: POST /v1/uploads returns 201 with single strategy, presigned PUT URL and <= 15 min expiry', async () => {
+  it('answers POST /v1/uploads with 201, a single presigned PUT URL and an expiry within 15 minutes', async () => {
     const start = Date.now();
-    const res = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {
-        filename: 'sintel.mp4',
-        sizeBytes: 1024 * 100, // 100 KB
-        contentType: 'video/mp4',
-      },
-    });
+    const res = await postUpload(app, authToken, { filename: 'sintel.mp4', sizeBytes: 1024 * 100 });
 
-    const elapsed = Date.now() - start;
-    expect(elapsed).toBeLessThan(500); // p95 < 200 ms locally (allow 500 ms under heavy concurrent suite)
+    expect(Date.now() - start).toBeLessThan(500);
     expect(res.statusCode).toBe(201);
-
     const body = res.json();
     expect(body.strategy).toBe('single');
     expect(body.videoId).toBeDefined();
     expect(body.uploadId).toBeDefined();
-    expect(body.singleUrl).toContain(`http://127.0.0.1:${s3Port}/raw/`);
+    expect(body.singleUrl).toContain(`${s3.endpoint}/raw/`);
     expect(body.singleUrl).toContain(body.videoId);
     expect(body.singleUrl).toContain('X-Amz-Signature');
     expect(body.headers['content-type']).toBe('video/mp4');
     expect(body.headers['content-length']).toBe(String(1024 * 100));
-
-    const expiresAt = new Date(body.expiresAt).getTime();
-    const diffMs = expiresAt - Date.now();
+    const diffMs = new Date(body.expiresAt).getTime() - Date.now();
     expect(diffMs).toBeGreaterThan(14 * 60 * 1000);
     expect(diffMs).toBeLessThanOrEqual(15 * 60 * 1000 + 2000);
   });
 
-  it('AC 18: Uploading body of different length fails; correct body succeeds directly to storage', async () => {
-    const res = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {
-        filename: 'clip.mp4',
-        sizeBytes: 50,
-        contentType: 'video/mp4',
-      },
-    });
+  it('lets storage refuse a body of the wrong length and accept the signed one', async () => {
+    const res = await postUpload(app, authToken, { filename: 'clip.mp4', sizeBytes: 50 });
     expect(res.statusCode).toBe(201);
     const { videoId, singleUrl } = res.json();
-    signedLengths.set(`raw/${videoId}/source.mp4`, 50);
+    s3.signedLengths.set(`raw/${videoId}/source.mp4`, 50);
 
-    // 1. Upload wrong body length (e.g. 20 bytes instead of declared 50 bytes)
-    const wrongBody = Buffer.alloc(20, 'a');
-    const failRes = await fetch(singleUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'video/mp4',
-        'Content-Length': '20', // Mismatched!
-      },
-      body: wrongBody,
-    });
-    expect(failRes.status).toBe(400);
-
-    // 2. Upload exact matching body length (50 bytes)
-    const correctBody = Buffer.alloc(50, 'v');
-    const successRes = await fetch(singleUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'video/mp4',
-        'Content-Length': '50',
-      },
-      body: correctBody,
-    });
-    expect(successRes.status).toBe(200);
+    expect((await putObject(singleUrl, 20)).status).toBe(400);
+    expect((await putObject(singleUrl, 50)).status).toBe(200);
   });
 
-  it('AC 19: complete performs HeadObject, CAS UPLOADING->UPLOADED, appends event, enqueues probe with {videoId}--probe--g1; idempotent on repeat', async () => {
-    const size = 100;
-    const createRes = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {
-        filename: 'complete-test.mp4',
-        sizeBytes: size,
-        contentType: 'video/mp4',
-      },
-    });
-    expect(createRes.statusCode).toBe(201);
-    const { videoId, uploadId, singleUrl } = createRes.json();
-
-    // Upload bytes directly to S3
-    const uploadRes = await fetch(singleUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'video/mp4',
-        'Content-Length': String(size),
-      },
-      body: Buffer.alloc(size, 'x'),
-    });
-    expect(uploadRes.status).toBe(200);
-
-    // Call POST /v1/uploads/:uploadId/complete
-    const completeRes = await app.inject({
-      method: 'POST',
-      url: `/v1/uploads/${uploadId}/complete`,
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {},
-    });
-
-    expect(completeRes.statusCode).toBe(202);
-    expect(completeRes.json()).toEqual({
-      videoId,
-      status: 'UPLOADED',
-      admission: 'admitted',
-    });
-
-    // Verify video in DB is UPLOADED
-    const video = expectOk(await repositories.videos.findById(videoId));
-    expect(video?.status).toBe('UPLOADED');
-
-    // Verify upload.completed event written to video_events
-    const events = expectOk(await repositories.events.findByVideoId(videoId));
-    expect(events.some((e) => e.type === 'upload.completed')).toBe(true);
-
-    // Verify probe job was enqueued in Redis with deterministic jobId
-    const expectedJobId = `${videoId}--probe--g1`;
-    const enqueuedJob = probeJobs.find((j) => j.opts?.jobId === expectedJobId);
-    expect(enqueuedJob).toBeDefined();
-    expect(enqueuedJob?.name).toBe('probe');
-    expect(enqueuedJob?.data.videoId).toBe(videoId);
-    expect(enqueuedJob?.data.generation).toBe(1);
-
-    const initialJobCount = probeJobs.length;
-
-    // Call complete second time (Idempotency) -> returns 202, no second job!
-    const secondComplete = await app.inject({
-      method: 'POST',
-      url: `/v1/uploads/${uploadId}/complete`,
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {},
-    });
-
-    expect(secondComplete.statusCode).toBe(202);
-    expect(secondComplete.json().status).toBe('UPLOADED');
-    expect(probeJobs.length).toBe(initialJobCount); // No second job!
-  });
-
-  it('AC 20: size mismatch at complete -> 422 UPLOAD_SIZE_MISMATCH, object deleted, video REJECTED', async () => {
-    const declaredSize = 200;
-    const actualSize = 150; // Mismatch
-
-    const createRes = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {
-        filename: 'mismatch.mp4',
-        sizeBytes: declaredSize,
-        contentType: 'video/mp4',
-      },
-    });
-    expect(createRes.statusCode).toBe(201);
-    const { videoId, uploadId } = createRes.json();
-
-    // Manually put mismatched size into mock storage map
-    const sourceKey = `raw/${videoId}/source.mp4`;
-    storageMap.set(sourceKey, {
-      bytes: Buffer.alloc(actualSize, 'm'),
-      contentType: 'video/mp4',
-    });
-
-    // Call complete
-    const completeRes = await app.inject({
-      method: 'POST',
-      url: `/v1/uploads/${uploadId}/complete`,
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {},
-    });
-
-    expect(completeRes.statusCode).toBe(422);
-    expect(completeRes.headers['content-type']).toContain('application/problem+json');
-    const problem = completeRes.json();
-    expect(problem.code).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
-
-    // Verify object was deleted from storage
-    expect(storageMap.has(sourceKey)).toBe(false);
-
-    // Verify video status became REJECTED in DB
-    const video = expectOk(await repositories.videos.findById(videoId));
-    expect(video?.status).toBe('REJECTED');
-    expect(video?.errorCode).toBe(ErrorCodes.UPLOAD_SIZE_MISMATCH);
-  });
-
-  it('AC 20: unsupported content type at request time -> 422 UNSUPPORTED_CONTENT_TYPE', async () => {
-    const res = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {
-        filename: 'document.pdf',
-        sizeBytes: 1000,
-        contentType: 'application/pdf', // Invalid
-      },
-    });
+  it.each([
+    {
+      name: 'an unsupported content type',
+      request: { filename: 'document.pdf', sizeBytes: 1000, contentType: 'application/pdf' },
+      code: ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
+    },
+    {
+      name: 'a file over MAX_UPLOAD_BYTES',
+      request: { filename: 'giant.mp4', sizeBytes: 500 * 1024 * 1024 },
+      code: ErrorCodes.UPLOAD_TOO_LARGE,
+    },
+  ])('refuses $name at request time with 422', async ({ request, code }) => {
+    const res = await postUpload(app, authToken, request);
 
     expect(res.statusCode).toBe(422);
     expect(res.headers['content-type']).toContain('application/problem+json');
-    expect(res.json().code).toBe(ErrorCodes.UNSUPPORTED_CONTENT_TYPE);
+    expect(res.json().code).toBe(code);
   });
 
-  it('AC 20: file exceeding MAX_UPLOAD_BYTES -> 422 UPLOAD_TOO_LARGE', async () => {
-    const res = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {
-        filename: 'giant.mp4',
-        sizeBytes: 500 * 1024 * 1024, // 500 MB (app configured with 100 MB max)
-        contentType: 'video/mp4',
-      },
-    });
-
-    expect(res.statusCode).toBe(422);
-    expect(res.headers['content-type']).toContain('application/problem+json');
-    expect(res.json().code).toBe(ErrorCodes.UPLOAD_TOO_LARGE);
-  });
-
-  it('AC 21: rate limit on POST /v1/uploads returns 429 RATE_LIMITED', async () => {
-    // App rate limit configured with 30/min
-    // We create an app instance with rateLimitMax: 3 to quickly trigger 429
-    const limitedApp = await buildApp({
-      adapters: {
-        repositories,
-      },
+  it('rate-limits POST /v1/uploads with 429 RATE_LIMITED', async () => {
+    const { app: limitedApp } = await buildInMemoryApp({
       config: inProcessAppConfig({ limits: { uploadRateLimitMax: 3 } }),
     });
-    await limitedApp.ready();
 
     try {
-      // 3 successful requests
       for (let i = 0; i < 3; i++) {
-        const res = await limitedApp.inject({
-          method: 'POST',
-          url: '/v1/uploads',
-          headers: {
-            authorization: `Bearer ${authToken}`,
-          },
-          payload: {
-            filename: `video-${i}.mp4`,
-            sizeBytes: 100,
-            contentType: 'video/mp4',
-          },
+        const res = await postUpload(limitedApp, authToken, {
+          filename: `video-${i}.mp4`,
+          sizeBytes: 100,
         });
         expect(res.statusCode).toBe(201);
       }
 
-      // 4th request exceeds rate limit -> 429 RATE_LIMITED
-      const limitedRes = await limitedApp.inject({
-        method: 'POST',
-        url: '/v1/uploads',
-        headers: {
-          authorization: `Bearer ${authToken}`,
-        },
-        payload: {
-          filename: 'overflow.mp4',
-          sizeBytes: 100,
-          contentType: 'video/mp4',
-        },
+      const limitedRes = await postUpload(limitedApp, authToken, {
+        filename: 'overflow.mp4',
+        sizeBytes: 100,
       });
 
       expect(limitedRes.statusCode).toBe(429);
@@ -426,75 +102,5 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     } finally {
       await limitedApp.close();
     }
-  });
-
-  it('keeps the commit when the direct enqueue fails after it, and the outbox relay publishes the probe job', async () => {
-    const size = 100;
-    const createRes = await app.inject({
-      method: 'POST',
-      url: '/v1/uploads',
-      headers: {
-        authorization: `Bearer ${authToken}`,
-      },
-      payload: {
-        filename: 'crash-test.mp4',
-        sizeBytes: size,
-        contentType: 'video/mp4',
-      },
-    });
-    expect(createRes.statusCode).toBe(201);
-    const { videoId, uploadId, singleUrl } = createRes.json();
-
-    await fetch(singleUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'video/mp4',
-        'Content-Length': String(size),
-      },
-      body: Buffer.alloc(size, 'x'),
-    });
-
-    const initialProbeCount = probeJobs.length;
-
-    vi.spyOn(mockProbeQueue, 'add').mockResolvedValueOnce(err(queueUnavailable('probe.add')));
-    const completed = await app.inject({
-      method: 'POST',
-      url: `/v1/uploads/${uploadId}/complete`,
-      headers: { authorization: `Bearer ${authToken}` },
-      payload: {},
-    });
-
-    expect(completed.statusCode).toBe(202);
-    expect(completed.json()).toMatchObject({ videoId, status: 'UPLOADED' });
-
-    const video = expectOk(await repositories.videos.findById(videoId));
-    expect(video?.status).toBe('UPLOADED');
-
-    expect(probeJobs.length).toBe(initialProbeCount);
-
-    const pendingOutbox = expectOk(await repositories.outbox.claimBatch(10));
-    const probeOutboxItem = pendingOutbox.find(
-      (item) =>
-        item.kind === 'probe' &&
-        item.payload.type === 'queue' &&
-        (item.payload.job.data as { videoId?: string }).videoId === videoId
-    );
-    expect(probeOutboxItem).toBeDefined();
-
-    for (const item of pendingOutbox) {
-      if (item.payload.type === 'queue') {
-        await mockProbeQueue.add(
-          item.payload.job.name,
-          item.payload.job.data,
-          item.payload.job.opts
-        );
-        await repositories.outbox.markPublished(item.id);
-      }
-    }
-
-    const expectedJobId = `${videoId}--probe--g1`;
-    const relayedJob = probeJobs.find((j) => j.opts?.jobId === expectedJobId);
-    expect(relayedJob).toBeDefined();
-    expect(relayedJob?.data.videoId).toBe(videoId);
   });
 });

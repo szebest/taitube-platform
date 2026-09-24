@@ -85,24 +85,23 @@ export class RedisCacheClient extends CacheClient {
     return this.subRedis;
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): CacheUnavailable => cacheUnavailable(operation, cause);
-  }
-
   async checkHealth(): Promise<Result<void, CacheUnavailable>> {
-    const pinged = await fromPromise(() => this.redis.ping(), this.unavailable('checkHealth'));
+    const pinged = await fromPromise(
+      () => this.redis.ping(),
+      cacheUnavailable.during('checkHealth')
+    );
     if (!pinged.ok) return pinged;
     return pinged.value === 'PONG' ? ok() : err(cacheUnavailable('checkHealth', pinged.value));
   }
 
   async ping(): Promise<Result<string, CacheUnavailable>> {
-    return fromPromise(() => this.redis.ping(), this.unavailable('ping'));
+    return fromPromise(() => this.redis.ping(), cacheUnavailable.during('ping'));
   }
 
   async publish(channel: string, message: string): Promise<Result<number, CacheUnavailable>> {
     return fromPromise(
       () => this.pubsubRedis.publish(channel, message),
-      this.unavailable('publish')
+      cacheUnavailable.during('publish')
     );
   }
 
@@ -121,7 +120,7 @@ export class RedisCacheClient extends CacheClient {
 
     const subscribed = await fromPromise(
       () => this.getSubRedis().subscribe(channel),
-      this.unavailable('subscribe')
+      cacheUnavailable.during('subscribe')
     );
     return map(subscribed, () => undefined);
   }
@@ -144,7 +143,7 @@ export class RedisCacheClient extends CacheClient {
 
     const unsubscribed = await fromPromise(
       () => subRedis.unsubscribe(channel),
-      this.unavailable('unsubscribe')
+      cacheUnavailable.during('unsubscribe')
     );
     return map(unsubscribed, () => undefined);
   }
@@ -164,7 +163,7 @@ export class RedisCacheClient extends CacheClient {
 
     const subscribed = await fromPromise(
       () => this.getSubRedis().psubscribe(pattern),
-      this.unavailable('psubscribe')
+      cacheUnavailable.during('psubscribe')
     );
     return map(subscribed, () => undefined);
   }
@@ -187,13 +186,13 @@ export class RedisCacheClient extends CacheClient {
 
     const unsubscribed = await fromPromise(
       () => subRedis.punsubscribe(pattern),
-      this.unavailable('punsubscribe')
+      cacheUnavailable.during('punsubscribe')
     );
     return map(unsubscribed, () => undefined);
   }
 
   async get(key: string): Promise<Result<string | null, CacheUnavailable>> {
-    return fromPromise(() => this.redis.get(key), this.unavailable('get'));
+    return fromPromise(() => this.redis.get(key), cacheUnavailable.during('get'));
   }
 
   async set(
@@ -206,13 +205,13 @@ export class RedisCacheClient extends CacheClient {
         ttlSeconds === undefined
           ? this.redis.set(key, value)
           : this.redis.set(key, value, 'EX', ttlSeconds),
-      this.unavailable('set')
+      cacheUnavailable.during('set')
     );
     return map(stored, () => undefined);
   }
 
   async del(key: string): Promise<Result<void, CacheUnavailable>> {
-    const deleted = await fromPromise(() => this.redis.del(key), this.unavailable('del'));
+    const deleted = await fromPromise(() => this.redis.del(key), cacheUnavailable.during('del'));
     return map(deleted, () => undefined);
   }
 
@@ -226,7 +225,7 @@ export class RedisCacheClient extends CacheClient {
             : this.pubsubRedis.quit().catch(() => this.pubsubRedis.disconnect()),
           this.subRedis?.quit().catch(() => this.subRedis?.disconnect()),
         ]),
-      this.unavailable('close')
+      cacheUnavailable.during('close')
     );
     return map(closed, () => undefined);
   }

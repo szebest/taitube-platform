@@ -471,6 +471,9 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
+      '@vp/events':
+        specifier: workspace:*
+        version: link:../events
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../job-contracts

@@ -7,6 +7,7 @@ import { createLogger } from '@vp/observability';
 import { err, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
+import { encodeSegments } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS, transcodeDeps } from '../../__tests__/stage-settings';
 import { createTranscodeProcessor } from '../transcode';
 
@@ -91,6 +92,53 @@ describe('apps/worker/stages: transcode', () => {
         contentType: 'video/mp4',
       })
     );
+  });
+
+  it('uploads immutable segments, then the playlist last, and marks the rendition DONE', async () => {
+    const uploads: Array<{ key: string; contentType: string; cacheControl?: string }> = [];
+    const upload = storage.uploadObject.bind(storage);
+    vi.spyOn(storage, 'uploadObject').mockImplementation(async (options) => {
+      const { key, contentType, cacheControl } = options;
+      uploads.push({ key, contentType, cacheControl });
+      return upload(options);
+    });
+    const media: MediaTools = {
+      ...STAGE_SETTINGS.media,
+      transcode: async (options) => {
+        const encoded = await encodeSegments(options, 10, 1000);
+        options.onProgress?.({ percent: 50, outTimeMs: 30_000 });
+        options.onProgress?.({ percent: 100, outTimeMs: 60_000 });
+        return encoded;
+      },
+    };
+
+    const transcode = createTranscodeProcessor(
+      transcodeDeps({ repositories, storage, logger, media })
+    );
+    const result = expectOk(await transcode(job()));
+
+    const playlistKey = `videos/${videoId}/hls/720p/index.m3u8`;
+    expect(result).toMatchObject({ rendition: '720p', segmentCount: 10, playlistKey });
+    expect(result.bytes).toBeGreaterThan(10_000);
+    expect(result.avgBitrateBps).toBeGreaterThan(0);
+
+    const segments = uploads.filter((u) => u.key.endsWith('.ts'));
+    expect(segments).toHaveLength(10);
+    for (const segment of segments) {
+      expect(segment).toMatchObject({
+        contentType: 'video/MP2T',
+        cacheControl: 'public, max-age=31536000, immutable',
+      });
+    }
+    expect(uploads.at(-1)).toEqual({
+      key: playlistKey,
+      contentType: 'application/vnd.apple.mpegurl',
+      cacheControl: 'public, max-age=60',
+    });
+
+    const [rendition] = expectOk(await repositories.renditions.findByVideoId(videoId));
+    expect(rendition).toMatchObject({ status: 'DONE', segmentCount: 10, playlistKey });
+    expect(rendition?.bytes).toBeGreaterThan(10_000);
   });
 
   it.each([

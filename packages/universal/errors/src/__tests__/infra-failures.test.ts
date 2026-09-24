@@ -20,6 +20,15 @@ describe('@vp/errors: infra failure constructors', () => {
     });
   });
 
+  it.each([databaseUnavailable, cacheUnavailable, queueUnavailable, storageUnavailable])(
+    'maps a rejection of one operation to the same failure through during()',
+    (build) => {
+      const cause = new Error('ECONNREFUSED');
+
+      expect(build.during('findById')(cause)).toEqual(build('findById', cause));
+    }
+  );
+
   it('carries the cause when one is given', () => {
     const cause = new Error('ECONNREFUSED');
 

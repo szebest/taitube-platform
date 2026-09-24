@@ -2,7 +2,7 @@ import type { LadderEntry } from '@vp/job-contracts';
 import { buildTranscodeArgs, generateMasterPlaylist, getAvcCodecString } from '../index';
 import { ENCODER } from './encoder-settings';
 
-describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', () => {
+describe('ffmpeg transcode arguments and master playlist', () => {
   const ladder720p: LadderEntry = {
     name: '720p',
     width: 1280,
@@ -49,8 +49,7 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     expect(args).toContain('expr:gte(t,n_forced*4)');
   });
 
-  it('AC 18: buildTranscodeArgs derives GOP = round(2 * fps) and enforces SDD §8.2 flags', () => {
-    // 24 fps -> gop 48
+  it('buildTranscodeArgs derives GOP = round(2 * fps) and enforces SDD §8.2 flags', () => {
     const args24 = buildTranscodeArgs({
       ...ENCODER,
       sourcePath: '/tmp/source.mp4',
@@ -77,7 +76,6 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     expect(args24).toContain('2996k');
     expect(args24).toContain('4200k');
 
-    // Keyframe alignment
     const gIndex24 = args24.indexOf('-g');
     expect(gIndex24).toBeGreaterThan(-1);
     expect(args24[gIndex24 + 1]).toBe('48');
@@ -85,14 +83,12 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     expect(args24[minGIndex24 + 1]).toBe('48');
     expect(args24).toContain('expr:gte(t,n_forced*2)');
 
-    // HLS parameters
     expect(args24).toContain('-hls_time');
     const timeIndex = args24.indexOf('-hls_time');
     expect(args24[timeIndex + 1]).toBe('6');
     expect(args24).toContain('independent_segments+temp_file');
     expect(args24).toContain('mpegts');
 
-    // 29.97 fps -> round(2 * 29.97) = 60
     const args30 = buildTranscodeArgs({
       ...ENCODER,
       sourcePath: '/tmp/source.mp4',
@@ -120,7 +116,6 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     );
     expect(singleVariant).toContain('720p/index.m3u8');
 
-    // Multi-variant order check
     const multiVariant = generateMasterPlaylist({
       ladder: [ladder720p, ladder1080p],
       fps: 24,
@@ -128,7 +123,7 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     const lines = multiVariant.split('\n');
     const firstStreamIdx = lines.findIndex((l) => l.includes('RESOLUTION=1920x1080'));
     const secondStreamIdx = lines.findIndex((l) => l.includes('RESOLUTION=1280x720'));
-    expect(firstStreamIdx).toBeLessThan(secondStreamIdx); // 1080p comes before 720p
+    expect(firstStreamIdx).toBeLessThan(secondStreamIdx);
   });
 
   it('generates master playlist with measured AVERAGE-BANDWIDTH when measuredResults provided', () => {
@@ -144,7 +139,6 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
       level: '3.1',
     };
 
-    // 10-second duration: 5_000_000 bytes -> (5_000_000 * 8) / 10 = 4_000_000 bps
     const master = generateMasterPlaylist({
       ladder: [ladder1080p, ladder720p, ladder480p],
       fps: 24,
@@ -160,12 +154,11 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     expect(master).toContain(
       '#EXT-X-STREAM-INF:BANDWIDTH=2996000,AVERAGE-BANDWIDTH=2500000,RESOLUTION=1280x720,FRAME-RATE=24.000,CODECS="avc1.64001f,mp4a.40.2"'
     );
-    // 480p without measured results falls back to theoretical bitrate (1400 + 96) * 1000 = 1496000
+    // No measurement for 480p: AVERAGE-BANDWIDTH falls back to (1400 + 96) kbps.
     expect(master).toContain(
       '#EXT-X-STREAM-INF:BANDWIDTH=1498000,AVERAGE-BANDWIDTH=1496000,RESOLUTION=854x480,FRAME-RATE=24.000,CODECS="avc1.4d401f,mp4a.40.2"'
     );
 
-    // Verify ordering: 1080p -> 720p -> 480p
     const lines = master.split('\n');
     const idx1080 = lines.findIndex((l) => l.includes('1080p/index.m3u8'));
     const idx720 = lines.findIndex((l) => l.includes('720p/index.m3u8'));
@@ -173,7 +166,6 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     expect(idx1080).toBeLessThan(idx720);
     expect(idx720).toBeLessThan(idx480);
 
-    // Snapshot master playlist for s60 fixture (Ticket 12 testing plan)
     expect(master).toMatchInlineSnapshot(`
       "#EXTM3U
       #EXT-X-VERSION:6
@@ -188,9 +180,11 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     `);
   });
 
-  it('getAvcCodecString computes correct RFC 6381 codec strings for profile and level', () => {
-    expect(getAvcCodecString('high', '4.1')).toBe('avc1.640029');
-    expect(getAvcCodecString('high', '3.1')).toBe('avc1.64001f');
-    expect(getAvcCodecString('main', '3.1')).toBe('avc1.4d401f');
+  it.each([
+    ['high', '4.1', 'avc1.640029'],
+    ['high', '3.1', 'avc1.64001f'],
+    ['main', '3.1', 'avc1.4d401f'],
+  ] as const)('getAvcCodecString maps %s@%s to the RFC 6381 string %s', (profile, level, codec) => {
+    expect(getAvcCodecString(profile, level)).toBe(codec);
   });
 });

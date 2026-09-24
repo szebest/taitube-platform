@@ -13,6 +13,8 @@ export const ProblemSchema = z.object({
 
 export type Problem = z.infer<typeof ProblemSchema>;
 
+export const PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
+
 const PROBLEM_TYPE_BASE = 'https://errors.video-pipeline.local';
 
 export function problemType(code: ErrorCode | string): string {

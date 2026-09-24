@@ -1,10 +1,8 @@
 import type { CacheClient, CategoryCachePort } from '@vp/core/ports';
 import type { Category } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
+import { CacheKeys } from '@vp/events';
 import { type Result, ignore, isErr, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
-
-export const CATEGORIES_CACHE_KEY = 'taitube:cache:categories:v1';
-export const CATEGORIES_INVALIDATION_CHANNEL = 'taitube:events:cache:categories:invalidated';
 
 interface CachedCategories {
   categories: Array<Category & { createdAt: string; updatedAt: string }>;
@@ -62,7 +60,7 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
   async start(): Promise<Result<void, never>> {
     if (this.cache) {
       ignore(
-        await this.cache.subscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage),
+        await this.cache.subscribe(CacheKeys.categoriesInvalidated, this.onInvalidateMessage),
         'a pod that cannot subscribe falls back to its L1 TTL'
       );
     }
@@ -115,16 +113,16 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
   async getCategories<E>(
     fetcher: () => Promise<Result<Category[], E>>
   ): Promise<Result<Category[], E>> {
-    const l1 = this.getL1(CATEGORIES_CACHE_KEY);
+    const l1 = this.getL1(CacheKeys.categories);
     if (l1) {
       return ok(l1.value);
     }
 
     if (this.cache) {
-      const cachedJson = unwrapOr(await this.cache.get(CATEGORIES_CACHE_KEY), null);
+      const cachedJson = unwrapOr(await this.cache.get(CacheKeys.categories), null);
       const categories = cachedJson ? parseCategories(cachedJson) : null;
       if (categories) {
-        this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
+        this.setL1(CacheKeys.categories, categories, this.l1TtlMs);
         return ok(categories);
       }
     }
@@ -142,14 +140,14 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
     if (this.cache) {
       ignore(
         await this.cache.set(
-          CATEGORIES_CACHE_KEY,
+          CacheKeys.categories,
           JSON.stringify({ categories }),
           this.l2TtlSeconds
         ),
         'the categories were read; a missed L2 write costs the next pod one query'
       );
     }
-    this.setL1(CATEGORIES_CACHE_KEY, categories, this.l1TtlMs);
+    this.setL1(CacheKeys.categories, categories, this.l1TtlMs);
 
     return ok(categories);
   }
@@ -159,9 +157,9 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
     this.clearL1();
     if (!this.cache) return ok();
 
-    const deleted = await this.cache.del(CATEGORIES_CACHE_KEY);
+    const deleted = await this.cache.del(CacheKeys.categories);
     const published = await this.cache.publish(
-      CATEGORIES_INVALIDATION_CHANNEL,
+      CacheKeys.categoriesInvalidated,
       JSON.stringify({ invalidatedAt: Date.now() })
     );
     return isErr(deleted) ? deleted : map(published, () => undefined);
@@ -170,7 +168,7 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
   async close(): Promise<void> {
     if (this.cache) {
       ignore(
-        await this.cache.unsubscribe(CATEGORIES_INVALIDATION_CHANNEL, this.onInvalidateMessage),
+        await this.cache.unsubscribe(CacheKeys.categoriesInvalidated, this.onInvalidateMessage),
         'the connection closes next, which drops the subscription anyway'
       );
     }

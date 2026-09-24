@@ -3,12 +3,16 @@ import {
   masterPlaylistKey,
   metaKey,
   posterKey,
+  rawPrefix,
   rawSourceKey,
   renditionPlaylistKey,
+  renditionPrefix,
+  reprocessGenerationPrefix,
   sanitizeStorageUrl,
   segmentKey,
   spriteKey,
   spriteVttKey,
+  videoPrefix,
 } from '../keys';
 
 describe('packages/storage: object keys', () => {
@@ -33,6 +37,18 @@ describe('packages/storage: object keys', () => {
       `videos/${videoId}/hls/g2/1080p/index.m3u8`
     );
     expect(segmentKey(videoId, '1080p', 5, 2)).toBe(`videos/${videoId}/hls/g2/1080p/seg_00005.ts`);
+  });
+
+  it('owns the prefixes a purge sweeps', () => {
+    expect(rawPrefix(videoId)).toBe(`raw/${videoId}/`);
+    expect(videoPrefix(videoId)).toBe(`videos/${videoId}/`);
+    expect(renditionPrefix(videoId, '720p')).toBe(`videos/${videoId}/hls/720p/`);
+    expect(renditionPrefix(videoId, '720p', 3)).toBe(`videos/${videoId}/hls/g3/720p/`);
+    expect(reprocessGenerationPrefix(videoId, 2)).toBe(`videos/${videoId}/hls/g2/`);
+  });
+
+  it('gives generation 1 no prefix of its own, since its directory holds every later one', () => {
+    expect(reprocessGenerationPrefix(videoId, 1)).toBeNull();
   });
 
   it('strips signature and credential params so a url is safe to log', () => {

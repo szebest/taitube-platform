@@ -35,10 +35,6 @@ function mapRow(row: typeof categories.$inferSelect): Category {
 export class PostgresCategoryRepository implements CategoryRepositoryPort {
   constructor(private readonly db: PostgresJsDatabase<Record<string, unknown>>) {}
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   /** A unique index on `slug` is the only conflict this table can report. */
   private conflict(slug: string, operation: string) {
     return (cause: unknown): DatabaseUnavailable | CategorySlugConflict =>
@@ -53,7 +49,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
 
     const rows = await fromPromise(
       () => query.orderBy(asc(categories.sortOrder), asc(categories.name)),
-      this.unavailable('findAll')
+      databaseUnavailable.during('findAll')
     );
 
     return map(rows, (found) => found.map(mapRow));
@@ -62,7 +58,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
   async findById(id: string): Promise<Result<Category | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.select().from(categories).where(eq(categories.id, id)).limit(1),
-      this.unavailable('findById')
+      databaseUnavailable.during('findById')
     );
 
     return map(rows, ([row]) => (row ? mapRow(row) : null));
@@ -71,7 +67,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
   async findBySlug(slug: string): Promise<Result<Category | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.select().from(categories).where(eq(categories.slug, slug)).limit(1),
-      this.unavailable('findBySlug')
+      databaseUnavailable.during('findBySlug')
     );
 
     return map(rows, ([row]) => (row ? mapRow(row) : null));
@@ -115,7 +111,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
             .from(categories)
             .where(and(eq(categories.slug, slug), ne(categories.id, id)))
             .limit(1),
-        this.unavailable('update')
+        databaseUnavailable.during('update')
       );
       if (!conflicting.ok) return conflicting;
       if (conflicting.value[0]) return err(categorySlugConflict(slug));
@@ -140,7 +136,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
   async delete(id: string): Promise<Result<void, DatabaseUnavailable>> {
     const deleted = await fromPromise(
       () => this.db.delete(categories).where(eq(categories.id, id)),
-      this.unavailable('delete')
+      databaseUnavailable.during('delete')
     );
 
     return map(deleted, () => undefined);
@@ -153,7 +149,7 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
           .select({ count: sql<number>`count(*)::int` })
           .from(videos)
           .where(and(eq(videos.categoryId, categoryId), sql`${videos.deletedAt} IS NULL`)),
-      this.unavailable('countVideos')
+      databaseUnavailable.during('countVideos')
     );
 
     return map(rows, ([row]) => row?.count ?? 0);

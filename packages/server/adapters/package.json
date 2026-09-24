@@ -83,6 +83,7 @@
     "@vp/domain-rules": "workspace:*",
     "@vp/env-schema": "workspace:*",
     "@vp/errors": "workspace:*",
+    "@vp/events": "workspace:*",
     "@vp/job-contracts": "workspace:*",
     "@vp/observability": "workspace:*",
     "@vp/permissions": "workspace:*",

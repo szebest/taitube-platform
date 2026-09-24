@@ -51,7 +51,7 @@ export class MeteredMultipartStorage extends MultipartStorage {
     bucket: string,
     key: string,
     uploadId: string,
-    parts: StorageCompletePartInput[]
+    parts: readonly StorageCompletePartInput[]
   ): Outcome<'completeMultipartUpload'> {
     return meterStorageOp(this.metrics, 'multipart', bucket, () =>
       this.inner.completeMultipartUpload(bucket, key, uploadId, parts)

@@ -15,14 +15,10 @@ export class PostgresRenditionRepository extends RenditionRepository {
     super();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async create(data: NewRenditionInput): Promise<Result<RenditionRecord, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.insert(schema.renditions).values(toRenditionInsert(data)).returning(),
-      this.unavailable('create')
+      databaseUnavailable.during('create')
     );
 
     if (!rows.ok) return rows;
@@ -33,7 +29,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
   async findByVideoId(videoId: string): Promise<Result<RenditionRecord[], DatabaseUnavailable>> {
     return fromPromise(
       () => this.db.select().from(schema.renditions).where(eq(schema.renditions.videoId, videoId)),
-      this.unavailable('findByVideoId')
+      databaseUnavailable.during('findByVideoId')
     );
   }
 
@@ -47,7 +43,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
           .select()
           .from(schema.renditions)
           .where(inArray(schema.renditions.videoId, videoIds)),
-      this.unavailable('findByVideoIds')
+      databaseUnavailable.during('findByVideoIds')
     );
   }
 
@@ -63,7 +59,7 @@ export class PostgresRenditionRepository extends RenditionRepository {
           .set(toRenditionUpdate(patch))
           .where(and(eq(schema.renditions.videoId, videoId), eq(schema.renditions.name, name)))
           .returning(),
-      this.unavailable('update')
+      databaseUnavailable.during('update')
     );
 
     return map(rows, ([updated]) => updated ?? null);

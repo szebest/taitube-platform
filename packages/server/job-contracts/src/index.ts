@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { RENDITIONS, type RenditionName } from './ladder';
+
+export * from './ladder';
 export * from './policies';
 
 export const QUEUES = [
@@ -13,9 +16,6 @@ export const QUEUES = [
   'dlq',
 ] as const;
 export type QueueName = (typeof QUEUES)[number];
-
-export const RENDITIONS = ['1080p', '720p', '480p'] as const;
-export type RenditionName = (typeof RENDITIONS)[number];
 
 export const LadderEntry = z.object({
   name: z.enum(RENDITIONS),

@@ -2,6 +2,7 @@ import { Singleflight } from '@vp/concurrency';
 import type { ReactionCachePort } from '@vp/core/ports';
 import type { ReactionCounts, ReactionType } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
+import { CacheKeys } from '@vp/events';
 import { type Result, fromPromise, ignore, isErr, map, ok, unwrapOr } from '@vp/result';
 import {
   type CachedCounts,
@@ -30,18 +31,6 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     this.userReactionTtlSeconds = config.userReactionTtlSeconds;
     this.beta = config.beta ?? 1.0;
     this.counts = new ReactionCountsStore({ backend: config.backend, ttlSeconds: this.ttlSeconds });
-  }
-
-  private userKey(userId: string): string {
-    return `taitube:user:${userId}:reactions`;
-  }
-
-  private userKeyFallback(userId: string, videoId: string): string {
-    return `taitube:user:${userId}:reactions:${videoId}`;
-  }
-
-  private unavailable(operation: string) {
-    return (cause: unknown): CacheUnavailable => cacheUnavailable(operation, cause);
   }
 
   async getCounts<E>(
@@ -98,7 +87,7 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
     ignore(
       fromPromise(
         () => this.singleflight.do(`counts:${videoId}`, () => this.fetchAndStore(videoId, fetcher)),
-        this.unavailable('refreshCounts')
+        cacheUnavailable.during('refreshCounts')
       ),
       'an early refresh is a best effort; the cached counts already answered'
     );
@@ -133,7 +122,7 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
       return ok(raw === 'NONE' ? null : (raw as ReactionType));
     }
 
-    return await this.singleflight.do(`user:${userId}:${videoId}`, async () => {
+    return await this.singleflight.do(CacheKeys.userReaction(userId, videoId), async () => {
       const fetched = await fetcher();
       if (isErr(fetched)) return fetched;
 
@@ -148,13 +137,13 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
   private async readUserReaction(userId: string, videoId: string): Promise<string | null> {
     const { backend } = this;
     if (backend.type === 'cache') {
-      return unwrapOr(await backend.cache.get(this.userKeyFallback(userId, videoId)), null);
+      return unwrapOr(await backend.cache.get(CacheKeys.userReaction(userId, videoId)), null);
     }
 
     return unwrapOr(
       await fromPromise(
-        () => backend.redis.hget(this.userKey(userId), videoId),
-        this.unavailable('getUserReaction')
+        () => backend.redis.hget(CacheKeys.userReactions(userId), videoId),
+        cacheUnavailable.during('getUserReaction')
       ),
       null
     );
@@ -170,24 +159,24 @@ export class RedisReactionCacheAdapter implements ReactionCachePort {
 
     if (backend.type === 'redis') {
       const { redis } = backend;
-      const key = this.userKey(userId);
+      const key = CacheKeys.userReactions(userId);
       const written = await fromPromise(
         () => redis.hset(key, videoId, value),
-        this.unavailable('setUserReaction')
+        cacheUnavailable.during('setUserReaction')
       );
       if (isErr(written)) return written;
 
       return map(
         await fromPromise(
           () => redis.expire(key, this.userReactionTtlSeconds),
-          this.unavailable('setUserReaction')
+          cacheUnavailable.during('setUserReaction')
         ),
         () => undefined
       );
     }
 
     return backend.cache.set(
-      this.userKeyFallback(userId, videoId),
+      CacheKeys.userReaction(userId, videoId),
       value,
       this.userReactionTtlSeconds
     );

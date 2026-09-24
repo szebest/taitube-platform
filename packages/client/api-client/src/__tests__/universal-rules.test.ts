@@ -5,7 +5,7 @@ import { ALLOWED_CONTENT_TYPES, validateStartUpload } from '@vp/validation';
 /**
  * The client tier consuming both rule packages for real. `@vp/api-client` is `client`-tier, so
  * this file only compiles and only runs if `@vp/validation` and `@vp/domain-rules` are genuinely
- * browser-reachable - which is the claim tickets 53, 70 and 71 build on.
+ * browser-reachable.
  */
 describe('client tier: the shared rules are reachable from a browser-only package', () => {
   it('runs the input rule the backend runs, before any network call', () => {

@@ -1,6 +1,7 @@
 import { inProcessAppConfig } from '@vp/env-schema';
 import * as fs from 'node:fs';
 import * as http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
@@ -13,10 +14,9 @@ import { buildApp } from '@vp/api';
 import { mintToken } from '@vp/dev-token';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { UploadAbortedError, UploadClient } from '../client';
 
-describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () => {
+describe('upload-client reference upload client', () => {
   let app: FastifyInstance;
   let apiPort: number;
   let s3Server: http.Server;
@@ -28,7 +28,6 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
   let authToken: string;
 
-  // Mock S3 multipart storage state
   interface MockPart {
     partNumber: number;
     etag: string;
@@ -38,9 +37,8 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
   const completedObjects = new Map<string, { size: number; contentType: string }>();
 
   let tempFilePath: string;
-  // 32 MB synthetic test file (with multipartThreshold = 8 MB, creates 4 parts of 8 MB)
   const PART_SIZE = 8 * 1024 * 1024;
-  const TOTAL_SIZE = 4 * PART_SIZE; // 32 MB = 4 parts
+  const TOTAL_SIZE = 4 * PART_SIZE;
 
   beforeAll(async () => {
     authToken = mintToken({
@@ -49,16 +47,14 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
       ttl: '2h',
     });
 
-    // Create 32 MB temporary file
     tempFilePath = path.join(os.tmpdir(), `test-multipart-${Date.now()}.mp4`);
     const chunk = Buffer.alloc(1024 * 1024, 0xaa);
     const fd = fs.openSync(tempFilePath, 'w');
-    for (let i = 0; i < 32; i++) {
+    for (let i = 0; i < TOTAL_SIZE / chunk.length; i++) {
       fs.writeSync(fd, chunk);
     }
     fs.closeSync(fd);
 
-    // Mock S3 storage server
     s3Server = http.createServer((req, res) => {
       const url = new URL(req.url || '/', `http://localhost:${s3Port}`);
       const pathname = url.pathname;
@@ -169,7 +165,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
 
     await new Promise<void>((resolve) => {
       s3Server.listen(0, '127.0.0.1', () => {
-        s3Port = (s3Server.address() as import('node:net').AddressInfo).port;
+        s3Port = (s3Server.address() as AddressInfo).port;
         resolve();
       });
     });
@@ -200,7 +196,7 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
         storage,
         multipart,
       },
-      config: inProcessAppConfig({ limits: { multipartThresholdBytes: 8 * 1024 * 1024 } }),
+      config: inProcessAppConfig({ limits: { multipartThresholdBytes: PART_SIZE } }),
     });
 
     const address = await app.listen({ port: 0, host: '127.0.0.1' });
@@ -214,13 +210,13 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     if (app) {
       await app.close();
     }
-    (s3Server as any)?.closeAllConnections?.();
+    s3Server?.closeAllConnections?.();
     if (s3Server) {
       await new Promise((resolve) => s3Server.close(resolve));
     }
   });
 
-  it('AC 18: survives a crash at 50%, resumes from ListParts with concurrency 4 and reaches UPLOADED', async () => {
+  it('survives a crash at 50%, resumes from ListParts with concurrency 4 and reaches UPLOADED', async () => {
     const client = new UploadClient({
       apiBaseUrl: `http://127.0.0.1:${apiPort}`,
       token: authToken,
@@ -246,7 +242,6 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
       })
     ).rejects.toThrow(UploadAbortedError);
 
-    // Verify intermediate state via GET /v1/uploads/:id (backed by S3 ListParts)
     const resumeInfo = await client.getResumeInfo(crashedUploadId);
     expect(resumeInfo.status).toBe('OPEN');
     expect(resumeInfo.strategy).toBe('multipart');
@@ -255,7 +250,6 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     expect(resumeInfo.uploadedParts?.length).toBeGreaterThanOrEqual(2);
     expect(resumeInfo.uploadedParts?.length).toBeLessThan(4);
 
-    // 2. Restarted client resumes upload using ListParts / existingUploadId
     const resumed = await client.uploadFile({
       filePath: tempFilePath,
       concurrency: 4,
@@ -265,7 +259,6 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     expect(resumed.uploadId).toBe(crashedUploadId);
     expect(resumed.status).toBe('UPLOADED');
 
-    // 3. Database assertion: video reaches UPLOADED status
     const video = expectOk(await repositories.videos.findById(resumed.videoId));
     expect(video).toBeDefined();
     expect(video?.status).toBe('UPLOADED');

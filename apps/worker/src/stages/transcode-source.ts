@@ -10,7 +10,7 @@ export interface TranscodeSourceParams {
   sourceKey: string;
   tmpDir: string;
   rendition: string;
-  /** Presigned streaming input hands FFmpeg a URL and never touches the local disk (Ticket 14 AC 5). */
+  /** Presigned streaming input hands FFmpeg a URL and never touches the local disk */
   streaming: boolean;
   log: Logger;
 }

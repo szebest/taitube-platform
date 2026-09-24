@@ -23,10 +23,6 @@ const { channelSubscriptions: cs, channels: ch, videos: v } = schema;
 export class PostgresSubscriptionRepository implements SubscriptionRepositoryPort {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {}
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   /**
    * Pure I/O. Whether an absent channel or a self-subscribe is an error is `decideSubscribe`'s
    * call, made before this runs; a channel that vanished in between changed nothing and has no
@@ -67,7 +63,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
             changed: true,
           };
         }),
-      this.unavailable('subscribe')
+      databaseUnavailable.during('subscribe')
     );
   }
 
@@ -108,7 +104,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
             changed: true,
           };
         }),
-      this.unavailable('unsubscribe')
+      databaseUnavailable.during('unsubscribe')
     );
   }
 
@@ -123,7 +119,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           .from(cs)
           .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
           .limit(1),
-      this.unavailable('isSubscribed')
+      databaseUnavailable.during('isSubscribed')
     );
 
     return map(rows, ([row]) => Boolean(row));
@@ -138,7 +134,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           .select({ channelId: cs.channelId })
           .from(cs)
           .where(eq(cs.subscriberId, subscriberId)),
-      this.unavailable('getUserSubscriptionChannelIds')
+      databaseUnavailable.during('getUserSubscriptionChannelIds')
     );
 
     return map(rows, (found) => found.map((r) => r.channelId));
@@ -151,7 +147,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           .select({ subscriberCount: ch.subscriberCount })
           .from(ch)
           .where(eq(ch.id, channelId)),
-      this.unavailable('getSubscriberCount')
+      databaseUnavailable.during('getSubscriberCount')
     );
 
     return map(rows, ([channel]) => channel?.subscriberCount ?? 0);
@@ -192,7 +188,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           )
           .orderBy(desc(cs.createdAt), desc(cs.channelId))
           .limit(options.limit + 1),
-      this.unavailable('listUserSubscriptions')
+      databaseUnavailable.during('listUserSubscriptions')
     );
   }
 
@@ -215,7 +211,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           .innerJoin(ch, eq(v.ownerId, ch.userId))
           .innerJoin(cs, eq(cs.channelId, ch.id))
           .where(baseWhere),
-      this.unavailable('getSubscriptionFeed')
+      databaseUnavailable.during('getSubscriptionFeed')
     );
     if (isErr(counted)) return counted;
 
@@ -238,7 +234,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           )
           .orderBy(desc(v.createdAt), desc(v.id))
           .limit(options.limit + 1),
-      this.unavailable('getSubscriptionFeed')
+      databaseUnavailable.during('getSubscriptionFeed')
     );
 
     return map(rows, (found) => ({

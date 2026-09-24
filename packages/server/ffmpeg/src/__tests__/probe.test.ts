@@ -1,10 +1,25 @@
-import { ErrorCodes, PermanentError } from '@vp/errors';
-import { describe, expect, it } from 'vitest';
-import { validateAndParseProbe } from '../index';
+import { type ErrorCode, ErrorCodes, PermanentError } from '@vp/errors';
+import { type RawFfprobeOutput, type RawStream, validateAndParseProbe } from '../index';
 import { PROBE_LIMITS } from './encoder-settings';
 
-describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
-  it('AC 17: s60 1080p video selects full ladder [1080p, 720p, 480p]', () => {
+function videoProbe(stream: RawStream, duration: string): RawFfprobeOutput {
+  return {
+    streams: [{ codec_type: 'video', codec_name: 'h264', ...stream }],
+    format: { duration },
+  };
+}
+
+function thrownBy(fn: () => unknown): unknown {
+  try {
+    fn();
+  } catch (err: unknown) {
+    return err;
+  }
+  return expect.unreachable();
+}
+
+describe('ffmpeg probe and ladder selection', () => {
+  it('selects the full ladder [1080p, 720p, 480p] for a 1080p source', () => {
     const raw = {
       streams: [
         {
@@ -34,64 +49,28 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
     expect(res.ladder.map((r) => r.name)).toEqual(['1080p', '720p', '480p']);
   });
 
-  it('AC 17: p720 video selects ladder [720p, 480p]', () => {
-    const raw = {
-      streams: [
-        {
-          codec_type: 'video',
-          codec_name: 'h264',
-          width: 1280,
-          height: 720,
-          r_frame_rate: '30/1',
-        },
-      ],
-      format: {
-        duration: '30.000',
-      },
-    };
+  it.each([
+    { label: '720p', width: 1280, height: 720, fps: '30/1', duration: '30.000', ladder: ['720p', '480p'] },
+    {
+      label: '360p (keeps the smallest rung, never upscales)',
+      width: 640,
+      height: 360,
+      fps: '25/1',
+      duration: '15.000',
+      ladder: ['480p'],
+    },
+  ])('selects $ladder for a $label source', ({ width, height, fps, duration, ladder }) => {
+    const raw = videoProbe({ width, height, r_frame_rate: fps }, duration);
 
     const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
-    expect(res.ladder.map((r) => r.name)).toEqual(['720p', '480p']);
+    expect(res.ladder.map((r) => r.name)).toEqual(ladder);
   });
 
-  it('AC 17: sd360 video selects ladder [480p] (keeps smallest rung, never upscales)', () => {
-    const raw = {
-      streams: [
-        {
-          codec_type: 'video',
-          codec_name: 'h264',
-          width: 640,
-          height: 360,
-          r_frame_rate: '25/1',
-        },
-      ],
-      format: {
-        duration: '15.000',
-      },
-    };
-
-    const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
-    expect(res.ladder.map((r) => r.name)).toEqual(['480p']);
-  });
-
-  it('AC 17: portrait video with 90° rotation is rotation-aware (swaps width/height for ladder)', () => {
-    const raw = {
-      streams: [
-        {
-          codec_type: 'video',
-          codec_name: 'h264',
-          width: 1920,
-          height: 1080,
-          tags: {
-            rotate: '90',
-          },
-          r_frame_rate: '24/1',
-        },
-      ],
-      format: {
-        duration: '10.000',
-      },
-    };
+  it('swaps width and height for a portrait video rotated 90°', () => {
+    const raw = videoProbe(
+      { width: 1920, height: 1080, tags: { rotate: '90' }, r_frame_rate: '24/1' },
+      '10.000'
+    );
 
     const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
     expect(res.rotation).toBe(90);
@@ -100,116 +79,46 @@ describe('packages/ffmpeg probe & ladder selection (AC 17, AC 18)', () => {
     expect(res.ladder.map((r) => r.name)).toEqual(['1080p', '720p', '480p']);
   });
 
-  it('AC 18: HEVC codec is supported as input', () => {
-    const raw = {
-      streams: [
-        {
-          codec_type: 'video',
-          codec_name: 'hevc',
-          width: 1920,
-          height: 1080,
-          r_frame_rate: '24/1',
-        },
-      ],
-      format: {
-        duration: '10.000',
-      },
-    };
+  it('accepts HEVC as an input codec', () => {
+    const raw = videoProbe(
+      { codec_name: 'hevc', width: 1920, height: 1080, r_frame_rate: '24/1' },
+      '10.000'
+    );
 
     const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
     expect(res.videoCodec).toBe('hevc');
     expect(res.ladder.length).toBe(3);
   });
 
-  it('AC 18: audio-only or container with no video stream throws CORRUPT_CONTAINER', () => {
-    const raw = {
-      streams: [
-        {
-          codec_type: 'audio',
-          codec_name: 'aac',
-        },
-      ],
-      format: {
-        duration: '10.000',
-      },
-    };
+  it.each<{ label: string; raw: RawFfprobeOutput; maxDurationSec: number; code: ErrorCode }>([
+    {
+      label: 'a container with no video stream',
+      raw: { streams: [{ codec_type: 'audio', codec_name: 'aac' }], format: { duration: '10.000' } },
+      maxDurationSec: PROBE_LIMITS.maxDurationSec,
+      code: ErrorCodes.CORRUPT_CONTAINER,
+    },
+    {
+      label: 'an unsupported video codec (prores)',
+      raw: videoProbe({ codec_name: 'prores', width: 1920, height: 1080 }, '10.000'),
+      maxDurationSec: PROBE_LIMITS.maxDurationSec,
+      code: ErrorCodes.UNSUPPORTED_CODEC,
+    },
+    {
+      label: 'a video longer than the limit',
+      raw: videoProbe({ width: 1920, height: 1080 }, '10000.000'),
+      maxDurationSec: 7200,
+      code: ErrorCodes.DURATION_EXCEEDED,
+    },
+    {
+      label: 'zero dimensions and zero duration',
+      raw: videoProbe({ width: 0, height: 0 }, '0'),
+      maxDurationSec: PROBE_LIMITS.maxDurationSec,
+      code: ErrorCodes.CORRUPT_CONTAINER,
+    },
+  ])('rejects $label with $code', ({ raw, maxDurationSec, code }) => {
+    const err = thrownBy(() => validateAndParseProbe(raw, maxDurationSec));
 
-    expect(() => validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec)).toThrowError(
-      PermanentError
-    );
-    try {
-      validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
-    } catch (err: unknown) {
-      expect((err as PermanentError).code).toBe(ErrorCodes.CORRUPT_CONTAINER);
-    }
-  });
-
-  it('AC 18: unsupported video codec (e.g. prores) throws UNSUPPORTED_CODEC', () => {
-    const raw = {
-      streams: [
-        {
-          codec_type: 'video',
-          codec_name: 'prores',
-          width: 1920,
-          height: 1080,
-        },
-      ],
-      format: {
-        duration: '10.000',
-      },
-    };
-
-    try {
-      validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
-      expect.unreachable();
-    } catch (err: unknown) {
-      expect((err as PermanentError).code).toBe(ErrorCodes.UNSUPPORTED_CODEC);
-    }
-  });
-
-  it('AC 18: over-duration video throws DURATION_EXCEEDED', () => {
-    const raw = {
-      streams: [
-        {
-          codec_type: 'video',
-          codec_name: 'h264',
-          width: 1920,
-          height: 1080,
-        },
-      ],
-      format: {
-        duration: '10000.000', // Exceeds 7200s
-      },
-    };
-
-    try {
-      validateAndParseProbe(raw, 7200);
-      expect.unreachable();
-    } catch (err: unknown) {
-      expect((err as PermanentError).code).toBe(ErrorCodes.DURATION_EXCEEDED);
-    }
-  });
-
-  it('AC 18: corrupt/missing dimensions or zero duration throws CORRUPT_CONTAINER', () => {
-    const raw = {
-      streams: [
-        {
-          codec_type: 'video',
-          codec_name: 'h264',
-          width: 0,
-          height: 0,
-        },
-      ],
-      format: {
-        duration: '0',
-      },
-    };
-
-    try {
-      validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
-      expect.unreachable();
-    } catch (err: unknown) {
-      expect((err as PermanentError).code).toBe(ErrorCodes.CORRUPT_CONTAINER);
-    }
+    expect(err).toBeInstanceOf(PermanentError);
+    expect((err as PermanentError).code).toBe(code);
   });
 });

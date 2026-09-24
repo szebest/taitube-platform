@@ -16,10 +16,6 @@ import { uuidv7 } from 'uuidv7';
 export class PostgresVideoReactionRepository implements VideoReactionRepositoryPort {
   constructor(private readonly db: PostgresJsDatabase<typeof schema>) {}
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async getUserReaction(
     videoId: string,
     userId: string
@@ -35,7 +31,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
               eq(schema.videoReactions.userId, userId)
             )
           ),
-      this.unavailable('getUserReaction')
+      databaseUnavailable.during('getUserReaction')
     );
 
     return map(rows, ([row]) => (row?.type as ReactionType) ?? null);
@@ -51,7 +47,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
           })
           .from(schema.videos)
           .where(eq(schema.videos.id, videoId)),
-      this.unavailable('getReactionCounts')
+      databaseUnavailable.during('getReactionCounts')
     );
 
     return map(rows, ([video]) => ({
@@ -162,7 +158,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
             dislikesCount,
           };
         }),
-      this.unavailable('setReaction')
+      databaseUnavailable.during('setReaction')
     );
   }
 
@@ -176,7 +172,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
           })
           .from(schema.videoReactions)
           .where(eq(schema.videoReactions.videoId, videoId)),
-      this.unavailable('countGroundTruth')
+      databaseUnavailable.during('countGroundTruth')
     );
 
     return map(rows, ([row]) => ({
@@ -196,7 +192,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
           .update(schema.videos)
           .set({ likesCount, dislikesCount, updatedAt: new Date() })
           .where(eq(schema.videos.id, videoId)),
-      this.unavailable('updateVideoCounters')
+      databaseUnavailable.during('updateVideoCounters')
     );
 
     return map(done, () => undefined);
@@ -213,7 +209,7 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
           .from(schema.videoReactions)
           .limit(limit)
           .offset(offset),
-      this.unavailable('listVideoIdsWithReactions')
+      databaseUnavailable.during('listVideoIdsWithReactions')
     );
 
     return map(rows, (found) => found.map((r) => r.videoId));

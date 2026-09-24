@@ -44,14 +44,10 @@ export class PostgresVideoRepository extends VideoRepository {
     super();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.select().from(v).where(eq(v.id, id)).limit(1),
-      this.unavailable('findById')
+      databaseUnavailable.during('findById')
     );
 
     return map(rows, ([row]) => row ?? null);
@@ -65,15 +61,15 @@ export class PostgresVideoRepository extends VideoRepository {
     const [renditions, steps, events] = await Promise.all([
       fromPromise(
         () => this.db.select().from(rn).where(eq(rn.videoId, id)),
-        this.unavailable('findWithDetails')
+        databaseUnavailable.during('findWithDetails')
       ),
       fromPromise(
         () => this.db.select().from(ps).where(eq(ps.videoId, id)),
-        this.unavailable('findWithDetails')
+        databaseUnavailable.during('findWithDetails')
       ),
       fromPromise(
         () => this.db.select().from(ve).where(eq(ve.videoId, id)),
-        this.unavailable('findWithDetails')
+        databaseUnavailable.during('findWithDetails')
       ),
     ]);
 
@@ -104,7 +100,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .insert(v)
           .values(vals as VideoInsert)
           .returning(),
-      this.unavailable('create')
+      databaseUnavailable.during('create')
     );
 
     if (!rows.ok) return rows;
@@ -131,7 +127,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .where(whereClause)
           .orderBy(desc(v.createdAt), desc(v.id))
           .limit(limit + 1),
-      this.unavailable('listByOwner')
+      databaseUnavailable.during('listByOwner')
     );
   }
 
@@ -144,7 +140,7 @@ export class PostgresVideoRepository extends VideoRepository {
 
     const counted = await fromPromise(
       () => this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(scope),
-      this.unavailable('listPublic')
+      databaseUnavailable.during('listPublic')
     );
     if (!counted.ok) return counted;
 
@@ -156,7 +152,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .where(drizzleWhere(scope, publicFeedCursorScope(options, instant)))
           .orderBy(...publicFeedOrderBy(options, instant))
           .limit(options.limit + 1),
-      this.unavailable('listPublic')
+      databaseUnavailable.during('listPublic')
     );
 
     return map(rows, (found) => ({
@@ -207,7 +203,7 @@ export class PostgresVideoRepository extends VideoRepository {
           });
           return ok(updated);
         }),
-      this.unavailable('updateMetadata')
+      databaseUnavailable.during('updateMetadata')
     );
 
     return committed.ok ? committed.value : committed;
@@ -259,7 +255,7 @@ export class PostgresVideoRepository extends VideoRepository {
 
           return true;
         }),
-      this.unavailable('transition')
+      databaseUnavailable.during('transition')
     );
   }
 
@@ -310,7 +306,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .where(whereClause)
           .for('update', { skipLocked: true })
           .limit(limit),
-      this.unavailable('scan')
+      databaseUnavailable.during('scan')
     );
 
     return map(rows, (found) => found as VideoRecord[]);
@@ -323,7 +319,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .delete(v)
           .where(and(eq(v.id, id), eq(v.status, 'DELETED')))
           .returning({ id: v.id }),
-      this.unavailable('hardDelete')
+      databaseUnavailable.during('hardDelete')
     );
 
     return map(rows, (found) => found.length > 0);
@@ -338,7 +334,7 @@ export class PostgresVideoRepository extends VideoRepository {
 
     const rows = await fromPromise(
       () => this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(whereClause),
-      this.unavailable('countInFlightByOwner')
+      databaseUnavailable.during('countInFlightByOwner')
     );
 
     return map(rows, ([row]) => row?.count ?? 0);
@@ -351,7 +347,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .select({ status: v.status, count: sql<number>`count(*)::int` })
           .from(v)
           .groupBy(v.status),
-      this.unavailable('countByStatus')
+      databaseUnavailable.during('countByStatus')
     );
 
     return map(rows, (found) => {
@@ -374,7 +370,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .update(v)
           .set({ likesCount, dislikesCount, updatedAt: new Date() })
           .where(eq(v.id, videoId)),
-      this.unavailable('updateReactionCounters')
+      databaseUnavailable.during('updateReactionCounters')
     );
 
     return map(updated, () => undefined);

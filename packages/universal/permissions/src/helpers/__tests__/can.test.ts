@@ -8,13 +8,130 @@ import {
 import type { Action, Resource, UserContext } from '../../types/index';
 import { can } from '../can';
 
-type CanCase = {
-  scenario: string;
-  user: UserContext | null;
-  action: Action;
-  resource?: Resource;
-  expected: boolean;
-};
+type Row = [scenario: string, action: Action, expected: boolean, resource?: Resource];
+
+const GUEST: Row[] = [
+  ['reads the video collection', 'video:read', true],
+  ['reads a public video', 'video:read', true, { visibility: 'public' }],
+  ['reads an unlisted video', 'video:read', true, { visibility: 'unlisted' }],
+  ['reads a private video', 'video:read', false, { visibility: 'private', ownerId: 'usr-1' }],
+  ['creates a video', 'video:create', false],
+  ['updates a video', 'video:update', false, { ownerId: 'usr-1' }],
+  ['deletes a video', 'video:delete', false, { ownerId: 'usr-1' }],
+  ['publishes a video', 'video:publish', false, { ownerId: 'usr-1' }],
+  ['reacts to a video', 'video:react', false],
+  ['creates a comment', 'comment:create', false],
+  ['deletes a comment', 'comment:delete', false, { authorId: 'usr-1' }],
+  ['pins a comment', 'comment:pin', false, { videoOwnerId: 'usr-1' }],
+  ['updates a channel', 'channel:update', false, { userId: 'usr-1' }],
+  ['manages a channel', 'channel:manage', false, { userId: 'usr-1' }],
+  ['subscribes to a channel', 'channel:subscribe', false],
+  ['manages categories', 'category:manage', false],
+  ['views all analytics', 'analytics:view_all', false],
+  ['reaches the admin area', 'admin:access', false],
+];
+
+const USER: Row[] = [
+  ['creates a video', 'video:create', true],
+  ['reacts to a video', 'video:react', true],
+  ['creates a comment', 'comment:create', true],
+  ['subscribes to a channel', 'channel:subscribe', true],
+  ['reads a foreign public video', 'video:read', true, { visibility: 'public', ownerId: 'usr-2' }],
+  [
+    'reads a foreign unlisted video',
+    'video:read',
+    true,
+    { visibility: 'unlisted', ownerId: 'usr-2' },
+  ],
+  [
+    'reads their own private video',
+    'video:read',
+    true,
+    { visibility: 'private', ownerId: 'usr-1' },
+  ],
+  [
+    'reads a foreign private video',
+    'video:read',
+    false,
+    { visibility: 'private', ownerId: 'usr-2' },
+  ],
+  ['updates their own video', 'video:update', true, { ownerId: 'usr-1' }],
+  ['deletes their own video', 'video:delete', true, { ownerId: 'usr-1' }],
+  ['updates a foreign video', 'video:update', false, { ownerId: 'usr-2' }],
+  ['deletes a foreign video', 'video:delete', false, { ownerId: 'usr-2' }],
+  ['updates a video with no owner in hand', 'video:update', false],
+  ['deletes a video with no owner in hand', 'video:delete', false],
+  ['publishes their own video', 'video:publish', false, { ownerId: 'usr-1' }],
+  [
+    'deletes their own comment under a foreign video',
+    'comment:delete',
+    true,
+    { authorId: 'usr-1', videoOwnerId: 'usr-2' },
+  ],
+  [
+    'deletes a foreign comment under a foreign video',
+    'comment:delete',
+    false,
+    { authorId: 'usr-2', videoOwnerId: 'usr-3' },
+  ],
+  [
+    'deletes a foreign comment under their own video',
+    'comment:delete',
+    true,
+    { authorId: 'usr-2', videoOwnerId: 'usr-1' },
+  ],
+  ['pins a comment under their own video', 'comment:pin', true, { videoOwnerId: 'usr-1' }],
+  ['pins a comment under a foreign video', 'comment:pin', false, { videoOwnerId: 'usr-2' }],
+  ['pins a comment with no video owner in hand', 'comment:pin', false],
+  ['updates their own channel', 'channel:update', true, { userId: 'usr-1' }],
+  ['updates a foreign channel', 'channel:update', false, { userId: 'usr-2' }],
+  ['manages their own channel', 'channel:manage', false, { userId: 'usr-1' }],
+  ['manages categories', 'category:manage', false],
+  ['views all analytics', 'analytics:view_all', false],
+  ['reaches the admin area', 'admin:access', false],
+];
+
+const CREATOR: Row[] = [
+  ['publishes their own video', 'video:publish', true, { ownerId: 'creator-1' }],
+  ['publishes a foreign video', 'video:publish', false, { ownerId: 'usr-2' }],
+  ['manages their own channel', 'channel:manage', true, { userId: 'creator-1' }],
+  ['manages a foreign channel', 'channel:manage', false, { userId: 'usr-2' }],
+  ['pins a comment under their own video', 'comment:pin', true, { videoOwnerId: 'creator-1' }],
+  ['pins a comment under a foreign video', 'comment:pin', false, { videoOwnerId: 'usr-2' }],
+  [
+    'deletes a foreign comment under their own video',
+    'comment:delete',
+    true,
+    { authorId: 'usr-2', videoOwnerId: 'creator-1' },
+  ],
+];
+
+const MODERATOR: Row[] = [
+  [
+    'deletes any comment on the platform',
+    'comment:delete',
+    true,
+    { authorId: 'usr-2', videoOwnerId: 'usr-3' },
+  ],
+  [
+    'reads a foreign private video',
+    'video:read',
+    true,
+    { visibility: 'private', ownerId: 'usr-2' },
+  ],
+  ['manages categories', 'category:manage', false],
+  ['views all analytics', 'analytics:view_all', false],
+  ['reaches the admin area', 'admin:access', false],
+];
+
+const asCases = (label: string, user: UserContext | null, rows: Row[]) =>
+  rows.map(([scenario, action, expected, resource]) => ({
+    scenario: `${label} ${scenario}`,
+    user,
+    action,
+    resource,
+    expected,
+  }));
 
 const ALL_ACTIONS: Action[] = [
   'video:read',
@@ -35,383 +152,11 @@ const ALL_ACTIONS: Action[] = [
 ];
 
 describe('helpers/can: Unified Action Evaluator Bridge', () => {
-  it.each<CanCase>([
-    {
-      scenario: 'guest reads the video collection',
-      user: guestUser,
-      action: 'video:read',
-      expected: true,
-    },
-    {
-      scenario: 'guest reads a public video',
-      user: guestUser,
-      action: 'video:read',
-      resource: { visibility: 'public' },
-      expected: true,
-    },
-    {
-      scenario: 'guest reads an unlisted video',
-      user: guestUser,
-      action: 'video:read',
-      resource: { visibility: 'unlisted' },
-      expected: true,
-    },
-    {
-      scenario: 'guest reads a private video',
-      user: guestUser,
-      action: 'video:read',
-      resource: { visibility: 'private', ownerId: 'usr-1' },
-      expected: false,
-    },
-    { scenario: 'guest creates a video', user: guestUser, action: 'video:create', expected: false },
-    {
-      scenario: 'guest updates a video',
-      user: guestUser,
-      action: 'video:update',
-      resource: { ownerId: 'usr-1' },
-      expected: false,
-    },
-    {
-      scenario: 'guest deletes a video',
-      user: guestUser,
-      action: 'video:delete',
-      resource: { ownerId: 'usr-1' },
-      expected: false,
-    },
-    {
-      scenario: 'guest publishes a video',
-      user: guestUser,
-      action: 'video:publish',
-      resource: { ownerId: 'usr-1' },
-      expected: false,
-    },
-    {
-      scenario: 'guest reacts to a video',
-      user: guestUser,
-      action: 'video:react',
-      expected: false,
-    },
-    {
-      scenario: 'guest creates a comment',
-      user: guestUser,
-      action: 'comment:create',
-      expected: false,
-    },
-    {
-      scenario: 'guest deletes a comment',
-      user: guestUser,
-      action: 'comment:delete',
-      resource: { authorId: 'usr-1' },
-      expected: false,
-    },
-    {
-      scenario: 'guest pins a comment',
-      user: guestUser,
-      action: 'comment:pin',
-      resource: { videoOwnerId: 'usr-1' },
-      expected: false,
-    },
-    {
-      scenario: 'guest updates a channel',
-      user: guestUser,
-      action: 'channel:update',
-      resource: { userId: 'usr-1' },
-      expected: false,
-    },
-    {
-      scenario: 'guest manages a channel',
-      user: guestUser,
-      action: 'channel:manage',
-      resource: { userId: 'usr-1' },
-      expected: false,
-    },
-    {
-      scenario: 'guest subscribes to a channel',
-      user: guestUser,
-      action: 'channel:subscribe',
-      expected: false,
-    },
-    {
-      scenario: 'guest manages categories',
-      user: guestUser,
-      action: 'category:manage',
-      expected: false,
-    },
-    {
-      scenario: 'guest views all analytics',
-      user: guestUser,
-      action: 'analytics:view_all',
-      expected: false,
-    },
-    {
-      scenario: 'guest reaches the admin area',
-      user: guestUser,
-      action: 'admin:access',
-      expected: false,
-    },
-
-    {
-      scenario: 'user creates a video',
-      user: standardUser,
-      action: 'video:create',
-      expected: true,
-    },
-    {
-      scenario: 'user reacts to a video',
-      user: standardUser,
-      action: 'video:react',
-      expected: true,
-    },
-    {
-      scenario: 'user creates a comment',
-      user: standardUser,
-      action: 'comment:create',
-      expected: true,
-    },
-    {
-      scenario: 'user subscribes to a channel',
-      user: standardUser,
-      action: 'channel:subscribe',
-      expected: true,
-    },
-    {
-      scenario: 'user reads a foreign public video',
-      user: standardUser,
-      action: 'video:read',
-      resource: { visibility: 'public', ownerId: 'usr-2' },
-      expected: true,
-    },
-    {
-      scenario: 'user reads a foreign unlisted video',
-      user: standardUser,
-      action: 'video:read',
-      resource: { visibility: 'unlisted', ownerId: 'usr-2' },
-      expected: true,
-    },
-    {
-      scenario: 'user reads their own private video',
-      user: standardUser,
-      action: 'video:read',
-      resource: { visibility: 'private', ownerId: 'usr-1' },
-      expected: true,
-    },
-    {
-      scenario: 'user reads a foreign private video',
-      user: standardUser,
-      action: 'video:read',
-      resource: { visibility: 'private', ownerId: 'usr-2' },
-      expected: false,
-    },
-    {
-      scenario: 'user updates their own video',
-      user: standardUser,
-      action: 'video:update',
-      resource: { ownerId: 'usr-1' },
-      expected: true,
-    },
-    {
-      scenario: 'user deletes their own video',
-      user: standardUser,
-      action: 'video:delete',
-      resource: { ownerId: 'usr-1' },
-      expected: true,
-    },
-    {
-      scenario: 'user updates a foreign video',
-      user: standardUser,
-      action: 'video:update',
-      resource: { ownerId: 'usr-2' },
-      expected: false,
-    },
-    {
-      scenario: 'user deletes a foreign video',
-      user: standardUser,
-      action: 'video:delete',
-      resource: { ownerId: 'usr-2' },
-      expected: false,
-    },
-    {
-      scenario: 'user updates a video with no owner in hand',
-      user: standardUser,
-      action: 'video:update',
-      expected: false,
-    },
-    {
-      scenario: 'user deletes a video with no owner in hand',
-      user: standardUser,
-      action: 'video:delete',
-      expected: false,
-    },
-    {
-      scenario: 'user publishes their own video',
-      user: standardUser,
-      action: 'video:publish',
-      resource: { ownerId: 'usr-1' },
-      expected: false,
-    },
-    {
-      scenario: 'user deletes their own comment under a foreign video',
-      user: standardUser,
-      action: 'comment:delete',
-      resource: { authorId: 'usr-1', videoOwnerId: 'usr-2' },
-      expected: true,
-    },
-    {
-      scenario: 'user deletes a foreign comment under a foreign video',
-      user: standardUser,
-      action: 'comment:delete',
-      resource: { authorId: 'usr-2', videoOwnerId: 'usr-3' },
-      expected: false,
-    },
-    {
-      scenario: 'user deletes a foreign comment under their own video',
-      user: standardUser,
-      action: 'comment:delete',
-      resource: { authorId: 'usr-2', videoOwnerId: 'usr-1' },
-      expected: true,
-    },
-    {
-      scenario: 'user pins a comment under their own video',
-      user: standardUser,
-      action: 'comment:pin',
-      resource: { videoOwnerId: 'usr-1' },
-      expected: true,
-    },
-    {
-      scenario: 'user pins a comment under a foreign video',
-      user: standardUser,
-      action: 'comment:pin',
-      resource: { videoOwnerId: 'usr-2' },
-      expected: false,
-    },
-    {
-      scenario: 'user pins a comment with no video owner in hand',
-      user: standardUser,
-      action: 'comment:pin',
-      expected: false,
-    },
-    {
-      scenario: 'user updates their own channel',
-      user: standardUser,
-      action: 'channel:update',
-      resource: { userId: 'usr-1' },
-      expected: true,
-    },
-    {
-      scenario: 'user updates a foreign channel',
-      user: standardUser,
-      action: 'channel:update',
-      resource: { userId: 'usr-2' },
-      expected: false,
-    },
-    {
-      scenario: 'user manages their own channel',
-      user: standardUser,
-      action: 'channel:manage',
-      resource: { userId: 'usr-1' },
-      expected: false,
-    },
-    {
-      scenario: 'user manages categories',
-      user: standardUser,
-      action: 'category:manage',
-      expected: false,
-    },
-    {
-      scenario: 'user views all analytics',
-      user: standardUser,
-      action: 'analytics:view_all',
-      expected: false,
-    },
-    {
-      scenario: 'user reaches the admin area',
-      user: standardUser,
-      action: 'admin:access',
-      expected: false,
-    },
-
-    {
-      scenario: 'creator publishes their own video',
-      user: creatorUser,
-      action: 'video:publish',
-      resource: { ownerId: 'creator-1' },
-      expected: true,
-    },
-    {
-      scenario: 'creator publishes a foreign video',
-      user: creatorUser,
-      action: 'video:publish',
-      resource: { ownerId: 'usr-2' },
-      expected: false,
-    },
-    {
-      scenario: 'creator manages their own channel',
-      user: creatorUser,
-      action: 'channel:manage',
-      resource: { userId: 'creator-1' },
-      expected: true,
-    },
-    {
-      scenario: 'creator manages a foreign channel',
-      user: creatorUser,
-      action: 'channel:manage',
-      resource: { userId: 'usr-2' },
-      expected: false,
-    },
-    {
-      scenario: 'creator pins a comment under their own video',
-      user: creatorUser,
-      action: 'comment:pin',
-      resource: { videoOwnerId: 'creator-1' },
-      expected: true,
-    },
-    {
-      scenario: 'creator pins a comment under a foreign video',
-      user: creatorUser,
-      action: 'comment:pin',
-      resource: { videoOwnerId: 'usr-2' },
-      expected: false,
-    },
-    {
-      scenario: 'creator deletes a foreign comment under their own video',
-      user: creatorUser,
-      action: 'comment:delete',
-      resource: { authorId: 'usr-2', videoOwnerId: 'creator-1' },
-      expected: true,
-    },
-
-    {
-      scenario: 'moderator deletes any comment on the platform',
-      user: moderatorUser,
-      action: 'comment:delete',
-      resource: { authorId: 'usr-2', videoOwnerId: 'usr-3' },
-      expected: true,
-    },
-    {
-      scenario: 'moderator reads a foreign private video',
-      user: moderatorUser,
-      action: 'video:read',
-      resource: { visibility: 'private', ownerId: 'usr-2' },
-      expected: true,
-    },
-    {
-      scenario: 'moderator manages categories',
-      user: moderatorUser,
-      action: 'category:manage',
-      expected: false,
-    },
-    {
-      scenario: 'moderator views all analytics',
-      user: moderatorUser,
-      action: 'analytics:view_all',
-      expected: false,
-    },
-    {
-      scenario: 'moderator reaches the admin area',
-      user: moderatorUser,
-      action: 'admin:access',
-      expected: false,
-    },
+  it.each([
+    ...asCases('guest', guestUser, GUEST),
+    ...asCases('user', standardUser, USER),
+    ...asCases('creator', creatorUser, CREATOR),
+    ...asCases('moderator', moderatorUser, MODERATOR),
   ])('$scenario: $expected', ({ user, action, resource, expected }) => {
     expect(can(user, action, resource)).toBe(expected);
   });

@@ -4,6 +4,7 @@ import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
+import { rawPrefix } from '@vp/storage';
 
 export interface ExpireRawOptions {
   repositories: Repositories;
@@ -47,7 +48,7 @@ export async function runExpireRaw(
     const deleted = await storage.deleteObject(rawBucket, video.sourceKey);
     const purged = isErr(deleted)
       ? deleted
-      : await storage.purgePrefix(rawBucket, `raw/${video.id}/`);
+      : await storage.purgePrefix(rawBucket, rawPrefix(video.id));
     if (isErr(purged)) {
       logger?.warn(
         { videoId: video.id, storage: purged.error.operation },
