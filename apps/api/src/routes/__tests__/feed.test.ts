@@ -1,8 +1,6 @@
-import { inProcessAppConfig } from '@vp/env-schema';
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
 import { SEEDED } from '@vp/testing';
+import type { FastifyInstance } from 'fastify';
+import { buildTestApp, seedVideo } from '../../__tests__/test-app';
 
 const OWNER = SEEDED.userId;
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000001';
@@ -13,22 +11,15 @@ describe('public feed route', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    const repositories = new InMemoryRepositories();
-    for (const [id, visibility] of [
-      [PUBLIC_VIDEO, 'public'],
-      [PRIVATE_VIDEO, 'private'],
-    ] as const) {
-      await repositories.videos.create({
-        id,
-        ownerId: OWNER,
-        title: `${visibility} video`,
-        visibility,
-        status: 'READY',
-        sourceKey: `raw/${id}/source.mp4`,
-      });
-    }
-    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
-    await app.ready();
+    const testApp = await buildTestApp();
+    app = testApp.app;
+    await seedVideo(testApp.repositories, { id: PUBLIC_VIDEO, ownerId: OWNER, title: 'public' });
+    await seedVideo(testApp.repositories, {
+      id: PRIVATE_VIDEO,
+      ownerId: OWNER,
+      title: 'private',
+      visibility: 'private',
+    });
   });
 
   afterAll(async () => {
@@ -49,7 +40,7 @@ describe('public feed route', () => {
 
   it('answers 304 with an empty body when the ETag still matches', async () => {
     const first = await app.inject({ method: 'GET', url: '/v1/feed' });
-    const etag = first.headers.etag as string;
+    const etag = String(first.headers.etag);
 
     const res = await app.inject({
       method: 'GET',

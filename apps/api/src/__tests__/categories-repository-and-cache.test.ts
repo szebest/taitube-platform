@@ -8,6 +8,7 @@ import type { Category } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { ok } from '@vp/result';
+import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 
 const CACHES = inProcessAppConfig().caches;
@@ -126,7 +127,7 @@ describe('category repositories and the L1/L2 cache service', () => {
       const category = expectOk(await repo.create({ name: 'Film', slug: 'film' }));
       await videoRepo.create({
         id: VIDEO_ID,
-        ownerId: '00000000-0000-7000-8000-000000000001',
+        ownerId: SEEDED.userId,
         title: 'Film Video',
         status: 'READY',
         sourceKey: 'raw/1.mp4',

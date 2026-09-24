@@ -1,9 +1,7 @@
-import { inProcessAppConfig } from '@vp/env-schema';
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
+import { bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
 
 const VIEWER = '11111111-1111-7111-8111-111111111111';
 const VIDEO = '33333333-3333-7333-8333-333333333333';
@@ -11,26 +9,19 @@ const ABSENT_VIDEO = '99999999-9999-7999-8999-999999999999';
 
 describe('reaction routes', () => {
   let app: FastifyInstance;
-  const auth = { authorization: `Bearer ${mintToken({ sub: VIEWER, role: 'USER', ttl: '1h' })}` };
+  const auth = bearer(mintToken({ sub: VIEWER, role: 'USER', ttl: '1h' }));
 
   beforeAll(async () => {
-    const repositories = new InMemoryRepositories();
+    const testApp = await buildTestApp();
+    app = testApp.app;
+    const { repositories } = testApp;
     await repositories.users.upsert({
       id: VIEWER,
       email: 'viewer@example.com',
       role: 'USER',
       tier: 'free',
     });
-    await repositories.videos.create({
-      id: VIDEO,
-      ownerId: VIEWER,
-      title: 'Reactable',
-      visibility: 'public',
-      status: 'READY',
-      sourceKey: 'raw/video.mp4',
-    });
-    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
-    await app.ready();
+    await seedVideo(repositories, { id: VIDEO, ownerId: VIEWER, title: 'Reactable' });
   });
 
   afterAll(async () => {

@@ -6,19 +6,13 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
-import {
-  InMemoryJobQueue,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import type { ProbeJob } from '@vp/job-contracts';
+import { ProbeJob } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
-import { composeApp } from '../../app';
+import { TOKENS, bearer, buildTestApp } from '../../__tests__/test-app';
 import { abortMidRequest } from './abort-mid-request';
 
-const OWNER_ID = '0190a000-0000-7000-8000-0000000000d1';
 const CALLER_TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
 
 function exportSpans(): InMemorySpanExporter {
@@ -31,19 +25,17 @@ function exportSpans(): InMemorySpanExporter {
 }
 
 async function completeAnUpload(headers: Record<string, string>) {
-  const repositories = new InMemoryRepositories();
-  const storage = new InMemoryStorageClient();
   const probeQueue = new InMemoryJobQueue('probe');
-  const { app } = await composeApp({
+  const { app, repositories, storage } = await buildTestApp({
     config: inProcessAppConfig({ buckets: { raw: 'raw' } }),
-    adapters: { repositories, storage, probeQueue },
+    adapters: { probeQueue },
   });
-  const authorization = `Bearer ${mintToken({ sub: OWNER_ID, role: 'user', ttl: '1h' })}`;
+  const auth = bearer(TOKENS.user);
 
   const started = await app.inject({
     method: 'POST',
     url: '/v1/uploads',
-    headers: { authorization },
+    headers: auth,
     payload: { filename: 'a.mp4', sizeBytes: 1024, contentType: 'video/mp4', title: 'a' },
   });
   const { uploadId, videoId } = started.json<{ uploadId: string; videoId: string }>();
@@ -60,13 +52,13 @@ async function completeAnUpload(headers: Record<string, string>) {
   await app.inject({
     method: 'POST',
     url: `/v1/uploads/${uploadId}/complete`,
-    headers: { authorization, ...headers },
+    headers: { ...auth, ...headers },
     payload: {},
   });
   await app.close();
 
   const [job] = expectOk(await probeQueue.getJobs(['waiting']));
-  return job?.data as ProbeJob;
+  return ProbeJob.parse(job?.data);
 }
 
 describe('apps/api/plugins: request span', () => {
@@ -100,7 +92,7 @@ describe('apps/api/plugins: request span', () => {
 
   it('ends the span of a request the client hung up on, as an error', async () => {
     const exporter = exportSpans();
-    const { app } = await composeApp({ config: inProcessAppConfig() });
+    const { app } = await buildTestApp();
 
     await abortMidRequest(app);
     await app.close();

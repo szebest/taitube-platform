@@ -1,13 +1,13 @@
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import {
-  ADMIN_TOKEN,
   type CategoriesApp,
-  REGULAR_USER_ID,
   buildCategoriesApp,
   deleteCategory,
   patchCategory,
   postCategory,
 } from './categories-app';
+import { ADMIN_TOKEN, TOKENS } from './test-app';
 
 const FAKE_ID = '00000000-0000-7000-8000-000000000999';
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000099';
@@ -49,7 +49,7 @@ describe('admin category writes', () => {
   });
 
   it('returns 403 Forbidden for non-admin users', async () => {
-    const res = await postCategory(ctx.app, ctx.userJwt, { name: 'Test', slug: 'test' });
+    const res = await postCategory(ctx.app, TOKENS.user, { name: 'Test', slug: 'test' });
     expect(res.statusCode).toBe(403);
     expect(res.json().code).toBe(ErrorCodes.FORBIDDEN);
   });
@@ -66,7 +66,7 @@ describe('admin category writes', () => {
   });
 
   it('rejects an invalid slug with 400', async () => {
-    const res = await postCategory(ctx.app, ctx.adminJwt, {
+    const res = await postCategory(ctx.app, TOKENS.admin, {
       name: 'Invalid Slug',
       slug: 'INVALID SLUG WITH SPACES AND CAPS!',
     });
@@ -74,9 +74,9 @@ describe('admin category writes', () => {
   });
 
   it('returns 409 CATEGORY_SLUG_CONFLICT on duplicate slug', async () => {
-    await postCategory(ctx.app, ctx.adminJwt, { name: 'Gaming', slug: 'gaming' });
+    await postCategory(ctx.app, TOKENS.admin, { name: 'Gaming', slug: 'gaming' });
 
-    const dupRes = await postCategory(ctx.app, ctx.adminJwt, {
+    const dupRes = await postCategory(ctx.app, TOKENS.admin, {
       name: 'Gaming Duplicate',
       slug: 'gaming',
     });
@@ -87,21 +87,21 @@ describe('admin category writes', () => {
 
   it('refuses to delete a category a live video uses and deletes it once the video is gone', async () => {
     const catId = (
-      await postCategory(ctx.app, ctx.adminJwt, {
+      await postCategory(ctx.app, TOKENS.admin, {
         name: 'Film & Animation',
         slug: 'film-animation',
       })
     ).json().id;
     await ctx.repositories.videos.create({
       id: VIDEO_ID,
-      ownerId: REGULAR_USER_ID,
+      ownerId: SEEDED.userId,
       title: 'Video in Film Category',
       status: 'READY',
       sourceKey: 'raw/99.mp4',
       categoryId: catId,
     });
 
-    const delInUse = await deleteCategory(ctx.app, ctx.adminJwt, catId);
+    const delInUse = await deleteCategory(ctx.app, TOKENS.admin, catId);
     expect(delInUse.statusCode).toBe(409);
     expect(delInUse.json().code).toBe(ErrorCodes.CATEGORY_IN_USE);
 
@@ -113,7 +113,7 @@ describe('admin category writes', () => {
       patch: { deletedAt: new Date() },
     });
 
-    const delSuccess = await deleteCategory(ctx.app, ctx.adminJwt, catId);
+    const delSuccess = await deleteCategory(ctx.app, TOKENS.admin, catId);
     expect(delSuccess.statusCode).toBe(204);
 
     const getAfter = await ctx.app.inject({ method: 'GET', url: '/v1/categories' });
@@ -121,11 +121,11 @@ describe('admin category writes', () => {
   });
 
   it('returns 404 CATEGORY_NOT_FOUND when updating or deleting non-existent category', async () => {
-    const patchRes = await patchCategory(ctx.app, ctx.adminJwt, FAKE_ID, { name: 'Ghost' });
+    const patchRes = await patchCategory(ctx.app, TOKENS.admin, FAKE_ID, { name: 'Ghost' });
     expect(patchRes.statusCode).toBe(404);
     expect(patchRes.json().code).toBe(ErrorCodes.CATEGORY_NOT_FOUND);
 
-    const delRes = await deleteCategory(ctx.app, ctx.adminJwt, FAKE_ID);
+    const delRes = await deleteCategory(ctx.app, TOKENS.admin, FAKE_ID);
     expect(delRes.statusCode).toBe(404);
     expect(delRes.json().code).toBe(ErrorCodes.CATEGORY_NOT_FOUND);
   });

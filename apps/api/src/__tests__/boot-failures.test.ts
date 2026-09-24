@@ -4,7 +4,6 @@ import type {
   PatternMessageListener,
   UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
-import { inProcessAppConfig } from '@vp/env-schema';
 import {
   type CacheUnavailable,
   ErrorCodes,
@@ -12,10 +11,9 @@ import {
   cacheUnavailable,
   queueUnavailable,
 } from '@vp/errors';
-import { QUEUES } from '@vp/job-contracts';
 import { type Result, err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { composeApp } from '../app';
+import { buildTestApp, inMemoryQueues } from './test-app';
 
 class UnsubscribableCache extends InMemoryCacheClient {
   override async psubscribe(
@@ -36,18 +34,9 @@ class UnschedulableQueue extends InMemoryJobQueue {
   }
 }
 
-function queuesWith(housekeeping: InMemoryJobQueue): Map<string, InMemoryJobQueue> {
-  const queues = new Map<string, InMemoryJobQueue>();
-  for (const name of QUEUES) {
-    queues.set(name, name === 'housekeeping' ? housekeeping : new InMemoryJobQueue(name));
-  }
-  return queues;
-}
-
 describe('apps/api: a dependency the API cannot boot without fails the start', () => {
   it('refuses to start on a cache that cannot take the SSE subscription', async () => {
-    const { app, container } = await composeApp({
-      config: inProcessAppConfig(),
+    const { app, container } = await buildTestApp({
       adapters: { cache: new UnsubscribableCache() },
     });
 
@@ -58,9 +47,8 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
   });
 
   it('refuses to start when the housekeeping schedulers cannot be registered', async () => {
-    const { app, container } = await composeApp({
-      config: inProcessAppConfig(),
-      adapters: { queues: queuesWith(new UnschedulableQueue('housekeeping')) },
+    const { app, container } = await buildTestApp({
+      adapters: { queues: inMemoryQueues(new UnschedulableQueue('housekeeping')) },
     });
 
     const failed = expectErr(await container.start());
@@ -79,7 +67,7 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
     const subscribe = vi.spyOn(cache, 'subscribe');
     const psubscribe = vi.spyOn(cache, 'psubscribe');
 
-    const app = (await composeApp({ config: inProcessAppConfig(), adapters: { cache } })).app;
+    const { app } = await buildTestApp({ adapters: { cache } });
     await app.ready();
 
     expect(intervals).not.toHaveBeenCalled();
@@ -94,10 +82,7 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
     const cleared = vi.spyOn(globalThis, 'clearInterval');
     const cache = new InMemoryCacheClient();
     const psubscribe = vi.spyOn(cache, 'psubscribe');
-    const { app, container } = await composeApp({
-      config: inProcessAppConfig(),
-      adapters: { cache },
-    });
+    const { app, container } = await buildTestApp({ adapters: { cache } });
 
     expectOk(await container.start());
     expect(intervals).toHaveBeenCalled();

@@ -1,5 +1,6 @@
 import { InMemoryChannelRepository } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 
 describe('apps/api: channel repository', () => {
@@ -14,9 +15,7 @@ describe('apps/api: channel repository', () => {
 
   describe('InMemoryChannelRepository CRUD', () => {
     it('seeds dev channels for dev users', async () => {
-      const devChannel = expectOk(
-        await channelRepo.findByUserId('00000000-0000-7000-8000-000000000001')
-      );
+      const devChannel = expectOk(await channelRepo.findByUserId(SEEDED.userId));
 
       expect(devChannel).not.toBeNull();
       expect(devChannel?.handle).toBe('dev');

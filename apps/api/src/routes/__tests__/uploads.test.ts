@@ -1,30 +1,24 @@
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
-import { SEEDED } from '@vp/testing';
+import { TOKENS, bearer, buildTestApp } from '../../__tests__/test-app';
 
-const USER = SEEDED.userId;
 const ABSENT_UPLOAD = '018f0000-0000-7000-8000-0000000000ff';
+const SPENDER = '00000000-0000-7000-8000-0000000005e7';
 const START = { filename: 'clip.mp4', sizeBytes: 1024, contentType: 'video/mp4' };
 
 describe('upload routes', () => {
   let app: FastifyInstance;
-  const auth = { authorization: `Bearer ${mintToken({ sub: USER, role: 'user', ttl: '1h' })}` };
+  const auth = bearer(TOKENS.user);
 
-  beforeEach(async () => {
-    app = (
-      await composeApp({
-        adapters: { repositories: new InMemoryRepositories() },
-        config: inProcessAppConfig({ limits: { uploadRateLimitMax: 2 } }),
-      })
-    ).app;
-    await app.ready();
+  beforeAll(async () => {
+    ({ app } = await buildTestApp({
+      config: inProcessAppConfig({ limits: { uploadRateLimitMax: 2 } }),
+    }));
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
   });
 
@@ -67,15 +61,17 @@ describe('upload routes', () => {
       code: ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
     },
   ])('answers $failure with $status', async ({ payload, status, code }) => {
-    const res = await app.inject({ method: 'POST', url: '/v1/uploads', headers: auth, payload });
+    const headers = bearer(TOKENS.otherUser);
+    const res = await app.inject({ method: 'POST', url: '/v1/uploads', headers, payload });
 
     expect(res.statusCode).toBe(status);
     if (code) expect(res.json().code).toBe(code);
   });
 
   it('answers 429 once the configured start rate is spent', async () => {
+    const spender = bearer(mintToken({ sub: SPENDER, role: 'user', ttl: '1h' }));
     const start = () =>
-      app.inject({ method: 'POST', url: '/v1/uploads', headers: auth, payload: START });
+      app.inject({ method: 'POST', url: '/v1/uploads', headers: spender, payload: START });
     await start();
     await start();
 

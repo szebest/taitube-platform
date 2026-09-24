@@ -1,9 +1,8 @@
-import { inProcessAppConfig } from '@vp/env-schema';
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
+import { bearer, buildTestApp } from '../../__tests__/test-app';
 
 const USER = '00000000-0000-7000-8000-000000000077';
 
@@ -11,12 +10,10 @@ describe('me routes', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   const token = mintToken({ sub: USER, role: 'user', ttl: '1h' });
-  const auth = { authorization: `Bearer ${token}` };
+  const auth = bearer(token);
 
   beforeAll(async () => {
-    repositories = new InMemoryRepositories();
-    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
-    await app.ready();
+    ({ app, repositories } = await buildTestApp());
   });
 
   afterAll(async () => {

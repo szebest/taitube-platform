@@ -1,24 +1,13 @@
-import {
-  InMemoryCacheClient,
-  InMemoryDatabaseClient,
-  InMemoryJobQueue,
-  InMemoryMultipartStorage,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
+import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
-import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../app';
-import { bearer } from './in-memory-app';
+import { bearer, buildTestApp, seedVideo } from './test-app';
 
 describe('video reactions routes', () => {
   let app: FastifyInstance;
   let repos: InMemoryRepositories;
-  let storage: InMemoryStorageClient;
-  let cache: InMemoryCacheClient;
 
   const testUser = {
     id: '11111111-1111-7111-8111-111111111111',
@@ -44,9 +33,7 @@ describe('video reactions routes', () => {
   const guestUserToken = mintToken({ sub: guestUser.id, role: 'GUEST', ttl: '1h' });
 
   beforeAll(async () => {
-    repos = new InMemoryRepositories();
-    storage = new InMemoryStorageClient();
-    cache = new InMemoryCacheClient();
+    ({ app, repositories: repos } = await buildTestApp());
 
     await repos.users.upsert({
       id: testUser.id,
@@ -61,29 +48,7 @@ describe('video reactions routes', () => {
       tier: 'free',
     });
 
-    await repos.videos.create({
-      id: testVideoId,
-      ownerId: testUser.id,
-      title: 'Awesome Video',
-      visibility: 'public',
-      status: 'READY',
-      sourceKey: 'raw/video.mp4',
-    });
-
-    app = (
-      await composeApp({
-        config: inProcessAppConfig(),
-        adapters: {
-          repositories: repos,
-          storage,
-          cache,
-          dbClient: new InMemoryDatabaseClient(),
-          multipart: new InMemoryMultipartStorage(storage),
-          probeQueue: new InMemoryJobQueue('probe'),
-        },
-      })
-    ).app;
-    await app.ready();
+    await seedVideo(repos, { id: testVideoId, ownerId: testUser.id, title: 'Awesome Video' });
   });
 
   afterAll(async () => {

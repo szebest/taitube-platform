@@ -4,6 +4,7 @@ import type { ProcessHost } from '@vp/composition';
 import { createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { run } from '../process';
+import { boundPort } from './bound-port';
 
 function host(env: Record<string, string>): ProcessHost & { exit: ReturnType<typeof vi.fn> } {
   return { env, onSignal: () => {}, exit: vi.fn() };
@@ -16,12 +17,6 @@ function loggerTo(log: ReturnType<typeof captureLog>) {
     level: 'info',
     destination: log.destination,
   });
-}
-
-function boundPort(server: net.Server): number {
-  const address = server.address();
-  if (address === null || typeof address === 'string') throw new Error('not bound to a TCP port');
-  return address.port;
 }
 
 const IN_MEMORY_BOOT = {

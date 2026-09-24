@@ -1,34 +1,15 @@
-import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import type { JobQueue } from '@vp/core/ports';
-import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../../app';
-import { SEEDED } from '@vp/testing';
-
-const ADMIN_TOKEN = 'operator-token-for-tests';
-const USER = SEEDED.userId;
-const OPERATOR = '00000000-0000-7000-8000-000000000099';
+import { ADMIN_TOKEN, TOKENS, bearer, buildTestApp } from '../../../__tests__/test-app';
 
 describe('admin queues board', () => {
   let app: FastifyInstance;
-  const userToken = mintToken({ sub: USER, role: 'user', ttl: '1h' });
-  const operatorToken = mintToken({ sub: OPERATOR, role: 'admin', ttl: '1h' });
-
   beforeAll(async () => {
-    app = (
-      await composeApp({
-        config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
-        adapters: {
-          queues: new Map<string, JobQueue>(
-            QUEUES.map((name) => [name, new InMemoryJobQueue(name)])
-          ),
-        },
-      })
-    ).app;
-    await app.ready();
+    ({ app } = await buildTestApp({
+      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+    }));
   });
 
   afterAll(async () => {
@@ -45,7 +26,7 @@ describe('admin queues board', () => {
     },
     {
       caller: 'a non-admin user',
-      headers: { authorization: `Bearer ${userToken}` },
+      headers: bearer(TOKENS.user),
       status: 403,
       code: ErrorCodes.FORBIDDEN,
     },
@@ -64,7 +45,7 @@ describe('admin queues board', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/admin/queues/api/queues',
-      headers: { authorization: `Bearer ${operatorToken}` },
+      headers: bearer(TOKENS.admin),
     });
 
     expect(res.statusCode).toBe(200);

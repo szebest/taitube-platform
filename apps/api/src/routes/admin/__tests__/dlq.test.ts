@@ -1,23 +1,23 @@
-import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { InMemoryJobQueue, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
-import { QUEUES } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
-import { composeApp } from '../../../app';
-import { SEEDED } from '@vp/testing';
+import {
+  ADMIN_TOKEN,
+  TOKENS,
+  bearer,
+  buildTestApp,
+  inMemoryQueues,
+} from '../../../__tests__/test-app';
 
-const ADMIN_TOKEN = 'operator-token-for-tests';
-const USER = SEEDED.userId;
 const VIDEO = '018f0000-0000-7000-8000-000000000010';
 
 describe('admin DLQ routes', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
-  let queues: Map<string, InMemoryJobQueue>;
-  const userToken = mintToken({ sub: USER, role: 'user', ttl: '1h' });
+  const transcode = new InMemoryJobQueue('transcode-720p');
   const admin = { 'x-admin-token': ADMIN_TOKEN };
 
   async function park(status: 'PARKED' | 'REPLAYED' = 'PARKED'): Promise<string> {
@@ -37,15 +37,10 @@ describe('admin DLQ routes', () => {
   }
 
   beforeAll(async () => {
-    repositories = new InMemoryRepositories();
-    queues = new Map(QUEUES.map((name) => [name, new InMemoryJobQueue(name)]));
-    app = (
-      await composeApp({
-        config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
-        adapters: { repositories, queues: new Map(queues) },
-      })
-    ).app;
-    await app.ready();
+    ({ app, repositories } = await buildTestApp({
+      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+      adapters: { queues: inMemoryQueues(transcode) },
+    }));
   });
 
   afterAll(async () => {
@@ -58,7 +53,7 @@ describe('admin DLQ routes', () => {
 
   it.each([
     { caller: 'an anonymous caller', headers: {}, status: 401 },
-    { caller: 'a non-admin user', headers: { authorization: `Bearer ${userToken}` }, status: 403 },
+    { caller: 'a non-admin user', headers: bearer(TOKENS.user), status: 403 },
     { caller: 'an operator', headers: admin, status: 200 },
   ])('answers $caller listing the DLQ with $status', async ({ headers, status }) => {
     const res = await app.inject({ method: 'GET', url: '/v1/admin/dlq', headers });
@@ -92,9 +87,7 @@ describe('admin DLQ routes', () => {
 
   it('replays an entry with 202 onto its origin queue', async () => {
     const id = await park();
-    const origin = queues.get('transcode-720p');
-    if (!origin) throw new Error('transcode-720p queue missing');
-    origin.enqueuedJobs.length = 0;
+    transcode.enqueuedJobs.length = 0;
 
     const res = await app.inject({
       method: 'POST',
@@ -104,7 +97,9 @@ describe('admin DLQ routes', () => {
 
     expect(res.statusCode).toBe(202);
     expect(res.json()).toMatchObject({ dlqEntryId: id, status: 'REPLAYED' });
-    expect(origin.enqueuedJobs.map((job) => job.id)).toEqual([`${VIDEO}--transcode--720p--g1--r1`]);
+    expect(transcode.enqueuedJobs.map((job) => job.id)).toEqual([
+      `${VIDEO}--transcode--720p--g1--r1`,
+    ]);
   });
 
   it('discards an entry with an empty 204', async () => {
