@@ -19,6 +19,7 @@ const TEST_CALLS = new Set(['it', 'test', 'describe', 'suite']);
 const EXCLUSIVE_MODIFIERS = new Set(['skip', 'only', 'todo', 'skipIf', 'runIf']);
 const SLEEP_NAMES = new Set(['sleep', 'settle', 'delay']);
 const TIMER_WAITS = new Set(['setTimeout', 'setImmediate']);
+const TIMER_MODULES = new Set(['node:timers/promises', 'timers/promises']);
 const CLOCKS = new Set(['Date.now', 'performance.now']);
 
 interface ParsedSpec {
@@ -78,6 +79,7 @@ function isTimerWait(node: ts.Node): boolean {
   if (!ts.isNewExpression(node) || dottedName(node.expression) !== 'Promise') return false;
   const executor = node.arguments?.[0];
   if (executor === undefined) return false;
+  if (ts.isIdentifier(executor)) return TIMER_WAITS.has(executor.text);
   let waits = false;
   const visit = (child: ts.Node): void => {
     if (ts.isCallExpression(child) && TIMER_WAITS.has(calleeName(child))) waits = true;
@@ -85,6 +87,12 @@ function isTimerWait(node: ts.Node): boolean {
   };
   visit(executor);
   return waits;
+}
+
+function isTimerImport(node: ts.Node): boolean {
+  if (!ts.isImportDeclaration(node)) return false;
+  if (!ts.isStringLiteral(node.moduleSpecifier)) return false;
+  return TIMER_MODULES.has(node.moduleSpecifier.text);
 }
 
 function isSleepHelper(node: ts.Node): boolean {
@@ -203,6 +211,7 @@ const RULES: Rule[] = [
     offenders: matching([ImportDeclaration], isRuntimeVitestImport),
   },
   { name: 'waits on a timer', offenders: matching([NewExpression], isTimerWait) },
+  { name: 'imports a timer to wait on', offenders: matching([ImportDeclaration], isTimerImport) },
   {
     name: 'declares a sleep helper',
     offenders: matching([FunctionDeclaration, VariableDeclaration], isSleepHelper),
@@ -242,6 +251,9 @@ describe('architecture: spec discipline', () => {
     ["import * as v from 'vitest';", 'imports a runtime value from vitest'],
     ['await new Promise((resolve) => setTimeout(resolve, 20));', 'waits on a timer'],
     ['await new Promise((resolve) => setImmediate(resolve));', 'waits on a timer'],
+    ['await new Promise(setImmediate);', 'waits on a timer'],
+    ["import { setTimeout } from 'node:timers/promises';", 'imports a timer to wait on'],
+    ["import { scheduler } from 'timers/promises';", 'imports a timer to wait on'],
     ['const settle = () => Promise.resolve();', 'declares a sleep helper'],
     ['async function sleep(ms: number) {}', 'declares a sleep helper'],
     [

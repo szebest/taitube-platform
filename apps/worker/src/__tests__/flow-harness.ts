@@ -49,7 +49,12 @@ export function flowWorld(): FlowWorld {
   };
 }
 
-export async function uploadedVideo(world: FlowWorld, sourceKey: string): Promise<string> {
+/** An UPLOADED video whose source is in the raw bucket, holding `body` or its own key. */
+export async function uploadedVideo(
+  world: Pick<FlowWorld, 'repositories' | 'storage'>,
+  sourceKey: string,
+  body: Buffer = Buffer.from(sourceKey)
+): Promise<string> {
   const videoId = uuidv7();
   expectOk(
     await world.repositories.videos.create({
@@ -65,7 +70,7 @@ export async function uploadedVideo(world: FlowWorld, sourceKey: string): Promis
     await world.storage.uploadObject({
       bucket: 'raw',
       key: sourceKey,
-      body: Buffer.from(sourceKey),
+      body,
       contentType: 'video/mp4',
     })
   );

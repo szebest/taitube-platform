@@ -40,16 +40,16 @@ export const ROWS: readonly Row[] = [
     fires: "import { UNTESTED_SOURCES } from './untested-sources';",
   },
   {
-    name: 'a local copy of a shared test fixture',
-    pattern: /function (createMockJob|setupUploadedVideo|freePort)\b/g,
+    name: 'a copy of a shared test fixture: one uploadedVideo, in the worker harness',
+    pattern: /function (createMockJob|uploadedVideo|freePort)\b/g,
     scope: [
       ':(glob)apps/**/*.ts',
       ':(glob)apps/**/*.tsx',
       ':(glob)packages/**/*.ts',
       ':(exclude,glob)packages/server/testing/**',
     ],
-    expected: 0,
-    fires: 'async function freePort(): Promise<number> {',
+    expected: 1,
+    fires: 'async function uploadedVideo(sourceKey: string): Promise<string> {',
   },
   {
     name: 'the seeded user id written out in a spec',

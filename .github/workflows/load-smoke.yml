@@ -85,6 +85,10 @@ jobs:
             --summary-export "$RUNNER_TEMP/baseline.json" tests/load/s1-upload-storm.js
           p95=$(jq '.metrics["http_req_duration{name:presign}"]["p(95)"]' "$RUNNER_TEMP/baseline.json")
           p99=$(jq '.metrics["http_req_duration{name:presign}"]["p(99)"]' "$RUNNER_TEMP/baseline.json")
+          if [ "$p95" = null ] || [ "$p99" = null ]; then
+            echo "::error::the baseline run recorded no presign p95/p99; the bar cannot be set"
+            exit 1
+          fi
           echo "presign baseline on this runner: p95=${p95} ms p99=${p99} ms, bar x${LOAD_FACTOR}"
           echo "PRESIGN_P95_MS=$(awk "BEGIN { print int($p95 * $LOAD_FACTOR) + 1 }")" >> "$GITHUB_ENV"
           echo "PRESIGN_P99_MS=$(awk "BEGIN { print int($p99 * $LOAD_FACTOR) + 1 }")" >> "$GITHUB_ENV"
