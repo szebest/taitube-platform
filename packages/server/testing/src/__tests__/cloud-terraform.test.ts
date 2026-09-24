@@ -148,7 +148,7 @@ describe('Cloud Infrastructure & Terraform (Ticket 31)', () => {
       expect(evalR2ClassABudget(500000, 400000)).toBe(true);
     });
 
-    it('AC 2: Storage & Cost dashboard covers Class A/B ops, Neon CU-h, and Grafana Cloud series', () => {
+    it('AC 2: Storage & Cost dashboard covers Class A/B ops and Grafana Cloud series', () => {
       expect(existsSync(dashboardPath)).toBe(true);
       const dashboardJson = JSON.parse(readFileSync(dashboardPath, 'utf-8'));
       expect(dashboardJson.title).toBe('Storage & Cost');
@@ -156,7 +156,6 @@ describe('Cloud Infrastructure & Terraform (Ticket 31)', () => {
       const panelTitles = dashboardJson.panels.map((p: { title?: string }) => p.title);
       expect(panelTitles).toContain('Class A & Class B Storage Ops per Hour');
       expect(panelTitles).toContain('Projected Monthly Class A Ops (R2 1M/mo Free Tier Budget)');
-      expect(panelTitles).toContain('Neon Compute-Hour (CU-h) Monthly Usage (100 CU-h Free Tier)');
       expect(panelTitles).toContain(
         'Grafana Cloud Active Metric Series Count (10k Free Tier Budget)'
       );

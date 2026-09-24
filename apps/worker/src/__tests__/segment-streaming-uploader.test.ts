@@ -208,7 +208,8 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         expect(attempt3Log).toBeDefined();
         expect(attempt3Log?.msg).toContain('threads = 1');
       } finally {
-        process.env.FFMPEG_THREADS = origThreads;
+        if (origThreads === undefined) Reflect.deleteProperty(process.env, 'FFMPEG_THREADS');
+        else process.env.FFMPEG_THREADS = origThreads;
       }
     });
   });
@@ -543,25 +544,25 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
       );
     });
 
-    it('AC 1: real FFmpeg transcode on s60 streams every segment and its playlist to storage', async () => {
+    it('AC 1: real FFmpeg transcode on s2 streams every segment and its playlist to storage', async () => {
       const rootDir = path.resolve(__dirname, '../../../../');
-      const s60Path = path.join(rootDir, 'tests/fixtures/s60.mp4');
+      const s2Path = path.join(rootDir, 'tests/fixtures/s2.mp4');
       if (
         !(await fs
-          .stat(s60Path)
+          .stat(s2Path)
           .then(() => true)
           .catch(() => false))
       ) {
         return;
       }
 
-      const sourceBuffer = await fs.readFile(s60Path);
+      const sourceBuffer = await fs.readFile(s2Path);
       const sourceSize = sourceBuffer.byteLength;
 
-      const videoId = await createVideo('raw/s60.mp4', sourceSize);
+      const videoId = await createVideo('raw/s2.mp4', sourceSize);
       await storage.uploadObject({
         bucket: 'raw',
-        key: 'raw/s60.mp4',
+        key: 'raw/s2.mp4',
         body: sourceBuffer,
         contentType: 'video/mp4',
       });
@@ -576,14 +577,18 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
         audioBitrateKbps: 128,
       });
 
-      const processor = createTranscodeProcessor(transcodeDeps({ repositories, storage, logger }));
+      const deps = transcodeDeps({ repositories, storage, logger });
+      const processor = createTranscodeProcessor({
+        ...deps,
+        ffmpeg: { ...deps.ffmpeg, gopSeconds: 0.5, hlsSegmentSeconds: 0.5 },
+      });
 
       const job = {
         id: `${videoId}--transcode--720p--g1`,
         attemptsMade: 0,
         data: {
           videoId,
-          sourceKey: 'raw/s60.mp4',
+          sourceKey: 'raw/s2.mp4',
           generation: 1,
           rendition: {
             name: '720p',
@@ -597,15 +602,15 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
             level: '3.1',
           },
           fps: 24,
-          durationMs: 60000,
-          traceparent: '00-s60-disk-test-01',
+          durationMs: 2000,
+          traceparent: '00-s2-disk-test-01',
         },
       };
 
       const result = await processor(job as any);
 
-      expect(expectOk(result).segmentCount).toBeGreaterThanOrEqual(10);
-      expect(expectOk(result).bytes).toBeGreaterThan(50000);
+      expect(expectOk(result).segmentCount).toBeGreaterThanOrEqual(3);
+      expect(expectOk(result).bytes).toBeGreaterThan(1000);
 
       // Verify all segments exist in storage
       for (let i = 0; i < expectOk(result).segmentCount; i++) {

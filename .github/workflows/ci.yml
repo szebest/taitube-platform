@@ -215,27 +215,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build the API image from the layer cache
-        uses: docker/build-push-action@v6
+      - name: Build the API and worker images side by side from the layer cache
+        uses: docker/bake-action@v6
         with:
-          context: .
-          file: apps/api/Dockerfile
-          tags: vp-api:local
+          source: .
           load: true
-          cache-from: type=gha,scope=api
-          cache-to: type=gha,scope=api,mode=max
-
-      - name: Build the worker image from the layer cache
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: apps/worker/Dockerfile
-          build-args: |
-            WORKER_RUNTIME=bun
-          tags: vp-worker:local
-          load: true
-          cache-from: type=gha,scope=worker-bun
-          cache-to: type=gha,scope=worker-bun,mode=max
+          set: |
+            api.cache-from=type=gha,scope=api
+            api.cache-to=type=gha,scope=api,mode=max
+            worker.cache-from=type=gha,scope=worker-bun
+            worker.cache-to=type=gha,scope=worker-bun,mode=max
 
       - name: Start the stack offline (internal network, zero internet egress)
         env:

@@ -146,99 +146,57 @@ describe('Ticket 14: FFmpeg keyframe alignment and thread back-off', () => {
       return Number(parsed.frames[0].pts_time);
     }
 
-    it('produces identical keyframe timestamps (within 1 frame / 0.05s) across 1080p/720p/480p for vfr.mp4', async () => {
-      const rootDir = path.resolve(__dirname, '../../../../../');
-      const vfrPath = path.join(rootDir, 'tests/fixtures/vfr.mp4');
-      if (!fs.existsSync(vfrPath)) return;
-
-      const timestampsByRendition: Record<string, number[]> = {};
-
-      for (const rendition of renditions) {
-        const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-vfr-${rendition.name}-`));
-        try {
-          await runFfmpegTranscode({
-            ...ENCODER,
-            sourcePath: vfrPath,
-            outputDir: outDir,
-            rendition,
-            fps: 24,
-            durationMs: 15000,
-            threads: 0,
-            preset: 'ultrafast',
-          });
-
-          const segFiles = fs
-            .readdirSync(outDir)
-            .filter((f) => f.endsWith('.ts'))
-            .sort();
-          expect(segFiles.length).toBeGreaterThanOrEqual(2);
-
-          timestampsByRendition[rendition.name] = segFiles.map((f) =>
-            getKeyframeTimestamp(path.join(outDir, f))
-          );
-        } finally {
-          fs.rmSync(outDir, { recursive: true, force: true });
-        }
+    /** Segment keyframes of one rendition, encoded into a directory removed afterwards. */
+    async function keyframes(
+      sourcePath: string,
+      rendition: (typeof renditions)[number],
+      segmentSeconds: number
+    ) {
+      const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-align-${rendition.name}-`));
+      try {
+        await runFfmpegTranscode({
+          ...ENCODER,
+          gopSeconds: Math.min(ENCODER.gopSeconds, segmentSeconds),
+          hlsSegmentSeconds: segmentSeconds,
+          sourcePath,
+          outputDir: outDir,
+          rendition,
+          fps: 24,
+          durationMs: 15000,
+          threads: 0,
+          preset: 'ultrafast',
+        });
+        return fs
+          .readdirSync(outDir)
+          .filter((f) => f.endsWith('.ts'))
+          .sort()
+          .map((f) => getKeyframeTimestamp(path.join(outDir, f)));
+      } finally {
+        fs.rmSync(outDir, { recursive: true, force: true });
       }
+    }
 
-      // Assert keyframe timestamps match across all 3 renditions for each segment N
-      const segCount = timestampsByRendition['1080p']?.length ?? 0;
-      for (let i = 0; i < segCount; i++) {
-        const t1080 = timestampsByRendition['1080p']?.[i] ?? 0;
-        const t720 = timestampsByRendition['720p']?.[i] ?? 0;
-        const t480 = timestampsByRendition['480p']?.[i] ?? 0;
+    it.each([
+      ['vfr.mp4', ENCODER.hlsSegmentSeconds],
+      ['s2.mp4', 0.5],
+    ])(
+      'puts every segment keyframe of %s at the same time (within 1 frame) in each rendition, %s s segments',
+      async (fixture, segmentSeconds) => {
+        const sourcePath = path.resolve(__dirname, '../../../../../tests/fixtures', fixture);
+        if (!fs.existsSync(sourcePath)) return;
 
-        // Within 1 frame tolerance (at 24fps, 1 frame is ~0.042s)
-        expect(Math.abs(t1080 - t720)).toBeLessThan(0.05);
-        expect(Math.abs(t1080 - t480)).toBeLessThan(0.05);
-      }
-    }, 60000);
+        const [t1080 = [], t720 = [], t480 = []] = await Promise.all(
+          renditions.map((rendition) => keyframes(sourcePath, rendition, segmentSeconds))
+        );
 
-    it('produces identical keyframe timestamps across 1080p/720p/480p for s60.mp4', async () => {
-      const rootDir = path.resolve(__dirname, '../../../../../');
-      const s60Path = path.join(rootDir, 'tests/fixtures/s60.mp4');
-      if (!fs.existsSync(s60Path)) return;
-
-      const timestampsByRendition: Record<string, number[]> = {};
-
-      for (const rendition of renditions) {
-        const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-s60-${rendition.name}-`));
-        try {
-          await runFfmpegTranscode({
-            ...ENCODER,
-            sourcePath: s60Path,
-            outputDir: outDir,
-            rendition,
-            fps: 24,
-            durationMs: 18000, // 3 segments
-            threads: 0,
-            preset: 'ultrafast',
-          });
-
-          const segFiles = fs
-            .readdirSync(outDir)
-            .filter((f) => f.endsWith('.ts'))
-            .sort()
-            .slice(0, 3);
-          expect(segFiles.length).toBe(3);
-
-          timestampsByRendition[rendition.name] = segFiles.map((f) =>
-            getKeyframeTimestamp(path.join(outDir, f))
-          );
-        } finally {
-          fs.rmSync(outDir, { recursive: true, force: true });
-        }
-      }
-
-      // Assert keyframe timestamps match across all 3 renditions for each segment N
-      for (let i = 0; i < 3; i++) {
-        const t1080 = timestampsByRendition['1080p']?.[i] ?? 0;
-        const t720 = timestampsByRendition['720p']?.[i] ?? 0;
-        const t480 = timestampsByRendition['480p']?.[i] ?? 0;
-
-        expect(Math.abs(t1080 - t720)).toBeLessThan(0.05);
-        expect(Math.abs(t1080 - t480)).toBeLessThan(0.05);
-      }
-    }, 60000);
+        expect(t1080.length).toBeGreaterThanOrEqual(3);
+        expect([t720.length, t480.length]).toEqual([t1080.length, t1080.length]);
+        t1080.forEach((t, i) => {
+          expect(Math.abs(t - (t720[i] ?? Number.NaN))).toBeLessThan(0.05);
+          expect(Math.abs(t - (t480[i] ?? Number.NaN))).toBeLessThan(0.05);
+        });
+      },
+      60000
+    );
   });
 });
