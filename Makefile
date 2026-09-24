@@ -12,8 +12,9 @@ DEV_TOKEN := pnpm --silent dev-token mint --raw
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-up: ## Start local infrastructure (Postgres, Redis, MinIO, minio-init)
-	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --wait postgres redis minio minio-init
+up: ## Start local infrastructure (Postgres, Redis, MinIO and its buckets); no migrate, API or workers
+	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --wait postgres redis minio
+	docker compose -f $(COMPOSE_FILE) run --rm minio-init
 
 doctor: ## Check developer prerequisites
 	@echo "Checking prerequisites..."

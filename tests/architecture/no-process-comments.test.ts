@@ -93,7 +93,10 @@ describe('architecture: no work-item references in code, specs or test titles', 
   it.each([
     ['an ADR reference', '// ADR-24: the edge decides\nexport {};'],
     ['an SDD section', '// SDD §6.2 owns the vocabulary\nexport {};'],
-    ['a string that is not a comment or a title', "const url = 'https://x.test/#12'; const a = 'AC 1';"],
+    [
+      'a string that is not a comment or a title',
+      "const url = 'https://x.test/#12'; const a = 'AC 1';",
+    ],
     ['a hex colour', "const colour = '#000000';"],
     ['a plain test title', "it('rejects a stale token', () => {});"],
   ])('passes %s', (_name, source) => {

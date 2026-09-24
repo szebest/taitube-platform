@@ -59,5 +59,5 @@ When AI coding agents (or pairs of engineers) work on tasks:
 
 `main` takes no direct push, so a ticket's status changes inside its PR:
 1. The PR that starts a ticket sets its `**Status:**` line to `in-progress`; the PR that completes it sets `done`. The vocabulary is `ready`, `blocked`, `in-progress`, `done` and `blocked-by-date`, and `gen-index.py` refuses anything else.
-2. Re-generate the index in the same PR: `python3 docs/tickets/gen-index.py`. CI runs it with `--check` (`tests/architecture/gen-index.test.ts`), so a stale index fails the PR.
+2. Re-generate the index in the same PR: `python3 docs/tickets/gen-index.py`. CI runs it with `--check` (`tests/in-process/gen-index.test.ts`, in `pnpm test:unit`), so a stale index fails the PR.
 3. After the merge, `.github/workflows/sync-tickets.yml` updates the GitHub issues on the push to `main`; `pnpm sync:tickets` does the same by hand.

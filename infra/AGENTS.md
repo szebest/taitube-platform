@@ -34,10 +34,10 @@ Instructions for any coding agent working on infrastructure, orchestration, and 
 ## 4. Key Commands
 
 ```bash
-# Start every compose service outside a profile (infra, migrate, API, workers), building images only if missing
+# Start Postgres, Redis and MinIO with its buckets; no migrate, API or workers
 make up
 
-# The same, rebuilding the API and worker images first
+# Build the images and start everything: infra, migrate and seed, API and every worker stage
 make up-all
 
 # Create and deploy to local k3d Kubernetes cluster

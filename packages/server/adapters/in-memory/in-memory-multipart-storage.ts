@@ -152,8 +152,12 @@ export class InMemoryMultipartStorage extends MultipartStorage {
     return ok();
   }
 
-  async close(): Promise<Result<void, StorageUnavailable>> {
+  clear(): void {
     this.uploads.clear();
+  }
+
+  async close(): Promise<Result<void, StorageUnavailable>> {
+    this.clear();
     return ok();
   }
 }

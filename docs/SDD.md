@@ -1759,9 +1759,9 @@ Exposed by `packages/server/observability` (`prom-client` registry; API on `:946
 | `http_requests_in_flight` | gauge | — | API | load shedding |
 | `sse_connections` | gauge | `channel_type` | API | fan-out capacity |
 | `sse_events_published_total` | counter | `event` | workers | |
-| `bullmq_queue_jobs` | gauge | `queue, state ∈ {waiting, prioritized, active, delayed, failed, completed, waiting-children}` | API (`queue-metrics` poller every 5 s via `queue.getJobCounts()`) | **KEDA scaling**, dashboards |
+| `bullmq_queue_jobs` | gauge | `queue, state ∈ {waiting, prioritized, active, completed, failed, delayed}` (`QUEUE_JOB_STATES`) | API (`services/queue-poller.ts`, every 5 s via `getJobCounts()`) | **KEDA scaling**, dashboards |
 | `bullmq_queue_oldest_waiting_age_seconds` | gauge | `queue` | API poller | starvation alert |
-| `jobs_processed_total` | counter | `queue, result ∈ {completed, failed, dlq, stalled}` | workers | failure rate |
+| `jobs_processed_total` | counter | `queue, result ∈ {completed, failed, stalled}` | workers | failure rate; a parked job is `dlq_entries_total` |
 | `job_duration_seconds` | histogram | `queue` | workers | p95 job latency |
 | `job_wait_seconds` | histogram | `queue` | workers (`processedOn - timestamp`) | queue lag |
 | `transcode_realtime_factor` | histogram | `rendition, preset` | transcode | video-seconds per wall-second (>1 = faster than realtime) |
@@ -1786,7 +1786,7 @@ metadata: { name: vp-worker-transcode-1080p-scaledobject, namespace: video-pipel
 spec:
   scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: vp-worker-transcode-1080p }
   minReplicaCount: 0
-  maxReplicaCount: 6                 # the cloud overlay patches it to 1
+  maxReplicaCount: 6                 # the cloud overlay patches 1080p and 720p to 1, 480p and probe to 2
   pollingInterval: 10
   cooldownPeriod: 300                # wait 5 min of empty queue before scaling to zero
   advanced:
@@ -1973,11 +1973,11 @@ video-pipeline/
 │   └── web/                                # React 18 · Create React App 5 (craco) · RTK Query · Bootstrap
 │       └── src/                            # modules/ (pages), components/can.tsx, hooks/use-can.ts
 ├── infra/
-│   ├── compose/                            # docker-compose.yml (+ offline, chaos, toxiproxy files), minio-init.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
+│   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/
 │   │   ├── base/                           # namespace, api, vp-worker-<stage> deployments, scaled-objects, configmap-secret, service-monitors, dashboards-configmaps
 │   │   ├── overlays/local/                 # k3d/kind: local images
-│   │   ├── overlays/cloud/                 # ExternalSecret, cloudflared, Alloy, in-cluster Redis, maxReplicaCount 1
+│   │   ├── overlays/cloud/                 # ExternalSecret, cloudflared, Alloy, in-cluster Redis, maxReplicaCount 1 (1080p, 720p) or 2 (480p, probe)
 │   │   └── helm-values/                    # keda, kube-prometheus-stack, redis, minio, postgres
 │   ├── terraform/                          # cloudflare (R2 buckets, custom domain, tunnel, DNS, Access, scoped tokens), hetzner (server, firewall)
 │   └── observability/
@@ -2025,7 +2025,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | HTTP | Fastify 5 + `fastify-type-provider-zod`, `@fastify/rate-limit`, `@fastify/swagger`, `@fastify/cors`, `@fastify/helmet` | | JWTs verified by the `TokenVerifier` adapters, not a Fastify plugin |
 | Queue | BullMQ 6 + ioredis 5 | | `@bull-board/api` + `@bull-board/fastify` |
 | DB | PostgreSQL 16, Drizzle ORM 0.45 (1.0 when GA) + drizzle-kit, `postgres` (postgres.js) driver | | |
-| Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `@aws-sdk/lib-storage` | 3.x | |
+| Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` | 3.x | |
 | Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
 | Validation | zod 3 | | |
 | IDs | `uuidv7` | | |

@@ -218,9 +218,14 @@ make down
 Start PostgreSQL, Redis, and MinIO storage containers:
 
 ```bash
+cp .env.example .env
 make up
 make check-redis
+pnpm db:migrate && pnpm db:seed
 ```
+
+`make up` starts the infrastructure only; `pnpm db:migrate` and `pnpm db:seed` read `.env` and create the
+schema and the dev user. `make up-all` runs the whole stack in containers instead, migrations included.
 
 ### 2. Install Dependencies and Run Verifications
 

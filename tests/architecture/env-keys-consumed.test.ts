@@ -186,9 +186,7 @@ describe('architecture: every declared key is read and every config leaf is cons
   it('keeps every PlatformEnv key out of AppEnv', () => {
     const appEnv = new Set(declaredKeys(read(`${ENV_SCHEMA}app-env.ts`)));
 
-    expect(
-      platformKeys().filter((key) => appEnv.has(key))
-    ).toEqual([]);
+    expect(platformKeys().filter((key) => appEnv.has(key))).toEqual([]);
   });
 
   it('consumes every AppConfig leaf in production source outside env-schema', () => {

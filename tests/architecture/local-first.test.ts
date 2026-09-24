@@ -46,7 +46,10 @@ describe('architecture: local-first', () => {
   });
 
   it('loads nothing from another host in the web app page or the HLS test page', () => {
-    const pages = trackedFiles(':(glob)apps/web/public/*.html', ':(glob)tools/hls-test-page/*.html');
+    const pages = trackedFiles(
+      ':(glob)apps/web/public/*.html',
+      ':(glob)tools/hls-test-page/*.html'
+    );
     const offenders = pages.flatMap((file) =>
       externalHosts(read(file)).map((url) => `${file}: ${url}`)
     );

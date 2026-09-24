@@ -3,8 +3,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import GithubSlugger from 'github-slugger';
-import { parseMarkdown } from './markdown';
-import { ROOT, read } from './repo-files';
+import { parseMarkdown } from '../architecture/markdown';
+import { ROOT, read } from '../architecture/repo-files';
 
 const GEN_INDEX = join(ROOT, 'docs/tickets/gen-index.py');
 

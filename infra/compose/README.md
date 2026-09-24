@@ -10,6 +10,8 @@ This directory contains Docker Compose configurations for running the `video-pip
 |---|---|
 | `docker-compose.yml` | Primary compose file defining PostgreSQL 16, Redis 7, MinIO, API, and worker stages. |
 | `docker-compose.offline.yml` | Network isolation overlay (`internal: true`) for testing offline operation (`make smoke-offline`). |
+| `docker-compose.chaos.yml` | Routes a worker's Redis through toxiproxy for the readiness chaos run (`make chaos-readiness`). |
+| `test.sh` | Infrastructure smoke checks (`make smoke-infra`). |
 
 ---
 
@@ -31,8 +33,8 @@ This directory contains Docker Compose configurations for running the `video-pip
 ## Commands
 
 ```bash
-make up          # Start database, redis, and storage
-make up-all      # Start everything including API and transcode workers
+make up          # Start Postgres, Redis and MinIO with its buckets; no migrate, API or workers
+make up-all      # Build the images and start everything: infra, migrate, API and every worker stage
 make down        # Stop all containers and remove volumes
 make obs-up      # Start observability profile
 ```

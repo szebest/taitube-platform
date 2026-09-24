@@ -38,10 +38,10 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 ## 4. Local Commands
 
 ```bash
-# Start every default-profile service (infra, migrate, API, workers), building images only if missing
+# Start Postgres, Redis and MinIO with its buckets; no migrate, API or workers
 make up
 
-# The same, rebuilding the API and worker images first
+# Build the images and start everything: infra, migrate and seed, API and every worker stage
 make up-all
 
 # Stop containers and remove volumes
