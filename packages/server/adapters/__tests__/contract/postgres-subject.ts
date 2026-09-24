@@ -1,18 +1,15 @@
-import * as path from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
 import { eq, sql } from 'drizzle-orm';
 import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
-import { migrate } from 'drizzle-orm/pglite/migrator';
 import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { PostgresRepositories } from '../../postgres/repositories/postgres-repositories';
 import type { PostgresDatabase } from '../../postgres/repositories/types';
+import { migratedDataDir } from './pglite-snapshot';
 import { claimRealServices } from './real-services';
 import type { RepositoriesSubject } from './subjects';
-
-const MIGRATIONS_FOLDER = path.resolve(import.meta.dirname, '../../../db/drizzle');
 
 const TRUNCATE = sql.raw(
   `TRUNCATE ${[
@@ -50,21 +47,9 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
   };
 }
 
-async function migratedPglite(): Promise<PostgresDatabase> {
-  const db = drizzlePglite(new PGlite(), { schema });
-  await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
-  return db;
-}
-
-let pglite: Promise<PostgresDatabase> | undefined;
-
-/**
- * One engine per module graph: starting PGlite costs most of a second, so the specs that share a
- * worker (`vitest.pglite.config.ts` runs them unisolated) share it too, and each truncates it.
- */
 async function pgliteSubject(): Promise<RepositoriesSubject> {
-  pglite ??= migratedPglite();
-  return subjectOver(await pglite, async () => {});
+  const engine = new PGlite({ loadDataDir: await migratedDataDir() });
+  return subjectOver(drizzlePglite(engine, { schema }), () => engine.close());
 }
 
 /** Connects before the first test, so a database that is not there fails the file loudly. */

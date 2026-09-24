@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run && vitest run --config vitest.pglite.config.ts",
+    "test": "vitest run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "exports": {

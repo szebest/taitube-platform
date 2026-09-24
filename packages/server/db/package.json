@@ -16,6 +16,11 @@
       "import": "./dist/migrate.js",
       "default": "./dist/migrate.js"
     },
+    "./migrations-hash": {
+      "types": "./dist/migrations-hash.d.ts",
+      "import": "./dist/migrations-hash.js",
+      "default": "./dist/migrations-hash.js"
+    },
     "./schema": {
       "types": "./dist/schema.d.ts",
       "import": "./dist/schema.js",
