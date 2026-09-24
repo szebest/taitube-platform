@@ -88,7 +88,20 @@ export function productionProgram(): SharedProgram {
   return shared;
 }
 
+const fixturePrograms = new Map<string, ts.Program>();
+
+/** Built once per set of files: a new program binds the whole `lib` again before it checks a line. */
 export function fixtureProgram(files: Record<string, string>): ts.Program {
+  const key = JSON.stringify(files);
+  let program = fixturePrograms.get(key);
+  if (!program) {
+    program = buildFixtureProgram(files);
+    fixturePrograms.set(key, program);
+  }
+  return program;
+}
+
+function buildFixtureProgram(files: Record<string, string>): ts.Program {
   const host = ts.createCompilerHost(OPTIONS);
   const read = host.readFile.bind(host);
   host.readFile = (file) => files[file] ?? read(file);
