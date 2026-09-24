@@ -459,7 +459,7 @@ The brief asked explicitly: transient task queue vs event-streaming log vs hybri
 | Rank | Option | Reason |
 |---|---|---|
 | **1** | **KEDA + Prometheus scaler** on `bullmq_queue_jobs{state=~"waiting|active|prioritized"}` | Scales on *waiting + active* so a busy worker is never counted as spare capacity; single metric source for dashboards, alerts and scaling; supports `activationThreshold` for scale-to-zero. |
-| 2 | KEDA + Redis list scaler (`listName: bull:transcode-1080p:wait`) | Zero dependency on Prometheus; but only sees the plain `wait` list — prioritized jobs live in a ZSET (`:prioritized`) and are invisible, and it ignores `active`. Fine as a fallback. |
+| 2 | KEDA + Redis list scaler (`listName: bull:transcode-1080p:wait`) | Zero dependency on Prometheus; but it reads a list length only, and a job with a priority lives in a ZSET (`:prioritized`), which every pipeline job does, so it would never wake a stage; it also ignores `active`. Not deployed. |
 | 3 | KEDA `ScaledJob` (one K8s Job per BullMQ job) | KEDA's own recommendation for long-running work, but it conflicts with BullMQ's pull model (the Job must still *pull* a job; if two Jobs start and one queue item exists, one Job idles). Kept as an experiment note. |
 | 4 | Compose-level scaler script (`docker compose up --scale`) | Used in **Phase 3-lite** for the non-Kubernetes path; demonstrates the loop (poll depth → set replicas) without a cluster. |
 | 5 | CPU-based HPA | Lagging indicator; workers are pegged at 100 % CPU by design while transcoding — CPU says nothing about backlog. |
@@ -1544,7 +1544,7 @@ flowchart LR
 | Authentication | A bearer token is verified by the `TokenVerifier` port (`@vp/core/ports`), and `AUTH_MODE` picks the adapter once, in `toAppConfig`. `jwks` verifies against `AUTH_JWKS_URL`: `iss` must equal `AUTH_ISSUER`, `aud` must name `AUTH_AUDIENCE`, `exp` is required, `alg` must be one of `AUTH_ALGORITHMS` and the one the JWK declares (never `none`), a kid-less token is refused while the key set holds more than one key, ES* signatures are read as JWS `r||s`, and an unknown `kid` refetches the key set at most once per 30 s so a rotated key is accepted at once. `dev` verifies `pnpm dev-token` tokens against the key derived from the committed seed and serves that key at `/.well-known/jwks.json`; production refuses `AUTH_MODE=dev` at `loadEnv()`, so neither the route nor the seed key exist there (`auth-hardening.test.ts`). `sub` becomes `users.id`, provisioned on first sight. An admin is a token whose verified role claim is `admin`; the static `x-admin-token` (constant-time compare) exists in dev mode only, acts as the provisioned `AUTH_DEV_USER_ID`, and production refuses any `ADMIN_TOKEN`. |
 | Authorisation | CASL rules in `@vp/permissions` (`packages/universal/permissions`), shared by `apps/api` and `apps/web`. `Role` is `'GUEST' \| 'USER' \| 'CREATOR' \| 'MODERATOR' \| 'ADMIN'`; `parseRole` turns an untrusted claim into one at the boundary (anything unknown is `GUEST`), and `getUserPermissions(user)` builds the ability from the per-subject rule sets. The API decides access in its domain services only, through the `AuthorizationPort` (`@vp/core/ports`, implemented by `CaslAuthorizationAdapter`) with a `canX({ user, ... })` helper or `assertCan(...)`; routes read `request.user` or `requireAuth(request)` and never check a role. List queries apply the same rules in SQL: `packages/server/adapters/postgres/scopes/` compiles them with CASL `rulesToAST` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`). A failure is an RFC 9457 problem (401 `UNAUTHORIZED`, 403 `FORBIDDEN`) through `sendResult`. In `apps/web`, `PermissionsProvider`, `useCan` and `<Can />` gate the UI from the same rules. A video is readable when it is `public` or `unlisted`, by its owner, or by a `MODERATOR`; only its owner may update or delete it. |
 | Upload safety | Presigned URLs live `S3_PRESIGN_TTL_SEC` (900 s); `Content-Type` and `Content-Length` are signed into the single-PUT URL. On complete, both strategies `HeadObject` the source and compare its size to the declared one; on a mismatch the server deletes the object and moves the video to `REJECTED`. Content-type allowlist `ALLOWED_CONTENT_TYPES` in `@vp/validation` (`video/mp4`, `video/webm`, `video/quicktime`, `video/x-matroska`). Per-user limits `MAX_UPLOAD_BYTES` and `MAX_INFLIGHT_PER_USER`. |
-| Storage | Buckets private; the CDN reads `public` through the R2 custom domain (`infra/terraform/main.tf`). Terraform issues two scoped R2 tokens: the API's reads and writes `raw` only; the worker's reads and writes `raw` and `public`. The worker writes to `raw` only to delete: housekeeping (`expire-raw`, `purge-deleted`) removes sources there and `reconcile-uploads` aborts stale multipart uploads, and R2 grants a delete only with Item Write (`cloud-terraform.test.ts` holds both tokens). |
+| Storage | Buckets private; the CDN reads `public` through the R2 custom domain (`infra/terraform/main.tf`). Terraform issues two scoped R2 tokens: the API's reads and writes `raw` only; the worker's reads and writes `raw` and `public`. The worker writes to `raw` only to delete: housekeeping (`expire-raw`, `purge-deleted`) removes sources there and `reconcile-uploads` aborts stale multipart uploads, and R2 grants a delete only with Item Write (`cloud-r2-tokens.test.ts` holds both tokens). |
 | Command injection | FFmpeg and ffprobe run through `spawn` with argv arrays (`@vp/ffmpeg`), never a shell. Object keys come from `@vp/storage` `keys.ts` and are built from the video UUID; the only part taken from the uploaded filename is the extension of `raw/<videoId>/source.<ext>`, and the filename is otherwise only the default title. |
 | Webhooks | Not built: no feature sends one, so `WEBHOOK_SIGNING_SECRET` and `WEBHOOK_URL_ALLOWLIST` are not declared. When outbound webhooks land they sign with HMAC-SHA256 (`X-Signature: t=…,v1=…`, 5-min replay window), go only to `https://` URLs behind an SSRF guard, and bring their keys back. |
 | Rate limiting | `@fastify/rate-limit`, registered with `global: false`, limits two routes, keyed by user (fallback IP): `POST /v1/uploads` at `UPLOAD_RATE_LIMIT_MAX` per minute (30) and reprocess at 5 per minute, with admins on the reprocess `allowList`. Reads are not rate-limited. The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names, and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
@@ -1804,18 +1804,7 @@ spec:
         activationThreshold: "0"     # any job wakes the deployment from zero
 ```
 
-Fallback trigger (no Prometheus dependency), on `vp-worker-transcode-480p` only. It reads the `wait` list, which a job with a priority never enters, so it can only wake the deployment for a job enqueued without one:
-
-```yaml
-    - type: redis
-      metadata:
-        addressFromEnv: REDIS_ADDR          # host:port
-        passwordFromEnv: REDIS_PASSWORD
-        listName: "bull:transcode-480p:wait"
-        listLength: "1"
-        activationListLength: "0"
-        databaseIndex: "0"
-```
+There is no Redis fallback trigger. KEDA's `redis` scaler reads a list length, and every pipeline job carries a priority, so it sits in the `:prioritized` ZSET and the `wait` list stays empty; the one fallback the base had, on `transcode-480p`, could never have fired. The Prometheus trigger reads `prioritized` and is the only one (`k8s-keda-autoscaling.test.ts`).
 
 Every API replica polls every queue and exports the same depth, so the query takes the `max` per state before it sums; a plain `sum` counts each job once per replica, and two replicas started two pods for one job. Why `waiting + prioritized + active` and threshold 1: every pipeline job carries a priority, and BullMQ keeps a job with one in `prioritized`, not `waiting`, so the API poller reads all three (`QUEUE_JOB_STATES` in `@vp/core/ports`). Workers never write `bullmq_queue_jobs`: a worker has no view of its queue's depth, and a gauge it set would outlive the job and hold the deployment above zero. And threshold 1: with concurrency 1 per pod, `desired = ceil(outstanding / 1)` means every queued job gets a pod and no busy pod is counted as free capacity. KEDA scales the Deployment; the HPA behaviour block prevents flapping and the long `terminationGracePeriodSeconds` plus `worker.close()` makes scale-in safe. Because the queue is *pulled*, over-provisioning during a burst is harmless — surplus pods idle and are removed after cooldown.
 
@@ -1827,7 +1816,7 @@ Every API replica polls every queue and exports the same depth, so the query tak
 - The API's HTTP server span is its own Fastify hook, `plugins/request-span.ts`: named `{method} {route template}`, parented on the caller's `traceparent`, and started from the root context, because the HTTP instrumentation hands a request it ignores over with tracing suppressed. The handler runs inside it, so `ioredis` spans and the `traceparent` a handler writes into a job both belong to the request's trace. `postgres` (postgres.js) has no OpenTelemetry instrumentation, so SQL is not a span.
 - BullMQ is instrumented by hand: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. Work nothing traced asked for, such as a reconciler repair, starts a root span of its own (`rootTraceparent`). Each `ffmpeg` run is a child span `ffmpeg` carrying `ffmpeg.stage`, the argv with URLs redacted (`ffmpeg.command`) and `ffmpeg.exit_code`.
 - Result: one trace = `POST /v1/uploads/:uploadId/complete` -> `probe` -> three `transcode-*` -> `thumbnail` -> `package` -> `notify`, viewable in Tempo (compose `observability` profile, through the otel-collector); the video repository writes the active `trace_id` into `video_events`, so an operator can go from a video row to its trace.
-- Sampling: `OTEL_TRACES_SAMPLER` understands `always_on`, `always_off` and `ratio` (with `OTEL_TRACES_SAMPLER_ARG`); any other value, the default `parentbased_always_on` and `parentbased_traceidratio` included, is parent-based always-on. No overlay sets it, so every environment samples 100 %.
+- Sampling: `OTEL_TRACES_SAMPLER` takes the OpenTelemetry names `always_on`, `always_off`, `traceidratio` and their `parentbased_` forms, and `OTEL_TRACES_SAMPLER_ARG` is the ratio (0 to 1); any other value fails `loadEnv()`. Local runs default to `parentbased_always_on`; the cloud overlay sets `parentbased_traceidratio` at `0.2`, so a new trace is kept one time in five and a child follows its parent's decision (`resolveSampler` in `@vp/observability`, `sampler.test.ts`).
 
 ### 13.4 Logging
 
@@ -2123,7 +2112,7 @@ The schema is **closed over what the code reads**: every key the deployables rea
 | `REDIS_URL` | `redis://localhost:6379/0` | queues and cache; `rediss://` for TLS; no credential in the URL |
 | `REDIS_PUBSUB_URL` | `redis://localhost:6379/1` | the connection publish and subscribe use |
 | `REDIS_PASSWORD` 🔒 | none; local `vp` | handed to BullMQ and to the cache client |
-| `BULLMQ_PREFIX` | `bull` | queue and flow key prefix; must match the KEDA redis trigger's `listName` prefix |
+| `BULLMQ_PREFIX` | `bull` | queue and flow key prefix |
 
 ### 16.4 Object storage (S3-compatible)
 
@@ -2199,7 +2188,6 @@ Handed to something other than this code, and declared so the schema stays close
 | `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | turbo and every tool honouring the convention (P9) |
 | `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` 🔒 | Grafana Alloy's upstream (`Authorization=Basic <base64(instanceId:token)>`). Named apart from `OTEL_EXPORTER_OTLP_*` because `vp-secrets` reaches every app pod, and the OTel SDK there would read them in place of the ConfigMap's `http://alloy:4318` |
 | `WORKER_RUNTIME` | the worker image `CMD` and the k8s worker command (`bun` or `node`) |
-| `REDIS_ADDR` | the KEDA redis trigger (`addressFromEnv`) |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
 
 ### 16.9 Cloud-only (not read by any process in this repo)
@@ -2220,7 +2208,7 @@ Items the design leans on, re-checked against vendor sources on the document dat
 | Supabase Free | 500 MB, 2 projects, paused after 1 week idle. | Fallback / auth only. |
 | Upstash Redis Free | 500k commands/**month**, 256 MB; Upstash documents BullMQ but warns about polling cost. | Self-host Redis (ADR-05). |
 | BullMQ | v6 (6.3.x, Sept 2026): ioredis optional peer dep, Job Schedulers replace repeatables, `Job#discard()` removed → `UnrecoverableError`. Queue names/job IDs cannot contain `:`. Flows ✔. Defaults: `lockDuration 30 s`, `stalledInterval 30 s`, `maxStalledCount 1`, `lockRenewTime = lockDuration/2`. Built-in `exponential/fixed` backoff with `jitter`; custom `backoffStrategy`. No native DLQ. | §9 throughout. |
-| KEDA | v2.20.x; `redis` list scaler (`listName`, `listLength`, `activationListLength`); `prometheus` scaler (`serverAddress`, `query`, `threshold`, `activationThreshold`); `minReplicaCount` default 0; ScaledJob recommended for long per-event jobs (we use ScaledObject deliberately — ADR-12). | §13.2 |
+| KEDA | v2.20.x; `redis` list scaler (`listName`, `listLength`, `activationListLength`; a list length only, so it cannot see BullMQ's `prioritized` ZSET); `prometheus` scaler (`serverAddress`, `query`, `threshold`, `activationThreshold`); `minReplicaCount` default 0; ScaledJob recommended for long per-event jobs (we use ScaledObject deliberately — ADR-12). | §13.2 |
 | Bun | 1.4.0 (Aug 2026); acquired by Anthropic Dec 2025; BullMQ works via ioredis (not `Bun.redis`); historical issues with `child_process` stdio piping and AWS SDK stream hangs on 1.3.x — mitigated by runtime switch. | ADR-01 guard-rails. |
 | Node.js | v24 Active LTS until 2026-10-20 (then Maintenance); v26 LTS from 2026-10-28. | Upgrade API base image in Phase 4. |
 | Fastify / Drizzle / Prisma | Fastify 5.12; Drizzle 0.45 stable, 1.0 RC; Prisma 7 Rust-free by default, Prisma 8 RC tagged `latest`. | ADR-02/04. |
@@ -2259,7 +2247,7 @@ Build: multipart uploads with resume + sweeper + lifecycle rules; ladder selecti
 
 ### Phase 3 — Observe & scale (≈ 3 weeks)
 
-Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler + Redis fallback), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
+Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
 
 **DoD:** On k3d: backlog of 1 000 probe jobs → KEDA scales `probe` and `transcode-*` to max within 60 s, drains, returns to 0 after cooldown — captured as a Grafana panel PNG in `docs/load-tests/results/`. One trace shows the full journey of a video. S1–S3 pass thresholds; results table committed.
 

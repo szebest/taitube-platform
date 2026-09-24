@@ -97,7 +97,6 @@ export const WORKER_STAGES = [
     limits: { cpu: '1000m', memory: '1Gi' },
     threads: true,
     maxReplicas: 4,
-    redisFallback: false,
   },
   {
     name: 'vp-worker-transcode-1080p',
@@ -106,7 +105,6 @@ export const WORKER_STAGES = [
     limits: { cpu: '2', memory: '2Gi' },
     threads: true,
     maxReplicas: 6,
-    redisFallback: false,
   },
   {
     name: 'vp-worker-transcode-720p',
@@ -115,7 +113,6 @@ export const WORKER_STAGES = [
     limits: { cpu: '2', memory: '1.5Gi' },
     threads: true,
     maxReplicas: 6,
-    redisFallback: false,
   },
   {
     name: 'vp-worker-transcode-480p',
@@ -124,7 +121,6 @@ export const WORKER_STAGES = [
     limits: { cpu: '1', memory: '1Gi' },
     threads: true,
     maxReplicas: 6,
-    redisFallback: true,
   },
   {
     name: 'vp-worker-thumbnail',
@@ -133,7 +129,6 @@ export const WORKER_STAGES = [
     limits: { cpu: '1000m', memory: '1Gi' },
     threads: true,
     maxReplicas: 4,
-    redisFallback: false,
   },
   {
     name: 'vp-worker-package',
@@ -142,7 +137,6 @@ export const WORKER_STAGES = [
     limits: { cpu: '1000m', memory: '1Gi' },
     threads: true,
     maxReplicas: 4,
-    redisFallback: false,
   },
   {
     name: 'vp-worker-notify',
@@ -151,7 +145,6 @@ export const WORKER_STAGES = [
     limits: { cpu: '500m', memory: '256Mi' },
     threads: false,
     maxReplicas: 4,
-    redisFallback: false,
   },
   {
     name: 'vp-worker-housekeeping',
@@ -160,7 +153,6 @@ export const WORKER_STAGES = [
     limits: { cpu: '500m', memory: '512Mi' },
     threads: false,
     maxReplicas: 2,
-    redisFallback: false,
   },
 ];
 

@@ -16,22 +16,16 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { TracerProvider as SdkTracerProvider } from '@opentelemetry/sdk-trace';
-import {
-  AlwaysOffSampler,
-  AlwaysOnSampler,
-  ParentBasedSampler,
-  type Sampler,
-  TraceIdRatioBasedSampler,
-} from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { type Result, fromPromise, ok, tryCatch } from '@vp/result';
+import { type TraceSamplerName, resolveSampler } from './sampler';
 
 interface TracingConfig {
   serviceName: string;
   enabled: boolean;
   serviceVersion: string;
   endpoint: string;
-  sampler: string;
+  sampler: TraceSamplerName;
   samplerArg: number;
   resourceAttributes: string;
 }
@@ -62,21 +56,6 @@ function parseResourceAttributes(raw?: string): Record<string, string> {
     }
   }
   return attrs;
-}
-
-function resolveSampler(st: string, ratio: number): Sampler {
-  if (st === 'always_on') {
-    return new AlwaysOnSampler();
-  }
-  if (st === 'always_off') {
-    return new AlwaysOffSampler();
-  }
-  if (st === 'ratio') {
-    return new TraceIdRatioBasedSampler(ratio);
-  }
-  return new ParentBasedSampler({
-    root: new AlwaysOnSampler(),
-  });
 }
 
 /**

@@ -715,6 +715,9 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
+      '@vp/observability':
+        specifier: workspace:*
+        version: link:../observability
       '@vp/pagination':
         specifier: workspace:*
         version: link:../../universal/pagination

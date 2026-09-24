@@ -1,6 +1,6 @@
 ---
 name: vp-keda-queue-autoscaling
-description: Autoscale BullMQ worker Deployments on queue depth with KEDA — Prometheus scaler on waiting+prioritized+active (primary), Redis-list scaler on the bull:<queue>:wait list (fallback), scale-to-zero, HPA behaviour to avoid flapping, safe scale-in with long grace periods and worker drain, plus the compose-level scaler for laptops. Use when writing ScaledObjects, sizing maxReplicaCount, or debugging "pods not scaling / scaled in mid-job".
+description: Autoscale BullMQ worker Deployments on queue depth with KEDA — the Prometheus scaler on waiting+prioritized+active (the only trigger), scale-to-zero, HPA behaviour to avoid flapping, safe scale-in with long grace periods and worker drain, plus the compose-level scaler for laptops. Use when writing ScaledObjects, sizing maxReplicaCount, or debugging "pods not scaling / scaled in mid-job".
 license: MIT
 metadata:
   project: video-pipeline
@@ -18,9 +18,9 @@ metadata:
 ```yaml
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
-metadata: { name: worker-transcode-1080p }
+metadata: { name: vp-worker-transcode-1080p-scaledobject }
 spec:
-  scaleTargetRef: { name: worker-transcode-1080p }
+  scaleTargetRef: { name: vp-worker-transcode-1080p }
   minReplicaCount: 0
   maxReplicaCount: 6            # cloud overlay: 1 (1080p/720p), 2 (480p/probe)
   pollingInterval: 10
@@ -33,25 +33,15 @@ spec:
   triggers:
     - type: prometheus
       metadata:
-        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
-        query: sum(bullmq_queue_jobs{queue="transcode-1080p", state=~"waiting|prioritized|active"})
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
+        query: sum(max by (state) (bullmq_queue_jobs{queue="transcode-1080p", state=~"waiting|prioritized|active"})) or vector(0)
         threshold: "1"
         activationThreshold: "0"
 ```
-`bullmq_queue_jobs{queue,state}` is produced by the API's `queue-metrics` poller (`getJobCounts()` every 5 s). If the API is down, KEDA holds the last value — acceptable; alert `ScaleToZeroBroken` covers the pathological case.
+`bullmq_queue_jobs{queue,state}` is produced by the API's queue poller (`getJobCounts()` over `QUEUE_JOB_STATES`). Every API replica exports the same depth, so take `max by (state)` before the `sum`; `infra/k8s/base/scaled-objects.yaml` is the source of truth. If the API is down, KEDA holds the last value — acceptable; alert `ScaleToZeroBroken` covers the pathological case.
 
-## Fallback trigger — Redis list (no Prometheus dependency)
-```yaml
-    - type: redis
-      metadata:
-        addressFromEnv: REDIS_ADDR          # host:port
-        passwordFromEnv: REDIS_PASSWORD
-        listName: "bull:transcode-1080p:wait"
-        listLength: "1"
-        activationListLength: "0"
-        databaseIndex: "0"
-```
-Limitations: ignores `prioritized` and `active`. Use a `TriggerAuthentication` for the password; `BULLMQ_PREFIX` must match `bull`.
+## No Redis fallback
+KEDA's `redis` scaler reads a list length. Every pipeline job carries a priority, so it sits in the `:prioritized` ZSET and the `wait` list stays empty: a list trigger never fires. `k8s-keda-autoscaling.test.ts` holds every ScaledObject to the one Prometheus trigger.
 
 ## Safe scale-in (the part people get wrong)
 - Pod spec: `terminationGracePeriodSeconds: 900` for transcodes (60 for probe/package), liveness via the worker heartbeat file, `emptyDir` with `sizeLimit` for `/tmp/vp`.

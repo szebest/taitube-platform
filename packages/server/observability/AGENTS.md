@@ -23,7 +23,8 @@ the OpenTelemetry SDK packages.
   `ready` probe, `/readyz`. Constructing it opens nothing; `listen()` and `close()` return a `Result`.
 - **Tracing (`src/tracing.ts`):** `initTracing` starts the Node SDK with auto-instrumentation and an OTLP
   HTTP trace exporter, from the module a process preloads with `--import`. Traces only: metrics stay with
-  Prometheus. `registeredTracing.shutdown()` flushes; `getActiveTraceparent`,
+  Prometheus. `resolveSampler` (`src/sampler.ts`) turns an `OTEL_TRACES_SAMPLER` name, typed
+  `TraceSamplerName`, and its ratio into the SDK sampler. `registeredTracing.shutdown()` flushes; `getActiveTraceparent`,
   `extractContextFromTraceparent`, `createTraceparent` and `rootTraceparent` carry the W3C
   `traceparent` that job payloads hold.
 
