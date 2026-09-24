@@ -5,7 +5,6 @@
  * and on a listed source that has since gained its spec.
  */
 export const UNTESTED_SOURCES: readonly string[] = [
-  'apps/api/src/migrate.ts',
   'apps/web/src/App.tsx',
   'apps/web/src/auth-token.ts',
   'apps/web/src/index.tsx',
@@ -90,7 +89,6 @@ export const UNTESTED_SOURCES: readonly string[] = [
   'packages/server/adapters/postgres/repositories/postgres-video-reaction-repository.ts',
   'packages/server/adapters/postgres/repositories/postgres-video-repository.ts',
   'packages/server/core/repositories/video-repository.ts',
-  'packages/server/db/src/migrate.ts',
   'packages/server/db/src/seed.ts',
   'scripts/check-boundaries.ts',
   'scripts/fairness-simulation.ts',

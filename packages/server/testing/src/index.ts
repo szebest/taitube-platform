@@ -1,21 +1,25 @@
 import { type ViteUserConfig, defineConfig } from 'vitest/config';
 
 /**
- * Standard test fixtures based on SDD domain model and .env.example contracts.
+ * The rows every in-memory `Repositories` and the development seed start with. A spec that acts as
+ * "the dev user" or reads "the seeded video" names it from here.
  */
-export const FIXTURES = {
-  VIDEO_ID: '00000000-0000-7000-8000-000000000001',
-  USER_ID: '00000000-0000-7000-8000-000000000002',
-  TRACEPARENT: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
-  SAMPLE_MP4_KEY: '00000000-0000-7000-8000-000000000001/source.mp4',
+export const SEEDED = {
+  userId: '00000000-0000-7000-8000-000000000001',
+  otherUserId: '00000000-0000-7000-8000-000000000002',
+  channelId: '00000000-0000-7000-8000-000000000101',
+  otherChannelId: '00000000-0000-7000-8000-000000000102',
+  videoId: '018f0000-0000-7000-8000-000000000001',
+  otherVideoId: '018f0000-0000-7000-8000-000000000002',
 } as const;
 
 /**
- * Helper to define package-level Vitest configs with consistent defaults.
+ * Every package's test config. Spies and stubbed env vars are restored before each test, so no spec
+ * needs an `afterEach` to undo them.
  */
 export function definePackageTestConfig(
   overrides: ViteUserConfig = {}
-): ReturnType<typeof defineConfig> {
+): ViteUserConfig {
   const { test: testOverrides, ...rootOverrides } = overrides;
 
   return defineConfig({
@@ -23,6 +27,8 @@ export function definePackageTestConfig(
     test: {
       environment: 'node',
       globals: true,
+      restoreMocks: true,
+      unstubEnvs: true,
       testTimeout: 30_000,
       hookTimeout: 30_000,
       include: ['src/**/__tests__/**/*.test.ts'],
@@ -31,37 +37,31 @@ export function definePackageTestConfig(
   });
 }
 
-/**
- * Mock BullMQ job builder for testing worker stages.
- */
-export interface MockJob<T = Record<string, unknown>> {
+export interface MockJob<T> {
   id: string;
   name: string;
   data: T;
   attemptsMade: number;
   updateProgress: (progress: number | object) => Promise<void>;
-  log: (row: string) => Promise<number>;
 }
 
-export function createMockJob<T extends Record<string, unknown>>(
+/** A queue job as a stage receives one, on its first attempt unless `overrides` says otherwise. */
+export function createMockJob<T>(
   name: string,
   data: T,
   overrides: Partial<MockJob<T>> = {}
 ): MockJob<T> {
   return {
-    id: `${name}-job-${Date.now()}`,
+    id: `${name}-job`,
     name,
     data,
     attemptsMade: 0,
     updateProgress: async () => {},
-    log: async () => 1,
     ...overrides,
   };
 }
 
-/**
- * Helper to run a test with temporary environment variable overrides.
- */
+/** Runs `fn` with the given variables set, or unset for `undefined`, and restores the rest after. */
 export async function withEnv<R>(
   envOverrides: Record<string, string | undefined>,
   fn: () => Promise<R> | R

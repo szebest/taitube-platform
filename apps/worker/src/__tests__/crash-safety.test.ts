@@ -1,8 +1,9 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
-import { JobQueue, type QueueJob } from '@vp/core/ports';
+import { JobQueue } from '@vp/core/ports';
 import type { PackageJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
+import { SEEDED, createMockJob } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createPackageProcessor } from '../stages/package';
@@ -11,18 +12,7 @@ import { STAGE_SETTINGS } from './stage-settings';
 describe('crash safety and effectively-once completion', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
-  const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
   const logger = createLogger({ format: 'json', service: 'worker-crash-test', level: 'silent' });
-
-  function createMockJob<T>(id: string, data: T, attemptsMade = 0): QueueJob<T> {
-    return {
-      id,
-      name: 'job',
-      data,
-      attemptsMade,
-      updateProgress: vi.fn().mockResolvedValue(undefined),
-    };
-  }
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
@@ -33,7 +23,7 @@ describe('crash safety and effectively-once completion', () => {
     const videoId = uuidv7();
     await repositories.videos.create({
       id: videoId,
-      ownerId: DEV_USER_ID,
+      ownerId: SEEDED.userId,
       title: 'Crash Safety Video',
       status: 'PROCESSING',
       sourceKey,
@@ -175,24 +165,28 @@ describe('crash safety and effectively-once completion', () => {
       getQueue: () => mockQueue,
     });
 
-    const job = createMockJob<PackageJob>(`${videoId}--package--g1`, {
-      videoId,
-      generation: 1,
-      ladder: [
-        {
-          name: '720p',
-          width: 1280,
-          height: 720,
-          videoKbps: 2800,
-          maxrateKbps: 2996,
-          bufsizeKbps: 4200,
-          audioKbps: 128,
-          profile: 'high',
-          level: '3.1',
-        },
-      ],
-      traceparent: '00-01-01-01',
-    });
+    const job = createMockJob<PackageJob>(
+      'package',
+      {
+        videoId,
+        generation: 1,
+        ladder: [
+          {
+            name: '720p',
+            width: 1280,
+            height: 720,
+            videoKbps: 2800,
+            maxrateKbps: 2996,
+            bufsizeKbps: 4200,
+            audioKbps: 128,
+            profile: 'high',
+            level: '3.1',
+          },
+        ],
+        traceparent: '00-01-01-01',
+      },
+      { id: `${videoId}--package--g1` }
+    );
 
     await processor(job);
 
@@ -203,7 +197,7 @@ describe('crash safety and effectively-once completion', () => {
     const readyEvents1 = events1.filter((e) => e.type === 'video.ready');
     expect(readyEvents1.length).toBe(1);
 
-    const duplicateJob = createMockJob<PackageJob>(`${videoId}--package--g1`, job.data, 1);
+    const duplicateJob = createMockJob('package', job.data, { id: job.id, attemptsMade: 1 });
     await processor(duplicateJob);
 
     const events2 = expectOk(await repositories.events.findByVideoId(videoId));

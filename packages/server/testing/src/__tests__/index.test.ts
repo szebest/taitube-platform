@@ -1,25 +1,60 @@
-import { FIXTURES, createMockJob, withEnv } from '../index';
+import { readdirSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { createMockJob, definePackageTestConfig, withEnv } from '../index';
 
-describe('@vp/testing smoke test', () => {
-  it('provides standard test fixtures', () => {
-    expect(FIXTURES.VIDEO_ID).toBe('00000000-0000-7000-8000-000000000001');
-    expect(FIXTURES.TRACEPARENT).toContain('00-4bf92f3577b34da6a3ce929d0e0e4736');
+const ROOT = resolve(import.meta.dirname, '../../../../..');
+const PROJECT_DIRS = ['apps', 'packages/universal', 'packages/server', 'packages/client'];
+const STANDALONE_PROJECTS = ['tests/architecture', 'tests/in-process'];
+
+function subdirectories(parent: string): string[] {
+  return readdirSync(join(ROOT, parent), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join(parent, entry.name));
+}
+
+function projectConfigs(): string[] {
+  const dirs = [...PROJECT_DIRS.flatMap(subdirectories), ...STANDALONE_PROJECTS];
+  return dirs.flatMap((dir) =>
+    readdirSync(join(ROOT, dir))
+      .filter((file) => /^vitest.*\.config\.ts$/.test(file))
+      .map((file) => join(dir, file))
+  );
+}
+
+describe('@vp/testing', () => {
+  it('restores spies and stubbed env vars before every test', () => {
+    const { test } = definePackageTestConfig();
+
+    expect(test).toMatchObject({ restoreMocks: true, unstubEnvs: true });
   });
 
-  it('creates mock job with default methods', async () => {
-    const job = createMockJob('probe', { videoId: FIXTURES.VIDEO_ID });
-    expect(job.name).toBe('probe');
-    expect(job.data.videoId).toBe(FIXTURES.VIDEO_ID);
-    expect(job.attemptsMade).toBe(0);
+  it('keeps the defaults a package does not override', () => {
+    const { test } = definePackageTestConfig({ test: { testTimeout: 60_000 } });
+
+    expect(test).toMatchObject({ testTimeout: 60_000, restoreMocks: true, globals: true });
+  });
+
+  it.each(projectConfigs())('runs %s with spies and env vars restored', async (config) => {
+    const { default: loaded } = await import(join(ROOT, config));
+
+    expect(loaded.test).toMatchObject({ restoreMocks: true, unstubEnvs: true });
+  });
+
+  it('builds a first-attempt job that reports progress', async () => {
+    const job = createMockJob('probe', { videoId: 'v1' });
+
+    expect(job).toMatchObject({ name: 'probe', data: { videoId: 'v1' }, attemptsMade: 0 });
     await expect(job.updateProgress(50)).resolves.toBeUndefined();
   });
 
-  it('safely scopes environment overrides with withEnv', async () => {
-    process.env.TEST_VAR = 'original';
-    await withEnv({ TEST_VAR: 'overridden' }, () => {
-      expect(process.env.TEST_VAR).toBe('overridden');
-    });
-    expect(process.env.TEST_VAR).toBe('original');
-    process.env.TEST_VAR = undefined;
+  it('sets and unsets env vars for one call and restores them after', async () => {
+    const seen = await withEnv({ VP_SPEC_SET: 'set', PATH: undefined }, () => ({
+      set: process.env.VP_SPEC_SET,
+      path: process.env.PATH,
+    }));
+
+    expect(seen).toEqual({ set: 'set', path: undefined });
+    expect(process.env.VP_SPEC_SET).toBeUndefined();
+    expect(process.env.PATH).toBeDefined();
   });
 });
