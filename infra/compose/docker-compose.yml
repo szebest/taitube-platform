@@ -2,9 +2,8 @@ name: video-pipeline
 
 x-app-env: &app-env
   DATABASE_URL: postgres://vp:vp@postgres:5432/vp
-  DATABASE_URL_MIGRATIONS: postgres://vp:vp@postgres:5432/vp
-  REDIS_URL: redis://:vp@redis:6379/0
-  REDIS_PUBSUB_URL: redis://:vp@redis:6379/1
+  REDIS_URL: redis://redis:6379/0
+  REDIS_PUBSUB_URL: redis://redis:6379/1
   REDIS_ADDR: redis:6379
   REDIS_PASSWORD: vp
   S3_ENDPOINT: http://minio:9000
@@ -89,7 +88,7 @@ services:
       - ../../.env
     environment:
       <<: *app-env
-    command: ["node", "dist/migrate.js"]
+    command: ["sh", "-c", "node dist/migrate.js && node dist/seed.js"]
     depends_on:
       postgres:
         condition: service_healthy

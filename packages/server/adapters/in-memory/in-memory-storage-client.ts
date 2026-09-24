@@ -11,8 +11,10 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
+import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
 import { measureStorageOp } from '../storage-metrics-helper';
 
 interface StoredObject {
@@ -141,7 +143,7 @@ export class InMemoryStorageClient extends StorageClient {
       }
       matchingKeys.sort();
 
-      const maxKeys = params.maxKeys ?? 1000;
+      const maxKeys = params.maxKeys ?? S3_MAX_KEYS_PER_REQUEST;
       let filteredKeys = matchingKeys;
       if (params.continuationToken) {
         const token = params.continuationToken;
@@ -192,14 +194,14 @@ export class InMemoryStorageClient extends StorageClient {
   async createPresignedPutUrl(
     params: StoragePresignedPutParams
   ): Promise<Result<StoragePresignedPutResult, StorageUnavailable>> {
-    const expiresIn = params.expiresInSeconds ?? 900;
+    const expiresIn = params.expiresInSeconds;
     return ok({
       url: `http://localhost:9000/${params.bucket}/${params.key}?mock-presigned=true`,
       headers: {
         'content-type': params.contentType,
         'content-length': String(params.contentLength ?? 0),
       },
-      expiresAt: new Date(Date.now() + expiresIn * 1000),
+      expiresAt: new Date(Date.now() + expiresIn * MS_PER_SECOND),
     });
   }
 

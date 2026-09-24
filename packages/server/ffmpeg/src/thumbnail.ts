@@ -1,7 +1,21 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { ErrorCodes, PermanentError } from '@vp/errors';
-import { runFfmpeg } from './transcode';
+import {
+  MS_PER_HOUR,
+  MS_PER_MINUTE,
+  MS_PER_SECOND,
+  SECONDS_PER_HOUR,
+  SECONDS_PER_MINUTE,
+} from '@vp/domain/time';
+import { type FfmpegProcessLimits, runFfmpeg } from './transcode';
+
+/** The sprite sheet's geometry; the WebVTT cues and the tiling filter both read it. */
+export interface SpriteLayout {
+  intervalSec: number;
+  columns: number;
+  tileWidth: number;
+  tileHeight: number;
+}
 
 export interface PosterOptions {
   sourcePath: string;
@@ -13,16 +27,12 @@ export interface SpriteOptions {
   sourcePath: string;
   outputPath: string;
   durationMs: number;
-  intervalSec?: number;
-  columns?: number;
+  layout: SpriteLayout;
 }
 
 export interface GenerateSpriteVttOptions {
   durationMs: number;
-  intervalSec?: number;
-  columns?: number;
-  tileWidth?: number;
-  tileHeight?: number;
+  layout: SpriteLayout;
   spriteFilename?: string;
 }
 
@@ -40,13 +50,13 @@ export interface SpriteVttCue {
 }
 
 export interface RunThumbnailOptions {
+  ffmpegPath: string;
   sourcePath: string;
   outputDir: string;
   durationMs: number;
-  intervalSec?: number;
-  columns?: number;
-  timeoutMs?: number;
-  forceFailure?: boolean;
+  layout: SpriteLayout;
+  timeoutMs: number;
+  limits: FfmpegProcessLimits;
 }
 
 export interface ThumbnailExecutionResult {
@@ -64,7 +74,7 @@ export interface ThumbnailExecutionResult {
  */
 export function buildPosterArgs(options: PosterOptions): string[] {
   const { sourcePath, outputPath, durationMs } = options;
-  const t10 = durationMs && durationMs > 0 ? (durationMs * 0.1) / 1000 : 0;
+  const t10 = durationMs && durationMs > 0 ? (durationMs * 0.1) / MS_PER_SECOND : 0;
 
   return [
     '-hide_banner',
@@ -97,8 +107,11 @@ export interface SpriteGrid {
 /**
  * Computes frame count and grid dimensions for sprite sheet tiling.
  */
-export function calculateSpriteGrid(durationMs: number, intervalSec = 5, columns = 10): SpriteGrid {
-  const durationSec = durationMs / 1000;
+export function calculateSpriteGrid(
+  durationMs: number,
+  { intervalSec, columns }: SpriteLayout
+): SpriteGrid {
+  const durationSec = durationMs / MS_PER_SECOND;
   const frameCount = Math.max(1, Math.ceil(durationSec / intervalSec));
   const rows = Math.max(1, Math.ceil(frameCount / columns));
   return { durationSec, frameCount, rows, columns };
@@ -109,8 +122,9 @@ export function calculateSpriteGrid(durationMs: number, intervalSec = 5, columns
  * 4K sources are scaled down before tiling to keep memory bounded.
  */
 export function buildSpriteArgs(options: SpriteOptions): string[] {
-  const { sourcePath, outputPath, durationMs, intervalSec = 5, columns = 10 } = options;
-  const { rows } = calculateSpriteGrid(durationMs, intervalSec, columns);
+  const { sourcePath, outputPath, durationMs, layout } = options;
+  const { intervalSec, columns, tileWidth: w, tileHeight: h } = layout;
+  const { rows } = calculateSpriteGrid(durationMs, layout);
 
   return [
     '-hide_banner',
@@ -120,7 +134,7 @@ export function buildSpriteArgs(options: SpriteOptions): string[] {
     '-i',
     sourcePath,
     '-vf',
-    `fps=1/${intervalSec},scale=160:90:force_original_aspect_ratio=decrease,pad=160:90:(ow-iw)/2:(oh-ih)/2,tile=${columns}x${rows}`,
+    `fps=1/${intervalSec},scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,tile=${columns}x${rows}`,
     '-frames:v',
     '1',
     '-q:v',
@@ -135,11 +149,11 @@ export function buildSpriteArgs(options: SpriteOptions): string[] {
  * Formats milliseconds into WebVTT timestamp format: HH:MM:SS.mmm
  */
 export function formatVttTimestamp(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const milliseconds = Math.floor(ms % 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+  const totalSeconds = Math.floor(ms / MS_PER_SECOND);
+  const milliseconds = Math.floor(ms % MS_PER_SECOND);
+  const hours = Math.floor(totalSeconds / SECONDS_PER_HOUR);
+  const minutes = Math.floor((totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+  const seconds = totalSeconds % SECONDS_PER_MINUTE;
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
 }
 
@@ -147,17 +161,11 @@ export function formatVttTimestamp(ms: number): string {
  * Generates WebVTT cues from duration and grid coordinates (SDD §8.3).
  */
 export function generateSpriteVtt(options: GenerateSpriteVttOptions): string {
-  const {
-    durationMs,
-    intervalSec = 5,
-    columns = 10,
-    tileWidth = 160,
-    tileHeight = 90,
-    spriteFilename = 'sprite.jpg',
-  } = options;
+  const { durationMs, layout, spriteFilename = 'sprite.jpg' } = options;
+  const { intervalSec, columns, tileWidth, tileHeight } = layout;
 
-  const { frameCount } = calculateSpriteGrid(durationMs, intervalSec, columns);
-  const intervalMs = intervalSec * 1000;
+  const { frameCount } = calculateSpriteGrid(durationMs, layout);
+  const intervalMs = intervalSec * MS_PER_SECOND;
 
   const lines: string[] = ['WEBVTT', ''];
 
@@ -240,15 +248,15 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
       const segments = hms.split(':').map(Number);
       if (segments.length === 3) {
         return (
-          (segments[0] ?? 0) * 3600000 +
-          (segments[1] ?? 0) * 60000 +
-          (segments[2] ?? 0) * 1000 +
+          (segments[0] ?? 0) * MS_PER_HOUR +
+          (segments[1] ?? 0) * MS_PER_MINUTE +
+          (segments[2] ?? 0) * MS_PER_SECOND +
           Number(ms.padEnd(3, '0').slice(0, 3))
         );
       }
       return (
-        (segments[0] ?? 0) * 60000 +
-        (segments[1] ?? 0) * 1000 +
+        (segments[0] ?? 0) * MS_PER_MINUTE +
+        (segments[1] ?? 0) * MS_PER_SECOND +
         Number(ms.padEnd(3, '0').slice(0, 3))
       );
     };
@@ -283,47 +291,28 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
 export async function runFfmpegThumbnail(
   options: RunThumbnailOptions
 ): Promise<ThumbnailExecutionResult> {
-  if (options.forceFailure) {
-    throw new PermanentError(ErrorCodes.FFMPEG_FAILED, 'Forced thumbnail failure for testing');
-  }
-
-  const {
-    sourcePath,
-    outputDir,
-    durationMs,
-    intervalSec = 5,
-    columns = 10,
-    timeoutMs = 60000,
-  } = options;
+  const { ffmpegPath, sourcePath, outputDir, durationMs, layout, timeoutMs, limits } = options;
 
   const posterPath = path.join(outputDir, 'poster.jpg');
   const spritePath = path.join(outputDir, 'sprite.jpg');
   const vttPath = path.join(outputDir, 'sprite.vtt');
 
-  const { frameCount, rows } = calculateSpriteGrid(durationMs, intervalSec, columns);
+  const { frameCount, rows } = calculateSpriteGrid(durationMs, layout);
 
-  // 1. Generate WebVTT
-  const vttContent = generateSpriteVtt({
-    durationMs,
-    intervalSec,
-    columns,
-  });
+  const vttContent = generateSpriteVtt({ durationMs, layout });
   await fs.writeFile(vttPath, vttContent, 'utf-8');
 
-  // 2. Build args
   const posterArgs = buildPosterArgs({ sourcePath, outputPath: posterPath, durationMs });
   const spriteArgs = buildSpriteArgs({
     sourcePath,
     outputPath: spritePath,
     durationMs,
-    intervalSec,
-    columns,
+    layout,
   });
 
-  // 3. Concurrently generate poster and sprite
   await Promise.all([
-    runFfmpeg({ stage: 'thumbnail', args: posterArgs, timeoutMs }),
-    runFfmpeg({ stage: 'thumbnail', args: spriteArgs, timeoutMs }),
+    runFfmpeg({ ffmpegPath, stage: 'thumbnail', args: posterArgs, timeoutMs, limits }),
+    runFfmpeg({ ffmpegPath, stage: 'thumbnail', args: spriteArgs, timeoutMs, limits }),
   ]);
 
   return {
@@ -333,6 +322,6 @@ export async function runFfmpegThumbnail(
     vttPath,
     frameCount,
     rows,
-    columns,
+    columns: layout.columns,
   };
 }

@@ -61,6 +61,11 @@
       "types": "./dist/authorization/index.d.ts",
       "import": "./dist/authorization/index.js",
       "default": "./dist/authorization/index.js"
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "import": "./dist/auth/index.js",
+      "default": "./dist/auth/index.js"
     }
   },
   "dependencies": {
@@ -74,6 +79,7 @@
     "@vp/concurrency": "workspace:*",
     "@vp/core": "workspace:*",
     "@vp/db": "workspace:*",
+    "@vp/dev-token": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/domain-rules": "workspace:*",
     "@vp/env-schema": "workspace:*",
@@ -82,6 +88,7 @@
     "@vp/observability": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/result": "workspace:*",
+    "@vp/storage": "workspace:*",
     "bullmq": "^6.3.4",
     "drizzle-orm": "^0.45.2",
     "ioredis": "^5.11.1",

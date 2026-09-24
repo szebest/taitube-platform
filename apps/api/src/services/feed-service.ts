@@ -5,14 +5,11 @@ import { type Result, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';
 
-const FEED_MAX_AGE_SECONDS = 30;
-const FEED_STALE_WHILE_REVALIDATE_SECONDS = 60;
-
 export interface FeedServiceDeps {
   videoService: VideoService;
   cache: CacheClient;
-  maxAgeSeconds?: number;
-  staleWhileRevalidateSeconds?: number;
+  maxAgeSeconds: number;
+  staleWhileRevalidateSeconds: number;
 }
 
 export interface FeedPage {
@@ -41,9 +38,8 @@ export class FeedService {
   constructor(deps: FeedServiceDeps) {
     this.videoService = deps.videoService;
     this.cache = deps.cache;
-    this.maxAgeSeconds = deps.maxAgeSeconds ?? FEED_MAX_AGE_SECONDS;
-    this.staleWhileRevalidateSeconds =
-      deps.staleWhileRevalidateSeconds ?? FEED_STALE_WHILE_REVALIDATE_SECONDS;
+    this.maxAgeSeconds = deps.maxAgeSeconds;
+    this.staleWhileRevalidateSeconds = deps.staleWhileRevalidateSeconds;
   }
 
   /**

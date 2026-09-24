@@ -9,11 +9,11 @@ import { DlqService } from '../services/dlq-service';
 import { FeedService } from '../services/feed-service';
 import { registerHousekeepingSchedulers } from '../services/housekeeping-schedulers';
 import { Poller } from '../services/poller';
-import { QUEUE_POLL_INTERVAL_MS, pollQueueMetrics } from '../services/queue-poller';
+import { pollQueueMetrics } from '../services/queue-poller';
 import { QueueService } from '../services/queue-service';
 import { ReactionService } from '../services/reaction-service';
 import { ReadinessService } from '../services/readiness-service';
-import { SQL_POLL_INTERVAL_MS, pollSqlMetrics } from '../services/sql-poller';
+import { pollSqlMetrics } from '../services/sql-poller';
 import { SseHub } from '../services/sse-hub';
 import { SseService } from '../services/sse-service';
 import { SubscriptionService } from '../services/subscription-service';
@@ -94,6 +94,8 @@ export function registerServices(c: Container): Container {
           probeQueue: c.get(Adapters.ProbeQueue),
           rawBucket: config().buckets.raw,
           multipartThresholdBytes: config().limits.multipartThresholdBytes,
+          partSizeMinBytes: config().limits.partSizeMinBytes,
+          partSizeMaxBytes: config().limits.partSizeMaxBytes,
           presignedUrlTtlSeconds: config().limits.presignTtlSeconds,
           uploadSessionTtlSeconds: config().limits.uploadSessionTtlSeconds,
           maxInflightPerUser: config().limits.maxInflightPerUser,
@@ -105,6 +107,7 @@ export function registerServices(c: Container): Container {
         new FeedService({
           videoService: c.get(Services.VideoService),
           cache: c.get(Adapters.Cache),
+          ...config().httpCache.feed,
         })
     )
     .provide(
@@ -113,6 +116,7 @@ export function registerServices(c: Container): Container {
         new CategoryService({
           categories: repositories().categories,
           categoryCache: c.get(Adapters.CategoryCache),
+          ...config().httpCache.categories,
         })
     )
     .provide(
@@ -192,13 +196,20 @@ export function registerServices(c: Container): Container {
       Services.QueuePoller,
       (c) => {
         const queues = c.get(Adapters.Queues);
-        return new Poller(() => pollQueueMetrics(queues, getMetrics()), QUEUE_POLL_INTERVAL_MS);
+        return new Poller(
+          () => pollQueueMetrics(queues, getMetrics()),
+          config().pollers.queueIntervalMs
+        );
       },
       { start: (poller) => poller.start(), dispose: (poller) => poller.stop() }
     )
     .provide(
       Services.SqlPoller,
-      () => new Poller(() => pollSqlMetrics(repositories(), getMetrics()), SQL_POLL_INTERVAL_MS),
+      () =>
+        new Poller(
+          () => pollSqlMetrics(repositories(), getMetrics(), config().pollers.staleStepMs),
+          config().pollers.sqlIntervalMs
+        ),
       { start: (poller) => poller.start(), dispose: (poller) => poller.stop() }
     )
     .provide(

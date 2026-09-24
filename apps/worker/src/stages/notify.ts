@@ -11,7 +11,7 @@ import { validateJobId } from '../job-identity';
 export interface NotifyProcessorDeps {
   repositories: Repositories;
   cache: CacheClient;
-  workerId?: string;
+  workerId: string;
   logger: Logger;
 }
 
@@ -23,7 +23,7 @@ export interface NotifyResult {
 export type NotifyFailure = DatabaseUnavailable | CacheUnavailable;
 
 export function createNotifyProcessor(deps: NotifyProcessorDeps) {
-  const { repositories, cache, workerId = `worker-${process.pid}`, logger } = deps;
+  const { repositories, cache, workerId, logger } = deps;
 
   return async function processNotifyJob(
     job: QueueJob<NotifyJob>

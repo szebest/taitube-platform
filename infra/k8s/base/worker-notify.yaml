@@ -50,8 +50,6 @@ spec:
           env:
             - name: WORKER_STAGE
               value: notify
-            - name: OTEL_SERVICE_NAME
-              value: vp-worker-notify
           resources:
             requests:
               cpu: 100m

@@ -22,16 +22,16 @@ import {
   type StorageUploadParams,
   type StorageUploadResult,
 } from '@vp/core/ports';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result';
+import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
 import { measureStorageOp } from '../storage-metrics-helper';
 import { type S3ConnectionConfig, isNotFound, s3ClientFrom } from './s3-config';
 
 export type S3StorageClientConfig =
   | { type: 'client'; client: S3Client }
   | ({ type: 'connection' } & S3ConnectionConfig);
-
-const DELETE_BATCH = 1000;
 
 export class S3StorageClient extends StorageClient {
   private readonly client: S3Client;
@@ -164,8 +164,8 @@ export class S3StorageClient extends StorageClient {
 
     return measureStorageOp('delete', bucket, async () => {
       const deleted: string[] = [];
-      for (let i = 0; i < keys.length; i += DELETE_BATCH) {
-        const chunk = keys.slice(i, i + DELETE_BATCH);
+      for (let i = 0; i < keys.length; i += S3_MAX_KEYS_PER_REQUEST) {
+        const chunk = keys.slice(i, i + S3_MAX_KEYS_PER_REQUEST);
         const sent = await fromPromise(
           () =>
             this.client.send(
@@ -232,7 +232,7 @@ export class S3StorageClient extends StorageClient {
   async createPresignedPutUrl(
     params: StoragePresignedPutParams
   ): Promise<Result<StoragePresignedPutResult, StorageUnavailable>> {
-    const expiresIn = params.expiresInSeconds ?? 900;
+    const expiresIn = params.expiresInSeconds;
     const signed = await fromPromise(
       () =>
         getSignedUrl(
@@ -254,7 +254,7 @@ export class S3StorageClient extends StorageClient {
         'content-type': params.contentType,
         'content-length': String(params.contentLength ?? 0),
       },
-      expiresAt: new Date(Date.now() + expiresIn * 1000),
+      expiresAt: new Date(Date.now() + expiresIn * MS_PER_SECOND),
     }));
   }
 
@@ -266,7 +266,7 @@ export class S3StorageClient extends StorageClient {
         getSignedUrl(
           this.client,
           new GetObjectCommand({ Bucket: params.bucket, Key: params.key }),
-          { expiresIn: params.expiresInSeconds ?? 900 }
+          { expiresIn: params.expiresInSeconds }
         ),
       this.unavailable('createPresignedGetUrl')
     );

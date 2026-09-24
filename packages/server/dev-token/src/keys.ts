@@ -1,6 +1,6 @@
 import * as crypto from 'node:crypto';
 
-export interface DevJwk {
+export interface DevJwk extends crypto.JsonWebKey {
   kty: string;
   crv: string;
   alg: string;

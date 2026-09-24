@@ -15,7 +15,7 @@ describe('apps/api: composeApp', () => {
   });
 
   it('registers every plugin in the route table', async () => {
-    const app = await buildApp();
+    const app = await buildApp({ config: inProcessAppConfig() });
     await app.ready();
 
     const registered = app.printRoutes({ commonPrefix: false });
@@ -27,7 +27,10 @@ describe('apps/api: composeApp', () => {
 
   it('builds over an adapter a test hands it instead of the configured one', async () => {
     const storage = new InMemoryStorageClient();
-    const { app, container } = await composeApp({ adapters: { storage } });
+    const { app, container } = await composeApp({
+      config: inProcessAppConfig(),
+      adapters: { storage },
+    });
 
     expect(container.get(Adapters.Storage)).toBe(storage);
     await app.close();
@@ -36,12 +39,63 @@ describe('apps/api: composeApp', () => {
   it('disposes the container when the app closes, and leaves an override to its owner', async () => {
     const storage = new InMemoryStorageClient();
     const storageClose = vi.spyOn(storage, 'close');
-    const { app, container } = await composeApp({ adapters: { storage } });
+    const { app, container } = await composeApp({
+      config: inProcessAppConfig(),
+      adapters: { storage },
+    });
     const cacheClose = vi.spyOn(container.get(Adapters.Cache), 'close');
 
     await app.close();
 
     expect(cacheClose).toHaveBeenCalledTimes(1);
     expect(storageClose).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { origin: 'http://localhost:5173', allowed: 'http://localhost:5173' },
+    { origin: 'https://evil.example', allowed: undefined },
+  ])('answers CORS for $origin with $allowed', async ({ origin, allowed }) => {
+    const app = await buildApp({
+      config: inProcessAppConfig({ http: { corsOrigins: ['http://localhost:5173'] } }),
+    });
+
+    const res = await app.inject({ method: 'GET', url: '/healthz', headers: { origin } });
+
+    expect(res.headers['access-control-allow-origin']).toBe(allowed);
+    await app.close();
+  });
+
+  it('refuses a JSON body over the configured limit with 413', async () => {
+    const app = await buildApp({ config: inProcessAppConfig({ http: { bodyLimitBytes: 64 } }) });
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/uploads',
+      headers: { 'content-type': 'application/json' },
+      payload: JSON.stringify({ filename: 'x'.repeat(128) }),
+    });
+
+    expect(res.statusCode).toBe(413);
+    expect(res.json()).toMatchObject({ status: 413, title: 'Payload Too Large' });
+    await app.close();
+  });
+
+  it('takes the client address from X-Forwarded-For only from a configured proxy', async () => {
+    const trusting = await buildApp({
+      config: inProcessAppConfig({ http: { trustProxy: ['127.0.0.1'] } }),
+    });
+    const untrusting = await buildApp({ config: inProcessAppConfig() });
+    for (const app of [trusting, untrusting]) {
+      app.get('/ip', async (request) => ({ ip: request.ip }));
+    }
+    const headers = { 'x-forwarded-for': '203.0.113.7' };
+
+    const [trusted, untrusted] = await Promise.all(
+      [trusting, untrusting].map((app) => app.inject({ method: 'GET', url: '/ip', headers }))
+    );
+
+    expect(trusted?.json().ip).toBe('203.0.113.7');
+    expect(untrusted?.json().ip).toBe('127.0.0.1');
+    await Promise.all([trusting.close(), untrusting.close()]);
   });
 });

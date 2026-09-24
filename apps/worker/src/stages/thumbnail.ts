@@ -1,5 +1,4 @@
 import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
@@ -11,7 +10,7 @@ import {
   mediaFailure,
   mediaFailureFrom,
 } from '@vp/errors';
-import { runFfmpegThumbnail } from '@vp/ffmpeg';
+import { type SpriteLayout, runFfmpegThumbnail } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
 import { type Logger, getMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
@@ -30,10 +29,13 @@ export interface ThumbnailProcessorDeps {
   storage: StorageClient;
   rawBucket: string;
   publicBucket: string;
-  workerId?: string;
+  workerId: string;
   logger: Logger;
   heartbeatPath: string;
-  spriteIntervalSec: number;
+  tmpDir: string;
+  ffmpegPath: string;
+  sprite: SpriteLayout;
+  ffmpegProcess: { killGraceMs: number; stderrTailLines: number; thumbnailTimeoutMs: number };
 }
 
 export type ThumbnailStageFailure = MediaFailure | StorageUnavailable | DatabaseUnavailable;
@@ -44,10 +46,13 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     storage,
     rawBucket,
     publicBucket,
-    workerId = `worker-${process.pid}`,
+    workerId,
     logger,
     heartbeatPath,
-    spriteIntervalSec,
+    tmpDir: tmpRoot,
+    ffmpegPath,
+    sprite,
+    ffmpegProcess,
   } = deps;
 
   return async function processThumbnailJob(
@@ -55,7 +60,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
   ): Promise<Result<ThumbnailResult, ThumbnailStageFailure>> {
     validateJobId(job.id || '');
 
-    const { videoId, sourceKey, durationMs, forceFailure } = job.data;
+    const { videoId, sourceKey, durationMs } = job.data;
     const attempt = (job.attemptsMade ?? 0) + 1;
     const log = logger.child({ videoId, jobId: job.id, stage: 'thumbnail', attempt });
 
@@ -108,16 +113,9 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       return isErr(recorded) ? recorded : err(failure);
     };
 
-    // Forced failure check for test verification (AC 3)
-    if (forceFailure) {
-      log.warn({ errorCode: ErrorCodes.FFMPEG_FAILED }, 'Forced thumbnail failure requested');
-      return failThumbnail(
-        mediaFailure('thumbnail', ErrorCodes.FFMPEG_FAILED, 'Forced thumbnail failure for testing')
-      );
-    }
-
     // Per-job temp directory with guaranteed cleanup on every exit path
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `vp-thumb-${videoId}-`));
+    await fs.mkdir(tmpRoot, { recursive: true });
+    const tmpDir = await fs.mkdtemp(path.join(tmpRoot, `vp-thumb-${videoId}-`));
 
     try {
       // 1. Download source from S3
@@ -144,10 +142,13 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
       const generated = await fromPromise(
         () =>
           runFfmpegThumbnail({
+            ffmpegPath,
             sourcePath: localSourcePath,
             outputDir: tmpDir,
             durationMs,
-            intervalSec: spriteIntervalSec,
+            layout: sprite,
+            timeoutMs: ffmpegProcess.thumbnailTimeoutMs,
+            limits: ffmpegProcess,
           }),
         (cause) => mediaFailureFrom('thumbnail', cause)
       );

@@ -8,7 +8,7 @@ import type {
   StorageClient,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
+import type { AppConfig } from '@vp/env-schema';
 import { type AnyFailure, toPipelineError } from '@vp/errors';
 import {
   type Logger,
@@ -33,12 +33,11 @@ export interface WorkerAdapterOverrides {
 }
 
 export interface WorkerRunnerOptions {
-  config?: AppConfig;
+  config: AppConfig;
   adapters?: WorkerAdapterOverrides;
   logger?: Logger;
   metrics?: PipelineMetrics;
   workerId?: string;
-  outboxRelayIntervalMs?: number;
   disableOutboxRelay?: boolean;
 }
 
@@ -63,8 +62,8 @@ function overrideAdapters(c: Container, overrides: WorkerAdapterOverrides = {}):
 }
 
 /** Composes one stage over the adapter family its configuration names, and starts consuming. */
-export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Promise<WorkerRunner> {
-  const config = options.config ?? inProcessAppConfig();
+export async function createWorkerRunner(options: WorkerRunnerOptions): Promise<WorkerRunner> {
+  const { config } = options;
   const { stage } = config.worker;
   initTracing({ serviceName: `vp-worker-${stage}`, ...config.otel });
 
@@ -79,11 +78,8 @@ export async function createWorkerRunner(options: WorkerRunnerOptions = {}): Pro
   registerStages(container, {
     logger,
     metrics: options.metrics ?? getMetrics(),
-    workerId: options.workerId,
-    outboxRelay: {
-      enabled: !options.disableOutboxRelay,
-      intervalMs: options.outboxRelayIntervalMs ?? 1000,
-    },
+    workerId: options.workerId ?? `worker-${process.pid}`,
+    outboxRelay: { enabled: !options.disableOutboxRelay },
   });
 
   const { queue } = container.get(Worker.Consumer);

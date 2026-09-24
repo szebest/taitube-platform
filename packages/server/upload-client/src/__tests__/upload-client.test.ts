@@ -4,13 +4,17 @@ import * as http from 'node:http';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
-import { InMemoryCacheClient, InMemoryDatabaseClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import {
+  InMemoryCacheClient,
+  InMemoryDatabaseClient,
+  InMemoryRepositories,
+} from '@vp/adapters/in-memory';
 import { buildApp } from '@vp/api';
 import { mintToken } from '@vp/dev-token';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { ClientCrashedError, UploadClient } from '../client';
+import { UploadAbortedError, UploadClient } from '../client';
 
 describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () => {
   let app: FastifyInstance;
@@ -216,40 +220,31 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
     }
   });
 
-  it('AC 18: uploads file with concurrency 4, survives crash at 50%, resumes from ListParts and reaches UPLOADED', async () => {
+  it('AC 18: survives a crash at 50%, resumes from ListParts with concurrency 4 and reaches UPLOADED', async () => {
     const client = new UploadClient({
       apiBaseUrl: `http://127.0.0.1:${apiPort}`,
       token: authToken,
     });
 
-    // 1. Initial upload attempt: starts upload and crashes at 50% (killAtPercent: 50)
-    let crashedUploadId = '';
-    let crashedErrorCaught = false;
-
-    // Step A: Initialize upload
     const init = await client.initUpload({
       filename: 'crash-and-resume.mp4',
       sizeBytes: TOTAL_SIZE,
       contentType: 'video/mp4',
     });
-    crashedUploadId = init.uploadId;
+    const crashedUploadId = init.uploadId;
+    const crash = new AbortController();
 
-    try {
-      await client.uploadFile({
+    await expect(
+      client.uploadFile({
         filePath: tempFilePath,
-        concurrency: 4,
-        killAtPercent: 50,
+        concurrency: 1,
         existingUploadId: init.uploadId,
-      });
-    } catch (err: unknown) {
-      if (err instanceof ClientCrashedError) {
-        crashedErrorCaught = true;
-      } else {
-        throw err;
-      }
-    }
-
-    expect(crashedErrorCaught).toBe(true);
+        signal: crash.signal,
+        onProgress: (completed, total) => {
+          if (completed / total >= 0.5) crash.abort();
+        },
+      })
+    ).rejects.toThrow(UploadAbortedError);
 
     // Verify intermediate state via GET /v1/uploads/:id (backed by S3 ListParts)
     const resumeInfo = await client.getResumeInfo(crashedUploadId);
@@ -265,7 +260,6 @@ describe('tools/upload-client Reference Upload Client (Ticket 11: AC 18)', () =>
       filePath: tempFilePath,
       concurrency: 4,
       existingUploadId: crashedUploadId,
-      // No killAtPercent this time: let it complete!
     });
 
     expect(resumed.uploadId).toBe(crashedUploadId);

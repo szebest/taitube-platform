@@ -15,6 +15,9 @@ import { buildApp } from '../app';
 import { SseConnection } from '../services/sse-connection';
 import { SseHub, type SseHubOptions } from '../services/sse-hub';
 
+const { heartbeatMs, idleTimeoutMs } = inProcessAppConfig().sse;
+const SSE_TIMERS = { heartbeatMs, idleTimeoutMs };
+
 function hubOptions(cache: CacheClient, overrides: Partial<SseHubOptions> = {}): SseHubOptions {
   return {
     cache,
@@ -200,6 +203,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     mockRes.on('data', (c) => writtenFrames.push(c.toString()));
 
     const connection = new SseConnection({
+      ...SSE_TIMERS,
       channel: videoChannel(PUBLIC_VIDEO_ID),
       rawResponse: mockRes as any,
     });
@@ -465,6 +469,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
       let closed = false;
       const dummyRes = new PassThrough();
       const conn = new SseConnection({
+        ...SSE_TIMERS,
         channel: 'video:idle',
         rawResponse: dummyRes as any,
         idleTimeoutMs: 50, // 50ms timeout for test
@@ -492,6 +497,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     }) as any;
 
     const conn = new SseConnection({
+      ...SSE_TIMERS,
       channel: videoChannel(PUBLIC_VIDEO_ID),
       rawResponse: mockRes as any,
     });
@@ -564,6 +570,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     const sharedCache = new InMemoryCacheClient();
 
     const app1 = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories,
         cache: sharedCache,
@@ -573,6 +580,7 @@ describe('Ticket 15: SSE Live Status, Progress, Snapshot, Replay, Heartbeat & Ba
     const addr1 = await app1.listen({ port: 0, host: '127.0.0.1' });
 
     const app2 = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories,
         cache: sharedCache,

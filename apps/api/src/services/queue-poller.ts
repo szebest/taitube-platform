@@ -1,8 +1,7 @@
 import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PipelineMetrics } from '@vp/observability';
 import { isOk } from '@vp/result';
-
-export const QUEUE_POLL_INTERVAL_MS = 5_000;
 
 const QUEUE_STATE_KEYS: ReadonlyArray<keyof QueueJobCounts> = [
   'waiting',
@@ -19,7 +18,7 @@ function oldestWaitingAgeSeconds(waiting: readonly unknown[]): number {
   if (!oldest) return 0;
 
   const enqueuedAt = (oldest as { timestamp?: number }).timestamp ?? Date.now();
-  return Math.max(0, (Date.now() - enqueuedAt) / 1000);
+  return Math.max(0, (Date.now() - enqueuedAt) / MS_PER_SECOND);
 }
 
 /**

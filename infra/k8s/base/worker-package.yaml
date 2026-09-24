@@ -50,8 +50,6 @@ spec:
           env:
             - name: WORKER_STAGE
               value: package
-            - name: OTEL_SERVICE_NAME
-              value: vp-worker-package
             - name: FFMPEG_THREADS
               valueFrom:
                 resourceFieldRef:

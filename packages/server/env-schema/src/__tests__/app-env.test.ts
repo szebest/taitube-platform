@@ -8,6 +8,7 @@ import {
   PostgresEnvSchema,
   SECRET_KEYS,
 } from '../app-env';
+import { PLATFORM_ENV } from '../platform-env';
 
 const CLOUD_HOSTS = [/r2\.cloudflarestorage\.com/, /neon\.tech/, /grafana\.net/];
 
@@ -34,8 +35,10 @@ function parseEnvExample(): Record<string, string> {
 describe('packages/env-schema: the environment contract', () => {
   const example = parseEnvExample();
 
-  it('carries exactly the keys the schema declares', () => {
-    expect(Object.keys(example).sort()).toEqual(Object.keys(AppEnvShape.shape).sort());
+  it('carries exactly the keys the two schemas declare', () => {
+    const declared = [...Object.keys(AppEnvShape.shape), ...Object.keys(PLATFORM_ENV)];
+
+    expect(Object.keys(example).sort()).toEqual(declared.sort());
   });
 
   it.each([
@@ -43,11 +46,12 @@ describe('packages/env-schema: the environment contract', () => {
     { scenario: 'redis', key: 'REDIS_URL' as const, expected: 'localhost' },
     { scenario: 'object storage', key: 'S3_ENDPOINT' as const, expected: 'localhost' },
     { scenario: 'the CDN', key: 'CDN_BASE_URL' as const, expected: 'localhost' },
-    { scenario: 'the public API', key: 'PUBLIC_API_URL' as const, expected: 'localhost' },
-    { scenario: 'turbo telemetry', key: 'TURBO_TELEMETRY_DISABLED' as const, expected: '1' },
-    { scenario: 'do-not-track', key: 'DO_NOT_TRACK' as const, expected: '1' },
   ])('keeps $scenario local in the unmodified example', ({ key, expected }) => {
     expect(String(AppEnvSchema.parse(example)[key])).toContain(expected);
+  });
+
+  it.each(['TURBO_TELEMETRY_DISABLED', 'DO_NOT_TRACK'])('turns %s on in the example', (key) => {
+    expect(example[key]).toBe('1');
   });
 
   it('declares no browser build variable', () => {
@@ -74,34 +78,82 @@ describe('packages/env-schema: the environment contract', () => {
   });
 
   it.each(SECRET_KEYS.map((key) => ({ key })))('gives $key no default', ({ key }) => {
-    expect(AppEnvShape.shape[key].parse(undefined)).toBeUndefined();
+    const unset = AppEnvShape.shape[key].safeParse(undefined);
+
+    expect(unset.success ? unset.data : undefined).toBeUndefined();
   });
 
-  it('refuses a production boot that is missing a secret or still holds the placeholder', () => {
-    const parsed = AppEnvSchema.safeParse({ ...example, NODE_ENV: 'production', ADMIN_TOKEN: '' });
+  const productionSecrets = Object.fromEntries(
+    SECRET_KEYS.map((key) => [
+      key,
+      key === 'DATABASE_URL' ? 'postgres://app:s3cret@db/vp' : `${key}-rotated`,
+    ])
+  );
+  const production = {
+    ...example,
+    ...productionSecrets,
+    NODE_ENV: 'production',
+    AUTH_MODE: 'jwks',
+    AUTH_JWKS_URL: 'https://idp.example/.well-known/jwks.json',
+    ADMIN_TOKEN: '',
+    DATABASE_URL_MIGRATIONS: '',
+  };
 
-    expect(parsed.success).toBe(false);
-    expect(parsed.error?.issues.map((issue) => [issue.path.join('.'), issue.message])).toEqual([
-      ['ADMIN_TOKEN', 'is required in production'],
-      [
-        'WEBHOOK_SIGNING_SECRET',
-        'still holds the published placeholder, which is not a credential',
-      ],
+  function refusals(env: Record<string, string>): [string, string][] {
+    const parsed = AppEnvSchema.safeParse(env);
+    return (parsed.error?.issues ?? []).map((issue) => [issue.path.join('.'), issue.message]);
+  }
+
+  it('boots production once every secret is a real value and auth verifies a real issuer', () => {
+    expect(refusals(production)).toEqual([]);
+  });
+
+  it('refuses the unmodified example under production, naming every local credential', () => {
+    expect(refusals({ ...example, NODE_ENV: 'production' })).toEqual([
+      ['DATABASE_URL', 'holds a credential this repo ships for local use'],
+      ['S3_ACCESS_KEY_ID', 'holds a credential this repo ships for local use'],
+      ['S3_SECRET_ACCESS_KEY', 'holds a credential this repo ships for local use'],
+      ['REDIS_PASSWORD', 'holds a credential this repo ships for local use'],
+      ['AUTH_MODE', 'dev verifies the public dev key; use jwks'],
+      ['ADMIN_TOKEN', 'is refused in production: admin comes from a verified token role'],
     ]);
   });
 
-  it('boots the same environment under development, where a secret may be absent', () => {
+  it.each([
+    { key: 'S3_ACCESS_KEY_ID', value: '', message: 'is required in production' },
+    {
+      key: 'REDIS_PASSWORD',
+      value: 'vp',
+      message: 'holds a credential this repo ships for local use',
+    },
+    {
+      key: 'REDIS_URL',
+      value: 'redis://:vp@redis:6379/0',
+      message: 'holds a credential this repo ships for local use',
+    },
+    {
+      key: 'ADMIN_TOKEN',
+      value: 'a-real-random-token',
+      message: 'is refused in production: admin comes from a verified token role',
+    },
+    { key: 'AUTH_MODE', value: 'dev', message: 'dev verifies the public dev key; use jwks' },
+    { key: 'CORS_ORIGINS', value: '*', message: 'must name the allowed origins in production' },
+    { key: 'CORS_ORIGINS', value: '', message: 'must name the allowed origins in production' },
+  ])('refuses $key="$value" under production', ({ key, value, message }) => {
+    expect(refusals({ ...production, [key]: value })).toEqual([[key, message]]);
+  });
+
+  it('requires a JWKS URL in jwks mode in every environment', () => {
+    expect(refusals({ ...example, AUTH_MODE: 'jwks', AUTH_JWKS_URL: '' })).toContainEqual([
+      'AUTH_JWKS_URL',
+      'is required when AUTH_MODE=jwks',
+    ]);
+  });
+
+  it('boots the example under development, where a secret may be absent', () => {
     const { ADMIN_TOKEN: _unset, ...env } = example;
 
     expect(AppEnvSchema.parse({ ...env, NODE_ENV: 'development' }).ADMIN_TOKEN).toBeUndefined();
-  });
-
-  it('boots production once every secret is a real value', () => {
-    const secrets = Object.fromEntries(SECRET_KEYS.map((key) => [key, `${key}-rotated-value`]));
-
-    expect(AppEnvSchema.safeParse({ ...example, ...secrets, NODE_ENV: 'production' }).success).toBe(
-      true
-    );
   });
 
   it('leaves no empty value followed by a comment, which compose reads as the value', () => {

@@ -1,9 +1,12 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cache.adapter';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CategoryService } from '../category-service';
+
+const CACHES = inProcessAppConfig().caches;
 
 const ADMIN: UserContext = { id: '00000000-0000-7000-8000-000000000003', role: 'ADMIN' };
 
@@ -16,6 +19,7 @@ describe('CategoryService', () => {
     repositories = new InMemoryRepositories();
     repositories.clear();
     cacheService = new RedisCategoryCacheAdapter({
+      ...CACHES.categories,
       cache: new InMemoryCacheClient(),
       l1TtlMs: 5000,
       l2TtlSeconds: 300,
@@ -23,6 +27,7 @@ describe('CategoryService', () => {
     categoryService = new CategoryService({
       categories: repositories.categories,
       categoryCache: cacheService,
+      ...inProcessAppConfig().httpCache.categories,
     });
   });
 

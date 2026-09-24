@@ -1,4 +1,4 @@
-import * as crypto from 'node:crypto';
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -9,7 +9,6 @@ import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
-import { type JwksKey, clearJwksCache, setCachedJwks } from '../plugins/jwks-verifier';
 
 describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () => {
   let app: FastifyInstance;
@@ -28,6 +27,7 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
     storage = new InMemoryStorageClient();
 
     app = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories,
         cache,
@@ -43,7 +43,6 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
   beforeEach(() => {
     repositories.clear();
     cache.clear();
-    clearJwksCache();
   });
 
   describe('JIT (Just-In-Time) User & Channel Provisioning Hook', () => {
@@ -256,98 +255,6 @@ describe('User & Channel Identity Profile with Universal Auth (Ticket 38)', () =
       expect(response.statusCode).toBe(404);
       const body = JSON.parse(response.body);
       expect(body.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
-    });
-  });
-
-  describe('Universal OIDC / JWKS Verification', () => {
-    it('verifies standard RS256 token against JWKS', async () => {
-      const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-        modulusLength: 2048,
-      });
-
-      const publicJwk = publicKey.export({ format: 'jwk' });
-      publicJwk.kid = 'rs256-test-key';
-      publicJwk.alg = 'RS256';
-      publicJwk.use = 'sig';
-
-      setCachedJwks({
-        keys: [publicJwk as unknown as JwksKey],
-      });
-
-      const header = {
-        alg: 'RS256',
-        typ: 'JWT',
-        kid: 'rs256-test-key',
-      };
-      const now = Math.floor(Date.now() / 1000);
-      const RS256_USER_ID = '00000000-0000-7000-8000-000000000088';
-      const payload = {
-        sub: RS256_USER_ID,
-        email: 'clerk_user@example.com',
-        role: 'user',
-        iat: now,
-        exp: now + 3600,
-      };
-
-      const encHeader = Buffer.from(JSON.stringify(header)).toString('base64url');
-      const encPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
-      const data = `${encHeader}.${encPayload}`;
-      const sig = crypto.sign('RSA-SHA256', Buffer.from(data), privateKey).toString('base64url');
-      const rsaJwt = `${data}.${sig}`;
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/v1/me/account',
-        headers: {
-          authorization: `Bearer ${rsaJwt}`,
-        },
-      });
-
-      expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
-      expect(body.user.id).toBe(RS256_USER_ID);
-      expect(body.user.email).toBe('clerk_user@example.com');
-      expect(body.channel.userId).toBe(RS256_USER_ID);
-      expect(body.channel.handle).toBe('clerk_user');
-    });
-
-    it('rejects expired RS256 token with 401 UNAUTHORIZED', async () => {
-      const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-        modulusLength: 2048,
-      });
-      const publicJwk = publicKey.export({ format: 'jwk' });
-      publicJwk.kid = 'rs256-expired-key';
-      publicJwk.alg = 'RS256';
-
-      setCachedJwks({
-        keys: [publicJwk as unknown as JwksKey],
-      });
-
-      const header = { alg: 'RS256', typ: 'JWT', kid: 'rs256-expired-key' };
-      const now = Math.floor(Date.now() / 1000);
-      const payload = {
-        sub: '00000000-0000-7000-8000-000000000077',
-        iat: now - 7200,
-        exp: now - 3600,
-      };
-
-      const encHeader = Buffer.from(JSON.stringify(header)).toString('base64url');
-      const encPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
-      const data = `${encHeader}.${encPayload}`;
-      const sig = crypto.sign('RSA-SHA256', Buffer.from(data), privateKey).toString('base64url');
-      const expiredJwt = `${data}.${sig}`;
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/v1/me/account',
-        headers: {
-          authorization: `Bearer ${expiredJwt}`,
-        },
-      });
-
-      expect(response.statusCode).toBe(401);
-      const body = JSON.parse(response.body);
-      expect(body.code).toBe(ErrorCodes.UNAUTHORIZED);
     });
   });
 

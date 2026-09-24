@@ -1,62 +1,53 @@
-import { productionSources, read } from './repo-files';
+import { ENTRYPOINTS, ENV_HOMES, isListed } from './entrypoints';
+import { isSpec, read, trackedFiles } from './repo-files';
 
-/**
- * The environment is read where a process starts and nowhere else: the loader, the schema, the
- * test harness and the entrypoints named below. Everything under them takes configuration as a
- * value, which is what lets a test build it without mutating globals.
- */
-const HOMES = [
-  'packages/server/config/',
-  'packages/server/env-schema/',
-  'packages/server/testing/',
-];
-const SERVER_ROOTS = ['apps/api/', 'apps/worker/', 'packages/server/', 'scripts/'];
-
-const ENTRYPOINTS = new Set([
-  'apps/api/src/main.ts',
-  'apps/worker/src/main.ts',
-  'packages/server/compose-autoscaler/src/cli.ts',
-  'packages/server/db/src/migrate.ts',
-  'packages/server/db/src/seed.ts',
-  'packages/server/dev-token/src/index.ts',
-  'packages/server/gen-video/src/index.ts',
-  'packages/server/upload-client/src/cli.ts',
-  'scripts/run-e2e.ts',
-]);
+const SCANNED = /\.(ts|tsx|mts|js|mjs)$/;
 
 function readsEnvOutsideAHome(file: string, source: string): boolean {
   return (
-    /\bprocess\.env\b/.test(source) &&
-    !HOMES.some((home) => file.startsWith(home)) &&
-    !ENTRYPOINTS.has(file) &&
-    !file.endsWith('.config.ts')
+    /\bprocess\.env\b/.test(source) && !isListed(file, ENTRYPOINTS) && !isListed(file, ENV_HOMES)
   );
 }
 
+function scannedSources(): string[] {
+  return trackedFiles('apps', 'packages', 'scripts', 'tests')
+    .filter((file) => SCANNED.test(file))
+    .filter((file) => !isSpec(file) && !/\/__(tests|mocks)__\//.test(file));
+}
+
 describe('architecture: process.env is read only where a process starts', () => {
-  it('recognises an env read added to a service', () => {
-    const service = "export const bucket = () => process.env['S3_BUCKET_RAW'] ?? 'raw';";
-
-    expect(readsEnvOutsideAHome('apps/api/src/services/upload-service.ts', service)).toBe(true);
+  it.each([
+    { file: 'apps/api/src/services/upload-service.ts', source: "process.env['S3_BUCKET_RAW']" },
+    { file: 'packages/server/db/drizzle.config.ts', source: 'process.env.DATABASE_URL' },
+    { file: 'infra/compose/autoscaler.mjs', source: 'const url = process.env.REDIS_URL;' },
+    { file: 'scripts/nested/tool.ts', source: 'process.env.X' },
+  ])('recognises an env read in $file', ({ file, source }) => {
+    expect(readsEnvOutsideAHome(file, source)).toBe(true);
   });
 
-  it('does not exempt a module for ending its own process', () => {
-    const service = "const bucket = process.env['S3_BUCKET_RAW']; if (!bucket) process.exit(1);";
+  it.each(['apps/api/src/main.ts', 'scripts/run-e2e.ts', 'packages/server/config/src/load-env.ts'])(
+    'allows %s, which is listed in entrypoints.ts',
+    (file) => {
+      expect(readsEnvOutsideAHome(file, 'process.env.NODE_ENV')).toBe(false);
+    }
+  );
 
-    expect(readsEnvOutsideAHome('apps/api/src/services/upload-service.ts', service)).toBe(true);
+  it('scans .mjs and .js as well as TypeScript', () => {
+    expect(['a.mjs', 'b.js', 'c.mts', 'd.tsx'].every((file) => SCANNED.test(file))).toBe(true);
   });
 
-  it('allows the entrypoint that starts the process', () => {
-    const main = "if (process.env.NODE_ENV !== 'test') main().catch(() => process.exit(1));";
-
-    expect(readsEnvOutsideAHome('apps/api/src/main.ts', main)).toBe(false);
-  });
-
-  it('finds no env read below an entrypoint in server code', () => {
-    const offenders = productionSources()
-      .filter((file) => SERVER_ROOTS.some((root) => file.startsWith(root)))
-      .filter((file) => readsEnvOutsideAHome(file, read(file)));
+  it('finds no env read outside the entrypoints and the env homes', () => {
+    const offenders = scannedSources().filter((file) => readsEnvOutsideAHome(file, read(file)));
 
     expect(offenders).toEqual([]);
+  });
+
+  it('lists no entrypoint or env home that does not exist', () => {
+    const tracked = trackedFiles('apps', 'packages', 'scripts', 'tests');
+    const missing = [...ENTRYPOINTS, ...ENV_HOMES].filter(
+      (pattern) => !tracked.some((file) => isListed(file, [pattern]))
+    );
+
+    expect(missing).toEqual([]);
   });
 });

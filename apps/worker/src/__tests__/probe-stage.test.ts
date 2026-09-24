@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
+import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
@@ -7,7 +8,6 @@ import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createProbeProcessor } from '../stages/probe';
 import { STAGE_SETTINGS } from './stage-settings';
 
@@ -124,6 +124,35 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
     });
     expect(expectOk(comp2).fenced).toBe(false);
     expect(expectOk(comp2).completed).toBe(true);
+  });
+
+  it('rejects a source longer than MAX_DURATION_SEC with DURATION_EXCEEDED', async () => {
+    const videoId = await setupUploadedVideo('raw/s15.mp4', 'Fifteen Seconds');
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: 'raw/s15.mp4',
+      body: await fs.readFile(path.resolve(__dirname, '../../../../tests/fixtures/s15.mp4')),
+      contentType: 'video/mp4',
+    });
+    const processor = createProbeProcessor({
+      ...STAGE_SETTINGS,
+      maxDurationSeconds: 10,
+      repositories,
+      storage,
+      logger,
+    });
+
+    const job = createMockJob(`${videoId}--probe--g1`, {
+      videoId,
+      sourceKey: 'raw/s15.mp4',
+      generation: 1,
+      traceparent: '00-01-01-01',
+    });
+
+    expect(expectErr(await processor(job)).code).toBe(ErrorCodes.DURATION_EXCEEDED);
+    expect(expectOk(await repositories.videos.findById(videoId))?.errorCode).toBe(
+      ErrorCodes.DURATION_EXCEEDED
+    );
   });
 
   it('AC 18: hostile zero-bytes file fails on attempt 1 with CORRUPT_CONTAINER', async () => {

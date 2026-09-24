@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryCategoryRepository,
@@ -8,6 +9,8 @@ import type { Category } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
+
+const CACHES = inProcessAppConfig().caches;
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000001';
 
@@ -158,7 +161,12 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
 
     beforeEach(() => {
       cache = new InMemoryCacheClient();
-      service = new RedisCategoryCacheAdapter({ cache, l1TtlMs: 1000, l2TtlSeconds: 10 });
+      service = new RedisCategoryCacheAdapter({
+        ...CACHES.categories,
+        cache,
+        l1TtlMs: 1000,
+        l2TtlSeconds: 10,
+      });
     });
 
     it('misses the cache on the first call, then serves the same rows from L1', async () => {
@@ -217,8 +225,8 @@ describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
     });
 
     it('purges a second instance L1 via Pub/Sub when the first invalidates', async () => {
-      const instanceA = new RedisCategoryCacheAdapter({ cache });
-      const instanceB = new RedisCategoryCacheAdapter({ cache });
+      const instanceA = new RedisCategoryCacheAdapter({ ...CACHES.categories, cache });
+      const instanceB = new RedisCategoryCacheAdapter({ ...CACHES.categories, cache });
       expectOk(await instanceB.start());
       const rows = [aCategoryRow()];
 

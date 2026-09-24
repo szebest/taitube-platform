@@ -1,19 +1,25 @@
 import { spawn } from 'node:child_process';
 import * as path from 'node:path';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { MICROSECONDS_PER_MS } from '@vp/domain/time';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
 
 export interface TranscodeOptions {
+  ffmpegPath: string;
   sourcePath: string;
   outputDir: string;
   rendition: LadderEntry;
   fps: number;
-  durationMs?: number;
+  gopSeconds: number;
+  hlsSegmentSeconds: number;
+  durationMs: number;
   threads: number;
   attempt?: number;
   preset: string;
-  timeoutMs?: number;
+  timeoutFactor: number;
+  minTimeoutMs: number;
+  limits: FfmpegProcessLimits;
   onProgress?: (progress: { percent: number; outTimeMs: number }) => void;
 }
 
@@ -40,15 +46,14 @@ export function computeFfmpegThreads(baseThreads: number, attempt = 1): number {
  * Builds the exact FFmpeg argument array according to SDD §8.2.
  */
 export function buildTranscodeArgs(options: TranscodeOptions): string[] {
-  const { sourcePath, outputDir, rendition, fps, preset } = options;
+  const { sourcePath, outputDir, rendition, fps, preset, gopSeconds, hlsSegmentSeconds } = options;
 
   const threads =
     options.attempt !== undefined
       ? computeFfmpegThreads(options.threads, options.attempt)
       : options.threads;
 
-  // SDD §8.2 & AC 18: GOP = round(2 * fps)
-  const gop = Math.max(1, Math.round(2 * fps));
+  const gop = Math.max(1, Math.round(gopSeconds * fps));
   const segmentFilename = path.join(outputDir, 'seg_%05d.ts');
   const playlistFilename = path.join(outputDir, 'index.m3u8');
 
@@ -92,7 +97,7 @@ export function buildTranscodeArgs(options: TranscodeOptions): string[] {
     '-sc_threshold',
     '0',
     '-force_key_frames',
-    'expr:gte(t,n_forced*2)',
+    `expr:gte(t,n_forced*${gopSeconds})`,
     '-c:a',
     'aac',
     '-b:a',
@@ -104,7 +109,7 @@ export function buildTranscodeArgs(options: TranscodeOptions): string[] {
     '-f',
     'hls',
     '-hls_time',
-    '6',
+    String(hlsSegmentSeconds),
     '-hls_playlist_type',
     'vod',
     '-hls_flags',
@@ -181,7 +186,15 @@ export function classifyFfmpegError(
   );
 }
 
+/** How a run is policed: the grace a SIGTERM gets before SIGKILL, and how much stderr a failure keeps. */
+export interface FfmpegProcessLimits {
+  killGraceMs: number;
+  stderrTailLines: number;
+}
+
 export interface FfmpegRunOptions {
+  ffmpegPath: string;
+  limits: FfmpegProcessLimits;
   /** Names the span and the timeout message; one word, e.g. `transcode` or `thumbnail`. */
   stage: string;
   args: string[];
@@ -193,9 +206,6 @@ export interface FfmpegRunOptions {
 
 /** ffmpeg reports both of these in microseconds, whatever the suffix says. */
 const PROGRESS_TIME_KEYS = ['out_time_ms=', 'out_time_us='] as const;
-
-const STDERR_TAIL_LINES = 50;
-const KILL_GRACE_MS = 3000;
 
 function redactedCommand(args: string[]): string {
   return [
@@ -218,7 +228,7 @@ function redactedCommand(args: string[]): string {
  * SIGKILL, and rejects with the classified error built from the stderr tail.
  */
 export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
-  const { stage, args, timeoutMs, onStdoutLine } = options;
+  const { ffmpegPath, stage, args, timeoutMs, onStdoutLine, limits } = options;
 
   const span = trace.getTracer('video-pipeline').startSpan('ffmpeg', {
     attributes: {
@@ -230,7 +240,7 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
   const startTime = Date.now();
 
   return new Promise((resolve, reject) => {
-    const proc = spawn('ffmpeg', args, {
+    const proc = spawn(ffmpegPath, args, {
       stdio: ['ignore', onStdoutLine ? 'pipe' : 'ignore', 'pipe'],
     });
 
@@ -242,7 +252,7 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
       proc.kill('SIGTERM');
       setTimeout(() => {
         if (!proc.killed) proc.kill('SIGKILL');
-      }, KILL_GRACE_MS);
+      }, limits.killGraceMs);
     }, timeoutMs);
 
     if (onStdoutLine && proc.stdout) {
@@ -263,7 +273,7 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
       for (const line of chunk.split('\n')) {
         if (!line.trim()) continue;
         stderrLines.push(line.trim());
-        if (stderrLines.length > STDERR_TAIL_LINES) {
+        if (stderrLines.length > limits.stderrTailLines) {
           stderrLines.shift();
         }
       }
@@ -316,10 +326,12 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
 export async function runFfmpegTranscode(
   options: TranscodeOptions
 ): Promise<TranscodeExecutionResult> {
-  const durationMs = options.durationMs || 60000;
-  const timeoutMs = options.timeoutMs || Math.max(3 * durationMs, 10 * 60 * 1000);
+  const { durationMs } = options;
+  const timeoutMs = Math.max(options.timeoutFactor * durationMs, options.minTimeoutMs);
 
   await runFfmpeg({
+    ffmpegPath: options.ffmpegPath,
+    limits: options.limits,
     stage: 'transcode',
     args: buildTranscodeArgs(options),
     timeoutMs,
@@ -332,7 +344,7 @@ export async function runFfmpegTranscode(
       if (!prefix) return;
       const microseconds = Number.parseInt(line.slice(prefix.length), 10);
       if (Number.isNaN(microseconds) || microseconds <= 0) return;
-      const outTimeMs = Math.round(microseconds / 1000);
+      const outTimeMs = Math.round(microseconds / MICROSECONDS_PER_MS);
       options.onProgress?.({
         percent: Math.min(100, Math.round((outTimeMs / durationMs) * 100)),
         outTimeMs,

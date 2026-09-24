@@ -46,7 +46,7 @@ describe('architecture: every route module is a plugin registered from one table
     const table = read(`${ROUTES_DIR}index.ts`);
     const missing = routeModules()
       .map((file) => pluginName(read(file)) as string)
-      .filter((name) => !new RegExp(`^\\s+${name},$`, 'm').test(table));
+      .filter((name) => !new RegExp(`[\\s[]${name}[,\\]]`).test(table));
 
     expect(missing).toEqual([]);
   });

@@ -43,18 +43,6 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       createdAt: now,
       updatedAt: now,
     });
-    this.channels.set('00000000-0000-7000-8000-000000000103', {
-      id: '00000000-0000-7000-8000-000000000103',
-      userId: '00000000-0000-7000-8000-000000000003',
-      handle: 'admin',
-      displayName: 'System Admin',
-      avatarUrl: null,
-      bannerUrl: null,
-      bio: 'Administrator channel',
-      subscriberCount: 999,
-      createdAt: now,
-      updatedAt: now,
-    });
   }
 
   clear(): void {

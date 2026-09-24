@@ -17,6 +17,7 @@ import type { Logger } from '@vp/observability';
 import { type Result, err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { createFailureHandler } from '../failure-handler';
+import { STAGE_SETTINGS } from './stage-settings';
 
 interface LogLine {
   readonly level: string;
@@ -83,6 +84,7 @@ describe('apps/worker: DLQ failure handler', () => {
 
   const handlerOver = (overrides: Partial<Repositories> = {}, stage = QUEUE_NAME) =>
     createFailureHandler({
+      workerId: STAGE_SETTINGS.workerId,
       stage,
       queueName: stage,
       repositories: { ...repositories, ...overrides },

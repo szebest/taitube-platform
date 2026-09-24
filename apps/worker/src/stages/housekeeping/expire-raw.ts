@@ -1,5 +1,6 @@
 import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
@@ -16,8 +17,6 @@ export interface ExpireRawResult {
   expiredCount: number;
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 /**
  * Expire raw sources past retention period (SDD §9.8, §7):
  * Delete raw/ sources of READY videos older than RAW_RETENTION_DAYS
@@ -32,7 +31,7 @@ export async function runExpireRaw(
 
   const expiredVideos = await repositories.videos.scan({
     status: 'READY',
-    idleFor: { since: 'readyAt', ms: retentionDays * DAY_MS },
+    idleFor: { since: 'readyAt', ms: retentionDays * MS_PER_DAY },
     without: { type: 'event', event: 'video.raw_expired' },
   });
   if (isErr(expiredVideos)) return expiredVideos;

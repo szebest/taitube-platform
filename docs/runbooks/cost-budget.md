@@ -96,7 +96,7 @@ If usage outgrows the free tiers or availability guarantees of the primary serve
 ### Storage: R2 → Backblaze B2
 When R2 free tier is exceeded or Backblaze is cheaper for the workload (e.g. storage size vs ops):
 1. **Provision**: Create a Backblaze B2 bucket and App Keys.
-2. **Env changes** in `infra/k8s/overlays/cloud/kustomization.yaml` (via ConfigMap patches) and `secrets.enc.yaml`:
+2. **Env changes** in `infra/k8s/overlays/cloud/kustomization.yaml` (via ConfigMap patches) and the secret store behind `external-secret.yaml`:
    - `S3_ENDPOINT`: `https://s3.<region>.backblazeb2.com`
    - `S3_ACCESS_KEY_ID`: `<B2_KEY_ID>`
    - `S3_SECRET_ACCESS_KEY`: `<B2_APPLICATION_KEY>`
@@ -106,7 +106,7 @@ When R2 free tier is exceeded or Backblaze is cheaper for the workload (e.g. sto
 ### Database: Neon → Self-Hosted VPS Postgres
 When 100 CU-h/mo is exceeded or autosuspend latency is unacceptable:
 1. **Provision**: Run Postgres via Helm on the k3s cluster or on a secondary VPS.
-2. **Env changes** in `secrets.enc.yaml`:
+2. **Env changes** in the secret store behind `external-secret.yaml`:
    - `DATABASE_URL`: `postgres://vp:<password>@vp-postgres:5432/vp` (internal DNS)
    - `DATABASE_URL_MIGRATIONS`: `postgres://vp:<password>@vp-postgres:5432/vp`
 3. **Env changes** in `kustomization.yaml`:

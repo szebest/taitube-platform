@@ -7,6 +7,7 @@ import {
   type StoragePresignedPartParams,
   type StorageUploadedPartInfo,
 } from '@vp/core/ports';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 import { measureStorageOp } from '../storage-metrics-helper';
@@ -57,11 +58,11 @@ export class InMemoryMultipartStorage extends MultipartStorage {
   async createPresignedPartUrl(
     params: StoragePresignedPartParams
   ): Promise<Result<StoragePresignedPartInfo, StorageUnavailable>> {
-    const expiresIn = params.expiresInSeconds ?? 900;
+    const expiresIn = params.expiresInSeconds;
     return ok({
       partNumber: params.partNumber,
       url: `http://localhost:9000/${params.bucket}/${params.key}?uploadId=${params.uploadId}&partNumber=${params.partNumber}&mock-presigned-part=true`,
-      expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + expiresIn * MS_PER_SECOND).toISOString(),
     });
   }
 

@@ -3,10 +3,10 @@ import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { ErrorCodes } from '@vp/errors';
+import { ErrorCodes, queueUnavailable } from '@vp/errors';
+import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 import { MockProbeJobQueue } from './mock-probe-queue';
 
@@ -428,7 +428,7 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     }
   });
 
-  it('Ticket 30 AC 2: Crash right after DB commit -> outbox entry written -> relay drains and publishes probe job', async () => {
+  it('keeps the commit when the direct enqueue fails after it, and the outbox relay publishes the probe job', async () => {
     const size = 100;
     const createRes = await app.inject({
       method: 'POST',
@@ -445,7 +445,6 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     expect(createRes.statusCode).toBe(201);
     const { videoId, uploadId, singleUrl } = createRes.json();
 
-    // Upload bytes directly to mock S3
     await fetch(singleUrl, {
       method: 'PUT',
       headers: {
@@ -457,28 +456,21 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
 
     const initialProbeCount = probeJobs.length;
 
-    // Simulate crash after commit via test header
+    vi.spyOn(mockProbeQueue, 'add').mockResolvedValueOnce(err(queueUnavailable('probe.add')));
     const crashRes = await app.inject({
       method: 'POST',
       url: `/v1/uploads/${uploadId}/complete`,
-      headers: {
-        authorization: `Bearer ${authToken}`,
-        'x-test-crash-after-commit': 'true',
-      },
+      headers: { authorization: `Bearer ${authToken}` },
       payload: {},
     });
 
-    // Request failed due to injected crash error
-    expect(crashRes.statusCode).toBe(500);
+    expect(crashRes.statusCode).toBe(503);
 
-    // But DB commit succeeded! Video is UPLOADED in DB
     const video = expectOk(await repositories.videos.findById(videoId));
     expect(video?.status).toBe('UPLOADED');
 
-    // And direct enqueue was NOT executed due to crash
     expect(probeJobs.length).toBe(initialProbeCount);
 
-    // Outbox record was atomically written in the DB transaction
     const pendingOutbox = expectOk(await repositories.outbox.claimBatch(10));
     const probeOutboxItem = pendingOutbox.find(
       (item) =>
@@ -488,7 +480,6 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
     );
     expect(probeOutboxItem).toBeDefined();
 
-    // Outbox relay logic: claims batch from outbox and adds to queue, marking published
     for (const item of pendingOutbox) {
       if (item.payload.type === 'queue') {
         await mockProbeQueue.add(
@@ -500,7 +491,6 @@ describe('apps/api Upload slice (Ticket 05: AC 17, 18, 19, 20, 21, 22)', () => {
       }
     }
 
-    // Now probe job is enqueued in the queue!
     const expectedJobId = `${videoId}--probe--g1`;
     const relayedJob = probeJobs.find((j) => j.opts?.jobId === expectedJobId);
     expect(relayedJob).toBeDefined();

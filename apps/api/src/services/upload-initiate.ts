@@ -1,14 +1,18 @@
 import * as path from 'node:path';
 import type { StoragePresignedPartInfo } from '@vp/core/ports';
 import type { VideoVisibility } from '@vp/domain';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type Result, all, isErr, ok } from '@vp/result';
-import { calculatePartSize, calculateTotalParts, rawSourceKey } from '@vp/storage';
+import {
+  MULTIPART_URL_BATCH_SIZE,
+  calculatePartSize,
+  calculateTotalParts,
+  rawSourceKey,
+} from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import type { UploadContext } from './upload-context';
-
-const INITIAL_PART_URL_BATCH = 100;
 
 export interface InitiateUploadParams {
   filename: string;
@@ -45,8 +49,8 @@ export async function initiateUpload(
   const uploadId = uuidv7();
   const ext = path.extname(filename).slice(1) || 'mp4';
   const sourceKey = rawSourceKey(videoId, ext);
-  const expiresAt = new Date(Date.now() + ctx.presignedUrlTtlSeconds * 1000);
-  const sessionExpiresAt = new Date(Date.now() + ctx.uploadSessionTtlSeconds * 1000);
+  const expiresAt = new Date(Date.now() + ctx.presignedUrlTtlSeconds * MS_PER_SECOND);
+  const sessionExpiresAt = new Date(Date.now() + ctx.uploadSessionTtlSeconds * MS_PER_SECOND);
 
   const isMultipart = params.strategy
     ? params.strategy === 'multipart'
@@ -107,7 +111,10 @@ export async function initiateUpload(
     });
   }
 
-  const partSizeBytes = calculatePartSize(sizeBytes);
+  const partSizeBytes = calculatePartSize(sizeBytes, {
+    minBytes: ctx.partSizeMinBytes,
+    maxBytes: ctx.partSizeMaxBytes,
+  });
   const partsExpected = calculateTotalParts(sizeBytes, partSizeBytes);
 
   const session = await ctx.multipart.createMultipartUpload(ctx.rawBucket, sourceKey, contentType);
@@ -148,7 +155,7 @@ export async function initiateUpload(
   if (isErr(recorded)) return recorded;
 
   const signed: Result<StoragePresignedPartInfo, StorageUnavailable>[] = [];
-  for (let part = 1; part <= Math.min(partsExpected, INITIAL_PART_URL_BATCH); part++) {
+  for (let part = 1; part <= Math.min(partsExpected, MULTIPART_URL_BATCH_SIZE); part++) {
     signed.push(
       await ctx.multipart.createPresignedPartUrl({
         bucket: ctx.rawBucket,

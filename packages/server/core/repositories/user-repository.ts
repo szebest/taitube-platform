@@ -7,9 +7,6 @@ export interface UserRecord {
   email: string;
   tier: UserTier;
   role?: UserRole;
-  maxConcurrentUploads?: number;
-  maxVideoDurationSec?: number;
-  storageQuotaBytes?: number;
   webhookUrl?: string | null;
   createdAt: Date;
 }
@@ -19,9 +16,6 @@ export interface UpsertUserInput {
   email: string;
   tier?: UserTier;
   role?: UserRole;
-  maxConcurrentUploads?: number;
-  maxVideoDurationSec?: number;
-  storageQuotaBytes?: number;
   webhookUrl?: string | null;
 }
 

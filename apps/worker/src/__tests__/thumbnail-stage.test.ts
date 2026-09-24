@@ -18,6 +18,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { throughRunner } from './queue-boundary';
+import { failThumbnails } from './ffmpeg-failures';
 import { STAGE_SETTINGS } from './stage-settings';
 
 describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', () => {
@@ -282,7 +283,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
     transcodeSpy.mockRestore();
   });
 
-  it('AC 3: Forced thumbnail failure -> package still runs, video READY, posterKey null, step FAILED with code, renditions unaffected', async () => {
+  it('AC 3: A thumbnail FFmpeg failure -> package still runs, video READY, posterKey null, step FAILED with code, renditions unaffected', async () => {
     const fixturePath = path.resolve(__dirname, '../../../../tests/fixtures/s60.mp4');
     const fixtureBytes = await fs.readFile(fixturePath);
     const sourceKey = 'raw/s60.mp4';
@@ -325,7 +326,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
         };
       });
 
-    // 1. Run probe with forceThumbnailFailure flag
+    failThumbnails();
     const probeProcessor = createProbeProcessor({
       ...STAGE_SETTINGS,
       repositories,
@@ -343,7 +344,6 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
         sourceKey,
         generation: 1,
         traceparent: '00-01',
-        forceThumbnailFailure: true,
       } satisfies ProbeJob,
       attemptsMade: 0,
     });
@@ -392,7 +392,6 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
       logger,
     });
 
-    // Process all children (thumbnail fails due to forceFailure: true)
     await Promise.all([
       q1080.process(throughRunner(transcode1080)),
       q720.process(throughRunner(transcode720)),

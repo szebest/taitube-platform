@@ -9,7 +9,7 @@ export interface PurgeDeletedOptions {
   storage: StorageClient;
   rawBucket: string;
   publicBucket: string;
-  thresholdMs?: number;
+  thresholdMs: number;
   logger?: Logger;
 }
 
@@ -27,14 +27,7 @@ export interface PurgeDeletedResult {
 export async function runPurgeDeleted(
   options: PurgeDeletedOptions
 ): Promise<Result<PurgeDeletedResult, DatabaseUnavailable>> {
-  const {
-    repositories,
-    storage,
-    rawBucket,
-    publicBucket,
-    thresholdMs = 60 * 60 * 1000,
-    logger,
-  } = options;
+  const { repositories, storage, rawBucket, publicBucket, thresholdMs, logger } = options;
 
   let purgedVideosCount = 0;
   let purgedGenerationsCount = 0;

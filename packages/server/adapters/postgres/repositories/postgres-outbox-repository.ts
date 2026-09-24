@@ -1,5 +1,6 @@
 import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/repositories';
 import * as schema from '@vp/db';
+import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, asc, eq, isNull, lt, sql } from 'drizzle-orm';
@@ -41,7 +42,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
       : err(databaseUnavailable('enqueue', 'insert returned no row'));
   }
 
-  async claimBatch(limit = 50): Promise<Result<OutboxRecord[], DatabaseUnavailable>> {
+  async claimBatch(limit: number): Promise<Result<OutboxRecord[], DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
         this.db
@@ -85,8 +86,8 @@ export class PostgresOutboxRepository extends OutboxRepository {
     return map(rows, (updated) => updated.length > 0);
   }
 
-  async prune(retentionDays = 7): Promise<Result<number, DatabaseUnavailable>> {
-    const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+  async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
+    const cutoff = new Date(Date.now() - retentionDays * MS_PER_DAY);
     const rows = await fromPromise(
       () =>
         this.db

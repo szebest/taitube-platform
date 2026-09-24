@@ -15,7 +15,8 @@ async function freePort(): Promise<number> {
 async function env(heartbeatPath: string, stage = 'probe') {
   return {
     NODE_ENV: 'test',
-    DATABASE_URL: 'postgres://vp:vp@localhost:5432/vp',
+    ADAPTER_FAMILY: 'in-memory',
+    DATABASE_URL: 'postgres://localhost:5432/vp',
     METRICS_PORT: String(await freePort()),
     WORKER_STAGE: stage,
     WORKER_HEARTBEAT_PATH: heartbeatPath,

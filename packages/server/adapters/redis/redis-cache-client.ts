@@ -6,10 +6,17 @@ import { Redis, type RedisOptions } from 'ioredis';
 
 export type RedisCacheClientConfig =
   | { type: 'client'; client: Redis }
-  | { type: 'url'; url: string; options?: RedisOptions };
+  | {
+      type: 'url';
+      url: string;
+      pubsubUrl: string;
+      password: string | undefined;
+      options?: RedisOptions;
+    };
 
 export class RedisCacheClient extends CacheClient {
   private readonly redis: Redis;
+  private readonly pubsubRedis: Redis;
   private subRedis?: Redis;
   private readonly channelListeners = new Map<string, Set<MessageListener>>();
   private readonly patternListeners = new Map<string, Set<PatternMessageListener>>();
@@ -20,15 +27,21 @@ export class RedisCacheClient extends CacheClient {
     switch (config.type) {
       case 'client':
         this.redis = config.client;
+        this.pubsubRedis = config.client;
         return;
-      case 'url':
-        this.redis = new Redis(config.url, {
+      case 'url': {
+        const options: RedisOptions = {
           maxRetriesPerRequest: null,
           enableReadyCheck: false,
           lazyConnect: true,
+          ...(config.password ? { password: config.password } : {}),
           ...config.options,
-        });
+        };
+        this.redis = new Redis(config.url, options);
+        this.pubsubRedis =
+          config.pubsubUrl === config.url ? this.redis : new Redis(config.pubsubUrl, options);
         return;
+      }
       default:
         assertNever(config, 'RedisCacheClientConfig');
     }
@@ -41,7 +54,7 @@ export class RedisCacheClient extends CacheClient {
   /** A connection in subscriber mode accepts no other command, so pub/sub gets its own. */
   private getSubRedis(): Redis {
     if (!this.subRedis) {
-      this.subRedis = this.redis.duplicate();
+      this.subRedis = this.pubsubRedis.duplicate();
 
       this.subRedis.on('message', (channel: string, message: string) => {
         const listeners = this.channelListeners.get(channel);
@@ -87,7 +100,10 @@ export class RedisCacheClient extends CacheClient {
   }
 
   async publish(channel: string, message: string): Promise<Result<number, CacheUnavailable>> {
-    return fromPromise(() => this.redis.publish(channel, message), this.unavailable('publish'));
+    return fromPromise(
+      () => this.pubsubRedis.publish(channel, message),
+      this.unavailable('publish')
+    );
   }
 
   async subscribe(
@@ -205,6 +221,9 @@ export class RedisCacheClient extends CacheClient {
       () =>
         Promise.all([
           this.redis.quit().catch(() => this.redis.disconnect()),
+          this.pubsubRedis === this.redis
+            ? undefined
+            : this.pubsubRedis.quit().catch(() => this.pubsubRedis.disconnect()),
           this.subRedis?.quit().catch(() => this.subRedis?.disconnect()),
         ]),
       this.unavailable('close')

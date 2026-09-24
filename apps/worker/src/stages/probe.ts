@@ -1,5 +1,4 @@
 import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories, UserRecord } from '@vp/core/repositories';
@@ -28,9 +27,12 @@ export interface ProbeProcessorDeps {
   repositories: Repositories;
   storage: StorageClient;
   rawBucket: string;
-  workerId?: string;
+  workerId: string;
   logger: Logger;
   heartbeatPath: string;
+  tmpDir: string;
+  ffprobePath: string;
+  maxDurationSeconds: number;
   getQueue?: (name: string) => JobQueue;
   flowProducer?: FlowProducerPort;
 }
@@ -63,9 +65,12 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     repositories,
     storage,
     rawBucket,
-    workerId = `worker-${process.pid}`,
+    workerId,
     logger,
     heartbeatPath,
+    tmpDir: tmpRoot,
+    ffprobePath,
+    maxDurationSeconds,
     getQueue,
     flowProducer,
   } = deps;
@@ -142,7 +147,8 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     if (isErr(beat)) return beat;
 
     // 4. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), `vp-probe-${videoId}-`));
+    await fs.mkdir(tmpRoot, { recursive: true });
+    const tmpDir = await fs.mkdtemp(path.join(tmpRoot, `vp-probe-${videoId}-`));
 
     /** One place decides how a probe ends: record it, then report the media verdict upward. */
     const failProbe = async (failure: MediaFailure): Promise<Result<never, ProbeStageFailure>> => {
@@ -192,7 +198,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       // 6. Run ffprobe and validate media (AC 17, AC 18). `@vp/ffmpeg` spawns a process and still
       // throws, so this is the line that converts it.
       const probed = await fromPromise(
-        () => runFfprobe(localSourcePath),
+        () => runFfprobe(localSourcePath, { ffprobePath, maxDurationSec: maxDurationSeconds }),
         (cause) => mediaFailureFrom('probe', cause, ErrorCodes.CORRUPT_CONTAINER)
       );
 

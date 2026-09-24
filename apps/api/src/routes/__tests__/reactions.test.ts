@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
@@ -28,7 +29,7 @@ describe('reaction routes', () => {
       status: 'READY',
       sourceKey: 'raw/video.mp4',
     });
-    app = await buildApp({ adapters: { repositories } });
+    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
     await app.ready();
   });
 

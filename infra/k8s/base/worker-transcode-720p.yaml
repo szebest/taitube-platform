@@ -50,8 +50,6 @@ spec:
           env:
             - name: WORKER_STAGE
               value: transcode-720p
-            - name: OTEL_SERVICE_NAME
-              value: vp-worker-transcode-720p
             - name: FFMPEG_THREADS
               valueFrom:
                 resourceFieldRef:

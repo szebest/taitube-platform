@@ -4,7 +4,9 @@ const KEY = /^[A-Z][A-Z0-9_]*$/;
 
 /** Every key the environment schema declares, read off its zod object literals. */
 export function schemaKeys(): Set<string> {
-  const source = read('packages/server/env-schema/src/app-env.ts');
+  const source = ['app-env.ts', 'platform-env.ts']
+    .map((file) => read(`packages/server/env-schema/src/${file}`))
+    .join('\n');
   return new Set([...source.matchAll(/^\s{2}([A-Z][A-Z0-9_]+):/gm)].map((m) => m[1] as string));
 }
 
@@ -56,7 +58,10 @@ export function composeAppKeys(source: string): string[] {
   return keys;
 }
 
-/** Keys a manifest hands the app pods: ConfigMap and Secret entries and container env names. */
+/**
+ * Keys a manifest hands the app pods: ConfigMap and Secret entries, container env names, the keys an
+ * overlay patches into them and the keys an ExternalSecret materialises.
+ */
 export function k8sAppKeys(source: string): string[] {
   const lines = source.split('\n');
   const keys: string[] = [];
@@ -64,7 +69,11 @@ export function k8sAppKeys(source: string): string[] {
     if (/^(data|stringData):\s*$/.test(line)) keys.push(...childKeys(lines, at));
   });
   keys.push(
-    ...[...source.matchAll(/^\s*- name: ([A-Z][A-Z0-9_]+)\s*$/gm)].map((m) => m[1] as string)
+    ...[...source.matchAll(/^\s*- name: ([A-Z][A-Z0-9_]+)\s*$/gm)].map((m) => m[1] as string),
+    ...[...source.matchAll(/\bpath: \/(?:data|stringData)\/([A-Z][A-Z0-9_]+)\s*$/gm)].map(
+      (m) => m[1] as string
+    ),
+    ...[...source.matchAll(/^\s*- secretKey: ([A-Z][A-Z0-9_]+)\s*$/gm)].map((m) => m[1] as string)
   );
   return keys;
 }

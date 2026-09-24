@@ -6,6 +6,7 @@ import {
   generateMasterPlaylist,
   getAvcCodecString,
 } from '../index';
+import { ENCODER } from './encoder-settings';
 
 describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', () => {
   const ladder720p: LadderEntry = {
@@ -32,9 +33,32 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
     level: '4.1',
   };
 
+  it('takes the GOP and segment length from the settings it is handed', () => {
+    const args = buildTranscodeArgs({
+      ...ENCODER,
+      gopSeconds: 4,
+      hlsSegmentSeconds: 8,
+      sourcePath: '/tmp/source.mp4',
+      outputDir: '/tmp/out-720p',
+      rendition: ladder720p,
+      fps: 30,
+      threads: 2,
+      preset: 'veryfast',
+    });
+    const argAfter = (flag: string) => args[args.indexOf(flag) + 1];
+
+    expect([argAfter('-g'), argAfter('-keyint_min'), argAfter('-hls_time')]).toEqual([
+      '120',
+      '120',
+      '8',
+    ]);
+    expect(args).toContain('expr:gte(t,n_forced*4)');
+  });
+
   it('AC 18: buildTranscodeArgs derives GOP = round(2 * fps) and enforces SDD §8.2 flags', () => {
     // 24 fps -> gop 48
     const args24 = buildTranscodeArgs({
+      ...ENCODER,
       sourcePath: '/tmp/source.mp4',
       outputDir: '/tmp/out-720p',
       rendition: ladder720p,
@@ -76,6 +100,7 @@ describe('packages/ffmpeg transcode & master playlist (Ticket 07: AC 18, 23)', (
 
     // 29.97 fps -> round(2 * 29.97) = 60
     const args30 = buildTranscodeArgs({
+      ...ENCODER,
       sourcePath: '/tmp/source.mp4',
       outputDir: '/tmp/out-720p',
       rendition: ladder720p,

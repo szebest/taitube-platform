@@ -8,10 +8,12 @@ import {
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { StorageClient } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
-import { asCdnBase } from '@vp/env-schema';
+import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { defaultPaginator } from '@vp/pagination';
 import type { UploadContext } from '../upload-context';
 import type { VideoServiceDeps } from '../video-service';
+
+const CACHES = inProcessAppConfig().caches;
 
 export const TEST_CDN = asCdnBase('http://localhost:9000/public');
 
@@ -24,6 +26,7 @@ export function videoServiceDeps(
     videos,
     cdn: TEST_CDN,
     reactionCache: new RedisReactionCacheAdapter({
+      ...CACHES.reactions,
       backend: { type: 'cache', cache: new InMemoryCacheClient() },
     }),
     authorization: new CaslAuthorizationAdapter(),
@@ -49,6 +52,8 @@ export function uploadContext(
     probeQueue: new InMemoryJobQueue('probe'),
     rawBucket: 'raw',
     multipartThresholdBytes: 10 * 1024 * 1024,
+    partSizeMinBytes: 8 * 1024 * 1024,
+    partSizeMaxBytes: 64 * 1024 * 1024,
     presignedUrlTtlSeconds: 900,
     uploadSessionTtlSeconds: 86_400,
     maxInflightPerUser: 3,

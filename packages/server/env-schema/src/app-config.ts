@@ -1,17 +1,49 @@
-import { type AppEnv, AppEnvSchema } from './app-env';
+import { assertNever } from '@vp/result';
+import type { AppEnv, JWS_ALGORITHMS } from './app-env';
 import { type CdnBase, asCdnBase } from './cdn-base';
+import {
+  CACHES,
+  FFMPEG_PROCESS,
+  HOUSEKEEPING,
+  HTTP_CACHE,
+  JWKS_CACHE_TTL_MS,
+  JWKS_FETCH_TIMEOUT_MS,
+  JWKS_REFETCH_INTERVAL_MS,
+  POLLERS,
+  SEGMENT_UPLOAD,
+  SPRITE_GEOMETRY,
+  SSE_IDLE_TIMEOUT_MS,
+  UPLOAD_SESSION_TTL_SECONDS,
+  WORKER_HEARTBEAT_INTERVAL_MS,
+} from './tuning';
 
-export type AdapterKind = 'in-memory' | 'external';
+export type AdapterKind = AppEnv['ADAPTER_FAMILY'];
 
-/** SDD §10: an idle stream closes after 30 minutes and the client reconnects with Last-Event-ID. */
-const SSE_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
-
-/** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
-const UPLOAD_SESSION_TTL_SECONDS = 24 * 60 * 60;
+export type JwsAlgorithm = (typeof JWS_ALGORITHMS)[number];
 
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
 
+export type AuthConfig =
+  | {
+      type: 'jwks';
+      jwksUrl: string;
+      issuer: string;
+      audience: string;
+      algorithms: readonly JwsAlgorithm[];
+      cacheTtlMs: number;
+      refetchIntervalMs: number;
+      fetchTimeoutMs: number;
+    }
+  | {
+      type: 'dev';
+      issuer: string;
+      audience: string;
+      adminToken: string | undefined;
+      adminUserId: string;
+    };
+
 export interface AppConfig {
+  environment: AppEnv['NODE_ENV'];
   kind: AdapterKind;
   logLevel: string;
   cdn: CdnBase;
@@ -21,9 +53,12 @@ export interface AppConfig {
     maxInflightPerUser: number;
     uploadRateLimitMax: number;
     multipartThresholdBytes: number;
+    partSizeMinBytes: number;
+    partSizeMaxBytes: number;
     presignTtlSeconds: number;
     uploadSessionTtlSeconds: number;
     rawRetentionDays: number;
+    maxDurationSeconds: number;
   };
   pagination: { defaultLimit: number; maxLimit: number };
   sse: { heartbeatMs: number; maxPerUser: number; maxPerPod: number; idleTimeoutMs: number };
@@ -34,7 +69,7 @@ export interface AppConfig {
     accessKeyId: string | undefined;
     secretAccessKey: string | undefined;
   };
-  redis: { url: string; pubsubUrl: string; password: string | undefined };
+  redis: { url: string; pubsubUrl: string; password: string | undefined; bullmqPrefix: string };
   postgres: { url: string; migrationsUrl: string; poolMax: number };
   otel: {
     enabled: boolean;
@@ -44,25 +79,94 @@ export interface AppConfig {
     samplerArg: number;
     resourceAttributes: string;
   };
-  auth: { jwksUrl: string; adminToken: string | undefined; devTokens: boolean };
-  http: { port: number; metricsPort: number };
+  auth: AuthConfig;
+  caches: {
+    categories: { l1TtlMs: number; l2TtlSeconds: number; maxL1Entries: number };
+    reactions: { ttlSeconds: number; userReactionTtlSeconds: number };
+    subscriptions: { userSubscriptionsTtlSeconds: number; subscriberCountTtlSeconds: number };
+  };
+  pollers: { queueIntervalMs: number; sqlIntervalMs: number; staleStepMs: number };
+  httpCache: {
+    categories: { maxAgeSeconds: number; staleWhileRevalidateSeconds: number };
+    feed: { maxAgeSeconds: number; staleWhileRevalidateSeconds: number };
+  };
+  housekeeping: {
+    outboxRelayIntervalMs: number;
+    outboxBatchSize: number;
+    outboxRetentionDays: number;
+    purgeDeletedAfterMs: number;
+    stuckProcessingAfterMs: number;
+    stuckUploadingAfterMs: number;
+    stuckUploadedAfterMs: number;
+    tmpSweepAfterMs: number;
+    reactionReconcileLimit: number;
+  };
+  http: {
+    port: number;
+    metricsPort: number;
+    corsOrigins: readonly string[];
+    trustProxy: readonly string[];
+    bodyLimitBytes: number;
+  };
   worker: {
     stage: WorkerStageName;
     concurrency: number | undefined;
     heartbeatPath: string;
+    heartbeatIntervalMs: number;
     tmpDir: string;
+    ffmpegPath: string;
+    ffprobePath: string;
     ffmpegThreads: number;
     x264Preset: string;
-    spriteIntervalSeconds: number;
+    hlsSegmentSeconds: number;
+    gopSeconds: number;
+    jobTimeoutFactor: number;
+    ffmpegProcess: {
+      killGraceMs: number;
+      stderrTailLines: number;
+      minTranscodeTimeoutMs: number;
+      thumbnailTimeoutMs: number;
+    };
+    sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
+    segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
   };
 }
 
+function authConfig(env: AppEnv): AuthConfig {
+  switch (env.AUTH_MODE) {
+    case 'jwks': {
+      if (!env.AUTH_JWKS_URL) throw new Error('AUTH_JWKS_URL is required when AUTH_MODE=jwks');
+      return {
+        type: 'jwks',
+        jwksUrl: env.AUTH_JWKS_URL,
+        issuer: env.AUTH_ISSUER,
+        audience: env.AUTH_AUDIENCE,
+        algorithms: env.AUTH_ALGORITHMS,
+        cacheTtlMs: JWKS_CACHE_TTL_MS,
+        refetchIntervalMs: JWKS_REFETCH_INTERVAL_MS,
+        fetchTimeoutMs: JWKS_FETCH_TIMEOUT_MS,
+      };
+    }
+    case 'dev':
+      return {
+        type: 'dev',
+        issuer: env.AUTH_ISSUER,
+        audience: env.AUTH_AUDIENCE,
+        adminToken: env.ADMIN_TOKEN,
+        adminUserId: env.AUTH_DEV_USER_ID,
+      };
+    default:
+      return assertNever(env.AUTH_MODE, 'AUTH_MODE');
+  }
+}
+
 export function toAppConfig(env: AppEnv): AppConfig {
-  const inMemory = env.NODE_ENV === 'test';
+  const quiet = env.NODE_ENV === 'test';
 
   return {
-    kind: inMemory ? 'in-memory' : 'external',
-    logLevel: inMemory ? 'silent' : env.LOG_LEVEL,
+    environment: env.NODE_ENV,
+    kind: env.ADAPTER_FAMILY,
+    logLevel: quiet ? 'silent' : env.LOG_LEVEL,
     cdn: asCdnBase(env.CDN_BASE_URL),
     buckets: { raw: env.S3_BUCKET_RAW, public: env.S3_BUCKET_PUBLIC },
     limits: {
@@ -70,9 +174,12 @@ export function toAppConfig(env: AppEnv): AppConfig {
       maxInflightPerUser: env.MAX_INFLIGHT_PER_USER,
       uploadRateLimitMax: env.UPLOAD_RATE_LIMIT_MAX,
       multipartThresholdBytes: env.S3_MULTIPART_THRESHOLD_BYTES,
+      partSizeMinBytes: env.S3_PART_SIZE_MIN_BYTES,
+      partSizeMaxBytes: env.S3_PART_SIZE_MAX_BYTES,
       presignTtlSeconds: env.S3_PRESIGN_TTL_SEC,
       uploadSessionTtlSeconds: UPLOAD_SESSION_TTL_SECONDS,
       rawRetentionDays: env.RAW_RETENTION_DAYS,
+      maxDurationSeconds: env.MAX_DURATION_SEC,
     },
     pagination: { defaultLimit: env.PAGE_SIZE_DEFAULT, maxLimit: env.PAGE_SIZE_MAX },
     sse: {
@@ -88,66 +195,60 @@ export function toAppConfig(env: AppEnv): AppConfig {
       accessKeyId: env.S3_ACCESS_KEY_ID,
       secretAccessKey: env.S3_SECRET_ACCESS_KEY,
     },
-    redis: { url: env.REDIS_URL, pubsubUrl: env.REDIS_PUBSUB_URL, password: env.REDIS_PASSWORD },
+    redis: {
+      url: env.REDIS_URL,
+      pubsubUrl: env.REDIS_PUBSUB_URL,
+      password: env.REDIS_PASSWORD,
+      bullmqPrefix: env.BULLMQ_PREFIX,
+    },
     postgres: {
       url: env.DATABASE_URL,
-      migrationsUrl: env.DATABASE_URL_MIGRATIONS,
+      migrationsUrl: env.DATABASE_URL_MIGRATIONS ?? env.DATABASE_URL,
       poolMax: env.DATABASE_POOL_MAX,
     },
     otel: {
-      enabled: !inMemory,
+      enabled: !quiet,
       serviceVersion: env.SERVICE_VERSION,
       endpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
       sampler: env.OTEL_TRACES_SAMPLER,
       samplerArg: env.OTEL_TRACES_SAMPLER_ARG,
       resourceAttributes: env.OTEL_RESOURCE_ATTRIBUTES,
     },
-    auth: {
-      jwksUrl: env.AUTH_JWKS_URL,
-      adminToken: env.ADMIN_TOKEN,
-      devTokens: env.NODE_ENV !== 'production',
+    auth: authConfig(env),
+    caches: {
+      categories: { ...CACHES.categories },
+      reactions: { ...CACHES.reactions },
+      subscriptions: { ...CACHES.subscriptions },
     },
-    http: { port: env.PORT, metricsPort: env.METRICS_PORT },
+    pollers: { ...POLLERS },
+    httpCache: {
+      categories: { ...HTTP_CACHE.categories },
+      feed: { ...HTTP_CACHE.feed },
+    },
+    housekeeping: { ...HOUSEKEEPING },
+    http: {
+      port: env.PORT,
+      metricsPort: env.METRICS_PORT,
+      corsOrigins: env.CORS_ORIGINS,
+      trustProxy: env.TRUST_PROXY,
+      bodyLimitBytes: env.HTTP_BODY_LIMIT_BYTES,
+    },
     worker: {
       stage: env.WORKER_STAGE,
       concurrency: env.WORKER_CONCURRENCY,
       heartbeatPath: env.WORKER_HEARTBEAT_PATH,
+      heartbeatIntervalMs: WORKER_HEARTBEAT_INTERVAL_MS,
       tmpDir: env.TMP_DIR,
+      ffmpegPath: env.FFMPEG_PATH,
+      ffprobePath: env.FFPROBE_PATH,
       ffmpegThreads: env.FFMPEG_THREADS,
       x264Preset: env.X264_PRESET,
-      spriteIntervalSeconds: env.SPRITE_INTERVAL_SECONDS,
+      hlsSegmentSeconds: env.HLS_SEGMENT_SECONDS,
+      gopSeconds: env.GOP_SECONDS,
+      jobTimeoutFactor: env.JOB_TIMEOUT_FACTOR,
+      ffmpegProcess: { ...FFMPEG_PROCESS },
+      sprite: { intervalSec: env.SPRITE_INTERVAL_SECONDS, ...SPRITE_GEOMETRY },
+      segmentUpload: { ...SEGMENT_UPLOAD },
     },
   };
-}
-
-type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
-
-/** `cdn` is taken as a plain string and branded on the way in, so an override cannot skip it. */
-export type AppConfigOverrides = DeepPartial<Omit<AppConfig, 'cdn'>> & { cdn?: string };
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function merged<T>(base: T, overrides: unknown): T {
-  if (!(isPlainObject(base) && isPlainObject(overrides))) return (overrides ?? base) as T;
-
-  const result: Record<string, unknown> = { ...base };
-  for (const [key, value] of Object.entries(overrides)) {
-    if (value !== undefined) result[key] = merged(base[key], value);
-  }
-  return result as T;
-}
-
-/**
- * What an in-process app runs on: the in-memory family over the schema defaults, with any
- * overrides merged in `AppConfig`'s own shape.
- */
-export function inProcessAppConfig(overrides: AppConfigOverrides = {}): AppConfig {
-  const { cdn, ...rest } = overrides;
-  const base = toAppConfig(
-    AppEnvSchema.parse({ NODE_ENV: 'test', DATABASE_URL: 'postgres://vp:vp@localhost:5432/vp' })
-  );
-
-  return merged({ ...base, cdn: cdn === undefined ? base.cdn : asCdnBase(cdn) }, rest);
 }

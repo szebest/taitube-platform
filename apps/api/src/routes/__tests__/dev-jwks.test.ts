@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { mintToken } from '@vp/dev-token';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../../app';
@@ -6,7 +7,7 @@ describe('dev JWKS route', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    app = await buildApp();
+    app = await buildApp({ config: inProcessAppConfig() });
     await app.ready();
   });
 

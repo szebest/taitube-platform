@@ -1,7 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
-import * as yaml from 'js-yaml';
-import { describe, expect, it } from 'vitest';
 
 describe('Cloud Infrastructure & Terraform (Ticket 31)', () => {
   const repoRoot = path.resolve(__dirname, '../../../../../');
@@ -26,7 +24,7 @@ describe('Cloud Infrastructure & Terraform (Ticket 31)', () => {
     expect(content).toContain('CLOUDFLARE_API_TOKEN');
     expect(content).toContain('HCLOUD_TOKEN');
     expect(content).toContain('DATABASE_URL');
-    expect(content).toContain('OTEL_EXPORTER_OTLP_ENDPOINT');
+    expect(content).toContain('GRAFANA_OTLP_ENDPOINT');
   });
 
   it('Interactive setup wizard exists and has executable syntax', () => {
@@ -35,7 +33,7 @@ describe('Cloud Infrastructure & Terraform (Ticket 31)', () => {
     expect(content).toContain('TOTAL_STAGES=6');
     expect(content).toContain('stage "Cloudflare: Domain & Account ID"');
     expect(content).toContain('stage "Hetzner Cloud: API Token & SSH Key"');
-    expect(content).toContain('stage "Secrets: SOPS & age Key Management"');
+    expect(content).toContain('stage "Secrets: External Secrets Operator"');
   });
 
   it('AC 2: Terraform configurations exist and follow style guide', () => {
@@ -126,56 +124,11 @@ describe('Cloud Infrastructure & Terraform (Ticket 31)', () => {
     expect(runbook).toContain('Oracle Cloud Infrastructure');
   });
 
-  it('AC 6: SOPS + age encrypted secrets skeleton committed with all 🔒 values', () => {
-    const secretsPath = path.join(cloudOverlayDir, 'secrets.enc.yaml');
-    expect(existsSync(secretsPath)).toBe(true);
-
-    const rawContent = readFileSync(secretsPath, 'utf-8');
-    const doc = yaml.load(rawContent) as {
-      kind?: string;
-      metadata?: { name?: string };
-      stringData?: Record<string, string>;
-      sops?: { age?: unknown[] };
-    };
-
-    expect(doc.kind).toBe('Secret');
-    expect(doc.metadata?.name).toBe('vp-secrets');
-
-    // Verify all 🔒 values are present with ENC markers
-    if (!(doc.stringData && doc.sops?.age)) {
-      throw new Error('stringData or sops metadata is missing from secrets.enc.yaml');
-    }
-    const data = doc.stringData;
-    expect(data.DATABASE_URL).toContain('ENC[');
-    expect(data.DATABASE_URL_MIGRATIONS).toContain('ENC[');
-    expect(data.REDIS_URL).toContain('ENC[');
-    expect(data.REDIS_PUBSUB_URL).toContain('ENC[');
-    expect(data.REDIS_PASSWORD).toContain('ENC[');
-    expect(data.S3_ACCESS_KEY_ID).toContain('ENC[');
-    expect(data.S3_SECRET_ACCESS_KEY).toContain('ENC[');
-    expect(data.ADMIN_TOKEN).toContain('ENC[');
-    expect(data.WEBHOOK_SIGNING_SECRET).toContain('ENC[');
-    expect(data.OTEL_EXPORTER_OTLP_HEADERS).toContain('ENC[');
-    expect(data.PROMETHEUS_REMOTE_WRITE_URL).toContain('ENC[');
-    expect(data.LOKI_URL).toContain('ENC[');
-    expect(data.CLOUDFLARE_TUNNEL_TOKEN).toContain('ENC[');
-    expect(data.CLOUDFLARE_API_TOKEN).toContain('ENC[');
-    expect(data.HCLOUD_TOKEN).toContain('ENC[');
-
-    // Verify SOPS age metadata block
-    expect(doc.sops).toBeDefined();
-    expect(doc.sops?.age).toBeDefined();
-    expect(doc.sops?.age?.length).toBeGreaterThan(0);
-
-    // README instructions exist
-    const readmePath = path.join(cloudOverlayDir, 'README.md');
-    expect(existsSync(readmePath)).toBe(true);
-    const readmeContent = readFileSync(readmePath, 'utf-8');
-    expect(readmeContent).toContain('sops -d secrets.enc.yaml');
-  });
-
   describe('Cost Guardrails, Alert Rules & Operator Runbooks (Ticket 33)', () => {
-    const alertRulesPath = path.join(repoRoot, 'infra/observability/alerts/video-pipeline-alerts.yaml');
+    const alertRulesPath = path.join(
+      repoRoot,
+      'infra/observability/alerts/video-pipeline-alerts.yaml'
+    );
     const dashboardPath = path.join(repoRoot, 'infra/observability/dashboards/storage-cost.json');
     const runbooksDir = path.join(repoRoot, 'docs/runbooks');
 

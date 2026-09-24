@@ -98,7 +98,7 @@ export function describeVideoReactionRepositoryContract(
       await reactions.setReaction(VIDEO_IDS.a, OWNER_ID, 'LIKE');
       await reactions.setReaction(VIDEO_IDS.b, OWNER_ID, 'LIKE');
 
-      const all = expectOk(await reactions.listVideoIdsWithReactions());
+      const all = expectOk(await reactions.listVideoIdsWithReactions(100));
       expect([...all].sort()).toEqual([VIDEO_IDS.a, VIDEO_IDS.b]);
       expect(expectOk(await reactions.listVideoIdsWithReactions(1))).toHaveLength(1);
       expect(expectOk(await reactions.listVideoIdsWithReactions(10, 2))).toEqual([]);

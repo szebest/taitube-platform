@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import * as http from 'node:http';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
@@ -56,7 +57,7 @@ describe('SSE event routes', () => {
         sourceKey: `raw/${id}/source.mp4`,
       });
     }
-    app = await buildApp({ adapters: { repositories } });
+    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
     baseUrl = await app.listen({ port: 0, host: '127.0.0.1' });
   });
 

@@ -369,6 +369,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
     });
 
     const processor = createNotifyProcessor({
+      workerId: STAGE_SETTINGS.workerId,
       repositories,
       cache,
       logger,

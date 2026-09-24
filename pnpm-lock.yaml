@@ -11,9 +11,15 @@ importers:
       '@biomejs/biome':
         specifier: 1.9.4
         version: 1.9.4
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
+      js-yaml:
+        specifier: ^5.4.1
+        version: 5.4.1
       lefthook:
         specifier: ^1.10.10
         version: 1.13.6
@@ -438,6 +444,9 @@ importers:
       '@vp/db':
         specifier: workspace:*
         version: link:../db
+      '@vp/dev-token':
+        specifier: workspace:*
+        version: link:../dev-token
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
@@ -462,6 +471,9 @@ importers:
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result
+      '@vp/storage':
+        specifier: workspace:*
+        version: link:../storage
       bullmq:
         specifier: ^6.3.4
         version: 6.3.4(ioredis@5.11.1)
@@ -674,9 +686,15 @@ importers:
 
   packages/server/env-schema:
     dependencies:
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
       '@vp/pagination':
         specifier: workspace:*
         version: link:../../universal/pagination
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       zod:
         specifier: ^3.24.2
         version: 3.25.76
@@ -730,6 +748,9 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors

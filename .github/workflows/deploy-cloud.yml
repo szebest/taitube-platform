@@ -20,13 +20,6 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Install sops & age
-        run: |
-          sudo apt-get update && sudo apt-get install -y age
-          wget -qO sops https://github.com/getsops/sops/releases/download/v3.9.0/sops-v3.9.0.linux.amd64
-          chmod +x sops
-          sudo mv sops /usr/local/bin/sops
-
       - name: Set up kubeconfig
         env:
           KUBECONFIG_BASE64: ${{ secrets.KUBECONFIG_BASE64 }}
@@ -35,22 +28,8 @@ jobs:
           echo "$KUBECONFIG_BASE64" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
 
-      - name: Write age key
-        env:
-          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
-        run: |
-          mkdir -p ~/.config/sops/age
-          echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
-
-      - name: Decrypt secrets and deploy cloud overlay
-        env:
-          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
-        run: |
-          # Apply decrypted secrets directly
-          sops -d infra/k8s/overlays/cloud/secrets.enc.yaml | kubectl apply -f -
-          
-          # Build and apply Kustomize overlay
-          kubectl kustomize infra/k8s/overlays/cloud | kubectl apply -f -
+      - name: Deploy cloud overlay
+        run: kubectl kustomize infra/k8s/overlays/cloud | kubectl apply -f -
 
       - name: Trigger Migration Job
         run: |

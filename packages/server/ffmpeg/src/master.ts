@@ -1,3 +1,4 @@
+import { MS_PER_SECOND } from '@vp/domain/time';
 import type { LadderEntry } from '@vp/job-contracts';
 
 export function getAvcCodecString(profile: 'main' | 'high' | string, level: string): string {
@@ -9,7 +10,7 @@ export function getAvcCodecString(profile: 'main' | 'high' | string, level: stri
 
 export interface MasterPlaylistOptions {
   ladder: LadderEntry[];
-  fps?: number;
+  fps: number | undefined;
   measuredResults?: Record<string, { bytes?: number; durationMs?: number; avgBitrateBps?: number }>;
 }
 
@@ -17,8 +18,8 @@ export interface MasterPlaylistOptions {
  * Generates an RFC 8216 / Apple HLS authoring-compliant master playlist (SDD §8.4).
  */
 export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
-  const { ladder, fps = 24, measuredResults } = options;
-  const frameRateStr = Number(fps).toFixed(3);
+  const { ladder, fps, measuredResults } = options;
+  const frameRate = fps === undefined ? '' : `,FRAME-RATE=${fps.toFixed(3)}`;
 
   const lines: string[] = ['#EXTM3U', '#EXT-X-VERSION:6', '#EXT-X-INDEPENDENT-SEGMENTS'];
 
@@ -32,7 +33,7 @@ export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
     if (measured?.avgBitrateBps) {
       avgBandwidth = measured.avgBitrateBps;
     } else if (measured?.bytes && measured?.durationMs && measured.durationMs > 0) {
-      avgBandwidth = Math.round((measured.bytes * 8) / (measured.durationMs / 1000));
+      avgBandwidth = Math.round((measured.bytes * 8) / (measured.durationMs / MS_PER_SECOND));
     } else {
       avgBandwidth = (r.videoKbps + r.audioKbps) * 1000;
     }
@@ -42,7 +43,7 @@ export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
     const codecs = `${avcCodec},mp4a.40.2`;
 
     lines.push(
-      `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},AVERAGE-BANDWIDTH=${avgBandwidth},RESOLUTION=${resolution},FRAME-RATE=${frameRateStr},CODECS="${codecs}"`,
+      `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},AVERAGE-BANDWIDTH=${avgBandwidth},RESOLUTION=${resolution}${frameRate},CODECS="${codecs}"`,
       `${r.name}/index.m3u8`
     );
   }

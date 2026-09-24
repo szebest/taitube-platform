@@ -30,7 +30,7 @@ export interface StageDeps {
   getQueue: (name: string) => JobQueue;
   flowProducer: FlowProducerPort;
   logger: Logger;
-  workerId: string | undefined;
+  workerId: string;
 }
 
 export type StageProcessor = (job: QueueJob<unknown>) => Promise<Result<unknown, AnyFailure>>;
@@ -59,6 +59,9 @@ const probe = (d: StageDeps) =>
       workerId: d.workerId,
       logger: d.logger,
       heartbeatPath: d.config.worker.heartbeatPath,
+      tmpDir: d.config.worker.tmpDir,
+      ffprobePath: d.config.worker.ffprobePath,
+      maxDurationSeconds: d.config.limits.maxDurationSeconds,
       getQueue: d.getQueue,
       flowProducer: d.flowProducer,
     })
@@ -75,7 +78,18 @@ const transcode = (d: StageDeps) =>
       workerId: d.workerId,
       logger: d.logger,
       heartbeatPath: d.config.worker.heartbeatPath,
-      ffmpeg: { threads: d.config.worker.ffmpegThreads, preset: d.config.worker.x264Preset },
+      tmpDir: d.config.worker.tmpDir,
+      ffmpeg: {
+        path: d.config.worker.ffmpegPath,
+        threads: d.config.worker.ffmpegThreads,
+        preset: d.config.worker.x264Preset,
+        gopSeconds: d.config.worker.gopSeconds,
+        hlsSegmentSeconds: d.config.worker.hlsSegmentSeconds,
+        timeoutFactor: d.config.worker.jobTimeoutFactor,
+        minTimeoutMs: d.config.worker.ffmpegProcess.minTranscodeTimeoutMs,
+        limits: d.config.worker.ffmpegProcess,
+      },
+      segmentUpload: d.config.worker.segmentUpload,
       getQueue: d.getQueue,
     })
   );
@@ -126,7 +140,10 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           workerId: d.workerId,
           logger: d.logger,
           heartbeatPath: d.config.worker.heartbeatPath,
-          spriteIntervalSec: d.config.worker.spriteIntervalSeconds,
+          tmpDir: d.config.worker.tmpDir,
+          ffmpegPath: d.config.worker.ffmpegPath,
+          sprite: d.config.worker.sprite,
+          ffmpegProcess: d.config.worker.ffmpegProcess,
         })
       ),
   },
@@ -195,6 +212,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           retentionDays: d.config.limits.rawRetentionDays,
           maxInflightPerUser: d.config.limits.maxInflightPerUser,
           tmpDir: d.config.worker.tmpDir,
+          housekeeping: d.config.housekeeping,
         })
       ),
   },

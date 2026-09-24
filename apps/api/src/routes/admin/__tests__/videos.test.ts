@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -31,6 +32,7 @@ describe('two consumers of VideoService.get render the same failure differently'
 
     repositories = new InMemoryRepositories();
     app = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories,
         cache: new InMemoryCacheClient(),

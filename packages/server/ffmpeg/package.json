@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
+    "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/job-contracts": "workspace:*"
   },

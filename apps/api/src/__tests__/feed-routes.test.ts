@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import * as http from 'node:http';
 import {
   InMemoryCacheClient,
@@ -32,6 +33,7 @@ describe('Public Video Feed API & Anonymous Access (Ticket 36)', () => {
     storage = new InMemoryStorageClient();
 
     app = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories,
         cache,

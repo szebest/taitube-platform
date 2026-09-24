@@ -46,9 +46,11 @@ describe('apps/worker: createWorkerRunner', () => {
 
   it('starts the outbox relay for housekeeping and stops it on close', async () => {
     const runner = await createWorkerRunner({
-      config: inProcessAppConfig({ worker: { stage: 'housekeeping' } }),
+      config: inProcessAppConfig({
+        worker: { stage: 'housekeeping' },
+        housekeeping: { outboxRelayIntervalMs: 60_000 },
+      }),
       logger,
-      outboxRelayIntervalMs: 60_000,
     });
 
     expect(runner.outboxRelay?.isRunning()).toBe(true);
@@ -57,7 +59,7 @@ describe('apps/worker: createWorkerRunner', () => {
   });
 
   it('names nothing still being disposed once it has closed', async () => {
-    const runner = await createWorkerRunner({ logger });
+    const runner = await createWorkerRunner({ config: inProcessAppConfig(), logger });
 
     await runner.close();
 

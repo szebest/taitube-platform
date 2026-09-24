@@ -1,5 +1,6 @@
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
 import { z } from 'zod';
+import { heldLocalCredentials } from './local-credentials';
 
 /**
  * A secret has no default: an unset one is absent, and `AppEnvSchema` refuses a production boot
@@ -11,43 +12,62 @@ const secret = () =>
     .optional()
     .transform((value) => value || undefined);
 
+const optionalUrl = () =>
+  z.preprocess((value) => (value === '' ? undefined : value), z.string().url().optional());
+
+const commaList = <T extends z.ZodTypeAny>(item: T) =>
+  z
+    .string()
+    .transform((value) =>
+      value
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+    )
+    .pipe(z.array(item));
+
+/** What a production boot cannot start without, and what the cloud overlay's `ExternalSecret` supplies. */
 export const SECRET_KEYS = [
-  'ADMIN_TOKEN',
-  'WEBHOOK_SIGNING_SECRET',
+  'DATABASE_URL',
   'S3_ACCESS_KEY_ID',
   'S3_SECRET_ACCESS_KEY',
   'REDIS_PASSWORD',
 ] as const;
 
-/** The placeholder `.env.example` and the k8s base Secret ship, which is public by construction. */
-const PLACEHOLDER_SECRET = /^change-me/;
+export const JWS_ALGORITHMS = [
+  'RS256',
+  'RS384',
+  'RS512',
+  'ES256',
+  'ES384',
+  'ES512',
+  'EdDSA',
+] as const;
 
 export const CoreEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default('debug'),
   SERVICE_VERSION: z.string().default('dev'),
-  PUBLIC_API_URL: z.string().url().default('http://localhost:3000'),
-  CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:8080'),
+  ADAPTER_FAMILY: z.enum(['external', 'in-memory']).default('external'),
+  CORS_ORIGINS: commaList(z.string()).default('http://localhost:5173,http://localhost:8080'),
+  TRUST_PROXY: commaList(z.string()).default(''),
+  HTTP_BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(1_048_576),
   PORT: z.coerce.number().int().positive().default(3000),
   METRICS_PORT: z.coerce.number().int().positive().default(9464),
   PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(PAGE_SIZE_DEFAULT),
   PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
-  TURBO_TELEMETRY_DISABLED: z.string().default('1'),
-  DO_NOT_TRACK: z.string().default('1'),
-  NODE_OPTIONS: z.string().optional(),
 });
 
 export const PostgresEnvSchema = z.object({
   DATABASE_URL: z.string().url({ message: 'DATABASE_URL is required and must be a valid URL' }),
-  DATABASE_URL_MIGRATIONS: z.string().url().default('postgres://vp:vp@localhost:5432/vp'),
+  DATABASE_URL_MIGRATIONS: optionalUrl(),
   DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
 });
 
 export const RedisEnvSchema = z.object({
-  REDIS_URL: z.string().default('redis://:vp@localhost:6379/0'),
-  REDIS_PUBSUB_URL: z.string().default('redis://:vp@localhost:6379/1'),
+  REDIS_URL: z.string().default('redis://localhost:6379/0'),
+  REDIS_PUBSUB_URL: z.string().default('redis://localhost:6379/1'),
   BULLMQ_PREFIX: z.string().default('bull'),
-  REDIS_ADDR: z.string().default('redis:6379'),
   REDIS_PASSWORD: secret(),
 });
 
@@ -71,13 +91,13 @@ export const StorageEnvSchema = z.object({
 });
 
 export const AuthEnvSchema = z.object({
-  AUTH_JWKS_URL: z.string().default('http://localhost:3000/.well-known/jwks.json'),
+  AUTH_MODE: z.enum(['jwks', 'dev']).default('dev'),
+  AUTH_JWKS_URL: optionalUrl(),
   AUTH_ISSUER: z.string().default('vp-dev'),
   AUTH_AUDIENCE: z.string().default('vp-api'),
-  AUTH_DEV_USER_ID: z.string().default('00000000-0000-7000-8000-000000000001'),
+  AUTH_ALGORITHMS: commaList(z.enum(JWS_ALGORITHMS)).default('RS256,ES256'),
+  AUTH_DEV_USER_ID: z.string().uuid().default('00000000-0000-7000-8000-000000000001'),
   ADMIN_TOKEN: secret(),
-  WEBHOOK_SIGNING_SECRET: secret(),
-  WEBHOOK_URL_ALLOWLIST: z.string().default('').optional(),
 });
 
 export const PipelineEnvSchema = z.object({
@@ -97,22 +117,17 @@ export const PipelineEnvSchema = z.object({
     (value) => (value === '' ? undefined : value),
     z.coerce.number().int().positive().optional()
   ),
-  WORKER_RUNTIME: z.enum(['bun', 'node']).default('bun'),
   FFMPEG_PATH: z.string().default('ffmpeg'),
   FFPROBE_PATH: z.string().default('ffprobe'),
   FFMPEG_THREADS: z.coerce.number().int().positive().default(2),
   X264_PRESET: z.string().default('veryfast'),
   HLS_SEGMENT_SECONDS: z.coerce.number().int().positive().default(6),
   GOP_SECONDS: z.coerce.number().int().positive().default(2),
-  TRANSCODE_MODE: z.enum(['per-rendition', 'combined']).default('per-rendition'),
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(4294967296),
   MAX_DURATION_SEC: z.coerce.number().int().positive().default(3600),
+  JOB_TIMEOUT_FACTOR: z.coerce.number().int().positive().default(3),
   MAX_INFLIGHT_PER_USER: z.coerce.number().int().positive().default(3),
   UPLOAD_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(30),
-  ALLOWED_CONTENT_TYPES: z
-    .string()
-    .default('video/mp4,video/quicktime,video/webm,video/x-matroska'),
-  JOB_TIMEOUT_FACTOR: z.coerce.number().int().positive().default(3),
   TMP_DIR: z.string().default('/tmp/vp'),
   SSE_HEARTBEAT_MS: z.coerce.number().int().positive().default(15000),
   SSE_MAX_PER_USER: z.coerce.number().int().positive().default(20),
@@ -122,9 +137,7 @@ export const PipelineEnvSchema = z.object({
 });
 
 export const OtelEnvSchema = z.object({
-  OTEL_SERVICE_NAME: z.string().default('').optional(),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default('http://localhost:4318'),
-  OTEL_EXPORTER_OTLP_HEADERS: z.string().default('').optional(),
   OTEL_TRACES_SAMPLER: z.string().default('parentbased_always_on'),
   OTEL_TRACES_SAMPLER_ARG: z.coerce.number().default(1.0),
   OTEL_RESOURCE_ATTRIBUTES: z.string().default('deployment.environment=local'),
@@ -137,24 +150,51 @@ export const AppEnvShape = CoreEnvSchema.merge(PostgresEnvSchema)
   .merge(PipelineEnvSchema)
   .merge(OtelEnvSchema);
 
-export const AppEnvSchema = AppEnvShape.superRefine((env, ctx) => {
-  if (env.NODE_ENV !== 'production') return;
+type ParsedEnv = z.infer<typeof AppEnvShape>;
+
+const URL_KEYS = (Object.keys(AppEnvShape.shape) as (keyof ParsedEnv)[]).filter((key) =>
+  /_URL(_|$)/.test(key)
+);
+
+function productionIssues(env: ParsedEnv): { key: string; message: string }[] {
+  const issues: { key: string; message: string }[] = [];
 
   for (const key of SECRET_KEYS) {
+    if (!env[key]) issues.push({ key, message: 'is required in production' });
+  }
+  for (const key of new Set([...SECRET_KEYS, ...URL_KEYS])) {
     const value = env[key];
-    if (!value) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: [key],
-        message: 'is required in production',
-      });
-    } else if (PLACEHOLDER_SECRET.test(value)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: [key],
-        message: 'still holds the published placeholder, which is not a credential',
-      });
+    if (typeof value === 'string' && heldLocalCredentials(value)) {
+      issues.push({ key, message: 'holds a credential this repo ships for local use' });
     }
+  }
+  if (env.AUTH_MODE === 'dev') {
+    issues.push({ key: 'AUTH_MODE', message: 'dev verifies the public dev key; use jwks' });
+  }
+  if (env.ADMIN_TOKEN !== undefined) {
+    issues.push({
+      key: 'ADMIN_TOKEN',
+      message: 'is refused in production: admin comes from a verified token role',
+    });
+  }
+  if (env.CORS_ORIGINS.length === 0 || env.CORS_ORIGINS.includes('*')) {
+    issues.push({ key: 'CORS_ORIGINS', message: 'must name the allowed origins in production' });
+  }
+  return issues;
+}
+
+export const AppEnvSchema = AppEnvShape.superRefine((env, ctx) => {
+  if (env.AUTH_MODE === 'jwks' && !env.AUTH_JWKS_URL) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['AUTH_JWKS_URL'],
+      message: 'is required when AUTH_MODE=jwks',
+    });
+  }
+  if (env.NODE_ENV !== 'production') return;
+
+  for (const { key, message } of productionIssues(env)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [key], message });
   }
 });
 

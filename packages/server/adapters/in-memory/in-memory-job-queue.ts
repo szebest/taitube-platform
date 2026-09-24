@@ -1,3 +1,4 @@
+import { JOB_PRIORITY } from '@vp/domain';
 import {
   JobQueue,
   type JobSchedulerInfo,
@@ -55,7 +56,7 @@ export class InMemoryJobQueue extends JobQueue {
 
   private getJobPriority(job: QueueJob<unknown>): number {
     const opts = (job as QueueJob<unknown> & { opts?: QueueJobOptions }).opts;
-    return opts?.priority ?? 5;
+    return opts?.priority ?? JOB_PRIORITY.free;
   }
 
   enqueueWaiting(job: QueueJob<unknown>): void {

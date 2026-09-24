@@ -76,22 +76,3 @@ export async function runMigrations(url: string): Promise<void> {
 
   await sql.end();
 }
-
-// Auto-run if executed directly as entrypoint
-if (
-  process.argv[1] &&
-  fileURLToPath(import.meta.url).toLowerCase() === path.resolve(process.argv[1]).toLowerCase()
-) {
-  runMigrations(
-    process.env['DATABASE_URL_MIGRATIONS'] ??
-      process.env['DATABASE_URL'] ??
-      'postgres://vp:vp@localhost:5432/vp'
-  )
-    .then(() => {
-      process.exit(0);
-    })
-    .catch((err) => {
-      console.error('[db:migrate] Migration failed:', err);
-      process.exit(1);
-    });
-}

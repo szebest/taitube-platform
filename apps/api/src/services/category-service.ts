@@ -18,10 +18,9 @@ import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 export interface CategoryServiceDeps {
   categories: CategoryRepositoryPort;
   categoryCache: CategoryCachePort;
+  maxAgeSeconds: number;
+  staleWhileRevalidateSeconds: number;
 }
-
-const CATEGORIES_MAX_AGE_SECONDS = 300;
-const CATEGORIES_STALE_WHILE_REVALIDATE_SECONDS = 60;
 
 export interface ListCategoriesResult {
   categories: Category[];
@@ -62,8 +61,8 @@ export class CategoryService {
         notModified: isNotModified(ifNoneMatch, etag),
         headers: buildCacheHeaders({
           etag,
-          maxAgeSeconds: CATEGORIES_MAX_AGE_SECONDS,
-          staleWhileRevalidateSeconds: CATEGORIES_STALE_WHILE_REVALIDATE_SECONDS,
+          maxAgeSeconds: this.deps.maxAgeSeconds,
+          staleWhileRevalidateSeconds: this.deps.staleWhileRevalidateSeconds,
         }),
       };
     });

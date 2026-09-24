@@ -4,7 +4,6 @@ import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memor
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
-import { MULTIPART_MIN_PART_SIZE } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -223,7 +222,7 @@ describe('apps/api Multipart Upload with Resume and Abort (Ticket 11: AC 17, 18,
     expect(res.statusCode).toBe(201);
     const data = JSON.parse(res.body);
     expect(data.strategy).toBe('multipart');
-    expect(data.partSizeBytes).toBe(MULTIPART_MIN_PART_SIZE); // 8 MiB
+    expect(data.partSizeBytes).toBe(inProcessAppConfig().limits.partSizeMinBytes);
     expect(data.partsExpected).toBe(512); // 4GB / 8MB = 512 parts
     expect(data.parts.length).toBe(100); // Batched to first 100 parts (AC 17)
 

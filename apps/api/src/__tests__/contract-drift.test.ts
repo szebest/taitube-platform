@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryRepositories,
@@ -82,6 +83,7 @@ describe('apps/api: contract drift', () => {
 
   beforeAll(async () => {
     app = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories: new InMemoryRepositories(),
         cache: new InMemoryCacheClient(),

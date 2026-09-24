@@ -15,6 +15,16 @@
       "types": "./dist/result.d.ts",
       "import": "./src/result.ts",
       "default": "./dist/result.js"
+    },
+    "./jwt": {
+      "types": "./dist/jwt.d.ts",
+      "import": "./src/jwt.ts",
+      "default": "./dist/jwt.js"
+    },
+    "./env": {
+      "types": "./dist/env.d.ts",
+      "import": "./src/env.ts",
+      "default": "./dist/env.js"
     }
   },
   "scripts": {

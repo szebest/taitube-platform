@@ -13,9 +13,9 @@ export interface SegmentUploaderOptions {
   rendition: string;
   publicBucket: string;
   storage: StorageClient;
-  concurrency?: number;
-  maxRetries?: number;
-  retryDelayMs?: number;
+  concurrency: number;
+  maxRetries: number;
+  retryDelayMs: number;
   logger: Logger;
 }
 
@@ -58,9 +58,9 @@ export class StreamingSegmentUploader {
     this.rendition = options.rendition;
     this.publicBucket = options.publicBucket;
     this.storage = options.storage;
-    this.concurrency = options.concurrency ?? 4;
-    this.maxRetries = options.maxRetries ?? 3;
-    this.retryDelayMs = options.retryDelayMs ?? 150;
+    this.concurrency = options.concurrency;
+    this.maxRetries = options.maxRetries;
+    this.retryDelayMs = options.retryDelayMs;
     this.logger = options.logger.child({
       component: 'streaming-uploader',
       rendition: options.rendition,

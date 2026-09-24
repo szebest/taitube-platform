@@ -1,3 +1,5 @@
+import type { AuthConfig } from '@vp/env-schema';
+import { assertNever } from '@vp/result';
 import type { FastifyPluginAsync } from 'fastify';
 import { adminCategoriesRoutes } from './admin/categories';
 import { adminDlqRoutes } from './admin/dlq';
@@ -15,9 +17,8 @@ import { subscriptionsRoutes } from './subscriptions';
 import { uploadsRoutes } from './uploads';
 import { videosRoutes } from './videos';
 
-export const ROUTES: readonly FastifyPluginAsync[] = [
+const ROUTES: readonly FastifyPluginAsync[] = [
   healthRoutes,
-  devJwksRoutes,
   uploadsRoutes,
   videosRoutes,
   reactionsRoutes,
@@ -32,3 +33,15 @@ export const ROUTES: readonly FastifyPluginAsync[] = [
   adminQueuesRoutes,
   adminDlqRoutes,
 ];
+
+/** The dev key is derived from a committed seed, so its JWKS is served in dev mode and nowhere else. */
+export function routesFor(auth: AuthConfig): readonly FastifyPluginAsync[] {
+  switch (auth.type) {
+    case 'dev':
+      return [...ROUTES, devJwksRoutes];
+    case 'jwks':
+      return ROUTES;
+    default:
+      return assertNever(auth, 'auth.type');
+  }
+}

@@ -1,0 +1,49 @@
+name: Set up kustomize
+description: Installs the pinned, checksum-verified kustomize the production-secrets assertion renders the overlays with, cached by version and arch.
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve release
+      id: release
+      shell: bash
+      env:
+        RUNNER_ARCH: ${{ runner.arch }}
+      run: |
+        version=v5.8.1
+        case "$RUNNER_ARCH" in
+          X64) arch=amd64; sha256=029a7f0f4e1932c52a0476cf02a0fd855c0bb85694b82c338fc648dcb53a819d ;;
+          ARM64) arch=arm64; sha256=0953ea3e476f66d6ddfcd911d750f5167b9365aa9491b2326398e289fef2c142 ;;
+          *) echo "::error::no pinned kustomize for runner arch $RUNNER_ARCH"; exit 1 ;;
+        esac
+        {
+          echo "version=$version"
+          echo "arch=$arch"
+          echo "sha256=$sha256"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Restore kustomize
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/kustomize
+        key: kustomize-${{ steps.release.outputs.version }}-linux-${{ steps.release.outputs.arch }}-${{ steps.release.outputs.sha256 }}
+
+    - name: Download and verify kustomize
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        VERSION: ${{ steps.release.outputs.version }}
+        ARCH: ${{ steps.release.outputs.arch }}
+        SHA256: ${{ steps.release.outputs.sha256 }}
+      run: |
+        archive="kustomize_${VERSION}_linux_${ARCH}.tar.gz"
+        curl -fsSL -o "$RUNNER_TEMP/$archive" \
+          "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${VERSION}/${archive}"
+        echo "${SHA256}  $RUNNER_TEMP/$archive" | sha256sum -c -
+        mkdir -p ~/.local/kustomize
+        tar -xzf "$RUNNER_TEMP/$archive" -C ~/.local/kustomize kustomize
+
+    - name: Put kustomize on PATH
+      shell: bash
+      run: echo "$HOME/.local/kustomize" >> "$GITHUB_PATH"

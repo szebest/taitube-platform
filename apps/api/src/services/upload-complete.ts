@@ -15,7 +15,6 @@ import {
 import {
   type DatabaseUnavailable,
   ErrorCodes,
-  type Failure,
   type QueueUnavailable,
   type StorageUnavailable,
 } from '@vp/errors';
@@ -30,29 +29,13 @@ export interface UploadPart {
   etag: string;
 }
 
-export interface CompleteUploadOptions {
-  testCrashAfterCommit?: boolean;
-}
-
 export interface CompleteUploadResult {
   videoId: string;
   status: string;
   admission?: 'admitted' | 'held';
 }
 
-/**
- * The deliberate failure point between the commit and the direct enqueue, so a test can prove the
- * outbox relay still publishes the job on its own.
- */
-export type CrashedAfterCommit = Failure<typeof ErrorCodes.INTERNAL, Record<never, never>>;
-
-const CRASHED_AFTER_COMMIT: CrashedAfterCommit = {
-  code: ErrorCodes.INTERNAL,
-  message: 'CRASH_AFTER_COMMIT',
-};
-
 export type CompleteUploadFailure =
-  | CrashedAfterCommit
   | LoadOwnedUploadFailure
   | UploadOpenFailure
   | NotMultipart
@@ -130,8 +113,7 @@ export async function completeUpload(
   ctx: UploadContext,
   user: UserContext,
   uploadId: string,
-  parts?: UploadPart[],
-  options?: CompleteUploadOptions
+  parts?: UploadPart[]
 ): Promise<Result<CompleteUploadResult, CompleteUploadFailure>> {
   const owned = await loadOwnedUpload(ctx, user, uploadId, 'complete this upload');
   if (isErr(owned)) return owned;
@@ -181,8 +163,6 @@ export async function completeUpload(
   });
   if (isErr(transitioned)) return transitioned;
   if (!transitioned.value) return ok({ videoId: video.id, status: 'UPLOADED' });
-
-  if (options?.testCrashAfterCommit) return err(CRASHED_AFTER_COMMIT);
 
   // Admission cannot be decided without the count, so a failed count holds the video rather than
   // admitting it (SDD §9.4, PRD FR-13): the outbox relay drains a held video anyway, so holding

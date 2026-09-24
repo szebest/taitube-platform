@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryDatabaseClient,
@@ -71,6 +72,7 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     });
 
     app = await buildApp({
+      config: inProcessAppConfig(),
       adapters: {
         repositories: repos,
         storage,

@@ -40,7 +40,13 @@ export function registerFamily(c: Container): void {
     )
     .provide(
       Redis,
-      () => new RedisCacheClient({ type: 'url', url: config.redis.url }),
+      () =>
+        new RedisCacheClient({
+          type: 'url',
+          url: config.redis.url,
+          pubsubUrl: config.redis.pubsubUrl,
+          password: config.redis.password,
+        }),
       closeOnDispose
     )
     .provide(Adapters.Cache, (c) => c.get(Redis))
@@ -55,18 +61,33 @@ export function registerFamily(c: Container): void {
       Adapters.QueueRegistry,
       () =>
         new LazyQueueRegistry(
-          (name) => new BullMqJobQueue({ type: 'connection', name, connection })
+          (name) =>
+            new BullMqJobQueue({
+              type: 'connection',
+              name,
+              connection,
+              prefix: config.redis.bullmqPrefix,
+            })
         ),
       closeOnDispose
     )
     .provide(
       Adapters.FlowProducer,
-      () => new BullMqFlowProducer({ type: 'connection', connection }),
+      () =>
+        new BullMqFlowProducer({
+          type: 'connection',
+          connection,
+          prefix: config.redis.bullmqPrefix,
+        }),
       closeOnDispose
     )
     .provide(
       Adapters.SubscriptionCache,
-      (c) => new RedisSubscriptionCacheAdapter({ redis: c.get(Redis).getRedis() })
+      (c) =>
+        new RedisSubscriptionCacheAdapter({
+          redis: c.get(Redis).getRedis(),
+          ...config.caches.subscriptions,
+        })
     )
     .provide(Adapters.BoardQueues, () => bullBoardQueues);
 }

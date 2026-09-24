@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { LadderEntry } from '@vp/job-contracts';
 import { selectLadder } from './ladder';
@@ -97,7 +98,7 @@ export function parseFps(rateStr?: string): number {
  */
 export function validateAndParseProbe(
   raw: RawFfprobeOutput,
-  maxDurationSec = 7200 // 2 hours default per PRD FR-1
+  maxDurationSec: number
 ): ProbeMetadata {
   if (raw.error) {
     throw new PermanentError(
@@ -147,7 +148,7 @@ export function validateAndParseProbe(
   // Rule 4: Duration validation
   const rawDuration = raw.format?.duration || videoStream.duration;
   const durationSec = rawDuration ? Number(rawDuration) : 0;
-  const durationMs = Math.round(durationSec * 1000);
+  const durationMs = Math.round(durationSec * MS_PER_SECOND);
 
   if (durationMs <= 0 || Number.isNaN(durationMs)) {
     throw new PermanentError(ErrorCodes.CORRUPT_CONTAINER, 'Invalid or missing video duration');
@@ -187,9 +188,14 @@ export function validateAndParseProbe(
 /**
  * Runs ffprobe on a file path or URL and returns validated ProbeMetadata (SDD §8.1).
  */
+export interface FfprobeOptions {
+  ffprobePath: string;
+  maxDurationSec: number;
+}
+
 export async function runFfprobe(
   targetPathOrUrl: string,
-  maxDurationSec?: number
+  { ffprobePath, maxDurationSec }: FfprobeOptions
 ): Promise<ProbeMetadata> {
   const args = [
     '-v',
@@ -204,7 +210,7 @@ export async function runFfprobe(
   ];
 
   return new Promise<ProbeMetadata>((resolve, reject) => {
-    const proc = spawn('ffprobe', args, {
+    const proc = spawn(ffprobePath, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 

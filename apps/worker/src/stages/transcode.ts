@@ -1,8 +1,8 @@
 import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import type { CacheClient, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -10,7 +10,7 @@ import {
   type StorageUnavailable,
   mediaFailure,
 } from '@vp/errors';
-import { computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
+import { type FfmpegProcessLimits, computeFfmpegThreads, runFfmpegTranscode } from '@vp/ffmpeg';
 import type { TranscodeJob, TranscodeResult } from '@vp/job-contracts';
 import { type Logger, type PipelineMetrics, getMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
@@ -27,13 +27,23 @@ export interface TranscodeProcessorDeps {
   cache?: CacheClient;
   rawBucket: string;
   publicBucket: string;
-  workerId?: string;
+  workerId: string;
   logger: Logger;
   metrics?: PipelineMetrics;
   heartbeatPath: string;
-  ffmpeg: { threads: number; preset: string };
+  tmpDir: string;
+  ffmpeg: {
+    path: string;
+    threads: number;
+    preset: string;
+    gopSeconds: number;
+    hlsSegmentSeconds: number;
+    timeoutFactor: number;
+    minTimeoutMs: number;
+    limits: FfmpegProcessLimits;
+  };
+  segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
   getQueue?: (name: string) => JobQueue;
-  simulateFailureRendition?: string;
   streamingInput?: boolean;
 }
 
@@ -51,12 +61,11 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     storage,
     rawBucket,
     publicBucket,
-    workerId = `worker-${process.pid}`,
+    workerId,
     logger,
     metrics: depsMetrics,
     heartbeatPath,
     ffmpeg,
-    simulateFailureRendition,
     streamingInput: depsStreamingInput,
   } = deps;
 
@@ -96,10 +105,8 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       logger: log,
     });
 
-    // Liveness heartbeat file (AC 21)
     await fs.writeFile(heartbeatPath, new Date().toISOString()).catch(() => {});
 
-    // 1. Claim processing step with fencing token (SDD §5.3, §9.5)
     const lockToken = uuidv7();
     const claim = await repositories.steps.claim({
       id: uuidv7(),
@@ -154,26 +161,13 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       return isErr(marked) ? marked : err(failure);
     };
 
-    // Simulated permanent failure check for resilience tests
-    if (simulateFailureRendition === rendition.name) {
-      log.error({ rendition: rendition.name }, 'Simulated permanent transcode failure');
-      return failTranscode(
-        mediaFailure(
-          stage,
-          ErrorCodes.FFMPEG_FAILED,
-          `Simulated permanent failure in transcode-${rendition.name}`
-        )
-      );
-    }
-
-    // 2. Per-job temp directory with guaranteed cleanup on every exit path (AC 21)
+    await fs.mkdir(deps.tmpDir, { recursive: true });
     const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), `vp-transcode-${videoId}-${rendition.name}-`)
+      path.join(deps.tmpDir, `vp-transcode-${videoId}-${rendition.name}-`)
     );
     const outDir = path.join(tmpDir, 'hls');
     await fs.mkdir(outDir, { recursive: true });
 
-    // Track temporary disk usage (worker_tmp_bytes metric)
     const srcBytes = (job.data as unknown as { sourceSizeBytes?: number }).sourceSizeBytes ?? 0;
     if (srcBytes > 0) {
       metrics.workerTmpBytes.set({ stage }, srcBytes);
@@ -182,7 +176,6 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     let lastProgressHeartbeat = 0;
 
     try {
-      // 3. Determine input source: download locally or use presigned URL (Ticket 14 AC 5)
       const source = await resolveTranscodeSource({
         storage,
         rawBucket,
@@ -198,7 +191,6 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
           : source;
       }
 
-      // 4. Tail the output dir and upload as FFmpeg encodes (Ticket 14 AC 1, 2)
       const uploader = new StreamingSegmentUploader({
         outputDir: outDir,
         videoId,
@@ -206,8 +198,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         rendition: rendition.name,
         publicBucket,
         storage,
-        concurrency: 4,
-        maxRetries: 3,
+        ...deps.segmentUpload,
         logger: log,
       });
       uploader.start();
@@ -215,10 +206,16 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       const encoded = await fromPromise(
         async () => {
           await runFfmpegTranscode({
+            ffmpegPath: ffmpeg.path,
             sourcePath: source.value,
             outputDir: outDir,
             rendition,
             fps,
+            gopSeconds: ffmpeg.gopSeconds,
+            hlsSegmentSeconds: ffmpeg.hlsSegmentSeconds,
+            timeoutFactor: ffmpeg.timeoutFactor,
+            minTimeoutMs: ffmpeg.minTimeoutMs,
+            limits: ffmpeg.limits,
             durationMs,
             threads,
             preset: ffmpeg.preset,
@@ -239,7 +236,6 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         (cause) => transcodeFailure(rendition.name, cause)
       );
 
-      // 5. Complete uploader: drain segments, wait for idle, upload playlist LAST (AC 2)
       const uploadResult = await uploader.stop(encoded.ok);
       if (isErr(encoded)) return failTranscode(encoded.error);
 
@@ -258,7 +254,6 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         'Uploaded rendition segments and playlist to public storage'
       );
 
-      // 6. Update renditions table to DONE
       const done = await repositories.renditions.update(videoId, rendition.name, {
         status: 'DONE',
         playlistKey,
@@ -268,7 +263,6 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       });
       if (isErr(done)) return done;
 
-      // 7. Complete step with fencing check
       const comp = await repositories.steps.complete({
         videoId,
         step: 'transcode',
@@ -278,9 +272,9 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       });
       if (isErr(comp)) return comp;
 
-      const avgBitrateBps = durationMs > 0 ? Math.round((totalBytes * 8) / (durationMs / 1000)) : 0;
+      const avgBitrateBps =
+        durationMs > 0 ? Math.round((totalBytes * 8) / (durationMs / MS_PER_SECOND)) : 0;
 
-      // Transcode-specific metrics (Ticket 22 AC 1)
       if (durationMs > 0 && processingMs > 0) {
         metrics.transcodeRealtimeFactor.observe(
           { rendition: rendition.name, preset: 'ultrafast' },
@@ -307,7 +301,6 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         return ok(outcome);
       }
 
-      // 8. Record transcode.completed in video_events
       const recorded = await repositories.events.create({
         videoId,
         type: 'transcode.completed',
@@ -324,9 +317,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
 
       return ok(outcome);
     } finally {
-      // Guaranteed temp directory removal on every exit path (AC 21, Ticket 14 AC 1, 6)
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
-      // Clear tmp bytes metric once disk is freed
       metrics.workerTmpBytes.set({ stage }, 0);
     }
   };

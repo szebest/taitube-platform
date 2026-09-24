@@ -2,7 +2,6 @@ import { execSync } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { PermanentError } from '@vp/errors';
 import { describe, expect, it } from 'vitest';
 import {
   buildPosterArgs,
@@ -12,6 +11,7 @@ import {
   parseSpriteVtt,
   runFfmpegThumbnail,
 } from '../index';
+import { ENCODER, LIMITS, SPRITE } from './encoder-settings';
 
 describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
   it('builds poster arguments with 10% seek offset and 1280x720 letterboxing', () => {
@@ -48,7 +48,7 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
       sourcePath: '/path/to/source.mp4',
       outputPath: '/path/to/sprite.jpg',
       durationMs: 60000,
-      intervalSec: 5,
+      layout: SPRITE,
     });
     expect(args60).toContain(
       'fps=1/5,scale=160:90:force_original_aspect_ratio=decrease,pad=160:90:(ow-iw)/2:(oh-ih)/2,tile=10x2'
@@ -59,7 +59,7 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
       sourcePath: '/path/to/source.mp4',
       outputPath: '/path/to/sprite.jpg',
       durationMs: 600000,
-      intervalSec: 5,
+      layout: SPRITE,
     });
     expect(args600).toContain(
       'fps=1/5,scale=160:90:force_original_aspect_ratio=decrease,pad=160:90:(ow-iw)/2:(oh-ih)/2,tile=10x12'
@@ -75,7 +75,7 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
 
   it('AC 1: generates and validates VTT for s60 (12 cues of 5s) and m10 (120 cues)', () => {
     // s60
-    const vtt60 = generateSpriteVtt({ durationMs: 60000, intervalSec: 5 });
+    const vtt60 = generateSpriteVtt({ durationMs: 60000, layout: SPRITE });
     const cues60 = parseSpriteVtt(vtt60);
 
     expect(cues60).toHaveLength(12);
@@ -104,7 +104,7 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
     expect(cues60[11]?.endTime).toBe('00:01:00.000');
 
     // m10 (600,000 ms)
-    const vtt600 = generateSpriteVtt({ durationMs: 600000, intervalSec: 5 });
+    const vtt600 = generateSpriteVtt({ durationMs: 600000, layout: SPRITE });
     const cues600 = parseSpriteVtt(vtt600);
 
     expect(cues600).toHaveLength(120);
@@ -133,10 +133,13 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
 
     try {
       const result = await runFfmpegThumbnail({
+        ffmpegPath: ENCODER.ffmpegPath,
         sourcePath: fixturePath,
         outputDir: tmpDir,
         durationMs: 60000,
-        intervalSec: 5,
+        layout: SPRITE,
+        timeoutMs: 60_000,
+        limits: LIMITS,
       });
 
       expect(result.frameCount).toBe(12);
@@ -169,16 +172,5 @@ describe('FFmpeg Thumbnails & WebVTT (Ticket 13, SDD §8.3)', () => {
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     }
-  });
-
-  it('forceFailure option throws PermanentError with code FFMPEG_FAILED', async () => {
-    await expect(
-      runFfmpegThumbnail({
-        sourcePath: 'dummy.mp4',
-        outputDir: '/tmp',
-        durationMs: 60000,
-        forceFailure: true,
-      })
-    ).rejects.toThrow(PermanentError);
   });
 });

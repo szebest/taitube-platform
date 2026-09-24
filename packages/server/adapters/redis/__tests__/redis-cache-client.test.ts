@@ -197,4 +197,18 @@ describe('RedisCacheClient', () => {
       expect(redis.disconnectCalls).toBe(1);
     });
   });
+
+  describe('connection', () => {
+    it('hands the configured password to a URL that carries none', () => {
+      const client = new RedisCacheClient({
+        type: 'url',
+        url: 'redis://redis.vp.local:6379/0',
+        pubsubUrl: 'redis://redis.vp.local:6379/1',
+        password: 'rotated',
+      });
+
+      expect(client.getRedis().options).toMatchObject({ password: 'rotated', db: 0 });
+      client.getRedis().disconnect();
+    });
+  });
 });

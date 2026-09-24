@@ -1,5 +1,6 @@
+import { STATUS_CODES } from 'node:http';
 import { type Problem, problemDetails, problemStatus } from '@vp/api-contracts';
-import { ErrorCodes, PipelineError } from '@vp/errors';
+import { type ErrorCode, ErrorCodes, PipelineError } from '@vp/errors';
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 interface ErrorWithCode {
@@ -16,6 +17,23 @@ interface ErrorWithStatusCode {
 }
 
 export const PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
+
+/** The vocabulary's name for a Fastify 4xx; a status with none reads as a request that failed validation. */
+const TRANSPORT_CODES: ReadonlyMap<number, ErrorCode> = new Map([
+  [401, ErrorCodes.UNAUTHORIZED],
+  [403, ErrorCodes.FORBIDDEN],
+  [415, ErrorCodes.UNSUPPORTED_CONTENT_TYPE],
+]);
+
+export function transportProblem(status: number, detail: string, instance: string): Problem {
+  return problemDetails({
+    code: TRANSPORT_CODES.get(status) ?? ErrorCodes.VALIDATION_FAILED,
+    title: STATUS_CODES[status] ?? 'Client Error',
+    status,
+    detail,
+    instance,
+  });
+}
 
 export function rateLimitProblem(instance: string, detail = 'Rate limit exceeded'): Problem {
   return problemDetails({
@@ -80,6 +98,12 @@ export function registerErrorHandler(app: FastifyInstance): void {
             errors: issues,
           })
         );
+      }
+
+      if (errorStatusCode !== undefined && errorStatusCode >= 400 && errorStatusCode < 500) {
+        return reply
+          .status(errorStatusCode)
+          .send(transportProblem(errorStatusCode, error.message, request.url));
       }
 
       request.log.error(

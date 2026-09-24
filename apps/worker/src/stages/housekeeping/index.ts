@@ -6,6 +6,7 @@ import type {
   StorageClient,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import type { AppConfig } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
 import { HousekeepingJob, type QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/observability';
@@ -31,6 +32,7 @@ export interface HousekeepingSettings {
   retentionDays: number;
   maxInflightPerUser: number;
   tmpDir: string;
+  housekeeping: AppConfig['housekeeping'];
 }
 
 export interface HousekeepingProcessorOptions extends HousekeepingSettings {
@@ -39,16 +41,35 @@ export interface HousekeepingProcessorOptions extends HousekeepingSettings {
   multipart: MultipartStorage;
   reactionCache: ReactionCachePort;
   getQueue: (name: QueueName) => JobQueue;
-  workerId?: string;
+  workerId: string;
   logger?: Logger;
+}
+
+export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
+  return {
+    uploads: {
+      uploadingThresholdMs: housekeeping.stuckUploadingAfterMs,
+      uploadedThresholdMs: housekeeping.stuckUploadedAfterMs,
+    },
+    processing: { thresholdMs: housekeeping.stuckProcessingAfterMs },
+    purge: { thresholdMs: housekeeping.purgeDeletedAfterMs },
+    tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },
+    reactions: { limit: housekeeping.reactionReconcileLimit },
+    outbox: {
+      batchSize: housekeeping.outboxBatchSize,
+      intervalMs: housekeeping.outboxRelayIntervalMs,
+    },
+  } as const;
 }
 
 export function createHousekeepingProcessor(
   options: HousekeepingProcessorOptions
 ): (job: QueueJob<unknown>) => Promise<Result<unknown, AnyFailure>> {
   const { repositories, storage, multipart, reactionCache, getQueue, workerId, logger } = options;
-  const { rawBucket, publicBucket, retentionDays, maxInflightPerUser, tmpDir } = options;
+  const { rawBucket, publicBucket, retentionDays, maxInflightPerUser, tmpDir, housekeeping } =
+    options;
   const probeQueue = getQueue('probe');
+  const tasks = housekeepingTasks(housekeeping);
 
   return async (job: QueueJob<unknown>): Promise<Result<unknown, AnyFailure>> => {
     const data = HousekeepingJob.parse(job.data);
@@ -62,6 +83,7 @@ export function createHousekeepingProcessor(
           probeQueue,
           rawBucket,
           maxInflightPerUser,
+          ...tasks.uploads,
           logger,
         });
 
@@ -70,6 +92,7 @@ export function createHousekeepingProcessor(
           repositories,
           getQueue,
           workerId,
+          ...tasks.processing,
           logger,
         });
 
@@ -79,6 +102,7 @@ export function createHousekeepingProcessor(
           storage,
           rawBucket,
           publicBucket,
+          ...tasks.purge,
           logger,
         });
 
@@ -92,12 +116,13 @@ export function createHousekeepingProcessor(
         });
 
       case 'tmp-sweep':
-        return ok(await runTmpSweep({ tmpDir, logger }));
+        return ok(await runTmpSweep({ tmpDir, ...tasks.tmpSweep, logger }));
 
       case 'reconcile-reaction-counters':
         return await runReconcileReactionCounters({
           repositories,
           reactionCache,
+          ...tasks.reactions,
           logger,
         });
 

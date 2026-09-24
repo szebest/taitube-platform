@@ -11,6 +11,7 @@ Instructions for any coding agent working on adapter drivers (`adapters`).
 
 ```
 adapters/
+├── auth/        # TokenVerifier: JwksTokenVerifier (IdP key set) and DevTokenVerifier (dev seed key)
 ├── bullmq/      # BullMqJobQueue & BullMqFlowProducer
 ├── in-memory/   # In-memory test doubles for zero-dependency unit tests
 ├── composition/ # Adapter tokens and registerAdapters: the one in-memory/external switch

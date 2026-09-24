@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "compose-autoscaler": "./dist/cli.js"
+    "compose-autoscaler": "./dist/main.js"
   },
   "exports": {
     ".": {

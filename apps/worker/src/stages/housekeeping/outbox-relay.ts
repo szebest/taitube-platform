@@ -1,5 +1,6 @@
 import type { FlowProducerPort, JobQueue } from '@vp/core/ports';
 import type { OutboxPayload, Repositories } from '@vp/core/repositories';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -13,8 +14,8 @@ export interface OutboxRelayOptions {
   repositories: Repositories;
   getQueue?: (name: string) => JobQueue;
   flowProducer?: FlowProducerPort;
-  batchSize?: number;
-  intervalMs?: number;
+  batchSize: number;
+  intervalMs: number;
   logger?: Logger;
   metrics?: PipelineMetrics;
 }
@@ -59,11 +60,11 @@ export async function drainOutboxOnce(
   options: {
     getQueue?: (name: string) => JobQueue;
     flowProducer?: FlowProducerPort;
-    batchSize?: number;
+    batchSize: number;
     logger?: Logger;
   }
 ): Promise<Result<DrainOutboxResult, DatabaseUnavailable>> {
-  const { getQueue, flowProducer, batchSize = 50, logger } = options;
+  const { getQueue, flowProducer, batchSize, logger } = options;
   const startMs = Date.now();
   const claimed = await repositories.outbox.claimBatch(batchSize);
   if (isErr(claimed)) return claimed;
@@ -95,7 +96,7 @@ export async function drainOutboxOnce(
   }
 
   if (items.length > 0) {
-    getMetrics().outboxDrainDuration.observe((Date.now() - startMs) / 1000);
+    getMetrics().outboxDrainDuration.observe((Date.now() - startMs) / MS_PER_SECOND);
   }
 
   return ok({ processedCount: items.length, successCount, failureCount });
@@ -111,7 +112,7 @@ export class OutboxRelay {
   start(): void {
     if (this.running) return;
     this.running = true;
-    const intervalMs = this.options.intervalMs ?? 1000;
+    const { intervalMs } = this.options;
 
     const loop = async () => {
       if (!this.running) return;

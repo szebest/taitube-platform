@@ -1,32 +1,19 @@
 import * as crypto from 'node:crypto';
-import type { AppConfig } from '@vp/env-schema';
-import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
+import type { AuthFailure, TokenVerifier } from '@vp/core/ports';
+import type { AppConfig, AuthConfig } from '@vp/env-schema';
+import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type UserContext, parseRole } from '@vp/permissions';
-import { isErr } from '@vp/result';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import { type Result, assertNever, err, isErr, ok } from '@vp/result';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { ServiceSet } from '../composition/services.module';
+import { sendResult } from '../routes/send-result';
 import type { ChannelService } from '../services/channel-service';
-import { verifyUniversalToken } from './jwks-verifier';
-
-const ADMIN_TOKEN_USER: UserContext = {
-  id: '00000000-0000-7000-8000-000000000003',
-  role: 'ADMIN',
-};
-
-/** An unset token admits nobody: there is no default for it to fall back to. */
-function matchesAdminToken(header: unknown, expected: string | undefined): boolean {
-  if (typeof header !== 'string' || !expected) return false;
-
-  return crypto.timingSafeEqual(
-    crypto.createHash('sha256').update(header).digest(),
-    crypto.createHash('sha256').update(expected).digest()
-  );
-}
 
 export interface AuthPluginOptions {
   channelService: ChannelService;
-  auth: AppConfig['auth'];
+  verifier: TokenVerifier;
+  auth: AuthConfig;
 }
 
 declare module 'fastify' {
@@ -39,56 +26,70 @@ declare module 'fastify' {
   }
 }
 
+function matchesAdminToken(header: unknown, adminToken: string | undefined): boolean {
+  if (typeof header !== 'string' || !adminToken) return false;
+
+  return crypto.timingSafeEqual(
+    crypto.createHash('sha256').update(header).digest(),
+    crypto.createHash('sha256').update(adminToken).digest()
+  );
+}
+
+/** Only dev mode has a static admin credential; production admins carry a verified role claim. */
+function adminFromHeader(request: FastifyRequest, auth: AuthConfig): UserContext | null {
+  switch (auth.type) {
+    case 'dev':
+      return matchesAdminToken(request.headers['x-admin-token'], auth.adminToken)
+        ? { id: auth.adminUserId, role: 'ADMIN' }
+        : null;
+    case 'jwks':
+      return null;
+    default:
+      return assertNever(auth, 'auth.type');
+  }
+}
+
+const BEARER = /^Bearer (.+)$/;
+
+async function identify(
+  request: FastifyRequest,
+  { verifier, auth }: AuthPluginOptions
+): Promise<Result<UserContext | null, AuthFailure>> {
+  const admin = adminFromHeader(request, auth);
+  if (admin) return ok(admin);
+
+  const header = request.headers.authorization;
+  if (!header) return ok(null);
+
+  const token = BEARER.exec(header)?.[1]?.trim();
+  if (!token) {
+    return err({
+      code: ErrorCodes.UNAUTHORIZED,
+      message: 'Invalid Authorization header format: expected Bearer token',
+      reason: 'not a bearer header',
+    });
+  }
+
+  const principal = await verifier.verify(token);
+  if (isErr(principal)) return principal;
+
+  const { sub, role, email } = principal.value;
+  return ok({ id: sub, role: parseRole(role ?? 'user'), ...(email ? { email } : {}) });
+}
+
 export async function authPlugin(app: FastifyInstance, options: AuthPluginOptions): Promise<void> {
   app.decorateRequest('user', null);
 
-  app.addHook('onRequest', async (request: FastifyRequest) => {
-    if (matchesAdminToken(request.headers['x-admin-token'], options.auth.adminToken)) {
-      request.user = ADMIN_TOKEN_USER;
-      return;
-    }
+  app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
+    const identified = await identify(request, options);
+    if (isErr(identified)) return sendResult(reply, request, identified);
 
-    const authHeader = request.headers.authorization;
+    request.user = identified.value;
+    if (!identified.value) return;
 
-    if (!authHeader) {
-      request.user = null;
-      return;
-    }
-
-    if (!authHeader.startsWith('Bearer ')) {
-      throw new PermanentError(
-        ErrorCodes.UNAUTHORIZED,
-        'Invalid Authorization header format: expected Bearer token'
-      );
-    }
-
-    const token = authHeader.slice(7).trim();
-
-    // The catch covers token verification and nothing else. It used to wrap provisioning too,
-    // which reported a dead database as `Token verification failed` and answered 401.
-    let payload: Awaited<ReturnType<typeof verifyUniversalToken>>;
-    try {
-      payload = await verifyUniversalToken(token, options.auth);
-    } catch (err) {
-      if (err instanceof PermanentError) throw err;
-      throw new PermanentError(
-        ErrorCodes.UNAUTHORIZED,
-        `Token verification failed: ${(err as Error).message}`
-      );
-    }
-
-    request.user = {
-      id: payload.sub,
-      role: parseRole(payload.role || 'user'),
-      email: payload.email,
-    };
-
-    // A pre-handler runs before any route, so it has no reply to render a Problem into and no
-    // `Result` to return. ADR-24 routes it to the backstop instead, which is why this throws.
-    const provisioned = await options.channelService.ensureProvisioned(payload.sub, payload.email);
-    if (isErr(provisioned)) {
-      throw new TransientError(provisioned.error.code, provisioned.error.message);
-    }
+    const { id, email } = identified.value;
+    const provisioned = await options.channelService.ensureProvisioned(id, email);
+    if (isErr(provisioned)) return sendResult(reply, request, provisioned);
   });
 }
 

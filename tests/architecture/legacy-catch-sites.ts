@@ -5,9 +5,8 @@
  *
  * Every entry left is a boundary ticket 84 named out of its own scope: a spawned process, a CLI's
  * top-level exit-code handler, telemetry that must never fail what it instruments, a build or
- * migration entrypoint, `apps/web` (tickets 53, 70 and 71 own the browser side), and the two
- * pre-handlers that have no reply to render into. The half that was waiting on a conversion is
- * gone - the ports, the services and the stages all return now.
+ * migration entrypoint, and `apps/web` (tickets 53, 70 and 71 own the browser side). The half that
+ * was waiting on a conversion is gone - the ports, the services and the stages all return now.
  */
 export const LEGACY_CATCH_SITES: readonly string[] = [
   // Spawns FFmpeg and reads its exit code - a process boundary, not a port.
@@ -17,9 +16,9 @@ export const LEGACY_CATCH_SITES: readonly string[] = [
   'packages/server/gen-video/src/probe.ts',
 
   // CLI tools: the catch is the top-level handler that turns a failure into an exit code.
-  'packages/server/dev-token/src/index.ts',
+  'packages/server/dev-token/src/main.ts',
   'packages/server/upload-client/src/client.ts',
-  'packages/server/compose-autoscaler/src/cli.ts',
+  'packages/server/compose-autoscaler/src/main.ts',
   'packages/server/compose-autoscaler/src/runner.ts',
 
   // Telemetry setup, which must never fail the process it is instrumenting.
@@ -40,9 +39,4 @@ export const LEGACY_CATCH_SITES: readonly string[] = [
   'packages/server/db/src/seed.ts',
   'scripts/check-boundaries.ts',
   'scripts/sync-claude-symlinks.ts',
-
-  // Pre-handlers: no reply to render into and no Result to return, so ADR-24's backstop table
-  // routes them here deliberately.
-  'apps/api/src/plugins/auth.ts',
-  'apps/api/src/plugins/jwks-verifier.ts',
 ].sort();

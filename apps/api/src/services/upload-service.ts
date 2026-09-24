@@ -4,7 +4,6 @@ import type { Result } from '@vp/result';
 import { type AbortUploadFailure, abortUpload } from './upload-abort';
 import {
   type CompleteUploadFailure,
-  type CompleteUploadOptions,
   type CompleteUploadResult,
   type UploadPart,
   completeUpload,
@@ -63,10 +62,9 @@ export class UploadService {
   complete(
     user: UserContext,
     uploadId: string,
-    parts?: UploadPart[],
-    options?: CompleteUploadOptions
+    parts?: UploadPart[]
   ): Promise<Result<CompleteUploadResult, CompleteUploadFailure>> {
-    return completeUpload(this.ctx, user, uploadId, parts, options);
+    return completeUpload(this.ctx, user, uploadId, parts);
   }
 
   abort(user: UserContext, uploadId: string): Promise<Result<void, AbortUploadFailure>> {

@@ -10,7 +10,8 @@ describe('apps/api: the raw bucket is the one the environment declares', () => {
     const config = toAppConfig(
       loadEnv({
         NODE_ENV: 'test',
-        DATABASE_URL: 'postgres://vp:vp@localhost:5432/vp',
+        ADAPTER_FAMILY: 'in-memory',
+        DATABASE_URL: 'postgres://localhost:5432/vp',
         S3_BUCKET_RAW: 'vp-raw',
       })
     );

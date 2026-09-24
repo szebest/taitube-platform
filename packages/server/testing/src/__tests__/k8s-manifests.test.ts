@@ -295,7 +295,7 @@ describe('infra/k8s: cloud overlay', () => {
       CDN_BASE_URL: 'https://cdn.example.com',
       REDIS_ADDR: 'vp-redis-master:6379',
       OTEL_EXPORTER_OTLP_ENDPOINT: 'http://alloy:4318',
-      HOUSEKEEPING_INTERVAL_MS: '900000',
+      AUTH_JWKS_URL: 'https://auth.example.com/.well-known/jwks.json',
     });
   });
 });

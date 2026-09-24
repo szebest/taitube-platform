@@ -39,8 +39,6 @@
     "test:integration": "vitest run",
     "generate": "drizzle-kit generate",
     "check": "drizzle-kit check",
-    "migrate": "bun src/migrate.ts",
-    "seed": "bun src/seed.ts",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {

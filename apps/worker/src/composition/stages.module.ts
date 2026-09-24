@@ -1,20 +1,22 @@
 import { Adapters } from '@vp/adapters/composition';
 import { type Container, token } from '@vp/composition';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { toPipelineError } from '@vp/errors';
 import type { Logger, PipelineMetrics } from '@vp/observability';
 import { fromPromise, isErr, ok } from '@vp/result';
 import { createFailureHandler } from '../failure-handler';
 import { validateQueueName } from '../job-identity';
 import { STAGE_REGISTRY, type StageDefinition, type StageProcessor } from '../registry';
+import { housekeepingTasks } from '../stages/housekeeping/index';
 import { OutboxRelay } from '../stages/housekeeping/outbox-relay';
 import { withTelemetry } from '../with-telemetry';
 
 export interface StageRuntime {
   logger: Logger;
   metrics: PipelineMetrics;
-  workerId: string | undefined;
-  outboxRelay: { enabled: boolean; intervalMs: number };
+  workerId: string;
+  outboxRelay: { enabled: boolean };
 }
 
 export interface StageConsumer {
@@ -47,7 +49,10 @@ function instrument(
 
     const enqueuedAt = (job as { timestamp?: number }).timestamp;
     if (enqueuedAt && enqueuedAt > 0) {
-      metrics.jobWaitDuration.observe({ queue }, Math.max(0, (startTime - enqueuedAt) / 1000));
+      metrics.jobWaitDuration.observe(
+        { queue },
+        Math.max(0, (startTime - enqueuedAt) / MS_PER_SECOND)
+      );
     }
 
     const settled = await fromPromise(
@@ -55,7 +60,7 @@ function instrument(
       (cause) => cause
     );
     const failed = isErr(settled) || isErr(settled.value);
-    metrics.jobDuration.observe({ queue }, (Date.now() - startTime) / 1000);
+    metrics.jobDuration.observe({ queue }, (Date.now() - startTime) / MS_PER_SECOND);
     metrics.jobsProcessed.inc({ queue, result: failed ? 'failed' : 'completed' });
 
     if (isErr(settled)) throw settled.error;
@@ -130,7 +135,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
               flowProducer: c.get(Adapters.FlowProducer),
               logger: runtime.logger,
               metrics: runtime.metrics,
-              intervalMs: runtime.outboxRelay.intervalMs,
+              ...housekeepingTasks(c.get(Adapters.Config).housekeeping).outbox,
             })
           : undefined,
       {

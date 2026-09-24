@@ -1,3 +1,4 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryDatabaseClient,
@@ -15,7 +16,7 @@ describe('health routes', () => {
 
   beforeEach(async () => {
     for (const dependency of Object.values(dependencies)) dependency.setHealthy(true);
-    app = await buildApp({ adapters: { dbClient, cache, storage } });
+    app = await buildApp({ config: inProcessAppConfig(), adapters: { dbClient, cache, storage } });
     await app.ready();
   });
 

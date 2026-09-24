@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Cloud Setup Wizard for video-pipeline (Ticket 31)
-# Walks an operator through setting up Cloudflare, Hetzner, Neon, Grafana Cloud, and SOPS/age secrets.
+# Walks an operator through setting up Cloudflare, Hetzner, Neon, Grafana Cloud, and External Secrets.
 #
 # Generated based on the .agents/skills/wizard template.
 
@@ -137,7 +137,7 @@ finish() {
   say "Next steps:"
   say "1. cd infra/terraform && terraform init && terraform plan"
   say "2. terraform apply"
-  say "3. Store generated credentials in infra/k8s/overlays/cloud/secrets.enc.yaml"
+  say "3. Store generated credentials in the secret manager behind vp-secret-store (infra/k8s/overlays/cloud/README.md)"
   printf '\n'
 }
 
@@ -198,7 +198,7 @@ open_url "https://console.neon.tech"
 step "Create a project named 'video-pipeline' in region Frankfurt (eu-central-1)."
 step "Copy the pooled connection string (feeds DATABASE_URL)."
 step "Copy the direct unpooled connection string (feeds DATABASE_URL_MIGRATIONS)."
-note "These values will be stored in infra/k8s/overlays/cloud/secrets.enc.yaml via SOPS."
+note "These values go into the secret manager behind vp-secret-store, under video-pipeline/<KEY>."
 pause "Confirm once you have copied your Neon database connection strings."
 
 # ── Stage 5: Grafana Cloud Observability ───────────────────────────────────
@@ -207,19 +207,15 @@ say "Set up Grafana Cloud for remote metrics, traces, and logs."
 open_url "https://grafana.com"
 step "Go to your Grafana Cloud Portal → OpenTelemetry → Configure."
 step "Note your OTLP Endpoint URL and generate an API Token."
-step "Note the Basic Auth header (feeds OTEL_EXPORTER_OTLP_HEADERS)."
+step "Note the OTLP endpoint and Basic Auth header (feed GRAFANA_OTLP_ENDPOINT and GRAFANA_OTLP_HEADERS)."
 pause "Confirm once you have your Grafana Cloud credentials."
 
-# ── Stage 6: SOPS & age Encryption ─────────────────────────────────────────
-stage "Secrets: SOPS & age Key Management"
-say "Check or generate an age key pair for decrypting secrets.enc.yaml."
-if command -v age-keygen >/dev/null 2>&1; then
-  step "age is installed on your system."
-  note "Generate key: age-keygen -o age.key"
-else
-  warn "age-keygen not found. Install age (brew/apt/scoop) to manage encrypted secrets."
-fi
-note "Secret file location: infra/k8s/overlays/cloud/secrets.enc.yaml"
+# ── Stage 6: External Secrets ─────────────────────────────────────────────
+stage "Secrets: External Secrets Operator"
+say "The cloud overlay reads every credential through an ExternalSecret; the repo holds none."
+step "Install External Secrets Operator in the cluster."
+step "Create a ClusterSecretStore named vp-secret-store for your secret manager."
+note "Keys it must hold: infra/k8s/overlays/cloud/external-secret.yaml"
 pause "Press Enter to finish cloud setup wizard."
 
 finish
