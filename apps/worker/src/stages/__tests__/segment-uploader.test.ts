@@ -6,7 +6,9 @@ import type { MediaTools } from '@vp/ffmpeg';
 import { createLogger } from '@vp/logger';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { manualInterval } from '../../__tests__/manual-interval';
 import { STAGE_SETTINGS, transcodeDeps } from '../../__tests__/stage-settings';
+import { StreamingSegmentUploader } from '../segment-uploader';
 import { createTranscodeProcessor } from '../transcode';
 import { exists, fakeEncoder, seedTranscode, transcodeJob } from './uploader-harness';
 
@@ -21,8 +23,20 @@ describe('streaming segment uploader', () => {
     storage = new InMemoryStorageClient();
   });
 
-  const processorWith = (media?: MediaTools) =>
-    createTranscodeProcessor(transcodeDeps({ repositories, storage, logger, media }));
+  const processorWith = (media: MediaTools, every = manualInterval().every) =>
+    createTranscodeProcessor({
+      ...transcodeDeps({ repositories, storage, logger, media }),
+      segmentUploader: (target) =>
+        new StreamingSegmentUploader({
+          storage,
+          publicBucket: STAGE_SETTINGS.publicBucket,
+          concurrency: 4,
+          maxRetries: 3,
+          retryDelayMs: 0,
+          every,
+          ...target,
+        }),
+    });
 
   it('retries a transiently failed segment and uploads the playlist last', async () => {
     const videoId = await seedTranscode(repositories, storage);
@@ -61,37 +75,24 @@ describe('streaming segment uploader', () => {
   });
 
   it('deletes each segment once uploaded, keeping disk usage bounded, and removes the temp dir', async () => {
-    const videoId = await seedTranscode(repositories, storage, { body: Buffer.alloc(50_000, 1) });
-    const segmentBytes = 10_000;
+    const videoId = await seedTranscode(repositories, storage);
+    const interval = manualInterval();
     const totalSegments = 12;
+    const leftAfterEachPoll: string[][] = [];
     let tmpDir = '';
-    let peakBytes = 0;
     const media: MediaTools = {
       ...STAGE_SETTINGS.media,
       transcode: async (opts) => {
         tmpDir = path.dirname(opts.outputDir);
-        const sampler = setInterval(async () => {
-          try {
-            let bytes = 0;
-            for (const f of await fs.readdir(opts.outputDir)) {
-              bytes += (await fs.stat(path.join(opts.outputDir, f))).size;
-            }
-            peakBytes = Math.max(peakBytes, bytes);
-          } catch {}
-        }, 10);
         for (let i = 0; i < totalSegments; i++) {
           const segment = path.join(opts.outputDir, `seg_${String(i).padStart(5, '0')}.ts`);
-          await fs.writeFile(`${segment}.tmp`, Buffer.alloc(segmentBytes, 2));
-          await new Promise((r) => setTimeout(r, 20));
+          await fs.writeFile(`${segment}.tmp`, Buffer.alloc(10_000, 2));
           await fs.rename(`${segment}.tmp`, segment);
-          await new Promise((r) => setTimeout(r, 25));
+          await interval.advance();
+          leftAfterEachPoll.push(await fs.readdir(opts.outputDir));
         }
         const playlistPath = path.join(opts.outputDir, 'index.m3u8');
-        await fs.writeFile(
-          playlistPath,
-          '#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-PLAYLIST-TYPE:VOD\n#EXT-X-ENDLIST\n'
-        );
-        clearInterval(sampler);
+        await fs.writeFile(playlistPath, '#EXTM3U\n#EXT-X-ENDLIST\n');
         return {
           outputDir: opts.outputDir,
           playlistPath,
@@ -101,10 +102,10 @@ describe('streaming segment uploader', () => {
       },
     };
 
-    const result = expectOk(await processorWith(media)(transcodeJob(videoId)));
+    const result = expectOk(await processorWith(media, interval.every)(transcodeJob(videoId)));
 
     expect(result.segmentCount).toBe(totalSegments);
-    expect(peakBytes).toBeLessThanOrEqual(4 * segmentBytes + 1000);
+    expect(leftAfterEachPoll).toEqual(Array.from({ length: totalSegments }, () => []));
     expect(await exists(tmpDir)).toBe(false);
   });
 

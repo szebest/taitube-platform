@@ -148,6 +148,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
           media: runtime.media,
           workerId: runtime.workerId,
           now: Date.now,
+          every: everyInterval,
         }),
       }),
       {
