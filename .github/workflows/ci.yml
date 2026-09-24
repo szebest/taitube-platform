@@ -86,6 +86,7 @@ jobs:
         run: |
           echo "started=$(jq '.startTime' "$RUNNER_TEMP/architecture.json")" >> "$GITHUB_OUTPUT"
           echo "finished=$(jq '[.testResults[].endTime] | max | floor' "$RUNNER_TEMP/architecture.json")" >> "$GITHUB_OUTPUT"
+          jq -r '.startTime as $t0 | .testResults | sort_by(.startTime)[] | "\(.startTime - $t0 | floor) \(.endTime - .startTime | floor) \(.name | split("/") | last)"' "$RUNNER_TEMP/architecture.json"
 
       - name: Hold the architecture suite to its budget
         uses: ./.github/actions/budget

@@ -24,7 +24,8 @@ const CLOCKS = new Set(['Date.now', 'performance.now']);
 
 interface Rule {
   name: string;
-  offenders: (file: ts.SourceFile) => ts.Node[];
+  /** Every node of one file, walked once and shared by the rules. */
+  offenders: (nodes: readonly ts.Node[]) => ts.Node[];
 }
 
 function descendants(node: ts.Node): ts.Node[] {
@@ -37,8 +38,16 @@ function descendants(node: ts.Node): ts.Node[] {
   return found;
 }
 
+/** `a.b.c` for a chain of plain names, `undefined` for anything else. */
+function dottedName(expression: ts.Expression): string | undefined {
+  if (ts.isIdentifier(expression)) return expression.text;
+  if (!ts.isPropertyAccessExpression(expression)) return undefined;
+  const base = dottedName(expression.expression);
+  return base === undefined ? undefined : `${base}.${expression.name.text}`;
+}
+
 function calleeName(call: ts.CallExpression): string {
-  return call.expression.getText();
+  return dottedName(call.expression) ?? '';
 }
 
 function isRuntimeVitestImport(node: ts.Node): boolean {
@@ -56,7 +65,7 @@ function isRuntimeVitestImport(node: ts.Node): boolean {
 }
 
 function isTimerWait(node: ts.Node): boolean {
-  if (!ts.isNewExpression(node) || node.expression.getText() !== 'Promise') return false;
+  if (!ts.isNewExpression(node) || dottedName(node.expression) !== 'Promise') return false;
   const executor = node.arguments?.[0];
   if (executor === undefined) return false;
   return descendants(executor).some(
@@ -76,9 +85,9 @@ function isClockRead(node: ts.Node | undefined): boolean {
   return node !== undefined && ts.isCallExpression(node) && CLOCKS.has(calleeName(node));
 }
 
-function clockSnapshots(file: ts.SourceFile): Set<string> {
+function clockSnapshots(nodes: readonly ts.Node[]): Set<string> {
   const names = new Set<string>();
-  for (const node of descendants(file)) {
+  for (const node of nodes) {
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
       if (isClockRead(node.initializer)) names.add(node.name.text);
     }
@@ -86,9 +95,9 @@ function clockSnapshots(file: ts.SourceFile): Set<string> {
   return names;
 }
 
-function elapsedTimeReads(file: ts.SourceFile): ts.Node[] {
-  const snapshots = clockSnapshots(file);
-  return descendants(file).filter(
+function elapsedTimeReads(nodes: readonly ts.Node[]): ts.Node[] {
+  const snapshots = clockSnapshots(nodes);
+  return nodes.filter(
     (node) =>
       ts.isBinaryExpression(node) &&
       node.operatorToken.kind === ts.SyntaxKind.MinusToken &&
@@ -149,10 +158,10 @@ function fullTitle(call: ts.CallExpression): string | undefined {
   return path.join(' > ');
 }
 
-function repeatedTitles(file: ts.SourceFile): ts.Node[] {
+function repeatedTitles(nodes: readonly ts.Node[]): ts.Node[] {
   const seen = new Set<string>();
   const repeats: ts.Node[] = [];
-  for (const node of descendants(file)) {
+  for (const node of nodes) {
     if (!ts.isCallExpression(node)) continue;
     const name = testCallName(node);
     if (name !== 'it' && name !== 'test') continue;
@@ -164,8 +173,8 @@ function repeatedTitles(file: ts.SourceFile): ts.Node[] {
   return repeats;
 }
 
-function matching(predicate: (node: ts.Node) => boolean): (file: ts.SourceFile) => ts.Node[] {
-  return (file) => descendants(file).filter(predicate);
+function matching(predicate: (node: ts.Node) => boolean): Rule['offenders'] {
+  return (nodes) => nodes.filter(predicate);
 }
 
 const RULES: Rule[] = [
@@ -181,8 +190,9 @@ const RULES: Rule[] = [
 
 function violations(path: string, source: string): string[] {
   const file = parseSource(path, source);
+  const nodes = descendants(file);
   return RULES.flatMap((rule) =>
-    rule.offenders(file).map((node) => {
+    rule.offenders(nodes).map((node) => {
       const { line } = file.getLineAndCharacterOfPosition(node.getStart());
       return `${path}:${line + 1}: ${rule.name}`;
     })
