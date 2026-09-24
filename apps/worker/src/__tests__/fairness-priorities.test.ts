@@ -4,6 +4,7 @@ import {
   InMemoryRepositories,
 } from '@vp/adapters/in-memory';
 import { ids } from '@vp/job-contracts';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
@@ -19,13 +20,12 @@ describe('fairness under admission control (SDD §9.4, §14.2)', () => {
 
     const MAX_INFLIGHT = 3;
 
-    const USER_A_ID = '00000000-0000-7000-8000-000000000002';
-    const USER_B_ID = '00000000-0000-7000-8000-000000000001';
+    const FREE_USER_ID = SEEDED.otherUserId;
+    const PRO_USER_ID = SEEDED.userId;
+    const TOTAL_VIDEOS = 55;
 
-    const userAReadyTimes: number[] = [];
-    const userBReadyTimes: number[] = [];
-
-    const startTime = Date.now();
+    const readyOwners: string[] = [];
+    const { promise: allReady, resolve: markAllReady } = Promise.withResolvers<void>();
 
     async function triggerReconciler() {
       await runReconcileUploads({
@@ -97,12 +97,8 @@ describe('fairness under admission control (SDD §9.4, §14.2)', () => {
         eventType: 'video.ready',
       });
 
-      const finishTime = Date.now() - startTime;
-      if (video.ownerId === USER_A_ID) {
-        userAReadyTimes.push(finishTime);
-      } else if (video.ownerId === USER_B_ID) {
-        userBReadyTimes.push(finishTime);
-      }
+      readyOwners.push(video.ownerId);
+      if (readyOwners.length === TOTAL_VIDEOS) markAllReady();
 
       await triggerReconciler();
     });
@@ -131,40 +127,21 @@ describe('fairness under admission control (SDD §9.4, §14.2)', () => {
           { jobId: ids.probe(videoId, 1), priority }
         );
       }
-      return videoId;
     }
 
     for (let i = 1; i <= 50; i++) {
-      await submitUpload(USER_A_ID, i, 5);
+      await submitUpload(FREE_USER_ID, i, 5);
     }
 
     for (let i = 1; i <= 5; i++) {
-      await submitUpload(USER_B_ID, i, 1);
+      await submitUpload(PRO_USER_ID, i, 1);
     }
+    await allReady;
 
-    const maxWaitMs = 15000;
-    const pollStart = Date.now();
-    while (userAReadyTimes.length < 50 || userBReadyTimes.length < 5) {
-      if (Date.now() - pollStart > maxWaitMs) {
-        throw new Error(
-          `Timeout waiting for all videos to finish. User A: ${userAReadyTimes.length}/50, User B: ${userBReadyTimes.length}/5`
-        );
-      }
-      await triggerReconciler();
-      await new Promise((r) => setTimeout(r, 20));
-    }
-
-    expect(userAReadyTimes).toHaveLength(50);
-    expect(userBReadyTimes).toHaveLength(5);
-
-    const userBLastReadyTime = userBReadyTimes[4] ?? 0;
-    const userALastReadyTime = userAReadyTimes[49] ?? 0;
-
-    const userAFinishedCountWhenBCompleted = userAReadyTimes.filter(
-      (t) => t <= userBLastReadyTime
-    ).length;
-
-    expect(userBLastReadyTime).toBeLessThan(userALastReadyTime);
-    expect(userAFinishedCountWhenBCompleted).toBeLessThan(50);
+    expect(readyOwners.filter((owner) => owner === FREE_USER_ID)).toHaveLength(50);
+    expect(readyOwners.filter((owner) => owner === PRO_USER_ID)).toHaveLength(5);
+    expect(readyOwners.lastIndexOf(PRO_USER_ID)).toBeLessThan(
+      readyOwners.lastIndexOf(FREE_USER_ID)
+    );
   });
 });
