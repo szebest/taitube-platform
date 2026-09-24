@@ -17,9 +17,7 @@ export const SEEDED = {
  * Every package's test config. Spies and stubbed env vars are restored before each test, so no spec
  * needs an `afterEach` to undo them.
  */
-export function definePackageTestConfig(
-  overrides: ViteUserConfig = {}
-): ViteUserConfig {
+export function definePackageTestConfig(overrides: ViteUserConfig = {}): ViteUserConfig {
   const { test: testOverrides, ...rootOverrides } = overrides;
 
   return defineConfig({
