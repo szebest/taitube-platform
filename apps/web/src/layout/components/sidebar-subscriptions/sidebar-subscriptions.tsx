@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { MenuItem } from "react-pro-sidebar";
 import { Dropdown } from "react-bootstrap";
 import { Link } from "react-router-dom";
@@ -20,22 +20,18 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 
 	const { data } = useMySubscriptionsQuery();
 
-	const subscriptions = useMemo(() => {
-		if (!data) return data;
-
-		return subscriptionsCollapsed
-			? data.items.slice(0, SUBSCRIPTIONS_COLLAPSED_AMOUNT)
-			: data.items;
-	}, [data, subscriptionsCollapsed]);
+	const channels = data?.items;
+	const hasMore = channels !== undefined && channels.length > SUBSCRIPTIONS_COLLAPSED_AMOUNT;
+	const shown = subscriptionsCollapsed ? channels?.slice(0, SUBSCRIPTIONS_COLLAPSED_AMOUNT) : channels;
 
 	return (
 		<>
 			<MenuItem component={<Link to="/subscriptions" onClick={close} />}>
 				<i className="bi bi-people-fill" />
-				<span>Subscriptions: {subscriptions?.length}</span>
+				<span>Subscriptions: {channels?.length}</span>
 			</MenuItem>
 
-			{subscriptions?.map((channel) => (
+			{shown?.map((channel) => (
 					<MenuItem key={channel.id} className={styles.item} component={<Link className="ps-menu-img" to={`/channel/${channel.id}`} onClick={close} />}>
 						<span className={styles.item__avatar}>
 							<ProfilePicture src={channel.avatarUrl} />
@@ -46,7 +42,7 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 					</MenuItem>
 				))}
 
-			{subscriptions && subscriptions.length > SUBSCRIPTIONS_COLLAPSED_AMOUNT &&
+			{hasMore &&
 				<MenuItem onClick={() => setSubscriptionsCollapsed((prev) => !prev)}>
 					{subscriptionsCollapsed ? (
 						<>

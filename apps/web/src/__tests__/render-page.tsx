@@ -7,6 +7,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { accountApi } from '../modules/shared/api/account-api';
 import { AuthProvider } from '../modules/shared/providers/auth-provider';
 import { PermissionsProvider } from '../modules/shared/providers/permissions-provider';
+import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
+import { ThemeProvider } from '../modules/shared/providers/theme-provider';
 import { type ApiStore, createApiStore, seed } from './api-store';
 import { stubBrowser } from './browser';
 
@@ -37,6 +39,15 @@ export function renderPage(
         </PermissionsProvider>
       </AuthProvider>
     </Provider>
+  );
+}
+
+/** Adds the sidebar and theme providers the layout reads; a spec using it fakes `useLocalStorage`. */
+export function inChrome(page: ReactElement): ReactElement {
+  return (
+    <SidebarProvider>
+      <ThemeProvider>{page}</ThemeProvider>
+    </SidebarProvider>
   );
 }
 
