@@ -1,30 +1,12 @@
-import { createHash } from 'node:crypto';
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { isErr } from '@vp/result';
 import postgres from 'postgres';
 import { type Log, waitForDatabase } from './client';
+import { migrationsHash } from './migrations-hash';
 
 const MIGRATIONS_FOLDER = path.resolve(import.meta.dirname, '../drizzle');
-
-/** One digest of every SQL file and the journal: equal digests mean nothing is left to apply. */
-export function migrationsHash(folder: string): string {
-  const hash = createHash('sha256');
-  const sqlFiles = fs
-    .readdirSync(folder)
-    .filter((file) => file.endsWith('.sql'))
-    .sort();
-  for (const file of sqlFiles) {
-    hash.update(fs.readFileSync(path.join(folder, file)));
-  }
-  const journal = path.join(folder, 'meta', '_journal.json');
-  if (fs.existsSync(journal)) {
-    hash.update(fs.readFileSync(journal));
-  }
-  return hash.digest('hex');
-}
 
 export async function runMigrations(url: string, log: Log): Promise<void> {
   const sql = postgres(url, { max: 1 });

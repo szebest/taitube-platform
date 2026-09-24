@@ -1,7 +1,14 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { type KeysetArgs, type KeysetQueryHook, type KeysetPage, useInfiniteScroll } from '../useInfiniteScroll';
+import {
+  type KeysetArgs,
+  type KeysetQueryHook,
+  type KeysetPage,
+  useInfiniteScroll,
+} from '../useInfiniteScroll';
 
 type Feed = { nextCursor: string | null; isFetching: boolean };
+
+const FIRST_PAGE: KeysetArgs = { limit: 2 };
 
 function keysetQuery(feed: Feed, asked: KeysetArgs[]): KeysetQueryHook<KeysetPage, KeysetArgs> {
   return (args) => {
@@ -18,7 +25,7 @@ function keysetQuery(feed: Feed, asked: KeysetArgs[]): KeysetQueryHook<KeysetPag
 
 /** Asks for one more page while rendering, which a server render applies before it returns. */
 function ScrolledOnce({ useFeedQuery }: { useFeedQuery: KeysetQueryHook<KeysetPage, KeysetArgs> }) {
-  const { loadMore, query } = useInfiniteScroll(useFeedQuery, { limit: 2 });
+  const { loadMore, query } = useInfiniteScroll(useFeedQuery, FIRST_PAGE);
   if (query.cursor === undefined) loadMore();
   return <span>{query.cursor ?? 'first page'}</span>;
 }
