@@ -3,7 +3,7 @@ import { createMetricsRegistry } from '@vp/observability';
 import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { TranscodeProgressReporter } from '../stages/progress-reporter';
+import { TranscodeProgressReporter } from '../progress-reporter';
 
 describe('TranscodeProgressReporter', () => {
   let repositories: InMemoryRepositories;
@@ -21,11 +21,6 @@ describe('TranscodeProgressReporter', () => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
     clock = 1_000_000;
-    vi.spyOn(Date, 'now').mockImplementation(() => clock);
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   it('throttles progress to 1 per 2s per rendition and persists only every 10%', async () => {
@@ -36,6 +31,7 @@ describe('TranscodeProgressReporter', () => {
       videoId,
       rendition: '720p',
       logger,
+      now: () => clock,
     });
 
     await reporter.report(5);

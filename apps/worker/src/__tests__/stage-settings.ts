@@ -78,6 +78,7 @@ export function transcodeDeps(parts: TranscodeParts): TranscodeProcessorDeps {
       storage,
       cache,
       metrics: STAGE_SETTINGS.metrics,
+      now: Date.now,
     }),
   };
 }

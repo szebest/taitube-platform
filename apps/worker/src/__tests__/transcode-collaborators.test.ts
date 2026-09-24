@@ -19,6 +19,7 @@ describe('apps/worker: transcode collaborators', () => {
     repositories: new InMemoryRepositories(),
     storage: new InMemoryStorageClient(),
     metrics: createMetricsRegistry(),
+    now: Date.now,
   });
 
   it('reports a rendition through the throttled progress reporter', () => {

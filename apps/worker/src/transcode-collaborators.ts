@@ -12,6 +12,7 @@ interface CollaboratorDeps {
   repositories: Repositories;
   storage: StorageClient;
   metrics: PipelineMetrics;
+  now: () => number;
 }
 
 /** The per-job collaborators a transcode builds from what the stage was handed. */
@@ -24,6 +25,7 @@ export function transcodeCollaborators(
         cache: d.cache,
         repositories: d.repositories,
         metrics: d.metrics,
+        now: d.now,
         ...target,
       }),
     segmentUploader: (target) =>
