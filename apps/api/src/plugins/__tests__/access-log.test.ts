@@ -2,6 +2,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { buildApp } from '../../app';
+import { abortMidRequest } from './abort-mid-request';
 
 async function loggedApp() {
   const log = captureLog();
@@ -53,6 +54,18 @@ describe('apps/api/plugins: access log', () => {
     });
     expect(log.text()).not.toContain('token=abc');
     await app.close();
+  });
+
+  it('writes one line for a request the client hung up on, and no completed line', async () => {
+    const { app, log } = await loggedApp();
+
+    await abortMidRequest(app);
+    await app.close();
+
+    const lines = log.lines().filter((line) => line.route === '/hang');
+    expect(lines).toEqual([
+      expect.objectContaining({ msg: 'request aborted', method: 'GET', route: '/hang' }),
+    ]);
   });
 
   it('logs an unhandled error once, with the request id, and answers a problem', async () => {

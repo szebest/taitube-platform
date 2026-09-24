@@ -11,7 +11,7 @@ Everything a browser does not import. This is the default tier — a package is 
 only when it has earned it with a real consumer.
 
 Members: `adapters`, `composition`, `concurrency`, `config`, `core`, `db`, `env-schema`, `events`,
-`ffmpeg`, `job-contracts`, `observability`, `storage`, `testing`, plus the CLI packages
+`ffmpeg`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, plus the CLI packages
 `compose-autoscaler`, `dev-token`, `gen-video`, `upload-client`.
 
 CLI packages live here rather than in `tools/` because they are workspace packages with a

@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/observability (Prometheus, OpenTelemetry & Logging)
+# AGENTS.md — @vp/observability (Prometheus & OpenTelemetry)
 
 Instructions for any coding agent working on `@vp/observability`.
 
@@ -7,8 +7,9 @@ Instructions for any coding agent working on `@vp/observability`.
 
 ## 1. Scope & Purpose
 
-`@vp/observability` provides the shared telemetry infrastructure for API servers and workers:
-- **Pino Structured Logger:** High-performance JSON logger with redaction, request correlation IDs, and stage tagging.
+`@vp/observability` provides the shared metrics and tracing for the API and the workers. Logging is not
+here: it lives in [`@vp/logger`](../logger/AGENTS.md), and this package neither re-exports it nor imports
+`pino` (`zero-matches.test.ts`).
 - **Prometheus Metrics:** Standard RED metrics (Rate, Errors, Duration) for HTTP endpoints, BullMQ queue depth gauges, transcode real-time factor, and storage throughput.
 - **OpenTelemetry Tracing:** Distributed trace propagation spanning API request handlers, Redis queues, and BullMQ worker job executions.
 
@@ -26,7 +27,6 @@ Instructions for any coding agent working on `@vp/observability`.
 - **`observability-and-instrumentation`**
 - **`prometheus`**
 - **`opentelemetry`**
-- **`pino-logging`**
 
 ---
 

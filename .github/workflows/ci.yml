@@ -14,7 +14,6 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
 
 env:
   TURBO_TELEMETRY_DISABLED: 1
@@ -235,7 +234,7 @@ jobs:
           cleanup: false
 
       - name: Build the images around the bundles
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6.10.0
         env:
           API_BUNDLE: ${{ runner.temp }}/bundle-api
           WORKER_BUNDLE: ${{ runner.temp }}/bundle-worker
@@ -276,5 +275,8 @@ jobs:
     name: publish-images
     needs: [e2e]
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/images.yml
     secrets: inherit

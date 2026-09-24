@@ -11,8 +11,8 @@ import {
 } from '@vp/errors';
 import { type FfmpegProcessLimits, type MediaTools, computeFfmpegThreads } from '@vp/ffmpeg';
 import type { TranscodeJob, TranscodeResult } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { ProgressReporter, ProgressTarget } from './progress-reporter';
@@ -82,10 +82,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     });
 
     const startTime = Date.now();
-    log.info(
-      { rendition: rendition.name, sourceKey, threads, attempt },
-      'transcode attempt starting'
-    );
+    log.info({ sourceKey }, 'transcode attempt starting');
 
     const fencedOut: TranscodeStageResult = {
       type: 'transcode',
@@ -245,7 +242,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       const processingMs = Date.now() - startTime;
 
       log.info(
-        { rendition: rendition.name, segmentCount, bytes: totalBytes, processingMs },
+        { segmentCount, bytes: totalBytes, processingMs },
         'uploaded rendition segments and playlist to public storage'
       );
 

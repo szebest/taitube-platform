@@ -1,8 +1,8 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { CANONICAL_LADDER } from '@vp/ffmpeg';
 import type { LadderEntry, PackageJob } from '@vp/job-contracts';
-import { createMetricsRegistry } from '@vp/observability';
 import { createLogger } from '@vp/logger';
+import { createMetricsRegistry } from '@vp/observability';
 import { renditionPlaylistKey } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -12,7 +12,11 @@ import { createPackageProcessor, durationBucket } from '../package';
 const OWNER_ID = uuidv7();
 const [, RENDITION = CANONICAL_LADDER[0] as LadderEntry] = CANONICAL_LADDER;
 
-async function processingVideo(repositories: InMemoryRepositories, storage: InMemoryStorageClient) {
+async function processingVideo(
+  repositories: InMemoryRepositories,
+  storage: InMemoryStorageClient,
+  generation = 1
+) {
   const videoId = uuidv7();
   expectOk(
     await repositories.videos.create({
@@ -28,7 +32,7 @@ async function processingVideo(repositories: InMemoryRepositories, storage: InMe
   expectOk(
     await storage.uploadObject({
       bucket: STAGE_SETTINGS.publicBucket,
-      key: renditionPlaylistKey(videoId, RENDITION.name, 1),
+      key: renditionPlaylistKey(videoId, RENDITION.name, generation),
       body: '#EXTM3U\n',
       contentType: 'application/vnd.apple.mpegurl',
     })
@@ -52,14 +56,14 @@ async function completedUpload(repositories: InMemoryRepositories, videoId: stri
   return completed?.completedAt?.getTime() ?? Number.NaN;
 }
 
-function packageJob(videoId: string) {
+function packageJob(videoId: string, generation = 1) {
   const data: PackageJob = {
     videoId,
-    generation: 1,
+    generation,
     ladder: [RENDITION],
     traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
   };
-  return { id: `${videoId}--package--g1`, name: 'package', data, attemptsMade: 0 };
+  return { id: `${videoId}--package--g${generation}`, name: 'package', data, attemptsMade: 0 };
 }
 
 async function observedTimeToReady(metrics: ReturnType<typeof createMetricsRegistry>) {
@@ -92,6 +96,26 @@ describe('apps/worker/stages: package', () => {
     expectOk(await processor(packageJob(videoId)));
 
     expect(await observedTimeToReady(metrics)).toEqual({ count: 1, sum: 42, bucket: '1-5' });
+  });
+
+  it('observes nothing for a re-processed generation, whose upload completed long before', async () => {
+    const repositories = new InMemoryRepositories();
+    const storage = new InMemoryStorageClient();
+    const metrics = createMetricsRegistry();
+    const videoId = await processingVideo(repositories, storage, 2);
+    const completedAt = await completedUpload(repositories, videoId);
+    const processor = createPackageProcessor({
+      ...STAGE_SETTINGS,
+      repositories,
+      storage,
+      metrics,
+      logger,
+      now: () => completedAt + 86_400_000,
+    });
+
+    expectOk(await processor(packageJob(videoId, 2)));
+
+    expect((await observedTimeToReady(metrics)).count).toBe(0);
   });
 
   it('observes nothing for a video no upload completed, rather than guessing a start', async () => {

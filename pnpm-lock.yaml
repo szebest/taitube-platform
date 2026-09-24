@@ -615,6 +615,12 @@ importers:
       '@vp/env-schema':
         specifier: workspace:*
         version: link:../env-schema
+      '@vp/logger':
+        specifier: workspace:*
+        version: link:../logger
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
     devDependencies:
       '@types/node':
         specifier: ^24.0.0

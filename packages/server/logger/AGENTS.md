@@ -18,8 +18,10 @@ calls `console` (`zero-matches.test.ts`).
 ## 2. Rules
 
 - The caller passes `format` and `level`, from config or a CLI flag. The package reads no environment.
-- Log an error as a field, `log.error({ err }, 'could not mint token')`. `serializeError` is the one
-  place an error becomes text: message, `@vp/errors` code, stack and causes. Never format one by hand.
+- Log an error, or a returned `Failure`, as a field: `log.error({ err }, 'could not mint token')`,
+  never `err: failure.message`. `serializeError` is the one place either becomes text: message,
+  `@vp/errors` code, stack and causes. Never format one by hand.
+- Do not repeat a key the child logger already binds; the bound one is on every line.
 - A message is a fixed lowercase string, and what varies goes in the fields:
   `log.info({ videoId }, 'probe queued')`, never a template string (`log-calls.test.ts`).
 

@@ -1,4 +1,4 @@
-import type { QueueJob } from '@vp/core/ports';
+import { QUEUE_JOB_STATES, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { isOk } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
@@ -112,11 +112,8 @@ describe('BullMqJobQueue', () => {
     });
 
     it('fills in the counts the queue does not report', async () => {
-      const subject = new BullMqJobQueue({
-        type: 'queue',
-        name: 'probe',
-        queue: new FakeQueue({ counts: { waiting: 3, prioritized: 2, failed: 1 } }).asQueue(),
-      });
+      const queue = new FakeQueue({ counts: { waiting: 3, prioritized: 2, failed: 1 } });
+      const subject = new BullMqJobQueue({ type: 'queue', name: 'probe', queue: queue.asQueue() });
 
       expect(expectOk(await subject.getJobCounts())).toEqual({
         waiting: 3,
@@ -127,6 +124,7 @@ describe('BullMqJobQueue', () => {
         delayed: 0,
         paused: 0,
       });
+      expect(queue.countedStates).toEqual(QUEUE_JOB_STATES.filter((state) => state !== 'paused'));
     });
   });
 

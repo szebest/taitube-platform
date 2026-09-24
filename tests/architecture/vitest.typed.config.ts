@@ -1,12 +1,13 @@
+import { readFileSync, readdirSync } from 'node:fs';
 import { defineConfig } from 'vitest/config';
 import { sourceAliases } from './workspace-sources';
 
-/** The assertions that ask the type checker; they share the one `ts.Program` in `program.ts`. */
-export const TYPE_AWARE = [
-  'env-keys-consumed.test.ts',
-  'no-discarded-result.test.ts',
-  'promql-labels-emitted.test.ts',
-];
+const HERE = import.meta.dirname;
+
+/** The assertions that ask the type checker: every one that imports the shared `ts.Program`. */
+export const TYPE_AWARE = readdirSync(HERE)
+  .filter((file) => file.endsWith('.test.ts'))
+  .filter((file) => readFileSync(`${HERE}/${file}`, 'utf8').includes("from './program'"));
 
 /**
  * One process with modules kept between files, so the program is built and checked once and

@@ -2060,7 +2060,7 @@ Package naming: `@vp/api`, `@vp/worker`, `@vp/job-contracts`, `@vp/db`, … Depe
 | Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
 | Validation | zod 4 | | |
 | IDs | `uuidv7` | | |
-| Logging | pino 9 + pino-pretty (dev) | | |
+| Logging | pino 10 through `@vp/logger`, JSON or its own pretty destination | | |
 | Metrics | prom-client 15 | | |
 | Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
 | Testing | vitest 3 (unit/integration), `@testcontainers/postgresql`, `@testcontainers/redis`, `testcontainers` (MinIO), `bun test` for worker parity, supertest-style via `app.inject()` | | |

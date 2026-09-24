@@ -1,4 +1,4 @@
-import { SpanKind, context, trace } from '@opentelemetry/api';
+import { SpanKind, SpanStatusCode, context, trace } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { suppressTracing } from '@opentelemetry/core';
 import {
@@ -16,6 +16,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import type { ProbeJob } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { buildApp } from '../../app';
+import { abortMidRequest } from './abort-mid-request';
 
 const OWNER_ID = '0190a000-0000-7000-8000-0000000000d1';
 const CALLER_TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
@@ -95,6 +96,18 @@ describe('apps/api/plugins: request span', () => {
     expect(exporter.getFinishedSpans().map((span) => span.name)).toContain(
       'POST /v1/uploads/:uploadId/complete'
     );
+  });
+
+  it('ends the span of a request the client hung up on, as an error', async () => {
+    const exporter = exportSpans();
+    const app = await buildApp({ config: inProcessAppConfig() });
+
+    await abortMidRequest(app);
+    await app.close();
+
+    const hung = exporter.getFinishedSpans().filter((span) => span.name === 'GET /hang');
+    expect(hung).toHaveLength(1);
+    expect(hung[0]?.status).toEqual({ code: SpanStatusCode.ERROR, message: 'client aborted' });
   });
 
   it("continues the caller's trace when the request carries a traceparent", async () => {

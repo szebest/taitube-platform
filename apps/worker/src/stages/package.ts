@@ -20,8 +20,8 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { type Result, assertNever, err, isErr, ok, unwrapOr } from '@vp/result';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
@@ -49,6 +49,9 @@ export type PackageStageFailure =
   | StorageUnavailable
   | DatabaseUnavailable
   | QueueUnavailable;
+
+/** A re-process packages generation 2 and up, long after the upload, so only the first is timed. */
+const FIRST_GENERATION = 1;
 
 /** The source-duration bands `time_to_ready_seconds` is split by (SDD §13.1). */
 export function durationBucket(durationMs: number): '<1min' | '1-5' | '5-15' | '15-60' {
@@ -251,7 +254,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
     log.info({ videoId, playbackUrl, transitioned }, 'video transitioned to READY');
 
-    if (transitioned && video) {
+    if (transitioned && video && generation === FIRST_GENERATION) {
       const upload = unwrapOr(await repositories.uploads.findByVideoId(videoId), null);
       if (upload?.completedAt) {
         metrics.timeToReady.observe(

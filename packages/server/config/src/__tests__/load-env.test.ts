@@ -1,15 +1,11 @@
 import { PRODUCTION_ENV } from '@vp/testing/env';
-import { loadEnv } from '../load-env';
+import { expectErr } from '@vp/testing/result';
+import { loadEnv, parseEnv } from '../load-env';
 
 const LOCAL_ENV = { DATABASE_URL: 'postgres://localhost:5432/vp' };
 
 function captureFailure(env: Record<string, string>): string {
-  try {
-    loadEnv(env);
-  } catch (failure) {
-    return (failure as Error).message;
-  }
-  throw new Error('loadEnv accepted an invalid environment');
+  return expectErr(parseEnv(env)).issues.join('\n');
 }
 
 describe('packages/config: loadEnv', () => {
@@ -43,6 +39,12 @@ describe('packages/config: loadEnv', () => {
     },
   ])('refuses a production boot with $scenario', ({ env, refusal }) => {
     expect(captureFailure(env)).toContain(refusal);
+  });
+
+  it('throws the same report, one key a line, for an entrypoint to log', () => {
+    expect(() => loadEnv({})).toThrow(
+      /^\[FATAL\] Invalid environment configuration:\n {2}- DATABASE_URL: .*details redacted/
+    );
   });
 
   it('boots the same environment under development', () => {

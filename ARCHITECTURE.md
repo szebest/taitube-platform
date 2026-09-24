@@ -204,8 +204,8 @@ portability.
 
 | Layer | Meaning | Packages |
 |---|---|---|
-| T1 | Foundation — no `@vp/*` dependency, including the CLIs that run from source before a build | `domain`, `errors`, `result`, `tsconfig`, `compose-autoscaler`, `concurrency`, `dev-token`, `gen-video`, `job-contracts`, `storage` |
-| T2 | Contracts and policy | `composition`, `db`, `events`, `ffmpeg`, `observability`, `pagination`, `permissions`, `testing`, `validation` |
+| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `job-contracts`, `logger`, `storage` |
+| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `db`, `events`, `ffmpeg`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video` |
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value | `api-contracts`, `core`, `domain-rules`, `env-schema` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config` |
 | T5 | Applications | `apps/api`, `apps/worker`, `apps/web` |

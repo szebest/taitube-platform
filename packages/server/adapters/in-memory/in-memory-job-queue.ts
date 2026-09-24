@@ -1,4 +1,3 @@
-import { JOB_PRIORITY } from '@vp/domain';
 import {
   JobQueue,
   type JobSchedulerInfo,
@@ -9,6 +8,7 @@ import {
   type QueueWorkerOptions,
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
+import { JOB_PRIORITY } from '@vp/domain';
 import { type QueueUnavailable, classifyError, queueUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 
@@ -287,7 +287,7 @@ export class InMemoryJobQueue extends JobQueue {
       completed: this.completedJobs.length,
       failed: this.failedJobs.length,
       delayed: 0,
-      paused: this.paused ? this.enqueuedJobs.length : 0,
+      paused: 0,
     });
   }
 

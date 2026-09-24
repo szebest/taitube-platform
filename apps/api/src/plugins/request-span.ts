@@ -44,13 +44,25 @@ async function requestSpanPlugin(app: FastifyInstance) {
     context.with(trace.setSpan(parent, span), done);
   });
 
-  app.addHook('onResponse', async (request, reply) => {
+  function end(request: FastifyRequest, annotate: (span: Span) => void) {
     const span = spans.get(request);
     if (!span) return;
-    span.setAttribute('http.response.status_code', reply.statusCode);
-    if (reply.statusCode >= SERVER_ERROR) span.setStatus({ code: SpanStatusCode.ERROR });
+    annotate(span);
     span.end();
     spans.delete(request);
+  }
+
+  app.addHook('onResponse', async (request, reply) => {
+    end(request, (span) => {
+      span.setAttribute('http.response.status_code', reply.statusCode);
+      if (reply.statusCode >= SERVER_ERROR) span.setStatus({ code: SpanStatusCode.ERROR });
+    });
+  });
+
+  app.addHook('onRequestAbort', async (request) => {
+    end(request, (span) =>
+      span.setStatus({ code: SpanStatusCode.ERROR, message: 'client aborted' })
+    );
   });
 }
 

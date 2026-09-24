@@ -11,17 +11,39 @@ function isLoggerCall(node: ts.CallExpression): boolean {
   const callee = node.expression;
   if (!ts.isPropertyAccessExpression(callee)) return false;
   if (!LEVELS.has(callee.name.text)) return false;
-  const receiver = callee.expression.getText().replace(/\?$/, '');
-  return LOGGER_NAME.test(receiver);
+  return LOGGER_NAME.test(callee.expression.getText());
 }
 
-function messageProblem(message: ts.Expression): string | undefined {
+function isText(node: ts.Expression): node is ts.StringLiteral | ts.NoSubstitutionTemplateLiteral {
+  return ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
+}
+
+function isConcatenation(node: ts.Expression): boolean {
+  return ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken;
+}
+
+/**
+ * Pino takes `(fields, message, ...args)` or `(message, ...args)`. A lone argument that is not an
+ * object literal is read as the message, so `log.error(err)` is held to the same rule.
+ */
+function messageIndex(args: ts.NodeArray<ts.Expression>): number | undefined {
+  const [first] = args;
+  if (first === undefined) return undefined;
+  if (isText(first) || ts.isTemplateExpression(first) || isConcatenation(first)) return 0;
+  if (args.length === 1) return ts.isObjectLiteralExpression(first) ? undefined : 0;
+  return 1;
+}
+
+function messageProblem(args: ts.NodeArray<ts.Expression>): string | undefined {
+  const index = messageIndex(args);
+  if (index === undefined) return undefined;
+  const message = args[index];
+  if (message === undefined) return undefined;
   if (ts.isTemplateExpression(message)) return 'interpolates into its message';
-  if (ts.isBinaryExpression(message) && message.operatorToken.kind === ts.SyntaxKind.PlusToken) {
-    return 'concatenates its message';
-  }
-  const isText = ts.isStringLiteral(message) || ts.isNoSubstitutionTemplateLiteral(message);
-  if (isText && /^[A-Z][a-z]/.test(message.text)) return 'starts its message in sentence case';
+  if (isConcatenation(message)) return 'concatenates its message';
+  if (!isText(message)) return 'passes a message that is not a literal';
+  if (args.length > index + 1) return 'formats its message printf-style';
+  if (/^[A-Z][a-z]/.test(message.text)) return 'starts its message in sentence case';
   return undefined;
 }
 
@@ -30,8 +52,7 @@ function logCallProblems(file: string, source: string): string[] {
   const problems: string[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) && isLoggerCall(node)) {
-      const message = node.arguments.at(-1);
-      const problem = message ? messageProblem(message) : undefined;
+      const problem = messageProblem(node.arguments);
       if (problem) {
         const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
         problems.push(`${file}:${line + 1}: ${problem}`);
@@ -50,6 +71,10 @@ const FIXTURE = [
   "request.log.info('Probe job started');",
   "logger?.warn({ reason }, 'FFmpeg exited 137');",
   'cache.set(key, `${a}${b}`);',
+  "log.info('probe %s queued', videoId);",
+  'log.info({ videoId }, message);',
+  'log.error(err);',
+  'log.info({ videoId, attempt: 2 });',
 ].join('\n');
 
 describe('architecture: log calls carry a fixed message and structured fields', () => {
@@ -57,12 +82,15 @@ describe('architecture: log calls carry a fixed message and structured fields', 
     [2, 'interpolates into its message'],
     [3, 'concatenates its message'],
     [4, 'starts its message in sentence case'],
+    [7, 'formats its message printf-style'],
+    [8, 'passes a message that is not a literal'],
+    [9, 'passes a message that is not a literal'],
   ])('fires on line %i, which %s', (line, problem) => {
     expect(logCallProblems('fixture.ts', FIXTURE)).toContain(`fixture.ts:${line}: ${problem}`);
   });
 
-  it('leaves a fixed message, an acronym and a call that is not a log alone', () => {
-    expect(logCallProblems('fixture.ts', FIXTURE)).toHaveLength(3);
+  it('leaves a fixed message, an acronym, fields alone and a call that is not a log alone', () => {
+    expect(logCallProblems('fixture.ts', FIXTURE)).toHaveLength(6);
   });
 
   it('finds none in production source, scripts or the e2e runner', () => {

@@ -4,7 +4,7 @@ import { REQUEST_ID_HEADER } from './request-id';
 import { routeLabel } from './route-label';
 
 /**
- * One line per request, written when the response is done. Fastify's own request logging is off
+ * One line per request, written when the response is done, or when the client hangs up first. Fastify's own request logging is off
  * because it writes two lines and logs the URL, which carries ids a route template would not.
  */
 async function accessLogPlugin(app: FastifyInstance) {
@@ -22,6 +22,10 @@ async function accessLogPlugin(app: FastifyInstance) {
       },
       'request completed'
     );
+  });
+
+  app.addHook('onRequestAbort', async (request) => {
+    request.log.info({ method: request.method, route: routeLabel(request) }, 'request aborted');
   });
 }
 
