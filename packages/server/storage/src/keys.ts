@@ -20,8 +20,13 @@ function hlsPrefix(videoId: string, generation: number): string {
   return generation > 1 ? `${hls}/g${generation}` : hls;
 }
 
-export function generationPrefix(videoId: string, generation: number): string {
-  return `${hlsPrefix(videoId, generation)}/`;
+/** Generation 1 is never listed: it writes into `hls/` itself, whose prefix holds the live video. */
+export function reprocessPrefixesBefore(videoId: string, currentGeneration: number): string[] {
+  const prefixes: string[] = [];
+  for (let generation = 2; generation < currentGeneration; generation += 1) {
+    prefixes.push(`${hlsPrefix(videoId, generation)}/`);
+  }
+  return prefixes;
 }
 
 export function renditionPrefix(videoId: string, rendition: string, generation = 1): string {

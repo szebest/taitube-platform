@@ -8,7 +8,7 @@ import {
   masterPlaylistKey,
   rawPrefix,
   renditionPrefix,
-  generationPrefix,
+  reprocessPrefixesBefore,
   videoPrefix,
 } from '@vp/storage';
 
@@ -122,8 +122,8 @@ async function purgeOldGenerations(
   videoId: string,
   currentGeneration: number
 ): Promise<Result<void, StorageUnavailable>> {
-  for (let generation = 2; generation < currentGeneration; generation += 1) {
-    const purged = await storage.purgePrefix(bucket, generationPrefix(videoId, generation));
+  for (const prefix of reprocessPrefixesBefore(videoId, currentGeneration)) {
+    const purged = await storage.purgePrefix(bucket, prefix);
     if (isErr(purged)) return purged;
   }
 
