@@ -1,11 +1,12 @@
 name: Set up FFmpeg
-description: FFmpeg and the fonts its drawtext filter needs, restored from the apt package cache instead of downloaded on every run.
+description: FFmpeg and the fonts its drawtext filter needs, from apt with the man-db trigger off (it is most of the install time).
 
 runs:
   using: composite
   steps:
-    - name: Install FFmpeg and fonts from the apt cache
-      uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
-      with:
-        packages: ffmpeg fonts-dejavu-core fontconfig
-        version: '1'
+    - name: Install FFmpeg and fonts
+      shell: bash
+      run: |
+        sudo rm -f /var/lib/man-db/auto-update
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq --no-install-recommends ffmpeg fonts-dejavu-core fontconfig

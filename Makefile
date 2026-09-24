@@ -143,9 +143,7 @@ k3d-up: ## Create local k3d (or kind) cluster and install Helm charts (Postgres,
 
 k3d-deploy: k8s-local-secrets ## Build local images, import to k3d, and apply Kustomize local overlay
 	@echo "Building local Docker images..."
-	docker compose -f $(COMPOSE_FILE) build api worker-probe
-	docker tag video-pipeline-api:latest vp-api:local
-	docker tag video-pipeline-worker-probe:latest vp-worker:local
+	docker buildx bake --load
 	@if [ "$(CLUSTER_TOOL)" = "kind" ]; then \
 		kind load docker-image vp-api:local --name $(CLUSTER_NAME); \
 		kind load docker-image vp-worker:local --name $(CLUSTER_NAME); \

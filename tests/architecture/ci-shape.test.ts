@@ -39,8 +39,11 @@ const DOCS_ONLY = ['!**/*.md', '!docs/**'];
 /** The scripts that run `pnpm boundaries` themselves, as `package.json` defines them. */
 const RUNS_BOUNDARIES = /\bpnpm (boundaries|build|typecheck)\b/g;
 
-const needsOf = (job: Job): string[] =>
-  job.needs === undefined ? [] : Array.isArray(job.needs) ? job.needs : [job.needs];
+function needsOf(job: Job): string[] {
+  if (job.needs === undefined) return [];
+  if (typeof job.needs === 'string') return [job.needs];
+  return job.needs;
+}
 
 const runs = (job: Job): string => (job.steps ?? []).map((step) => step.run ?? '').join('\n');
 

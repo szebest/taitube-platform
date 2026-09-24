@@ -25,14 +25,26 @@ const EXPORTERS: Record<string, { by: string; labels: () => Map<string, LabelVal
   vp_: { by: 'collectDefaultMetrics', labels: () => new Map() },
 };
 
-const PLAIN_ALTERNATIVES = /^[\w.:<>-]+(\|[\w.:<>-]+)*$/;
+const PLAIN_VALUE = /^[\w.:<>-]+$/;
 
+/** The part of a matcher no recorded value answers, or undefined when every part is answered. */
 function unmatchedValue(values: LabelValues, op: '=' | '=~', value: string): string | undefined {
   if (values === ANY_VALUE) return undefined;
-  if (op === '=') return values.has(value) ? undefined : value;
-  if (PLAIN_ALTERNATIVES.test(value)) return value.split('|').find((v) => !values.has(v));
+  if (op === '=') {
+    return values.has(value) ? undefined : value;
+  }
+
+  const alternatives = value.split('|');
+  const everyAlternativeIsPlain = alternatives.every((alternative) =>
+    PLAIN_VALUE.test(alternative)
+  );
+  if (everyAlternativeIsPlain) {
+    return alternatives.find((alternative) => !values.has(alternative));
+  }
+
   const pattern = new RegExp(`^(?:${value})$`);
-  return [...values].some((v) => pattern.test(v)) ? undefined : value;
+  const someValueMatches = [...values].some((recorded) => pattern.test(recorded));
+  return someValueMatches ? undefined : value;
 }
 
 /** Every label value a query selects on that no code path records, and every metric nobody exports. */

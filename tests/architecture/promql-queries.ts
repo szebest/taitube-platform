@@ -108,16 +108,20 @@ const PROMQL_WORDS = new Set([
   'absent',
 ]);
 
-/** The metric names an expression reads, with label sets, groupings, ranges and strings removed. */
+const QUOTED = /"[^"]*"/g;
+const LABEL_SET = /\{[^}]*\}/g;
+const RANGE = /\[[^\]]*\]/g;
+const GROUPING = /\b(by|without|on|ignoring|group_left|group_right)\s*\([^)]*\)/g;
+const DASHBOARD_VARIABLE = /\$\{?\w+\}?/g;
+const NUMBER = /(?<![\w:])\d[\d.]*(e\d+)?/g;
+const IDENTIFIER = /[a-zA-Z_:][\w:]*/g;
+
+/** The metric names an expression reads: what is left once labels, ranges and numbers are gone. */
 export function metricNames(expr: string): string[] {
-  const bare = expr
-    .replace(/"[^"]*"/g, '')
-    .replace(/\{[^}]*\}/g, '')
-    .replace(/\[[^\]]*\]/g, '')
-    .replace(/\b(by|without|on|ignoring|group_left|group_right)\s*\([^)]*\)/g, '')
-    .replace(/\$\{?\w+\}?/g, '')
-    .replace(/(?<![\w:])\d[\d.]*(e\d+)?/g, '');
-  return [...bare.matchAll(/[a-zA-Z_:][\w:]*/g)]
-    .map(([name]) => name)
-    .filter((name) => !PROMQL_WORDS.has(name));
+  let bare = expr;
+  for (const noise of [QUOTED, LABEL_SET, RANGE, GROUPING, DASHBOARD_VARIABLE, NUMBER]) {
+    bare = bare.replace(noise, '');
+  }
+  const identifiers = bare.match(IDENTIFIER) ?? [];
+  return identifiers.filter((name) => !PROMQL_WORDS.has(name));
 }

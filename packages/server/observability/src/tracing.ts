@@ -16,6 +16,7 @@ import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { NodeSDK } from '@opentelemetry/sdk-node';
+import { TracerProvider as SdkTracerProvider } from '@opentelemetry/sdk-trace';
 import {
   AlwaysOffSampler,
   AlwaysOnSampler,
@@ -53,7 +54,8 @@ const TRACER_NAME = 'video-pipeline';
  * The hook wraps third-party modules only. It re-reads a module's `export *` itself, without the
  * loader that resolves this repo's extensionless specifiers, so wrapping our own code fails.
  */
-const WORKSPACE_MODULES = [/\/node_modules\/@vp\//, /^file:\/\/(?!.*\/node_modules\/)/];
+const WORKSPACE_PACKAGE = /\/node_modules\/@vp\//;
+const APP_SOURCE = /^file:\/\/(?!.*\/node_modules\/)/;
 
 const toError = (cause: unknown): Error =>
   cause instanceof Error ? cause : new Error(String(cause));
@@ -96,7 +98,7 @@ export function initTracing(config: TracingConfig): Result<void, Error> {
 
   return tryCatch(() => {
     register('@opentelemetry/instrumentation/hook.mjs', import.meta.url, {
-      data: { exclude: WORKSPACE_MODULES },
+      data: { exclude: [WORKSPACE_PACKAGE, APP_SOURCE] },
     });
     new NodeSDK({
       resource: resourceFromAttributes({
@@ -127,13 +129,16 @@ export function initTracing(config: TracingConfig): Result<void, Error> {
  * provider is a no-op without `shutdown`, and this resolves at once.
  */
 export const registeredTracing: Tracing = {
-  shutdown: () => {
-    const global = trace.getTracerProvider();
-    const provider = (global instanceof ProxyTracerProvider ? global.getDelegate() : global) as {
-      shutdown?: () => Promise<void>;
-    };
-    const { shutdown } = provider;
-    return shutdown ? fromPromise(() => shutdown.call(provider), toError) : Promise.resolve(ok());
+  shutdown: async () => {
+    let provider = trace.getTracerProvider();
+    if (provider instanceof ProxyTracerProvider) {
+      provider = provider.getDelegate();
+    }
+    if (!(provider instanceof SdkTracerProvider)) {
+      return ok();
+    }
+    const sdkProvider = provider;
+    return fromPromise(() => sdkProvider.shutdown(), toError);
   },
 };
 

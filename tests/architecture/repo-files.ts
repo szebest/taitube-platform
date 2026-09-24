@@ -27,15 +27,20 @@ interface Pathspec {
 
 /** The pathspec forms the suite uses: a path, `:(glob)` and `:(exclude)` / `:(exclude,glob)`. */
 function pathspec(spec: string): Pathspec {
-  const magic = /^:\(([^)]*)\)(.*)$/.exec(spec);
-  const flags = new Set((magic?.[1] ?? '').split(','));
-  const path = magic ? (magic[2] as string) : spec;
-  return {
-    exclude: flags.has('exclude'),
-    matches: flags.has('glob')
-      ? (file) => matchesGlob(file, path)
-      : (file) => file === path || file.startsWith(`${path.replace(/\/$/, '')}/`),
-  };
+  let flags: string[] = [];
+  let path = spec;
+  if (spec.startsWith(':(')) {
+    const magicEnd = spec.indexOf(')');
+    flags = spec.slice(2, magicEnd).split(',');
+    path = spec.slice(magicEnd + 1);
+  }
+
+  const exclude = flags.includes('exclude');
+  if (flags.includes('glob')) {
+    return { exclude, matches: (file) => matchesGlob(file, path) };
+  }
+  const directory = path.endsWith('/') ? path : `${path}/`;
+  return { exclude, matches: (file) => file === path || file.startsWith(directory) };
 }
 
 /** What `git ls-files -- <pathspecs>` lists, without a process per call. */

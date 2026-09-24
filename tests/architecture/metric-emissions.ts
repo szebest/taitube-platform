@@ -68,13 +68,13 @@ function labelObject(
 ): ts.ObjectLiteralExpression | undefined {
   if (ts.isObjectLiteralExpression(argument)) return argument;
   if (!ts.isIdentifier(argument)) return undefined;
+
   const declaration = checker.getSymbolAtLocation(argument)?.valueDeclaration;
-  return declaration &&
-    ts.isVariableDeclaration(declaration) &&
-    declaration.initializer &&
-    ts.isObjectLiteralExpression(declaration.initializer)
-    ? declaration.initializer
-    : undefined;
+  if (!(declaration && ts.isVariableDeclaration(declaration))) return undefined;
+
+  const { initializer } = declaration;
+  if (!(initializer && ts.isObjectLiteralExpression(initializer))) return undefined;
+  return initializer;
 }
 
 function merge(into: Map<string, LabelValues>, label: string, values: LabelValues): void {
