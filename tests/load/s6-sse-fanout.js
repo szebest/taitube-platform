@@ -47,7 +47,6 @@ export default function () {
 
   const connectStart = Date.now();
 
-  // 1. Initial SSE connect — requests the event stream
   // Fastify sse-hub sends an immediate snapshot on connect
   const res = http.get(`${API_BASE}/v1/videos/${videoId}/events`, {
     headers,
@@ -65,7 +64,6 @@ export default function () {
 
   let lastEventId = '0';
   if (res.body && typeof res.body === 'string') {
-    // Parse SSE frames: id, event, data
     const lines = res.body.split('\n');
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -85,7 +83,6 @@ export default function () {
     }
   }
 
-  // 2. Simulate client reconnect with Last-Event-ID (e.g. after API restart or network drop)
   sleep(1);
 
   const reconnectHeaders = Object.assign({}, headers, {

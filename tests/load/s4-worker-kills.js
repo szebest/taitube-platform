@@ -34,7 +34,6 @@ const PART_SIZE = 8 * 1024 * 1024; // 8 MB chunks
 export default function () {
   const startTime = Date.now();
 
-  // 1. Initialize upload of 60s source
   const init = initUpload({
     filename: 's60.mp4',
     sizeBytes: videoData.byteLength,
@@ -47,7 +46,6 @@ export default function () {
   const partsExpected = init.partsExpected || parts.length;
   const etags = [];
 
-  // 2. Upload parts directly to storage
   for (let i = 0; i < partsExpected; i++) {
     const start = i * PART_SIZE;
     const end = Math.min(start + PART_SIZE, videoData.byteLength);
@@ -61,7 +59,6 @@ export default function () {
     etags.push(result);
   }
 
-  // 3. Complete upload
   const completeRes = completeUpload(uploadId, etags);
   const videoId = completeRes.videoId;
 
@@ -69,7 +66,6 @@ export default function () {
     'videoId present in complete response': (v) => !!v,
   });
 
-  // 4. Poll until video is terminal (READY or FAILED)
   // Under chaos kills, BullMQ stalled detection takes up to 120s + re-encode time
   let status = 'PROCESSING';
   let attempts = 0;

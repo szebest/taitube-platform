@@ -23,9 +23,6 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-// ============================================================================
-// Enums (SDD §5.2)
-// ============================================================================
 export const videoStatusEnum = pgEnum('video_status', VIDEO_STATUSES);
 
 export const uploadStatusEnum = pgEnum('upload_status', UPLOAD_STATUSES);
@@ -36,12 +33,7 @@ export const stepStatusEnum = pgEnum('step_status', STEP_STATUSES);
 
 export const userRoleEnum = pgEnum('user_role', USER_ROLES);
 
-// Helper for timestamptz in postgres
 const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
-
-// ============================================================================
-// Tables (SDD §5.2)
-// ============================================================================
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
@@ -304,27 +296,3 @@ export const channelSubscriptions = pgTable(
     index('channel_subscriptions_channel_created_idx').on(table.channelId, table.createdAt.desc()),
   ]
 );
-
-// Types
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
-export type Video = typeof videos.$inferSelect;
-export type NewVideo = typeof videos.$inferInsert;
-export type Upload = typeof uploads.$inferSelect;
-export type NewUpload = typeof uploads.$inferInsert;
-export type Rendition = typeof renditions.$inferSelect;
-export type NewRendition = typeof renditions.$inferInsert;
-export type ProcessingStep = typeof processingSteps.$inferSelect;
-export type NewProcessingStep = typeof processingSteps.$inferInsert;
-export type VideoEvent = typeof videoEvents.$inferSelect;
-export type NewVideoEvent = typeof videoEvents.$inferInsert;
-export type DlqEntry = typeof dlqEntries.$inferSelect;
-export type NewDlqEntry = typeof dlqEntries.$inferInsert;
-export type OutboxRow = typeof outbox.$inferSelect;
-export type NewOutboxRow = typeof outbox.$inferInsert;
-export type Category = typeof categories.$inferSelect;
-export type NewCategory = typeof categories.$inferInsert;
-export type VideoReaction = typeof videoReactions.$inferSelect;
-export type NewVideoReaction = typeof videoReactions.$inferInsert;
-export type ChannelSubscription = typeof channelSubscriptions.$inferSelect;
-export type NewChannelSubscription = typeof channelSubscriptions.$inferInsert;
