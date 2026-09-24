@@ -46,6 +46,7 @@ export const HOUSEKEEPING = {
   stuckUploadedAfterMs: 5 * MS_PER_MINUTE,
   tmpSweepAfterMs: 2 * MS_PER_HOUR,
   reactionReconcileLimit: 500,
+  scanLimit: 100,
 } as const;
 
 export const SEGMENT_UPLOAD = {

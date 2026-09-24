@@ -24,7 +24,7 @@ function absenceScope(absence: VideoScanAbsence): SQL {
   }
 }
 
-export function videoScanScope(filter: VideoScan, now: Date): SQL | undefined {
+export function videoScanScope(filter: Omit<VideoScan, 'limit'>, now: Date): SQL | undefined {
   const { status, idleFor, minGeneration, without } = filter;
   const idleSince = idleFor && new Date(now.getTime() - idleFor.ms).toISOString();
   return drizzleWhere(

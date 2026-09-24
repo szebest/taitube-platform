@@ -1,6 +1,5 @@
 import { trace } from '@opentelemetry/api';
 import {
-  DEFAULT_VIDEO_SCAN_LIMIT,
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
   type ListVideosOptions,
@@ -231,7 +230,7 @@ export class PostgresVideoRepository extends VideoRepository {
           .from(v)
           .where(videoScanScope(filter, new Date()))
           .for('update', { skipLocked: true })
-          .limit(filter.limit ?? DEFAULT_VIDEO_SCAN_LIMIT),
+          .limit(filter.limit),
       databaseUnavailable.during('scan')
     );
 

@@ -1,6 +1,5 @@
 import { trace } from '@opentelemetry/api';
 import {
-  DEFAULT_VIDEO_SCAN_LIMIT,
   type EventRepository,
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
@@ -204,7 +203,7 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   async scan(filter: VideoScan): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
-    const { status, minGeneration, without, limit = DEFAULT_VIDEO_SCAN_LIMIT } = filter;
+    const { status, minGeneration, without, limit } = filter;
     const idle = filter.idleFor && {
       since: filter.idleFor.since,
       before: new Date(Date.now() - filter.idleFor.ms),

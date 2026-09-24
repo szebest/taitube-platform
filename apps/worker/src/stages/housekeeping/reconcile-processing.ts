@@ -10,6 +10,7 @@ export interface ReconcileProcessingOptions {
   repositories: Repositories;
   getQueue: (name: QueueName) => JobQueue;
   thresholdMs: number;
+  scanLimit: number;
   workerId: string;
   logger?: Logger;
 }
@@ -34,13 +35,14 @@ const ACTIVE_PROCESSING_QUEUES: QueueName[] = [
 export async function runReconcileProcessing(
   options: ReconcileProcessingOptions
 ): Promise<Result<ReconcileProcessingResult, DatabaseUnavailable>> {
-  const { repositories, getQueue, thresholdMs, workerId, logger } = options;
+  const { repositories, getQueue, thresholdMs, scanLimit, workerId, logger } = options;
 
   let orphanedCount = 0;
 
   const staleProcessing = await repositories.videos.scan({
     status: 'PROCESSING',
     idleFor: { since: 'updatedAt', ms: thresholdMs },
+    limit: scanLimit,
   });
   if (isErr(staleProcessing)) return staleProcessing;
 

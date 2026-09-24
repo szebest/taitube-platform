@@ -100,6 +100,7 @@ export interface AppConfig {
     stuckUploadedAfterMs: number;
     tmpSweepAfterMs: number;
     reactionReconcileLimit: number;
+    scanLimit: number;
   };
   http: {
     port: number;

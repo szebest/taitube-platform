@@ -355,9 +355,9 @@ The contract-drift assertion stays in `apps/api` because it has to boot the app:
 instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
 depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/api` can answer.
 
-**One exception list left, shrink-only.** `tests/architecture/untested-sources.ts` records the sources that
-already breached the 1:1 test mandate when it became executable. The assertion fails on a *new* breach **and**
-on a listed entry that has gained its spec, so the list can only get shorter. Nothing may be appended to it.
+**No exception lists.** Every assertion here is flat: `test-correspondence` fails on any source with runtime
+code and no name-matching spec, in every tier, and `zero-matches` fails if an exception list or `shrinkOnly`
+comes back.
 
 Three further mechanisms sit outside the suite:
 

@@ -10,7 +10,15 @@ describe('housekeeping: expire-raw', () => {
   let storage: InMemoryStorageClient;
 
   const expire = async () =>
-    expectOk(await runExpireRaw({ repositories, storage, rawBucket: 'raw', retentionDays: 7 }));
+    expectOk(
+      await runExpireRaw({
+        repositories,
+        storage,
+        rawBucket: 'raw',
+        retentionDays: 7,
+        scanLimit: 100,
+      })
+    );
 
   const expiredEvents = async (videoId: string) =>
     expectOk(await repositories.events.findByVideoId(videoId)).filter(

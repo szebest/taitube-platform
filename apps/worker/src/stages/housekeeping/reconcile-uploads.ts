@@ -15,6 +15,7 @@ export interface ReconcileUploadsOptions {
   rawBucket: string;
   uploadingThresholdMs: number;
   uploadedThresholdMs: number;
+  scanLimit: number;
   maxInflightPerUser: number;
   logger?: Logger;
 }
@@ -40,6 +41,7 @@ export async function runReconcileUploads(
     rawBucket,
     uploadingThresholdMs,
     uploadedThresholdMs,
+    scanLimit,
     maxInflightPerUser,
     logger,
   } = options;
@@ -50,6 +52,7 @@ export async function runReconcileUploads(
   const staleUploading = await repositories.videos.scan({
     status: 'UPLOADING',
     idleFor: { since: 'updatedAt', ms: uploadingThresholdMs },
+    limit: scanLimit,
   });
   if (isErr(staleUploading)) return staleUploading;
 
@@ -93,6 +96,7 @@ export async function runReconcileUploads(
     status: 'UPLOADED',
     idleFor: { since: 'updatedAt', ms: uploadedThresholdMs },
     without: { type: 'step', step: 'probe' },
+    limit: scanLimit,
   });
   if (isErr(staleUploaded)) return staleUploaded;
 

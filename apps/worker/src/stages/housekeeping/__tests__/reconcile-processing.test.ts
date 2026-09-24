@@ -18,6 +18,7 @@ describe('housekeeping: reconcile-processing', () => {
         getQueue,
         workerId: 'worker-spec',
         thresholdMs: 3 * HOUR_MS,
+        scanLimit: 100,
       })
     );
 

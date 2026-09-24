@@ -110,7 +110,9 @@ describe('admission control in the uploads reconciler', () => {
 
     expect((await reconcile()).reenqueuedCount).toBe(0);
 
-    const activeVideo = expectOk(await repositories.videos.scan({ status: 'PROCESSING' }))[0];
+    const activeVideo = expectOk(
+      await repositories.videos.scan({ status: 'PROCESSING', limit: 1 })
+    )[0];
     if (!activeVideo) {
       throw new Error('Expected a PROCESSING video');
     }

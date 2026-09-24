@@ -11,6 +11,7 @@ export interface ExpireRawOptions {
   storage: StorageClient;
   rawBucket: string;
   retentionDays: number;
+  scanLimit: number;
   logger?: Logger;
 }
 
@@ -26,7 +27,7 @@ export interface ExpireRawResult {
 export async function runExpireRaw(
   options: ExpireRawOptions
 ): Promise<Result<ExpireRawResult, DatabaseUnavailable>> {
-  const { repositories, storage, rawBucket, retentionDays, logger } = options;
+  const { repositories, storage, rawBucket, retentionDays, scanLimit, logger } = options;
 
   let expiredCount = 0;
 
@@ -34,6 +35,7 @@ export async function runExpireRaw(
     status: 'READY',
     idleFor: { since: 'readyAt', ms: retentionDays * MS_PER_DAY },
     without: { type: 'event', event: 'video.raw_expired' },
+    limit: scanLimit,
   });
   if (isErr(expiredVideos)) return expiredVideos;
 

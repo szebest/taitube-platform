@@ -137,6 +137,7 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
       probeQueue: getQueue('probe'),
       maxInflightPerUser: 100,
       uploadedThresholdMs: 500,
+      scanLimit: 100,
     }).catch(() => {});
   }, 1000);
   workerClosers.push(async () => clearInterval(reconcilerTimer));

@@ -145,6 +145,7 @@ export async function runAbandonedUploadTest(ctx: DlqCheckContext): Promise<{
       multipart,
       probeQueue: new InMemoryJobQueue('probe'),
       uploadingThresholdMs: 10,
+      scanLimit: 100,
     });
   }
 
