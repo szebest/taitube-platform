@@ -9,7 +9,11 @@ const IMPORT = /^import [^;]+;$/gm;
  */
 export function hasRuntimeCode(source: string): boolean {
   const { outputText } = ts.transpileModule(source, {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      removeComments: true,
+    },
   });
 
   return (

@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { normalizeVideoResource } from '../video.normalizer';
 
 describe('normalizers/video: normalizeVideoResource', () => {
