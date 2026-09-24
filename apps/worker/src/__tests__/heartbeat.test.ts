@@ -2,18 +2,9 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { type Every, Heartbeat, everyInterval } from '../heartbeat';
+import { manualInterval } from './manual-interval';
 
 const INTERVAL_MS = 15_000;
-
-/** A scheduler the spec advances by hand, so no real interval has to elapse. */
-function manualInterval() {
-  const ticks: Array<() => Promise<void>> = [];
-  const every: Every = (_intervalMs, tick) => {
-    ticks.push(tick);
-    return { stop: () => ticks.splice(ticks.indexOf(tick), 1) };
-  };
-  return { every, advance: () => Promise.all(ticks.map((tick) => tick())), ticks };
-}
 
 describe('apps/worker: Heartbeat', () => {
   let dir: string;

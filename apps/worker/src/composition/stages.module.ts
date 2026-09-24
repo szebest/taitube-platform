@@ -3,8 +3,8 @@ import { type Container, token } from '@vp/composition';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { toPipelineError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
-import { MetricsServer, type PipelineMetrics } from '@vp/observability';
 import type { LogContext, Logger } from '@vp/logger';
+import { MetricsServer, type PipelineMetrics } from '@vp/observability';
 import { fromPromise, isErr, isOk, ok } from '@vp/result';
 import { createFailureHandler } from '../failure-handler';
 import { Heartbeat, everyInterval } from '../heartbeat';
@@ -193,12 +193,13 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
               flowProducer: c.get(Adapters.FlowProducer),
               logger: runtime.logger,
               metrics: c.get(Adapters.Metrics),
+              every: everyInterval,
               ...housekeepingTasks(config().housekeeping).outbox,
             })
           : undefined,
       {
         start: async (relay) => {
-          relay?.start();
+          void relay?.start();
           return ok();
         },
         dispose: (relay) => relay?.stop(),
