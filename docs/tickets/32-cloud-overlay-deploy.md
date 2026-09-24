@@ -7,7 +7,7 @@
 | Size | L |
 | Blocked by | 25 — Kubernetes locally · 22 — Metrics + dashboards · 31 — Cloud accounts + Terraform |
 | Blocks | 33 |
-| Spec | [PRD G9, §7 Cost](../PRD.md#7-non-functional-requirements-slos) · [SDD §12.3 Rung 3 (diagram, capacity, cost model, fallback ladder)](../SDD.md#123-rung-3-cloud-reference-deployment-phase-4) · [SDD §13 (Alloy → Grafana Cloud)](../SDD.md#13-autoscaling-observability) · [SDD §16 cloud env columns](../SDD.md#16-environment-variables) · [ADR-15](../SDD.md#adr-15-cloud-hosting-for-the-reference-deployment) |
+| Spec | [PRD G9, §7 Cost](../PRD.md#7-non-functional-requirements--slos) · [SDD §12.3 Rung 3 (diagram, capacity, cost model, fallback ladder)](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) · [SDD §13 (Alloy → Grafana Cloud)](../SDD.md#13-autoscaling--observability) · [SDD §16 cloud env columns](../SDD.md#16-environment-variables) · [ADR-15](../SDD.md#adr-15--cloud-hosting-for-the-reference-deployment) |
 
 **Status:** done
 

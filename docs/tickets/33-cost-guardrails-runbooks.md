@@ -7,7 +7,7 @@
 | Size | S–M |
 | Blocked by | 32 — Cloud deployment · 24 — Alert rules |
 | Blocks | — |
-| Spec | [PRD §11 Risks (egress, Class A ops, free tiers)](../PRD.md#11-risks-mitigations) · [SDD §12.3 guardrails paragraph](../SDD.md#123-rung-3-cloud-reference-deployment-phase-4) · [SDD §13.5 `R2ClassABudget`](../SDD.md#135-dashboards-alerts-committed-under-observability) · [SDD §15.1 `docs/runbooks`](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
+| Spec | [PRD §11 Risks (egress, Class A ops, free tiers)](../PRD.md#11-risks--mitigations) · [SDD §12.3 guardrails paragraph](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) · [SDD §13.5 `R2ClassABudget`](../SDD.md#135-dashboards--alerts-committed-under-observability) · [SDD §15.1 `docs/runbooks`](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
 
 **Status:** done
 

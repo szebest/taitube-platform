@@ -7,7 +7,7 @@
 | Size | S |
 | Blocked by | 22 — Metrics catalogue |
 | Blocks | — |
-| Spec | [SDD §13.2 (compose-level scaler paragraph)](../SDD.md#132-keda-scaledobject-prometheus-scaler-primary) · [ADR-12 option 4](../SDD.md#adr-12-autoscaling-keda-scaledobject-per-stage-prometheus-scaler-primary-redis-list-scaler-fallback) |
+| Spec | [SDD §13.2 (compose-level scaler paragraph)](../SDD.md#132-keda-scaledobject-prometheus-scaler-primary) · [ADR-12 option 4](../SDD.md#adr-12--autoscaling-keda-scaledobject-per-stage-prometheus-scaler-primary-redis-list-scaler-fallback) |
 
 **Status:** done
 

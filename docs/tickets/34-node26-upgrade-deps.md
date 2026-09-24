@@ -7,7 +7,7 @@
 | Size | S |
 | Blocked by | 08 — Containerise + compose |
 | Blocks | — |
-| Spec | [SDD §17 Fact sheet (Node.js row)](../SDD.md#17-fact-sheet-verified-2026-09-03) · [SDD §15.2 Toolchain](../SDD.md#152-toolchain) · [SDD §18 Phase 4](../SDD.md#phase-4-resilience-cloud-34-weeks) |
+| Spec | [SDD §17 Fact sheet (Node.js row)](../SDD.md#17-fact-sheet-verified-2026-09-03) · [SDD §15.2 Toolchain](../SDD.md#152-toolchain) · [SDD §18 Phase 4](../SDD.md#phase-4--resilience--cloud--34-weeks) |
 
 **Status:** blocked-by-date (ready after Node 26 enters Active LTS on 2026-10-28)
 

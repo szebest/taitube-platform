@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 53 — Frontend architecture modernization · 54 — Frontend testing infrastructure · 55 — Modern design system foundation |
 | Blocks | 75 |
-| Spec | [SDD ADR-18 Error taxonomy](../SDD.md#adr-18-error-taxonomy-decides-retry-policy) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) · [PRD §1 Summary](../PRD.md#1-summary) |
+| Spec | [SDD ADR-18 Error taxonomy](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) · [PRD §1 Summary](../PRD.md#1-summary) |
 
 **Status:** blocked
 

@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 55 — Modern design system foundation · 58 — Modern browse layout · 59 — Modern video watch page |
 | Blocks | 75 |
-| Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §13 Observability](../SDD.md#13-autoscaling-observability) |
+| Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
 **Status:** blocked
 

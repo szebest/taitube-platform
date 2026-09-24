@@ -6,7 +6,7 @@
 | Size | L |
 | Blocked by | 81 — Declarative permissions refactor with @casl/ability |
 | Blocks | 83, 84 |
-| Spec | [SDD ADR-20 Monorepo topology](../SDD.md#adr-20-monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes-domain-services) · [SDD §11 Security](../SDD.md#11-security) |
+| Spec | [SDD ADR-20 Monorepo topology](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes--domain-services) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** done
 

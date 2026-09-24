@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 38 — User & channel identity · 39 — Declarative RBAC & ABAC |
 | Blocks | 45, 76 |
-| Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model-database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
+| Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done
 

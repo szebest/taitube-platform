@@ -7,7 +7,7 @@
 | Size | L |
 | Blocked by | 06 — Worker runtime + probe |
 | Blocks | 08, 09, 12, 15 |
-| Spec | [PRD US-5, US-7](../PRD.md#52-processing) · [PRD FR-4, FR-6, FR-7](../PRD.md#6-functional-requirements) · [SDD §3.2 Pipeline](../SDD.md#32-processing-pipeline-fan-out-fan-in) · [SDD §3.3 Playback](../SDD.md#33-playback) · [SDD §8.2 Transcode](../SDD.md#82-transcode-one-rendition-to-hls-ts-segments) · [SDD §8.4 Master playlist](../SDD.md#84-master-playlist-generated-by-package-not-by-ffmpeg) · [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10.2 Fan-out (publisher side)](../SDD.md#102-fan-out-architecture) · [ADR-07](../SDD.md#adr-07-delivery-format-hls-with-mpeg-ts-segments-mvp-cmaffmp4-upgrade-path) |
+| Spec | [PRD US-5, US-7](../PRD.md#52-processing) · [PRD FR-4, FR-6, FR-7](../PRD.md#6-functional-requirements) · [SDD §3.2 Pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §3.3 Playback](../SDD.md#33-playback) · [SDD §8.2 Transcode](../SDD.md#82-transcode-one-rendition-to-hls-ts-segments) · [SDD §8.4 Master playlist](../SDD.md#84-master-playlist-generated-by-package-not-by-ffmpeg) · [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10.2 Fan-out (publisher side)](../SDD.md#102-fan-out-architecture) · [ADR-07](../SDD.md#adr-07--delivery-format-hls-with-mpeg-ts-segments-mvp-cmaffmp4-upgrade-path) |
 
 **Status:** done
 

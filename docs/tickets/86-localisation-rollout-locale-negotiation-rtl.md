@@ -6,7 +6,7 @@
 | Size | M |
 | Blocked by | 63 — TanStack Start SSR · 72 — Settings & customization system · 85 — Universal Intl formatting core |
 | Blocks | — |
-| Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23-package-runtime-tiers-the-directory-is-the-tier) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [PRD §1 Summary](../PRD.md#1-summary) |
+| Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [PRD §1 Summary](../PRD.md#1-summary) |
 
 **Status:** ready-for-agent
 

@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 13 — Thumbnails · 14 — Segment streaming · 15 — SSE · 16 — Retries/DLQ · 17 — Housekeeping |
 | Blocks | 28 |
-| Spec | [SDD §18 Phase 2 DoD](../SDD.md#phase-2-real-pipeline-3-weeks) · [PRD §9 Success metrics](../PRD.md#9-success-metrics) · [SDD §14.1 Principles](../SDD.md#141-principles) |
+| Spec | [SDD §18 Phase 2 DoD](../SDD.md#phase-2--real-pipeline--3-weeks) · [PRD §9 Success metrics](../PRD.md#9-success-metrics) · [SDD §14.1 Principles](../SDD.md#141-principles) |
 
 **Status:** done
 

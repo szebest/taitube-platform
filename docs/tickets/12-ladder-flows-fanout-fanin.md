@@ -7,7 +7,7 @@
 | Size | L |
 | Blocked by | 07 — Playable READY video |
 | Blocks | 13, 14, 16, 22, 23 |
-| Spec | [PRD US-5, US-6](../PRD.md#52-processing) · [PRD FR-4, FR-6](../PRD.md#6-functional-requirements) · [SDD §3.2 Pipeline](../SDD.md#32-processing-pipeline-fan-out-fan-in) · [SDD §9.1 Queue topology](../SDD.md#91-queue-topology) · [SDD §9.3 Flows (code)](../SDD.md#93-fan-out-fan-in-with-flows) · [SDD §8.1 Ladder table](../SDD.md#81-probe) · [SDD §8.4 Master playlist](../SDD.md#84-master-playlist-generated-by-package-not-by-ffmpeg) · [ADR-08](../SDD.md#adr-08-transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) |
+| Spec | [PRD US-5, US-6](../PRD.md#52-processing) · [PRD FR-4, FR-6](../PRD.md#6-functional-requirements) · [SDD §3.2 Pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §9.1 Queue topology](../SDD.md#91-queue-topology) · [SDD §9.3 Flows (code)](../SDD.md#93-fan-out--fan-in-with-flows) · [SDD §8.1 Ladder table](../SDD.md#81-probe) · [SDD §8.4 Master playlist](../SDD.md#84-master-playlist-generated-by-package-not-by-ffmpeg) · [ADR-08](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) |
 
 **Status:** done
 

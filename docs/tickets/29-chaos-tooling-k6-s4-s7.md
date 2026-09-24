@@ -7,7 +7,7 @@
 | Size | L |
 | Blocked by | 28 — Load tests S1–S3 · 24 — Alert rules |
 | Blocks | — |
-| Spec | [PRD G3, G4, US-9, US-10](../PRD.md#5-user-stories-acceptance-criteria) · [SDD §14.2 S4–S7](../SDD.md#142-scenarios) · [SDD §14.4 Chaos tooling](../SDD.md#144-chaos-tooling) · [SDD §9.5 crash matrix](../SDD.md#95-long-running-jobs-heartbeats-crashes-double-processing) · [SDD §9.6 systemic failure runbook](../SDD.md#96-failure-handling-retries-dlq-poison-pills) |
+| Spec | [PRD G3, G4, US-9, US-10](../PRD.md#5-user-stories--acceptance-criteria) · [SDD §14.2 S4–S7](../SDD.md#142-scenarios) · [SDD §14.4 Chaos tooling](../SDD.md#144-chaos-tooling) · [SDD §9.5 crash matrix](../SDD.md#95-long-running-jobs-heartbeats-crashes-double-processing) · [SDD §9.6 systemic failure runbook](../SDD.md#96-failure-handling-retries-dlq-poison-pills) |
 
 **Status:** done
 
