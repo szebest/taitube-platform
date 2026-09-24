@@ -6,6 +6,8 @@ export default defineConfig({
   test: {
     name: 'in-process',
     globals: true,
+    restoreMocks: true,
+    unstubEnvs: true,
     environment: 'node',
     include: ['**/*.test.ts'],
     testTimeout: 30_000,

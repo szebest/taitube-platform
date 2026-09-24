@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "exports": {
@@ -39,6 +40,7 @@
     "@vp/result": "workspace:*"
   },
   "devDependencies": {
+    "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3",

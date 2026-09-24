@@ -102,6 +102,23 @@ export function generateFixture(fixture: FixtureDefinition, outputDir: string): 
       return { type: 'generated', path: outPath };
     }
 
+    case 'bad-codec': {
+      const failed = ffmpeg([
+        '-y',
+        '-f',
+        'lavfi',
+        '-i',
+        `testsrc2=size=${fixture.width ?? 320}x${fixture.height ?? 240}:rate=24`,
+        '-t',
+        String(fixture.durationSeconds ?? 1),
+        '-c:v',
+        'mjpeg',
+        outPath,
+      ]);
+      if (failed) return failed;
+      return { type: 'generated', path: outPath };
+    }
+
     case 'portrait': {
       const w = fixture.width ?? 1920;
       const h = fixture.height ?? 1080;

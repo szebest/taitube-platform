@@ -173,6 +173,17 @@
       "videoCodec": "hevc"
     },
     {
+      "id": "bad-codec",
+      "filename": "bad-codec.mov",
+      "description": "Hostile codec fixture: Motion JPEG video in a QuickTime container, outside the probe's codec allowlist",
+      "category": "hostile",
+      "slow": false,
+      "durationSeconds": 1,
+      "width": 320,
+      "height": 240,
+      "videoCodec": "mjpeg"
+    },
+    {
       "id": "zero-bytes",
       "filename": "zero-bytes.mp4",
       "description": "Hostile 0-byte empty file",
