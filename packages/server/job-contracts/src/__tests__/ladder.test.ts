@@ -2,7 +2,8 @@ import { LadderEntry } from '../index';
 import { CANONICAL_LADDER, RENDITIONS } from '../ladder';
 
 describe('@vp/job-contracts rendition ladder', () => {
-  it('names the renditions from the ladder, tallest first', () => {
+  it('names every rung of the ladder, tallest first', () => {
+    expect(RENDITIONS).toEqual(CANONICAL_LADDER.map((rung) => rung.name));
     expect(RENDITIONS).toEqual(['1080p', '720p', '480p']);
   });
 

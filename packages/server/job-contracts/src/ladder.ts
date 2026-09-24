@@ -1,15 +1,3 @@
-interface Rung<Name extends string> {
-  readonly name: Name;
-  readonly width: number;
-  readonly height: number;
-  readonly videoKbps: number;
-  readonly maxrateKbps: number;
-  readonly bufsizeKbps: number;
-  readonly audioKbps: number;
-  readonly profile: 'main' | 'high';
-  readonly level: string;
-}
-
 /**
  * Authoritative HLS rendition ladder matching SDD §8.1, tallest first.
  * Bitrates and profiles follow Apple HLS Authoring Specifications.
@@ -48,11 +36,10 @@ export const CANONICAL_LADDER = [
     profile: 'main',
     level: '3.1',
   },
-] as const satisfies readonly [Rung<string>, ...Rung<string>[]];
+] as const;
 
-export type RenditionName = (typeof CANONICAL_LADDER)[number]['name'];
+const [fullHd, hd, sd] = CANONICAL_LADDER;
 
-export const RENDITIONS = CANONICAL_LADDER.map((rung) => rung.name) as [
-  RenditionName,
-  ...RenditionName[],
-];
+export const RENDITIONS = [fullHd.name, hd.name, sd.name] as const;
+
+export type RenditionName = (typeof RENDITIONS)[number];
