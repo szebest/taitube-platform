@@ -37,5 +37,5 @@ runs:
       shell: bash
       run: |
         sudo rm -f /var/lib/man-db/auto-update
-        sudo dpkg -i ~/ffmpeg-debs/*.deb > /dev/null
+        sudo dpkg --force-unsafe-io -i ~/ffmpeg-debs/*.deb > /dev/null
         ffmpeg -hide_banner -version | head -1
