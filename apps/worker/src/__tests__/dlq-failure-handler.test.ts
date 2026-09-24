@@ -10,7 +10,6 @@ import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';

@@ -3,7 +3,6 @@ import { createMetricsRegistry } from '@vp/observability';
 import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it } from 'vitest';
 import { TranscodeProgressReporter } from '../stages/progress-reporter';
 
 describe('TranscodeProgressReporter (Ticket 15: AC 4)', () => {

@@ -12,7 +12,6 @@ import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createNotifyProcessor } from '../stages/notify';
 import { createPackageProcessor } from '../stages/package';
 import { createTranscodeProcessor } from '../stages/transcode';

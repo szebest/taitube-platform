@@ -5,7 +5,6 @@ import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPackageProcessor } from '../stages/package';
 import { STAGE_SETTINGS } from './stage-settings';
 

@@ -6,7 +6,6 @@ import type { MediaTools } from '@vp/ffmpeg';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { STAGE_SETTINGS, failingTranscodeOf, transcodeDeps } from './stage-settings';
 
