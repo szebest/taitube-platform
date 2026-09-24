@@ -33,9 +33,9 @@ whose bulk is server vocabulary is a server module however small the part the br
    here is what puts a Redis client in the browser bundle.
 2. **No `node:*`, no `process`, no `Buffer`, no `NodeJS.*` types.** The `@vp/tsconfig/universal.json`
    preset sets `lib` with `DOM` and `types: []`, so these are compile errors, not review comments.
-3. **Specs are typechecked separately.** `types: []` alone is not enough: a spec doing
-   `import { describe } from 'vitest'` pulls `@types/node` into the whole program and `node:fs` starts
-   resolving again. Each package excludes its specs from `tsconfig.json` and typechecks them through a
+3. **Specs are typechecked separately.** `types: []` alone is not enough: the vitest globals a spec
+   uses (`vitest/globals` in `@vp/tsconfig/spec.json`) pull `@types/node` into the program, and `node:fs`
+   starts resolving again. Each package excludes its specs from `tsconfig.json` and typechecks them through a
    sibling `tsconfig.spec.json`. Keep that shape when adding a package.
 4. **Relative imports are extensionless**, as in every tier. `apps/web` resolves them through the one
    webpack override in its `craco.config.js` (`resolve.fullySpecified: false` for workspace packages);

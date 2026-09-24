@@ -65,8 +65,10 @@ adapters and the composition module; the doubles are reached only through `@vp/a
 
 ### Rule 4: Configuration Arrives as a Value
 - No adapter reads `process.env`. A driver takes an explicit connection or a prebuilt client, told apart by
-  a `type` tag and switched over exhaustively (`{ type: 'url', ... }` or `{ type: 'client', client }` for
-  Redis, `'connection'` / `'client'` for S3, `'url'` / `'sql'` for Postgres), never an `'x' in config` probe
+  a `type` tag and switched over exhaustively (`'url'` / `'client'` for Redis, `'connection'` / `'client'`
+  for `S3StorageClient`, `'storage'` for `S3MultipartStorage`, `'url'` / `'sql'` for Postgres,
+  `'queue'` / `'connection'` for `BullMqJobQueue`, `'producer'` / `'connection'` for `BullMqFlowProducer`),
+  never an `'x' in config` probe
   or an optional field whose presence picks the mode.
 - A resource an adapter opens is closed by its `close()`, and the composition module that constructs it
   registers that as its disposer (`tests/architecture/shutdown-closure.test.ts`).

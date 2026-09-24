@@ -16,8 +16,10 @@ is `zod`.
 - **Payloads:** `ProbeJob`, `TranscodeJob`, `ThumbnailJob`, `PackageJob`, `NotifyJob`, `HousekeepingJob`,
   `DlqJob`. Results: `TranscodeResult` and `ThumbnailResult`, told apart by `type` in the
   `ChildResult` discriminated union a package job reads back from its flow children.
-- **Deterministic job ids (`ids`):** `<videoId>--<stage>--g<generation>` (transcode adds the rendition,
-  e.g. `<videoId>--transcode--720p--g1`); a replay appends `--r<n>` (`generateReplayJobId`).
+- **Deterministic job ids (`ids`):** probe, thumbnail and package are `<videoId>--<stage>--g<generation>`, a
+  transcode adds the rendition (`<videoId>--transcode--720p--g1`), notify is
+  `<videoId>--notify--<event>--<seq>` and a DLQ entry `<queue>--<jobId>--a<attempt>`; a replay appends
+  `--r<n>` (`generateReplayJobId`).
 - **Ladder (`src/ladder.ts`):** `RENDITIONS`, `RenditionName`, `LadderEntry` and `CANONICAL_LADDER`
   (tallest first), which `satisfies readonly LadderEntry[]`. No other package defines rungs.
 

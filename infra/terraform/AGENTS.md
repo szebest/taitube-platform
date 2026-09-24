@@ -21,8 +21,8 @@ No CORS rule is declared on either bucket.
 ## 2. Invariants & Rules
 
 1. **Parity with Local MinIO:** The two R2 buckets must keep the shape `infra/compose/minio-init.sh` gives MinIO: raw private with the same 7-day expiry, public readable. Bucket names differ (`vp-raw`/`vp-public` against `raw`/`public`) and reach the code only through `S3_BUCKET_RAW` / `S3_BUCKET_PUBLIC`; object keys belong to `packages/server/storage/src/keys.ts`.
-2. **Deterministic Inputs:** Variables are declared in `variables.tf`; the non-secret ones have defaults. Values go in a `terraform.tfvars` copied from `terraform.tfvars.example`; `cloudflare_api_token` and `hcloud_token` are `sensitive`. No `.gitignore` covers `terraform.tfvars` or the local `*.tfstate`, so never stage either.
-3. **Automated Verification:** Nothing runs `terraform validate`, `terraform fmt` or a plan in CI. The only check is `packages/server/testing/src/__tests__/cloud-terraform.test.ts`, which reads the `.tf` files as text and asserts the providers, variables and resource names above; keep it in step with any rename.
+2. **Deterministic Inputs:** Variables are declared in `variables.tf`; the non-secret ones have defaults. Values go in a `terraform.tfvars` copied from `terraform.tfvars.example`; `cloudflare_api_token` and `hcloud_token` are `sensitive`. `.gitignore` covers `terraform.tfvars`, `*.tfstate` and `.terraform/`.
+3. **Automated Verification:** Nothing runs `terraform validate` or a plan in CI ([ticket 90](../../docs/tickets/90-cloud-terraform-provider-v5.md)); keep `terraform fmt -check` clean by hand. `packages/server/testing/src/__tests__/cloud-terraform.test.ts` reads the `.tf` files as text for the providers, variables and resource names, and `cloud-r2-tokens.test.ts` reads `main.tf` through `@cdktf/hcl2json` for each R2 token's buckets and permission groups; keep both in step with any rename.
 
 ---
 

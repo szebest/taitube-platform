@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/db (Database Schema, Migrations & CAS Helpers)
+# AGENTS.md — @vp/db (Database Schema, Migrations & Seed)
 
 Instructions for any coding agent working on `@vp/db`.
 
@@ -12,8 +12,9 @@ Instructions for any coding agent working on `@vp/db`.
 - **Schema Definitions:** Drizzle ORM tables (`src/schema.ts`, subpath `@vp/db/schema`).
 - **Database Migrations:** `runMigrations(url, log)` (`src/migrate.ts`, `@vp/db/migrate`) applies the
   drizzle-kit output in `drizzle/`, skipping the run when the recorded migration hash is unchanged.
-- **Development Seeds:** `seedDatabase(url, log)` (`src/seed.ts`, `@vp/db/seed`) upserts two users, a
-  ready video and its renditions.
+- **Development Seeds:** `seedDatabase(url, log)` (`src/seed.ts`, `@vp/db/seed`) upserts two users, two
+  READY videos (the dev user's public one, the other user's private one) and the public one's three
+  renditions.
 - **Connection Client:** `createDbClient(url, { max })` (the `postgres.js` pool plus the Drizzle
   instance) and `waitForDatabase` (`src/client.ts`, `@vp/db/client`).
 
@@ -36,7 +37,8 @@ The runners live in the API: `apps/api/src/migrate.ts` (`pnpm db:migrate`) and `
    transaction. This package holds no transition helper.
 2. **Schema Drift Prevention:** Generate migrations with `pnpm --filter @vp/db generate` and verify them
    with `pnpm --filter @vp/db check` (root alias `pnpm db:check`).
-3. **Deterministic Seeds:** Seed rows use fixed UUIDs and `onConflictDoUpdate`, so a rerun is idempotent.
+3. **Deterministic Seeds:** Seed rows use fixed UUIDs, and each row's `onConflictDoUpdate` sets that row's
+   own values (`ready_at` only on insert), so a rerun leaves the tables as the first run did.
 
 ---
 

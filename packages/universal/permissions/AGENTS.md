@@ -31,10 +31,12 @@ depends on `@vp/errors` and `@casl/ability` only, so `apps/web`, `apps/api`, `@v
 
 - Zero I/O and no Node-specific runtime bindings, so it runs under Node 24, Bun 1.4 and the browser.
 - Rules, the ability builder and the helpers are pure functions; the package declares no class.
-- Callers ask through the `canX` helpers and `assertCan`. Two consumers hold the `AppAbility` itself:
-  `apps/web/src/modules/shared/providers/permissions-provider.tsx`, which backs `<Can>`, and
+- Callers ask through the `canX` helpers and `assertCan`. The `AppAbility` itself is held by
+  `apps/web/src/modules/shared/providers/permissions-provider.tsx` (behind `<Can>`),
+  `AuthorizationPort.getAbility()` in `@vp/core/ports` and its two implementations,
+  `CaslAuthorizationAdapter` and the in-memory authorization doubles, and
   `packages/server/adapters/postgres/scopes/rules-to-sql.ts`, which turns rules into SQL through
-  `@casl/ability/extra`. `@vp/adapters` is the only package besides this one that imports
+  `@casl/ability/extra`. `@vp/adapters` is the only package besides this one that declares
   `@casl/ability`.
 
 ---

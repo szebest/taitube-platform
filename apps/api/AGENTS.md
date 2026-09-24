@@ -31,10 +31,11 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 - Services must remain completely decoupled from Fastify transport objects (`FastifyRequest`, `FastifyReply`).
 - Routes are plugins: `export async function xRoutes(app: FastifyInstance)`, reading `app.services` and `app.config`, registered from `routes/index.ts`.
 
-### Rule 3: One Authorization Mechanism — `AuthorizationPort` Inside Services
-- There is exactly one place an authorization decision is made: a domain service calling
-  `AuthorizationPort.can(...)` with a `@vp/permissions` rule helper. The concrete implementation
-  (`CaslAuthorizationAdapter`) is injected from the composition root.
+### Rule 3: Authorization Is Decided Inside Services
+- An authorization decision is made in a domain service only: through a `@vp/domain-rules` `decide*` rule
+  (`decideAdminAccess`, `decideUploadAccess`, `decideCategoryCreate`, ...), or through
+  `AuthorizationPort.can(...)` with a `@vp/permissions` helper where a service holds the port (`VideoService`).
+  The concrete `CaslAuthorizationAdapter` is injected from the composition root.
 - Routes carry **authentication** only: `requireAuth(request)` for a caller that must be signed in, or
   `request.user` when the endpoint also serves anonymous callers. They never check a role, an ownership
   field or a permission themselves, and they never resolve a resource in order to authorize it.
@@ -66,9 +67,12 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
   per-code `options.on`, or a total `*.presenter.ts` module with `assertNever`; when to use which is in
   [docs/standards/error-handling.md](../../docs/standards/error-handling.md).
 - `setErrorHandler` stays, narrowed to a backstop: transport validation, rate limiting, Fastify's own 4xx
-  errors (answered with their own status) and genuine bugs. The auth hook returns its failures through `sendResult`. Both paths build the body with `problemDetails` from `@vp/api-contracts` (`sendResult` through `problemFor`), so its shape is identical either way.
-- `PermanentError` / `TransientError` are the BullMQ queue-boundary representation only (ADR-18). Domain code
-  in this app does not throw them.
+  errors (answered with their own status), `requireAuth` and genuine bugs. The auth hook returns its
+  failures through `sendResult`. Both paths build the body with `problemDetails` from `@vp/api-contracts`
+  (`sendResult` through `problemFor`), so its shape is identical either way.
+- `PermanentError` / `TransientError` are the BullMQ queue-boundary representation (ADR-18), with one
+  exception here: `requireAuth` in `plugins/auth.ts` throws `PermanentError(UNAUTHORIZED)` for a signed-out
+  caller, which `setErrorHandler` answers as a 401 problem. Services and routes throw neither.
 
 ---
 

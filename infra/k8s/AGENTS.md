@@ -18,7 +18,7 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
 
 ## 2. Invariants & Rules
 
-1. **KEDA Queue Autoscaling:** Each worker Deployment scales on a Prometheus trigger over `bullmq_queue_jobs{queue="<stage>", state=~"waiting|prioritized|active"}` (`base/scaled-objects.yaml`).
+1. **KEDA Queue Autoscaling:** Each worker Deployment scales on one Prometheus trigger, `sum(max by (state) (bullmq_queue_jobs{queue="<stage>", state=~"waiting|prioritized|active"}))` (`base/scaled-objects.yaml`). There is no Redis list trigger: a prioritized job is not in the `wait` list (`k8s-keda-autoscaling.test.ts`).
    - Scale-to-zero: every ScaledObject has `minReplicaCount: 0`.
    - Scale-in Protection: `terminationGracePeriodSeconds` is sized per stage so an in-flight job can finish: 30 (API, notify), 60 (probe, housekeeping), 120 (thumbnail, package), 300 / 600 / 900 (480p / 720p / 1080p transcode). `apps/worker/src/__tests__/registry.test.ts` reads these manifests to keep each stage's `shutdownTimeoutMs` at the grace period less the 5 s preStop and a 5 s margin.
 2. **Resource Boundaries:** Every container MUST specify explicit `resources.requests` and `resources.limits` for CPU and memory. The cloud overlay's `alloy.yaml` is the one container that sets none yet.

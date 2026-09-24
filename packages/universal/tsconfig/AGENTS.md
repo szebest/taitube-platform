@@ -36,9 +36,8 @@ build. There is **no** `build.json` preset in this package.
   on is a repo-wide change, not a preset tweak.
 - **`moduleResolution` is `bundler`, not `nodenext`.** That is what keeps every relative import
   extensionless (`./thing`), which `esm-specifiers.test.ts` requires in every tier.
-- **`types: []` on `universal` and `client` is load-bearing**, and by itself is not enough. A spec doing
-  `import { describe } from 'vitest'` pulls `@types/node` back into the program and `node:fs` starts
-  resolving again — which is why those packages exclude their specs from `tsconfig.json` and typecheck them
+- **`types: []` on `universal` and `client` is load-bearing**, and by itself is not enough. The vitest
+  globals a spec uses pull `@types/node` back into the program and `node:fs` starts resolving again — which is why those packages exclude their specs from `tsconfig.json` and typecheck them
   through `tsconfig.spec.json` instead. Do not "fix" a `Cannot find name 'process'` error in a universal
   package by adding `node` to `types`; that error is the boundary working.
 - **Adding a preset means adding a tier.** The preset set mirrors `packages/universal | server | client`

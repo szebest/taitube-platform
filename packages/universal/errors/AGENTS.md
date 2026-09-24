@@ -22,8 +22,9 @@ Instructions for any coding agent working on `@vp/errors`.
 `PermanentError` / `TransientError` (`pipeline-error.ts`) are the BullMQ queue-boundary representation.
 `instrument` in `apps/worker/src/composition/stages.module.ts` calls `toPipelineError`, which picks the
 class from `RETRY_CLASS`, at the moment a stage's `Result` has to become a throw, because BullMQ's retry
-contract is the exception. They are still thrown directly by `@vp/ffmpeg` (probe and run),
-`assertCan` in `@vp/permissions`, `apps/api/src/plugins/auth.ts` and the in-memory channel repository;
+contract is the exception. `@vp/ffmpeg`'s probe and run reject with them; they are thrown directly by
+`assertCan` in `@vp/permissions`, `requireAuth` in `apps/api/src/plugins/auth.ts` and the in-memory channel
+repository;
 the roots `no-domain-throw.test.ts` sweeps never throw them.
 
 ---

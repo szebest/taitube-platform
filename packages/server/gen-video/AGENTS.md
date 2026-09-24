@@ -16,7 +16,7 @@ metadata, not bytes. See [README.md](README.md).
 This is a **workspace package with a CLI**, not a loose script, which is why it lives under
 `packages/server/` rather than `tools/`. `tools/` is for assets with no `package.json`.
 
-- **Tier `server`**, **`vp.layer` 2** - it logs through `@vp/logger` (T1), its only dependency.
+- **Tier `server`**, **`vp.layer` 2** - it logs through `@vp/logger` (layer 1), its only dependency.
 - `src/main.ts` is the entrypoint: it builds a `pretty` logger and hands it to `run` in `src/cli.ts`.
   Help text goes to stdout; progress and failures go to the logger on stderr.
 

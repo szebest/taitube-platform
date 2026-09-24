@@ -17,7 +17,7 @@ dependencies. Besides `.` it exports `./keys`.
   `renditionPlaylistKey`, `masterPlaylistKey`, `reprocessPrefixesBefore`), thumbnails under `thumbs/`
   (`posterKey`, `spriteKey`, `spriteVttKey`). `sanitizeStorageUrl` strips a presigned URL's query string.
 - **Headers (`src/mime.ts`):** `getHeaderMapping` gives the `Content-Type` and `Cache-Control` for an
-  object by extension (`.m3u8`, `.ts`, `.jpg`, `.vtt`, `.json`, `.mp4`), `application/octet-stream`
+  object by extension (`.m3u8`, `.ts`, `.jpg`, `.jpeg`, `.vtt`, `.json`, `.mp4`), `application/octet-stream`
   otherwise.
 - **Multipart (`src/multipart.ts`):** `calculatePartSize` (a thousandth of the file, clamped to
   `PartSizeBounds`), `calculateTotalParts`, `MULTIPART_URL_BATCH_SIZE` and `S3_MAX_KEYS_PER_REQUEST`.

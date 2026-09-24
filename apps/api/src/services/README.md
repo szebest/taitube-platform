@@ -22,7 +22,7 @@ A service's collaborators arrive through its deps and are required; `composition
 4. **Failures as values**: Return `Result<T, E>` whose failure carries an `ErrorCode` (`CATEGORY_NOT_FOUND`, `CHANNEL_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, …); the route renders it through `sendResult` (ADR-24).
 5. **Data Projection & DTO Formatting**: Transform database entities into API response views (converting `Date` to ISO string, attaching CDN URLs).
 6. **Caching & Invalidation**: Coordinate L1/L2 caches and invalidate caches upon state modifications.
-7. **Composition**: Delegate cross-cutting operations to the shared helpers (`http-cache.ts`, `Singleflight`) and to injected ports; never construct or default a collaborator.
+7. **Composition**: Delegate cross-cutting operations to `http-cache.ts` and to what the composition root hands in (ports, the `Singleflight` from `@vp/concurrency`); never construct or default a collaborator.
 
 ---
 

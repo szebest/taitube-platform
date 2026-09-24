@@ -10,9 +10,10 @@ Instructions for any coding agent working on `@vp/testing`.
 `@vp/testing` holds the helpers specs across the repo share. Tier `server`, `vp.layer` 2; depends on
 `@vp/result` and `vitest`. Each subpath's `import` condition points at `src/`, so a spec needs no build.
 
-- **`.` (`src/index.ts`):** `definePackageTestConfig` (the vitest config every package's
-  `vitest.config.ts` builds on: node environment, globals, `src/**/__tests__/**/*.test.ts`), `FIXTURES`
-  (the seeded video and user ids, a `traceparent`), `createMockJob` and `withEnv`.
+- **`.` (`src/index.ts`):** `definePackageTestConfig` (node environment, globals,
+  `src/**/__tests__/**/*.test.ts`; most package `vitest.config.ts` files build on it, a few define their
+  own), `FIXTURES` (`VIDEO_ID`, which holds the seed's dev user id, `USER_ID`, the other seeded user,
+  `TRACEPARENT` and `SAMPLE_MP4_KEY`), `createMockJob` and `withEnv`.
 - **`./result`:** `expectOk` / `expectErr`, which unwrap a `Result` or fail naming what came back.
 - **`./jwt`:** `signingKey` and `signJwt`, a throwaway RS256, ES256 or EdDSA key and a token signed with
   it, for the token-verifier and API auth specs.

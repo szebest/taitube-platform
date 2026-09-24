@@ -1958,7 +1958,7 @@ video-pipeline/
 │   │   │   ├── routes/                     # thin transport adapters; sendResult unwraps the Result; admin/
 │   │   │   └── services/                   # deep domain services, SSE hub, queue and SQL pollers, housekeeping schedulers
 │   │   └── Dockerfile
-│   ├── worker/                             # Bun 1.4 by default, Node 24 with WORKER_RUNTIME=node · one image, WORKER_STAGE picks the role
+│   ├── worker/                             # Bun 1.4 by default, Node 24 built with WORKER_RUNTIME=node · WORKER_STAGE picks the role
 │   │   ├── src/
 │   │   │   ├── main.ts · process.ts        # loadEnv -> toAppConfig -> runner; drained shutdown
 │   │   │   ├── instrument.ts               # tracing preload
@@ -2021,7 +2021,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Task runner / cache | Turborepo | 2.x | remote cache optional (Vercel free) |
 | Language | TypeScript | 5.x, `strict`, `noUncheckedIndexedAccess`, ESM | |
 | API runtime | Node.js | 24 LTS (v26 becomes LTS 2026-10-28 — upgrade in Phase 4) | |
-| Worker runtime | Bun | 1.4.x by default, Node 24 with `WORKER_RUNTIME=node` | |
+| Worker runtime | Bun | 1.4.x by default, Node 24 in an image built with `--build-arg WORKER_RUNTIME=node` | |
 | HTTP | Fastify 5 + `fastify-type-provider-zod`, `@fastify/rate-limit`, `@fastify/swagger`, `@fastify/cors`, `@fastify/helmet` | | JWTs verified by the `TokenVerifier` adapters, not a Fastify plugin |
 | Queue | BullMQ 6 + ioredis 5 | | `@bull-board/api` + `@bull-board/fastify` |
 | DB | PostgreSQL 16, Drizzle ORM 0.45 (1.0 when GA) + drizzle-kit, `postgres` (postgres.js) driver | | |
@@ -2187,7 +2187,7 @@ Handed to something other than this code, and declared so the schema stays close
 | `NODE_OPTIONS` | Node itself; the images and compose set `--import @vp/config/register` |
 | `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | turbo and every tool honouring the convention (P9) |
 | `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` 🔒 | Grafana Alloy's upstream (`Authorization=Basic <base64(instanceId:token)>`). Named apart from `OTEL_EXPORTER_OTLP_*` because `vp-secrets` reaches every app pod, and the OTel SDK there would read them in place of the ConfigMap's `http://alloy:4318` |
-| `WORKER_RUNTIME` | the worker image `CMD` and the k8s worker command (`bun` or `node`) |
+| `WORKER_RUNTIME` | the worker image build (`--build-arg`, which picks the `runtime-bun` or `runtime-node` stage) and its `CMD`; setting it on a running pod does not change the binary the image has |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
 
 ### 16.9 Cloud-only (not read by any process in this repo)

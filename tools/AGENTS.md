@@ -21,7 +21,7 @@ The four CLI **packages** that used to live here are workspace packages, so they
 | Package | Location | What it does |
 |---|---|---|
 | `@vp/compose-autoscaler` | `packages/server/compose-autoscaler` | Queue-depth autoscaler daemon for local Docker Compose |
-| `@vp/dev-token` | `packages/server/dev-token` | Mints and verifies EdDSA dev JWTs and prints the dev JWKS (`mint`, `verify`, `jwks`) |
+| `@vp/dev-token` | `packages/server/dev-token` | Mints and verifies EdDSA dev JWTs, prints the dev JWKS and serves it over HTTP (`mint`, `verify`, `jwks`, `serve`) |
 | `@vp/gen-video` | `packages/server/gen-video` | Deterministic synthetic video fixture generator (FFmpeg) |
 | `@vp/upload-client` | `packages/server/upload-client` | Reference CLI for resumable multipart uploads |
 
@@ -29,7 +29,8 @@ Their root scripts are unchanged: `pnpm gen-video`, `pnpm dev-token`, `pnpm uplo
 `pnpm compose-autoscaler`.
 
 **Adding something here?** If it needs a `package.json`, it is a package — put it under
-`packages/<tier>/` and give it a `vp.tier` and `vp.layer`. `tools/` is for scripts and static assets only.
+`packages/<tier>/` and give it a `vp.layer` (the directory is its tier; `pnpm boundaries` refuses a `vp.tier`
+there). `tools/` is for scripts and static assets only.
 
 ---
 

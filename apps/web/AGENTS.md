@@ -131,10 +131,9 @@ Not built yet: `apps/web` depends on neither `@vp/validation` nor `@vp/domain-ru
   the **rule**, never the presenter: a `Problem` and a toast are different answers to the same failure.
 
 ### Rule 5: Nothing phones home
-No absolute third-party host in `src/`, no analytics beacon. Everything resolves against `API_BASE_URL`.
-`public/index.html` still breaks this: it loads `bootstrap-icons` from `cdn.jsdelivr.net` and preconnects to
-`fonts.googleapis.com`, `facebook.com` and an `fbcdn.net` host. Those are leftovers to remove, not a pattern
-to copy. See [docs/LOCAL_FIRST.md](../../docs/LOCAL_FIRST.md).
+No absolute third-party host in `src/` or `public/*.html`, no analytics beacon; `bootstrap-icons` is bundled
+from `node_modules`. Everything resolves against `API_BASE_URL` (`local-first.test.ts`). See
+[docs/LOCAL_FIRST.md](../../docs/LOCAL_FIRST.md).
 
 ---
 

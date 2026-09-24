@@ -1,7 +1,7 @@
-import { execFileSync } from 'node:child_process';
-import { matchesGlob, posix } from 'node:path';
+import { posix } from 'node:path';
+import { existsInRepo, missingPaths } from './doc-paths';
 import { markdownDocument, trackedDocuments } from './markdown';
-import { ROOT, read, trackedFiles, trackedPaths } from './repo-files';
+import { read, trackedFiles, trackedPaths } from './repo-files';
 import { type Command, commandsIn, makeTargets, phonyTargets } from './shell-commands';
 
 /** The documents a reader follows as instructions; the rest of `docs/` is a record of past work. */
@@ -83,76 +83,52 @@ function repoScope(): Scope {
   };
 }
 
-const TOP_LEVEL = new Set(trackedFiles().map((file) => file.split('/')[0] ?? ''));
-
-/** `packages/<tier>/` and `{a,b}` name a set of paths; as a glob, each must match one. */
-function asGlob(path: string): string {
-  return path.replaceAll(/<[^>]+>/g, '*');
-}
-
-function pathOf(span: string): string | undefined {
-  if (/\s/.test(span) || !span.includes('/')) return undefined;
-  const path = span.replace(/[:#].*$/, '').replace(/\/$/, '');
-  return TOP_LEVEL.has(path.split('/')[0] ?? '') ? path : undefined;
-}
-
-function existsInRepo(path: string, paths: ReadonlySet<string>): boolean {
-  const glob = asGlob(path);
-  const wildcardAt = glob.search(/[*{]/);
-  if (wildcardAt === -1) return paths.has(path);
-  const literalPrefix = glob.slice(0, wildcardAt);
-  return [...paths].some(
-    (candidate) => candidate.startsWith(literalPrefix) && matchesGlob(candidate, glob)
-  );
-}
-
-/** Paths git ignores are what a build or an install writes; a document may name them. */
-function ignoredByGit(paths: readonly string[]): Set<string> {
-  if (paths.length === 0) return new Set();
-  try {
-    const output = execFileSync('git', ['check-ignore', '--no-index', '--stdin'], {
-      cwd: ROOT,
-      encoding: 'utf8',
-      input: paths.join('\n'),
-    });
-    return new Set(output.split('\n').filter(Boolean));
-  } catch {
-    return new Set();
-  }
-}
-
-function missingPaths(documents: readonly string[]): string[] {
-  const paths = trackedPaths();
-  const missing: { document: string; path: string }[] = [];
-  for (const document of documents) {
-    for (const span of markdownDocument(document).codeSpans) {
-      const path = pathOf(span);
-      if (path !== undefined && !existsInRepo(path, paths)) missing.push({ document, path });
-    }
-  }
-  const ignored = ignoredByGit(missing.map(({ path }) => path));
-  return missing
-    .filter(({ path }) => !ignored.has(path))
-    .map(({ document, path }) => `${document}: ${path}`);
+function phonyFindings(makefile: string): string[] {
+  const phony = new Set(phonyTargets(makefile));
+  const rules = makeTargets(makefile);
+  return [
+    ...rules.filter((rule) => !phony.has(rule)).map((rule) => `${rule} is not .PHONY`),
+    ...[...phony]
+      .filter((name) => !rules.includes(name))
+      .map((name) => `${name} is .PHONY but no rule`),
+  ];
 }
 
 const TREE_GLYPHS = /^[\s│├└─]+/;
+const TREE_INDENT = 4;
+const TOP_LEVEL_DIRECTORY = 1;
+const TIER = 2;
+const PACKAGE = 3;
 
-/** The `packages/<tier>/<name>` directories the README's monorepo tree draws. */
-function packagesInTree(readme: string): string[] {
-  const tree = markdownDocument(readme).codeBlocks.find((block) => block.includes('├── packages/'));
+interface TreeEntry {
+  level: number;
+  name: string;
+}
+
+/** A tree line's depth (one per four columns of glyphs) and its first word, with the trailing `/` gone. */
+function treeEntry(line: string): TreeEntry {
+  const glyphs = TREE_GLYPHS.exec(line)?.[0] ?? '';
+  const name = (line.slice(glyphs.length).split(/\s+/)[0] ?? '').replace(/\/$/, '');
+  return { level: glyphs.length / TREE_INDENT, name };
+}
+
+/** The `packages/<tier>/<name>` directories a monorepo tree draws. */
+function packagesInTree(tree: string): string[] {
   const drawn: string[] = [];
   let inPackages = false;
   let tier = '';
-  for (const line of (tree ?? '').split('\n')) {
-    const entry = line.replace(TREE_GLYPHS, '').split(/\s+/)[0] ?? '';
-    const depth = line.length - line.replace(TREE_GLYPHS, '').length;
-    if (entry === 'packages/') inPackages = true;
-    else if (inPackages && depth <= 4) inPackages = false;
-    else if (inPackages && depth === 8) tier = entry.replace(/\/$/, '');
-    else if (inPackages && depth === 12) drawn.push(`packages/${tier}/${entry.replace(/\/$/, '')}`);
+  for (const { level, name } of tree.split('\n').map(treeEntry)) {
+    if (level === TOP_LEVEL_DIRECTORY) inPackages = name === 'packages';
+    else if (inPackages && level === TIER) tier = name;
+    else if (inPackages && level === PACKAGE) drawn.push(`packages/${tier}/${name}`);
   }
   return drawn;
+}
+
+function readmeTree(): string {
+  return (
+    markdownDocument('README.md').codeBlocks.find((block) => block.includes('├── packages/')) ?? ''
+  );
 }
 
 describe('architecture: doc-commands', () => {
@@ -207,10 +183,14 @@ describe('architecture: doc-commands', () => {
     expect(missing).toEqual([]);
   });
 
-  it('declares exactly the Makefile rules as .PHONY', () => {
-    const makefileText = read('Makefile');
+  it('fires on a rule missing from .PHONY and on a .PHONY name with no rule', () => {
+    expect(phonyFindings(makefile)).toEqual(['load-smoke is not .PHONY']);
+    expect(phonyFindings(`${makefile}\n.PHONY: gone`)).toEqual(['load-smoke is not .PHONY']);
+    expect(phonyFindings('.PHONY: up gone\nup:')).toEqual(['gone is .PHONY but no rule']);
+  });
 
-    expect([...phonyTargets(makefileText)].sort()).toEqual([...makeTargets(makefileText)].sort());
+  it('declares exactly the Makefile rules as .PHONY', () => {
+    expect(phonyFindings(read('Makefile'))).toEqual([]);
   });
 
   it('fires on a backticked path that does not exist, and reads placeholders as globs', () => {
@@ -223,13 +203,51 @@ describe('architecture: doc-commands', () => {
     expect(existsInRepo('packages/server/logger', paths)).toBe(false);
   });
 
+  it('fires on a path nothing tracks, and passes one a build or an install writes', () => {
+    const spans = [
+      {
+        document: 'README.md',
+        spans: ['docs/adr/', 'apps/web/node_modules', 'apps/api/dist/main.js'],
+      },
+    ];
+
+    expect(missingPaths(spans, trackedPaths())).toEqual(['README.md: docs/adr']);
+  });
+
   it('names only repo paths that exist or that a build writes', () => {
-    expect(missingPaths(checkedDocuments())).toEqual([]);
+    const documents = checkedDocuments().map((document) => ({
+      document,
+      spans: markdownDocument(document).codeSpans,
+    }));
+
+    expect(missingPaths(documents, trackedPaths())).toEqual([]);
+  });
+
+  it('reads the packages a tree draws under their tier, and stops at the next top-level directory', () => {
+    const tree = [
+      'repo/',
+      '├── apps/',
+      '│   └── api/',
+      '├── packages/',
+      '│   ├── universal/',
+      '│   │   └── result/          # Result',
+      '│   └── server/',
+      '│       ├── logger/',
+      '│       └── db/',
+      '└── infra/',
+      '    └── compose/',
+    ].join('\n');
+
+    expect(packagesInTree(tree)).toEqual([
+      'packages/universal/result',
+      'packages/server/logger',
+      'packages/server/db',
+    ]);
   });
 
   it('draws every workspace package in the README tree, and only those', () => {
     const packages = trackedFiles(':(glob)packages/*/*/package.json').map(posix.dirname);
 
-    expect(packagesInTree('README.md').sort()).toEqual(packages.sort());
+    expect(packagesInTree(readmeTree()).sort()).toEqual(packages.sort());
   });
 });
