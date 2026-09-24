@@ -9,7 +9,6 @@ import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 
 describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {

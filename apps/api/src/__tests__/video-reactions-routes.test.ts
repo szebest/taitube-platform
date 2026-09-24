@@ -1,4 +1,3 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryDatabaseClient,
@@ -8,12 +7,14 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app';
+import { bearer } from './in-memory-app';
 
-describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
+describe('video reactions routes', () => {
   let app: FastifyInstance;
   let repos: InMemoryRepositories;
   let storage: InMemoryStorageClient;
@@ -47,7 +48,6 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     storage = new InMemoryStorageClient();
     cache = new InMemoryCacheClient();
 
-    // Seed users
     await repos.users.upsert({
       id: testUser.id,
       email: testUser.email,
@@ -61,7 +61,6 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
       tier: 'free',
     });
 
-    // Seed public ready video
     await repos.videos.create({
       id: testVideoId,
       ownerId: testUser.id,
@@ -102,9 +101,7 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/v1/videos/${testVideoId}/reactions`,
-      headers: {
-        authorization: `Bearer ${guestUserToken}`,
-      },
+      headers: bearer(guestUserToken),
       payload: { type: 'LIKE' },
     });
 
@@ -120,9 +117,7 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/v1/videos/${nonExistent}/reactions`,
-      headers: {
-        authorization: `Bearer ${testUserToken}`,
-      },
+      headers: bearer(testUserToken),
       payload: { type: 'LIKE' },
     });
     expect(res.statusCode).toBe(404);
@@ -132,9 +127,7 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/v1/videos/${testVideoId}/reactions`,
-      headers: {
-        authorization: `Bearer ${testUserToken}`,
-      },
+      headers: bearer(testUserToken),
       payload: { type: 'LIKE' },
     });
 
@@ -150,9 +143,7 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${testVideoId}/reactions/me`,
-      headers: {
-        authorization: `Bearer ${testUserToken}`,
-      },
+      headers: bearer(testUserToken),
     });
 
     expect(res.statusCode).toBe(200);
@@ -161,7 +152,7 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     expect(body.reaction).toBe('LIKE');
   });
 
-  it('GET /v1/videos/:id details is enriched with likesCount and dislikesCount (AC 47)', async () => {
+  it('GET /v1/videos/:id details is enriched with likesCount and dislikesCount', async () => {
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${testVideoId}`,
@@ -174,47 +165,29 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     expect(body.dislikesCount).toBe(0);
   });
 
-  it('PUT /v1/videos/:id/reactions supports second user adding DISLIKE', async () => {
-    const res = await app.inject({
-      method: 'PUT',
-      url: `/v1/videos/${testVideoId}/reactions`,
-      headers: {
-        authorization: `Bearer ${otherUserToken}`,
-      },
-      payload: { type: 'DISLIKE' },
-    });
+  it.each([
+    { type: 'DISLIKE', likesCount: 1, dislikesCount: 1 },
+    { type: 'LIKE', likesCount: 2, dislikesCount: 0 },
+  ])(
+    'moves a second user to $type with likes $likesCount and dislikes $dislikesCount',
+    async ({ type, likesCount, dislikesCount }) => {
+      const res = await app.inject({
+        method: 'PUT',
+        url: `/v1/videos/${testVideoId}/reactions`,
+        headers: bearer(otherUserToken),
+        payload: { type },
+      });
 
-    expect(res.statusCode).toBe(200);
-    const body = res.json();
-    expect(body.reaction).toBe('DISLIKE');
-    expect(body.likesCount).toBe(1);
-    expect(body.dislikesCount).toBe(1);
-  });
-
-  it('PUT /v1/videos/:id/reactions switches reaction from DISLIKE to LIKE', async () => {
-    const res = await app.inject({
-      method: 'PUT',
-      url: `/v1/videos/${testVideoId}/reactions`,
-      headers: {
-        authorization: `Bearer ${otherUserToken}`,
-      },
-      payload: { type: 'LIKE' },
-    });
-
-    expect(res.statusCode).toBe(200);
-    const body = res.json();
-    expect(body.reaction).toBe('LIKE');
-    expect(body.likesCount).toBe(2);
-    expect(body.dislikesCount).toBe(0);
-  });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ reaction: type, likesCount, dislikesCount });
+    }
+  );
 
   it('PUT /v1/videos/:id/reactions with type NONE clears reaction', async () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/v1/videos/${testVideoId}/reactions`,
-      headers: {
-        authorization: `Bearer ${otherUserToken}`,
-      },
+      headers: bearer(otherUserToken),
       payload: { type: 'NONE' },
     });
 
@@ -224,13 +197,10 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     expect(body.likesCount).toBe(1);
     expect(body.dislikesCount).toBe(0);
 
-    // Verify GET /me returns null
     const meRes = await app.inject({
       method: 'GET',
       url: `/v1/videos/${testVideoId}/reactions/me`,
-      headers: {
-        authorization: `Bearer ${otherUserToken}`,
-      },
+      headers: bearer(otherUserToken),
     });
     expect(meRes.statusCode).toBe(200);
     expect(meRes.json().reaction).toBeNull();
@@ -240,9 +210,7 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     const putRes = await app.inject({
       method: 'PUT',
       url: `/videos/${testVideoId}/reactions`,
-      headers: {
-        authorization: `Bearer ${otherUserToken}`,
-      },
+      headers: bearer(otherUserToken),
       payload: { type: 'DISLIKE' },
     });
     expect(putRes.statusCode).toBe(200);
@@ -250,9 +218,7 @@ describe('Video Reactions API Routes (Ticket 40 AC 44-47)', () => {
     const getRes = await app.inject({
       method: 'GET',
       url: `/videos/${testVideoId}/reactions/me`,
-      headers: {
-        authorization: `Bearer ${otherUserToken}`,
-      },
+      headers: bearer(otherUserToken),
     });
     expect(getRes.statusCode).toBe(200);
     expect(getRes.json().reaction).toBe('DISLIKE');

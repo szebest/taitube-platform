@@ -7,6 +7,7 @@ const TEMPLATE_PREFIX = /^(taitube|video|user):/;
 const STRING_PREFIX = /^taitube:/;
 
 function handBuiltKeys(name: string, source: string): string[] {
+  if (!/(taitube|video|user):/.test(source)) return [];
   const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
   const found: string[] = [];
   const visit = (node: ts.Node) => {

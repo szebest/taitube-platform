@@ -65,6 +65,7 @@ function testTitles(file: ts.SourceFile): string[] {
 }
 
 function processReferences(name: string, source: string): string[] {
+  if (!(WORK_ITEM.test(source) || NUMBERED_STEP.test(source))) return [];
   const kind = name.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true, kind);
   return [

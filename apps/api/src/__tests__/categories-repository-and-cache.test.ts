@@ -1,4 +1,3 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryCategoryRepository,
@@ -6,6 +5,7 @@ import {
 } from '@vp/adapters/in-memory';
 import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cache.adapter';
 import type { Category } from '@vp/domain';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
@@ -29,7 +29,7 @@ function aCategoryRow(overrides: Partial<Category> = {}): Category {
   };
 }
 
-describe('Category Repositories & L1/L2 Cache Service (Ticket 37)', () => {
+describe('category repositories and the L1/L2 cache service', () => {
   describe('InMemoryCategoryRepository', () => {
     let repo: InMemoryCategoryRepository;
     let videoRepo: InMemoryVideoRepository;
