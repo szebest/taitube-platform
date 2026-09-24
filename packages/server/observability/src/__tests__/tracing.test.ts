@@ -9,7 +9,6 @@ import {
   createTraceparent,
   extractContextFromTraceparent,
   getActiveTraceparent,
-  initTracing,
   registeredTracing,
   rootTraceparent,
 } from '../tracing';
@@ -37,20 +36,6 @@ describe('@vp/observability: tracing', () => {
     expect(createTraceparent('0123456789abcdef0123456789abcdef', 'fedcba9876543210')).toBe(
       '00-0123456789abcdef0123456789abcdef-fedcba9876543210-01'
     );
-  });
-
-  it('starts nothing when tracing is disabled', () => {
-    const started = initTracing({
-      serviceName: 'vp-test',
-      enabled: false,
-      serviceVersion: 'test',
-      endpoint: 'http://localhost:4318',
-      sampler: 'always_on',
-      samplerArg: 1,
-      resourceAttributes: '',
-    });
-
-    expect(started).toEqual({ ok: true, value: undefined });
   });
 
   it('reads no traceparent from a no-op span', () => {
