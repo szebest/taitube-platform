@@ -98,8 +98,12 @@ function pathOf(span: string): string | undefined {
 
 function existsInRepo(path: string, paths: ReadonlySet<string>): boolean {
   const glob = asGlob(path);
-  if (glob === path && !path.includes('*') && !path.includes('{')) return paths.has(path);
-  return [...paths].some((candidate) => matchesGlob(candidate, glob));
+  const wildcardAt = glob.search(/[*{]/);
+  if (wildcardAt === -1) return paths.has(path);
+  const literalPrefix = glob.slice(0, wildcardAt);
+  return [...paths].some(
+    (candidate) => candidate.startsWith(literalPrefix) && matchesGlob(candidate, glob)
+  );
 }
 
 /** Paths git ignores are what a build or an install writes; a document may name them. */

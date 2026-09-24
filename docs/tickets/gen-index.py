@@ -4,7 +4,7 @@ from its `Blocked by` row, and check every PRD/SDD anchor the tickets link to.
 
     python3 docs/tickets/gen-index.py              write README.md and the Blocks rows
     python3 docs/tickets/gen-index.py --check      write nothing; exit 1 when anything would change
-    python3 docs/tickets/gen-index.py --anchors    print the anchor of every heading of stdin, one a line
+    python3 docs/tickets/gen-index.py --anchors F  print `F<TAB>anchor` for every heading of each file F
 
 `--dir` points it at another tickets directory (its specs are read from `<dir>/..`)."""
 import argparse
@@ -264,11 +264,13 @@ def generate(check):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--check', action='store_true')
-    parser.add_argument('--anchors', action='store_true')
+    parser.add_argument('--anchors', nargs='+', metavar='FILE')
     parser.add_argument('--dir', default=os.path.dirname(os.path.abspath(__file__)))
     args = parser.parse_args()
     if args.anchors:
-        print('\n'.join(heading_anchors(sys.stdin.read())))
+        for file in args.anchors:
+            for anchor in heading_anchors(open(file, encoding='utf-8').read()):
+                print(f'{file}\t{anchor}')
         return
     os.chdir(args.dir)
     try:

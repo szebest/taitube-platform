@@ -1,16 +1,31 @@
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import GithubSlugger from 'github-slugger';
-import { markdownDocument, parseMarkdown } from './markdown';
+import { parseMarkdown } from './markdown';
 import { ROOT, read } from './repo-files';
 
 const GEN_INDEX = join(ROOT, 'docs/tickets/gen-index.py');
 
-function genIndex(args: string[], input?: string) {
-  const run = spawnSync('python3', [GEN_INDEX, ...args], { encoding: 'utf8', input });
-  return { status: run.status, output: `${run.stdout}${run.stderr}` };
+interface Run {
+  status: number | null;
+  output: string;
+}
+
+/** Asynchronous, so the runs below overlap: each one is mostly Python starting up. */
+function genIndex(args: string[]): Promise<Run> {
+  return new Promise((resolve) => {
+    const child = spawn('python3', [GEN_INDEX, ...args]);
+    let output = '';
+    child.stdout.on('data', (chunk) => {
+      output += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      output += chunk;
+    });
+    child.on('close', (status) => resolve({ status, output }));
+  });
 }
 
 const EDGE_CASES = [
@@ -73,59 +88,82 @@ function frontierLines(dir: string): string[] {
   return section.split('\n').filter((line) => line.startsWith('- '));
 }
 
+const EDGE_CASES_FILE = join(mkdtempSync(join(tmpdir(), 'gen-index-')), 'edge-cases.md');
+
+const SLUGGED = [
+  { file: join(ROOT, 'docs/SDD.md'), text: () => read('docs/SDD.md') },
+  { file: join(ROOT, 'docs/PRD.md'), text: () => read('docs/PRD.md') },
+  { file: EDGE_CASES_FILE, text: () => EDGE_CASES },
+];
+
+async function frontierAcrossAStatusChange(): Promise<{
+  whileOpen: string[];
+  afterDone: string[];
+}> {
+  const dir = ticketsDirectory([
+    { number: '01', status: 'in-progress', blockedBy: 'None' },
+    { number: '02', status: 'ready', blockedBy: '01 — Ticket 01' },
+  ]);
+  await genIndex(['--dir', dir]);
+  const whileOpen = frontierLines(dir);
+  writeFileSync(
+    join(dir, '01-ticket.md'),
+    ticketText({ number: '01', status: 'done', blockedBy: 'None' })
+  );
+  await genIndex(['--dir', dir]);
+  const afterDone = frontierLines(dir);
+  rmSync(join(dir, '..'), { recursive: true });
+  return { whileOpen, afterDone };
+}
+
+async function refusedStatus(): Promise<Run> {
+  const dir = ticketsDirectory([{ number: '01', status: 'ready-for-agent', blockedBy: 'None' }]);
+  const run = await genIndex(['--dir', dir]);
+  rmSync(join(dir, '..'), { recursive: true });
+  return run;
+}
+
 describe('architecture: gen-index', () => {
+  let check: Run;
+  let anchors: Run;
+  let refusal: Run;
+  let frontier: { whileOpen: string[]; afterDone: string[] };
+
+  beforeAll(async () => {
+    writeFileSync(EDGE_CASES_FILE, EDGE_CASES);
+    [check, anchors, refusal, frontier] = await Promise.all([
+      genIndex(['--check']),
+      genIndex(['--anchors', ...SLUGGED.map(({ file }) => file)]),
+      refusedStatus(),
+      frontierAcrossAStatusChange(),
+    ]);
+    rmSync(dirname(EDGE_CASES_FILE), { recursive: true });
+  });
+
   it('holds the index current, every status in the vocabulary and every spec anchor real', () => {
-    const run = genIndex(['--check']);
-
-    expect(run.output).toMatch(/^ok: /);
-    expect(run.status).toBe(0);
+    expect(check.output).toMatch(/^ok: /);
+    expect(check.status).toBe(0);
   });
 
-  it.each([
-    ['SDD', 'docs/SDD.md'],
-    ['PRD', 'docs/PRD.md'],
-  ])('slugs every %s heading the way github-slugger does', (_name, file) => {
-    const slugger = new GithubSlugger();
-    const expected = markdownDocument(file).headings.map((heading) => slugger.slug(heading.text));
+  it('slugs every SDD and PRD heading, and the edge cases, the way github-slugger does', () => {
+    const expected = SLUGGED.flatMap(({ file, text }) =>
+      slugsOf(text()).map((anchor) => `${file}\t${anchor}`)
+    );
 
-    expect(genIndex(['--anchors'], read(file)).output.trim().split('\n')).toEqual(expected);
-  });
-
-  it('agrees with github-slugger on dashes, ampersands, code, repeats, unicode and fences', () => {
-    const expected = slugsOf(EDGE_CASES);
-
-    expect(expected).toContain('adr-24--result-typed-errors');
-    expect(expected).toContain('notes-1');
-    expect(genIndex(['--anchors'], EDGE_CASES).output.trim().split('\n')).toEqual(expected);
+    expect(slugsOf(EDGE_CASES)).toContain('adr-24--result-typed-errors');
+    expect(slugsOf(EDGE_CASES)).toContain('notes-1');
+    expect(anchors.output.trim().split('\n')).toEqual(expected);
   });
 
   it('refuses a status outside the vocabulary', () => {
-    const dir = ticketsDirectory([{ number: '01', status: 'ready-for-agent', blockedBy: 'None' }]);
-
-    const run = genIndex(['--dir', dir]);
-    rmSync(join(dir, '..'), { recursive: true });
-
-    expect(run.status).toBe(1);
-    expect(run.output).toContain('01-ticket.md: unknown status `ready-for-agent`');
+    expect(refusal.status).toBe(1);
+    expect(refusal.output).toContain('01-ticket.md: unknown status `ready-for-agent`');
   });
 
   it('moves the frontier when a status changes', () => {
-    const dir = ticketsDirectory([
-      { number: '01', status: 'in-progress', blockedBy: 'None' },
-      { number: '02', status: 'ready', blockedBy: '01 — Ticket 01' },
+    expect(frontier.whileOpen).toEqual([
+      '- none: every ticket is done, in progress or behind a blocker',
     ]);
-
-    genIndex(['--dir', dir]);
-    const whileOpen = frontierLines(dir);
-    writeFileSync(
-      join(dir, '01-ticket.md'),
-      ticketText({ number: '01', status: 'done', blockedBy: 'None' })
-    );
-    genIndex(['--dir', dir]);
-    const afterDone = frontierLines(dir);
-    rmSync(join(dir, '..'), { recursive: true });
-
-    expect(whileOpen).toEqual(['- none: every ticket is done, in progress or behind a blocker']);
-    expect(afterDone).toEqual(['- [02: Ticket 02](02-ticket.md)']);
+    expect(frontier.afterDone).toEqual(['- [02: Ticket 02](02-ticket.md)']);
   });
 });
