@@ -9,6 +9,7 @@ import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import {
   type FlowWorld,
+  completionOf,
   encodeSegments,
   fakeMedia,
   flowWorld,
@@ -67,8 +68,9 @@ describe('apps/worker: fan-out to renditions and fan-in to the package', () => {
     await world.getQueue('thumbnail').process(throughRunner(thumbnail));
     expect(await packageState()).toBe('waiting-children');
 
+    const packaged = completionOf(packageQueue, packageJobId);
     await world.getQueue('transcode-480p').process(transcode());
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await packaged;
     expect(await packageState()).toBe('completed');
 
     const video = expectOk(await world.repositories.videos.findById(videoId));
