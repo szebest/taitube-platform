@@ -32,16 +32,18 @@ const APP_SOURCE = /^file:\/\/(?!.*\/node_modules\/)/;
 
 const toError = (cause: unknown): Error => new Error('tracing failed', { cause });
 
-function parseResourceAttributes(raw?: string): Record<string, string> {
-  if (!raw) return {};
-  const attrs: Record<string, string> = {};
-  for (const item of raw.split(',')) {
-    const [k, v] = item.split('=');
-    if (k && v) {
-      attrs[k.trim()] = v.trim();
-    }
+/** `OTEL_RESOURCE_ATTRIBUTES` is `key=value` pairs joined by commas; a pair with no `=` is dropped. */
+function resourceAttributes(raw: string): Record<string, string> {
+  const attributes: Record<string, string> = {};
+  for (const pair of raw.split(',')) {
+    const separator = pair.indexOf('=');
+    if (separator === -1) continue;
+    const key = pair.slice(0, separator).trim();
+    const value = pair.slice(separator + 1).trim();
+    if (key === '' || value === '') continue;
+    attributes[key] = value;
   }
-  return attrs;
+  return attributes;
 }
 
 function resolveSampler(st: string, ratio: number): Sampler {
@@ -76,7 +78,7 @@ export function initTracing(config: TracingConfig): Result<void, Error> {
       resource: resourceFromAttributes({
         [ATTR_SERVICE_NAME]: config.serviceName,
         [ATTR_SERVICE_VERSION]: config.serviceVersion,
-        ...parseResourceAttributes(config.resourceAttributes),
+        ...resourceAttributes(config.resourceAttributes),
       }),
       traceExporter: new OTLPTraceExporter({
         url: `${config.endpoint.replace(/\/$/, '')}/v1/traces`,

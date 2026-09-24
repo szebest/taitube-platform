@@ -1,14 +1,25 @@
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { ADMIN_TOKEN, TOKENS, bearer, buildTestApp } from '../../../__tests__/test-app';
+import {
+  ADMIN_TOKEN,
+  TOKENS,
+  bearer,
+  buildTestApp,
+  inMemoryQueues,
+} from '../../../__tests__/test-app';
 
 describe('admin queues board', () => {
   let app: FastifyInstance;
+  const transcode = new InMemoryJobQueue('transcode-720p');
+
   beforeAll(async () => {
     ({ app } = await buildTestApp({
       config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+      adapters: { queues: inMemoryQueues(transcode) },
     }));
   });
 
@@ -41,7 +52,17 @@ describe('admin queues board', () => {
     }
   );
 
-  it('serves the board to an operator with every pipeline queue', async () => {
+  it('serves the board UI to the operator token', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/admin/queues',
+      headers: { 'x-admin-token': ADMIN_TOKEN },
+    });
+
+    expect([200, 301, 302]).toContain(res.statusCode);
+  });
+
+  it('lists every pipeline queue and the DLQ to an admin', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/admin/queues/api/queues',
@@ -50,7 +71,20 @@ describe('admin queues board', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.json().queues.map((queue: { name: string }) => queue.name)).toEqual(
-      expect.arrayContaining([...QUEUES])
+      expect.arrayContaining([...QUEUES, 'dlq'])
     );
+  });
+
+  it('pauses and resumes a queue for an admin', async () => {
+    const queueUrl = '/admin/queues/api/queues/transcode-720p';
+    const headers = bearer(TOKENS.admin);
+
+    const paused = await app.inject({ method: 'PUT', url: `${queueUrl}/pause`, headers });
+    expect(paused.statusCode).toBe(200);
+    expect(expectOk(await transcode.isPaused())).toBe(true);
+
+    const resumed = await app.inject({ method: 'PUT', url: `${queueUrl}/resume`, headers });
+    expect(resumed.statusCode).toBe(200);
+    expect(expectOk(await transcode.isPaused())).toBe(false);
   });
 });

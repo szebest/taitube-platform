@@ -55,6 +55,7 @@ describe('admin DLQ routes', () => {
     { caller: 'an anonymous caller', headers: {}, status: 401 },
     { caller: 'a non-admin user', headers: bearer(TOKENS.user), status: 403 },
     { caller: 'an operator', headers: admin, status: 200 },
+    { caller: 'an admin by Bearer JWT', headers: bearer(TOKENS.admin), status: 200 },
   ])('answers $caller listing the DLQ with $status', async ({ headers, status }) => {
     const res = await app.inject({ method: 'GET', url: '/v1/admin/dlq', headers });
 
@@ -73,6 +74,23 @@ describe('admin DLQ routes', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.json().items.map((item: { id: string }) => item.id)).toEqual([replayed]);
+  });
+
+  it('pages the listing with limit and the cursor it hands back', async () => {
+    for (let i = 0; i < 4; i++) await park('REPLAYED');
+
+    const first = await app.inject({ method: 'GET', url: '/v1/admin/dlq?limit=2', headers: admin });
+    const { items: firstItems, nextCursor } = first.json();
+    const second = await app.inject({
+      method: 'GET',
+      url: `/v1/admin/dlq?limit=2&cursor=${encodeURIComponent(nextCursor)}`,
+      headers: admin,
+    });
+    const secondIds = second.json().items.map((item: { id: string }) => item.id);
+
+    expect(firstItems).toHaveLength(2);
+    expect(secondIds).toHaveLength(2);
+    expect(secondIds).not.toContain(firstItems[0].id);
   });
 
   it('answers 400 on a status outside the DLQ vocabulary', async () => {
@@ -100,6 +118,14 @@ describe('admin DLQ routes', () => {
     expect(transcode.enqueuedJobs.map((job) => job.id)).toEqual([
       `${VIDEO}--transcode--720p--g1--r1`,
     ]);
+    expect(expectOk(await repositories.dlq.findById(id))).toMatchObject({ status: 'REPLAYED' });
+    const events = expectOk(await repositories.events.findByVideoId(VIDEO));
+    expect(events.find((event) => event.type === 'dlq.replayed')?.payload).toMatchObject({
+      dlqEntryId: id,
+      originQueue: 'transcode-720p',
+      originalJobId: `${VIDEO}--transcode--720p--g1`,
+      replayJobId: `${VIDEO}--transcode--720p--g1--r1`,
+    });
   });
 
   it('discards an entry with an empty 204', async () => {
@@ -110,6 +136,41 @@ describe('admin DLQ routes', () => {
     expect(res.statusCode).toBe(204);
     expect(res.body).toBe('');
     expect(expectOk(await repositories.dlq.findById(id))?.status).toBe('DISCARDED');
+    const events = expectOk(await repositories.events.findByVideoId(VIDEO));
+    expect(events.find((event) => event.type === 'dlq.discarded')?.payload).toMatchObject({
+      dlqEntryId: id,
+      originQueue: 'transcode-720p',
+    });
+  });
+
+  it.each([
+    { action: 'replay', method: 'POST' as const, suffix: '/replay', headers: {}, status: 401 },
+    { action: 'discard', method: 'DELETE' as const, suffix: '', headers: {}, status: 401 },
+    {
+      action: 'replay',
+      method: 'POST' as const,
+      suffix: '/replay',
+      headers: bearer(TOKENS.user),
+      status: 403,
+    },
+    {
+      action: 'discard',
+      method: 'DELETE' as const,
+      suffix: '',
+      headers: bearer(TOKENS.user),
+      status: 403,
+    },
+  ])('refuses a $action by a caller who is not an admin with $status', async (refused) => {
+    const id = await park();
+
+    const res = await app.inject({
+      method: refused.method,
+      url: `/v1/admin/dlq/${id}${refused.suffix}`,
+      headers: refused.headers,
+    });
+
+    expect(res.statusCode).toBe(refused.status);
+    expect(expectOk(await repositories.dlq.findById(id))?.status).toBe('PARKED');
   });
 
   it.each([

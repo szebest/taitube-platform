@@ -3,8 +3,9 @@ import { join, resolve } from 'node:path';
 import { createMockJob, definePackageTestConfig, withEnv } from '../index';
 
 const ROOT = resolve(import.meta.dirname, '../../../../..');
-const PROJECT_DIRS = ['apps', 'packages/universal', 'packages/server', 'packages/client'];
-const STANDALONE_PROJECTS = ['tests/architecture', 'tests/in-process', 'scripts/__tests__'];
+const PACKAGE_PARENTS = ['apps', 'packages/universal', 'packages/server', 'packages/client'];
+const OTHER_DIRS = ['tests', 'scripts/__tests__'];
+const TEST_CONFIG = /^(vitest.*|integration)\.config\.ts$/;
 
 function subdirectories(parent: string): string[] {
   return readdirSync(join(ROOT, parent), { withFileTypes: true })
@@ -12,11 +13,16 @@ function subdirectories(parent: string): string[] {
     .map((entry) => join(parent, entry.name));
 }
 
-function projectConfigs(): string[] {
-  const dirs = [...PROJECT_DIRS.flatMap(subdirectories), ...STANDALONE_PROJECTS];
+/** Every vitest config in the repo: the projects `pnpm test` runs, e2e and both integration runs. */
+function testConfigs(): string[] {
+  const dirs = [
+    ...PACKAGE_PARENTS.flatMap(subdirectories),
+    ...OTHER_DIRS,
+    ...subdirectories('tests'),
+  ];
   return dirs.flatMap((dir) =>
     readdirSync(join(ROOT, dir))
-      .filter((file) => /^vitest.*\.config\.ts$/.test(file))
+      .filter((file) => TEST_CONFIG.test(file))
       .map((file) => join(dir, file))
   );
 }
@@ -34,7 +40,17 @@ describe('@vp/testing', () => {
     expect(test).toMatchObject({ testTimeout: 60_000, restoreMocks: true, globals: true });
   });
 
-  it.each(projectConfigs())('runs %s with spies and env vars restored', async (config) => {
+  it('reads the e2e and both integration configs as well as the projects', () => {
+    expect(testConfigs()).toEqual(
+      expect.arrayContaining([
+        'tests/vitest.config.ts',
+        'tests/integration/vitest.config.ts',
+        'packages/server/ffmpeg/integration.config.ts',
+      ])
+    );
+  });
+
+  it.each(testConfigs())('runs %s with spies and env vars restored', async (config) => {
     const { default: loaded } = await import(join(ROOT, config));
 
     expect(loaded.test).toMatchObject({ restoreMocks: true, unstubEnvs: true });

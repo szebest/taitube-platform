@@ -77,23 +77,35 @@ describe('housekeeping schedulers and video deletion', () => {
   });
 
   describe('DELETE /v1/videos/:id soft delete', () => {
-    it('rejects unauthenticated requests with 401', async () => {
-      const res = await deleteVideo(uuidv7());
-      expect(res.statusCode).toBe(401);
-    });
+    it.each([
+      {
+        caller: 'an anonymous caller',
+        token: undefined,
+        owned: true,
+        status: 401,
+        code: ErrorCodes.UNAUTHORIZED,
+      },
+      {
+        caller: 'a missing video',
+        token: TOKENS.user,
+        owned: false,
+        status: 404,
+        code: ErrorCodes.VIDEO_NOT_FOUND,
+      },
+      {
+        caller: 'a user who does not own it',
+        token: TOKENS.otherUser,
+        owned: true,
+        status: 403,
+        code: ErrorCodes.FORBIDDEN,
+      },
+    ])('refuses $caller with $status', async ({ token, owned, status, code }) => {
+      const videoId = owned ? await ownedVideo() : uuidv7();
 
-    it('returns 404 if video does not exist', async () => {
-      const res = await deleteVideo(uuidv7(), TOKENS.user);
+      const res = await deleteVideo(videoId, token);
 
-      expect(res.statusCode).toBe(404);
-      expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
-    });
-
-    it('rejects deletion by a non-owner user with 403', async () => {
-      const res = await deleteVideo(await ownedVideo(), TOKENS.otherUser);
-
-      expect(res.statusCode).toBe(403);
-      expect(res.json().code).toBe(ErrorCodes.FORBIDDEN);
+      expect(res.statusCode).toBe(status);
+      expect(res.json().code).toBe(code);
     });
 
     it('allows owner to soft delete video via DELETE /v1/videos/:id', async () => {

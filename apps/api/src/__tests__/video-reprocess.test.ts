@@ -45,21 +45,33 @@ describe('POST /videos/:id/reprocess', () => {
     await ctx.app.close();
   });
 
-  it('rejects unauthenticated request with 401', async () => {
-    const res = await reprocess(VIDEO_ID);
-    expect(res.statusCode).toBe(401);
-  });
+  it.each([
+    {
+      caller: 'an anonymous caller',
+      token: undefined,
+      videoId: VIDEO_ID,
+      status: 401,
+      code: ErrorCodes.UNAUTHORIZED,
+    },
+    {
+      caller: 'a user who neither owns it nor is an admin',
+      token: TOKENS.otherUser,
+      videoId: VIDEO_ID,
+      status: 403,
+      code: ErrorCodes.FORBIDDEN,
+    },
+    {
+      caller: 'an admin asking for a video that does not exist',
+      token: TOKENS.admin,
+      videoId: '018f0000-0000-7000-8000-000000000999',
+      status: 404,
+      code: ErrorCodes.VIDEO_NOT_FOUND,
+    },
+  ])('refuses $caller with $status', async ({ token, videoId, status, code }) => {
+    const res = await reprocess(videoId, token);
 
-  it('rejects non-owner non-admin with 403', async () => {
-    const res = await reprocess(VIDEO_ID, TOKENS.otherUser);
-    expect(res.statusCode).toBe(403);
-    expect(res.json().code).toBe(ErrorCodes.FORBIDDEN);
-  });
-
-  it('returns 404 for nonexistent video', async () => {
-    const res = await reprocess('018f0000-0000-7000-8000-000000000999', TOKENS.admin);
-    expect(res.statusCode).toBe(404);
-    expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
+    expect(res.statusCode).toBe(status);
+    expect(res.json().code).toBe(code);
   });
 
   it('owner can reprocess: bumps generation, transitions to PROBING, enqueues probe job', async () => {
