@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { DOCUMENT_ASSERTIONS } from './vitest.docs.config';
 import { TYPE_AWARE } from './vitest.typed.config';
 import { sourceAliases } from './workspace-sources';
 
@@ -14,7 +15,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['**/*.test.ts'],
-    exclude: TYPE_AWARE,
+    exclude: [...TYPE_AWARE, ...DOCUMENT_ASSERTIONS],
     testTimeout: 30_000,
     pool: 'threads',
     poolOptions: { threads: { singleThread: true, isolate: false } },
