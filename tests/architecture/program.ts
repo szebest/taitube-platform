@@ -14,6 +14,11 @@ function workspacePaths(): Record<string, string[]> {
 
 const OPTIONS: ts.CompilerOptions = {
   target: ts.ScriptTarget.ES2022,
+  /**
+   * No DOM: `lib.dom.d.ts` is most of what the program parses, and none of the assertions asks about a
+   * browser global. In `apps/web` one reads as an error type, which is not a `Result` or a config leaf.
+   */
+  lib: ['lib.es2022.d.ts'],
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
   jsx: ts.JsxEmit.ReactJSX,
@@ -55,13 +60,14 @@ function libSource(file: string, version: ts.ScriptTarget): ts.SourceFile | unde
  */
 function workspaceOnlyHost(): ts.CompilerHost {
   const host = ts.createCompilerHost(OPTIONS);
+  const resolutions = ts.createModuleResolutionCache(ROOT, (name) => name, OPTIONS);
   const parse = host.getSourceFile.bind(host);
   host.getSourceFile = (file, version, ...rest) =>
     libSource(file, ts.ScriptTarget.ES2022) ?? parse(file, version, ...rest);
   host.resolveModuleNameLiterals = (literals, containingFile, redirected, options) =>
     literals.map(({ text }) =>
       text.startsWith('.') || text.startsWith('@vp/') || text === 'fastify'
-        ? ts.resolveModuleName(text, containingFile, options, host, undefined, redirected)
+        ? ts.resolveModuleName(text, containingFile, options, host, resolutions, redirected)
         : { resolvedModule: undefined }
     );
   return host;
