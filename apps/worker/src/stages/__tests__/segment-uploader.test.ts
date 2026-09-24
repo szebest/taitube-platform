@@ -33,6 +33,7 @@ describe('streaming segment uploader', () => {
           concurrency: 4,
           maxRetries: 3,
           retryDelayMs: 0,
+          pollIntervalMs: 100,
           every,
           ...target,
         }),

@@ -17,6 +17,7 @@ export interface SegmentUploaderOptions {
   concurrency: number;
   maxRetries: number;
   retryDelayMs: number;
+  pollIntervalMs: number;
   every: Every;
   logger: Logger;
 }
@@ -67,6 +68,7 @@ export class StreamingSegmentUploader implements SegmentUploader {
   private readonly concurrency: number;
   private readonly maxRetries: number;
   private readonly retryDelayMs: number;
+  private readonly pollIntervalMs: number;
   private readonly every: Every;
   private readonly logger: Logger;
 
@@ -88,6 +90,7 @@ export class StreamingSegmentUploader implements SegmentUploader {
     this.concurrency = options.concurrency;
     this.maxRetries = options.maxRetries;
     this.retryDelayMs = options.retryDelayMs;
+    this.pollIntervalMs = options.pollIntervalMs;
     this.every = options.every;
     this.logger = options.logger.child({
       component: 'streaming-uploader',
@@ -97,7 +100,7 @@ export class StreamingSegmentUploader implements SegmentUploader {
 
   start(): void {
     if (this.polling) return;
-    this.polling = this.every(100, () => this.poll());
+    this.polling = this.every(this.pollIntervalMs, () => this.poll());
     void this.poll();
   }
 

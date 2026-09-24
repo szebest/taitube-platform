@@ -128,7 +128,12 @@ export interface AppConfig {
       thumbnailTimeoutMs: number;
     };
     sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
-    segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
+    segmentUpload: {
+      concurrency: number;
+      maxRetries: number;
+      retryDelayMs: number;
+      pollIntervalMs: number;
+    };
   };
 }
 
