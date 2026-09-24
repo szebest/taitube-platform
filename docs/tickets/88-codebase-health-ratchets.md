@@ -214,7 +214,7 @@ connection.
 1. With a metrics port already bound, the worker exits non-zero **without having consumed a job**. Proof: `apps/worker/src/__tests__/main.test.ts`, asserting zero processed. **Done in 88b: the metrics server starts before the consumer, a bind failure fails `start()`, `run()` exits 1 and `InMemoryJobQueue#process` is never called.**
 2. `SIGTERM` delivered during `container.start()` runs `shutdownOnce` and exits 0. Proof: main specs for both deployables. **Done in 88b: both mains take a `ProcessHost` and call `exitOnSignals` before `start()`; a dispose during start answers `interrupted`. `apps/{api,worker}/src/__tests__/main.test.ts`.**
 3. `start-order.test.ts` asserts, for both composition roots, that every consumer starts after metrics and heartbeat. Proof: architecture test over the registration order, with a fixture that fires. **Done in 88b: `tests/architecture/start-order.test.ts` composes both roots in-memory and reads `container.started()`.**
-4. Worker liveness fails when the heartbeat file is missing or older than `3 x` its interval; every worker deployment has a readiness probe that fails when Redis is down. Proof: `k8s-manifests` spec; a toxiproxy chaos run named in the PR. **Done in 88b: liveness is `test -f ... && ... -lt 45`, readiness is `/readyz` on the metrics port; `k8s-manifests.test.ts` runs the liveness command against a fresh, a 45 s old and a missing file. The chaos run is in the PR.**
+4. Worker liveness fails when the heartbeat file is missing or older than `3 x` its interval; every worker deployment has a readiness probe that fails when Redis is down. Proof: `k8s-manifests` spec; a toxiproxy chaos run named in the PR. **Done in 88b: liveness is `test -f ... && ... -lt 45`, readiness is `/readyz` on the metrics port; `k8s-manifests.test.ts` runs the liveness command against a fresh, a 45 s old and a missing file. The toxiproxy chaos run is not done here: it moves to 88d, beside W9 AC 10, which needs the same compose run with a dependency stopped.**
 5. The heartbeat is written by one `Heartbeat` module, in one format: integer epoch seconds and a newline, which is what the probe's arithmetic reads. Proof: `Heartbeat` spec asserts the file matches `^\d+\n$` after every write path; zero-matches row `heartbeatPath` outside the `Heartbeat` module and composition, 0. **Done in 88b: `apps/worker/src/heartbeat.ts`, `heartbeat.test.ts`; the stages no longer write the file.**
 6. A transcode whose step heartbeat returns `Err` (lost fencing) aborts FFmpeg and commits nothing. Today the `Result` is discarded (`transcode.ts:231`). Proof: stage spec. **Done in 88b: a lost lease aborts FFmpeg through an `AbortSignal` (`runFfmpeg` now takes one); `apps/worker/src/stages/__tests__/transcode.test.ts` for a refused renewal and a fenced step.**
 7. Compose's API healthcheck uses `/readyz`; workers have a compose healthcheck. Proof: compose spec. **Done in 88b: `packages/server/testing/src/__tests__/compose-manifests.test.ts`.**
@@ -283,7 +283,6 @@ of every persisted error code. Fastify's own 4xx errors map to a problem with th
 - The failure handler persists `errorCodeOf(err)`: the error's own vocabulary code, or its cause's, else `INTERNAL`. `UNRECOVERABLE_ERROR` is gone; the DLQ copy still carries `unrecoverable`.
 - `validateJobId` returns a `Result` and runs once, in `instrument()`, instead of first thing in five stages.
 - The observability package moved from T1 to T2 to depend on `@vp/result`; the CLIs that now use `@vp/result` moved the same way.
-- The reprocess fast-path enqueue is `ignore`d, not returned: the outbox row committed with the transition delivers the probe. `upload-complete` still answers its enqueue failure, which is unchanged behaviour.
 
 ### W6 - Boundaries & file discipline
 
@@ -397,7 +396,7 @@ says so.
 7. A 404 records `route="unmatched"`. Proof: `http-metrics` spec.
 8. Running the API with the collector exporter captured in-process, one request yields an HTTP server span whose trace id matches the `traceparent` on the job it enqueued. Proof: spec. `reconcile-uploads` creates a new root trace per repair instead of a constant.
 9. `time_to_ready_seconds` measures from upload complete, as §13.1 says. Proof: stage spec with an injected clock.
-10. S3 `checkHealth` issues a `HeadBucket`; `/readyz` answers 503 when MinIO is stopped. Proof: adapter spec with a failing fake client; chaos run.
+10. S3 `checkHealth` issues a `HeadBucket`; `/readyz` answers 503 when MinIO is stopped. Proof: adapter spec with a failing fake client; chaos run. The same compose run carries W3 AC 4's toxiproxy proof: a worker's `/readyz` answers 503 while Redis is cut off.
 11. The `neon_compute_hours_used` panel and its `vector(12.5)` fallback are removed or fed by a real exporter. Proof: dashboard spec.
 
 ### W10 - CI speed
