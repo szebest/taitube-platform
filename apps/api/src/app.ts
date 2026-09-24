@@ -6,7 +6,7 @@ import { Container, DisposeFailed } from '@vp/composition';
 import type { AppConfig } from '@vp/env-schema';
 import { isErr } from '@vp/result';
 import type { Logger } from '@vp/observability';
-import fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify';
+import fastify, { type FastifyBaseLogger, type FastifyInstance, LogController } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { type AdapterOverrides, overrideAdapters } from './composition/adapter-set';
 import { registerOpenApi } from './composition/openapi';
@@ -53,7 +53,7 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
 
   const app = fastify({
     loggerInstance,
-    disableRequestLogging: true,
+    logController: new LogController({ disableRequestLogging: true }),
     genReqId: (request) => requestIdFrom(request.headers),
     trustProxy: [...config.http.trustProxy],
     bodyLimit: config.http.bodyLimitBytes,

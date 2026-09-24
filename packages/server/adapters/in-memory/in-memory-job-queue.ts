@@ -108,7 +108,6 @@ export class InMemoryJobQueue extends JobQueue {
 
     if (initialState === 'waiting') {
       this.enqueueWaiting(job);
-      // If a worker is listening and we are not paused, execute
       if (this.processor && !this.paused) {
         queueMicrotask(() => {
           this.drain().catch(() => {});
@@ -134,7 +133,6 @@ export class InMemoryJobQueue extends JobQueue {
   async executeJob(job: QueueJob<unknown>): Promise<void> {
     const currentState = this.jobStates.get(job.id);
     if (currentState === 'waiting-children') {
-      // Still waiting for children to finish
       return;
     }
 
@@ -216,7 +214,6 @@ export class InMemoryJobQueue extends JobQueue {
     _options?: QueueWorkerOptions
   ): Promise<Result<void, QueueUnavailable>> {
     this.processor = handler as (job: QueueJob<unknown>) => Promise<unknown>;
-    // Process pending jobs if not paused
     if (!this.paused) {
       await this.drain();
     }

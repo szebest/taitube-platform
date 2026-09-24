@@ -1,7 +1,8 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { registerAdapters } from '@vp/adapters/composition';
+import { Adapters, registerAdapters } from '@vp/adapters/composition';
+import type { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { Container } from '@vp/composition';
 import type { WorkerStageName } from '@vp/env-schema';
 import { inProcessAppConfig } from '@vp/env-schema';
@@ -51,6 +52,34 @@ describe('apps/worker/composition: stages module', () => {
 
     await c.dispose();
     await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('leaves queue depth to the API poller, so an idle queue can read zero', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vp-stages-'));
+    const c = await stageContainer('housekeeping', tmpDir);
+    const { queue } = c.get(Worker.Consumer);
+    expectOk(await c.start());
+    await queue.add('tmp-sweep', { task: 'tmp-sweep' });
+    expect((await settled(c)).completed).toBe(1);
+
+    const { values } = await c.get(Adapters.Metrics).bullmqQueueJobs.get();
+    expect(values).toEqual([]);
+    await c.dispose();
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('counts a stalled job as result="stalled"', async () => {
+    const c = await stageContainer('notify');
+    const queue = c.get(Worker.Consumer).queue as InMemoryJobQueue;
+    expectOk(await c.start());
+
+    queue.stall('job-1');
+
+    const { values } = await c.get(Adapters.Metrics).jobsProcessed.get();
+    expect(values).toEqual([
+      expect.objectContaining({ labels: { queue: 'notify', result: 'stalled' }, value: 1 }),
+    ]);
+    await c.dispose();
   });
 
   it('fails a job whose stage returned a failure', async () => {

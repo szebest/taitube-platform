@@ -1,10 +1,10 @@
 import { defineConfig } from 'vitest/config';
-import { sourceAliases } from './workspace-sources';
+import { sourceAliases } from '../architecture/workspace-sources';
 
 export default defineConfig({
   resolve: { alias: sourceAliases() },
   test: {
-    name: 'architecture',
+    name: 'in-process',
     globals: true,
     environment: 'node',
     include: ['**/*.test.ts'],

@@ -61,6 +61,8 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
+    "@opentelemetry/context-async-hooks": "^2.11.0",
+    "@opentelemetry/sdk-trace-base": "^2.11.0",
     "@types/node": "^24.0.0",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",

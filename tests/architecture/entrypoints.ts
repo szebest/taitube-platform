@@ -3,9 +3,11 @@
  * here and nowhere else; every module below one takes what it needs as a value.
  */
 export const ENTRYPOINTS: readonly string[] = [
+  'apps/api/src/instrument.ts',
   'apps/api/src/main.ts',
   'apps/api/src/migrate.ts',
   'apps/api/src/seed.ts',
+  'apps/worker/src/instrument.ts',
   'apps/worker/src/main.ts',
   'apps/web/src/index.tsx',
   'packages/server/compose-autoscaler/src/main.ts',
