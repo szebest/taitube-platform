@@ -2,7 +2,8 @@ import { Adapters, queueNamed } from '@vp/adapters/composition';
 import { type Container, token } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
 import type { JobQueue } from '@vp/core/ports';
-import { type Logger, MetricsServer, createLogger } from '@vp/observability';
+import { MetricsServer } from '@vp/observability';
+import { type Logger, createLogger } from '@vp/logger';
 import { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
 import { CategoryService } from '../services/category-service';
@@ -79,7 +80,9 @@ export function registerServices(c: Container): Container {
   const repositories = () => c.get(Adapters.Repositories);
 
   return c
-    .provide(Services.Logger, () => createLogger({ service: 'vp-api', level: config().logLevel }))
+    .provide(Services.Logger, () =>
+      createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
+    )
     .provide(Services.Paginator, () => new Paginator(config().pagination))
     .provide(
       Services.VideoService,

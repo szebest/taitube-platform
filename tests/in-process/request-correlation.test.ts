@@ -9,7 +9,7 @@ import {
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
-import { LogContext, createLogger } from '@vp/observability';
+import { LogContext, createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { buildApp } from '../../apps/api/src/app';
 import { createWorkerRunner } from '../../apps/worker/src/runner';
@@ -35,6 +35,7 @@ describe('in-process: one request id from the API into the worker', () => {
       config,
       adapters: { repositories, storage, jobQueue: probeQueue },
       logger: createLogger({
+        format: 'json',
         service: 'worker-probe',
         level: 'info',
         destination: workerLog.destination,

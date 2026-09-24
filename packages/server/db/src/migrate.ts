@@ -12,7 +12,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function runMigrations(url: string, log: Log): Promise<void> {
-  log(`[db:migrate] Connecting to ${url.replace(/:[^:@]+@/, ':***@')}...`);
   const sql = postgres(url, { max: 1 });
 
   const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:migrate', log });
@@ -33,7 +32,7 @@ export async function runMigrations(url: string, log: Log): Promise<void> {
     candidates.find((dir) => fs.existsSync(path.join(dir, 'meta', '_journal.json'))) ??
     candidates.find((dir) => fs.existsSync(dir)) ??
     (candidates[0] as string);
-  log(`[db:migrate] Applying migrations from ${migrationsFolder}...`);
+  log.info({ migrationsFolder }, 'applying migrations');
 
   const hash = createHash('sha256');
   const files = fs.readdirSync(migrationsFolder).sort();
@@ -51,13 +50,13 @@ export async function runMigrations(url: string, log: Log): Promise<void> {
   await sql`CREATE TABLE IF NOT EXISTS __vp_migration_hash (hash text PRIMARY KEY)`;
   const rows = await sql`SELECT hash FROM __vp_migration_hash LIMIT 1`;
   if (rows.length > 0 && rows[0]?.hash === currentHash) {
-    log('[db:migrate] Migrations unchanged (hash match). Skipping execution.');
+    log.info({}, 'migrations unchanged, nothing to apply');
     await sql.end();
     return;
   }
 
   await migrate(db, { migrationsFolder });
-  log('[db:migrate] Migrations applied successfully.');
+  log.info({}, 'migrations applied');
 
   await sql`DELETE FROM __vp_migration_hash`;
   await sql`INSERT INTO __vp_migration_hash (hash) VALUES (${currentHash})`;

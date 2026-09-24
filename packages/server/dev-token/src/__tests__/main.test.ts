@@ -1,6 +1,23 @@
+import { createLogger } from '@vp/logger';
+import { captureLog } from '@vp/testing/log-capture';
 import { mintToken } from '../jwt';
 import { DEV_KEY_ID } from '../keys';
-import { main } from '../main';
+import { type Cli, main } from '../main';
+
+function recordingCli() {
+  const printed: string[] = [];
+  const log = captureLog();
+  const cli: Cli = {
+    print: (text) => printed.push(text),
+    log: createLogger({
+      service: 'dev-token',
+      level: 'info',
+      format: 'pretty',
+      destination: log.destination,
+    }),
+  };
+  return { cli, printed, log };
+}
 
 describe('packages/dev-token: main', () => {
   afterEach(() => {
@@ -8,38 +25,38 @@ describe('packages/dev-token: main', () => {
   });
 
   it('prints the dev JWKS for `jwks`', async () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { cli, printed } = recordingCli();
 
-    await main(['jwks']);
+    await main(['jwks'], cli);
 
-    expect(JSON.parse(String(log.mock.calls[0]?.[0])).keys[0].kid).toBe(DEV_KEY_ID);
+    expect(JSON.parse(printed[0] ?? '').keys[0].kid).toBe(DEV_KEY_ID);
   });
 
   it('prints only the token for `mint --raw`', async () => {
     const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
-    await main(['mint', '--role', 'admin', '--raw']);
+    await main(['mint', '--role', 'admin', '--raw'], recordingCli().cli);
 
     expect(String(write.mock.calls[0]?.[0]).split('.')).toHaveLength(3);
   });
 
   it('prints the payload of a valid token for `verify`', async () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { cli, printed } = recordingCli();
 
-    await main(['verify', mintToken({ sub: 'usr-1', role: 'admin', ttl: '1h' })]);
+    await main(['verify', mintToken({ sub: 'usr-1', role: 'admin', ttl: '1h' })], cli);
 
-    expect(log).toHaveBeenCalledWith('✓ Token valid:');
+    expect(JSON.parse(printed[0] ?? '')).toMatchObject({ sub: 'usr-1', role: 'admin' });
   });
 
-  it('exits non-zero on a token that does not verify', async () => {
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('logs the reason and exits non-zero on a token that does not verify', async () => {
+    const { cli, log } = recordingCli();
     const exit = vi.spyOn(process, 'exit').mockImplementation((() => {
       throw new Error('exited');
     }) as () => never);
 
-    await expect(main(['verify', 'not.a.token'])).rejects.toThrow('exited');
+    await expect(main(['verify', 'not.a.token'], cli)).rejects.toThrow('exited');
 
-    expect(error.mock.calls[0]?.[0]).toBe('✗ Token invalid:');
+    expect(log.text()).toContain('error token is invalid');
     expect(exit).toHaveBeenCalledWith(1);
   });
 });

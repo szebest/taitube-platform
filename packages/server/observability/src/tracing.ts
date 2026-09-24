@@ -57,8 +57,7 @@ const TRACER_NAME = 'video-pipeline';
 const WORKSPACE_PACKAGE = /\/node_modules\/@vp\//;
 const APP_SOURCE = /^file:\/\/(?!.*\/node_modules\/)/;
 
-const toError = (cause: unknown): Error =>
-  cause instanceof Error ? cause : new Error(String(cause));
+const toError = (cause: unknown): Error => new Error('tracing failed', { cause });
 
 function parseResourceAttributes(raw?: string): Record<string, string> {
   if (!raw) return {};

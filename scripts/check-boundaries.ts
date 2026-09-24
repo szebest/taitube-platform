@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { createLogger } from '../packages/server/logger/src/index';
 
 type Tier = 'universal' | 'server' | 'client';
 
@@ -138,12 +139,17 @@ export function packageCount(): number {
 }
 
 if (process.argv[1]?.endsWith('check-boundaries.ts')) {
+  const log = createLogger({ service: 'check-boundaries', level: 'info', format: 'pretty' });
   const errors = checkBoundaries();
   if (errors.length > 0) {
-    console.error(`\nPackage boundary violations (${errors.length}):\n`);
-    for (const e of errors) console.error(`  ✗ ${e}`);
-    console.error('\nSee ARCHITECTURE.md — package runtime tiers and dependency layers.\n');
+    for (const violation of errors) {
+      log.error({ violation }, 'package boundary violation');
+    }
+    log.error(
+      { violations: errors.length, see: 'ARCHITECTURE.md' },
+      'package runtime tiers and dependency layers are inconsistent'
+    );
     process.exit(1);
   }
-  console.log(`Package boundaries OK — ${packageCount()} packages, tiers and layers consistent.`);
+  log.info({ packages: packageCount() }, 'package boundaries ok, tiers and layers consistent');
 }

@@ -1,6 +1,7 @@
 import { exec } from 'node:child_process';
 import * as fs from 'node:fs';
 import { promisify } from 'node:util';
+import { type Logger, createLogger } from '@vp/logger';
 import { type Attempt, ComposeAutoscaler } from './runner';
 import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler';
 
@@ -47,7 +48,7 @@ function parseCliArgs(args: string[]): CliArgs {
 }
 
 function printHelp(): void {
-  console.log(`
+  process.stdout.write(`
 @vp/compose-autoscaler — Docker Compose Queue-Depth Autoscaler
 
 Polls Prometheus metrics (/metrics) from the API and dynamically scales
@@ -109,7 +110,7 @@ function readStageOverrides(configFile?: string): Attempt<StageOverrides> {
   return { type: 'done', value: {} };
 }
 
-export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<void> {
+export async function main(argv: readonly string[], log: Logger): Promise<void> {
   const args = parseCliArgs([...argv]);
 
   if (args.help) {
@@ -119,7 +120,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
 
   const overrides = readStageOverrides(args.configFile);
   if (overrides.type === 'failed') {
-    console.error(overrides.reason);
+    log.error({ reason: overrides.reason }, 'could not read the stage configs');
     process.exit(1);
   }
   const stageConfigs = { ...DEFAULT_STAGE_CONFIGS, ...overrides.value };
@@ -132,7 +133,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
     dryRun,
     pollIntervalMs: args.intervalSec * 1000,
     stageConfigs,
-    onLog: console.log,
+    logger: log,
     executor: (cmd) => attempt(() => execAsync(cmd)),
     fetcher: (url) => attempt(() => fetchMetricsText(url)),
   });
@@ -151,8 +152,9 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
 }
 
 if (process.env.NODE_ENV !== 'test') {
-  main().catch((err) => {
-    console.error('Fatal autoscaler error:', err);
+  const log = createLogger({ service: 'compose-autoscaler', level: 'info', format: 'pretty' });
+  main(process.argv.slice(2), log).catch((err) => {
+    log.fatal({ err }, 'autoscaler failed');
     process.exit(1);
   });
 }

@@ -20,13 +20,12 @@ import {
   InMemoryRepositories,
 } from '../packages/server/adapters/index';
 import { ids } from '../packages/server/job-contracts/src/index';
+import { type Logger, createLogger } from '../packages/server/logger/src/index';
 import { createMetricsRegistry } from '../packages/server/observability/src/index';
 import { isErr } from '../packages/universal/result/src/index';
 
-async function runFairnessSimulation() {
-  console.log('================================================================');
-  console.log('VIDEO-PIPELINE: Ticket 18 Admission Control & Fairness Benchmark');
-  console.log('================================================================');
+async function runFairnessSimulation(log: Logger) {
+  log.info('starting admission control and fairness benchmark');
 
   const repositories = new InMemoryRepositories();
   const multipart = new InMemoryMultipartStorage();
@@ -158,17 +157,17 @@ async function runFairnessSimulation() {
     return videoId;
   }
 
-  console.log('[1/3] Submitting 50 uploads for User A (free tier, priority 5)...');
+  log.info({ user: 'A', tier: 'free', uploads: 50, priority: 5 }, 'submitting uploads');
   for (let i = 1; i <= 50; i++) {
     await submitUpload(USER_A_ID, i, 5);
   }
 
-  console.log('[2/3] Submitting 5 uploads for User B (pro tier, priority 1)...');
+  log.info({ user: 'B', tier: 'pro', uploads: 5, priority: 1 }, 'submitting uploads');
   for (let i = 1; i <= 5; i++) {
     await submitUpload(USER_B_ID, i, 1);
   }
 
-  console.log('[3/3] Processing pipeline jobs with admission control and priority scheduling...');
+  log.info('processing pipeline jobs with admission control and priority scheduling');
   const maxWaitMs = 30000;
   const pollStart = Date.now();
   while (userAReadyTimes.length < 50 || userBReadyTimes.length < 5) {
@@ -187,18 +186,22 @@ async function runFairnessSimulation() {
     (t) => t.elapsedMs <= userBLast.elapsedMs
   ).length;
 
-  console.log('\n================== SIMULATION RESULTS ==================');
-  console.log(`MAX_INFLIGHT_PER_USER:               ${MAX_INFLIGHT}`);
-  console.log(`User B (Pro, 5 videos) finished in:  ${userBLast.elapsedMs.toFixed(2)} ms`);
-  console.log(`User A (Free, 50 videos) finished in: ${userALast.elapsedMs.toFixed(2)} ms`);
-  console.log(`User A progress when User B finished: ${userAAtBCompletion} / 50 videos`);
-  console.log(
-    `Fairness assertion verified:         ${userBLast.elapsedMs < userALast.elapsedMs ? 'PASSED ✓' : 'FAILED ✗'}`
-  );
-  console.log('========================================================\n');
+  const verdict = userBLast.elapsedMs < userALast.elapsedMs ? 'PASSED' : 'FAILED';
+  const report = [
+    '================== SIMULATION RESULTS ==================',
+    `MAX_INFLIGHT_PER_USER:               ${MAX_INFLIGHT}`,
+    `User B (Pro, 5 videos) finished in:  ${userBLast.elapsedMs.toFixed(2)} ms`,
+    `User A (Free, 50 videos) finished in: ${userALast.elapsedMs.toFixed(2)} ms`,
+    `User A progress when User B finished: ${userAAtBCompletion} / 50 videos`,
+    `Fairness assertion verified:         ${verdict}`,
+    '========================================================',
+  ];
+  process.stdout.write(`${report.join('\n')}\n`);
 }
 
-runFairnessSimulation().catch((err) => {
-  console.error('Fairness simulation failed:', err);
+const log = createLogger({ service: 'fairness-simulation', level: 'info', format: 'pretty' });
+
+runFairnessSimulation(log).catch((err) => {
+  log.error({ err }, 'fairness simulation failed');
   process.exit(1);
 });

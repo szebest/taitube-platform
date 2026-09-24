@@ -9,7 +9,8 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
@@ -39,7 +40,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     metrics.dlqEntriesTotal.inc({ queue: queueName, error_code: errorCode });
     logger.warn(
       { queue: queueName, error_code: errorCode, jobId, attemptsMade },
-      `dlq_entries_total{queue="${queueName}", error_code="${errorCode}"} incremented`
+      'job routed to the dead letter queue'
     );
 
     const created = await repositories.dlq.create({
@@ -58,7 +59,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     if (isErr(created)) {
       logger.error(
         { err: created.error.message, jobId, queueName },
-        'Failed to insert dlq_entries row'
+        'failed to insert dlq_entries row'
       );
     }
 
@@ -84,7 +85,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       if (!dlqPayload.success) {
         logger.error(
           { err: dlqPayload.error.message, jobId, queueName },
-          'Failed to build copy of job for dlq queue'
+          'failed to build copy of job for dlq queue'
         );
       } else {
         const added = await getQueue('dlq').add('dlq', dlqPayload.data, {
@@ -95,10 +96,10 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         if (isErr(added)) {
           logger.error(
             { err: added.error.message, jobId },
-            'Failed to add copy of job to dlq queue'
+            'failed to add copy of job to dlq queue'
           );
         } else {
-          logger.info({ dlqJobId }, 'Enqueued DLQ copy job');
+          logger.info({ dlqJobId }, 'enqueued DLQ copy job');
         }
       }
     }
@@ -122,7 +123,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       if (isErr(marked)) {
         logger.error(
           { err: marked.error.message, videoId, step: stepName },
-          'Failed to mark processing step DEAD'
+          'failed to mark processing step DEAD'
         );
       }
 
@@ -133,7 +134,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
         if (isErr(failed)) {
           logger.error(
             { err: failed.error.message, videoId, rendition: renditionName },
-            'Failed to mark rendition FAILED'
+            'failed to mark rendition FAILED'
           );
         }
       }
@@ -194,7 +195,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       if (transitioned) {
         logger.error(
           { videoId, videoErrorCode, errorMessage },
-          'Package failure transitioned video to FAILED'
+          'package failure transitioned video to FAILED'
         );
 
         if (notifyJobData && getQueue) {
@@ -202,7 +203,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
           if (isErr(notified)) {
             logger.error(
               { err: notified.error.message, videoId },
-              'Failed to publish video.failed to the notify queue'
+              'failed to publish video.failed to the notify queue'
             );
           }
         }

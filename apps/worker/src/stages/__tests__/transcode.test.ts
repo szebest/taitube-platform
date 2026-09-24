@@ -3,14 +3,14 @@ import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { TranscodeJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { err, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS, transcodeDeps } from '../../__tests__/stage-settings';
 import { createTranscodeProcessor } from '../transcode';
 
-const logger = createLogger({ service: 'transcode-spec', level: 'silent' });
+const logger = createLogger({ format: 'json', service: 'transcode-spec', level: 'silent' });
 
 /** FFmpeg that reports progress once, then runs until it is aborted, the way a long encode does. */
 function encodeUntilAborted(): { media: MediaTools; aborted: () => boolean } {

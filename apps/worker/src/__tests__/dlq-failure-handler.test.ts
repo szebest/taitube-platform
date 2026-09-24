@@ -6,7 +6,8 @@ import {
 } from '@vp/adapters/in-memory';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { calculateBackoffDelay, ids, stagePolicies } from '@vp/job-contracts';
-import { createLogger, createMetricsRegistry } from '@vp/observability';
+import { createMetricsRegistry } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -23,7 +24,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
   let queues: Map<string, InMemoryJobQueue>;
   let flowProducer: InMemoryFlowProducer;
   const metrics = createMetricsRegistry();
-  const logger = createLogger({ service: 'dlq-test', level: 'info' });
+  const logger = createLogger({ format: 'json', service: 'dlq-test', level: 'info' });
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
 
   function getQueue(name: string): InMemoryJobQueue {

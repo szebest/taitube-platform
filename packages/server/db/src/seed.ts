@@ -13,7 +13,7 @@ export async function seedDatabase(connectionUrl: string, log: Log): Promise<voi
   const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:seed', log });
   if (isErr(reached)) throw reached.error;
 
-  log('[db:seed] Seeding database...');
+  log.info({}, 'seeding the database');
 
   await db
     .insert(users)
@@ -160,6 +160,6 @@ export async function seedDatabase(connectionUrl: string, log: Log): Promise<voi
       },
     });
 
-  log('[db:seed] Seed completed successfully: Dev user + READY video created.');
+  log.info({}, 'database seeded with the dev user and a ready video');
   await sql.end();
 }

@@ -5,7 +5,7 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { ProbeJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createProbeProcessor } from '../stages/probe';
@@ -15,7 +15,7 @@ describe('apps/worker probe stage (Ticket 06: AC 17, 18, 19, 20, 21, 22)', () =>
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-  const logger = createLogger({ service: 'worker-probe-test', level: 'silent' });
+  const logger = createLogger({ format: 'json', service: 'worker-probe-test', level: 'silent' });
 
   function createMockJob(id: string, data: ProbeJob): QueueJob<ProbeJob> {
     return {

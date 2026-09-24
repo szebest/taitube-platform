@@ -1,7 +1,7 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { JobQueue, type QueueJob } from '@vp/core/ports';
 import type { PackageJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -13,7 +13,7 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-  const logger = createLogger({ service: 'worker-crash-test', level: 'silent' });
+  const logger = createLogger({ format: 'json', service: 'worker-crash-test', level: 'silent' });
 
   function createMockJob<T>(id: string, data: T, attemptsMade = 0): QueueJob<T> {
     return {

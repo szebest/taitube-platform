@@ -46,6 +46,7 @@
     "@vp/errors": "workspace:*",
     "@vp/events": "workspace:*",
     "@vp/job-contracts": "workspace:*",
+    "@vp/logger": "workspace:*",
     "@vp/observability": "workspace:*",
     "@vp/pagination": "workspace:*",
     "@vp/permissions": "workspace:*",

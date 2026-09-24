@@ -1,7 +1,8 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { CANONICAL_LADDER } from '@vp/ffmpeg';
 import type { LadderEntry, PackageJob } from '@vp/job-contracts';
-import { createLogger, createMetricsRegistry } from '@vp/observability';
+import { createMetricsRegistry } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { renditionPlaylistKey } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -71,7 +72,7 @@ async function observedTimeToReady(metrics: ReturnType<typeof createMetricsRegis
 }
 
 describe('apps/worker/stages: package', () => {
-  const logger = createLogger({ service: 'package-test', level: 'silent' });
+  const logger = createLogger({ format: 'json', service: 'package-test', level: 'silent' });
 
   it('measures time to ready from the upload completing, on the clock it was handed', async () => {
     const repositories = new InMemoryRepositories();

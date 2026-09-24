@@ -8,7 +8,7 @@ export { checkFixture } from './check-fixture';
 
 export async function generateAllFixtures(
   options: GeneratorOptions,
-  log: (message: string) => void
+  onFixture: (id: string) => void
 ): Promise<{ generated: string[]; errors: string[] }> {
   const manifest = loadManifest();
   const generated: string[] = [];
@@ -25,7 +25,7 @@ export async function generateAllFixtures(
   });
 
   for (const fixture of targets) {
-    log(`[gen-video] Generating ${fixture.id} (${fixture.filename})...`);
+    onFixture(fixture.id);
     const outcome = generateFixture(fixture, options.outputDir);
     switch (outcome.type) {
       case 'generated':

@@ -1,4 +1,5 @@
 import * as path from 'node:path';
+import { type Logger, createLogger } from '@vp/logger';
 import { checkFixture, generateAllFixtures, loadManifest } from './generator';
 import type { GeneratorOptions } from './types';
 
@@ -35,18 +36,19 @@ function parseArgs(args: string[]): { options: GeneratorOptions; check: boolean;
 
 type Generation =
   | { readonly type: 'done'; readonly generated: string[]; readonly errors: string[] }
-  | { readonly type: 'failed'; readonly reason: string };
+  | { readonly type: 'failed'; readonly cause: unknown };
 
-async function generate(options: GeneratorOptions): Promise<Generation> {
+async function generate(options: GeneratorOptions, log: Logger): Promise<Generation> {
   try {
-    return { type: 'done', ...(await generateAllFixtures(options, console.log)) };
+    const onFixture = (id: string) => log.info({ fixture: id }, 'generating fixture');
+    return { type: 'done', ...(await generateAllFixtures(options, onFixture)) };
   } catch (cause) {
-    return { type: 'failed', reason: cause instanceof Error ? cause.message : String(cause) };
+    return { type: 'failed', cause };
   }
 }
 
 function printHelp(): void {
-  console.log(`
+  process.stdout.write(`
 gen-video: Synthetic deterministic test-video generator for video-pipeline
 
 Usage:
@@ -61,7 +63,7 @@ Options:
 `);
 }
 
-export async function main(args: readonly string[] = process.argv.slice(2)): Promise<void> {
+export async function main(args: readonly string[], log: Logger): Promise<void> {
   const { options, check, help } = parseArgs([...args]);
 
   if (help) {
@@ -72,7 +74,7 @@ export async function main(args: readonly string[] = process.argv.slice(2)): Pro
   const manifest = loadManifest();
 
   if (check) {
-    console.log(`[gen-video] Checking fixtures in ${options.outputDir}...`);
+    log.info({ outputDir: options.outputDir }, 'checking fixtures');
     const targets = manifest.fixtures.filter((f) => {
       if (options.only) return f.id === options.only;
       if (f.slow && !options.includeSlow) return false;
@@ -82,50 +84,44 @@ export async function main(args: readonly string[] = process.argv.slice(2)): Pro
     let failedCount = 0;
     for (const fixture of targets) {
       const result = checkFixture(fixture, options.outputDir);
+      const fields = { fixture: result.id, file: result.filename, detail: result.message };
       if (result.passed) {
-        console.log(`  ✓ [${result.id}] ${result.filename}: ${result.message}`);
+        log.info(fields, 'fixture verified');
       } else {
-        console.error(`  ✗ [${result.id}] ${result.filename}: ${result.message}`);
+        log.error(fields, 'fixture invalid or missing');
         failedCount++;
       }
     }
 
     if (failedCount > 0) {
-      console.error(
-        `\n[gen-video] Verification failed: ${failedCount} fixture(s) invalid or missing.`
-      );
+      log.error({ failed: failedCount }, 'fixture verification failed');
       process.exit(1);
-    } else {
-      console.log(`\n[gen-video] All ${targets.length} checked fixtures verified successfully.`);
     }
+    log.info({ checked: targets.length }, 'every fixture verified');
     return;
   }
 
-  console.log(`[gen-video] Generating fixtures into ${options.outputDir}...`);
+  log.info({ outputDir: options.outputDir }, 'generating fixtures');
   const start = Date.now();
-  const generation = await generate(options);
+  const generation = await generate(options, log);
   if (generation.type === 'failed') {
-    console.error(
-      `[gen-video] Could not write fixtures into ${options.outputDir}: ${generation.reason}`
-    );
+    log.error({ err: generation.cause, outputDir: options.outputDir }, 'could not write fixtures');
     process.exit(1);
   }
   const { generated, errors } = generation;
-  const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+  const seconds = (Date.now() - start) / 1000;
 
-  console.log(`\n[gen-video] Generated ${generated.length} fixture(s) in ${elapsed}s.`);
-  if (errors.length > 0) {
-    console.error(`[gen-video] Encountered ${errors.length} error(s):`);
-    for (const err of errors) {
-      console.error(`  - ${err}`);
-    }
-    process.exit(1);
+  log.info({ generated: generated.length, seconds }, 'fixtures generated');
+  for (const error of errors) {
+    log.error({ detail: error }, 'fixture not generated');
   }
+  if (errors.length > 0) process.exit(1);
 }
 
 if (process.env['NODE_ENV'] !== 'test') {
-  main().catch((err) => {
-    console.error('Fatal generator error:', err);
+  const log = createLogger({ service: 'gen-video', level: 'info', format: 'pretty' });
+  main(process.argv.slice(2), log).catch((err) => {
+    log.fatal({ err }, 'fixture generator failed');
     process.exit(1);
   });
 }

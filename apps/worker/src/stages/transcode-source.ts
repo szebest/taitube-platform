@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import type { StorageClient } from '@vp/core/ports';
 import { ErrorCodes, type MediaFailure, type StorageUnavailable, mediaFailure } from '@vp/errors';
-import type { Logger } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, err, isErr, ok } from '@vp/result';
 
 export interface TranscodeSourceParams {
@@ -25,7 +25,7 @@ export async function resolveTranscodeSource(
   const stage = `transcode-${rendition}`;
 
   if (streaming) {
-    log.info({ sourceKey }, 'Using presigned URL streaming input mode for transcode');
+    log.info({ sourceKey }, 'using presigned URL streaming input mode for transcode');
     return storage.createPresignedGetUrl({
       bucket: rawBucket,
       key: sourceKey,
@@ -36,7 +36,7 @@ export async function resolveTranscodeSource(
   const head = await storage.headObject(rawBucket, sourceKey);
   if (isErr(head)) return head;
   if (!head.value) {
-    log.error({ sourceKey }, 'Source object not found in storage');
+    log.error({ sourceKey }, 'source object not found in storage');
     return err(
       mediaFailure(
         stage,
@@ -51,7 +51,7 @@ export async function resolveTranscodeSource(
   if (isErr(downloaded)) return downloaded;
 
   if (!downloaded.value) {
-    log.error({ sourceKey }, 'Failed to download source object');
+    log.error({ sourceKey }, 'failed to download source object');
     return err(
       mediaFailure(
         stage,

@@ -3,12 +3,8 @@ import { type Container, token } from '@vp/composition';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { toPipelineError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
-import {
-  type LogContext,
-  type Logger,
-  MetricsServer,
-  type PipelineMetrics,
-} from '@vp/observability';
+import { MetricsServer, type PipelineMetrics } from '@vp/observability';
+import type { LogContext, Logger } from '@vp/logger';
 import { fromPromise, isErr, isOk, ok } from '@vp/result';
 import { createFailureHandler } from '../failure-handler';
 import { Heartbeat, everyInterval } from '../heartbeat';

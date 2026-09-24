@@ -15,7 +15,8 @@ import {
 } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { NotifyJob, ProbeJob } from '@vp/job-contracts';
-import { createLogger, getActiveSpanContext } from '@vp/observability';
+import { getActiveSpanContext } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -34,7 +35,7 @@ describe('OpenTelemetry Tracing End-to-End (Ticket 23: AC 17, 18, 19, 20, 21)', 
   let queues: Map<string, InMemoryJobQueue>;
   let flowProducer: InMemoryFlowProducer;
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-  const logger = createLogger({ service: 'tracing-e2e-test', level: 'silent' });
+  const logger = createLogger({ format: 'json', service: 'tracing-e2e-test', level: 'silent' });
 
   function getQueue(name: string): InMemoryJobQueue {
     let q = queues.get(name);

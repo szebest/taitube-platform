@@ -23,8 +23,7 @@ export interface HeartbeatOptions {
   every: Every;
 }
 
-const toError = (cause: unknown): Error =>
-  cause instanceof Error ? cause : new Error(String(cause));
+const toError = (cause: unknown): Error => new Error('heartbeat write failed', { cause });
 
 /**
  * The liveness file, and the only thing that writes it. The probe computes

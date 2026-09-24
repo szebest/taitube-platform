@@ -15,6 +15,6 @@ describe('apps/api: pnpm db:seed', () => {
     });
 
     expect(run.status).toBe(1);
-    expect(run.stderr).toContain('refuses NODE_ENV=production');
+    expect(run.stdout).toContain('refuses NODE_ENV=production');
   });
 });

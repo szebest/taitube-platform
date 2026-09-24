@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import * as fs from 'node:fs';
+import { type Logger, createLogger } from '@vp/logger';
 import { UploadClient } from './client';
 
 function parseArgs(args: string[]) {
@@ -27,7 +28,7 @@ function parseArgs(args: string[]) {
 }
 
 function printHelp(): void {
-  console.log(`
+  process.stdout.write(`
 @vp/upload-client — Reference resumable multipart upload client (Ticket 11)
 
 Usage:
@@ -46,8 +47,8 @@ Options:
 `);
 }
 
-export async function main(): Promise<void> {
-  const { file, flags } = parseArgs(process.argv.slice(2));
+export async function main(args: readonly string[], log: Logger): Promise<void> {
+  const { file, flags } = parseArgs([...args]);
 
   if (flags.help || !(file || flags.abort)) {
     printHelp();
@@ -64,23 +65,17 @@ export async function main(): Promise<void> {
   });
 
   if (flags.abort) {
-    console.log(`[upload-client] Aborting upload ${flags.abort}...`);
     await client.abortUpload(flags.abort);
-    console.log(`[upload-client] Upload ${flags.abort} aborted successfully.`);
+    log.info({ uploadId: flags.abort }, 'upload aborted');
     return;
   }
 
   if (!fs.existsSync(file)) {
-    console.error(`Error: File not found at "${file}"`);
+    log.error({ file }, 'file not found');
     process.exit(1);
   }
 
-  console.log(
-    `[upload-client] Starting upload of ${file} (concurrency: ${concurrency}, target: ${apiBaseUrl})...`
-  );
-  if (flags.resume) {
-    console.log(`[upload-client] Resuming upload ${flags.resume}...`);
-  }
+  log.info({ file, concurrency, apiBaseUrl, resuming: flags.resume }, 'upload starting');
 
   const result = await client.uploadFile({
     filePath: file,
@@ -89,20 +84,21 @@ export async function main(): Promise<void> {
     existingUploadId: flags.resume,
     onProgress: (completed, total) => {
       const pct = ((completed / total) * 100).toFixed(1);
-      process.stdout.write(`\r[upload-client] Progress: ${completed}/${total} parts (${pct}%)`);
+      process.stderr.write(`\rprogress ${completed}/${total} parts (${pct}%)`);
     },
   });
 
-  console.log('');
-  console.log('[upload-client] Upload completed successfully!');
-  console.log(`  Video ID:  ${result.videoId}`);
-  console.log(`  Upload ID: ${result.uploadId}`);
-  console.log(`  Status:    ${result.status}`);
+  process.stderr.write('\n');
+  log.info(
+    { videoId: result.videoId, uploadId: result.uploadId, status: result.status },
+    'upload completed'
+  );
 }
 
 if (process.env.NODE_ENV !== 'test') {
-  main().catch((err) => {
-    console.error('[upload-client] Error:', err);
+  const log = createLogger({ service: 'upload-client', level: 'info', format: 'pretty' });
+  main(process.argv.slice(2), log).catch((err) => {
+    log.fatal({ err }, 'upload failed');
     process.exit(1);
   });
 }

@@ -1,9 +1,11 @@
 import { lstatSync, readlinkSync, rmSync, symlinkSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { glob } from 'node:fs/promises';
+import { createLogger } from '../packages/server/logger/src/index';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const check = process.argv.includes('--check');
+const log = createLogger({ service: 'sync-claude-symlinks', level: 'info', format: 'pretty' });
 
 function linkState(path: string): 'ok' | 'missing' | 'wrong' {
   const stat = lstatSync(path, { throwIfNoEntry: false });
@@ -21,7 +23,7 @@ for await (const entry of glob('**/AGENTS.md', {
   agentsFiles.push(entry);
 }
 
-const stale: string[] = [];
+const stale: { link: string; state: 'missing' | 'wrong' }[] = [];
 let created = 0;
 
 for (const agents of agentsFiles.sort()) {
@@ -32,24 +34,28 @@ for (const agents of agentsFiles.sort()) {
 
   const shown = relative(ROOT, link);
   if (check) {
-    stale.push(`${shown} (${state})`);
+    stale.push({ link: shown, state });
     continue;
   }
   if (state === 'wrong') rmSync(link);
   symlinkSync('AGENTS.md', link);
-  console.log(`  linked ${shown} -> AGENTS.md`);
+  log.info({ link: shown, target: 'AGENTS.md' }, 'linked claude.md');
   created += 1;
 }
 
 if (check && stale.length > 0) {
-  console.error(`\nCLAUDE.md symlinks out of sync (${stale.length}):\n`);
-  for (const s of stale) console.error(`  ✗ ${s}`);
-  console.error('\nRun: pnpm sync:claude\n');
+  for (const { link, state } of stale) {
+    log.error({ link, state }, 'claude.md symlink out of sync');
+  }
+  log.error({ stale: stale.length, fix: 'pnpm sync:claude' }, 'claude.md symlinks out of sync');
   process.exit(1);
 }
 
-console.log(
-  check
-    ? `CLAUDE.md symlinks OK — ${agentsFiles.length} AGENTS.md files, all linked.`
-    : `Done — ${agentsFiles.length} AGENTS.md files, ${created} link(s) created.`
-);
+if (check) {
+  log.info(
+    { agentsFiles: agentsFiles.length },
+    'claude.md symlinks ok, all agents.md files linked'
+  );
+} else {
+  log.info({ agentsFiles: agentsFiles.length, created }, 'claude.md symlinks synced');
+}

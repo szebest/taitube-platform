@@ -14,7 +14,8 @@ import {
 } from '@vp/errors';
 import type { MediaTools, ProbeMetadata } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { enqueueFollowUpJobs } from './probe-enqueue';
@@ -86,7 +87,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       stage: 'probe',
     });
 
-    log.info({ sourceKey }, 'Probe job started');
+    log.info({ sourceKey }, 'probe job started');
 
     const startedResult = await repositories.videos.transition({
       videoId,
@@ -104,7 +105,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       if (current && ['PROCESSING', 'READY', 'FAILED', 'DELETED'].includes(current.status)) {
         log.info(
           { status: current.status },
-          'Video already past PROBING; skipping redundant execution'
+          'video already past PROBING; skipping redundant execution'
         );
         return ok({
           videoId,
@@ -129,7 +130,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
     if (isErr(claim)) return claim;
 
     if (claim.value.fenced) {
-      log.warn({ lockToken }, 'Probe step already completed; fenced out');
+      log.warn({ lockToken }, 'probe step already completed; fenced out');
       return ok({ videoId, status: 'DONE', durationMs: 0 });
     }
 
@@ -152,7 +153,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       const head = await storage.headObject(rawBucket, sourceKey);
       if (isErr(head)) return head;
       if (!head.value) {
-        log.error({ sourceKey }, 'Source object not found in storage');
+        log.error({ sourceKey }, 'source object not found in storage');
         return await failProbe(
           mediaFailure(
             'probe',
@@ -167,7 +168,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       if (isErr(downloaded)) return downloaded;
 
       if (!downloaded.value) {
-        log.error({ sourceKey }, 'Failed to download source object');
+        log.error({ sourceKey }, 'failed to download source object');
         return await failProbe(
           mediaFailure(
             'probe',
@@ -190,7 +191,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         metrics.ffmpegExitTotal.inc({ stage: 'probe', code: probed.error.code });
         log.warn(
           { errorCode: probed.error.code, err: probed.error.message },
-          'Probe validation failed with permanent error'
+          'probe validation failed with permanent error'
         );
         return await failProbe(probed.error);
       }
@@ -204,7 +205,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           ladder: metadata.ladder.map((r) => r.name),
           dimensions: `${metadata.effectiveWidth}x${metadata.effectiveHeight}`,
         },
-        'Probe successful, updating database and pending renditions'
+        'probe successful, updating database and pending renditions'
       );
 
       for (const entry of metadata.ladder) {
@@ -238,7 +239,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
       if (isErr(comp)) return comp;
 
       if (comp.value.fenced) {
-        log.warn({ lockToken }, 'Fenced out on step completion (another worker reclaimed step)');
+        log.warn({ lockToken }, 'fenced out on step completion (another worker reclaimed step)');
         return ok({
           videoId,
           status: 'FENCED',

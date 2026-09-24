@@ -8,7 +8,7 @@ import {
 import { JobQueue, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import type { NotifyJob, PackageJob, TranscodeJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -23,7 +23,7 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
   let storage: InMemoryStorageClient;
   let cache: InMemoryCacheClient;
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-  const logger = createLogger({ service: 'worker-pipeline-test', level: 'silent' });
+  const logger = createLogger({ format: 'json', service: 'worker-pipeline-test', level: 'silent' });
 
   function createMockJob<T>(id: string, data: T): QueueJob<T> {
     return {

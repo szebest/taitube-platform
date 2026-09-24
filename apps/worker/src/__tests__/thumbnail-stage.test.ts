@@ -9,7 +9,7 @@ import {
 import type { QueueJob } from '@vp/core/ports';
 import { parseSpriteVtt } from '@vp/ffmpeg';
 import type { ProbeJob, ThumbnailJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -25,7 +25,7 @@ describe('Thumbnail Stage as Non-Blocking Flow Child (Ticket 13: AC 1, 2, 3)', (
   let storage: InMemoryStorageClient;
   let queues: Map<string, InMemoryJobQueue>;
   let flowProducer: InMemoryFlowProducer;
-  const logger = createLogger({ service: 'thumbnail-test', level: 'silent' });
+  const logger = createLogger({ format: 'json', service: 'thumbnail-test', level: 'silent' });
 
   function getQueue(name: string): InMemoryJobQueue {
     let q = queues.get(name);

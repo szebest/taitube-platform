@@ -7,7 +7,8 @@ import {
   type Failure,
   type QueueUnavailable,
 } from '@vp/errors';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 
 export interface OutboxRelayOptions {
@@ -83,7 +84,7 @@ export async function drainOutboxOnce(
       if (isErr(recorded)) return recorded;
       logger?.error(
         { id: item.id, kind: item.kind, code: published.error.code },
-        'Failed to publish outbox item'
+        'failed to publish outbox item'
       );
       continue;
     }
@@ -93,7 +94,7 @@ export async function drainOutboxOnce(
 
     successCount += 1;
     metrics.outboxEventsPublished.inc({ kind: item.kind });
-    logger?.debug({ id: item.id, kind: item.kind }, 'Outbox item published successfully');
+    logger?.debug({ id: item.id, kind: item.kind }, 'outbox item published successfully');
   }
 
   if (items.length > 0) {
@@ -129,7 +130,7 @@ export class OutboxRelay {
           logger: this.options.logger,
         });
         if (isErr(drained)) {
-          this.options.logger?.error({ code: drained.error.code }, 'Outbox relay loop error');
+          this.options.logger?.error({ code: drained.error.code }, 'outbox relay loop error');
         }
         this.draining = false;
       }

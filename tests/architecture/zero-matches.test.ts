@@ -1,4 +1,3 @@
-import { ENTRYPOINTS } from './entrypoints';
 import { read, trackedFiles } from './repo-files';
 
 /** `apps`, `packages` and `scripts`, without specs, `__tests__` or `__mocks__`. */
@@ -56,10 +55,23 @@ const ROWS: readonly Row[] = [
   ['a throwing parse in a service', /\.parse\(/g, productionUnder('apps/api/src/services'), 0],
   ['a failure classified by its message', /message\.includes/g, PRODUCTION_SOURCE, 0],
   ['a cast through unknown', /as unknown as/g, PRODUCTION_SOURCE, 0],
+  ['console, anywhere a process runs', /\bconsole\./g, [...PRODUCTION_SOURCE, 'tests/e2e'], 0],
   [
-    'console outside a process entrypoint',
-    /\bconsole\./g,
-    [...PRODUCTION_SOURCE, ...ENTRYPOINTS.map((entrypoint) => `:(exclude,glob)${entrypoint}`)],
+    'pino outside @vp/logger',
+    /from 'pino'/g,
+    [...PRODUCTION_SOURCE, 'tests/e2e', ':(exclude)packages/server/logger'],
+    0,
+  ],
+  [
+    'logging re-exported from @vp/observability',
+    /createLogger|LogContext|from 'pino'/g,
+    productionUnder('packages/server/observability'),
+    0,
+  ],
+  [
+    'an error turned into text by hand',
+    /instanceof Error \?/g,
+    [...PRODUCTION_SOURCE, 'tests/e2e'],
     0,
   ],
 ];
@@ -76,13 +88,13 @@ describe('architecture: zero-matches', () => {
     );
   });
 
-  it('reads the console row over no entrypoint and every other production file', () => {
-    const [, , scope] = ROWS.find(([name]) => name.startsWith('console')) as Row;
-    const files = trackedFiles(...scope);
+  it('reads the console row over entrypoints, scripts and the e2e runner too', () => {
+    const consoleRow = ROWS.find(([name]) => name.startsWith('console'));
+    const files = trackedFiles(...(consoleRow?.[2] ?? []));
 
-    expect(files).not.toContain('apps/api/src/main.ts');
-    expect(files).not.toContain('scripts/run-e2e.ts');
-    expect(files).toContain('packages/server/config/src/load-env.ts');
+    expect(files).toContain('apps/api/src/main.ts');
+    expect(files).toContain('scripts/run-e2e.ts');
+    expect(files).toContain('tests/e2e/e2e-runner.ts');
     expect(countMatches(/\bconsole\./g, ["console.warn('x'); console.log(1)"])).toBe(2);
   });
 

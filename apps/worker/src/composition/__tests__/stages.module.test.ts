@@ -7,7 +7,7 @@ import { Container } from '@vp/composition';
 import type { WorkerStageName } from '@vp/env-schema';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
-import { LogContext, createLogger } from '@vp/observability';
+import { LogContext, createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { OutboxRelay } from '../../stages/housekeeping/outbox-relay';
 import { Worker, registerStages } from '../stages.module';
@@ -18,7 +18,7 @@ async function stageContainer(stage: WorkerStageName, tmpDir = os.tmpdir(), outb
     inProcessAppConfig({ worker: { stage, tmpDir } })
   );
   return registerStages(c, {
-    logger: createLogger({ service: 'stages-test', level: 'silent' }),
+    logger: createLogger({ format: 'json', service: 'stages-test', level: 'silent' }),
     logContext: new LogContext(),
     media: mediaTools,
     workerId: 'stages-test',

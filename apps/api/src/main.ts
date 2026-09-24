@@ -7,6 +7,7 @@ import {
 import { loadEnv } from '@vp/config';
 import { type AppConfig, toAppConfig } from '@vp/env-schema';
 import { asThrowable } from '@vp/errors';
+import { type Logger, createLogger } from '@vp/logger';
 import { type Tracing, registeredTracing } from '@vp/observability';
 import { assertNever, fromPromise, ignore, isErr } from '@vp/result';
 import { type ComposedApp, composeApp } from './app';
@@ -60,7 +61,7 @@ export async function serve(
       if (isErr(closed)) throw closed.error;
     },
     pending: () => container.disposing(),
-    log: (message) => logger.info(message),
+    log: logger,
   });
   if (signals) exitOnSignals(signals, shutdown);
 
@@ -72,7 +73,7 @@ export async function serve(
       case 'interrupted':
         return { address: '', metricsPort: metricsPort(), shutdown };
       case 'failed':
-        logger.error({ token: started.error.token, err: started.error.cause }, 'Startup failed');
+        logger.error({ token: started.error.token, err: started.error.cause }, 'startup failed');
         await app.close();
         throw asThrowable(started.error.cause);
       default:
@@ -92,20 +93,22 @@ export async function main(host: ProcessHost): Promise<ApiProcess> {
   return serve(await composeApp({ config }), config, { tracing: registeredTracing, signals: host });
 }
 
-export function run(host: ProcessHost): Promise<void> {
+/** `log` is for a start that fails before the app has a logger of its own. */
+export function run(host: ProcessHost, log: Logger): Promise<void> {
   return main(host).then(
     () => undefined,
-    (cause) => {
-      console.error('Fatal API error:', cause);
+    (err) => {
+      log.fatal({ err }, 'api could not start');
       host.exit(1);
     }
   );
 }
 
 if (process.env.NODE_ENV !== 'test') {
-  void run({
+  const host: ProcessHost = {
     env: process.env,
     onSignal: (signal, handler) => process.on(signal, handler),
     exit: (code) => process.exit(code),
-  });
+  };
+  void run(host, createLogger({ service: 'vp-api', level: 'info', format: 'json' }));
 }

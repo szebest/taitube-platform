@@ -20,7 +20,8 @@ import {
   ThumbnailJob,
   TranscodeJob,
 } from '@vp/job-contracts';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, err } from '@vp/result';
 import { invalidField } from '@vp/validation';
 import type { ZodType } from 'zod';

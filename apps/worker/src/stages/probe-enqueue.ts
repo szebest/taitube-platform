@@ -10,7 +10,7 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { Logger } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, isErr, ok } from '@vp/result';
 
 export interface EnqueueFollowUpsParams {
@@ -99,7 +99,7 @@ export async function enqueueFollowUpJobs(
 
     log.info(
       { packageJobId, ladder: metadata.ladder.map((r) => r.name), priority },
-      'Created BullMQ flow with package parent and transcode children'
+      'created BullMQ flow with package parent and transcode children'
     );
     return ok();
   }
@@ -133,7 +133,7 @@ export async function enqueueFollowUpJobs(
 
       log.info(
         { transcodeJobId, queue: transcodeQueueName, priority },
-        'Enqueued transcode follow-up job'
+        'enqueued transcode follow-up job'
       );
     }
 
@@ -161,7 +161,7 @@ export async function enqueueFollowUpJobs(
 
       log.info(
         { thumbnailJobId, queue: 'thumbnail', priority },
-        'Enqueued thumbnail follow-up job'
+        'enqueued thumbnail follow-up job'
       );
     }
   }

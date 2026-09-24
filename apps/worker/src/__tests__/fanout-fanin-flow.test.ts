@@ -8,7 +8,7 @@ import {
 } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { ProbeJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -25,7 +25,7 @@ describe('Fan-out / fan-in with BullMQ Flows (Ticket 12: AC 1, 2, 3, 4, 5, 6)', 
   let queues: Map<string, InMemoryJobQueue>;
   let flowProducer: InMemoryFlowProducer;
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-  const logger = createLogger({ service: 'fanout-fanin-test', level: 'silent' });
+  const logger = createLogger({ format: 'json', service: 'fanout-fanin-test', level: 'silent' });
 
   function getQueue(name: string): InMemoryJobQueue {
     let q = queues.get(name);

@@ -25,6 +25,7 @@
     "@vp/events": "workspace:*",
     "@vp/ffmpeg": "workspace:*",
     "@vp/job-contracts": "workspace:*",
+    "@vp/logger": "workspace:*",
     "@vp/observability": "workspace:*",
     "@vp/result": "workspace:*",
     "@vp/storage": "workspace:*",

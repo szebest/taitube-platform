@@ -11,7 +11,8 @@ import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import { asThrowable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
-import type { LogContext, Logger, PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/observability';
+import type { LogContext, Logger } from '@vp/logger';
 import { type Result, assertNever, isErr, ok } from '@vp/result';
 import { Worker, registerStages, resolveStartOrder } from './composition/stages.module';
 import type { OutboxRelay } from './stages/housekeeping/outbox-relay';
@@ -93,13 +94,13 @@ export async function composeWorker(options: WorkerRunnerOptions): Promise<Worke
     start: async () => {
       const started = await container.start();
       if (isErr(started) && started.error.type === 'failed') {
-        logger.error({ token: started.error.token, cause: started.error.cause }, 'Startup failed');
+        logger.error({ token: started.error.token, cause: started.error.cause }, 'startup failed');
       }
       return started;
     },
     started: () => container.started(),
     close: async () => {
-      logger.info('Shutting down worker...');
+      logger.info('shutting down worker...');
       const disposed = await container.dispose();
       if (isErr(disposed)) throw new DisposeFailed(disposed.error);
     },

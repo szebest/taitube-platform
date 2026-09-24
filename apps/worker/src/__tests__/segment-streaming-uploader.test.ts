@@ -195,7 +195,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
           (m) => m.ctx?.['attempt'] === 2 && m.ctx?.['threads'] === 1
         );
         expect(attempt2Log).toBeDefined();
-        expect(attempt2Log?.msg).toContain('threads = 1');
+        expect(attempt2Log?.msg).toBe('transcode attempt starting');
 
         // Attempt 3 (attemptsMade = 2)
         loggedMessages.length = 0;
@@ -206,7 +206,7 @@ describe('Ticket 14: Streaming Segment Uploader, Disk Bounds & Thread Back-off',
           (m) => m.ctx?.['attempt'] === 3 && m.ctx?.['threads'] === 1
         );
         expect(attempt3Log).toBeDefined();
-        expect(attempt3Log?.msg).toContain('threads = 1');
+        expect(attempt3Log?.msg).toBe('transcode attempt starting');
       } finally {
         if (origThreads === undefined) Reflect.deleteProperty(process.env, 'FFMPEG_THREADS');
         else process.env.FFMPEG_THREADS = origThreads;

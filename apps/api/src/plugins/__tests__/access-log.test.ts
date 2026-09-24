@@ -1,5 +1,5 @@
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { buildApp } from '../../app';
 
@@ -7,7 +7,12 @@ async function loggedApp() {
   const log = captureLog();
   const app = await buildApp({
     config: inProcessAppConfig(),
-    logger: createLogger({ service: 'vp-api', level: 'info', destination: log.destination }),
+    logger: createLogger({
+      format: 'json',
+      service: 'vp-api',
+      level: 'info',
+      destination: log.destination,
+    }),
   });
   return { app, log };
 }
@@ -66,7 +71,7 @@ describe('apps/api/plugins: access log', () => {
     expect(res.headers['content-type']).toContain('application/problem+json');
     expect(res.json()).toMatchObject({ code: 'INTERNAL', status: 500 });
     expect(log.lines().filter((line) => line.level === 'error')).toEqual([
-      expect.objectContaining({ reqId: 'r-9', msg: 'Unhandled exception' }),
+      expect.objectContaining({ reqId: 'r-9', msg: 'unhandled exception' }),
     ]);
     await app.close();
   });

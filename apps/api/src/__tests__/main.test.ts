@@ -2,7 +2,8 @@ import * as net from 'node:net';
 import { Adapters } from '@vp/adapters/composition';
 import type { ProcessHost } from '@vp/composition';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
-import { type Tracing, createLogger } from '@vp/observability';
+import type { Tracing } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { err, ok } from '@vp/result';
 import { captureLog } from '@vp/testing/log-capture';
 import { composeApp } from '../app';
@@ -17,7 +18,12 @@ function host(env: Record<string, string>): ProcessHost & { exit: ReturnType<typ
 }
 
 function loggerTo(log: ReturnType<typeof captureLog>) {
-  return createLogger({ service: 'vp-api', level: 'info', destination: log.destination });
+  return createLogger({
+    format: 'json',
+    service: 'vp-api',
+    level: 'info',
+    destination: log.destination,
+  });
 }
 
 function config(): AppConfig {
@@ -50,19 +56,17 @@ describe('apps/api: main', () => {
 
   it('refuses a production boot without its secrets before it binds a port', async () => {
     const port = await freePort();
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const log = captureLog();
     const production = host({
       NODE_ENV: 'production',
       DATABASE_URL: 'postgres://localhost:5432/vp',
       PORT: String(port),
     });
 
-    await run(production);
+    await run(production, loggerTo(log));
 
     expect(production.exit).toHaveBeenCalledWith(1);
-    expect(String(error.mock.calls.at(-1)?.[1])).toContain(
-      'S3_ACCESS_KEY_ID: is required in production'
-    );
+    expect(log.text()).toContain('S3_ACCESS_KEY_ID: is required in production');
     expect(await refusesConnections(port)).toBe(true);
   });
 
@@ -71,7 +75,7 @@ describe('apps/api: main', () => {
     await new Promise<void>((resolve) => taken.listen(0, '0.0.0.0', resolve));
     const metricsPort = (taken.address() as net.AddressInfo).port;
     const port = await freePort();
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const log = captureLog();
     const booting = host({
       NODE_ENV: 'test',
       ADAPTER_FAMILY: 'in-memory',
@@ -80,10 +84,13 @@ describe('apps/api: main', () => {
       METRICS_PORT: String(metricsPort),
     });
 
-    await run(booting);
+    await run(booting, loggerTo(log));
 
     expect(booting.exit).toHaveBeenCalledWith(1);
-    expect(error.mock.calls.at(-1)?.[1]).toMatchObject({ code: 'EADDRINUSE' });
+    expect(log.lines().at(-1)).toMatchObject({
+      msg: 'api could not start',
+      err: { code: 'EADDRINUSE' },
+    });
     expect(await refusesConnections(port)).toBe(true);
     await new Promise<void>((resolve) => taken.close(() => resolve()));
   });
@@ -186,7 +193,8 @@ describe('apps/api: main', () => {
     const api = await serve(composed, config(), TIMINGS);
 
     expect(await api.shutdown()).toBe('failed');
-    expect(log.lines().map((line) => line.msg)).toContainEqual(expect.stringContaining('Storage'));
+    expect(log.text()).toContain('shutdown failed');
+    expect(log.text()).toContain('Storage');
   });
 
   it('flushes buffered spans once the servers have closed', async () => {
@@ -232,6 +240,6 @@ describe('apps/api: main', () => {
     });
 
     expect(await api.shutdown()).toBe('forced');
-    expect(log.lines().at(-1)?.msg).toContain('still waiting on Storage');
+    expect(log.lines().at(-1)).toMatchObject({ msg: 'shutdown forced', waitingOn: 'Storage' });
   });
 });

@@ -17,7 +17,7 @@ describe('packages/db: createDbClient', () => {
 
 describe('packages/db: waitForDatabase', () => {
   it('succeeds on the first probe the database answers, reporting the failed attempt', async () => {
-    const log = vi.fn();
+    const log = { info: vi.fn(), warn: vi.fn() };
     const probe = vi
       .fn<() => Promise<unknown>>()
       .mockRejectedValueOnce(new Error('ECONNREFUSED'))
@@ -25,7 +25,12 @@ describe('packages/db: waitForDatabase', () => {
 
     expectOk(await waitForDatabase(probe, { label: 'db:test', log, delayMs: 0 }));
     expect(probe).toHaveBeenCalledTimes(2);
-    expect(log.mock.calls).toEqual([[expect.stringContaining('attempt 1/15 failed')]]);
+    expect(log.warn).toHaveBeenCalledTimes(1);
+    expect(log.warn.mock.calls[0]?.[0]).toMatchObject({
+      label: 'db:test',
+      attempt: 1,
+      attempts: 15,
+    });
   });
 
   it('gives up after the last attempt, naming the label', async () => {
@@ -33,7 +38,7 @@ describe('packages/db: waitForDatabase', () => {
 
     const reached = await waitForDatabase(probe, {
       label: 'db:test',
-      log: () => {},
+      log: { info: () => {}, warn: () => {} },
       attempts: 3,
       delayMs: 0,
     });

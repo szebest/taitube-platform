@@ -1,5 +1,6 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { createLogger, createMetricsRegistry } from '@vp/observability';
+import { createMetricsRegistry } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -8,7 +9,11 @@ import { TranscodeProgressReporter } from '../stages/progress-reporter';
 describe('TranscodeProgressReporter (Ticket 15: AC 4)', () => {
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
-  const logger = createLogger({ service: 'progress-reporter-test', level: 'silent' });
+  const logger = createLogger({
+    format: 'json',
+    service: 'progress-reporter-test',
+    level: 'silent',
+  });
   const videoId = uuidv7();
 
   beforeEach(() => {

@@ -3,7 +3,8 @@ import type { Repositories } from '@vp/core/repositories';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { publishVideoEvent, userChannel, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, isErr, map, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
@@ -32,7 +33,7 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
     const attempt = (job.attemptsMade ?? 0) + 1;
     const log = logger.child({ videoId, jobId: job.id, stage: 'notify', attempt });
 
-    log.info({ userId }, 'Notify job started');
+    log.info({ userId }, 'notify job started');
 
     const lockToken = uuidv7();
     const claim = await repositories.steps.claim({
@@ -48,7 +49,7 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
     if (isErr(claim)) return claim;
 
     if (claim.value.fenced) {
-      log.warn({ lockToken }, 'Notify step already completed; fenced out');
+      log.warn({ lockToken }, 'notify step already completed; fenced out');
       return ok({ videoId, published: false });
     }
 
@@ -74,7 +75,7 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
     if (isErr(published)) return published;
 
     const channels = [videoChannel(videoId), userChannel(userId)];
-    log.info({ channels, latestId }, 'Published status update to Redis channels');
+    log.info({ channels, latestId }, 'published status update to Redis channels');
 
     metrics.sseEventsPublished.inc({ event: 'status' });
 

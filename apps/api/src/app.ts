@@ -5,7 +5,7 @@ import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { Container, DisposeFailed } from '@vp/composition';
 import type { AppConfig } from '@vp/env-schema';
 import { isErr } from '@vp/result';
-import type { Logger } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import fastify, { type FastifyBaseLogger, type FastifyInstance, LogController } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { type AdapterOverrides, overrideAdapters } from './composition/adapter-set';

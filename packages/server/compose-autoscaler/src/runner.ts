@@ -1,3 +1,4 @@
+import type { Logger } from '@vp/logger';
 import {
   DEFAULT_STAGE_CONFIGS,
   type ScalerStageConfig,
@@ -17,7 +18,7 @@ export interface AutoscalerOptions {
   dryRun?: boolean;
   pollIntervalMs?: number;
   stageConfigs?: Record<string, ScalerStageConfig>;
-  onLog: (msg: string) => void;
+  logger: Logger;
   executor: (cmd: string) => Promise<Attempt<unknown>>;
   fetcher: (url: string) => Promise<Attempt<string>>;
 }
@@ -29,7 +30,7 @@ export class ComposeAutoscaler {
   private readonly pollIntervalMs: number;
   private readonly configs: Record<string, ScalerStageConfig>;
   private readonly states: Map<string, StageScalingState> = new Map();
-  private readonly log: (msg: string) => void;
+  private readonly log: Logger;
   private readonly execCmd: AutoscalerOptions['executor'];
   private readonly fetchMetrics: AutoscalerOptions['fetcher'];
   private isRunning = false;
@@ -41,7 +42,7 @@ export class ComposeAutoscaler {
     this.dryRun = options.dryRun ?? false;
     this.pollIntervalMs = options.pollIntervalMs ?? 10_000;
     this.configs = options.stageConfigs ?? DEFAULT_STAGE_CONFIGS;
-    this.log = options.onLog;
+    this.log = options.logger;
     this.execCmd = options.executor;
     this.fetchMetrics = options.fetcher;
 
@@ -61,7 +62,7 @@ export class ComposeAutoscaler {
   public async tick(nowMs: number = Date.now()): Promise<void> {
     const metrics = await this.fetchMetrics(this.metricsUrl);
     if (metrics.type === 'failed') {
-      this.log(`[WARN] Autoscaler poll iteration failed: ${metrics.reason}`);
+      this.log.warn({ reason: metrics.reason }, 'metrics poll failed');
       return;
     }
     const queueDepths = parsePrometheusQueueMetrics(metrics.value);
@@ -89,19 +90,20 @@ export class ComposeAutoscaler {
       const fileFlag = this.composeFile ? `-f ${this.composeFile} ` : '';
       const cmd = `docker compose ${fileFlag}up -d --scale ${serviceName}=${decision.targetReplicas} --no-recreate`;
 
+      const scaling = {
+        service: serviceName,
+        reason: decision.reason,
+        targetReplicas: decision.targetReplicas,
+      };
       if (this.dryRun) {
-        this.log(
-          `[DRY-RUN] [${serviceName}] ${decision.reason} -> Target: ${decision.targetReplicas} (Command: ${cmd})`
-        );
+        this.log.info({ ...scaling, command: cmd }, 'would scale (dry run)');
         continue;
       }
 
-      this.log(
-        `[SCALING] [${serviceName}] ${decision.reason} -> Target: ${decision.targetReplicas}`
-      );
+      this.log.info(scaling, 'scaling');
       const scaled = await this.execCmd(cmd);
       if (scaled.type === 'failed') {
-        this.log(`[ERROR] Failed to execute scale command for ${serviceName}: ${scaled.reason}`);
+        this.log.error({ service: serviceName, reason: scaled.reason }, 'scale command failed');
       }
     }
   }
@@ -109,8 +111,9 @@ export class ComposeAutoscaler {
   public start(): void {
     if (this.isRunning) return;
     this.isRunning = true;
-    this.log(
-      `[AUTOSCALER] Started polling ${this.metricsUrl} every ${this.pollIntervalMs / 1000}s (dryRun: ${this.dryRun})`
+    this.log.info(
+      { metricsUrl: this.metricsUrl, pollIntervalMs: this.pollIntervalMs, dryRun: this.dryRun },
+      'autoscaler started'
     );
 
     const loop = async () => {
@@ -130,6 +133,6 @@ export class ComposeAutoscaler {
       clearTimeout(this.pollTimer);
       this.pollTimer = null;
     }
-    this.log('[AUTOSCALER] Stopped.');
+    this.log.info('autoscaler stopped');
   }
 }

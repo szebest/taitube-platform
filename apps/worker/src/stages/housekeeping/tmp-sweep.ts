@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import type { Logger } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { fromPromise, isOk, unwrapOr } from '@vp/result';
 
 export interface TmpSweepOptions {
@@ -46,9 +46,9 @@ export async function runTmpSweep(options: TmpSweepOptions): Promise<TmpSweepRes
 
     if (isOk(removed)) {
       sweptCount += 1;
-      logger?.info({ path: fullPath }, 'Swept stale temp directory/file');
+      logger?.info({ path: fullPath }, 'swept stale temp directory/file');
     } else {
-      logger?.warn({ path: fullPath }, 'Failed to sweep temp path');
+      logger?.warn({ path: fullPath }, 'failed to sweep temp path');
     }
   }
 

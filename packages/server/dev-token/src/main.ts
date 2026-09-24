@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as path from 'node:path';
+import { type Logger, createLogger } from '@vp/logger';
 import { mintToken, verifyToken } from './jwt';
 import { getDevJwks } from './keys';
 
@@ -26,8 +27,14 @@ function parseArgs(args: string[]) {
   return { command, flags };
 }
 
-function printHelp(): void {
-  console.log(`
+/** What the CLI prints, and where its progress and failures go. */
+export interface Cli {
+  print: (text: string) => void;
+  log: Logger;
+}
+
+function printHelp(cli: Cli): void {
+  cli.print(`
 dev-token: EdDSA JWT issuer and JWKS provider for video-pipeline
 
 Usage:
@@ -51,7 +58,7 @@ Serve Options:
 `);
 }
 
-export async function main(args: readonly string[] = process.argv.slice(2)): Promise<void> {
+export async function main(args: readonly string[], cli: Cli): Promise<void> {
   const { command, flags } = parseArgs([...args]);
 
   switch (command) {
@@ -65,17 +72,20 @@ export async function main(args: readonly string[] = process.argv.slice(2)): Pro
         const outPath = path.resolve(process.cwd(), flags['out']);
         fs.mkdirSync(path.dirname(outPath), { recursive: true });
         fs.writeFileSync(outPath, token, 'utf-8');
-        console.log(`[dev-token] Minted token written to ${outPath}`);
+        cli.log.info({ path: outPath }, 'token written');
       } else if (flags['raw'] === 'true') {
         process.stdout.write(token);
       } else {
-        console.log('\n--- MINTED DEV JWT (iss=vp-dev, aud=vp-api) ---');
-        console.log(`Subject: ${sub}`);
-        console.log(`Role:    ${role}`);
-        console.log(`TTL:     ${ttl}`);
-        console.log('\nToken:');
-        console.log(token);
-        console.log(`\nHeader: Authorization: Bearer ${token}\n`);
+        cli.print(
+          [
+            'Minted dev JWT (iss=vp-dev, aud=vp-api)',
+            `Subject: ${sub}`,
+            `Role:    ${role}`,
+            `TTL:     ${ttl}`,
+            '',
+            `Authorization: Bearer ${token}`,
+          ].join('\n')
+        );
       }
       break;
     }
@@ -83,18 +93,17 @@ export async function main(args: readonly string[] = process.argv.slice(2)): Pro
     case 'verify': {
       const token = args[1];
       if (!token) {
-        console.error('Error: token argument required for verify');
+        cli.log.error('verify needs a token argument');
         process.exit(1);
       }
       let verified: ReturnType<typeof verifyToken>;
       try {
         verified = verifyToken(token);
-      } catch (cause) {
-        console.error('✗ Token invalid:', cause instanceof Error ? cause.message : cause);
+      } catch (err) {
+        cli.log.error({ err }, 'token is invalid');
         process.exit(1);
       }
-      console.log('✓ Token valid:');
-      console.log(JSON.stringify(verified, null, 2));
+      cli.print(JSON.stringify(verified, null, 2));
       break;
     }
 
@@ -106,9 +115,9 @@ export async function main(args: readonly string[] = process.argv.slice(2)): Pro
         const outPath = path.resolve(process.cwd(), flags['out']);
         fs.mkdirSync(path.dirname(outPath), { recursive: true });
         fs.writeFileSync(outPath, json, 'utf-8');
-        console.log(`[dev-token] JWKS written to ${outPath}`);
+        cli.log.info({ path: outPath }, 'jwks written');
       } else {
-        console.log(json);
+        cli.print(json);
       }
       break;
     }
@@ -132,21 +141,26 @@ export async function main(args: readonly string[] = process.argv.slice(2)): Pro
       });
 
       server.listen(port, () => {
-        console.log(
-          `[dev-token] JWKS server listening on http://localhost:${port}/.well-known/jwks.json`
+        cli.log.info(
+          { url: `http://localhost:${port}/.well-known/jwks.json` },
+          'jwks server listening'
         );
       });
       break;
     }
 
     default:
-      printHelp();
+      printHelp(cli);
   }
 }
 
 if (process.env['NODE_ENV'] !== 'test') {
-  main().catch((err) => {
-    console.error('Fatal dev-token error:', err);
+  const cli: Cli = {
+    print: (text) => process.stdout.write(`${text}\n`),
+    log: createLogger({ service: 'dev-token', level: 'info', format: 'pretty' }),
+  };
+  main(process.argv.slice(2), cli).catch((err) => {
+    cli.log.fatal({ err }, 'dev-token failed');
     process.exit(1);
   });
 }

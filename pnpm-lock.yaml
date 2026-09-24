@@ -125,6 +125,9 @@ importers:
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../../packages/server/job-contracts
+      '@vp/logger':
+        specifier: workspace:*
+        version: link:../../packages/server/logger
       '@vp/observability':
         specifier: workspace:*
         version: link:../../packages/server/observability
@@ -361,6 +364,9 @@ importers:
       '@vp/job-contracts':
         specifier: workspace:*
         version: link:../../packages/server/job-contracts
+      '@vp/logger':
+        specifier: workspace:*
+        version: link:../../packages/server/logger
       '@vp/observability':
         specifier: workspace:*
         version: link:../../packages/server/observability
@@ -543,6 +549,10 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   packages/server/compose-autoscaler:
+    dependencies:
+      '@vp/logger':
+        specifier: workspace:*
+        version: link:../logger
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -700,6 +710,10 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   packages/server/dev-token:
+    dependencies:
+      '@vp/logger':
+        specifier: workspace:*
+        version: link:../logger
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -814,6 +828,10 @@ importers:
         version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
 
   packages/server/gen-video:
+    dependencies:
+      '@vp/logger':
+        specifier: workspace:*
+        version: link:../logger
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -837,6 +855,34 @@ importers:
         specifier: ^3.24.2
         version: 3.25.76
     devDependencies:
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/node@24.13.3)(jiti@1.21.7)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  packages/server/logger:
+    dependencies:
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
+      pino:
+        specifier: ^10.3.1
+        version: 10.3.1
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
       '@vp/testing':
         specifier: workspace:*
         version: link:../testing
@@ -891,9 +937,6 @@ importers:
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result
-      pino:
-        specifier: ^10.3.1
-        version: 10.3.1
       prom-client:
         specifier: ^15.1.3
         version: 15.1.3
@@ -965,6 +1008,9 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
+      '@vp/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result

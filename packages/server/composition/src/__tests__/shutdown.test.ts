@@ -8,15 +8,20 @@ import {
 
 function plan(overrides: Partial<ShutdownPlan> = {}) {
   const events: string[] = [];
+  const logged: { message: string; fields: Record<string, unknown> }[] = [];
+  const record = (fields: Record<string, unknown>, message: string) => {
+    events.push(`log: ${message} ${JSON.stringify(fields)}`);
+    logged.push({ message, fields });
+  };
   const base: ShutdownPlan = {
     drain: () => void events.push('drain'),
     drainDelayMs: 0,
     close: async () => void events.push('close'),
     graceMs: 1_000,
     pending: () => undefined,
-    log: (message) => void events.push(`log: ${message}`),
+    log: { info: record, error: record },
   };
-  return { events, plan: { ...base, ...overrides } };
+  return { events, logged, plan: { ...base, ...overrides } };
 }
 
 describe('packages/composition: shutdownOnce', () => {
@@ -59,14 +64,17 @@ describe('packages/composition: shutdownOnce', () => {
   });
 
   it('reports a close that failed, so the process does not exit 0', async () => {
-    const { events, plan: p } = plan({
+    const { logged, plan: p } = plan({
       close: async () => {
         throw new Error('socket hang up');
       },
     });
 
     expect(await shutdownOnce(p)()).toBe('failed');
-    expect(events.at(-1)).toContain('socket hang up');
+    expect(logged.at(-1)).toEqual({
+      message: 'shutdown failed',
+      fields: { err: expect.objectContaining({ message: 'socket hang up' }) },
+    });
   });
 });
 

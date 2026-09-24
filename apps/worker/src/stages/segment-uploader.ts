@@ -2,7 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { StorageClient } from '@vp/core/ports';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
-import type { Logger } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, err, fromPromise, ignore, isErr, ok, unwrapOr } from '@vp/result';
 import { getHeaderMapping, renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
 
@@ -162,7 +162,7 @@ export class StreamingSegmentUploader implements SegmentUploader {
 
       this.logger.warn(
         { filename, attempt, maxRetries: this.maxRetries, error: lastMessage },
-        `Segment upload attempt ${attempt} failed, retrying...`
+        'segment upload failed, retrying'
       );
 
       if (attempt < this.maxRetries) {

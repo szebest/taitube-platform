@@ -8,7 +8,8 @@ import { loadEnv } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
 import { asThrowable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
-import { LogContext, createLogger, registeredTracing } from '@vp/observability';
+import { registeredTracing } from '@vp/observability';
+import { LogContext, type Logger, createLogger } from '@vp/logger';
 import { ignore, isErr } from '@vp/result';
 import { STAGE_REGISTRY } from './registry';
 import { type WorkerRunner, composeWorker } from './runner';
@@ -24,6 +25,7 @@ export async function main(host: ProcessHost): Promise<WorkerProcess> {
   const { stage } = config.worker;
   const logContext = new LogContext();
   const logger = createLogger({
+    format: 'json',
     service: `worker-${stage}`,
     level: config.logLevel,
     bindings: { stage },
@@ -50,7 +52,7 @@ export async function main(host: ProcessHost): Promise<WorkerProcess> {
     },
     graceMs: STAGE_REGISTRY[stage].shutdownTimeoutMs,
     pending: () => runner.disposing(),
-    log: (message) => logger.info(message),
+    log: logger,
   });
 
   exitOnSignals(host, shutdown);
@@ -60,25 +62,27 @@ export async function main(host: ProcessHost): Promise<WorkerProcess> {
 
   logger.info(
     { started: runner.started(), queue: runner.worker.name, metricsPort: runner.metricsPort() },
-    'Worker consuming'
+    'worker consuming'
   );
   return { runner, metricsPort: runner.metricsPort(), shutdown };
 }
 
-export function run(host: ProcessHost): Promise<void> {
+/** `log` is for a start that fails before the worker has a logger of its own. */
+export function run(host: ProcessHost, log: Logger): Promise<void> {
   return main(host).then(
     () => undefined,
-    (cause) => {
-      console.error('Fatal worker error:', cause);
+    (err) => {
+      log.fatal({ err }, 'worker could not start');
       host.exit(1);
     }
   );
 }
 
 if (process.env['NODE_ENV'] !== 'test') {
-  void run({
+  const host: ProcessHost = {
     env: process.env,
     onSignal: (signal, handler) => process.on(signal, handler),
     exit: (code) => process.exit(code),
-  });
+  };
+  void run(host, createLogger({ service: 'vp-worker', level: 'info', format: 'json' }));
 }

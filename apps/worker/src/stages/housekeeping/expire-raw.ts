@@ -2,7 +2,7 @@ import type { StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Logger } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, isErr, ok } from '@vp/result';
 
 export interface ExpireRawOptions {
@@ -41,7 +41,7 @@ export async function runExpireRaw(
 
     logger?.info(
       { videoId: video.id, sourceKey: video.sourceKey, retentionDays },
-      'Expiring raw source video past retention'
+      'expiring raw source video past retention'
     );
 
     const deleted = await storage.deleteObject(rawBucket, video.sourceKey);
@@ -51,7 +51,7 @@ export async function runExpireRaw(
     if (isErr(purged)) {
       logger?.warn(
         { videoId: video.id, storage: purged.error.operation },
-        'Raw source not removed; the video is kept for the next run'
+        'raw source not removed; the video is kept for the next run'
       );
       continue;
     }

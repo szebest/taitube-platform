@@ -19,6 +19,7 @@ import type {
   StorageClient,
 } from '../../packages/server/core/ports/index';
 import { mintToken } from '../../packages/server/dev-token/src/index';
+import type { Logger } from '../../packages/server/logger/src/index';
 import {
   type DlqCheckContext,
   auditDlqHostile,
@@ -44,6 +45,7 @@ export class E2ERunner {
   private resultsDir: string;
   private reduced: boolean;
   private inProcessEnv?: InProcessEnv;
+  private log: Logger;
 
   repositories!: Repositories;
   storage!: StorageClient;
@@ -62,7 +64,8 @@ export class E2ERunner {
 
   private explicitResultsDir: boolean;
 
-  constructor(options: E2ERunnerOptions = {}) {
+  constructor(options: E2ERunnerOptions, log: Logger) {
+    this.log = log;
     this.apiUrl = options.apiUrl;
     this.fixturesDir = options.fixturesDir || path.resolve(process.cwd(), 'tests/fixtures');
     this.resultsDir =
@@ -80,7 +83,7 @@ export class E2ERunner {
       try {
         const res = await fetch(`${this.apiUrl}/healthz`);
         if (res.ok) {
-          console.log(`[e2e-runner] Connected to API at ${this.apiUrl}`);
+          this.log.info({ apiUrl: this.apiUrl }, 'connected to api');
           const { DATABASE_URL, S3_ENDPOINT } = process.env;
           this.repositories = DATABASE_URL
             ? new PostgresRepositories({ type: 'url', url: DATABASE_URL, max: 5 })
@@ -103,13 +106,11 @@ export class E2ERunner {
           return this.apiUrl;
         }
       } catch {
-        console.log(
-          `[e2e-runner] API at ${this.apiUrl} unreachable; falling back to in-process stack`
-        );
+        this.log.warn({ apiUrl: this.apiUrl }, 'api unreachable, falling back to in-process stack');
       }
     }
 
-    this.inProcessEnv = await setupInProcessEnv();
+    this.inProcessEnv = await setupInProcessEnv(this.log);
     this.apiUrl = this.inProcessEnv.apiUrl;
     this.repositories = this.inProcessEnv.repositories;
     this.storage = this.inProcessEnv.storage;
@@ -173,9 +174,9 @@ export class E2ERunner {
     await this.setup();
 
     const specs = this.getSpecs();
-    console.log(`[e2e-runner] Launching ${specs.length} concurrent video uploads...`);
+    this.log.info({ videos: specs.length }, 'launching concurrent video uploads');
     const videoResults = await Promise.all(specs.map((spec) => this.runSingleVideo(spec)));
-    console.log(`[e2e-runner] All ${videoResults.length} videos reached terminal states.`);
+    this.log.info({ videos: videoResults.length }, 'all videos reached terminal states');
 
     const dlqReplayResult = await this.runForcedTransientDlqReplay();
     const abandonedUploadResult = await this.runAbandonedUploadTest();
@@ -205,10 +206,11 @@ export class E2ERunner {
       fs.mkdirSync(this.resultsDir, { recursive: true });
       const reportPath = path.join(this.resultsDir, 'README.md');
       fs.writeFileSync(reportPath, markdownReport, 'utf-8');
-      console.log(`[e2e-runner] Results written to ${reportPath}`);
+      this.log.info({ reportPath }, 'results written');
     } else {
-      console.log(
-        `[e2e-runner] Skipping overwrite of benchmark report in ${this.resultsDir} (set WRITE_E2E_REPORT=true or run full suite to write)`
+      this.log.info(
+        { resultsDir: this.resultsDir, enableWith: 'WRITE_E2E_REPORT=true or the full suite' },
+        'skipping overwrite of benchmark report'
       );
     }
 
