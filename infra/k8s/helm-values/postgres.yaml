@@ -1,4 +1,7 @@
 # infra/k8s/helm-values/postgres.yaml
+# The service is vp-postgres, the host DATABASE_URL names in infra/k8s/base.
+fullnameOverride: vp-postgres
+
 auth:
   username: vp
   password: vp

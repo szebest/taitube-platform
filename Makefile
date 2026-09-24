@@ -137,7 +137,7 @@ k3d-up: ## Create local k3d (or kind) cluster and install Helm charts (Postgres,
 	helm upgrade --install vp-postgres bitnami/postgresql -n video-pipeline --create-namespace -f infra/k8s/helm-values/postgres.yaml
 	helm upgrade --install vp-redis bitnami/redis -n video-pipeline --create-namespace -f infra/k8s/helm-values/redis.yaml
 	helm upgrade --install vp-minio minio/minio -n video-pipeline --create-namespace -f infra/k8s/helm-values/minio.yaml
-	helm upgrade --install keda kedacore/keda -n keda --create-namespace -f infra/k8s/helm-values/keda.yaml
+	helm upgrade --install keda kedacore/keda --version 2.21.0 -n keda --create-namespace -f infra/k8s/helm-values/keda.yaml
 	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace -f infra/k8s/helm-values/kube-prometheus-stack.yaml
 	@echo "Cluster infrastructure ready."
 

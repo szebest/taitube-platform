@@ -1,10 +1,4 @@
 # infra/k8s/helm-values/keda.yaml
-image:
-  keda:
-    tag: 2.14.0
-  metricsApiServer:
-    tag: 2.14.0
-
 crds:
   install: true
 

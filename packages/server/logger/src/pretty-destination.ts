@@ -9,7 +9,15 @@ interface LogRecord {
 }
 
 /** What pino puts on every line, which a person reading a terminal does not need to see. */
-const HIDDEN_FIELDS = new Set(['level', 'time', 'msg', 'service', 'err', 'pid', 'hostname']);
+const HIDDEN_FIELDS: ReadonlySet<string> = new Set([
+  'level',
+  'time',
+  'msg',
+  'service',
+  'err',
+  'pid',
+  'hostname',
+]);
 
 function describeError(err: SerializedError): string {
   const lines: string[] = [];

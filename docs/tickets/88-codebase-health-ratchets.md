@@ -80,7 +80,7 @@ Scores at `64eff79`. The old table scored some rows higher; the audit found more
 | Errors | 7 | 9.5 | `no-discarded-result.test.ts` (type-aware); `catch-confinement` sees `.catch(`, list deleted; `error-vocabulary.test.ts` |
 | Hygiene & single owners | 6 | 9.5 | `knip` at zero in `lint-typecheck`; `no-process-comments.test.ts`; single-owner assertions |
 | Tests | 6 | 9.5 | correspondence list deleted; `spec-discipline.test.ts`; real `integration` job; 14 green nightlies |
-| Observability | 5 | 9 | `promql-labels-emitted.test.ts`; API access log with redaction; exported API span |
+| Observability | 5 | 9 | `promql-labels-emitted.test.ts`; API access log with redaction; exported API span; one `@vp/logger`, no `console`, `log-calls.test.ts` |
 | CI speed | 5 | 9 | CI wall-clock budgets asserted from the run; docs-only PR skips the pipeline |
 | Documentation | 6 | 9.5 | `doc-links.test.ts` (files **and** anchors); `doc-commands.test.ts`; `architecture-table.test.ts` |
 | Drift | 7 | 9.5 | the three doc tests above, plus `gen-index.py` computing the frontier instead of storing it |
@@ -379,12 +379,16 @@ reconciler hard-codes a `traceparent`, so every reconciled upload shares one tra
 initialised inside `main()`, after the static imports it has to patch, so the Fastify, pg and ioredis spans are
 probably never produced and the worker's parent span comes from a random id. Three metric defects break alerting and
 scaling (above), 404s put the raw URL into the `route` label, and `time_to_ready_seconds` measures from creation, not
-from upload complete.
+from upload complete. Outside the two deployables nothing logs through a logger at all: about 54 `console` calls in
+`scripts/`, 46 in the CLIs and db runners, 10 in the apps' entrypoints and 7 in `tests/e2e`, with seven hand-rolled
+`err instanceof Error ? err.message : err` ternaries turning errors into text.
 
 **Target.** One `createLogger` for both deployables, redacting `authorization`, `cookie` and `x-admin-token`,
 carrying a request id taken from `x-request-id` or generated, and propagating it into job payloads beside
 `traceparent`. Tracing is preloaded through `--import`. Every label value a query depends on is emitted, and a test
-says so.
+says so. Logging has one package, `@vp/logger`, used by everything that runs: `json` for the deployables, `pretty`
+(a readable line on stderr) for the CLIs, scripts and the e2e runner. Errors are a field, serialized in one place, and
+messages are fixed strings with the variable parts in fields.
 
 **ACs**
 1. The API logs one structured line per request with method, route, status, duration and request id; an `Authorization` header never appears in a log line. Proof: spec capturing the log stream. **Done in 88d: `createLogger` is the API's `loggerInstance`; `plugins/access-log.ts` writes one `request completed` line; `plugins/__tests__/access-log.test.ts` reads the stream and finds no `secret-token`.**
@@ -398,6 +402,26 @@ says so.
 9. `time_to_ready_seconds` measures from upload complete, as §13.1 says. Proof: stage spec with an injected clock. **Done in 88d: `package.ts` reads `uploads.completed_at` and a `now` from `StageDeps`; `stages/__tests__/package.test.ts`.**
 10. S3 `checkHealth` issues a `HeadBucket`; `/readyz` answers 503 when MinIO is stopped. Proof: adapter spec with a failing fake client; chaos run. The same compose run carries W3 AC 4's toxiproxy proof: a worker's `/readyz` answers 503 while Redis is cut off. **Done in 88d: both S3 adapters answer readiness with `HeadBucket` on the raw bucket; adapter specs over the fake client; `make chaos-readiness` reads 503 from the API with MinIO stopped.**
 11. The `neon_compute_hours_used` panel and its `vector(12.5)` fallback are removed or fed by a real exporter. Proof: dashboard spec. **Done in 88d: removed; `packages/server/testing/src/__tests__/dashboards.test.ts` holds it out and holds the k8s ConfigMaps equal to the dashboard files, which had drifted.**
+12. One logging package, `@vp/logger` (`packages/server/logger`), owns `createLogger` and the `Logger` type. `@vp/observability` re-exports nothing about logging, and no other package imports `pino`. Proof: zero-matches rows `from 'pino'` outside `packages/server/logger`, 0, and `createLogger|LogContext|from 'pino'` in `@vp/observability`, 0. **Done in 88d: `packages/server/logger` (T1: pino and `@opentelemetry/api` only); `LogContext` moved with it; the CLIs it now serves moved to T2.**
+13. The logger has two formats behind one interface. `json` is for the deployables and has redaction, request id and trace ids. `pretty` is for CLIs, scripts and the e2e runner: a human-readable line on stderr with no JSON noise. Format and level come from the caller (config or a CLI flag), never from `process.env` inside the package. Proof: logger spec with an `it.each` over both formats. **Done in 88d: `packages/server/logger/src/__tests__/logger.test.ts`; `pretty-destination.ts` is a small formatter of our own rather than `pino-pretty`, which needs a worker thread (see *Decided in 88d*).**
+14. Errors are logged as a field (`log.error({ err }, 'could not mint token')`) and serialized in one place, with the message, the cause chain and the code (from `@vp/errors`, or a system one such as `EADDRINUSE`) if there is one. No hand-rolled `err instanceof Error ? err.message : err` anywhere. Proof: zero-matches row `instanceof Error \?` over production source and `tests/e2e`, 0; a serializer spec covering a cause chain and a non-Error throw. **Done in 88d: `serialize-error.ts` is pino's `err` serializer in both formats; `serialize-error.test.ts`. A non-Error object is kept as JSON with credential headers censored.**
+15. No `console.` in production source, `scripts/` or `tests/e2e`, entrypoints included. The row from AC 4 widens to zero with no ENTRYPOINTS exception. Proof: the widened row. **Done in 88d: a CLI's result (a token, JWKS, help, a report table) is written to stdout as output; progress and failures go to the logger. The logger needs no `console` sink.**
+16. Log calls follow one shape: a stable lowercase message plus structured fields, never values interpolated into the message (`log.info({ videoId }, 'probe queued')`, not template strings). Proof: `tests/architecture/log-calls.test.ts` (AST), with fixtures that fire on a template message, a concatenated one and a sentence-case one. **Done in 88d: 67 messages lowercased and 3 interpolated ones rewritten with their values in fields.**
+
+**Decided in 88d.**
+- The API's HTTP server span is a Fastify hook of our own (`plugins/request-span.ts`), not `instrumentation-fastify`: it is named by the route template the metric and the access log use, and it is started from the root context, because `instrumentation-http` runs an incoming request it ignores with tracing suppressed. Without that the span was a no-op in the running stack while every in-process spec passed; a spec now runs the request under a suppressed context. `postgres` (postgres.js) has no OpenTelemetry instrumentation, so SQL is not a span; the Tempo trace in the PR shows the server span with its `ioredis` children.
+- The ESM hook excludes this repo's modules: it re-reads `export *` without the loader that resolves extensionless specifiers, so wrapping `@vp/*` failed on every barrel. Third-party modules are still wrapped. The SDK exports traces only (`metricReaders: []`, `logRecordProcessors: []`); without that it started OTLP metric and log exporters from its env defaults. `dns` and `net` instrumentation are off, they were most of the spans.
+- `prioritized` joins the poller's states from one list, `QUEUE_JOB_STATES` in `@vp/core/ports`, which the BullMQ adapter, the in-memory double and the poller read. Every pipeline job carries a priority, so BullMQ never had a pipeline job in `waiting`; the KEDA queries only ever saw the workers' `active=1`. The in-memory double now counts a job with a priority as `prioritized`, as BullMQ does.
+- `promql-labels-emitted` parses every query with `@prometheus-io/lezer-promql` and reads label values from recording calls through the type checker (a literal union is its values, a `string` is any value). A series another process exports is named by prefix with the labels this repo decides (`kube_` -> the Deployment names under `infra/k8s/base`); anything else is a finding. It found two selectors matching nothing: `ScaleToZeroBroken` and the replicas panel read `deployment=~"worker-.*"`, and the Deployments are `vp-worker-*`. The alert now also counts `prioritized`.
+- The k8s dashboard ConfigMaps are copies of `infra/observability/dashboards/*.json` (kustomize cannot read outside its root) and had drifted; `dashboards.test.ts` holds them equal, regenerated here.
+- `time_to_ready_seconds` reads `uploads.completed_at`. A video no upload completed (a seeded one, or a reprocess of one) observes nothing rather than a guessed start.
+- `@vp/logger` is T1 (pino and `@opentelemetry/api` only), so the CLIs that log through it (`dev-token`, `gen-video`, `compose-autoscaler`) move to T2. The pretty format is a 50-line destination of our own: `pino-pretty` renders through a worker-thread transport, which is the part Bun is least reliable at, and its default output is multi-line. `@vp/db` and `@vp/composition` take a structural `Log` / `ShutdownLog` (`info`/`error(fields, message)`) instead of depending on the logger, which a pino `Logger` satisfies.
+- A CLI's result (a minted token, JWKS, help text, the fairness report) is written to stdout; the logger writes progress and failures to stderr, so `TOKEN=$(pnpm dev-token mint --raw)` still captures the token alone.
+- `log-calls.test.ts` finds a logger by its name (`log`, `logger`, `*.log`, `*.logger`), which is the naming the repo uses; it checks the message argument, the last one.
+- `test:unit` (`vitest run --project '!architecture'`) is what the `unit` job runs, so the architecture suite runs once per pipeline, in `lint-typecheck`.
+- `repo-files.ts` lists the index once per process and matches pathspecs in process, instead of a `git ls-files` per call. The cost was the git forks, most of the suite's wall time.
+- Readiness proof uses `worker-notify` routed through toxiproxy (`docker-compose.chaos.yml` adds the `redis` proxy), since toxiproxy fronted only MinIO.
+- The KEDA values pinned image `2.14.0` against chart `2.21.0`, whose operator flags 2.14 does not know, so `make k3d-up` crash-looped KEDA. The chart version is pinned in the Makefile and the image follows it.
 
 ### W10 - CI speed
 
