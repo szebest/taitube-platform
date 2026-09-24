@@ -1,3 +1,4 @@
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { describeChannelRepositoryContract } from '../../../__tests__/contract/channel-repository.contract';
 import { inMemorySubject } from '../../../__tests__/contract/subjects';
@@ -20,8 +21,12 @@ describe('InMemoryChannelRepository dev seed', () => {
 
     expect(expectOk(await channels.findByHandle('temporary'))).toBeNull();
     expect(expectOk(await channels.findByHandle('dev'))).toMatchObject({
-      userId: '00000000-0000-7000-8000-000000000001',
+      id: SEEDED.channelId,
+      userId: SEEDED.userId,
       displayName: 'Dev Channel',
     });
+    expect(expectOk(await channels.findByUserId(SEEDED.otherUserId))?.id).toBe(
+      SEEDED.otherChannelId
+    );
   });
 });
