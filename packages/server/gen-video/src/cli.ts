@@ -1,37 +1,34 @@
 import * as path from 'node:path';
+import { parseArgs } from 'node:util';
 import { checkFixture } from './check-fixture';
 import { generateAllFixtures, selectFixtures } from './generator';
 import { loadManifest } from './probe';
 import type { GeneratorOptions } from './types';
 
-function parseArgs(args: string[]): { options: GeneratorOptions; check: boolean; help: boolean } {
-  let outputDir = path.resolve(process.cwd(), 'tests/fixtures');
-  let includeSlow = false;
-  let only: string | undefined;
-  let check = false;
-  let help = false;
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === '--output-dir' && args[i + 1]) {
-      outputDir = path.resolve(process.cwd(), args[i + 1] as string);
-      i++;
-    } else if (arg === '--include-slow') {
-      includeSlow = true;
-    } else if (arg === '--only' && args[i + 1]) {
-      only = args[i + 1];
-      i++;
-    } else if (arg === '--check') {
-      check = true;
-    } else if (arg === '--help' || arg === '-h') {
-      help = true;
-    }
-  }
+function readArgs(argv: readonly string[]): {
+  options: GeneratorOptions;
+  check: boolean;
+  help: boolean;
+} {
+  const { values } = parseArgs({
+    args: [...argv],
+    options: {
+      'output-dir': { type: 'string', default: 'tests/fixtures' },
+      'include-slow': { type: 'boolean', default: false },
+      only: { type: 'string' },
+      check: { type: 'boolean', default: false },
+      help: { type: 'boolean', short: 'h', default: false },
+    },
+  });
 
   return {
-    options: { outputDir, includeSlow, only },
-    check,
-    help,
+    options: {
+      outputDir: path.resolve(process.cwd(), values['output-dir']),
+      includeSlow: values['include-slow'],
+      only: values.only,
+    },
+    check: values.check,
+    help: values.help,
   };
 }
 
@@ -56,7 +53,7 @@ export interface CliHost {
 }
 
 export async function run({ argv }: CliHost): Promise<void> {
-  const { options, check, help } = parseArgs([...argv]);
+  const { options, check, help } = readArgs(argv);
 
   if (help) {
     printHelp();

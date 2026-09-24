@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import { parseArgs } from 'node:util';
 import { type AutoscalerOptions, ComposeAutoscaler } from './runner';
 import { DEFAULT_STAGE_CONFIGS, type ScalerStageConfig } from './scaler';
 
@@ -24,36 +25,29 @@ interface CliArgs {
   help?: boolean;
 }
 
-function parseCliArgs(args: string[], env: Env): CliArgs {
-  const flags: Record<string, string> = {};
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (!arg) continue;
-    if (arg === '--help' || arg === '-h') {
-      flags.help = 'true';
-    } else if (arg.startsWith('--')) {
-      const key = arg.slice(2);
-      const next = args[i + 1];
-      if (next && !next.startsWith('--')) {
-        flags[key] = next;
-        i++;
-      } else {
-        flags[key] = 'true';
-      }
-    }
-  }
+function parseCliArgs(argv: readonly string[], env: Env): CliArgs {
+  const { values } = parseArgs({
+    args: [...argv],
+    options: {
+      url: { type: 'string' },
+      file: { type: 'string' },
+      'dry-run': { type: 'boolean', default: false },
+      interval: { type: 'string', default: '10' },
+      config: { type: 'string' },
+      help: { type: 'boolean', short: 'h', default: false },
+    },
+  });
 
   const metricsPort = env.METRICS_PORT || '9464';
   const defaultMetricsUrl = `http://localhost:${metricsPort}/metrics`;
 
   return {
-    metricsUrl: flags.url || env.METRICS_URL || defaultMetricsUrl,
-    composeFile: flags.file || env.COMPOSE_FILE,
-    dryRun: flags['dry-run'] === 'true' || flags.dryRun === 'true',
-    intervalSec: Number.parseInt(flags.interval || flags['poll-interval'] || '10', 10),
-    configFile: flags.config,
-    help: flags.help === 'true',
+    metricsUrl: values.url || env.METRICS_URL || defaultMetricsUrl,
+    composeFile: values.file || env.COMPOSE_FILE,
+    dryRun: values['dry-run'],
+    intervalSec: Number.parseInt(values.interval, 10),
+    configFile: values.config,
+    help: values.help,
   };
 }
 
@@ -96,7 +90,7 @@ function readStageOverrides(env: Env, configFile?: string): StageOverrides {
 }
 
 export function run(host: CliHost): void {
-  const args = parseCliArgs([...host.argv], host.env);
+  const args = parseCliArgs(host.argv, host.env);
 
   if (args.help) {
     printHelp();

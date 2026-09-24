@@ -1,29 +1,25 @@
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as path from 'node:path';
+import { parseArgs } from 'node:util';
 import { mintToken, verifyToken } from './jwt';
 import { getDevJwks } from './keys';
 
-function parseArgs(args: string[]) {
-  const command = args[0] ?? 'help';
-  const rest = args.slice(1);
-  const flags: Record<string, string> = {};
-
-  for (let i = 0; i < rest.length; i++) {
-    const arg = rest[i];
-    if (arg?.startsWith('--')) {
-      const key = arg.slice(2);
-      const next = rest[i + 1];
-      if (next && !next.startsWith('--')) {
-        flags[key] = next;
-        i++;
-      } else {
-        flags[key] = 'true';
-      }
-    }
-  }
-
-  return { command, flags };
+function readArgs(argv: readonly string[]) {
+  const { positionals, values } = parseArgs({
+    args: [...argv],
+    allowPositionals: true,
+    options: {
+      sub: { type: 'string', default: '00000000-0000-7000-8000-000000000001' },
+      role: { type: 'string', default: 'user' },
+      ttl: { type: 'string', default: '8h' },
+      out: { type: 'string' },
+      raw: { type: 'boolean', default: false },
+      port: { type: 'string', default: '3001' },
+    },
+  });
+  const [command = 'help', token] = positionals;
+  return { command, token, flags: values };
 }
 
 function printHelp(): void {
@@ -56,36 +52,33 @@ export interface CliHost {
 }
 
 export async function run({ argv }: CliHost): Promise<void> {
-  const { command, flags } = parseArgs([...argv]);
+  const { command, token, flags } = readArgs(argv);
 
   switch (command) {
     case 'mint': {
-      const sub = flags['sub'] ?? '00000000-0000-7000-8000-000000000001';
-      const role = flags['role'] ?? 'user';
-      const ttl = flags['ttl'] ?? '8h';
-      const token = mintToken({ sub, role, ttl });
+      const { sub, role, ttl } = flags;
+      const minted = mintToken({ sub, role, ttl });
 
-      if (flags['out']) {
-        const outPath = path.resolve(process.cwd(), flags['out']);
+      if (flags.out) {
+        const outPath = path.resolve(process.cwd(), flags.out);
         fs.mkdirSync(path.dirname(outPath), { recursive: true });
-        fs.writeFileSync(outPath, token, 'utf-8');
+        fs.writeFileSync(outPath, minted, 'utf-8');
         console.log(`[dev-token] Minted token written to ${outPath}`);
-      } else if (flags['raw'] === 'true') {
-        process.stdout.write(token);
+      } else if (flags.raw) {
+        process.stdout.write(minted);
       } else {
         console.log('\n--- MINTED DEV JWT (iss=vp-dev, aud=vp-api) ---');
         console.log(`Subject: ${sub}`);
         console.log(`Role:    ${role}`);
         console.log(`TTL:     ${ttl}`);
         console.log('\nToken:');
-        console.log(token);
-        console.log(`\nHeader: Authorization: Bearer ${token}\n`);
+        console.log(minted);
+        console.log(`\nHeader: Authorization: Bearer ${minted}\n`);
       }
       break;
     }
 
     case 'verify': {
-      const token = argv[1];
       if (!token) throw new Error('verify needs a token argument');
       const payload = verifyToken(token);
       console.log('✓ Token valid:');
@@ -97,8 +90,8 @@ export async function run({ argv }: CliHost): Promise<void> {
       const jwks = getDevJwks();
       const json = JSON.stringify(jwks, null, 2);
 
-      if (flags['out']) {
-        const outPath = path.resolve(process.cwd(), flags['out']);
+      if (flags.out) {
+        const outPath = path.resolve(process.cwd(), flags.out);
         fs.mkdirSync(path.dirname(outPath), { recursive: true });
         fs.writeFileSync(outPath, json, 'utf-8');
         console.log(`[dev-token] JWKS written to ${outPath}`);
@@ -109,7 +102,7 @@ export async function run({ argv }: CliHost): Promise<void> {
     }
 
     case 'serve': {
-      const port = Number.parseInt(flags['port'] ?? '3001', 10);
+      const port = Number.parseInt(flags.port, 10);
       const jwks = getDevJwks();
       const jwksJson = JSON.stringify(jwks, null, 2);
 

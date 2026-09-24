@@ -31,15 +31,15 @@ describe('Prometheus alert rules (SDD §13.5)', () => {
   it('verifies every alert carries a valid runbook_url annotation pointing to an existing runbook', () => {
     for (const rule of loadAlertRules()) {
       expect(
-        rule.runbookUrl,
+        rule.annotations.runbook_url,
         `Alert "${rule.alert}" must have runbook_url annotation`
       ).toBeDefined();
       expect(
-        rule.runbookUrl?.startsWith('docs/runbooks/'),
-        `Alert "${rule.alert}" runbook_url must point to docs/runbooks/*.md (got ${rule.runbookUrl})`
+        rule.annotations.runbook_url?.startsWith('docs/runbooks/'),
+        `Alert "${rule.alert}" runbook_url must point to docs/runbooks/*.md (got ${rule.annotations.runbook_url})`
       ).toBe(true);
 
-      const targetPath = path.resolve(rootDir, rule.runbookUrl ?? '');
+      const targetPath = path.resolve(rootDir, rule.annotations.runbook_url ?? '');
       expect(
         fs.existsSync(targetPath),
         `Runbook file for alert "${rule.alert}" does not exist at ${targetPath}`
@@ -51,13 +51,11 @@ describe('Prometheus alert rules (SDD §13.5)', () => {
     for (const rule of loadAlertRules()) {
       expect(
         ['critical', 'warning', 'info'],
-        `Alert "${rule.alert}" has invalid severity ${rule.severity}`
-      ).toContain(rule.severity);
+        `Alert "${rule.alert}" has invalid severity ${rule.labels.severity}`
+      ).toContain(rule.labels.severity);
 
-      expect(rule.forDuration, `Alert "${rule.alert}" must specify for duration`).toMatch(
-        /^[0-9]+[smhd]$/
-      );
-      expect(rule.expr?.length, `Alert "${rule.alert}" expression cannot be empty`).toBeGreaterThan(
+      expect(rule.for, `Alert "${rule.alert}" must specify for duration`).toMatch(/^[0-9]+[smhd]$/);
+      expect(rule.expr.length, `Alert "${rule.alert}" expression cannot be empty`).toBeGreaterThan(
         0
       );
     }
@@ -67,7 +65,7 @@ describe('Prometheus alert rules (SDD §13.5)', () => {
     const scaleAlert = loadAlertRules().find((r) => r.alert === 'ScaleToZeroBroken');
 
     expect(scaleAlert).toBeDefined();
-    expect(scaleAlert?.environment).toBe('kubernetes-only');
+    expect(scaleAlert?.labels.environment).toBe('kubernetes-only');
     expect(scaleAlert?.expr).toContain('kube_deployment_status_replicas');
   });
 });

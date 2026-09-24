@@ -22,9 +22,11 @@
     "@opentelemetry/context-async-hooks": "^2.11.0",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
+    "js-yaml": "^5.4.1",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.7"
+    "vitest": "^3.0.7",
+    "zod": "^3.25.76"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
