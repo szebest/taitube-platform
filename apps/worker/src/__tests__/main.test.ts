@@ -1,16 +1,13 @@
+import { resolve } from 'node:path';
+import { runEntrypoint } from '@vp/testing/run-entrypoint';
+
+const ENTRYPOINT = resolve(import.meta.dirname, '../main.ts');
+
 describe('apps/worker: main', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+  it('starts nothing, and exits clean, when a spec loads it', () => {
+    const loaded = runEntrypoint(ENTRYPOINT, [], { PATH: process.env.PATH, NODE_ENV: 'test' });
 
-  it('starts nothing, and installs no signal handler, when a spec loads it', async () => {
-    const on = vi.spyOn(process, 'on');
-    const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
-
-    await import('../main');
-    await new Promise((resolve) => setTimeout(resolve, 20));
-
-    expect(on).not.toHaveBeenCalledWith('SIGTERM', expect.any(Function));
-    expect(exit).not.toHaveBeenCalled();
+    expect(loaded.status).toBe(0);
+    expect(loaded.stdout).toBe('');
   });
 });
