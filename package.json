@@ -22,7 +22,7 @@
     "format": "biome format --write .",
     "typecheck": "pnpm boundaries && turbo run typecheck",
     "clean": "turbo run clean && rimraf node_modules",
-    "gen-video": "bun packages/server/gen-video/src/main.ts",
+    "gen-video": "tsx packages/server/gen-video/src/main.ts",
     "dev-token": "bun packages/server/dev-token/src/main.ts",
     "upload-client": "bun packages/server/upload-client/src/main.ts",
     "compose-autoscaler": "bun packages/server/compose-autoscaler/src/main.ts",

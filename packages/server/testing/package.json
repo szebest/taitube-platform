@@ -30,6 +30,11 @@
       "types": "./dist/log-capture.d.ts",
       "import": "./src/log-capture.ts",
       "default": "./dist/log-capture.js"
+    },
+    "./run-entrypoint": {
+      "types": "./dist/run-entrypoint.d.ts",
+      "import": "./src/run-entrypoint.ts",
+      "default": "./dist/run-entrypoint.js"
     }
   },
   "scripts": {

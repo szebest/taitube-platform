@@ -1,14 +1,10 @@
-import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import { runEntrypoint } from '@vp/testing/run-entrypoint';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../main.ts');
 
 function uploadClient(...argv: string[]) {
-  return spawnSync('bun', [ENTRYPOINT, ...argv], {
-    env: { PATH: process.env.PATH },
-    encoding: 'utf8',
-    timeout: 20_000,
-  });
+  return runEntrypoint(ENTRYPOINT, argv, { PATH: process.env.PATH });
 }
 
 describe('packages/upload-client: pnpm upload-client', () => {

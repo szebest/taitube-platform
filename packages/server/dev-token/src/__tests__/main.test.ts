@@ -1,15 +1,11 @@
-import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import { runEntrypoint } from '@vp/testing/run-entrypoint';
 import { DEV_KEY_ID } from '../keys';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../main.ts');
 
 function devToken(...argv: string[]) {
-  return spawnSync('bun', [ENTRYPOINT, ...argv], {
-    env: { PATH: process.env.PATH },
-    encoding: 'utf8',
-    timeout: 20_000,
-  });
+  return runEntrypoint(ENTRYPOINT, argv, { PATH: process.env.PATH });
 }
 
 describe('packages/dev-token: pnpm dev-token', () => {

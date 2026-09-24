@@ -1,16 +1,12 @@
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { runEntrypoint } from '@vp/testing/run-entrypoint';
 
 const ENTRYPOINT = path.resolve(import.meta.dirname, '../main.ts');
 
 function autoscaler(...argv: string[]) {
-  return spawnSync('bun', [ENTRYPOINT, ...argv], {
-    env: { PATH: process.env.PATH },
-    encoding: 'utf8',
-    timeout: 20_000,
-  });
+  return runEntrypoint(ENTRYPOINT, argv, { PATH: process.env.PATH });
 }
 
 describe('packages/compose-autoscaler: pnpm compose-autoscaler', () => {
