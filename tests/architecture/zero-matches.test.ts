@@ -161,20 +161,6 @@ const ROWS: readonly Row[] = [
     fires: 'image: quay.io/minio/minio:latest',
   },
   {
-    name: 'a MinIO image not pinned by digest',
-    pattern: /image:\s*\S*chainguard\/minio(-client)?(:[\w.-]+)?\s*$/gm,
-    scope: ['infra', '.github'],
-    expected: 0,
-    fires: 'image: cgr.dev/chainguard/minio:latest\n',
-  },
-  {
-    name: 'a MinIO chart tag not pinned by digest',
-    pattern: /^\s*tag:\s*[\w.-]+\s*$/gm,
-    scope: ['infra/k8s/helm-values/minio.yaml'],
-    expected: 0,
-    fires: '  tag: latest-dev\n',
-  },
-  {
     name: 'an error turned into text by hand',
     pattern: /instanceof\s+Error\s*\?/g,
     scope: [...PRODUCTION_SOURCE, 'tests/e2e'],

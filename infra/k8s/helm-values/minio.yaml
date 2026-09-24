@@ -1,6 +1,5 @@
 # infra/k8s/helm-values/minio.yaml
-# Upstream stopped publishing MinIO images; Chainguard's `-dev` variants carry the shell and the
-# `docker-entrypoint.sh` this chart's commands run.
+# `-dev` carries the shell and `docker-entrypoint.sh` the chart runs.
 image:
   repository: cgr.dev/chainguard/minio
   tag: latest-dev@sha256:4b862594d23cb20ae0fbeb93311ed312a5b566ecba2293220b204c89ef3c1fe2

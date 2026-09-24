@@ -1581,7 +1581,7 @@ services:
     ports: ["6379:6379"]
     volumes: [redisdata:/data]
 
-  minio:                           # upstream stopped publishing images; Chainguard's, pinned by digest
+  minio:
     image: cgr.dev/chainguard/minio@sha256:<index digest>
     command: ["server", "/data", "--console-address", ":9001"]   # the binary is the entrypoint, no shell
     environment: { MINIO_ROOT_USER: minioadmin, MINIO_ROOT_PASSWORD: minioadmin }
