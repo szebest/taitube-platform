@@ -28,30 +28,32 @@ interface RegisteredRoute {
   path: string;
 }
 
+const CONNECTOR = '── ';
+const INDENT_WIDTH = 4;
+
 /**
- * Rebuilds the route table from `printRoutes`, which is the only public view of
- * every registered route — `findRoute` hands back a handler without its schema,
- * and an `onRoute` hook cannot be attached before `composeApp` mounts the routes.
+ * Reads `printRoutes({ commonPrefix: false })` one line at a time: each line is a tree connector,
+ * then a path fragment, then its methods in parentheses. That is the only public view of every
+ * registered route; `composeApp` mounts the routes before a spec could attach an `onRoute` hook.
  */
-function parseRouteTree(tree: string): RegisteredRoute[] {
+function registeredRoutes(tree: string): RegisteredRoute[] {
   const routes: RegisteredRoute[] = [];
-  const pathByDepth: string[] = [];
+  const pathAtDepth: string[] = [];
 
   for (const line of tree.split('\n')) {
-    const match = /^((?:[│ ] {3})*)(?:[├└]── )(.*)$/.exec(line);
-    if (!match) continue;
+    const connectorAt = line.indexOf(CONNECTOR);
+    if (connectorAt === -1) continue;
 
-    const [, indent = '', node = ''] = match;
-    const depth = indent.length / 4;
-    const [, fragment = '', methodList] = /^(.*?)(?: \(([A-Z, ]+)\))?$/.exec(node) ?? [];
+    const depth = (connectorAt - 1) / INDENT_WIDTH;
+    const node = line.slice(connectorAt + CONNECTOR.length);
+    const [fragment = '', methodList] = node.split(' (');
+    const parentPath = depth === 0 ? '' : (pathAtDepth[depth - 1] ?? '');
+    const path = parentPath + fragment;
+    pathAtDepth[depth] = path;
 
-    pathByDepth[depth] = (depth === 0 ? '' : (pathByDepth[depth - 1] ?? '')) + fragment;
-    pathByDepth.length = depth + 1;
-
-    const path = pathByDepth[depth];
-    if (!(methodList && path) || path.includes('*')) continue;
-
-    for (const method of methodList.split(', ')) {
+    if (methodList === undefined || path.includes('*')) continue;
+    const methods = methodList.replace(')', '').split(', ');
+    for (const method of methods) {
       if (method === 'HEAD' || method === 'OPTIONS') continue;
       routes.push({ method, path });
     }
@@ -62,19 +64,15 @@ function parseRouteTree(tree: string): RegisteredRoute[] {
 
 /** `/videos/:id` is the unversioned alias of `/v1/videos/:id`; probes carry no version. */
 function canonicalPaths(path: string): string[] {
-  const versioned =
-    path.startsWith('/v1/') || UNVERSIONED_PATHS.has(path) ? [path] : [`/v1${path}`];
+  const isCanonical = path.startsWith('/v1/') || UNVERSIONED_PATHS.has(path);
+  const versioned = isCanonical ? path : `/v1${path}`;
 
-  return versioned.flatMap((candidate) =>
-    candidate
-      .split('/')
-      .slice(1)
-      .reduce<string[]>(
-        (prefixes, segment) =>
-          prefixes.flatMap((prefix) => segment.split('|').map((option) => `${prefix}/${option}`)),
-        ['']
-      )
-  );
+  let candidates = [''];
+  for (const segment of versioned.split('/').slice(1)) {
+    const options = segment.split('|');
+    candidates = candidates.flatMap((prefix) => options.map((option) => `${prefix}/${option}`));
+  }
+  return candidates;
 }
 
 describe('apps/api: contract drift', () => {
@@ -99,7 +97,7 @@ describe('apps/api: contract drift', () => {
       })
     ).app;
     await app.ready();
-    registered = parseRouteTree(app.printRoutes({ commonPrefix: false }));
+    registered = registeredRoutes(app.printRoutes({ commonPrefix: false }));
     spec = app.swagger() as typeof spec;
   });
 
