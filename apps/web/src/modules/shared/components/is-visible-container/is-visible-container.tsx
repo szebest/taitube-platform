@@ -8,8 +8,7 @@ export type IsVisibleContainerProps = PropsWithChildren<{
 
 type Visibility = Pick<IntersectionObserverEntry, 'isIntersecting'>;
 
-/** @internal */
-export function whenIntersecting(onVisible: VoidFunction) {
+function whenIntersecting(onVisible: VoidFunction) {
 	return ([entry]: Visibility[]) => {
 		if (!entry?.isIntersecting) return;
 

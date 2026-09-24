@@ -2,7 +2,7 @@ import { Navigate, useParams } from 'react-router-dom';
 
 import styles from './user-page.module.scss';
 
-import { useChannelQuery, useMyVideosQuery } from 'src/modules/shared/api';
+import { accountApi, videosApi } from 'src/modules/shared/api';
 
 import { useInfiniteScroll, useIsView } from 'src/modules/shared/hooks';
 import { useAuth } from 'src/modules/shared/providers';
@@ -15,10 +15,10 @@ export function UserPage() {
 	const { account } = useAuth();
 	const [isListView, setIsListView] = useIsView();
 
-	const { data: channel, isFetching } = useChannelQuery(channelId ?? '', { skip: !channelId });
+	const { data: channel, isFetching } = accountApi.useChannelQuery(channelId ?? '', { skip: !channelId });
 
 	const isOwnChannel = !!channelId && account?.channel.id === channelId;
-	const { loadMore, queryData } = useInfiniteScroll(useMyVideosQuery, { limit: 30 });
+	const { loadMore, queryData } = useInfiniteScroll(videosApi.useMyVideosQuery, { limit: 30 });
 
 	if (!channelId) return <Navigate to="/" replace />
 	if (isFetching) return <LoadingSpinner />

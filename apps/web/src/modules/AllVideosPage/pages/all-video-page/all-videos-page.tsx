@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import styles from './all-video-page.module.scss';
 
 import type { PublicFeedQuery } from 'src/modules/shared/api';
-import { usePublicFeedQuery } from 'src/modules/shared/api';
+import { feedApi } from 'src/modules/shared/api';
 
 import { useInfiniteScroll, useIsView } from 'src/modules/shared/hooks';
 
@@ -14,7 +14,7 @@ import { CategoryList } from '../../components';
 export function AllVideosPage() {
 	const [isListView, setIsListView] = useIsView();
 	const initialQuery: PublicFeedQuery = { sort: 'recent', limit: 30 };
-	const { loadMore, queryData, query, setQuery } = useInfiniteScroll(usePublicFeedQuery, initialQuery);
+	const { loadMore, queryData, query, setQuery } = useInfiniteScroll(feedApi.usePublicFeedQuery, initialQuery);
 
 	const onCategoryChange = useCallback((categoryId: string | undefined) => {
 		setQuery(prev => ({ ...prev, categoryId, cursor: undefined }));

@@ -2,7 +2,6 @@ import type { CategoriesList } from "@vp/api-contracts";
 
 import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
-/** @internal */
 export const categoriesApi =baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		categories: builder.query<CategoriesList, void>({
@@ -11,5 +10,3 @@ export const categoriesApi =baseApi.injectEndpoints({
 		}),
 	}),
 });
-
-export const { useCategoriesQuery } = categoriesApi;

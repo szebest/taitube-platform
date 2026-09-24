@@ -1,11 +1,11 @@
-import { useUploadVideoMutation } from '../../api';
+import { uploadsApi } from '../../api';
 
 import type { UploadFormModel } from '../../models';
 
 import { VideoForm } from '../../components';
 
 export function UploadPage() {
-	const [upload, state] = useUploadVideoMutation();
+	const [upload, state] = uploadsApi.useUploadVideoMutation();
 
 	const submit = (form: UploadFormModel) => {
 		const [file] = form.file;

@@ -2,7 +2,6 @@ import type { Account, Channel } from "@vp/api-contracts";
 
 import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
-/** @internal */
 export const accountApi =baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		account: builder.query<Account, void>({
@@ -16,5 +15,3 @@ export const accountApi =baseApi.injectEndpoints({
 		}),
 	}),
 });
-
-export const { useAccountQuery, useChannelQuery } = accountApi;

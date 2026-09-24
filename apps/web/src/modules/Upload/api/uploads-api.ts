@@ -2,7 +2,6 @@ import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
 import { type CompletedUpload, type UploadRequest, uploadVideo } from "./upload-video";
 
-/** @internal */
 export const uploadsApi =baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		uploadProgress: builder.query<number, void>({
@@ -21,5 +20,3 @@ export const uploadsApi =baseApi.injectEndpoints({
 		}),
 	}),
 });
-
-export const { useUploadVideoMutation, useUploadProgressQuery } = uploadsApi;

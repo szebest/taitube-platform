@@ -2,7 +2,6 @@ import type { IsSubscribed, KeysetQuery, ListSubscriptionsResponse, Subscription
 
 import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
-/** @internal */
 export const subscriptionsApi =baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		// biome-ignore lint/suspicious/noConfusingVoidType: RTK Query spells "callable with no argument" as void; undefined would force every caller to pass one.
@@ -28,10 +27,3 @@ export const subscriptionsApi =baseApi.injectEndpoints({
 		}),
 	}),
 });
-
-export const {
-	useMySubscriptionsQuery,
-	useIsSubscribedQuery,
-	useSubscribeMutation,
-	useUnsubscribeMutation,
-} = subscriptionsApi;

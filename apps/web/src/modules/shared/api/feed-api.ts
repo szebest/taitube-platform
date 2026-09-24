@@ -6,7 +6,6 @@ import { appendPage } from "./page-merge";
 
 export type PublicFeedQuery = FeedQuery;
 
-/** @internal */
 export const feedApi =baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		publicFeed: builder.query<FeedResponse, PublicFeedQuery>({
@@ -27,5 +26,3 @@ export const feedApi =baseApi.injectEndpoints({
 		}),
 	}),
 });
-
-export const { usePublicFeedQuery, useSubscriptionFeedQuery } = feedApi;

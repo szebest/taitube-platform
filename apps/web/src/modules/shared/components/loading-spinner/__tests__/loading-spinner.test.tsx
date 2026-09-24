@@ -5,7 +5,7 @@ describe('apps/web: loading spinner', () => {
   it('announces itself as a loading status', () => {
     const markup = renderToStaticMarkup(<LoadingSpinner />);
 
-    expect(markup).toContain('role="status"');
+    expect(markup).toContain('<output');
     expect(markup).toContain('aria-label="Loading"');
   });
 });

@@ -2,10 +2,10 @@ import { ProgressBar } from 'react-bootstrap';
 
 import styles from './upload-progress.module.scss';
 
-import { useUploadProgressQuery } from '../../api';
+import { uploadsApi } from '../../api';
 
 export function UploadProgress() {
-  const { data: loaded } = useUploadProgressQuery();
+  const { data: loaded } = uploadsApi.useUploadProgressQuery();
 
   return (
     <div className={styles.progress}>

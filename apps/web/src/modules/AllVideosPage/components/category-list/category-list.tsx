@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { useCategoriesQuery } from 'src/modules/shared/api';
+import { categoriesApi } from 'src/modules/shared/api';
 import { DragScrollMenu } from 'src/modules/shared/components';
 
 export type CategoryListProps = {
@@ -11,7 +11,7 @@ export type CategoryListProps = {
 export function CategoryList({ onCategoryChange, selectedCategoryId }: CategoryListProps) {
 	const [dragging, setDragging] = useState(false);
 
-	const { data } = useCategoriesQuery();
+	const { data } = categoriesApi.useCategoriesQuery();
 
 	const categories = useMemo(
 		() => [{ id: undefined, name: 'All' }, ...(data ?? [])],
