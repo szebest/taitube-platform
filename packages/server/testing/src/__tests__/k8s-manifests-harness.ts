@@ -1,4 +1,4 @@
-import { execFileSync, execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -66,7 +66,7 @@ export function overlay(name: Overlay): Manifest[] {
   }
   const dir = path.join(repoRoot, `infra/k8s/overlays/${name}`);
   const documents = yaml.loadAll(
-    execSync(`kubectl kustomize "${dir}"`, { encoding: 'utf-8' })
+    execFileSync('kustomize', ['build', dir], { encoding: 'utf-8' })
   ) as Manifest[];
   rendered.set(name, documents);
   return documents;

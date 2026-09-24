@@ -127,6 +127,9 @@ jobs:
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
 
+      - name: Set up kustomize
+        uses: ./.github/actions/setup-kustomize
+
       - name: Replay the build from the turbo cache
         run: pnpm exec turbo run build
 
@@ -168,6 +171,9 @@ jobs:
 
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
+
+      - name: Set up kustomize
+        uses: ./.github/actions/setup-kustomize
 
       - name: Replay the build from the turbo cache
         run: pnpm exec turbo run build
