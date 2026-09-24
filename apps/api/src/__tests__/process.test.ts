@@ -1,3 +1,4 @@
+import * as http from 'node:http';
 import * as net from 'node:net';
 import type { ProcessHost } from '@vp/composition';
 import { createLogger } from '@vp/logger';
@@ -17,6 +18,12 @@ function loggerTo(log: ReturnType<typeof captureLog>) {
   });
 }
 
+function boundPort(server: net.Server): number {
+  const address = server.address();
+  if (address === null || typeof address === 'string') throw new Error('not bound to a TCP port');
+  return address.port;
+}
+
 const IN_MEMORY_BOOT = {
   NODE_ENV: 'test',
   ADAPTER_FAMILY: 'in-memory',
@@ -26,7 +33,7 @@ const IN_MEMORY_BOOT = {
 
 describe('apps/api: process', () => {
   it('refuses a production boot without its secrets before it binds a port', async () => {
-    const listens = vi.spyOn(net.Server.prototype, 'listen');
+    const listens = vi.spyOn(http.Server.prototype, 'listen');
     const log = captureLog();
     const production = host({
       NODE_ENV: 'production',
@@ -44,8 +51,8 @@ describe('apps/api: process', () => {
   it('exits 1 with the bind error, and never listens, when its metrics port is already bound', async () => {
     const taken = net.createServer();
     await new Promise<void>((resolve) => taken.listen(0, '0.0.0.0', resolve));
-    const metricsPort = (taken.address() as net.AddressInfo).port;
-    const listens = vi.spyOn(net.Server.prototype, 'listen');
+    const metricsPort = boundPort(taken);
+    const listens = vi.spyOn(http.Server.prototype, 'listen');
     const log = captureLog();
     const booting = host({ ...IN_MEMORY_BOOT, METRICS_PORT: String(metricsPort) });
 

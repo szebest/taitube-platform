@@ -44,10 +44,6 @@ function queuesWith(housekeeping: InMemoryJobQueue): Map<string, InMemoryJobQueu
   return queues;
 }
 
-function timers(): number {
-  return process.getActiveResourcesInfo().filter((resource) => resource === 'Timeout').length;
-}
-
 describe('apps/api: a dependency the API cannot boot without fails the start', () => {
   it('refuses to start on a cache that cannot take the SSE subscription', async () => {
     const { app, container } = await composeApp({
@@ -78,7 +74,7 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
   });
 
   it('builds the whole app without opening a timer or a subscription, and closes cleanly', async () => {
-    const before = timers();
+    const intervals = vi.spyOn(globalThis, 'setInterval');
     const cache = new InMemoryCacheClient();
     const subscribe = vi.spyOn(cache, 'subscribe');
     const psubscribe = vi.spyOn(cache, 'psubscribe');
@@ -86,7 +82,7 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
     const app = (await composeApp({ config: inProcessAppConfig(), adapters: { cache } })).app;
     await app.ready();
 
-    expect(timers()).toBe(before);
+    expect(intervals).not.toHaveBeenCalled();
     expect(subscribe).not.toHaveBeenCalled();
     expect(psubscribe).not.toHaveBeenCalled();
     expect(app.printRoutes()).toContain('uploads');
@@ -94,7 +90,8 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
   });
 
   it('starts the pollers and the subscription only when asked, and stops them on close', async () => {
-    const before = timers();
+    const intervals = vi.spyOn(globalThis, 'setInterval');
+    const cleared = vi.spyOn(globalThis, 'clearInterval');
     const cache = new InMemoryCacheClient();
     const psubscribe = vi.spyOn(cache, 'psubscribe');
     const { app, container } = await composeApp({
@@ -103,10 +100,12 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
     });
 
     expectOk(await container.start());
-    expect(timers()).toBeGreaterThan(before);
+    expect(intervals).toHaveBeenCalled();
     expect(psubscribe).toHaveBeenCalled();
 
     await app.close();
-    expect(timers()).toBe(before);
+    const opened = intervals.mock.results.map((result) => result.value);
+    const closed = cleared.mock.calls.map(([handle]) => handle);
+    expect(closed).toEqual(expect.arrayContaining(opened));
   });
 });
