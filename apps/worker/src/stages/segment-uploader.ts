@@ -7,8 +7,6 @@ import { type Result, err, fromPromise, ignore, isErr, ok, unwrapOr } from '@vp/
 import { getHeaderMapping, renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
 import type { Every, Repeating } from '../heartbeat';
 
-const POLL_INTERVAL_MS = 100;
-
 export interface SegmentUploaderOptions {
   outputDir: string;
   videoId: string;
@@ -99,7 +97,7 @@ export class StreamingSegmentUploader implements SegmentUploader {
 
   start(): void {
     if (this.polling) return;
-    this.polling = this.every(POLL_INTERVAL_MS, () => this.poll());
+    this.polling = this.every(100, () => this.poll());
     void this.poll();
   }
 
