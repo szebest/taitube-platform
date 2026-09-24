@@ -854,7 +854,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(bullmq_queue_jobs{state=~\"waiting|prioritized|active\"}) by (queue)",
+              "expr": "sum by (queue) (max by (queue, state) (bullmq_queue_jobs{state=~\"waiting|prioritized|active\"}))",
               "legendFormat": "Outstanding Jobs: {{queue}}",
               "range": true,
               "refId": "A"

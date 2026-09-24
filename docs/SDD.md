@@ -1800,7 +1800,7 @@ spec:
       metadata:
         serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
         query: |
-          sum(bullmq_queue_jobs{queue="transcode-1080p", state=~"waiting|prioritized|active"})
+          sum(max by (state) (bullmq_queue_jobs{queue="transcode-1080p", state=~"waiting|prioritized|active"}))
         threshold: "1"               # one pod per outstanding job (concurrency = 1)
         activationThreshold: "0"     # any job wakes the deployment from zero
 ```
@@ -1818,7 +1818,7 @@ Fallback trigger (no Prometheus dependency):
         databaseIndex: "0"
 ```
 
-Why `waiting + prioritized + active` and threshold 1: every pipeline job carries a priority, and BullMQ keeps a job with one in `prioritized`, not `waiting`, so the API poller reads all three (`QUEUE_JOB_STATES` in `@vp/core/ports`). Workers never write `bullmq_queue_jobs`: a worker has no view of its queue's depth, and a gauge it set would outlive the job and hold the deployment above zero. And threshold 1: with concurrency 1 per pod, `desired = ceil(outstanding / 1)` means every queued job gets a pod and no busy pod is counted as free capacity. KEDA scales the Deployment; the HPA behaviour block prevents flapping and the long `terminationGracePeriodSeconds` plus `worker.close()` makes scale-in safe. Because the queue is *pulled*, over-provisioning during a burst is harmless — surplus pods idle and are removed after cooldown.
+Every API replica polls every queue and exports the same depth, so the query takes the `max` per state before it sums; a plain `sum` counts each job once per replica, and two replicas started two pods for one job. Why `waiting + prioritized + active` and threshold 1: every pipeline job carries a priority, and BullMQ keeps a job with one in `prioritized`, not `waiting`, so the API poller reads all three (`QUEUE_JOB_STATES` in `@vp/core/ports`). Workers never write `bullmq_queue_jobs`: a worker has no view of its queue's depth, and a gauge it set would outlive the job and hold the deployment above zero. And threshold 1: with concurrency 1 per pod, `desired = ceil(outstanding / 1)` means every queued job gets a pod and no busy pod is counted as free capacity. KEDA scales the Deployment; the HPA behaviour block prevents flapping and the long `terminationGracePeriodSeconds` plus `worker.close()` makes scale-in safe. Because the queue is *pulled*, over-provisioning during a burst is harmless — surplus pods idle and are removed after cooldown.
 
 **Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose up -d --scale worker-transcode-1080p=N --no-recreate` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
 
