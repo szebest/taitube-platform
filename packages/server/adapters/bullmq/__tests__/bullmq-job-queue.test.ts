@@ -122,9 +122,8 @@ describe('BullMqJobQueue', () => {
         completed: 0,
         failed: 1,
         delayed: 0,
-        paused: 0,
       });
-      expect(queue.countedStates).toEqual(QUEUE_JOB_STATES.filter((state) => state !== 'paused'));
+      expect(queue.countedStates).toEqual(QUEUE_JOB_STATES);
     });
   });
 

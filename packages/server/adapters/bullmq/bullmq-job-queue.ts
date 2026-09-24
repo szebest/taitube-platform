@@ -6,7 +6,6 @@ import {
   type QueueJob,
   type QueueJobCounts,
   type QueueJobOptions,
-  type QueueJobState,
   type QueueWorkerOptions,
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
@@ -25,16 +24,6 @@ import {
 import { bullMqProcessor } from './bullmq-processor';
 import { checkBackendHealth } from './connection';
 import { toJobsOptions, toQueueJob } from './job-mapping';
-
-/**
- * BullMQ 6 leaves a paused queue's jobs where they were and keeps no `paused` list, so a paused
- * queue is read through `isPaused` and that state counts nothing here, as it does in memory.
- */
-function hasBullMqList(state: QueueJobState): state is Exclude<QueueJobState, 'paused'> {
-  return state !== 'paused';
-}
-
-const COUNTED_STATES = QUEUE_JOB_STATES.filter(hasBullMqList);
 
 export type WorkerFactory = (
   name: string,
@@ -174,23 +163,18 @@ export class BullMqJobQueue extends JobQueue {
 
   async getJobCounts(): Promise<Result<QueueJobCounts, QueueUnavailable>> {
     const counted = await fromPromise(
-      () => this.queue.getJobCounts(...COUNTED_STATES),
+      () => this.queue.getJobCounts(...QUEUE_JOB_STATES),
       this.unavailable('getJobCounts')
     );
 
-    return map(counted, (counts) => {
-      const result: QueueJobCounts = {
-        waiting: 0,
-        prioritized: 0,
-        active: 0,
-        completed: 0,
-        failed: 0,
-        delayed: 0,
-        paused: 0,
-      };
-      for (const state of COUNTED_STATES) result[state] = counts[state] ?? 0;
-      return result;
-    });
+    return map(counted, (counts) => ({
+      waiting: counts.waiting ?? 0,
+      prioritized: counts.prioritized ?? 0,
+      active: counts.active ?? 0,
+      completed: counts.completed ?? 0,
+      failed: counts.failed ?? 0,
+      delayed: counts.delayed ?? 0,
+    }));
   }
 
   async getJobs(

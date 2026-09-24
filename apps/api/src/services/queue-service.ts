@@ -1,4 +1,4 @@
-import type { JobQueue } from '@vp/core/ports';
+import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
 import {
   type AuthorizationFailure,
   type ReplayQueueUnknown,
@@ -14,28 +14,19 @@ export interface QueueServiceDeps {
   queues: Map<string, JobQueue>;
 }
 
-export interface QueueCountMetrics {
-  active: number;
-  completed: number;
-  failed: number;
-  delayed: number;
-  waiting: number;
-  paused: number;
-}
-
 export interface QueueStatus {
   name: string;
   isPaused: boolean;
-  counts: QueueCountMetrics;
+  counts: QueueJobCounts;
 }
 
-const IDLE_COUNTS: QueueCountMetrics = {
+const IDLE_COUNTS: QueueJobCounts = {
   active: 0,
   completed: 0,
   failed: 0,
   delayed: 0,
   waiting: 0,
-  paused: 0,
+  prioritized: 0,
 };
 
 export class QueueService {

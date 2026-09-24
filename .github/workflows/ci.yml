@@ -79,7 +79,21 @@ jobs:
         run: pnpm boundaries
 
       - name: Check architectural invariants
-        run: pnpm test:architecture
+        run: pnpm test:architecture --reporter=default --reporter=json --outputFile.json="$RUNNER_TEMP/architecture.json"
+
+      - name: Read how long the architecture suite took
+        id: architecture-time
+        run: |
+          echo "started=$(jq '.startTime' "$RUNNER_TEMP/architecture.json")" >> "$GITHUB_OUTPUT"
+          echo "finished=$(jq '[.testResults[].endTime] | max | floor' "$RUNNER_TEMP/architecture.json")" >> "$GITHUB_OUTPUT"
+
+      - name: Hold the architecture suite to its budget
+        uses: ./.github/actions/budget
+        with:
+          what: test:architecture
+          seconds: 6
+          started-at: ${{ steps.architecture-time.outputs.started }}
+          finished-at: ${{ steps.architecture-time.outputs.finished }}
 
       - name: Run Biome lint
         run: pnpm lint
@@ -94,6 +108,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
+      - name: Start the job's budget
+        run: echo "JOB_STARTED_AT=$(date +%s%3N)" >> "$GITHUB_ENV"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -111,6 +128,13 @@ jobs:
 
       - name: Run unit tests (Node 24)
         run: pnpm test:unit
+
+      - name: Hold unit to its budget
+        uses: ./.github/actions/budget
+        with:
+          what: unit
+          seconds: 150
+          started-at: ${{ env.JOB_STARTED_AT }}
 
   unit-bun:
     name: unit-bun

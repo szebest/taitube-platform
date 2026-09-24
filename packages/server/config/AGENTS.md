@@ -26,7 +26,7 @@ which resolves extensionless relative specifiers in compiled output.
    listed; a key matching `password|secret|key|token|auth` — or any URL — is reported without its value.
    `parseEnv` returns that report as a `Result`, `loadEnv` throws it for an entrypoint that already has
    a logger, and `loadEnvOrExit` is for one that has none yet (the preloaded `instrument.ts`, migrate,
-   seed): one pretty `fatal` line on stderr at the default level, no stack, and exit 1.
+   seed): one JSON `fatal` line at the default level, no stack, and the host exits 1.
 3. **No `typeof process` guard.** Server tier means `process` is there. A feature-detect standing in for
    a boundary is what this split removed; do not reintroduce one.
 

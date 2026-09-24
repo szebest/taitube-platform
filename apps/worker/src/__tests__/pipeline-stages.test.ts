@@ -230,7 +230,6 @@ describe('apps/worker full pipeline stages (Ticket 07: AC 17, 18, 19, 20, 22, 23
           delayed: 0,
           waiting: 0,
           prioritized: 0,
-          paused: 0,
         });
       }
       async getJobs() {

@@ -35,7 +35,6 @@ export const QUEUE_JOB_STATES = [
   'completed',
   'failed',
   'delayed',
-  'paused',
 ] as const;
 export type QueueJobState = (typeof QUEUE_JOB_STATES)[number];
 

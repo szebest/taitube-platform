@@ -14,7 +14,7 @@ extends it.
 | Preset | Extended by | What it adds on top of `base.json` |
 |---|---|---|
 | `base.json` | the four presets below; never extended directly by a package | the shared compiler settings |
-| `server.json` | every `packages/server/*` package, `apps/api`, `apps/worker` | `types: ["node", "vitest/globals"]` |
+| `server.json` | every `packages/server/*` package, `apps/api`, `apps/worker` | `lib: ["ES2024"]` (Node 24 and Bun 1.4 both ship it), `types: ["node", "vitest/globals"]` |
 | `universal.json` | every `packages/universal/*` package | `lib: ["ES2022", "DOM"]`, `types: []` |
 | `client.json` | `packages/client/*` | `lib: ["ES2022", "DOM", "DOM.Iterable"]`, `types: []` |
 | `spec.json` | `tsconfig.spec.json` in `universal` and `client` packages | the client libs **plus** node/vitest types, `noEmit: true` |

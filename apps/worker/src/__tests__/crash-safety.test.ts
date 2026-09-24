@@ -163,7 +163,6 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
           delayed: 0,
           waiting: 0,
           prioritized: 0,
-          paused: 0,
         });
       }
       async getJobs() {

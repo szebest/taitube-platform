@@ -9,16 +9,16 @@ import type {
   QueueWorker,
   Status,
 } from '@bull-board/api/typings/app';
-import type { JobQueue } from '@vp/core/ports';
+import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
 import { type Result, isErr, unwrapOr } from '@vp/result';
 
-const IDLE_COUNTS = {
+const IDLE_COUNTS: QueueJobCounts = {
   active: 0,
   completed: 0,
   failed: 0,
   delayed: 0,
   waiting: 0,
-  paused: 0,
+  prioritized: 0,
 };
 
 const JOB_STATUSES: JobStatus[] = [
@@ -64,7 +64,7 @@ class PortBoardAdapter extends BaseAdapter {
 
   async getJobCounts(): Promise<JobCounts> {
     const counts = unwrapOr(await this.queue.getJobCounts(), IDLE_COUNTS);
-    return { latest: 0, 'waiting-children': 0, prioritized: 0, ...counts };
+    return { latest: 0, 'waiting-children': 0, paused: 0, ...counts };
   }
 
   async getJobs(): Promise<QueueJob[]> {

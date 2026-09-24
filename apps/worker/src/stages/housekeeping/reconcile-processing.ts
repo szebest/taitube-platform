@@ -60,7 +60,6 @@ export async function runReconcileProcessing(
         'active',
         'delayed',
         'prioritized',
-        'paused',
       ]);
       if (isErr(jobs)) {
         hasWaitingJob = true;

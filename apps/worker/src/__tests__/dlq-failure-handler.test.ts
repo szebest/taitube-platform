@@ -6,8 +6,8 @@ import {
 } from '@vp/adapters/in-memory';
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { calculateBackoffDelay, ids, stagePolicies } from '@vp/job-contracts';
-import { createMetricsRegistry } from '@vp/observability';
 import { createLogger } from '@vp/logger';
+import { createMetricsRegistry } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -292,17 +292,20 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
     const q720 = getQueue('transcode-720p');
     const qNotify = getQueue('notify');
 
-    qPackage.onFailed(
-      createFailureHandler({
-        workerId: STAGE_SETTINGS.workerId,
-        stage: 'package',
-        queueName: 'package',
-        repositories,
-        getQueue,
-        logger,
-        metrics,
-      })
-    );
+    const packageFailed = Promise.withResolvers<void>();
+    const handlePackageFailure = createFailureHandler({
+      workerId: STAGE_SETTINGS.workerId,
+      stage: 'package',
+      queueName: 'package',
+      repositories,
+      getQueue,
+      logger,
+      metrics,
+    });
+    qPackage.onFailed(async (job, error) => {
+      await handlePackageFailure(job, error);
+      packageFailed.resolve();
+    });
     q720.onFailed(
       createFailureHandler({
         workerId: STAGE_SETTINGS.workerId,
@@ -391,8 +394,7 @@ describe('Ticket 16: Retries, Backoff, DLQ and Poison Pill Handling', () => {
       ],
     });
 
-    // Await background execution of child and parent failure propagation
-    await new Promise((r) => setTimeout(r, 50));
+    await packageFailed.promise;
 
     // Verify video transitioned to FAILED with the child's error code (FFMPEG_FAILED)
     const video = expectOk(await repositories.videos.findById(videoId));

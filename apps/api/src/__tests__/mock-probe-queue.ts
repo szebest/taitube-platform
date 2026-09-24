@@ -56,7 +56,6 @@ export class MockProbeJobQueue extends JobQueue {
       delayed: 0,
       waiting: 0,
       prioritized: 0,
-      paused: 0,
     });
   }
 

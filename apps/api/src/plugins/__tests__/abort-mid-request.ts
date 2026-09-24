@@ -1,22 +1,14 @@
 import { get } from 'node:http';
 import type { FastifyInstance } from 'fastify';
 
-function deferred() {
-  let resolve = () => {};
-  const promise = new Promise<void>((settle) => {
-    resolve = settle;
-  });
-  return { promise, resolve };
-}
-
 /**
  * Serves `GET /hang` on a real socket and drops the connection while its handler runs. Resolves once
  * the API has run its abort hooks; the handler answers afterwards, into a closed socket.
  */
 export async function abortMidRequest(app: FastifyInstance): Promise<void> {
-  const handlerRunning = deferred();
-  const abortSeen = deferred();
-  const release = deferred();
+  const handlerRunning = Promise.withResolvers<void>();
+  const abortSeen = Promise.withResolvers<void>();
+  const release = Promise.withResolvers<void>();
   app.get('/hang', async () => {
     handlerRunning.resolve();
     await release.promise;

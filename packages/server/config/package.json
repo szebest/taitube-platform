@@ -21,6 +21,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@vp/composition": "workspace:*",
     "@vp/env-schema": "workspace:*",
     "@vp/logger": "workspace:*",
     "@vp/result": "workspace:*"

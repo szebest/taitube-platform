@@ -35,6 +35,15 @@ const BUDGETS: Readonly<Record<string, number>> = {
 };
 
 const CRITICAL_PATH_MINUTES = 6;
+
+const BUDGET_ACTION = './.github/actions/budget';
+const JOB_START = 'JOB_STARTED_AT';
+
+/** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
+const SECOND_BUDGETS = [
+  { job: 'unit', what: 'unit', seconds: 150 },
+  { job: 'lint-typecheck', what: 'test:architecture', seconds: 6 },
+];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
 const DOCS_ONLY_FILTER = { code: ['**', '!**/*.md', '!docs/**'] };
 
@@ -82,6 +91,19 @@ function shapeFindings(source: string): string[] {
   for (const [name, budget] of Object.entries(BUDGETS)) {
     if (jobNamed(name)?.['timeout-minutes'] !== budget)
       findings.push(`${name}: timeout-minutes is not ${budget}`);
+  }
+
+  for (const { job: name, what, seconds } of SECOND_BUDGETS) {
+    const steps = jobNamed(name)?.steps ?? [];
+    const budget = steps.find((step) => step.uses === BUDGET_ACTION && step.with?.what === what);
+    if (budget?.with?.seconds !== seconds) {
+      findings.push(`${name}: ${what} is not held to ${seconds} s`);
+    }
+    const wholeJob = what === name;
+    const startsWithTheJob = steps[0]?.run?.includes(JOB_START) && steps.at(-1) === budget;
+    if (budget && wholeJob && !startsWithTheJob) {
+      findings.push(`${name}: its budget does not run from the first step to the last`);
+    }
   }
 
   const e2e = jobNamed('e2e-smoke');
@@ -151,6 +173,11 @@ jobs:
       - run: pnpm db:migrate
       - run: pnpm test
       - run: pnpm test:architecture
+      - uses: ./.github/actions/budget
+        with:
+          what: unit
+          seconds: 150
+          started-at: 0
   e2e:
     name: e2e-smoke
     needs: [build, unit]
@@ -175,6 +202,8 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'build: no path filter that skips a docs-only change',
     'build: the path filter matches a file on any one pattern',
     'the workflow grants packages: write to every job',
+    'lint-typecheck: test:architecture is not held to 6 s',
+    'unit: its budget does not run from the first step to the last',
   ])('fires on a workflow where %s', (finding) => {
     expect(shapeFindings(BAD_WORKFLOW)).toContain(finding);
   });

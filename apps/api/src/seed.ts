@@ -4,14 +4,14 @@ import { toAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
 import { seedDevelopment } from './seed-development';
 
-const config = toAppConfig(
-  loadEnvOrExit('vp-seed', { env: process.env, exit: (code) => process.exit(code) })
-);
-const log = createLogger({ service: 'vp-seed', level: config.logLevel, format: 'json' });
-
-seedDevelopment(config, (url) => seedDatabase(url, log))
-  .then(() => process.exit(0))
-  .catch((err) => {
-    log.fatal({ err }, 'database seed failed');
-    process.exit(1);
-  });
+const env = loadEnvOrExit('vp-seed', process);
+if (env) {
+  const config = toAppConfig(env);
+  const log = createLogger({ service: 'vp-seed', level: config.logLevel, format: 'json' });
+  seedDevelopment(config, (url) => seedDatabase(url, log))
+    .then(() => process.exit(0))
+    .catch((err) => {
+      log.fatal({ err }, 'database seed failed');
+      process.exit(1);
+    });
+}

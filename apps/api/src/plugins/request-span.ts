@@ -2,6 +2,7 @@ import {
   ROOT_CONTEXT,
   type Span,
   SpanKind,
+  type SpanStatus,
   SpanStatusCode,
   context,
   trace,
@@ -12,6 +13,20 @@ import fp from 'fastify-plugin';
 import { routeLabel } from './route-label';
 
 const SERVER_ERROR = 500;
+
+function endSpan(
+  spans: WeakMap<FastifyRequest, Span>,
+  request: FastifyRequest,
+  status: SpanStatus,
+  statusCode?: number
+) {
+  const span = spans.get(request);
+  if (!span) return;
+  if (statusCode !== undefined) span.setAttribute('http.response.status_code', statusCode);
+  span.setStatus(status);
+  span.end();
+  spans.delete(request);
+}
 
 /**
  * The API's HTTP server span, named by route and parented on the caller's `traceparent`. The
@@ -44,25 +59,13 @@ async function requestSpanPlugin(app: FastifyInstance) {
     context.with(trace.setSpan(parent, span), done);
   });
 
-  function end(request: FastifyRequest, annotate: (span: Span) => void) {
-    const span = spans.get(request);
-    if (!span) return;
-    annotate(span);
-    span.end();
-    spans.delete(request);
-  }
-
   app.addHook('onResponse', async (request, reply) => {
-    end(request, (span) => {
-      span.setAttribute('http.response.status_code', reply.statusCode);
-      if (reply.statusCode >= SERVER_ERROR) span.setStatus({ code: SpanStatusCode.ERROR });
-    });
+    const code = reply.statusCode >= SERVER_ERROR ? SpanStatusCode.ERROR : SpanStatusCode.UNSET;
+    endSpan(spans, request, { code }, reply.statusCode);
   });
 
   app.addHook('onRequestAbort', async (request) => {
-    end(request, (span) =>
-      span.setStatus({ code: SpanStatusCode.ERROR, message: 'client aborted' })
-    );
+    endSpan(spans, request, { code: SpanStatusCode.ERROR, message: 'client aborted' });
   });
 }
 

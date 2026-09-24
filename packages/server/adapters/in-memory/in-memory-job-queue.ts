@@ -287,7 +287,6 @@ export class InMemoryJobQueue extends JobQueue {
       completed: this.completedJobs.length,
       failed: this.failedJobs.length,
       delayed: 0,
-      paused: 0,
     });
   }
 

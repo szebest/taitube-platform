@@ -128,7 +128,7 @@ is stale — fix it.
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
 | `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
-| `@vp/config` | server | `@vp/env-schema`, `@vp/logger`, `@vp/result` |
+| `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
 
 ### T5 — Applications
 

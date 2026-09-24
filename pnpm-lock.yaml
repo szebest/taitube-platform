@@ -612,6 +612,9 @@ importers:
 
   packages/server/config:
     dependencies:
+      '@vp/composition':
+        specifier: workspace:*
+        version: link:../composition
       '@vp/env-schema':
         specifier: workspace:*
         version: link:../env-schema

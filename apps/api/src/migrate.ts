@@ -1,18 +1,13 @@
 import { loadEnvOrExit } from '@vp/config';
 import { runMigrations } from '@vp/db/migrate';
-import { toAppConfig } from '@vp/env-schema';
-import { createLogger } from '@vp/logger';
+import { type AppConfig, toAppConfig } from '@vp/env-schema';
+import { type Logger, createLogger } from '@vp/logger';
 import { fromPromise, isOk } from '@vp/result';
 
 const MAX_ATTEMPTS = 10;
 const RETRY_DELAY_MS = 2_000;
 
-const { postgres, logLevel } = toAppConfig(
-  loadEnvOrExit('vp-migrate', { env: process.env, exit: (code) => process.exit(code) })
-);
-const log = createLogger({ service: 'vp-migrate', level: logLevel, format: 'json' });
-
-async function main(): Promise<void> {
+async function migrate({ postgres }: AppConfig, log: Logger): Promise<void> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const migrated = await fromPromise(
       () => runMigrations(postgres.migrationsUrl, log),
@@ -31,9 +26,14 @@ async function main(): Promise<void> {
   }
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    log.fatal({ err }, 'database migration failed');
-    process.exit(1);
-  });
+const env = loadEnvOrExit('vp-migrate', process);
+if (env) {
+  const config = toAppConfig(env);
+  const log = createLogger({ service: 'vp-migrate', level: config.logLevel, format: 'json' });
+  migrate(config, log)
+    .then(() => process.exit(0))
+    .catch((err) => {
+      log.fatal({ err }, 'database migration failed');
+      process.exit(1);
+    });
+}
