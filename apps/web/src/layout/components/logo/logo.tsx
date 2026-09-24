@@ -74,5 +74,3 @@ export function Logo({ hideLogoPart }: LogoProps) {
 		</div>
 	);
 }
-
-export default Logo;

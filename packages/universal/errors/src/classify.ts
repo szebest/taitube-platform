@@ -51,14 +51,6 @@ export function errorCodeOf(error: unknown): ErrorCode {
   return ErrorCodes.INTERNAL;
 }
 
-export function isPermanentError(error: unknown): boolean {
-  return classifyError(error) === 'permanent';
-}
-
-export function isTransientError(error: unknown): boolean {
-  return classifyError(error) === 'transient';
-}
-
 /**
  * The reverse direction, in the same file for the same reason: a boundary that still signals
  * failure by throwing - BullMQ's retry contract, a route handler that has not been converted -

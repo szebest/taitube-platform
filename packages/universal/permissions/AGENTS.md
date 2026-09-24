@@ -11,7 +11,7 @@ Instructions for any coding agent working on `@vp/permissions`.
 - Decoupled from `@vp/core` and backend database adapters so both `apps/api` and `apps/web` can import authorization logic without bundle pollution.
 - Pure functional rule factories (`video.rules.ts`, `comment.rules.ts`, `channel.rules.ts`, `upload.rules.ts`, `admin.rules.ts`).
 - Global ability builder `getUserPermissions(user: UserContext | null)`.
-- Library-agnostic typed `canX` action helper functions (`canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canPublishVideo`, `canAccessUpload`, etc.).
+- Library-agnostic typed `canX` action helper functions (`canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canAccessUpload`, etc.).
 - RFC 9457 assertion adapter `assertCan(allowed, { action, subject, user, message })` strictly distinguishing 401 UNAUTHORIZED vs 403 FORBIDDEN.
 - Zod schema validation adapter converting issues into structured `invalidParams`.
 

@@ -3,8 +3,7 @@ import type { LengthBounds } from '../failures';
 import { type CategoryFormFailure, invalidCategoryName } from './failures';
 import { validateSlug } from './slug-format';
 
-export const CATEGORY_NAME_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };
-export const CATEGORY_DESCRIPTION_MAX_LENGTH = 500;
+const CATEGORY_NAME_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };
 
 export interface CategoryFormInput {
   readonly name: string;

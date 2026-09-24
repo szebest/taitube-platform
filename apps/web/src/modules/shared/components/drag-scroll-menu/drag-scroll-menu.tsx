@@ -42,5 +42,3 @@ export function DragScrollMenu({ children, onDraggingChange }: DragScrollMenuPro
 		</ScrollMenu>
 	)
 }
-
-export default DragScrollMenu;

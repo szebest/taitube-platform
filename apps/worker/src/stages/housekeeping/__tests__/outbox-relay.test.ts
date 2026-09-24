@@ -5,7 +5,7 @@ import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { OutboxRelay, drainOutboxOnce } from '../outbox-relay';
+import { OutboxRelay } from '../outbox-relay';
 import { inMemoryQueues, queueOutboxEntry } from './housekeeping-harness';
 
 const BATCH_SIZE = 50;
@@ -17,7 +17,13 @@ describe('housekeeping: outbox relay', () => {
 
   const drain = async (queues: (name: string) => InMemoryJobQueue = getQueue) =>
     expectOk(
-      await drainOutboxOnce(repositories, { batchSize: BATCH_SIZE, getQueue: queues, metrics })
+      await new OutboxRelay({
+        repositories,
+        getQueue: queues,
+        metrics,
+        batchSize: BATCH_SIZE,
+        intervalMs: 60_000,
+      }).drainOnce()
     );
 
   const enqueueProbe = async (videoId: string, data: object = {}) =>

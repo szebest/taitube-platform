@@ -14,7 +14,7 @@ export interface QueueServiceDeps {
   queues: Map<string, JobQueue>;
 }
 
-export interface QueueCountMetrics {
+interface QueueCountMetrics {
   active: number;
   completed: number;
   failed: number;

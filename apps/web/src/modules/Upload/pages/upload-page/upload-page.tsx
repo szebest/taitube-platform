@@ -24,5 +24,3 @@ export function UploadPage() {
 		<VideoForm submit={submit} {...state} />
 	)
 }
-
-export default UploadPage;

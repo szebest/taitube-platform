@@ -1,5 +1,4 @@
 import { assertNever } from '../../assert-never';
-import { match } from '../../combinators';
 import { type Result, isErr, isOk } from '../../result';
 
 type Known = { readonly code: 'A'; readonly at: string } | { readonly code: 'B' };
@@ -26,17 +25,6 @@ function _renderGrown(failure: Grown): string {
       // @ts-expect-error 'C' still reaches the default branch, so `failure` is not `never`
       return assertNever(failure, 'renderGrown');
   }
-}
-
-const knownHandlers = { A: (f: { readonly at: string }) => f.at, B: () => 'b' };
-
-function _matchKnown(result: Result<number, Known>): string {
-  return match(result, () => 'ok', knownHandlers);
-}
-
-function _matchGrown(result: Result<number, Grown>): string {
-  // @ts-expect-error the handler record has no entry for the 'C' variant
-  return match(result, () => 'ok', knownHandlers);
 }
 
 function _narrowsToValue(result: Result<number, Known>): number {

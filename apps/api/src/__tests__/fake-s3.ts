@@ -2,12 +2,12 @@ import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { S3MultipartStorage, S3StorageClient } from '@vp/adapters';
 
-export interface StoredObject {
+interface StoredObject {
   size: number;
   contentType: string;
 }
 
-export interface FakePart {
+interface FakePart {
   partNumber: number;
   etag: string;
   size: number;

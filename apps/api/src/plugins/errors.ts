@@ -28,7 +28,7 @@ const TRANSPORT_CODES: ReadonlyMap<number, ErrorCode> = new Map([
   [415, ErrorCodes.UNSUPPORTED_CONTENT_TYPE],
 ]);
 
-export function transportProblem(status: number, detail: string, instance: string): Problem {
+function transportProblem(status: number, detail: string, instance: string): Problem {
   return problemDetails({
     code: TRANSPORT_CODES.get(status) ?? ErrorCodes.VALIDATION_FAILED,
     title: STATUS_CODES[status] ?? 'Client Error',
@@ -48,11 +48,7 @@ export function rateLimitProblem(instance: string, detail = 'Rate limit exceeded
   });
 }
 
-/**
- * Renders a thrown domain error. Scopes whose own plugin installs an error handler —
- * Bull Board does — call this so they answer with the same body as every other route.
- */
-export function domainProblem(code: string, message: string, instance: string): Problem {
+function domainProblem(code: string, message: string, instance: string): Problem {
   return problemDetails({
     code,
     title: message || 'Domain Error',

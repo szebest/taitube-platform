@@ -10,17 +10,19 @@ import {
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { QueueJob } from '@vp/core/ports';
-import { PipelineEnvSchema, inProcessAppConfig } from '@vp/env-schema';
+import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { QUEUES } from '@vp/job-contracts';
 import { createLogger, createMetricsRegistry } from '@vp/observability';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
-import { STAGE_REGISTRY, type StageDeps } from '../registry';
+import { STAGE_REGISTRY, type StageDefinition } from '../registry';
+
+type StageDeps = Parameters<StageDefinition['createProcessor']>[0];
 
 const CACHES = inProcessAppConfig().caches;
 
-const STAGES = PipelineEnvSchema.shape.WORKER_STAGE.removeDefault().options;
+const STAGES = AppEnvSchema.innerType().shape.WORKER_STAGE.removeDefault().options;
 
 /** The preStop sleep and the margin the process keeps before the kubelet's SIGKILL. */
 const PRE_STOP_SECONDS = 5;

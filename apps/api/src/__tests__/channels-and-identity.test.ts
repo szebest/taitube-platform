@@ -8,7 +8,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 
 describe('user and channel identity profile with universal auth', () => {
   let app: FastifyInstance;
@@ -26,14 +26,16 @@ describe('user and channel identity profile with universal auth', () => {
     cache = new InMemoryCacheClient();
     storage = new InMemoryStorageClient();
 
-    app = await buildApp({
-      config: inProcessAppConfig(),
-      adapters: {
-        repositories,
-        cache,
-        storage,
-      },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig(),
+        adapters: {
+          repositories,
+          cache,
+          storage,
+        },
+      })
+    ).app;
   });
 
   afterAll(async () => {

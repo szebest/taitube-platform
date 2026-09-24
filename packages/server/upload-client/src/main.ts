@@ -46,7 +46,7 @@ Options:
 `);
 }
 
-export async function main(): Promise<void> {
+async function main(): Promise<void> {
   const { file, flags } = parseArgs(process.argv.slice(2));
 
   if (flags.help || !(file || flags.abort)) {
@@ -100,9 +100,7 @@ export async function main(): Promise<void> {
   console.log(`  Status:    ${result.status}`);
 }
 
-if (process.env.NODE_ENV !== 'test') {
-  main().catch((err) => {
-    console.error('[upload-client] Error:', err);
-    process.exit(1);
-  });
-}
+main().catch((err) => {
+  console.error('[upload-client] Error:', err);
+  process.exit(1);
+});

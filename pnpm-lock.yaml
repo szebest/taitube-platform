@@ -693,9 +693,6 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
-      '@vp/job-contracts':
-        specifier: workspace:*
-        version: link:../job-contracts
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result
@@ -736,6 +733,9 @@ importers:
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result
+      '@vp/storage':
+        specifier: workspace:*
+        version: link:../storage
     devDependencies:
       '@vp/testing':
         specifier: workspace:*
@@ -1065,9 +1065,6 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../errors
-      zod:
-        specifier: ^3.24.2
-        version: 3.25.76
     devDependencies:
       '@vp/testing':
         specifier: workspace:*

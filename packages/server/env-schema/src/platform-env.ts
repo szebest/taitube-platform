@@ -12,5 +12,3 @@ export const PLATFORM_ENV = {
   REDIS_ADDR: 'the KEDA redis trigger, addressFromEnv in infra/k8s/base/scaled-objects.yaml',
   CLOUDFLARE_TUNNEL_TOKEN: 'cloudflared, infra/k8s/overlays/cloud/cloudflared.yaml',
 } as const;
-
-export type PlatformEnvKey = keyof typeof PLATFORM_ENV;

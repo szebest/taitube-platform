@@ -3,13 +3,13 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { VideoIdParamSchema } from './video-resource';
 
-export const EventStreamQuerySchema = z
+const EventStreamQuerySchema = z
   .object({
     'last-event-id': z.string().optional().describe('Replay events after this ID'),
   })
   .optional();
 
-export const EventStreamSchema = z.string().describe('text/event-stream Server-Sent Events stream');
+const EventStreamSchema = z.string().describe('text/event-stream Server-Sent Events stream');
 
 export const streamVideoEvents = defineEndpoint({
   method: 'GET',

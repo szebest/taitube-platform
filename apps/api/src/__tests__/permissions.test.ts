@@ -8,7 +8,7 @@ import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 
 describe('apps/api: route authorization', () => {
   let app: FastifyInstance;
@@ -39,14 +39,16 @@ describe('apps/api: route authorization', () => {
     adminToken = mintToken({ sub: ADMIN_ID, role: 'admin', ttl: '1h' });
 
     repositories = new InMemoryRepositories();
-    app = await buildApp({
-      config: inProcessAppConfig(),
-      adapters: {
-        repositories,
-        cache: new InMemoryCacheClient(),
-        storage: new InMemoryStorageClient(),
-      },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig(),
+        adapters: {
+          repositories,
+          cache: new InMemoryCacheClient(),
+          storage: new InMemoryStorageClient(),
+        },
+      })
+    ).app;
 
     await repositories.videos.create({
       id: VIDEO_ID,

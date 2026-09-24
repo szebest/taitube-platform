@@ -23,7 +23,8 @@
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/job-contracts": "workspace:*",
-    "@vp/result": "workspace:*"
+    "@vp/result": "workspace:*",
+    "@vp/storage": "workspace:*"
   },
   "devDependencies": {
     "@vp/testing": "workspace:*",

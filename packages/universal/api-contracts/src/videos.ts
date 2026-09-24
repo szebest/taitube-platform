@@ -23,13 +23,13 @@ function isKeysetCursor(cursor: string): boolean {
   );
 }
 
-export const ListVideosQuerySchema = z.object({
+const ListVideosQuerySchema = z.object({
   cursor: CursorSchema.refine(isKeysetCursor, { message: 'Invalid pagination cursor' }).optional(),
   limit: PageLimitSchema,
   status: VideoStatusSchema.optional().describe('Filter videos by pipeline status'),
 });
 
-export const UpdateVideoMetadataSchema = z.object({
+const UpdateVideoMetadataSchema = z.object({
   title: z.string().max(255).optional().describe('Updated video title'),
   description: z.string().max(4000).optional().describe('Updated video description'),
   visibility: VideoVisibilitySchema.optional().describe(

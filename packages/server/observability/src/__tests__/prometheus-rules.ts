@@ -17,7 +17,10 @@ export const alertRulesPath = path.resolve(
   rootDir,
   'infra/observability/alerts/video-pipeline-alerts.yaml'
 );
-export const alertmanagerPath = path.resolve(rootDir, 'infra/compose/alertmanager/alertmanager.yml');
+export const alertmanagerPath = path.resolve(
+  rootDir,
+  'infra/compose/alertmanager/alertmanager.yml'
+);
 
 const QUOTED = `["']?([^"']+)["']?`;
 const FIELDS: [RegExp, keyof ParsedRule][] = [
@@ -30,7 +33,7 @@ const FIELDS: [RegExp, keyof ParsedRule][] = [
 ];
 
 /** A line parser for the alert rules file, so the spec needs no YAML dependency. */
-export function parsePrometheusRules(yamlContent: string): ParsedRule[] {
+function parsePrometheusRules(yamlContent: string): ParsedRule[] {
   const rules: ParsedRule[] = [];
   let currentRule: Partial<ParsedRule> | null = null;
   let inExprBlock = false;

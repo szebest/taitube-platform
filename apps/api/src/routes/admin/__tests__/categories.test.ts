@@ -3,7 +3,7 @@ import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../../app';
+import { composeApp } from '../../../app';
 
 const ADMIN_TOKEN = 'operator-token-for-tests';
 const USER = '00000000-0000-7000-8000-000000000001';
@@ -17,10 +17,12 @@ describe('admin category routes', () => {
 
   beforeAll(async () => {
     repositories = new InMemoryRepositories();
-    app = await buildApp({
-      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
-      adapters: { repositories },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+        adapters: { repositories },
+      })
+    ).app;
     await app.ready();
   });
 

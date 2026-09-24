@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path';
 
 type Tier = 'universal' | 'server' | 'client';
 
-export interface PkgDep {
+interface PkgDep {
   name: string;
   dev: boolean;
 }
@@ -133,17 +133,14 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
   return errors;
 }
 
-export function packageCount(): number {
-  return load().length;
-}
-
 if (process.argv[1]?.endsWith('check-boundaries.ts')) {
-  const errors = checkBoundaries();
+  const packages = load();
+  const errors = checkBoundaries(packages);
   if (errors.length > 0) {
     console.error(`\nPackage boundary violations (${errors.length}):\n`);
     for (const e of errors) console.error(`  ✗ ${e}`);
     console.error('\nSee ARCHITECTURE.md — package runtime tiers and dependency layers.\n');
     process.exit(1);
   }
-  console.log(`Package boundaries OK — ${packageCount()} packages, tiers and layers consistent.`);
+  console.log(`Package boundaries OK — ${packages.length} packages, tiers and layers consistent.`);
 }

@@ -1,9 +1,12 @@
 export * from './ladder';
 export * from './master';
 export * from './probe';
+export type { ProbeMetadata } from './probe-metadata';
 export * from './run-ffmpeg';
 export * from './transcode';
+export { computeFfmpegThreads } from './transcode-args';
 export * from './thumbnail';
+export type { SpriteLayout } from './sprite-sheet';
 
 import { runFfprobe } from './probe';
 import { runFfmpegThumbnail } from './thumbnail';

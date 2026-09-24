@@ -9,14 +9,13 @@ import type {
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
-import { asThrowable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { Logger, PipelineMetrics } from '@vp/observability';
-import { type Result, assertNever, isErr, ok } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 import { Worker, registerStages, resolveStartOrder } from './composition/stages.module';
 import type { OutboxRelay } from './stages/housekeeping/outbox-relay';
 
-export interface WorkerAdapterOverrides {
+interface WorkerAdapterOverrides {
   repositories?: Repositories;
   storage?: StorageClient;
   multipart?: MultipartStorage;
@@ -103,20 +102,4 @@ export async function composeWorker(options: WorkerRunnerOptions): Promise<Worke
     },
     disposing: () => container.disposing(),
   };
-}
-
-/** Composes and starts in one call, for a caller with no signals to install first. */
-export async function createWorkerRunner(options: WorkerRunnerOptions): Promise<WorkerRunner> {
-  const runner = await composeWorker(options);
-  const started = await runner.start();
-  if (!isErr(started)) return runner;
-
-  switch (started.error.type) {
-    case 'failed':
-      throw asThrowable(started.error.cause);
-    case 'interrupted':
-      return runner;
-    default:
-      return assertNever(started.error, 'StartupFailed');
-  }
 }

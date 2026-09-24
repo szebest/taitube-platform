@@ -7,7 +7,6 @@ export * from './videos/failures';
 export * from './videos/metadata';
 export * from './channels/failures';
 export * from './channels/handle-format';
-export * from './channels/display-name';
 export * from './categories/failures';
 export * from './categories/slug-format';
 export * from './categories/category-form';

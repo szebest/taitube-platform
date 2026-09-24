@@ -28,12 +28,11 @@ import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
-import { TranscodeProgressReporter } from './stages/progress-reporter';
-import { StreamingSegmentUploader } from './stages/segment-uploader';
 import { createThumbnailProcessor } from './stages/thumbnail';
-import { type TranscodeProcessorDeps, createTranscodeProcessor } from './stages/transcode';
+import { createTranscodeProcessor } from './stages/transcode';
+import { transcodeCollaborators } from './stages/transcode-collaborators';
 
-export interface StageDeps {
+interface StageDeps {
   config: AppConfig;
   repositories: Repositories;
   storage: StorageClient;
@@ -97,28 +96,6 @@ const probe = (d: StageDeps) =>
       flowProducer: d.flowProducer,
     })
   );
-
-/** The per-job collaborators a transcode builds from what the stage was handed. */
-export function transcodeCollaborators(
-  d: Pick<StageDeps, 'config' | 'cache' | 'repositories' | 'storage' | 'metrics'>
-): Pick<TranscodeProcessorDeps, 'progressReporter' | 'segmentUploader'> {
-  return {
-    progressReporter: (target) =>
-      new TranscodeProgressReporter({
-        cache: d.cache,
-        repositories: d.repositories,
-        metrics: d.metrics,
-        ...target,
-      }),
-    segmentUploader: (target) =>
-      new StreamingSegmentUploader({
-        storage: d.storage,
-        publicBucket: d.config.buckets.public,
-        ...d.config.worker.segmentUpload,
-        ...target,
-      }),
-  };
-}
 
 const transcode = (d: StageDeps) =>
   consuming(

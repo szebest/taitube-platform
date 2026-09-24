@@ -77,7 +77,7 @@ async function identify(
   return ok({ id: sub, role: parseRole(role ?? 'user'), ...(email ? { email } : {}) });
 }
 
-export async function authPlugin(app: FastifyInstance, options: AuthPluginOptions): Promise<void> {
+async function authPlugin(app: FastifyInstance, options: AuthPluginOptions): Promise<void> {
   app.decorateRequest('user', null);
 
   app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {

@@ -16,13 +16,6 @@ export function parseJson(text: string): Result<unknown, SyntaxError> {
   );
 }
 
-export function fromThrowable<A extends readonly unknown[], T, E>(
-  fn: (...args: A) => T,
-  onThrow: (cause: unknown) => E
-): (...args: A) => Result<T, E> {
-  return (...args: A) => tryCatch(() => fn(...args), onThrow);
-}
-
 /**
  * Pass a thunk whenever the expression that produces the promise can itself throw. An SDK builder
  * chain - `redis.multi().hset(...).exec()` - runs synchronously up to the last call, so handing the

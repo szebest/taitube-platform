@@ -14,7 +14,7 @@ import type {
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 
-/** The adapters a test may hand `buildApp` instead of the ones the configuration would build. */
+/** The adapters a test may hand `composeApp` instead of the ones the configuration would build. */
 export interface AdapterOverrides {
   dbClient?: DatabaseClient;
   repositories?: Repositories;

@@ -11,7 +11,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 import { bearer } from './in-memory-app';
 
 describe('video reactions routes', () => {
@@ -70,17 +70,19 @@ describe('video reactions routes', () => {
       sourceKey: 'raw/video.mp4',
     });
 
-    app = await buildApp({
-      config: inProcessAppConfig(),
-      adapters: {
-        repositories: repos,
-        storage,
-        cache,
-        dbClient: new InMemoryDatabaseClient(),
-        multipart: new InMemoryMultipartStorage(storage),
-        probeQueue: new InMemoryJobQueue('probe'),
-      },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig(),
+        adapters: {
+          repositories: repos,
+          storage,
+          cache,
+          dbClient: new InMemoryDatabaseClient(),
+          multipart: new InMemoryMultipartStorage(storage),
+          probeQueue: new InMemoryJobQueue('probe'),
+        },
+      })
+    ).app;
     await app.ready();
   });
 

@@ -50,7 +50,7 @@ export interface UpdateChannelInput {
   bio?: string | null;
 }
 
-export type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string };
+type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string };
 
 export type GetAccountFailure = AccountNotFound | ChannelNotFound | DatabaseUnavailable;
 export type UpdateChannelFailure = ChannelNotFound | ClaimHandleFailure | DatabaseUnavailable;

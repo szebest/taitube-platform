@@ -1,10 +1,4 @@
-import {
-  CreateCategorySchema,
-  UpdateCategorySchema,
-  createCategory,
-  deleteCategory,
-  updateCategory,
-} from '../admin-categories';
+import { createCategory, deleteCategory, updateCategory } from '../admin-categories';
 
 describe('packages/api-contracts: admin categories', () => {
   it.each([
@@ -18,18 +12,18 @@ describe('packages/api-contracts: admin categories', () => {
   });
 
   it('defaults a new category to active at the front of the order', () => {
-    expect(CreateCategorySchema.parse({ name: 'Gaming', slug: 'gaming' })).toMatchObject({
+    expect(createCategory.body.parse({ name: 'Gaming', slug: 'gaming' })).toMatchObject({
       sortOrder: 0,
       isActive: true,
     });
   });
 
   it.each(['Gaming', 'gaming games', 'gaming_'])('rejects %s as a slug', (slug) => {
-    expect(CreateCategorySchema.safeParse({ name: 'Gaming', slug }).success).toBe(false);
+    expect(createCategory.body.safeParse({ name: 'Gaming', slug }).success).toBe(false);
   });
 
   it('refuses an empty update', () => {
-    expect(UpdateCategorySchema.safeParse({}).success).toBe(false);
-    expect(UpdateCategorySchema.safeParse({ isActive: false }).success).toBe(true);
+    expect(updateCategory.body.safeParse({}).success).toBe(false);
+    expect(updateCategory.body.safeParse({ isActive: false }).success).toBe(true);
   });
 });

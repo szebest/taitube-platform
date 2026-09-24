@@ -19,8 +19,6 @@ export type VersionConflict = Failure<
   { id: string; expectedVersion?: number }
 >;
 
-export type ConflictFailure = HandleTaken | CategorySlugConflict | VersionConflict;
-
 export function handleTaken(handle: string): HandleTaken {
   return {
     code: ErrorCodes.HANDLE_ALREADY_TAKEN,

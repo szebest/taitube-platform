@@ -28,5 +28,3 @@ export const UserDetails = memo(({ channel }: UserDetailsProps) => {
 		</div>
 	)
 });
-
-export default UserDetails;

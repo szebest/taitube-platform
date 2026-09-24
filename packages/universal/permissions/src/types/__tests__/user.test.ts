@@ -1,4 +1,4 @@
-import { type Role, VALID_ROLES, isSignedInRole, parseRole } from '../user';
+import { type Role, isSignedInRole, parseRole } from '../user';
 
 describe('types/user: parseRole', () => {
   it.each<{ input: unknown }>([
@@ -11,13 +11,16 @@ describe('types/user: parseRole', () => {
     expect(parseRole(input)).toBe('GUEST');
   });
 
-  it.each<{ role: Role }>(VALID_ROLES.map((role) => ({ role })))(
-    'accepts $role in either case',
-    ({ role }) => {
-      expect(parseRole(role)).toBe(role);
-      expect(parseRole(role.toLowerCase())).toBe(role);
-    }
-  );
+  it.each<{ role: Role }>([
+    { role: 'GUEST' },
+    { role: 'USER' },
+    { role: 'CREATOR' },
+    { role: 'MODERATOR' },
+    { role: 'ADMIN' },
+  ])('accepts $role in either case', ({ role }) => {
+    expect(parseRole(role)).toBe(role);
+    expect(parseRole(role.toLowerCase())).toBe(role);
+  });
 });
 
 describe('types/user: isSignedInRole', () => {

@@ -145,32 +145,3 @@ export function generateReplayJobId(originalJobId: string): string {
   }
   return `${originalJobId}--r1`;
 }
-
-// SSE event schemas
-export const SseEvent = z.discriminatedUnion('event', [
-  z.object({
-    event: z.literal('snapshot'),
-    data: z.object({
-      videoId: z.string(),
-      status: z.string(),
-      progress: z.object({ overall: z.number(), byRendition: z.record(z.number()) }),
-    }),
-  }),
-  z.object({
-    event: z.literal('progress'),
-    data: z.object({
-      rendition: z.enum(RENDITIONS).optional(),
-      percent: z.number(),
-      overall: z.number(),
-    }),
-  }),
-  z.object({
-    event: z.literal('status'),
-    data: z.object({
-      status: z.string(),
-      playbackUrl: z.string().url().optional(),
-      error: z.object({ code: z.string(), message: z.string() }).optional(),
-    }),
-  }),
-]);
-export type SseEvent = z.infer<typeof SseEvent>;

@@ -62,22 +62,6 @@ export function canDeleteVideo({
   return ability.can('delete', videoSubject);
 }
 
-export function canPublishVideo({
-  user,
-  video,
-}: {
-  user: UserContext | null;
-  video?: VideoResource;
-}): boolean {
-  if (!user) return false;
-  const ability = getUserPermissions(user);
-  const videoSubject = toVideoSubject(video);
-  if (!videoSubject) {
-    return ability.can('publish', 'Video');
-  }
-  return ability.can('publish', videoSubject);
-}
-
 export function canReactVideo({ user }: { user: UserContext | null }): boolean {
   if (!user) return false;
   const ability = getUserPermissions(user);

@@ -7,7 +7,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ## 1. Scope & Architecture
 
 `apps/api` is the Fastify 5 REST API and real-time Server-Sent Events (SSE) server running on Node.js 24.
-- **Composition Root:** `apps/api/src/app.ts` composes one `Container`: `registerAdapters` from `@vp/adapters` picks the adapter family from `config.kind`, `composition/services.module.ts` registers every service, `composition/adapter-set.ts` is the `adapters` override seam tests use. `buildApp()` constructs and registers routes and starts nothing; `main.ts` calls `container.start()` and owns the drained shutdown. Nothing else constructs a concrete adapter or a domain service.
+- **Composition Root:** `apps/api/src/app.ts` composes one `Container`: `registerAdapters` from `@vp/adapters` picks the adapter family from `config.kind`, `composition/services.module.ts` registers every service, `composition/adapter-set.ts` is the `adapters` override seam tests use. `composeApp()` constructs and registers routes and starts nothing; `serve.ts` calls `container.start()` and owns the drained shutdown, and `main.ts` only hands `process.ts` the real process. Nothing else constructs a concrete adapter or a domain service.
 - **Zero Concrete Driver Imports:** Route handlers and domain services must NEVER import `@aws-sdk/client-s3`, `ioredis`, `bullmq`, or Postgres/Drizzle directly.
 
 ---

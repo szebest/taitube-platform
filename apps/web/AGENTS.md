@@ -15,7 +15,7 @@ A **Create React App 5** single-page application, arrived by `git subtree` and a
 | Concern | Actual | Not |
 |---|---|---|
 | React | **18.3.1** | 19 |
-| Build & dev server | **`react-scripts` 5.0.1** (webpack 5, Babel) | Vite / Nitro |
+| Build & dev server | **`react-scripts` 5.0.1** (webpack 5, Babel) through `@craco/craco`, whose one override (`craco.config.js`) sets `resolve.fullySpecified: false` for workspace packages so their extensionless ESM resolves | Vite / Nitro |
 | Routing | **`react-router-dom` 6**, routes declared in `src/App.tsx` | TanStack Router, file-based routes |
 | Server rendering | **none — CSR only**, `public/index.html` + a client bundle | streaming SSR |
 | Data fetching | **RTK Query** (`@reduxjs/toolkit/query/react`) with `fakeBaseQuery` | TanStack Query |

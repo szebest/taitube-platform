@@ -38,5 +38,3 @@ export function CategoryList({ onCategoryChange, selectedCategoryId }: CategoryL
 		</DragScrollMenu>
 	)
 }
-
-export default CategoryList;

@@ -5,7 +5,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../app';
+import { composeApp } from '../../app';
 
 describe('health routes', () => {
   let app: FastifyInstance;
@@ -16,7 +16,9 @@ describe('health routes', () => {
 
   beforeEach(async () => {
     for (const dependency of Object.values(dependencies)) dependency.setHealthy(true);
-    app = await buildApp({ config: inProcessAppConfig(), adapters: { dbClient, cache, storage } });
+    app = (
+      await composeApp({ config: inProcessAppConfig(), adapters: { dbClient, cache, storage } })
+    ).app;
     await app.ready();
   });
 

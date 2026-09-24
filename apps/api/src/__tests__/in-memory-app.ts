@@ -6,7 +6,7 @@ import {
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { type AdapterOverrides, buildApp } from '../app';
+import { type AdapterOverrides, composeApp } from '../app';
 
 export interface InMemoryApp {
   app: FastifyInstance;
@@ -24,10 +24,12 @@ export async function buildInMemoryApp(options: InMemoryAppOptions = {}): Promis
   const repositories = new InMemoryRepositories();
   const cache = new InMemoryCacheClient();
   const storage = new InMemoryStorageClient();
-  const app = await buildApp({
-    config: options.config ?? inProcessAppConfig(),
-    adapters: { repositories, cache, storage, ...options.adapters },
-  });
+  const app = (
+    await composeApp({
+      config: options.config ?? inProcessAppConfig(),
+      adapters: { repositories, cache, storage, ...options.adapters },
+    })
+  ).app;
   await app.ready();
   return { app, repositories, cache, storage };
 }

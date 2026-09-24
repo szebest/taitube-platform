@@ -1,5 +1,5 @@
 import * as crypto from 'node:crypto';
-import { mintToken, parseTtlSeconds, verifyToken } from '../jwt';
+import { mintToken, verifyToken } from '../jwt';
 import { getDevJwks } from '../keys';
 
 describe('dev-token: EdDSA JWT mint and verify', () => {
@@ -98,12 +98,14 @@ describe('dev-token: EdDSA JWT mint and verify', () => {
     ['8h', 28800],
     ['1d', 86400],
     [3600, 3600],
-    [undefined, 28800],
-  ])('parses the TTL %j as %i seconds', (ttl, seconds) => {
-    expect(parseTtlSeconds(ttl)).toBe(seconds);
+    ['', 28800],
+  ])('mints a token that lives %j as %i seconds', (ttl, seconds) => {
+    const { iat, exp } = verifyToken(mintToken({ ttl }));
+
+    expect(exp - iat).toBe(seconds);
   });
 
   it('rejects a malformed TTL', () => {
-    expect(() => parseTtlSeconds('invalid')).toThrow(/invalid ttl/i);
+    expect(() => mintToken({ ttl: 'invalid' })).toThrow(/invalid ttl/i);
   });
 });

@@ -4,14 +4,21 @@ import { queueUnavailable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { createLogger } from '@vp/observability';
 import { err } from '@vp/result';
-import { createWorkerRunner } from '../runner';
+import { expectOk } from '@vp/testing/result';
+import { type WorkerRunnerOptions, composeWorker } from '../runner';
 
 const logger = createLogger({ service: 'runner-test', level: 'silent' });
 const collaborators = { logger, media: mediaTools, workerId: 'runner-spec' };
 
-describe('apps/worker: createWorkerRunner', () => {
+async function started(options: WorkerRunnerOptions) {
+  const runner = await composeWorker(options);
+  expectOk(await runner.start());
+  return runner;
+}
+
+describe('apps/worker: composeWorker', () => {
   it('consumes the configured stage over the in-memory family', async () => {
-    const runner = await createWorkerRunner({
+    const runner = await started({
       config: inProcessAppConfig({ worker: { stage: 'package' } }),
       ...collaborators,
     });
@@ -25,7 +32,7 @@ describe('apps/worker: createWorkerRunner', () => {
     const jobQueue = new InMemoryJobQueue('probe');
     const close = vi.spyOn(jobQueue, 'close');
 
-    const runner = await createWorkerRunner({
+    const runner = await started({
       config: inProcessAppConfig({ worker: { stage: 'probe' } }),
       adapters: { jobQueue, repositories: new InMemoryRepositories() },
       ...collaborators,
@@ -37,7 +44,7 @@ describe('apps/worker: createWorkerRunner', () => {
   });
 
   it('rejects its close, naming the disposer that failed', async () => {
-    const runner = await createWorkerRunner({
+    const runner = await started({
       config: inProcessAppConfig({ worker: { stage: 'package' } }),
       ...collaborators,
     });
@@ -47,7 +54,7 @@ describe('apps/worker: createWorkerRunner', () => {
   });
 
   it('starts the outbox relay for housekeeping and stops it on close', async () => {
-    const runner = await createWorkerRunner({
+    const runner = await started({
       config: inProcessAppConfig({
         worker: { stage: 'housekeeping' },
         housekeeping: { outboxRelayIntervalMs: 60_000 },
@@ -61,7 +68,7 @@ describe('apps/worker: createWorkerRunner', () => {
   });
 
   it('names nothing still being disposed once it has closed', async () => {
-    const runner = await createWorkerRunner({ config: inProcessAppConfig(), ...collaborators });
+    const runner = await started({ config: inProcessAppConfig(), ...collaborators });
 
     await runner.close();
 

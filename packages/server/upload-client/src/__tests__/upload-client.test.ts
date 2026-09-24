@@ -10,11 +10,11 @@ import {
   InMemoryDatabaseClient,
   InMemoryRepositories,
 } from '@vp/adapters/in-memory';
-import { buildApp } from '@vp/api';
+import { composeApp } from '@vp/api';
 import { mintToken } from '@vp/dev-token';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { UploadAbortedError, UploadClient } from '../client';
+import { UploadClient } from '../client';
 
 describe('upload-client reference upload client', () => {
   let app: FastifyInstance;
@@ -188,16 +188,18 @@ describe('upload-client reference upload client', () => {
       forcePathStyle: true,
     });
 
-    app = await buildApp({
-      adapters: {
-        repositories,
-        dbClient,
-        cache,
-        storage,
-        multipart,
-      },
-      config: inProcessAppConfig({ limits: { multipartThresholdBytes: PART_SIZE } }),
-    });
+    app = (
+      await composeApp({
+        adapters: {
+          repositories,
+          dbClient,
+          cache,
+          storage,
+          multipart,
+        },
+        config: inProcessAppConfig({ limits: { multipartThresholdBytes: PART_SIZE } }),
+      })
+    ).app;
 
     const address = await app.listen({ port: 0, host: '127.0.0.1' });
     apiPort = Number(new URL(address).port);
@@ -240,7 +242,7 @@ describe('upload-client reference upload client', () => {
           if (completed / total >= 0.5) crash.abort();
         },
       })
-    ).rejects.toThrow(UploadAbortedError);
+    ).rejects.toMatchObject({ name: 'UploadAbortedError' });
 
     const resumeInfo = await client.getResumeInfo(crashedUploadId);
     expect(resumeInfo.status).toBe('OPEN');

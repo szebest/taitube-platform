@@ -31,5 +31,3 @@ export const VideoDetails = ({ video }: VideoDetailsProps) => {
 		</div>
 	)
 };
-
-export default VideoDetails;

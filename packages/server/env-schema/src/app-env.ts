@@ -44,7 +44,7 @@ export const JWS_ALGORITHMS = [
   'EdDSA',
 ] as const;
 
-export const CoreEnvSchema = z.object({
+const CoreEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default('debug'),
   SERVICE_VERSION: z.string().default('dev'),
@@ -58,20 +58,20 @@ export const CoreEnvSchema = z.object({
   PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
 });
 
-export const PostgresEnvSchema = z.object({
+const PostgresEnvSchema = z.object({
   DATABASE_URL: z.string().url({ message: 'DATABASE_URL is required and must be a valid URL' }),
   DATABASE_URL_MIGRATIONS: optionalUrl(),
   DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
 });
 
-export const RedisEnvSchema = z.object({
+const RedisEnvSchema = z.object({
   REDIS_URL: z.string().default('redis://localhost:6379/0'),
   REDIS_PUBSUB_URL: z.string().default('redis://localhost:6379/1'),
   BULLMQ_PREFIX: z.string().default('bull'),
   REDIS_PASSWORD: secret(),
 });
 
-export const StorageEnvSchema = z.object({
+const StorageEnvSchema = z.object({
   S3_ENDPOINT: z.string().default('http://localhost:9000'),
   S3_REGION: z.string().default('us-east-1'),
   S3_FORCE_PATH_STYLE: z
@@ -90,7 +90,7 @@ export const StorageEnvSchema = z.object({
   RAW_RETENTION_DAYS: z.coerce.number().int().positive().default(7),
 });
 
-export const AuthEnvSchema = z.object({
+const AuthEnvSchema = z.object({
   AUTH_MODE: z.enum(['jwks', 'dev']).default('dev'),
   AUTH_JWKS_URL: optionalUrl(),
   AUTH_ISSUER: z.string().default('vp-dev'),
@@ -100,7 +100,7 @@ export const AuthEnvSchema = z.object({
   ADMIN_TOKEN: secret(),
 });
 
-export const PipelineEnvSchema = z.object({
+const PipelineEnvSchema = z.object({
   WORKER_STAGE: z
     .enum([
       'probe',
@@ -136,14 +136,14 @@ export const PipelineEnvSchema = z.object({
   WORKER_HEARTBEAT_PATH: z.string().default('/tmp/vp/heartbeat'),
 });
 
-export const OtelEnvSchema = z.object({
+const OtelEnvSchema = z.object({
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default('http://localhost:4318'),
   OTEL_TRACES_SAMPLER: z.string().default('parentbased_always_on'),
   OTEL_TRACES_SAMPLER_ARG: z.coerce.number().default(1.0),
   OTEL_RESOURCE_ATTRIBUTES: z.string().default('deployment.environment=local'),
 });
 
-export const AppEnvShape = CoreEnvSchema.merge(PostgresEnvSchema)
+const AppEnvShape = CoreEnvSchema.merge(PostgresEnvSchema)
   .merge(RedisEnvSchema)
   .merge(StorageEnvSchema)
   .merge(AuthEnvSchema)

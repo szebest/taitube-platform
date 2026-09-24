@@ -2,7 +2,7 @@ import type { ReactionInput, UserReaction, VideoReaction } from "@vp/api-contrac
 
 import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
-export const reactionsApi = baseApi.injectEndpoints({
+const reactionsApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		myReaction: builder.query<UserReaction, string>({
 			providesTags: (_result, _error, id) => [{ type: 'REACTION', id }],

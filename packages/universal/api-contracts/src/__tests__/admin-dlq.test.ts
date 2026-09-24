@@ -1,11 +1,5 @@
 import { PAGE_SIZE_MAX } from '@vp/pagination';
-import {
-  DLQ_STATUSES,
-  ListDlqQuerySchema,
-  discardDlqEntry,
-  listDlq,
-  replayDlqEntry,
-} from '../admin-dlq';
+import { discardDlqEntry, listDlq, replayDlqEntry } from '../admin-dlq';
 
 describe('packages/api-contracts: admin dlq', () => {
   it.each([
@@ -18,20 +12,20 @@ describe('packages/api-contracts: admin dlq', () => {
     expect(contract.status).toBe(status);
   });
 
-  it.each(DLQ_STATUSES)('filters the list by status=%s', (status) => {
-    expect(ListDlqQuerySchema.parse({ status }).status).toBe(status);
+  it.each(['PARKED', 'REPLAYED', 'DISCARDED'])('filters the list by status=%s', (status) => {
+    expect(listDlq.query.parse({ status }).status).toBe(status);
   });
 
   it('leaves the limit unset rather than defaulting it', () => {
-    expect(ListDlqQuerySchema.parse({})).toEqual({});
-    expect(ListDlqQuerySchema.safeParse({ status: 'PENDING' }).success).toBe(false);
+    expect(listDlq.query.parse({})).toEqual({});
+    expect(listDlq.query.safeParse({ status: 'PENDING' }).success).toBe(false);
   });
 
   it.each([
     { scenario: 'fractional', limit: '12.5' },
     { scenario: 'above the shared maximum', limit: String(PAGE_SIZE_MAX + 1) },
   ])('bounds a $scenario limit through the shared page-size schema', ({ limit }) => {
-    expect(ListDlqQuerySchema.safeParse({ limit }).success).toBe(false);
+    expect(listDlq.query.safeParse({ limit }).success).toBe(false);
   });
 
   it('guards every admin entry point with 401 and 403', () => {

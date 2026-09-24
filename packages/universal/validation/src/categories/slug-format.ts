@@ -1,8 +1,8 @@
 import { type Result, err, ok } from '@vp/result';
 import { type InvalidSlug, invalidSlug } from './failures';
 
-export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-export const SLUG_MAX_LENGTH = 100;
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const SLUG_MAX_LENGTH = 100;
 
 const PATTERN_SOURCE = SLUG_PATTERN.source;
 

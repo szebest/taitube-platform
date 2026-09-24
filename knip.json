@@ -21,7 +21,8 @@
       ]
     },
     "apps/web": {
-      "entry": ["src/index.tsx!", "craco.config.js"],
+      "entry": ["src/index.tsx!"],
+      "ignore": ["craco.config.js"],
       "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!", "!src/**/*.test.{ts,tsx}!"]
     },
     "packages/server/testing": {

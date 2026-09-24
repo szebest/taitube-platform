@@ -8,7 +8,7 @@ import {
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 import { bearer } from './in-memory-app';
 
 export const CDN = 'http://cdn.videopipeline.local';
@@ -19,7 +19,7 @@ export const CHANNEL_1 = { id: '22222222-2222-7222-8222-222222222222', handle: '
 export const CHANNEL_2 = { id: '44444444-4444-7444-8444-444444444444', handle: 'creator2' };
 
 export const creatorToken = mintToken({ sub: CREATOR_ID, role: 'CREATOR', ttl: '1h' });
-export const subscriberToken = mintToken({ sub: SUBSCRIBER_ID, role: 'USER', ttl: '1h' });
+const subscriberToken = mintToken({ sub: SUBSCRIBER_ID, role: 'USER', ttl: '1h' });
 
 export interface SubscriptionsApp {
   app: FastifyInstance;
@@ -56,16 +56,18 @@ export async function buildSubscriptionsApp(): Promise<SubscriptionsApp> {
     displayName: 'Creator Two',
   });
 
-  const app = await buildApp({
-    adapters: {
-      repositories: repos,
-      storage: new InMemoryStorageClient(),
-      cache: new InMemoryCacheClient(),
-      dbClient: new InMemoryDatabaseClient(),
-      subscriptionCache,
-    },
-    config: inProcessAppConfig({ cdn: CDN }),
-  });
+  const app = (
+    await composeApp({
+      adapters: {
+        repositories: repos,
+        storage: new InMemoryStorageClient(),
+        cache: new InMemoryCacheClient(),
+        dbClient: new InMemoryDatabaseClient(),
+        subscriptionCache,
+      },
+      config: inProcessAppConfig({ cdn: CDN }),
+    })
+  ).app;
   await app.ready();
   return { app, repos, subscriptionCache };
 }

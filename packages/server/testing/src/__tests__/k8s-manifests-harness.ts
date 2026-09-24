@@ -21,7 +21,7 @@ interface PodSpec {
   volumes: { name: string; emptyDir?: { sizeLimit?: string } }[];
 }
 
-export interface Trigger {
+interface Trigger {
   type: string;
   metadata: Record<string, string>;
 }

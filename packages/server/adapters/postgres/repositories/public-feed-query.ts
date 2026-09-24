@@ -50,7 +50,7 @@ function cursorRankInput(cursor: PublicFeedCursor): RankInput {
   };
 }
 
-export function publicFeedRank(sort: PublicFeedSort | null | undefined, instant: Date): SQL {
+function publicFeedRank(sort: PublicFeedSort | null | undefined, instant: Date): SQL {
   return rankExpression(sort, ROW_RANK_INPUT, instant);
 }
 

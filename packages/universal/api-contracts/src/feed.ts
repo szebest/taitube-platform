@@ -4,9 +4,9 @@ import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
 import { VideoSummarySchema } from './video-resource';
 
-export const FEED_SORTS = ['recent', 'popular', 'trending'] as const;
+const FEED_SORTS = ['recent', 'popular', 'trending'] as const;
 
-export const FeedSortSchema = z
+const FeedSortSchema = z
   .enum(FEED_SORTS)
   .default('recent')
   .describe('Feed sort mode: recent (newest), popular (views count), trending (gravity ranking)');
@@ -20,7 +20,7 @@ export const FeedResponseSchema = z.object({
   total: z.number().int().nonnegative().describe('Total number of matching public ready videos'),
 });
 
-export const FeedQuerySchema = z.object({
+const FeedQuerySchema = z.object({
   sort: FeedSortSchema,
   categoryId: z.string().uuid().optional().describe('Optional category UUID filter'),
   cursor: CursorSchema.optional(),
@@ -43,6 +43,5 @@ export const getFeed = defineEndpoint({
   },
 });
 
-export type FeedSort = z.infer<typeof FeedSortSchema>;
 export type FeedQuery = z.input<typeof FeedQuerySchema>;
 export type FeedResponse = z.infer<typeof FeedResponseSchema>;

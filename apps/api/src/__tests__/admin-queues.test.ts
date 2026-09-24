@@ -1,11 +1,11 @@
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
-import { mintDevToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 import { bearer } from './in-memory-app';
 
 const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
@@ -17,14 +17,16 @@ describe('Bull Board admin queues', () => {
   const queuesMap = new Map<string, JobQueue>(
     QUEUES.map((name) => [name, new InMemoryJobQueue(name)])
   );
-  const adminJwt = mintDevToken({ sub: ADMIN_USER_ID, role: 'admin', ttl: '1h' });
-  const regularJwt = mintDevToken({ sub: REGULAR_USER_ID, role: 'user', ttl: '1h' });
+  const adminJwt = mintToken({ sub: ADMIN_USER_ID, role: 'admin', ttl: '1h' });
+  const regularJwt = mintToken({ sub: REGULAR_USER_ID, role: 'user', ttl: '1h' });
 
   beforeAll(async () => {
-    app = await buildApp({
-      config: inProcessAppConfig({ auth: { adminToken: VALID_ADMIN_TOKEN } }),
-      adapters: { queues: queuesMap },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig({ auth: { adminToken: VALID_ADMIN_TOKEN } }),
+        adapters: { queues: queuesMap },
+      })
+    ).app;
     await app.ready();
   });
 

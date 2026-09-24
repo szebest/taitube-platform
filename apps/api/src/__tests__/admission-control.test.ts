@@ -4,11 +4,11 @@ import {
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
-import { mintDevToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 import { completeUpload, postUpload } from './upload-requests';
 
 describe('upload admission control and tier priorities', () => {
@@ -30,19 +30,21 @@ describe('upload admission control and tier priorities', () => {
     multipart = new InMemoryMultipartStorage();
     probeQueue = new InMemoryJobQueue('probe');
 
-    app = await buildApp({
-      adapters: {
-        repositories,
-        storage,
-        multipart,
-        probeQueue,
-      },
-      config: inProcessAppConfig({ limits: { maxInflightPerUser: 3 } }),
-    });
+    app = (
+      await composeApp({
+        adapters: {
+          repositories,
+          storage,
+          multipart,
+          probeQueue,
+        },
+        config: inProcessAppConfig({ limits: { maxInflightPerUser: 3 } }),
+      })
+    ).app;
     await app.ready();
 
-    freeToken = mintDevToken({ sub: FREE_USER_ID, role: 'user' });
-    proToken = mintDevToken({ sub: PRO_USER_ID, role: 'user' });
+    freeToken = mintToken({ sub: FREE_USER_ID, role: 'user' });
+    proToken = mintToken({ sub: PRO_USER_ID, role: 'user' });
   });
 
   afterEach(async () => {

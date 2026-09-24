@@ -7,8 +7,8 @@ import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ok } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp, composeApp } from '../app';
-import { serve } from '../main';
+import { composeApp } from '../app';
+import { serve } from '../serve';
 
 describe('HTTP and auth foundations', () => {
   let app: FastifyInstance;
@@ -87,14 +87,16 @@ describe('HTTP and auth foundations', () => {
       sourceKey: `raw/${OTHER_PRIVATE_VIDEO_ID}/source.mp4`,
     });
 
-    app = await buildApp({
-      adapters: {
-        repositories,
-        cache,
-        storage,
-      },
-      config: inProcessAppConfig({ cdn: cdnBase }),
-    });
+    app = (
+      await composeApp({
+        adapters: {
+          repositories,
+          cache,
+          storage,
+        },
+        config: inProcessAppConfig({ cdn: cdnBase }),
+      })
+    ).app;
     await app.ready();
   });
 

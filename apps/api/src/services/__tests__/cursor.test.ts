@@ -8,7 +8,6 @@ import {
   decodeCreatedAtCursor,
   decodeFeedCursor,
   decodeSubscriptionCursor,
-  encodeFeedCursor,
   feedCursorPayload,
   subscriptionCursorPayload,
 } from '../cursor';
@@ -26,7 +25,9 @@ describe('apps/api/services: pagination cursors', () => {
   describe('feed cursor', () => {
     it('round-trips the row a page resumes after, plus the instant it ranked against', () => {
       expect(
-        expectOk(decodeFeedCursor(encodeFeedCursor(ROW, INSTANT, paginator), paginator))
+        expectOk(
+          decodeFeedCursor(paginator.encodeCursor(feedCursorPayload(ROW, INSTANT)), paginator)
+        )
       ).toEqual({
         id: 'video-1',
         createdAt: CREATED_AT,
@@ -48,7 +49,7 @@ describe('apps/api/services: pagination cursors', () => {
       'yields the same %s rank the repository derives from the row itself',
       (sort) => {
         const cursor = expectOk(
-          decodeFeedCursor(encodeFeedCursor(ROW, INSTANT, paginator), paginator)
+          decodeFeedCursor(paginator.encodeCursor(feedCursorPayload(ROW, INSTANT)), paginator)
         );
         const rankOf = publicFeedRanking(sort);
 

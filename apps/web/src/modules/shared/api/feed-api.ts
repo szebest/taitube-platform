@@ -5,9 +5,8 @@ import { apiClient, baseApi, runApiQuery } from "src/base-api";
 import { appendPage } from "./page-merge";
 
 export type PublicFeedQuery = FeedQuery;
-export type SubscriptionFeedQuery = KeysetQuery;
 
-export const feedApi = baseApi.injectEndpoints({
+const feedApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		publicFeed: builder.query<FeedResponse, PublicFeedQuery>({
 			providesTags: ['VIDEOS'],
@@ -17,7 +16,7 @@ export const feedApi = baseApi.injectEndpoints({
 			merge: appendPage,
 			forceRefetch: ({ currentArg, previousArg }) => currentArg?.cursor !== previousArg?.cursor,
 		}),
-		subscriptionFeed: builder.query<FeedResponse, SubscriptionFeedQuery>({
+		subscriptionFeed: builder.query<FeedResponse, KeysetQuery>({
 			providesTags: ['VIDEOS', 'SUBSCRIPTION'],
 			queryFn: (query) =>
 				runApiQuery(() => apiClient.subscriptions.getSubscriptionFeed({ query })),

@@ -1,5 +1,5 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintDevToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
@@ -7,7 +7,6 @@ import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { composeApp } from '../app';
-import { HOUSEKEEPING_SCHEDULER_CONFIGS } from '../services/housekeeping-schedulers';
 import { bearer } from './in-memory-app';
 
 describe('housekeeping schedulers and video deletion', () => {
@@ -41,9 +40,9 @@ describe('housekeeping schedulers and video deletion', () => {
     app = composed.app;
     await app.ready();
 
-    adminJwt = mintDevToken({ sub: ADMIN_USER_ID, role: 'admin', ttl: '1h' });
-    ownerJwt = mintDevToken({ sub: OWNER_USER_ID, role: 'user', ttl: '1h' });
-    otherJwt = mintDevToken({ sub: OTHER_USER_ID, role: 'user', ttl: '1h' });
+    adminJwt = mintToken({ sub: ADMIN_USER_ID, role: 'admin', ttl: '1h' });
+    ownerJwt = mintToken({ sub: OWNER_USER_ID, role: 'user', ttl: '1h' });
+    otherJwt = mintToken({ sub: OTHER_USER_ID, role: 'user', ttl: '1h' });
   });
 
   afterAll(async () => {
@@ -65,16 +64,20 @@ describe('housekeeping schedulers and video deletion', () => {
       expect(map.get('reconcile-reaction-counters')?.pattern).toBe('0 * * * *');
     });
 
-    it.each(HOUSEKEEPING_SCHEDULER_CONFIGS)(
-      'scheduler "$id" carries task payload matching its id',
-      async ({ id }) => {
-        const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
-        const map = new Map(schedulers.map((s) => [s.id, s]));
-        const item = map.get(id);
-        expect(item).toBeDefined();
-        expect((item?.data as { task: string })?.task).toBe(id);
-      }
-    );
+    it.each([
+      'reconcile-uploads',
+      'reconcile-processing',
+      'purge-deleted',
+      'expire-raw',
+      'tmp-sweep',
+      'reconcile-reaction-counters',
+    ])('scheduler "%s" carries task payload matching its id', async (id) => {
+      const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
+      const map = new Map(schedulers.map((s) => [s.id, s]));
+      const item = map.get(id);
+      expect(item).toBeDefined();
+      expect((item?.data as { task: string })?.task).toBe(id);
+    });
 
     it('restarting the API twice leaves exactly one of each scheduler', async () => {
       const second = await composeApp({

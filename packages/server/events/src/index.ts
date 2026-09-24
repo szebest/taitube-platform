@@ -4,7 +4,6 @@ import { z } from 'zod';
 
 import { userChannel, videoChannel } from './channels';
 
-export { SseEvent } from '@vp/job-contracts';
 export * from './channels';
 export * from './keys';
 

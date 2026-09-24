@@ -2,7 +2,6 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
-import { parseSpriteVtt } from '@vp/ffmpeg';
 import type { ThumbnailJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/observability';
 import { expectErr, expectOk } from '@vp/testing/result';
@@ -77,9 +76,12 @@ describe('thumbnail stage', () => {
       });
     }
     const vtt = expectOk(await storage.getObject('public', result.spriteVttKey));
-    const cues = parseSpriteVtt(vtt.toString('utf-8'));
-    expect(cues.length).toBeGreaterThanOrEqual(11);
-    expect(cues.length).toBeLessThanOrEqual(13);
+    const timings = vtt
+      .toString('utf-8')
+      .split('\n')
+      .filter((line) => line.includes(' --> '));
+    expect(timings.length).toBeGreaterThanOrEqual(11);
+    expect(timings.length).toBeLessThanOrEqual(13);
     expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
       posterKey: result.posterKey,
       spriteKey: result.spriteKey,

@@ -1,5 +1,5 @@
 import { isErr, isOk } from '@vp/result';
-import { SLUG_MAX_LENGTH, validateSlug } from '../slug-format';
+import { validateSlug } from '../slug-format';
 
 describe('@vp/validation: validateSlug', () => {
   it.each([{ slug: 'music' }, { slug: 'how-to-code' }, { slug: 'a1-b2-c3' }])(
@@ -16,7 +16,7 @@ describe('@vp/validation: validateSlug', () => {
     { slug: 'trailing-' },
     { slug: 'double--dash' },
     { slug: '' },
-    { slug: 'a'.repeat(SLUG_MAX_LENGTH + 1) },
+    { slug: 'a'.repeat(101) },
   ])('rejects $slug', ({ slug }) => {
     expect(isErr(validateSlug(slug))).toBe(true);
   });

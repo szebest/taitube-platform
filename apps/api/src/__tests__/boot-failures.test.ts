@@ -15,7 +15,7 @@ import {
 import { QUEUES } from '@vp/job-contracts';
 import { type Result, err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { buildApp, composeApp } from '../app';
+import { composeApp } from '../app';
 
 class UnsubscribableCache extends InMemoryCacheClient {
   override async psubscribe(
@@ -83,7 +83,7 @@ describe('apps/api: a dependency the API cannot boot without fails the start', (
     const subscribe = vi.spyOn(cache, 'subscribe');
     const psubscribe = vi.spyOn(cache, 'psubscribe');
 
-    const app = await buildApp({ config: inProcessAppConfig(), adapters: { cache } });
+    const app = (await composeApp({ config: inProcessAppConfig(), adapters: { cache } })).app;
     await app.ready();
 
     expect(timers()).toBe(before);

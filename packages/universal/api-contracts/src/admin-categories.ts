@@ -6,7 +6,7 @@ import { defineEndpoint } from './endpoint';
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
 const SLUG_MESSAGE = 'Slug must consist of lowercase alphanumeric characters and hyphens';
 
-export const CreateCategorySchema = z.object({
+const CreateCategorySchema = z.object({
   name: z.string().min(1).max(100).describe('Category display name'),
   slug: z.string().regex(SLUG_PATTERN, SLUG_MESSAGE).max(100).describe('URL-friendly unique slug'),
   description: z.string().max(500).nullish().describe('Optional category description'),
@@ -15,7 +15,7 @@ export const CreateCategorySchema = z.object({
   isActive: z.boolean().optional().default(true).describe('Active status (default: true)'),
 });
 
-export const UpdateCategorySchema = z
+const UpdateCategorySchema = z
   .object({
     name: z.string().min(1).max(100).optional().describe('Category display name'),
     slug: z
@@ -88,6 +88,3 @@ export const deleteCategory = defineEndpoint({
     409: [ErrorCodes.CATEGORY_IN_USE],
   },
 });
-
-export type CreateCategory = z.infer<typeof CreateCategorySchema>;
-export type UpdateCategory = z.infer<typeof UpdateCategorySchema>;

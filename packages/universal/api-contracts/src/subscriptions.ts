@@ -5,18 +5,18 @@ import { defineEndpoint } from './endpoint';
 import { FeedResponseSchema } from './feed';
 import { KeysetQuerySchema } from './pagination';
 
-export const SubscriptionStateSchema = z.object({
+const SubscriptionStateSchema = z.object({
   channelId: z.string().uuid(),
   subscribed: z.boolean(),
   subscriberCount: z.number().int().nonnegative(),
 });
 
-export const IsSubscribedSchema = z.object({
+const IsSubscribedSchema = z.object({
   channelId: z.string().uuid(),
   subscribed: z.boolean(),
 });
 
-export const SubscribedChannelSchema = z.object({
+const SubscribedChannelSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
   handle: z.string(),
@@ -28,7 +28,7 @@ export const SubscribedChannelSchema = z.object({
   subscribedAt: z.string(),
 });
 
-export const ListSubscriptionsResponseSchema = z.object({
+const ListSubscriptionsResponseSchema = z.object({
   items: z.array(SubscribedChannelSchema),
   nextCursor: z.string().nullable(),
 });

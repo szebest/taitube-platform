@@ -9,7 +9,7 @@ import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 
 describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
   let app: FastifyInstance;
@@ -29,19 +29,21 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
       ttl: '2h',
     });
 
-    app = await buildApp({
-      adapters: {
-        repositories,
-        storage,
-        multipart,
-        cache,
-        probeQueue,
-      },
-      config: inProcessAppConfig({
-        buckets: { raw: 'raw-bucket' },
-        limits: { multipartThresholdBytes: 5 * 1024 * 1024 },
-      }),
-    });
+    app = (
+      await composeApp({
+        adapters: {
+          repositories,
+          storage,
+          multipart,
+          cache,
+          probeQueue,
+        },
+        config: inProcessAppConfig({
+          buckets: { raw: 'raw-bucket' },
+          limits: { multipartThresholdBytes: 5 * 1024 * 1024 },
+        }),
+      })
+    ).app;
 
     await app.ready();
   });

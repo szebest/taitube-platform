@@ -12,12 +12,12 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import { playbackUrl } from './video-views';
 
-export interface SseSnapshot {
+interface SseSnapshot {
   data: Record<string, unknown>;
   lastEventId: number;
 }
 
-export interface SseReplayEvent {
+interface SseReplayEvent {
   id: number;
   event: string;
   data: unknown;
@@ -44,7 +44,7 @@ export interface SseServiceDeps {
 
 export type OpenVideoStreamFailure = ReadVideoFailure | DatabaseUnavailable;
 
-export function mapEventToSse(record: {
+function mapEventToSse(record: {
   id: number;
   type: string;
   payload: unknown;

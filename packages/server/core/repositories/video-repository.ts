@@ -101,7 +101,7 @@ export interface TransitionVideoOptions {
   outbox?: NewOutboxInput;
 }
 
-export type VideoIdleClock = 'updatedAt' | 'deletedAt' | 'readyAt';
+type VideoIdleClock = 'updatedAt' | 'deletedAt' | 'readyAt';
 
 export type VideoScanAbsence =
   | { type: 'step'; step: string }

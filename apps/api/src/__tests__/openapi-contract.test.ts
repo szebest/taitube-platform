@@ -5,7 +5,7 @@ import {
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 import { SDD_ENDPOINT_CONTRACT } from './sdd-endpoint-contract';
 
 interface OpenApiOperation {
@@ -32,14 +32,16 @@ describe('OpenAPI 3.1 and Scalar documentation contract', () => {
   let swaggerSpec: OpenApiSpec;
 
   beforeAll(async () => {
-    app = await buildApp({
-      config: inProcessAppConfig(),
-      adapters: {
-        repositories: new InMemoryRepositories(),
-        cache: new InMemoryCacheClient(),
-        storage: new InMemoryStorageClient(),
-      },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig(),
+        adapters: {
+          repositories: new InMemoryRepositories(),
+          cache: new InMemoryCacheClient(),
+          storage: new InMemoryStorageClient(),
+        },
+      })
+    ).app;
     await app.ready();
     swaggerSpec = app.swagger() as unknown as OpenApiSpec;
   });

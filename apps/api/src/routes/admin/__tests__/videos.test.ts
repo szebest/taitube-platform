@@ -8,7 +8,7 @@ import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../../app';
+import { composeApp } from '../../../app';
 
 const OWNER = '00000000-0000-7000-8000-000000000001';
 const STRANGER = '00000000-0000-7000-8000-000000000002';
@@ -31,14 +31,16 @@ describe('two consumers of VideoService.get render the same failure differently'
     operatorToken = mintToken({ sub: OPERATOR, role: 'admin', ttl: '1h' });
 
     repositories = new InMemoryRepositories();
-    app = await buildApp({
-      config: inProcessAppConfig(),
-      adapters: {
-        repositories,
-        cache: new InMemoryCacheClient(),
-        storage: new InMemoryStorageClient(),
-      },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig(),
+        adapters: {
+          repositories,
+          cache: new InMemoryCacheClient(),
+          storage: new InMemoryStorageClient(),
+        },
+      })
+    ).app;
     await app.ready();
   });
 

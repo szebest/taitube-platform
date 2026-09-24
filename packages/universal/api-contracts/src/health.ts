@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 
-export const LivenessSchema = z.object({
+const LivenessSchema = z.object({
   status: z.literal('ok'),
 });
 
-export const ReadinessSchema = z.object({
+const ReadinessSchema = z.object({
   status: z.literal('ok'),
   checks: z.record(z.enum(['ok', 'failed'])),
 });
@@ -63,6 +63,3 @@ export const jwks = defineEndpoint({
   result: z.object({ keys: z.array(z.record(z.unknown())) }),
   errors: {},
 });
-
-export type Liveness = z.infer<typeof LivenessSchema>;
-export type Readiness = z.infer<typeof ReadinessSchema>;

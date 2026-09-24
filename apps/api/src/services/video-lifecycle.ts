@@ -13,8 +13,6 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, ok } from '@vp/result';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
-export { DELETABLE_STATUSES, REPROCESSABLE_STATUSES };
-
 export interface VideoLifecycleDeps {
   videos: VideoRepository;
   probeQueue: JobQueue;

@@ -1,15 +1,20 @@
 import { ok } from '@vp/result';
-import { JsonCursorCodec } from '../cursor-codec';
-import { DEFAULT_PAGINATION, PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX, Paginator } from '../pagination';
+import type { CursorCodec, CursorPayload } from '../cursor-codec';
+import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX, Paginator } from '../pagination';
+
+const jsonCodec: CursorCodec = {
+  encode: (payload) => JSON.stringify(payload),
+  decode: (cursor) => ok(JSON.parse(cursor) as CursorPayload),
+};
 
 describe('packages/pagination: Paginator', () => {
-  const jsonPaginator = new Paginator({ cursorCodec: new JsonCursorCodec() });
+  const jsonPaginator = new Paginator({ cursorCodec: jsonCodec });
   const cursorOf = (row: { id: string }) => ({ id: row.id });
   const toItem = (row: { id: string }) => row.id;
   const rows = (count: number) => Array.from({ length: count }, (_, i) => ({ id: `r${i}` }));
 
   it('builds its unconfigured bounds from the shared page-size constants', () => {
-    expect(DEFAULT_PAGINATION).toEqual({
+    expect(new Paginator().defaults).toEqual({
       defaultLimit: PAGE_SIZE_DEFAULT,
       maxLimit: PAGE_SIZE_MAX,
     });
@@ -38,7 +43,7 @@ describe('packages/pagination: Paginator', () => {
     it('falls back per field when an override is partial', () => {
       const paginator = new Paginator({ maxLimit: 10 });
 
-      expect(paginator.limit()).toBe(DEFAULT_PAGINATION.defaultLimit);
+      expect(paginator.limit()).toBe(PAGE_SIZE_DEFAULT);
       expect(paginator.limit(50)).toBe(10);
     });
   });

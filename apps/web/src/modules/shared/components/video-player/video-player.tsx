@@ -37,5 +37,3 @@ export function VideoPlayer({ playbackUrl }: VideoPlayerProps) {
 		</div>
 	)
 }
-
-export default VideoPlayer;

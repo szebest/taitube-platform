@@ -1,7 +1,5 @@
 import { isErr, isOk } from '@vp/result';
 import {
-  HANDLE_CANDIDATE_ATTEMPTS,
-  HANDLE_MAX_LENGTH,
   handleCandidates,
   isReservedHandle,
   isValidHandleFormat,
@@ -79,7 +77,7 @@ describe('@vp/validation: handleCandidates', () => {
     for (const candidate of take(20, 'admin@example.com', 'abcd1234')) {
       expect(isValidHandleFormat(candidate)).toBe(true);
       expect(isReservedHandle(candidate)).toBe(false);
-      expect(candidate.length).toBeLessThanOrEqual(HANDLE_MAX_LENGTH);
+      expect(candidate.length).toBeLessThanOrEqual(30);
     }
   });
 
@@ -112,12 +110,10 @@ describe('@vp/validation: handleCandidates', () => {
     const offered = take(25, `${'x'.repeat(60)}@example.com`, '018f1b2c');
 
     expect(offered.every(isValidHandleFormat)).toBe(true);
-    expect(offered.every((handle) => handle.length <= HANDLE_MAX_LENGTH)).toBe(true);
+    expect(offered.every((handle) => handle.length <= 30)).toBe(true);
   });
 
   it('gives up rather than looping forever on a saturated base', () => {
-    expect([...handleCandidates('ada@example.com', '018f1b2c')]).toHaveLength(
-      HANDLE_CANDIDATE_ATTEMPTS + 2
-    );
+    expect([...handleCandidates('ada@example.com', '018f1b2c')]).toHaveLength(1002);
   });
 });

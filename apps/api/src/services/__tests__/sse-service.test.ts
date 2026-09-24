@@ -5,7 +5,7 @@ import { ErrorCodes } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { SseService, mapEventToSse } from '../sse-service';
+import { SseService } from '../sse-service';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000d1';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
@@ -169,7 +169,17 @@ describe('apps/api/services: SseService', () => {
     });
   });
 
-  describe('mapEventToSse', () => {
+  describe('replayed events', () => {
+    async function replayed(type: string, payload?: Record<string, unknown>) {
+      await seed('public');
+      await repositories.events.create({
+        videoId: VIDEO_ID,
+        type,
+        ...(payload ? { payload } : {}),
+      });
+      return expectOk(await service.openUserStream(OWNER).replay(0))[0];
+    }
+
     it.each([
       ['progress', { percent: 40 }, 'progress', { percent: 40 }],
       ['video.ready', {}, 'status', { status: 'READY' }],
@@ -177,24 +187,23 @@ describe('apps/api/services: SseService', () => {
       ['video.processing', {}, 'status', { status: 'PROCESSING' }],
       ['probe.completed', {}, 'status', { status: 'PROCESSING' }],
       ['upload.initiated', { a: 1 }, 'status', { a: 1 }],
-    ])('maps %s onto the %s event', (type, payload, event, data) => {
-      expect(mapEventToSse({ id: 7, type, payload })).toEqual({ id: 7, event, data });
+    ])('replays %s as the %s event', async (type, payload, event, data) => {
+      expect(await replayed(type, payload)).toEqual({ id: expect.any(Number), event, data });
     });
 
-    it('defaults a failure without codes to a bare FAILED status', () => {
-      expect(mapEventToSse({ id: 9, type: 'video.failed', payload: null })).toEqual({
-        id: 9,
+    it('defaults a failure without codes to a bare FAILED status', async () => {
+      expect(await replayed('video.failed')).toEqual({
+        id: expect.any(Number),
         event: 'status',
         data: { status: 'FAILED', error: { code: 'FAILED', message: '' } },
       });
     });
 
-    it('carries the failure code and message through', () => {
+    it('carries the failure code and message through', async () => {
       expect(
-        mapEventToSse({
-          id: 9,
-          type: 'video.failed',
-          payload: { errorCode: 'PROBE_FAILED', errorMessage: 'no video stream' },
+        await replayed('video.failed', {
+          errorCode: 'PROBE_FAILED',
+          errorMessage: 'no video stream',
         })
       ).toMatchObject({
         data: { error: { code: 'PROBE_FAILED', message: 'no video stream' } },

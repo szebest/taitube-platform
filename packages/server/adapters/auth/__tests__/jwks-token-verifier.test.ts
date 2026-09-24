@@ -1,6 +1,6 @@
 import { signJwt, signingKey } from '@vp/testing/jwt';
 import { expectErr, expectOk } from '@vp/testing/result';
-import type { Jwk } from '../jwt';
+import type { Jwks } from '../jwt';
 import { JwksTokenVerifier } from '../jwks-token-verifier';
 
 const JWKS_URL = 'https://idp.example/.well-known/jwks.json';
@@ -15,7 +15,7 @@ function claims(now: number) {
 
 function harness() {
   const clock = { now: 1_000_000 };
-  const published: { keys: Jwk[] } = { keys: [] };
+  const published: { keys: Jwks['keys'][number][] } = { keys: [] };
   const fetch = vi.fn(
     async (_url: string, _init: { signal: AbortSignal }): Promise<Response> =>
       Response.json(published)

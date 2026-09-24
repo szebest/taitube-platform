@@ -7,7 +7,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
  * Typed from the service's own error union, so an override for a code the service cannot return is
  * a compile error and a handler receives the narrowed variant with its payload.
  */
-export type FailureOverrides<E extends AnyFailure> = Partial<{
+type FailureOverrides<E extends AnyFailure> = Partial<{
   [C in E['code']]: (failure: Extract<E, { readonly code: C }>) => Problem;
 }>;
 

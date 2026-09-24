@@ -11,7 +11,6 @@ import {
   getActiveSpanContext,
   getActiveTraceparent,
   initTracing,
-  injectTraceparent,
 } from '../tracing';
 
 describe('OpenTelemetry Tracing Module (packages/observability)', () => {
@@ -62,10 +61,6 @@ describe('OpenTelemetry Tracing Module (packages/observability)', () => {
       const spanCtx = getActiveSpanContext();
       expect(spanCtx.traceId).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
       expect(spanCtx.spanId).toBe(childSpan.spanContext().spanId);
-
-      const carrier: Record<string, unknown> = {};
-      injectTraceparent(carrier);
-      expect(carrier.traceparent).toBe(activeTp);
 
       childSpan.setStatus({ code: SpanStatusCode.OK });
       childSpan.end();

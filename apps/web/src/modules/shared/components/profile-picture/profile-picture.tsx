@@ -22,5 +22,3 @@ export const ProfilePicture = memo(({ src }: ProfilePictureProps) => {
 		</div>
 	);
 });
-
-export default ProfilePicture;

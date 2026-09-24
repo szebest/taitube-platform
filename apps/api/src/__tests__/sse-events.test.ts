@@ -8,7 +8,7 @@ import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { publishVideoEvent } from '@vp/events';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 import { readSseUntil } from './sse-stream';
 
 const OWNER_USER_ID = '00000000-0000-7000-8000-000000000001';
@@ -30,10 +30,14 @@ describe('apps/api SSE video event streams', () => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
     storage = new InMemoryStorageClient();
-    app = await buildApp({
-      adapters: { repositories, cache, storage },
-      config: inProcessAppConfig({ sse: { heartbeatMs: 100, idleTimeoutMs: 500, maxPerUser: 20 } }),
-    });
+    app = (
+      await composeApp({
+        adapters: { repositories, cache, storage },
+        config: inProcessAppConfig({
+          sse: { heartbeatMs: 100, idleTimeoutMs: 500, maxPerUser: 20 },
+        }),
+      })
+    ).app;
     baseUrl = await app.listen({ port: 0, host: '127.0.0.1' });
   });
 
@@ -203,11 +207,14 @@ describe('apps/api SSE video event streams', () => {
   it('delivers an event for one video through two API instances that share a cache', async () => {
     const sharedCache = new InMemoryCacheClient();
     const instances = await Promise.all(
-      [0, 1].map(() =>
-        buildApp({
-          config: inProcessAppConfig(),
-          adapters: { repositories, cache: sharedCache, storage },
-        })
+      [0, 1].map(
+        async () =>
+          (
+            await composeApp({
+              config: inProcessAppConfig(),
+              adapters: { repositories, cache: sharedCache, storage },
+            })
+          ).app
       )
     );
     const addresses = await Promise.all(

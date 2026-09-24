@@ -1,9 +1,9 @@
 import { type Result, andThen, err, map, ok } from '@vp/result';
-import { ALLOWED_CONTENT_TYPES, validateContentType } from './allowed-content-type';
+import { validateContentType } from './allowed-content-type';
 import { type StartUploadFailure, invalidTitle } from './failures';
 import { validateUploadSize } from './upload-size';
 
-export const MAX_TITLE_LENGTH = 200;
+const MAX_TITLE_LENGTH = 200;
 
 /**
  * The ceiling and the allowed list are supplied, never read here: the backend takes them from
@@ -27,9 +27,7 @@ function validateTitle(
   maxLength: number
 ): Result<string | null | undefined, StartUploadFailure> {
   if (title === undefined || title === null) return ok(title);
-  return title.length === 0 || title.length > maxLength
-    ? err(invalidTitle(maxLength))
-    : ok(title);
+  return title.length === 0 || title.length > maxLength ? err(invalidTitle(maxLength)) : ok(title);
 }
 
 export function validateStartUpload(
@@ -44,9 +42,3 @@ export function validateStartUpload(
     )
   );
 }
-
-export const DEFAULT_UPLOAD_LIMITS: UploadLimits = {
-  maxBytes: 5 * 1024 * 1024 * 1024,
-  allowedContentTypes: ALLOWED_CONTENT_TYPES,
-  maxTitleLength: MAX_TITLE_LENGTH,
-};

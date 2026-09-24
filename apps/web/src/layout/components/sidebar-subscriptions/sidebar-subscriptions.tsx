@@ -66,5 +66,3 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 		</>
 	);
 }
-
-export default SidebarSubscriptions;

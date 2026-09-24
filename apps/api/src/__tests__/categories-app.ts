@@ -7,7 +7,7 @@ import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cac
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 import { bearer } from './in-memory-app';
 
 export const ADMIN_TOKEN = 'operator-token-for-tests';
@@ -37,10 +37,12 @@ export async function buildCategoriesApp(): Promise<CategoriesApp> {
   const cache = new InMemoryCacheClient();
   const storage = new InMemoryStorageClient();
   const categoryCache = newCategoryCache(cache);
-  const app = await buildApp({
-    config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
-    adapters: { repositories, cache, storage, categoryCache },
-  });
+  const app = (
+    await composeApp({
+      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+      adapters: { repositories, cache, storage, categoryCache },
+    })
+  ).app;
 
   return {
     app,

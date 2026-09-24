@@ -13,7 +13,6 @@ import type { UserContext, VideoResource } from '../../types/index';
 import {
   canCreateVideo,
   canDeleteVideo,
-  canPublishVideo,
   canReactVideo,
   canReadVideo,
   canUpdateVideo,
@@ -113,33 +112,6 @@ describe('helpers/videos: Video Action Helpers', () => {
       },
     ])('$scenario: $expected', ({ user, video, expected }) => {
       expect(check({ user, video })).toBe(expected);
-    });
-  });
-
-  describe('canPublishVideo', () => {
-    it.each<VideoCase>([
-      { scenario: 'a guest', user: guestUser, expected: false },
-      { scenario: 'a standard user', user: standardUser, video: publicVideo, expected: false },
-      {
-        scenario: 'a creator on their own video',
-        user: creatorUser,
-        video: publicVideo,
-        expected: true,
-      },
-      {
-        scenario: 'a creator on a foreign video',
-        user: creatorUser,
-        video: foreignVideo,
-        expected: false,
-      },
-      {
-        scenario: 'an admin on a foreign video',
-        user: adminUser,
-        video: foreignVideo,
-        expected: true,
-      },
-    ])('$scenario: $expected', ({ user, video, expected }) => {
-      expect(canPublishVideo({ user, video })).toBe(expected);
     });
   });
 });

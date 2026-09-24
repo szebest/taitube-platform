@@ -6,7 +6,7 @@ import {
 } from '@vp/adapters/in-memory';
 import { API_ENDPOINTS, endpointKey, findEndpoint } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 
 /** Mounted by third-party plugins (@fastify/swagger, Scalar, Bull Board), not by this repo. */
 const VENDOR_PREFIXES = ['/docs', '/openapi.json', '/admin/queues'];
@@ -25,7 +25,7 @@ interface RegisteredRoute {
 /**
  * Rebuilds the route table from `printRoutes`, which is the only public view of
  * every registered route — `findRoute` hands back a handler without its schema,
- * and an `onRoute` hook cannot be attached before `buildApp` mounts the routes.
+ * and an `onRoute` hook cannot be attached before `composeApp` mounts the routes.
  */
 function parseRouteTree(tree: string): RegisteredRoute[] {
   const routes: RegisteredRoute[] = [];
@@ -82,14 +82,16 @@ describe('apps/api: contract drift', () => {
   };
 
   beforeAll(async () => {
-    app = await buildApp({
-      config: inProcessAppConfig(),
-      adapters: {
-        repositories: new InMemoryRepositories(),
-        cache: new InMemoryCacheClient(),
-        storage: new InMemoryStorageClient(),
-      },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig(),
+        adapters: {
+          repositories: new InMemoryRepositories(),
+          cache: new InMemoryCacheClient(),
+          storage: new InMemoryStorageClient(),
+        },
+      })
+    ).app;
     await app.ready();
     registered = parseRouteTree(app.printRoutes({ commonPrefix: false }));
     spec = app.swagger() as typeof spec;

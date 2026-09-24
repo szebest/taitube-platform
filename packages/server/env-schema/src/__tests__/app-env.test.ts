@@ -1,14 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
-import {
-  AppEnvSchema,
-  AppEnvShape,
-  CoreEnvSchema,
-  PostgresEnvSchema,
-  SECRET_KEYS,
-} from '../app-env';
+import { AppEnvSchema, SECRET_KEYS } from '../app-env';
 import { PLATFORM_ENV } from '../platform-env';
+
+const SHAPE = AppEnvSchema.innerType().shape;
 
 const CLOUD_HOSTS = [/r2\.cloudflarestorage\.com/, /neon\.tech/, /grafana\.net/];
 
@@ -36,7 +32,7 @@ describe('packages/env-schema: the environment contract', () => {
   const example = parseEnvExample();
 
   it('carries exactly the keys the two schemas declare', () => {
-    const declared = [...Object.keys(AppEnvShape.shape), ...Object.keys(PLATFORM_ENV)];
+    const declared = [...Object.keys(SHAPE), ...Object.keys(PLATFORM_ENV)];
 
     expect(Object.keys(example).sort()).toEqual(declared.sort());
   });
@@ -55,9 +51,7 @@ describe('packages/env-schema: the environment contract', () => {
   });
 
   it('declares no browser build variable', () => {
-    const browserKeys = Object.keys(AppEnvShape.shape).filter((key) =>
-      key.startsWith('REACT_APP_')
-    );
+    const browserKeys = Object.keys(SHAPE).filter((key) => key.startsWith('REACT_APP_'));
 
     expect(browserKeys).toEqual([]);
   });
@@ -71,14 +65,12 @@ describe('packages/env-schema: the environment contract', () => {
   });
 
   it('takes its page bounds from the shared page-size constants', () => {
-    const core = CoreEnvSchema.parse({});
-
-    expect(core.PAGE_SIZE_DEFAULT).toBe(PAGE_SIZE_DEFAULT);
-    expect(core.PAGE_SIZE_MAX).toBe(PAGE_SIZE_MAX);
+    expect(SHAPE.PAGE_SIZE_DEFAULT.parse(undefined)).toBe(PAGE_SIZE_DEFAULT);
+    expect(SHAPE.PAGE_SIZE_MAX.parse(undefined)).toBe(PAGE_SIZE_MAX);
   });
 
   it.each(SECRET_KEYS.map((key) => ({ key })))('gives $key no default', ({ key }) => {
-    const unset = AppEnvShape.shape[key].safeParse(undefined);
+    const unset = SHAPE[key].safeParse(undefined);
 
     expect(unset.success ? unset.data : undefined).toBeUndefined();
   });
@@ -167,20 +159,17 @@ describe('packages/env-schema: the environment contract', () => {
     { raw: '', expected: undefined },
     { raw: '3', expected: 3 },
   ])('reads WORKER_CONCURRENCY $raw as $expected', ({ raw, expected }) => {
-    expect(AppEnvShape.shape.WORKER_CONCURRENCY.parse(raw)).toBe(expected);
+    expect(SHAPE.WORKER_CONCURRENCY.parse(raw)).toBe(expected);
   });
 
   it.each(['# empty = stage default', 'abc', '0', '-1', '2.5'])(
     'refuses WORKER_CONCURRENCY %s',
     (raw) => {
-      expect(AppEnvShape.shape.WORKER_CONCURRENCY.safeParse(raw).success).toBe(false);
+      expect(SHAPE.WORKER_CONCURRENCY.safeParse(raw).success).toBe(false);
     }
   );
 
   it('defaults the connection pool without being told', () => {
-    expect(
-      PostgresEnvSchema.parse({ DATABASE_URL: 'postgres://user:pass@localhost:5432/testdb' })
-        .DATABASE_POOL_MAX
-    ).toBe(10);
+    expect(SHAPE.DATABASE_POOL_MAX.parse(undefined)).toBe(10);
   });
 });

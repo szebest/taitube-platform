@@ -1,7 +1,7 @@
 import type { HealthCheckable } from '@vp/core/ports';
 import { isOk } from '@vp/result';
 
-export type DependencyCheck = 'ok' | 'failed';
+type DependencyCheck = 'ok' | 'failed';
 
 export interface ReadinessReport {
   ready: boolean;

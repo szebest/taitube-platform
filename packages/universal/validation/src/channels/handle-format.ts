@@ -3,11 +3,11 @@ import { type InvalidHandleFormat, invalidHandleFormat } from './failures';
 
 const HANDLE_REGEX = /^[a-zA-Z0-9_.-]{3,30}$/;
 
-export const HANDLE_MIN_LENGTH = 3;
-export const HANDLE_MAX_LENGTH = 30;
+const HANDLE_MIN_LENGTH = 3;
+const HANDLE_MAX_LENGTH = 30;
 
 /** How many suffixed handles a caller may try before giving up on a collision run. */
-export const HANDLE_CANDIDATE_ATTEMPTS = 1000;
+const HANDLE_CANDIDATE_ATTEMPTS = 1000;
 
 const RESERVED_HANDLES: ReadonlySet<string> = new Set([
   'admin',

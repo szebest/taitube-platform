@@ -25,9 +25,9 @@ The authority on how the three layers use it is
 - **Zero runtime dependencies, forever.** T1 universal. It must typecheck with `"types": []` and no
   `@types/node`, and run unchanged in a browser, under `vitest` and under `bun test`.
 - **No `ResultAsync` class.** Async code returns `Promise<Result<T, E>>`, so a plain `await` is
-  always legal. `mapAsync` / `andThenAsync` take and return promises; nothing here is chainable
+  always legal. `andThenAsync` takes and returns promises; nothing here is chainable
   through a wrapper object.
-- **`tryCatch` / `fromPromise` / `fromThrowable` are the only sanctioned `catch` outside an
+- **`tryCatch` / `fromPromise` are the only sanctioned `catch` outside an
   adapter.** `tests/architecture/catch-confinement.test.ts` enforces that.
 - **`assertNever` is the only `throw` in this package**, and the only one the no-domain-throw sweep
   allows a caller to reach.

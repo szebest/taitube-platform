@@ -7,7 +7,7 @@ import type { TranscodeJob } from '@vp/job-contracts';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 
-export const RENDITION_720P = {
+const RENDITION_720P = {
   name: '720p',
   width: 1280,
   height: 720,

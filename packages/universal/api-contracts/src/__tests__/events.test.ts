@@ -1,4 +1,4 @@
-import { EventStreamQuerySchema, streamMyEvents, streamVideoEvents } from '../events';
+import { streamMyEvents, streamVideoEvents } from '../events';
 
 describe('packages/api-contracts: events', () => {
   it('streams one video and the caller feed over SSE', () => {
@@ -7,10 +7,10 @@ describe('packages/api-contracts: events', () => {
   });
 
   it('carries the replay position as last-event-id', () => {
-    expect(EventStreamQuerySchema.parse({ 'last-event-id': '42' })).toEqual({
+    expect(streamVideoEvents.query.parse({ 'last-event-id': '42' })).toEqual({
       'last-event-id': '42',
     });
-    expect(EventStreamQuerySchema.parse(undefined)).toBeUndefined();
+    expect(streamVideoEvents.query.parse(undefined)).toBeUndefined();
   });
 
   it('caps concurrent streams with a 429', () => {

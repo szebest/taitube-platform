@@ -1,4 +1,4 @@
-import { AppEnvShape } from '../app-env';
+import { AppEnvSchema } from '../app-env';
 import { PLATFORM_ENV } from '../platform-env';
 
 describe('packages/env-schema: PLATFORM_ENV', () => {
@@ -8,7 +8,7 @@ describe('packages/env-schema: PLATFORM_ENV', () => {
 
   it('shares no key with the schema toAppConfig reads', () => {
     expect(
-      Object.keys(PLATFORM_ENV).filter((key) => Object.hasOwn(AppEnvShape.shape, key))
+      Object.keys(PLATFORM_ENV).filter((key) => Object.hasOwn(AppEnvSchema.innerType().shape, key))
     ).toEqual([]);
   });
 });

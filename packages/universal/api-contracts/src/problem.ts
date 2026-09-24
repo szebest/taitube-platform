@@ -17,7 +17,7 @@ export const PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
 
 const PROBLEM_TYPE_BASE = 'https://errors.video-pipeline.local';
 
-export function problemType(code: ErrorCode | string): string {
+function problemType(code: ErrorCode | string): string {
   return `${PROBLEM_TYPE_BASE}/${code}`;
 }
 
@@ -29,7 +29,7 @@ export function problemType(code: ErrorCode | string): string {
  * Transport-level validation failures are 400 whatever code they carry; that is a
  * property of where the error came from, not of the code, so it is not in here.
  */
-export const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
+const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.INVALID_HANDLE_FORMAT]: 400,
   [ErrorCodes.INVALID_CURSOR]: 400,
   [ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF]: 400,

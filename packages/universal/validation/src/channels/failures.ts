@@ -1,12 +1,10 @@
 import { ErrorCodes, type InputFailure } from '@vp/errors';
-import { type InvalidField, type LengthBounds, invalidLength } from '../failures';
+import type { LengthBounds } from '../failures';
 
 export type InvalidHandleFormat = InputFailure<
   typeof ErrorCodes.INVALID_HANDLE_FORMAT,
   { handle: string; minLength: number; maxLength: number; reserved: boolean }
 >;
-
-export type InvalidDisplayName = InvalidField<LengthBounds>;
 
 export function invalidHandleFormat(
   handle: string,
@@ -24,8 +22,4 @@ export function invalidHandleFormat(
     maxLength: bounds.maxLength,
     reserved,
   };
-}
-
-export function invalidDisplayName(bounds: LengthBounds): InvalidDisplayName {
-  return invalidLength('displayName', bounds);
 }

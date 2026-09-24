@@ -109,7 +109,6 @@ export const UNTESTED_SOURCES: readonly string[] = [
   'packages/universal/domain/src/reaction.ts',
   'packages/universal/permissions/src/ability.ts',
   'packages/universal/permissions/src/errors/assert-can.ts',
-  'packages/universal/permissions/src/errors/validation-adapter.ts',
   'scripts/check-boundaries.ts',
   'scripts/fairness-simulation.ts',
   'scripts/run-e2e.ts',

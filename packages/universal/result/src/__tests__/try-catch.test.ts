@@ -1,5 +1,5 @@
 import { err, ok } from '../result';
-import { fromPromise, fromThrowable, parseJson, tryCatch } from '../try-catch';
+import { fromPromise, parseJson, tryCatch } from '../try-catch';
 
 const describeCause = (cause: unknown) => ({ code: 'WRAPPED' as const, cause });
 
@@ -30,20 +30,6 @@ describe('@vp/result: parseJson', () => {
     const parsed = parseJson(text);
 
     expect(parsed.ok ? undefined : parsed.error).toBeInstanceOf(SyntaxError);
-  });
-});
-
-describe('@vp/result: fromThrowable', () => {
-  it('wraps a function once and forwards its arguments', () => {
-    const parse = fromThrowable(JSON.parse, describeCause);
-
-    expect(parse('{"a":1}')).toEqual(ok({ a: 1 }));
-  });
-
-  it('returns a failure from the wrapped function instead of throwing', () => {
-    const parse = fromThrowable(JSON.parse, () => 'INVALID_JSON');
-
-    expect(parse('{')).toEqual(err('INVALID_JSON'));
   });
 });
 

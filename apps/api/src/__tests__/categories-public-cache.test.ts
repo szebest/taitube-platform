@@ -1,6 +1,6 @@
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 import {
   CATEGORIES_CACHE_CONTROL,
   type CategoriesApp,
@@ -140,15 +140,17 @@ describe('public category API and its cache', () => {
   it('purges the in-process cache of a second instance when the first one mutates', async () => {
     const podBCache = newCategoryCache(ctx.cache);
     expectOk(await podBCache.start());
-    const podB = await buildApp({
-      config: inProcessAppConfig(),
-      adapters: {
-        repositories: ctx.repositories,
-        cache: ctx.cache,
-        storage: ctx.storage,
-        categoryCache: podBCache,
-      },
-    });
+    const podB = (
+      await composeApp({
+        config: inProcessAppConfig(),
+        adapters: {
+          repositories: ctx.repositories,
+          cache: ctx.cache,
+          storage: ctx.storage,
+          categoryCache: podBCache,
+        },
+      })
+    ).app;
 
     try {
       await postCategory(ctx.app, ctx.adminJwt, { name: 'Initial Music', slug: 'initial-music' });

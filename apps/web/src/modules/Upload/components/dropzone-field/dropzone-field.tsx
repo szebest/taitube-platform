@@ -54,5 +54,3 @@ export const DropzoneField = <T extends FieldValues>({
 		/>
 	)
 }
-
-export default DropzoneField;

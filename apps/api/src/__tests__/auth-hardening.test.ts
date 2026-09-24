@@ -6,7 +6,7 @@ import { toAppConfig } from '@vp/env-schema';
 import { PRODUCTION_ENV } from '@vp/testing/env';
 import { signJwt, signingKey } from '@vp/testing/jwt';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
 
 const ADMIN_ID = '00000000-0000-7000-8000-0000000000c1';
 
@@ -43,7 +43,7 @@ describe('apps/api: authentication under a production configuration', () => {
       AUTH_ALGORITHMS: 'RS256,RS512,ES256',
       AUTH_JWKS_URL: `http://127.0.0.1:${port}/.well-known/jwks.json`,
     });
-    app = await buildApp({ config: toAppConfig(env) });
+    app = (await composeApp({ config: toAppConfig(env) })).app;
   });
 
   afterAll(async () => {

@@ -17,9 +17,9 @@ import {
   WORKER_HEARTBEAT_INTERVAL_MS,
 } from './tuning';
 
-export type AdapterKind = AppEnv['ADAPTER_FAMILY'];
+type AdapterKind = AppEnv['ADAPTER_FAMILY'];
 
-export type JwsAlgorithm = (typeof JWS_ALGORITHMS)[number];
+type JwsAlgorithm = (typeof JWS_ALGORITHMS)[number];
 
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
 

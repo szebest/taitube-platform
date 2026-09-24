@@ -28,5 +28,3 @@ export function SubscriptionCard({ channel }: SubscriptionCardProps) {
 		</div>
 	);
 }
-
-export default SubscriptionCard;

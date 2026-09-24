@@ -47,20 +47,6 @@ export function renditionPlaylistKey(videoId: string, rendition: string, generat
   return renditionObjectKey(videoId, rendition, 'index.m3u8', generation);
 }
 
-export function segmentKey(
-  videoId: string,
-  rendition: string,
-  segmentIndex: number,
-  generation = 1
-): string {
-  return renditionObjectKey(
-    videoId,
-    rendition,
-    `seg_${String(segmentIndex).padStart(5, '0')}.ts`,
-    generation
-  );
-}
-
 export function posterKey(videoId: string): string {
   return `${videoPrefix(videoId)}thumbs/poster.jpg`;
 }
@@ -71,10 +57,6 @@ export function spriteKey(videoId: string): string {
 
 export function spriteVttKey(videoId: string): string {
   return `${videoPrefix(videoId)}thumbs/sprite.vtt`;
-}
-
-export function metaKey(videoId: string): string {
-  return `${videoPrefix(videoId)}meta.json`;
 }
 
 export function sanitizeStorageUrl(url: string): string {

@@ -1,190 +1,109 @@
-import type { LadderEntry } from '@vp/job-contracts';
-import { buildTranscodeArgs, generateMasterPlaylist, getAvcCodecString } from '../index';
+import { execFileSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { CANONICAL_LADDER, type LadderEntry } from '@vp/job-contracts';
+import { runFfmpegTranscode } from '../transcode';
 import { ENCODER } from './encoder-settings';
 
-describe('ffmpeg transcode arguments and master playlist', () => {
-  const ladder720p: LadderEntry = {
-    name: '720p',
-    width: 1280,
-    height: 720,
-    videoKbps: 2800,
-    maxrateKbps: 2996,
-    bufsizeKbps: 4200,
-    audioKbps: 128,
-    profile: 'high',
-    level: '3.1',
-  };
+describe('@vp/ffmpeg: runFfmpegTranscode', () => {
+  const renditions: readonly LadderEntry[] = CANONICAL_LADDER;
 
-  const ladder1080p: LadderEntry = {
-    name: '1080p',
-    width: 1920,
-    height: 1080,
-    videoKbps: 5000,
-    maxrateKbps: 5350,
-    bufsizeKbps: 7500,
-    audioKbps: 128,
-    profile: 'high',
-    level: '4.1',
-  };
+  describe('keyframe timestamps of segment N across 1080p/720p/480p', () => {
+    // One frame at 24 fps is ~0.042 s.
+    const FRAME_TOLERANCE_S = 0.05;
+    const fixturesDir = path.resolve(__dirname, '../../../../../tests/fixtures');
 
-  it('takes the GOP and segment length from the settings it is handed', () => {
-    const args = buildTranscodeArgs({
-      ...ENCODER,
-      gopSeconds: 4,
-      hlsSegmentSeconds: 8,
-      sourcePath: '/tmp/source.mp4',
-      outputDir: '/tmp/out-720p',
-      rendition: ladder720p,
-      fps: 30,
-      threads: 2,
-      preset: 'veryfast',
-    });
-    const argAfter = (flag: string) => args[args.indexOf(flag) + 1];
+    function getKeyframeTimestamp(segPath: string): number {
+      const stdout = execFileSync(
+        'ffprobe',
+        [
+          '-v',
+          'error',
+          '-select_streams',
+          'v',
+          '-show_entries',
+          'frame=pts_time,key_frame',
+          '-show_frames',
+          '-read_intervals',
+          '%+#1',
+          '-of',
+          'json',
+          segPath,
+        ],
+        { encoding: 'utf-8' }
+      );
+      const parsed = JSON.parse(stdout);
+      expect(parsed.frames[0].key_frame).toBe(1);
+      return Number(parsed.frames[0].pts_time);
+    }
 
-    expect([argAfter('-g'), argAfter('-keyint_min'), argAfter('-hls_time')]).toEqual([
-      '120',
-      '120',
-      '8',
-    ]);
-    expect(args).toContain('expr:gte(t,n_forced*4)');
-  });
+    async function segmentKeyframes(
+      sourcePath: string,
+      durationMs: number,
+      keptSegments?: number
+    ): Promise<Record<string, number[]>> {
+      const timestampsByRendition: Record<string, number[]> = {};
+      for (const rendition of renditions) {
+        const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-keyframes-${rendition.name}-`));
+        try {
+          await runFfmpegTranscode({
+            ...ENCODER,
+            sourcePath,
+            outputDir: outDir,
+            rendition,
+            fps: 24,
+            durationMs,
+            threads: 0,
+            preset: 'ultrafast',
+          });
+          const segFiles = fs
+            .readdirSync(outDir)
+            .filter((f) => f.endsWith('.ts'))
+            .sort()
+            .slice(0, keptSegments);
+          timestampsByRendition[rendition.name] = segFiles.map((f) =>
+            getKeyframeTimestamp(path.join(outDir, f))
+          );
+        } finally {
+          fs.rmSync(outDir, { recursive: true, force: true });
+        }
+      }
+      return timestampsByRendition;
+    }
 
-  it('buildTranscodeArgs derives GOP = round(2 * fps) and enforces SDD §8.2 flags', () => {
-    const args24 = buildTranscodeArgs({
-      ...ENCODER,
-      sourcePath: '/tmp/source.mp4',
-      outputDir: '/tmp/out-720p',
-      rendition: ladder720p,
-      fps: 24,
-      threads: 2,
-      preset: 'veryfast',
-    });
+    function expectAligned(timestampsByRendition: Record<string, number[]>, segCount: number) {
+      for (let i = 0; i < segCount; i++) {
+        const t1080 = timestampsByRendition['1080p']?.[i] ?? 0;
+        const t720 = timestampsByRendition['720p']?.[i] ?? 0;
+        const t480 = timestampsByRendition['480p']?.[i] ?? 0;
+        expect(Math.abs(t1080 - t720)).toBeLessThan(FRAME_TOLERANCE_S);
+        expect(Math.abs(t1080 - t480)).toBeLessThan(FRAME_TOLERANCE_S);
+      }
+    }
 
-    expect(args24).toContain('-hide_banner');
-    expect(args24).toContain('-nostdin');
-    expect(args24).toContain('pipe:1');
-    expect(args24).toContain(
-      'scale=w=1280:h=720:force_original_aspect_ratio=decrease:force_divisible_by=2'
-    );
-    expect(args24).toContain('-preset');
-    expect(args24).toContain('veryfast');
-    expect(args24).toContain('-profile:v');
-    expect(args24).toContain('high');
-    expect(args24).toContain('-level');
-    expect(args24).toContain('3.1');
-    expect(args24).toContain('2800k');
-    expect(args24).toContain('2996k');
-    expect(args24).toContain('4200k');
+    it('produces identical keyframe timestamps (within 1 frame) across 1080p/720p/480p for vfr.mp4', async () => {
+      const vfrPath = path.join(fixturesDir, 'vfr.mp4');
+      if (!fs.existsSync(vfrPath)) return;
 
-    const gIndex24 = args24.indexOf('-g');
-    expect(gIndex24).toBeGreaterThan(-1);
-    expect(args24[gIndex24 + 1]).toBe('48');
-    const minGIndex24 = args24.indexOf('-keyint_min');
-    expect(args24[minGIndex24 + 1]).toBe('48');
-    expect(args24).toContain('expr:gte(t,n_forced*2)');
+      const timestamps = await segmentKeyframes(vfrPath, 15000);
 
-    expect(args24).toContain('-hls_time');
-    const timeIndex = args24.indexOf('-hls_time');
-    expect(args24[timeIndex + 1]).toBe('6');
-    expect(args24).toContain('independent_segments+temp_file');
-    expect(args24).toContain('mpegts');
+      for (const rendition of renditions) {
+        expect(timestamps[rendition.name]?.length ?? 0).toBeGreaterThanOrEqual(2);
+      }
+      expectAligned(timestamps, timestamps['1080p']?.length ?? 0);
+    }, 60000);
 
-    const args30 = buildTranscodeArgs({
-      ...ENCODER,
-      sourcePath: '/tmp/source.mp4',
-      outputDir: '/tmp/out-720p',
-      rendition: ladder720p,
-      fps: 29.97,
-      threads: 2,
-      preset: 'veryfast',
-    });
-    const gIndex30 = args30.indexOf('-g');
-    expect(args30[gIndex30 + 1]).toBe('60');
-  });
+    it('produces identical keyframe timestamps across 1080p/720p/480p for s60.mp4', async () => {
+      const s60Path = path.join(fixturesDir, 's60.mp4');
+      if (!fs.existsSync(s60Path)) return;
 
-  it('generates master playlist matching SDD §8.4 with correct BANDWIDTH, RESOLUTION, and CODECS', () => {
-    const singleVariant = generateMasterPlaylist({
-      ladder: [ladder720p],
-      fps: 24,
-    });
+      const timestamps = await segmentKeyframes(s60Path, 18000, 3);
 
-    expect(singleVariant).toContain('#EXTM3U');
-    expect(singleVariant).toContain('#EXT-X-VERSION:6');
-    expect(singleVariant).toContain('#EXT-X-INDEPENDENT-SEGMENTS');
-    expect(singleVariant).toContain(
-      '#EXT-X-STREAM-INF:BANDWIDTH=2996000,AVERAGE-BANDWIDTH=2928000,RESOLUTION=1280x720,FRAME-RATE=24.000,CODECS="avc1.64001f,mp4a.40.2"'
-    );
-    expect(singleVariant).toContain('720p/index.m3u8');
-
-    const multiVariant = generateMasterPlaylist({
-      ladder: [ladder720p, ladder1080p],
-      fps: 24,
-    });
-    const lines = multiVariant.split('\n');
-    const firstStreamIdx = lines.findIndex((l) => l.includes('RESOLUTION=1920x1080'));
-    const secondStreamIdx = lines.findIndex((l) => l.includes('RESOLUTION=1280x720'));
-    expect(firstStreamIdx).toBeLessThan(secondStreamIdx);
-  });
-
-  it('generates master playlist with measured AVERAGE-BANDWIDTH when measuredResults provided', () => {
-    const ladder480p: LadderEntry = {
-      name: '480p',
-      width: 854,
-      height: 480,
-      videoKbps: 1400,
-      maxrateKbps: 1498,
-      bufsizeKbps: 2100,
-      audioKbps: 96,
-      profile: 'main',
-      level: '3.1',
-    };
-
-    const master = generateMasterPlaylist({
-      ladder: [ladder1080p, ladder720p, ladder480p],
-      fps: 24,
-      measuredResults: {
-        '1080p': { bytes: 5_000_000, durationMs: 10_000 },
-        '720p': { avgBitrateBps: 2_500_000 },
-      },
-    });
-
-    expect(master).toContain(
-      '#EXT-X-STREAM-INF:BANDWIDTH=5350000,AVERAGE-BANDWIDTH=4000000,RESOLUTION=1920x1080,FRAME-RATE=24.000,CODECS="avc1.640029,mp4a.40.2"'
-    );
-    expect(master).toContain(
-      '#EXT-X-STREAM-INF:BANDWIDTH=2996000,AVERAGE-BANDWIDTH=2500000,RESOLUTION=1280x720,FRAME-RATE=24.000,CODECS="avc1.64001f,mp4a.40.2"'
-    );
-    // No measurement for 480p: AVERAGE-BANDWIDTH falls back to (1400 + 96) kbps.
-    expect(master).toContain(
-      '#EXT-X-STREAM-INF:BANDWIDTH=1498000,AVERAGE-BANDWIDTH=1496000,RESOLUTION=854x480,FRAME-RATE=24.000,CODECS="avc1.4d401f,mp4a.40.2"'
-    );
-
-    const lines = master.split('\n');
-    const idx1080 = lines.findIndex((l) => l.includes('1080p/index.m3u8'));
-    const idx720 = lines.findIndex((l) => l.includes('720p/index.m3u8'));
-    const idx480 = lines.findIndex((l) => l.includes('480p/index.m3u8'));
-    expect(idx1080).toBeLessThan(idx720);
-    expect(idx720).toBeLessThan(idx480);
-
-    expect(master).toMatchInlineSnapshot(`
-      "#EXTM3U
-      #EXT-X-VERSION:6
-      #EXT-X-INDEPENDENT-SEGMENTS
-      #EXT-X-STREAM-INF:BANDWIDTH=5350000,AVERAGE-BANDWIDTH=4000000,RESOLUTION=1920x1080,FRAME-RATE=24.000,CODECS="avc1.640029,mp4a.40.2"
-      1080p/index.m3u8
-      #EXT-X-STREAM-INF:BANDWIDTH=2996000,AVERAGE-BANDWIDTH=2500000,RESOLUTION=1280x720,FRAME-RATE=24.000,CODECS="avc1.64001f,mp4a.40.2"
-      720p/index.m3u8
-      #EXT-X-STREAM-INF:BANDWIDTH=1498000,AVERAGE-BANDWIDTH=1496000,RESOLUTION=854x480,FRAME-RATE=24.000,CODECS="avc1.4d401f,mp4a.40.2"
-      480p/index.m3u8
-      "
-    `);
-  });
-
-  it.each([
-    ['high', '4.1', 'avc1.640029'],
-    ['high', '3.1', 'avc1.64001f'],
-    ['main', '3.1', 'avc1.4d401f'],
-  ] as const)('getAvcCodecString maps %s@%s to the RFC 6381 string %s', (profile, level, codec) => {
-    expect(getAvcCodecString(profile, level)).toBe(codec);
+      for (const rendition of renditions) {
+        expect(timestamps[rendition.name]).toHaveLength(3);
+      }
+      expectAligned(timestamps, 3);
+    }, 60000);
   });
 });

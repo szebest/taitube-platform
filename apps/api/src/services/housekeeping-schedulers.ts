@@ -2,12 +2,7 @@ import type { JobQueue } from '@vp/core/ports';
 import type { QueueUnavailable } from '@vp/errors';
 import { type Result, isErr, ok } from '@vp/result';
 
-export interface HousekeepingSchedulerConfig {
-  id: string;
-  pattern: string;
-}
-
-export const HOUSEKEEPING_SCHEDULER_CONFIGS: readonly HousekeepingSchedulerConfig[] = [
+const HOUSEKEEPING_SCHEDULER_CONFIGS = [
   { id: 'reconcile-uploads', pattern: '*/15 * * * *' },
   { id: 'reconcile-processing', pattern: '*/10 * * * *' },
   { id: 'purge-deleted', pattern: '0 * * * *' },
