@@ -13,7 +13,7 @@ export default defineConfig({
     projects: [
       'apps/*/vitest*.config.ts',
       'packages/*/*/vitest*.config.ts',
-      'tests/architecture/vitest.config.ts',
+      'tests/architecture/vitest*.config.ts',
       'tests/in-process/vitest.config.ts',
     ],
   },

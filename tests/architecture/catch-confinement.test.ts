@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { ENTRYPOINTS, isListed } from './entrypoints';
+import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
 /**
@@ -18,8 +19,7 @@ function catches(source: string): boolean {
 
 /** `.then(onFulfilled, onRejected)` is a `.catch(` by another name; the second argument gives it away. */
 function rejectionHandlers(file: string, source: string): string[] {
-  const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind);
+  const sourceFile = parseSource(file, source);
   const found: string[] = [];
   const visit = (node: ts.Node): void => {
     if (

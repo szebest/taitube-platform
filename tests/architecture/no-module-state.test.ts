@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { ENTRYPOINTS, isListed } from './entrypoints';
+import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
 /**
@@ -43,7 +44,7 @@ function isCall(expression: ts.Expression): boolean {
 }
 
 function moduleState(file: string, source: string): string[] {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const sourceFile = parseSource(file, source);
   const found: string[] = [];
   const report = (node: ts.Node, shape: Shape) => {
     const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());

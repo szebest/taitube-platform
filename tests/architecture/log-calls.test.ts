@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { parseSource } from './parsed-sources';
 import { productionSources, read, trackedFiles } from './repo-files';
 
 const LEVELS = new Set(['trace', 'debug', 'info', 'warn', 'error', 'fatal']);
@@ -25,7 +26,7 @@ function messageProblem(message: ts.Expression): string | undefined {
 }
 
 function logCallProblems(file: string, source: string): string[] {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.ES2022, true);
+  const sourceFile = parseSource(file, source);
   const problems: string[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) && isLoggerCall(node)) {

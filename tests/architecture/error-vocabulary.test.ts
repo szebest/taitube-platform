@@ -1,5 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import ts from 'typescript';
+import { parseSource } from './parsed-sources';
 import { productionSources, read, trackedFiles } from './repo-files';
 
 /**
@@ -25,7 +26,7 @@ function isMetricLabel(node: ts.Node): boolean {
 }
 
 function strangers(file: string, source: string): string[] {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const sourceFile = parseSource(file, source);
   const found: string[] = [];
   const visit = (node: ts.Node): void => {
     if (
@@ -45,7 +46,7 @@ function strangers(file: string, source: string): string[] {
 
 /** What a repository is asked to persist types its code as `ErrorCode`, never as `string`. */
 function untypedWrites(file: string, source: string): string[] {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const sourceFile = parseSource(file, source);
   return sourceFile.statements
     .filter(ts.isInterfaceDeclaration)
     .filter(({ name }) => /(Options|Input)$/.test(name.text))

@@ -35,7 +35,7 @@ const WORKER: StartOrder = {
   consumers: ['Consumer', 'OutboxRelay'],
 };
 
-describe('architecture: consumers start after the metrics server and the heartbeat', () => {
+describe('in-process: consumers start after the metrics server and the heartbeat', () => {
   it.each([
     { order: ['MetricsServer', 'Heartbeat', 'Consumer', 'OutboxRelay'], expected: [] },
     {
