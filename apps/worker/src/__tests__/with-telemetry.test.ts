@@ -74,6 +74,11 @@ describe('withTelemetry across the pipeline', () => {
     world = flowWorld();
   });
 
+  afterEach(() => {
+    trace.disable();
+    context.disable();
+  });
+
   it('keeps one trace from upload complete through probe, transcodes, thumbnail, package and notify', async () => {
     const { repositories, storage, getQueue } = world;
     const videoId = uuidv7();

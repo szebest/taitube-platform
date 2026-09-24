@@ -175,8 +175,14 @@ jobs:
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
 
-      - name: Run worker & packages unit tests under Bun (runtime parity gate)
+      - name: Run the api, worker and packages unit tests under Bun (runtime parity gate)
         run: pnpm test:bun
+
+      - name: Run the two suites that once raced a real clock twenty times over
+        run: >-
+          bun test --timeout 30000 --rerun-each 20
+          apps/worker/src/stages/__tests__/segment-uploader.test.ts
+          packages/server/adapters/redis/__tests__/redis-reaction-cache.adapter.test.ts
 
   integration:
     name: integration
