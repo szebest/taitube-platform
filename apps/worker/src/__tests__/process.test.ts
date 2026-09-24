@@ -63,7 +63,6 @@ describe('apps/worker: process', () => {
   });
 
   afterEach(async () => {
-    vi.restoreAllMocks();
     await fs.rm(dir, { recursive: true, force: true });
   });
 

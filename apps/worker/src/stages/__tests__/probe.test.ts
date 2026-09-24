@@ -5,19 +5,17 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import type { QueueJob } from '@vp/core/ports';
 import { type ErrorCode, ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools, ProbeMetadata } from '@vp/ffmpeg';
-import { CANONICAL_LADDER, type ProbeJob } from '@vp/job-contracts';
+import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
+import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
+import { rungs } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createProbeProcessor } from '../probe';
 
-const OWNER_ID = '00000000-0000-7000-8000-000000000001';
+const OWNER_ID = SEEDED.userId;
 const logger = createLogger({ format: 'json', service: 'worker-probe-test', level: 'silent' });
-
-function rungs(...names: string[]) {
-  return CANONICAL_LADDER.filter((rung) => names.includes(rung.name)).map((rung) => ({ ...rung }));
-}
 
 function metadata(overrides: Partial<ProbeMetadata>): ProbeMetadata {
   return {

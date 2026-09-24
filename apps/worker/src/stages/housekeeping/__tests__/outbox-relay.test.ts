@@ -5,6 +5,7 @@ import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
+import { manualInterval } from '../../../__tests__/manual-interval';
 import { OutboxRelay } from '../outbox-relay';
 import { inMemoryQueues, queueOutboxEntry } from './housekeeping-harness';
 
@@ -15,16 +16,20 @@ describe('housekeeping: outbox relay', () => {
   let getQueue: (name: string) => InMemoryJobQueue;
   let metrics: PipelineMetrics;
 
-  const drain = async (queues: (name: string) => InMemoryJobQueue = getQueue) =>
-    expectOk(
-      await new OutboxRelay({
-        repositories,
-        getQueue: queues,
-        metrics,
-        batchSize: BATCH_SIZE,
-        intervalMs: 60_000,
-      }).drainOnce()
-    );
+  const relay = (
+    queues: (name: string) => InMemoryJobQueue = getQueue,
+    every = manualInterval().every
+  ) =>
+    new OutboxRelay({
+      repositories,
+      getQueue: queues,
+      metrics,
+      batchSize: BATCH_SIZE,
+      intervalMs: 60_000,
+      every,
+    });
+  const drain = async (queues?: (name: string) => InMemoryJobQueue) =>
+    expectOk(await relay(queues).drainOnce());
 
   const enqueueProbe = async (videoId: string, data: object = {}) =>
     expectOk(
@@ -114,29 +119,31 @@ describe('housekeeping: outbox relay', () => {
     expect(repairs.reduce((sum, { value }) => sum + value, 0)).toBe(0);
   });
 
-  it('drains a batch of twenty entries in under a second', async () => {
+  it('drains a batch of twenty entries in one pass', async () => {
     for (let i = 0; i < 20; i += 1) await enqueueProbe(uuidv7());
 
-    const start = Date.now();
-    const drained = await drain();
-
-    expect(drained.successCount).toBe(20);
-    expect(Date.now() - start).toBeLessThan(1000);
+    expect(await drain()).toEqual({ processedCount: 20, successCount: 20, failureCount: 0 });
+    expect(getQueue('probe').enqueuedJobs).toHaveLength(20);
   });
 
-  it('runs its timer loop until stopped', async () => {
-    const relay = new OutboxRelay({
-      repositories,
-      getQueue,
-      metrics,
-      batchSize: BATCH_SIZE,
-      intervalMs: 50,
-    });
+  it('drains on start and again on every tick, until stopped', async () => {
+    const interval = manualInterval();
+    const running = relay(getQueue, interval.every);
+    const firstId = uuidv7();
+    const secondId = uuidv7();
+    const published = () => getQueue('probe').enqueuedJobs.map((job) => job.id);
 
-    relay.start();
-    expect(relay.isRunning()).toBe(true);
-    await new Promise((resolve) => setTimeout(resolve, 120));
-    await relay.stop();
-    expect(relay.isRunning()).toBe(false);
+    await enqueueProbe(firstId);
+    await running.start();
+    expect(running.isRunning()).toBe(true);
+    expect(published()).toEqual([ids.probe(firstId, 1)]);
+
+    await enqueueProbe(secondId);
+    await interval.advance();
+    expect(published()).toEqual([ids.probe(firstId, 1), ids.probe(secondId, 1)]);
+
+    running.stop();
+    expect(running.isRunning()).toBe(false);
+    expect(interval.ticks).toEqual([]);
   });
 });

@@ -30,10 +30,6 @@ describe('transcode attempt around the segment uploader', () => {
     storage = new InMemoryStorageClient();
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it.each([1, 2])(
     'backs FFmpeg threads off to one on a retry after %i failed attempts',
     async (attemptsMade) => {

@@ -4,6 +4,7 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import type { QueueJob } from '@vp/core/ports';
 import type { ThumbnailJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
+import { SEEDED } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
@@ -25,7 +26,7 @@ describe('thumbnail stage', () => {
     const videoId = uuidv7();
     await repositories.videos.create({
       id: videoId,
-      ownerId: '00000000-0000-7000-8000-000000000001',
+      ownerId: SEEDED.userId,
       title: 'Thumbnail Video',
       status: 'PROCESSING',
       sourceKey,

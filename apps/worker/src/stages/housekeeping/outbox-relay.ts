@@ -10,6 +10,7 @@ import {
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err, isErr, map, ok } from '@vp/result';
+import type { Every, Repeating } from '../../heartbeat';
 
 export interface OutboxRelayOptions {
   repositories: Repositories;
@@ -17,6 +18,7 @@ export interface OutboxRelayOptions {
   flowProducer?: FlowProducerPort;
   batchSize: number;
   intervalMs: number;
+  every: Every;
   logger?: Logger;
   metrics: PipelineMetrics;
 }
@@ -57,35 +59,16 @@ async function publish(
 }
 
 export class OutboxRelay {
-  private timer?: NodeJS.Timeout;
-  private running = false;
+  private repeating: Repeating | undefined;
   private draining = false;
 
   constructor(private readonly options: OutboxRelayOptions) {}
 
-  start(): void {
-    if (this.running) return;
-    this.running = true;
-    const { intervalMs } = this.options;
-
-    const loop = async () => {
-      if (!this.running) return;
-      if (!this.draining) {
-        this.draining = true;
-        // A drain that could not read the outbox leaves the rows claimed for the next tick; the
-        // loop must keep ticking, so its failure is reported and dropped rather than returned.
-        const drained = await this.drainOnce();
-        if (isErr(drained)) {
-          this.options.logger?.error({ code: drained.error.code }, 'outbox relay loop error');
-        }
-        this.draining = false;
-      }
-      if (this.running) {
-        this.timer = setTimeout(loop, intervalMs);
-      }
-    };
-
-    loop();
+  /** Drains once straight away, then every `intervalMs`; resolves when that first drain settles. */
+  start(): Promise<void> {
+    if (this.repeating) return Promise.resolve();
+    this.repeating = this.options.every(this.options.intervalMs, () => this.tick());
+    return this.tick();
   }
 
   async drainOnce(): Promise<Result<DrainOutboxResult, DatabaseUnavailable>> {
@@ -128,14 +111,23 @@ export class OutboxRelay {
   }
 
   isRunning(): boolean {
-    return this.running;
+    return this.repeating !== undefined;
   }
 
-  async stop(): Promise<void> {
-    this.running = false;
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = undefined;
+  stop(): void {
+    this.repeating?.stop();
+    this.repeating = undefined;
+  }
+
+  private async tick(): Promise<void> {
+    if (this.draining) return;
+    this.draining = true;
+    // A drain that could not read the outbox leaves the rows claimed for the next tick; the
+    // loop must keep ticking, so its failure is reported and dropped rather than returned.
+    const drained = await this.drainOnce();
+    if (isErr(drained)) {
+      this.options.logger?.error({ code: drained.error.code }, 'outbox relay loop error');
     }
+    this.draining = false;
   }
 }

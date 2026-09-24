@@ -25,6 +25,10 @@ function plan(overrides: Partial<ShutdownPlan> = {}) {
 }
 
 describe('packages/composition: shutdownOnce', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('drains before it closes, and reports a clean drain', async () => {
     const { events, plan: p } = plan();
 
@@ -33,12 +37,15 @@ describe('packages/composition: shutdownOnce', () => {
   });
 
   it('keeps the server open for the drain delay after readiness flips', async () => {
+    vi.useFakeTimers();
     const { events, plan: p } = plan({ drainDelayMs: 30 });
     const shutdown = shutdownOnce(p)();
-    await new Promise((resolve) => setTimeout(resolve, 10));
 
+    vi.advanceTimersByTime(29);
     expect(events).toContain('drain');
     expect(events).not.toContain('close');
+
+    vi.advanceTimersByTime(1);
     await shutdown;
     expect(events).toContain('close');
   });
@@ -53,13 +60,16 @@ describe('packages/composition: shutdownOnce', () => {
   });
 
   it('gives up after the grace window and names what it was still waiting on', async () => {
+    vi.useFakeTimers();
     const { events, plan: p } = plan({
       graceMs: 20,
       close: () => new Promise(() => {}),
       pending: () => 'PostgresRepositories',
     });
+    const shutdown = shutdownOnce(p)();
 
-    expect(await shutdownOnce(p)()).toBe('forced');
+    vi.advanceTimersByTime(20);
+    expect(await shutdown).toBe('forced');
     expect(events.at(-1)).toContain('PostgresRepositories');
   });
 
