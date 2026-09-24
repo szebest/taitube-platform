@@ -6,6 +6,4 @@
  */
 export const UNTESTED_SOURCES: readonly string[] = [
   'packages/server/core/repositories/video-repository.ts',
-  'packages/server/db/src/migrate.ts',
-  'packages/server/db/src/seed.ts',
 ];

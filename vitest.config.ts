@@ -15,7 +15,7 @@ export default defineConfig({
       'packages/*/*/vitest*.config.ts',
       'tests/architecture/vitest*.config.ts',
       'tests/in-process/vitest.config.ts',
-      'scripts/vitest.config.ts',
+      'scripts/__tests__/vitest.config.ts',
     ],
   },
 });

@@ -7,7 +7,7 @@ export default defineConfig({
     restoreMocks: true,
     unstubEnvs: true,
     environment: 'node',
-    include: ['__tests__/**/*.test.ts'],
+    include: ['*.test.ts'],
     testTimeout: 30_000,
   },
 });
