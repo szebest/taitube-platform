@@ -32,24 +32,19 @@ provider under `src/modules/shared/providers/`, or in the query cache.
 
 ### The one seam that matters
 
-`apps/web` is **tier `client`, layer T5**. It depends on four workspace packages:
-
-```
-@vp/api-client      (client, T4) — the typed HTTP client
-@vp/api-contracts   (universal, T3) — request/response shapes
-@vp/permissions     (universal, T2) — CASL rules
-@vp/result          (universal, T1) — Result, tryCatch / fromPromise and assertNever
-```
+`apps/web` is **tier `client`, layer T5**, one above `@vp/api-client` (T4); its workspace dependencies
+are in [package.json](package.json).
 
 It cannot import `@vp/core`, `@vp/adapters`, `@vp/db` or anything else under `packages/server/` — pnpm never
 links them into `apps/web/node_modules`, so the import does not resolve. See
 [packages/AGENTS.md](../../packages/AGENTS.md) for the tier rules and `pnpm boundaries` for the check.
 
 **Every HTTP call goes through `apiClient`** from `src/base-api.ts`, which wraps `createApiClient` from
-`@vp/api-client`. `axios` carries no API traffic; its one use is the PUT of file bytes to presigned storage URLs in `src/modules/Upload/api/upload-video.ts`. A raw `fetch`, a new
-`axios` instance, or a hardcoded host in a component is a boundary violation — the API base URL comes from
-`src/config/index.ts` (`REACT_APP_API_BASE_URL`, defaulting to `http://localhost:3000`), which is what keeps
-Rule 1 local-first true for the frontend.
+`@vp/api-client`. `axios` carries no API traffic; its one use is the PUT of file bytes to presigned storage
+URLs in `src/modules/Upload/api/upload-video.ts`. A raw `fetch`, a new `axios` instance, or a hardcoded host
+in a component is a boundary violation — the API base URL comes from `src/config/index.ts`
+(`REACT_APP_API_BASE_URL`, defaulting to `http://localhost:3000`), which is what keeps Rule 1 local-first true
+for the frontend.
 
 ### Layout
 
@@ -78,7 +73,8 @@ src/
 
 ## 2. Rules that hold today
 
-Rules 1, 2, 3 and 5 are enforced by code or by review **now**. Rule 4 is the rule for new code and is not built yet.
+Rules 1, 2, 3 and 5 are enforced by code or by review **now**. Rule 4 is the rule for new code and is not
+built yet.
 
 ### Rule 1: Declarative authorization only
 No component hand-checks a user id, a role or ownership. Permission decisions go through `useCan`
@@ -115,9 +111,9 @@ Not built yet: `apps/web` depends on neither `@vp/validation` nor `@vp/domain-ru
   optimisation, never the decision. The hardcoded `{ 'video/mp4': ['.mp4'] }` in `acceptFileTypes` of
   `src/modules/Upload/components/video-form/upload/upload-video-form.tsx` is the thing ticket 53 deletes:
   the API accepts the four types in `ALLOWED_CONTENT_TYPES`, so that literal is both a duplicate and wrong.
-- **`@vp/domain-rules` is where an entity-dependent decision comes from** - the same rule the API runs, against
-  an entity already in the query cache. Today the web gets the nearest thing from `@vp/permissions`: `<Can>`
-  with a helper such as `canUpdateVideo`.
+- **`@vp/domain-rules` is where an entity-dependent decision comes from** - the same rule the API runs,
+  against an entity already in the query cache. Today the web gets the nearest thing from `@vp/permissions`:
+  `<Can>` with a helper such as `canUpdateVideo`.
 - **Limits are data.** A rule receives the ceiling and the allowed types; it never reads them. Where the
   frontend gets them - a field on an existing response or a small `GET /v1/config` - is ticket 53's call.
 - **A hook unwraps the `Result`, a component never does.** The hook owns validation, submission, the

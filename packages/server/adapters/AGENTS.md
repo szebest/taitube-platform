@@ -3,11 +3,13 @@
 Instructions for any coding agent working on adapter drivers (`adapters`).
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Architecture
 
-`@vp/adapters` contains the concrete drivers and in-memory test doubles implementing `@vp/core/ports` and `@vp/core/repositories`.
+`@vp/adapters` contains the concrete drivers and in-memory test doubles implementing `@vp/core/ports` and
+`@vp/core/repositories`.
 
 ```
 adapters/
@@ -41,15 +43,16 @@ adapters and the composition module; the doubles are reached only through `@vp/a
 ### Rule 2: Autonomous In-Memory Test Doubles
 - In-memory doubles manage their own in-memory collections (`Map`, `Array`).
 - Must expose `.clear()` for clean test teardown.
-- Repositories communicate with each other exclusively through port interfaces, never by manipulating private foreign structures.
+- Repositories communicate with each other exclusively through port interfaces, never by manipulating private
+  foreign structures.
 
 ### Rule 3: Every SDK Call Is Wrapped Where It Is Made
 - Outside `@vp/result` and an entrypoint's top-level handler, this package is the only home for `catch`
   (`tests/architecture/catch-confinement.test.ts`). Write it as `tryCatch` / `fromPromise` **at the exact line
-  the SDK is called** - never around a block. A wrapper around ten statements cannot say which one failed.
-  Raw `catch` still exists in `bullmq/bullmq-processor.ts` (reclassifies a stage throw for BullMQ),
-  `redis/redis-cache-client.ts` (isolating a throwing pub/sub listener, `quit()` fallback) and the in-memory queue, flow producer
-  and cache doubles; do not add more.
+  the SDK is called** - never around a block. A wrapper around ten statements cannot say which one failed. Raw
+  `catch` still exists in `bullmq/bullmq-processor.ts` (reclassifies a stage throw for BullMQ),
+  `redis/redis-cache-client.ts` (isolating a throwing pub/sub listener, `quit()` fallback) and the in-memory
+  queue, flow producer and cache doubles; do not add more.
 - An adapter reports infra failures and the constraint violations the domain cares about
   (`HANDLE_ALREADY_TAKEN`, `CATEGORY_SLUG_CONFLICT`), and **decides nothing else**. Not-found, in-use and
   permission are rules; they live in `@vp/domain-rules`. An adapter that decides one of those has put a copy
@@ -64,12 +67,11 @@ adapters and the composition module; the doubles are reached only through `@vp/a
   finished promise over leaves everything before it outside the boundary.
 
 ### Rule 4: Configuration Arrives as a Value
-- No adapter reads `process.env`. A driver takes an explicit connection or a prebuilt client, told apart by
-  a `type` tag and switched over exhaustively (`'url'` / `'client'` for Redis, `'connection'` / `'client'`
-  for `S3StorageClient`, `'storage'` for `S3MultipartStorage`, `'url'` / `'sql'` for Postgres,
-  `'queue'` / `'connection'` for `BullMqJobQueue`, `'producer'` / `'connection'` for `BullMqFlowProducer`),
-  never an `'x' in config` probe
-  or an optional field whose presence picks the mode.
+- No adapter reads `process.env`. A driver takes an explicit connection or a prebuilt client, told apart by a
+  `type` tag and switched over exhaustively (`'url'` / `'client'` for Redis, `'connection'` / `'client'` for
+  `S3StorageClient`, `'storage'` for `S3MultipartStorage`, `'url'` / `'sql'` for Postgres, `'queue'` /
+  `'connection'` for `BullMqJobQueue`, `'producer'` / `'connection'` for `BullMqFlowProducer`), never an
+  `'x' in config` probe or an optional field whose presence picks the mode.
 - A resource an adapter opens is closed by its `close()`, and the composition module that constructs it
   registers that as its disposer (`tests/architecture/shutdown-closure.test.ts`).
 

@@ -3,6 +3,7 @@
 Instructions for any coding agent working on `packages/universal/api-contracts`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope
@@ -16,7 +17,7 @@ from here; `@vp/api-client` derives its typed fetchers from here. Neither re-dec
 
 - **Tier `universal`** — this runs in a browser. No `node:*`, no server SDK, no `@types/node`.
   A Node builtin here is a compile error, not a review comment.
-- **Layer T3** - depends on `@vp/domain` and `@vp/errors` (T1), `@vp/pagination` (T2) and `zod`.
+- **Layer T3** - one above `@vp/pagination` (T2); its dependencies are in [package.json](package.json).
 
 ---
 

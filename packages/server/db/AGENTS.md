@@ -3,6 +3,7 @@
 Instructions for any coding agent working on `@vp/db`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
@@ -23,9 +24,9 @@ The runners live in the API: `apps/api/src/migrate.ts` (`pnpm db:migrate`) and `
 
 *Note:* Domain repositories are implemented in `packages/server/adapters/postgres/repositories/` implementing interfaces in `packages/server/core/repositories/`.
 
-**Layer 2.** It depends on `@vp/domain`, `@vp/job-contracts`, `@vp/result` and `@vp/storage` (all layer 1),
-`drizzle-orm` and `postgres`. It does not depend on `@vp/logger`: `runMigrations`, `seedDatabase` and
-`waitForDatabase` take the structural `Log` (`info` / `warn`) from `src/client.ts`.
+**Layer 2.** Its `@vp/*` dependencies are all layer 1; the list is in [package.json](package.json). It does
+not depend on `@vp/logger`: `runMigrations`, `seedDatabase` and `waitForDatabase` take the structural `Log`
+(`info` / `warn`) from `src/client.ts`.
 
 ---
 

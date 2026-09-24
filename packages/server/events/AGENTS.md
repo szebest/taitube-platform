@@ -3,12 +3,13 @@
 Instructions for any coding agent working on `@vp/events`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
 
 `@vp/events` owns the Redis vocabulary the API, the worker and the adapters share. Tier `server`,
-`vp.layer` 2; depends on `@vp/errors`, `@vp/result` and `zod`.
+`vp.layer` 2; its dependencies are in [package.json](package.json).
 
 - `src/index.ts` - `SseMessageEnvelope` (Zod: `event` is `snapshot`, `progress` or `status`),
   `publishVideoEvent`, `formatSseFrame` and `SSE_PING_COMMENT`.

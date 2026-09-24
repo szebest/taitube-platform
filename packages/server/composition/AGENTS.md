@@ -1,16 +1,18 @@
 # AGENTS.md — @vp/composition (The Container)
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
 
 The mechanism both deployables build their object graph with and shut down through: a typed `Token<T>`
-(`src/token.ts`), a `Container` that resolves tokens to values with the `start()` / `dispose()` lifecycle
-that runs over what was resolved (`src/container.ts`, plus `closeOnDispose`), and `shutdownOnce` /
-`exitOnSignals` (`src/shutdown.ts`), the drained, grace-bounded shutdown `apps/api/src/serve.ts` and
-`apps/worker/src/process.ts` install on `SIGTERM` / `SIGINT`. Registrations live with their owners: `registerAdapters` in `@vp/adapters`,
-`apps/api/src/composition/services.module.ts`, `apps/worker/src/composition/stages.module.ts`.
+(`src/token.ts`), a `Container` that resolves tokens to values with the `start()` / `dispose()` lifecycle that
+runs over what was resolved (`src/container.ts`, plus `closeOnDispose`), and `shutdownOnce` / `exitOnSignals`
+(`src/shutdown.ts`), the drained, grace-bounded shutdown `apps/api/src/serve.ts` and
+`apps/worker/src/process.ts` install on `SIGTERM` / `SIGINT`. Registrations live with their owners:
+`registerAdapters` in `@vp/adapters`, `apps/api/src/composition/services.module.ts`,
+`apps/worker/src/composition/stages.module.ts`.
 
 Decision record: [SDD ADR-25](../../../docs/SDD.md#adr-25--composition-one-container-configuration-is-a-value).
 

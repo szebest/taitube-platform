@@ -3,6 +3,7 @@
 Instructions for any coding agent working on `@vp/validation`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
@@ -27,8 +28,7 @@ The API is the authority and runs each rule itself (`apps/api/src/routes/uploads
 ## 2. Invariants
 
 - **No entity type, ever.** No `@vp/domain`, no `@vp/core`, no hand-copied record shape, in the
-  source **or** the manifest (`dependencies` is `@vp/errors` and `@vp/result`). That is the
-  machine-checked form of "input only".
+  source **or** the [manifest](package.json). That is the machine-checked form of "input only".
 - **Limits are arguments, not lookups.** `validateStartUpload(input, limits)`. Nothing here reads
   `MAX_UPLOAD_BYTES`, an env var, a config module or a hardcoded ceiling; the caller passes
   `UploadLimits` (the API builds them from its `AppConfig`).

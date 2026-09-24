@@ -80,8 +80,8 @@ with it.
 
 ## 3. The current map
 
-Copied from the manifests by hand. If this table and `package.json` disagree, the manifest wins and this document
-is stale — fix it.
+Copied from the manifests by hand. If this table and `package.json` disagree, the manifest wins and this
+document is stale — fix it.
 
 ### T1 — Foundation (no `@vp/*` dependency)
 
@@ -149,8 +149,8 @@ What it *ships* is two runtime dependencies; the layer records the whole manifes
 
 **Every package in `@vp/web`'s closure is `universal` or `client`** - seven of them, counting what
 `@vp/api-contracts` and `@vp/permissions` pull in (`@vp/domain`, `@vp/errors`, `@vp/pagination`); `@vp/web`
-has no `@vp/*` devDependency. That is the invariant the whole scheme exists to protect.
-Verify it any time with `pnpm why bullmq` from `apps/web` — it returns nothing.
+has no `@vp/*` devDependency. That is the invariant the whole scheme exists to protect. Verify it any time
+with `pnpm why bullmq` from `apps/web` — it returns nothing.
 
 Membership is necessary and not sufficient: `@vp/env-schema` was `universal` while the browser imported one
 constant from it, and the rest of the module — `DATABASE_URL`, `S3_SECRET_ACCESS_KEY`, `ADMIN_TOKEN`, the
@@ -228,8 +228,7 @@ shows up as a failing test.
 3. Decide the **layer**: one more than the highest layer it depends on. If that forces a sibling edge, the
    design is wrong — fix the dependency, not the number.
 4. `package.json` gets `"vp": { "layer": ... }` - **not a `tier`**, the directory already fixes that and
-   declaring one fails `pnpm boundaries`. `tsconfig.json` extends
-   `@vp/tsconfig/<tier>.json`.
+   declaring one fails `pnpm boundaries`. `tsconfig.json` extends `@vp/tsconfig/<tier>.json`.
 5. Write `AGENTS.md` and run `pnpm sync:claude` for the symlink.
 6. `pnpm boundaries` must pass.
 
@@ -261,8 +260,8 @@ layer and have both depend on it. Do not add a sibling edge.
 
 ### Changing a package's tier
 
-Move the directory, then run `pnpm install` and `pnpm boundaries`. There is no `vp.tier` to update. The move is deliberate by
-design — a tier change should be a visible commit, not a one-word edit.
+Move the directory, then run `pnpm install` and `pnpm boundaries`. There is no `vp.tier` to update. The move
+is deliberate by design — a tier change should be a visible commit, not a one-word edit.
 
 ---
 

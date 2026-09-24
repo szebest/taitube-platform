@@ -3,6 +3,7 @@
 Instructions for any coding agent working on `packages/client/api-client`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope
@@ -13,7 +14,7 @@ client without existing in the contract**. `ApiClientOptions` (`request.ts`) inj
 `fetch`, `credentials`, `getAuthToken` (sent as a bearer token) and extra `headers`.
 
 - **Tier `client`** — browser only. May depend on `universal` and `client` packages, never `server`.
-- **Layer T4** - depends on `@vp/api-contracts` (T3) and `zod`.
+- **Layer T4** - one above `@vp/api-contracts` (T3); its dependencies are in [package.json](package.json).
 
 ---
 

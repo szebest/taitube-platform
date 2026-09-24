@@ -3,6 +3,7 @@
 Instructions for any coding agent working on `packages/server/compose-autoscaler`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope

@@ -2,9 +2,12 @@
 
 [![CI](https://github.com/szebest/taitube-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/szebest/taitube-platform/actions/workflows/ci.yml)
 
-TaiTube is an asynchronous video ingestion, processing, and streaming platform. It provides direct-to-storage multipart uploads, keyframe-aligned multi-rendition HLS transcoding via FFmpeg, distributed job coordination with BullMQ, real-time Server-Sent Events (SSE) progress tracking, and full observability out of the box.
+TaiTube is an asynchronous video ingestion, processing and streaming platform: multipart uploads straight to
+storage, keyframe-aligned multi-rendition HLS transcoding with FFmpeg, job coordination with BullMQ, SSE
+progress events, and metrics, traces and logs.
 
-The repository is structured as a modular TypeScript monorepo designed around hexagonal architecture (ports and adapters), dual-runtime execution (Node.js 24 and Bun 1.4), and a strict local-first approach that runs completely offline with zero external cloud dependencies.
+It is a TypeScript monorepo built on ports and adapters, with workers that run on Node.js 24 and Bun 1.4, and it
+runs offline with no external cloud dependency.
 
 ---
 
@@ -129,19 +132,31 @@ taitube-platform/
 
 ## Key Capabilities
 
-- **Local-First Architecture**: Runs fully offline with zero external network access. Local development uses MinIO, Redis, and PostgreSQL with default credentials.
-- **Dual-Runtime Worker Parity**: Worker services and packages execute interchangeably under Node.js 24 and Bun 1.4. All test suites pass under both `vitest` and `bun test`.
-- **Direct Multipart Storage Uploads**: S3-compatible chunked uploads with part sizing between `S3_PART_SIZE_MIN_BYTES` and `S3_PART_SIZE_MAX_BYTES` (8 MiB to 64 MiB by default), parallel part uploads, resume from stored parts, and abort cleanup.
-- **Keyframe-Aligned HLS Ladder**: Transcodes multi-bitrate video streams (1080p, 720p, 480p) with identical keyframe cadence across renditions for clean adaptive bitrate switching in video players.
-- **Real-Time Progress Tracking**: Server-Sent Events (SSE) backed by Redis Pub/Sub broadcast per-rendition percentage, ETA, and state changes with snapshot replay on reconnect.
-- **Declarative RBAC & ABAC Permission Engine**: Pure domain authorization engine (`can(user, action, resource)`) evaluating role capabilities (`GUEST`, `USER`, `CREATOR`, `MODERATOR`, `ADMIN`) and dynamic attribute predicates (resource ownership, creator video comment moderation, superuser bypass). Domain services enforce the policies through `AuthorizationPort`, surfacing refusals as RFC 9457 Problem Details errors.
-- **Resilient State Machine**: Optimistic concurrency control via PostgreSQL CAS transactions and worker fencing tokens to guarantee exactly-once processing outcomes.
-- **Public Video Feed & High-Performance Caching**: Unauthenticated public video browsing (`GET /v1/feed`) with multi-sort (newest, views count, trending gravity decay) and category filtering, backed by Redis caching, Singleflight promise coalescing, and HTTP ETag/304 conditional responses.
-- **Dynamic Category Management & Multi-Tier L1/L2 Caching**: PostgreSQL-backed dynamic taxonomies (`GET /v1/categories`, `POST/PATCH/DELETE /v1/admin/categories`) with in-process LRU L1 cache (60s TTL), distributed Redis L2 cache, cluster-wide Redis Pub/Sub invalidation broadcast, and HTTP ETag/304 Not Modified conditional responses.
-- **High-Throughput Video Reactions & Counter Caching**: Video reactions (`PUT /v1/videos/:id/reactions` for LIKE/DISLIKE/NONE, `GET /v1/videos/:id/reactions/me`) with atomic PostgreSQL transactions and denormalized counter columns (`likesCount`, `dislikesCount`). Sub-millisecond reads powered by `RedisReactionCacheAdapter` featuring Singleflight concurrent request deduplication, XFetch probabilistic background recomputation, and scheduled reconciler drift repair.
-- **Channel Subscriptions & Subscribed Video Feed**: Channel subscription management (`POST /v1/channels/:id/subscribers`, `DELETE /v1/channels/:id/subscribers`, `GET /v1/channels/:id/subscribers/me`, `GET /v1/me/subscriptions`) with self-subscription prevention (`CANNOT_SUBSCRIBE_TO_SELF`), atomic subscriber counter updates, and O(1) Redis set caching (`taitube:user:{id}:subscriptions`). Authenticated curated video feed (`GET /v1/feed/subscriptions`) providing keyset-paginated public `READY` videos from subscribed creators.
-- **Dead Letter Queue and Reprocessing**: Permanent failures route to a dedicated DLQ queue with complete error classification and administrative retry capabilities.
-- **Comprehensive Observability**: Pre-configured OpenTelemetry tracing across all API calls and worker jobs, Prometheus RED metrics, Grafana dashboards, Loki log aggregation, and Alertmanager rules.
+- **Local-first**: runs offline; local development uses MinIO, Redis and PostgreSQL.
+- **Dual runtime**: worker code and packages run under Node.js 24 and Bun 1.4, and the specs pass under both
+  `vitest` and `bun test`.
+- **Multipart uploads**: parts between `S3_PART_SIZE_MIN_BYTES` and `S3_PART_SIZE_MAX_BYTES` (8 MiB to 64 MiB
+  by default), uploaded in parallel, resumable and abortable.
+- **HLS ladder**: 1080p, 720p and 480p renditions with the same keyframe cadence, so players can switch cleanly.
+- **Progress events**: SSE over Redis Pub/Sub with per-rendition percentage, ETA and state, and a snapshot on
+  reconnect.
+- **Authorization**: CASL rules over the roles `GUEST`, `USER`, `CREATOR`, `MODERATOR` and `ADMIN` plus
+  ownership predicates, enforced in domain services through `AuthorizationPort`; a refusal is an RFC 9457
+  Problem Details response.
+- **State machine**: PostgreSQL compare-and-set transitions and worker fencing tokens.
+- **Public feed**: `GET /v1/feed` sorted by newest, views or trending, filtered by category, with Redis
+  caching, Singleflight coalescing and ETag/304 responses.
+- **Categories**: `GET /v1/categories` and `POST/PATCH/DELETE /v1/admin/categories`, cached in process (60s
+  TTL) and in Redis, invalidated over Redis Pub/Sub, with ETag/304 responses.
+- **Reactions**: `PUT /v1/videos/:id/reactions` (LIKE/DISLIKE/NONE) and `GET /v1/videos/:id/reactions/me`,
+  with counter columns (`likesCount`, `dislikesCount`) cached by `RedisReactionCacheAdapter` and repaired by
+  a scheduled reconciler.
+- **Subscriptions**: `POST/DELETE /v1/channels/:id/subscribers`, `GET /v1/channels/:id/subscribers/me` and
+  `GET /v1/me/subscriptions`, with self-subscription refused (`CANNOT_SUBSCRIBE_TO_SELF`);
+  `GET /v1/feed/subscriptions` is a keyset-paginated feed of `READY` videos from subscribed channels.
+- **Dead letter queue**: permanent failures go to a DLQ that an admin can retry from.
+- **Observability**: OpenTelemetry traces for API calls and worker jobs, Prometheus metrics, Grafana
+  dashboards and Alertmanager rules; the apps write JSON logs to stdout.
 
 ---
 

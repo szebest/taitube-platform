@@ -3,12 +3,14 @@
 Instructions for any coding agent working on `@vp/testing`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
 
-`@vp/testing` holds the helpers specs across the repo share. Tier `server`, `vp.layer` 2; depends on
-`@vp/result` and `vitest`. Each subpath's `import` condition points at `src/`, so a spec needs no build.
+`@vp/testing` holds the helpers specs across the repo share. Tier `server`, `vp.layer` 2; its dependencies
+are in [package.json](package.json). Each subpath's `import` condition points at `src/`, so a spec needs no
+build.
 
 - **`.` (`src/index.ts`):** `definePackageTestConfig` (node environment, globals,
   `src/**/__tests__/**/*.test.ts`; most package `vitest.config.ts` files build on it, a few define their

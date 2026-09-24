@@ -3,6 +3,7 @@
 Instructions for any coding agent working on `@vp/core`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Architecture
@@ -12,10 +13,11 @@ repository interfaces every persistence adapter satisfies. It holds no I/O, no S
 
 - **Strict Dependency Inversion:** `core` must NEVER import external drivers, concrete SDKs
   (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`), or framework code.
-- **Server tier, layer 3, and deliberately so:** it depends on `@vp/domain`, `@vp/errors`,
-  `@vp/permissions` and `@vp/result`. `ports/storage-client.ts` types `StorageBody` as
-  `Buffer | Uint8Array | NodeJS.ReadableStream | string` and `getObject()` as `Promise<Result<Buffer, StorageUnavailable>>`. That
-  is what a real object store hands back, and it is why this package cannot be `universal`.
+- **Server tier, layer 3, and deliberately so:** the layer is one above `@vp/permissions` (layer 2), and
+  its dependencies are in [package.json](package.json). `ports/storage-client.ts` types `StorageBody` as
+  `Buffer | Uint8Array | NodeJS.ReadableStream | string` and `getObject()` as
+  `Promise<Result<Buffer, StorageUnavailable>>`. That is what a real object store hands back, and it is why
+  this package cannot be `universal`.
 - **The portable half already left.** Entities and value objects are `@vp/domain`, pure rules are
   `@vp/domain-rules` and `@vp/validation`, and the keyset cursor mechanism is `@vp/pagination`. All are
   `universal`. Do not add any of that code back here, where nothing client-side could reach it.

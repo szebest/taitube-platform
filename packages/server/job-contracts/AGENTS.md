@@ -3,13 +3,14 @@
 Instructions for any coding agent working on `@vp/job-contracts`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
 
 `@vp/job-contracts` is the single source of truth for queue names, job ids, job payload and result
-schemas, stage retry policies and the rendition ladder. Tier `server`, `vp.layer` 1; its only dependency
-is `zod`.
+schemas, stage retry policies and the rendition ladder. Tier `server`, `vp.layer` 1; its dependencies
+are in [package.json](package.json).
 
 - **Queue names (`QUEUES`):** `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`,
   `package`, `notify`, `housekeeping`, `dlq`.
