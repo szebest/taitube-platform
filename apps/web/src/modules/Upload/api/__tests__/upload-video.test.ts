@@ -1,17 +1,15 @@
 import axios from 'axios';
 import type { ApiClient } from '@vp/api-client';
+import { VIDEO_ID } from '../../../../__tests__/fixtures';
 import { uploadVideo } from '../upload-video';
 
-vi.mock('axios', () => ({
-  default: { put: vi.fn(async () => ({ headers: { etag: '"part-etag"' } })) },
-}));
-
-const put = axios.put as unknown as ReturnType<typeof vi.fn>;
-
-const VIDEO_ID = '00000000-0000-7000-8000-000000000001';
 const UPLOAD_ID = '00000000-0000-7000-8000-0000000000u1';
 
-const file = { name: 'clip.mp4', size: 4, type: 'video/mp4', slice: () => 'chunk' } as unknown as File;
+const file = new File(['abcd'], 'clip.mp4', { type: 'video/mp4' });
+
+function stubObjectStorage() {
+  return vi.spyOn(axios, 'put').mockResolvedValue({ headers: { etag: '"part-etag"' } });
+}
 
 function clientWith(started: Record<string, unknown>) {
   const completeUpload = vi.fn(async () => ({ videoId: VIDEO_ID, status: 'UPLOADED' }));
@@ -31,11 +29,8 @@ function clientWith(started: Record<string, unknown>) {
 }
 
 describe('apps/web: upload orchestration', () => {
-  beforeEach(() => {
-    put.mockClear();
-  });
-
   it('PUTs the whole file and completes with no parts on the single strategy', async () => {
+    const put = stubObjectStorage();
     const { client, completeUpload } = clientWith({
       videoId: VIDEO_ID,
       uploadId: UPLOAD_ID,
@@ -71,6 +66,7 @@ describe('apps/web: upload orchestration', () => {
   });
 
   it('uploads every part and completes with the collected etags', async () => {
+    stubObjectStorage();
     const { client, completeUpload, issueUploadParts } = clientWith({
       videoId: VIDEO_ID,
       uploadId: UPLOAD_ID,
