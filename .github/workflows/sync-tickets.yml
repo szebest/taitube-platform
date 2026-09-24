@@ -38,3 +38,19 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python scripts/sync-tickets-to-github.py
+
+      - name: Name every ticket still missing its issue link
+        run: |
+          missing=$(git diff --name-only -- docs/tickets)
+          if [ -z "$missing" ]; then
+            echo "Every ticket links its issue." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "These tickets have an issue but no \`| Issue |\` row. Run \`pnpm sync:tickets\` on a branch and commit the rows:"
+            echo
+            git diff -- docs/tickets | grep '^+| Issue |' || true
+          } >> "$GITHUB_STEP_SUMMARY"
+          for file in $missing; do
+            echo "::warning file=$file::no issue link row; pnpm sync:tickets on a branch writes it"
+          done
