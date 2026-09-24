@@ -1,4 +1,11 @@
-import { type Span, SpanKind, SpanStatusCode, context, trace } from '@opentelemetry/api';
+import {
+  ROOT_CONTEXT,
+  type Span,
+  SpanKind,
+  SpanStatusCode,
+  context,
+  trace,
+} from '@opentelemetry/api';
 import { extractContextFromTraceparent, getTracer } from '@vp/observability';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
@@ -15,8 +22,10 @@ async function requestSpanPlugin(app: FastifyInstance) {
 
   app.addHook('onRequest', (request, _reply, done) => {
     const traceparent = request.headers.traceparent;
+    // The HTTP instrumentation runs an incoming request it ignores with tracing suppressed.
     const parent = extractContextFromTraceparent(
-      typeof traceparent === 'string' ? traceparent : undefined
+      typeof traceparent === 'string' ? traceparent : undefined,
+      ROOT_CONTEXT
     );
     const route = routeLabel(request);
     const span = getTracer().startSpan(

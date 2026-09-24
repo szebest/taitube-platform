@@ -9,7 +9,6 @@ import {
   defaultTextMapGetter,
   defaultTextMapSetter,
   isSpanContextValid,
-  propagation,
   trace,
 } from '@opentelemetry/api';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
@@ -50,6 +49,12 @@ export interface Tracing {
 
 const TRACER_NAME = 'video-pipeline';
 
+/**
+ * The hook wraps third-party modules only. It re-reads a module's `export *` itself, without the
+ * loader that resolves this repo's extensionless specifiers, so wrapping our own code fails.
+ */
+const WORKSPACE_MODULES = [/\/node_modules\/@vp\//, /^file:\/\/(?!.*\/node_modules\/)/];
+
 const toError = (cause: unknown): Error =>
   cause instanceof Error ? cause : new Error(String(cause));
 
@@ -83,15 +88,16 @@ function resolveSampler(st: string, ratio: number): Sampler {
 /**
  * Starts the OpenTelemetry SDK. It patches only what is imported after it, so a process calls it
  * from the module it preloads with `--import`, before `main` imports Fastify, `pg` or `ioredis`.
- * Incoming HTTP is left to the API's own request span, which knows the route.
+ * Incoming HTTP is left to the API's own request span, which knows the route; metrics stay with
+ * Prometheus and logs with pino, so the SDK exports traces only.
  */
 export function initTracing(config: TracingConfig): Result<void, Error> {
   if (!config.enabled) return ok();
 
-  propagation.setGlobalPropagator(new W3CTraceContextPropagator());
-
   return tryCatch(() => {
-    register('@opentelemetry/instrumentation/hook.mjs', import.meta.url);
+    register('@opentelemetry/instrumentation/hook.mjs', import.meta.url, {
+      data: { exclude: WORKSPACE_MODULES },
+    });
     new NodeSDK({
       resource: resourceFromAttributes({
         [ATTR_SERVICE_NAME]: config.serviceName,
@@ -102,9 +108,13 @@ export function initTracing(config: TracingConfig): Result<void, Error> {
         url: `${config.endpoint.replace(/\/$/, '')}/v1/traces`,
       }),
       sampler: resolveSampler(config.sampler, config.samplerArg),
+      metricReaders: [],
+      logRecordProcessors: [],
       instrumentations: [
         getNodeAutoInstrumentations({
           '@opentelemetry/instrumentation-fs': { enabled: false },
+          '@opentelemetry/instrumentation-dns': { enabled: false },
+          '@opentelemetry/instrumentation-net': { enabled: false },
           '@opentelemetry/instrumentation-http': { ignoreIncomingRequestHook: () => true },
         }),
       ],

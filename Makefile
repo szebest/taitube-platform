@@ -6,7 +6,7 @@ CLUSTER_TOOL ?= k3d
 CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 
-.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-local-secrets k8s-validate load-s1 load-s2 load-s3 load-smoke
+.PHONY: help up down logs psql redis-cli mc check-redis nuke test test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill chaos-readiness obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-local-secrets k8s-validate load-s1 load-s2 load-s3 load-smoke
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -186,6 +186,9 @@ load-s3: ## Run S3 Backlog Burst load test (requires Compose stack)
 load-smoke: ## Run reduced S1 Load Smoke Test
 	@TOKEN=$$(pnpm -w exec tsx tools/dev-token/src/cli.ts mint 2>/dev/null || node -e "console.log(require('./tools/dev-token/dist/jwt.js').mintDevToken())") && \
 	API="http://localhost:3000" TOKEN=$$TOKEN k6 run --vus 60 --duration 2m tests/load/s1-upload-storm.js
+
+chaos-readiness: ## Stop MinIO and cut a worker's Redis via toxiproxy; /readyz must answer 503, then 200
+	bash scripts/chaos-readiness.sh
 
 toxiproxy-up: ## Start toxiproxy service fronting MinIO for chaos testing
 	docker compose -f $(COMPOSE_FILE) --profile chaos up -d toxiproxy

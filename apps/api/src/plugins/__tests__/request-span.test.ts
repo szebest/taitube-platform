@@ -1,5 +1,6 @@
 import { SpanKind, context, trace } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+import { suppressTracing } from '@opentelemetry/core';
 import {
   BasicTracerProvider,
   InMemorySpanExporter,
@@ -84,6 +85,16 @@ describe('apps/api/plugins: request span', () => {
     expect(complete?.kind).toBe(SpanKind.SERVER);
     expect(complete?.attributes['http.response.status_code']).toBe(202);
     expect(job.traceparent.split('-')[1]).toBe(complete?.spanContext().traceId);
+  });
+
+  it('traces a request the HTTP instrumentation handed over with tracing suppressed', async () => {
+    const exporter = exportSpans();
+
+    await context.with(suppressTracing(context.active()), () => completeAnUpload({}));
+
+    expect(exporter.getFinishedSpans().map((span) => span.name)).toContain(
+      'POST /v1/uploads/:uploadId/complete'
+    );
   });
 
   it("continues the caller's trace when the request carries a traceparent", async () => {
