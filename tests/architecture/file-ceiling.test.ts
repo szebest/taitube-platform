@@ -1,26 +1,32 @@
-import { OVERSIZED_SOURCES } from './oversized-sources';
-import { productionSources, read, shrinkOnly } from './repo-files';
+import { read, trackedFiles } from './repo-files';
 
 const MAX_LINES = 400;
 const MAX_BYTES = 10 * 1024;
 
-function oversized(file: string): boolean {
-  const source = read(file);
+const TYPESCRIPT_FILES = [':(glob)**/*.ts', ':(glob)**/*.tsx', ':(glob)**/*.mts'];
+
+function oversized(source: string): boolean {
   return source.split('\n').length > MAX_LINES || Buffer.byteLength(source, 'utf8') > MAX_BYTES;
 }
 
 describe('architecture: file length ceiling', () => {
-  it('holds every production source under 400 lines and 10 KB', () => {
-    const offenders = productionSources().filter(oversized);
-    const { unlisted } = shrinkOnly(offenders, OVERSIZED_SOURCES);
-
-    expect(unlisted).toEqual([]);
+  it.each([
+    ['a spec over 400 lines', "it('holds', () => {});\n".repeat(MAX_LINES + 1)],
+    ['a short file over 10 KB', `export const blob = '${'x'.repeat(MAX_BYTES)}';`],
+  ])('fires on %s', (_name, source) => {
+    expect(oversized(source)).toBe(true);
   });
 
-  it('keeps the exception list shrinking: no entry that already fits', () => {
-    const offenders = productionSources().filter(oversized);
-    const { stale } = shrinkOnly(offenders, OVERSIZED_SOURCES);
+  it('passes a file at the ceiling', () => {
+    expect(oversized('const a = 1;\n'.repeat(MAX_LINES - 1))).toBe(false);
+  });
 
-    expect(stale).toEqual([]);
+  it('holds every tracked TypeScript file, specs and tests included, under 400 lines and 10 KB', () => {
+    const files = trackedFiles(...TYPESCRIPT_FILES);
+    const offenders = files.filter((file) => oversized(read(file)));
+
+    expect(files.some((file) => file.endsWith('.test.ts'))).toBe(true);
+    expect(files.some((file) => file.startsWith('tests/'))).toBe(true);
+    expect(offenders).toEqual([]);
   });
 });
