@@ -142,12 +142,14 @@ resource "cloudflare_api_token" "r2_api_app" {
   }
 }
 
-# Token for apps/worker: Read on vp-raw (source), Read & Write on vp-public (transcode outputs)
+# Token for apps/worker: Read & Write on vp-raw and vp-public. Housekeeping deletes sources and
+# aborts multipart uploads in vp-raw, and R2 grants a delete only with Item Write.
 resource "cloudflare_api_token" "r2_worker_app" {
   name = "vp-worker-r2-scoped"
 
   policy {
     permission_groups = [
+      "Workers R2 Storage Bucket Item Write",
       "Workers R2 Storage Bucket Item Read"
     ]
     resources = {
