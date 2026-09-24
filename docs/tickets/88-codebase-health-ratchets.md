@@ -342,7 +342,7 @@ zero. Biome runs with warnings as errors.
 - The Node resolve hook is a synchronous `module.registerHooks` in `register.js`, so `loader.mjs` and its `./loader` export are gone.
 - `sprite-vtt` parsing is gone rather than moved: the VTT is our own writer's output, so specs assert on its text.
 - The `parseRouteTree` helper in `contract-drift.test.ts` still reads `printRoutes()` with regexes. It predates 88c and nothing here moved it; it is left for W8.
-- `esm-specifiers` reads TypeScript only: the k6 scripts need their `./common.js` extension (k6 does not resolve), and `register.js` hands `./loader.mjs` to Node's `register()` as a URL, not an import.
+- `esm-specifiers` reads TypeScript only: the k6 scripts need their `./common.js` extension, because k6 does not resolve one.
 - The duration limit stays in `@vp/ffmpeg`'s probe validation. The `.js` blocker is gone, but it sits there with the other two probe rules (no video stream, codec allowlist), and moving one of the three into `@vp/domain-rules` splits the probe's rules across two packages for no caller that needs it.
 - `routes-outside-send-result.ts` was already empty and is deleted with `oversized-sources.ts`; `shrinkOnly` stays for `untested-sources.ts` alone, which W8 owns. Twelve of its entries were paid by the spec splits.
 - `schema.ts` came under the ceiling by deleting its 22 inferred `$inferSelect`/`$inferInsert` exports, which nothing imported, and its banners; `postgres-video-repository.ts` by moving the scan filter to `video-scan-query.ts` (with its spec) and letting the column defaults fill `create`.

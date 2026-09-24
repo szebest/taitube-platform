@@ -115,14 +115,14 @@ export async function runPurgeDeleted(
   return ok({ purgedVideosCount, purgedGenerationsCount });
 }
 
-/** Generation 1 predates the `g1` prefix, so its layout is swept with it. */
+/** Generation 1 writes into `hls/` itself, whose prefix holds every later generation too. */
 async function purgeOldGenerations(
   storage: StorageClient,
   bucket: string,
   videoId: string,
   currentGeneration: number
 ): Promise<Result<void, StorageUnavailable>> {
-  for (let generation = 1; generation < currentGeneration; generation += 1) {
+  for (let generation = 2; generation < currentGeneration; generation += 1) {
     const purged = await storage.purgePrefix(bucket, generationPrefix(videoId, generation));
     if (isErr(purged)) return purged;
   }

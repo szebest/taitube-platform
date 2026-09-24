@@ -14,9 +14,6 @@ interface SpriteOptions {
   layout: SpriteLayout;
 }
 
-/**
- * Builds FFmpeg argument array for 1280x720 letterboxed poster image (SDD §8.3).
- */
 export function buildPosterArgs(options: PosterOptions): string[] {
   const { sourcePath, outputPath, durationMs } = options;
   const t10 = durationMs && durationMs > 0 ? (durationMs * 0.1) / MS_PER_SECOND : 0;

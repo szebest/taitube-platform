@@ -22,7 +22,11 @@
     },
     "apps/web": {
       "entry": ["src/index.tsx!"],
-      "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!", "!src/**/*.test.{ts,tsx}!"]
+      "project": [
+        "src/**/*.{ts,tsx,scss,sass}!",
+        "!src/**/__tests__/**!",
+        "!src/**/*.test.{ts,tsx}!"
+      ]
     },
     "packages/server/testing": {
       "includeEntryExports": false,
@@ -71,6 +75,10 @@
         "!**/*.test.{ts,tsx}!",
         "!dist/**"
       ]
+    },
+    "packages/universal/tsconfig": {
+      "entry": [],
+      "project": []
     }
   }
 }

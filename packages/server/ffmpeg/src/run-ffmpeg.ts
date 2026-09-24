@@ -55,12 +55,16 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
 
     const stderrLines: string[] = [];
     let stopped: 'timeout' | 'aborted' | undefined;
+    let exited = false;
+    proc.once('exit', () => {
+      exited = true;
+    });
 
     const stop = (reason: 'timeout' | 'aborted'): void => {
       stopped ??= reason;
       proc.kill('SIGTERM');
       setTimeout(() => {
-        if (!proc.killed) proc.kill('SIGKILL');
+        if (!exited) proc.kill('SIGKILL');
       }, limits.killGraceMs);
     };
     const abort = () => stop('aborted');

@@ -1,8 +1,5 @@
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 
-/**
- * Classifies an FFmpeg failure into PermanentError vs TransientError (SDD §9.5, §9.6, ADR-18).
- */
 export function classifyFfmpegError(
   exitCode: number | null,
   signal: string | null,

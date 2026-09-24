@@ -15,9 +15,6 @@ interface SpriteGrid {
   columns: number;
 }
 
-/**
- * Computes frame count and grid dimensions for sprite sheet tiling.
- */
 export function calculateSpriteGrid(
   durationMs: number,
   { intervalSec, columns }: SpriteLayout
@@ -34,9 +31,6 @@ interface GenerateSpriteVttOptions {
   spriteFilename?: string;
 }
 
-/**
- * Formats milliseconds into WebVTT timestamp format: HH:MM:SS.mmm
- */
 function formatVttTimestamp(ms: number): string {
   const totalSeconds = Math.floor(ms / MS_PER_SECOND);
   const milliseconds = Math.floor(ms % MS_PER_SECOND);
@@ -46,9 +40,6 @@ function formatVttTimestamp(ms: number): string {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
 }
 
-/**
- * Generates WebVTT cues from duration and grid coordinates (SDD §8.3).
- */
 export function generateSpriteVtt(options: GenerateSpriteVttOptions): string {
   const { durationMs, layout, spriteFilename = 'sprite.jpg' } = options;
   const { intervalSec, columns, tileWidth, tileHeight } = layout;

@@ -24,9 +24,6 @@ export interface ThumbnailExecutionResult {
   columns: number;
 }
 
-/**
- * Runs FFmpeg to produce poster.jpg, sprite.jpg, and generates sprite.vtt into outputDir.
- */
 export async function runFfmpegThumbnail(
   options: RunThumbnailOptions
 ): Promise<ThumbnailExecutionResult> {

@@ -8,9 +8,6 @@ export interface FfprobeOptions {
   maxDurationSec: number;
 }
 
-/**
- * Runs ffprobe on a file path or URL and returns validated ProbeMetadata (SDD §8.1).
- */
 export async function runFfprobe(
   targetPathOrUrl: string,
   { ffprobePath, maxDurationSec }: FfprobeOptions

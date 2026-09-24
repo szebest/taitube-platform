@@ -51,9 +51,6 @@ export interface ProbeMetadata {
 
 const ALLOWED_INPUT_CODECS: ReadonlySet<string> = new Set(['h264', 'hevc', 'vp9', 'av1', 'mpeg4']);
 
-/**
- * Parses rotation angle from ffprobe stream tags or display matrix side data.
- */
 function extractRotation(stream: RawStream): number {
   if (stream.side_data_list && Array.isArray(stream.side_data_list)) {
     const displayMatrix = stream.side_data_list.find(
@@ -75,9 +72,6 @@ function extractRotation(stream: RawStream): number {
   return 0;
 }
 
-/**
- * Parses frame rate fraction (e.g. "24/1", "30000/1001") into numeric FPS.
- */
 function parseFps(rateStr?: string): number {
   if (!rateStr) return 24;
   const parts = rateStr.split('/');
@@ -92,9 +86,6 @@ function parseFps(rateStr?: string): number {
   return Number.isFinite(direct) && direct > 0 ? direct : 24;
 }
 
-/**
- * Validates ffprobe output and computes video metadata according to SDD §8.1.
- */
 export function validateAndParseProbe(
   raw: RawFfprobeOutput,
   maxDurationSec: number
@@ -121,7 +112,7 @@ export function validateAndParseProbe(
   if (!ALLOWED_INPUT_CODECS.has(codec)) {
     throw new PermanentError(
       ErrorCodes.UNSUPPORTED_CODEC,
-      `Unsupported video codec "${codec}". Allowed input codecs are h264, hevc, vp9, av1, mpeg4.`
+      `Unsupported video codec "${codec}". Allowed input codecs are ${[...ALLOWED_INPUT_CODECS].join(', ')}.`
     );
   }
 

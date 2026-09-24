@@ -1,12 +1,13 @@
 import { FIXTURES } from '@vp/testing';
 import {
+  generationPrefix,
   masterPlaylistKey,
   posterKey,
   rawPrefix,
   rawSourceKey,
+  renditionObjectKey,
   renditionPlaylistKey,
   renditionPrefix,
-  generationPrefix,
   sanitizeStorageUrl,
   spriteKey,
   spriteVttKey,
@@ -15,6 +16,8 @@ import {
 
 describe('packages/storage: object keys', () => {
   const videoId = FIXTURES.VIDEO_ID;
+  const segmentKeyOf = (generation: number) =>
+    renditionObjectKey(videoId, '720p', 'seg_00001.ts', generation);
 
   it('lays keys out as SDD §7 specifies', () => {
     expect(rawSourceKey(videoId, 'mp4')).toBe(`raw/${videoId}/source.mp4`);
@@ -39,6 +42,20 @@ describe('packages/storage: object keys', () => {
     expect(renditionPrefix(videoId, '720p')).toBe(`videos/${videoId}/hls/720p/`);
     expect(renditionPrefix(videoId, '720p', 3)).toBe(`videos/${videoId}/hls/g3/720p/`);
     expect(generationPrefix(videoId, 2)).toBe(`videos/${videoId}/hls/g2/`);
+  });
+
+  it.each([1, 2])(
+    'holds every playback key generation %i writes under its prefix',
+    (generation) => {
+      const prefix = generationPrefix(videoId, generation);
+
+      expect(masterPlaylistKey(videoId, generation).startsWith(prefix)).toBe(true);
+      expect(segmentKeyOf(generation).startsWith(prefix)).toBe(true);
+    }
+  );
+
+  it('writes generation 1 into hls/ itself, so there is no g1/ directory', () => {
+    expect(generationPrefix(videoId, 1)).toBe(`videos/${videoId}/hls/`);
   });
 
   it('strips signature and credential params so a url is safe to log', () => {

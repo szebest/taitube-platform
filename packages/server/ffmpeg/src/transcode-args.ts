@@ -25,9 +25,6 @@ export function computeFfmpegThreads(baseThreads: number, attempt = 1): number {
   return Math.max(1, computed);
 }
 
-/**
- * Builds the exact FFmpeg argument array according to SDD §8.2.
- */
 export function buildTranscodeArgs(options: TranscodeArgsOptions): string[] {
   const { sourcePath, outputDir, rendition, fps, preset, gopSeconds, hlsSegmentSeconds } = options;
 

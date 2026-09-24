@@ -38,7 +38,6 @@ describe('HTTP and auth foundations', () => {
         { name: '720p', width: 1280, height: 720 },
         { name: '480p', width: 854, height: 480 },
       ],
-      playbackUrl: `${cdnBase}/videos/${SEED_VIDEO_ID}/hls/master.m3u8`,
       masterPlaylistKey: `videos/${SEED_VIDEO_ID}/hls/master.m3u8`,
       posterKey: `videos/${SEED_VIDEO_ID}/thumbs/poster.jpg`,
       spriteKey: `videos/${SEED_VIDEO_ID}/thumbs/sprite.jpg`,

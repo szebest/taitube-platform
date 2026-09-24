@@ -1,6 +1,7 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { storageUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
+import { masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
 import { runPurgeDeleted } from '../purge-deleted';
 import { hoursAgo, seedVideo } from './housekeeping-harness';
@@ -68,23 +69,40 @@ describe('housekeeping: purge-deleted', () => {
     expect(await purgedEvents(videoId)).toEqual([]);
   });
 
-  it('removes the old generation and legacy playlist while keeping the ready one', async () => {
-    const { id: videoId } = await seedVideo(repositories, { status: 'READY', generation: 2 });
-    const hls = `videos/${videoId}/hls`;
-    for (const key of ['g1/master.m3u8', 'g1/720p/index.m3u8', 'master.m3u8']) {
-      await put('public', `${hls}/${key}`);
+  it.each([2, 3])(
+    'keeps only generation %i, the ready one, of a reprocessed video',
+    async (current) => {
+      const { id: videoId } = await seedVideo(repositories, {
+        status: 'READY',
+        generation: current,
+      });
+      const written = Array.from({ length: current }, (_, index) => index + 1).flatMap(
+        (generation) => [
+          masterPlaylistKey(videoId, generation),
+          renditionPlaylistKey(videoId, '720p', generation),
+        ]
+      );
+      for (const key of written) await put('public', key);
+
+      expect((await purge()).purgedGenerationsCount).toBe(current - 1);
+
+      expect((await publicKeys(`videos/${videoId}/`)).sort()).toEqual(
+        [masterPlaylistKey(videoId, current), renditionPlaylistKey(videoId, '720p', current)].sort()
+      );
+
+      expect((await purge()).purgedGenerationsCount).toBe(0);
     }
-    await put('public', `${hls}/g2/master.m3u8`);
-    await put('public', `${hls}/g2/720p/index.m3u8`);
+  );
 
-    expect((await purge()).purgedGenerationsCount).toBeGreaterThanOrEqual(1);
+  it('purges no prefix a generation never wrote', async () => {
+    const { id: videoId } = await seedVideo(repositories, { status: 'READY', generation: 3 });
+    const purgePrefix = vi.spyOn(storage, 'purgePrefix');
 
-    expect(await publicKeys(`${hls}/`)).toEqual(
-      expect.arrayContaining([`${hls}/g2/master.m3u8`, `${hls}/g2/720p/index.m3u8`])
+    await purge();
+
+    expect(purgePrefix.mock.calls.map(([, prefix]) => prefix)).not.toContain(
+      `videos/${videoId}/hls/g1/`
     );
-    expect(await publicKeys(`${hls}/g1/`)).toHaveLength(0);
-    expect(expectOk(await storage.headObject('public', `${hls}/master.m3u8`))).toBeNull();
-    expect((await purge()).purgedGenerationsCount).toBe(0);
   });
 
   it('purges every object of a soft-deleted video past one listing page and drops the row', async () => {

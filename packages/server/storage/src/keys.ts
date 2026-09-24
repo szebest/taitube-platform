@@ -20,9 +20,8 @@ function hlsPrefix(videoId: string, generation: number): string {
   return generation > 1 ? `${hls}/g${generation}` : hls;
 }
 
-/** Where a reprocess generation lives; generation 1 lives in `hls/` itself, not in `g1/`. */
 export function generationPrefix(videoId: string, generation: number): string {
-  return `${videoPrefix(videoId)}hls/g${generation}/`;
+  return `${hlsPrefix(videoId, generation)}/`;
 }
 
 export function renditionPrefix(videoId: string, rendition: string, generation = 1): string {

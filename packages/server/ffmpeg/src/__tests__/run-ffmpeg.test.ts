@@ -4,6 +4,30 @@ import { runFfmpeg } from '../run-ffmpeg';
 const LIMITS = { killGraceMs: 200, stderrTailLines: 20 };
 
 describe('@vp/ffmpeg: runFfmpeg', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('kills a process that ignores SIGTERM once the grace period is over', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    let running: Promise<void> = Promise.resolve();
+    await new Promise<void>((trapInstalled) => {
+      running = runFfmpeg({
+        ffmpegPath: 'sh',
+        stage: 'transcode',
+        args: ['-c', "trap '' TERM; echo ready; while :; do :; done"],
+        timeoutMs: 1_000,
+        limits: LIMITS,
+        onStdoutLine: () => trapInstalled(),
+      });
+    });
+
+    vi.advanceTimersByTime(1_000);
+    vi.advanceTimersByTime(LIMITS.killGraceMs);
+
+    await expect(running).rejects.toMatchObject({ code: ErrorCodes.FFMPEG_TIMEOUT });
+  });
+
   it('stops the process when its signal aborts, and rejects as aborted rather than timed out', async () => {
     const lease = new AbortController();
     const running = runFfmpeg({

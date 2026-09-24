@@ -24,9 +24,6 @@ export interface TranscodeExecutionResult {
 /** ffmpeg reports both of these in microseconds, whatever the suffix says. */
 const PROGRESS_TIME_KEYS = ['out_time_ms=', 'out_time_us='] as const;
 
-/**
- * Runs FFmpeg to transcode one rendition to HLS TS segments with progress and error classification.
- */
 export async function runFfmpegTranscode(
   options: TranscodeOptions
 ): Promise<TranscodeExecutionResult> {

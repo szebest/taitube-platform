@@ -5,11 +5,8 @@ import {
   type ListPublicVideosResult,
   type ListVideosOptions,
   type NewVideoInput,
-  type ProcessingStepRecord,
-  type RenditionRecord,
   type TransitionVideoOptions,
   type UpdateVideoMetadataOptions,
-  type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
   type VideoScan,
@@ -34,7 +31,7 @@ import {
   videoReadScope,
 } from '../scopes/index';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
-import type { VideoEventInsert, VideoInsert } from './types';
+import type { VideoInsert } from './types';
 import { videoScanScope } from './video-scan-query';
 
 const { videos: v, videoEvents: ve, processingSteps: ps, renditions: rn } = schema;
@@ -69,26 +66,12 @@ export class PostgresVideoRepository extends VideoRepository {
       databaseUnavailable.during('findWithDetails')
     );
 
-    return map(details, ([renditions, steps, events]) => ({
-      video,
-      renditions: renditions as RenditionRecord[],
-      steps: steps as ProcessingStepRecord[],
-      events: events as VideoEventRecord[],
-    }));
+    return map(details, ([renditions, steps, events]) => ({ video, renditions, steps, events }));
   }
 
   async create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>> {
-    const vals = {
-      ...data,
-      ...(data.fps !== undefined ? { fps: data.fps !== null ? String(data.fps) : null } : {}),
-    };
-
     const rows = await fromPromise(
-      () =>
-        this.db
-          .insert(v)
-          .values(vals as VideoInsert)
-          .returning(),
+      () => this.db.insert(v).values(data).returning(),
       databaseUnavailable.during('create')
     );
 
@@ -142,7 +125,7 @@ export class PostgresVideoRepository extends VideoRepository {
     );
 
     return map(rows, (found) => ({
-      items: found as VideoRecord[],
+      items: found,
       total: total.value,
       instant: instantMs,
     }));
@@ -223,7 +206,7 @@ export class PostgresVideoRepository extends VideoRepository {
             payload: eventPayload,
             traceId: effectiveTraceId,
             createdAt: new Date(),
-          } as VideoEventInsert);
+          });
 
           if (options.outbox) {
             await tx.insert(schema.outbox).values({
@@ -253,7 +236,7 @@ export class PostgresVideoRepository extends VideoRepository {
       databaseUnavailable.during('scan')
     );
 
-    return map(rows, (found) => found as VideoRecord[]);
+    return rows;
   }
 
   async hardDelete(id: string): Promise<Result<boolean, DatabaseUnavailable>> {

@@ -104,7 +104,6 @@ export const UNTESTED_SOURCES: readonly string[] = [
   'packages/server/job-contracts/src/policies.ts',
   'packages/server/observability/src/logger.ts',
   'packages/server/observability/src/metrics.ts',
-  'packages/server/upload-client/src/main.ts',
   'packages/server/upload-client/src/client.ts',
   'packages/universal/domain/src/reaction.ts',
   'packages/universal/permissions/src/ability.ts',
