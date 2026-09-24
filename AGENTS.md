@@ -14,7 +14,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 | API in production | Node 24 | OpenTelemetry auto-instrumentation needs Node's module hooks (`--import ./dist/instrument.js`) |
 | Worker in production | Bun 1.4 by default, Node 24 with `WORKER_RUNTIME=node` | dual runtime, rule 2 |
 | Repo scripts, CLIs, `pnpm db:migrate` / `pnpm db:seed`, the e2e runner | `tsx` | Node parity with production for migrate and seed, and CI installs Bun only where `bun test` runs; the cost is about 150 ms of startup (`dev-token help` 0.19 s against Bun's 0.04 s) |
-| Unit and architecture specs | vitest | `vi.mock(import())`, fake timers, `restoreMocks`, jsdom for web, and the JSON reporter the CI budget reads |
+| Unit and architecture specs | vitest | `vi.mock(import())`, fake timers, `restoreMocks`, a jsdom run proving a universal package works in a browser (`vitest.jsdom.config.ts`), and the JSON reporter the CI budget reads |
 | Worker and package specs, a second time | `bun test` (`pnpm test:bun`) | the dual-runtime proof |
 
 `zero-matches` fails on a `bun <path>.ts` script in `package.json`, the `Makefile` or `.github`, and `ci-shape` on a CI job other than `unit-bun` that sets up Bun.

@@ -7,16 +7,24 @@ Instructions for any coding agent working on `@vp/events`.
 
 ## 1. Scope & Purpose
 
-`@vp/events` defines the Zod schemas and TypeScript types for real-time video lifecycle events, Server-Sent Events (SSE), and Redis Pub/Sub messages.
-- Event channels: `video:{id}` and `user:{id}`.
-- Event types: `snapshot`, `progress`, `status`.
+`@vp/events` owns the Redis vocabulary the API, the worker and the adapters share. Tier `server`,
+`vp.layer` 2; depends on `@vp/errors`, `@vp/result` and `zod`.
+
+- `src/index.ts` - `SseMessageEnvelope` (Zod: `event` is `snapshot`, `progress` or `status`),
+  `publishVideoEvent`, `formatSseFrame` and `SSE_PING_COMMENT`.
+- `src/channels.ts` - Pub/Sub channels `video:{id}` and `user:{id}`: `videoChannel`, `userChannel`,
+  `VIDEO_WILDCARD_CHANNEL`, `USER_WILDCARD_CHANNEL`, `channelType`.
+- `src/keys.ts` - `CacheKeys`, every `taitube:` cache key.
 
 ---
 
 ## 2. Invariants
 
-- All event payloads emitted over Redis Pub/Sub or SSE must validate against Zod schemas in this package.
-- Progress updates are throttled and formatted with integer percentages, current rendition, and ETA.
+- A Redis key or channel is built only in `keys.ts` or `channels.ts`; a template literal starting
+  `taitube:`, `video:` or `user:` anywhere else fails `tests/architecture/redis-keys-owner.test.ts`.
+- `publishVideoEvent` publishes to the video's channel and, when a `userId` is given, the owner's. It
+  returns a `Result`; the caller decides what a refused publish means.
+- The API's SSE hub parses every message it receives with `SseMessageEnvelope` before it forwards it.
 
 ---
 

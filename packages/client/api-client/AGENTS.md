@@ -9,10 +9,11 @@ Instructions for any coding agent working on `packages/client/api-client`.
 
 The typed client the frontend calls the API through. `createApiClient` maps the `@vp/api-contracts`
 registry at runtime and `ApiClient` is a mapped type over it, so **an endpoint cannot exist in the
-client without existing in the contract**. Base URL, credentials and bearer token are injected.
+client without existing in the contract**. `ApiClientOptions` (`request.ts`) injects `baseUrl`,
+`fetch`, `credentials`, `getAuthToken` (sent as a bearer token) and extra `headers`.
 
 - **Tier `client`** — browser only. May depend on `universal` and `client` packages, never `server`.
-- **Layer T4** — may depend on T1 through T3 (`@vp/api-contracts`).
+- **Layer T4** - depends on `@vp/api-contracts` (T3) and `zod`.
 
 ---
 
@@ -21,8 +22,8 @@ client without existing in the contract**. Base URL, credentials and bearer toke
 1. **Never hand-write an endpoint.** It is derived from the contract or it does not exist.
 2. **Responses are validated.** A payload that does not match `contract.result` raises
    `ApiContractError`; a non-2xx raises `ApiError` carrying the parsed RFC 9457 problem document.
-3. **No base URL literal.** The host is injected from config — a hardcoded host breaks local-first
-   (Rule 1) and is asserted against in `apps/web`.
+3. **No base URL literal.** The host is injected (`apps/web/src/base-api.ts` passes `API_BASE_URL`); a
+   hardcoded external host breaks local-first (Rule 1) and fails `tests/architecture/local-first.test.ts`.
 4. **Relative imports are extensionless**, as in every tier. `apps/web` resolves them through the one
    webpack override in its `craco.config.js` (`resolve.fullySpecified: false` for workspace packages).
 

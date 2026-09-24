@@ -173,7 +173,7 @@ Print or copy this checklist when provisioning:
 - [ ] Hetzner API Token generated and SSH key uploaded
 - [ ] Neon project created; pooled and direct URLs saved
 - [ ] Grafana Cloud OTLP credentials generated
-- [ ] `infra/terraform/terraform.tfvars` filled from `.example`
+- [ ] `terraform.tfvars` created from `infra/terraform/terraform.tfvars.example` and filled in
 - [ ] `terraform plan` executed with 0 errors
 - [ ] `terraform apply` completed; outputs saved
 - [ ] Cloud secrets stored in the secret manager behind `vp-secret-store`

@@ -5,7 +5,7 @@ import {
   parseMarkdown,
   trackedDocuments,
 } from './markdown';
-import { trackedFiles } from './repo-files';
+import { trackedPaths } from './repo-files';
 
 interface Repo {
   exists: (path: string) => boolean;
@@ -71,20 +71,6 @@ function brokenLinks(file: string, repo: Repo): string[] {
   return broken;
 }
 
-/** Tracked files and every directory above one: what a relative link may name. */
-function trackedPaths(): Set<string> {
-  const paths = new Set<string>(['', '.']);
-  for (const file of trackedFiles()) {
-    paths.add(file);
-    let directory = posix.dirname(file);
-    while (!paths.has(directory)) {
-      paths.add(directory);
-      directory = posix.dirname(directory);
-    }
-  }
-  return paths;
-}
-
 function fixtureRepo(documents: Record<string, string>): Repo {
   return {
     exists: (path) => path in documents || path === 'docs',
@@ -137,7 +123,10 @@ describe('architecture: doc-links', () => {
 
   it('finds no broken relative link or anchor in any tracked document', () => {
     const paths = trackedPaths();
-    const repo: Repo = { exists: (path) => paths.has(path), document: markdownDocument };
+    const repo: Repo = {
+      exists: (path) => path === '.' || path === '' || paths.has(path),
+      document: markdownDocument,
+    };
 
     expect(trackedDocuments().flatMap((file) => brokenLinks(file, repo))).toEqual([]);
   });

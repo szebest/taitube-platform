@@ -7,13 +7,18 @@ Instructions for any coding agent working on `@vp/config`.
 
 ## 1. Scope & Purpose
 
-`@vp/config` reads `process.env`, validates it against `@vp/env-schema`, prints a redacted report of
-every invalid key and exits 1 before a process can boot half-configured. That is all it does.
+`@vp/config` validates an environment record against `AppEnvSchema` from `@vp/env-schema` and reports
+every invalid key, redacted, before a process can boot half-configured. That is all it does:
+`parseEnv`, `loadEnv` (`src/load-env.ts`) and `loadEnvOrExit` (`src/load-env-or-exit.ts`). The apps hand it
+`host.env` (`apps/api/src/process.ts`, `apps/worker/src/process.ts`) and pass the `AppEnv` it returns to
+`toAppConfig`.
 
-The schema itself is **not** here. It is `@vp/env-schema`, one layer down. Anything that names an
-environment key belongs there; anything that touches a runtime belongs here.
+The schema, `AppConfig` and `toAppConfig` are **not** here. They are `@vp/env-schema` (layer 3, one below
+this package's layer 4). Anything that names an environment key belongs there; anything that touches a
+runtime belongs here.
 
-It also ships the Node module-resolution hook the apps load with `node --import @vp/config/register`,
+It also ships `src/register.js`, the Node module-resolution hook the apps load with
+`node --import @vp/config/register` (the `dev` scripts, both Dockerfiles, `infra/compose/docker-compose.yml`),
 which resolves extensionless relative specifiers in compiled output.
 
 ---
@@ -25,8 +30,9 @@ which resolves extensionless relative specifiers in compiled output.
 2. **Fail loudly, fail early.** An invalid environment exits 1 at startup with every offending key
    listed; a key matching `password|secret|key|token|auth` — or any URL — is reported without its value.
    `parseEnv` returns that report as a `Result`, `loadEnv` throws it for an entrypoint that already has
-   a logger, and `loadEnvOrExit` is for one that has none yet (the preloaded `instrument.ts`, migrate,
-   seed): one JSON `fatal` line at the default level, no stack, and the host exits 1.
+   a logger, and `loadEnvOrExit` is for one that has none yet (the preloaded `instrument.ts` of both apps,
+   `apps/api/src/migrate.ts`, `apps/api/src/seed.ts`): one JSON `fatal` line through `@vp/logger` at
+   `DEFAULT_LOG_LEVEL`, no stack, and the `ProcessHost` (`@vp/composition`) exits 1.
 3. **No `typeof process` guard.** Server tier means `process` is there. A feature-detect standing in for
    a boundary is what this split removed; do not reintroduce one.
 

@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { join, matchesGlob, resolve } from 'node:path';
+import { join, matchesGlob, posix, resolve } from 'node:path';
 
 export const ROOT = resolve(import.meta.dirname, '../..');
 
@@ -66,6 +66,25 @@ export function trackedFiles(...pathspecs: string[]): string[] {
       (includes.length === 0 || includes.some((spec) => spec.matches(file))) &&
       !excludes.some((spec) => spec.matches(file))
   );
+}
+
+let paths: ReadonlySet<string> | undefined;
+
+/** Every tracked file and every directory above one: what a document may link to or name. */
+export function trackedPaths(): ReadonlySet<string> {
+  if (paths === undefined) {
+    const found = new Set<string>();
+    for (const file of allTracked()) {
+      found.add(file);
+      let directory = posix.dirname(file);
+      while (directory !== '.' && !found.has(directory)) {
+        found.add(directory);
+        directory = posix.dirname(directory);
+      }
+    }
+    paths = found;
+  }
+  return paths;
 }
 
 export function isSpec(file: string): boolean {

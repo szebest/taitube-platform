@@ -15,6 +15,17 @@ calls `console` (`zero-matches.test.ts`).
 - `format: 'pretty'` is for a person at a terminal: `level message key=value` on stderr, then the error
   and its cause chain. A CLI's own output, such as a minted token, is written to stdout, not logged.
 
+Tier `server`, `vp.layer` 1; its only dependencies are `pino` and `@opentelemetry/api`.
+
+- `src/logger.ts` - `createLogger(config)` and the `Logger` type. `config` is `service`, `level`,
+  `format`, optional `bindings`, `destination` (a spec hands a stream it reads back) and `context`.
+- `src/pretty-destination.ts` and `src/pretty-line.ts` - the `pretty` format is a pino destination of
+  our own that rewrites each JSON record; there is no `pino-pretty` and no worker thread.
+- `src/serialize-error.ts` - `serializeError`, the `err` serializer for both formats.
+- `src/log-context.ts` - `LogContext`, `AsyncLocalStorage` bindings that `run(bindings, work)` adds to
+  every `json` line written inside `work`.
+- `src/credentials.ts` - the redacted headers: `authorization`, `cookie`, `x-admin-token`.
+
 ## 2. Rules
 
 - The caller passes `format` and `level`, from config or a CLI flag. The package reads no environment.

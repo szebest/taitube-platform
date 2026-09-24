@@ -10,7 +10,6 @@ This directory contains Docker Compose configurations for running the `video-pip
 |---|---|
 | `docker-compose.yml` | Primary compose file defining PostgreSQL 16, Redis 7, MinIO, API, and worker stages. |
 | `docker-compose.offline.yml` | Network isolation overlay (`internal: true`) for testing offline operation (`make smoke-offline`). |
-| `docker-compose.toxiproxy.yml` | Toxiproxy sidecar overlay for simulating storage/network chaos. |
 
 ---
 

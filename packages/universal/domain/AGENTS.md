@@ -9,10 +9,11 @@ Instructions for any coding agent working on `@vp/domain`.
 
 `@vp/domain` is the portable half of the old `core/`: entities, value objects, and the ranking and
 eligibility policy that decides what the product does, expressed as pure functions over structural
-types. It runs unchanged in `apps/web`, `apps/api` and `apps/worker`.
+types. `apps/api` and `apps/worker` import it directly; `apps/web` reaches it through
+`@vp/api-contracts`.
 
-It was split out of `@vp/core` because one file — `core/ports/storage-client.ts`, which types
-`StorageBody` as `Buffer | NodeJS.ReadableStream` — pinned the whole package to the server tier. The
+It was split out of `@vp/core` because one file - `packages/server/core/ports/storage-client.ts`, whose
+`StorageBody` includes `Buffer` and `NodeJS.ReadableStream` - pinned the whole package to the server tier. The
 driver ports and repository contracts stayed behind as `@vp/core`; everything portable is here.
 
 ---
@@ -22,8 +23,8 @@ driver ports and repository contracts stayed behind as `@vp/core`; everything po
 1. **Zero dependencies, zero I/O.** No `@vp/*` runtime dependency, no SDK, no `node:*`. This is T1
    foundation vocabulary: the words every other package speaks.
 2. **Entities are declared here and aliased elsewhere.** `Video` and `Upload` live in `video.ts` and
-   `upload.ts`; `@vp/core`'s `VideoRecord` and `UploadRecord` are `export type X = Y` aliases, not a second
-   copy of 38 fields. A rule in `@vp/domain-rules` and a repository in `@vp/core` must be talking about one
+   `upload.ts`; `@vp/core`'s `VideoRecord` and `UploadRecord` (`packages/server/core/repositories/`)
+   are `export type X = Y` aliases, not a second copy of the fields. A rule in `@vp/domain-rules` and a repository in `@vp/core` must be talking about one
    shape. A *policy* module that reads a handful of fields still declares the narrow structural type it needs
    (`PublicFeedCandidate`) rather than importing a record shape from `@vp/core/repositories` - that is what
    keeps the dependency pointing this way and not back.
@@ -34,12 +35,13 @@ driver ports and repository contracts stayed behind as `@vp/core`; everything po
 4. **Policy constants carry domain-loaded names** — `TRENDING_GRAVITY`, `PUBLIC_FEED_VISIBILITY` — so a
    call site reads as a rule rather than as a magic number.
 5. **Relative imports are extensionless** (`./channel`), as in every tier (`esm-specifiers.test.ts`).
-6. **Time units live in `time.ts`** (`MS_PER_DAY`, `SECONDS_PER_HOUR`, ...), exported as `@vp/domain/time`, and
-   every package above T1 spells a duration with them. `public-feed.ts` imports them by that name as well,
-   so the module needs no relative specifier. `no-tuning-literals.test.ts` fails on a minute, hour or day
-   written as literal arithmetic in a service, stage, adapter or `@vp/ffmpeg`.
-7. **Input rules are not here.** The handle format helpers moved to `@vp/validation`, because a format check
-   needs no entity and `@vp/validation` may not import this package. This is entity and policy vocabulary; a
+6. **Time units live in `time.ts`** (`MS_PER_DAY`, `SECONDS_PER_HOUR`, ...), exported as the
+   `@vp/domain/time` subpath (not from the root barrel), and `public-feed.ts` imports them by that name.
+   `no-tuning-literals.test.ts` fails on a minute, hour or day written as literal arithmetic in
+   `apps/api/src/services`, `apps/worker/src`, `packages/server/adapters` or `packages/server/ffmpeg/src`.
+7. **Input rules are not here.** The handle format helpers live in `@vp/validation`
+   (`channels/handle-format.ts`), because a format check needs no entity and
+   `validation-is-input-only.test.ts` forbids `@vp/validation` importing this package. This is entity and policy vocabulary; a
    predicate over submitted input belongs one package over.
 
 ---

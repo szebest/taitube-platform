@@ -11,19 +11,21 @@ Instructions for any coding agent working on adapter drivers (`adapters`).
 
 ```
 adapters/
-├── auth/        # TokenVerifier: JwksTokenVerifier (IdP key set) and DevTokenVerifier (dev seed key)
-├── bullmq/      # BullMqJobQueue & BullMqFlowProducer
-├── in-memory/   # In-memory test doubles for zero-dependency unit tests
-├── composition/ # Adapter tokens and registerAdapters: the one in-memory/external switch
-├── postgres/    # PostgresDatabaseClient & Drizzle repository implementations
-├── redis/       # RedisCacheClient, pub/sub, category, reaction and subscription caches
-└── s3/          # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
+├── auth/          # TokenVerifier: JwksTokenVerifier (IdP key set) and DevTokenVerifier (dev seed key)
+├── authorization/ # CaslAuthorizationAdapter (AuthorizationPort over @vp/permissions)
+├── bullmq/        # BullMqJobQueue, BullMqFlowProducer, bullMqProcessor, Bull Board queues
+├── composition/   # Adapter tokens and registerAdapters: the one in-memory/external switch
+├── in-memory/     # In-memory test doubles for zero-dependency unit tests
+├── metered/       # MeteredStorageClient & MeteredMultipartStorage (storage op metrics)
+├── postgres/      # PostgresDatabaseClient, Drizzle repositories, mappers, CASL-to-SQL scopes
+├── redis/         # RedisCacheClient, pub/sub, category, reaction and subscription caches
+└── s3/            # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
 ```
 
 `registerAdapters(c, config)` registers one family behind `config.kind` and imports that family's module
 on demand, so an external process never loads a test double. The root barrel exports the concrete
 adapters and the composition module; the doubles are reached only through `@vp/adapters/in-memory`, and
-`in-memory-off-boot-path.test.ts` walks both deployables' boot graphs to hold it there.
+`tests/architecture/in-memory-off-boot-path.test.ts` walks both deployables' boot graphs to hold it there.
 
 ---
 
@@ -42,9 +44,12 @@ adapters and the composition module; the doubles are reached only through `@vp/a
 - Repositories communicate with each other exclusively through port interfaces, never by manipulating private foreign structures.
 
 ### Rule 3: Every SDK Call Is Wrapped Where It Is Made
-- This package is the only home for `catch` outside `@vp/result`, and the only form it takes is `tryCatch` /
-  `fromPromise` **at the exact line the SDK is called** - never around a block. A wrapper around ten statements
-  cannot say which one failed, which is the property that made `catch {}` unreviewable in the first place.
+- Outside `@vp/result` and an entrypoint's top-level handler, this package is the only home for `catch`
+  (`tests/architecture/catch-confinement.test.ts`). Write it as `tryCatch` / `fromPromise` **at the exact line
+  the SDK is called** - never around a block. A wrapper around ten statements cannot say which one failed.
+  Raw `catch` still exists in `bullmq/bullmq-processor.ts` (reclassifies a stage throw for BullMQ),
+  `redis/redis-cache-client.ts` (isolating a throwing pub/sub listener, `quit()` fallback) and the in-memory queue, flow producer
+  and cache doubles; do not add more.
 - An adapter reports infra failures and the constraint violations the domain cares about
   (`HANDLE_ALREADY_TAKEN`, `CATEGORY_SLUG_CONFLICT`), and **decides nothing else**. Not-found, in-use and
   permission are rules; they live in `@vp/domain-rules`. An adapter that decides one of those has put a copy
@@ -60,10 +65,11 @@ adapters and the composition module; the doubles are reached only through `@vp/a
 
 ### Rule 4: Configuration Arrives as a Value
 - No adapter reads `process.env`. A driver takes an explicit connection or a prebuilt client, told apart by
-  a `type` tag and switched over exhaustively: `{ type: 'url', url }` or `{ type: 'client', client }`,
-  never an `'x' in config` probe or an optional field whose presence picks the mode.
+  a `type` tag and switched over exhaustively (`{ type: 'url', ... }` or `{ type: 'client', client }` for
+  Redis, `'connection'` / `'client'` for S3, `'url'` / `'sql'` for Postgres), never an `'x' in config` probe
+  or an optional field whose presence picks the mode.
 - A resource an adapter opens is closed by its `close()`, and the composition module that constructs it
-  registers that as its disposer (`shutdown-closure.test.ts`).
+  registers that as its disposer (`tests/architecture/shutdown-closure.test.ts`).
 
 ### Rule 5: File Length Discipline
 - Target `<= 250 lines` per file.

@@ -7,7 +7,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ## 1. Scope & Architecture
 
 `apps/api` is the Fastify 5 REST API and real-time Server-Sent Events (SSE) server running on Node.js 24.
-- **Composition Root:** `apps/api/src/app.ts` composes one `Container`: `registerAdapters` from `@vp/adapters` picks the adapter family from `config.kind`, `composition/services.module.ts` registers every service, `composition/adapter-set.ts` is the `adapters` override seam tests use. `composeApp()` constructs and registers routes and starts nothing; `serve.ts` calls `container.start()` and owns the drained shutdown, and `main.ts` only hands `process.ts` the real process. Nothing else constructs a concrete adapter or a domain service.
+- **Composition Root:** `apps/api/src/app.ts` composes one `Container`: `registerAdapters` from `@vp/adapters/composition` picks the adapter family from `config.kind`, `composition/services.module.ts` registers every service, `composition/adapter-set.ts` is the `adapters` override seam tests use. `composeApp()` constructs and registers routes and starts nothing; `serve.ts` calls `container.start()` and owns the drained shutdown, and `main.ts` only hands `process.ts` the real process. Nothing else constructs a concrete adapter or a domain service.
 - **Zero Concrete Driver Imports:** Route handlers and domain services must NEVER import `@aws-sdk/client-s3`, `ioredis`, `bullmq`, or Postgres/Drizzle directly.
 
 ---
@@ -21,12 +21,12 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
   - Delegate immediately to dedicated domain services in `apps/api/src/services/`.
   - Format HTTP status codes (`200`, `201`, `204`, `304`) and transport headers (`Cache-Control`, `ETag`).
 - **Strictly Forbidden:** Calling repositories directly, executing database transactions, or orchestrating domain state inside route handlers.
-- **Validation belongs in `@vp/validation`, not in a route.** The size cap and `ALLOWED_CONTENT_TYPES` used to
-  sit inline in `routes/uploads.ts`, which is how the browser ended up enforcing a narrower list and no size
-  check at all. A route calls the shared rule; it does not hold one.
+- **Validation belongs in `@vp/validation`, not in a route.** `routes/uploads.ts` calls `validateStartUpload`
+  with `ALLOWED_CONTENT_TYPES` from that package, so the browser can run the same rule. A route calls the
+  shared rule; it does not hold one.
 
 ### Rule 2: Deep Domain Services, Total Dependencies
-- Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`, `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`, `SubscriptionService`, `SseService`, `DlqService`, `QueueService`).
+- Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`, `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`, `SubscriptionService`, `SseService`, `DlqService`, `QueueService`, `ReadinessService`).
 - A service's dependencies are required. It never constructs, defaults or reads from `process.env` a collaborator or a setting it was not handed, and it imports nothing from `@vp/adapters` (`total-dependencies`, `adapter-instantiation` and `sdk-confinement` assert it). HTTP cache helpers are three functions in `http-cache.ts`; `Singleflight` comes from `@vp/concurrency`.
 - Services must remain completely decoupled from Fastify transport objects (`FastifyRequest`, `FastifyReply`).
 - Routes are plugins: `export async function xRoutes(app: FastifyInstance)`, reading `app.services` and `app.config`, registered from `routes/index.ts`.
@@ -66,7 +66,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
   per-code `options.on`, or a total `*.presenter.ts` module with `assertNever`; when to use which is in
   [docs/standards/error-handling.md](../../docs/standards/error-handling.md).
 - `setErrorHandler` stays, narrowed to a backstop: transport validation, rate limiting, Fastify's own 4xx
-  errors (answered with their own status) and genuine bugs. The auth hook answers its own 401 problem. Both paths call the same `problemFor`, so the body is identical either way.
+  errors (answered with their own status) and genuine bugs. The auth hook returns its failures through `sendResult`. Both paths build the body with `problemDetails` from `@vp/api-contracts` (`sendResult` through `problemFor`), so its shape is identical either way.
 - `PermanentError` / `TransientError` are the BullMQ queue-boundary representation only (ADR-18). Domain code
   in this app does not throw them.
 
@@ -75,7 +75,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ## 3. Dedicated Skills & References
 
 - **`api-domain-services`**: Route-to-service mapping and service composition.
-- **`api-casl-authorization`**: Fastify CASL route protection.
+- **`api-casl-authorization`**: where an authorization decision is made, and why routes never make one.
 - **`vp-fastify-sse-problem-json`**: Fastify conventions, SSE streaming, RFC 9457 errors.
 - **Standards:**
   - Route guidelines: `apps/api/src/routes/README.md`
@@ -88,7 +88,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ## 4. Local Commands
 
 ```bash
-# Run API in development mode
+# Run the built API (reads dist/, so build first with pnpm --filter @vp/api build)
 pnpm --filter @vp/api dev
 
 # Run API unit test suite (using in-memory doubles)

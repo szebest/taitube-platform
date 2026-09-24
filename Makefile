@@ -13,7 +13,7 @@ help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
 up: ## Start local infrastructure (Postgres, Redis, MinIO, minio-init)
-	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --wait
+	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --wait postgres redis minio minio-init
 
 doctor: ## Check developer prerequisites
 	@echo "Checking prerequisites..."
@@ -181,8 +181,8 @@ load-s2: ## Run S2 Large File load test (requires Compose stack)
 load-s3: ## Run S3 Backlog Burst load test (requires Compose stack)
 	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s3-backlog-burst.js
 
-load-smoke: ## Run reduced S1 Load Smoke Test
-	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run --vus 60 --duration 2m tests/load/s1-upload-storm.js
+load-smoke: ## Run the nightly load smoke (S1, 5 VUs for 1 min) against a stack started with UPLOAD_RATE_LIMIT_MAX=100000
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run --vus 5 --duration 1m tests/load/s1-upload-storm.js
 
 chaos-readiness: ## Stop MinIO and cut a worker's Redis via toxiproxy; /readyz must answer 503, then 200
 	bash scripts/chaos-readiness.sh

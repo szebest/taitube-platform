@@ -39,7 +39,7 @@ so the entities and policy left as `@vp/domain` and the keyset cursors left as `
 
 Two packages were looked at and deliberately kept whole:
 
-- **`adapters`.** Only 7 of 73 files name a Node builtin, but the tier is not decided by builtins here:
+- **`adapters`.** Only 7 of its 94 source files name a Node builtin, but the tier is not decided by builtins here:
   every subfolder wraps a concrete server SDK, and even the in-memory doubles implement `Buffer`-typed
   ports. Splitting it would produce fragments with one consumer each.
 - **`ffmpeg`.** `ladder.ts` and `master.ts` are portable, but nothing on the client renders a quality

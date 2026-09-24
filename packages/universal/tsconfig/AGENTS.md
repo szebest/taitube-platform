@@ -13,11 +13,11 @@ extends it.
 
 | Preset | Extended by | What it adds on top of `base.json` |
 |---|---|---|
-| `base.json` | the four presets below; never extended directly by a package | the shared compiler settings |
+| `base.json` | the four presets below and the root `tsconfig.base.json` / `tsconfig.repo.json`; never extended directly by a package | the shared compiler settings (`lib: ["ES2022"]`, `types: []`) |
 | `server.json` | every `packages/server/*` package, `apps/api`, `apps/worker` | `lib: ["ES2024"]` (Node 24 and Bun 1.4 both ship it), `types: ["node", "vitest/globals"]` |
-| `universal.json` | every `packages/universal/*` package | `lib: ["ES2022", "DOM"]`, `types: []` |
+| `universal.json` | every `packages/universal/*` package except this one | `lib: ["ES2022", "DOM"]`, `types: []` |
 | `client.json` | `packages/client/*` | `lib: ["ES2022", "DOM", "DOM.Iterable"]`, `types: []` |
-| `spec.json` | `tsconfig.spec.json` in `universal` and `client` packages | the client libs **plus** node/vitest types, `noEmit: true` |
+| `spec.json` | `tsconfig.spec.json` in every `universal` and `client` package, and in `packages/server/env-schema` | the client libs **plus** node/vitest types, `noEmit: true` |
 
 `apps/web` is the one consumer that extends nothing here: it is a Create React App workspace with its own
 hand-written `tsconfig.json` (`moduleResolution: "node"`, `jsx: "react-jsx"`). Tickets 49–75 fold it in.
@@ -34,8 +34,8 @@ build. There is **no** `build.json` preset in this package.
   `noUncheckedIndexedAccess: true`. `strict` already implies `noImplicitAny`, `strictNullChecks` and the rest
   of the strict family, so do not re-declare them; `exactOptionalPropertyTypes` is **not** on and turning it
   on is a repo-wide change, not a preset tweak.
-- **`moduleResolution` is `bundler`, not `nodenext`.** That is what lets source import `./thing` without a
-  `.js` suffix. Switching it would mean adding extensions to every relative import in the repo.
+- **`moduleResolution` is `bundler`, not `nodenext`.** That is what keeps every relative import
+  extensionless (`./thing`), which `esm-specifiers.test.ts` requires in every tier.
 - **`types: []` on `universal` and `client` is load-bearing**, and by itself is not enough. A spec doing
   `import { describe } from 'vitest'` pulls `@types/node` back into the program and `node:fs` starts
   resolving again — which is why those packages exclude their specs from `tsconfig.json` and typecheck them

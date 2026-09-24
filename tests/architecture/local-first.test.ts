@@ -1,4 +1,4 @@
-import { productionSources, read } from './repo-files';
+import { productionSources, read, trackedFiles } from './repo-files';
 
 const URL_LITERAL = /\bhttps?:\/\/[^\s'"`)\\<>]+/g;
 const HOST = /^https?:\/\/([^/:?#]+)/;
@@ -42,6 +42,16 @@ describe('architecture: local-first', () => {
       externalHosts(read(file)).map((url) => `${file}: ${url}`)
     );
 
+    expect(offenders).toEqual([]);
+  });
+
+  it('loads nothing from another host in the page the web app ships', () => {
+    const pages = trackedFiles(':(glob)apps/web/public/*.html');
+    const offenders = pages.flatMap((file) =>
+      externalHosts(read(file)).map((url) => `${file}: ${url}`)
+    );
+
+    expect(pages).toContain('apps/web/public/index.html');
     expect(offenders).toEqual([]);
   });
 

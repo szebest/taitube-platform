@@ -7,18 +7,27 @@ Instructions for any coding agent working on `@vp/storage`.
 
 ## 1. Scope & Purpose
 
-`@vp/storage` standardizes S3-compatible object keys, bucket topologies, and upload parameters for MinIO and Cloudflare R2:
-- **Bucket Topologies:**
-  - `raw`: Private bucket for unprocessed uploads (`raw/<videoId>/<uploadId>/source.<ext>`).
-  - `public`: Public bucket for finished HLS playlists, video segments, posters, and WebVTT scrub thumbnails (`videos/<videoId>/...`).
-- **Single Source of Truth:** Key formats are defined exclusively in `packages/server/storage/src/keys.ts`.
-- **MIME Types:** Validation and mapping for video files (`video/mp4`, `video/quicktime`, `video/webm`).
+`@vp/storage` holds the S3 conventions the API, the worker, `@vp/adapters`, `@vp/db` and `@vp/ffmpeg` share: object keys,
+per-extension headers and multipart sizing. Pure functions and constants, no SDK. Tier `server`, `vp.layer` 1, no
+dependencies. Besides `.` it exports `./keys`.
+
+- **Keys (`src/keys.ts`, SDD §7):** the raw upload is `raw/<videoId>/source.<ext>` (`rawPrefix`,
+  `rawSourceKey`); everything published sits under `videos/<videoId>/` (`videoPrefix`): HLS under
+  `hls/` for generation 1 and `hls/g<n>/` after (`renditionPrefix`, `renditionObjectKey`,
+  `renditionPlaylistKey`, `masterPlaylistKey`, `reprocessPrefixesBefore`), thumbnails under `thumbs/`
+  (`posterKey`, `spriteKey`, `spriteVttKey`). `sanitizeStorageUrl` strips a presigned URL's query string.
+- **Headers (`src/mime.ts`):** `getHeaderMapping` gives the `Content-Type` and `Cache-Control` for an
+  object by extension (`.m3u8`, `.ts`, `.jpg`, `.vtt`, `.json`, `.mp4`), `application/octet-stream`
+  otherwise.
+- **Multipart (`src/multipart.ts`):** `calculatePartSize` (a thousandth of the file, clamped to
+  `PartSizeBounds`), `calculateTotalParts`, `MULTIPART_URL_BATCH_SIZE` and `S3_MAX_KEYS_PER_REQUEST`.
 
 ---
 
 ## 2. Invariants
 
-- Never assemble hardcoded S3 key strings in application code; always call `storageKeys.*` helper functions.
+- Production source never builds a `raw/` or `videos/` key by hand; it calls the helpers in `keys.ts`
+  (a zero-matches row in `tests/architecture/zero-matches.test.ts`).
 - Updating key conventions requires updating `docs/SDD.md` §7 in the same PR.
 
 ---
