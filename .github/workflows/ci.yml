@@ -80,12 +80,7 @@ jobs:
         run: pnpm boundaries
 
       - name: Check architectural invariants
-        run: |
-          pnpm test:architecture
-          for flags in "--maxWorkers=2" "--maxWorkers=4" "--pool=threads" "--pool=threads --maxWorkers=2" "--poolOptions.forks.singleFork"; do
-            echo "EXPERIMENT $flags"
-            npx vitest run --project 'architecture*' --no-isolate $flags 2>&1 | grep -E "Duration|Tests "
-          done
+        run: pnpm test:architecture
 
       - name: Run Biome lint
         run: pnpm lint
