@@ -153,6 +153,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     const lease = new AbortController();
     let lostLease: LostLease | undefined;
     let lastRenewal = 0;
+    let renewal: Promise<void> = Promise.resolve();
 
     const renewLease = async (): Promise<void> => {
       const renewed = await repositories.steps.heartbeat(lockToken);
@@ -215,7 +216,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
                 ),
                 'BullMQ progress is advisory; the step lease is what fences the job'
               );
-              void renewLease();
+              renewal = renewLease();
               void progress.report(percent);
             },
           });
@@ -224,6 +225,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         (cause) => transcodeFailure(rendition.name, cause)
       );
 
+      await renewal;
       const uploadResult = await uploader.stop(encoded.ok && !lostLease);
       if (lostLease) {
         log.warn({ lockToken, lease: lostLease.type }, 'Step lease lost; the encode was aborted');

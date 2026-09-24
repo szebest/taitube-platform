@@ -121,4 +121,37 @@ describe('apps/worker/stages: transcode', () => {
     const events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.map((event) => event.type)).not.toContain('transcode.completed');
   });
+
+  it('waits for a renewal still in flight when FFmpeg finishes, and commits nothing if it failed', async () => {
+    let refuse: () => void = () => {};
+    let requested: () => void = () => {};
+    const renewalRequested = new Promise<void>((resolve) => {
+      requested = resolve;
+    });
+    vi.spyOn(repositories.steps, 'heartbeat').mockImplementation(() => {
+      requested();
+      return new Promise((resolve) => {
+        refuse = () => resolve(err(databaseUnavailable('heartbeat')));
+      });
+    });
+    const complete = vi.spyOn(repositories.steps, 'complete');
+    const media: MediaTools = {
+      ...STAGE_SETTINGS.media,
+      transcode: async (options) => {
+        options.onProgress?.({ percent: 100, outTimeMs: 60_000 });
+        return { outputDir: options.outputDir, playlistPath: '', segmentCount: 0, durationMs: 0 };
+      },
+    };
+
+    const transcoding = createTranscodeProcessor(
+      transcodeDeps({ repositories, storage, logger, media })
+    )(job());
+    await renewalRequested;
+    refuse();
+
+    expect(await transcoding).toEqual(
+      err(expect.objectContaining({ code: ErrorCodes.DATABASE_UNAVAILABLE }))
+    );
+    expect(complete).not.toHaveBeenCalled();
+  });
 });
