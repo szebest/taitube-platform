@@ -27,7 +27,7 @@ spec:
       containers:
         - name: api
           image: ghcr.io/szebest/vp-api:latest
-          command: ["node", "dist/main.js"]
+          command: ["node", "--import", "./dist/instrument.js", "dist/main.js"]
           lifecycle:
             preStop:
               exec:

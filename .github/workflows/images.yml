@@ -3,6 +3,11 @@ name: Images
 on:
   workflow_call:
   workflow_dispatch:
+    inputs:
+      push:
+        description: Push the scanned images to GHCR
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,13 +19,32 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_API: ghcr.io/szebest/vp-api
-  IMAGE_WORKER: ghcr.io/szebest/vp-worker
+  PUSH: ${{ startsWith(github.ref, 'refs/tags/v') || inputs.push == true }}
 
 jobs:
   build-and-push:
-    name: build-and-push-images
+    name: build-and-push-${{ matrix.image.name }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: api
+            repository: ghcr.io/szebest/vp-api
+            file: apps/api/Dockerfile
+            runtime: ''
+            suffix: ''
+          - name: worker-bun
+            repository: ghcr.io/szebest/vp-worker
+            file: apps/worker/Dockerfile
+            runtime: bun
+            suffix: ''
+          - name: worker-node
+            repository: ghcr.io/szebest/vp-worker
+            file: apps/worker/Dockerfile
+            runtime: node
+            suffix: -node
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,99 +56,60 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
+        if: env.PUSH == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build API image
-      - name: Extract metadata for API image
-        id: meta-api
+      - name: Extract image metadata
+        id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_API }}
+          images: ${{ matrix.image.repository }}
+          flavor: |
+            suffix=${{ matrix.image.suffix }}
           tags: |
             type=ref,event=tag
             type=sha,format=long
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') && matrix.image.suffix == '' }}
+            type=raw,value=node,enable=${{ startsWith(github.ref, 'refs/tags/v') && matrix.image.suffix == '-node' }}
 
-      - name: Build and push API image (linux/amd64,linux/arm64)
+      - name: Build the amd64 image for the scan
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/api/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
-          tags: ${{ steps.meta-api.outputs.tags }}
-          labels: ${{ steps.meta-api.outputs.labels }}
-
-      # Build Worker image (Bun runtime)
-      - name: Extract metadata for Worker image (Bun)
-        id: meta-worker
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE_WORKER }}
-          tags: |
-            type=ref,event=tag
-            type=sha,format=long
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
-
-      - name: Build and push Worker image (Bun, linux/amd64,linux/arm64)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: apps/worker/Dockerfile
+          file: ${{ matrix.image.file }}
           build-args: |
-            WORKER_RUNTIME=bun
-          platforms: linux/amd64,linux/arm64
-          push: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
-          tags: ${{ steps.meta-worker.outputs.tags }}
-          labels: ${{ steps.meta-worker.outputs.labels }}
+            WORKER_RUNTIME=${{ matrix.image.runtime }}
+          platforms: linux/amd64
+          load: true
+          tags: scan/${{ matrix.image.name }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,scope=${{ matrix.image.name }},mode=max
 
-      # Build Worker image (Node runtime)
-      - name: Extract metadata for Worker image (Node)
-        id: meta-worker-node
-        uses: docker/metadata-action@v5
+      - name: Fail on a HIGH or CRITICAL finding that has a fix
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          images: ${{ env.IMAGE_WORKER }}
-          tags: |
-            type=ref,event=tag,suffix=-node
-            type=sha,format=long,suffix=-node
-            type=raw,value=node,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+          image-ref: scan/${{ matrix.image.name }}:${{ github.sha }}
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
 
-      - name: Build and push Worker image (Node, linux/amd64,linux/arm64)
+      - name: Build and push (linux/amd64, linux/arm64)
+        if: env.PUSH == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/worker/Dockerfile
+          file: ${{ matrix.image.file }}
           build-args: |
-            WORKER_RUNTIME=node
+            WORKER_RUNTIME=${{ matrix.image.runtime }}
           platforms: linux/amd64,linux/arm64
-          push: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
-          tags: ${{ steps.meta-worker-node.outputs.tags }}
-          labels: ${{ steps.meta-worker-node.outputs.labels }}
-
-      # Trivy Security Scans
-      - name: Run Trivy vulnerability scanner on API
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.IMAGE_API }}:${{ steps.meta-api.outputs.version || 'latest' }}
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL'
-        continue-on-error: true
-
-      - name: Run Trivy vulnerability scanner on Worker
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.IMAGE_WORKER }}:${{ steps.meta-worker.outputs.version || 'latest' }}
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL'
-        continue-on-error: true
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,scope=${{ matrix.image.name }},mode=max

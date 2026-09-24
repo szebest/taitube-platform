@@ -2,32 +2,30 @@
 ARG WORKER_RUNTIME=bun
 
 FROM node:24-slim AS base
-RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
+ARG TURBO_VERSION=2.10.12
+RUN corepack enable && corepack prepare pnpm@10.18.3 --activate \
+ && npm install --global turbo@${TURBO_VERSION}
+ENV npm_config_store_dir=/pnpm/store
 WORKDIR /repo
 
 FROM base AS pruner
-# Copy source trees
 COPY . .
-RUN npx turbo prune --docker @vp/worker
+RUN turbo prune --docker @vp/worker
 
 FROM base AS build
-# Install dependencies
 COPY --from=pruner /repo/out/json/ .
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile
 
-# Build worker and dependencies, deploy production bundle
 COPY --from=pruner /repo/out/full/ .
-RUN pnpm turbo run build --filter=@vp/worker... \
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter=@vp/worker... \
  && pnpm deploy --legacy --filter=@vp/worker --prod /out \
  && cp -r packages/server/db/drizzle /out/drizzle \
  && mkdir -p /out/node_modules/@vp/db \
  && cp -r packages/server/db/drizzle /out/node_modules/@vp/db/drizzle
 
-# Base runtime choices
 FROM oven/bun:1.4-slim AS runtime-bun
 FROM node:24-slim AS runtime-node
 
-# Selected runtime target
 FROM runtime-${WORKER_RUNTIME} AS runtime
 ARG WORKER_RUNTIME=bun
 ENV WORKER_RUNTIME=${WORKER_RUNTIME}
@@ -43,4 +41,4 @@ COPY --from=build --chown=10001:10001 /out /app
 USER 10001
 ENV NODE_ENV=production TMPDIR=/tmp/vp WORKER_HEARTBEAT_PATH=/tmp/vp/heartbeat TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 NODE_OPTIONS="--import @vp/config/register"
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} dist/main.js"]
+CMD ["sh", "-c", "exec ${WORKER_RUNTIME:-bun} --import ./dist/instrument.js dist/main.js"]

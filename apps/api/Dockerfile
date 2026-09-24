@@ -1,27 +1,26 @@
 # apps/api/Dockerfile
 FROM node:24-slim AS base
-RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
+ARG TURBO_VERSION=2.10.12
+RUN corepack enable && corepack prepare pnpm@10.18.3 --activate \
+ && npm install --global turbo@${TURBO_VERSION}
+ENV npm_config_store_dir=/pnpm/store
 WORKDIR /repo
 
 FROM base AS pruner
-# Copy source trees
 COPY . .
-RUN npx turbo prune --docker @vp/api
+RUN turbo prune --docker @vp/api
 
 FROM base AS build
-# Install dependencies
 COPY --from=pruner /repo/out/json/ .
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile
 
-# Build API and dependencies, deploy production bundle
 COPY --from=pruner /repo/out/full/ .
-RUN pnpm turbo run build --filter=@vp/api... \
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter=@vp/api... \
  && pnpm deploy --legacy --filter=@vp/api --prod /out \
  && cp -r packages/server/db/drizzle /out/drizzle \
  && mkdir -p /out/node_modules/@vp/db \
  && cp -r packages/server/db/drizzle /out/node_modules/@vp/db/drizzle
 
-# Production runtime image
 FROM node:24-slim AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tini curl \
  && rm -rf /var/lib/apt/lists/* \
@@ -35,4 +34,4 @@ ENV NODE_ENV=production PORT=3000 METRICS_PORT=9464 TURBO_TELEMETRY_DISABLED=1 D
 EXPOSE 3000 9464
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["node", "dist/main.js"]
+CMD ["node", "--import", "./dist/instrument.js", "dist/main.js"]

@@ -20,33 +20,58 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
   DO_NOT_TRACK: 1
 
+# Every job's timeout-minutes is its budget (tests/architecture/ci-shape.test.ts holds them): a job
+# that gets slower fails the run instead of waiting for somebody to notice.
 jobs:
-  lint-typecheck:
-    name: lint-typecheck
+  build:
+    name: build
     runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js 24
-        uses: actions/setup-node@v4
+      - name: Detect a change CI can affect
+        id: changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
-          node-version: 24
-          cache: 'pnpm'
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
 
-      - name: Restore Turborepo cache
-        uses: actions/cache@v4
+      - name: Set up the workspace
+        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
+        uses: ./.github/actions/setup-workspace
+
+      - name: Build every package once
+        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
+        run: pnpm exec turbo run build
+
+      - name: Save the build for the jobs that follow
+        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
+        uses: actions/cache/save@v4
         with:
-          path: .turbo
+          path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  lint-typecheck:
+    name: lint-typecheck
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
@@ -54,202 +79,78 @@ jobs:
       - name: Check package boundaries (tiers, layers, CLAUDE.md symlinks)
         run: pnpm boundaries
 
-      - name: Check architectural invariants (tiers, SDK confinement, local-first, ceilings)
+      - name: Check architectural invariants
         run: pnpm test:architecture
 
       - name: Run Biome lint
         run: pnpm lint
 
       - name: Run TypeScript typecheck
-        run: pnpm typecheck
+        run: pnpm exec turbo run typecheck
 
   unit:
     name: unit
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: vp
-          POSTGRES_PASSWORD: vp
-          POSTGRES_DB: vp
-        ports:
-          - 5432:5432
-        options: >-
-          --mount type=tmpfs,destination=/var/lib/postgresql/data
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
+    timeout-minutes: 3
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies (ffmpeg, fonts)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core fontconfig
-
-
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js 24
-        uses: actions/setup-node@v4
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
         with:
-          node-version: 24
-          cache: 'pnpm'
+          bun: 'true'
 
-      - name: Set up Bun 1.4
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.0
+      - name: Set up FFmpeg
+        uses: ./.github/actions/setup-ffmpeg
 
-      - name: Restore Turborepo cache
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
+      - name: Restore or generate the video fixtures
+        uses: ./.github/actions/video-fixtures
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm build
-
-      - name: Set up kustomize
-        uses: ./.github/actions/setup-kustomize
-
-      - name: Generate video fixtures
-        run: pnpm gen-video
-
-      - name: Run database migrations
-        env:
-          DATABASE_URL: postgres://vp:vp@localhost:5432/vp
-        run: pnpm db:migrate
+      - name: Replay the build from the turbo cache
+        run: pnpm exec turbo run build
 
       - name: Run unit tests (Node 24)
-        env:
-          DATABASE_URL: postgres://vp:vp@localhost:5432/vp
-        run: pnpm test
+        run: pnpm test:unit
 
   unit-bun:
     name: unit-bun
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: vp
-          POSTGRES_PASSWORD: vp
-          POSTGRES_DB: vp
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
+    timeout-minutes: 3
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies (ffmpeg, fonts)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core fontconfig
-
-
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js 24
-        uses: actions/setup-node@v4
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
         with:
-          node-version: 24
-          cache: 'pnpm'
+          bun: 'true'
 
-      - name: Set up Bun 1.4
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.0
+      - name: Set up FFmpeg
+        uses: ./.github/actions/setup-ffmpeg
 
-      - name: Restore Turborepo cache
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
+      - name: Restore or generate the video fixtures
+        uses: ./.github/actions/video-fixtures
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm build
-
-      - name: Generate video fixtures
-        run: pnpm gen-video
-
-      - name: Run database migrations
-        env:
-          DATABASE_URL: postgres://vp:vp@localhost:5432/vp
-        run: pnpm db:migrate
+      - name: Replay the build from the turbo cache
+        run: pnpm exec turbo run build
 
       - name: Run worker & packages unit tests under Bun (runtime parity gate)
-        env:
-          DATABASE_URL: postgres://vp:vp@localhost:5432/vp
         run: pnpm test:bun
 
   integration:
     name: integration
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install system dependencies (ffmpeg, fonts)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core fontconfig
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js 24
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Set up Bun 1.4
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.0
-
-      - name: Restore Turborepo cache
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm build
-
-      - name: Generate video fixtures
-        run: pnpm gen-video
-
-      - name: Verify video fixtures against manifest
-        run: pnpm gen-video --check
 
       - name: Start infrastructure services with Docker Compose
         env:
@@ -257,6 +158,26 @@ jobs:
         run: |
           cp .env.example .env
           docker compose -f infra/compose/docker-compose.yml up -d postgres redis minio
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          bun: 'true'
+
+      - name: Set up FFmpeg
+        uses: ./.github/actions/setup-ffmpeg
+
+      - name: Restore or generate the video fixtures
+        uses: ./.github/actions/video-fixtures
+
+      - name: Verify video fixtures against manifest
+        run: pnpm gen-video --check
+
+      - name: Replay the build from the turbo cache
+        run: pnpm exec turbo run build
+
+      - name: Migrate the database and create the buckets
+        run: |
           until docker compose -f infra/compose/docker-compose.yml exec -T postgres pg_isready -U vp -d vp; do sleep 1; done
           docker compose -f infra/compose/docker-compose.yml up minio-init
           DATABASE_URL="postgres://vp:vp@localhost:5432/vp" pnpm db:migrate
@@ -268,7 +189,8 @@ jobs:
         env:
           NODE_ENV: test
           DATABASE_URL: postgres://vp:vp@localhost:5432/vp
-          REDIS_URL: redis://:vp@localhost:6379
+          REDIS_URL: redis://localhost:6379
+          REDIS_PASSWORD: vp
           S3_ENDPOINT: http://localhost:9000
           S3_ACCESS_KEY_ID: minioadmin
           S3_SECRET_ACCESS_KEY: minioadmin
@@ -280,76 +202,78 @@ jobs:
 
   e2e:
     name: e2e-smoke
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    needs: [lint-typecheck, unit, unit-bun, integration]
+    timeout-minutes: 4
+    env:
+      COMPOSE: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies (ffmpeg, fonts)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core fontconfig
-          echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js 24
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Set up Bun 1.4
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.0
-
-      - name: Restore Turborepo cache
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm build
-
-      - name: Generate video fixtures
-        run: pnpm gen-video
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and start entire stack with Docker Compose (offline — internal network, zero internet egress)
+      - name: Build the API image from the layer cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          tags: vp-api:local
+          load: true
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+      - name: Build the worker image from the layer cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          build-args: |
+            WORKER_RUNTIME=bun
+          tags: vp-worker:local
+          load: true
+          cache-from: type=gha,scope=worker-bun
+          cache-to: type=gha,scope=worker-bun,mode=max
+
+      - name: Start the stack offline (internal network, zero internet egress)
         env:
           REDIS_PASSWORD: vp
         run: |
           cp .env.example .env
+          echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
           sudo sysctl -w net.ipv4.conf.all.route_localnet=1 2>/dev/null || true
-          which iptables >/dev/null 2>&1 && (sudo iptables -t nat -C POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE) || true
-          docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml up -d --build --wait --wait-timeout 180 || {
-            echo "Docker compose startup failed. Dumping container logs:"
-            docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml logs --tail=100
-            exit 1
-          }
-          docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml exec -T api curl -s --connect-timeout 2 http://1.1.1.1 >/dev/null 2>&1 && { echo "ERROR: Container reached the internet!"; exit 1; } || echo "Verified: Containers have zero internet egress."
+          sudo iptables -t nat -C POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE
+          $COMPOSE up -d --no-build
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          bun: 'true'
+
+      - name: Restore or generate the smoke fixture
+        uses: ./.github/actions/video-fixtures
+        with:
+          only: s2
+
+      - name: Wait for the stack and prove it has no egress
+        env:
+          REDIS_PASSWORD: vp
+        run: |
+          $COMPOSE up -d --no-build --wait --wait-timeout 90 || { $COMPOSE logs --tail=100; exit 1; }
+          $COMPOSE exec -T api curl -s --connect-timeout 2 http://1.1.1.1 >/dev/null 2>&1 && { echo "ERROR: Container reached the internet!"; exit 1; } || echo "Verified: Containers have zero internet egress."
 
       - name: Run E2E smoke test (validates pipeline correctness under offline mode)
         run: API_URL=http://127.0.0.1:3000 make smoke
 
       - name: Dump container logs on failure
         if: failure()
-        run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml logs --tail=200 || true
+        run: $COMPOSE logs --tail=200 || true
 
       - name: Stop stack
         if: always()
-        run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml down -v --remove-orphans || true
+        run: $COMPOSE down -v --remove-orphans || true
 
   publish-images:
     name: publish-images
@@ -357,4 +281,3 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     uses: ./.github/workflows/images.yml
     secrets: inherit
-

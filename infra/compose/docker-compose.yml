@@ -80,6 +80,7 @@ services:
       - ./minio-init.sh:/init/minio-init.sh:ro
 
   migrate:
+    image: vp-api:local
     build:
       context: ../..
       dockerfile: apps/api/Dockerfile
@@ -95,6 +96,7 @@ services:
     restart: "no"
 
   api:
+    image: vp-api:local
     build:
       context: ../..
       dockerfile: apps/api/Dockerfile
@@ -115,7 +117,6 @@ services:
         condition: service_completed_successfully
       migrate:
         condition: service_completed_successfully
-    command: ["node", "dist/main.js"]
     stop_signal: SIGTERM
     stop_grace_period: 25s
     healthcheck:
@@ -127,6 +128,7 @@ services:
 
   # ---- workers: one image, WORKER_STAGE picks the role (SDD §12.1) ----
   worker-probe: &worker
+    image: vp-worker:local
     build:
       context: ../..
       dockerfile: apps/worker/Dockerfile
