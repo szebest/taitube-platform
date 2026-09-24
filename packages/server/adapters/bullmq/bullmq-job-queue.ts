@@ -48,6 +48,7 @@ export class BullMqJobQueue extends JobQueue {
   private readonly createWorker: WorkerFactory;
   private worker?: Worker;
   private failedHandler?: (job: QueueJob<unknown>, err: Error) => Promise<void> | void;
+  private stalledHandler?: (jobId: string) => void;
 
   constructor(config: BullMqJobQueueConfig) {
     super();
@@ -96,13 +97,18 @@ export class BullMqJobQueue extends JobQueue {
 
   onFailed(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void {
     this.failedHandler = handler;
-    if (this.worker) this.listenForFailures(this.worker);
   }
 
-  private listenForFailures(worker: Worker): void {
+  onStalled(handler: (jobId: string) => void): void {
+    this.stalledHandler = handler;
+  }
+
+  /** Handlers are read when the event fires, so one set after `process()` still hears it. */
+  private listen(worker: Worker): void {
     worker.on('failed', (job: Job | undefined, err: Error) => {
       if (job) this.failedHandler?.(toQueueJob(job), err);
     });
+    worker.on('stalled', (jobId: string) => this.stalledHandler?.(jobId));
   }
 
   async add<T = unknown>(
@@ -138,7 +144,7 @@ export class BullMqJobQueue extends JobQueue {
 
     return map(started, (worker) => {
       this.worker = worker;
-      if (this.failedHandler) this.listenForFailures(worker);
+      this.listen(worker);
     });
   }
 
@@ -227,7 +233,6 @@ export class BullMqJobQueue extends JobQueue {
 
   async close(): Promise<Result<void, QueueUnavailable>> {
     return fromPromise(async () => {
-      // Explicitly wait for active jobs to finish within grace period (Ticket 26 / ADR-12)
       if (this.worker) await this.worker.close(false);
       await this.queue.close();
     }, this.unavailable('close'));

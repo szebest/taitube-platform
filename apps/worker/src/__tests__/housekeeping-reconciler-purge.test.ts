@@ -13,7 +13,7 @@ import type { JobQueue } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { queueUnavailable, storageUnavailable } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
-import { createLogger } from '@vp/observability';
+import { LogContext, createLogger } from '@vp/observability';
 import type { Result } from '@vp/result';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
@@ -834,6 +834,7 @@ describe('Housekeeping Stage — Reconcilers, Soft Delete & Object Purge (Ticket
         config: inProcessAppConfig({ worker: { stage: 'housekeeping' } }),
         adapters: { repositories, storage, multipart, getQueue },
         logger: createLogger({ service: 'housekeeping-spec', level: 'silent' }),
+        logContext: new LogContext(),
         media: STAGE_SETTINGS.media,
         workerId: STAGE_SETTINGS.workerId,
       });

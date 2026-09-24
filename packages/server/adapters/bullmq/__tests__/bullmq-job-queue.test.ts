@@ -264,6 +264,22 @@ describe('BullMqJobQueue', () => {
     });
   });
 
+  describe('stalled handler', () => {
+    it.each([
+      { scenario: 'set before the worker starts', setFirst: true },
+      { scenario: 'set on a worker that is already running', setFirst: false },
+    ])('hears a stalled job when $scenario', async ({ setFirst }) => {
+      const stalled: string[] = [];
+      if (setFirst) jobQueue.onStalled((jobId) => stalled.push(jobId));
+      await jobQueue.process(async () => 'ok');
+      if (!setFirst) jobQueue.onStalled((jobId) => stalled.push(jobId));
+
+      workers[0]?.emitStalled('job-3');
+
+      expect(stalled).toEqual(['job-3']);
+    });
+  });
+
   describe('close', () => {
     it('drains the worker before closing the queue', async () => {
       await jobQueue.process(async () => 'ok');

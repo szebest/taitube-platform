@@ -64,6 +64,7 @@ export async function recordProbeFailure(
     eventSeq: 1,
     payload: { status: 'FAILED', errorCode, errorMessage },
     traceparent: job.data.traceparent,
+    requestId: job.data.requestId,
   };
   ignore(
     await getQueue('notify').add('notify', notice, {

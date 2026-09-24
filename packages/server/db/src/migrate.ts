@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -5,16 +6,16 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { isErr } from '@vp/result';
 import postgres from 'postgres';
-import { waitForDatabase } from './client';
+import { type Log, waitForDatabase } from './client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function runMigrations(url: string): Promise<void> {
-  console.log(`[db:migrate] Connecting to ${url.replace(/:[^:@]+@/, ':***@')}...`);
+export async function runMigrations(url: string, log: Log): Promise<void> {
+  log(`[db:migrate] Connecting to ${url.replace(/:[^:@]+@/, ':***@')}...`);
   const sql = postgres(url, { max: 1 });
 
-  const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:migrate' });
+  const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:migrate', log });
   if (isErr(reached)) throw reached.error;
 
   const db = drizzle(sql);
@@ -32,10 +33,9 @@ export async function runMigrations(url: string): Promise<void> {
     candidates.find((dir) => fs.existsSync(path.join(dir, 'meta', '_journal.json'))) ??
     candidates.find((dir) => fs.existsSync(dir)) ??
     (candidates[0] as string);
-  console.log(`[db:migrate] Applying migrations from ${migrationsFolder}...`);
+  log(`[db:migrate] Applying migrations from ${migrationsFolder}...`);
 
-  const crypto = await import('node:crypto');
-  const hash = crypto.createHash('sha256');
+  const hash = createHash('sha256');
   const files = fs.readdirSync(migrationsFolder).sort();
   for (const file of files) {
     if (file.endsWith('.sql')) {
@@ -51,13 +51,13 @@ export async function runMigrations(url: string): Promise<void> {
   await sql`CREATE TABLE IF NOT EXISTS __vp_migration_hash (hash text PRIMARY KEY)`;
   const rows = await sql`SELECT hash FROM __vp_migration_hash LIMIT 1`;
   if (rows.length > 0 && rows[0]?.hash === currentHash) {
-    console.log('[db:migrate] Migrations unchanged (hash match). Skipping execution.');
+    log('[db:migrate] Migrations unchanged (hash match). Skipping execution.');
     await sql.end();
     return;
   }
 
   await migrate(db, { migrationsFolder });
-  console.log('[db:migrate] Migrations applied successfully.');
+  log('[db:migrate] Migrations applied successfully.');
 
   await sql`DELETE FROM __vp_migration_hash`;
   await sql`INSERT INTO __vp_migration_hash (hash) VALUES (${currentHash})`;

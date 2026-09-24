@@ -1,5 +1,5 @@
 import { isErr } from '@vp/result';
-import { createDbClient, waitForDatabase } from './client';
+import { type Log, createDbClient, waitForDatabase } from './client';
 import { renditions, users, videos } from './schema';
 
 export const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
@@ -7,13 +7,13 @@ export const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
 export const SEED_VIDEO_ID = '018f0000-0000-7000-8000-000000000001';
 export const OTHER_PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000002';
 
-export async function seedDatabase(connectionUrl: string): Promise<void> {
+export async function seedDatabase(connectionUrl: string, log: Log): Promise<void> {
   const { db, sql } = createDbClient(connectionUrl);
 
-  const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:seed' });
+  const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:seed', log });
   if (isErr(reached)) throw reached.error;
 
-  console.log('[db:seed] Seeding database...');
+  log('[db:seed] Seeding database...');
 
   await db
     .insert(users)
@@ -160,6 +160,6 @@ export async function seedDatabase(connectionUrl: string): Promise<void> {
       },
     });
 
-  console.log('[db:seed] Seed completed successfully: Dev user + READY video created.');
+  log('[db:seed] Seed completed successfully: Dev user + READY video created.');
   await sql.end();
 }

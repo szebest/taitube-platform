@@ -10,7 +10,7 @@ async function main(): Promise<void> {
   const { postgres } = toAppConfig(loadEnv());
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const migrated = await fromPromise(
-      () => runMigrations(postgres.migrationsUrl),
+      () => runMigrations(postgres.migrationsUrl, console.log),
       (cause) => cause
     );
     if (isOk(migrated)) {

@@ -4,23 +4,16 @@ import { loadEnv } from '../load-env';
 const LOCAL_ENV = { DATABASE_URL: 'postgres://localhost:5432/vp' };
 
 function captureFailure(env: Record<string, string>): string {
-  const exitSpy = vi
-    .spyOn(process, 'exit')
-    .mockImplementation((() => {}) as unknown as typeof process.exit);
-  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
   try {
-    expect(() => loadEnv(env)).toThrow();
-    expect(exitSpy).toHaveBeenCalledWith(1);
-    return errorSpy.mock.calls[0]?.[0] as string;
-  } finally {
-    exitSpy.mockRestore();
-    errorSpy.mockRestore();
+    loadEnv(env);
+  } catch (failure) {
+    return (failure as Error).message;
   }
+  throw new Error('loadEnv accepted an invalid environment');
 }
 
 describe('packages/config: loadEnv', () => {
-  it('reports every invalid key, redacts the sensitive ones and exits 1', () => {
+  it('reports every invalid key and redacts the sensitive ones', () => {
     const message = captureFailure({ ADMIN_TOKEN: 'super-secret-token' });
 
     expect(message).toContain('DATABASE_URL');

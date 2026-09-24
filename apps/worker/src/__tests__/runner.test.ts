@@ -2,12 +2,17 @@ import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { queueUnavailable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
-import { createLogger } from '@vp/observability';
+import { LogContext, createLogger } from '@vp/observability';
 import { err } from '@vp/result';
 import { createWorkerRunner } from '../runner';
 
 const logger = createLogger({ service: 'runner-test', level: 'silent' });
-const collaborators = { logger, media: mediaTools, workerId: 'runner-spec' };
+const collaborators = {
+  logger,
+  logContext: new LogContext(),
+  media: mediaTools,
+  workerId: 'runner-spec',
+};
 
 describe('apps/worker: createWorkerRunner', () => {
   it('consumes the configured stage over the in-memory family', async () => {

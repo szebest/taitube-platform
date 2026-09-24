@@ -14,8 +14,12 @@ export function createDbClient(
   return { db: drizzle(sql, { schema }), sql };
 }
 
+/** Where a library function reports progress; its entrypoint decides what that means. */
+export type Log = (message: string) => void;
+
 export interface WaitOptions {
   label: string;
+  log: Log;
   attempts?: number;
   delayMs?: number;
 }
@@ -26,12 +30,12 @@ function messageOf(cause: unknown): string {
 
 export async function waitForDatabase(
   probe: () => PromiseLike<unknown>,
-  { label, attempts = 15, delayMs = 1_000 }: WaitOptions
+  { label, log, attempts = 15, delayMs = 1_000 }: WaitOptions
 ): Promise<Result<void, Error>> {
   for (let attempt = 1; attempt <= attempts; attempt++) {
     const reached = await fromPromise(probe, messageOf);
     if (isOk(reached)) return ok();
-    console.warn(
+    log(
       `[${label}] Database connection attempt ${attempt}/${attempts} failed (${reached.error}), retrying in ${delayMs / 1000}s...`
     );
     if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, delayMs));

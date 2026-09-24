@@ -62,6 +62,20 @@ describe('housekeeping: reconcile-uploads', () => {
     expect(await repairs()).toBe(1);
   });
 
+  it('starts a trace of its own for every repair', async () => {
+    await seedLostProbe();
+    await seedLostProbe();
+
+    await reconcile();
+
+    const traceIds = probeQueue.enqueuedJobs.map(
+      (job) => (job.data as { traceparent: string }).traceparent.split('-')[1]
+    );
+    expect(traceIds).toHaveLength(2);
+    expect(new Set(traceIds).size).toBe(2);
+    expect(traceIds).not.toContain('00000000000000000000000000000001');
+  });
+
   it('counts no repair when the probe queue refuses the job', async () => {
     await seedLostProbe();
     vi.spyOn(probeQueue, 'add').mockResolvedValue(err(queueUnavailable('add')));

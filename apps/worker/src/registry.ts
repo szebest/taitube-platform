@@ -46,6 +46,7 @@ export interface StageDeps {
   metrics: PipelineMetrics;
   media: MediaTools;
   workerId: string;
+  now: () => number;
 }
 
 export type StageProcessor = (job: QueueJob<unknown>) => Promise<Result<unknown, AnyFailure>>;
@@ -221,6 +222,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           cdn: d.config.cdn,
           workerId: d.workerId,
           logger: d.logger,
+          now: d.now,
           getQueue: d.getQueue,
         })
       ),

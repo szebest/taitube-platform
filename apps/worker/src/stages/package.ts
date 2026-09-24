@@ -21,7 +21,7 @@ import {
   stagePolicies,
 } from '@vp/job-contracts';
 import type { Logger, PipelineMetrics } from '@vp/observability';
-import { type Result, assertNever, err, isErr, ok } from '@vp/result';
+import { type Result, assertNever, err, isErr, ok, unwrapOr } from '@vp/result';
 import { getHeaderMapping, masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 
@@ -33,6 +33,7 @@ export interface PackageProcessorDeps {
   cdn: CdnBase;
   workerId: string;
   logger: Logger;
+  now: () => number;
   getQueue?: (name: string) => JobQueue;
 }
 
@@ -48,8 +49,18 @@ export type PackageStageFailure =
   | DatabaseUnavailable
   | QueueUnavailable;
 
+/** The source-duration bands `time_to_ready_seconds` is split by (SDD §13.1). */
+export function durationBucket(durationMs: number): '<1min' | '1-5' | '5-15' | '15-60' {
+  const minutes = durationMs / MS_PER_SECOND / 60;
+  if (minutes >= 15) return '15-60';
+  if (minutes >= 5) return '5-15';
+  if (minutes >= 1) return '1-5';
+  return '<1min';
+}
+
 export function createPackageProcessor(deps: PackageProcessorDeps) {
-  const { repositories, storage, metrics, publicBucket, cdn, workerId, logger, getQueue } = deps;
+  const { repositories, storage, metrics, publicBucket, cdn, workerId, logger, now, getQueue } =
+    deps;
 
   return async function processPackageJob(
     job: QueueJob<PackageJob>
@@ -188,7 +199,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
 
     const patch: Record<string, unknown> = {
       masterPlaylistKey: masterKey,
-      readyAt: new Date(),
+      readyAt: new Date(now()),
     };
     if (thumbResult?.posterKey) {
       patch['posterKey'] = thumbResult.posterKey;
@@ -206,6 +217,7 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
           eventSeq: 1,
           payload: { status: 'READY', playbackUrl },
           traceparent: job.data.traceparent,
+          requestId: job.data.requestId,
         }
       : undefined;
     const notifyJobOpts = {
@@ -239,19 +251,13 @@ export function createPackageProcessor(deps: PackageProcessorDeps) {
     log.info({ videoId, playbackUrl, transitioned }, 'Video transitioned to READY');
 
     if (transitioned && video) {
-      const durationSec = (video.durationMs || 0) / MS_PER_SECOND;
-      let bucket = '<1min';
-      if (durationSec >= 900) {
-        bucket = '15-60';
-      } else if (durationSec >= 300) {
-        bucket = '5-15';
-      } else if (durationSec >= 60) {
-        bucket = '1-5';
+      const upload = unwrapOr(await repositories.uploads.findByVideoId(videoId), null);
+      if (upload?.completedAt) {
+        metrics.timeToReady.observe(
+          { bucket: durationBucket(video.durationMs ?? 0) },
+          Math.max(0, (now() - upload.completedAt.getTime()) / MS_PER_SECOND)
+        );
       }
-
-      const createdAtTime = video.createdAt ? new Date(video.createdAt).getTime() : Date.now();
-      const timeToReadySec = Math.max(0, (Date.now() - createdAtTime) / MS_PER_SECOND);
-      metrics.timeToReady.observe({ bucket }, timeToReadySec);
     }
 
     if (transitioned && getQueue && notifyJobData) {

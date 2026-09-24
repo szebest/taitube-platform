@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
-import { createLogger } from '@vp/observability';
+import { LogContext, createLogger } from '@vp/observability';
 import { composeApp } from '../../apps/api/src/app';
 import { composeWorker } from '../../apps/worker/src/runner';
 
@@ -62,6 +62,7 @@ describe('architecture: consumers start after the metrics server and the heartbe
         worker: { stage: 'housekeeping', heartbeatPath: path.join(dir, 'heartbeat') },
       }),
       logger: createLogger({ service: 'start-order', level: 'silent' }),
+      logContext: new LogContext(),
       media: mediaTools,
       workerId: 'start-order',
     });

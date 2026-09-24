@@ -68,6 +68,9 @@ importers:
       '@fastify/under-pressure':
         specifier: ^9.1.0
         version: 9.1.0
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
       '@scalar/fastify-api-reference':
         specifier: ^1.67.0
         version: 1.67.0
@@ -847,6 +850,9 @@ importers:
         specifier: ^2.11.0
         version: 2.11.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/exporter-trace-otlp-http':
+        specifier: ^0.222.0
+        version: 0.222.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation':
         specifier: ^0.222.0
         version: 0.222.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/resources':

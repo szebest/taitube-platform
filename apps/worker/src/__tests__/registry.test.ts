@@ -54,6 +54,7 @@ function deps(): StageDeps {
     metrics: createMetricsRegistry(),
     media: mediaTools,
     workerId: 'registry-test',
+    now: Date.now,
   };
 }
 

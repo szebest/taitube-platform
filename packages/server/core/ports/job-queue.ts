@@ -89,4 +89,6 @@ export abstract class JobQueue implements HealthCheckable<QueueUnavailable> {
   }
   abstract close(): Promise<Result<void, QueueUnavailable>>;
   onFailed?(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void;
+  /** A job whose lock expired before its worker finished: it goes back to waiting, or fails. */
+  onStalled?(handler: (jobId: string) => void): void;
 }

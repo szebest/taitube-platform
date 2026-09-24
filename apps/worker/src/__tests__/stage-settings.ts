@@ -49,6 +49,7 @@ export const STAGE_SETTINGS = {
   workerId: 'worker-spec',
   metrics: createMetricsRegistry(),
   media: mediaTools,
+  now: Date.now,
 };
 
 export const TASKS = housekeepingTasks(config.housekeeping);

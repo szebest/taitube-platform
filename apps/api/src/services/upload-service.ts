@@ -8,6 +8,7 @@ import {
   type UploadPart,
   completeUpload,
 } from './upload-complete';
+import type { DispatchOrigin } from './probe-dispatch';
 import type { UploadContext } from './upload-context';
 import {
   type InitiateUploadFailure,
@@ -62,9 +63,10 @@ export class UploadService {
   complete(
     user: UserContext,
     uploadId: string,
-    parts?: UploadPart[]
+    parts?: UploadPart[],
+    origin: DispatchOrigin = {}
   ): Promise<Result<CompleteUploadResult, CompleteUploadFailure>> {
-    return completeUpload(this.ctx, user, uploadId, parts);
+    return completeUpload(this.ctx, user, uploadId, parts, origin);
   }
 
   abort(user: UserContext, uploadId: string): Promise<Result<void, AbortUploadFailure>> {

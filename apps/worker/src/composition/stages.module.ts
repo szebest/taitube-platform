@@ -3,7 +3,12 @@ import { type Container, token } from '@vp/composition';
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import { toPipelineError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
-import { type Logger, MetricsServer, type PipelineMetrics } from '@vp/observability';
+import {
+  type LogContext,
+  type Logger,
+  MetricsServer,
+  type PipelineMetrics,
+} from '@vp/observability';
 import { fromPromise, isErr, isOk, ok } from '@vp/result';
 import { createFailureHandler } from '../failure-handler';
 import { Heartbeat, everyInterval } from '../heartbeat';
@@ -15,6 +20,7 @@ import { withTelemetry } from '../with-telemetry';
 
 export interface StageRuntime {
   logger: Logger;
+  logContext: LogContext;
   workerId: string;
   media: MediaTools;
   outboxRelay: { enabled: boolean };
@@ -50,16 +56,18 @@ export function resolveStartOrder(c: Container): void {
  * The one place a stage result becomes a BullMQ outcome: a normal return is a completed job, so a
  * returned failure is raised here, and a flow parent reads its children's plain values (ADR-24).
  */
+type TracedJob = QueueJob<{ videoId?: string; traceparent?: string; requestId?: string }>;
+
 function instrument(
   stage: StageDefinition,
   processor: StageProcessor,
-  metrics: PipelineMetrics
-): (job: QueueJob<{ videoId?: string; traceparent?: string }>) => Promise<unknown> {
+  metrics: PipelineMetrics,
+  logContext: LogContext
+): (job: TracedJob) => Promise<unknown> {
   const { queue } = stage;
 
-  return withTelemetry(queue, async (job: QueueJob<{ videoId?: string; traceparent?: string }>) => {
+  const traced = withTelemetry(queue, async (job: TracedJob) => {
     const startTime = Date.now();
-    metrics.bullmqQueueJobs.set({ queue, state: 'active' }, 1);
 
     const enqueuedAt = (job as { timestamp?: number }).timestamp;
     if (enqueuedAt && enqueuedAt > 0) {
@@ -81,6 +89,11 @@ function instrument(
     if (isErr(settled.value)) throw toPipelineError(settled.value.error);
     return settled.value.value;
   });
+
+  return (job) => {
+    const { requestId } = job.data ?? {};
+    return logContext.run(requestId ? { requestId } : {}, () => traced(job));
+  };
 }
 
 export function registerStages(c: Container, runtime: StageRuntime): Container {
@@ -138,12 +151,16 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
           metrics: c.get(Adapters.Metrics),
           media: runtime.media,
           workerId: runtime.workerId,
+          now: Date.now,
         }),
       }),
       {
         start: async ({ queue, processor }) => {
           const stage = c.get(Worker.Stage);
           const metrics = c.get(Adapters.Metrics);
+          queue.onStalled?.(() =>
+            metrics.jobsProcessed.inc({ queue: stage.queue, result: 'stalled' })
+          );
           queue.onFailed?.(
             createFailureHandler({
               stage: stage.stage,
@@ -156,7 +173,9 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
             })
           );
           return queue.process(
-            instrument(stage, processor, metrics) as Parameters<JobQueue['process']>[0],
+            instrument(stage, processor, metrics, runtime.logContext) as Parameters<
+              JobQueue['process']
+            >[0],
             {
               concurrency: config().worker.concurrency ?? stage.concurrency,
               lockDurationMs: stage.lockDurationMs,

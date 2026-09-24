@@ -25,6 +25,11 @@
       "types": "./dist/env.d.ts",
       "import": "./src/env.ts",
       "default": "./dist/env.js"
+    },
+    "./log-capture": {
+      "types": "./dist/log-capture.d.ts",
+      "import": "./src/log-capture.ts",
+      "default": "./dist/log-capture.js"
     }
   },
   "scripts": {

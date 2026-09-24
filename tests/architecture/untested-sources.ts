@@ -66,7 +66,6 @@ export const UNTESTED_SOURCES: readonly string[] = [
   'apps/worker/src/stages/housekeeping/reconcile-reaction-counters.ts',
   'apps/worker/src/stages/housekeeping/tmp-sweep.ts',
   'apps/worker/src/stages/notify.ts',
-  'apps/worker/src/stages/package.ts',
   'apps/worker/src/stages/probe-enqueue.ts',
   'apps/worker/src/stages/probe.ts',
   'apps/worker/src/stages/progress-reporter.ts',

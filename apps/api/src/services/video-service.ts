@@ -20,6 +20,7 @@ import {
   reprocessVideo,
   softDeleteVideo,
 } from './video-lifecycle';
+import type { DispatchOrigin } from './probe-dispatch';
 
 import {
   type FeedSort,
@@ -205,9 +206,9 @@ export class VideoService {
   reprocess(
     user: UserContext,
     videoId: string,
-    options: { traceparent?: string } = {}
+    origin: DispatchOrigin = {}
   ): Promise<Result<ReprocessResult, VideoLifecycleServiceFailure>> {
-    return reprocessVideo(this.deps, user, videoId, options);
+    return reprocessVideo(this.deps, user, videoId, origin);
   }
 
   softDelete(

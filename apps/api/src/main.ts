@@ -7,8 +7,8 @@ import {
 import { loadEnv } from '@vp/config';
 import { type AppConfig, toAppConfig } from '@vp/env-schema';
 import { asThrowable } from '@vp/errors';
-import { type Tracing, initTracing } from '@vp/observability';
-import { assertNever, fromPromise, ignore, isErr, ok } from '@vp/result';
+import { type Tracing, registeredTracing } from '@vp/observability';
+import { assertNever, fromPromise, ignore, isErr } from '@vp/result';
 import { type ComposedApp, composeApp } from './app';
 import { Services } from './composition/services.module';
 
@@ -38,6 +38,7 @@ export async function serve(
   { tracing, timings = API_SHUTDOWN, signals }: ServeOptions
 ): Promise<ApiProcess> {
   const lifecycle: { phase: 'starting' | 'listening' | 'stopping' } = { phase: 'starting' };
+  const logger = container.get(Services.Logger);
   const shutdown = shutdownOnce({
     graceMs: timings.graceMs,
     get drainDelayMs() {
@@ -59,7 +60,7 @@ export async function serve(
       if (isErr(closed)) throw closed.error;
     },
     pending: () => container.disposing(),
-    log: (message) => console.log(`[api] ${message}`),
+    log: (message) => logger.info(message),
   });
   if (signals) exitOnSignals(signals, shutdown);
 
@@ -71,7 +72,7 @@ export async function serve(
       case 'interrupted':
         return { address: '', metricsPort: metricsPort(), shutdown };
       case 'failed':
-        console.error(`[api] startup failed at ${started.error.token}:`, started.error.cause);
+        logger.error({ token: started.error.token, err: started.error.cause }, 'Startup failed');
         await app.close();
         throw asThrowable(started.error.cause);
       default:
@@ -81,19 +82,14 @@ export async function serve(
 
   const address = await app.listen({ port: config.http.port, host: '0.0.0.0' });
   lifecycle.phase = 'listening';
-  console.log(`[api] Fastify server listening on ${address}`);
-  console.log(`[api] Metrics on http://0.0.0.0:${metricsPort()}/metrics`);
+  logger.info({ address, metricsPort: metricsPort() }, 'API listening');
 
   return { address, metricsPort: metricsPort(), shutdown };
 }
 
 export async function main(host: ProcessHost): Promise<ApiProcess> {
-  const config = toAppConfig(loadEnv(host.env, { exitOnError: false }));
-  const traced = initTracing({ serviceName: 'vp-api', ...config.otel });
-  if (isErr(traced)) console.warn(`[api] tracing disabled: ${traced.error.message}`);
-  const tracing = traced.ok ? traced.value : { shutdown: async () => ok() };
-
-  return serve(await composeApp({ config }), config, { tracing, signals: host });
+  const config = toAppConfig(loadEnv(host.env));
+  return serve(await composeApp({ config }), config, { tracing: registeredTracing, signals: host });
 }
 
 export function run(host: ProcessHost): Promise<void> {

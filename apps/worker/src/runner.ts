@@ -11,7 +11,7 @@ import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import { asThrowable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
-import type { Logger, PipelineMetrics } from '@vp/observability';
+import type { LogContext, Logger, PipelineMetrics } from '@vp/observability';
 import { type Result, assertNever, isErr, ok } from '@vp/result';
 import { Worker, registerStages, resolveStartOrder } from './composition/stages.module';
 import type { OutboxRelay } from './stages/housekeeping/outbox-relay';
@@ -30,6 +30,7 @@ export interface WorkerAdapterOverrides {
 export interface WorkerRunnerOptions {
   config: AppConfig;
   logger: Logger;
+  logContext: LogContext;
   media: MediaTools;
   workerId: string;
   adapters?: WorkerAdapterOverrides;
@@ -74,6 +75,7 @@ export async function composeWorker(options: WorkerRunnerOptions): Promise<Worke
   );
   registerStages(container, {
     logger,
+    logContext: options.logContext,
     workerId: options.workerId,
     media: options.media,
     outboxRelay: { enabled: !options.disableOutboxRelay },

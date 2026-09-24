@@ -18,6 +18,7 @@ export class InMemoryJobQueue extends JobQueue {
   private isHealthy = true;
   private processor?: (job: QueueJob<unknown>) => Promise<unknown>;
   private failedHandler?: (job: QueueJob<unknown>, err: Error) => Promise<void> | void;
+  private stalledHandler?: (jobId: string) => void;
   private readonly allJobs = new Map<string, QueueJob<unknown>>();
   private readonly jobStates = new Map<string, string>();
   private readonly schedulers = new Map<string, JobSchedulerInfo>();
@@ -52,6 +53,15 @@ export class InMemoryJobQueue extends JobQueue {
 
   onFailed(handler: (job: QueueJob<unknown>, err: Error) => Promise<void> | void): void {
     this.failedHandler = handler;
+  }
+
+  onStalled(handler: (jobId: string) => void): void {
+    this.stalledHandler = handler;
+  }
+
+  /** What BullMQ reports when a job's lock lapses; a spec drives it, nothing here times out. */
+  stall(jobId: string): void {
+    this.stalledHandler?.(jobId);
   }
 
   private getJobPriority(job: QueueJob<unknown>): number {

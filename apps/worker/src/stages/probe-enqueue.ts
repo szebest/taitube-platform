@@ -38,6 +38,7 @@ export async function enqueueFollowUpJobs(
         generation: job.data.generation,
         ladder: metadata.ladder,
         traceparent: job.data.traceparent,
+        requestId: job.data.requestId,
       } satisfies PackageJob,
       opts: {
         jobId: packageJobId,
@@ -60,6 +61,7 @@ export async function enqueueFollowUpJobs(
               fps: metadata.fps,
               durationMs: metadata.durationMs,
               traceparent: job.data.traceparent,
+              requestId: job.data.requestId,
             } satisfies TranscodeJob,
             opts: {
               jobId: transcodeJobId,
@@ -80,6 +82,7 @@ export async function enqueueFollowUpJobs(
             generation: job.data.generation,
             durationMs: metadata.durationMs,
             traceparent: job.data.traceparent,
+            requestId: job.data.requestId,
           } satisfies ThumbnailJob,
           opts: {
             jobId: ids.thumbnail(videoId, job.data.generation),
@@ -117,6 +120,7 @@ export async function enqueueFollowUpJobs(
           fps: metadata.fps,
           durationMs: metadata.durationMs,
           traceparent: job.data.traceparent,
+          requestId: job.data.requestId,
         } satisfies TranscodeJob,
         {
           jobId: transcodeJobId,
@@ -144,6 +148,7 @@ export async function enqueueFollowUpJobs(
           generation: job.data.generation,
           durationMs: metadata.durationMs,
           traceparent: job.data.traceparent,
+          requestId: job.data.requestId,
         } satisfies ThumbnailJob,
         {
           jobId: thumbnailJobId,

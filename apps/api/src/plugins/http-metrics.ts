@@ -1,6 +1,7 @@
 import type { PipelineMetrics } from '@vp/observability';
 import type { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
+import { routeLabel } from './route-label';
 
 export interface HttpMetricsOptions {
   metrics: PipelineMetrics;
@@ -12,12 +13,10 @@ async function httpMetricsPlugin(app: FastifyInstance, { metrics }: HttpMetricsO
     metrics.httpRequestsInFlight.inc();
   });
 
-  app.addHook('onResponse', async (req, reply) => {
+  app.addHook('onResponse', async (request, reply) => {
     metrics.httpRequestsInFlight.dec();
-
-    const route = (req.routeOptions as { url?: string } | undefined)?.url ?? req.url ?? 'unknown';
     metrics.httpRequestDuration.observe(
-      { method: req.method ?? 'unknown', route, status: String(reply.statusCode) },
+      { method: request.method, route: routeLabel(request), status: String(reply.statusCode) },
       reply.elapsedTime / 1000
     );
   });

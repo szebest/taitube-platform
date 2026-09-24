@@ -5,7 +5,12 @@ import { ignore } from '@vp/result';
 
 const PROBE_QUEUE = 'probe';
 
-export interface ProbeDispatchInput {
+/** Where the request that asked for the work came from, carried into the job for correlation. */
+export interface DispatchOrigin {
+  requestId?: string;
+}
+
+export interface ProbeDispatchInput extends DispatchOrigin {
   videoId: string;
   sourceKey: string;
   generation: number;
@@ -31,6 +36,7 @@ export function buildProbeDispatch(input: ProbeDispatchInput): ProbeDispatch {
     sourceKey: input.sourceKey,
     generation: input.generation,
     traceparent: input.traceparent,
+    requestId: input.requestId,
   };
 
   const opts: QueueJobOptions = {
