@@ -210,21 +210,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          bun: 'true'
+
+      - name: Replay the build from the turbo cache
+        run: pnpm exec turbo run build
+
+      - name: Bundle the API and the worker from that build
+        run: |
+          scripts/bundle-app.sh api "$RUNNER_TEMP/bundle-api" &
+          scripts/bundle-app.sh worker "$RUNNER_TEMP/bundle-worker" &
+          wait
+
+      - name: Restore or generate the smoke fixture
+        uses: ./.github/actions/video-fixtures
+        with:
+          only: s2
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           cleanup: false
 
-      - name: Build the API and worker images side by side from the layer cache
+      - name: Build the images around the bundles
         uses: docker/bake-action@v6
+        env:
+          API_BUNDLE: ${{ runner.temp }}/bundle-api
+          WORKER_BUNDLE: ${{ runner.temp }}/bundle-worker
         with:
           source: .
           load: true
           set: |
-            api.cache-from=type=gha,scope=api
-            api.cache-to=type=gha,scope=api,mode=max
-            worker.cache-from=type=gha,scope=worker-bun
-            worker.cache-to=type=gha,scope=worker-bun,mode=max
+            api.cache-from=type=gha,scope=api-runtime
+            api.cache-to=type=gha,scope=api-runtime,mode=max
+            worker.cache-from=type=gha,scope=worker-runtime
+            worker.cache-to=type=gha,scope=worker-runtime,mode=max
 
       - name: Start the stack offline (internal network, zero internet egress)
         env:
@@ -235,19 +257,6 @@ jobs:
           sudo sysctl -w net.ipv4.conf.all.route_localnet=1 2>/dev/null || true
           sudo iptables -t nat -C POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE
           docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml up -d --no-build
-
-      - name: Set up the workspace
-        uses: ./.github/actions/setup-workspace
-        with:
-          bun: 'true'
-
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build --filter=@vp/gen-video... --filter=@vp/dev-token...
-
-      - name: Restore or generate the smoke fixture
-        uses: ./.github/actions/video-fixtures
-        with:
-          only: s2
 
       - name: Wait for the stack and prove it has no egress
         env:

@@ -17,11 +17,13 @@ COPY --from=pruner /repo/out/json/ .
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY --from=pruner /repo/out/full/ .
+COPY --from=pruner /repo/scripts/bundle-app.sh /usr/local/bin/bundle-app
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter=@vp/worker... \
- && pnpm deploy --legacy --filter=@vp/worker --prod /out \
- && cp -r packages/server/db/drizzle /out/drizzle \
- && mkdir -p /out/node_modules/@vp/db \
- && cp -r packages/server/db/drizzle /out/node_modules/@vp/db/drizzle
+ && bundle-app worker /out
+
+# CI replaces this stage with the bundle it built on the runner (`--build-context bundle=<dir>`).
+FROM scratch AS bundle
+COPY --from=build /out /
 
 FROM oven/bun:1.4-slim AS runtime-bun
 FROM node:24-slim AS runtime-node
@@ -38,7 +40,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
  && mkdir -p /tmp/vp && chown -R 10001:10001 /tmp/vp
 
 WORKDIR /app
-COPY --from=build --chown=10001:10001 /out /app
+COPY --from=bundle --chown=10001:10001 / /app
 
 USER 10001
 ENV NODE_ENV=production TMPDIR=/tmp/vp WORKER_HEARTBEAT_PATH=/tmp/vp/heartbeat TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 NODE_OPTIONS="--import @vp/config/register"

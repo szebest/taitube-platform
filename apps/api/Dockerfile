@@ -15,11 +15,13 @@ COPY --from=pruner /repo/out/json/ .
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY --from=pruner /repo/out/full/ .
+COPY --from=pruner /repo/scripts/bundle-app.sh /usr/local/bin/bundle-app
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter=@vp/api... \
- && pnpm deploy --legacy --filter=@vp/api --prod /out \
- && cp -r packages/server/db/drizzle /out/drizzle \
- && mkdir -p /out/node_modules/@vp/db \
- && cp -r packages/server/db/drizzle /out/node_modules/@vp/db/drizzle
+ && bundle-app api /out
+
+# CI replaces this stage with the bundle it built on the runner (`--build-context bundle=<dir>`).
+FROM scratch AS bundle
+COPY --from=build /out /
 
 FROM node:24-slim AS runtime
 # The runtime runs the app, not a package manager: npm and corepack only carry CVEs in here.
@@ -29,7 +31,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
  && useradd -r -u 10001 -m appuser
 
 WORKDIR /app
-COPY --from=build --chown=appuser:appuser /out /app
+COPY --from=bundle --chown=appuser:appuser / /app
 
 USER appuser
 ENV NODE_ENV=production PORT=3000 METRICS_PORT=9464 TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 NODE_OPTIONS="--import @vp/config/register"
