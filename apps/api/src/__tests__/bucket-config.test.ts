@@ -1,9 +1,6 @@
 import { loadEnv } from '@vp/config';
-import { mintToken } from '@vp/dev-token';
 import { toAppConfig } from '@vp/env-schema';
-import { composeApp } from '../app';
-
-const token = mintToken({ sub: '00000000-0000-7000-8000-00000000b001', role: 'user', ttl: '1h' });
+import { TOKENS, bearer, buildTestApp } from './test-app';
 
 describe('apps/api: the raw bucket is the one the environment declares', () => {
   it('presigns an upload against S3_BUCKET_RAW', async () => {
@@ -15,12 +12,12 @@ describe('apps/api: the raw bucket is the one the environment declares', () => {
         S3_BUCKET_RAW: 'vp-raw',
       })
     );
-    const app = (await composeApp({ config })).app;
+    const { app } = await buildTestApp({ config });
 
     const res = await app.inject({
       method: 'POST',
       url: '/v1/uploads',
-      headers: { authorization: `Bearer ${token}` },
+      headers: bearer(TOKENS.user),
       payload: { filename: 'clip.mp4', sizeBytes: 1024, contentType: 'video/mp4' },
     });
     await app.close();

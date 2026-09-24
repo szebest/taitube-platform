@@ -1,6 +1,4 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
-import { composeApp } from '../app';
 import {
   CATEGORIES_CACHE_CONTROL,
   type CategoriesApp,
@@ -9,6 +7,7 @@ import {
   patchCategory,
   postCategory,
 } from './categories-app';
+import { TOKENS, buildTestApp } from './test-app';
 
 describe('public category API and its cache', () => {
   let ctx: CategoriesApp;
@@ -76,8 +75,7 @@ describe('public category API and its cache', () => {
 
     const res1 = await getCategories();
     expect(res1.statusCode).toBe(200);
-    const etag = res1.headers.etag as string;
-    expect(etag).toBeDefined();
+    const etag = String(res1.headers.etag);
 
     const res2 = await getCategories('/v1/categories', { 'if-none-match': etag });
 
@@ -100,7 +98,7 @@ describe('public category API and its cache', () => {
     const get1 = await getCategories();
     expect(get1.json()).toHaveLength(0);
 
-    const createRes = await postCategory(ctx.app, ctx.adminJwt, {
+    const createRes = await postCategory(ctx.app, TOKENS.admin, {
       name: 'Technology',
       slug: 'technology',
       description: 'Tech & Gadgets',
@@ -120,11 +118,11 @@ describe('public category API and its cache', () => {
 
   it('serves an updated category with a fresh ETag right after the admin PATCH', async () => {
     const catId = (
-      await postCategory(ctx.app, ctx.adminJwt, { name: 'Old Name', slug: 'old-name' })
+      await postCategory(ctx.app, TOKENS.admin, { name: 'Old Name', slug: 'old-name' })
     ).json().id;
     const get1 = await getCategories();
 
-    const patchRes = await patchCategory(ctx.app, ctx.adminJwt, catId, {
+    const patchRes = await patchCategory(ctx.app, TOKENS.admin, catId, {
       name: 'New Updated Name',
       sortOrder: 10,
     });
@@ -140,27 +138,24 @@ describe('public category API and its cache', () => {
   it('purges the in-process cache of a second instance when the first one mutates', async () => {
     const podBCache = newCategoryCache(ctx.cache);
     expectOk(await podBCache.start());
-    const podB = (
-      await composeApp({
-        config: inProcessAppConfig(),
-        adapters: {
-          repositories: ctx.repositories,
-          cache: ctx.cache,
-          storage: ctx.storage,
-          categoryCache: podBCache,
-        },
-      })
-    ).app;
+    const { app: podB } = await buildTestApp({
+      adapters: {
+        repositories: ctx.repositories,
+        cache: ctx.cache,
+        storage: ctx.storage,
+        categoryCache: podBCache,
+      },
+    });
 
     try {
-      await postCategory(ctx.app, ctx.adminJwt, { name: 'Initial Music', slug: 'initial-music' });
+      await postCategory(ctx.app, TOKENS.admin, { name: 'Initial Music', slug: 'initial-music' });
 
       const podBGet1 = await podB.inject({ method: 'GET', url: '/v1/categories' });
       expect(podBGet1.statusCode).toBe(200);
       expect(podBGet1.json()[0].name).toBe('Initial Music');
       expect(podBCache.getL1Size()).toBe(1);
 
-      const patchRes = await patchCategory(ctx.app, ctx.adminJwt, podBGet1.json()[0].id, {
+      const patchRes = await patchCategory(ctx.app, TOKENS.admin, podBGet1.json()[0].id, {
         name: 'Updated Music By Pod A',
       });
       expect(patchRes.statusCode).toBe(200);

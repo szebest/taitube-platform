@@ -41,7 +41,7 @@ describe('apps/api/services: pollQueueMetrics', () => {
     vi.useFakeTimers({ now: start });
     const probe = new InMemoryJobQueue('probe');
     await probe.add('probe', { videoId: 'first' }, { priority: 5 });
-    vi.setSystemTime(start + 60_000);
+    vi.advanceTimersByTime(60_000);
     await probe.add('probe', { videoId: 'second' });
     vi.useRealTimers();
     const metrics = createMetricsRegistry();

@@ -1,8 +1,6 @@
-import { inProcessAppConfig } from '@vp/env-schema';
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
+import { buildTestApp } from '../../__tests__/test-app';
 
 const CREATOR = '11111111-1111-7111-8111-111111111111';
 const CHANNEL = '22222222-2222-7222-8222-222222222222';
@@ -11,7 +9,9 @@ describe('public channel route', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    const repositories = new InMemoryRepositories();
+    const testApp = await buildTestApp();
+    app = testApp.app;
+    const { repositories } = testApp;
     await repositories.users.upsert({
       id: CREATOR,
       email: 'creator@example.com',
@@ -24,8 +24,6 @@ describe('public channel route', () => {
       handle: 'makers',
       displayName: 'The Makers',
     });
-    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
-    await app.ready();
   });
 
   afterAll(async () => {

@@ -1,13 +1,12 @@
 import type { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { bearer, buildInMemoryApp, seedVideo } from './in-memory-app';
-import { SEEDED } from '@vp/testing';
+import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
 
 const USER_1 = SEEDED.userId;
-const USER_2 = '00000000-0000-7000-8000-000000000002';
+const USER_2 = SEEDED.otherUserId;
 const CAT_TECH = '10000000-0000-7000-8000-000000000001';
 const CAT_MUSIC = '20000000-0000-7000-8000-000000000002';
 const FEED_CACHE_CONTROL = 'public, max-age=30, stale-while-revalidate=60';
@@ -20,10 +19,10 @@ describe('apps/api public video feed', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
-  const userToken = mintToken({ sub: USER_1, role: 'user', ttl: '1h' });
+  const userToken = TOKENS.user;
 
   beforeAll(async () => {
-    ({ app, repositories, cache } = await buildInMemoryApp());
+    ({ app, repositories, cache } = await buildTestApp());
   });
 
   afterAll(async () => {
@@ -65,8 +64,7 @@ describe('apps/api public video feed', () => {
 
     const res1 = await app.inject({ method: 'GET', url: '/v1/feed' });
     expect(res1.statusCode).toBe(200);
-    const etag = res1.headers['etag'] as string;
-    expect(etag).toBeDefined();
+    const etag = String(res1.headers['etag']);
 
     const res2 = await app.inject({
       method: 'GET',

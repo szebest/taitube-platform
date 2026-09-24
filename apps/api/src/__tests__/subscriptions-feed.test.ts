@@ -22,7 +22,7 @@ describe('GET /v1/feed/subscriptions', () => {
     await subscription(ctx.app, 'POST', CHANNEL_2.id);
 
     publicVideo1Id = expectOk(
-      await ctx.repos.videos.create({
+      await ctx.repositories.videos.create({
         id: '77777777-7777-7777-8777-777777777771',
         ownerId: CREATOR_ID,
         title: 'Creator 1 Public Video',
@@ -33,7 +33,7 @@ describe('GET /v1/feed/subscriptions', () => {
         masterPlaylistKey: 'videos/c1v1/hls/master.m3u8',
       })
     ).id;
-    await ctx.repos.videos.create({
+    await ctx.repositories.videos.create({
       id: '77777777-7777-7777-8777-777777777772',
       ownerId: CREATOR_ID,
       title: 'Creator 1 Private Video',
@@ -42,7 +42,7 @@ describe('GET /v1/feed/subscriptions', () => {
       sourceKey: 'raw/c1v2.mp4',
     });
     publicVideo2Id = expectOk(
-      await ctx.repos.videos.create({
+      await ctx.repositories.videos.create({
         id: '77777777-7777-7777-8777-777777777773',
         ownerId: OTHER_CREATOR_ID,
         title: 'Creator 2 Public Video',
@@ -51,7 +51,7 @@ describe('GET /v1/feed/subscriptions', () => {
         sourceKey: 'raw/c2v1.mp4',
       })
     ).id;
-    await ctx.repos.videos.create({
+    await ctx.repositories.videos.create({
       id: '77777777-7777-7777-8777-777777777774',
       ownerId: OTHER_CREATOR_ID,
       title: 'Creator 2 Processing Video',

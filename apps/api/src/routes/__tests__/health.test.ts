@@ -1,11 +1,10 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import {
   InMemoryCacheClient,
   InMemoryDatabaseClient,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
+import { buildTestApp } from '../../__tests__/test-app';
 
 describe('health routes', () => {
   let app: FastifyInstance;
@@ -14,16 +13,16 @@ describe('health routes', () => {
   const storage = new InMemoryStorageClient();
   const dependencies = { postgres: dbClient, redis: cache, s3: storage };
 
-  beforeEach(async () => {
-    for (const dependency of Object.values(dependencies)) dependency.setHealthy(true);
-    app = (
-      await composeApp({ config: inProcessAppConfig(), adapters: { dbClient, cache, storage } })
-    ).app;
-    await app.ready();
+  beforeAll(async () => {
+    ({ app } = await buildTestApp({ adapters: { dbClient, cache, storage } }));
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    for (const dependency of Object.values(dependencies)) dependency.setHealthy(true);
   });
 
   it.each(['/healthz', '/livez'])('answers liveness on %s with 200 ok', async (url) => {
@@ -43,7 +42,7 @@ describe('health routes', () => {
     });
   });
 
-  it.each(Object.keys(dependencies) as (keyof typeof dependencies)[])(
+  it.each(['postgres', 'redis', 's3'] as const)(
     'answers readiness with 503 degraded naming %s when it fails',
     async (name) => {
       dependencies[name].setHealthy(false);
@@ -59,12 +58,14 @@ describe('health routes', () => {
   );
 
   it('answers readiness 503 while draining yet keeps liveness at 200', async () => {
-    app.services.readiness.beginDrain();
+    const { app: draining } = await buildTestApp();
+    draining.services.readiness.beginDrain();
 
     const [ready, live] = await Promise.all([
-      app.inject({ method: 'GET', url: '/readyz' }),
-      app.inject({ method: 'GET', url: '/livez' }),
+      draining.inject({ method: 'GET', url: '/readyz' }),
+      draining.inject({ method: 'GET', url: '/livez' }),
     ]);
+    await draining.close();
 
     expect(ready.statusCode).toBe(503);
     expect(ready.json()).toEqual({ status: 'degraded', checks: {} });

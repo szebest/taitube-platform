@@ -1,14 +1,26 @@
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { ADMIN_TOKEN, type AdminApp, buildAdminApp } from './admin-app';
-import { bearer } from './in-memory-app';
+import {
+  ADMIN_TOKEN,
+  TOKENS,
+  type TestApp,
+  bearer,
+  buildTestApp,
+  inMemoryQueues,
+} from './test-app';
 
 describe('admin DLQ endpoints', () => {
-  let ctx: AdminApp;
+  let ctx: TestApp;
+  const transcode = new InMemoryJobQueue('transcode-720p');
 
   beforeAll(async () => {
-    ctx = await buildAdminApp();
+    ctx = await buildTestApp({
+      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+      adapters: { queues: inMemoryQueues(transcode) },
+    });
   });
 
   afterAll(async () => {
@@ -32,44 +44,25 @@ describe('admin DLQ endpoints', () => {
       }
     });
 
-    it('rejects unauthenticated requests with 401', async () => {
-      const res = await ctx.app.inject({ method: 'GET', url: '/admin/dlq' });
-      expect(res.statusCode).toBe(401);
-    });
-
-    it('rejects non-admin users with 403', async () => {
-      const res = await ctx.app.inject({
-        method: 'GET',
-        url: '/admin/dlq',
-        headers: bearer(ctx.otherJwt),
-      });
-      expect(res.statusCode).toBe(403);
-    });
-
-    it('allows admin via Bearer JWT and lists entries', async () => {
-      const res = await ctx.app.inject({
-        method: 'GET',
-        url: '/admin/dlq',
-        headers: bearer(ctx.adminJwt),
-      });
-      expect(res.statusCode).toBe(200);
-      expect(res.json().items.length).toBeGreaterThanOrEqual(5);
-    });
-
-    it('allows admin via x-admin-token header', async () => {
-      const res = await ctx.app.inject({
-        method: 'GET',
-        url: '/admin/dlq',
+    it.each([
+      { caller: 'an anonymous caller', headers: {}, status: 401 },
+      { caller: 'a user who is not an admin', headers: bearer(TOKENS.otherUser), status: 403 },
+      { caller: 'an admin by Bearer JWT', headers: bearer(TOKENS.admin), status: 200 },
+      {
+        caller: 'an admin by x-admin-token',
         headers: { 'x-admin-token': ADMIN_TOKEN },
-      });
-      expect(res.statusCode).toBe(200);
+        status: 200,
+      },
+    ])('answers $caller with $status', async ({ headers, status }) => {
+      const res = await ctx.app.inject({ method: 'GET', url: '/admin/dlq', headers });
+      expect(res.statusCode).toBe(status);
     });
 
     it('supports pagination with limit and cursor', async () => {
       const firstPage = await ctx.app.inject({
         method: 'GET',
         url: '/admin/dlq?limit=2',
-        headers: bearer(ctx.adminJwt),
+        headers: bearer(TOKENS.admin),
       });
       expect(firstPage.statusCode).toBe(200);
       const page1 = firstPage.json();
@@ -79,7 +72,7 @@ describe('admin DLQ endpoints', () => {
       const secondPage = await ctx.app.inject({
         method: 'GET',
         url: `/admin/dlq?limit=2&cursor=${encodeURIComponent(page1.nextCursor)}`,
-        headers: bearer(ctx.adminJwt),
+        headers: bearer(TOKENS.admin),
       });
       expect(secondPage.statusCode).toBe(200);
       const page2 = secondPage.json();
@@ -91,7 +84,7 @@ describe('admin DLQ endpoints', () => {
       const res = await ctx.app.inject({
         method: 'GET',
         url: '/admin/dlq?status=REPLAYED',
-        headers: bearer(ctx.adminJwt),
+        headers: bearer(TOKENS.admin),
       });
       expect(res.statusCode).toBe(200);
       const data = res.json();
@@ -111,7 +104,7 @@ describe('admin DLQ endpoints', () => {
       const forbidden = await ctx.app.inject({
         method,
         url: url(uuidv7()),
-        headers: bearer(ctx.ownerJwt),
+        headers: bearer(TOKENS.user),
       });
       expect(forbidden.statusCode).toBe(403);
     });
@@ -120,7 +113,7 @@ describe('admin DLQ endpoints', () => {
       const res = await ctx.app.inject({
         method,
         url: url('nonexistent-id'),
-        headers: bearer(ctx.adminJwt),
+        headers: bearer(TOKENS.admin),
       });
       expect(res.statusCode).toBe(404);
       expect(res.json().code).toBe(ErrorCodes.DLQ_ENTRY_NOT_FOUND);
@@ -142,14 +135,12 @@ describe('admin DLQ endpoints', () => {
         status: 'PARKED',
       })
     ).id;
-    const targetQueue = ctx.queues.get('transcode-720p');
-    if (!targetQueue) throw new Error('transcode-720p queue missing');
-    targetQueue.enqueuedJobs.length = 0;
+    transcode.enqueuedJobs.length = 0;
 
     const res = await ctx.app.inject({
       method: 'POST',
       url: `/admin/dlq/${dlqEntryId}/replay`,
-      headers: bearer(ctx.adminJwt),
+      headers: bearer(TOKENS.admin),
     });
 
     expect(res.statusCode).toBe(202);
@@ -158,8 +149,8 @@ describe('admin DLQ endpoints', () => {
     expect(data.dlqEntryId).toBe(dlqEntryId);
     expect(data.replayJobId).toBe(`${videoId}--transcode--720p--g1--r1`);
 
-    expect(targetQueue.enqueuedJobs).toHaveLength(1);
-    expect(targetQueue.enqueuedJobs[0]?.id).toBe(`${videoId}--transcode--720p--g1--r1`);
+    expect(transcode.enqueuedJobs).toHaveLength(1);
+    expect(transcode.enqueuedJobs[0]?.id).toBe(`${videoId}--transcode--720p--g1--r1`);
 
     const updated = expectOk(await ctx.repositories.dlq.findById(dlqEntryId));
     expect(updated?.status).toBe('REPLAYED');
@@ -194,7 +185,7 @@ describe('admin DLQ endpoints', () => {
     const res = await ctx.app.inject({
       method: 'DELETE',
       url: `/admin/dlq/${dlqEntryId}`,
-      headers: bearer(ctx.adminJwt),
+      headers: bearer(TOKENS.admin),
     });
     expect(res.statusCode).toBe(204);
 

@@ -1,16 +1,15 @@
-import { inProcessAppConfig } from '@vp/env-schema';
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
+import { buildTestApp } from '../../__tests__/test-app';
 
 const CACHE_CONTROL = 'public, max-age=300, stale-while-revalidate=60';
 
 describe('public category routes', () => {
   let app: FastifyInstance;
-  let repositories: InMemoryRepositories;
 
   beforeAll(async () => {
-    repositories = new InMemoryRepositories();
+    const testApp = await buildTestApp();
+    app = testApp.app;
+    const { repositories } = testApp;
     await repositories.categories.create({ name: 'Music', slug: 'music', sortOrder: 1 });
     await repositories.categories.create({
       name: 'Hidden',
@@ -18,8 +17,6 @@ describe('public category routes', () => {
       sortOrder: 0,
       isActive: false,
     });
-    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
-    await app.ready();
   });
 
   afterAll(async () => {

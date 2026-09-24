@@ -7,12 +7,12 @@ describe('apps/api/services: Poller', () => {
   });
 
   it('opens no timer until it is started', () => {
+    const intervals = vi.spyOn(globalThis, 'setInterval');
     const poll = vi.fn(async () => {});
-    const before = process.getActiveResourcesInfo().filter((r) => r === 'Timeout').length;
 
     new Poller(poll, 1_000);
 
-    expect(process.getActiveResourcesInfo().filter((r) => r === 'Timeout').length).toBe(before);
+    expect(intervals).not.toHaveBeenCalled();
     expect(poll).not.toHaveBeenCalled();
   });
 
@@ -49,7 +49,8 @@ describe('apps/api/services: Poller', () => {
     const poller = new Poller(poll, 1_000);
 
     expectOk(await poller.start());
-    await vi.advanceTimersByTimeAsync(1_000);
+    await Promise.resolve();
+    vi.advanceTimersByTime(1_000);
     poller.stop();
 
     expect(poll).toHaveBeenCalledTimes(2);

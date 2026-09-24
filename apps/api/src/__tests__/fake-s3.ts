@@ -1,6 +1,6 @@
 import * as http from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { S3MultipartStorage, S3StorageClient } from '@vp/adapters/s3';
+import { boundPort } from './bound-port';
 
 interface StoredObject {
   size: number;
@@ -144,7 +144,7 @@ export async function startFakeS3(): Promise<FakeS3> {
   });
 
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const endpoint = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const endpoint = `http://127.0.0.1:${boundPort(server)}`;
   const storage = new S3StorageClient({
     type: 'connection',
     healthBucket: 'raw',

@@ -1,12 +1,13 @@
 import * as http from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { loadEnv } from '@vp/config';
 import { mintToken } from '@vp/dev-token';
 import { toAppConfig } from '@vp/env-schema';
+import { createLogger } from '@vp/logger';
 import { PRODUCTION_ENV } from '@vp/testing/env';
 import { signJwt, signingKey } from '@vp/testing/jwt';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../app';
+import { boundPort } from './bound-port';
+import { bearer, buildTestApp } from './test-app';
 
 const ADMIN_ID = '00000000-0000-7000-8000-0000000000c1';
 
@@ -35,7 +36,7 @@ describe('apps/api: authentication under a production configuration', () => {
       response.end(JSON.stringify({ keys: [rsa.jwk, ec.jwk] }));
     });
     await new Promise<void>((resolve) => idp.listen(0, '127.0.0.1', resolve));
-    const { port } = idp.address() as AddressInfo;
+    const port = boundPort(idp);
 
     const env = loadEnv({
       ...PRODUCTION_ENV,
@@ -43,7 +44,8 @@ describe('apps/api: authentication under a production configuration', () => {
       AUTH_ALGORITHMS: 'RS256,RS512,ES256',
       AUTH_JWKS_URL: `http://127.0.0.1:${port}/.well-known/jwks.json`,
     });
-    app = (await composeApp({ config: toAppConfig(env) })).app;
+    const logger = createLogger({ service: 'vp-api', level: 'silent', format: 'json' });
+    ({ app } = await buildTestApp({ config: toAppConfig(env), logger }));
   });
 
   afterAll(async () => {
@@ -55,7 +57,7 @@ describe('apps/api: authentication under a production configuration', () => {
     return app.inject({
       method: 'GET',
       url: '/v1/admin/dlq',
-      headers: { authorization: `Bearer ${token}` },
+      headers: bearer(token),
     });
   }
 

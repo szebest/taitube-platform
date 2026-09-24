@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { bearer } from './in-memory-app';
+import { bearer } from './test-app';
 
 export interface UploadRequest {
   filename: string;

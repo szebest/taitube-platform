@@ -1,8 +1,3 @@
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ok } from '@vp/result';
@@ -10,18 +5,19 @@ import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 import { serve } from '../serve';
+import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
 
 describe('HTTP and auth foundations', () => {
   let app: FastifyInstance;
-  const repositories = new InMemoryRepositories();
-  const cache = new InMemoryCacheClient();
-  const storage = new InMemoryStorageClient();
   const cdnBase = 'http://localhost:9000/public';
 
   const SEED_VIDEO_ID = SEEDED.videoId;
   const OTHER_PRIVATE_VIDEO_ID = SEEDED.otherVideoId;
 
   beforeAll(async () => {
+    const testApp = await buildTestApp({ config: inProcessAppConfig({ cdn: cdnBase }) });
+    app = testApp.app;
+    const { repositories } = testApp;
     await repositories.videos.create({
       id: SEED_VIDEO_ID,
       ownerId: SEEDED.userId,
@@ -77,26 +73,12 @@ describe('HTTP and auth foundations', () => {
       playlistKey: `videos/${SEED_VIDEO_ID}/hls/480p/index.m3u8`,
     });
 
-    await repositories.videos.create({
+    await seedVideo(repositories, {
       id: OTHER_PRIVATE_VIDEO_ID,
       ownerId: SEEDED.otherUserId,
       title: 'Other Private Video',
       visibility: 'private',
-      status: 'READY',
-      sourceKey: `raw/${OTHER_PRIVATE_VIDEO_ID}/source.mp4`,
     });
-
-    app = (
-      await composeApp({
-        adapters: {
-          repositories,
-          cache,
-          storage,
-        },
-        config: inProcessAppConfig({ cdn: cdnBase }),
-      })
-    ).app;
-    await app.ready();
   });
 
   afterAll(async () => {
@@ -104,18 +86,12 @@ describe('HTTP and auth foundations', () => {
   });
 
   it('GET /v1/videos/:id with a minted token returns 200 and the SDD §6.3 shape', async () => {
-    const token = mintToken({
-      sub: SEEDED.userId,
-      role: 'admin',
-      ttl: '1h',
-    });
+    const token = mintToken({ sub: SEEDED.userId, role: 'admin', ttl: '1h' });
 
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${SEED_VIDEO_ID}`,
-      headers: {
-        authorization: `Bearer ${token}`,
-      },
+      headers: bearer(token),
     });
 
     expect(res.statusCode).toBe(200);
@@ -156,18 +132,10 @@ describe('HTTP and auth foundations', () => {
   });
 
   it("hides another owner's private video behind a 404", async () => {
-    const nonAdminToken = mintToken({
-      sub: SEEDED.userId,
-      role: 'user',
-      ttl: '1h',
-    });
-
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${OTHER_PRIVATE_VIDEO_ID}`,
-      headers: {
-        authorization: `Bearer ${nonAdminToken}`,
-      },
+      headers: bearer(TOKENS.user),
     });
 
     expect(res.statusCode).toBe(404);

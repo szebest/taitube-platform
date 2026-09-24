@@ -143,7 +143,6 @@ describe('apps/api/services: FeedService', () => {
         cursor: first.data.nextCursor ?? undefined,
       })
     );
-    vi.restoreAllMocks();
 
     expect(first.data.items.map((item) => item.id)).toEqual([seeds[0]?.id]);
     expect(second.data.items.map((item) => item.id)).toEqual([seeds[1]?.id]);
