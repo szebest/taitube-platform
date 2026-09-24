@@ -9,7 +9,7 @@ import type {
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
-import { type AnyFailure, toPipelineError } from '@vp/errors';
+import { asThrowable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { Logger, PipelineMetrics } from '@vp/observability';
 import { type Result, assertNever, isErr, ok } from '@vp/result';
@@ -112,10 +112,8 @@ export async function createWorkerRunner(options: WorkerRunnerOptions): Promise<
   if (!isErr(started)) return runner;
 
   switch (started.error.type) {
-    case 'failed': {
-      const { cause } = started.error;
-      throw cause instanceof Error ? cause : toPipelineError(cause as AnyFailure);
-    }
+    case 'failed':
+      throw asThrowable(started.error.cause);
     case 'interrupted':
       return runner;
     default:

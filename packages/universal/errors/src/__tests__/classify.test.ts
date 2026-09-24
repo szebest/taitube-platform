@@ -1,4 +1,5 @@
 import {
+  asThrowable,
   classifyError,
   errorCodeOf,
   isPermanentError,
@@ -121,5 +122,27 @@ describe('@vp/errors: errorCodeOf', () => {
     { shape: 'nothing at all', error: undefined },
   ])('persists INTERNAL for $shape', ({ error }) => {
     expect(errorCodeOf(error)).toBe(ErrorCodes.INTERNAL);
+  });
+});
+
+describe('@vp/errors: asThrowable', () => {
+  it('keeps an Error it was handed, EADDRINUSE included', () => {
+    const bound = Object.assign(new Error('listen EADDRINUSE'), { code: 'EADDRINUSE' });
+
+    expect(asThrowable(bound)).toBe(bound);
+  });
+
+  it('raises a vocabulary failure through its retry class', () => {
+    const thrown = asThrowable({
+      code: ErrorCodes.CACHE_UNAVAILABLE,
+      message: 'Cache unavailable',
+    });
+
+    expect(thrown).toBeInstanceOf(TransientError);
+    expect((thrown as TransientError).code).toBe(ErrorCodes.CACHE_UNAVAILABLE);
+  });
+
+  it('wraps anything else in a plain Error', () => {
+    expect(asThrowable('down')).toEqual(new Error('down'));
   });
 });

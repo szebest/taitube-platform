@@ -6,7 +6,7 @@ import {
 } from '@vp/composition';
 import { loadEnv } from '@vp/config';
 import { type AppConfig, toAppConfig } from '@vp/env-schema';
-import { type AnyFailure, toPipelineError } from '@vp/errors';
+import { asThrowable } from '@vp/errors';
 import { type Tracing, initTracing } from '@vp/observability';
 import { assertNever, fromPromise, ignore, isErr, ok } from '@vp/result';
 import { type ComposedApp, composeApp } from './app';
@@ -73,7 +73,7 @@ export async function serve(
       case 'failed':
         console.error(`[api] startup failed at ${started.error.token}:`, started.error.cause);
         await app.close();
-        throw toPipelineError(started.error.cause as AnyFailure);
+        throw asThrowable(started.error.cause);
       default:
         return assertNever(started.error, 'StartupFailed');
     }

@@ -6,6 +6,7 @@ import {
 } from '@vp/composition';
 import { loadEnv } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
+import { asThrowable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
 import { createLogger, initTracing } from '@vp/observability';
 import { ignore, isErr } from '@vp/result';
@@ -56,7 +57,7 @@ export async function main(host: ProcessHost): Promise<WorkerProcess> {
   exitOnSignals(host, shutdown);
 
   const started = await runner.start();
-  if (isErr(started) && started.error.type === 'failed') throw started.error.cause;
+  if (isErr(started) && started.error.type === 'failed') throw asThrowable(started.error.cause);
 
   console.log(`[worker] Started ${runner.started().join(', ')}; consuming "${runner.worker.name}"`);
   console.log(`[worker] Metrics on http://0.0.0.0:${runner.metricsPort()}/metrics`);

@@ -65,6 +65,28 @@ describe('apps/api: main', () => {
     expect(await refusesConnections(port)).toBe(true);
   });
 
+  it('exits 1 with the bind error, and never listens, when its metrics port is already bound', async () => {
+    const taken = net.createServer();
+    await new Promise<void>((resolve) => taken.listen(0, '0.0.0.0', resolve));
+    const metricsPort = (taken.address() as net.AddressInfo).port;
+    const port = await freePort();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const booting = host({
+      NODE_ENV: 'test',
+      ADAPTER_FAMILY: 'in-memory',
+      DATABASE_URL: 'postgres://localhost:5432/vp',
+      PORT: String(port),
+      METRICS_PORT: String(metricsPort),
+    });
+
+    await run(booting);
+
+    expect(booting.exit).toHaveBeenCalledWith(1);
+    expect(error.mock.calls.at(-1)?.[1]).toMatchObject({ code: 'EADDRINUSE' });
+    expect(await refusesConnections(port)).toBe(true);
+    await new Promise<void>((resolve) => taken.close(() => resolve()));
+  });
+
   it('finishes a request that is in flight when shutdown begins', async () => {
     const composed = await composeApp({ config: config() });
     let release = () => {};

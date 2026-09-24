@@ -69,3 +69,20 @@ export function toPipelineError(failure: AnyFailure): PermanentError | Transient
   const Thrown = retryClass(failure.code) === 'permanent' ? PermanentError : TransientError;
   return new Thrown(failure.code, failure.message, failureDetails(failure));
 }
+
+/**
+ * What a composition root throws for a start that failed: an `Error` as it came, a failure from the
+ * vocabulary through `toPipelineError`, and anything else wrapped, so no cast decides which it was.
+ */
+export function asThrowable(cause: unknown): Error {
+  if (cause instanceof Error) return cause;
+  const failure = cause as Partial<AnyFailure> | null;
+  if (isErrorCode(failure?.code)) {
+    return toPipelineError({
+      ...failure,
+      code: failure.code,
+      message: failure.message ?? failure.code,
+    });
+  }
+  return new Error(String(cause));
+}
