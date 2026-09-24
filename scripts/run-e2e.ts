@@ -7,7 +7,7 @@ async function main() {
   const apiUrl = process.env['API_URL'];
 
   console.log('================================================================');
-  console.log('==> Starting Phase 2 E2E Acceptance Suite (Ticket 20)');
+  console.log('==> Starting Phase 2 E2E Acceptance Suite');
   console.log(`==> Mode: ${reduced ? 'Reduced set (CI)' : 'Full 20-video concurrent suite'}`);
   if (apiUrl) console.log(`==> Target API URL: ${apiUrl}`);
   console.log('================================================================');

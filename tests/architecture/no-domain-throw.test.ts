@@ -3,9 +3,6 @@ import { productionSources, read } from './repo-files';
 /**
  * Layers 1 and 2 return their failures (SDD ADR-24). The only `throw` they may reach is
  * `assertNever`, which fires on a variant the compiler already proved unreachable.
- *
- * Ticket 84 converted the last service and the last stage, so this is a flat assertion now: the
- * shrink-only list it used to read from is gone.
  */
 const DOMAIN_ROOTS = [
   'packages/universal/validation/',

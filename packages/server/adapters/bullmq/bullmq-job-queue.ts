@@ -226,7 +226,7 @@ export class BullMqJobQueue extends JobQueue {
 
   async close(): Promise<Result<void, QueueUnavailable>> {
     return fromPromise(async () => {
-      // Explicitly wait for active jobs to finish within grace period (Ticket 26 / ADR-12)
+      // `close(false)` waits for active jobs; `true` would abandon them mid-commit (ADR-12).
       if (this.worker) await this.worker.close(false);
       await this.queue.close();
     }, queueUnavailable.during('close'));

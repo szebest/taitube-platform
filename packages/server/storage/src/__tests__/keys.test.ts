@@ -7,7 +7,7 @@ import {
   rawSourceKey,
   renditionPlaylistKey,
   renditionPrefix,
-  reprocessGenerationPrefix,
+  generationPrefix,
   sanitizeStorageUrl,
   segmentKey,
   spriteKey,
@@ -44,11 +44,7 @@ describe('packages/storage: object keys', () => {
     expect(videoPrefix(videoId)).toBe(`videos/${videoId}/`);
     expect(renditionPrefix(videoId, '720p')).toBe(`videos/${videoId}/hls/720p/`);
     expect(renditionPrefix(videoId, '720p', 3)).toBe(`videos/${videoId}/hls/g3/720p/`);
-    expect(reprocessGenerationPrefix(videoId, 2)).toBe(`videos/${videoId}/hls/g2/`);
-  });
-
-  it('gives generation 1 no prefix of its own, since its directory holds every later one', () => {
-    expect(reprocessGenerationPrefix(videoId, 1)).toBeNull();
+    expect(generationPrefix(videoId, 2)).toBe(`videos/${videoId}/hls/g2/`);
   });
 
   it('strips signature and credential params so a url is safe to log', () => {

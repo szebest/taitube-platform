@@ -211,7 +211,7 @@ export function parseSpriteVtt(vttContent: string): SpriteVttCue[] {
 
     const startTime = timeMatch[1] ?? '';
     const endTime = timeMatch[2] ?? '';
-    if (!startTime || !endTime) {
+    if (!(startTime && endTime)) {
       continue;
     }
 

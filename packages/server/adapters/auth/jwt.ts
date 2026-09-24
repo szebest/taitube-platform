@@ -105,7 +105,7 @@ function verifySignature(
 ): Result<void, AuthFailure> {
   const { alg } = decoded.header;
   const signer = SIGNERS.get(alg);
-  if (!signer || !algorithms.includes(alg)) return err(unauthorized(`alg ${alg} is not accepted`));
+  if (!(signer && algorithms.includes(alg))) return err(unauthorized(`alg ${alg} is not accepted`));
   if (key.alg !== undefined && key.alg !== alg) {
     return err(unauthorized(`the key declares ${key.alg}, the token ${alg}`));
   }

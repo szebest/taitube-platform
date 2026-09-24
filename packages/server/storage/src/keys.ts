@@ -20,9 +20,9 @@ function hlsPrefix(videoId: string, generation: number): string {
   return generation > 1 ? `${hls}/g${generation}` : hls;
 }
 
-/** Generation 1 has no directory of its own, so its prefix would also cover every later one. */
-export function reprocessGenerationPrefix(videoId: string, generation: number): string | null {
-  return generation > 1 ? `${hlsPrefix(videoId, generation)}/` : null;
+/** Where a reprocess generation lives; generation 1 lives in `hls/` itself, not in `g1/`. */
+export function generationPrefix(videoId: string, generation: number): string {
+  return `${videoPrefix(videoId)}hls/g${generation}/`;
 }
 
 export function renditionPrefix(videoId: string, rendition: string, generation = 1): string {

@@ -1,4 +1,4 @@
-import { type PropsWithChildren, useEffect } from 'react';
+import { type ComponentProps, useEffect } from 'react';
 import { ScrollMenu, type VisibilityContext } from 'react-horizontal-scrolling-menu';
 
 import styles from './drag-scroll-menu.module.scss';
@@ -11,7 +11,8 @@ type ScrollVisibilityApiType = React.ContextType<typeof VisibilityContext>;
 
 export type DragScrollMenuProps = {
 	onDraggingChange?: (dragging: boolean) => void
-} & PropsWithChildren;
+	children: ComponentProps<typeof ScrollMenu>['children']
+};
 
 export function DragScrollMenu({ children, onDraggingChange }: DragScrollMenuProps) {
 	const { dragStart, dragStop, dragMove, dragging } = useDrag();
@@ -37,7 +38,7 @@ export function DragScrollMenu({ children, onDraggingChange }: DragScrollMenuPro
 			onMouseDown={() => dragStart}
 			onMouseUp={() => dragStop}
 			onMouseMove={handleDrag}>
-			{children as any}
+			{children}
 		</ScrollMenu>
 	)
 }

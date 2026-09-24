@@ -8,7 +8,7 @@ import {
   masterPlaylistKey,
   rawPrefix,
   renditionPrefix,
-  reprocessGenerationPrefix,
+  generationPrefix,
   videoPrefix,
 } from '@vp/storage';
 
@@ -115,16 +115,15 @@ export async function runPurgeDeleted(
   return ok({ purgedVideosCount, purgedGenerationsCount });
 }
 
-/** Generation 1 has no prefix of its own, so it is swept object by object. */
+/** Generation 1 predates the `g1` prefix, so its layout is swept with it. */
 async function purgeOldGenerations(
   storage: StorageClient,
   bucket: string,
   videoId: string,
   currentGeneration: number
 ): Promise<Result<void, StorageUnavailable>> {
-  for (let generation = 2; generation < currentGeneration; generation += 1) {
-    const prefix = reprocessGenerationPrefix(videoId, generation);
-    const purged = prefix ? await storage.purgePrefix(bucket, prefix) : ok(0);
+  for (let generation = 1; generation < currentGeneration; generation += 1) {
+    const purged = await storage.purgePrefix(bucket, generationPrefix(videoId, generation));
     if (isErr(purged)) return purged;
   }
 

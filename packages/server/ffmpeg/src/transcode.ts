@@ -31,7 +31,7 @@ export interface TranscodeExecutionResult {
 }
 
 /**
- * Computes the number of threads for FFmpeg based on base threads and retry attempt (SDD §9.6 rule 6, Ticket 14 AC 3).
+ * Threads for an FFmpeg attempt, one fewer per retry (SDD §9.6 rule 6).
  * Attempt 1: FFMPEG_THREADS
  * Attempt 2: FFMPEG_THREADS - 1
  * Attempt >= FFMPEG_THREADS: 1

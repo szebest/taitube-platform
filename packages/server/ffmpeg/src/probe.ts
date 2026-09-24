@@ -111,7 +111,6 @@ export function validateAndParseProbe(
   const streams = raw.streams || [];
   const videoStream = streams.find((s) => s.codec_type === 'video');
 
-  // Rule 1: No video stream (or audio-only) -> CORRUPT_CONTAINER (SDD §8.1, AC 18)
   if (!videoStream) {
     throw new PermanentError(
       ErrorCodes.CORRUPT_CONTAINER,
@@ -121,7 +120,6 @@ export function validateAndParseProbe(
 
   const codec = (videoStream.codec_name || '').toLowerCase();
 
-  // Rule 2: Unsupported codec outside allowlist {h264, hevc, vp9, av1, mpeg4} (AC 18)
   if (!ALLOWED_INPUT_CODECS.has(codec)) {
     throw new PermanentError(
       ErrorCodes.UNSUPPORTED_CODEC,

@@ -105,7 +105,7 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
         `${pkg.name}: declares vp.tier "${pkg.declaredTier}", but its directory packages/${onDisk}/ is the tier. Remove the field.`
       );
     }
-    if (!onDisk && !pkg.declaredTier) {
+    if (!(onDisk || pkg.declaredTier)) {
       errors.push(`${pkg.name}: lives outside packages/<tier>/ and must declare vp.tier`);
     }
 

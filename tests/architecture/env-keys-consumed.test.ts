@@ -66,7 +66,7 @@ function leavesTaken(
   const open = !receiving || (receiving.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) !== 0;
   return propertiesOf(type).flatMap((property) => {
     const taken = open ? undefined : receivingProperty(checker, receiving, property.name);
-    if (!open && !taken) return [];
+    if (!(open || taken)) return [];
     return leavesTaken(
       checker,
       `${path}.${property.name}`,

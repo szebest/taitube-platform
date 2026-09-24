@@ -28,7 +28,7 @@ function parseArgs(args: string[]) {
 
 function printHelp(): void {
   console.log(`
-@vp/upload-client — Reference resumable multipart upload client (Ticket 11)
+@vp/upload-client — Reference resumable multipart upload client
 
 Usage:
   pnpm upload-client <file> [options]
@@ -38,7 +38,7 @@ Usage:
 Options:
   --url <url>            API Base URL (default: http://localhost:3000)
   --token <jwt>          JWT Auth Bearer token (default: reads DEV_TOKEN or mints via dev-token)
-  --concurrency <n>      Parallel part upload concurrency (default: 4 per AC 18)
+  --concurrency <n>      Parallel part upload concurrency (default: 4)
   --title <title>        Video title
   --resume <uploadId>    Resume an incomplete upload
   --abort <uploadId>     Abort an incomplete upload and mark abandoned

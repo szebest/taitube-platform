@@ -52,7 +52,7 @@ export async function recordProbeFailure(
   });
   if (isErr(transitioned)) return transitioned;
 
-  if (!transitioned.value || !getQueue) return ok();
+  if (!(transitioned.value && getQueue)) return ok();
 
   const video = unwrapOr(await repositories.videos.findById(videoId), null);
   if (!video) return ok();
