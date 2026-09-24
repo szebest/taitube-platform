@@ -1,7 +1,7 @@
 import { loadAll } from 'js-yaml';
 import type ts from 'typescript';
 import { ANY_VALUE, type LabelValues, emittedLabels, registeredMetrics } from './metric-emissions';
-import { fixtureProgram, serverProgram } from './program';
+import { fixtureProgram, productionProgram } from './program';
 import { type Query, parseQuery, repoQueries } from './promql-queries';
 import { read, trackedFiles } from './repo-files';
 
@@ -141,7 +141,7 @@ describe('architecture: every label value a query needs is emitted', () => {
   });
 
   it('finds every dashboard, alert and autoscaler query answered by code that runs', () => {
-    const { program, roots } = serverProgram();
+    const { program, roots } = productionProgram();
     const files = program.getSourceFiles().filter((file) => roots.has(file.fileName));
     const fields = new Set(registeredMetrics().map(({ field }) => field));
     const queries = repoQueries();
