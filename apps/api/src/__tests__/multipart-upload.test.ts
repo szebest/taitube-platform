@@ -8,8 +8,9 @@ import { type FakeS3, startFakeS3 } from './fake-s3';
 import { bearer, buildInMemoryApp } from './in-memory-app';
 import { MockProbeJobQueue } from './mock-probe-queue';
 import { completeUpload, postUpload } from './upload-requests';
+import { SEEDED } from '@vp/testing';
 
-const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
+const DEV_USER_ID = SEEDED.userId;
 const MB = 1024 * 1024;
 const PART_SIZE = 8 * MB;
 const BOTH_PARTS = [

@@ -2,6 +2,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { expectOk } from '@vp/testing/result';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
+import { SEEDED } from '@vp/testing';
 
 const HOUR_MS = 3_600_000;
 
@@ -9,7 +10,7 @@ describe('VideoService.listPublic', () => {
   const repositories = new InMemoryRepositories();
   const videoService = new VideoService(videoServiceDeps(repositories.videos));
 
-  const OWNER_1 = '00000000-0000-7000-8000-000000000001';
+  const OWNER_1 = SEEDED.userId;
   const OWNER_2 = '00000000-0000-7000-8000-000000000002';
   const CAT_A = '11111111-1111-7111-8111-111111111111';
   const CAT_B = '22222222-2222-7222-8222-222222222222';

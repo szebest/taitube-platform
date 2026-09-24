@@ -2,7 +2,7 @@ import { getFeed, getVideo, setReaction, startUpload } from '@vp/api-contracts';
 import { ApiContractError, ApiError } from '../api-error';
 import { sendRequest } from '../request';
 
-const VIDEO_ID = '00000000-0000-7000-8000-000000000001';
+const VIDEO_ID = '00000000-0000-7000-8000-0000000000f1';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -34,7 +34,9 @@ describe('packages/api-client: request', () => {
   });
 
   it('substitutes a path parameter', async () => {
-    const { calls, fetchStub } = recordingFetch(() => jsonResponse({ videoId: VIDEO_ID, reaction: null }));
+    const { calls, fetchStub } = recordingFetch(() =>
+      jsonResponse({ videoId: VIDEO_ID, reaction: null })
+    );
 
     await sendRequest(
       { baseUrl: 'http://localhost:3000', fetch: fetchStub },

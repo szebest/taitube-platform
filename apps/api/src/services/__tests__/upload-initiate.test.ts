@@ -3,8 +3,9 @@ import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { UploadService } from '../upload-service';
 import { uploadContext } from './service-deps';
+import { SEEDED } from '@vp/testing';
 
-const OWNER: UserContext = { id: '00000000-0000-7000-8000-000000000001', role: 'CREATOR' };
+const OWNER: UserContext = { id: SEEDED.userId, role: 'CREATOR' };
 const MB = 1024 * 1024;
 
 describe('apps/api/services: initiate upload', () => {

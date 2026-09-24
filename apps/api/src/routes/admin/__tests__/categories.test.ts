@@ -4,9 +4,10 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../../../app';
+import { SEEDED } from '@vp/testing';
 
 const ADMIN_TOKEN = 'operator-token-for-tests';
-const USER = '00000000-0000-7000-8000-000000000001';
+const USER = SEEDED.userId;
 const ABSENT_CATEGORY = '00000000-0000-7000-8000-000000000999';
 
 describe('admin category routes', () => {

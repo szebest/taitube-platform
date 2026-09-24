@@ -9,9 +9,10 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 import { bearer } from './in-memory-app';
+import { SEEDED } from '@vp/testing';
 
 export const ADMIN_TOKEN = 'operator-token-for-tests';
-export const REGULAR_USER_ID = '00000000-0000-7000-8000-000000000001';
+export const REGULAR_USER_ID = SEEDED.userId;
 export const CATEGORIES_CACHE_CONTROL = 'public, max-age=300, stale-while-revalidate=60';
 
 const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';

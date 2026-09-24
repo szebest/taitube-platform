@@ -126,9 +126,7 @@ function isConsoleCall(node: ts.Node): boolean {
   return ts.isCallExpression(node) && calleeName(node).startsWith('console.');
 }
 
-function testTitle(call: ts.CallExpression): string | undefined {
-  const name = testCallName(call);
-  if (name !== 'it' && name !== 'test') return undefined;
+function titleOf(call: ts.CallExpression): string | undefined {
   const title = call.arguments[0];
   if (title === undefined) return undefined;
   if (ts.isStringLiteralLike(title)) return title.text;
@@ -136,12 +134,29 @@ function testTitle(call: ts.CallExpression): string | undefined {
   return undefined;
 }
 
+/** The title a reporter prints: every enclosing `describe` title, then the test's own. */
+function fullTitle(call: ts.CallExpression): string | undefined {
+  const own = titleOf(call);
+  if (own === undefined) return undefined;
+  const path = [own];
+  let parent: ts.Node | undefined = call.parent;
+  while (parent !== undefined) {
+    if (ts.isCallExpression(parent) && testCallName(parent) === 'describe') {
+      path.unshift(titleOf(parent) ?? '');
+    }
+    parent = parent.parent;
+  }
+  return path.join(' > ');
+}
+
 function repeatedTitles(file: ts.SourceFile): ts.Node[] {
   const seen = new Set<string>();
   const repeats: ts.Node[] = [];
   for (const node of descendants(file)) {
     if (!ts.isCallExpression(node)) continue;
-    const title = testTitle(node);
+    const name = testCallName(node);
+    if (name !== 'it' && name !== 'test') continue;
+    const title = fullTitle(node);
     if (title === undefined) continue;
     if (seen.has(title)) repeats.push(node);
     seen.add(title);
@@ -197,6 +212,7 @@ describe('architecture: spec discipline', () => {
     ["type M = typeof import('./module');", 'types a module import'],
     ['const real = await importOriginal<Module>();', 'types a module import'],
     ["it('does a thing', () => {}); it('does a thing', () => {});", 'repeats a test title'],
+    ["describe('a', () => { it('x', () => {}); it('x', () => {}); });", 'repeats a test title'],
     ["console.log('here');", 'logs to the console'],
     ["it.skip('later', () => {});", 'skips or narrows the run'],
     ["describe.only('focus', () => {});", 'skips or narrows the run'],

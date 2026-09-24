@@ -10,6 +10,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
+import { SEEDED } from '@vp/testing';
 
 describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
   let app: FastifyInstance;
@@ -19,7 +20,7 @@ describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
   const cache = new InMemoryCacheClient();
   const probeQueue = new InMemoryJobQueue('probe');
 
-  const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
+  const DEV_USER_ID = SEEDED.userId;
   let authToken: string;
 
   beforeAll(async () => {

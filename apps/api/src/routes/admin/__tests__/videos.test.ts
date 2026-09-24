@@ -9,8 +9,9 @@ import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../../../app';
+import { SEEDED } from '@vp/testing';
 
-const OWNER = '00000000-0000-7000-8000-000000000001';
+const OWNER = SEEDED.userId;
 const STRANGER = '00000000-0000-7000-8000-000000000002';
 const OPERATOR = '00000000-0000-7000-8000-000000000099';
 const PRIVATE_VIDEO = '018f0000-0000-7000-8000-0000000000a1';

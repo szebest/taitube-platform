@@ -35,12 +35,12 @@ describe('admin category writes', () => {
     },
     {
       method: 'PATCH' as const,
-      url: '/v1/admin/categories/00000000-0000-7000-8000-000000000001',
+      url: '/v1/admin/categories/00000000-0000-7000-8000-00000000ca71',
       payload: { name: 'Test' },
     },
     {
       method: 'DELETE' as const,
-      url: '/v1/admin/categories/00000000-0000-7000-8000-000000000001',
+      url: '/v1/admin/categories/00000000-0000-7000-8000-00000000ca71',
       payload: undefined,
     },
   ])('returns 401 for an unauthenticated $method', async ({ method, url, payload }) => {

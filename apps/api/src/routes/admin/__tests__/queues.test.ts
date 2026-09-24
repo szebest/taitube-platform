@@ -6,9 +6,10 @@ import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../../../app';
+import { SEEDED } from '@vp/testing';
 
 const ADMIN_TOKEN = 'operator-token-for-tests';
-const USER = '00000000-0000-7000-8000-000000000001';
+const USER = SEEDED.userId;
 const OPERATOR = '00000000-0000-7000-8000-000000000099';
 
 describe('admin queues board', () => {

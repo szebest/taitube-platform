@@ -9,6 +9,7 @@ import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
+import { SEEDED } from '@vp/testing';
 
 describe('user and channel identity profile with universal auth', () => {
   let app: FastifyInstance;
@@ -16,7 +17,7 @@ describe('user and channel identity profile with universal auth', () => {
   let cache: InMemoryCacheClient;
   let storage: InMemoryStorageClient;
 
-  const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
+  const DEV_USER_ID = SEEDED.userId;
   let devToken: string;
 
   beforeAll(async () => {

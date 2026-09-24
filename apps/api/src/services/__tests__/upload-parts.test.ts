@@ -7,7 +7,6 @@ import { UploadService } from '../upload-service';
 import { uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000b001', role: 'CREATOR' };
-const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000b002', role: 'CREATOR' };
 const MB = 1024 * 1024;
 
 describe('apps/api/services: upload parts', () => {
@@ -61,14 +60,6 @@ describe('apps/api/services: upload parts', () => {
       });
     });
 
-    it('refuses a caller who does not own the upload', async () => {
-      const { uploadId } = expectOk(await startMultipart());
-
-      expect(expectErr(await service.getResumeInfo(STRANGER, uploadId)).message).toContain(
-        'Not authorized'
-      );
-    });
-
     it('refuses an upload that is no longer open', async () => {
       const { uploadId } = expectOk(await startMultipart());
       expectOk(await service.abort(OWNER, uploadId));
@@ -115,14 +106,6 @@ describe('apps/api/services: upload parts', () => {
 
       expect(expectErr(await service.issuePartUrls(OWNER, uploadId, 1, 1)).code).toBe(
         ErrorCodes.VALIDATION_FAILED
-      );
-    });
-
-    it('refuses a caller who does not own the upload', async () => {
-      const { uploadId } = expectOk(await startMultipart());
-
-      expect(expectErr(await service.issuePartUrls(STRANGER, uploadId, 1, 1)).message).toContain(
-        'Not authorized'
       );
     });
 

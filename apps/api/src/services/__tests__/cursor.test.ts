@@ -98,7 +98,7 @@ describe('apps/api/services: pagination cursors', () => {
   });
 
   describe('createdAt cursor', () => {
-    it('round-trips the keyset', () => {
+    it('round-trips the createdAt keyset', () => {
       const cursor = paginator.encodeCursor(createdAtCursorPayload(ROW));
       expect(expectOk(decodeCreatedAtCursor(cursor, paginator))).toEqual({
         id: 'video-1',
@@ -106,20 +106,20 @@ describe('apps/api/services: pagination cursors', () => {
       });
     });
 
-    it('returns null for an absent cursor and rejects a broken one', () => {
+    it('returns null for an absent createdAt cursor and rejects a broken one', () => {
       expect(decodeCreatedAtCursor(undefined, paginator)).toEqual(ok(null));
       expectRejected(decodeCreatedAtCursor('not-a-cursor', paginator));
     });
   });
 
   describe('subscription cursor', () => {
-    it('round-trips the keyset', () => {
+    it('round-trips the subscription keyset', () => {
       const item = { channelId: 'channel-1', createdAt: CREATED_AT };
       const cursor = paginator.encodeCursor(subscriptionCursorPayload(item));
       expect(expectOk(decodeSubscriptionCursor(cursor, paginator))).toEqual(item);
     });
 
-    it('returns null for an absent cursor and rejects a broken one', () => {
+    it('returns null for an absent subscription cursor and rejects a broken one', () => {
       expect(decodeSubscriptionCursor(undefined, paginator)).toEqual(ok(null));
       expectRejected(decodeSubscriptionCursor('not-a-cursor', paginator));
     });

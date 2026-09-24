@@ -10,8 +10,9 @@ import { publishVideoEvent } from '@vp/events';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 import { readSseUntil } from './sse-stream';
+import { SEEDED } from '@vp/testing';
 
-const OWNER_USER_ID = '00000000-0000-7000-8000-000000000001';
+const OWNER_USER_ID = SEEDED.userId;
 const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
 const PUBLIC_VIDEO_ID = '018f0000-0000-7000-8000-000000000010';
 const PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000020';

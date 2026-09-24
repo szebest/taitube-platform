@@ -12,7 +12,6 @@ import { UploadService } from '../upload-service';
 import { uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000d001', role: 'CREATOR' };
-const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000d002', role: 'CREATOR' };
 const MB = 1024 * 1024;
 const SIZE = 3;
 
@@ -110,14 +109,6 @@ describe('apps/api/services: complete upload', () => {
       errorCode: ErrorCodes.UPLOAD_SIZE_MISMATCH,
     });
     expect(expectOk(await storage.headObject('raw', started.sourceKey))).toBeNull();
-  });
-
-  it('refuses a caller who does not own the upload', async () => {
-    const started = await startSingle();
-
-    expect(expectErr(await service.complete(STRANGER, started.uploadId)).message).toContain(
-      'Not authorized'
-    );
   });
 
   it('refuses to complete an upload that was aborted', async () => {

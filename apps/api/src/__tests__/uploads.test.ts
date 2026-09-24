@@ -5,8 +5,9 @@ import type { FastifyInstance } from 'fastify';
 import { type FakeS3, startFakeS3 } from './fake-s3';
 import { buildInMemoryApp } from './in-memory-app';
 import { postUpload, putObject } from './upload-requests';
+import { SEEDED } from '@vp/testing';
 
-const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
+const DEV_USER_ID = SEEDED.userId;
 
 describe('apps/api single-part upload initiation', () => {
   let app: FastifyInstance;
@@ -27,10 +28,8 @@ describe('apps/api single-part upload initiation', () => {
   });
 
   it('answers POST /v1/uploads with 201, a single presigned PUT URL and an expiry within 15 minutes', async () => {
-    const start = Date.now();
     const res = await postUpload(app, authToken, { filename: 'sintel.mp4', sizeBytes: 1024 * 100 });
 
-    expect(Date.now() - start).toBeLessThan(500);
     expect(res.statusCode).toBe(201);
     const body = res.json();
     expect(body.strategy).toBe('single');

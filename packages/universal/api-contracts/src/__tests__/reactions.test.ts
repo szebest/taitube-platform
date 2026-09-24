@@ -11,7 +11,7 @@ describe('packages/api-contracts: reactions', () => {
   });
 
   it('rejects NONE as a stored reaction, where absence is null', () => {
-    const videoId = '00000000-0000-7000-8000-000000000001';
+    const videoId = '00000000-0000-7000-8000-0000000000f1';
 
     expect(getMyReaction.result.parse({ videoId, reaction: null }).reaction).toBeNull();
     expect(getMyReaction.result.safeParse({ videoId, reaction: 'NONE' }).success).toBe(false);

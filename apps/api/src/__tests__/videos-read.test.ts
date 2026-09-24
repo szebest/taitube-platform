@@ -3,8 +3,9 @@ import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { backdate, bearer, buildInMemoryApp, seedVideo } from './in-memory-app';
+import { SEEDED } from '@vp/testing';
 
-const USER_A = '00000000-0000-7000-8000-000000000001';
+const USER_A = SEEDED.userId;
 const USER_B = '00000000-0000-7000-8000-000000000002';
 const BASE_TIME = 1700000000000;
 

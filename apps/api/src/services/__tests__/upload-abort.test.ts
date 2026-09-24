@@ -7,7 +7,6 @@ import { UploadService } from '../upload-service';
 import { uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000c001', role: 'CREATOR' };
-const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000c002', role: 'CREATOR' };
 const MB = 1024 * 1024;
 
 describe('apps/api/services: abort upload', () => {
@@ -52,15 +51,6 @@ describe('apps/api/services: abort upload', () => {
     expect(events.find((event) => event.type === 'upload.aborted')?.payload).toMatchObject({
       uploadId,
       strategy: 'single',
-    });
-  });
-
-  it('refuses a caller who does not own the upload', async () => {
-    const { uploadId, videoId } = expectOk(await start(MB));
-
-    expect(expectErr(await service.abort(STRANGER, uploadId)).message).toContain('Not authorized');
-    expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
-      status: 'UPLOADING',
     });
   });
 

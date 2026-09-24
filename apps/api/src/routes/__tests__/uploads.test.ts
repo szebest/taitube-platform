@@ -4,8 +4,9 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../../app';
+import { SEEDED } from '@vp/testing';
 
-const USER = '00000000-0000-7000-8000-000000000001';
+const USER = SEEDED.userId;
 const ABSENT_UPLOAD = '018f0000-0000-7000-8000-0000000000ff';
 const START = { filename: 'clip.mp4', sizeBytes: 1024, contentType: 'video/mp4' };
 

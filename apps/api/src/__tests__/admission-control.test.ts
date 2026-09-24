@@ -10,6 +10,7 @@ import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 import { completeUpload, postUpload } from './upload-requests';
+import { SEEDED } from '@vp/testing';
 
 describe('upload admission control and tier priorities', () => {
   let app: FastifyInstance;
@@ -19,7 +20,7 @@ describe('upload admission control and tier priorities', () => {
   let probeQueue: InMemoryJobQueue;
 
   const FREE_USER_ID = '00000000-0000-7000-8000-000000000002';
-  const PRO_USER_ID = '00000000-0000-7000-8000-000000000001';
+  const PRO_USER_ID = SEEDED.userId;
 
   let freeToken: string;
   let proToken: string;

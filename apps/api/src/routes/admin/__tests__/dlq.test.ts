@@ -7,9 +7,10 @@ import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { composeApp } from '../../../app';
+import { SEEDED } from '@vp/testing';
 
 const ADMIN_TOKEN = 'operator-token-for-tests';
-const USER = '00000000-0000-7000-8000-000000000001';
+const USER = SEEDED.userId;
 const VIDEO = '018f0000-0000-7000-8000-000000000010';
 
 describe('admin DLQ routes', () => {

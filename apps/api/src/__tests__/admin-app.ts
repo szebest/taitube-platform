@@ -4,9 +4,10 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
+import { SEEDED } from '@vp/testing';
 
 const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
-export const OWNER_USER_ID = '00000000-0000-7000-8000-000000000001';
+export const OWNER_USER_ID = SEEDED.userId;
 export const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
 export const ADMIN_TOKEN = 'operator-token-for-tests';
 

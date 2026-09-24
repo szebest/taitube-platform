@@ -2,8 +2,9 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createMetricsRegistry } from '@vp/observability';
 import { pollSqlMetrics } from '../sql-poller';
+import { SEEDED } from '@vp/testing';
 
-const OWNER_ID = '00000000-0000-7000-8000-000000000001';
+const OWNER_ID = SEEDED.userId;
 
 describe('apps/api/services: SQL poller', () => {
   it('records videos_by_status and processing_steps_running_stale', async () => {

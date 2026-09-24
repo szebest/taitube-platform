@@ -4,8 +4,9 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../../app';
+import { SEEDED } from '@vp/testing';
 
-const OWNER = '00000000-0000-7000-8000-000000000001';
+const OWNER = SEEDED.userId;
 const STRANGER = '00000000-0000-7000-8000-000000000002';
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000001';
 const PRIVATE_VIDEO = '018f0000-0000-7000-8000-000000000002';

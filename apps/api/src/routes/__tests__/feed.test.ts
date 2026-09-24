@@ -2,8 +2,9 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../../app';
+import { SEEDED } from '@vp/testing';
 
-const OWNER = '00000000-0000-7000-8000-000000000001';
+const OWNER = SEEDED.userId;
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000001';
 const PRIVATE_VIDEO = '018f0000-0000-7000-8000-000000000002';
 const CACHE_CONTROL = 'public, max-age=30, stale-while-revalidate=60';

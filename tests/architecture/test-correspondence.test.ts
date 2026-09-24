@@ -32,7 +32,8 @@ describe('architecture: one test file per source file', () => {
     },
     {
       scenario: 'a documented abstract class of abstract members',
-      source: '/** The verdict. */\nexport abstract class Port {\n  /** Reads. */\n  abstract read(): void;\n}',
+      source:
+        '/** The verdict. */\nexport abstract class Port {\n  /** Reads. */\n  abstract read(): void;\n}',
     },
   ])('asks no spec of $scenario, which erases to nothing', ({ source }) => {
     expect(hasRuntimeCode(source)).toBe(false);

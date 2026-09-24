@@ -41,13 +41,17 @@ describe('apps/api/services: Poller', () => {
     expect(poll).toHaveBeenCalledTimes(1);
   });
 
-  it('survives a sample that throws', async () => {
-    const poller = new Poller(async () => {
+  it('keeps sampling after a sample that throws', async () => {
+    vi.useFakeTimers();
+    const poll = vi.fn(async () => {
       throw new Error('scrape failed');
-    }, 1_000);
+    });
+    const poller = new Poller(poll, 1_000);
 
     expectOk(await poller.start());
-    await new Promise((resolve) => setImmediate(resolve));
+    await vi.advanceTimersByTimeAsync(1_000);
     poller.stop();
+
+    expect(poll).toHaveBeenCalledTimes(2);
   });
 });

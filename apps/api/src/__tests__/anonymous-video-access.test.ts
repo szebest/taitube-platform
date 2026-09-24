@@ -4,8 +4,9 @@ import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { buildInMemoryApp, seedVideo } from './in-memory-app';
 import { readSseUntil } from './sse-stream';
+import { SEEDED } from '@vp/testing';
 
-const OWNER = '00000000-0000-7000-8000-000000000001';
+const OWNER = SEEDED.userId;
 const PUBLIC_ID = '018f0000-0000-7000-8000-000000000061';
 const UNLISTED_ID = '018f0000-0000-7000-8000-000000000062';
 const PRIVATE_ID = '018f0000-0000-7000-8000-000000000063';

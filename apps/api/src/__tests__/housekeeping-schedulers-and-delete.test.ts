@@ -8,6 +8,7 @@ import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import { composeApp } from '../app';
 import { bearer } from './in-memory-app';
+import { SEEDED } from '@vp/testing';
 
 describe('housekeeping schedulers and video deletion', () => {
   let app: FastifyInstance;
@@ -15,7 +16,7 @@ describe('housekeeping schedulers and video deletion', () => {
   const queuesMap = new Map<string, InMemoryJobQueue>();
 
   const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
-  const OWNER_USER_ID = '00000000-0000-7000-8000-000000000001';
+  const OWNER_USER_ID = SEEDED.userId;
   const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
 
   let adminJwt: string;

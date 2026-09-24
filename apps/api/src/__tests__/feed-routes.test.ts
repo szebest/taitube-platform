@@ -4,8 +4,9 @@ import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { bearer, buildInMemoryApp, seedVideo } from './in-memory-app';
+import { SEEDED } from '@vp/testing';
 
-const USER_1 = '00000000-0000-7000-8000-000000000001';
+const USER_1 = SEEDED.userId;
 const USER_2 = '00000000-0000-7000-8000-000000000002';
 const CAT_TECH = '10000000-0000-7000-8000-000000000001';
 const CAT_MUSIC = '20000000-0000-7000-8000-000000000002';
