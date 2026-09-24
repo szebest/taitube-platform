@@ -12,12 +12,7 @@ import {
   sourceMissing,
   uploadSizeMismatch,
 } from '@vp/domain-rules';
-import {
-  type DatabaseUnavailable,
-  ErrorCodes,
-  type QueueUnavailable,
-  type StorageUnavailable,
-} from '@vp/errors';
+import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
 import { createTraceparent, getActiveSpanContext, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
@@ -43,8 +38,7 @@ export type CompleteUploadFailure =
   | SourceMissing
   | UploadSizeMismatch
   | StorageUnavailable
-  | DatabaseUnavailable
-  | QueueUnavailable;
+  | DatabaseUnavailable;
 
 async function finishMultipart(
   ctx: UploadContext,
@@ -175,8 +169,7 @@ export async function completeUpload(
     return ok({ videoId: video.id, status: 'UPLOADED', admission: 'held' });
   }
 
-  const enqueued = await enqueueProbe(ctx.probeQueue, dispatch);
-  if (isErr(enqueued)) return enqueued;
+  await enqueueProbe(ctx.probeQueue, dispatch);
 
   return ok({ videoId: video.id, status: 'UPLOADED', admission: 'admitted' });
 }

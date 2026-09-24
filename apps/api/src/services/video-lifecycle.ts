@@ -10,7 +10,7 @@ import {
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ignore, isErr, ok } from '@vp/result';
+import { type Result, err, isErr, ok } from '@vp/result';
 import { buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
 export { DELETABLE_STATUSES, REPROCESSABLE_STATUSES };
@@ -72,10 +72,7 @@ export async function reprocessVideo(
   if (isErr(transitioned)) return transitioned;
   if (!transitioned.value) return err(versionConflict(videoId));
 
-  ignore(
-    await enqueueProbe(deps.probeQueue, dispatch),
-    'the outbox row committed with the transition delivers the probe if this fast path fails'
-  );
+  await enqueueProbe(deps.probeQueue, dispatch);
 
   return ok({ videoId, status: 'PROBING', generation });
 }
