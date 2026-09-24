@@ -4,20 +4,32 @@ description: Ubuntu's FFmpeg and the fonts its drawtext filter needs, installed 
 runs:
   using: composite
   steps:
+    - name: Name the cache after the runner image and the package list
+      id: key
+      shell: bash
+      env:
+        PACKAGES: ffmpeg fonts-dejavu-core fontconfig
+      run: |
+        packages_hash=$(printf '%s' "$PACKAGES" | sha256sum | cut -c1-16)
+        echo "key=ffmpeg-debs-${ImageOS}-${ImageVersion}-${packages_hash}" >> "$GITHUB_OUTPUT"
+        echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
+
     - name: Restore the FFmpeg packages
       id: cache
       uses: actions/cache@v4
       with:
         path: ~/ffmpeg-debs
-        key: ffmpeg-debs-${{ env.ImageOS }}-${{ env.ImageVersion }}
+        key: ${{ steps.key.outputs.key }}
 
     - name: Download the FFmpeg packages
       if: steps.cache.outputs.cache-hit != 'true'
       shell: bash
+      env:
+        PACKAGES: ${{ steps.key.outputs.packages }}
       run: |
         sudo rm -f /var/lib/man-db/auto-update
         sudo apt-get update -qq
-        sudo apt-get install -y -qq --download-only --no-install-recommends ffmpeg fonts-dejavu-core fontconfig
+        sudo apt-get install -y -qq --download-only --no-install-recommends $PACKAGES
         mkdir -p ~/ffmpeg-debs
         cp /var/cache/apt/archives/*.deb ~/ffmpeg-debs/
 

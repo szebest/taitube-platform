@@ -92,12 +92,13 @@ export class InMemoryJobQueue extends JobQueue {
       return ok(existing as QueueJob<T>);
     }
 
-    const job: QueueJob<T> & { opts?: QueueJobOptions } = {
+    const job: QueueJob<T> = {
       id: jobId,
       name,
       data,
       attemptsMade: 0,
       opts: options,
+      enqueuedAt: Date.now(),
       getState: async () => this.jobStates.get(jobId) ?? 'unknown',
     };
 
@@ -157,8 +158,7 @@ export class InMemoryJobQueue extends JobQueue {
       return;
     } catch (err: unknown) {
       const classification = classifyError(err);
-      const opts = (job as QueueJob<unknown> & { opts?: QueueJobOptions }).opts;
-      let maxAttempts = opts?.attempts ?? 1;
+      let maxAttempts = job.opts?.attempts ?? 1;
       if (classification === 'permanent') {
         maxAttempts = 1;
       } else if (classification === 'unknown') {

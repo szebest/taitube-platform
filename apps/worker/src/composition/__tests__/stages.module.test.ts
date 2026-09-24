@@ -54,7 +54,7 @@ describe('apps/worker/composition: stages module', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('leaves queue depth to the API poller, so an idle queue can read zero', async () => {
+  it('leaves queue depth to the API poller and times how long the job waited', async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vp-stages-'));
     const c = await stageContainer('housekeeping', tmpDir);
     const { queue } = c.get(Worker.Consumer);
@@ -62,8 +62,12 @@ describe('apps/worker/composition: stages module', () => {
     await queue.add('tmp-sweep', { task: 'tmp-sweep' });
     expect((await settled(c)).completed).toBe(1);
 
-    const { values } = await c.get(Adapters.Metrics).bullmqQueueJobs.get();
+    const metrics = c.get(Adapters.Metrics);
+    const { values } = await metrics.bullmqQueueJobs.get();
     expect(values).toEqual([]);
+    const waits = await metrics.jobWaitDuration.get();
+    const waitCount = waits.values.find((sample) => sample.metricName === 'job_wait_seconds_count');
+    expect(waitCount?.value).toBe(1);
     await c.dispose();
     await fs.rm(tmpDir, { recursive: true, force: true });
   });

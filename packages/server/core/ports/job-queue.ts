@@ -8,6 +8,8 @@ export interface QueueJob<T = unknown> {
   data: T;
   opts?: QueueJobOptions;
   attemptsMade?: number;
+  /** When the job was added, epoch milliseconds, as the queue recorded it. */
+  enqueuedAt?: number;
   updateProgress?: (progress: number | object) => Promise<void>;
   getChildrenValues?: <R = Record<string, unknown>>() => Promise<R>;
   getState?: () => Promise<string>;

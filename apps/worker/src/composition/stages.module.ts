@@ -65,9 +65,9 @@ function instrument(
   const traced = withTelemetry(queue, async (job: TracedJob) => {
     const startTime = Date.now();
 
-    const enqueuedAt = (job as { timestamp?: number }).timestamp;
-    if (enqueuedAt && enqueuedAt > 0) {
-      metrics.jobWaitDuration.observe({ queue }, Math.max(0, (startTime - enqueuedAt) / 1000));
+    if (job.enqueuedAt !== undefined) {
+      const waitedSeconds = Math.max(0, (startTime - job.enqueuedAt) / 1000);
+      metrics.jobWaitDuration.observe({ queue }, waitedSeconds);
     }
 
     const identified = validateJobId(job.id);

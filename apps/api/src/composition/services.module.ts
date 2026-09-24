@@ -221,7 +221,7 @@ export function registerServices(c: Container): Container {
         const queues = c.get(Adapters.Queues);
         const metrics = c.get(Adapters.Metrics);
         return new Poller(
-          () => pollQueueMetrics(queues, metrics),
+          () => pollQueueMetrics(queues, metrics, Date.now),
           config().pollers.queueIntervalMs
         );
       },
