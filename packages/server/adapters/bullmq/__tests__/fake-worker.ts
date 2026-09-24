@@ -1,7 +1,7 @@
 import type { Job, Worker, WorkerOptions } from 'bullmq';
 
 export type WorkerHandler = (job: Job) => Promise<unknown>;
-export type FailedListener = (job: Job | undefined, err: Error) => void;
+type FailedListener = (job: Job | undefined, err: Error) => void;
 type StalledListener = (jobId: string) => void;
 type Listener = FailedListener | StalledListener;
 

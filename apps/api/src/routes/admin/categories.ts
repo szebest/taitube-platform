@@ -6,7 +6,7 @@ import { sendResult } from '../send-result';
 import { presentAdminCategoryFailure } from './categories.presenter';
 
 /**
- * Admin category CRUD (Ticket 37, SDD §6.1). Transport only: it extracts identity, calls the
+ * Admin category CRUD (SDD §6.1). Transport only: it extracts identity, calls the
  * service and hands the `Result` to `sendResult` with the presenter that owns this surface's
  * mapping. No rule, no repository, no status decided by hand.
  */

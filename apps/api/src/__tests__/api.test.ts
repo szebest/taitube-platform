@@ -7,10 +7,10 @@ import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ok } from '@vp/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp, composeApp } from '../app';
-import { serve } from '../main';
+import { composeApp } from '../app';
+import { serve } from '../serve';
 
-describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
+describe('HTTP and auth foundations', () => {
   let app: FastifyInstance;
   const repositories = new InMemoryRepositories();
   const cache = new InMemoryCacheClient();
@@ -38,7 +38,6 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
         { name: '720p', width: 1280, height: 720 },
         { name: '480p', width: 854, height: 480 },
       ],
-      playbackUrl: `${cdnBase}/videos/${SEED_VIDEO_ID}/hls/master.m3u8`,
       masterPlaylistKey: `videos/${SEED_VIDEO_ID}/hls/master.m3u8`,
       posterKey: `videos/${SEED_VIDEO_ID}/thumbs/poster.jpg`,
       spriteKey: `videos/${SEED_VIDEO_ID}/thumbs/sprite.jpg`,
@@ -87,14 +86,16 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
       sourceKey: `raw/${OTHER_PRIVATE_VIDEO_ID}/source.mp4`,
     });
 
-    app = await buildApp({
-      adapters: {
-        repositories,
-        cache,
-        storage,
-      },
-      config: inProcessAppConfig({ cdn: cdnBase }),
-    });
+    app = (
+      await composeApp({
+        adapters: {
+          repositories,
+          cache,
+          storage,
+        },
+        config: inProcessAppConfig({ cdn: cdnBase }),
+      })
+    ).app;
     await app.ready();
   });
 
@@ -102,20 +103,8 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     await app.close();
   });
 
-  it('GET /healthz returns 200 liveness', async () => {
-    const res = await app.inject({
-      method: 'GET',
-      url: '/healthz',
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ status: 'ok' });
-  });
-
-  it('GET /livez returns 200 liveness (K8s alias)', async () => {
-    const res = await app.inject({
-      method: 'GET',
-      url: '/livez',
-    });
+  it.each(['/healthz', '/livez'])('GET %s returns 200 liveness', async (url) => {
+    const res = await app.inject({ method: 'GET', url });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ status: 'ok' });
   });
@@ -133,7 +122,7 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     expect(jwks.keys[0].crv).toBe('Ed25519');
   });
 
-  it('AC 2: GET /v1/videos/:id with minted token returns 200 and §6.3 shape', async () => {
+  it('GET /v1/videos/:id with a minted token returns 200 and the SDD §6.3 shape', async () => {
     const token = mintToken({
       sub: DEV_USER_ID,
       role: 'admin',
@@ -151,7 +140,6 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
 
-    // Verify §6.3 response shape
     expect(body.id).toBe(SEED_VIDEO_ID);
     expect(body.title).toBe('Test Sintel Trailer');
     expect(body.status).toBe('READY');
@@ -170,11 +158,10 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     expect(body.createdAt).toBeDefined();
   });
 
-  it('AC 2: private video with no token returns 401 problem+json with code', async () => {
+  it('answers an anonymous read of a private video with 401 problem+json', async () => {
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${OTHER_PRIVATE_VIDEO_ID}`,
-      // No Authorization header
     });
 
     expect(res.statusCode).toBe(401);
@@ -187,11 +174,10 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     expect(problem.detail).toBeDefined();
   });
 
-  it('AC 2: other owner + private video returns 404 (do not leak existence)', async () => {
-    // User DEV_USER_ID is not the owner of OTHER_PRIVATE_VIDEO_ID
+  it("hides another owner's private video behind a 404", async () => {
     const nonAdminToken = mintToken({
       sub: DEV_USER_ID,
-      role: 'user', // non-admin
+      role: 'user',
       ttl: '1h',
     });
 
@@ -210,12 +196,10 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     expect(problem.code).toBe('VIDEO_NOT_FOUND');
   });
 
-  it('AC 2: public or unlisted video returns 200 without token', async () => {
-    // SEED_VIDEO_ID has visibility: public
+  it('serves a public video without a token', async () => {
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${SEED_VIDEO_ID}`,
-      // No Authorization header
     });
 
     expect(res.statusCode).toBe(200);
@@ -224,8 +208,7 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
     expect(body.title).toBe('Test Sintel Trailer');
   });
 
-  it('AC 6: /readyz returns 503 when Redis is stopped and 200 when back', async () => {
-    // 1. When Redis is healthy
+  it('/readyz returns 503 while Redis is down and 200 once it is back', async () => {
     cache.setHealthy(true);
     const resHealthy = await app.inject({
       method: 'GET',
@@ -241,7 +224,6 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
       },
     });
 
-    // 2. When Redis stops responding
     cache.setHealthy(false);
     const resDegraded = await app.inject({
       method: 'GET',
@@ -257,7 +239,6 @@ describe('apps/api HTTP and Auth foundations (AC 2, AC 6)', () => {
       },
     });
 
-    // 3. When Redis recovers
     cache.setHealthy(true);
     const resRecovered = await app.inject({
       method: 'GET',

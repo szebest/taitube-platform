@@ -1,10 +1,6 @@
 import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
 import type { Token } from './token';
 
-export interface Startable {
-  start(): Promise<Result<void, unknown>>;
-}
-
 export interface Lifecycle<T> {
   start?: (value: T) => Promise<Result<void, unknown>>;
   dispose?: (value: T) => Promise<Result<void, unknown> | void> | Result<void, unknown> | void;
@@ -16,7 +12,7 @@ export interface Closable {
 
 export const closeOnDispose: Lifecycle<Closable> = { dispose: (resource) => resource.close() };
 
-export interface TokenFailed {
+interface TokenFailed {
   readonly token: string;
   readonly cause: unknown;
 }

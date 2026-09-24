@@ -31,10 +31,6 @@ function mapRow(row: typeof channels.$inferSelect): Channel {
 export class PostgresChannelRepository implements ChannelRepositoryPort {
   constructor(private readonly db: PostgresJsDatabase<Record<string, unknown>>) {}
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   /** `channels` is unique on both `handle` and `user_id`; either collision is a taken handle. */
   private conflict(handle: string, operation: string) {
     return (cause: unknown): DatabaseUnavailable | HandleTaken =>
@@ -48,7 +44,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
   ): Promise<Result<Channel | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.select().from(channels).where(eq(column, value)).limit(1),
-      this.unavailable(operation)
+      databaseUnavailable.during(operation)
     );
 
     return map(rows, ([row]) => (row ? mapRow(row) : null));
@@ -107,7 +103,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
             .from(channels)
             .where(and(eq(channels.handle, handle), ne(channels.id, id)))
             .limit(1),
-        this.unavailable('update')
+        databaseUnavailable.during('update')
       );
       if (!conflicting.ok) return conflicting;
       if (conflicting.value[0]) return err(handleTaken(handle));

@@ -1,16 +1,15 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintDevToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-token';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { composeApp } from '../app';
-import { HOUSEKEEPING_SCHEDULER_CONFIGS } from '../services/housekeeping-schedulers';
+import { bearer } from './in-memory-app';
 
-describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC 4)', () => {
+describe('housekeeping schedulers and video deletion', () => {
   let app: FastifyInstance;
   const repositories = new InMemoryRepositories();
   const queuesMap = new Map<string, InMemoryJobQueue>();
@@ -41,30 +40,16 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
     app = composed.app;
     await app.ready();
 
-    adminJwt = mintDevToken({
-      sub: ADMIN_USER_ID,
-      role: 'admin',
-      ttl: '1h',
-    });
-
-    ownerJwt = mintDevToken({
-      sub: OWNER_USER_ID,
-      role: 'user',
-      ttl: '1h',
-    });
-
-    otherJwt = mintDevToken({
-      sub: OTHER_USER_ID,
-      role: 'user',
-      ttl: '1h',
-    });
+    adminJwt = mintToken({ sub: ADMIN_USER_ID, role: 'admin', ttl: '1h' });
+    ownerJwt = mintToken({ sub: OWNER_USER_ID, role: 'user', ttl: '1h' });
+    otherJwt = mintToken({ sub: OTHER_USER_ID, role: 'user', ttl: '1h' });
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  describe('AC 1: Schedulers exist with ids/crons from SDD §9.8 & idempotent boot', () => {
+  describe('housekeeping schedulers (SDD §9.8)', () => {
     it('initializes housekeeping schedulers with exact ids and crons from SDD §9.8', async () => {
       const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
       expect(schedulers).toHaveLength(6);
@@ -79,19 +64,22 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       expect(map.get('reconcile-reaction-counters')?.pattern).toBe('0 * * * *');
     });
 
-    it.each(HOUSEKEEPING_SCHEDULER_CONFIGS)(
-      'scheduler "$id" carries task payload matching its id',
-      async ({ id }) => {
-        const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
-        const map = new Map(schedulers.map((s) => [s.id, s]));
-        const item = map.get(id);
-        expect(item).toBeDefined();
-        expect((item?.data as { task: string })?.task).toBe(id);
-      }
-    );
+    it.each([
+      'reconcile-uploads',
+      'reconcile-processing',
+      'purge-deleted',
+      'expire-raw',
+      'tmp-sweep',
+      'reconcile-reaction-counters',
+    ])('scheduler "%s" carries task payload matching its id', async (id) => {
+      const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
+      const map = new Map(schedulers.map((s) => [s.id, s]));
+      const item = map.get(id);
+      expect(item).toBeDefined();
+      expect((item?.data as { task: string })?.task).toBe(id);
+    });
 
     it('restarting the API twice leaves exactly one of each scheduler', async () => {
-      // Boot a second API instance on the same queues
       const second = await composeApp({
         config: inProcessAppConfig(),
         adapters: { repositories, queues: queuesMap },
@@ -116,7 +104,7 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
     });
   });
 
-  describe('AC 4: DELETE /videos/:id and /v1/videos/:id soft delete', () => {
+  describe('DELETE /v1/videos/:id soft delete', () => {
     it('rejects unauthenticated requests with 401', async () => {
       const res = await app.inject({
         method: 'DELETE',
@@ -130,12 +118,10 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       const res = await app.inject({
         method: 'DELETE',
         url: `/v1/videos/${nonExistentId}`,
-        headers: {
-          authorization: `Bearer ${ownerJwt}`,
-        },
+        headers: bearer(ownerJwt),
       });
       expect(res.statusCode).toBe(404);
-      const body = JSON.parse(res.body);
+      const body = res.json();
       expect(body.code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
     });
 
@@ -151,13 +137,11 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       const res = await app.inject({
         method: 'DELETE',
         url: `/v1/videos/${videoId}`,
-        headers: {
-          authorization: `Bearer ${otherJwt}`,
-        },
+        headers: bearer(otherJwt),
       });
 
       expect(res.statusCode).toBe(403);
-      const body = JSON.parse(res.body);
+      const body = res.json();
       expect(body.code).toBe(ErrorCodes.FORBIDDEN);
     });
 
@@ -173,13 +157,11 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
       const res = await app.inject({
         method: 'DELETE',
         url: `/v1/videos/${videoId}`,
-        headers: {
-          authorization: `Bearer ${ownerJwt}`,
-        },
+        headers: bearer(ownerJwt),
       });
 
       expect(res.statusCode).toBe(202);
-      const body = JSON.parse(res.body);
+      const body = res.json();
       expect(body).toEqual({
         videoId,
         status: 'DELETED',
@@ -187,32 +169,10 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
 
       const video = expectOk(await repositories.videos.findById(videoId));
       expect(video?.status).toBe('DELETED');
-      expect((video as unknown as { deletedAt?: Date })?.deletedAt).toBeDefined();
+      expect(video?.deletedAt).toBeInstanceOf(Date);
 
       const events = expectOk(await repositories.events.findByVideoId(videoId));
       expect(events.some((e) => e.type === 'video.deleted')).toBe(true);
-    });
-
-    it('allows soft delete via alternative path /videos/:id', async () => {
-      const videoId = uuidv7();
-      await repositories.videos.create({
-        id: videoId,
-        ownerId: OWNER_USER_ID,
-        sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'PROCESSING',
-      });
-
-      const res = await app.inject({
-        method: 'DELETE',
-        url: `/videos/${videoId}`,
-        headers: {
-          authorization: `Bearer ${ownerJwt}`,
-        },
-      });
-
-      expect(res.statusCode).toBe(202);
-      const video = expectOk(await repositories.videos.findById(videoId));
-      expect(video?.status).toBe('DELETED');
     });
 
     it('returns 202 idempotently if video is already DELETED', async () => {
@@ -224,46 +184,51 @@ describe('apps/api Housekeeping Schedulers & Video Deletion (Ticket 17: AC 1, AC
         status: 'READY',
       });
 
-      // First delete
       const res1 = await app.inject({
         method: 'DELETE',
         url: `/v1/videos/${videoId}`,
-        headers: {
-          authorization: `Bearer ${ownerJwt}`,
-        },
+        headers: bearer(ownerJwt),
       });
       expect(res1.statusCode).toBe(202);
 
-      // Second delete
       const res2 = await app.inject({
         method: 'DELETE',
         url: `/v1/videos/${videoId}`,
-        headers: {
-          authorization: `Bearer ${ownerJwt}`,
-        },
+        headers: bearer(ownerJwt),
       });
       expect(res2.statusCode).toBe(202);
-      expect(JSON.parse(res2.body)).toEqual({
+      expect(res2.json()).toEqual({
         videoId,
         status: 'DELETED',
       });
     });
 
-    it('allows admin to soft delete any user video', async () => {
+    it.each([
+      {
+        name: 'the owner via the /videos/:id alias',
+        url: '/videos',
+        status: 'PROCESSING',
+        token: () => ownerJwt,
+      },
+      {
+        name: 'an admin on any user video',
+        url: '/v1/videos',
+        status: 'FAILED',
+        token: () => adminJwt,
+      },
+    ] as const)('soft deletes for $name', async ({ url, status, token }) => {
       const videoId = uuidv7();
       await repositories.videos.create({
         id: videoId,
         ownerId: OWNER_USER_ID,
         sourceKey: `raw/${videoId}/source.mp4`,
-        status: 'FAILED',
+        status,
       });
 
       const res = await app.inject({
         method: 'DELETE',
-        url: `/v1/videos/${videoId}`,
-        headers: {
-          authorization: `Bearer ${adminJwt}`,
-        },
+        url: `${url}/${videoId}`,
+        headers: bearer(token()),
       });
 
       expect(res.statusCode).toBe(202);

@@ -1,7 +1,7 @@
 import { type UserContext, canAccessUpload } from '@vp/permissions';
 import { type Result, err, map } from '@vp/result';
-import { type AuthorizationFailure, authorize } from '../authorize.js';
-import { type UploadNotFound, uploadNotFound } from './failures.js';
+import { type AuthorizationFailure, authorize } from '../authorize';
+import { type UploadNotFound, uploadNotFound } from './failures';
 
 /** What the rule needs to answer: who owns the video the upload writes into. */
 export interface OwnedUpload {

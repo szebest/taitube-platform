@@ -60,5 +60,3 @@ export const VideoLikes = ({ video }: VideoLikesProps) => {
 		</ButtonGroup>
 	);
 };
-
-export default VideoLikes;

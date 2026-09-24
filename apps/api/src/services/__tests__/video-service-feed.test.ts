@@ -3,7 +3,9 @@ import { expectOk } from '@vp/testing/result';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
 
-describe('VideoService.listPublic (Ticket 36)', () => {
+const HOUR_MS = 3_600_000;
+
+describe('VideoService.listPublic', () => {
   const repositories = new InMemoryRepositories();
   const videoService = new VideoService(videoServiceDeps(repositories.videos));
 
@@ -15,7 +17,6 @@ describe('VideoService.listPublic (Ticket 36)', () => {
   it('filters only public AND READY videos, across all owners, ignoring private/unlisted or non-READY', async () => {
     repositories.clear();
 
-    // Seed various videos
     await repositories.videos.create({
       id: '018f0000-0000-7000-8000-000000000001',
       ownerId: OWNER_1,
@@ -151,7 +152,6 @@ describe('VideoService.listPublic (Ticket 36)', () => {
 
     const now = Date.now();
 
-    // Fresh video with moderate views
     const fresh = expectOk(
       await repositories.videos.create({
         id: '018f0000-0000-7000-8000-000000000031',
@@ -163,9 +163,8 @@ describe('VideoService.listPublic (Ticket 36)', () => {
         sourceKey: 'raw/31.mp4',
       })
     );
-    fresh.createdAt = new Date(now - 1 * 3600000); // 1 hour ago
+    fresh.createdAt = new Date(now - HOUR_MS);
 
-    // Very old video with slightly higher views
     const old = expectOk(
       await repositories.videos.create({
         id: '018f0000-0000-7000-8000-000000000032',
@@ -177,7 +176,7 @@ describe('VideoService.listPublic (Ticket 36)', () => {
         sourceKey: 'raw/32.mp4',
       })
     );
-    old.createdAt = new Date(now - 100 * 3600000); // 100 hours ago
+    old.createdAt = new Date(now - 100 * HOUR_MS);
 
     const feed = expectOk(await videoService.listPublic({ sort: 'trending' }));
     expect(feed.items[0]?.title).toBe('Fresh Video');
@@ -199,7 +198,6 @@ describe('VideoService.listPublic (Ticket 36)', () => {
       });
     }
 
-    // Page 1 with limit 2 (sort=popular)
     const page1 = expectOk(await videoService.listPublic({ sort: 'popular', limit: 2 }));
     expect(page1.items).toHaveLength(2);
     expect(page1.items[0]?.title).toBe('Video 5');
@@ -207,7 +205,6 @@ describe('VideoService.listPublic (Ticket 36)', () => {
     expect(page1.nextCursor).not.toBeNull();
     expect(page1.total).toBe(5);
 
-    // Page 2
     const cursor1 = page1.nextCursor ?? undefined;
     const page2 = expectOk(
       await videoService.listPublic({
@@ -221,7 +218,6 @@ describe('VideoService.listPublic (Ticket 36)', () => {
     expect(page2.items[1]?.title).toBe('Video 2');
     expect(page2.nextCursor).not.toBeNull();
 
-    // Page 3 (final)
     const cursor2 = page2.nextCursor ?? undefined;
     const page3 = expectOk(
       await videoService.listPublic({

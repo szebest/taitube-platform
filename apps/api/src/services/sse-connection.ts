@@ -82,7 +82,7 @@ export class SseConnection extends EventEmitter {
     }
 
     if (envelope.id && envelope.id <= this.lastSentEventId) {
-      return; // Deduplicate
+      return;
     }
 
     this.dispatchLiveEvent(envelope);
@@ -95,14 +95,13 @@ export class SseConnection extends EventEmitter {
     }
     this.isConnecting = false;
 
-    // Flush buffered events with deduplication
     while (this.connectBuffer.length > 0) {
       const ev = this.connectBuffer.shift();
       if (!ev) {
         break;
       }
       if (ev.id && ev.id <= this.lastSentEventId) {
-        continue; // Deduplicate
+        continue;
       }
       this.dispatchLiveEvent(ev);
     }
@@ -138,7 +137,6 @@ export class SseConnection extends EventEmitter {
   private handleDrain(): void {
     this.isBackpressured = false;
 
-    // 1. Flush coalesced progress (latest per rendition)
     for (const progressEv of this.pendingProgress.values()) {
       if (progressEv.id) {
         this.lastSentEventId = Math.max(this.lastSentEventId, progressEv.id);
@@ -154,7 +152,6 @@ export class SseConnection extends EventEmitter {
     }
     this.pendingProgress.clear();
 
-    // 2. Flush pending status events
     while (this.pendingStatusQueue.length > 0 && !this.isBackpressured) {
       const statusEv = this.pendingStatusQueue.shift();
       if (!statusEv) {

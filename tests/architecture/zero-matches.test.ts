@@ -13,10 +13,14 @@ const PRODUCTION_SOURCE = [
   ':(exclude,glob)**/__mocks__/**',
 ];
 
-const SPEC_EXCLUSIONS = PRODUCTION_SOURCE.filter((spec) => spec.startsWith(':(exclude'));
-
+/** git drops every file when an exclusion does not share the include's directory prefix. */
 function productionUnder(dir: string): string[] {
-  return [`:(glob)${dir}/**/*.ts`, ...SPEC_EXCLUSIONS];
+  return [
+    `:(glob)${dir}/**/*.ts`,
+    `:(exclude,glob)${dir}/**/*.test.ts`,
+    `:(exclude,glob)${dir}/**/__tests__/**`,
+    `:(exclude,glob)${dir}/**/__mocks__/**`,
+  ];
 }
 
 interface Row {
@@ -166,6 +170,80 @@ const ROWS: readonly Row[] = [
     scope: [...PRODUCTION_SOURCE, 'tests/e2e'],
     expected: 0,
     fires: 'const text =\n  cause instanceof Error\n    ? cause.message\n    : String(cause);',
+  },
+  {
+    name: 'the part-manifest rule, called by upload-complete',
+    pattern: /\bdecidePartManifest\(/g,
+    scope: ['apps/api/src/services/upload-complete.ts'],
+    expected: 1,
+    fires: 'const manifest = decidePartManifest({ upload, parts });',
+  },
+  {
+    name: 'the size-match rule, called by upload-complete',
+    pattern: /\bdecideSizeMatch\(/g,
+    scope: ['apps/api/src/services/upload-complete.ts'],
+    expected: 1,
+    fires: 'const size = decideSizeMatch({ video, actualSizeBytes });',
+  },
+  {
+    name: 'a problem content type',
+    pattern: /\bPROBLEM_CONTENT_TYPE =/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 1,
+    fires: "export const PROBLEM_CONTENT_TYPE = 'application/problem+json';",
+  },
+  {
+    name: 'an adapter-local unavailable helper',
+    pattern: /private unavailable\(/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: 'private unavailable(operation: string) {',
+  },
+  {
+    name: 'an unavailable factory',
+    pattern: /\bfunction unavailable\b/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 1,
+    fires: 'function unavailable(code: ErrorCode) {',
+  },
+  {
+    name: 'a BullMQ health body',
+    pattern: /status === 'ready'/g,
+    scope: productionUnder('packages/server/adapters/bullmq'),
+    expected: 1,
+    fires: "if (this.connection.status === 'ready') return ok();",
+  },
+  {
+    name: 'a hand-built object key',
+    pattern: /`(raw|videos)\//g,
+    scope: [...PRODUCTION_SOURCE, ':(exclude)packages/server/storage/src/keys.ts'],
+    expected: 0,
+    fires: 'const key = `videos/${videoId}/hls/master.m3u8`;',
+  },
+  {
+    name: 'the rendition names, listed once in the ladder module',
+    pattern: /'1080p', '720p'/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 1,
+    fires: "export const RENDITIONS = ['1080p', '720p', '480p'] as const;",
+  },
+  {
+    name: 'the dead default ladder',
+    pattern: /\bDEFAULT_LADDER\b/g,
+    scope: PRODUCTION_SOURCE,
+    expected: 0,
+    fires: 'ladder: DEFAULT_LADDER,',
+  },
+  {
+    name: 'a doc asking for an import extension',
+    pattern: /\.js`? (extension|specifier)|carr(y|ies) `\.js`/g,
+    scope: [
+      'ARCHITECTURE.md',
+      ':(glob)packages/universal/**/AGENTS.md',
+      ':(glob)packages/client/**/AGENTS.md',
+    ],
+    expected: 0,
+    fires: 'Relative imports carry `.js` so Node resolves them.',
   },
 ];
 

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../apps/api/src/app';
-import { createWorkerRunner } from '../../apps/worker/src/runner';
+import { composeApp } from '../../apps/api/src/app';
+import { composeWorker } from '../../apps/worker/src/runner';
 import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import {
   InMemoryCacheClient,
@@ -20,8 +20,8 @@ import type {
 } from '../../packages/server/core/ports/index';
 import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
 import { mediaTools } from '../../packages/server/ffmpeg/src/index';
-import { createMetricsRegistry } from '../../packages/server/observability/src/index';
 import { LogContext, type Logger, createLogger } from '../../packages/server/logger/src/index';
+import { createMetricsRegistry } from '../../packages/server/observability/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
 export interface InProcessEnv {
@@ -90,7 +90,7 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
   const metrics = createMetricsRegistry();
 
   for (const stage of workerStages) {
-    const runner = await createWorkerRunner({
+    const runner = await composeWorker({
       config: inProcessAppConfig({ cdn: `${s3Instance.baseUrl}/public`, worker: { stage } }),
       adapters: {
         repositories,
@@ -107,24 +107,28 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
       media: mediaTools,
       workerId: `e2e-worker-${stage}`,
     });
+    const started = await runner.start();
+    if (!started.ok) throw new Error(`the ${stage} worker did not start`, { cause: started.error });
     workerClosers.push(runner.close);
   }
 
-  const app = await buildApp({
-    adapters: {
-      repositories,
-      storage,
-      multipart,
-      cache,
-      probeQueue: getQueue('probe'),
-      queues: queuesMap,
-    },
-    config: inProcessAppConfig({
-      cdn: `${s3Instance.baseUrl}/public`,
-      limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 },
-      sse: { heartbeatMs: 2000 },
-    }),
-  });
+  const app = (
+    await composeApp({
+      adapters: {
+        repositories,
+        storage,
+        multipart,
+        cache,
+        probeQueue: getQueue('probe'),
+        queues: queuesMap,
+      },
+      config: inProcessAppConfig({
+        cdn: `${s3Instance.baseUrl}/public`,
+        limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 },
+        sse: { heartbeatMs: 2000 },
+      }),
+    })
+  ).app;
 
   const reconcilerTimer = setInterval(() => {
     runReconcileUploads({

@@ -1,8 +1,8 @@
 import { captureLog } from '@vp/testing/log-capture';
 import { LogContext } from '../log-context';
-import { type LogFormat, createLogger } from '../logger';
+import { type LoggerConfig, createLogger } from '../logger';
 
-function loggerTo(format: LogFormat, context?: LogContext) {
+function loggerTo(format: LoggerConfig['format'], context?: LogContext) {
   const log = captureLog();
   const logger = createLogger({
     service: 'vp-api',

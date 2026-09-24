@@ -1,4 +1,4 @@
-import { API_ENDPOINTS, contracts } from '@vp/api-contracts';
+import { contracts, isEndpoint } from '@vp/api-contracts';
 import { createApiClient } from '../client';
 
 const emptyFeed = { items: [], nextCursor: null, total: 0 };
@@ -8,7 +8,10 @@ describe('packages/api-client: client', () => {
     const client = createApiClient({ baseUrl: 'http://localhost:3000' });
 
     const callers = Object.values(client).flatMap((group) => Object.values(group));
-    expect(callers).toHaveLength(API_ENDPOINTS.length);
+    const endpoints = Object.values(contracts).flatMap((group) =>
+      Object.values(group).filter(isEndpoint)
+    );
+    expect(callers).toHaveLength(endpoints.length);
     expect(callers.every((caller) => typeof caller === 'function')).toBe(true);
     expect(Object.keys(client).sort()).toEqual(Object.keys(contracts).sort());
   });

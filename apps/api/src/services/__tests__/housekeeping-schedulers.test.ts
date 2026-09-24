@@ -3,10 +3,7 @@ import type { JobSchedulerTemplate, UpsertJobSchedulerOptions } from '@vp/core/p
 import { ErrorCodes, type QueueUnavailable, queueUnavailable } from '@vp/errors';
 import { type Result, err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import {
-  HOUSEKEEPING_SCHEDULER_CONFIGS,
-  registerHousekeepingSchedulers,
-} from '../housekeeping-schedulers';
+import { registerHousekeepingSchedulers } from '../housekeeping-schedulers';
 
 class UnreachableQueue extends InMemoryJobQueue {
   override async upsertJobScheduler<T = unknown>(
@@ -25,9 +22,14 @@ describe('apps/api/services: housekeeping schedulers', () => {
     expectOk(await registerHousekeepingSchedulers(queue));
 
     const registered = expectOk(await queue.getJobSchedulers());
-    expect(registered.map((scheduler) => scheduler.id).sort()).toEqual(
-      HOUSEKEEPING_SCHEDULER_CONFIGS.map((config) => config.id).sort()
-    );
+    expect(registered.map((scheduler) => scheduler.id).sort()).toEqual([
+      'expire-raw',
+      'purge-deleted',
+      'reconcile-processing',
+      'reconcile-reaction-counters',
+      'reconcile-uploads',
+      'tmp-sweep',
+    ]);
     expect(registered.find((scheduler) => scheduler.id === 'purge-deleted')?.pattern).toBe(
       '0 * * * *'
     );

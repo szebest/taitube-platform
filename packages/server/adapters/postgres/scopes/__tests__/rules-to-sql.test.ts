@@ -1,6 +1,6 @@
 import { videos } from '@vp/db';
 import type { UserContext } from '@vp/permissions';
-import { type AstCondition, getConditionSql, rulesToSql } from '../rules-to-sql';
+import { rulesToSql } from '../rules-to-sql';
 import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: rules-to-sql compiler', () => {
@@ -47,53 +47,20 @@ describe('adapters/postgres/scoping: rules-to-sql compiler', () => {
       expect(sqlText(condition)).toBe('false');
     });
 
+    it('compiles a non-default action against the given table', () => {
+      const condition = rulesToSql('update', 'Video', standardUser, videos);
+      expect(sqlText(condition)).toBe('"videos"."owner_id" = $1');
+      expect(sqlParams(condition)).toEqual(['usr-123']);
+    });
+
+    it('matches no rows for a guest deleting', () => {
+      expect(sqlText(rulesToSql('delete', 'Video', guest, videos))).toBe('false');
+    });
+
     it('creator publishes only own videos', () => {
       const condition = rulesToSql('publish', 'Video', creator, videos);
       expect(sqlText(condition)).toBe('"videos"."owner_id" = $1');
       expect(sqlParams(condition)).toEqual(['usr-123']);
-    });
-  });
-
-  describe('operator compilation', () => {
-    it.each<{ name: string; condition: AstCondition; sql: string }>([
-      {
-        name: 'in',
-        condition: { type: 'field', operator: 'in', field: 'status', value: ['READY', 'FAILED'] },
-        sql: '"videos"."status" in ($1, $2)',
-      },
-      {
-        name: 'ne',
-        condition: { type: 'field', operator: 'ne', field: 'status', value: 'DELETED' },
-        sql: '"videos"."status" <> $1',
-      },
-      {
-        name: 'exists false',
-        condition: { type: 'field', operator: 'exists', field: 'deletedAt', value: false },
-        sql: '"videos"."deleted_at" is null',
-      },
-      {
-        name: 'exists true',
-        condition: { type: 'field', operator: 'exists', field: 'deletedAt', value: true },
-        sql: '"videos"."deleted_at" is not null',
-      },
-    ])('compiles a $name condition', ({ condition, sql }) => {
-      expect(sqlText(getConditionSql(condition, videos))).toBe(sql);
-    });
-
-    it('rejects a condition on a column the table does not have', () => {
-      expect(() =>
-        getConditionSql({ type: 'field', operator: 'eq', field: 'userId', value: 'usr-1' }, videos)
-      ).toThrow(/unknown column "userId"/);
-    });
-
-    it.each<{ kind: string; condition: AstCondition }>([
-      {
-        kind: 'field',
-        condition: { type: 'field', operator: 'regex', field: 'title', value: '^a' },
-      },
-      { kind: 'compound', condition: { type: 'compound', operator: 'nor', value: [] } },
-    ])('rejects an unsupported $kind operator', ({ condition }) => {
-      expect(() => getConditionSql(condition, videos)).toThrow(/Unsupported/);
     });
   });
 });

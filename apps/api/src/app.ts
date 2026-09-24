@@ -94,7 +94,3 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
 
   return { app, container };
 }
-
-export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
-  return (await composeApp(options)).app;
-}

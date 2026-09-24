@@ -26,10 +26,6 @@ export const options = {
 const PART_SIZE = 64 * 1024 * 1024; // 64 MB
 
 export default function () {
-  // AC 18 resume after killing VU mid-upload logic:
-  // In a real chaos test, you might abort k6 or kill the network.
-  // Here we just simulate an upload process.
-
   const init = initUpload({
     filename: 'l30.mp4',
     sizeBytes: videoData.byteLength,
@@ -48,15 +44,11 @@ export default function () {
     const end = Math.min(start + PART_SIZE, videoData.byteLength);
     const chunk = videoData.slice(start, end);
 
-    // Simulate some logic to stop at 50% for resume testing if __ENV.KILL_AT_50 is set
     if (__ENV.KILL_AT_50 === 'true' && i >= partsExpected / 2) {
       console.log(`VU ${__VU} stopping at 50% to simulate crash`);
-      return; // abort iteration early
+      return;
     }
 
-    // In a real script we would fetch more part URLs if partsExpected > 100
-    // but common.js currently assumes all part URLs are fetched or we can fetch them.
-    // For simplicity, assuming parts array has the URL for this part.
     const partInfo = parts.find((p) => p.partNumber === i + 1);
     if (!partInfo) {
       throw new Error(`Missing part info for part ${i + 1}`);

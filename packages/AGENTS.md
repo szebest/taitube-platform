@@ -105,10 +105,10 @@ is stale — fix it.
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/compose-autoscaler` | server | `@vp/logger` |
 | `@vp/composition` | server | `@vp/result` |
-| `@vp/db` | server | `@vp/domain`, `@vp/errors`, `@vp/result` |
+| `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 | `@vp/dev-token` | server | `@vp/logger` |
-| `@vp/events` | server | `@vp/errors`, `@vp/job-contracts`, `@vp/result` |
-| `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result` |
+| `@vp/events` | server | `@vp/errors`, `@vp/result` |
+| `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 | `@vp/gen-video` | server | `@vp/logger` |
 | `@vp/observability` | server | `@vp/result` |
 | `@vp/testing` | server | `@vp/result` |
@@ -127,7 +127,7 @@ is stale — fix it.
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
-| `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
+| `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
 | `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
 
 ### T5 — Applications
@@ -136,16 +136,16 @@ is stale — fix it.
 |---|---|---|
 | `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/permissions`, `@vp/result` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` |
-| `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |
+| `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 
 ### T6 — Reference tools
 
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|
-| `@vp/upload-client` | server | `@vp/errors`, `@vp/logger`, `@vp/result`, `@vp/storage` | `@vp/adapters`, `@vp/api`, `@vp/core`, `@vp/dev-token` |
+| `@vp/upload-client` | server | `@vp/logger`, `@vp/result` | `@vp/adapters`, `@vp/api`, `@vp/dev-token`, `@vp/env-schema` |
 
 Its acceptance suite boots `apps/api` and a stub S3, so the package sits above the application it drives.
-What it *ships* is four runtime dependencies; the layer records the whole manifest, dev edges included.
+What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
 **Every package in `@vp/web`'s closure is `universal` or `client`** — six of them, counting what
 `@vp/api-contracts` and `@vp/permissions` pull in, and it stays six once devDependencies count too. That is

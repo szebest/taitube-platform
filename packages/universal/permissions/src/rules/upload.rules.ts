@@ -1,5 +1,5 @@
 import type { AbilityBuilder } from '@casl/ability';
-import { type AppAbility, type UserContext, isSignedInRole } from '../types/index.js';
+import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
 
 export function defineUploadRules(
   user: UserContext | null,

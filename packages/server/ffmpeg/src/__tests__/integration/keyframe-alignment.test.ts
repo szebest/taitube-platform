@@ -2,13 +2,14 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { CANONICAL_LADDER, runFfmpegTranscode } from '../../index';
+import { CANONICAL_LADDER, type LadderEntry } from '@vp/job-contracts';
+import { runFfmpegTranscode } from '../../transcode';
 import { ENCODER } from '../encoder-settings';
 
 /** Real encodes of three renditions per fixture: the `integration` job runs these, not `unit`. */
-const renditions = CANONICAL_LADDER.filter((rung) => ['1080p', '720p', '480p'].includes(rung.name));
+const renditions: readonly LadderEntry[] = CANONICAL_LADDER;
 
-describe('Ticket 14 AC 4: keyframe timestamps of segment N across 1080p/720p/480p', () => {
+describe('@vp/ffmpeg: keyframe timestamps of segment N across 1080p/720p/480p', () => {
   function getKeyframeTimestamp(segPath: string): number {
     const stdout = execFileSync(
       'ffprobe',
@@ -34,11 +35,7 @@ describe('Ticket 14 AC 4: keyframe timestamps of segment N across 1080p/720p/480
   }
 
   /** Segment keyframes of one rendition, encoded into a directory removed afterwards. */
-  async function keyframes(
-    sourcePath: string,
-    rendition: (typeof renditions)[number],
-    segmentSeconds: number
-  ) {
+  async function keyframes(sourcePath: string, rendition: LadderEntry, segmentSeconds: number) {
     const outDir = fs.mkdtempSync(path.join(os.tmpdir(), `test-align-${rendition.name}-`));
     try {
       await runFfmpegTranscode({

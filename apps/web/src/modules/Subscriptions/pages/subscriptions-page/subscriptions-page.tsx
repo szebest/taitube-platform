@@ -20,5 +20,3 @@ export function SubscriptionsPage() {
 		</div>
 	);
 }
-
-export default SubscriptionsPage;

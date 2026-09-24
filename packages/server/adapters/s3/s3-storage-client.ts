@@ -60,10 +60,6 @@ export class S3StorageClient extends StorageClient {
     return this.client;
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): StorageUnavailable => storageUnavailable(operation, cause);
-  }
-
   /** A 404 is an answer, not a fault: it resolves to `absent` while any other cause is a failure. */
   private async absentOr<T>(
     operation: string,
@@ -80,7 +76,7 @@ export class S3StorageClient extends StorageClient {
   async checkHealth(): Promise<Result<void, StorageUnavailable>> {
     const answered = await fromPromise(
       () => this.client.send(new HeadBucketCommand({ Bucket: this.healthBucket })),
-      this.unavailable('checkHealth')
+      storageUnavailable.during('checkHealth')
     );
     return map(answered, () => undefined);
   }
@@ -99,7 +95,7 @@ export class S3StorageClient extends StorageClient {
             CacheControl: params.cacheControl,
           })
         ),
-      this.unavailable('uploadObject')
+      storageUnavailable.during('uploadObject')
     );
 
     return map(sent, (res) => ({ key: params.key, etag: res.ETag }));
@@ -130,7 +126,7 @@ export class S3StorageClient extends StorageClient {
         chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
       }
       return Buffer.concat(chunks);
-    }, this.unavailable('getObject'));
+    }, storageUnavailable.during('getObject'));
   }
 
   async downloadObject(
@@ -149,7 +145,7 @@ export class S3StorageClient extends StorageClient {
   async deleteObject(bucket: string, key: string): Promise<Result<void, StorageUnavailable>> {
     const sent = await fromPromise(
       () => this.client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key })),
-      this.unavailable('deleteObject')
+      storageUnavailable.during('deleteObject')
     );
     return map(sent, () => undefined);
   }
@@ -171,7 +167,7 @@ export class S3StorageClient extends StorageClient {
               Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
             })
           ),
-        this.unavailable('deleteObjects')
+        storageUnavailable.during('deleteObjects')
       );
       if (!sent.ok) return sent;
       deleted.push(...chunk);
@@ -192,7 +188,7 @@ export class S3StorageClient extends StorageClient {
             MaxKeys: params.maxKeys,
           })
         ),
-      this.unavailable('listObjects')
+      storageUnavailable.during('listObjects')
     );
 
     return map(sent, (res) => ({
@@ -239,7 +235,7 @@ export class S3StorageClient extends StorageClient {
           }),
           { expiresIn }
         ),
-      this.unavailable('createPresignedPutUrl')
+      storageUnavailable.during('createPresignedPutUrl')
     );
 
     return map(signed, (url) => ({
@@ -262,7 +258,7 @@ export class S3StorageClient extends StorageClient {
           new GetObjectCommand({ Bucket: params.bucket, Key: params.key }),
           { expiresIn: params.expiresInSeconds }
         ),
-      this.unavailable('createPresignedGetUrl')
+      storageUnavailable.during('createPresignedGetUrl')
     );
   }
 

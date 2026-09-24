@@ -1,8 +1,8 @@
-import { problemFor } from '@vp/api-contracts';
+import { PROBLEM_CONTENT_TYPE, problemFor } from '@vp/api-contracts';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
 import { err, ok } from '@vp/result';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { PROBLEM_CONTENT_TYPE, sendResult } from '../send-result';
+import { sendResult } from '../send-result';
 
 interface Sent {
   status?: number;

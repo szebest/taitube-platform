@@ -32,7 +32,6 @@ const PART_SIZE = 8 * 1024 * 1024;
 export default function () {
   const startTime = Date.now();
 
-  // 1. Initiate upload
   let init;
   try {
     init = initUpload({
@@ -42,7 +41,6 @@ export default function () {
       strategy: 'multipart',
     });
   } catch (_err) {
-    // If storage/API outage is active, retry with backoff
     retryObservedCount.add(1);
     sleep(2);
     init = initUpload({
@@ -58,7 +56,6 @@ export default function () {
   const partsExpected = init.partsExpected || parts.length;
   const etags = [];
 
-  // 2. Upload parts
   for (let i = 0; i < partsExpected; i++) {
     const start = i * PART_SIZE;
     const end = Math.min(start + PART_SIZE, videoData.byteLength);
@@ -76,7 +73,6 @@ export default function () {
     etags.push(res);
   }
 
-  // 3. Complete upload
   let completeRes;
   try {
     completeRes = completeUpload(uploadId, etags);
@@ -91,7 +87,6 @@ export default function () {
     'videoId present in completed upload': (v) => !!v,
   });
 
-  // 4. Poll until video is terminal
   // Under outage/restart conditions, workers retry with backoff: 10s, 20s, 40s
   let status = 'PROCESSING';
   let pollAttempts = 0;

@@ -71,5 +71,3 @@ export function EditPage() {
 		</>
 	)
 }
-
-export default EditPage;

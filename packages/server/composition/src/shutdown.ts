@@ -1,7 +1,7 @@
 import { fromPromise, isErr } from '@vp/result';
 
 /** The part of a `@vp/logger` logger a shutdown writes to. */
-export interface ShutdownLog {
+interface ShutdownLog {
   info(fields: Record<string, unknown>, message: string): void;
   error(fields: Record<string, unknown>, message: string): void;
 }

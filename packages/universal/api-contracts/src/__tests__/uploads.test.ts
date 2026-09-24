@@ -1,11 +1,4 @@
-import {
-  StartUploadSchema,
-  abortUpload,
-  completeUpload,
-  getUpload,
-  issueUploadParts,
-  startUpload,
-} from '../uploads';
+import { abortUpload, completeUpload, getUpload, issueUploadParts, startUpload } from '../uploads';
 
 const start = {
   filename: 'clip.mp4',
@@ -27,9 +20,9 @@ describe('packages/api-contracts: uploads', () => {
   });
 
   it('leaves the strategy to the server unless the caller forces one', () => {
-    expect(StartUploadSchema.parse(start).strategy).toBeUndefined();
-    expect(StartUploadSchema.parse({ ...start, strategy: 'multipart' }).strategy).toBe('multipart');
-    expect(StartUploadSchema.safeParse({ ...start, strategy: 'stream' }).success).toBe(false);
+    expect(startUpload.body.parse(start).strategy).toBeUndefined();
+    expect(startUpload.body.parse({ ...start, strategy: 'multipart' }).strategy).toBe('multipart');
+    expect(startUpload.body.safeParse({ ...start, strategy: 'stream' }).success).toBe(false);
   });
 
   it('defaults a part-url batch to 100 starting at part 1', () => {

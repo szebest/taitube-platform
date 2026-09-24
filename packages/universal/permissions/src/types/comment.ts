@@ -5,5 +5,3 @@ export interface CommentResource {
   readonly videoId?: string;
   readonly videoOwnerId?: string;
 }
-
-export type CommentAction = 'comment:create' | 'comment:delete' | 'comment:pin';

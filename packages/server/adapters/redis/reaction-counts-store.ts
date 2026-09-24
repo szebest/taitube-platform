@@ -1,6 +1,7 @@
 import type { CacheClient } from '@vp/core/ports';
 import type { ReactionCounts } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
+import { CacheKeys } from '@vp/events';
 import {
   type Result,
   assertNever,
@@ -45,21 +46,13 @@ export class ReactionCountsStore {
     this.ttlSeconds = config.ttlSeconds;
   }
 
-  key(videoId: string): string {
-    return `taitube:video:${videoId}:reactions`;
-  }
-
-  private unavailable(operation: string) {
-    return (cause: unknown): CacheUnavailable => cacheUnavailable(operation, cause);
-  }
-
   /**
    * A failed read is a miss: the caller then asks the fetcher, which is what it would have done
    * for an absent key. That is the one narrowing that belongs here rather than at a caller, since
    * there is no other answer a caller could give it.
    */
   async read(videoId: string): Promise<CachedCounts | null> {
-    const key = this.key(videoId);
+    const key = CacheKeys.videoReactionCounts(videoId);
     const { backend } = this;
 
     switch (backend.type) {
@@ -74,7 +67,7 @@ export class ReactionCountsStore {
 
   private async readHash(redis: Redis, key: string): Promise<CachedCounts | null> {
     const hash = unwrapOr(
-      await fromPromise(() => redis.hgetall(key), this.unavailable('read')),
+      await fromPromise(() => redis.hgetall(key), cacheUnavailable.during('read')),
       null
     );
     if (!hash || (hash['likes'] === undefined && hash['dislikes'] === undefined)) return null;
@@ -104,7 +97,7 @@ export class ReactionCountsStore {
     if (!json) return null;
 
     return unwrapOr(
-      tryCatch(() => JSON.parse(json), this.unavailable('read')),
+      tryCatch(() => JSON.parse(json), cacheUnavailable.during('read')),
       null
     );
   }
@@ -114,7 +107,7 @@ export class ReactionCountsStore {
     counts: ReactionCounts,
     delta: number
   ): Promise<Result<void, CacheUnavailable>> {
-    const key = this.key(videoId);
+    const key = CacheKeys.videoReactionCounts(videoId);
     const cachedAt = Date.now();
     const { backend } = this;
 
@@ -132,7 +125,7 @@ export class ReactionCountsStore {
             })
             .expire(key, this.ttlSeconds)
             .exec(),
-        this.unavailable('write')
+        cacheUnavailable.during('write')
       );
       return map(done, () => undefined);
     }
@@ -145,7 +138,7 @@ export class ReactionCountsStore {
     });
     const done = await fromPromise(
       () => backend.cache.set(key, payload, this.ttlSeconds),
-      this.unavailable('write')
+      cacheUnavailable.during('write')
     );
     return map(done, () => undefined);
   }
@@ -155,12 +148,12 @@ export class ReactionCountsStore {
     deltaLikes: number,
     deltaDislikes: number
   ): Promise<Result<void, CacheUnavailable>> {
-    const key = this.key(videoId);
+    const key = CacheKeys.videoReactionCounts(videoId);
     const { backend } = this;
 
     if (backend.type === 'redis') {
       const { redis } = backend;
-      const present = await fromPromise(() => redis.exists(key), this.unavailable('adjust'));
+      const present = await fromPromise(() => redis.exists(key), cacheUnavailable.during('adjust'));
       if (isErr(present)) return present;
       if (!present.value) return ok();
 
@@ -169,7 +162,7 @@ export class ReactionCountsStore {
         if (deltaLikes !== 0) multi.hincrby(key, 'likes', deltaLikes);
         if (deltaDislikes !== 0) multi.hincrby(key, 'dislikes', deltaDislikes);
         return multi.expire(key, this.ttlSeconds).exec();
-      }, this.unavailable('adjust'));
+      }, cacheUnavailable.during('adjust'));
 
       return map(applied, () => undefined);
     }
@@ -206,23 +199,23 @@ export class ReactionCountsStore {
       });
     this.adjustMutexes.set(key, next);
 
-    const settled = await fromPromise(() => next, this.unavailable('adjust'));
+    const settled = await fromPromise(() => next, cacheUnavailable.during('adjust'));
     return isErr(settled) ? settled : settled.value;
   }
 
   async invalidate(videoId: string): Promise<Result<void, CacheUnavailable>> {
-    const key = this.key(videoId);
+    const key = CacheKeys.videoReactionCounts(videoId);
     const { backend } = this;
 
     switch (backend.type) {
       case 'redis':
         return map(
-          await fromPromise(() => backend.redis.del(key), this.unavailable('invalidate')),
+          await fromPromise(() => backend.redis.del(key), cacheUnavailable.during('invalidate')),
           () => undefined
         );
       case 'cache':
         return map(
-          await fromPromise(() => backend.cache.del(key), this.unavailable('invalidate')),
+          await fromPromise(() => backend.cache.del(key), cacheUnavailable.during('invalidate')),
           () => undefined
         );
       default:

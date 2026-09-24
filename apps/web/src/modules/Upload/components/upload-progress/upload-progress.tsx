@@ -14,5 +14,3 @@ export function UploadProgress() {
     </div>
   )
 }
-
-export default UploadProgress;

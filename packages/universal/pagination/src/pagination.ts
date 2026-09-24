@@ -4,7 +4,7 @@ import {
   type CursorCodec,
   type CursorPayload,
   type InvalidCursor,
-} from './cursor-codec.js';
+} from './cursor-codec';
 
 /**
  * Bounds for a keyset-paginated endpoint. Resolved once at application start
@@ -21,11 +21,6 @@ export interface PaginationDefaults {
  */
 export const PAGE_SIZE_DEFAULT = 20;
 export const PAGE_SIZE_MAX = 100;
-
-export const DEFAULT_PAGINATION: PaginationDefaults = {
-  defaultLimit: PAGE_SIZE_DEFAULT,
-  maxLimit: PAGE_SIZE_MAX,
-};
 
 export interface PaginatorOptions extends Partial<PaginationDefaults> {
   /** Wire format for cursors; swap it without touching any call site. */
@@ -55,8 +50,8 @@ export class Paginator {
 
   constructor(options: PaginatorOptions = {}) {
     this.defaults = {
-      defaultLimit: options.defaultLimit ?? DEFAULT_PAGINATION.defaultLimit,
-      maxLimit: options.maxLimit ?? DEFAULT_PAGINATION.maxLimit,
+      defaultLimit: options.defaultLimit ?? PAGE_SIZE_DEFAULT,
+      maxLimit: options.maxLimit ?? PAGE_SIZE_MAX,
     };
     this.cursorCodec = options.cursorCodec ?? new Base64UrlCursorCodec();
   }

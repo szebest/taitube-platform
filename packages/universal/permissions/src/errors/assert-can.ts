@@ -1,5 +1,5 @@
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import type { UserContext } from '../types/index.js';
+import type { UserContext } from '../types/index';
 
 export interface AssertCanOptions {
   action: string;

@@ -2106,7 +2106,7 @@ Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Goi
 
 One contract for both apps, declared with zod in `packages/server/env-schema` and loaded by `packages/server/config` (fail fast on boot with a readable list of missing/invalid keys). Full annotated template: `.env.example` at the repo root. Secrets are marked 🔒 and carry no default (§11).
 
-Two schemas, each with named consumers. `AppEnv` (`app-env.ts`) is what `toAppConfig()` reads, and every key in it reaches a consumer: `env-keys-consumed.test.ts` checks every `AppEnv` key is read by `toAppConfig` and every `AppConfig` leaf is read by production source outside `env-schema`. `PLATFORM_ENV` (`platform-env.ts`) is the short list of keys this repo hands to something else, each naming the consumer beside it. Tuning with no key of its own (cache TTLs, housekeeping thresholds, the outbox cadence, the segment uploader's retries) is declared once, as a named constant in `tuning.ts`; no service, stage or adapter holds a numeric default (`no-tuning-literals.test.ts`).
+Two schemas, each with named consumers. `AppEnv` (`app-env.ts`) is what `toAppConfig()` reads, and every key in it reaches a consumer: `env-keys-consumed.test.ts` checks every `AppEnv` key is read by `toAppConfig` and every `AppConfig` leaf is read by production source outside `env-schema`. `platform-env.json` is the short list of keys this repo hands to something else, each naming the consumer beside it: data, since no code of ours reads them. Tuning with no key of its own (cache TTLs, housekeeping thresholds, the outbox cadence, the segment uploader's retries) is declared once, as a named constant in `tuning.ts`; no service, stage or adapter holds a numeric default (`no-tuning-literals.test.ts`).
 
 The schema is **closed over what the code reads**: every key the deployables read is declared, every declared key is uncommented in `.env.example`, and every key compose, the k8s base and overlays, CI steps and `make` hand the apps is declared (`env-key-closure.test.ts`). `process.env` is read only in the entrypoints and env homes `tests/architecture/entrypoints.ts` lists; everything below takes the `AppConfig` value `toAppConfig()` shapes (ADR-25).
 
@@ -2208,7 +2208,7 @@ The upload content types are a typed constant in `@vp/validation` that the brows
 | `SENTRY_DSN` 🔒 (optional) | — | |
 | `API` / `TOKEN` / `K6_PROMETHEUS_RW_SERVER_URL` (k6 only) | `http://localhost:3000` / dev JWT / `http://localhost:9090/api/v1/write` | reference deployment URL / Grafana Cloud k6 |
 
-### 16.8 Platform keys (`PLATFORM_ENV`)
+### 16.8 Platform keys (`platform-env.json`)
 
 Handed to something other than this code, and declared so the schema stays closed:
 

@@ -5,7 +5,7 @@ import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { TranscodeProgressReporter } from '../stages/progress-reporter';
 
-describe('TranscodeProgressReporter (Ticket 15: AC 4)', () => {
+describe('TranscodeProgressReporter', () => {
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
   const logger = createLogger({
@@ -15,9 +15,17 @@ describe('TranscodeProgressReporter (Ticket 15: AC 4)', () => {
   });
   const videoId = uuidv7();
 
+  let clock: number;
+
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
+    clock = 1_000_000;
+    vi.spyOn(Date, 'now').mockImplementation(() => clock);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('throttles progress to 1 per 2s per rendition and persists only every 10%', async () => {
@@ -30,45 +38,37 @@ describe('TranscodeProgressReporter (Ticket 15: AC 4)', () => {
       logger,
     });
 
-    // Initial publish at 5% (time 0)
     await reporter.report(5);
-    // At 5% (< 10%), should publish to Redis pub/sub but NOT persist in DB
     let events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.length).toBe(0);
     expect(cache.publishedMessages.length).toBe(1);
 
-    // Rapid progress at 8% (within 2s) -> throttled completely
     await reporter.report(8);
     expect(cache.publishedMessages.length).toBe(1);
 
-    // Fast-forward lastPublishTime to simulate 2.5s later
-    (reporter as any).lastPublishTime = Date.now() - 2500;
-    // Progress at 12% -> passes 10% decile boundary! Should persist and publish!
+    clock += 2500;
     await reporter.report(12);
 
     events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.length).toBe(1);
     const event0 = events[0];
     expect(event0?.type).toBe('progress');
-    expect((event0?.payload as any)?.percent).toBe(12);
+    expect(event0?.payload).toMatchObject({ percent: 12 });
     expect(cache.publishedMessages.length).toBe(2);
 
-    // Fast-forward another 2.5s, progress at 16% -> same decile (1), should publish but NOT persist
-    (reporter as any).lastPublishTime = Date.now() - 2500;
+    clock += 2500;
     await reporter.report(16);
 
     events = expectOk(await repositories.events.findByVideoId(videoId));
-    expect(events.length).toBe(1); // Still 1 persisted
+    expect(events.length).toBe(1);
     expect(cache.publishedMessages.length).toBe(3);
 
-    // Fast-forward another 2.5s, progress at 22% -> passes 20% decile boundary! Should persist!
-    (reporter as any).lastPublishTime = Date.now() - 2500;
+    clock += 2500;
     await reporter.report(22);
 
     events = expectOk(await repositories.events.findByVideoId(videoId));
     expect(events.length).toBe(2);
-    const event1 = events[1];
-    expect((event1?.payload as any)?.percent).toBe(22);
+    expect(events[1]?.payload).toMatchObject({ percent: 22 });
     expect(cache.publishedMessages.length).toBe(4);
   });
 });

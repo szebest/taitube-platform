@@ -16,7 +16,7 @@ export type ApiQueryError = {
   message: string;
 };
 
-export function toQueryError(error: unknown): ApiQueryError {
+function toQueryError(error: unknown): ApiQueryError {
   if (error instanceof ApiError) {
     return { status: error.status, code: error.code, message: error.message };
   }

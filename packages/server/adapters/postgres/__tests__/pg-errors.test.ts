@@ -1,4 +1,4 @@
-import { isForeignKeyViolation, isUniqueViolation } from '../pg-errors';
+import { isUniqueViolation } from '../pg-errors';
 
 const DUPLICATE_MESSAGE = 'duplicate key value violates unique constraint "categories_slug_unique"';
 
@@ -22,10 +22,6 @@ describe('postgres adapter: constraint classification', () => {
     { name: 'undefined', error: undefined },
   ])('does not read $name as a unique violation', ({ error }) => {
     expect(isUniqueViolation(error)).toBe(false);
-  });
-
-  it('reads a foreign key violation from its SQLSTATE', () => {
-    expect(isForeignKeyViolation({ cause: { code: '23503' } })).toBe(true);
   });
 
   it('stops walking a cause chain that points at itself', () => {

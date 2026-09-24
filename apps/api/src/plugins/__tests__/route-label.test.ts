@@ -1,5 +1,5 @@
 import type { FastifyRequest } from 'fastify';
-import { UNMATCHED_ROUTE, routeLabel } from '../route-label';
+import { routeLabel } from '../route-label';
 
 const requestFor = (url: string | undefined) => ({ routeOptions: { url } }) as FastifyRequest;
 
@@ -9,6 +9,6 @@ describe('apps/api/plugins: routeLabel', () => {
   });
 
   it('names a request no route matched as unmatched', () => {
-    expect(routeLabel(requestFor(undefined))).toBe(UNMATCHED_ROUTE);
+    expect(routeLabel(requestFor(undefined))).toBe('unmatched');
   });
 });

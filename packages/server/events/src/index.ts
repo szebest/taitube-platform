@@ -2,18 +2,10 @@ import type { CacheUnavailable } from '@vp/errors';
 import { type Result, all, map } from '@vp/result';
 import { z } from 'zod';
 
-export { SseEvent } from '@vp/job-contracts';
+import { userChannel, videoChannel } from './channels';
 
-export function videoChannel(videoId: string): string {
-  return `video:${videoId}`;
-}
-
-export function userChannel(userId: string): string {
-  return `user:${userId}`;
-}
-
-export const VIDEO_WILDCARD_CHANNEL = 'video:*';
-export const USER_WILDCARD_CHANNEL = 'user:*';
+export * from './channels';
+export * from './keys';
 
 export const SseMessageEnvelope = z.object({
   id: z.number().int().optional(),

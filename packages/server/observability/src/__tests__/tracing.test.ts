@@ -8,10 +8,8 @@ import {
 import {
   createTraceparent,
   extractContextFromTraceparent,
-  getActiveSpanContext,
   getActiveTraceparent,
   initTracing,
-  injectTraceparent,
   registeredTracing,
   rootTraceparent,
 } from '../tracing';
@@ -60,7 +58,6 @@ describe('@vp/observability: tracing', () => {
 
     context.with(trace.setSpan(context.active(), noop), () => {
       expect(getActiveTraceparent()).toBeUndefined();
-      expect(getActiveSpanContext()).toEqual({});
     });
   });
 
@@ -74,12 +71,7 @@ describe('@vp/observability: tracing', () => {
     context.with(trace.setSpan(parentCtx, childSpan), () => {
       const activeTp = getActiveTraceparent();
       expect(activeTp).toContain('4bf92f3577b34da6a3ce929d0e0e4736');
-      expect(getActiveSpanContext()).toEqual({
-        traceId: '4bf92f3577b34da6a3ce929d0e0e4736',
-        spanId: childSpan.spanContext().spanId,
-        traceparent: activeTp,
-      });
-      expect(injectTraceparent({})).toEqual({ traceparent: activeTp });
+      expect(activeTp?.split('-')[2]).toBe(childSpan.spanContext().spanId);
 
       childSpan.setStatus({ code: SpanStatusCode.OK });
       childSpan.end();

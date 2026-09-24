@@ -7,7 +7,6 @@ import {
   type Tracer,
   context,
   defaultTextMapGetter,
-  defaultTextMapSetter,
   isSpanContextValid,
   trace,
 } from '@opentelemetry/api';
@@ -27,7 +26,7 @@ import {
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { type Result, fromPromise, ok, tryCatch } from '@vp/result';
 
-export interface TracingConfig {
+interface TracingConfig {
   serviceName: string;
   enabled: boolean;
   serviceVersion: string;
@@ -35,12 +34,6 @@ export interface TracingConfig {
   sampler: string;
   samplerArg: number;
   resourceAttributes: string;
-}
-
-export interface TracingContext {
-  traceparent?: string;
-  spanId?: string;
-  traceId?: string;
 }
 
 /** What a process flushes its spans through on shutdown. */
@@ -161,16 +154,6 @@ export function getActiveTraceparent(): string | undefined {
   return spanContext ? toTraceparent(spanContext) : undefined;
 }
 
-export function getActiveSpanContext(): TracingContext {
-  const spanContext = activeSpanContext();
-  if (!spanContext) return {};
-  return {
-    traceId: spanContext.traceId,
-    spanId: spanContext.spanId,
-    traceparent: toTraceparent(spanContext),
-  };
-}
-
 /**
  * Parses a W3C traceparent into a Context carrying the remote span. The W3C propagator is used
  * directly rather than the global one, which is a no-op until `initTracing` runs.
@@ -181,14 +164,6 @@ export function extractContextFromTraceparent(
 ): Context {
   if (!traceparent) return parentCtx;
   return new W3CTraceContextPropagator().extract(parentCtx, { traceparent }, defaultTextMapGetter);
-}
-
-export function injectTraceparent(
-  carrier: Record<string, unknown> = {},
-  ctx: Context = context.active()
-): Record<string, unknown> {
-  new W3CTraceContextPropagator().inject(ctx, carrier, defaultTextMapSetter);
-  return carrier;
 }
 
 export function createTraceparent(traceId?: string, spanId?: string): string {

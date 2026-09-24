@@ -1,15 +1,15 @@
 import { ErrorCodes } from '@vp/errors';
 import { Base64UrlCursorCodec } from '@vp/pagination';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint.js';
-import { CursorSchema, PageLimitSchema } from './pagination.js';
+import { defineEndpoint } from './endpoint';
+import { CursorSchema, PageLimitSchema } from './pagination';
 import {
   VideoIdParamSchema,
   VideoListResponseSchema,
   VideoSchema,
   VideoStatusSchema,
   VideoVisibilitySchema,
-} from './video-resource.js';
+} from './video-resource';
 
 function isKeysetCursor(cursor: string): boolean {
   const decoded = new Base64UrlCursorCodec().decode(cursor);
@@ -23,13 +23,13 @@ function isKeysetCursor(cursor: string): boolean {
   );
 }
 
-export const ListVideosQuerySchema = z.object({
+const ListVideosQuerySchema = z.object({
   cursor: CursorSchema.refine(isKeysetCursor, { message: 'Invalid pagination cursor' }).optional(),
   limit: PageLimitSchema,
   status: VideoStatusSchema.optional().describe('Filter videos by pipeline status'),
 });
 
-export const UpdateVideoMetadataSchema = z.object({
+const UpdateVideoMetadataSchema = z.object({
   title: z.string().max(255).optional().describe('Updated video title'),
   description: z.string().max(4000).optional().describe('Updated video description'),
   visibility: VideoVisibilitySchema.optional().describe(

@@ -8,16 +8,15 @@ export type PostgresDatabaseClientConfig =
   | { type: 'sql'; sql: Sql }
   | { type: 'url'; url: string; max: number };
 
-function unavailable(operation: string) {
-  return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-}
-
 /** The queries a pool and a transaction answer alike; only how each nests and closes differs. */
 abstract class PostgresSession extends DatabaseClient {
   protected abstract readonly session: postgres.ISql;
 
   async checkHealth(): Promise<Result<void, DatabaseUnavailable>> {
-    const probed = await fromPromise(() => this.session`SELECT 1`, unavailable('checkHealth'));
+    const probed = await fromPromise(
+      () => this.session`SELECT 1`,
+      databaseUnavailable.during('checkHealth')
+    );
     return map(probed, () => undefined);
   }
 
@@ -27,7 +26,7 @@ abstract class PostgresSession extends DatabaseClient {
   ): Promise<Result<T[], DatabaseUnavailable>> {
     return fromPromise(
       () => this.session.unsafe<T[]>(queryText, params as never[]),
-      unavailable('query')
+      databaseUnavailable.during('query')
     );
   }
 
@@ -37,7 +36,7 @@ abstract class PostgresSession extends DatabaseClient {
   ): Promise<Result<number, DatabaseUnavailable>> {
     const executed = await fromPromise(
       () => this.session.unsafe(queryText, params as never[]),
-      unavailable('execute')
+      databaseUnavailable.during('execute')
     );
 
     return map(executed, (res) => res.count ?? 0);
@@ -54,7 +53,7 @@ class PostgresTransactionClient extends PostgresSession {
   ): Promise<Result<T, E | DatabaseUnavailable>> {
     const committed = await fromPromise(
       () => this.session.savepoint((sp) => fn(new PostgresTransactionClient(sp))),
-      unavailable('transaction')
+      databaseUnavailable.during('transaction')
     );
 
     return committed.ok ? committed.value : committed;
@@ -98,7 +97,7 @@ export class PostgresDatabaseClient extends PostgresSession {
   ): Promise<Result<T, E | DatabaseUnavailable>> {
     const committed = await fromPromise(
       () => this.session.begin((tx) => fn(new PostgresTransactionClient(tx))),
-      unavailable('transaction')
+      databaseUnavailable.during('transaction')
     );
 
     return committed.ok ? committed.value : committed;
@@ -106,7 +105,7 @@ export class PostgresDatabaseClient extends PostgresSession {
 
   async close(): Promise<Result<void, DatabaseUnavailable>> {
     if (!this.ownsPool) return ok();
-    const closed = await fromPromise(() => this.session.end(), unavailable('close'));
+    const closed = await fromPromise(() => this.session.end(), databaseUnavailable.during('close'));
     return map(closed, () => undefined);
   }
 }

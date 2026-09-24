@@ -38,5 +38,3 @@ export function AllVideosPage() {
 		</div>
 	)
 }
-
-export default AllVideosPage;

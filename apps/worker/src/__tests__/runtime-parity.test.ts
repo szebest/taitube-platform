@@ -1,6 +1,5 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { describe, expect, it } from 'vitest';
 
 function getSourceFiles(dir: string): string[] {
   const results: string[] = [];
@@ -30,15 +29,7 @@ describe('@vp/worker dual-runtime parity gate (SDD §2.3, ADR-01)', () => {
     }
   });
 
-  it('enforces runtime-neutrality: forbids Bun.* APIs in worker source (unit-bun gate)', () => {
-    // Under Node (unit job), Node LTS tests pass when Bun-only constructs are
-    // conditionally placed (e.g. guarded with typeof Bun !== 'undefined').
-    // Under Bun (unit-bun job), this parity gate enforces zero Bun.* API usage in worker source.
-    if (!isBun) {
-      // In Node environment, pass cleanly so unit stays green.
-      return;
-    }
-
+  it('forbids Bun.* APIs in worker source', () => {
     const srcDir = path.resolve(__dirname, '..');
     const sourceFiles = getSourceFiles(srcDir);
     const violations: string[] = [];

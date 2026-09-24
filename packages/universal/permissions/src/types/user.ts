@@ -1,4 +1,4 @@
-export const VALID_ROLES = ['GUEST', 'USER', 'CREATOR', 'MODERATOR', 'ADMIN'] as const;
+const VALID_ROLES = ['GUEST', 'USER', 'CREATOR', 'MODERATOR', 'ADMIN'] as const;
 export type Role = (typeof VALID_ROLES)[number];
 const ROLES_SET: ReadonlySet<Role> = new Set<Role>(VALID_ROLES);
 

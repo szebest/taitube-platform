@@ -1,11 +1,11 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint.js';
-import { CursorSchema, PageLimitSchema } from './pagination.js';
+import { defineEndpoint } from './endpoint';
+import { CursorSchema, PageLimitSchema } from './pagination';
 
-export const DLQ_STATUSES = ['PARKED', 'REPLAYED', 'DISCARDED'] as const;
+const DLQ_STATUSES = ['PARKED', 'REPLAYED', 'DISCARDED'] as const;
 
-export const DlqEntrySchema = z.object({
+const DlqEntrySchema = z.object({
   id: z.string(),
   queue: z.string(),
   jobId: z.string(),
@@ -21,11 +21,11 @@ export const DlqEntrySchema = z.object({
   replayedAt: z.union([z.string(), z.date()]).nullable().optional(),
 });
 
-export const DlqIdParamSchema = z.object({
+const DlqIdParamSchema = z.object({
   id: z.string().describe('DLQ entry ID'),
 });
 
-export const ListDlqQuerySchema = z.object({
+const ListDlqQuerySchema = z.object({
   cursor: CursorSchema.optional(),
   limit: PageLimitSchema.optional(),
   status: z.enum(DLQ_STATUSES).optional().describe('DLQ status filter'),
@@ -92,6 +92,3 @@ export const discardDlqEntry = defineEndpoint({
     404: [ErrorCodes.DLQ_ENTRY_NOT_FOUND],
   },
 });
-
-export type DlqEntry = z.infer<typeof DlqEntrySchema>;
-export type ListDlqQuery = z.input<typeof ListDlqQuerySchema>;

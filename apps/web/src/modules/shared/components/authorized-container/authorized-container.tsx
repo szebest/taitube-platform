@@ -20,5 +20,3 @@ export function AuthorizedContainer({ children }: PropsWithChildren) {
     </>
   );
 }
-
-export default AuthorizedContainer;

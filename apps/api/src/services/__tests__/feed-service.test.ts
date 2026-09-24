@@ -6,7 +6,7 @@ import { cacheUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
-import { encodeFeedCursor } from '../cursor';
+import { feedCursorPayload } from '../cursor';
 import { FeedService } from '../feed-service';
 import { generateEtag } from '../http-cache';
 import { VideoService } from '../video-service';
@@ -150,10 +150,8 @@ describe('apps/api/services: FeedService', () => {
   });
 
   it('never caches a cursored page', async () => {
-    const cursor = encodeFeedCursor(
-      { createdAt: new Date(), id: OWNER_ID, viewsCount: 0 },
-      publicFeedInstant(),
-      new Paginator()
+    const cursor = new Paginator().encodeCursor(
+      feedCursorPayload({ createdAt: new Date(), id: OWNER_ID, viewsCount: 0 }, publicFeedInstant())
     );
 
     await service.getFeed({ sort: 'recent', cursor });

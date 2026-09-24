@@ -2,22 +2,13 @@ import { lazy } from "react";
 import { Navigate } from "react-router";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-
-// providers
 import { ApiProvider } from "@reduxjs/toolkit/dist/query/react";
 
+import { baseApi } from "./base-api";
+import { DefaultLayout } from "./layout/containers";
+import { AuthorizedContainer } from "./modules/shared/components";
 import { AuthProvider, PermissionsProvider, SidebarProvider, ThemeProvider } from "./modules/shared/providers";
 
-// layouts
-import { DefaultLayout } from "./layout/containers";
-
-// api
-import { baseApi } from "./base-api";
-
-// components
-import { AuthorizedContainer } from "./modules/shared/components";
-
-// pages
 const VideoPage = lazy(() =>
 	import("./modules/VideoPage").then((module) => ({
 		default: module.VideoPage,
@@ -126,5 +117,3 @@ export function App() {
 		</ApiProvider>
 	);
 }
-
-export default App;

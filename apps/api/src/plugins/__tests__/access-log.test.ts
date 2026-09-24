@@ -1,12 +1,12 @@
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
-import { buildApp } from '../../app';
+import { composeApp } from '../../app';
 import { abortMidRequest } from './abort-mid-request';
 
 async function loggedApp() {
   const log = captureLog();
-  const app = await buildApp({
+  const { app } = await composeApp({
     config: inProcessAppConfig(),
     logger: createLogger({
       format: 'json',

@@ -1,3 +1,3 @@
-export * from './api-error.js';
-export * from './client.js';
-export * from './request.js';
+export * from './api-error';
+export * from './client';
+export * from './request';

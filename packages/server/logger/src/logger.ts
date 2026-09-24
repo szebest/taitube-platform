@@ -6,7 +6,7 @@ import { prettyDestination } from './pretty-destination';
 import { serializeError } from './serialize-error';
 
 /** `json` for a deployable's collector, `pretty` for a person at a terminal. */
-export type LogFormat = 'json' | 'pretty';
+type LogFormat = 'json' | 'pretty';
 
 export interface LoggerConfig {
   service: string;

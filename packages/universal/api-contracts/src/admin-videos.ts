@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
-import { defineEndpoint } from './endpoint.js';
-import { VideoIdParamSchema, VideoSchema } from './video-resource.js';
+import { defineEndpoint } from './endpoint';
+import { VideoIdParamSchema, VideoSchema } from './video-resource';
 
 /**
  * The same read as `GET /v1/videos/:id`, answered honestly. The public route renders "you may not

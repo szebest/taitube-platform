@@ -55,5 +55,3 @@ export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
 		</Link>
 	);
 });
-
-export default VideoCard;

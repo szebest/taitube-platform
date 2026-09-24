@@ -10,14 +10,10 @@ export class PostgresUserRepository extends UserRepository {
     super();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async findById(id: string): Promise<Result<UserRecord | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1),
-      this.unavailable('findById')
+      databaseUnavailable.during('findById')
     );
 
     return map(rows, ([row]) => row ?? null);
@@ -43,7 +39,7 @@ export class PostgresUserRepository extends UserRepository {
             },
           })
           .returning(),
-      this.unavailable('upsert')
+      databaseUnavailable.during('upsert')
     );
 
     if (!rows.ok) return rows;

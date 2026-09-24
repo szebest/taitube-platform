@@ -112,7 +112,7 @@ export class InMemoryMultipartStorage extends MultipartStorage {
     bucket: string,
     key: string,
     uploadId: string,
-    parts: StorageCompletePartInput[]
+    parts: readonly StorageCompletePartInput[]
   ): Promise<Result<void, StorageUnavailable>> {
     const upload = this.uploads.get(uploadId);
     if (!upload) {

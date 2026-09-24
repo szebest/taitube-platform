@@ -6,7 +6,7 @@ import { QUEUES } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
-import { buildApp } from '../../../app';
+import { composeApp } from '../../../app';
 
 const ADMIN_TOKEN = 'operator-token-for-tests';
 const USER = '00000000-0000-7000-8000-000000000001';
@@ -38,10 +38,12 @@ describe('admin DLQ routes', () => {
   beforeAll(async () => {
     repositories = new InMemoryRepositories();
     queues = new Map(QUEUES.map((name) => [name, new InMemoryJobQueue(name)]));
-    app = await buildApp({
-      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
-      adapters: { repositories, queues: new Map(queues) },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+        adapters: { repositories, queues: new Map(queues) },
+      })
+    ).app;
     await app.ready();
   });
 

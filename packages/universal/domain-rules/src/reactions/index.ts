@@ -1,2 +1,2 @@
-export * from './failures.js';
-export * from './react.rule.js';
+export * from './failures';
+export * from './react.rule';

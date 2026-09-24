@@ -1,24 +1,24 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { defineEndpoint } from './endpoint.js';
-import { VideoIdParamSchema } from './video-resource.js';
+import { defineEndpoint } from './endpoint';
+import { VideoIdParamSchema } from './video-resource';
 
-export const ReactionTypeSchema = z.enum(['LIKE', 'DISLIKE']).nullable();
+const ReactionTypeSchema = z.enum(['LIKE', 'DISLIKE']).nullable();
 
-export const ReactionInputSchema = z.object({
+const ReactionInputSchema = z.object({
   type: z
     .enum(['LIKE', 'DISLIKE', 'NONE'])
     .describe('Reaction type: LIKE, DISLIKE, or NONE to clear'),
 });
 
-export const VideoReactionSchema = z.object({
+const VideoReactionSchema = z.object({
   videoId: z.string().uuid().describe('Video UUID identifier'),
   reaction: ReactionTypeSchema.describe('User reaction state: LIKE, DISLIKE, or null'),
   likesCount: z.number().int().nonnegative().describe('Current total likes count'),
   dislikesCount: z.number().int().nonnegative().describe('Current total dislikes count'),
 });
 
-export const UserReactionSchema = z.object({
+const UserReactionSchema = z.object({
   videoId: z.string().uuid().describe('Video UUID identifier'),
   reaction: ReactionTypeSchema.describe('Authenticated user reaction: LIKE, DISLIKE, or null'),
 });
@@ -58,7 +58,6 @@ export const getMyReaction = defineEndpoint({
   },
 });
 
-export type ReactionType = z.infer<typeof ReactionTypeSchema>;
 export type ReactionInput = z.infer<typeof ReactionInputSchema>;
 export type VideoReaction = z.infer<typeof VideoReactionSchema>;
 export type UserReaction = z.infer<typeof UserReactionSchema>;

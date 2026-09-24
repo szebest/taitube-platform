@@ -1,7 +1,7 @@
 import * as crypto from 'node:crypto';
 import { type SigningKey, signJwt, signingKey } from '@vp/testing/jwt';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { type ClaimPolicy, decodeJwt, selectKey, verifyJwt } from '../jwt';
+import { type ClaimPolicy, decodeJwt, verifyJwt } from '../jwt';
 
 const NOW = 1_700_000_000_000;
 const POLICY: ClaimPolicy = {
@@ -88,13 +88,17 @@ describe('packages/adapters/auth: verifyJwt', () => {
   });
 });
 
-describe('packages/adapters/auth: selectKey', () => {
+describe('packages/adapters/auth: key selection', () => {
   it('takes the only key for a kid-less token', () => {
-    expect(expectOk(selectKey({ keys: [rsa.jwk] }, undefined))).toBe(rsa.jwk);
+    const decoded = expectOk(decodeJwt(signJwt(rsa, CLAIMS, { kid: undefined })));
+
+    expectOk(verifyJwt(decoded, { keys: [rsa.jwk] }, POLICY));
   });
 
   it('finds nothing in an empty key set', () => {
-    expectErr(selectKey({ keys: [] }, undefined));
+    const decoded = expectOk(decodeJwt(signJwt(rsa, CLAIMS, { kid: undefined })));
+
+    expect(expectErr(verifyJwt(decoded, { keys: [] }, POLICY)).reason).toMatch(/holds no key/);
   });
 });
 

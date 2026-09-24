@@ -39,5 +39,3 @@ export function DefaultLayout({ maxWidth = "1920px" }: DefaultLayoutProps) {
 		</>
 	);
 }
-
-export default DefaultLayout;

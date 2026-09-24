@@ -1,5 +1,4 @@
 import {
-  SubscriptionStateSchema,
   getSubscriptionFeed,
   isSubscribedToChannel,
   listMySubscriptions,
@@ -30,7 +29,7 @@ describe('packages/api-contracts: subscriptions', () => {
     expect(unsubscribeFromChannel.result.parse({ ...state, subscribed: false })).toMatchObject({
       subscribed: false,
     });
-    expect(SubscriptionStateSchema.safeParse({ ...state, subscriberCount: -1 }).success).toBe(
+    expect(subscribeToChannel.result.safeParse({ ...state, subscriberCount: -1 }).success).toBe(
       false
     );
   });

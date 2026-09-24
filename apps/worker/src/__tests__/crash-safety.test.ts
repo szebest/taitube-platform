@@ -8,7 +8,7 @@ import { uuidv7 } from 'uuidv7';
 import { createPackageProcessor } from '../stages/package';
 import { STAGE_SETTINGS } from './stage-settings';
 
-describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 17, 18)', () => {
+describe('crash safety and effectively-once completion', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
   const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
@@ -43,7 +43,7 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     return videoId;
   }
 
-  it('AC 18: zombie transcode worker completion is fenced out after second worker claims step', async () => {
+  it('fences out a zombie transcode completion after a second worker claims the step', async () => {
     const videoId = await setupProcessingVideo('raw/zombie-transcode.mp4');
 
     await repositories.renditions.create({
@@ -57,7 +57,6 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
       status: 'PENDING',
     });
 
-    // 1. Worker 1 (zombie) claims step with lockToken1
     const lockToken1 = uuidv7();
     const claim1 = await repositories.steps.claim({
       id: uuidv7(),
@@ -71,7 +70,6 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     });
     expect(expectOk(claim1).fenced).toBe(false);
 
-    // 2. Worker 2 (fresh) claims step with lockToken2 (e.g. after worker 1 crashed/stalled)
     const lockToken2 = uuidv7();
     const claim2 = await repositories.steps.claim({
       id: uuidv7(),
@@ -85,7 +83,6 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     });
     expect(expectOk(claim2).fenced).toBe(false);
 
-    // 3. Worker 2 completes successfully with lockToken2
     const complete2 = await repositories.steps.complete({
       videoId,
       step: 'transcode',
@@ -96,7 +93,6 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
     expect(expectOk(complete2).fenced).toBe(false);
     expect(expectOk(complete2).completed).toBe(true);
 
-    // 4. Worker 1 (zombie) wakes up from partition/hang and attempts to complete with stale lockToken1
     const complete1 = await repositories.steps.complete({
       videoId,
       step: 'transcode',
@@ -105,19 +101,17 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
       result: { segmentCount: 10, bytes: 50000 },
     });
 
-    // Fencing guarantee: stale token affects 0 rows and reports fenced: true
     expect(expectOk(complete1).fenced).toBe(true);
     expect(expectOk(complete1).completed).toBe(false);
 
-    // Verify step remains completed by worker 2
     const steps = expectOk(await repositories.steps.findByVideoId(videoId));
-    const step = steps.find((s: any) => s.step === 'transcode' && s.rendition === '720p');
+    const step = steps.find((s) => s.step === 'transcode' && s.rendition === '720p');
     expect(step?.workerId).toBe('worker-fresh');
     expect(step?.attempt).toBe(2);
     expect(step?.status).toBe('DONE');
   });
 
-  it('AC 17 & 18: effectively-once package completion ensures exactly one READY transition and video.ready event', async () => {
+  it('a re-run package job leaves exactly one READY transition, video.ready event and notify job', async () => {
     const videoId = await setupProcessingVideo('raw/effectively-once.mp4');
 
     await storage.uploadObject({
@@ -135,9 +129,9 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
       getName() {
         return 'notify';
       }
-      async add<_T = unknown>(name: string): Promise<any> {
+      async add<T = unknown>(name: string, data: T) {
         enqueuedJobs.push(name);
-        return ok({ id: 'mock-id', name });
+        return ok({ id: 'mock-id', name, data, attemptsMade: 0 });
       }
       async process() {
         return ok();
@@ -200,27 +194,22 @@ describe('apps/worker crash safety & effectively-once guarantees (Ticket 09: AC 
       traceparent: '00-01-01-01',
     });
 
-    // Run attempt 1
     await processor(job);
 
-    // Verify video is READY and exactly one video.ready event exists
     const v1 = expectOk(await repositories.videos.findById(videoId));
     expect(v1?.status).toBe('READY');
 
     const events1 = expectOk(await repositories.events.findByVideoId(videoId));
-    const readyEvents1 = events1.filter((e: any) => e.type === 'video.ready');
+    const readyEvents1 = events1.filter((e) => e.type === 'video.ready');
     expect(readyEvents1.length).toBe(1);
 
-    // Simulate duplicate/zombie re-execution of package job (attempt 2)
     const duplicateJob = createMockJob<PackageJob>(`${videoId}--package--g1`, job.data, 1);
     await processor(duplicateJob);
 
-    // Invariant: count(video_events where type='video.ready') MUST REMAIN EXACTLY 1
     const events2 = expectOk(await repositories.events.findByVideoId(videoId));
-    const readyEvents2 = events2.filter((e: any) => e.type === 'video.ready');
+    const readyEvents2 = events2.filter((e) => e.type === 'video.ready');
     expect(readyEvents2.length).toBe(1);
 
-    // Invariant: notify enqueued exactly once
     expect(enqueuedJobs.filter((name) => name === 'notify').length).toBe(1);
   });
 });

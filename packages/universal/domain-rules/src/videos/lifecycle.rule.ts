@@ -1,13 +1,13 @@
 import type { Video, VideoStatus } from '@vp/domain';
 import { type UserContext, canDeleteVideo, canUpdateVideo } from '@vp/permissions';
 import { type Result, andThen, err, isErr, ok } from '@vp/result';
-import { type AuthorizationFailure, authorize } from '../authorize.js';
+import { type AuthorizationFailure, authorize } from '../authorize';
 import {
   type VideoNotFound,
   type VideoStatusNotEligible,
   videoNotFound,
   videoStatusNotEligible,
-} from './failures.js';
+} from './failures';
 
 /** A reprocess re-runs the pipeline over the same source, so the source has to have survived. */
 export const REPROCESSABLE_STATUSES: readonly VideoStatus[] = ['READY', 'FAILED', 'PROCESSING'];

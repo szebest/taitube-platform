@@ -87,5 +87,3 @@ export const VideoForm = ({ isError, isSuccess, reset: resetMutation, data, subm
 		</Form>
 	);
 }
-
-export default VideoForm;

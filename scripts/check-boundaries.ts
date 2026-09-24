@@ -4,7 +4,7 @@ import { createLogger } from '../packages/server/logger/src/index';
 
 type Tier = 'universal' | 'server' | 'client';
 
-export interface PkgDep {
+interface PkgDep {
   name: string;
   dev: boolean;
 }
@@ -106,7 +106,7 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
         `${pkg.name}: declares vp.tier "${pkg.declaredTier}", but its directory packages/${onDisk}/ is the tier. Remove the field.`
       );
     }
-    if (!onDisk && !pkg.declaredTier) {
+    if (!(onDisk || pkg.declaredTier)) {
       errors.push(`${pkg.name}: lives outside packages/<tier>/ and must declare vp.tier`);
     }
 
@@ -134,13 +134,10 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
   return errors;
 }
 
-export function packageCount(): number {
-  return load().length;
-}
-
 if (process.argv[1]?.endsWith('check-boundaries.ts')) {
   const log = createLogger({ service: 'check-boundaries', level: 'info', format: 'pretty' });
-  const errors = checkBoundaries();
+  const packages = load();
+  const errors = checkBoundaries(packages);
   if (errors.length > 0) {
     for (const violation of errors) {
       log.error({ violation }, 'package boundary violation');
@@ -151,5 +148,5 @@ if (process.argv[1]?.endsWith('check-boundaries.ts')) {
     );
     process.exit(1);
   }
-  log.info({ packages: packageCount() }, 'package boundaries ok, tiers and layers consistent');
+  log.info({ packages: packages.length }, 'package boundaries ok, tiers and layers consistent');
 }

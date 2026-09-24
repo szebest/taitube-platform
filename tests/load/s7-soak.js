@@ -39,7 +39,6 @@ const PART_SIZE = 8 * 1024 * 1024;
 export default function () {
   const startTime = Date.now();
 
-  // 1. Presigned upload initiation
   const init = initUpload({
     filename: 'soak-s60.mp4',
     sizeBytes: videoData.byteLength,
@@ -52,7 +51,6 @@ export default function () {
   const partsExpected = init.partsExpected || parts.length;
   const etags = [];
 
-  // 2. Upload video segments directly to storage
   for (let i = 0; i < partsExpected; i++) {
     const start = i * PART_SIZE;
     const end = Math.min(start + PART_SIZE, videoData.byteLength);
@@ -63,7 +61,6 @@ export default function () {
     etags.push(result);
   }
 
-  // 3. Finalize upload
   const completeRes = completeUpload(uploadId, etags);
   const videoId = completeRes.videoId;
 
@@ -71,7 +68,6 @@ export default function () {
     'soak videoId generated': (v) => !!v,
   });
 
-  // 4. Verification poll — ensures jobs don't leak or hang indefinitely
   let status = 'PROCESSING';
   let polls = 0;
   const maxPolls = 120; // 10 minutes max wait per 60s video

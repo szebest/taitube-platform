@@ -3,7 +3,7 @@ import type { Result } from '@vp/result';
 import type { FlowJobNode } from '../ports/flow-producer';
 import type { QueueJobOptions } from '../ports/job-queue';
 
-export interface OutboxQueueJobPayload {
+interface OutboxQueueJobPayload {
   name: string;
   data: unknown;
   opts?: QueueJobOptions;

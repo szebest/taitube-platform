@@ -22,6 +22,7 @@ import {
 import { ids } from '../packages/server/job-contracts/src/index';
 import { type Logger, createLogger } from '../packages/server/logger/src/index';
 import { createMetricsRegistry } from '../packages/server/observability/src/index';
+import { rawSourceKey } from '../packages/server/storage/src/index';
 import { isErr } from '../packages/universal/result/src/index';
 
 async function runFairnessSimulation(log: Logger) {
@@ -134,7 +135,7 @@ async function runFairnessSimulation(log: Logger) {
 
   async function submitUpload(ownerId: string, index: number, priority: number) {
     const videoId = crypto.randomUUID();
-    const sourceKey = `raw/${videoId}/source.mp4`;
+    const sourceKey = rawSourceKey(videoId);
 
     const video = await repositories.videos.create({
       id: videoId,

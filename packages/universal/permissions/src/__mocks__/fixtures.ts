@@ -1,11 +1,10 @@
 import type {
-  CategoryResource,
   ChannelResource,
   CommentResource,
   UploadResource,
   UserContext,
   VideoResource,
-} from '../types/index.js';
+} from '../types/index';
 
 export const guestUser: UserContext | null = null;
 export const standardUser: UserContext = { id: 'usr-1', role: 'USER', email: 'user@test.local' };
@@ -72,9 +71,4 @@ export const sampleChannel: ChannelResource = {
   id: 'chan-1',
   userId: 'usr-1',
   ownerId: 'usr-1',
-};
-
-export const sampleCategory: CategoryResource = {
-  id: 'cat-1',
-  slug: 'technology',
 };

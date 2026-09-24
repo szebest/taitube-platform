@@ -1,24 +1,5 @@
-import { andThenAsync, mapAsync } from '../async';
+import { andThenAsync } from '../async';
 import { type Result, err, ok } from '../result';
-
-describe('@vp/result: mapAsync', () => {
-  it('awaits the mapper over a success', async () => {
-    await expect(mapAsync(ok(2), async (n) => n * 5)).resolves.toEqual(ok(10));
-  });
-
-  it('accepts a promised result', async () => {
-    await expect(mapAsync(Promise.resolve(ok(2)), (n) => n + 1)).resolves.toEqual(ok(3));
-  });
-
-  it('skips the mapper on a failure', async () => {
-    const mapper = vi.fn(async (n: number) => n);
-
-    await expect(mapAsync(err('nope') as Result<number, string>, mapper)).resolves.toEqual(
-      err('nope')
-    );
-    expect(mapper).not.toHaveBeenCalled();
-  });
-});
 
 describe('@vp/result: andThenAsync', () => {
   it('chains a success into the awaited next result', async () => {

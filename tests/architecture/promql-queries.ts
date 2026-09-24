@@ -8,15 +8,15 @@ export interface Query {
   expr: string;
 }
 
-export type MatchOperator = '=' | '!=' | '=~' | '!~';
+type MatchOperator = '=' | '!=' | '=~' | '!~';
 
-export interface Matcher {
+interface Matcher {
   label: string;
   op: MatchOperator;
   value: string;
 }
 
-export interface Selector {
+interface Selector {
   /** Empty for a selector that names no metric, such as `{job="api"}`. */
   metric: string;
   matchers: Matcher[];

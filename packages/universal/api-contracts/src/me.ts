@@ -1,21 +1,21 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { ChannelSchema } from './channels.js';
-import { defineEndpoint } from './endpoint.js';
+import { ChannelSchema } from './channels';
+import { defineEndpoint } from './endpoint';
 
-export const UserSchema = z.object({
+const UserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
   tier: z.string(),
   createdAt: z.string(),
 });
 
-export const AccountSchema = UserSchema.extend({
+const AccountSchema = UserSchema.extend({
   user: UserSchema,
   channel: ChannelSchema,
 });
 
-export const UpdateChannelSchema = z.object({
+const UpdateChannelSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
   handle: z.string().optional(),
   avatarUrl: z.string().url().nullable().optional(),
@@ -55,6 +55,4 @@ export const updateMyChannel = defineEndpoint({
   },
 });
 
-export type User = z.infer<typeof UserSchema>;
 export type Account = z.infer<typeof AccountSchema>;
-export type UpdateChannel = z.infer<typeof UpdateChannelSchema>;

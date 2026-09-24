@@ -1,54 +1,41 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { createLogger } from '@vp/logger';
-import { captureLog } from '@vp/testing/log-capture';
-import { main } from '../main';
 
-function recordingLogger() {
-  const log = captureLog();
-  const logger = createLogger({
-    service: 'gen-video',
-    level: 'info',
-    format: 'pretty',
-    destination: log.destination,
+const ENTRYPOINT = path.resolve(import.meta.dirname, '../main.ts');
+
+function genVideo(...argv: string[]) {
+  return spawnSync('bun', [ENTRYPOINT, ...argv], {
+    env: { PATH: process.env.PATH },
+    encoding: 'utf8',
+    timeout: 20_000,
   });
-  return { log, logger };
 }
 
-describe('packages/gen-video: main', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
+describe('packages/gen-video: pnpm gen-video', () => {
+  it('runs the command it is given', () => {
+    const help = genVideo('--help');
+
+    expect(help.status).toBe(0);
+    expect(help.stdout).toContain('pnpm gen-video [options]');
   });
 
-  it('prints its usage for --help and generates nothing', async () => {
-    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-    const { log, logger } = recordingLogger();
-
-    await main(['--help'], logger);
-
-    expect(write).toHaveBeenCalledTimes(1);
-    expect(String(write.mock.calls[0]?.[0])).toContain('pnpm gen-video [options]');
-    expect(log.text()).toBe('');
-  });
-
-  it('logs why the output directory cannot be written and exits 1', async () => {
+  it('logs why generation failed and exits 1', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vp-gen-video-'));
     const blocker = path.join(dir, 'a-file');
     fs.writeFileSync(blocker, '');
-    const outputDir = path.join(blocker, 'fixtures');
-    const { log, logger } = recordingLogger();
-    const exit = vi.spyOn(process, 'exit').mockImplementation((() => {
-      throw new Error('exited');
-    }) as () => never);
 
-    await expect(main(['--output-dir', outputDir, '--only', 'zero-bytes'], logger)).rejects.toThrow(
-      'exited'
+    const blocked = genVideo(
+      '--output-dir',
+      path.join(blocker, 'fixtures'),
+      '--only',
+      'zero-bytes'
     );
 
-    expect(log.text()).toContain(`error could not write fixtures outputDir=${outputDir}`);
-    expect(log.text()).toContain('ENOTDIR');
-    expect(exit).toHaveBeenCalledWith(1);
+    expect(blocked.status).toBe(1);
+    expect(blocked.stderr).toContain('fatal fixture generator failed');
+    expect(blocked.stderr).toContain('ENOTDIR');
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });

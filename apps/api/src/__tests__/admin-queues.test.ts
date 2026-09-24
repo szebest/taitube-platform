@@ -1,151 +1,96 @@
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobQueue } from '@vp/core/ports';
-import { mintDevToken } from '@vp/dev-token';
+import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../app';
+import { composeApp } from '../app';
+import { bearer } from './in-memory-app';
 
-describe('apps/api Bull Board admin queues (Ticket 10: AC 17, 18, 19)', () => {
+const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
+const REGULAR_USER_ID = '00000000-0000-7000-8000-000000000002';
+const VALID_ADMIN_TOKEN = 'operator-token-for-tests';
+
+describe('Bull Board admin queues', () => {
   let app: FastifyInstance;
-  const queuesMap = new Map<string, JobQueue>();
-
-  const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
-  const REGULAR_USER_ID = '00000000-0000-7000-8000-000000000002';
-  const VALID_ADMIN_TOKEN = 'operator-token-for-tests';
-
-  let adminJwt: string;
-  let regularJwt: string;
+  const queuesMap = new Map<string, JobQueue>(
+    QUEUES.map((name) => [name, new InMemoryJobQueue(name)])
+  );
+  const adminJwt = mintToken({ sub: ADMIN_USER_ID, role: 'admin', ttl: '1h' });
+  const regularJwt = mintToken({ sub: REGULAR_USER_ID, role: 'user', ttl: '1h' });
 
   beforeAll(async () => {
-    for (const name of QUEUES) {
-      queuesMap.set(name, new InMemoryJobQueue(name));
-    }
-
-    app = await buildApp({
-      config: inProcessAppConfig({ auth: { adminToken: VALID_ADMIN_TOKEN } }),
-      adapters: {
-        queues: queuesMap,
-      },
-    });
+    app = (
+      await composeApp({
+        config: inProcessAppConfig({ auth: { adminToken: VALID_ADMIN_TOKEN } }),
+        adapters: { queues: queuesMap },
+      })
+    ).app;
     await app.ready();
-
-    adminJwt = mintDevToken({
-      sub: ADMIN_USER_ID,
-      role: 'admin',
-      ttl: '1h',
-    });
-
-    regularJwt = mintDevToken({
-      sub: REGULAR_USER_ID,
-      role: 'user',
-      ttl: '1h',
-    });
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('AC 17: unauthenticated request to /admin/queues returns 401 Unauthorized', async () => {
-    const res = await app.inject({
-      method: 'GET',
-      url: '/admin/queues',
-    });
+  it.each([
+    { name: 'no credentials', headers: {}, status: 401, code: 'UNAUTHORIZED' },
+    { name: 'a non-admin JWT', headers: bearer(regularJwt), status: 403, code: 'FORBIDDEN' },
+    {
+      name: 'an invalid x-admin-token',
+      headers: { 'x-admin-token': 'wrong-invalid-secret-token' },
+      status: 401,
+      code: 'UNAUTHORIZED',
+    },
+  ])('answers $name with $status problem+json', async ({ headers, status, code }) => {
+    const res = await app.inject({ method: 'GET', url: '/admin/queues', headers });
 
-    expect(res.statusCode).toBe(401);
-    const body = JSON.parse(res.body);
-    expect(body.code).toBe('UNAUTHORIZED');
+    expect(res.statusCode).toBe(status);
+    expect(res.json().code).toBe(code);
     expect(res.headers['content-type']).toContain('application/problem+json');
   });
 
-  it('AC 17: non-admin JWT bearer to /admin/queues returns 403 Forbidden', async () => {
+  it('serves the Bull Board UI to a valid x-admin-token', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/admin/queues',
-      headers: {
-        authorization: `Bearer ${regularJwt}`,
-      },
-    });
-
-    expect(res.statusCode).toBe(403);
-    const body = JSON.parse(res.body);
-    expect(body.code).toBe('FORBIDDEN');
-    expect(res.headers['content-type']).toContain('application/problem+json');
-  });
-
-  it('AC 17: invalid x-admin-token returns 401 Unauthorized', async () => {
-    const res = await app.inject({
-      method: 'GET',
-      url: '/admin/queues',
-      headers: {
-        'x-admin-token': 'wrong-invalid-secret-token',
-      },
-    });
-
-    expect(res.statusCode).toBe(401);
-    const body = JSON.parse(res.body);
-    expect(body.code).toBe('UNAUTHORIZED');
-  });
-
-  it('AC 17: valid x-admin-token allows access and serves Bull Board UI', async () => {
-    const res = await app.inject({
-      method: 'GET',
-      url: '/admin/queues',
-      headers: {
-        'x-admin-token': VALID_ADMIN_TOKEN,
-      },
+      headers: { 'x-admin-token': VALID_ADMIN_TOKEN },
     });
 
     expect([200, 301, 302]).toContain(res.statusCode);
   });
 
-  it('AC 17: valid admin JWT allows access and lists all QUEUES (including dlq)', async () => {
+  it('lists every queue, dlq included, to an admin JWT', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/admin/queues/api/queues',
-      headers: {
-        authorization: `Bearer ${adminJwt}`,
-      },
+      headers: bearer(adminJwt),
     });
 
     expect(res.statusCode).toBe(200);
-    const data = JSON.parse(res.body);
-    expect(data.queues).toBeDefined();
-
-    const exposedQueueNames = data.queues.map((q: { name: string }) => q.name);
+    const exposedQueueNames = res.json().queues.map((q: { name: string }) => q.name);
     expect(exposedQueueNames).toEqual(expect.arrayContaining([...QUEUES, 'dlq']));
   });
 
-  it('AC 18: pausing transcode-720p stops new jobs, resuming continues', async () => {
-    const queue720p = queuesMap.get('transcode-720p') as JobQueue;
-    expect(queue720p).toBeDefined();
+  it('pauses and resumes transcode-720p through the Bull Board API', async () => {
+    const queue720p = queuesMap.get('transcode-720p');
+    if (!queue720p) throw new Error('transcode-720p queue missing');
 
-    // 1. Pause queue via Bull Board API
     const pauseRes = await app.inject({
       method: 'PUT',
       url: '/admin/queues/api/queues/transcode-720p/pause',
-      headers: {
-        authorization: `Bearer ${adminJwt}`,
-      },
+      headers: bearer(adminJwt),
     });
     expect(pauseRes.statusCode).toBe(200);
+    expect(expectOk(await queue720p.isPaused())).toBe(true);
 
-    const isPaused = expectOk(await queue720p.isPaused());
-    expect(isPaused).toBe(true);
-
-    // 2. Resume queue via Bull Board API
     const resumeRes = await app.inject({
       method: 'PUT',
       url: '/admin/queues/api/queues/transcode-720p/resume',
-      headers: {
-        authorization: `Bearer ${adminJwt}`,
-      },
+      headers: bearer(adminJwt),
     });
     expect(resumeRes.statusCode).toBe(200);
-
-    const isResumed = expectOk(await queue720p.isPaused());
-    expect(isResumed).toBe(false);
+    expect(expectOk(await queue720p.isPaused())).toBe(false);
   });
 });

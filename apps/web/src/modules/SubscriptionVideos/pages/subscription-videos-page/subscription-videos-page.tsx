@@ -27,5 +27,3 @@ export function SubscriptionVideosPage() {
 		</div>
 	)
 }
-
-export default SubscriptionVideosPage;

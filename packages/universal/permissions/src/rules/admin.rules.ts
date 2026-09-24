@@ -1,5 +1,5 @@
 import type { AbilityBuilder } from '@casl/ability';
-import type { AppAbility, UserContext } from '../types/index.js';
+import type { AppAbility, UserContext } from '../types/index';
 
 export function defineAdminRules(
   user: UserContext | null,

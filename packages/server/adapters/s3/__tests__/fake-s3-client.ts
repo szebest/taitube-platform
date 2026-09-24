@@ -1,6 +1,6 @@
 import type { S3Client } from '@aws-sdk/client-s3';
 
-export interface SentCommand {
+interface SentCommand {
   name: string;
   input: Record<string, unknown>;
 }

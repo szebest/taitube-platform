@@ -36,7 +36,7 @@ export const QUEUE_JOB_STATES = [
   'failed',
   'delayed',
 ] as const;
-export type QueueJobState = (typeof QUEUE_JOB_STATES)[number];
+type QueueJobState = (typeof QUEUE_JOB_STATES)[number];
 
 export type QueueJobCounts = Record<QueueJobState, number>;
 

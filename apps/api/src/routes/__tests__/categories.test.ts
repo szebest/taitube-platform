@@ -1,7 +1,7 @@
 import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../../app';
+import { composeApp } from '../../app';
 
 const CACHE_CONTROL = 'public, max-age=300, stale-while-revalidate=60';
 
@@ -18,7 +18,7 @@ describe('public category routes', () => {
       sortOrder: 0,
       isActive: false,
     });
-    app = await buildApp({ config: inProcessAppConfig(), adapters: { repositories } });
+    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
     await app.ready();
   });
 

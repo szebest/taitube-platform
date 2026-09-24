@@ -91,10 +91,6 @@ export function decodeSubscriptionCursor(
   );
 }
 
-export function encodeFeedCursor(v: FeedCursorRow, instant: number, paginator: Paginator): string {
-  return paginator.encodeCursor(feedCursorPayload(v, instant));
-}
-
 export function decodeFeedCursor(
   cursor: string | undefined,
   paginator: Paginator

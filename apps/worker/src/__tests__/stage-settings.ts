@@ -5,11 +5,11 @@ import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import * as ffmpeg from '@vp/ffmpeg';
 import type { MediaTools } from '@vp/ffmpeg';
-import { createMetricsRegistry } from '@vp/observability';
 import type { Logger } from '@vp/logger';
-import { transcodeCollaborators } from '../registry';
+import { createMetricsRegistry } from '@vp/observability';
 import { housekeepingTasks } from '../stages/housekeeping/index';
 import type { TranscodeProcessorDeps } from '../stages/transcode';
+import { transcodeCollaborators } from '../transcode-collaborators';
 
 const config = inProcessAppConfig();
 

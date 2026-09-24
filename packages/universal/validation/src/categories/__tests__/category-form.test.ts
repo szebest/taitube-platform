@@ -1,5 +1,5 @@
 import { isOk } from '@vp/result';
-import { CATEGORY_NAME_BOUNDS, validateCategoryForm, validateCategoryName } from '../category-form';
+import { validateCategoryForm, validateCategoryName } from '../category-form';
 
 const form = { name: 'Music', slug: 'music', description: 'Tunes' };
 
@@ -10,7 +10,7 @@ describe('@vp/validation: validateCategoryName', () => {
 
   it.each([
     { name: 'an empty name', value: '' },
-    { name: 'a name over the ceiling', value: 'a'.repeat(CATEGORY_NAME_BOUNDS.maxLength + 1) },
+    { name: 'a name over the ceiling', value: 'a'.repeat(101) },
   ])('rejects $name', ({ value }) => {
     expect(isOk(validateCategoryName(value))).toBe(false);
   });

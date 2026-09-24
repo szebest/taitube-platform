@@ -1,4 +1,4 @@
-import { JOB_PRIORITY, jobPriorityFor } from '../user.js';
+import { JOB_PRIORITY, jobPriorityFor } from '../user';
 
 describe('domain/user: jobPriorityFor', () => {
   it.each([

@@ -135,5 +135,3 @@ export const SubscribeButton = memo(({ channelId }: SubscribeButtonProps) => {
 		</div>
 	);
 });
-
-export default SubscribeButton;

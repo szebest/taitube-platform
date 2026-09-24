@@ -7,7 +7,7 @@ import { videoChannel } from '@vp/events';
 import { createMetricsRegistry } from '@vp/observability';
 import { type Result, err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { SseHub } from '../sse-hub';
+import { SseHub, type SseHubOptions } from '../sse-hub';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000e1';
 const VIEWER_ID = '00000000-0000-7000-8000-0000000000e2';
@@ -29,16 +29,29 @@ describe('apps/api/services: SseHub', () => {
   let hub: SseHub;
   let chunks: string[];
 
-  beforeEach(() => {
-    cache = new UnsubscribableCache();
-    hub = new SseHub({
+  function newHub(overrides: Partial<SseHubOptions> = {}): SseHub {
+    return new SseHub({
       cache,
       metrics: createMetricsRegistry(),
       maxConnectionsPerUser: 20,
       maxPodConnections: 5000,
       heartbeatMs: 10_000,
       idleTimeoutMs: 10_000,
+      ...overrides,
     });
+  }
+
+  function register(channel: string, userId?: string) {
+    return hub.register({
+      channel,
+      userId,
+      rawResponse: new PassThrough() as unknown as ServerResponse,
+    });
+  }
+
+  beforeEach(() => {
+    cache = new UnsubscribableCache();
+    hub = newHub();
     chunks = [];
   });
 
@@ -77,7 +90,10 @@ describe('apps/api/services: SseHub', () => {
 
     await publishProgress();
 
-    expect(chunks.join('')).toContain('"percent":45');
+    const output = chunks.join('');
+    expect(output).toContain('event: progress');
+    expect(output).toContain('"percent":45');
+    expect(output).toContain('"rendition":"720p"');
   });
 
   it('subscribes once when two streams ask it to at the same time', async () => {
@@ -141,5 +157,37 @@ describe('apps/api/services: SseHub', () => {
         })
       ).message
     ).toContain('shutting down');
+  });
+
+  it('refuses a user their 21st stream until one of the 20 closes', () => {
+    const connections = Array.from({ length: 20 }, () =>
+      expectOk(register('video:test', VIEWER_ID))
+    );
+    expect(hub.getUserConnectionCount(VIEWER_ID)).toBe(20);
+
+    expect(expectErr(register('video:test', VIEWER_ID)).message).toMatch(
+      /Maximum active SSE streams \(20\) exceeded/
+    );
+
+    connections[0]?.close();
+    expect(hub.getUserConnectionCount(VIEWER_ID)).toBe(19);
+
+    expectOk(register('video:test', VIEWER_ID));
+    expect(hub.getUserConnectionCount(VIEWER_ID)).toBe(20);
+  });
+
+  it('refuses a stream past the pod cap until one closes', async () => {
+    await hub.close();
+    hub = newHub({ maxPodConnections: 3 });
+    const connections = ['video:1', 'video:2', 'video:3'].map((channel) =>
+      expectOk(register(channel))
+    );
+
+    expect(expectErr(register('video:4')).message).toMatch(
+      /Maximum pod SSE connection limit reached/
+    );
+
+    connections[0]?.close();
+    expect(expectOk(register('video:4'))).toBeDefined();
   });
 });

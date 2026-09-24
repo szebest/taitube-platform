@@ -2,7 +2,7 @@ import type { Account, Channel } from "@vp/api-contracts";
 
 import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
-export const accountApi = baseApi.injectEndpoints({
+const accountApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		account: builder.query<Account, void>({
 			providesTags: ['ACCOUNT'],

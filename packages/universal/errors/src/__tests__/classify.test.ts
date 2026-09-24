@@ -1,11 +1,4 @@
-import {
-  asThrowable,
-  classifyError,
-  errorCodeOf,
-  isPermanentError,
-  isTransientError,
-  toPipelineError,
-} from '../classify';
+import { asThrowable, classifyError, errorCodeOf, toPipelineError } from '../classify';
 import { ErrorCodes } from '../error-codes';
 import { databaseUnavailable } from '../infra-failures';
 import { PermanentError, TransientError } from '../pipeline-error';
@@ -52,11 +45,6 @@ describe('@vp/errors: classifyError', () => {
     { name: 'undefined', error: undefined },
   ])('calls $name unknown rather than guessing', ({ error }) => {
     expect(classifyError(error)).toBe('unknown');
-  });
-
-  it('keeps unknown distinct from transient, which is what the lower attempt cap needs', () => {
-    expect(isTransientError(new Error('boom'))).toBe(false);
-    expect(isPermanentError(new Error('boom'))).toBe(false);
   });
 });
 

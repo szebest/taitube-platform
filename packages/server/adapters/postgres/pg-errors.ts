@@ -1,5 +1,4 @@
 const UNIQUE_VIOLATION = '23505';
-const FOREIGN_KEY_VIOLATION = '23503';
 
 /**
  * Drizzle wraps a driver error in a `DrizzleQueryError` and puts the real one on `cause`, so a
@@ -21,8 +20,4 @@ function hasSqlState(error: unknown, state: string): boolean {
 
 export function isUniqueViolation(error: unknown): boolean {
   return hasSqlState(error, UNIQUE_VIOLATION);
-}
-
-export function isForeignKeyViolation(error: unknown): boolean {
-  return hasSqlState(error, FOREIGN_KEY_VIOLATION);
 }

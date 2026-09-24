@@ -95,11 +95,17 @@ jobs:
           started-at: ${{ steps.architecture-time.outputs.started }}
           finished-at: ${{ steps.architecture-time.outputs.finished }}
 
-      - name: Run Biome lint
+      - name: Run Biome lint (warnings are errors)
         run: pnpm lint
 
       - name: Run TypeScript typecheck
         run: pnpm exec turbo run typecheck
+
+      - name: Find unused files, exports and dependencies (knip)
+        run: pnpm knip
+
+      - name: Find exports only specs use (knip --production)
+        run: pnpm knip --production
 
   unit:
     name: unit

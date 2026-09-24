@@ -33,7 +33,7 @@ driver ports and repository contracts stayed behind as `@vp/core`; everything po
    values `@vp/api-contracts` builds its Zod enums from. Never retype one of these lists: import it.
 4. **Policy constants carry domain-loaded names** — `TRENDING_GRAVITY`, `PUBLIC_FEED_VISIBILITY` — so a
    call site reads as a rule rather than as a magic number.
-5. **Relative imports carry `.js`** (`./channel.js`), because CRA's webpack refuses extensionless ESM.
+5. **Relative imports are extensionless** (`./channel`), as in every tier (`esm-specifiers.test.ts`).
 6. **Time units live in `time.ts`** (`MS_PER_DAY`, `SECONDS_PER_HOUR`, ...), exported as `@vp/domain/time`, and
    every package above T1 spells a duration with them. `public-feed.ts` imports them by that name as well,
    so the module needs no relative specifier. `no-tuning-literals.test.ts` fails on a minute, hour or day

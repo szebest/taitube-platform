@@ -4,7 +4,7 @@ import { MS_PER_SECOND } from '@vp/domain/time';
 import { ErrorCodes } from '@vp/errors';
 import { type Result, err, isErr, ok, tryCatch } from '@vp/result';
 
-export interface Jwk extends crypto.JsonWebKey {
+interface Jwk extends crypto.JsonWebKey {
   kid?: string;
   alg?: string;
   use?: string;
@@ -88,7 +88,7 @@ export function decodeJwt(token: string): Result<DecodedJwt, AuthFailure> {
 }
 
 /** A kid-less token is only unambiguous against a JWKS holding one key. */
-export function selectKey(jwks: Jwks, kid: string | undefined): Result<Jwk, AuthFailure> {
+function selectKey(jwks: Jwks, kid: string | undefined): Result<Jwk, AuthFailure> {
   if (kid !== undefined) {
     const key = jwks.keys.find((candidate) => candidate.kid === kid);
     return key ? ok(key) : err(unauthorized(`no key with kid ${kid}`));
@@ -105,7 +105,7 @@ function verifySignature(
 ): Result<void, AuthFailure> {
   const { alg } = decoded.header;
   const signer = SIGNERS.get(alg);
-  if (!signer || !algorithms.includes(alg)) return err(unauthorized(`alg ${alg} is not accepted`));
+  if (!(signer && algorithms.includes(alg))) return err(unauthorized(`alg ${alg} is not accepted`));
   if (key.alg !== undefined && key.alg !== alg) {
     return err(unauthorized(`the key declares ${key.alg}, the token ${alg}`));
   }

@@ -14,10 +14,6 @@ export class PostgresEventRepository extends EventRepository {
     super();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async create(data: NewVideoEventInput): Promise<Result<VideoEventRecord, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
@@ -31,7 +27,7 @@ export class PostgresEventRepository extends EventRepository {
             createdAt: new Date(),
           })
           .returning(),
-      this.unavailable('create')
+      databaseUnavailable.during('create')
     );
 
     if (!rows.ok) return rows;
@@ -47,7 +43,7 @@ export class PostgresEventRepository extends EventRepository {
           .from(schema.videoEvents)
           .where(eq(schema.videoEvents.videoId, videoId))
           .orderBy(asc(schema.videoEvents.id)),
-      this.unavailable('findByVideoId')
+      databaseUnavailable.during('findByVideoId')
     );
   }
 
@@ -62,7 +58,7 @@ export class PostgresEventRepository extends EventRepository {
           .from(schema.videoEvents)
           .where(and(eq(schema.videoEvents.videoId, videoId), gt(schema.videoEvents.id, afterId)))
           .orderBy(asc(schema.videoEvents.id)),
-      this.unavailable('findAfterId')
+      databaseUnavailable.during('findAfterId')
     );
   }
 
@@ -84,7 +80,7 @@ export class PostgresEventRepository extends EventRepository {
           .innerJoin(schema.videos, eq(schema.videoEvents.videoId, schema.videos.id))
           .where(and(eq(schema.videos.ownerId, userId), gt(schema.videoEvents.id, afterId)))
           .orderBy(asc(schema.videoEvents.id)),
-      this.unavailable('findAfterIdForUser')
+      databaseUnavailable.during('findAfterIdForUser')
     );
   }
 
@@ -97,7 +93,7 @@ export class PostgresEventRepository extends EventRepository {
           .where(eq(schema.videoEvents.videoId, videoId))
           .orderBy(desc(schema.videoEvents.id))
           .limit(1),
-      this.unavailable('getLatestEventId')
+      databaseUnavailable.during('getLatestEventId')
     );
 
     return map(rows, ([row]) => row?.id ?? 0);

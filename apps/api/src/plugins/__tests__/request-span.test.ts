@@ -15,7 +15,7 @@ import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { ProbeJob } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
-import { buildApp } from '../../app';
+import { composeApp } from '../../app';
 import { abortMidRequest } from './abort-mid-request';
 
 const OWNER_ID = '0190a000-0000-7000-8000-0000000000d1';
@@ -34,7 +34,7 @@ async function completeAnUpload(headers: Record<string, string>) {
   const repositories = new InMemoryRepositories();
   const storage = new InMemoryStorageClient();
   const probeQueue = new InMemoryJobQueue('probe');
-  const app = await buildApp({
+  const { app } = await composeApp({
     config: inProcessAppConfig({ buckets: { raw: 'raw' } }),
     adapters: { repositories, storage, probeQueue },
   });
@@ -100,7 +100,7 @@ describe('apps/api/plugins: request span', () => {
 
   it('ends the span of a request the client hung up on, as an error', async () => {
     const exporter = exportSpans();
-    const app = await buildApp({ config: inProcessAppConfig() });
+    const { app } = await composeApp({ config: inProcessAppConfig() });
 
     await abortMidRequest(app);
     await app.close();

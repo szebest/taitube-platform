@@ -1,5 +1,5 @@
 import { ErrorCodes, isInputFailure } from '@vp/errors';
-import { invalidDisplayName, invalidHandleFormat } from '../failures';
+import { invalidHandleFormat } from '../failures';
 
 const bounds = { minLength: 3, maxLength: 30 };
 
@@ -22,10 +22,7 @@ describe('@vp/validation: channel failures', () => {
     expect(reserved.message).toBe('Handle "admin" is reserved');
   });
 
-  it.each([
-    { name: 'invalidHandleFormat', failure: invalidHandleFormat('a', bounds) },
-    { name: 'invalidDisplayName', failure: invalidDisplayName({ minLength: 1, maxLength: 100 }) },
-  ])('$name is wire-safe', ({ failure }) => {
-    expect(isInputFailure(failure)).toBe(true);
+  it('reports a wire-safe failure', () => {
+    expect(isInputFailure(invalidHandleFormat('a', bounds))).toBe(true);
   });
 });

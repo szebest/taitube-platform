@@ -15,10 +15,6 @@ export class PostgresOutboxRepository extends OutboxRepository {
     super();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async enqueue(item: NewOutboxInput): Promise<Result<OutboxRecord, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
@@ -32,7 +28,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
             attempts: 0,
           })
           .returning(),
-      this.unavailable('enqueue')
+      databaseUnavailable.during('enqueue')
     );
 
     if (!rows.ok) return rows;
@@ -52,7 +48,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
           .orderBy(asc(o.createdAt))
           .for('update', { skipLocked: true })
           .limit(limit),
-      this.unavailable('claimBatch')
+      databaseUnavailable.during('claimBatch')
     );
 
     return map(rows, (claimed) => claimed.map(toOutboxRecord));
@@ -66,7 +62,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
           .set({ publishedAt: new Date() })
           .where(eq(o.id, id))
           .returning({ id: o.id }),
-      this.unavailable('markPublished')
+      databaseUnavailable.during('markPublished')
     );
 
     return map(rows, (updated) => updated.length > 0);
@@ -80,7 +76,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
           .set({ attempts: sql`${o.attempts} + 1` })
           .where(eq(o.id, id))
           .returning({ id: o.id }),
-      this.unavailable('recordAttempt')
+      databaseUnavailable.during('recordAttempt')
     );
 
     return map(rows, (updated) => updated.length > 0);
@@ -94,7 +90,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
           .delete(o)
           .where(and(sql`${o.publishedAt} IS NOT NULL`, lt(o.publishedAt, cutoff)))
           .returning({ id: o.id }),
-      this.unavailable('prune')
+      databaseUnavailable.during('prune')
     );
 
     return map(rows, (pruned) => pruned.length);
@@ -103,7 +99,7 @@ export class PostgresOutboxRepository extends OutboxRepository {
   async findById(id: string): Promise<Result<OutboxRecord | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.select().from(o).where(eq(o.id, id)).limit(1),
-      this.unavailable('findById')
+      databaseUnavailable.during('findById')
     );
 
     return map(rows, ([row]) => (row ? (row as OutboxRecord) : null));

@@ -17,14 +17,10 @@ export class PostgresUploadRepository extends UploadRepository {
     super();
   }
 
-  private unavailable(operation: string) {
-    return (cause: unknown): DatabaseUnavailable => databaseUnavailable(operation, cause);
-  }
-
   async findById(id: string): Promise<Result<UploadRecord | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.select().from(schema.uploads).where(eq(schema.uploads.id, id)).limit(1),
-      this.unavailable('findById')
+      databaseUnavailable.during('findById')
     );
 
     return map(rows, ([row]) => row ?? null);
@@ -34,7 +30,7 @@ export class PostgresUploadRepository extends UploadRepository {
     const rows = await fromPromise(
       () =>
         this.db.select().from(schema.uploads).where(eq(schema.uploads.videoId, videoId)).limit(1),
-      this.unavailable('findByVideoId')
+      databaseUnavailable.during('findByVideoId')
     );
 
     return map(rows, ([row]) => row ?? null);
@@ -51,7 +47,7 @@ export class PostgresUploadRepository extends UploadRepository {
           .innerJoin(schema.videos, eq(schema.uploads.videoId, schema.videos.id))
           .where(eq(schema.uploads.id, uploadId))
           .limit(1),
-      this.unavailable('findWithVideo')
+      databaseUnavailable.during('findWithVideo')
     );
 
     return map(rows, ([row]) => row ?? null);
@@ -60,7 +56,7 @@ export class PostgresUploadRepository extends UploadRepository {
   async create(data: NewUploadInput): Promise<Result<UploadRecord, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () => this.db.insert(schema.uploads).values(toUploadInsert(data)).returning(),
-      this.unavailable('create')
+      databaseUnavailable.during('create')
     );
 
     /**
@@ -83,7 +79,7 @@ export class PostgresUploadRepository extends UploadRepository {
           .set(toUploadStatusUpdate(status))
           .where(eq(schema.uploads.id, uploadId))
           .returning(),
-      this.unavailable('updateStatus')
+      databaseUnavailable.during('updateStatus')
     );
 
     return map(rows, ([row]) => row ?? null);

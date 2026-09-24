@@ -24,10 +24,7 @@ export interface LengthBounds {
   readonly maxLength: number;
 }
 
-export function invalidLength(
-  field: string,
-  bounds: LengthBounds
-): InvalidField<LengthBounds> {
+export function invalidLength(field: string, bounds: LengthBounds): InvalidField<LengthBounds> {
   return invalidField(
     field,
     `${field} must be between ${bounds.minLength} and ${bounds.maxLength} characters`,

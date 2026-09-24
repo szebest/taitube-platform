@@ -1,4 +1,4 @@
-import type { UploadResource, VideoResource } from '../types/index.js';
+import type { UploadResource, VideoResource } from '../types/index';
 
 /**
  * Normalizes upload-like inputs into a canonical UploadResource.

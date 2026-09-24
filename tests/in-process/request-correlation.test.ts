@@ -11,8 +11,9 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { LogContext, createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
-import { buildApp } from '../../apps/api/src/app';
-import { createWorkerRunner } from '../../apps/worker/src/runner';
+import { expectOk } from '@vp/testing/result';
+import { composeApp } from '../../apps/api/src/app';
+import { composeWorker } from '../../apps/worker/src/runner';
 
 const OWNER_ID = '0190a000-0000-7000-8000-0000000000c1';
 const RAW_BUCKET = 'raw';
@@ -28,10 +29,13 @@ describe('in-process: one request id from the API into the worker', () => {
       worker: { stage: 'probe', tmpDir, heartbeatPath: path.join(tmpDir, 'heartbeat') },
     });
 
-    const api = await buildApp({ config, adapters: { repositories, storage, probeQueue } });
+    const { app: api } = await composeApp({
+      config,
+      adapters: { repositories, storage, probeQueue },
+    });
     const workerLog = captureLog();
     const logContext = new LogContext();
-    const worker = await createWorkerRunner({
+    const worker = await composeWorker({
       config,
       adapters: { repositories, storage, jobQueue: probeQueue },
       logger: createLogger({
@@ -45,6 +49,7 @@ describe('in-process: one request id from the API into the worker', () => {
       media: mediaTools,
       workerId: 'correlation-spec',
     });
+    expectOk(await worker.start());
 
     const authorization = `Bearer ${mintToken({ sub: OWNER_ID, role: 'user', ttl: '1h' })}`;
     const started = await api.inject({

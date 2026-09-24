@@ -28,5 +28,3 @@ export const VideoDescription = ({ video }: VideoDescriptionProps) => {
 		</div>
 	)
 };
-
-export default VideoDescription;

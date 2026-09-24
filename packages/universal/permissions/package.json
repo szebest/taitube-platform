@@ -21,8 +21,7 @@
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",
-    "@vp/errors": "workspace:*",
-    "zod": "^3.24.2"
+    "@vp/errors": "workspace:*"
   },
   "devDependencies": {
     "@vp/testing": "workspace:*",
