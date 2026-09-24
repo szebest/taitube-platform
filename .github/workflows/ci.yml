@@ -99,8 +99,6 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
-        with:
-          bun: 'true'
 
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg

@@ -20,6 +20,18 @@ function allTracked(): readonly string[] {
   return tracked;
 }
 
+const globMatches = new Map<string, ReadonlySet<string>>();
+
+/** The tracked files a glob matches, worked out once per glob: `matchesGlob` compiles it on every call. */
+function matchingGlob(glob: string): ReadonlySet<string> {
+  let matched = globMatches.get(glob);
+  if (matched === undefined) {
+    matched = new Set(allTracked().filter((file) => matchesGlob(file, glob)));
+    globMatches.set(glob, matched);
+  }
+  return matched;
+}
+
 interface Pathspec {
   exclude: boolean;
   matches: (file: string) => boolean;
@@ -37,7 +49,8 @@ function pathspec(spec: string): Pathspec {
 
   const exclude = flags.includes('exclude');
   if (flags.includes('glob')) {
-    return { exclude, matches: (file) => matchesGlob(file, path) };
+    const matched = matchingGlob(path);
+    return { exclude, matches: (file) => matched.has(file) };
   }
   const directory = path.endsWith('/') ? path : `${path}/`;
   return { exclude, matches: (file) => file === path || file.startsWith(directory) };
