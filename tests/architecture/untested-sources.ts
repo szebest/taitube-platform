@@ -103,7 +103,6 @@ export const UNTESTED_SOURCES: readonly string[] = [
   'packages/server/adapters/postgres/repositories/postgres-user-repository.ts',
   'packages/server/adapters/postgres/repositories/postgres-video-reaction-repository.ts',
   'packages/server/adapters/postgres/repositories/postgres-video-repository.ts',
-  'packages/server/compose-autoscaler/src/main.ts',
   'packages/server/core/ports/authorization.ts',
   'packages/server/core/ports/job-queue.ts',
   'packages/server/core/repositories/video-repository.ts',

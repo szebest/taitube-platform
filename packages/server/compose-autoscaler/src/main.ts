@@ -92,19 +92,25 @@ async function fetchMetricsText(url: string): Promise<string> {
   return res.text();
 }
 
-function readStageOverrides(configFile?: string): Attempt<StageOverrides> {
-  const label = configFile ? `config file ${configFile}` : 'AUTOSCALER_CONFIG JSON';
-  const text = configFile ? fs.readFileSync(configFile, 'utf-8') : process.env.AUTOSCALER_CONFIG;
-  if (!text) return { type: 'done', value: {} };
+function parseOverrides(label: string, read: () => string): Attempt<StageOverrides> {
   try {
-    return { type: 'done', value: JSON.parse(text) as StageOverrides };
+    return { type: 'done', value: JSON.parse(read()) as StageOverrides };
   } catch (cause) {
     return { type: 'failed', reason: `Failed to load ${label}: ${String(cause)}` };
   }
 }
 
-export async function main(): Promise<void> {
-  const args = parseCliArgs(process.argv.slice(2));
+function readStageOverrides(configFile?: string): Attempt<StageOverrides> {
+  if (configFile) {
+    return parseOverrides(`config file ${configFile}`, () => fs.readFileSync(configFile, 'utf-8'));
+  }
+  const inline = process.env.AUTOSCALER_CONFIG;
+  if (inline) return parseOverrides('AUTOSCALER_CONFIG JSON', () => inline);
+  return { type: 'done', value: {} };
+}
+
+export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<void> {
+  const args = parseCliArgs([...argv]);
 
   if (args.help) {
     printHelp();
