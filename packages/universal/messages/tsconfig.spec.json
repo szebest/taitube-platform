@@ -1,0 +1,7 @@
+{
+  "extends": "@vp/tsconfig/spec.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src/**/*"]
+}
