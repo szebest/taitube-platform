@@ -106,7 +106,7 @@ export function playbackUrl(video: PlayableVideo, cdn: CdnBase): string | undefi
   return cdnUrl(cdn, video.masterPlaylistKey || masterPlaylistKey(video.id));
 }
 
-export function thumbnailUrl(
+function thumbnailUrl(
   video: { customThumbnailKey?: string | null; posterKey?: string | null },
   cdn: CdnBase
 ): string | undefined {

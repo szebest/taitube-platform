@@ -1,5 +1,5 @@
 import { isErr, isOk } from '@vp/result';
-import { VIDEO_TAG_LIMITS, validateVideoTags } from '../tags';
+import { validateVideoTags } from '../tags';
 
 const tags = (count: number) => Array.from({ length: count }, (_, i) => `tag-${i}`);
 
@@ -35,7 +35,8 @@ describe('@vp/validation: validateVideoTags', () => {
     expect(isErr(result) && result.error).toMatchObject({
       code: 'VALIDATION_FAILED',
       field: 'tags',
-      ...VIDEO_TAG_LIMITS,
+      maxTags: 30,
+      maxLength: 30,
     });
   });
 });

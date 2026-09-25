@@ -1,7 +1,7 @@
 import { type Result, err, ok } from '@vp/result';
 import { type InvalidVideoTags, invalidVideoTags } from './failures';
 
-export const VIDEO_TAG_LIMITS = { maxTags: 30, maxLength: 30 } as const;
+const VIDEO_TAG_LIMITS = { maxTags: 30, maxLength: 30 } as const;
 
 function withoutRepeats(tags: readonly string[]): string[] {
   const seen = new Set<string>();

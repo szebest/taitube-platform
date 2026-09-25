@@ -2,7 +2,6 @@ import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import { asCdnBase } from '@vp/env-schema';
 import {
   playbackUrl,
-  thumbnailUrl,
   toCreatorVideoView,
   toVideoDetailView,
   toVideoSummaryView,
@@ -54,7 +53,7 @@ describe('apps/api/services: video views', () => {
     });
   });
 
-  describe('thumbnailUrl', () => {
+  describe('the thumbnail a summary shows', () => {
     it.each([
       {
         name: 'the custom image over the poster',
@@ -67,8 +66,8 @@ describe('apps/api/services: video views', () => {
         expected: `${CDN}/p.jpg`,
       },
       { name: 'nothing before the pipeline made a poster', keys: {}, expected: undefined },
-    ])('shows $name', ({ keys, expected }) => {
-      expect(thumbnailUrl(keys, CDN)).toBe(expected);
+    ])('is $name', ({ keys, expected }) => {
+      expect(toVideoSummaryView(video(keys), CDN).thumbnailUrl).toBe(expected);
     });
   });
 
