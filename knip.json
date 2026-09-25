@@ -33,11 +33,13 @@
       ]
     },
     "apps/web": {
-      "entry": ["src/index.tsx!"],
+      "entry": ["src/router.tsx!", "src/routes/**/*.tsx!"],
       "project": [
         "src/**/*.{ts,tsx,scss,sass}!",
+        "vite/**/*.ts",
         "!src/**/__tests__/**!",
-        "!src/**/*.test.{ts,tsx}!"
+        "!src/**/*.test.{ts,tsx}!",
+        "!vite/**/__tests__/**"
       ]
     },
     "packages/server/testing": {

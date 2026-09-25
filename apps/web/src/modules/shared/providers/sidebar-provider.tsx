@@ -1,5 +1,7 @@
-import { useLocalStorage } from "@uidotdev/usehooks";
 import { type PropsWithChildren, createContext, useContext, useMemo, useState } from "react"
+import { z } from "zod";
+
+import { useStoredState } from "src/hooks/use-stored-state";
 
 type SidebarContextValue = {
 	collapsed: boolean;
@@ -9,12 +11,14 @@ type SidebarContextValue = {
 	breakpointChanged: (_: boolean) => void;
 }
 
+const Collapsed = z.boolean();
+
 const SidebarContext = createContext<SidebarContextValue | undefined>(undefined)
 
 export type SidebarProviderProps = PropsWithChildren;
 
 export const SidebarProvider = ({ children }: SidebarProviderProps) => {
-	const [collapsed, setCollapsed] = useLocalStorage('SIDEBAR', false);
+	const [collapsed, setCollapsed] = useStoredState('SIDEBAR', Collapsed, false);
 	const [isBelowBreakpoint, setIsBelowBreakpoint] = useState<boolean | undefined>(undefined);
 
 	const ctx = useMemo(() => ({

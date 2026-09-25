@@ -55,7 +55,7 @@ describe('packages/env-schema: the environment contract', () => {
   });
 
   it('declares no browser build variable', () => {
-    const browserKeys = Object.keys(SHAPE).filter((key) => key.startsWith('REACT_APP_'));
+    const browserKeys = Object.keys(SHAPE).filter((key) => key.startsWith('VITE_'));
 
     expect(browserKeys).toEqual([]);
   });

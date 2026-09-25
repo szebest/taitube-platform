@@ -37,12 +37,12 @@ whose bulk is server vocabulary is a server module however small the part the br
    uses (`vitest/globals` in `@vp/tsconfig/spec.json`) pull `@types/node` into the program, and `node:fs`
    starts resolving again. Each package excludes its specs from `tsconfig.json` and typechecks them through a
    sibling `tsconfig.spec.json`. Keep that shape when adding a package.
-4. **Relative imports are extensionless**, as in every tier. `apps/web` resolves them through the one
-   webpack override in its `craco.config.js` (`resolve.fullySpecified: false` for workspace packages);
+4. **Relative imports are extensionless**, as in every tier. `apps/web` reads the package from its
+   source through Vite, which resolves an extensionless specifier with no override;
    never add an extension to make an import resolve, change the build instead.
 5. Prefer a platform API over a dependency — `Intl`, `atob`/`btoa`, `URL` — since anything you add ships
    to the browser.
-6. **Declare `"sideEffects": false`.** Without it webpack keeps every module the frontend touches whole,
+6. **Declare `"sideEffects": false`.** Without it the bundler keeps every module the frontend touches whole,
    so an unused export still ships. `tests/architecture/frontend-vocabulary.test.ts` asserts it.
 
 ## Why it holds

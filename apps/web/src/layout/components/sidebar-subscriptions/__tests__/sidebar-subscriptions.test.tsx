@@ -24,7 +24,7 @@ async function storeWith(count: number): Promise<ApiStore> {
   return store;
 }
 
-function renderSubscriptions(store: ApiStore): string {
+async function renderSubscriptions(store: ApiStore): Promise<string> {
   return renderPage(
     <Menu>
       <SidebarSubscriptions close={() => {}} />
@@ -34,12 +34,12 @@ function renderSubscriptions(store: ApiStore): string {
 }
 
 describe('apps/web: sidebar subscriptions', () => {
-  it('links to the subscriptions page before the list arrives', () => {
-    expect(renderSubscriptions(createApiStore())).toContain('href="/subscriptions"');
+  it('links to the subscriptions page before the list arrives', async () => {
+    expect(await renderSubscriptions(createApiStore())).toContain('href="/subscriptions"');
   });
 
   it('links every subscribed channel when there are few', async () => {
-    const markup = renderSubscriptions(await storeWith(3));
+    const markup = await renderSubscriptions(await storeWith(3));
 
     expect(markup).toContain('href="/channel/0190c3a0-5e1d-7000-8000-00000000c102"');
     expect(markup).toContain('Channel 3');
@@ -47,7 +47,7 @@ describe('apps/web: sidebar subscriptions', () => {
   });
 
   it('shows the first five channels and offers the rest behind show more', async () => {
-    const markup = renderSubscriptions(await storeWith(7));
+    const markup = await renderSubscriptions(await storeWith(7));
 
     expect(markup).toContain('Subscriptions: 7');
     expect(markup).toContain('Channel 5');

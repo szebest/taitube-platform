@@ -1,9 +1,16 @@
-describe('apps/web: config', () => {
-  afterEach(() => {
+async function apiBaseUrl(configured: string | undefined): Promise<string> {
+  vi.stubEnv('VITE_API_BASE_URL', configured);
+  vi.resetModules();
+  try {
+    const { API_BASE_URL } = await import('../index');
+    return API_BASE_URL;
+  } finally {
     vi.unstubAllEnvs();
     vi.resetModules();
-  });
+  }
+}
 
+describe('apps/web: config', () => {
   it.each([
     {
       scenario: 'defaults to the local API',
@@ -11,20 +18,20 @@ describe('apps/web: config', () => {
       expected: 'http://localhost:3000',
     },
     {
-      scenario: 'reads REACT_APP_API_BASE_URL and drops a trailing slash',
+      scenario: 'reads VITE_API_BASE_URL and drops a trailing slash',
       configured: 'http://api.local:8080/',
       expected: 'http://api.local:8080',
     },
     {
       scenario: 'ignores an empty override rather than producing a relative URL',
-      configured: '',
+      configured: '  ',
       expected: 'http://localhost:3000',
     },
   ])('$scenario', async ({ configured, expected }) => {
-    vi.stubEnv('REACT_APP_API_BASE_URL', configured);
+    expect(await apiBaseUrl(configured)).toBe(expected);
+  });
 
-    const { API_BASE_URL } = await import('../index');
-
-    expect(API_BASE_URL).toBe(expected);
+  it('refuses to start on an override that is not a URL', async () => {
+    await expect(apiBaseUrl('not a url')).rejects.toThrow();
   });
 });

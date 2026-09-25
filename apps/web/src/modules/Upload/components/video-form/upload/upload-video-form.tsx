@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 import { Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
@@ -78,7 +78,7 @@ export const VideoForm = ({ isError, isSuccess, reset: resetMutation, data, subm
 			}
 
 			{isSuccess && data &&
-				<Link to={`/watch/${data.videoId}`} className="btn btn-primary">Go to the uploaded video page</Link>
+				<Link to="/watch/$videoId" params={{ videoId: data.videoId }} className="btn btn-primary">Go to the uploaded video page</Link>
 			}
 
 			{isSubmitted && !isError &&

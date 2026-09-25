@@ -3,9 +3,11 @@ import { renderPage } from '../../../../../__tests__/render-page';
 import { SubscriptionCard } from '../subscription-card';
 
 describe('apps/web: subscription card', () => {
-  it('links the channel by name and avatar and offers the subscribe button', () => {
-    const markup = renderPage(
-      <SubscriptionCard channel={subscribedChannel({ avatarUrl: 'http://localhost:9000/avatars/c.png' })} />
+  it('links the channel by name and avatar and offers the subscribe button', async () => {
+    const markup = await renderPage(
+      <SubscriptionCard
+        channel={subscribedChannel({ avatarUrl: 'http://localhost:9000/avatars/c.png' })}
+      />
     );
 
     const channelLinks = markup.split(`href="/channel/${CHANNEL_ID}"`).length - 1;

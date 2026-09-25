@@ -1,4 +1,4 @@
-import { Navigate, useParams } from 'react-router-dom';
+import { useParams } from '@tanstack/react-router';
 
 import styles from './user-page.module.scss';
 
@@ -11,16 +11,15 @@ import { LoadingSpinner, VideosContainer } from "src/modules/shared/components";
 import { UserDetails } from '../../components';
 
 export function UserPage() {
-	const { channelId } = useParams();
+	const { channelId } = useParams({ from: '/channel/$channelId' });
 	const { account } = useAuth();
 	const [isListView, setIsListView] = useIsView();
 
-	const { data: channel, isFetching } = accountApi.useChannelQuery(channelId ?? '', { skip: !channelId });
+	const { data: channel, isFetching } = accountApi.useChannelQuery(channelId);
 
-	const isOwnChannel = !!channelId && account?.channel.id === channelId;
+	const isOwnChannel = account?.channel.id === channelId;
 	const { loadMore, queryData } = useInfiniteScroll(videosApi.useMyVideosQuery, { limit: 30 });
 
-	if (!channelId) return <Navigate to="/" replace />
 	if (isFetching) return <LoadingSpinner />
 	if (!channel) return null;
 
