@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** ready
+**Status:** blocked
 
 ---
 
