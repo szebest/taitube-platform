@@ -9,7 +9,6 @@ export const ENTRYPOINTS: readonly string[] = [
   'apps/api/src/seed.ts',
   'apps/worker/src/instrument.ts',
   'apps/worker/src/main.ts',
-  'apps/web/src/index.tsx',
   'packages/server/compose-autoscaler/src/main.ts',
   'packages/server/dev-token/src/main.ts',
   'packages/server/gen-video/src/main.ts',
@@ -24,7 +23,6 @@ export const ENV_HOMES: readonly string[] = [
   'packages/server/config/src/load-env.ts',
   'packages/server/testing/src/index.ts',
   'apps/web/src/config/index.ts',
-  'apps/web/src/Globals.d.ts',
 ];
 
 function matcher(pattern: string): RegExp {

@@ -15,22 +15,22 @@ describe('apps/web: subscription videos page', () => {
       { items: [videoSummary({ title: 'From a subscription' })], nextCursor: null, total: 1 }
     );
 
-    const markup = renderPage(<SubscriptionVideosPage />, { store });
+    const markup = await renderPage(<SubscriptionVideosPage />, { store });
 
     expect(markup).toContain('Subscription videos:');
     expect(markup).toContain('From a subscription');
   });
 
-  it('shows the spinner while the first page loads', () => {
-    expect(renderPage(<SubscriptionVideosPage />)).toContain('aria-label="Loading"');
+  it('shows the spinner while the first page loads', async () => {
+    expect(await renderPage(<SubscriptionVideosPage />)).toContain('aria-label="Loading"');
   });
 
   it.each([
     { stored: false, gridIcon: 'bi-grid-3x2-gap-fill' },
     { stored: true, gridIcon: 'bi-grid-3x2-gap"' },
-  ])('marks the view the viewer chose, list=$stored', ({ stored, gridIcon }) => {
+  ])('marks the view the viewer chose, list=$stored', async ({ stored, gridIcon }) => {
     storeValue(IN_VIEW_LOCAL_STORAGE_KEY, stored);
 
-    expect(renderPage(<SubscriptionVideosPage />)).toContain(gridIcon);
+    expect(await renderPage(<SubscriptionVideosPage />)).toContain(gridIcon);
   });
 });

@@ -4,12 +4,12 @@ import { account } from '../../../../../__tests__/fixtures';
 import { renderPage, signIn } from '../../../../../__tests__/render-page';
 import { AuthorizedContainer } from '../authorized-container';
 
-function renderGuarded(store: ApiStore): string {
+async function renderGuarded(store: ApiStore): Promise<string> {
   return renderPage(
     <AuthorizedContainer>
       <span>members only</span>
     </AuthorizedContainer>,
-    { store, url: '/upload' }
+    { store }
   );
 }
 
@@ -18,15 +18,15 @@ describe('apps/web: authorized container', () => {
     const store = createApiStore();
     await signIn(store, account());
 
-    expect(renderGuarded(store)).toContain('members only');
+    expect(await renderGuarded(store)).toContain('members only');
   });
 
   it.each<{ scenario: string; token?: string }>([
     { scenario: 'a guest', token: undefined },
     { scenario: 'a viewer whose account is still loading', token: 'signed-in' },
-  ])('hides its content from $scenario', ({ token }) => {
+  ])('hides its content from $scenario', async ({ token }) => {
     stubBrowser({ token });
 
-    expect(renderGuarded(createApiStore())).toBe('');
+    expect(await renderGuarded(createApiStore())).toBe('');
   });
 });

@@ -4,6 +4,8 @@ const URL_LITERAL = /\bhttps?:\/\/[^\s'"`)\\<>]+/g;
 const HOST = /^https?:\/\/([^/:?#]+)/;
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]']);
 const XML_NAMESPACE = 'www.w3.org';
+/** TanStack Start renders the whole HTML document from the root route; there is no static shell. */
+const WEB_DOCUMENT = 'apps/web/src/routes/__root.tsx';
 
 function isLocal(url: string): boolean {
   const host = HOST.exec(url)?.[1];
@@ -45,16 +47,13 @@ describe('architecture: local-first', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('loads nothing from another host in the web app page or the HLS test page', () => {
-    const pages = trackedFiles(
-      ':(glob)apps/web/public/*.html',
-      ':(glob)tools/hls-test-page/*.html'
-    );
+  it('loads nothing from another host in the web app document or the HLS test page', () => {
+    const pages = [WEB_DOCUMENT, ...trackedFiles(':(glob)tools/hls-test-page/*.html')];
     const offenders = pages.flatMap((file) =>
       externalHosts(read(file)).map((url) => `${file}: ${url}`)
     );
 
-    expect(pages).toContain('apps/web/public/index.html');
+    expect(trackedFiles(WEB_DOCUMENT)).toEqual([WEB_DOCUMENT]);
     expect(pages).toContain('tools/hls-test-page/index.html');
     expect(offenders).toEqual([]);
   });

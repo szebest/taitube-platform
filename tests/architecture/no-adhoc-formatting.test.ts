@@ -80,7 +80,7 @@ describe('architecture: user-facing formatting happens in @vp/intl and nowhere e
   });
 
   it('still reads the frontend it is asserting about', () => {
-    expect(outsideTheHome()).toContain('apps/web/src/App.tsx');
+    expect(outsideTheHome()).toContain('apps/web/src/routes/__root.tsx');
   });
 
   it('finds no locale method, hand-built Intl object or displayed toFixed outside @vp/intl', () => {

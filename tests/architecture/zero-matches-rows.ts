@@ -288,6 +288,31 @@ export const ROWS: readonly Row[] = [
     fires: '# TOKEN=<dev jwt from tools/dev-token>',
   },
   {
+    name: 'Create React App, craco or a CRA build variable',
+    pattern: /react-scripts|craco|REACT_APP_/g,
+    scope: [
+      ':(exclude)docs/tickets',
+      ':(exclude)docs/reviews',
+      ':(exclude).agents',
+      ':(exclude)pnpm-lock.yaml',
+      ':(exclude)tests/architecture/zero-matches-rows.ts',
+    ],
+    expected: 0,
+    fires: "const base = process.env['REACT_APP_API_BASE_URL'];",
+  },
+  {
+    name: 'a web module reading the build environment outside src/config',
+    pattern: /import\.meta\.env/g,
+    scope: [
+      ':(glob)apps/web/src/**/*.ts',
+      ':(glob)apps/web/src/**/*.tsx',
+      ':(exclude)apps/web/src/config/index.ts',
+      ':(exclude,glob)apps/web/src/**/__tests__/**',
+    ],
+    expected: 0,
+    fires: 'const base = import.meta.env.VITE_API_BASE_URL;',
+  },
+  {
     name: 'a frontier written by hand',
     pattern: /Frontier Priority Policy:\*\* Ticket/g,
     scope: ['AGENTS.md', 'docs/tickets/gen-index.py'],

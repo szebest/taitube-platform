@@ -1,24 +1,21 @@
-import { Navigate, useParams } from 'react-router-dom';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { useParams } from '@tanstack/react-router';
 
 import styles from './video-page.module.scss';
 
-import { videosApi } from 'src/modules/shared/api';
+import { videoQueryOptions } from 'src/features/watch/api/video-query-options';
+import { WatchPlayer } from 'src/features/watch/components/watch-player';
 
-import { LoadingSpinner, VideoPlayer } from "src/modules/shared/components";
 import { VideoDetails } from "../../components";
 
 export function VideoPage() {
-	const { videoId } = useParams();
-	const { data: video, isLoading } = videosApi.useVideoQuery(videoId ?? '', { skip: !videoId });
-
-	if (!videoId) return <Navigate to="/" />
-	if (isLoading) return <LoadingSpinner />
-	if (!video) return null;
+	const { videoId } = useParams({ from: '/watch/$videoId' });
+	const { data: video } = useSuspenseQuery(videoQueryOptions(videoId));
 
 	return (
 		<div className={styles.container}>
 			<div className={styles.container__wrapper}>
-				<VideoPlayer playbackUrl={video.playbackUrl} />
+				<WatchPlayer playbackUrl={video.playbackUrl} posterUrl={video.posterUrl} />
 				<VideoDetails video={video} />
 			</div>
 		</div>

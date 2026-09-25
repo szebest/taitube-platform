@@ -5,15 +5,17 @@ import { reactionsApi } from '../../../../shared/api/reactions-api';
 import { VideoLikes } from '../video-likes';
 
 describe('apps/web: video likes', () => {
-  it('shows the like and dislike counts, rounded', () => {
-    const markup = renderPage(<VideoLikes video={video({ likesCount: 1250, dislikesCount: 12_500 })} />);
+  it('shows the like and dislike counts, rounded', async () => {
+    const markup = await renderPage(
+      <VideoLikes video={video({ likesCount: 1250, dislikesCount: 12_500 })} />
+    );
 
     expect(markup).toContain('1.3K');
     expect(markup).toContain('13K');
   });
 
-  it('marks neither button for a guest', () => {
-    const markup = renderPage(<VideoLikes video={video()} />);
+  it('marks neither button for a guest', async () => {
+    const markup = await renderPage(<VideoLikes video={video()} />);
 
     expect(markup).not.toContain('-fill');
   });
@@ -30,7 +32,7 @@ describe('apps/web: video likes', () => {
       { videoId: VIDEO_ID, reaction }
     );
 
-    const markup = renderPage(<VideoLikes video={video()} />, { store });
+    const markup = await renderPage(<VideoLikes video={video()} />, { store });
 
     expect(markup).toContain(filled);
     expect(markup).toContain(unfilled);

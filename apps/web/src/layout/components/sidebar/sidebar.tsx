@@ -5,7 +5,7 @@ import {
 	MenuItem
 } from "react-pro-sidebar";
 import { Dropdown } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 import styles from "./sidebar.module.scss";
 
@@ -47,7 +47,7 @@ export function Sidebar() {
 
 				{account &&
 					<>
-						<MenuItem component={<Link to={`/channel/${account.channel.id}`} onClick={close} />}>
+						<MenuItem component={<Link to="/channel/$channelId" params={{ channelId: account.channel.id }} onClick={close} />}>
 							<i className="bi bi-person-fill" />
 							<span>Your channel</span>
 						</MenuItem>

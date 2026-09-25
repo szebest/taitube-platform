@@ -1,12 +1,12 @@
-import { inChrome, renderPage } from '../../../../__tests__/render-page';
 import { stubBrowser } from '../../../../__tests__/browser';
+import { inChrome, renderPage } from '../../../../__tests__/render-page';
 import { Logo } from '../logo';
 
 describe('apps/web: logo', () => {
-  it('links home and offers the sidebar toggle', () => {
+  it('links home and offers the sidebar toggle', async () => {
     stubBrowser();
 
-    const markup = renderPage(inChrome(<Logo hideLogoPart={false} />));
+    const markup = await renderPage(inChrome(<Logo hideLogoPart={false} />));
 
     expect(markup).toContain('href="/"');
     expect(markup).toContain('<title>Taitube</title>');
@@ -16,9 +16,9 @@ describe('apps/web: logo', () => {
   it.each([
     { hideLogoPart: true, shape: 'logo__short' },
     { hideLogoPart: false, shape: 'logo__long' },
-  ])('draws the $shape logo when hideLogoPart=$hideLogoPart', ({ hideLogoPart, shape }) => {
+  ])('draws the $shape logo when hideLogoPart=$hideLogoPart', async ({ hideLogoPart, shape }) => {
     stubBrowser();
 
-    expect(renderPage(inChrome(<Logo hideLogoPart={hideLogoPart} />))).toContain(shape);
+    expect(await renderPage(inChrome(<Logo hideLogoPart={hideLogoPart} />))).toContain(shape);
   });
 });

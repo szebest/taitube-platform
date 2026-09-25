@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Dropdown } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { toast } from "react-toastify";
 
 import styles from './video-settings-dropdown.module.scss';
@@ -17,11 +17,12 @@ export type VideoSettingsDropdownProps = {
 
 export const VideoSettingsDropdown = memo(({ video, shouldRedirectOnDelete }: VideoSettingsDropdownProps) => {
 	const navigate = useNavigate();
+	const router = useRouter();
 
 	const [deleteVideo, { isLoading: isDeleteLoading }] = videosApi.useDeleteVideoMutation();
 
 	const handleEdit = () => {
-		navigate(`/upload/edit/${video.id}`);
+		navigate({ to: '/upload/edit/$videoId', params: { videoId: video.id } });
 	}
 
 	const handleDelete = async () => {
@@ -31,7 +32,7 @@ export const VideoSettingsDropdown = memo(({ video, shouldRedirectOnDelete }: Vi
 		toast('Successfully deleted the video');
 
 		if (shouldRedirectOnDelete) {
-			navigate(-1);
+			router.history.back();
 		}
 	}
 
