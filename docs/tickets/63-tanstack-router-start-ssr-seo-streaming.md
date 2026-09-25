@@ -1,12 +1,12 @@
-# 63: TanStack Router & TanStack Start SSR — SEO, dynamic OpenGraph & video streaming metadata
+# 63: Video SEO on the SSR render - route meta, OpenGraph, player cards, JSON-LD, sitemap and RSS
 
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Issue | [#63](https://github.com/szebest/taitube-platform/issues/63) |
-| Size | L |
-| Blocked by | 62 — Frontend performance & virtualization |
-| Blocks | 64, 66, 75, 77, 86 |
+| Size | M |
+| Blocked by | 58 - Modern browse layout · 59 - Modern watch page · 89 - TanStack Start foundation |
+| Blocks | 77, 86 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
@@ -18,68 +18,43 @@
 
 ## What to build
 
-### Architectural Decision: Why TanStack Router / TanStack Start instead of Next.js?
+SEO on top of the SSR [89](89-web-tanstack-start-foundation.md) already renders. The router, loaders,
+dehydration and streaming are 89's; the framework choice is recorded in
+[SDD ADR-21](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs).
+Every page's data is already in the query cache during the server render because its loader calls
+`queryClient.ensureQueryData(...)`, so `head()` reads the same query: no `createServerFn` per page.
 
-| Framework | Architecture & Ecosystem | Streaming & Edge | Lock-in & Overhead | Verdict |
-|---|---|---|---|---|
-| **Next.js (App Router)** | Vercel-centric server actions, heavy React Server Components magic, fragile bundling outside Vercel | Complex caching rules, slow HMR in large monorepos | Heavy vendor lock-in, hard to run local-first without Node server | **Rejected** |
-| **TanStack Router + TanStack Start** | 100% type-safe routing, built-in loaders, seamless TanStack Query integration, standard Vite build | Blazing fast streaming SSR, zero vendor lock-in | Lightweight, native Vite 6, full client/server control | **Accepted (Recommended)** |
+1. **Route `head()` meta** for watch, feed and channel routes: title, description, canonical URL.
+2. **OpenGraph and Twitter player cards** on `/watch/$videoId`: `og:type=video.other`, `og:title`,
+   `og:description`, `og:image` (poster), `og:video` (HLS master URL, `application/x-mpegURL`),
+   `twitter:card=player` with width and height.
+3. **`VideoObject` JSON-LD** on the watch page (thumbnail, upload date, ISO 8601 duration, interaction
+   counts), and `ItemList` of `VideoObject` on feed and channel pages.
+4. **`/sitemap.xml` and `/feeds/videos.xml`** as TanStack Start server routes listing public READY videos.
 
-Search engine web crawlers (Googlebot, Bing, Twitter/X, Discord, Telegram) require server-rendered HTML and OpenGraph meta tags to properly index video pages and generate rich link cards.
-
-This ticket delivers modern, high-performance SSR and SEO powered by **TanStack Router / TanStack Start**:
-1. **100% Type-Safe Routing (`@tanstack/react-router`)**:
-   - File-based routing with automatic route tree generation (`routeTree.gen.ts`).
-   - Strict path param and search param validation via Zod schemas (`/watch/$videoId`, `/search?q=...&category=...`).
-   - Loader-based pre-fetching: video data and comments pre-fetched before route transition to eliminate layout waterfalls.
-2. **Server-First Fetching Architecture with TanStack Start (`createServerFn`)**:
-   - All public, discovery, and playback routes run **Server-First SSR**:
-     - **Home Feed (`/`):** Server function `fetchFeedServerFn` prefetches initial category videos during SSR.
-     - **Watch Page (`/watch/$videoId`):** Server function `fetchVideoDetailServerFn` fetches video metadata, channel profile, and initial comment batch on the server.
-     - **Search (`/search`):** Server function `fetchSearchResultsServerFn` performs server-side search matching and renders polymorphic results directly into the initial HTML.
-     - **Channel Profile (`/channels/$handle`):** Server function `fetchChannelServerFn` renders creator header, tabs, and video grid on the server.
-     - **Playlists (`/playlist`):** Server function `fetchPlaylistServerFn` pre-renders playlist hero card and ordered video queue.
-   - **Dehydration & Streamed HTML:** Server loaders call `await queryClient.prefetchQuery(...)`. State is serialized into the streaming HTML payload and rehydrated on the client with 0 duplicate HTTP requests.
-   - Fast streaming: HTML shell with `<head>` tags and critical visual structure streams to client with TTFB < 100ms.
-3. **Complete Video SEO & Structured Data (TanStack Head)**:
-   - Dynamic OpenGraph tags: `og:type=video.other`, `og:title`, `og:description`, `og:image` (high-res poster), `og:video` (HLS master URL), `og:video:type=application/x-mpegURL`.
-   - Twitter Player Cards (`twitter:card=player`, `twitter:player:width`, `twitter:player:height`).
-   - Google Rich Snippets schema markup: Valid `schema.org/VideoObject` JSON-LD with thumbnail, upload date, duration (ISO 8601 `PT12M45S`), and interaction statistics.
-4. **Automated Dynamic Sitemap & RSS Feed**:
-   - `GET /sitemap.xml`: Generates XML sitemap of all public READY videos for search engine indexing.
-   - `GET /feeds/videos.xml`: Atom / RSS feed for video syndication.
+Search and playlist pages own their loaders and meta in [74](74-frontend-multi-resource-search-discovery-ui.md)
+and [73](73-frontend-youtube-playlists-library-player-queue.md).
 
 ## Acceptance criteria
 
-- [ ] `@tanstack/react-router` and TanStack Start (`@tanstack/react-start`) integrated into `apps/web` with Vite 6.
-- [ ] Server functions (`createServerFn`) implemented for Feed, Watch Page, Search, Channel Profile, and Playlists.
-- [ ] Route loaders prefetch queries on the server; client hydration executes with 0 redundant initial network fetches.
-- [ ] Server-rendered HTML inspection confirms watch page, feed, and search contain rendered video titles and cards without client JavaScript.
-- [ ] Route parameters strictly validated using Zod (`/watch/$videoId`).
-- [ ] SSR pre-fetching configured: Video watch page renders complete HTML with meta tags on initial response.
-- [ ] Validated OpenGraph tags and Twitter Player card output for all public videos.
-- [ ] Validated `VideoObject` JSON-LD schema rendered in `<head>` conforming to Google Search Central specifications.
-- [ ] Dynamic HTML streaming response verified: initial shell arrives under 100ms TTFB.
-- [ ] Automated `/sitemap.xml` endpoint serving dynamic sitemap for search crawlers.
-- [ ] Unit & crawler simulation tests verifying meta tags and JSON-LD output without JavaScript execution.
+- [ ] Raw server HTML of `/watch/<id>` (no JavaScript executed) contains the title, OpenGraph tags, Twitter
+      player card and a `VideoObject` JSON-LD block that validates against the schema.org shape.
+- [ ] Feed and channel pages render their own title, description and JSON-LD in the server HTML.
+- [ ] `head()` reads the loader's query; the server makes no extra request for meta.
+- [ ] `/sitemap.xml` and `/feeds/videos.xml` return valid XML listing only public READY videos.
+- [ ] A private or missing video renders no OpenGraph tags and the not-found page.
 
 ## Out of scope
 
-- Static Site Generation (SSG) for user-specific studio or admin pages.
-
-## Notes for the implementer
-
-- ISO 8601 duration converter: Convert duration in milliseconds to `PT#M#S` format for the `VideoObject.duration` schema property.
-- Ensure all crawler requests (`User-Agent: Googlebot|Twitterbot|facebookexternalhit`) receive full static meta tags.
+- Static site generation, and meta for studio, admin or settings routes.
+- `<html lang>` and `hreflang`: [86](86-localisation-rollout-locale-negotiation-rtl.md).
 
 ## Testing plan
 
-- Headless curl test: Fetch `/watch/:id` with `curl -s` and assert `og:title`, `og:video`, and `<script type="application/ld+json">` are present in raw HTML.
-- Rich snippet test: Validate output against Google Rich Results Test schema validator.
+- Server render specs per route asserting the tags and JSON-LD in the HTML string.
+- Server route specs for sitemap and feed with a stubbed API.
 
 ## Definition of Done
 
-- [ ] SSR and type-safe routing pass all tests under `pnpm --filter @taitube/web test`.
-- [ ] Google Search Console / Rich Results test returns 0 errors.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

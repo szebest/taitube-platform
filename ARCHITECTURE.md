@@ -26,7 +26,7 @@ taitube-platform/
 ├── apps/
 │   ├── api/                        # Fastify API - composeApp in apps/api/src/app.ts, main.ts reads the env
 │   ├── worker/                     # BullMQ worker - composeWorker in apps/worker/src/runner.ts
-│   └── web/                        # Taitube web client (React 18 + CRA today; tickets 49-75 own the rewrite)
+│   └── web/                        # Taitube web client (React 18 + CRA today; ticket 89 moves it to TanStack Start)
 │
 ├── packages/universal/             # runs in a browser AND on a server
 │   ├── api-contracts/              # @vp/api-contracts - every endpoint schema, one entry per route

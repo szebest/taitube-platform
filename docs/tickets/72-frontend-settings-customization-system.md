@@ -5,8 +5,8 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#72](https://github.com/szebest/taitube-platform/issues/72) |
 | Size | M |
-| Blocked by | 38 — User identity · 53 — Frontend architecture · 55 — Modern design system · 69 — Frontend URL-driven state |
-| Blocks | 75, 86 |
+| Blocked by | 38 - User identity · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation |
+| Blocks | 86 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** blocked
@@ -17,82 +17,72 @@
 > Until then `@vp/intl-react` reads the saved locale from `LOCALE_STORAGE_KEY` (`vp.locale`); this ticket
 > moves it into the preference store.
 
+> **Builds on 89.** A new page: no legacy module to replace. It uses 89's route structure, 53's query and form
+> setup, 55's theme engine and 56's `_authed` layout.
+
 ## What to build
 
-A premier streaming platform must empower users and creators with granular control over their viewing and publishing experience: visual themes, playback defaults, privacy controls, notification preferences, and channel branding. Storing these settings in ad-hoc, untyped local storage causes configuration loss and inconsistent cross-device experiences.
+Route `apps/web/src/routes/_authed/settings.tsx`, feature code in `apps/web/src/features/settings/`.
 
-This ticket delivers the **Extensive Settings & Customization System** (`/settings` and `?modal=settings&tab=...`):
+### 1. Settings hub
 
-1. **Tabbed Settings Hub (`/settings`) & Deep-Linked Settings Modal**:
-   - URL-driven tab synchronization: `/settings?tab=appearance|playback|privacy|notifications|channel`.
-   - Reusable quick-settings modal (`?modal=settings&tab=...`) accessible directly from user header avatar dropdown.
+- `/settings` with tabs `appearance`, `playback`, `privacy`, `notifications`, `channel`. The tab is the route's
+  `validateSearch` param (`?tab=`, default `appearance`), so every tab is a link.
+- A quick-settings overlay from the header avatar (`?modal=settings&tab=`) is a follow-up once
+  [69](69-frontend-url-state-search-params-modal-routing.md) ships `useUrlModal`.
 
-2. **Customization Categories & Features**:
-   - **Appearance & Themes (`/settings?tab=appearance`)**:
-     - Theme selector: `Dark (Obsidian)`, `Light (Clean)`, `OLED (Pure Pitch Black #000000)`, or `System Sync`.
-     - Accent color customization: `Crimson Red (Default)`, `Neon Amber`, `Electric Violet`, `Cyber Cyan`.
-     - Video Card Density: `Comfortable` (large cards, high details) vs `Compact` (denser grid for power users).
-     - Ambient Lighting: Global default toggle (enable/disable ambient canvas glow).
-   - **Playback & Player Defaults (`/settings?tab=playback`)**:
-     - Default streaming quality: `Auto`, `1080p HD`, `720p`, `480p` (honored across video transitions).
-     - Default playback speed: `1x`, `1.25x`, `1.5x`, `2x`.
-     - Autoplay next video toggle: On / Off (controls playlist and Up Next auto-advance).
-     - Inline video preview on hover toggle: On / Off.
-     - Captions / Subtitles toggle: default language, caption font size (`Small`, `Medium`, `Large`), caption background opacity.
-     - "Stats for Nerds" default toggle: On / Off.
-   - **Privacy & History (`/settings?tab=privacy`)**:
-     - "Pause Watch History": When enabled, viewing videos does not append entries to `watch_history` or record resume points.
-     - "Clear All Watch History": Confirmation dialog triggering `DELETE /v1/me/history`.
-     - Playlist default privacy: `Public`, `Unlisted`, or `Private`.
-     - Subscriptions privacy: Keep subscriptions private / public on channel profile.
-   - **Notifications & Audio Alerts (`/settings?tab=notifications`)**:
-     - Subscribed channel upload alerts (In-app toasts, browser Web Push).
-     - Activity on comments (replies, likes on comments).
-     - Transcoding complete notification alerts.
-   - **Channel Customization & Branding (`/settings?tab=channel`)** (Creator mode):
-     - Display name and handle (`@handle`) editing with real-time uniqueness validation.
-     - Avatar upload with client-side crop preview.
-     - Channel banner image upload with desktop/tablet/mobile viewport safe-zone guides.
-     - Channel description bio and external social links (GitHub, X, Discord, Website).
+### 2. Preference store
 
-3. **Hybrid Durability Model (Local Storage + Cloud Profile Sync)**:
-   - Client-only preferences (theme, card density, volume) persist immediately to typed `localStorage` schema with zero network lag.
-   - User account preferences (privacy toggles, notifications, channel profile) synchronize to backend `PATCH /v1/me/preferences` and `PATCH /v1/me/profile`.
+- One typed preference store in `features/settings/`: a Zod schema with defaults, read and written through one
+  hook. Device preferences (theme, accent, density, volume, player defaults, locale) persist in a cookie so SSR
+  renders them without a flash; `localStorage` reads are wrapped in try/catch.
+- Account preferences (privacy, notifications) are server data: a query plus optimistic mutations. They need a
+  `/v1/me/preferences` endpoint that does not exist yet; those tabs wait for it.
+- The player ([57](57-production-video-player-hls-streaming-controls.md)) and the card grid read their defaults
+  from this store instead of their own keys.
+
+### 3. Tabs
+
+- **Appearance:** theme (dark, light, OLED, system) on 55's theme engine, accent colour, card density
+  (comfortable, compact), ambient mode default. Changes apply without a reload.
+- **Playback:** default quality, speed, autoplay next, hover preview, captions defaults, stats for nerds default.
+- **Privacy:** pause watch history, clear watch history (confirmation dialog), default playlist privacy,
+  subscriptions visibility. The history controls depend on
+  [46](46-youtube-playlists-watch-history-engine.md)'s endpoints.
+- **Notifications:** upload alerts from subscribed channels, comment activity, transcoding complete.
+- **Channel:** TanStack Form over `PATCH /v1/me/channel` ([38](38-user-channel-identity-universal-auth.md)):
+  display name, handle (format from `@vp/validation`'s handle rule, availability from the API), bio, social
+  links, avatar and banner upload with preview and safe-zone guides.
 
 ## Acceptance criteria
 
-- [ ] Route `/settings` and deep-linked modal `?modal=settings&tab=...` implemented with TanStack Router.
-- [ ] Appearance settings: Theme toggle (Dark, Light, OLED, System) and Accent color picker instantly update CSS variables without page reload.
-- [ ] Card density selector switches video grid between comfortable and compact layouts.
-- [ ] Playback settings: Default quality, playback speed, autoplay next, and hover preview toggles saved and respected by `<TaitubePlayer />`.
-- [ ] Privacy settings:
-  - "Pause Watch History" toggle stops `POST /v1/me/history` tracking.
-  - "Clear Watch History" button successfully deletes all history records with confirmation modal.
-- [ ] Channel branding form powered by `@tanstack/react-form` + `@tanstack/zod-form-adapter`:
-  - Validates handle formatting (`^[a-zA-Z0-9_]{3,30}$`) and bio length.
-  - Generates presigned avatar and banner upload URLs and previews images before submit.
-- [ ] Notification preferences toggles wired with optimistic state updates.
-- [ ] Component tests in `apps/web/src/__tests__/settings.integration.test.tsx` verifying theme switching, playback preference persistence, and form submission.
+- [ ] `/settings?tab=<tab>` opens that tab; an unknown tab falls back to `appearance` through `validateSearch`.
+- [ ] Theme and accent apply without a reload, survive a reload, and the server render matches (no flash).
+- [ ] Card density switches the grid between comfortable and compact.
+- [ ] Playback defaults are honoured by the player on the next video.
+- [ ] The locale preference moves from `vp.locale` into the store, with a one-time migration of the old key.
+- [ ] Channel form validates the handle with `@vp/validation`, reports a taken handle from the API, previews
+      avatar and banner before submit, and saves through `PATCH /v1/me/channel`.
+- [ ] Privacy and notification toggles update optimistically and roll back on failure (once the preferences
+      endpoint exists).
+- [ ] Pause and clear watch history work against 46's endpoints (once they exist).
+- [ ] Integration specs for theme switching, preference persistence and the channel form, through 54's
+      `renderRoute` with MSW.
 
 ## Out of scope
 
-- Email notification digest SMTP delivery.
-- Custom domain mapping for channels.
-
-## Notes for the implementer
-
-- **Zero-Flash Theme Bootstrapping:** Ensure `theme-script.ts` reads initial theme from `localStorage` in the HTML `<head>` before hydration to prevent light/dark flicker.
-- **File Length Discipline:** Modularize settings tabs into `apps/web/src/pages/settings/tabs/` (`AppearanceTab`, `PlaybackTab`, `PrivacyTab`, `ChannelTab`), keeping each under 200 lines.
+- Email digests.
+- Custom domains for channels.
+- The locale selector and negotiation: 86.
 
 ## Testing plan
 
-- Theme persistence test: Change theme to OLED -> reload page -> verify `html` element retains `theme-oled` class.
-- Privacy test: Enable "Pause Watch History" -> watch a video -> assert history list remains unchanged.
-- Channel branding test: Update handle and avatar -> assert updated channel profile displays new assets.
+- Theme: switch to OLED, reload, the `html` element keeps the OLED theme on the server render.
+- Channel: submit a new handle and avatar, the channel page shows them.
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm --filter @taitube/web test`.
-- [ ] Settings hub fully responsive across mobile and desktop.
+- [ ] `pnpm --filter @vp/web test` and `pnpm typecheck` pass.
+- [ ] Settings verified on mobile and desktop.
 - [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

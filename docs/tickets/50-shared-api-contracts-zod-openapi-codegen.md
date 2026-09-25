@@ -6,7 +6,7 @@
 | Issue | [#50](https://github.com/szebest/taitube-platform/issues/50) |
 | Size | M |
 | Blocked by | 19 — Videos API completion · 37 — Admin category API · 38 — User identity |
-| Blocks | 51, 52 |
+| Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) |
 
 **Status:** ready

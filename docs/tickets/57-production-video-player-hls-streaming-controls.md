@@ -5,98 +5,124 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#57](https://github.com/szebest/taitube-platform/issues/57) |
 | Size | L |
-| Blocked by | 53 — Frontend architecture · 54 — Frontend testing infrastructure · 55 — Modern design system |
-| Blocks | 59, 62, 65, 73, 75, 76, 77, 78 |
+| Blocked by | 55 - Design system · 89 - TanStack Start foundation |
+| Blocks | 59, 62, 65, 66, 73, 76, 77, 78 |
 | Spec | [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
 **Status:** blocked
 
+> **Builds on 89.** The legacy watch page (`src/modules/VideoPage`, carried over by
+> [89](89-web-tanstack-start-foundation.md) on `/watch/$videoId`) plays through a `react-player` wrapper with the
+> browser's default controls. This ticket swaps that wrapper for the new player inside the legacy page, so
+> playback improves before [59](59-video-watch-page-responsive-layout-enhancements.md) redesigns the page. It
+> owns removing `react-player` from `apps/web/package.json` once the legacy page no longer imports it; the rest
+> of `src/modules/VideoPage` is 59's to delete.
+
 ## What to build
 
-A world-class video platform lives or dies by its player. The original frontend used a plain `react-player` wrapper that simply delegated to the default browser controls. 
+`<TaitubePlayer />` in `apps/web/src/features/player/`, built on Vidstack (`@vidstack/react`) with hls.js,
+skinned with the Tailwind tokens and Radix primitives from [55](55-design-system-tailwind-radix-dark-theme.md).
+It takes a video resource from `@vp/api-contracts` (`playbackUrl`, `posterUrl`, `spriteVttUrl`) and knows
+nothing about routes or data fetching.
 
-This ticket delivers **Taitube Player (`<TaitubePlayer />`)** — an elite, fully-fledged video player built on **Vidstack (`@vidstack/react`)** and **HLS.js**, matching YouTube's exact ergonomics while carrying our own distinct brand feel (sleek obsidian dark theme, custom neon accent branding, and glassmorphic controls).
+### 1. Playback and ABR
 
-### 1. YouTube-Grade Visual Experience & "Taitube Feel"
-- **Ambient Lighting Mode (Glow Effect):** A real-time ambient canvas that softly blurs and reflects the primary video colors onto the background behind the player, creating deep immersion (toggleable in settings).
-- **Glassmorphic Floating Control Bar:** Smooth auto-hiding controls (fading out after 2.5s of inactivity) with a gradient backdrop shadow to ensure 100% visibility over bright video scenes.
-- **Center Action Ripple Badges:** When pausing, playing, seeking, or changing volume, large animated icon badges ripple in the center of the video (just like YouTube's play/pause flash and double-tap ripples).
-- **Double-Tap / Double-Click Seeking:** Double-clicking the left side seeks backward 10s with an animated `<< 10 seconds` chevron ripple; double-clicking the right side seeks forward 10s.
+- The multi-variant HLS master from `playbackUrl`, automatic rendition selection by bandwidth and buffer.
+- Settings menu: quality (`Auto (1080p)` badge, then each rendition in the master), playback speed
+  (0.25x to 2x), ambient mode toggle, captions toggle when tracks exist.
+- Preferences (volume, muted, speed, quality, ambient) persist per browser in a small typed `localStorage`
+  store wrapped in try/catch; [72](72-frontend-settings-customization-system.md) later moves the defaults into
+  the settings store.
 
-### 2. Timeline & Storyboard Scrubbing Preview
-- **Floating Hover Thumbnail Preview:** When hovering anywhere along the seekbar, a floating tooltip displays the exact timestamp and a sharp preview frame parsed from the WebVTT sprite sheet (generated in backend Ticket 13).
-- **Smooth Chapter Markers:** Timeline segments show chapter visual breaks with hover title tooltips if chapter metadata is present.
-- **Scrubbing Time Indicator:** Shows current time / total duration with relative countdown toggle on click.
+### 2. Controls and feel
 
-### 3. Adaptive Bitrate (ABR) & Stream Quality Selector
-- **Multi-variant HLS Engine:** Automatic ladder selection (1080p, 720p, 480p) driven by bandwidth estimates and buffer health.
-- **Settings Gear Menu:**
-  - Quality selection: `Auto` with current badge (e.g. `Auto (1080p)`), `1080p HD`, `720p`, `480p`.
-  - Playback speed: `0.25x`, `0.5x`, `0.75x`, `Normal (1x)`, `1.25x`, `1.5x`, `1.75x`, `2x`.
-  - Ambient mode toggle (On / Off).
-  - Annotations / Captions toggle.
+- Auto-hiding control bar (2.5 s of inactivity) over a gradient so it reads on bright frames.
+- Centre badges on play, pause, seek and volume change; double-click or double-tap on the left or right third
+  seeks 10 s back or forward with a chevron ripple.
+- Seekbar hover preview: timestamp plus the frame from the WebVTT sprite sheet that
+  [13](13-thumbnails-flow-child.md) generates (`spriteVttUrl`).
+- Ambient mode: a downscaled canvas sampled at 10 to 15 FPS, blurred behind the player.
 
-### 4. Layout Modes & Picture-in-Picture
-- **Theater / Cinema Mode (`t`):** Expands the player to span the full browser viewport width while keeping the header and page scrollable.
-- **Fullscreen (`f` / double-click):** Native browser fullscreen with customized control layout.
-- **Picture-in-Picture (PiP / `i`):** Native Picture-in-Picture window for multitasking.
-- **Miniplayer on Scroll:** Automatically detaches into a compact floating player in the bottom-right corner when scrolling down to read long comment threads.
+### 3. Layout modes
 
-### 5. Advanced Power-User Features: "Stats for Nerds"
-- Right-click context menu opens a custom Taitube context menu:
-  - Copy video URL
-  - Copy video URL at current time
-  - Copy embed code
-  - **"Stats for Nerds" Overlay:** Displays real-time live diagnostics: current resolution, viewport size, frame drops, network activity, audio/video codecs, buffer health in seconds, and playback latency.
+- Theater mode (`t`) as a player state the watch page reads to change its layout; fullscreen (`f`, double-click);
+  native Picture-in-Picture (`i`).
+- Miniplayer on scroll is a watch page concern and lives in 59; the player only exposes a compact variant.
 
-### 6. YouTube Keyboard Navigation Matrix
-- `Space` / `k`: Play / Pause toggle
-- `j` / `l`: Seek -10s / +10s
-- `Left` / `Right`: Seek -5s / +5s
-- `Up` / `Down`: Volume +/- 5% (with logarithmic audio perception curve)
-- `m`: Mute / Unmute
-- `t`: Theater mode toggle
-- `f`: Fullscreen toggle
-- `i`: Miniplayer / PiP toggle
-- `,` / `.`: Frame-by-frame backward / forward when paused
-- `0`–`9`: Seek to 0% – 90% of duration
+### 4. Power-user features
+
+- Custom context menu: copy URL, copy URL at the current time (`?t=`), copy embed code.
+- Stats for nerds overlay: resolution, viewport, dropped frames, bandwidth estimate, codecs, buffer health.
+
+### 5. Keyboard
+
+`Space`/`k` play-pause, `j`/`l` -10/+10 s, arrows -5/+5 s and volume, `m` mute, `t` theater, `f` fullscreen,
+`i` PiP, `,`/`.` frame step when paused, `0` to `9` seek to 0 to 90 %. Shortcuts are suspended while focus is in
+an input, textarea or contenteditable.
+
+### 6. SSR
+
+The player is client-only. The watch route renders the poster image with the right aspect ratio on the server
+(no layout shift, the poster is the LCP candidate), and mounts `<TaitubePlayer />` after hydration through a
+lazy client boundary, not a route-wide `ssr: false`.
+
+### 7. Events for other tickets
+
+The player emits typed `onTimeUpdate`, `onEnded` and `onQualityChange` callbacks. It sends nothing itself: the
+views heartbeat and QoS beacons are [65](65-first-party-video-playback-telemetry-analytics-beacon.md) (a tracker
+in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-library-player-queue.md).
+
+## Delivery slices
+
+1. `<TaitubePlayer />` with Vidstack + hls.js, default skin, poster SSR, swapped into the legacy watch page;
+   `react-player` removed.
+2. Taitube skin, settings menu (quality, speed), persisted preferences, keyboard matrix.
+3. Seekbar sprite preview, centre badges, double-tap seek.
+4. Theater and PiP modes, compact variant.
+5. Context menu, stats for nerds, ambient mode.
 
 ## Acceptance criteria
 
-- [ ] `@vidstack/react` and `@vidstack/react/player/styles/default/theme.css` integrated into `apps/web/src/components/player/`.
-- [ ] Custom Tailwind CSS skin applied giving a unified Taitube design language (obsidian controls, violet/amber accent seekbar, glassmorphic menus).
-- [ ] Real-time Ambient Mode implemented via `<canvas>` or CSS background filter reflecting video edges onto the backdrop with 60 FPS performance and low CPU overhead.
-- [ ] WebVTT sprite sheet thumbnail preview tooltip rendered on seekbar hover.
-- [ ] Double-click / double-tap seeking (left: -10s, right: +10s) with animated chevron ripple badges.
-- [ ] Center play/pause flash animation on state change.
-- [ ] Settings gear menu with Quality picker, Playback speed, and Ambient toggle.
-- [ ] Theater mode (`t`) layout shift and Picture-in-Picture (`i`) operational.
-- [ ] Custom context menu on right click with "Stats for Nerds" modal displaying live buffer, dropped frames, and HLS bandwidth.
-- [ ] Full YouTube keyboard shortcuts functional and automatically suspended when focused on form inputs.
-- [ ] User preferences (volume, muted, ambient mode, quality) saved to `localStorage`.
-- [ ] Heartbeat ping sent to `POST /v1/videos/:id/views` and progress saved to `POST /v1/me/history`.
-- [ ] Unit & visual tests verifying player lifecycle, shortcut triggers, and unmount cleanup.
+- [ ] `<TaitubePlayer />` lives in `apps/web/src/features/player/` and plays a READY video's HLS master in the
+      legacy watch page; `react-player` is gone from `apps/web/package.json`.
+- [ ] Server-rendered `/watch/<id>` HTML contains the poster image with fixed aspect ratio; the player mounts
+      only in the browser.
+- [ ] Quality menu lists the renditions from the master plus `Auto`, and switching changes the active level.
+- [ ] Speed, volume, muted, quality and ambient preferences survive a reload; a throwing `localStorage` does
+      not break playback.
+- [ ] Seekbar hover shows the sprite frame for the hovered time from `spriteVttUrl`, and nothing when the
+      video has no sprite.
+- [ ] Double-click or double-tap seeking with ripple badges; centre badge on play and pause.
+- [ ] Theater (`t`) and PiP (`i`) work; theater state is readable by the page.
+- [ ] Context menu with the copy actions and the stats for nerds overlay showing live buffer, dropped frames
+      and bandwidth.
+- [ ] Every shortcut in the matrix works and none fires while an input has focus.
+- [ ] `onTimeUpdate`, `onEnded` and `onQualityChange` fire with typed payloads.
+- [ ] Unmount destroys the hls.js instance and removes every listener and timer (spec asserts it).
 
 ## Out of scope
 
-- DRM licensing (FairPlay / Widevine).
-- Client-side video trimming / clipping UI.
+- DRM (FairPlay, Widevine).
+- Client-side trimming or clipping.
+- Chapters: no backend source yet.
+- Views heartbeat and history progress: 65 and 73.
 
 ## Notes for the implementer
 
-- **Ambient Mode Performance:** Use an offscreen canvas sampled at 10–15 FPS downscaled to 32x18 pixels and blurred with `filter: blur(40px)`. This yields identical visual ambient glow to YouTube with near-zero CPU/GPU utilization.
-- **Logarithmic Volume:** Humans perceive loudness logarithmically; map linear volume slider `v` (0 to 1) to `Math.pow(v, 2)` before applying to the HTML audio element.
+- Ambient mode: sample to a 32x18 offscreen canvas and scale it up with `filter: blur(40px)`; this keeps CPU
+  near zero.
+- Volume: map the linear slider `v` to `v ** 2` before applying it, loudness is perceived logarithmically.
 
 ## Testing plan
 
-- Ambient performance test: Profile memory and frame rate with ambient glow enabled on 1080p stream; assert zero frame drops.
-- Keyboard matrix test: Trigger each shortcut via testing library and verify expected video state.
-- Scrubbing test: Move mouse across seekbar and assert preview thumbnail frame coordinates match timestamp.
+- Keyboard matrix as one `it.each` over key and expected player state.
+- Sprite preview: parse a fixture VTT, hover at a time, assert the background position of the matching cue.
+- Lifecycle: mount, unmount, assert hls.js `destroy` and no live listeners.
+- SSR: server-render the watch route, assert the poster and no player markup.
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm --filter @taitube/web test`.
-- [ ] Player verified in Chrome, Firefox, Edge, and Safari.
+- [ ] `pnpm --filter @vp/web test` and `pnpm typecheck` pass.
+- [ ] Player verified in Chrome, Firefox, Edge and Safari.
 - [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
-
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

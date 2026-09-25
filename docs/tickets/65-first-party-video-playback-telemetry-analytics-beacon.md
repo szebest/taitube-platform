@@ -5,8 +5,8 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#65](https://github.com/szebest/taitube-platform/issues/65) |
 | Size | M |
-| Blocked by | 43 — Views buffer · 57 — Production player · 64 — Web Vitals |
-| Blocks | 75 |
+| Blocked by | 43 - Views buffer · 57 - Production player · 64 - Web Vitals · 89 - TanStack Start foundation |
+| Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
 **Status:** blocked
@@ -16,7 +16,7 @@
 To power real YouTube Studio analytics (watch time, audience retention graphs, rebuffering percentage, and device breakdown) without depending on intrusive third-party trackers, we need a **first-party, privacy-preserving playback telemetry engine**.
 
 This ticket delivers:
-1. **Lightweight Playback Telemetry Beacon in `<TaitubePlayer />`**:
+1. **Lightweight Playback Telemetry Beacon in the player (`apps/web/src/features/player/`)**:
    - Captures key QoS (Quality of Service) and engagement milestones:
      - `playback_start` (startup time / time-to-first-frame in ms).
      - `heartbeat` (sent every 30s during active playback, reporting segment duration watched).
@@ -34,14 +34,14 @@ This ticket delivers:
 
 ## Acceptance criteria
 
-- [ ] Telemetry tracker module in `apps/web/src/lib/telemetry/playback-tracker.ts` attached to Vidstack player events.
+- [ ] Telemetry tracker in `apps/web/src/features/player/telemetry/playback-tracker.ts` attached to Vidstack player events, running on the client only.
 - [ ] Non-blocking beacon transmission using `navigator.sendBeacon` upon pause, buffer stall, and unmount.
 - [ ] Backend ingestion route `POST /v1/telemetry/playback`:
   - Accepts telemetry payload (`videoId`, `sessionUuid`, `eventType`, `currentTime`, `duration`, `rebufferingMs`, `rendition`).
   - Buffers retention milestones in Redis and updates retention percentiles.
 - [ ] Database table `video_retention_milestones` storing aggregate viewer drop-off percentages per 5% interval.
 - [ ] Creator endpoint `GET /v1/creator/videos/:id/retention` returning retention curve array `[{ percent: 0, viewers: 100 }, { percent: 50, viewers: 78 }, ...]`.
-- [ ] Creator Studio UI renders interactive retention curve chart in `/studio/videos/:id/analytics`.
+- [ ] Creator Studio renders the retention curve on `/studio/videos/$videoId/analytics` (route from [60](60-creator-studio-dashboard-video-management-ui.md)), data through a route loader and `ensureQueryData`.
 - [ ] Prometheus QoS metrics exported and displayed in Grafana dashboard (`video_buffering_ratio`).
 
 ## Out of scope
@@ -60,7 +60,7 @@ This ticket delivers:
 
 ## Definition of Done
 
-- [ ] Telemetry integration tests green under `pnpm test`.
+- [ ] Telemetry integration tests green under `pnpm test` and `pnpm --filter @vp/web test`.
 - [ ] Zero impact on player frame rates or network performance.
 - [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
