@@ -12,8 +12,8 @@ import {
 } from '@vp/errors';
 import type { MediaTools, SpriteLayout } from '@vp/ffmpeg';
 import type { ThumbnailJob, ThumbnailResult } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, err, fromPromise, isErr, map, ok, unwrapOr } from '@vp/result';
 import {
   getHeaderMapping,

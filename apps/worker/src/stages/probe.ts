@@ -14,8 +14,8 @@ import {
 } from '@vp/errors';
 import type { MediaTools, ProbeMetadata } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { enqueueFollowUpJobs } from './probe-enqueue';
@@ -189,7 +189,10 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
 
       if (isErr(probed)) {
         metrics.ffmpegExitTotal.inc({ stage: 'probe', code: probed.error.code });
-        log.warn({ err: probed.error }, 'probe validation failed with permanent error');
+        log.warn(
+          { err: probed.error },
+          'probe validation failed with permanent error'
+        );
         return await failProbe(probed.error);
       }
 

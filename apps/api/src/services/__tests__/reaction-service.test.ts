@@ -1,6 +1,6 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
-import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ReactionService } from '../reaction-service';

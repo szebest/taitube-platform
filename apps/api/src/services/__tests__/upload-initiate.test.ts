@@ -1,9 +1,9 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { UserContext } from '@vp/permissions';
-import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { UploadService } from '../upload-service';
 import { uploadContext } from './service-deps';
+import { SEEDED } from '@vp/testing';
 
 const OWNER: UserContext = { id: SEEDED.userId, role: 'CREATOR' };
 const MB = 1024 * 1024;

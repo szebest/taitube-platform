@@ -1,8 +1,8 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
+import { SEEDED } from '@vp/testing';
 
 const HOUR_MS = 3_600_000;
 

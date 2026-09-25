@@ -1,6 +1,6 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
+import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { TranscodeProgressReporter } from '../progress-reporter';
