@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import { FIXTURES, createMockJob, withEnv } from '../index';
 
 describe('@vp/testing smoke test', () => {
-  it('provides standard test fixtures', () => {
-    expect(FIXTURES.VIDEO_ID).toBe('00000000-0000-7000-8000-000000000001');
+  it('names the seeded video and dev user by what they are', () => {
+    expect(FIXTURES.VIDEO_ID).toBe('018f0000-0000-7000-8000-000000000001');
+    expect(FIXTURES.DEV_USER_ID).toBe('00000000-0000-7000-8000-000000000001');
     expect(FIXTURES.TRACEPARENT).toContain('00-4bf92f3577b34da6a3ce929d0e0e4736');
   });
 
@@ -16,11 +16,12 @@ describe('@vp/testing smoke test', () => {
   });
 
   it('safely scopes environment overrides with withEnv', async () => {
-    process.env.TEST_VAR = 'original';
-    await withEnv({ TEST_VAR: 'overridden' }, () => {
-      expect(process.env.TEST_VAR).toBe('overridden');
+    await withEnv({ TEST_VAR: 'original' }, async () => {
+      await withEnv({ TEST_VAR: 'overridden' }, () => {
+        expect(process.env.TEST_VAR).toBe('overridden');
+      });
+      expect(process.env.TEST_VAR).toBe('original');
     });
-    expect(process.env.TEST_VAR).toBe('original');
-    process.env.TEST_VAR = undefined;
+    expect(process.env.TEST_VAR).toBeUndefined();
   });
 });

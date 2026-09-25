@@ -14,8 +14,8 @@ build.
 
 - **`.` (`src/index.ts`):** `definePackageTestConfig` (node environment, globals,
   `src/**/__tests__/**/*.test.ts`; most package `vitest.config.ts` files build on it, a few define their
-  own), `FIXTURES` (`VIDEO_ID`, which holds the seed's dev user id, `USER_ID`, the other seeded user,
-  `TRACEPARENT` and `SAMPLE_MP4_KEY`), `createMockJob` and `withEnv`.
+  own), `FIXTURES` (`VIDEO_ID` and `DEV_USER_ID`, the ids the seed writes, and a
+  `TRACEPARENT`), `createMockJob` and `withEnv`.
 - **`./result`:** `expectOk` / `expectErr`, which unwrap a `Result` or fail naming what came back.
 - **`./jwt`:** `signingKey` and `signJwt`, a throwaway RS256, ES256 or EdDSA key and a token signed with
   it, for the token-verifier and API auth specs.
