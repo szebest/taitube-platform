@@ -6,7 +6,7 @@
 | Issue | [#43](https://github.com/szebest/taitube-platform/issues/43) |
 | Size | L |
 | Blocked by | 38 — User & channel identity |
-| Blocks | 44, 45, 65 |
+| Blocks | 44, 65 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §9.4 Worker process model](../SDD.md#94-worker-process-model) · [SDD §9.8 Housekeeping schedulers](../SDD.md#98-housekeeping-job-schedulers) |
 
 **Status:** done

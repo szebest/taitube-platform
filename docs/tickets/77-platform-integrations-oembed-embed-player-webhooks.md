@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#77](https://github.com/szebest/taitube-platform/issues/77) |
 | Size | M |
-| Blocked by | 38 — User identity · 57 — Production video player · 63 — TanStack Router SSR |
+| Blocked by | 38 - User identity · 57 - Production video player · 63 - SEO and OpenGraph · 89 - TanStack Start foundation |
 | Blocks | 78 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
@@ -38,10 +38,10 @@ This ticket delivers the **Platform Integrations & External Sharing Ecosystem**:
          "height": 360
        }
        ```
-   - Automated oEmbed discovery tags injected into `<head>`: `<link rel="alternate" type="application/json+oembed" href="...">`.
+   - oEmbed discovery tag added to the watch route's `head()` from [63](63-tanstack-router-start-ssr-seo-streaming.md): `<link rel="alternate" type="application/json+oembed" href="...">`.
 
-2. **Standalone Embed Player (`/embed/:id`)**:
-   - Lightweight, standalone HTML page hosting `<TaitubePlayer />` with minimal chrome designed for `<iframe>` embedding.
+2. **Standalone Embed Player (`/embed/$videoId`)**:
+   - A route with its own minimal layout (no header, sidebar or comments) rendering the player from `apps/web/src/features/player/`, designed for `<iframe>` embedding. Embed params are the route's `validateSearch` schema.
    - Respects embed query parameters:
      - `?autoplay=1`: Starts playback muted upon mount.
      - `?t=120`: Starts playback at 2m00s.
@@ -51,7 +51,7 @@ This ticket delivers the **Platform Integrations & External Sharing Ecosystem**:
    - Strict `Content-Security-Policy` and `X-Frame-Options` allowing embedding across external websites while protecting against clickjacking.
 
 3. **Discord, Twitter/X, Telegram & Slack Rich Unfurl Engine**:
-   - Generates Twitter Player Card tags:
+   - Points the Twitter Player Card and OpenGraph video tags from 63 at the embed route:
      - `twitter:card=player`
      - `twitter:player=https://taitube.tv/embed/:id`
      - `twitter:player:width=1280`
@@ -67,8 +67,8 @@ This ticket delivers the **Platform Integrations & External Sharing Ecosystem**:
 
 - [ ] Endpoint `GET /v1/oembed` implemented returning specification-compliant JSON representation for public videos.
 - [ ] HTML `<head>` on `/watch/$videoId` includes `<link rel="alternate" type="application/json+oembed">` discovery tags.
-- [ ] Standalone embed route `/embed/:id` implemented in `apps/web/src/routes/embed.$id.tsx` rendering lightweight `<TaitubePlayer />`.
-- [ ] Embed player respects `autoplay`, `t`, `controls`, and `loop` URL query parameters.
+- [ ] Standalone embed route `/embed/$videoId` in `apps/web/src/routes/embed.$videoId.tsx`, outside the app layout, rendering the player and nothing else.
+- [ ] Embed player respects `autoplay`, `t`, `controls`, and `loop`, parsed by the route's `validateSearch`.
 - [ ] OpenGraph and Twitter Player Card tags verified: Discord and Twitter link crawlers display playable video card previews.
 - [ ] Outgoing creator webhooks API (`POST /v1/me/webhooks`, `GET /v1/me/webhooks`, `DELETE /v1/me/webhooks/:id`) supporting `video.ready` and `live.started` events with HMAC signatures.
 - [ ] Integration tests verifying oEmbed response validation, iframe embed rendering, and webhook dispatch signing.
@@ -80,17 +80,17 @@ This ticket delivers the **Platform Integrations & External Sharing Ecosystem**:
 ## Notes for the implementer
 
 - Ensure iframe embeds include `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"` attributes.
-- Keep embed route bundle size minimal: do not load sidebar, comments, or header chunks on `/embed/:id`.
+- Keep embed route bundle size minimal: do not load sidebar, comments, or header chunks on `/embed/$videoId`.
 
 ## Testing plan
 
 - oEmbed test: Call `GET /v1/oembed?url=...` with curl; validate JSON response schema against official oEmbed test suite.
-- Iframe test: Render an HTML page containing `<iframe src="http://localhost:5173/embed/:id">`; verify video plays inside frame.
+- Iframe test: Render an HTML page containing `<iframe src="http://localhost:5173/embed/<id>">`; verify video plays inside frame.
 - Webhook test: Trigger a video publish event; verify webhook listener receives payload with valid HMAC-SHA256 signature.
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm test` and `bun test`.
+- [ ] All ACs green under `pnpm test`, `pnpm test:bun` and `pnpm --filter @vp/web test`.
 - [ ] Verified video embeds render and play cleanly inside third-party iframe test page.
 - [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

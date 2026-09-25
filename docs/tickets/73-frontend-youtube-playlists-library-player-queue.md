@@ -5,8 +5,8 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#73](https://github.com/szebest/taitube-platform/issues/73) |
 | Size | L |
-| Blocked by | 46 — YouTube-grade playlists · 57 — Production video player · 59 — Modern video watch page · 69 — Frontend URL-driven state |
-| Blocks | 75 |
+| Blocked by | 46 - Playlists and watch history engine · 57 - Video player · 59 - Watch page · 69 - URL state and modal routing · 89 - TanStack Start foundation |
+| Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
@@ -16,93 +16,96 @@
 > Components never call `Intl.*`, `toLocaleString` or `toFixed`, and never hold a copy literal — an
 > architecture test enforces both. See [85](85-universal-intl-formatting-message-core.md).
 
+> **Builds on 89.** New pages: no legacy module to replace. It uses 89's route structure and loader pattern,
+> the watch page from [59](59-video-watch-page-responsive-layout-enhancements.md) and `useUrlModal` from
+> [69](69-frontend-url-state-search-params-modal-routing.md).
+
 ## What to build
 
-Playlists and watch history are the two pillars of personal viewing libraries, binge-watching, and user retention. Viewers expect to resume watching videos exactly where they stopped, review past watched videos, clear history, and organize playlists.
+Feature code in `apps/web/src/features/library/`, query and mutation factories in
+`features/library/api/` over [46](46-youtube-playlists-watch-history-engine.md)'s endpoints. Routes are thin:
+`validateSearch`, a loader with `ensureQueryData` / `ensureInfiniteQueryData`, a `pendingComponent` skeleton.
 
-This ticket delivers the complete **Frontend YouTube-Grade Playlist & Watch History System**:
+### 1. Watch history `/feed/history` (under `_authed`)
 
-1. **Watch History Page & Resume Scrub Bar (`/feed/history`)**:
-   - Dedicated Watch History view listing previously watched videos grouped by time ("Today", "Yesterday", "This week"):
-     - Shows red/crimson progress bar on thumbnail bottom indicating resume timestamp (e.g. `12:45 / 18:20`).
-     - Clicking a history card opens `/watch?v=...&t={progressSeconds}`, instantly resuming playback where the user left off.
-     - Per-item removal button ("X" to delete from history via `DELETE /v1/me/history/:videoId`).
-     - Top history controls: "Clear all watch history" (`?modal=confirm-clear-history`), "Pause watch history" toggle, and search filter within history.
+- Infinite list grouped by day (today, yesterday, this week, older), each card with a resume progress bar.
+- A card links to `/watch/$videoId?t=<progressSeconds>`, so playback resumes where it stopped.
+- Remove one item, clear all (confirmation through `useUrlModal`), pause history, filter by title (`q` in
+  `validateSearch`).
+- Resume progress is written here: a small hook subscribes to the player's `onTimeUpdate` and saves progress
+  to 46's history endpoint, throttled, and skips it while history is paused.
 
-2. **"Save to Playlist" Modal (`?modal=save-to-playlist&videoId=...`)**:
-   - Deep-linked URL modal integrated with `useUrlModal` (Ticket 69) and Radix Dialog.
-   - Accessible from any video card (3-dot menu -> "Save to Playlist") or Watch Page action bar ("Save" button).
-   - Fetches `GET /v1/me/playlists?videoId=:id` displaying the user's personal playlists:
-     - **"Watch Later" (Clock icon):** Always pinned at the top.
-     - **Custom Playlists:** Displays title, video count, and visibility badge (Lock for Private, Globe for Public, Link for Unlisted).
-     - **Interactive Checkbox:** Toggling a checkbox immediately fires an optimistic mutation (`POST /v1/playlists/:id/items` or `DELETE /v1/playlists/:id/items/:videoId`), updating the checkbox instantly with cache rollback on error.
-   - **Inline "+ Create new playlist" Accordion:**
-     - Expands inline without closing the modal.
-     - Fields: Playlist Title (required, 1–100 chars), Privacy dropdown (Public, Unlisted, Private).
-     - Submitting creates the playlist, immediately inserts the active video, updates the checklist, and shows a Sonner confirmation toast.
+### 2. Save to playlist dialog (`?modal=save-to-playlist&videoId=`)
 
-3. **Playlist Detail / Management View (`/playlist?list=PL...`)**:
-   - Dedicated page matching YouTube's playlist layout:
-     - **Left Column (Sticky Hero Card):**
-       - Stacked thumbnail preview poster with ambient blur glow backdrop.
-       - Playlist Title, Description, and Creator channel badge (avatar, display name, handle).
-       - Metadata chips: total video count, total duration (e.g. `24 videos • 1 hr 45 min`), visibility pill.
-       - Action buttons: "Play All" (starts playback at index 0), "Shuffle", and "Share" (`?modal=share`).
-       - **Owner Controls:** Edit title and description inline, change privacy dropdown, or Delete playlist (`?modal=confirm-delete`).
-     - **Right Column (Ordered Video List):**
-       - Numbered video items (`1`, `2`, `3`...).
-       - Drag-and-drop reordering handles (powered by `@dnd-kit/core` or HTML5 drag events) allowing users to drag items into any position with optimistic UI and batched synchronization to `PUT /v1/playlists/:id/reorder`.
-       - Per-item 3-dot dropdown: "Remove from playlist", "Move to top", "Move to bottom".
+- A URL modal through `useUrlModal`, opened from the card three-dot menu ([58](58-modern-browse-layout-microinteractions-motion.md))
+  and the watch page Save button (59).
+- Lists the viewer's playlists with Watch Later pinned first, each with a checkbox for whether the video is in
+  it. Toggling is an optimistic mutation with rollback.
+- Inline create: TanStack Form with title (1 to 100 chars) and privacy; submitting creates the playlist, adds
+  the video and shows a toast.
 
-4. **Watch Page Playlist Context & Queued Player Tray (`/watch?v=...&list=PL...&index=...`)**:
-   - When viewing a video with `&list=PL...`:
-     - Renders a collapsible **Playlist Queue Tray** adjacent to `<TaitubePlayer />` (or docked above comments in mobile / theater mode).
-     - **Tray Header:** Displays playlist title, creator name, track counter (`3 / 24`), Shuffle toggle, and Loop mode toggle (Off / Loop Playlist / Loop Single).
-     - **Auto-Scroll & Active Glow:** The tray automatically scrolls to center the currently playing video, highlighted with an obsidian neon border.
-     - **Continuous Autoplay:** When `<TaitubePlayer />` emits the `ended` event, the player automatically navigates to `index + 1` without requiring viewer interaction.
-     - **Player Playlist Controls:** Previous / Next track buttons inside `<TaitubePlayer />` become active and advance or rewind through the playlist queue.
-     - Preserves playlist parameters in URL (`?v=...&list=PL...&index=...`) for sharing exact queue playback states.
+### 3. Playlists `/feed/playlists` and `/playlist?list=<id>`
+
+- `/feed/playlists`: the viewer's playlists as a grid.
+- `/playlist`: `list` is the route's `validateSearch` param. Hero card (stacked thumbnails, title,
+  description, owner, count and total duration, visibility), Play all, Shuffle, Share.
+- Owner controls: inline title and description edit, privacy, delete with confirmation.
+- Ordered list with drag-to-reorder (optimistic, one batched `PUT /v1/playlists/:id/reorder` on drop) and a
+  per-item menu (remove, move to top, move to bottom).
+
+### 4. Queue on the watch page (`/watch/$videoId?list=&index=`)
+
+- 59's watch route `validateSearch` gains `list` and `index`; the loader also ensures the playlist when
+  `list` is set.
+- Queue tray beside the player (above comments on mobile and in theater mode): title, owner, `3 / 24`, shuffle,
+  loop (off, playlist, single), auto-scroll to the current item.
+- On the player's `onEnded`, navigate to the next item with `replace` so back leaves the playlist in one step.
+  Previous and next controls in the player move through the queue. If playback was paused by the user or
+  autoplay is blocked, the next video waits on its first frame.
+
+## Delivery slices
+
+1. Watch history page with resume links and the progress writer hook.
+2. History management: remove, clear, pause, filter.
+3. Save to playlist dialog with optimistic toggles and inline create.
+4. `/feed/playlists` and `/playlist` detail with owner controls.
+5. Drag-to-reorder and item menu.
+6. Queue tray, autoplay, previous and next, loop and shuffle.
 
 ## Acceptance criteria
 
-- [ ] Watch History page implemented at `/feed/history` displaying paginated past watched videos with red resume progress indicators.
-- [ ] Resuming video from history passes `?t={seconds}` and restores player playback position.
-- [ ] Single item deletion and "Clear all history" modal trigger backend synchronization with optimistic removal.
-- [ ] "Save to Playlist" modal implemented in `apps/web/src/components/playlists/save-to-playlist-modal.tsx` bound to `?modal=save-to-playlist&videoId=...`.
-- [ ] Modal lists user's playlists with checked state indicating video presence, with "Watch Later" pinned to top.
-- [ ] Toggling playlist checkbox triggers optimistic mutation to add/remove video with toast notification.
-- [ ] Inline "+ Create new playlist" form successfully creates playlist and adds video.
-- [ ] Playlist detail page route `/playlist` implemented in `apps/web/src/routes/playlist.tsx`:
-  - Left hero poster card with stacked thumbnails, title, duration, and "Play All" CTA.
-  - Right video list with drag-and-drop reordering handle updating `PUT /v1/playlists/:id/reorder`.
-  - Item menu supports "Remove from playlist" and "Move to top/bottom".
-- [ ] Watch Page playlist queue tray implemented in `apps/web/src/components/player/playlist-queue-tray.tsx`:
-  - Displays list of upcoming videos with active video highlighted.
-  - Automatically advances to `index + 1` on video `ended` event.
-  - Previous / Next buttons in `<TaitubePlayer />` navigate queue.
-  - Loop and shuffle modes operational.
-- [ ] Vitest integration tests in `apps/web/src/__tests__/playlists.integration.test.tsx` verifying history resume, save modal mutations, reordering drag events, and watch queue autoplay transitions.
+- [ ] `/feed/history` lists watched videos by day with resume bars; opening one starts at its saved position.
+- [ ] Progress is saved while watching and not saved while history is paused.
+- [ ] Remove one and clear all update the list optimistically and roll back on failure.
+- [ ] `?modal=save-to-playlist&videoId=<id>` opens the dialog from a direct link, lists playlists with Watch
+      Later first and the right checked state; toggling updates instantly with a toast.
+- [ ] Inline create adds a playlist containing the video.
+- [ ] `/playlist?list=<id>` renders the hero and list on the server; owner controls appear only through `useCan`.
+- [ ] Drag-to-reorder sends one reorder request with the new order and rolls back on failure.
+- [ ] `/watch/<id>?list=<pl>&index=0` shows the queue tray; the end of the video goes to `index=1`; previous,
+      next, loop and shuffle work.
+- [ ] Integration specs for resume, the dialog mutations, reorder and queue advance, through 54's `renderRoute`
+      with MSW.
 
 ## Out of scope
 
-- Collaborative multi-user playlist editing.
-- Automatic smart recommendations appended to user playlists.
+- Collaborative playlists.
+- Recommendations added to playlists.
 
 ## Notes for the implementer
 
-- **Drag-and-Drop Performance:** Use `@dnd-kit/sortable` or lightweight pointer drag handles. Update local list state instantly on `onDragEnd` before awaiting the server `PUT /v1/playlists/:id/reorder` response.
-- **Autoplay Guard:** If the user has explicitly paused video or disabled browser autoplay, queue advance pauses on the first frame of the next video.
-- **File Length Discipline:** Keep each component file <= 250 lines.
+- Reorder: update the cache on drop, then send the request; use `@dnd-kit/sortable` for keyboard-accessible
+  dragging.
 
 ## Testing plan
 
-- Modal test: Render modal with MSW; toggle checkbox; verify mutation sent and optimistic checkmark toggles.
-- Queue test: Simulate video end event; verify router advances search param `index` from 0 to 1 and loads next video.
-- Reorder test: Simulate drag from position 3 to 1; verify `PUT /v1/playlists/:id/reorder` payload.
+- Dialog: toggle a checkbox, assert the mutation and the optimistic check.
+- Queue: fire the player's `onEnded`, assert `index` goes from 0 to 1 and the next video loads.
+- Reorder: drag item 3 to 1, assert the `PUT` payload.
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm --filter @taitube/web test` (or `pnpm test`).
-- [ ] Complete YouTube playlist flow verified in browser.
+- [ ] `pnpm --filter @vp/web test` and `pnpm typecheck` pass.
+- [ ] Playlist and history flows verified in the browser.
 - [ ] Architecture docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#78](https://github.com/szebest/taitube-platform/issues/78) |
 | Size | L |
-| Blocked by | 38, 41, 57, 76, 77 |
+| Blocked by | 38 - User identity · 41 - Channel subscriptions · 57 - Production video player · 76 - Live streaming · 77 - Platform integrations · 89 - TanStack Start foundation |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
@@ -85,7 +85,7 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm test` and `bun test`.
+- [ ] All ACs green under `pnpm test`, `pnpm test:bun` and `pnpm --filter @vp/web test`.
 - [ ] Discord interaction handler verified with Ed25519 test vectors.
 - [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `CONTEXT.md`, `docs/SDD.md` and ADRs if boundaries or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

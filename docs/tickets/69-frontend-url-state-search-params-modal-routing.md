@@ -5,86 +5,56 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#69](https://github.com/szebest/taitube-platform/issues/69) |
 | Size | M |
-| Blocked by | 53 — Frontend architecture modernization · 55 — Modern design system foundation |
-| Blocks | 72, 73, 74, 75 |
+| Blocked by | 55 - Modern design system foundation · 89 - TanStack Start foundation |
+| Blocks | 73 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
 
+Every route already has a Zod `validateSearch` from [89](89-web-tanstack-start-foundation.md). This ticket adds
+URL-driven modals on top of it: a dialog that Back closes, that survives a reload and that can be shared as a
+link. Route search keys for search, studio and settings belong to
+[74](74-frontend-multi-resource-search-discovery-ui.md), [60](60-creator-studio-dashboard-video-management-ui.md)
+and [72](72-frontend-settings-customization-system.md).
+
 ## What to build
 
-In premier high-interaction web applications (such as STS, YouTube, and Linear), the URL is the **canonical single source of truth** for all visual states, active dialogs, tabs, and filters. Fragile local component state (`const [isOpen, setIsOpen] = useState(false)`) breaks the web: users cannot share links to active dialogs, pressing the browser Back button exits the entire website rather than closing a modal, and pressing F5 destroys in-progress interactions.
+1. **Modal search fragment.** A registry of modal ids in `apps/web/src/features/url-modal/`, each with its own
+   Zod params schema, composed into a reusable search schema fragment that a route merges into its
+   `validateSearch`. The `modal` key is one literal discriminant; its params are typed from the registry.
+2. **`useUrlModal(id)`** returning `{ isOpen, params, open(params), close() }`. Opening pushes a history
+   entry; closing navigates back when the modal was opened in this session and otherwise replaces, and it
+   removes the modal's own keys from the URL.
+3. **`<UrlModal id>`** in `apps/web/src/components/ui/url-modal.tsx`, a Radix Dialog whose `open` is bound to
+   the hook, so Escape, backdrop and the close button all go through `close()`.
+4. **Push vs replace discipline.** Modals push; filters, tabs and chips replace. Documented in
+   `apps/web/AGENTS.md` next to the route conventions.
+5. **Search retention.** Router search middleware so the modal keys and other shared keys survive or drop
+   predictably across `Link`s, instead of each link spreading `prev`.
 
-This ticket delivers the **URL-Driven State Architecture & Modal Deep-Linking System (The STS Pattern)**:
-
-1. **URL-Synchronized Modal Engine (`useUrlModal`)**:
-   - Central hook `useUrlModal<TParams = Record<string, string>>(modalId: string)` in `apps/web/src/hooks/use-url-modal.ts`:
-     - Reads and updates URL search parameters via TanStack Router.
-     - Returns `{ isOpen, params, open(params?), close(), toggle() }`.
-   - **Back-Button Dismissal:** Opening a modal executes a history push (`replace: false`). Clicking the browser Back button or mobile swipe-back naturally pops the history entry, closing the modal without unloading the underlying view.
-   - **Shareable Deep Links:** Any modal URL (e.g. `https://taitube.tv/watch?v=uuid&modal=save-to-playlist`, `https://taitube.tv/watch?v=uuid&modal=share&t=124s`) can be copied, sent to another user, or opened in a new tab, instantly rendering the target page with the modal open.
-   - **F5 / Refresh Durability:** Reloading the browser preserves active modal state, form selections, and tab positions.
-
-2. **Core URL-Managed Modals**:
-   - `?modal=auth&mode=signin|signup&redirect=...`: Universal authentication dialog with seamless redirect preservation.
-   - `?modal=save-to-playlist&videoId=...`: YouTube-grade "Save to Playlist" modal.
-   - `?modal=create-playlist`: Standalone new playlist creation dialog.
-   - `?modal=share&videoId=...&t=...`: Share video dialog with timestamp toggle and copy link CTA.
-   - `?modal=upload`: Creator studio video upload modal / drawer.
-   - `?modal=report&targetId=...&targetType=video|comment`: Content moderation report dialog.
-   - `?modal=stats-for-nerds`: Live player diagnostic overlay.
-   - `?modal=settings&tab=appearance|playback|privacy`: Quick settings overlay.
-   - `?modal=confirm-clear-history`: Watch history purge confirmation dialog.
-
-3. **Strict Push vs. Replace Navigation Discipline**:
-   - Opening modals: `router.navigate({ search: prev => ({ ...prev, modal: id, ...params }), replace: false })` (Pushes history entry so Back button dismisses modal).
-   - Filter toggles, search category chips, tab switches, and seekbar position: `router.navigate({ search: prev => ({ ...prev, ...updates }), replace: true })` (Replaces history entry to avoid trapping the user in hundreds of history entries).
-
-4. **Typesafe Route Search Validation (Zod + TanStack Router)**:
-   - Every route in `apps/web/src/routes/` exports a strict Zod `validateSearch` schema:
-     - **Home Feed:** `z.object({ category: z.string().optional(), sort: z.enum(['views', 'recent', 'trending']).default('trending'), modal: z.string().optional() })`
-     - **Search Page:** `z.object({ q: z.string().default(''), type: z.enum(['all', 'video', 'channel', 'playlist']).default('all'), sort: z.enum(['relevance', 'date', 'views']).default('relevance'), modal: z.string().optional() })`
-     - **Watch Page:** `z.object({ v: z.string().uuid(), t: z.number().optional(), list: z.string().optional(), index: z.number().optional(), modal: z.string().optional() })`
-     - **Channel Page:** `z.object({ tab: z.enum(['videos', 'playlists', 'about']).default('videos'), modal: z.string().optional() })`
-     - **History Page:** `z.object({ filter: z.string().optional(), modal: z.string().optional() })`
-     - **Settings Page:** `z.object({ tab: z.enum(['account', 'appearance', 'playback', 'privacy', 'notifications']).default('appearance'), modal: z.string().optional() })`
-     - **Creator Studio:** `z.object({ tab: z.enum(['videos', 'analytics', 'comments']).default('videos'), page: z.number().default(1), status: z.string().optional(), modal: z.string().optional() })`
-
-5. **Radix Dialog & Drawer Integration**:
-   - Reusable `<UrlModal modalId="..." />` and `<UrlDrawer modalId="..." />` wrappers in `apps/web/src/components/ui/url-modal.tsx`:
-     - Binds Radix UI `Dialog.Root` `open` prop directly to `isOpen`.
-     - `onOpenChange={(open) => !open && close()}` cleanly removes search parameters from URL.
+The feature tickets register their own modals (share in 59, save to playlist in 73, settings overlay in 72,
+auth in 56). This ticket proves the mechanism with a spec route.
 
 ## Acceptance criteria
 
-- [ ] Central `useUrlModal` hook implemented in `apps/web/src/hooks/use-url-modal.ts` with type-safe parameters.
-- [ ] `<UrlModal />` component created in `apps/web/src/components/ui/url-modal.tsx` wrapping Radix Dialog.
-- [ ] Modals opening pushes history entry (`replace: false`); browser Back button closes modal without page refresh.
-- [ ] Closing modal via backdrop click, Escape key, or 'X' button removes `modal` parameter from URL.
-- [ ] Deep-linking test: Navigating directly to `/watch?v=...&modal=share` renders watch page with Share modal open.
-- [ ] Push vs Replace discipline verified: changing search filter tabs uses `replace: true`, opening modal uses `replace: false`.
-- [ ] Typesafe search parameter schemas configured across all primary routes (`/`, `/search`, `/watch`, `/channels/$handle`, `/studio`).
-- [ ] Vitest integration tests in `apps/web/src/__tests__/url-state.integration.test.tsx` asserting search param synchronization, history back actions, and modal URL lifecycle.
+- [ ] Opening a modal pushes a history entry; Back closes it without reloading the page underneath.
+- [ ] Escape, backdrop click and the close button remove the modal and its params from the URL.
+- [ ] Loading a URL with `modal=<id>` renders the page with that modal open, on the server render too.
+- [ ] An unknown modal id or invalid params are dropped by `validateSearch`, not rendered.
+- [ ] `useUrlModal('x')` does not compile for an id missing from the registry, and its `params` type comes
+      from that modal's schema.
+- [ ] Changing a filter or tab uses `replace`; opening a modal does not.
 
 ## Out of scope
 
-- Direct backend API mutations (handled in respective feature tickets).
-- Browser local storage caching of URL parameters.
-
-## Notes for the implementer
-
-- **Clean URL Parameter Removal:** When closing a modal, delete the `modal` key and any associated modal-specific keys (e.g. `videoId`, `mode`) from the search parameters object before navigating.
-- **File Length Discipline:** Keep `use-url-modal.ts` and `url-modal.tsx` <= 200 lines each.
+- Moving any existing dialog to the URL; the feature tickets do that when they register their modal.
+- Persisting URL state in browser storage.
 
 ## Testing plan
 
-- JSDOM test: Trigger `open('save-to-playlist', { videoId: '123' })`; assert `window.location.search` contains `?modal=save-to-playlist&videoId=123`.
-- Back navigation test: Simulate `history.back()`; assert `isOpen` becomes `false` and modal unmounts.
-- Deep link test: Mount router with initial URL containing modal query; assert dialog renders immediately.
+- Integration specs over memory history (the `renderRoute` helper from [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) once it exists): open, back, deep link, invalid id.
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm --filter @taitube/web test` (or `pnpm test`).
-- [ ] URL-driven modal behavior verified in browser testing.
-- [ ] Architecture docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

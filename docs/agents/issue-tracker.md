@@ -4,7 +4,7 @@ Issues for this repo live as one markdown file per ticket in `docs/tickets/`, ge
 
 ## Conventions
 
-- Tickets: `docs/tickets/NN-<slug>.md`, numbered from `01` in **dependency order** (blockers have lower numbers). One ticket per file, never a combined file.
+- Tickets: `docs/tickets/NN-<slug>.md`, numbered from `01` in **dependency order** (blockers have lower numbers, except a foundation ticket added later, which keeps the next free number and may block lower-numbered tickets; the graph stays acyclic). One ticket per file, never a combined file.
 - Ticket body: header table (`Phase`, `Size`, `Blocked by`, `Blocks`, `Spec` links to PRD/SDD anchors), a `**Status:**` line holding one word of `ready` | `blocked` | `in-progress` | `done` | `blocked-by-date` (`gen-index.py` refuses anything else), then `## What to build`, `## Acceptance criteria` (checkboxes), `## Out of scope`, `## Notes for the implementer`, `## Testing plan`, `## Open questions`, `## Definition of Done`.
 - `Blocked by` is authoritative. `Blocks`, the frontier, the status board, the Mermaid graph and the lane table are **generated**: run `python3 docs/tickets/gen-index.py` after any change (it also validates PRD/SDD anchors, and CI runs it with `--check`).
 - Specs are the PRD (`docs/PRD.md`) and SDD (`docs/SDD.md`); a feature spec produced by `to-spec` goes to `docs/specs/<feature-slug>.md`.

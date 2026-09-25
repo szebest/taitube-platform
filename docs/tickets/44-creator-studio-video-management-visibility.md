@@ -6,7 +6,7 @@
 | Issue | [#44](https://github.com/szebest/taitube-platform/issues/44) |
 | Size | M |
 | Blocked by | 37 — Admin category · 38 — User identity · 39 — Declarative RBAC · 43 — Views buffer |
-| Blocks | 45, 47, 60 |
+| Blocks | 47, 60 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** blocked

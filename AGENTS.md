@@ -23,7 +23,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 
 ## How work is organised
 - Work items are tracer-bullet tickets in `docs/tickets/<NN>-<slug>.md`. Use the `vp-work-ticket` skill to pick one up.
-- Numbering represents dependency order, not priority. Never start a ticket whose blockers are not `done`.
+- Numbering represents dependency order, not priority. The one exception is a foundation ticket added after the tickets that build on it: it keeps the next free number and blocks them anyway (89 blocks the frontend tickets). `gen-index.py` accepts any acyclic graph. Never start a ticket whose blockers are not `done`.
 - The frontier is computed: [docs/tickets/README.md#frontier](docs/tickets/README.md#frontier) lists every ticket whose blockers are done and which nobody has started. Pick from it.
 - Ticket status lives in the ticket's `**Status:**` line; run `python3 docs/tickets/gen-index.py` after changing it.
 
@@ -60,7 +60,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 Agents working in a specific package or app MUST follow its dedicated `AGENTS.md`:
 
 - **Frontend Client (`apps/web`, client/T4):** [apps/web/AGENTS.md](apps/web/AGENTS.md)  
-  *React 18 + Create React App 5 + RTK Query + Bootstrap today; declarative `<Can>` authorization, all HTTP through `@vp/api-client`. The React 19 / TanStack / Tailwind stack is target state owned by tickets 49–75.*
+  *React 18 + Create React App 5 + RTK Query + Bootstrap today; declarative `<Can>` authorization, all HTTP through `@vp/api-client`. Ticket 89 moves it to React 19 + TanStack Start/Router/Query on Vite with SSR, ahead of every other frontend ticket; Tailwind/Radix is 55.*
 - **Backend API (`apps/api`):** [apps/api/AGENTS.md](apps/api/AGENTS.md)  
   *Fastify 5, route plugins over `app.services`, deep domain services, one container composed in `composition/`.*
 - **Worker Runtime (`apps/worker`):** [apps/worker/AGENTS.md](apps/worker/AGENTS.md)  

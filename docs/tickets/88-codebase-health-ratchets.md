@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | XL (delivered as six PRs, see *Delivery*) |
 | Blocked by | 87 — One composition root, a typed container and configuration as a value |
-| Blocks | 90 |
+| Blocks | 89, 90 |
 | Spec | [SDD ADR-19 Hexagonal architecture](../SDD.md#adr-19--hexagonal-architecture-interface-segregation-and-modular-repository-boundaries) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-24 Result-typed error handling](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) · [SDD §6.4 Thin transport routes](../SDD.md#64-api-layer-architecture-thin-transport-routes--domain-services) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13 Autoscaling & Observability](../SDD.md#13-autoscaling--observability) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §16 Environment variables](../SDD.md#16-environment-variables) |
 
 **Status:** done

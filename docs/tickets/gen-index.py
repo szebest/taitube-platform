@@ -107,17 +107,32 @@ def blocks_of(tickets):
     blocks = collections.defaultdict(list)
     for number, ticket in tickets.items():
         for dep in ticket['deps']:
-            if dep not in tickets or dep >= number:
-                raise TicketError(f'ticket {number:02d} depends on {dep:02d}: blockers must be lower-numbered tickets')
+            if dep not in tickets:
+                raise TicketError(f'ticket {number:02d} depends on {dep:02d}, which does not exist')
             blocks[dep].append(number)
     return blocks
 
 
 def levels_of(tickets):
+    """A ticket's level is one past its deepest blocker. A foundation ticket added late carries a higher
+    number than the tickets it blocks, so the walk follows the edges, not the numbers."""
     level = {}
-    for number in sorted(tickets):
+    walking = []
+
+    def visit(number):
+        if number in level:
+            return level[number]
+        if number in walking:
+            cycle = walking[walking.index(number):] + [number]
+            raise TicketError('dependency cycle: ' + ' -> '.join(f'{n:02d}' for n in cycle))
+        walking.append(number)
         deps = tickets[number]['deps']
-        level[number] = 1 + max(level[dep] for dep in deps) if deps else 0
+        level[number] = 1 + max(visit(dep) for dep in deps) if deps else 0
+        walking.pop()
+        return level[number]
+
+    for number in sorted(tickets):
+        visit(number)
     return level
 
 
@@ -153,7 +168,7 @@ def with_blocks_row(ticket, blocks):
 
 HEADER = """# Tickets — video-pipeline
 
-Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers always have lower numbers), not priority. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the frontier, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). Change a ticket's `**Status:**` line and re-run to update the board.
+Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers have lower numbers), not priority, with one exception: a foundation ticket added after the tickets that build on it keeps the next free number and blocks them anyway, so the graph may point from a higher number to a lower one but never in a cycle. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the frontier, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). Change a ticket's `**Status:**` line and re-run to update the board.
 """
 
 HOW_TO = """## How to work a ticket (humans and agents)
