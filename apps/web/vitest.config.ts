@@ -15,27 +15,5 @@ export default defineConfig({
     hookTimeout: 30_000,
     include: ['src/**/__tests__/**/*.test.{ts,tsx}'],
     setupFiles: ['src/__tests__/local-storage.setup.ts'],
-    deps: {
-      optimizer: {
-        ssr: {
-          enabled: true,
-          include: [
-            'react',
-            'react-dom',
-            'react-dom/server',
-            'react-router-dom',
-            'react-router',
-            '@reduxjs/toolkit',
-            '@reduxjs/toolkit/query/react',
-            'react-redux',
-            'react-bootstrap',
-            'react-toastify',
-            'framer-motion',
-            'react-pro-sidebar',
-            'react-player',
-          ],
-        },
-      },
-    },
   },
 });

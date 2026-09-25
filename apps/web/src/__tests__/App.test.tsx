@@ -1,19 +1,7 @@
-import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
 import { App } from '../App';
 import { stubBrowser } from './browser';
-
-const route = vi.hoisted(() => ({ path: '/' }));
-
-vi.mock(import('react-router-dom'), async (importOriginal) => {
-  const router = await importOriginal();
-  return {
-    ...router,
-    BrowserRouter: ({ children }: { children?: ReactNode }) => (
-      <router.MemoryRouter initialEntries={[route.path]}>{children}</router.MemoryRouter>
-    ),
-  };
-});
 
 describe('apps/web: app', () => {
   it.each([
@@ -27,9 +15,12 @@ describe('apps/web: app', () => {
     { path: '/upload/edit/any-video', chrome: false },
   ])('gives a guest the layout at $path: $chrome', ({ path, chrome }) => {
     stubBrowser();
-    route.path = path;
 
-    const markup = renderToStaticMarkup(<App />);
+    const markup = renderToStaticMarkup(
+      <MemoryRouter initialEntries={[path]}>
+        <App />
+      </MemoryRouter>
+    );
 
     expect(markup.includes('href="/trending"')).toBe(chrome);
   });

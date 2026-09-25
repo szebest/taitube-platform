@@ -91,7 +91,7 @@ describe('SubscriptionService', () => {
       expect(expectOk(await cache.getSubscriberCount(creator.channelId))).toBe(1);
     });
 
-    it('evicts the membership from the cache on unsubscribe', async () => {
+    it('leaves the cache a miss once the only membership is unsubscribed', async () => {
       await service.subscribe(subscriber, creator.channelId);
       const result = expectOk(await service.unsubscribe(subscriber, creator.channelId));
 
@@ -100,7 +100,7 @@ describe('SubscriptionService', () => {
         subscribed: false,
         subscriberCount: 0,
       });
-      expect(expectOk(await cache.isSubscribed(subscriber.id, creator.channelId))).toBe(false);
+      expect(expectOk(await cache.isSubscribed(subscriber.id, creator.channelId))).toBeNull();
     });
 
     it('skips cache writes when the call changed nothing', async () => {

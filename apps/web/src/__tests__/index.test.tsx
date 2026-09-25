@@ -1,4 +1,7 @@
 import { StrictMode } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+// Loaded before `document` is stubbed: emotion decides once, on load, whether it runs in a browser.
+import '../App';
 
 vi.mock(import('react-dom/client'), async (importOriginal) => ({
   ...(await importOriginal()),
@@ -15,7 +18,7 @@ async function boot(root: object | null) {
 }
 
 describe('apps/web: entrypoint', () => {
-  it('mounts the app in strict mode into #root', async () => {
+  it('mounts the app in strict mode, under the browser router, into #root', async () => {
     const root = {};
 
     const { createRoot, App } = await boot(root);
@@ -24,7 +27,9 @@ describe('apps/web: entrypoint', () => {
     const [mounted] = vi.mocked(createRoot).mock.results;
     expect(mounted?.value.render).toHaveBeenCalledWith(
       <StrictMode>
-        <App />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </StrictMode>
     );
   });

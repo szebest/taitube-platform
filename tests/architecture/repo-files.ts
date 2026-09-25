@@ -22,25 +22,36 @@ function allTracked(): readonly string[] {
 
 const globMatches = new Map<string, ReadonlySet<string>>();
 
-const WILDCARD = /[*?[{]/;
+const WILDCARDS = ['*', '?', '[', ']', '{', '}', '(', ')'];
 
-/**
- * The files that can match: under the glob's literal directory and ending in its literal tail.
- * `matchesGlob` compiles the glob on every call, so it only sees these.
- */
-function candidates(glob: string): readonly string[] {
-  const firstWildcard = glob.search(WILDCARD);
-  const directory = glob.slice(0, glob.lastIndexOf('/', firstWildcard) + 1);
-  const tail = glob.slice(glob.lastIndexOf('*') + 1);
-  const suffix = WILDCARD.test(tail) ? '' : tail;
-  return allTracked().filter((file) => file.startsWith(directory) && file.endsWith(suffix));
+/** The directory a glob names before its first wildcard, and the text after its last one. */
+function literalEnds(glob: string): { directory: string; ending: string } {
+  const positions = WILDCARDS.flatMap((wildcard) => [
+    glob.indexOf(wildcard),
+    glob.lastIndexOf(wildcard),
+  ]).filter((position) => position !== -1);
+  if (positions.length === 0) return { directory: glob, ending: glob };
+
+  const head = glob.slice(0, Math.min(...positions));
+  return {
+    directory: head.slice(0, head.lastIndexOf('/') + 1),
+    ending: glob.slice(Math.max(...positions) + 1),
+  };
 }
 
-/** The tracked files a glob matches, worked out once per glob. */
+/**
+ * The tracked files a glob matches, worked out once per glob. `matchesGlob` compiles the glob on
+ * every call, so it is asked only about the files under the glob's directory with its ending.
+ */
 function matchingGlob(glob: string): ReadonlySet<string> {
   let matched = globMatches.get(glob);
   if (matched === undefined) {
-    matched = new Set(candidates(glob).filter((file) => matchesGlob(file, glob)));
+    const { directory, ending } = literalEnds(glob);
+    matched = new Set(
+      allTracked().filter(
+        (file) => file.startsWith(directory) && file.endsWith(ending) && matchesGlob(file, glob)
+      )
+    );
     globMatches.set(glob, matched);
   }
   return matched;

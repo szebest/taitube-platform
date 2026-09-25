@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate } from "react-router";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { ApiProvider } from "@reduxjs/toolkit/dist/query/react";
 
@@ -53,63 +53,59 @@ export function App() {
 				<PermissionsProvider>
 					<SidebarProvider>
 						<ThemeProvider>
-							<BrowserRouter>
-									<Routes>
-										<Route path="" element={<DefaultLayout />}>
-											<Route path="" element={<AllVideosPage />} />
-											<Route path="*" element={<Navigate to="" replace />} />
-										</Route>
-										<Route path="/trending" element={<DefaultLayout />}>
-											<Route path="" element={<TrendingPage />} />
-											<Route path="*" element={<Navigate to="/trending" replace />} />
-										</Route>
-										<Route
-											path="/subscriptions"
-											element={
-												<AuthorizedContainer>
-													<DefaultLayout />
-												</AuthorizedContainer>
-											}
-										>
-											<Route path="" element={<SubscriptionPage />} />
-											<Route
-												path="videos"
-												element={<SubscriptionVideosPage />}
-											/>
-											<Route
-												path="*"
-												element={<Navigate to="/subscriptions/videos" replace />}
-											/>
-										</Route>
-										<Route path="/watch" element={<DefaultLayout />}>
-											<Route path=":videoId" element={<VideoPage />} />
-											<Route path="" element={<Navigate to="/" replace />} />
-											<Route path="*" element={<Navigate to="/" replace />} />
-										</Route>
-										<Route path="/channel" element={<DefaultLayout />}>
-											<Route path=":channelId" element={<UserPage />} />
-											<Route path="" element={<Navigate to="/" replace />} />
-											<Route path="*" element={<Navigate to="/" replace />} />
-										</Route>
-										<Route
-											path="/upload"
-											element={
-												<AuthorizedContainer>
-													<DefaultLayout maxWidth="1280px" />
-												</AuthorizedContainer>
-											}
-										>
-											<Route path="" element={<UploadPage />} />
-											<Route path="edit/:videoId" element={<EditPage />} />
-											<Route path="*" element={<Navigate to="/upload" replace />} />
-										</Route>
+							<Routes>
+								<Route path="" element={<DefaultLayout />}>
+									<Route path="" element={<AllVideosPage />} />
+									<Route path="*" element={<Navigate to="" replace />} />
+								</Route>
+								<Route path="/trending" element={<DefaultLayout />}>
+									<Route path="" element={<TrendingPage />} />
+									<Route path="*" element={<Navigate to="/trending" replace />} />
+								</Route>
+								<Route
+									path="/subscriptions"
+									element={
+										<AuthorizedContainer>
+											<DefaultLayout />
+										</AuthorizedContainer>
+									}
+								>
+									<Route path="" element={<SubscriptionPage />} />
+									<Route
+										path="videos"
+										element={<SubscriptionVideosPage />}
+									/>
+									<Route
+										path="*"
+										element={<Navigate to="/subscriptions/videos" replace />}
+									/>
+								</Route>
+								<Route path="/watch" element={<DefaultLayout />}>
+									<Route path=":videoId" element={<VideoPage />} />
+									<Route path="" element={<Navigate to="/" replace />} />
+									<Route path="*" element={<Navigate to="/" replace />} />
+								</Route>
+								<Route path="/channel" element={<DefaultLayout />}>
+									<Route path=":channelId" element={<UserPage />} />
+									<Route path="" element={<Navigate to="/" replace />} />
+									<Route path="*" element={<Navigate to="/" replace />} />
+								</Route>
+								<Route
+									path="/upload"
+									element={
+										<AuthorizedContainer>
+											<DefaultLayout maxWidth="1280px" />
+										</AuthorizedContainer>
+									}
+								>
+									<Route path="" element={<UploadPage />} />
+									<Route path="edit/:videoId" element={<EditPage />} />
+									<Route path="*" element={<Navigate to="/upload" replace />} />
+								</Route>
 
-										<Route path="*" element={<Navigate to="" />} />
-									</Routes>
-
-									<ToastContainer limit={3} />
-
-							</BrowserRouter>
+								<Route path="*" element={<Navigate to="" />} />
+							</Routes>
+							<ToastContainer limit={3} />
 						</ThemeProvider>
 					</SidebarProvider>
 				</PermissionsProvider>
