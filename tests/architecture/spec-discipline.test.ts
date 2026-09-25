@@ -28,6 +28,12 @@ describe('architecture: spec discipline', () => {
     ['await new Promise(setImmediate);', 'waits on a timer'],
     ["import { setTimeout } from 'node:timers/promises';", 'imports a timer to wait on'],
     ["import { scheduler } from 'timers/promises';", 'imports a timer to wait on'],
+    [
+      "const { setTimeout: wait } = await import('node:timers/promises');",
+      'imports a timer to wait on',
+    ],
+    ['await new Promise((r) => globalThis.setTimeout(r, 20));', 'waits on a timer'],
+    ['await new Promise(globalThis.setImmediate);', 'waits on a timer'],
     ['const settle = () => Promise.resolve();', 'declares a sleep helper'],
     ['async function sleep(ms: number) {}', 'declares a sleep helper'],
     [
@@ -56,6 +62,7 @@ describe('architecture: spec discipline', () => {
     ["import type { Mock } from 'vitest';"],
     ["import { type Mock } from 'vitest';"],
     ["import { defineConfig } from 'vitest/config';"],
+    ["const { readFile } = await import('node:fs/promises');"],
     ["if (signal === 'SIGTERM') setImmediate(handler);"],
     ['const since = new Date(Date.now() - 3_600_000);'],
     ["vi.spyOn(console, 'error');"],

@@ -60,24 +60,39 @@ function isRuntimeVitestImport(node: ts.Node): boolean {
   return bindings.elements.some((element) => !element.isTypeOnly);
 }
 
+/** `setTimeout` for `setTimeout` and `globalThis.setTimeout` alike, `undefined` for anything else. */
+function timerName(expression: ts.Expression): string | undefined {
+  const name = dottedName(expression)?.replace(/^globalThis\./, '');
+  return name !== undefined && TIMER_WAITS.has(name) ? name : undefined;
+}
+
 function isTimerWait(node: ts.Node): boolean {
   if (!ts.isNewExpression(node) || dottedName(node.expression) !== 'Promise') return false;
   const executor = node.arguments?.[0];
   if (executor === undefined) return false;
-  if (ts.isIdentifier(executor)) return TIMER_WAITS.has(executor.text);
+  if (timerName(executor) !== undefined) return true;
   let waits = false;
   const visit = (child: ts.Node): void => {
-    if (ts.isCallExpression(child) && TIMER_WAITS.has(calleeName(child))) waits = true;
+    if (ts.isCallExpression(child) && timerName(child.expression) !== undefined) waits = true;
     ts.forEachChild(child, visit);
   };
   visit(executor);
   return waits;
 }
 
+function importedModule(node: ts.Node): ts.Expression | undefined {
+  if (ts.isImportDeclaration(node)) return node.moduleSpecifier;
+  if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+    return node.arguments[0];
+  }
+  return undefined;
+}
+
 function isTimerImport(node: ts.Node): boolean {
-  if (!ts.isImportDeclaration(node)) return false;
-  if (!ts.isStringLiteral(node.moduleSpecifier)) return false;
-  return TIMER_MODULES.has(node.moduleSpecifier.text);
+  const specifier = importedModule(node);
+  return (
+    specifier !== undefined && ts.isStringLiteral(specifier) && TIMER_MODULES.has(specifier.text)
+  );
 }
 
 function isSleepHelper(node: ts.Node): boolean {
@@ -196,7 +211,10 @@ const RULES: Rule[] = [
     offenders: matching([ImportDeclaration], isRuntimeVitestImport),
   },
   { name: 'waits on a timer', offenders: matching([NewExpression], isTimerWait) },
-  { name: 'imports a timer to wait on', offenders: matching([ImportDeclaration], isTimerImport) },
+  {
+    name: 'imports a timer to wait on',
+    offenders: matching([ImportDeclaration, CallExpression], isTimerImport),
+  },
   {
     name: 'declares a sleep helper',
     offenders: matching([FunctionDeclaration, VariableDeclaration], isSleepHelper),
