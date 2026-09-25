@@ -1,22 +1,20 @@
 import { defineConfig, mergeConfig } from 'vitest/config';
 import viteConfig from './vite.config';
 
-export default defineConfig(async (env) =>
-  mergeConfig(
-    await viteConfig(env),
-    defineConfig({
-      test: {
-        environment: 'node',
-        css: { include: [/\.css\?url/, /\/src\/index\.scss\?url/] },
-        globals: true,
-        restoreMocks: true,
-        unstubEnvs: true,
-        unstubGlobals: true,
-        testTimeout: 30_000,
-        hookTimeout: 30_000,
-        include: ['src/**/__tests__/**/*.test.{ts,tsx}', 'vite/**/__tests__/**/*.test.ts'],
-        setupFiles: ['src/__tests__/live-page.setup.ts'],
-      },
-    })
-  )
+export default mergeConfig(
+  await viteConfig({ command: 'serve', mode: 'test' }),
+  defineConfig({
+    test: {
+      environment: 'node',
+      css: { include: [/\.css\?url/, /\/src\/index\.scss\?url/] },
+      globals: true,
+      restoreMocks: true,
+      unstubEnvs: true,
+      unstubGlobals: true,
+      testTimeout: 30_000,
+      hookTimeout: 30_000,
+      include: ['src/**/__tests__/**/*.test.{ts,tsx}', 'vite/**/__tests__/**/*.test.ts'],
+      setupFiles: ['src/__tests__/live-page.setup.ts'],
+    },
+  })
 );
