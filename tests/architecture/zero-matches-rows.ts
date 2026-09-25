@@ -315,6 +315,20 @@ export const ROWS: readonly Row[] = [
     fires: 'const base = import.meta.env.VITE_API_BASE_URL;',
   },
   {
+    name: 'a web import through the retired src/ alias instead of #app/',
+    pattern: /(?:\bfrom|\bimport\(?|[mM]ock\(|importActual\(|@import|@use|@forward)\s*['"]src\//g,
+    scope: [':(glob)apps/web/**/*.ts', ':(glob)apps/web/**/*.tsx', ':(glob)apps/web/**/*.scss'],
+    expected: 0,
+    fires: "import { API_BASE_URL } from 'src/config';",
+  },
+  {
+    name: 'a web import climbing two or more directories instead of #app/',
+    pattern: /(?:\bfrom|\bimport\(?|[mM]ock\(|importActual\()\s*['"](?:\.\.\/){2,}/g,
+    scope: [':(glob)apps/web/**/*.ts', ':(glob)apps/web/**/*.tsx'],
+    expected: 0,
+    fires: "vi.doMock('../../../modules/shared/api', () => ({}));",
+  },
+  {
     name: 'a frontier written by hand',
     pattern: /Frontier Priority Policy:\*\* Ticket/g,
     scope: ['AGENTS.md', 'docs/tickets/gen-index.py'],

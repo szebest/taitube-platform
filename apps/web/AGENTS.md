@@ -148,6 +148,26 @@ renders through `renderPage` (`src/__tests__/render-page.tsx`), which mounts it 
 router over memory history with the root's providers; a route renders through `serverRender`
 (`src/__tests__/server-render.ts`), which answers a request with the real route tree the way the server does.
 
+### Rule 8: `#app/` for anything outside the feature folder
+`#app/*` is a Node subpath import declared once in `package.json` `"imports"` and pointing at `src/`, so
+TypeScript, Vite, Vitest and the SSR build resolve it without a tsconfig `paths` entry or a Vite alias.
+
+```ts
+import { API_BASE_URL } from '#app/config';          // outside the feature folder
+import { videoQueryOptions } from './video-query-options';  // a sibling
+import { WatchPlayer } from '../components/watch-player';   // one level up, still the same feature
+```
+
+- `./` and at most one `../` for a close sibling; `#app/...` for everything else, specs and `vi.mock`
+  paths included. No `src/...` import and no `../../`: two zero-matches rows hold both at 0.
+- No extension on any import, `.js` included.
+- The target is an array (`./src/*` first, then `*.ts`, `*.tsx`, `*/index.ts`, `*/index.tsx`) because Vite
+  reads only the first entry and probes extensions itself, while TypeScript probes nothing and walks the list.
+  Keep the order when you touch it.
+- Not `#/`: TypeScript 5.9 refuses a specifier starting with `#/`. Revisit on TypeScript 6.
+- SCSS does not use it (Vite's Sass importer drops everything after `#` as a URL fragment). Stylesheets import
+  from `src/` through Sass `loadPaths`: `@import "styles/abstract/variables";`.
+
 ---
 
 ## 4. Local commands

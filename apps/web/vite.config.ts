@@ -27,7 +27,9 @@ export default defineConfig(async ({ mode }) => ({
     alias: workspaceSourceAliases(fileURLToPath(new URL('../../packages', import.meta.url))),
   },
   css: {
-    preprocessorOptions: { scss: { loadPaths: [fileURLToPath(new URL('./src', import.meta.url))] } },
+    preprocessorOptions: {
+      scss: { loadPaths: [fileURLToPath(new URL('./src', import.meta.url))] },
+    },
   },
   server: { port: DEV_PORT, strictPort: true },
   preview: { port: DEV_PORT, strictPort: true },

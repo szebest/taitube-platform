@@ -19,8 +19,8 @@ extends it.
 | `client.json` | `packages/client/*` | `lib: ["ES2022", "DOM", "DOM.Iterable"]`, `types: []` |
 | `spec.json` | `tsconfig.spec.json` in every `universal` and `client` package, and in `packages/server/env-schema` | the client libs **plus** node/vitest types, `noEmit: true` |
 
-`apps/web` extends `client.json` too, adding `jsx: "react-jsx"`, the `vite/client` types and a `src/*` path
-that matches the Vite alias of the same name.
+`apps/web` extends `client.json` too, adding `jsx: "react-jsx"` and the `vite/client` types. It declares no
+`paths`: its `#app/*` imports resolve through the `"imports"` field of its `package.json`.
 
 A package's own `tsconfig.json` adds `rootDir` / `outDir` / `include` and excludes its specs; a sibling
 `tsconfig.build.json` extends it and excludes `__tests__`, `__mocks__` and `*.test.ts` from the emitted
