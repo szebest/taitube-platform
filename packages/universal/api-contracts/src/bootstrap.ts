@@ -27,5 +27,3 @@ export const getBootstrap = defineEndpoint({
     404: [ErrorCodes.CHANNEL_NOT_FOUND],
   },
 });
-
-export type Bootstrap = z.infer<typeof BootstrapSchema>;

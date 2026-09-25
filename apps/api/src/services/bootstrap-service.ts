@@ -1,19 +1,12 @@
-import type { Category } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { isErr, map, ok } from '@vp/result';
 import type { CategoryService } from './category-service';
-import type { ChannelService, ChannelView } from './channel-service';
+import type { ChannelService } from './channel-service';
 
 export interface BootstrapServiceDeps {
   channelService: ChannelService;
   categoryService: CategoryService;
   featureFlags: readonly string[];
-}
-
-export interface BootstrapContext {
-  user: ChannelView | null;
-  categories: Category[];
-  featureFlags: Record<string, boolean>;
 }
 
 /** What a client needs before its first render, gathered in one call. */
@@ -32,7 +25,7 @@ export class BootstrapService {
     if (isErr(user)) return user;
     if (isErr(categories)) return categories;
 
-    return ok<BootstrapContext>({
+    return ok({
       user: user.value,
       categories: categories.value.categories,
       featureFlags: this.featureFlags,
