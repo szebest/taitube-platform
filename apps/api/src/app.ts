@@ -23,6 +23,11 @@ export * from './composition/adapter-set';
 export * from './composition/services.module';
 export * from './services/index';
 
+const CORS_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+/** Chromium caps a cached preflight at two hours, so a longer value buys nothing. */
+const CORS_PREFLIGHT_MAX_AGE_SECONDS = 7200;
+
 export interface BuildAppOptions {
   config: AppConfig;
   adapters?: AdapterOverrides;
@@ -64,7 +69,11 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
-  await app.register(cors, { origin: [...config.http.corsOrigins] });
+  await app.register(cors, {
+    origin: [...config.http.corsOrigins],
+    methods: CORS_METHODS,
+    maxAge: CORS_PREFLIGHT_MAX_AGE_SECONDS,
+  });
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(rateLimit, {
     global: false,

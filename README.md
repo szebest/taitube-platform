@@ -151,6 +151,8 @@ taitube-platform/
   caching, Singleflight coalescing and ETag/304 responses.
 - **Categories**: `GET /v1/categories` and `POST/PATCH/DELETE /v1/admin/categories`, cached in process (60s
   TTL) and in Redis, invalidated over Redis Pub/Sub, with ETag/304 responses.
+- **Bootstrap**: `GET /v1/bootstrap` hands the web app its first-render context in one call: the caller's
+  channel (or `null` for a guest), the active categories and the flags `FEATURE_FLAGS` turns on.
 - **Reactions**: `PUT /v1/videos/:id/reactions` (LIKE/DISLIKE/NONE) and `GET /v1/videos/:id/reactions/me`,
   with counter columns (`likesCount`, `dislikesCount`) cached by `RedisReactionCacheAdapter` and repaired by
   a scheduled reconciler.

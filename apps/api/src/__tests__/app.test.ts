@@ -67,6 +67,44 @@ describe('apps/api: composeApp', () => {
     await app.close();
   });
 
+  it.each([
+    { origin: 'http://localhost:5173', method: 'PATCH' },
+    { origin: 'http://localhost:8080', method: 'DELETE' },
+  ])('lets $origin preflight a $method and cache the answer', async ({ origin, method }) => {
+    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/v1/me/channel',
+      headers: {
+        origin,
+        'access-control-request-method': method,
+        'access-control-request-headers': 'authorization,content-type',
+      },
+    });
+
+    expect(res.statusCode).toBe(204);
+    expect(res.headers['access-control-allow-origin']).toBe(origin);
+    expect(res.headers['access-control-allow-methods']).toContain(method);
+    expect(res.headers['access-control-allow-headers']).toBe('authorization,content-type');
+    expect(res.headers['access-control-max-age']).toBe('7200');
+    expect(res.headers.vary).toContain('Origin');
+    await app.close();
+  });
+
+  it('answers a preflight from an origin it does not list without allowing it', async () => {
+    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/v1/me/channel',
+      headers: { origin: 'https://evil.example', 'access-control-request-method': 'PATCH' },
+    });
+
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    await app.close();
+  });
+
   it('refuses a JSON body over the configured limit with 413', async () => {
     const app = (await composeApp({ config: inProcessAppConfig({ http: { bodyLimitBytes: 64 } }) }))
       .app;
