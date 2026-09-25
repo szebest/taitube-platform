@@ -14,6 +14,7 @@ import { InMemoryUploadRepository } from './in-memory-upload-repository';
 import { InMemoryUserRepository } from './in-memory-user-repository';
 import { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
 import { InMemoryVideoRepository } from './in-memory-video-repository';
+import { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
 
 const Repo = {
@@ -29,6 +30,7 @@ const Repo = {
   channels: token<InMemoryChannelRepository>('channels'),
   videoReactions: token<InMemoryVideoReactionRepository>('videoReactions'),
   subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
+  videoViews: token<InMemoryVideoViewRepository>('videoViews'),
   comments: token<InMemoryCommentRepository>('comments'),
   playlists: token<InMemoryPlaylistRepository>('playlists'),
   watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),
@@ -78,6 +80,7 @@ function graph(): Container {
           videosRepo: c.get(Repo.videos),
         })
     )
+    .provide(Repo.videoViews, (c) => new InMemoryVideoViewRepository(c.get(Repo.videos)))
     .provide(
       Repo.comments,
       (c) =>
@@ -117,6 +120,7 @@ export class InMemoryRepositories implements Repositories {
   readonly channels: InMemoryChannelRepository;
   readonly videoReactions: InMemoryVideoReactionRepository;
   readonly subscriptions: InMemorySubscriptionRepository;
+  readonly videoViews: InMemoryVideoViewRepository;
   readonly comments: InMemoryCommentRepository;
   readonly playlists: InMemoryPlaylistRepository;
   readonly watchHistory: InMemoryWatchHistoryRepository;
@@ -135,6 +139,7 @@ export class InMemoryRepositories implements Repositories {
     this.channels = c.get(Repo.channels);
     this.videoReactions = c.get(Repo.videoReactions);
     this.subscriptions = c.get(Repo.subscriptions);
+    this.videoViews = c.get(Repo.videoViews);
     this.comments = c.get(Repo.comments);
     this.playlists = c.get(Repo.playlists);
     this.watchHistory = c.get(Repo.watchHistory);

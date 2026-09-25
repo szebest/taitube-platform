@@ -82,7 +82,7 @@ describe('db: library schema', () => {
 });
 
 const MIGRATIONS = join(import.meta.dirname, '../../drizzle');
-const LIBRARY_MIGRATION = '0011_watch_later_playlists_and_history.sql';
+const LIBRARY_MIGRATION = '0012_watch_later_playlists_and_history.sql';
 
 async function apply(engine: PGlite, file: string): Promise<void> {
   for (const statement of readFileSync(join(MIGRATIONS, file), 'utf8').split(

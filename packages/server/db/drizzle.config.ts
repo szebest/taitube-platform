@@ -1,7 +1,12 @@
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: ['./src/schema.ts', './src/comments-schema.ts', './src/library-schema.ts'],
+  schema: [
+    './src/schema.ts',
+    './src/comments-schema.ts',
+    './src/view-schema.ts',
+    './src/library-schema.ts',
+  ],
   out: './drizzle',
   dialect: 'postgresql',
   strict: true,

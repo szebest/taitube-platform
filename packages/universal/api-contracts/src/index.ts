@@ -1,6 +1,7 @@
 import * as adminCategories from './admin-categories';
 import * as adminDlq from './admin-dlq';
 import * as adminVideos from './admin-videos';
+import * as analytics from './analytics';
 import * as categories from './categories';
 import * as channels from './channels';
 import * as comments from './comments';
@@ -13,11 +14,13 @@ import * as reactions from './reactions';
 import * as subscriptions from './subscriptions';
 import * as uploads from './uploads';
 import * as videos from './videos';
+import * as views from './views';
 import * as watchHistory from './watch-history';
 
 export * from './admin-categories';
 export * from './admin-videos';
 export * from './admin-dlq';
+export * from './analytics';
 export * from './categories';
 export * from './channels';
 export * from './comments';
@@ -35,12 +38,14 @@ export * from './subscriptions';
 export * from './uploads';
 export * from './video-resource';
 export * from './videos';
+export * from './views';
 export * from './watch-history';
 
 export const contracts = {
   adminCategories,
   adminDlq,
   adminVideos,
+  analytics,
   categories,
   channels,
   comments,
@@ -53,6 +58,7 @@ export const contracts = {
   subscriptions,
   uploads,
   videos,
+  views,
   watchHistory,
 } as const;
 

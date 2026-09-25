@@ -15,6 +15,7 @@ import {
   SPRITE_GEOMETRY,
   SSE_IDLE_TIMEOUT_MS,
   UPLOAD_SESSION_TTL_SECONDS,
+  VIEWS,
   WORKER_HEARTBEAT_INTERVAL_MS,
 } from './tuning';
 
@@ -104,6 +105,15 @@ export interface AppConfig {
     tmpSweepAfterMs: number;
     reactionReconcileLimit: number;
     scanLimit: number;
+  };
+  views: {
+    minWatchSeconds: number;
+    dedupTtlSeconds: number;
+    fallbackCapacity: number;
+    breakerFailureThreshold: number;
+    breakerCooldownMs: number;
+    flushIntervalMs: number;
+    batchRetentionMs: number;
   };
   http: {
     port: number;
@@ -237,6 +247,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       feed: { ...HTTP_CACHE.feed },
     },
     housekeeping: { ...HOUSEKEEPING },
+    views: { ...VIEWS },
     http: {
       port: env.PORT,
       metricsPort: env.METRICS_PORT,

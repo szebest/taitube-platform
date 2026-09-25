@@ -10,6 +10,7 @@ export * from './category-repository';
 export * from './channel-repository';
 export * from './video-reaction-repository';
 export * from './subscription-repository';
+export * from './video-view-repository';
 export * from './comment-repository';
 export * from './playlist-repository';
 export * from './watch-history-repository';

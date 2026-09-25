@@ -1,4 +1,5 @@
 import type { ForcedSubject, InferSubjects, MongoAbility } from '@casl/ability';
+import type { AnalyticsResource } from './analytics';
 import type { CategoryResource } from './category';
 import type { ChannelResource } from './channel';
 import type { CommentResource } from './comment';
@@ -26,6 +27,7 @@ export type AppSubjects =
       | (CommentResource & ForcedSubject<'Comment'>)
       | (ChannelResource & ForcedSubject<'Channel'>)
       | (CategoryResource & ForcedSubject<'Category'>)
+      | (AnalyticsResource & ForcedSubject<'Analytics'>)
       | (PlaylistResource & ForcedSubject<'Playlist'>)
     >
   | 'Video'

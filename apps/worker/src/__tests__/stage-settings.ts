@@ -48,6 +48,7 @@ export const STAGE_SETTINGS = {
   maxInflightPerUser: 3,
   tmpDir: '/tmp/vp',
   housekeeping: config.housekeeping,
+  views: config.views,
   workerId: 'worker-spec',
   metrics: createMetricsRegistry(),
   media: mediaTools,

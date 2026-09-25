@@ -6,3 +6,4 @@ export * from './upload';
 export * from './category';
 export * from './playlist';
 export * from './ability';
+export * from './analytics';

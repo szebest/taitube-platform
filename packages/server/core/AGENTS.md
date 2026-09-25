@@ -29,7 +29,8 @@ repository interfaces every persistence adapter satisfies. It holds no I/O, no S
 ```
 core/
 ├── ports/          # Driver ports: StorageClient, MultipartStorage, CacheClient, JobQueue, FlowProducerPort,
-│                   #   DatabaseClient, TokenVerifier, AuthorizationPort, the three cache ports, HealthCheckable
+│                   #   DatabaseClient, TokenVerifier, AuthorizationPort, the three cache ports, ViewBufferPort,
+│                   #   HealthCheckable
 └── repositories/   # One file per repository contract, plus the Repositories bundle (repositories.ts)
 ```
 
@@ -37,11 +38,11 @@ core/
 1. **Driver ports are abstract classes.** The I/O drivers (`StorageClient`, `MultipartStorage`, `CacheClient`,
    `JobQueue`, `FlowProducerPort`, `DatabaseClient`) are abstract classes that implement the
    `HealthCheckable<E>` interface; `TokenVerifier` and `AuthorizationPort` are abstract classes without a
-   health check. The cache ports (`CategoryCachePort`, `ReactionCachePort`, `SubscriptionCachePort`) are
-   interfaces, which the Redis and in-memory adapters implement.
+   health check. The cache ports (`CategoryCachePort`, `ReactionCachePort`, `SubscriptionCachePort`) and
+   `ViewBufferPort` are interfaces, which the Redis and in-memory adapters implement.
 2. **Repository contracts:** `repositories/` defines data access signatures decoupled from any ORM or
    database driver - abstract classes (`VideoRepository`, `UploadRepository`, `StepRepository`, ...) and
-   `*RepositoryPort` interfaces (channel, category, subscription, video reaction). The `Repositories`
+   `*RepositoryPort` interfaces (channel, category, subscription, video reaction, video view). The `Repositories`
    interface bundles them.
 3. **Repository contracts stay with the ports.** An earlier draft split them into a universal
    `@vp/contracts`; it would have had no client consumer, because the frontend's response types come

@@ -44,17 +44,18 @@ describe('housekeeping schedulers and video deletion', () => {
 
   describe('housekeeping schedulers (SDD §9.8)', () => {
     it.each([
-      { id: 'reconcile-uploads', pattern: '*/15 * * * *' },
-      { id: 'reconcile-processing', pattern: '*/10 * * * *' },
-      { id: 'purge-deleted', pattern: '0 * * * *' },
-      { id: 'expire-raw', pattern: '30 3 * * *' },
-      { id: 'tmp-sweep', pattern: '*/30 * * * *' },
-      { id: 'reconcile-reaction-counters', pattern: '0 * * * *' },
-    ])('schedules $id on $pattern with a task of the same name', async ({ id, pattern }) => {
+      { id: 'reconcile-uploads', repeat: { pattern: '*/15 * * * *' } },
+      { id: 'reconcile-processing', repeat: { pattern: '*/10 * * * *' } },
+      { id: 'purge-deleted', repeat: { pattern: '0 * * * *' } },
+      { id: 'expire-raw', repeat: { pattern: '30 3 * * *' } },
+      { id: 'tmp-sweep', repeat: { pattern: '*/30 * * * *' } },
+      { id: 'reconcile-reaction-counters', repeat: { pattern: '0 * * * *' } },
+      { id: 'flush-video-views', repeat: { every: 10_000 } },
+    ])('schedules $id on $repeat with a task of the same name', async ({ id, repeat }) => {
       const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
       const scheduler = schedulers.find((candidate) => candidate.id === id);
 
-      expect(scheduler?.pattern).toBe(pattern);
+      expect(scheduler).toMatchObject(repeat);
       expect(scheduler?.data).toMatchObject({ task: id });
     });
 
@@ -65,6 +66,7 @@ describe('housekeeping schedulers and video deletion', () => {
       const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
       expect(schedulers.map((s) => s.id).sort()).toEqual([
         'expire-raw',
+        'flush-video-views',
         'purge-deleted',
         'reconcile-processing',
         'reconcile-reaction-counters',

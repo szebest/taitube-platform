@@ -1,5 +1,5 @@
 {
-  "id": "58c482fa-79ea-4c61-b2c4-c46916864e2e",
+  "id": "e3572166-3bb8-4017-a6f5-9db82ae0d778",
   "prevId": "fd142abc-6af8-4016-881f-7f5f8117589e",
   "version": "7",
   "dialect": "postgresql",
@@ -1327,7 +1327,7 @@
         },
         "views_count": {
           "name": "views_count",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "default": 0
@@ -1430,6 +1430,21 @@
               "expression": "category_id",
               "isExpression": false,
               "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "videos_views_count_idx": {
+          "name": "videos_views_count_idx",
+          "columns": [
+            {
+              "expression": "views_count",
+              "isExpression": false,
+              "asc": false,
               "nulls": "last"
             }
           ],
@@ -1698,36 +1713,18 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.playlist_items": {
-      "name": "playlist_items",
+    "public.video_view_batches": {
+      "name": "video_view_batches",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
+        "batch_id": {
+          "name": "batch_id",
+          "type": "text",
           "primaryKey": true,
           "notNull": true
         },
-        "playlist_id": {
-          "name": "playlist_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "video_id": {
-          "name": "video_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "added_at": {
-          "name": "added_at",
+        "applied_at": {
+          "name": "applied_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -1735,32 +1732,11 @@
         }
       },
       "indexes": {
-        "playlist_items_playlist_position_idx": {
-          "name": "playlist_items_playlist_position_idx",
+        "video_view_batches_applied_at_idx": {
+          "name": "video_view_batches_applied_at_idx",
           "columns": [
             {
-              "expression": "playlist_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "position",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "playlist_items_video_idx": {
-          "name": "playlist_items_video_idx",
-          "columns": [
-            {
-              "expression": "video_id",
+              "expression": "applied_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1772,250 +1748,54 @@
           "with": {}
         }
       },
-      "foreignKeys": {
-        "playlist_items_playlist_id_playlists_id_fk": {
-          "name": "playlist_items_playlist_id_playlists_id_fk",
-          "tableFrom": "playlist_items",
-          "tableTo": "playlists",
-          "columnsFrom": [
-            "playlist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "playlist_items_video_id_videos_id_fk": {
-          "name": "playlist_items_video_id_videos_id_fk",
-          "tableFrom": "playlist_items",
-          "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "playlist_items_playlist_video_key": {
-          "name": "playlist_items_playlist_video_key",
-          "nullsNotDistinct": false,
-          "columns": [
-            "playlist_id",
-            "video_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.playlists": {
-      "name": "playlists",
+    "public.video_views_daily": {
+      "name": "video_views_daily",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "owner_id": {
-          "name": "owner_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "visibility": {
-          "name": "visibility",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'private'"
-        },
-        "is_system": {
-          "name": "is_system",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "custom_thumbnail_key": {
-          "name": "custom_thumbnail_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "playlists_owner_visibility_idx": {
-          "name": "playlists_owner_visibility_idx",
-          "columns": [
-            {
-              "expression": "owner_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "visibility",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "playlists_one_system_per_owner_idx": {
-          "name": "playlists_one_system_per_owner_idx",
-          "columns": [
-            {
-              "expression": "owner_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"playlists\".\"is_system\"",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "playlists_owner_id_users_id_fk": {
-          "name": "playlists_owner_id_users_id_fk",
-          "tableFrom": "playlists",
-          "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "playlists_visibility_check": {
-          "name": "playlists_visibility_check",
-          "value": "\"playlists\".\"visibility\" IN ('private', 'unlisted', 'public')"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.watch_history": {
-      "name": "watch_history",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
         "video_id": {
           "name": "video_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "progress_seconds": {
-          "name": "progress_seconds",
-          "type": "integer",
+        "view_date": {
+          "name": "view_date",
+          "type": "date",
           "primaryKey": false,
           "notNull": true
         },
-        "duration_seconds": {
-          "name": "duration_seconds",
+        "views": {
+          "name": "views",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": 0
         },
-        "watched_at": {
-          "name": "watched_at",
-          "type": "timestamp with time zone",
+        "watch_seconds": {
+          "name": "watch_seconds",
+          "type": "bigint",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": 0
         }
       },
       "indexes": {
-        "watch_history_user_watched_idx": {
-          "name": "watch_history_user_watched_idx",
+        "video_views_daily_date_video_idx": {
+          "name": "video_views_daily_date_video_idx",
           "columns": [
             {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "watched_at",
+              "expression": "view_date",
               "isExpression": false,
               "asc": false,
               "nulls": "last"
             },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": false,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "watch_history_video_idx": {
-          "name": "watch_history_video_idx",
-          "columns": [
             {
               "expression": "video_id",
               "isExpression": false,
@@ -2030,22 +1810,9 @@
         }
       },
       "foreignKeys": {
-        "watch_history_user_id_users_id_fk": {
-          "name": "watch_history_user_id_users_id_fk",
-          "tableFrom": "watch_history",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "watch_history_video_id_videos_id_fk": {
-          "name": "watch_history_video_id_videos_id_fk",
-          "tableFrom": "watch_history",
+        "video_views_daily_video_id_videos_id_fk": {
+          "name": "video_views_daily_video_id_videos_id_fk",
+          "tableFrom": "video_views_daily",
           "tableTo": "videos",
           "columnsFrom": [
             "video_id"
@@ -2057,24 +1824,18 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "watch_history_user_video_key": {
-          "name": "watch_history_user_video_key",
-          "nullsNotDistinct": false,
+      "compositePrimaryKeys": {
+        "video_views_daily_video_id_view_date_pk": {
+          "name": "video_views_daily_video_id_view_date_pk",
           "columns": [
-            "user_id",
-            "video_id"
+            "video_id",
+            "view_date"
           ]
         }
       },
+      "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "watch_history_progress_check": {
-          "name": "watch_history_progress_check",
-          "value": "\"watch_history\".\"progress_seconds\" >= 0 AND \"watch_history\".\"duration_seconds\" > 0"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     }
   },

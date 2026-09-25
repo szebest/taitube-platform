@@ -12,6 +12,7 @@ import type {
   StorageClient,
   SubscriptionCachePort,
   TokenVerifier,
+  ViewBufferPort,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 
@@ -27,6 +28,7 @@ export interface AdapterOverrides {
   reactionCache?: ReactionCachePort;
   subscriptionCache?: SubscriptionCachePort;
   categoryCache?: CategoryCachePort;
+  viewBuffer?: ViewBufferPort;
   commentCache?: CommentCachePort;
   authorization?: AuthorizationPort;
   tokenVerifier?: TokenVerifier;
@@ -43,6 +45,7 @@ const OVERRIDABLE: Record<keyof AdapterOverrides, { readonly name: string }> = {
   reactionCache: Adapters.ReactionCache,
   subscriptionCache: Adapters.SubscriptionCache,
   categoryCache: Adapters.CategoryCache,
+  viewBuffer: Adapters.ViewBuffer,
   commentCache: Adapters.CommentCache,
   authorization: Adapters.Authorization,
   tokenVerifier: Adapters.TokenVerifier,
