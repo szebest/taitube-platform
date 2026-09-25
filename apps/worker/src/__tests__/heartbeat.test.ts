@@ -43,7 +43,7 @@ describe('apps/worker: Heartbeat', () => {
     expect(await written()).toBe('1700000015\n');
 
     beating.stop();
-    expect(interval.ticks).toEqual([]);
+    expect(interval.ticks.size).toBe(0);
   });
 
   it('refuses to start when the first beat cannot be written', async () => {
@@ -51,7 +51,7 @@ describe('apps/worker: Heartbeat', () => {
     const interval = manualInterval();
 
     expect((await heartbeat(interval.every).start()).ok).toBe(false);
-    expect(interval.ticks).toEqual([]);
+    expect(interval.ticks.size).toBe(0);
   });
 
   it('schedules a real interval that stops cleanly', () => {

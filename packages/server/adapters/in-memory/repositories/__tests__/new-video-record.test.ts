@@ -9,7 +9,7 @@ const REQUIRED = {
 
 describe('newVideoRecord', () => {
   it('fills every column the caller left out with its database default', () => {
-    expect(newVideoRecord(REQUIRED, NOW)).toEqual({
+    expect(newVideoRecord(REQUIRED, NOW)).toStrictEqual({
       ...REQUIRED,
       title: null,
       description: null,
@@ -31,12 +31,15 @@ describe('newVideoRecord', () => {
       errorCode: null,
       errorMessage: null,
       viewsCount: 0,
+      likesCount: 0,
+      dislikesCount: 0,
       categoryId: null,
       generation: 1,
       version: 1,
       createdAt: NOW,
       updatedAt: NOW,
       readyAt: null,
+      deletedAt: null,
     });
   });
 

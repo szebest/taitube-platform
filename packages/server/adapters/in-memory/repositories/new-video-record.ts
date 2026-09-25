@@ -25,11 +25,14 @@ export function newVideoRecord(data: NewVideoInput, now: Date): VideoRecord {
     errorCode: data.errorCode ?? null,
     errorMessage: data.errorMessage ?? null,
     viewsCount: data.viewsCount ?? 0,
+    likesCount: data.likesCount ?? 0,
+    dislikesCount: data.dislikesCount ?? 0,
     categoryId: data.categoryId ?? null,
     generation: data.generation ?? 1,
     version: 1,
     createdAt: now,
     updatedAt: now,
     readyAt: data.readyAt ?? (status === 'READY' ? now : null),
+    deletedAt: data.deletedAt ?? null,
   };
 }

@@ -144,6 +144,6 @@ describe('housekeeping: outbox relay', () => {
 
     running.stop();
     expect(running.isRunning()).toBe(false);
-    expect(interval.ticks).toEqual([]);
+    expect(interval.ticks.size).toBe(0);
   });
 });
