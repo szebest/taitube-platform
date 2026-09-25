@@ -1,8 +1,13 @@
 async function apiBaseUrl(configured: string | undefined): Promise<string> {
   vi.stubEnv('VITE_API_BASE_URL', configured);
   vi.resetModules();
-  const { API_BASE_URL } = await import('../index');
-  return API_BASE_URL;
+  try {
+    const { API_BASE_URL } = await import('../index');
+    return API_BASE_URL;
+  } finally {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  }
 }
 
 describe('apps/web: config', () => {

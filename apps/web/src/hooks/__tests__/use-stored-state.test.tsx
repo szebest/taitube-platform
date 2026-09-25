@@ -3,10 +3,6 @@ import { z } from 'zod';
 import { asLivePage } from '../../__tests__/live-page';
 import { useStoredState } from '../use-stored-state';
 
-vi.mock(import('react'), async (importOriginal) =>
-  (await import('../../__tests__/live-page')).withLivePage(await importOriginal())
-);
-
 const Flag = z.boolean();
 
 function stubStorage(entries: Record<string, string> = {}) {

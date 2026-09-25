@@ -1,11 +1,17 @@
 import type * as React from 'react';
 
-const page = { live: false };
+declare global {
+  var livePageForSpecs: { live: boolean } | undefined;
+}
+
+// On globalThis: a mocked `react` outlives the spec file that installed it when files share a worker.
+globalThis.livePageForSpecs ??= { live: false };
+const page = globalThis.livePageForSpecs;
 
 /**
- * `react` with `useSyncExternalStore` reading the client snapshot while `asLivePage` runs, so a
- * server render shows what the page shows after hydration. Install it with
- * `vi.mock(import('react'), async (importOriginal) => withLivePage(await importOriginal()))`.
+ * `react` as a hydrated page runs it while `asLivePage` does: `useSyncExternalStore` reads the client
+ * snapshot and `useEffect` runs its effect, so a server render shows what the live page shows.
+ * `live-page.setup.ts` installs it for every spec.
  */
 export function withLivePage(react: typeof React): typeof React {
   return {
@@ -18,6 +24,10 @@ export function withLivePage(react: typeof React): typeof React {
       page.live
         ? getSnapshot()
         : react.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot),
+    useEffect: (effect: React.EffectCallback, deps?: React.DependencyList): void => {
+      if (page.live) effect();
+      else react.useEffect(effect, deps);
+    },
   };
 }
 

@@ -3,10 +3,6 @@ import { stubBrowser } from '../../../../__tests__/browser';
 import { asLivePage } from '../../../../__tests__/live-page';
 import { ThemeProvider, useTheme } from '../theme-provider';
 
-vi.mock(import('react'), async (importOriginal) =>
-  (await import('../../../../__tests__/live-page')).withLivePage(await importOriginal())
-);
-
 type ThemeControls = Partial<ReturnType<typeof useTheme>>;
 
 function renderTheme(controls: ThemeControls = {}): string {
