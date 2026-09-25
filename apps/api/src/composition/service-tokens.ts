@@ -6,6 +6,7 @@ import type { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
 import type {
   AnalyticsService,
+  BootstrapService,
   CategoryService,
   ChannelService,
   CommentService,
@@ -36,6 +37,7 @@ export interface ServiceSet {
   commentService: CommentService;
   viewService: ViewService;
   analyticsService: AnalyticsService;
+  bootstrapService: BootstrapService;
   playlistService: PlaylistService;
   watchHistoryService: WatchHistoryService;
   queueService: QueueService;
@@ -59,6 +61,7 @@ export const Services = {
   CommentService: token<CommentService>('CommentService'),
   ViewService: token<ViewService>('ViewService'),
   AnalyticsService: token<AnalyticsService>('AnalyticsService'),
+  BootstrapService: token<BootstrapService>('BootstrapService'),
   PlaylistService: token<PlaylistService>('PlaylistService'),
   WatchHistoryService: token<WatchHistoryService>('WatchHistoryService'),
   QueueService: token<QueueService>('QueueService'),

@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { SEEDED } from '@vp/testing';
 import { toAppConfig } from '../app-config';
 import { AppEnvSchema } from '../app-env';
-import { SEEDED } from '@vp/testing';
 
 function exampleEnv(): Record<string, string> {
   const content = readFileSync(resolve(__dirname, '../../../../../.env.example'), 'utf8');
@@ -43,6 +43,16 @@ describe('packages/env-schema: toAppConfig', () => {
     expect(config.postgres.url).toBe('postgres://db:5432/vp');
     expect(config.auth).toMatchObject({ type: 'dev', adminToken: undefined });
     expect(config.s3.accessKeyId).toBeUndefined();
+  });
+
+  it.each([
+    { flags: undefined, featureFlags: [] },
+    { flags: '', featureFlags: [] },
+    { flags: 'studio, live', featureFlags: ['studio', 'live'] },
+  ])('enables $featureFlags from FEATURE_FLAGS=$flags', ({ flags, featureFlags }) => {
+    const env = { DATABASE_URL: 'postgres://db/vp', FEATURE_FLAGS: flags };
+
+    expect(toAppConfig(AppEnvSchema.parse(env)).featureFlags).toEqual(featureFlags);
   });
 
   it.each([

@@ -169,6 +169,12 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   },
   { path: '/v1/categories', method: 'get', expectedStatuses: [200, 304] },
   {
+    path: '/v1/bootstrap',
+    method: 'get',
+    expectedStatuses: [200, 401, 404],
+    expectedErrorCodes: [UNAUTHORIZED, ErrorCodes.CHANNEL_NOT_FOUND],
+  },
+  {
     path: '/v1/me/account',
     method: 'get',
     expectedStatuses: [200, 401, 404],

@@ -53,6 +53,7 @@ const CoreEnvSchema = z.object({
   METRICS_PORT: z.coerce.number().int().nonnegative().default(9464),
   PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(PAGE_SIZE_DEFAULT),
   PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
+  FEATURE_FLAGS: commaList(z.string()).default(''),
 });
 
 const PostgresEnvSchema = z.object({

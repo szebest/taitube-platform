@@ -27,6 +27,7 @@ import { Poller } from '../services/poller';
 import { pollQueueMetrics } from '../services/queue-poller';
 import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
+import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
 import { Services } from './service-tokens';
 
@@ -48,7 +49,7 @@ export function registerServices(c: Container): Container {
   const config = () => c.get(Adapters.Config);
   const repositories = () => c.get(Adapters.Repositories);
 
-  return c
+  return registerBootstrap(c)
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
     )
@@ -289,6 +290,7 @@ export function registerServices(c: Container): Container {
       commentService: c.get(Services.CommentService),
       viewService: c.get(Services.ViewService),
       analyticsService: c.get(Services.AnalyticsService),
+      bootstrapService: c.get(Services.BootstrapService),
       playlistService: c.get(Services.PlaylistService),
       watchHistoryService: c.get(Services.WatchHistoryService),
       queueService: c.get(Services.QueueService),

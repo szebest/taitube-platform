@@ -2,6 +2,7 @@ import * as adminCategories from './admin-categories';
 import * as adminDlq from './admin-dlq';
 import * as adminVideos from './admin-videos';
 import * as analytics from './analytics';
+import * as bootstrap from './bootstrap';
 import * as categories from './categories';
 import * as channels from './channels';
 import * as comments from './comments';
@@ -18,9 +19,10 @@ import * as views from './views';
 import * as watchHistory from './watch-history';
 
 export * from './admin-categories';
-export * from './admin-videos';
 export * from './admin-dlq';
+export * from './admin-videos';
 export * from './analytics';
+export * from './bootstrap';
 export * from './categories';
 export * from './channels';
 export * from './comments';
@@ -46,6 +48,7 @@ export const contracts = {
   adminDlq,
   adminVideos,
   analytics,
+  bootstrap,
   categories,
   channels,
   comments,
