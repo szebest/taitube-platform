@@ -9,7 +9,7 @@ metadata:
 
 # Work a video-pipeline ticket
 
-Tickets are tracer-bullet vertical slices in `docs/tickets/`, numbered in dependency order. The index `docs/tickets/README.md` has the status board, dependency graph and the frontier (tickets whose blockers are all done). This skill is the repo-specific wrapper around `implement`.
+Tickets are tracer-bullet vertical slices in `docs/tickets/`, numbered in dependency order (a foundation ticket added later may block lower-numbered ones, so read the `Blocked by` row, not the number). The index `docs/tickets/README.md` has the status board, dependency graph and the frontier (tickets whose blockers are all done). This skill is the repo-specific wrapper around `implement`.
 
 ## 1. Claim
 1. Open `docs/tickets/README.md`; confirm the ticket is on the frontier (all `Blocked by` tickets show `done`). If not, stop and say which blocker is missing.

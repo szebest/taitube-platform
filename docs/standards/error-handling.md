@@ -224,7 +224,7 @@ versions and `name` is what the SDK documents.
 
 ## The frontend contract
 
-Not implemented yet. Tickets 53, 70 and 71 build against this; what is decided here is the shape.
+Not implemented yet. Tickets 53 and 70 build against this; what is decided here is the shape.
 
 ```
 user types / drops a file

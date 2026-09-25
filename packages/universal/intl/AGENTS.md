@@ -12,7 +12,7 @@ Every number, date, count, duration and list the product shows a person is forma
 platform's own `Intl` constructors and nothing else. A formatter takes a tagged value and a
 `FormatContext` and returns `Result<string, FormatFailure>`.
 
-It is `universal`, layer T2, because ticket 63's server render runs it in Node and the browser runs it
+It is `universal`, layer T2, because ticket 89's server render runs it in Node and the browser runs it
 again on hydration. It depends on `@vp/result` and `@vp/errors` only. The words around a value (the
 `views` in `1.2M views`) are copy and live in `@vp/messages`, not here.
 

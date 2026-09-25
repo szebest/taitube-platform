@@ -5,78 +5,64 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#75](https://github.com/szebest/taitube-platform/issues/75) |
 | Size | L |
-| Blocked by | 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74 |
-| Blocks | — |
+| Blocked by | 89 - TanStack Start foundation |
+| Blocks | 57 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
 **Status:** blocked
 
+The browser-level suite, started early on the app [89](89-web-tanstack-start-foundation.md) leaves (legacy
+pages included) so every later page ticket adds its own flows to a harness that already runs, instead of one
+big suite at the end.
+
 ## What to build
 
-With all backend capabilities, the modern TanStack frontend, URL-driven modal state, YouTube-grade playlists, multi-resource search, error resilience, and skeleton states integrated, we must **prove—not claim—that the complete platform is robust, performant, secure, and seamlessly integrated**.
+1. **Harness in `apps/web/e2e/`.** Playwright (Chromium, headless) against the compose stack (`make up-all`)
+   with the web app built and started by Playwright's `webServer`, seeded with `pnpm db:seed`. Traces and
+   screenshots on failure. One command, `pnpm --filter @vp/web test:e2e`, and a `make e2e-web` alias; a CI job
+   runs a reduced set.
+2. **Core flows on the current app:**
+   - Browse: home feed renders server-side, a card opens the watch page.
+   - Watch: the watch page renders server-side for a seeded READY video. The playback flow (`playing` and
+     `timeupdate` on the HLS master) belongs to [57](57-production-video-player-hls-streaming-controls.md),
+     which adds it to this harness, so it tests the real player rather than the legacy react-player.
+   - Upload: sign in with a dev persona, upload a fixture from the upload page, the video reaches READY
+     (the full-stack smoke formerly planned in 52).
+3. **Security suite:**
+   - XSS: hostile payloads (`<script>`, `onerror=`, `javascript:` URLs) in titles, descriptions and comments
+     render as text, and no script runs.
+   - Privilege escalation: a normal user calling creator and admin endpoints on someone else's resources
+     gets 403 problem+json.
+   - Security headers on the web server's HTML responses (CSP, `X-Content-Type-Options`,
+     `frame-ancestors`), added to the Start server where missing.
 
-This ticket delivers the **Full-Stack Acceptance Test Suite (make test-fullstack)**:
+Later flows (playlists, URL modals, search, admin, error pages, offline) are added by the tickets that build
+them. Lighthouse and vitals are [64](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) and
+[66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md); offline is
+[68](68-pwa-service-worker-offline-cache-background-sync.md).
 
-1. **Playwright Browser E2E Test Suite (`apps/web/e2e/`)**:
-   - Automated browser testing simulating real user workflows end-to-end against compose infrastructure:
-     - **Creator Workflow:** Log in as creator -> drag-and-drop upload video -> observe real-time live SSE progress bar update -> set title, category, tags -> view video reach `READY`.
-     - **Viewer Workflow:** Anonymous browse home feed -> search video with typo -> open watch page -> verify Vidstack player streams 1080p HLS without buffering -> hover seekbar and verify storyboard preview -> like video (optimistic update) -> submit threaded comment -> verify comment appears instantly.
-     - **Playlist & Queue Workflow:** Open watch page -> click "Save" -> verify `?modal=save-to-playlist` appears in URL -> create new playlist "Chill Beats" -> navigate to playlist page -> drag to reorder items -> click "Play All" -> verify player auto-advances to next video when current video ends while updating queue tray.
-     - **URL-Driven Modal & History Workflow (The STS Pattern):** Click Share button -> assert `?modal=share` in URL -> press browser Back button -> assert modal dismisses without navigating away -> press Forward button -> assert modal re-opens -> refresh page -> assert modal remains open.
-     - **Multi-Resource Search Workflow:** Focus search bar via `/` hotkey -> type creator handle -> assert suggestion quick-hit appears -> press Enter -> verify search results display spotlight Channel card, Videos, and Playlists with functional filter tabs.
-     - **Admin Workflow:** Log in as admin -> enter `/admin` -> create category -> verify new category appears in public browse bar -> inspect BullMQ queue health.
-     - **Resilience & Error Workflow:** Navigate to `/watch/invalid-video-id` -> verify custom `<NotFoundRoute />` renders without crash -> simulate 503 transient drop -> verify exponential retry recovers smoothly -> assert comment errors do not interrupt video playback.
-     - **Visual Stability Workflow:** Emulate 4G network throttle -> verify initial `<VideoGridSkeleton />` and `<WatchPageSkeleton />` mount with zero Cumulative Layout Shift (`CLS < 0.05`) before hydration.
+## Delivery slices
 
-2. **Security & Vulnerability Audit Suite**:
-   - **XSS Attack Vector Fuzzing:** Automated injection of malicious payloads (`<script>`, `onerror=alert(1)`, `javascript:`) in video titles, descriptions, playlist names, and comments; asserts 0 script execution and sanitized DOM rendering.
-   - **RBAC/ABAC Privilege Escalation Testing:** Normal user attempts to execute creator actions on another user's video (PATCH `/v1/creator/videos/:id`), access another user's private playlist, or execute admin actions (DELETE `/v1/admin/categories/:id`); asserts 403 Forbidden with RFC 9457 Problem Details.
-   - **CORS & Security Headers Check:** Verifies CSP (Content-Security-Policy), HSTS, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, and restricted CORS preflight behavior.
-
-3. **Performance & Core Web Vitals Gate**:
-   - Automated headless Lighthouse audit running in CI:
-     - Home feed LCP < 1.8s, CLS < 0.05, INP < 100ms.
-     - Video watch page LCP < 2.0s with zero layout shift during player mounting.
-     - Production bundle analyzer asserts initial client bundle <= 120 KB gzipped.
-
-4. **Resilience & Offline Validation**:
-   - Simulates offline drop mid-browse: verifies PWA Service Worker serves cached feed and queues background sync comment mutations cleanly.
+1. Harness, `webServer`, seed, CI job and the browse flow.
+2. Watch page and upload to READY flows.
+3. Security suite.
 
 ## Acceptance criteria
 
-- [ ] Playwright E2E suite installed in `apps/web/e2e/` with test workflows covering Creator, Viewer, Playlists, URL Modals, Search, Admin, Error Resilience, and Visual Skeletons.
-- [ ] Command `pnpm test:e2e:fullstack` (or `make e2e-fullstack`) executes all tests against local Docker stack in < 8 minutes.
-- [ ] Automated security audit tests:
-  - 10 hostile XSS injection payloads sanitized across comments, descriptions, and playlists.
-  - 10 privilege escalation boundary tests asserting 403 / 401 across admin, private playlists, and creator endpoints.
-  - Strict security response headers verified (Content-Security-Policy, X-Content-Type-Options).
-- [ ] Core Web Vitals CI assertions pass:
-  - LCP <= 1.8s
-  - CLS <= 0.05
-  - Performance score >= 90
-- [ ] End-to-end playback assertion: Playwright verifies `<video>` element emits playing event and time updates on HLS master stream.
-- [ ] Playlist queue assertion: Playwright verifies queue tray renders playlist items and continuous autoplay advances video sequence.
-- [ ] URL-driven modal assertion: Playwright verifies search param modal sync, browser Back button modal dismissal, and refresh durability.
-- [ ] Offline resilience assertion: Playwright simulates network disconnect, verifies offline banner renders, and background sync queues mutation.
-- [ ] Error routing assertion: Invalid URLs display custom 404 page; transient server hiccups auto-retry and recover.
-- [ ] Skeleton visual stability assertion: Playwright captures cold-load frames, asserting layout coordinates match rendered content (`CLS < 0.05`).
+- [ ] `pnpm --filter @vp/web test:e2e` runs the suite against the local compose stack with no off-machine
+      requests at test time; CI runs the reduced set.
+- [ ] Browse, watch page and upload-to-READY flows pass on the current app.
+- [ ] Each XSS payload renders inert in every field it is placed in.
+- [ ] Each privilege escalation attempt gets 403 (or 401 when unauthenticated) with a problem+json body.
+- [ ] The HTML response carries the security headers above.
+- [ ] `apps/web/AGENTS.md` says where a page ticket adds its flows.
 
 ## Out of scope
 
-- Multi-region distributed load testing (covered in backend ticket 28).
-
-## Notes for the implementer
-
-- Run Playwright in headless Chromium mode with `--disable-gpu` for fast, reproducible CI execution.
-- Seed predictable test fixtures using `pnpm db:seed` before running the test suite.
-
-## Testing plan
-
-- Full suite execution via `make e2e-fullstack`.
-- Report generation: HTML test report with trace recordings and failure screenshots in `apps/web/playwright-report/`.
+- Load testing: [28](28-k6-s1-s3-nightly-load-smoke.md).
+- The backend pipeline acceptance suite (`make e2e`, [20](20-phase2-acceptance-e2e-suite.md)).
 
 ## Definition of Done
 
-- [ ] `make e2e-fullstack` passes with 100% green tests.
-- [ ] Security, Playlist, Error Resilience, and Core Web Vitals assertions verified.
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] `pnpm --filter @vp/web test:e2e` green locally and in CI; `pnpm typecheck`, `pnpm lint` green.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

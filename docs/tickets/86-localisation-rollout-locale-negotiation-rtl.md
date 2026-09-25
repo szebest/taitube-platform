@@ -4,7 +4,7 @@
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Size | M |
-| Blocked by | 63 — TanStack Start SSR · 72 — Settings & customization system · 85 — Universal Intl formatting core |
+| Blocked by | 63 - SEO and OpenGraph · 72 - Settings & customization system · 85 - Universal Intl formatting core · 89 - TanStack Start foundation |
 | Blocks | — |
 | Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [PRD §1 Summary](../PRD.md#1-summary) |
 
@@ -32,7 +32,8 @@ One place decides the locale, and everything else is told:
 
 1. an explicit route segment or search param, if the URL carries one;
 2. the persisted user preference (ticket 72's settings);
-3. `Accept-Language`, negotiated against the supported set during the SSR render;
+3. `Accept-Language`, negotiated against the supported set during the SSR render and handed to the router
+   context, so the root route and every loader read the same value;
 4. `navigator.languages` on a client-only navigation;
 5. `en`.
 
@@ -51,7 +52,9 @@ render and the hydration agree by construction rather than by luck. `navigator` 
 
 ### W3 — SSR locale and document metadata
 
-- The server render sets `<html lang>` and, where relevant, `dir`.
+The server render is [89](89-web-tanstack-start-foundation.md)'s; this ticket carries the locale through it.
+
+- The root route's server render sets `<html lang>` and, where relevant, `dir`.
 - The negotiated locale is serialised into the streaming payload so hydration does not re-negotiate.
 - Ticket 63's OpenGraph and meta tags render in the negotiated locale; `hreflang` alternates are emitted for
   the supported set.

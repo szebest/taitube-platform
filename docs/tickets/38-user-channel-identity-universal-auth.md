@@ -6,7 +6,7 @@
 | Issue | [#38](https://github.com/szebest/taitube-platform/issues/38) |
 | Size | L |
 | Blocked by | 04 — API skeleton + auth + schema |
-| Blocks | 39, 40, 41, 42, 43, 44, 45, 46, 47, 49, 50, 56, 72, 76, 77, 78 |
+| Blocks | 39, 40, 41, 42, 43, 44, 46, 47, 49, 50, 56, 72, 76, 77, 78 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** done

@@ -123,19 +123,46 @@ async function refusedStatus(): Promise<Run> {
   return run;
 }
 
+async function foundationAddedLate(): Promise<{ run: Run; readme: string; blocked: string }> {
+  const dir = ticketsDirectory([
+    { number: '01', status: 'done', blockedBy: 'None' },
+    { number: '02', status: 'ready', blockedBy: '03' },
+    { number: '03', status: 'ready', blockedBy: '01' },
+  ]);
+  const run = await genIndex(['--dir', dir]);
+  const readme = readFileSync(join(dir, 'README.md'), 'utf8');
+  const blocked = readFileSync(join(dir, '03-ticket.md'), 'utf8');
+  rmSync(join(dir, '..'), { recursive: true });
+  return { run, readme, blocked };
+}
+
+async function refusedCycle(): Promise<Run> {
+  const dir = ticketsDirectory([
+    { number: '01', status: 'ready', blockedBy: '02' },
+    { number: '02', status: 'ready', blockedBy: '01' },
+  ]);
+  const run = await genIndex(['--dir', dir]);
+  rmSync(join(dir, '..'), { recursive: true });
+  return run;
+}
+
 describe('architecture: gen-index', () => {
   let check: Run;
   let anchors: Run;
   let refusal: Run;
   let frontier: { whileOpen: string[]; afterDone: string[] };
+  let foundation: { run: Run; readme: string; blocked: string };
+  let cycle: Run;
 
   beforeAll(async () => {
     writeFileSync(EDGE_CASES_FILE, EDGE_CASES);
-    [check, anchors, refusal, frontier] = await Promise.all([
+    [check, anchors, refusal, frontier, foundation, cycle] = await Promise.all([
       genIndex(['--check']),
       genIndex(['--anchors', ...SLUGGED.map(({ file }) => file)]),
       refusedStatus(),
       frontierAcrossAStatusChange(),
+      foundationAddedLate(),
+      refusedCycle(),
     ]);
     rmSync(dirname(EDGE_CASES_FILE), { recursive: true });
   });
@@ -158,6 +185,18 @@ describe('architecture: gen-index', () => {
   it('refuses a status outside the vocabulary', () => {
     expect(refusal.status).toBe(1);
     expect(refusal.output).toContain('01-ticket.md: unknown status `ready-for-agent`');
+  });
+
+  it('accepts a blocker with a higher number and levels the graph by its edges', () => {
+    expect(foundation.run.status).toBe(0);
+    expect(foundation.blocked).toContain('| Blocks | 02 |');
+    expect(foundation.readme).toContain('| 1 | [03](03-ticket.md) Ticket 03 |');
+    expect(foundation.readme).toContain('| 2 | [02](02-ticket.md) Ticket 02 |');
+  });
+
+  it('refuses a dependency cycle', () => {
+    expect(cycle.status).toBe(1);
+    expect(cycle.output).toContain('dependency cycle: 01 -> 02 -> 01');
   });
 
   it('moves the frontier when a status changes', () => {

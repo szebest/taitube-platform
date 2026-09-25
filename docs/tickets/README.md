@@ -1,6 +1,6 @@
 # Tickets — video-pipeline
 
-Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers always have lower numbers), not priority. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the frontier, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). Change a ticket's `**Status:**` line and re-run to update the board.
+Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers have lower numbers), not priority, with one exception: a foundation ticket added after the tickets that build on it keeps the next free number and blocks them anyway, so the graph may point from a higher number to a lower one but never in a cycle. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the frontier, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). Change a ticket's `**Status:**` line and re-run to update the board.
 
 ## Frontier
 
@@ -9,8 +9,10 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [44: Creator studio video management (metadata, thumbnails, visibility & admin overrides)](44-creator-studio-video-management-visibility.md)
 - [46: YouTube-grade playlists & watch history domain engine (Public/private, Watch Later, drag-and-drop reorder & resume sync)](46-youtube-playlists-watch-history-engine.md)
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
+- [49: Next-Gen frontend direct API gateway & CORS profile for Taitube](49-nextgen-frontend-api-gateway-bootstrap.md)
 - [50: Shared API contracts package (`@taitube/api-contracts`) & automated OpenAPI TypeScript codegen](50-shared-api-contracts-zod-openapi-codegen.md)
 - [83: Granular container topology — per-app images, a one-app dev loop and a single orchestrated launch](83-granular-container-topology-full-stack-deployment.md)
+- [89: Move apps/web from Create React App to TanStack Start - Vite, file-based TanStack Router, TanStack Query and SSR](89-web-tanstack-start-foundation.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -71,58 +73,59 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 34 | [Node 26 LTS upgrade and dependency refresh (after 2026-10-28)](34-node26-upgrade-deps.md) | 4 | S | 08 | — | blocked-by-date |
 | 35 | [Local-first proof — the whole system runs with zero external services and no internet (Phase 1 exit criterion)](35-local-first-offline-mode.md) | 1 | S–M | 08 | 79, 80 | done |
 | 36 | [Public video feed — unauthenticated browse, detail, and SSE for public videos](36-public-video-feed-api.md) | 5 | M | 19, 15 | 49 | done |
-| 37 | [Admin category management & public cached category API](37-admin-category-management-cached-api.md) | 5 | M | 04 | 44, 45, 50, 61 | done |
-| 38 | [User & channel identity profile with universal OIDC/JWKS provider](38-user-channel-identity-universal-auth.md) | 5 | L | 04 | 39, 40, 41, 42, 43, 44, 45, 46, 47, 49, 50, 56, 72, 76, 77, 78 | done |
-| 39 | [Declarative RBAC & ABAC permission engine (can(user, action, resource))](39-declarative-rbac-abac-permission-engine.md) | 5 | M | 38 | 40, 41, 42, 44, 45, 46, 61, 81 | done |
-| 40 | [High-throughput video reactions (likes/dislikes) & counter caching](40-high-throughput-video-reactions-counter-caching.md) | 5 | M | 38, 39 | 45, 76 | done |
-| 41 | [Channel subscriptions & subscribed channels video feed](41-channel-subscriptions-subscriber-feed.md) | 5 | M | 38, 39 | 45, 78 | done |
-| 42 | [Threaded video comments with keyset pagination & moderation](42-threaded-comments-keyset-pagination-moderation.md) | 5 | L | 38, 39 | 45, 76 | done |
-| 43 | [High-scale video views buffer (Redis batch flush) & creator studio analytics](43-high-scale-video-views-buffer-reconciler.md) | 5 | L | 38 | 44, 45, 65 | done |
-| 44 | [Creator studio video management (metadata, thumbnails, visibility & admin overrides)](44-creator-studio-video-management-visibility.md) | 5 | M | 37, 38, 39, 43 | 45, 47, 60 | ready |
-| 45 | [Frontend API modernization & contract alignment — migrate web app to clean canonical `/v1` APIs](45-legacy-frontend-compatibility-adapter-layer.md) | 5 | L | 37, 38, 39, 40, 41, 42, 43, 44 | 49, 52 | blocked |
-| 46 | [YouTube-grade playlists & watch history domain engine (Public/private, Watch Later, drag-and-drop reorder & resume sync)](46-youtube-playlists-watch-history-engine.md) | 5 | L | 38, 39 | 47, 49, 73 | ready |
-| 47 | [Multi-resource search engine — unified weighted full-text search across videos, channels & playlists with Redis caching](47-multi-resource-search-engine.md) | 5 | L | 38, 44, 46 | 49, 74 | blocked |
+| 37 | [Admin category management & public cached category API](37-admin-category-management-cached-api.md) | 5 | M | 04 | 44, 49, 50, 61 | done |
+| 38 | [User & channel identity profile with universal OIDC/JWKS provider](38-user-channel-identity-universal-auth.md) | 5 | L | 04 | 39, 40, 41, 42, 43, 44, 46, 47, 49, 50, 56, 72, 76, 77, 78 | done |
+| 39 | [Declarative RBAC & ABAC permission engine (can(user, action, resource))](39-declarative-rbac-abac-permission-engine.md) | 5 | M | 38 | 40, 41, 42, 44, 46, 61, 81 | done |
+| 40 | [High-throughput video reactions (likes/dislikes) & counter caching](40-high-throughput-video-reactions-counter-caching.md) | 5 | M | 38, 39 | 76 | done |
+| 41 | [Channel subscriptions & subscribed channels video feed](41-channel-subscriptions-subscriber-feed.md) | 5 | M | 38, 39 | 78 | done |
+| 42 | [Threaded video comments with keyset pagination & moderation](42-threaded-comments-keyset-pagination-moderation.md) | 5 | L | 38, 39 | 76 | done |
+| 43 | [High-scale video views buffer (Redis batch flush) & creator studio analytics](43-high-scale-video-views-buffer-reconciler.md) | 5 | L | 38 | 44, 65 | done |
+| 44 | [Creator studio video management (metadata, thumbnails, visibility & admin overrides)](44-creator-studio-video-management-visibility.md) | 5 | M | 37, 38, 39, 43 | 47, 60 | ready |
+| 45 | [Frontend API modernization & contract alignment — migrate web app to clean canonical `/v1` APIs](45-legacy-frontend-compatibility-adapter-layer.md) | 5 | L | — | — | done |
+| 46 | [YouTube-grade playlists & watch history domain engine (Public/private, Watch Later, drag-and-drop reorder & resume sync)](46-youtube-playlists-watch-history-engine.md) | 5 | L | 38, 39 | 47, 73 | ready |
+| 47 | [Multi-resource search engine — unified weighted full-text search across videos, channels & playlists with Redis caching](47-multi-resource-search-engine.md) | 5 | L | 38, 44, 46 | 74 | blocked |
 | 48 | [Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md) | 5 | L | 01 | — | ready |
-| 49 | [Next-Gen frontend direct API gateway & CORS profile for Taitube](49-nextgen-frontend-api-gateway-bootstrap.md) | 5 | M | 36, 38, 45, 46, 47 | 52 | blocked |
-| 50 | [Shared API contracts package (`@taitube/api-contracts`) & automated OpenAPI TypeScript codegen](50-shared-api-contracts-zod-openapi-codegen.md) | 5 | M | 19, 37, 38 | 51, 52 | ready |
-| 51 | [Type-safe API client SDK (`@taitube/api-client`) with auto-generated TanStack Query hooks](51-type-safe-query-client-tanstack-react-hooks.md) | 5 | M | 50 | 53 | blocked |
-| 52 | [Frontend integration as monorepo app (`apps/web`) with shared contracts & unified DX](52-integrate-frontend-pnpm-monorepo-app-web.md) | 5 | L | 45, 49, 50 | 53, 54, 75 | blocked |
-| 53 | [Frontend architecture modernization — TanStack suite (Query, Form, Table), typed API client & state cleanup](53-frontend-architecture-modernization-tanstack-query.md) | 5 | L | 51, 52 | 54, 55, 57, 67, 68, 69, 70, 72, 75 | blocked |
-| 54 | [Frontend testing infrastructure & integration suite (Vitest 3, Testing Library & MSW mock API)](54-frontend-testing-trophy-vitest-msw-integration-suite.md) | 5 | M | 52, 53 | 55, 56, 57, 58, 70, 75 | blocked |
-| 55 | [Modern design system foundation — Tailwind CSS v4, Radix UI primitives & theme engine](55-design-system-tailwind-radix-dark-theme.md) | 5 | L | 53, 54 | 56, 57, 58, 60, 61, 69, 70, 71, 72, 75 | blocked |
-| 56 | [Frontend universal auth, session security & XSS / token hardening](56-frontend-universal-auth-session-security.md) | 5 | M | 38, 54, 55 | 60, 61, 75 | blocked |
-| 57 | [Production video player — YouTube-grade player (Vidstack, Ambient Glow, Storyboard Scrubbing, Cinema & Stats for Nerds)](57-production-video-player-hls-streaming-controls.md) | 5 | L | 53, 54, 55 | 59, 62, 65, 73, 75, 76, 77, 78 | blocked |
-| 58 | [Modern browse layout — responsive navigation, category pills & video card micro-interactions](58-modern-browse-layout-microinteractions-motion.md) | 5 | M | 54, 55 | 59, 62, 71, 74, 75 | blocked |
-| 59 | [Modern video watch page — dynamic 2-column layout, interactive engagement bar & threaded comments UI](59-video-watch-page-responsive-layout-enhancements.md) | 5 | L | 57, 58 | 62, 71, 73, 75, 76 | blocked |
-| 60 | [Creator studio dashboard — video library, analytics charts & upload modal](60-creator-studio-dashboard-video-management-ui.md) | 5 | L | 44, 55, 56 | 62, 75 | blocked |
-| 61 | [Administrator control panel — dynamic category manager, queue health & moderation UI](61-admin-control-panel-category-moderation-ui.md) | 5 | M | 37, 39, 55, 56 | 62, 75 | blocked |
-| 62 | [Frontend performance, list virtualization & production bundle hardening](62-frontend-performance-virtualization-ssr-bundle-hardening.md) | 5 | L | 57, 58, 59, 60, 61 | 63, 64, 66, 75 | blocked |
-| 63 | [TanStack Router & TanStack Start SSR — SEO, dynamic OpenGraph & video streaming metadata](63-tanstack-router-start-ssr-seo-streaming.md) | 5 | L | 62 | 64, 66, 75, 77, 86 | blocked |
-| 64 | [Core Web Vitals optimization & real-user measurement (LCP, INP, CLS & OpenTelemetry web traces)](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) | 5 | M | 62, 63 | 65, 75 | blocked |
-| 65 | [First-party video playback telemetry, QoS & creator audience analytics beacon](65-first-party-video-playback-telemetry-analytics-beacon.md) | 5 | M | 43, 57, 64 | 75 | blocked |
-| 66 | [Advanced code splitting, granular chunking & asset lazy loading](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) | 5 | M | 62, 63 | 67, 68, 75 | blocked |
-| 67 | [Intelligent pre-fetching, viewport-triggered queries & Service Worker asset cache](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) | 5 | M | 53, 66 | 75 | blocked |
-| 68 | [Progressive Web App (PWA) & Service Worker — offline experience, asset caching & background sync](68-pwa-service-worker-offline-cache-background-sync.md) | 5 | L | 53, 66 | 75 | blocked |
-| 69 | [Frontend URL-driven state architecture — search params sync, modal deep-linking (STS pattern) & typesafe routing](69-frontend-url-state-search-params-modal-routing.md) | 5 | M | 53, 55 | 72, 73, 74, 75 | blocked |
-| 70 | [Frontend resilient error handling — RFC 9457 error pages, classified query retry policies & contextual view fallbacks](70-frontend-resilient-error-handling-retry-policy.md) | 5 | M | 53, 54, 55 | 75 | blocked |
-| 71 | [Frontend skeleton shimmer loading states — layout-stable placeholders for primary views (CLS < 0.05)](71-frontend-skeleton-shimmer-loading-states.md) | 5 | M | 55, 58, 59 | 75 | blocked |
-| 72 | [Extensive settings & customization system — themes, playback preferences, privacy toggles & channel branding](72-frontend-settings-customization-system.md) | 5 | M | 38, 53, 55, 69 | 75, 86 | blocked |
-| 73 | [Frontend YouTube-grade playlist & watch history library — watch history feed, playlist manager & player queue tray](73-frontend-youtube-playlists-library-player-queue.md) | 5 | L | 46, 57, 59, 69 | 75 | blocked |
-| 74 | [Frontend multi-resource search & discovery UI — polymorphic results, filter chips & auto-complete suggestions](74-frontend-multi-resource-search-discovery-ui.md) | 5 | M | 47, 58, 69 | 75 | blocked |
-| 75 | [Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md) | 5 | L | 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74 | — | blocked |
+| 49 | [Next-Gen frontend direct API gateway & CORS profile for Taitube](49-nextgen-frontend-api-gateway-bootstrap.md) | 5 | M | 36, 37, 38 | — | ready |
+| 50 | [Shared API contracts package (`@taitube/api-contracts`) & automated OpenAPI TypeScript codegen](50-shared-api-contracts-zod-openapi-codegen.md) | 5 | M | 19, 37, 38 | — | ready |
+| 51 | [Type-safe API client SDK (`@taitube/api-client`) with auto-generated TanStack Query hooks](51-type-safe-query-client-tanstack-react-hooks.md) | 5 | M | — | — | done |
+| 52 | [Frontend integration as monorepo app (`apps/web`) with shared contracts & unified DX](52-integrate-frontend-pnpm-monorepo-app-web.md) | 5 | L | — | — | done |
+| 53 | [Frontend data layer on TanStack Query and TanStack Form - loaders, query options, RTK Query removed](53-frontend-architecture-modernization-tanstack-query.md) | 5 | L | 89 | 56, 58, 59, 60, 61, 68, 70, 72 | blocked |
+| 54 | [Frontend testing infrastructure & integration suite (Vitest 3, Testing Library & MSW mock API)](54-frontend-testing-trophy-vitest-msw-integration-suite.md) | 5 | M | 89 | 55, 56 | blocked |
+| 55 | [Modern design system foundation — Tailwind CSS v4, Radix UI primitives & theme engine](55-design-system-tailwind-radix-dark-theme.md) | 5 | L | 54, 89 | 57, 58, 59, 60, 61, 69, 70, 72 | blocked |
+| 56 | [Frontend universal auth, session security & XSS / token hardening](56-frontend-universal-auth-session-security.md) | 5 | M | 38, 53, 54, 89 | 60, 61, 62, 72 | blocked |
+| 57 | [Production video player — YouTube-grade player (Vidstack, Ambient Glow, Storyboard Scrubbing, Cinema & Stats for Nerds)](57-production-video-player-hls-streaming-controls.md) | 5 | L | 55, 75, 89 | 59, 62, 65, 66, 73, 76, 77, 78 | blocked |
+| 58 | [Modern browse layout — responsive navigation, category pills & video card micro-interactions](58-modern-browse-layout-microinteractions-motion.md) | 5 | L | 53, 55, 89 | 62, 63, 74 | blocked |
+| 59 | [Modern video watch page — dynamic 2-column layout, interactive engagement bar & threaded comments UI](59-video-watch-page-responsive-layout-enhancements.md) | 5 | L | 53, 55, 57, 89 | 62, 63, 73, 76 | blocked |
+| 60 | [Creator studio dashboard — video library, analytics charts & upload modal](60-creator-studio-dashboard-video-management-ui.md) | 5 | L | 44, 53, 55, 56, 89 | 62, 66 | blocked |
+| 61 | [Administrator control panel — dynamic category manager, queue health & moderation UI](61-admin-control-panel-category-moderation-ui.md) | 5 | M | 37, 39, 53, 55, 56, 89 | — | blocked |
+| 62 | [Remove the legacy frontend and virtualize long lists](62-frontend-performance-virtualization-ssr-bundle-hardening.md) | 5 | L | 56, 57, 58, 59, 60, 74, 89 | — | blocked |
+| 63 | [Video SEO on the SSR render - route meta, OpenGraph, player cards, JSON-LD, sitemap and RSS](63-tanstack-router-start-ssr-seo-streaming.md) | 5 | M | 58, 59, 89 | 77, 86 | blocked |
+| 64 | [Core Web Vitals real-user measurement (LCP, INP, CLS) and OpenTelemetry web traces](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) | 5 | M | 89 | 65 | blocked |
+| 65 | [First-party video playback telemetry, QoS & creator audience analytics beacon](65-first-party-video-playback-telemetry-analytics-beacon.md) | 5 | M | 43, 57, 64, 89 | — | blocked |
+| 66 | [Advanced code splitting, granular chunking & asset lazy loading](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) | 5 | M | 57, 60, 89 | — | blocked |
+| 67 | [Intelligent pre-fetching, viewport-triggered queries & Service Worker asset cache](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) | 5 | M | — | — | done |
+| 68 | [Progressive Web App (PWA) & Service Worker — offline experience, asset caching & background sync](68-pwa-service-worker-offline-cache-background-sync.md) | 5 | L | 53, 89 | — | blocked |
+| 69 | [Frontend URL-driven state architecture — search params sync, modal deep-linking (STS pattern) & typesafe routing](69-frontend-url-state-search-params-modal-routing.md) | 5 | M | 55, 89 | 73 | blocked |
+| 70 | [Frontend resilient error handling — RFC 9457 error pages, classified query retry policies & contextual view fallbacks](70-frontend-resilient-error-handling-retry-policy.md) | 5 | M | 53, 55, 89 | — | blocked |
+| 71 | [Frontend skeleton shimmer loading states — layout-stable placeholders for primary views (CLS < 0.05)](71-frontend-skeleton-shimmer-loading-states.md) | 5 | M | — | — | done |
+| 72 | [Extensive settings & customization system — themes, playback preferences, privacy toggles & channel branding](72-frontend-settings-customization-system.md) | 5 | M | 38, 53, 55, 56, 89 | 86 | blocked |
+| 73 | [Frontend YouTube-grade playlist & watch history library — watch history feed, playlist manager & player queue tray](73-frontend-youtube-playlists-library-player-queue.md) | 5 | L | 46, 57, 59, 69, 89 | — | blocked |
+| 74 | [Frontend multi-resource search & discovery UI — polymorphic results, filter chips & auto-complete suggestions](74-frontend-multi-resource-search-discovery-ui.md) | 5 | M | 47, 58, 89 | 62 | blocked |
+| 75 | [Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md) | 5 | L | 89 | 57 | blocked |
 | 76 | [Live streaming architecture — RTMP/WHIP ingestion, low-latency HLS packaging & real-time chat sidecar](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) | 5 | L | 38, 40, 42, 57, 59 | 78 | blocked |
-| 77 | [Platform integrations ecosystem — oEmbed provider, embeddable iframe player, Discord/Twitter rich unfurls & webhooks](77-platform-integrations-oembed-embed-player-webhooks.md) | 5 | M | 38, 57, 63 | 78 | blocked |
-| 78 | [Discord integration ecosystem — Taitube Discord bot, Watch Together voice activity, creator alerts & community role sync](78-discord-integration-bot-watch-together-activity-creator-alerts.md) | 5 | L | 38, 41, 57, 76, 77 | — | blocked |
+| 77 | [Platform integrations ecosystem — oEmbed provider, embeddable iframe player, Discord/Twitter rich unfurls & webhooks](77-platform-integrations-oembed-embed-player-webhooks.md) | 5 | M | 38, 57, 63, 89 | 78 | blocked |
+| 78 | [Discord integration ecosystem — Taitube Discord bot, Watch Together voice activity, creator alerts & community role sync](78-discord-integration-bot-watch-together-activity-creator-alerts.md) | 5 | L | 38, 41, 57, 76, 77, 89 | — | blocked |
 | 79 | [Offline smoke test runner refactor & CI configuration cleanup](79-offline-smoke-runner-refactor-cleanup.md) | 1 | S | 35 | — | done |
 | 80 | [Full-spectrum developer experience, local environment setup & CI/CD pipeline acceleration](80-ci-test-pipeline-optimization-speed.md) | 3 | L | 02, 08, 35 | — | done |
 | 81 | [Declarative permissions refactor with @casl/ability & elimination of ad-hoc checks](81-casl-declarative-permissions-refactor.md) | 5 | M | 39 | 82 | done |
 | 82 | [Architecture remediation — package runtime tiers, contract seams & machine-enforced boundaries](82-architecture-remediation-package-scoping-contract-seams.md) | 5 | L | 81 | 83, 84 | done |
 | 83 | [Granular container topology — per-app images, a one-app dev loop and a single orchestrated launch](83-granular-container-topology-full-stack-deployment.md) | 5 | L | 82 | — | ready |
 | 84 | [Result-typed error handling — domain code returns, the edge decides](84-result-typed-error-handling-shared-domain-rules.md) | 5 | L | 82 | 85, 87 | done |
-| 85 | [Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md) | 5 | L | 84 | 86 | done |
-| 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85 | — | blocked |
+| 85 | [Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md) | 5 | L | 84 | 86, 89 | done |
+| 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85, 89 | — | blocked |
 | 87 | [One composition root — a typed container, configuration as a value, and no hidden dependencies](87-composition-root-typed-container-config-value.md) | 5 | L | 84 | 88 | done |
-| 88 | [Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | XL (delivered as six PRs, see *Delivery*) | 87 | 90 | done |
+| 88 | [Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | XL (delivered as six PRs, see *Delivery*) | 87 | 89, 90 | done |
+| 89 | [Move apps/web from Create React App to TanStack Start - Vite, file-based TanStack Router, TanStack Query and SSR](89-web-tanstack-start-foundation.md) | 5 | L | 85, 88 | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 78, 86 | ready |
 | 90 | [Cloud Terraform on the Cloudflare v5 provider, validated in CI](90-cloud-terraform-provider-v5.md) | 5 | M | 88 | — | done |
 
 > Board statuses derive from each ticket's `**Status:**` line and its blockers: `ready` = all blockers done (the frontier) · `blocked` · `in-progress` · `done` · `blocked-by-date` (blockers done, waiting for a date the ticket names).
@@ -195,7 +198,7 @@ flowchart LR
         T50["50 Shared API contracts package"]
         T51["51 Type-safe API client SDK"]
         T52["52 Frontend integration as monorepo app"]
-        T53["53 Frontend architecture modernization"]
+        T53["53 Frontend data layer on TanStack Query"]
         T54["54 Frontend testing infrastructure & integr…"]
         T55["55 Modern design system foundation"]
         T56["56 Frontend universal auth"]
@@ -204,9 +207,9 @@ flowchart LR
         T59["59 Modern video watch page"]
         T60["60 Creator studio dashboard"]
         T61["61 Administrator control panel"]
-        T62["62 Frontend performance"]
-        T63["63 TanStack Router & TanStack Start SSR"]
-        T64["64 Core Web Vitals optimization & real-user…"]
+        T62["62 Remove the legacy frontend"]
+        T63["63 Video SEO on the SSR render - route meta"]
+        T64["64 Core Web Vitals real-user measurement"]
         T65["65 First-party video playback telemetry"]
         T66["66 Advanced code splitting"]
         T67["67 Intelligent pre-fetching"]
@@ -229,6 +232,7 @@ flowchart LR
         T86["86 Localisation rollout"]
         T87["87 One composition root"]
         T88["88 Codebase health to nine"]
+        T89["89 Move apps/web from Create React App to T…"]
         T90["90 Cloud Terraform on the Cloudflare v5 pro…"]
     end
     subgraph 3_Developer_Velocity_Operational_Excellence["3 — Developer Velocity & Operational Excellence"]
@@ -303,14 +307,6 @@ flowchart LR
     T38 --> T44
     T39 --> T44
     T43 --> T44
-    T37 --> T45
-    T38 --> T45
-    T39 --> T45
-    T40 --> T45
-    T41 --> T45
-    T42 --> T45
-    T43 --> T45
-    T44 --> T45
     T38 --> T46
     T39 --> T46
     T38 --> T47
@@ -318,99 +314,79 @@ flowchart LR
     T46 --> T47
     T01 --> T48
     T36 --> T49
+    T37 --> T49
     T38 --> T49
-    T45 --> T49
-    T46 --> T49
-    T47 --> T49
     T19 --> T50
     T37 --> T50
     T38 --> T50
-    T50 --> T51
-    T45 --> T52
-    T49 --> T52
-    T50 --> T52
-    T51 --> T53
-    T52 --> T53
-    T52 --> T54
-    T53 --> T54
-    T53 --> T55
+    T89 --> T53
+    T89 --> T54
     T54 --> T55
+    T89 --> T55
     T38 --> T56
+    T53 --> T56
     T54 --> T56
-    T55 --> T56
-    T53 --> T57
-    T54 --> T57
+    T89 --> T56
     T55 --> T57
-    T54 --> T58
+    T75 --> T57
+    T89 --> T57
+    T53 --> T58
     T55 --> T58
+    T89 --> T58
+    T53 --> T59
+    T55 --> T59
     T57 --> T59
-    T58 --> T59
+    T89 --> T59
     T44 --> T60
+    T53 --> T60
     T55 --> T60
     T56 --> T60
+    T89 --> T60
     T37 --> T61
     T39 --> T61
+    T53 --> T61
     T55 --> T61
     T56 --> T61
+    T89 --> T61
+    T56 --> T62
     T57 --> T62
     T58 --> T62
     T59 --> T62
     T60 --> T62
-    T61 --> T62
-    T62 --> T63
-    T62 --> T64
-    T63 --> T64
+    T74 --> T62
+    T89 --> T62
+    T58 --> T63
+    T59 --> T63
+    T89 --> T63
+    T89 --> T64
     T43 --> T65
     T57 --> T65
     T64 --> T65
-    T62 --> T66
-    T63 --> T66
-    T53 --> T67
-    T66 --> T67
+    T89 --> T65
+    T57 --> T66
+    T60 --> T66
+    T89 --> T66
     T53 --> T68
-    T66 --> T68
-    T53 --> T69
+    T89 --> T68
     T55 --> T69
+    T89 --> T69
     T53 --> T70
-    T54 --> T70
     T55 --> T70
-    T55 --> T71
-    T58 --> T71
-    T59 --> T71
+    T89 --> T70
     T38 --> T72
     T53 --> T72
     T55 --> T72
-    T69 --> T72
+    T56 --> T72
+    T89 --> T72
     T46 --> T73
     T57 --> T73
     T59 --> T73
     T69 --> T73
+    T89 --> T73
     T47 --> T74
     T58 --> T74
-    T69 --> T74
-    T52 --> T75
-    T53 --> T75
-    T54 --> T75
-    T55 --> T75
-    T56 --> T75
-    T57 --> T75
-    T58 --> T75
-    T59 --> T75
-    T60 --> T75
-    T61 --> T75
-    T62 --> T75
-    T63 --> T75
-    T64 --> T75
-    T65 --> T75
-    T66 --> T75
-    T67 --> T75
-    T68 --> T75
-    T69 --> T75
-    T70 --> T75
-    T71 --> T75
-    T72 --> T75
-    T73 --> T75
-    T74 --> T75
+    T89 --> T74
+    T89 --> T75
     T38 --> T76
     T40 --> T76
     T42 --> T76
@@ -419,11 +395,13 @@ flowchart LR
     T38 --> T77
     T57 --> T77
     T63 --> T77
+    T89 --> T77
     T38 --> T78
     T41 --> T78
     T57 --> T78
     T76 --> T78
     T77 --> T78
+    T89 --> T78
     T35 --> T79
     T02 --> T80
     T08 --> T80
@@ -436,8 +414,11 @@ flowchart LR
     T63 --> T86
     T72 --> T86
     T85 --> T86
+    T89 --> T86
     T84 --> T87
     T87 --> T88
+    T85 --> T89
+    T88 --> T89
     T88 --> T90
 ```
 
@@ -447,26 +428,24 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 
 | Level | Tickets (can run in parallel) |
 |---|---|
-| 0 | [01](01-repo-skeleton-local-infra.md) Repo skeleton + local infrastructure |
+| 0 | [01](01-repo-skeleton-local-infra.md) Repo skeleton + local infrastructure · [45](45-legacy-frontend-compatibility-adapter-layer.md) Frontend API modernization & contract al… · [51](51-type-safe-query-client-tanstack-react-hooks.md) Type-safe API client SDK · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app · [67](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) Intelligent pre-fetching · [71](71-frontend-skeleton-shimmer-loading-states.md) Frontend skeleton shimmer loading states |
 | 1 | [02](02-ci-dual-runtime.md) CI · [03](03-dev-tooling-fixtures-token-testpage.md) Dev tooling · [31](31-cloud-accounts-terraform.md) Cloud accounts + Terraform · [48](48-project-rebrand-cli-unification.md) Complete monorepo rebrand & package name… |
 | 2 | [04](04-api-skeleton-auth-schema-get-video.md) API skeleton + auth + full database schema |
 | 3 | [05](05-single-put-upload-complete-enqueue.md) Upload slice · [10](10-bull-board-admin-auth.md) Bull Board queue UI behind admin auth · [19](19-videos-api-completion-openapi.md) Videos API completion · [37](37-admin-category-management-cached-api.md) Admin category management & public cache… · [38](38-user-channel-identity-universal-auth.md) User & channel identity profile |
 | 4 | [06](06-worker-runtime-probe-stage.md) Worker runtime + probe stage · [11](11-multipart-upload-resume-abort.md) Multipart upload · [39](39-declarative-rbac-abac-permission-engine.md) Declarative RBAC & ABAC permission engine · [43](43-high-scale-video-views-buffer-reconciler.md) High-scale video views buffer · [50](50-shared-api-contracts-zod-openapi-codegen.md) Shared API contracts package |
-| 5 | [07](07-transcode-720p-package-notify-playable.md) transcode-720p + package + notify · [17](17-housekeeping-reconciler-purge.md) Housekeeping stage · [40](40-high-throughput-video-reactions-counter-caching.md) High-throughput video reactions · [41](41-channel-subscriptions-subscriber-feed.md) Channel subscriptions & subscribed chann… · [42](42-threaded-comments-keyset-pagination-moderation.md) Threaded video comments · [44](44-creator-studio-video-management-visibility.md) Creator studio video management · [46](46-youtube-playlists-watch-history-engine.md) YouTube-grade playlists & watch history … · [51](51-type-safe-query-client-tanstack-react-hooks.md) Type-safe API client SDK · [81](81-casl-declarative-permissions-refactor.md) Declarative permissions refactor |
-| 6 | [08](08-containerise-compose-smoke-images.md) Containerise everything · [09](09-crash-safety-effectively-once.md) Crash safety · [12](12-ladder-flows-fanout-fanin.md) Fan-out / fan-in · [15](15-sse-progress-events.md) Live status · [18](18-admission-control-priorities.md) Admission control · [45](45-legacy-frontend-compatibility-adapter-layer.md) Frontend API modernization & contract al… · [47](47-multi-resource-search-engine.md) Multi-resource search engine · [82](82-architecture-remediation-package-scoping-contract-seams.md) Architecture remediation |
+| 5 | [07](07-transcode-720p-package-notify-playable.md) transcode-720p + package + notify · [17](17-housekeeping-reconciler-purge.md) Housekeeping stage · [40](40-high-throughput-video-reactions-counter-caching.md) High-throughput video reactions · [41](41-channel-subscriptions-subscriber-feed.md) Channel subscriptions & subscribed chann… · [42](42-threaded-comments-keyset-pagination-moderation.md) Threaded video comments · [44](44-creator-studio-video-management-visibility.md) Creator studio video management · [46](46-youtube-playlists-watch-history-engine.md) YouTube-grade playlists & watch history … · [81](81-casl-declarative-permissions-refactor.md) Declarative permissions refactor |
+| 6 | [08](08-containerise-compose-smoke-images.md) Containerise everything · [09](09-crash-safety-effectively-once.md) Crash safety · [12](12-ladder-flows-fanout-fanin.md) Fan-out / fan-in · [15](15-sse-progress-events.md) Live status · [18](18-admission-control-priorities.md) Admission control · [47](47-multi-resource-search-engine.md) Multi-resource search engine · [82](82-architecture-remediation-package-scoping-contract-seams.md) Architecture remediation |
 | 7 | [13](13-thumbnails-flow-child.md) Thumbnails as a non-blocking Flow child · [14](14-segment-streaming-uploader-disk-bounds.md) Stream segments to storage while encoding · [16](16-retries-dlq-admin-replay-reprocess.md) Retries · [21](21-observability-stack-local.md) Local observability stack · [25](25-kubernetes-local-k3d.md) Kubernetes locally · [34](34-node26-upgrade-deps.md) Node 26 LTS upgrade · [35](35-local-first-offline-mode.md) Local-first proof · [36](36-public-video-feed-api.md) Public video feed · [83](83-granular-container-topology-full-stack-deployment.md) Granular container topology · [84](84-result-typed-error-handling-shared-domain-rules.md) Result-typed error handling |
 | 8 | [20](20-phase2-acceptance-e2e-suite.md) Phase 2 acceptance · [22](22-metrics-catalogue-dashboards.md) Metrics catalogue populated + queue poll… · [23](23-otel-tracing-e2e.md) OpenTelemetry tracing end-to-end · [30](30-transactional-outbox.md) Transactional outbox · [49](49-nextgen-frontend-api-gateway-bootstrap.md) Next-Gen frontend direct API gateway & C… · [79](79-offline-smoke-runner-refactor-cleanup.md) Offline smoke test runner refactor & CI … · [80](80-ci-test-pipeline-optimization-speed.md) Full-spectrum developer experience · [85](85-universal-intl-formatting-message-core.md) Universal Intl formatting core · [87](87-composition-root-typed-container-config-value.md) One composition root |
-| 9 | [24](24-alert-rules-alertmanager.md) Alert rules + Alertmanager · [26](26-keda-autoscaling-graceful-shutdown.md) KEDA autoscaling on queue depth · [27](27-compose-autoscaler.md) Compose-level autoscaler · [32](32-cloud-overlay-deploy.md) Cloud reference deployment · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app · [88](88-codebase-health-ratchets.md) Codebase health to nine |
-| 10 | [28](28-k6-s1-s3-nightly-load-smoke.md) Load tests S1–S3 · [33](33-cost-guardrails-runbooks.md) Cost guardrails · [53](53-frontend-architecture-modernization-tanstack-query.md) Frontend architecture modernization · [90](90-cloud-terraform-provider-v5.md) Cloud Terraform on the Cloudflare v5 pro… |
-| 11 | [29](29-chaos-tooling-k6-s4-s7.md) Chaos tooling · [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) Frontend testing infrastructure & integr… |
-| 12 | [55](55-design-system-tailwind-radix-dark-theme.md) Modern design system foundation |
-| 13 | [56](56-frontend-universal-auth-session-security.md) Frontend universal auth · [57](57-production-video-player-hls-streaming-controls.md) Production video player · [58](58-modern-browse-layout-microinteractions-motion.md) Modern browse layout · [69](69-frontend-url-state-search-params-modal-routing.md) Frontend URL-driven state architecture · [70](70-frontend-resilient-error-handling-retry-policy.md) Frontend resilient error handling |
-| 14 | [59](59-video-watch-page-responsive-layout-enhancements.md) Modern video watch page · [60](60-creator-studio-dashboard-video-management-ui.md) Creator studio dashboard · [61](61-admin-control-panel-category-moderation-ui.md) Administrator control panel · [72](72-frontend-settings-customization-system.md) Extensive settings & customization system · [74](74-frontend-multi-resource-search-discovery-ui.md) Frontend multi-resource search & discove… |
-| 15 | [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md) Frontend performance · [71](71-frontend-skeleton-shimmer-loading-states.md) Frontend skeleton shimmer loading states · [73](73-frontend-youtube-playlists-library-player-queue.md) Frontend YouTube-grade playlist & watch … · [76](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) Live streaming architecture |
-| 16 | [63](63-tanstack-router-start-ssr-seo-streaming.md) TanStack Router & TanStack Start SSR |
-| 17 | [64](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) Core Web Vitals optimization & real-user… · [66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) Advanced code splitting · [77](77-platform-integrations-oembed-embed-player-webhooks.md) Platform integrations ecosystem · [86](86-localisation-rollout-locale-negotiation-rtl.md) Localisation rollout |
-| 18 | [65](65-first-party-video-playback-telemetry-analytics-beacon.md) First-party video playback telemetry · [67](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) Intelligent pre-fetching · [68](68-pwa-service-worker-offline-cache-background-sync.md) Progressive Web App · [78](78-discord-integration-bot-watch-together-activity-creator-alerts.md) Discord integration ecosystem |
-| 19 | [75](75-fullstack-e2e-playwright-security-perf-validation.md) Full-stack Playwright E2E suite |
+| 9 | [24](24-alert-rules-alertmanager.md) Alert rules + Alertmanager · [26](26-keda-autoscaling-graceful-shutdown.md) KEDA autoscaling on queue depth · [27](27-compose-autoscaler.md) Compose-level autoscaler · [32](32-cloud-overlay-deploy.md) Cloud reference deployment · [88](88-codebase-health-ratchets.md) Codebase health to nine |
+| 10 | [28](28-k6-s1-s3-nightly-load-smoke.md) Load tests S1–S3 · [33](33-cost-guardrails-runbooks.md) Cost guardrails · [89](89-web-tanstack-start-foundation.md) Move apps/web from Create React App to T… · [90](90-cloud-terraform-provider-v5.md) Cloud Terraform on the Cloudflare v5 pro… |
+| 11 | [29](29-chaos-tooling-k6-s4-s7.md) Chaos tooling · [53](53-frontend-architecture-modernization-tanstack-query.md) Frontend data layer on TanStack Query · [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) Frontend testing infrastructure & integr… · [64](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) Core Web Vitals real-user measurement · [75](75-fullstack-e2e-playwright-security-perf-validation.md) Full-stack Playwright E2E suite |
+| 12 | [55](55-design-system-tailwind-radix-dark-theme.md) Modern design system foundation · [56](56-frontend-universal-auth-session-security.md) Frontend universal auth · [68](68-pwa-service-worker-offline-cache-background-sync.md) Progressive Web App |
+| 13 | [57](57-production-video-player-hls-streaming-controls.md) Production video player · [58](58-modern-browse-layout-microinteractions-motion.md) Modern browse layout · [60](60-creator-studio-dashboard-video-management-ui.md) Creator studio dashboard · [61](61-admin-control-panel-category-moderation-ui.md) Administrator control panel · [69](69-frontend-url-state-search-params-modal-routing.md) Frontend URL-driven state architecture · [70](70-frontend-resilient-error-handling-retry-policy.md) Frontend resilient error handling · [72](72-frontend-settings-customization-system.md) Extensive settings & customization system |
+| 14 | [59](59-video-watch-page-responsive-layout-enhancements.md) Modern video watch page · [65](65-first-party-video-playback-telemetry-analytics-beacon.md) First-party video playback telemetry · [66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) Advanced code splitting · [74](74-frontend-multi-resource-search-discovery-ui.md) Frontend multi-resource search & discove… |
+| 15 | [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md) Remove the legacy frontend · [63](63-tanstack-router-start-ssr-seo-streaming.md) Video SEO on the SSR render - route meta · [73](73-frontend-youtube-playlists-library-player-queue.md) Frontend YouTube-grade playlist & watch … · [76](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) Live streaming architecture |
+| 16 | [77](77-platform-integrations-oembed-embed-player-webhooks.md) Platform integrations ecosystem · [86](86-localisation-rollout-locale-negotiation-rtl.md) Localisation rollout |
+| 17 | [78](78-discord-integration-bot-watch-together-activity-creator-alerts.md) Discord integration ecosystem |
 
 ## Suggested single-developer order
 

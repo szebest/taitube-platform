@@ -102,7 +102,7 @@ here. Type-only imports are still needed.
 ### Rule 4: Rules come from a package, and the component holds none
 
 Not built yet: `apps/web` depends on neither `@vp/validation` nor `@vp/domain-rules`, and no hook returns a
-`ViewState`. Tickets 53, 70 and 71 (all blocked) build it. The authority is
+`ViewState`. Tickets 53 and 70 build it, on top of 89. The authority is
 [docs/standards/error-handling.md](../../docs/standards/error-handling.md).
 
 - **`@vp/validation` is where a form check comes from.** It is universal, it takes the input and nothing else,
@@ -175,21 +175,44 @@ command to trust.
 ## 4. Target state — not yet true
 
 [SDD ADR-21](../../docs/SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs)
-chose **React 19 + TanStack Start + TanStack Router + TanStack Query v5 + Vite 6 + Tailwind CSS + Radix +
-hls.js**. None of it is installed. Tickets **49–75** carry out that migration; until they land, treat every
-TanStack / Tailwind / Radix / hls.js instruction anywhere in the repo as a description of the destination.
+chose **React 19 + TanStack Start + TanStack Router + TanStack Query v5 + Vite + Tailwind CSS + Radix +
+hls.js**. None of it is installed yet. The order is fixed:
 
-Concretely, the following are **target-state** rules and must not be cited as violations of today's code:
+1. **[Ticket 89](../../docs/tickets/89-web-tanstack-start-foundation.md) goes first**, ahead of every other
+   frontend ticket: TanStack Start on Vite, file-based TanStack Router, TanStack Query in the router context,
+   SSR, React 19, devtools and Vitest on Vite, with CRA, craco and react-scripts deleted. Legacy pages come
+   across as thin routes with only mechanical edits (router imports swapped, SSR-safe storage), nothing
+   redesigned.
+2. Then 53 (data layer, deletes RTK Query), 54 (jsdom, Testing Library, MSW), 55 (Tailwind + Radix), 56
+   (auth), 69 (URL modals) and the page tickets (57-61, 72-74) build on 89's structure. Each page ticket
+   owns deleting the legacy module it replaces; 62 removes Bootstrap and what is left.
 
-- **URL-driven state (the STS pattern)** — modals, tabs, filters and facets as search params with a Zod
-  `validateSearch` per route. Today's routes are plain `react-router-dom` v6 and hold view state in
-  providers and component state. Ticket 69.
-- **Layout-stable skeletons, `CLS < 0.05`** — ticket 71.
-- **Hierarchical error boundaries and a classified retry policy** — ticket 70.
-- **Streaming SSR and route-level code splitting** — tickets 62, 63, 66.
+Until 89 lands, treat every TanStack / Vite / Tailwind / Radix / hls.js instruction anywhere in the repo as a
+description of the destination.
 
-Adding TanStack or Tailwind ad hoc to a feature change is not "moving towards the target"; it is a second
-stack in the same bundle. Take it through the migration tickets.
+### Structure 89 sets up
+
+```
+src/
+├── routes/               file routes only: params, validateSearch, loader, head, component
+├── features/<feature>/   new code: api/ (queryOptions, mutations), components/, hooks/
+├── integrations/         query/ (QueryClient factory), auth/ (the auth seam in router context)
+├── components/ui/        the design system (55)
+├── modules/              legacy pages, deleted one by one by the page tickets
+└── router.tsx            createRouter, context { queryClient, auth }, defaults
+```
+
+- **A route file stays thin.** It parses params and search with Zod, loads with
+  `queryClient.ensureQueryData(xQueryOptions(...))`, and renders a component from `src/features/`. No
+  fetching in a component body, no `useEffect` fetch.
+- **URL state is a `validateSearch` schema on the route**, never component state that should survive a
+  refresh or a shared link.
+- **Loading and error UI are route `pendingComponent` / `errorComponent` / `notFoundComponent`**, not
+  ad hoc spinners.
+- **Nothing new goes into `src/modules/` or RTK Query.**
+
+Adding TanStack or Tailwind ad hoc to a feature change before 89 lands is not "moving towards the target"; it
+is a second stack in the same bundle. Take it through the tickets.
 
 There are **no `apps/web`-scoped skills.** `web-tanstack-query`, `web-headless-ui` and `web-player-hls`
 documented the target stack in the present tense and were removed in ticket 82 — they return with the

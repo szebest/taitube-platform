@@ -1,69 +1,56 @@
-# 64: Core Web Vitals optimization & real-user measurement (LCP, INP, CLS & OpenTelemetry web traces)
+# 64: Core Web Vitals real-user measurement (LCP, INP, CLS) and OpenTelemetry web traces
 
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Issue | [#64](https://github.com/szebest/taitube-platform/issues/64) |
 | Size | M |
-| Blocked by | 62 — Frontend performance · 63 — TanStack Router SSR |
-| Blocks | 65, 75 |
+| Blocked by | 89 - TanStack Start foundation |
+| Blocks | 65 |
 | Spec | [SDD §13 Observability](../SDD.md#13-autoscaling--observability) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
 
+Measurement only. The optimisations (poster preload, `fetchpriority`, aspect-ratio
+placeholders, `startTransition`) belong to the page tickets that render those elements and to
+[66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md); this ticket makes their effect visible.
+
 ## What to build
 
-Real user performance in modern web applications is defined by Google's **Core Web Vitals**:
-1. **LCP (Largest Contentful Paint):** Target < 1.8s (video poster / hero card).
-2. **INP (Interaction to Next Paint):** Target < 100ms (interaction responsiveness on click/seek).
-3. **CLS (Cumulative Layout Shift):** Target < 0.05 (prevent layout jumps while loading comments, video ads, or metadata).
-4. **TTFB (Time to First Byte):** Target < 200ms.
-
-This ticket delivers real-time frontend performance engineering, RUM (Real User Measurement), and frontend OpenTelemetry tracing:
-
-1. **LCP Optimizations**:
-   - `fetchpriority="high"` and `<link rel="preload">` on the primary video poster image.
-   - Resource hints (`dns-prefetch`, `preconnect`) for MinIO/S3 CDN storage.
-2. **INP (Interaction to Next Paint) Hardening**:
-   - Replaces blocking synchronous JavaScript with `React.startTransition` and `scheduler.postTask` during search input filtering and heavy comment list sorting.
-   - Passive event listeners on all touch and wheel scrolling handlers.
-3. **CLS Elimination**:
-   - Enforces strict CSS aspect-ratio placeholders (`aspect-video`, `aspect-[16/9]`) on player skeletons and video thumbnail grids so content never jumps when images load.
-4. **RUM Telemetry & OpenTelemetry Web SDK**:
-   - Imports `web-vitals` library to capture real-world user metrics (LCP, INP, CLS, FCP, TTFB).
-   - Reports Web Vitals via navigator `sendBeacon` to backend endpoint `POST /v1/telemetry/vitals`.
-   - Wires `@opentelemetry/sdk-trace-web` linking frontend user clicks to backend Fastify and BullMQ worker traces (Ticket 23).
+1. **RUM beacon.** `web-vitals` (`onLCP`, `onINP`, `onCLS`, `onFCP`, `onTTFB`) in `apps/web/src/features/telemetry/`,
+   started from the root route on the client only, batched and sent with `navigator.sendBeacon` (or
+   `fetch` with `keepalive`) to `POST /v1/telemetry/vitals`, tagged with the route id rather than the URL.
+2. **Vitals endpoint.** `POST /v1/telemetry/vitals` in `apps/api`, contract in `@vp/api-contracts`, exporting
+   histograms to Prometheus (`frontend_lcp_seconds`, `frontend_inp_seconds`, `frontend_cls_ratio`,
+   `frontend_ttfb_seconds`) by route, plus a Grafana panel row.
+3. **Web traces.** `@opentelemetry/sdk-trace-web` with fetch instrumentation propagating `traceparent`, so a
+   page load links to the Fastify and worker traces from [23](23-otel-tracing-e2e.md). Exported to the local
+   collector; no user data in span attributes.
+4. **Lighthouse report.** A local Lighthouse CI run against the built app that reports LCP, CLS and the
+   performance score in the PR. Thresholds are recorded but not enforced until the page tickets land.
 
 ## Acceptance criteria
 
-- [ ] Video poster images load with `fetchpriority="high"` and preconnect links on watch pages.
-- [ ] Video player and thumbnail cards enforce explicit `aspect-video` containers guaranteeing CLS < 0.05.
-- [ ] Non-critical state updates (filtering, comment sort) wrapped in `startTransition` to keep INP < 100ms.
-- [ ] `web-vitals` integrated capturing metric events (`onLCP`, `onINP`, `onCLS`, `onTTFB`).
-- [ ] Endpoint `POST /v1/telemetry/vitals` accepting non-blocking beacon batches and exporting metrics to Prometheus (`frontend_lcp_seconds`, `frontend_inp_seconds`, `frontend_cls_ratio`).
-- [ ] Frontend OpenTelemetry span injection correlating browser page loads to backend trace IDs.
-- [ ] Automated Lighthouse CI run in GitHub Actions / local asserting:
-  - LCP <= 1.8s
-  - CLS <= 0.05
-  - Performance score >= 92
+- [ ] Loading a page sends one beacon batch with the vitals the browser reported, tagged by route id.
+- [ ] `POST /v1/telemetry/vitals` validates the batch, rejects oversized bodies, and the metrics appear in
+      Prometheus.
+- [ ] A browser fetch to the API carries `traceparent`, and Tempo shows the browser span as the parent of the
+      API span.
+- [ ] Lighthouse CI runs against the local build with no off-machine requests and prints its report.
+- [ ] Nothing in this ticket loads in the server render or blocks hydration.
 
 ## Out of scope
 
-- Third-party marketing trackers (Google Analytics, Mixpanel) — keeps platform privacy-focused and GDPR compliant.
-
-## Notes for the implementer
-
-- Use `navigator.sendBeacon` or `fetch` with `keepalive: true` to guarantee telemetry transmits even if user closes tab.
-- Do not log sensitive user data in OpenTelemetry frontend spans.
+- Third-party analytics (Google Analytics, Mixpanel).
+- Playback QoS telemetry: [65](65-first-party-video-playback-telemetry-analytics-beacon.md).
 
 ## Testing plan
 
-- Synthetic performance audit: Run Lighthouse audit on desktop and simulated mobile throttling (4G, 4x CPU slowdown); assert all Core Web Vitals are within "Good" green thresholds.
-- Telemetry test: Load page, simulate user interaction, assert `POST /v1/telemetry/vitals` receives metric event with correct trace ID.
+- Unit spec for the batching and route tagging with a mocked `sendBeacon`.
+- API integration test for the vitals endpoint and the exported metrics.
 
 ## Definition of Done
 
-- [ ] Lighthouse score >= 92 across all pages.
-- [ ] Real User Monitoring verified against Prometheus dashboard.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] `pnpm --filter @vp/web test`, `pnpm test`, `pnpm typecheck`, `pnpm lint` green; `make smoke-offline` passes.
+- [ ] `docs/SDD.md` §6.1 and §13 list the endpoint and metrics.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
