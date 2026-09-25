@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#62](https://github.com/szebest/taitube-platform/issues/62) |
 | Size | L |
-| Blocked by | 57 - Production video player · 58 - Modern browse layout · 59 - Modern watch page · 60 - Creator studio · 89 - TanStack Start foundation |
+| Blocked by | 56 - Frontend auth · 57 - Production video player · 58 - Modern browse layout · 59 - Modern watch page · 60 - Creator studio · 74 - Multi-resource search UI · 89 - TanStack Start foundation |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
@@ -20,7 +20,7 @@ component-level splitting are [66](66-advanced-code-splitting-dynamic-chunking-l
 
 1. **Legacy removal.** Delete whatever is left of `apps/web/src/modules/`, the legacy providers and root
    layout pieces, their SCSS, and the dependencies nothing imports any more: `bootstrap`, `react-bootstrap`,
-   `sass`, `react-player`, `react-router-dom`. A zero-matches row keeps them out.
+   `sass`, `react-player`. A zero-matches row keeps them out.
 2. **List virtualization.** `@tanstack/react-virtual` on the feed grid (window scroller), the comment thread
    and the search results, with dynamic row measurement so infinite queries keep paging as the user scrolls.
 
@@ -32,8 +32,8 @@ component-level splitting are [66](66-advanced-code-splitting-dynamic-chunking-l
 
 ## Acceptance criteria
 
-- [ ] `apps/web/src/modules/` is gone; `bootstrap`, `react-bootstrap`, `sass`, `react-player` and
-      `react-router-dom` are out of `apps/web/package.json`, and a zero-matches row fails on any of them.
+- [ ] `apps/web/src/modules/` is gone; `bootstrap`, `react-bootstrap`, `sass` and `react-player` are out of
+      `apps/web/package.json`, and a zero-matches row fails on any of them.
 - [ ] Feed, comments and search results render a bounded number of rows however many items are loaded (a
       spec with 2,000 items asserts the mounted row count stays under 50).
 - [ ] Scrolling to the end of a virtualized list still fetches the next page.

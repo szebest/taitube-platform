@@ -16,6 +16,7 @@ import { PostgresUploadRepository } from './postgres-upload-repository';
 import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
+import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import type { PostgresDatabase } from './types';
 
 /** A `drizzle` handle or a `sql` pool is borrowed; a `url` opens a pool the bundle ends. */
@@ -37,6 +38,7 @@ export class PostgresRepositories implements Repositories {
   readonly channels: PostgresChannelRepository;
   readonly videoReactions: PostgresVideoReactionRepository;
   readonly subscriptions: PostgresSubscriptionRepository;
+  readonly videoViews: PostgresVideoViewRepository;
   readonly comments: PostgresCommentRepository;
 
   private readonly ownedPool: Sql | undefined;
@@ -57,6 +59,7 @@ export class PostgresRepositories implements Repositories {
     this.channels = new PostgresChannelRepository(db);
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);
+    this.videoViews = new PostgresVideoViewRepository(db);
     this.comments = new PostgresCommentRepository(db);
   }
 

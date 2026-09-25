@@ -5,3 +5,4 @@ export * from './channel';
 export * from './upload';
 export * from './category';
 export * from './ability';
+export * from './analytics';

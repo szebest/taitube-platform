@@ -7,6 +7,7 @@ import { InMemoryJobQueue } from '../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../in-memory/in-memory-multipart-storage';
 import { InMemoryStorageClient } from '../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../in-memory/in-memory-subscription-cache';
+import { InMemoryViewBuffer } from '../in-memory/in-memory-view-buffer';
 import { InMemoryRepositories } from '../in-memory/repositories/in-memory-repositories';
 import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
 import { MeteredStorageClient } from '../metered/metered-storage-client';
@@ -48,5 +49,6 @@ export function registerFamily(c: Container): void {
       closeOnDispose
     )
     .provide(Adapters.SubscriptionCache, () => new InMemorySubscriptionCache())
+    .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
     .provide(Adapters.BoardQueues, () => portBoardQueues);
 }

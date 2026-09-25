@@ -181,7 +181,8 @@ hls.js**. None of it is installed yet. The order is fixed:
 1. **[Ticket 89](../../docs/tickets/89-web-tanstack-start-foundation.md) goes first**, ahead of every other
    frontend ticket: TanStack Start on Vite, file-based TanStack Router, TanStack Query in the router context,
    SSR, React 19, devtools and Vitest on Vite, with CRA, craco and react-scripts deleted. Legacy pages come
-   across as thin routes, untouched.
+   across as thin routes with only mechanical edits (router imports swapped, SSR-safe storage), nothing
+   redesigned.
 2. Then 53 (data layer, deletes RTK Query), 54 (jsdom, Testing Library, MSW), 55 (Tailwind + Radix), 56
    (auth), 69 (URL modals) and the page tickets (57-61, 72-74) build on 89's structure. Each page ticket
    owns deleting the legacy module it replaces; 62 removes Bootstrap and what is left.

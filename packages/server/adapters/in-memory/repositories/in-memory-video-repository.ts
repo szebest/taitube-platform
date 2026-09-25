@@ -56,6 +56,11 @@ export class InMemoryVideoRepository extends VideoRepository {
     return Array.from(this.videosMap.values());
   }
 
+  addViews(videoId: string, views: number): void {
+    const video = this.videosMap.get(videoId);
+    if (video) video.viewsCount = (video.viewsCount ?? 0) + views;
+  }
+
   private async getEvents(id: string): Promise<VideoEventRecord[]> {
     return this.eventsRepo ? unwrapOr(await this.eventsRepo.findByVideoId(id), []) : [];
   }

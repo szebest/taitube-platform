@@ -10,5 +10,7 @@ export * from './channels/handle-format';
 export * from './categories/failures';
 export * from './categories/slug-format';
 export * from './categories/category-form';
+export * from './views/failures';
+export * from './views/view-telemetry';
 export * from './comments/failures';
 export * from './comments/content';

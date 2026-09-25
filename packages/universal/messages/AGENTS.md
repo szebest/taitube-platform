@@ -11,7 +11,7 @@ Instructions for any coding agent working on `@vp/messages`.
 The product's user-facing words: `dt()` to declare a message, `createTranslator()` for `t` / `tOr`, one
 catalogue per locale organised per feature (`src/en/`), and `ERROR_COPY`, the copy for every `ErrorCode`.
 
-`universal`, layer T3, on top of `@vp/intl`. The browser renders it today and ticket 63's server render
+`universal`, layer T3, on top of `@vp/intl`. The browser renders it today and ticket 89's server render
 will too. **No server package or app may import it**: the API returns a `code`, the client chooses the
 words (`tests/architecture/messages-are-client-only.test.ts`).
 
