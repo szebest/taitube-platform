@@ -141,6 +141,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
           multipart: c.get(Adapters.Multipart),
           cache: c.get(Adapters.Cache),
           reactionCache: c.get(Adapters.ReactionCache),
+          viewBuffer: c.get(Adapters.ViewBuffer),
           getQueue: c.get(Worker.GetQueue),
           flowProducer: c.get(Adapters.FlowProducer),
           logger: runtime.logger,

@@ -1,4 +1,4 @@
-# AGENTS.md — @vp/concurrency (In-process Coalescing)
+# AGENTS.md — @vp/concurrency (In-process Coalescing & Circuit Breaking)
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
@@ -12,6 +12,10 @@ adapter, and a service importing it from there crossed the service-to-adapter ed
 
 Consumers: `FeedService` (`apps/api/src/services/feed-service.ts`, handed one by
 `apps/api/src/composition/services.module.ts`) and `RedisReactionCacheAdapter` (`@vp/adapters`).
+
+`CircuitBreaker`: stops calling a dependency after a run of failures and lets one trial call through
+after a cooldown, on a clock it is handed (`now`). Consumer: `FallbackViewBuffer` (`@vp/adapters`),
+built by the external adapter family.
 
 ---
 

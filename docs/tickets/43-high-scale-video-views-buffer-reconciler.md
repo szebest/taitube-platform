@@ -9,7 +9,7 @@
 | Blocks | 44, 65 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §9.4 Worker process model](../SDD.md#94-worker-process-model) · [SDD §9.8 Housekeeping schedulers](../SDD.md#98-housekeeping-job-schedulers) |
 
-**Status:** ready
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -46,16 +46,16 @@ This ticket delivers:
 
 ## Acceptance criteria
 
-- [ ] Database migration creating `video_views_daily`:
+- [x] Database migration creating `video_views_daily`:
   - `video_id UUID not null references videos.id on delete cascade, view_date date not null, views integer not null default 0`.
   - Primary key `(video_id, view_date)` with composite index on `(view_date DESC, video_id)`.
-- [ ] Add `views_count bigint not null default 0` to `videos` table with index.
-- [ ] `ViewBufferPort` in `@taitube/core/ports/view-buffer.port.ts` and `RedisViewBufferAdapter` in `adapters/redis/redis-view-buffer.adapter.ts`.
-- [ ] `POST /v1/videos/:id/views` endpoint:
+- [x] Add `views_count bigint not null default 0` to `videos` table with index.
+- [x] `ViewBufferPort` in `@taitube/core/ports/view-buffer.port.ts` and `RedisViewBufferAdapter` in `adapters/redis/redis-view-buffer.adapter.ts`.
+- [x] `POST /v1/videos/:id/views` endpoint:
   - Validates telemetry payload with Zod schema (sessionId, watchSeconds, videoDuration).
   - Evaluates HyperLogLog deduplication (`PFADD taitube:views:dedup:{videoId}:{date} {sessionId}`).
   - Buffers increment in Redis, returning `202 Accepted` immediately (< 5ms p99 latency).
-- [ ] BullMQ scheduled job `flush-video-views`:
+- [x] BullMQ scheduled job `flush-video-views`:
   - Runs on worker reconciler schedule (every 10s).
   - Drains snapshot key atomically, executes batched PostgreSQL update in single transaction:
     ```sql
@@ -66,10 +66,10 @@ This ticket delivers:
     ```
   - Upserts daily metrics into `video_views_daily`.
   - Clears flushed batch key on successful commit.
-- [ ] Creator analytics endpoints:
+- [x] Creator analytics endpoints:
   - `GET /v1/creator/videos/:id/analytics`: Requires creator ownership. Returns daily views timeseries and summary stats.
   - `GET /v1/creator/channel/analytics`: Aggregated channel views metrics.
-- [ ] Concurrency & resilience tests:
+- [x] Concurrency & resilience tests:
   - Simulating 10,000 rapid view requests produces 0 database lock timeouts and exact consolidated view count in Postgres.
   - Simulated worker restart mid-batch recovers uncommitted snapshot without view counter loss.
 
@@ -100,6 +100,19 @@ This ticket delivers:
 
 ## Definition of Done
 
-- [ ] All ACs green under pnpm test and bun test.
-- [ ] pnpm typecheck && pnpm lint pass with zero warnings or errors.
+- [x] All ACs green under pnpm test and bun test.
+- [x] pnpm typecheck && pnpm lint pass with zero warnings or errors.
 - [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+
+## Open questions
+
+- Decided: packages are still `@vp/*` (the rebrand is ticket 48), so the port is `ViewBufferPort` in `packages/server/core/ports/view-buffer.ts` (no `.port.ts` suffix, core invariant 5) and the adapter is `packages/server/adapters/redis/redis-view-buffer.adapter.ts`.
+- Decided: the flush is effectively-once, not just at-least-once. `video_view_batches` records each applied batch id in the same transaction as the counters, and the batch key is deleted only after the commit. A flush that dies before the commit finds the same batch pending and applies it; one that dies after it sees the id and only releases it. Ledger rows older than a day are forgotten by the flush.
+- Decided: the buffer hash field is `{videoId}|{YYYY-MM-DD}|views` (and `|watch` for watch seconds) rather than a bare `{videoId}`, so a batch that spans midnight lands each view on the day it was counted, and average retention has watch time to divide.
+- Decided: `record` runs PFADD, the sliding EXPIRE and both HINCRBYs in one Lua script, so a beacon is one Redis round trip. The HyperLogLog undercounts distinct viewers by up to its ~0.81% standard error; that is the ticket's trade-off. The 10,000-beacon tests therefore assert that Postgres ends with exactly the count the buffer took.
+- Decided: a signed-in viewer is deduplicated by account, an anonymous one by `sessionId`.
+- Decided: the beacon endpoint does not look the video up (that would take a pool connection per beacon). An unknown or deleted video's counts are dropped at flush.
+- Decided: the Redis fallback lives in the external adapter family as `FallbackViewBuffer` (`@vp/adapters/resilient`) with a `CircuitBreaker` from `@vp/concurrency`. It holds views in process up to `views.fallbackCapacity` distinct viewers (a bounded map, not a literal ring buffer, since counts aggregate) and hands them to Redis on the first call that reaches it. A process that stops while Redis is down loses what it held.
+- Decided: `flush-video-views` rides the housekeeping queue on `every: 10000` (cron has minute resolution), so a long housekeeping task delays it; the buffer just grows meanwhile.
+- Decided: tuning (`views.*` in `AppConfig`) comes from `tuning.ts` with no new environment key.
+

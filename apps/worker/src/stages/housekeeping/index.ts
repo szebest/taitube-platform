@@ -4,6 +4,7 @@ import type {
   QueueJob,
   ReactionCachePort,
   StorageClient,
+  ViewBufferPort,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
@@ -13,6 +14,7 @@ import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
 import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
+import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeDeleted } from './purge-deleted';
 import { runReconcileProcessing } from './reconcile-processing';
 import { runReconcileReactionCounters } from './reconcile-reaction-counters';
@@ -26,6 +28,7 @@ export * from './purge-deleted';
 export * from './expire-raw';
 export * from './tmp-sweep';
 export * from './outbox-relay';
+export * from './flush-video-views';
 
 interface HousekeepingSettings {
   rawBucket: string;
@@ -34,6 +37,7 @@ interface HousekeepingSettings {
   maxInflightPerUser: number;
   tmpDir: string;
   housekeeping: AppConfig['housekeeping'];
+  views: AppConfig['views'];
 }
 
 export interface HousekeepingProcessorOptions extends HousekeepingSettings {
@@ -41,9 +45,11 @@ export interface HousekeepingProcessorOptions extends HousekeepingSettings {
   storage: StorageClient;
   multipart: MultipartStorage;
   reactionCache: ReactionCachePort;
+  viewBuffer: ViewBufferPort;
   getQueue: (name: QueueName) => JobQueue;
   workerId: string;
   metrics: PipelineMetrics;
+  now: () => number;
   logger?: Logger;
 }
 
@@ -72,8 +78,9 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
 export function createHousekeepingProcessor(
   options: HousekeepingProcessorOptions
 ): (job: QueueJob<HousekeepingJob>) => Promise<Result<unknown, AnyFailure>> {
-  const { repositories, storage, multipart, reactionCache, getQueue, workerId, metrics, logger } =
+  const { repositories, storage, multipart, reactionCache, viewBuffer, getQueue, workerId } =
     options;
+  const { metrics, now, logger } = options;
   const { rawBucket, publicBucket, retentionDays, maxInflightPerUser, tmpDir, housekeeping } =
     options;
   const probeQueue = getQueue('probe');
@@ -133,6 +140,16 @@ export function createHousekeepingProcessor(
           repositories,
           reactionCache,
           ...tasks.reactions,
+          logger,
+        });
+
+      case 'flush-video-views':
+        return await runFlushVideoViews({
+          repositories,
+          viewBuffer,
+          metrics,
+          now,
+          batchRetentionMs: options.views.batchRetentionMs,
           logger,
         });
 

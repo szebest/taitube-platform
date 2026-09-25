@@ -6,6 +6,7 @@ import type { MeteredMultipartStorage } from '../../metered/metered-multipart-st
 import type { MeteredStorageClient } from '../../metered/metered-storage-client';
 import { PostgresDatabaseClient } from '../../postgres/postgres-database-client';
 import { RedisSubscriptionCacheAdapter } from '../../redis/redis-subscription-cache.adapter';
+import { FallbackViewBuffer } from '../../resilient/fallback-view-buffer';
 import { S3MultipartStorage } from '../../s3/s3-multipart-storage';
 import { S3StorageClient } from '../../s3/s3-storage-client';
 import { Adapters } from '../adapter-tokens';
@@ -59,6 +60,7 @@ describe('external adapter family', () => {
     const c = family().override(Adapters.Cache, new InMemoryCacheClient());
 
     expect(c.get(Adapters.SubscriptionCache)).toBeInstanceOf(RedisSubscriptionCacheAdapter);
+    expect(c.get(Adapters.ViewBuffer)).toBeInstanceOf(FallbackViewBuffer);
     await c.dispose();
   });
 });

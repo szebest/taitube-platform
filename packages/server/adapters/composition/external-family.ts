@@ -1,4 +1,5 @@
 import { type Container, closeOnDispose, token } from '@vp/composition';
+import { CircuitBreaker } from '@vp/concurrency';
 import type { Repositories } from '@vp/core/repositories';
 import { bullBoardQueues } from '../bullmq/bull-board-queues';
 import { BullMqFlowProducer } from '../bullmq/bullmq-flow-producer';
@@ -10,6 +11,8 @@ import { PostgresDatabaseClient } from '../postgres/postgres-database-client';
 import { PostgresRepositories } from '../postgres/repositories/postgres-repositories';
 import { RedisCacheClient } from '../redis/redis-cache-client';
 import { RedisSubscriptionCacheAdapter } from '../redis/redis-subscription-cache.adapter';
+import { RedisViewBufferAdapter } from '../redis/redis-view-buffer.adapter';
+import { FallbackViewBuffer } from '../resilient/fallback-view-buffer';
 import { S3MultipartStorage } from '../s3/s3-multipart-storage';
 import { S3StorageClient } from '../s3/s3-storage-client';
 import { Adapters } from './adapter-tokens';
@@ -107,6 +110,23 @@ export function registerFamily(c: Container): void {
         new RedisSubscriptionCacheAdapter({
           redis: c.get(Redis).getRedis(),
           ...config.caches.subscriptions,
+        })
+    )
+    .provide(
+      Adapters.ViewBuffer,
+      (c) =>
+        new FallbackViewBuffer({
+          primary: new RedisViewBufferAdapter({
+            redis: c.get(Redis).getRedis(),
+            dedupTtlSeconds: config.views.dedupTtlSeconds,
+          }),
+          breaker: new CircuitBreaker({
+            failureThreshold: config.views.breakerFailureThreshold,
+            cooldownMs: config.views.breakerCooldownMs,
+            now: Date.now,
+          }),
+          capacity: config.views.fallbackCapacity,
+          metrics: c.get(Adapters.Metrics),
         })
     )
     .provide(Adapters.BoardQueues, () => bullBoardQueues);
