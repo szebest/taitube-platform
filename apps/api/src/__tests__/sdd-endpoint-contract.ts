@@ -15,6 +15,9 @@ const AUTHENTICATED = [VALIDATION_FAILED, UNAUTHORIZED];
 const OWNED_VIDEO = [...AUTHENTICATED, FORBIDDEN, ErrorCodes.VIDEO_NOT_FOUND];
 const VIEWED_VIDEO = [...AUTHENTICATED, ErrorCodes.VIDEO_NOT_FOUND];
 const CHANNEL = [...AUTHENTICATED, ErrorCodes.CHANNEL_NOT_FOUND];
+const LISTED = [VALIDATION_FAILED, ErrorCodes.INVALID_CURSOR, UNAUTHORIZED];
+const MODERATED = [...AUTHENTICATED, FORBIDDEN, ErrorCodes.COMMENT_NOT_FOUND];
+const PINNED = [...MODERATED, ErrorCodes.COMMENT_NOT_PINNABLE];
 const ADMIN = [UNAUTHORIZED, FORBIDDEN];
 const DLQ_ENTRY = [VALIDATION_FAILED, ...ADMIN, ErrorCodes.DLQ_ENTRY_NOT_FOUND];
 
@@ -207,6 +210,59 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     method: 'get',
     expectedStatuses: [200, 400, 401, 404],
     expectedErrorCodes: CHANNEL,
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/videos/{id}/comments',
+    method: 'get',
+    expectedStatuses: [200, 400, 401, 404],
+    expectedErrorCodes: [...LISTED, ErrorCodes.VIDEO_NOT_FOUND],
+    hasQueryParams: true,
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/videos/{id}/comments',
+    method: 'post',
+    expectedStatuses: [201, 400, 401, 403, 404, 422],
+    expectedErrorCodes: [...OWNED_VIDEO, ErrorCodes.COMMENT_NOT_FOUND],
+    hasBody: true,
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/comments/{id}/replies',
+    method: 'get',
+    expectedStatuses: [200, 400, 401, 404],
+    expectedErrorCodes: [...LISTED, ErrorCodes.COMMENT_NOT_FOUND],
+    hasQueryParams: true,
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/comments/{id}',
+    method: 'patch',
+    expectedStatuses: [200, 400, 401, 403, 404, 422],
+    expectedErrorCodes: MODERATED,
+    hasBody: true,
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/comments/{id}',
+    method: 'delete',
+    expectedStatuses: [204, 400, 401, 403, 404],
+    expectedErrorCodes: MODERATED,
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/comments/{id}/pin',
+    method: 'post',
+    expectedStatuses: [200, 400, 401, 403, 404, 409],
+    expectedErrorCodes: PINNED,
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/comments/{id}/pin',
+    method: 'delete',
+    expectedStatuses: [200, 400, 401, 403, 404, 409],
+    expectedErrorCodes: PINNED,
     hasPathParams: true,
   },
   {

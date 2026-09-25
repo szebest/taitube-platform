@@ -50,6 +50,27 @@ export function subscriptionCursorPayload(item: {
   return { createdAt: isoOf(item.createdAt), channelId: item.channelId };
 }
 
+export interface CommentThreadCursorRow {
+  isPinned: boolean;
+  likeCount: number;
+  createdAt: Date;
+  id: string;
+}
+
+/** Both comment sorts read from one payload, so a cursor survives a switch of sort. */
+export function commentThreadCursorPayload(row: CommentThreadCursorRow): CursorPayload {
+  return {
+    isPinned: row.isPinned ? 1 : 0,
+    likeCount: row.likeCount,
+    createdAt: isoOf(row.createdAt),
+    id: row.id,
+  };
+}
+
+function asPinnedFlag(value: unknown): Result<boolean, InvalidCursor> {
+  return value === 0 || value === 1 ? ok(value === 1) : err(invalidCursor());
+}
+
 /**
  * One payload for every sort: the rank inputs, not a rank. Which sort reads which of them is
  * the repository's business, so replaying a cursor under a different sort stays meaningful.
@@ -87,6 +108,21 @@ export function decodeSubscriptionCursor(
   return decodeWith(cursor, paginator, (payload) =>
     andThen(asDate(payload['createdAt']), (createdAt) =>
       andThen(asId(payload['channelId']), (channelId) => ok({ createdAt, channelId }))
+    )
+  );
+}
+
+export function decodeCommentThreadCursor(
+  cursor: string | undefined,
+  paginator: Paginator
+): Result<CommentThreadCursorRow | null, InvalidCursor> {
+  return decodeWith(cursor, paginator, (payload) =>
+    andThen(asPinnedFlag(payload['isPinned']), (isPinned) =>
+      andThen(asNumber(payload['likeCount']), (likeCount) =>
+        andThen(asDate(payload['createdAt']), (createdAt) =>
+          andThen(asId(payload['id']), (id) => ok({ isPinned, likeCount, createdAt, id }))
+        )
+      )
     )
   );
 }

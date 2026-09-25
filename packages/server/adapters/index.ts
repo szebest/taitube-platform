@@ -2,6 +2,7 @@ export * from './s3/index';
 export * from './redis/redis-cache-client';
 export * from './redis/redis-category-cache.adapter';
 export * from './redis/redis-reaction-cache.adapter';
+export * from './redis/redis-comment-cache.adapter';
 export * from './redis/redis-subscription-cache.adapter';
 export * from './redis/redis-view-buffer.adapter';
 export * from './bullmq/bullmq-job-queue';

@@ -86,6 +86,7 @@ export interface AppConfig {
     categories: { l1TtlMs: number; l2TtlSeconds: number; maxL1Entries: number };
     reactions: { ttlSeconds: number; userReactionTtlSeconds: number };
     subscriptions: { userSubscriptionsTtlSeconds: number; subscriberCountTtlSeconds: number };
+    comments: { hotTtlSeconds: number };
   };
   pollers: { queueIntervalMs: number; sqlIntervalMs: number; staleStepMs: number };
   httpCache: {
@@ -236,6 +237,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       categories: { ...CACHES.categories },
       reactions: { ...CACHES.reactions },
       subscriptions: { ...CACHES.subscriptions },
+      comments: { ...CACHES.comments },
     },
     pollers: { ...POLLERS },
     httpCache: {

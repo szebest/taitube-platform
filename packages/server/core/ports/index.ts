@@ -9,5 +9,6 @@ export * from './reaction-cache';
 export * from './subscription-cache';
 export * from './authorization';
 export * from './category-cache';
+export * from './comment-cache';
 export * from './token-verifier';
 export * from './view-buffer';

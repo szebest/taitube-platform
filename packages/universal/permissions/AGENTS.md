@@ -17,7 +17,8 @@ depends on `@vp/errors` and `@casl/ability` only, so `apps/web`, `apps/api`, `@v
 - The ability builder `getUserPermissions(user: UserContext | null)` in `ability.ts`, which applies all
   six.
 - Typed helpers in `src/helpers/`: `canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canReactVideo`,
-  `canAccessUpload`, `canSubscribeChannel`, `canManageCategory`, `canAccessAdmin`, `canReadAnalytics`.
+  `canAccessUpload`, `canSubscribeChannel`, `canCreateComment`, `canUpdateComment`,
+  `canDeleteComment`, `canPinComment`, `canManageCategory`, `canAccessAdmin`, `canReadAnalytics`.
 - Subject normalizers in `src/normalizers/` (`toVideoSubject`, `toUploadSubject`,
   `normalizeVideoResource`, `normalizeUploadResource`) that the helpers wrap resources with.
 - Types in `src/types/`: `UserContext`, `Role`, `parseRole` (the boundary parser from untrusted input),

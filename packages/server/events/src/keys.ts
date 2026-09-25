@@ -5,6 +5,7 @@ export const CacheKeys = {
   categoriesInvalidated: `${NAMESPACE}:events:cache:categories:invalidated`,
   publicFeed: (variant: string) => `${NAMESPACE}:feed:public:${variant}`,
   videoReactionCounts: (videoId: string) => `${NAMESPACE}:video:${videoId}:reactions`,
+  videoHotComments: (videoId: string) => `${NAMESPACE}:video:${videoId}:comments:top`,
   userReactions: (userId: string) => `${NAMESPACE}:user:${userId}:reactions`,
   userReaction: (userId: string, videoId: string) =>
     `${NAMESPACE}:user:${userId}:reactions:${videoId}`,

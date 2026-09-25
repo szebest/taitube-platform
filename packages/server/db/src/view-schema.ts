@@ -1,5 +1,6 @@
 import { bigint, date, index, integer, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
-import { timestamptz, videos } from './schema';
+import { timestamptz } from './columns';
+import { videos } from './schema';
 
 export const videoViewsDaily = pgTable(
   'video_views_daily',

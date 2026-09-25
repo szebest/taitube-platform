@@ -34,6 +34,7 @@ export const CACHES = {
     userSubscriptionsTtlSeconds: SECONDS_PER_DAY,
     subscriberCountTtlSeconds: SECONDS_PER_HOUR,
   },
+  comments: { hotTtlSeconds: SECONDS_PER_MINUTE },
 } as const;
 
 export const HOUSEKEEPING = {

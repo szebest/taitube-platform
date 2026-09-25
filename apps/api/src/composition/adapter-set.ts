@@ -4,6 +4,7 @@ import type {
   AuthorizationPort,
   CacheClient,
   CategoryCachePort,
+  CommentCachePort,
   DatabaseClient,
   JobQueue,
   MultipartStorage,
@@ -28,6 +29,7 @@ export interface AdapterOverrides {
   subscriptionCache?: SubscriptionCachePort;
   categoryCache?: CategoryCachePort;
   viewBuffer?: ViewBufferPort;
+  commentCache?: CommentCachePort;
   authorization?: AuthorizationPort;
   tokenVerifier?: TokenVerifier;
 }
@@ -44,6 +46,7 @@ const OVERRIDABLE: Record<keyof AdapterOverrides, { readonly name: string }> = {
   subscriptionCache: Adapters.SubscriptionCache,
   categoryCache: Adapters.CategoryCache,
   viewBuffer: Adapters.ViewBuffer,
+  commentCache: Adapters.CommentCache,
   authorization: Adapters.Authorization,
   tokenVerifier: Adapters.TokenVerifier,
 };

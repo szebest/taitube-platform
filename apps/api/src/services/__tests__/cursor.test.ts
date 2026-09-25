@@ -4,7 +4,9 @@ import { type InvalidCursor, Paginator } from '@vp/pagination';
 import { type Result, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import {
+  commentThreadCursorPayload,
   createdAtCursorPayload,
+  decodeCommentThreadCursor,
   decodeCreatedAtCursor,
   decodeFeedCursor,
   decodeSubscriptionCursor,
@@ -109,6 +111,34 @@ describe('apps/api/services: pagination cursors', () => {
     it('returns null for an absent createdAt cursor and rejects a broken one', () => {
       expect(decodeCreatedAtCursor(undefined, paginator)).toEqual(ok(null));
       expectRejected(decodeCreatedAtCursor('not-a-cursor', paginator));
+    });
+  });
+
+  describe('comment thread cursor', () => {
+    const THREAD = { isPinned: true, likeCount: 7, createdAt: CREATED_AT, id: 'comment-1' };
+
+    it('round-trips every key either comment sort orders by', () => {
+      const cursor = paginator.encodeCursor(commentThreadCursorPayload(THREAD));
+      expect(expectOk(decodeCommentThreadCursor(cursor, paginator))).toEqual(THREAD);
+    });
+
+    it('returns null for an absent cursor', () => {
+      expect(decodeCommentThreadCursor(undefined, paginator)).toEqual(ok(null));
+    });
+
+    it.each<{ scenario: string; payload: Record<string, unknown> }>([
+      {
+        scenario: 'a pinned flag that is not 0 or 1',
+        payload: { ...commentThreadCursorPayload(THREAD), isPinned: 2 },
+      },
+      {
+        scenario: 'no like count',
+        payload: { isPinned: 1, createdAt: CREATED_AT.toISOString(), id: 'comment-1' },
+      },
+    ])('rejects a cursor with $scenario', ({ payload }) => {
+      expectRejected(
+        decodeCommentThreadCursor(paginator.encodeCursor(payload as never), paginator)
+      );
     });
   });
 

@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import { PostgresCategoryRepository } from './postgres-category-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
+import { PostgresCommentRepository } from './postgres-comment-repository';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
@@ -38,6 +39,7 @@ export class PostgresRepositories implements Repositories {
   readonly videoReactions: PostgresVideoReactionRepository;
   readonly subscriptions: PostgresSubscriptionRepository;
   readonly videoViews: PostgresVideoViewRepository;
+  readonly comments: PostgresCommentRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -58,6 +60,7 @@ export class PostgresRepositories implements Repositories {
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);
     this.videoViews = new PostgresVideoViewRepository(db);
+    this.comments = new PostgresCommentRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {

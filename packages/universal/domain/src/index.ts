@@ -1,4 +1,5 @@
 export * from './category';
+export * from './comment';
 export * from './channel';
 export * from './public-feed';
 export * from './reaction';

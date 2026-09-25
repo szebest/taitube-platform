@@ -28,6 +28,8 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.HANDLE_ALREADY_TAKEN]: 'errors.handleAlreadyTaken',
   [ErrorCodes.INVALID_HANDLE_FORMAT]: 'errors.invalidHandleFormat',
   [ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF]: 'errors.cannotSubscribeToSelf',
+  [ErrorCodes.COMMENT_NOT_FOUND]: 'errors.commentNotFound',
+  [ErrorCodes.COMMENT_NOT_PINNABLE]: 'errors.commentNotPinnable',
   [ErrorCodes.DATABASE_UNAVAILABLE]: 'errors.databaseUnavailable',
   [ErrorCodes.CACHE_UNAVAILABLE]: 'errors.cacheUnavailable',
   [ErrorCodes.QUEUE_UNAVAILABLE]: 'errors.queueUnavailable',

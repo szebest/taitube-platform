@@ -4,24 +4,25 @@ import { Singleflight } from '@vp/concurrency';
 import { createLogger } from '@vp/logger';
 import { MetricsServer } from '@vp/observability';
 import { Paginator } from '@vp/pagination';
-import { AnalyticsService } from '../services/analytics-service';
-import { CategoryService } from '../services/category-service';
-import { ChannelService } from '../services/channel-service';
-import { DlqService } from '../services/dlq-service';
-import { FeedService } from '../services/feed-service';
-import { registerHousekeepingSchedulers } from '../services/housekeeping-schedulers';
+import {
+  CategoryService,
+  ChannelService,
+  CommentService,
+  DlqService,
+  FeedService,
+  QueueService,
+  ReactionService,
+  SseHub,
+  SseService,
+  SubscriptionService,
+  UploadService,
+  VideoService,
+  registerHousekeepingSchedulers,
+} from '../services/index';
 import { Poller } from '../services/poller';
 import { pollQueueMetrics } from '../services/queue-poller';
-import { QueueService } from '../services/queue-service';
-import { ReactionService } from '../services/reaction-service';
 import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
-import { SseHub } from '../services/sse-hub';
-import { SseService } from '../services/sse-service';
-import { SubscriptionService } from '../services/subscription-service';
-import { UploadService } from '../services/upload-service';
-import { VideoService } from '../services/video-service';
-import { ViewService } from '../services/view-service';
 import { bullBoardPlugin } from './bull-board';
 import { Services } from './service-tokens';
 
@@ -124,31 +125,17 @@ export function registerServices(c: Container): Container {
         })
     )
     .provide(
-      Services.ViewService,
+      Services.CommentService,
       (c) =>
-        new ViewService({
-          viewBuffer: c.get(Adapters.ViewBuffer),
-          metrics: c.get(Adapters.Metrics),
-          limits: config().views,
-          now: Date.now,
-        })
-    )
-    .provide(
-      Services.AnalyticsService,
-      () =>
-        new AnalyticsService({
+        new CommentService({
+          comments: repositories().comments,
           videos: repositories().videos,
-          videoViews: repositories().videoViews,
-          now: Date.now,
+          commentCache: c.get(Adapters.CommentCache),
+          singleflight: new Singleflight(),
+          paginator: c.get(Services.Paginator),
         })
     )
-    .provide(
-      Services.QueueService,
-      (c) =>
-        new QueueService({
-          queues: c.get(Adapters.Queues),
-        })
-    )
+    .provide(Services.QueueService, (c) => new QueueService({ queues: c.get(Adapters.Queues) }))
     .provide(Services.QueueBoard, (c) =>
       bullBoardPlugin({
         basePath: '/admin/queues',
@@ -249,6 +236,7 @@ export function registerServices(c: Container): Container {
       channelService: c.get(Services.ChannelService),
       reactionService: c.get(Services.ReactionService),
       subscriptionService: c.get(Services.SubscriptionService),
+      commentService: c.get(Services.CommentService),
       viewService: c.get(Services.ViewService),
       analyticsService: c.get(Services.AnalyticsService),
       queueService: c.get(Services.QueueService),

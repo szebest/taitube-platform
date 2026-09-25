@@ -25,6 +25,7 @@ export function newVideoRecord(data: NewVideoInput, now: Date): VideoRecord {
     errorCode: data.errorCode ?? null,
     errorMessage: data.errorMessage ?? null,
     viewsCount: data.viewsCount ?? 0,
+    commentsCount: 0,
     likesCount: data.likesCount ?? 0,
     dislikesCount: data.dislikesCount ?? 0,
     categoryId: data.categoryId ?? null,

@@ -14,6 +14,7 @@ describe('@vp/events cache keys', () => {
     [CacheKeys.viewFlushPointer, 'taitube:views:flushing'],
     [CacheKeys.viewFlushBatch('b1'), 'taitube:views:flush:b1'],
     [CacheKeys.viewDedup('v1', '2026-03-10'), 'taitube:views:dedup:v1:20260310'],
+    [CacheKeys.videoHotComments('v1'), 'taitube:video:v1:comments:top'],
   ])('builds %s', (key, expected) => {
     expect(key).toBe(expected);
   });

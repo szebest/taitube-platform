@@ -1,5 +1,6 @@
 import type { CategoryRepositoryPort } from './category-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
+import type { CommentRepositoryPort } from './comment-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
 import type { OutboxRepository } from './outbox-repository';
@@ -26,4 +27,5 @@ export interface Repositories {
   videoReactions: VideoReactionRepositoryPort;
   subscriptions: SubscriptionRepositoryPort;
   videoViews: VideoViewRepositoryPort;
+  comments: CommentRepositoryPort;
 }

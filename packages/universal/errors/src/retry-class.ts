@@ -29,6 +29,8 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.HANDLE_ALREADY_TAKEN]: 'permanent',
   [ErrorCodes.INVALID_HANDLE_FORMAT]: 'permanent',
   [ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF]: 'permanent',
+  [ErrorCodes.COMMENT_NOT_FOUND]: 'permanent',
+  [ErrorCodes.COMMENT_NOT_PINNABLE]: 'permanent',
   [ErrorCodes.UNSUPPORTED_CODEC]: 'permanent',
   [ErrorCodes.CORRUPT_CONTAINER]: 'permanent',
   [ErrorCodes.DURATION_EXCEEDED]: 'permanent',

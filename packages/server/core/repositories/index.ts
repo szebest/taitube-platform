@@ -11,4 +11,5 @@ export * from './channel-repository';
 export * from './video-reaction-repository';
 export * from './subscription-repository';
 export * from './video-view-repository';
+export * from './comment-repository';
 export * from './repositories';

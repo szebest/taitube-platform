@@ -18,10 +18,10 @@ import {
   pgEnum,
   pgTable,
   text,
-  timestamp,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { timestamptz } from './columns';
 
 export const videoStatusEnum = pgEnum('video_status', VIDEO_STATUSES);
 
@@ -32,8 +32,6 @@ export const renditionStatusEnum = pgEnum('rendition_status', RENDITION_STATUSES
 export const stepStatusEnum = pgEnum('step_status', STEP_STATUSES);
 
 export const userRoleEnum = pgEnum('user_role', USER_ROLES);
-
-export const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
@@ -112,6 +110,7 @@ export const videos = pgTable(
     generation: integer('generation').notNull().default(1),
     version: integer('version').notNull().default(0),
     viewsCount: bigint('views_count', { mode: 'number' }).notNull().default(0),
+    commentsCount: integer('comments_count').notNull().default(0),
     likesCount: integer('likes_count').notNull().default(0),
     dislikesCount: integer('dislikes_count').notNull().default(0),
     readyAt: timestamptz('ready_at'),
