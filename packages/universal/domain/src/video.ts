@@ -42,8 +42,5 @@ export interface Video {
   deletedAt?: Date | null;
 }
 
-export const CUSTOM_THUMBNAIL_FORMATS = ['jpg', 'png', 'webp'] as const;
-
-export type ThumbnailSelection =
-  | { source: 'poster' }
-  | { source: 'custom'; thumbnailId: string; format: (typeof CUSTOM_THUMBNAIL_FORMATS)[number] };
+/** One member until a custom upload exists; a `custom` member is added beside it then. */
+export type ThumbnailSelection = { source: 'poster' };

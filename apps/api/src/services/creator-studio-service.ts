@@ -25,7 +25,6 @@ import { type DatabaseUnavailable, type VersionConflict, versionConflict } from 
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, assertNever, err, isErr, map } from '@vp/result';
-import { customThumbnailKey } from '@vp/storage';
 import { creatorLibraryCursorPayload, decodeCreatorLibraryCursor } from './cursor';
 import type { ReadVideoServiceFailure, VideoService } from './video-service';
 import { type CreatorVideoView, type VideoDetailView, toCreatorVideoView } from './video-views';
@@ -67,21 +66,19 @@ export type TakeDownServiceFailure =
   | ReadVideoServiceFailure
   | VersionConflict;
 
-function thumbnailKeyOf(videoId: string, selection: ThumbnailSelection): string | null {
+function thumbnailKeyOf(selection: ThumbnailSelection): string | null {
   switch (selection.source) {
     case 'poster':
       return null;
-    case 'custom':
-      return customThumbnailKey(videoId, selection.thumbnailId, selection.format);
     default:
-      return assertNever(selection, 'ThumbnailSelection');
+      return assertNever(selection.source, 'ThumbnailSelection');
   }
 }
 
-function toStudioPatch(videoId: string, patch: VideoMetadataPatch): StudioMetadataPatch {
+function toStudioPatch(patch: VideoMetadataPatch): StudioMetadataPatch {
   const { selectedThumbnail, ...columns } = patch;
   if (!selectedThumbnail) return columns;
-  return { ...columns, customThumbnailKey: thumbnailKeyOf(videoId, selectedThumbnail) };
+  return { ...columns, customThumbnailKey: thumbnailKeyOf(selectedThumbnail) };
 }
 
 export class CreatorStudioService {
@@ -138,7 +135,7 @@ export class CreatorStudioService {
     const outcome = await this.deps.studio.updateMetadata({
       videoId,
       expectedVersion: version,
-      patch: toStudioPatch(videoId, decided.value),
+      patch: toStudioPatch(decided.value),
       userId: user.id,
     });
     if (isErr(outcome)) return outcome;

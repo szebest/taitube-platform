@@ -4252,29 +4252,7 @@ paths:
                       required:
                         - source
                       additionalProperties: false
-                    - type: object
-                      properties:
-                        source:
-                          type: string
-                          enum:
-                            - custom
-                        thumbnailId:
-                          type: string
-                          format: uuid
-                          description: Id of an image stored under the video
-                        format:
-                          type: string
-                          enum:
-                            - jpg
-                            - png
-                            - webp
-                          description: Image format of that file
-                      required:
-                        - source
-                        - thumbnailId
-                        - format
-                      additionalProperties: false
-                  description: The generated poster, or a custom image kept under the video
+                  description: The thumbnail to show; the generated poster until custom uploads exist
                 version:
                   type: integer
                   minimum: 0

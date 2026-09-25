@@ -1,4 +1,4 @@
-import { CREATOR_LIBRARY_SORTS, CUSTOM_THUMBNAIL_FORMATS } from '@vp/domain';
+import { CREATOR_LIBRARY_SORTS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
@@ -25,15 +25,8 @@ const CreatorLibraryQuerySchema = z.object({
 });
 
 const ThumbnailSelectionSchema = z
-  .discriminatedUnion('source', [
-    z.object({ source: z.literal('poster') }),
-    z.object({
-      source: z.literal('custom'),
-      thumbnailId: z.string().uuid().describe('Id of an image stored under the video'),
-      format: z.enum(CUSTOM_THUMBNAIL_FORMATS).describe('Image format of that file'),
-    }),
-  ])
-  .describe('The generated poster, or a custom image kept under the video');
+  .discriminatedUnion('source', [z.object({ source: z.literal('poster') })])
+  .describe('The thumbnail to show; the generated poster until custom uploads exist');
 
 const UpdateCreatorVideoSchema = z.object({
   title: z.string().max(255).optional().describe('Video title'),

@@ -1124,7 +1124,7 @@ CREATE INDEX channel_subscriptions_channel_idx ON channel_subscriptions (channel
 ALTER TABLE videos ADD COLUMN comments_count integer NOT NULL DEFAULT 0;  -- moved in the same transaction as each comment write
 
 ALTER TABLE videos ADD COLUMN tags text[] NOT NULL DEFAULT '{}';          -- at most 30, each 1-30 characters, trimmed, one per case-folded spelling
-ALTER TABLE videos ADD COLUMN custom_thumbnail_key text;                  -- videos/{id}/thumbs/custom/{thumbnailId}.{ext}; NULL shows the poster
+ALTER TABLE videos ADD COLUMN custom_thumbnail_key text;                  -- a creator's own image once uploads exist; NULL shows the poster
 CREATE INDEX videos_tags_idx ON videos USING gin (tags);                  -- tag containment: tags @> ARRAY['lofi']
 
 CREATE TABLE video_comments (
@@ -1257,7 +1257,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /v1/creator/videos/:id/analytics?range=7d\|30d\|90d` | Video analytics | — | `200 { videoId, range, from, to, timeline:[{viewDate, views, watchSeconds}], rangeViews, totalViews, averageDailyViews, averageRetention }` | Owner or admin (`read Analytics`). A stranger gets 403 on a video they can see and 404 on one they cannot. Reads what the last flush committed. |
 | `GET /v1/creator/channel/analytics?range=7d\|30d\|90d` | Channel analytics | — | `200 { range, from, to, timeline, rangeViews, totalViews, videoCount, dailyVelocity, topVideos:[{videoId, title, views, totalViews}] }` | Authenticated caller, over the videos they own. |
 | `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
-| `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" } \| { source:"custom", thumbnailId, format }, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. |
+| `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" }, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. |
 | `DELETE /v1/creator/videos/:id` | Studio delete | — | `202 { videoId, status:"DELETED" }` | Same soft delete as `DELETE /videos/:id`. |
 | `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
 | `POST /channels/:id/subscribers` | Subscribe | — | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
@@ -1411,8 +1411,7 @@ public/                                (private bucket, public read via CDN cust
     ├── thumbs/
     │   ├── poster.jpg                 (1280×720)
     │   ├── sprite.jpg                 (10×N grid of 160×90 frames, 1 frame / 5 s)
-    │   ├── sprite.vtt                 (WebVTT thumbnails with #xywh= fragments)
-    │   └── custom/{thumbnailId}.{jpg|png|webp}   (a creator's own thumbnail; the key is built from the id, never taken from a client)
+    │   └── sprite.vtt                 (WebVTT thumbnails with #xywh= fragments)
     └── meta.json                      (probe output snapshot; debugging aid)
 ```
 

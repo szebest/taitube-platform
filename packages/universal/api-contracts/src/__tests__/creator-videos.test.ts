@@ -22,20 +22,19 @@ describe('packages/api-contracts: creator videos', () => {
     expect(listCreatorVideos.query.safeParse(query).success).toBe(false);
   });
 
-  it.each([
-    { name: 'the generated poster', selectedThumbnail: { source: 'poster' } },
-    {
-      name: 'a custom image by id and format',
-      selectedThumbnail: { source: 'custom', thumbnailId: THUMBNAIL_ID, format: 'webp' },
-    },
-  ])('accepts $name as the thumbnail', ({ selectedThumbnail }) => {
-    expect(updateCreatorVideo.body.safeParse({ version: 1, selectedThumbnail }).success).toBe(true);
+  it('accepts the generated poster as the thumbnail', () => {
+    const body = { version: 1, selectedThumbnail: { source: 'poster' } };
+
+    expect(updateCreatorVideo.body.safeParse(body).success).toBe(true);
   });
 
   it.each([
     {
-      name: 'a custom thumbnail named by a key, which a client never chooses',
-      body: { version: 1, selectedThumbnail: { source: 'custom', key: 'videos/x/thumbs/a.jpg' } },
+      name: 'a custom thumbnail, which nothing can upload yet',
+      body: {
+        version: 1,
+        selectedThumbnail: { source: 'custom', thumbnailId: THUMBNAIL_ID, format: 'png' },
+      },
     },
     { name: 'no version to check it against', body: { title: 'No version' } },
     { name: 'a category that is not an id', body: { version: 1, categoryId: 'music' } },

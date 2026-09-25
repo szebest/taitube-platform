@@ -93,7 +93,6 @@ describe('apps/api/services: creator studio', () => {
         await studio.update(OWNER, VIDEO_ID, {
           tags: [' lofi ', 'LOFI'],
           categoryId: CATEGORY_ID,
-          selectedThumbnail: { source: 'custom', thumbnailId: THUMBNAIL_ID, format: 'png' },
           version,
         })
       );
@@ -101,7 +100,6 @@ describe('apps/api/services: creator studio', () => {
       expect(view).toMatchObject({
         tags: ['lofi'],
         categoryId: CATEGORY_ID,
-        thumbnailUrl: `${TEST_CDN}/videos/${VIDEO_ID}/thumbs/custom/${THUMBNAIL_ID}.png`,
         version: version + 1,
       });
     });
@@ -109,9 +107,11 @@ describe('apps/api/services: creator studio', () => {
     it('goes back to the generated poster', async () => {
       const { version } = await seed();
       expectOk(
-        await studio.update(OWNER, VIDEO_ID, {
-          selectedThumbnail: { source: 'custom', thumbnailId: THUMBNAIL_ID, format: 'jpg' },
-          version,
+        await repositories.videoStudio.updateMetadata({
+          videoId: VIDEO_ID,
+          expectedVersion: version,
+          patch: { customThumbnailKey: `videos/${VIDEO_ID}/thumbs/custom/${THUMBNAIL_ID}.jpg` },
+          userId: OWNER.id,
         })
       );
 

@@ -1,6 +1,5 @@
 import { SEEDED } from '@vp/testing';
 import {
-  customThumbnailKey,
   masterPlaylistKey,
   posterKey,
   rawPrefix,
@@ -28,12 +27,6 @@ describe('packages/storage: object keys', () => {
     expect(posterKey(videoId)).toBe(`videos/${videoId}/thumbs/poster.jpg`);
     expect(spriteKey(videoId)).toBe(`videos/${videoId}/thumbs/sprite.jpg`);
     expect(spriteVttKey(videoId)).toBe(`videos/${videoId}/thumbs/sprite.vtt`);
-  });
-
-  it('keeps a custom thumbnail under the video it belongs to, named by its id', () => {
-    expect(customThumbnailKey(videoId, 'thumb-1', 'png')).toBe(
-      `videos/${videoId}/thumbs/custom/thumb-1.png`
-    );
   });
 
   it('prefixes a reprocess generation into the playback keys', () => {

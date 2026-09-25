@@ -63,10 +63,6 @@ export function spriteVttKey(videoId: string): string {
   return `${videoPrefix(videoId)}thumbs/sprite.vtt`;
 }
 
-export function customThumbnailKey(videoId: string, thumbnailId: string, format: string): string {
-  return `${videoPrefix(videoId)}thumbs/custom/${thumbnailId}.${format}`;
-}
-
 export function sanitizeStorageUrl(url: string): string {
   if (!URL.canParse(url)) return url;
   const parsed = new URL(url);
