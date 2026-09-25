@@ -1,6 +1,8 @@
 export * from './category';
 export * from './comment';
 export * from './channel';
+export * from './playlist';
+export * from './playlist-position';
 export * from './public-feed';
 export * from './reaction';
 export * from './status-vocabulary';
@@ -9,3 +11,4 @@ export * from './upload';
 export * from './user';
 export * from './video';
 export * from './views';
+export * from './watch-history';

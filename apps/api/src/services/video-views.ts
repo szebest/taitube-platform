@@ -74,7 +74,7 @@ export interface VideoSummaryView {
   readyAt?: string;
 }
 
-function cdnUrl(cdn: CdnBase, key: string): string {
+export function cdnUrl(cdn: CdnBase, key: string): string {
   return `${cdn}/${key.replace(/^\/+/, '')}`;
 }
 

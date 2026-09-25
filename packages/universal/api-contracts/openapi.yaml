@@ -7561,6 +7561,3296 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+  /v1/playlists:
+    post:
+      summary: Create a playlist
+      tags:
+        - Playlists
+      description: Creates an empty playlist owned by the caller, private unless asked otherwise.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 1-150 characters of plain text after trimming
+                description:
+                  type: string
+                  description: Up to 5000 characters of plain text
+                visibility:
+                  type: string
+                  enum:
+                    - private
+                    - unlisted
+                    - public
+                  description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+              required:
+                - title
+              additionalProperties: false
+      responses:
+        '201':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  ownerId:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  isSystem:
+                    type: boolean
+                    description: 'Watch Later: cannot be renamed or deleted'
+                  thumbnailUrl:
+                    type: string
+                    nullable: true
+                    description: The custom thumbnail, else the first video poster
+                  videoCount:
+                    type: integer
+                    minimum: 0
+                    description: Videos this viewer may watch
+                  owner:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      handle:
+                        type: string
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - handle
+                      - displayName
+                      - avatarUrl
+                    additionalProperties: false
+                    description: The channel that owns the resource, null for a user without one
+                    nullable: true
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: The item id a reorder names
+                        videoId:
+                          type: string
+                          format: uuid
+                        position:
+                          type: integer
+                          minimum: 0
+                          description: 0-based place in the playlist; a video hidden from this viewer keeps its place
+                        addedAt:
+                          type: string
+                          description: ISO 8601 timestamp the video was added
+                        video:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              description: Video UUIDv7 identifier
+                            ownerId:
+                              type: string
+                              format: uuid
+                              description: Owning user UUID, for client-side ownership rules
+                            title:
+                              type: string
+                              nullable: true
+                              description: Video title
+                            description:
+                              type: string
+                              nullable: true
+                              description: Video description
+                            visibility:
+                              type: string
+                              enum:
+                                - private
+                                - unlisted
+                                - public
+                              description: Access visibility level
+                            status:
+                              type: string
+                              enum:
+                                - UPLOADING
+                                - UPLOADED
+                                - PROBING
+                                - PROCESSING
+                                - READY
+                                - FAILED
+                                - REJECTED
+                                - ABANDONED
+                                - DELETED
+                              description: Current pipeline lifecycle state
+                            durationMs:
+                              type: number
+                              description: Video duration in milliseconds
+                            posterUrl:
+                              type: string
+                              description: Public CDN URL to poster thumbnail (PRD US-12)
+                            playbackUrl:
+                              type: string
+                              description: Public CDN playback URL to master.m3u8 if ready
+                            viewsCount:
+                              type: number
+                              description: Total view count
+                            likesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total like reactions count
+                            dislikesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total dislike reactions count
+                            categoryId:
+                              type: string
+                              format: uuid
+                              nullable: true
+                              description: Category UUID identifier
+                            version:
+                              type: integer
+                              minimum: 0
+                              description: Optimistic locking record version
+                            createdAt:
+                              type: string
+                              description: ISO 8601 creation timestamp
+                            updatedAt:
+                              type: string
+                              description: ISO 8601 last update timestamp
+                            readyAt:
+                              type: string
+                              description: ISO 8601 ready timestamp if ready
+                          required:
+                            - id
+                            - ownerId
+                            - title
+                            - description
+                            - visibility
+                            - status
+                            - version
+                            - createdAt
+                            - updatedAt
+                          additionalProperties: false
+                        channel:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            handle:
+                              type: string
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - handle
+                            - displayName
+                            - avatarUrl
+                          additionalProperties: false
+                          description: The channel that owns the resource, null for a user without one
+                          nullable: true
+                      required:
+                        - id
+                        - videoId
+                        - position
+                        - addedAt
+                        - video
+                        - channel
+                      additionalProperties: false
+                  createdAt:
+                    type: string
+                    description: ISO 8601 creation timestamp
+                  updatedAt:
+                    type: string
+                    description: ISO 8601 timestamp of the last change, items included
+                required:
+                  - id
+                  - ownerId
+                  - title
+                  - description
+                  - visibility
+                  - isSystem
+                  - thumbnailUrl
+                  - videoCount
+                  - owner
+                  - items
+                  - createdAt
+                  - updatedAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/playlists/{id}:
+    get:
+      summary: Read a playlist
+      tags:
+        - Playlists
+      description: The playlist, its owner channel and its items in order. A private playlist of someone else answers 404, as if it did not exist.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: id
+          required: true
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  ownerId:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  isSystem:
+                    type: boolean
+                    description: 'Watch Later: cannot be renamed or deleted'
+                  thumbnailUrl:
+                    type: string
+                    nullable: true
+                    description: The custom thumbnail, else the first video poster
+                  videoCount:
+                    type: integer
+                    minimum: 0
+                    description: Videos this viewer may watch
+                  owner:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      handle:
+                        type: string
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - handle
+                      - displayName
+                      - avatarUrl
+                    additionalProperties: false
+                    description: The channel that owns the resource, null for a user without one
+                    nullable: true
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: The item id a reorder names
+                        videoId:
+                          type: string
+                          format: uuid
+                        position:
+                          type: integer
+                          minimum: 0
+                          description: 0-based place in the playlist; a video hidden from this viewer keeps its place
+                        addedAt:
+                          type: string
+                          description: ISO 8601 timestamp the video was added
+                        video:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              description: Video UUIDv7 identifier
+                            ownerId:
+                              type: string
+                              format: uuid
+                              description: Owning user UUID, for client-side ownership rules
+                            title:
+                              type: string
+                              nullable: true
+                              description: Video title
+                            description:
+                              type: string
+                              nullable: true
+                              description: Video description
+                            visibility:
+                              type: string
+                              enum:
+                                - private
+                                - unlisted
+                                - public
+                              description: Access visibility level
+                            status:
+                              type: string
+                              enum:
+                                - UPLOADING
+                                - UPLOADED
+                                - PROBING
+                                - PROCESSING
+                                - READY
+                                - FAILED
+                                - REJECTED
+                                - ABANDONED
+                                - DELETED
+                              description: Current pipeline lifecycle state
+                            durationMs:
+                              type: number
+                              description: Video duration in milliseconds
+                            posterUrl:
+                              type: string
+                              description: Public CDN URL to poster thumbnail (PRD US-12)
+                            playbackUrl:
+                              type: string
+                              description: Public CDN playback URL to master.m3u8 if ready
+                            viewsCount:
+                              type: number
+                              description: Total view count
+                            likesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total like reactions count
+                            dislikesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total dislike reactions count
+                            categoryId:
+                              type: string
+                              format: uuid
+                              nullable: true
+                              description: Category UUID identifier
+                            version:
+                              type: integer
+                              minimum: 0
+                              description: Optimistic locking record version
+                            createdAt:
+                              type: string
+                              description: ISO 8601 creation timestamp
+                            updatedAt:
+                              type: string
+                              description: ISO 8601 last update timestamp
+                            readyAt:
+                              type: string
+                              description: ISO 8601 ready timestamp if ready
+                          required:
+                            - id
+                            - ownerId
+                            - title
+                            - description
+                            - visibility
+                            - status
+                            - version
+                            - createdAt
+                            - updatedAt
+                          additionalProperties: false
+                        channel:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            handle:
+                              type: string
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - handle
+                            - displayName
+                            - avatarUrl
+                          additionalProperties: false
+                          description: The channel that owns the resource, null for a user without one
+                          nullable: true
+                      required:
+                        - id
+                        - videoId
+                        - position
+                        - addedAt
+                        - video
+                        - channel
+                      additionalProperties: false
+                  createdAt:
+                    type: string
+                    description: ISO 8601 creation timestamp
+                  updatedAt:
+                    type: string
+                    description: ISO 8601 timestamp of the last change, items included
+                required:
+                  - id
+                  - ownerId
+                  - title
+                  - description
+                  - visibility
+                  - isSystem
+                  - thumbnailUrl
+                  - videoCount
+                  - owner
+                  - items
+                  - createdAt
+                  - updatedAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - PLAYLIST_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    patch:
+      summary: Edit a playlist
+      tags:
+        - Playlists
+      description: The owner renames, redescribes or changes the visibility of a playlist.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 1-150 characters of plain text after trimming
+                description:
+                  type: string
+                  description: Up to 5000 characters of plain text
+                visibility:
+                  type: string
+                  enum:
+                    - private
+                    - unlisted
+                    - public
+                  description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  ownerId:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  isSystem:
+                    type: boolean
+                    description: 'Watch Later: cannot be renamed or deleted'
+                  thumbnailUrl:
+                    type: string
+                    nullable: true
+                    description: The custom thumbnail, else the first video poster
+                  videoCount:
+                    type: integer
+                    minimum: 0
+                    description: Videos this viewer may watch
+                  owner:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      handle:
+                        type: string
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - handle
+                      - displayName
+                      - avatarUrl
+                    additionalProperties: false
+                    description: The channel that owns the resource, null for a user without one
+                    nullable: true
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: The item id a reorder names
+                        videoId:
+                          type: string
+                          format: uuid
+                        position:
+                          type: integer
+                          minimum: 0
+                          description: 0-based place in the playlist; a video hidden from this viewer keeps its place
+                        addedAt:
+                          type: string
+                          description: ISO 8601 timestamp the video was added
+                        video:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              description: Video UUIDv7 identifier
+                            ownerId:
+                              type: string
+                              format: uuid
+                              description: Owning user UUID, for client-side ownership rules
+                            title:
+                              type: string
+                              nullable: true
+                              description: Video title
+                            description:
+                              type: string
+                              nullable: true
+                              description: Video description
+                            visibility:
+                              type: string
+                              enum:
+                                - private
+                                - unlisted
+                                - public
+                              description: Access visibility level
+                            status:
+                              type: string
+                              enum:
+                                - UPLOADING
+                                - UPLOADED
+                                - PROBING
+                                - PROCESSING
+                                - READY
+                                - FAILED
+                                - REJECTED
+                                - ABANDONED
+                                - DELETED
+                              description: Current pipeline lifecycle state
+                            durationMs:
+                              type: number
+                              description: Video duration in milliseconds
+                            posterUrl:
+                              type: string
+                              description: Public CDN URL to poster thumbnail (PRD US-12)
+                            playbackUrl:
+                              type: string
+                              description: Public CDN playback URL to master.m3u8 if ready
+                            viewsCount:
+                              type: number
+                              description: Total view count
+                            likesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total like reactions count
+                            dislikesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total dislike reactions count
+                            categoryId:
+                              type: string
+                              format: uuid
+                              nullable: true
+                              description: Category UUID identifier
+                            version:
+                              type: integer
+                              minimum: 0
+                              description: Optimistic locking record version
+                            createdAt:
+                              type: string
+                              description: ISO 8601 creation timestamp
+                            updatedAt:
+                              type: string
+                              description: ISO 8601 last update timestamp
+                            readyAt:
+                              type: string
+                              description: ISO 8601 ready timestamp if ready
+                          required:
+                            - id
+                            - ownerId
+                            - title
+                            - description
+                            - visibility
+                            - status
+                            - version
+                            - createdAt
+                            - updatedAt
+                          additionalProperties: false
+                        channel:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            handle:
+                              type: string
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - handle
+                            - displayName
+                            - avatarUrl
+                          additionalProperties: false
+                          description: The channel that owns the resource, null for a user without one
+                          nullable: true
+                      required:
+                        - id
+                        - videoId
+                        - position
+                        - addedAt
+                        - video
+                        - channel
+                      additionalProperties: false
+                  createdAt:
+                    type: string
+                    description: ISO 8601 creation timestamp
+                  updatedAt:
+                    type: string
+                    description: ISO 8601 timestamp of the last change, items included
+                required:
+                  - id
+                  - ownerId
+                  - title
+                  - description
+                  - visibility
+                  - isSystem
+                  - thumbnailUrl
+                  - videoCount
+                  - owner
+                  - items
+                  - createdAt
+                  - updatedAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - SYSTEM_PLAYLIST_IMMUTABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - PLAYLIST_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    delete:
+      summary: Delete a playlist
+      tags:
+        - Playlists
+      description: The owner deletes a playlist and its items. Watch Later cannot be deleted.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: id
+          required: true
+      responses:
+        '204':
+          description: Playlist deleted
+          content:
+            application/json:
+              schema:
+                enum:
+                  - 'null'
+                nullable: true
+                description: Playlist deleted
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - SYSTEM_PLAYLIST_IMMUTABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - PLAYLIST_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/playlists/{id}/items:
+    post:
+      summary: Add a video to a playlist
+      tags:
+        - Playlists
+      description: Appends a video the caller may watch to the end of the playlist. Adding a video already there changes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                videoId:
+                  type: string
+                  format: uuid
+              required:
+                - videoId
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: id
+          required: true
+      responses:
+        '201':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  ownerId:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  isSystem:
+                    type: boolean
+                    description: 'Watch Later: cannot be renamed or deleted'
+                  thumbnailUrl:
+                    type: string
+                    nullable: true
+                    description: The custom thumbnail, else the first video poster
+                  videoCount:
+                    type: integer
+                    minimum: 0
+                    description: Videos this viewer may watch
+                  owner:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      handle:
+                        type: string
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - handle
+                      - displayName
+                      - avatarUrl
+                    additionalProperties: false
+                    description: The channel that owns the resource, null for a user without one
+                    nullable: true
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: The item id a reorder names
+                        videoId:
+                          type: string
+                          format: uuid
+                        position:
+                          type: integer
+                          minimum: 0
+                          description: 0-based place in the playlist; a video hidden from this viewer keeps its place
+                        addedAt:
+                          type: string
+                          description: ISO 8601 timestamp the video was added
+                        video:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              description: Video UUIDv7 identifier
+                            ownerId:
+                              type: string
+                              format: uuid
+                              description: Owning user UUID, for client-side ownership rules
+                            title:
+                              type: string
+                              nullable: true
+                              description: Video title
+                            description:
+                              type: string
+                              nullable: true
+                              description: Video description
+                            visibility:
+                              type: string
+                              enum:
+                                - private
+                                - unlisted
+                                - public
+                              description: Access visibility level
+                            status:
+                              type: string
+                              enum:
+                                - UPLOADING
+                                - UPLOADED
+                                - PROBING
+                                - PROCESSING
+                                - READY
+                                - FAILED
+                                - REJECTED
+                                - ABANDONED
+                                - DELETED
+                              description: Current pipeline lifecycle state
+                            durationMs:
+                              type: number
+                              description: Video duration in milliseconds
+                            posterUrl:
+                              type: string
+                              description: Public CDN URL to poster thumbnail (PRD US-12)
+                            playbackUrl:
+                              type: string
+                              description: Public CDN playback URL to master.m3u8 if ready
+                            viewsCount:
+                              type: number
+                              description: Total view count
+                            likesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total like reactions count
+                            dislikesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total dislike reactions count
+                            categoryId:
+                              type: string
+                              format: uuid
+                              nullable: true
+                              description: Category UUID identifier
+                            version:
+                              type: integer
+                              minimum: 0
+                              description: Optimistic locking record version
+                            createdAt:
+                              type: string
+                              description: ISO 8601 creation timestamp
+                            updatedAt:
+                              type: string
+                              description: ISO 8601 last update timestamp
+                            readyAt:
+                              type: string
+                              description: ISO 8601 ready timestamp if ready
+                          required:
+                            - id
+                            - ownerId
+                            - title
+                            - description
+                            - visibility
+                            - status
+                            - version
+                            - createdAt
+                            - updatedAt
+                          additionalProperties: false
+                        channel:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            handle:
+                              type: string
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - handle
+                            - displayName
+                            - avatarUrl
+                          additionalProperties: false
+                          description: The channel that owns the resource, null for a user without one
+                          nullable: true
+                      required:
+                        - id
+                        - videoId
+                        - position
+                        - addedAt
+                        - video
+                        - channel
+                      additionalProperties: false
+                  createdAt:
+                    type: string
+                    description: ISO 8601 creation timestamp
+                  updatedAt:
+                    type: string
+                    description: ISO 8601 timestamp of the last change, items included
+                required:
+                  - id
+                  - ownerId
+                  - title
+                  - description
+                  - visibility
+                  - isSystem
+                  - thumbnailUrl
+                  - videoCount
+                  - owner
+                  - items
+                  - createdAt
+                  - updatedAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - PLAYLIST_NOT_FOUND
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/playlists/{id}/items/{videoId}:
+    delete:
+      summary: Remove a video from a playlist
+      tags:
+        - Playlists
+      description: Removes the video; the items after it move up one place. Removing an absent video changes nothing.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: id
+          required: true
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: videoId
+          required: true
+      responses:
+        '204':
+          description: Video removed
+          content:
+            application/json:
+              schema:
+                enum:
+                  - 'null'
+                nullable: true
+                description: Video removed
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - PLAYLIST_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/playlists/{id}/reorder:
+    put:
+      summary: Reorder a playlist
+      tags:
+        - Playlists
+      description: Moves one item to a new place, or puts the items the caller can see in the order given; a video hidden from them keeps its slot. A full order that misses or repeats a visible item was drawn from a stale view and answers 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - type: object
+                  properties:
+                    itemId:
+                      type: string
+                      format: uuid
+                    newPosition:
+                      type: integer
+                      minimum: 0
+                      description: Target place; past the end means last
+                  required:
+                    - itemId
+                    - newPosition
+                  additionalProperties: false
+                - type: object
+                  properties:
+                    itemIds:
+                      type: array
+                      items:
+                        type: string
+                        format: uuid
+                      description: Every item id the caller sees in the playlist, in the new order
+                  required:
+                    - itemIds
+                  additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  ownerId:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                  isSystem:
+                    type: boolean
+                    description: 'Watch Later: cannot be renamed or deleted'
+                  thumbnailUrl:
+                    type: string
+                    nullable: true
+                    description: The custom thumbnail, else the first video poster
+                  videoCount:
+                    type: integer
+                    minimum: 0
+                    description: Videos this viewer may watch
+                  owner:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      handle:
+                        type: string
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - handle
+                      - displayName
+                      - avatarUrl
+                    additionalProperties: false
+                    description: The channel that owns the resource, null for a user without one
+                    nullable: true
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: The item id a reorder names
+                        videoId:
+                          type: string
+                          format: uuid
+                        position:
+                          type: integer
+                          minimum: 0
+                          description: 0-based place in the playlist; a video hidden from this viewer keeps its place
+                        addedAt:
+                          type: string
+                          description: ISO 8601 timestamp the video was added
+                        video:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              description: Video UUIDv7 identifier
+                            ownerId:
+                              type: string
+                              format: uuid
+                              description: Owning user UUID, for client-side ownership rules
+                            title:
+                              type: string
+                              nullable: true
+                              description: Video title
+                            description:
+                              type: string
+                              nullable: true
+                              description: Video description
+                            visibility:
+                              type: string
+                              enum:
+                                - private
+                                - unlisted
+                                - public
+                              description: Access visibility level
+                            status:
+                              type: string
+                              enum:
+                                - UPLOADING
+                                - UPLOADED
+                                - PROBING
+                                - PROCESSING
+                                - READY
+                                - FAILED
+                                - REJECTED
+                                - ABANDONED
+                                - DELETED
+                              description: Current pipeline lifecycle state
+                            durationMs:
+                              type: number
+                              description: Video duration in milliseconds
+                            posterUrl:
+                              type: string
+                              description: Public CDN URL to poster thumbnail (PRD US-12)
+                            playbackUrl:
+                              type: string
+                              description: Public CDN playback URL to master.m3u8 if ready
+                            viewsCount:
+                              type: number
+                              description: Total view count
+                            likesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total like reactions count
+                            dislikesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total dislike reactions count
+                            categoryId:
+                              type: string
+                              format: uuid
+                              nullable: true
+                              description: Category UUID identifier
+                            version:
+                              type: integer
+                              minimum: 0
+                              description: Optimistic locking record version
+                            createdAt:
+                              type: string
+                              description: ISO 8601 creation timestamp
+                            updatedAt:
+                              type: string
+                              description: ISO 8601 last update timestamp
+                            readyAt:
+                              type: string
+                              description: ISO 8601 ready timestamp if ready
+                          required:
+                            - id
+                            - ownerId
+                            - title
+                            - description
+                            - visibility
+                            - status
+                            - version
+                            - createdAt
+                            - updatedAt
+                          additionalProperties: false
+                        channel:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            handle:
+                              type: string
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - handle
+                            - displayName
+                            - avatarUrl
+                          additionalProperties: false
+                          description: The channel that owns the resource, null for a user without one
+                          nullable: true
+                      required:
+                        - id
+                        - videoId
+                        - position
+                        - addedAt
+                        - video
+                        - channel
+                      additionalProperties: false
+                  createdAt:
+                    type: string
+                    description: ISO 8601 creation timestamp
+                  updatedAt:
+                    type: string
+                    description: ISO 8601 timestamp of the last change, items included
+                required:
+                  - id
+                  - ownerId
+                  - title
+                  - description
+                  - visibility
+                  - isSystem
+                  - thumbnailUrl
+                  - videoCount
+                  - owner
+                  - items
+                  - createdAt
+                  - updatedAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - PLAYLIST_NOT_FOUND
+                      - PLAYLIST_ITEM_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/playlists:
+    get:
+      summary: List my playlists
+      tags:
+        - Playlists
+      description: 'Every playlist the caller owns, Watch Later first, each flagged with whether it holds videoId: the "Save to playlist" dialog in one round trip.'
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: query
+          name: videoId
+          required: false
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        title:
+                          type: string
+                        visibility:
+                          type: string
+                          enum:
+                            - private
+                            - unlisted
+                            - public
+                          description: 'public: listed and searchable; unlisted: anyone with the link; private: the owner'
+                        isSystem:
+                          type: boolean
+                        videoCount:
+                          type: integer
+                          minimum: 0
+                        containsVideo:
+                          type: boolean
+                          description: The playlist holds the videoId asked about
+                        updatedAt:
+                          type: string
+                      required:
+                        - id
+                        - title
+                        - visibility
+                        - isSystem
+                        - videoCount
+                        - containsVideo
+                        - updatedAt
+                      additionalProperties: false
+                required:
+                  - items
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/history:
+    post:
+      summary: Save a playback position
+      tags:
+        - Watch history
+      description: A heartbeat is buffered in Redis for 7 days and reaches the history on the first beat and at most once a minute after that; a pause or the end is written through with ON CONFLICT (user_id, video_id) DO UPDATE.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                videoId:
+                  type: string
+                  format: uuid
+                progressSeconds:
+                  type: integer
+                  minimum: 0
+                durationSeconds:
+                  type: integer
+                  exclusiveMinimum: true
+                  minimum: 0
+                reason:
+                  type: string
+                  enum:
+                    - heartbeat
+                    - pause
+                    - ended
+                  default: pause
+                  description: 'heartbeat: every few seconds of playback; pause and ended: written through'
+              required:
+                - videoId
+                - progressSeconds
+                - durationSeconds
+              additionalProperties: false
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videoId:
+                    type: string
+                    format: uuid
+                  progressSeconds:
+                    type: integer
+                    minimum: 0
+                  durationSeconds:
+                    type: integer
+                    exclusiveMinimum: true
+                    minimum: 0
+                  progressPercent:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                  completed:
+                    type: boolean
+                    description: Watched to 92 % or further
+                  resumeAtSeconds:
+                    type: integer
+                    minimum: 0
+                    description: 0 for a completed video
+                  watchedAt:
+                    type: string
+                    description: ISO 8601 timestamp of the playhead
+                required:
+                  - videoId
+                  - progressSeconds
+                  - durationSeconds
+                  - progressPercent
+                  - completed
+                  - resumeAtSeconds
+                  - watchedAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    get:
+      summary: List my watch history
+      tags:
+        - Watch history
+      description: Videos the caller watched, newest first, keyset-paginated on (watched_at, id). A video they may no longer watch drops out.
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: cursor
+          required: false
+          description: Opaque base64url keyset pagination cursor
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          in: query
+          name: limit
+          required: false
+          description: 'Page size limit (1-100, default 20). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.'
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        videoId:
+                          type: string
+                          format: uuid
+                        progressSeconds:
+                          type: integer
+                          minimum: 0
+                        durationSeconds:
+                          type: integer
+                          exclusiveMinimum: true
+                          minimum: 0
+                        progressPercent:
+                          type: integer
+                          minimum: 0
+                          maximum: 100
+                        completed:
+                          type: boolean
+                          description: Watched to 92 % or further
+                        resumeAtSeconds:
+                          type: integer
+                          minimum: 0
+                          description: 0 for a completed video
+                        watchedAt:
+                          type: string
+                          description: ISO 8601 timestamp of the playhead
+                        id:
+                          type: string
+                          format: uuid
+                        video:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              description: Video UUIDv7 identifier
+                            ownerId:
+                              type: string
+                              format: uuid
+                              description: Owning user UUID, for client-side ownership rules
+                            title:
+                              type: string
+                              nullable: true
+                              description: Video title
+                            description:
+                              type: string
+                              nullable: true
+                              description: Video description
+                            visibility:
+                              type: string
+                              enum:
+                                - private
+                                - unlisted
+                                - public
+                              description: Access visibility level
+                            status:
+                              type: string
+                              enum:
+                                - UPLOADING
+                                - UPLOADED
+                                - PROBING
+                                - PROCESSING
+                                - READY
+                                - FAILED
+                                - REJECTED
+                                - ABANDONED
+                                - DELETED
+                              description: Current pipeline lifecycle state
+                            durationMs:
+                              type: number
+                              description: Video duration in milliseconds
+                            posterUrl:
+                              type: string
+                              description: Public CDN URL to poster thumbnail (PRD US-12)
+                            playbackUrl:
+                              type: string
+                              description: Public CDN playback URL to master.m3u8 if ready
+                            viewsCount:
+                              type: number
+                              description: Total view count
+                            likesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total like reactions count
+                            dislikesCount:
+                              type: integer
+                              minimum: 0
+                              description: Total dislike reactions count
+                            categoryId:
+                              type: string
+                              format: uuid
+                              nullable: true
+                              description: Category UUID identifier
+                            version:
+                              type: integer
+                              minimum: 0
+                              description: Optimistic locking record version
+                            createdAt:
+                              type: string
+                              description: ISO 8601 creation timestamp
+                            updatedAt:
+                              type: string
+                              description: ISO 8601 last update timestamp
+                            readyAt:
+                              type: string
+                              description: ISO 8601 ready timestamp if ready
+                          required:
+                            - id
+                            - ownerId
+                            - title
+                            - description
+                            - visibility
+                            - status
+                            - version
+                            - createdAt
+                            - updatedAt
+                          additionalProperties: false
+                        channel:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            handle:
+                              type: string
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - handle
+                            - displayName
+                            - avatarUrl
+                          additionalProperties: false
+                          description: The channel that owns the resource, null for a user without one
+                          nullable: true
+                      required:
+                        - videoId
+                        - progressSeconds
+                        - durationSeconds
+                        - progressPercent
+                        - completed
+                        - resumeAtSeconds
+                        - watchedAt
+                        - id
+                        - video
+                        - channel
+                      additionalProperties: false
+                  nextCursor:
+                    type: string
+                    nullable: true
+                required:
+                  - items
+                  - nextCursor
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - INVALID_CURSOR
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    delete:
+      summary: Clear my watch history
+      tags:
+        - Watch history
+      description: Removes every entry and every buffered playhead.
+      responses:
+        '204':
+          description: History cleared
+          content:
+            application/json:
+              schema:
+                enum:
+                  - 'null'
+                nullable: true
+                description: History cleared
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/history/{videoId}:
+    get:
+      summary: Where to resume a video
+      tags:
+        - Watch history
+      description: The latest playhead, from the Redis buffer when it holds one.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: videoId
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  playhead:
+                    type: object
+                    properties:
+                      videoId:
+                        type: string
+                        format: uuid
+                      progressSeconds:
+                        type: integer
+                        minimum: 0
+                      durationSeconds:
+                        type: integer
+                        exclusiveMinimum: true
+                        minimum: 0
+                      progressPercent:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                      completed:
+                        type: boolean
+                        description: Watched to 92 % or further
+                      resumeAtSeconds:
+                        type: integer
+                        minimum: 0
+                        description: 0 for a completed video
+                      watchedAt:
+                        type: string
+                        description: ISO 8601 timestamp of the playhead
+                    required:
+                      - videoId
+                      - progressSeconds
+                      - durationSeconds
+                      - progressPercent
+                      - completed
+                      - resumeAtSeconds
+                      - watchedAt
+                    additionalProperties: false
+                    nullable: true
+                required:
+                  - playhead
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    delete:
+      summary: Remove a video from my watch history
+      tags:
+        - Watch history
+      description: Removes the entry and its buffered playhead. Removing an absent entry changes nothing.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: videoId
+          required: true
+      responses:
+        '204':
+          description: Entry removed
+          content:
+            application/json:
+              schema:
+                enum:
+                  - 'null'
+                nullable: true
+                description: Entry removed
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/channels/{idOrHandle}:
     get:
       summary: Get public creator channel profile

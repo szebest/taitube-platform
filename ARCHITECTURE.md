@@ -59,7 +59,7 @@ taitube-platform/
 │   │   ├── in-memory/              # the test doubles
 │   │   ├── metered/                # MeteredStorageClient, MeteredMultipartStorage (storage metrics)
 │   │   ├── postgres/               # repositories/, mappers/, scopes/ (CASL rules -> SQL, keyset)
-│   │   ├── redis/                  # RedisCacheClient and the category, reaction, subscription and comment caches
+│   │   ├── redis/                  # RedisCacheClient and the category, reaction, subscription, comment and playhead caches
 │   │   └── s3/                     # S3StorageClient, S3MultipartStorage (@aws-sdk/client-s3)
 │   ├── composition/                # @vp/composition - Container, tokens, shutdownOnce, exitOnSignals
 │   ├── concurrency/                # @vp/concurrency - Singleflight

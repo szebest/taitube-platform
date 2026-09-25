@@ -5,9 +5,9 @@ import { decideSizeMatch } from '../size-match.rule';
 
 describe('@vp/domain-rules: decideSizeMatch', () => {
   it('accepts an object whose size matches what was declared', () => {
-    expect(isOk(decideSizeMatch({ video: aVideo({ sourceSizeBytes: 100 }), actualSizeBytes: 100 }))).toBe(
-      true
-    );
+    expect(
+      isOk(decideSizeMatch({ video: aVideo({ sourceSizeBytes: 100 }), actualSizeBytes: 100 }))
+    ).toBe(true);
   });
 
   it('rejects an object whose size disagrees', () => {

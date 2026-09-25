@@ -38,6 +38,7 @@ describe('apps/api/composition: services module', () => {
       'commentService',
       'dlqService',
       'feedService',
+      'playlistService',
       'queueBoard',
       'queueService',
       'reactionService',
@@ -48,6 +49,7 @@ describe('apps/api/composition: services module', () => {
       'uploadService',
       'videoService',
       'viewService',
+      'watchHistoryService',
     ]);
     expectOk(await c.dispose());
   });

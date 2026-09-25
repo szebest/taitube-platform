@@ -162,6 +162,14 @@ taitube-platform/
   is keyset-paginated under `sort=top` or `sort=newest` with the pinned comment first, the first top page
   is cached in Redis for 60s, and `videos.comments_count` moves with every write. The author edits, the
   video owner pins and moderates, moderators and admins delete.
+- **Playlists**: `POST /v1/playlists`, `GET/PATCH/DELETE /v1/playlists/:id`, `POST /v1/playlists/:id/items`,
+  `DELETE /v1/playlists/:id/items/:videoId`, `PUT /v1/playlists/:id/reorder` and
+  `GET /v1/me/playlists?videoId=` for the "Save to playlist" dialog. Public, unlisted or private, scoped in
+  SQL from the same CASL rules the API checks; every user gets a private Watch Later that cannot be renamed
+  or deleted. A drag-and-drop move rewrites the moved item alone.
+- **Watch history**: `POST/GET/DELETE /v1/me/history` and `GET/DELETE /v1/me/history/:videoId`. Playback
+  heartbeats buffer in Redis for 7 days and reach the `watch_history` row at most once a minute; a pause
+  and the end write it straight away, and a video watched past 92 % resumes from the start.
 - **Dead letter queue**: permanent failures go to a DLQ that an admin can retry from.
 - **Observability**: OpenTelemetry traces for API calls and worker jobs, Prometheus metrics, Grafana
   dashboards and Alertmanager rules; the apps write JSON logs to stdout.

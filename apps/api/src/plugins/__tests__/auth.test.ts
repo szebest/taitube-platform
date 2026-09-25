@@ -29,7 +29,11 @@ const JWKS_AUTH: AuthConfig = {
 
 function channels(): ChannelService {
   const repositories = new InMemoryRepositories();
-  return new ChannelService({ users: repositories.users, channels: repositories.channels });
+  return new ChannelService({
+    users: repositories.users,
+    channels: repositories.channels,
+    playlists: repositories.playlists,
+  });
 }
 
 const verifier = new DevTokenVerifier({

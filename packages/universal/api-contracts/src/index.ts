@@ -9,11 +9,13 @@ import * as events from './events';
 import * as feed from './feed';
 import * as health from './health';
 import * as me from './me';
+import * as playlists from './playlists';
 import * as reactions from './reactions';
 import * as subscriptions from './subscriptions';
 import * as uploads from './uploads';
 import * as videos from './videos';
 import * as views from './views';
+import * as watchHistory from './watch-history';
 
 export * from './admin-categories';
 export * from './admin-videos';
@@ -28,6 +30,7 @@ export * from './feed';
 export * from './health';
 export * from './me';
 export * from './pagination';
+export * from './playlists';
 export * from './problem';
 export * from './problem-for';
 export * from './reactions';
@@ -36,6 +39,7 @@ export * from './uploads';
 export * from './video-resource';
 export * from './videos';
 export * from './views';
+export * from './watch-history';
 
 export const contracts = {
   adminCategories,
@@ -49,11 +53,13 @@ export const contracts = {
   feed,
   health,
   me,
+  playlists,
   reactions,
   subscriptions,
   uploads,
   videos,
   views,
+  watchHistory,
 } as const;
 
 export function endpointKey(method: string, path: string): string {

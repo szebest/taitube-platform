@@ -29,3 +29,5 @@ export interface UpdateChannelInput {
   bannerUrl?: string | null;
   bio?: string | null;
 }
+
+export type ChannelCard = Pick<Channel, 'id' | 'handle' | 'displayName' | 'avatarUrl'>;
