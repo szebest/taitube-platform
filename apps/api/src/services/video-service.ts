@@ -12,6 +12,7 @@ import { type DatabaseUnavailable, type VersionConflict, versionConflict } from 
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import { type UserContext, canAccessAdmin } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
+import type { DispatchOrigin } from './probe-dispatch';
 import {
   type ReprocessResult,
   type SoftDeleteResult,
@@ -20,7 +21,6 @@ import {
   reprocessVideo,
   softDeleteVideo,
 } from './video-lifecycle';
-import type { DispatchOrigin } from './probe-dispatch';
 
 import {
   type FeedSort,

@@ -28,8 +28,9 @@ export type ContractParams<T extends EndpointContract> = T['params'] extends z.Z
 export type ContractQuery<T extends EndpointContract> = T['query'] extends z.ZodTypeAny
   ? z.input<T['query']>
   : undefined;
+/** What a client sends; the server handler receives the parsed output instead. */
 export type ContractBody<T extends EndpointContract> = T['body'] extends z.ZodTypeAny
-  ? z.infer<T['body']>
+  ? z.input<T['body']>
   : undefined;
 export type ContractResult<T extends EndpointContract> = z.infer<T['result']>;
 
