@@ -9,6 +9,7 @@ import { PostgresRepositories } from '../../postgres/repositories/postgres-repos
 import { RedisCacheClient } from '../../redis/redis-cache-client';
 import { RedisCategoryCacheAdapter } from '../../redis/redis-category-cache.adapter';
 import { RedisCommentCacheAdapter } from '../../redis/redis-comment-cache.adapter';
+import { RedisPlayheadCacheAdapter } from '../../redis/redis-playhead-cache.adapter';
 import { Adapters } from '../adapter-tokens';
 import { registerAdapters } from '../register-adapters';
 
@@ -54,6 +55,7 @@ describe('registerAdapters', () => {
     expect(c.get(Adapters.Authorization)).toBeInstanceOf(CaslAuthorizationAdapter);
     expect(c.get(Adapters.CategoryCache)).toBeInstanceOf(RedisCategoryCacheAdapter);
     expect(c.get(Adapters.CommentCache)).toBeInstanceOf(RedisCommentCacheAdapter);
+    expect(c.get(Adapters.PlayheadCache)).toBeInstanceOf(RedisPlayheadCacheAdapter);
     expectOk(await c.dispose());
   });
 

@@ -10,6 +10,7 @@ import { JwksTokenVerifier } from '../auth/jwks-token-verifier';
 import { CaslAuthorizationAdapter } from '../authorization/casl-authorization-adapter';
 import { RedisCategoryCacheAdapter } from '../redis/redis-category-cache.adapter';
 import { RedisCommentCacheAdapter } from '../redis/redis-comment-cache.adapter';
+import { RedisPlayheadCacheAdapter } from '../redis/redis-playhead-cache.adapter';
 import { RedisReactionCacheAdapter } from '../redis/redis-reaction-cache.adapter';
 import { Adapters } from './adapter-tokens';
 import { queueNamed } from './queue-registry';
@@ -67,6 +68,14 @@ export async function registerAdapters(c: Container, config: AppConfig): Promise
         new RedisCommentCacheAdapter({
           cache: c.get(Adapters.Cache),
           hotTtlSeconds: config.caches.comments.hotTtlSeconds,
+        })
+    )
+    .provide(
+      Adapters.PlayheadCache,
+      (c) =>
+        new RedisPlayheadCacheAdapter({
+          cache: c.get(Adapters.Cache),
+          ttlSeconds: config.caches.playheads.ttlSeconds,
         })
     )
     .provide(

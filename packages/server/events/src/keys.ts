@@ -9,6 +9,8 @@ export const CacheKeys = {
   userReactions: (userId: string) => `${NAMESPACE}:user:${userId}:reactions`,
   userReaction: (userId: string, videoId: string) =>
     `${NAMESPACE}:user:${userId}:reactions:${videoId}`,
+  userPlayhead: (userId: string, videoId: string) =>
+    `${NAMESPACE}:user:${userId}:playhead:${videoId}`,
   userSubscriptions: (userId: string) => `${NAMESPACE}:user:${userId}:subscriptions`,
   channelSubscriberCount: (channelId: string) =>
     `${NAMESPACE}:channel:${channelId}:subscriber_count`,

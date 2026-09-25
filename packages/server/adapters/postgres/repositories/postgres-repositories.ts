@@ -9,6 +9,7 @@ import { PostgresCommentRepository } from './postgres-comment-repository';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
+import { PostgresPlaylistRepository } from './postgres-playlist-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
 import { PostgresSubscriptionRepository } from './postgres-subscription-repository';
@@ -16,6 +17,7 @@ import { PostgresUploadRepository } from './postgres-upload-repository';
 import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
+import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
 import type { PostgresDatabase } from './types';
 
 /** A `drizzle` handle or a `sql` pool is borrowed; a `url` opens a pool the bundle ends. */
@@ -38,6 +40,8 @@ export class PostgresRepositories implements Repositories {
   readonly videoReactions: PostgresVideoReactionRepository;
   readonly subscriptions: PostgresSubscriptionRepository;
   readonly comments: PostgresCommentRepository;
+  readonly playlists: PostgresPlaylistRepository;
+  readonly watchHistory: PostgresWatchHistoryRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -58,6 +62,8 @@ export class PostgresRepositories implements Repositories {
     this.videoReactions = new PostgresVideoReactionRepository(db);
     this.subscriptions = new PostgresSubscriptionRepository(db);
     this.comments = new PostgresCommentRepository(db);
+    this.playlists = new PostgresPlaylistRepository(db);
+    this.watchHistory = new PostgresWatchHistoryRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {

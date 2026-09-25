@@ -13,6 +13,9 @@ import type { RepositoriesSubject } from './subjects';
 
 const TRUNCATE = sql.raw(
   `TRUNCATE ${[
+    'watch_history',
+    'playlist_items',
+    'playlists',
     'channel_subscriptions',
     'video_comments',
     'video_reactions',

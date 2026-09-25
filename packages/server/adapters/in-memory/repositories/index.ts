@@ -13,4 +13,6 @@ export * from './in-memory-channel-repository';
 export * from './in-memory-video-reaction-repository';
 export * from './in-memory-subscription-repository';
 export * from './in-memory-comment-repository';
+export * from './in-memory-playlist-repository';
+export * from './in-memory-watch-history-repository';
 export * from './in-memory-repositories';
