@@ -39,6 +39,7 @@ A registered domain (e.g. `example.com`) added to Cloudflare with active DNS man
      - `Zone` | `DNS` | `Edit`
      - `Zone` | `Zone Settings` | `Read`
      - `Zone` | `Zone` | `Read`
+     - `User` | `API Tokens` | `Edit` (Terraform creates the two scoped R2 tokens and reads the permission groups they use)
    - Account Resources: Include your target account.
    - Zone Resources: Include all zones (or select your specific domain).
 5. Click **Continue to summary** -> **Create Token**.

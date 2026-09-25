@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD ADR-15 Cloud hosting](../SDD.md#adr-15--cloud-hosting-for-the-reference-deployment) · [SDD §12.3 Rung 3 Cloud](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** done
 
 ---
 
@@ -53,3 +53,16 @@ So the cloud rung has no proof it can be planned, let alone applied.
 
 - Applying the plan. Nothing in CI holds Cloudflare or Hetzner credentials, and none should.
 - Remote state. It stays local (`terraform.tf`), as the local-first rule wants.
+
+## Open questions
+
+- Decided: the checks run in their own `terraform` job with a 2-minute budget, not in `lint-typecheck`, which
+  already spends about 80 of its 120 seconds. The job is not yet a required status check; adding it to branch
+  protection is a repo setting.
+- Decided: `.github/actions/setup-terraform` installs Terraform 1.16.4 by pinned version and sha256, cached by
+  version and arch, the way `setup-kustomize` does, rather than a third-party action.
+- Decided: v5 takes permission groups by ID, so `main.tf` looks the two R2 groups up by name in
+  `cloudflare_api_token_permission_groups_list` scoped to R2 buckets, and the specs still read the names.
+- Decided: both specs read the HCL through `@cdktf/hcl2json` instead of matching aligned text, so `terraform fmt`
+  can no longer break them.
+- Decided: the commented-out R2 backend block in `terraform.tf` is gone; state stays local.
