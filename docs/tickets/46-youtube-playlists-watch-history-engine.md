@@ -9,7 +9,7 @@
 | Blocks | 47, 73 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -67,13 +67,13 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
 
 ## Acceptance criteria
 
-- [ ] Database migration:
+- [x] Database migration:
   - `playlists` table with `is_system boolean not null default false`, `visibility` enum/text check, and indexes on `(owner_id, visibility)`.
   - `playlist_items` table with unique constraint on `(playlist_id, video_id)` and index on `(playlist_id, position)`.
   - `watch_history` table with unique constraint on `(user_id, video_id)` and index on `(user_id, watched_at desc)`.
-- [ ] JIT provisioner / service creates default "Watch Later" system playlist for user upon registration.
-- [ ] Redis playhead caching service in `adapters/redis/playhead-cache.service.ts`.
-- [ ] Playlist API Endpoints:
+- [x] JIT provisioner / service creates default "Watch Later" system playlist for user upon registration.
+- [x] Redis playhead caching service in `adapters/redis/playhead-cache.service.ts`.
+- [x] Playlist API Endpoints:
   - `POST /v1/playlists`: Creates custom playlist with title, description, and visibility (`public`, `unlisted`, `private`).
   - `GET /v1/playlists/:id`: Returns playlist metadata, owner channel profile, total video count, and ordered video items. Enforces privacy rules (404/403 for private playlist accessed by non-owner).
   - `PATCH /v1/playlists/:id`: Updates title, description, and visibility.
@@ -82,15 +82,15 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
   - `DELETE /v1/playlists/:id/items/:videoId`: Removes video and shifts subsequent positions down.
   - `PUT /v1/playlists/:id/reorder`: Atomically reorders items via transaction.
   - `GET /v1/me/playlists?videoId=:videoId`: Returns user playlists with `containsVideo: boolean`.
-- [ ] Watch History Endpoints:
+- [x] Watch History Endpoints:
   - `POST /v1/me/history`: Upserts playback position with `ON CONFLICT (user_id, video_id) DO UPDATE`.
   - `GET /v1/me/history`: Returns keyset-paginated list of watched videos ordered by `watched_at desc`.
   - `DELETE /v1/me/history`: Clears history for authenticated user.
   - `DELETE /v1/me/history/:videoId`: Deletes single video entry from history.
-- [ ] RBAC enforcement:
+- [x] RBAC enforcement:
   - Unauthenticated requests can only view `public` and `unlisted` playlists.
   - Modifying playlist items or deleting playlist requires owner identity or ADMIN role.
-- [ ] Route tests via `app.inject()` validating CRUD, reordering consistency, privacy enforcement, and history synchronization.
+- [x] Route tests via `app.inject()` validating CRUD, reordering consistency, privacy enforcement, and history synchronization.
 
 ## Out of scope
 
@@ -147,7 +147,7 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm test` and `bun test`.
-- [ ] `pnpm typecheck && pnpm lint` pass with zero warnings or errors.
-- [ ] Architectural docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [x] All ACs green under `pnpm test` and `bun test`.
+- [x] `pnpm typecheck && pnpm lint` pass with zero warnings or errors.
+- [x] Architectural docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
+- [x] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
