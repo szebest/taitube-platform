@@ -2,10 +2,7 @@ import { ErrorCodes, type Failure } from '@vp/errors';
 
 export { type CategorySlugConflict, categorySlugConflict } from '@vp/errors';
 
-export type CategoryNotFound = Failure<
-  typeof ErrorCodes.CATEGORY_NOT_FOUND,
-  { idOrSlug: string }
->;
+export type CategoryNotFound = Failure<typeof ErrorCodes.CATEGORY_NOT_FOUND, { idOrSlug: string }>;
 
 export type CategoryInUse = Failure<
   typeof ErrorCodes.CATEGORY_IN_USE,
@@ -24,4 +21,3 @@ export function categoryInUse(categoryId: string, videoCount: number): CategoryI
     videoCount,
   };
 }
-

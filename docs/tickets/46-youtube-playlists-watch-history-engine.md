@@ -9,7 +9,7 @@
 | Blocks | 47, 73 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -67,13 +67,13 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
 
 ## Acceptance criteria
 
-- [ ] Database migration:
+- [x] Database migration:
   - `playlists` table with `is_system boolean not null default false`, `visibility` enum/text check, and indexes on `(owner_id, visibility)`.
   - `playlist_items` table with unique constraint on `(playlist_id, video_id)` and index on `(playlist_id, position)`.
   - `watch_history` table with unique constraint on `(user_id, video_id)` and index on `(user_id, watched_at desc)`.
-- [ ] JIT provisioner / service creates default "Watch Later" system playlist for user upon registration.
-- [ ] Redis playhead caching service in `adapters/redis/playhead-cache.service.ts`.
-- [ ] Playlist API Endpoints:
+- [x] JIT provisioner / service creates default "Watch Later" system playlist for user upon registration.
+- [x] Redis playhead caching service in `adapters/redis/playhead-cache.service.ts`.
+- [x] Playlist API Endpoints:
   - `POST /v1/playlists`: Creates custom playlist with title, description, and visibility (`public`, `unlisted`, `private`).
   - `GET /v1/playlists/:id`: Returns playlist metadata, owner channel profile, total video count, and ordered video items. Enforces privacy rules (404/403 for private playlist accessed by non-owner).
   - `PATCH /v1/playlists/:id`: Updates title, description, and visibility.
@@ -82,15 +82,15 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
   - `DELETE /v1/playlists/:id/items/:videoId`: Removes video and shifts subsequent positions down.
   - `PUT /v1/playlists/:id/reorder`: Atomically reorders items via transaction.
   - `GET /v1/me/playlists?videoId=:videoId`: Returns user playlists with `containsVideo: boolean`.
-- [ ] Watch History Endpoints:
+- [x] Watch History Endpoints:
   - `POST /v1/me/history`: Upserts playback position with `ON CONFLICT (user_id, video_id) DO UPDATE`.
   - `GET /v1/me/history`: Returns keyset-paginated list of watched videos ordered by `watched_at desc`.
   - `DELETE /v1/me/history`: Clears history for authenticated user.
   - `DELETE /v1/me/history/:videoId`: Deletes single video entry from history.
-- [ ] RBAC enforcement:
+- [x] RBAC enforcement:
   - Unauthenticated requests can only view `public` and `unlisted` playlists.
   - Modifying playlist items or deleting playlist requires owner identity or ADMIN role.
-- [ ] Route tests via `app.inject()` validating CRUD, reordering consistency, privacy enforcement, and history synchronization.
+- [x] Route tests via `app.inject()` validating CRUD, reordering consistency, privacy enforcement, and history synchronization.
 
 ## Out of scope
 
@@ -109,9 +109,51 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
 - Privacy test: User A creates private playlist; assert User B receives 404 NOT_FOUND.
 - History test: Sync video progress at 45s; fetch history; assert `progress_seconds: 45`.
 
+## Open questions
+
+- Decided: sparse integer positions, 1024 apart, instead of dense `0..n-1`. A drag-and-drop move takes
+  the midpoint between its new neighbours and rewrites that one row; the playlist is respaced (one
+  `UPDATE ... FROM (VALUES ...)`) only when two neighbours sit adjacent or a key would leave the integer
+  range. Append is `COALESCE(MAX(position) + 1024, 0)` inside the locked transaction, and removing an item
+  deletes one row. The wire `position` is the 0-based place, so "removes video and shifts subsequent
+  positions down" holds for every client without rewriting rows. The pure planner is
+  `packages/universal/domain/src/playlist-position.ts`.
+- Decided: the testing plan's "reorder item 4 to position 1 -> [4, 0, 1, 2, 3]" is really position 0.
+  Both are tested: to 0 gives `[4, 0, 1, 2, 3]`, to 1 gives `[0, 4, 1, 2, 3]`.
+- Decided: a full reindex names every item the caller can see, exactly once. Anything else was drawn
+  from a stale view and answers `409 VERSION_CONFLICT` rather than dropping or duplicating an item. An
+  item whose video the caller may not watch (made private by its creator, or deleted) keeps its slot and
+  the caller's order fills the slots around it, so a hidden video never blocks a reindex. The rule
+  (`decidePlaylistReorder`) runs inside the repository transaction, against the slots it has locked.
+- Decided: packages stay `@vp/*` (ticket 48), so the ports are `core/repositories/playlist-repository.ts`
+  and `watch-history-repository.ts` and the Redis adapter is `redis/redis-playhead-cache.adapter.ts`.
+  `assertCan(...)` is `authorize(...)` from `@vp/domain-rules`, its `Result` form.
+- Decided: Watch Later is provisioned in `ensureProvisioned` before the channel (idempotent through a
+  partial unique index on `owner_id WHERE is_system`). The channel is what marks an identity as
+  provisioned, so an existing channel implies an existing Watch Later and a failed provision is retried
+  on the next request. The migration backfills one for every user that already exists. The backfilled ids are `gen_random_uuid()`, since Postgres before 18 has no
+  `uuidv7()`. Watch Later cannot be renamed either: `PATCH` answers `SYSTEM_PLAYLIST_IMMUTABLE` like
+  `DELETE`.
+- Decided: a playlist the caller cannot read answers `404 PLAYLIST_NOT_FOUND` for reads and writes alike;
+  one they can read but not edit answers `403`. Items whose video the viewer may not watch are hidden
+  and keep their place.
+- Decided: `POST /v1/me/history` takes a `reason` (`heartbeat`, `pause` by default, `ended`). The buffered
+  playhead carries `flushedAt`, when its row was last written. A heartbeat only writes Redis while that
+  is younger than `caches.playheads.flushIntervalMs` (60 s); the first beat, a beat past the interval, a
+  pause and the end write through. So the history list is at most a minute behind a long session, and a
+  buffer that expires loses at most a minute. There is no separate flush job, and with Redis down every
+  beat writes through. `GET /v1/me/history/:videoId` is the resume read the buffer exists for.
+- Decided: the upsert keeps the newest row (`ON CONFLICT ... WHERE watched_at <= excluded.watched_at`).
+  `watched_at` is stamped by the server, so this orders requests that arrive out of order; it does not
+  tell a stale tab's late write from a fresh one, and the Redis buffer is last writer wins.
+- Decided: `CacheClient.del` takes several keys, so clearing a history drops every buffered playhead in
+  one round trip.
+- Decided: `GET /v1/playlists/:id` returns every item unpaginated. YouTube caps a playlist at 5000 videos;
+  a cap and paging are left to the frontend ticket (73) if a real playlist needs them.
+
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm test` and `bun test`.
-- [ ] `pnpm typecheck && pnpm lint` pass with zero warnings or errors.
-- [ ] Architectural docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [x] All ACs green under `pnpm test` and `bun test`.
+- [x] `pnpm typecheck && pnpm lint` pass with zero warnings or errors.
+- [x] Architectural docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
+- [x] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.

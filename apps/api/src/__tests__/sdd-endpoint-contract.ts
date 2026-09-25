@@ -1,4 +1,5 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
+import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
 import { SDD_STUDIO_ENDPOINTS } from './sdd-studio-endpoints';
 
 export interface SddEndpointContract {
@@ -336,7 +337,8 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     expectedErrorCodes: DLQ_ENTRY,
     hasPathParams: true,
   },
+  ...SDD_LIBRARY_ENDPOINTS,
+  ...SDD_STUDIO_ENDPOINTS,
   { path: '/healthz', method: 'get', expectedStatuses: [200] },
   { path: '/readyz', method: 'get', expectedStatuses: [200, 503] },
-  ...SDD_STUDIO_ENDPOINTS,
 ];

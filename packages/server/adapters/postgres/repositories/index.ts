@@ -14,5 +14,7 @@ export * from './postgres-subscription-repository';
 export * from './postgres-video-view-repository';
 export * from './postgres-video-studio-repository';
 export * from './postgres-comment-repository';
+export * from './postgres-playlist-repository';
+export * from './postgres-watch-history-repository';
 export * from './postgres-repositories';
 export * from './types';

@@ -83,7 +83,7 @@ export interface CreatorVideoView extends VideoSummaryView {
   tags: string[];
 }
 
-function cdnUrl(cdn: CdnBase, key: string): string {
+export function cdnUrl(cdn: CdnBase, key: string): string {
   return `${cdn}/${key.replace(/^\/+/, '')}`;
 }
 

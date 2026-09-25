@@ -1,6 +1,11 @@
 import { videos } from '@vp/db';
 import type { UserContext } from '@vp/permissions';
-import { ownerScope, publicVisibilityScope, videoReadScope } from '../accessible-by';
+import {
+  ownerScope,
+  playlistReadScope,
+  publicVisibilityScope,
+  videoReadScope,
+} from '../accessible-by';
 import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: accessible-by adapter', () => {
@@ -31,6 +36,28 @@ describe('adapters/postgres/scoping: accessible-by adapter', () => {
       { name: 'admin', user: admin },
     ])('imposes no restriction for a $name', ({ user }) => {
       expect(videoReadScope(user)).toBeUndefined();
+    });
+  });
+
+  describe('playlistReadScope', () => {
+    it('restricts a guest to public and unlisted playlists', () => {
+      const scope = playlistReadScope(guest);
+      expect(sqlText(scope)).toBe(
+        '("playlists"."visibility" = $1 or "playlists"."visibility" = $2)'
+      );
+      expect(sqlParams(scope)).toEqual(['unlisted', 'public']);
+    });
+
+    it('widens the scope to the playlists the user owns', () => {
+      const scope = playlistReadScope(standardUser);
+      expect(sqlText(scope)).toBe(
+        '("playlists"."owner_id" = $1 or "playlists"."visibility" = $2 or "playlists"."visibility" = $3)'
+      );
+      expect(sqlParams(scope)).toEqual(['usr-123', 'unlisted', 'public']);
+    });
+
+    it('imposes no restriction for an admin', () => {
+      expect(playlistReadScope(admin)).toBeUndefined();
     });
   });
 

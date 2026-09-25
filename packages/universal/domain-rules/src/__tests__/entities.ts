@@ -1,4 +1,4 @@
-import type { Category, Channel, Comment, Upload, Video } from '@vp/domain';
+import type { Category, Channel, Comment, Playlist, Upload, Video } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
 export const OWNER: UserContext = { id: 'owner-1', role: 'CREATOR' };
@@ -91,6 +91,21 @@ export function aCategory(overrides: Partial<Category> = {}): Category {
     iconUrl: null,
     sortOrder: 0,
     isActive: true,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function aPlaylist(overrides: Partial<Playlist> = {}): Playlist {
+  return {
+    id: 'playlist-1',
+    ownerId: OWNER.id,
+    title: 'Road trip',
+    description: '',
+    visibility: 'private',
+    isSystem: false,
+    customThumbnailKey: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,

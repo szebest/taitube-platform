@@ -2,7 +2,7 @@
 
 ## Architectural Principle: Deep Domain Services & Modular Composition
 
-Every domain resource and entity in the API has a corresponding service in `apps/api/src/services/` (e.g. `VideoService`, `CreatorStudioService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `ViewService`, `AnalyticsService`, `SseService`).
+Every domain resource and entity in the API has a corresponding service in `apps/api/src/services/` (e.g. `VideoService`, `CreatorStudioService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `ViewService`, `AnalyticsService`, `SseService`).
 
 Services are deep modules that encapsulate business rules, domain invariants, repository interactions, cache coordination, error classification, and entity-to-view transformations. They are completely decoupled from Fastify and HTTP transport concerns.
 
@@ -54,6 +54,9 @@ A service's collaborators arrive through its deps and are required; `composition
 | `SubscriptionService` | `subscription-service.ts` | Channel subscriptions and the subscribed video feed |
 | `CommentService` | `comment-service.ts` | Threaded comments, the hot first page behind singleflight, moderation through `@vp/domain-rules` |
 | - | `comment-views.ts` | The comment wire shape, with the creator badge |
+| `PlaylistService` | `playlist-service.ts` | Playlists and their items; reorders hand `decidePlaylistReorder` to the repository transaction |
+| `WatchHistoryService` | `watch-history-service.ts` | Resumable playheads over the Redis write-behind buffer, the keyset history list |
+| - | `library-views.ts` | The playlist and watch history wire shapes |
 | `ViewService` | `view-service.ts` | Playback beacons: the watch-time gate, then the Redis view buffer, never the database |
 | `AnalyticsService` | `analytics-service.ts` | Creator video and channel analytics over what the view flush committed |
 | `DlqService` | `dlq-service.ts` | Dead-letter queue listing, job replay with fresh suffixes, discarding |

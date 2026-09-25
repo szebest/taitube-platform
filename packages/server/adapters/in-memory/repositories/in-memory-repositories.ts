@@ -6,6 +6,7 @@ import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
+import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
 import { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
@@ -15,6 +16,7 @@ import { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repo
 import { InMemoryVideoRepository } from './in-memory-video-repository';
 import { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 import { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
+import { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
 
 const Repo = {
   events: token<InMemoryEventRepository>('events'),
@@ -32,6 +34,8 @@ const Repo = {
   subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
   videoViews: token<InMemoryVideoViewRepository>('videoViews'),
   comments: token<InMemoryCommentRepository>('comments'),
+  playlists: token<InMemoryPlaylistRepository>('playlists'),
+  watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),
 } as const;
 
 /**
@@ -95,6 +99,22 @@ function graph(): Container {
           channelsRepo: c.get(Repo.channels),
           videosRepo: c.get(Repo.videos),
         })
+    )
+    .provide(
+      Repo.playlists,
+      (c) =>
+        new InMemoryPlaylistRepository({
+          channelsRepo: c.get(Repo.channels),
+          videosRepo: c.get(Repo.videos),
+        })
+    )
+    .provide(
+      Repo.watchHistory,
+      (c) =>
+        new InMemoryWatchHistoryRepository({
+          channelsRepo: c.get(Repo.channels),
+          videosRepo: c.get(Repo.videos),
+        })
     );
 }
 
@@ -114,6 +134,8 @@ export class InMemoryRepositories implements Repositories {
   readonly subscriptions: InMemorySubscriptionRepository;
   readonly videoViews: InMemoryVideoViewRepository;
   readonly comments: InMemoryCommentRepository;
+  readonly playlists: InMemoryPlaylistRepository;
+  readonly watchHistory: InMemoryWatchHistoryRepository;
 
   constructor() {
     const c = graph();
@@ -132,6 +154,8 @@ export class InMemoryRepositories implements Repositories {
     this.subscriptions = c.get(Repo.subscriptions);
     this.videoViews = c.get(Repo.videoViews);
     this.comments = c.get(Repo.comments);
+    this.playlists = c.get(Repo.playlists);
+    this.watchHistory = c.get(Repo.watchHistory);
   }
 
   clear(): void {

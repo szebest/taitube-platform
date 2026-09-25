@@ -149,8 +149,8 @@ export class InMemoryCacheClient extends CacheClient {
     return ok();
   }
 
-  async del(key: string): Promise<Result<void, CacheUnavailable>> {
-    this.kv.delete(key);
+  async del(...keys: string[]): Promise<Result<void, CacheUnavailable>> {
+    for (const key of keys) this.kv.delete(key);
     return ok();
   }
 

@@ -13,14 +13,17 @@ depends on `@vp/errors` and `@casl/ability` only, so `apps/web`, `apps/api`, `@v
 `@vp/adapters` and `@vp/domain-rules` all import it.
 
 - Rule factories in `src/rules/`: `defineVideoRules`, `defineCommentRules`, `defineChannelRules`,
-  `defineUploadRules`, `defineAnalyticsRules`, `defineAdminRules` (`<resource>.rules.ts`).
+  `defineUploadRules`, `defineAnalyticsRules`, `definePlaylistRules`, `defineAdminRules`
+  (`<resource>.rules.ts`).
 - The ability builder `getUserPermissions(user: UserContext | null)` in `ability.ts`, which applies all
-  six. The admin rules go last: a later CASL rule wins, so `manage all` overrides every `cannot`, such as
+  seven. The admin rules go last: a later CASL rule wins, so `manage all` overrides every `cannot`, such as
   the one that stops an owner changing the visibility of a video an admin took down (`REJECTED`).
 - Typed helpers in `src/helpers/`: `canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canModerateVideo` (the
   `moderate` action, an admin takedown), `canReactVideo`,
   `canAccessUpload`, `canSubscribeChannel`, `canCreateComment`, `canUpdateComment`,
-  `canDeleteComment`, `canPinComment`, `canManageCategory`, `canAccessAdmin`, `canReadAnalytics`.
+  `canDeleteComment`, `canPinComment`, `canManageCategory`, `canAccessAdmin`, `canReadAnalytics`,
+  `canCreatePlaylist`, `canReadPlaylist`, `canUpdatePlaylist`, `canDeletePlaylist`,
+  `canManagePlaylistItems`.
 - Subject normalizers in `src/normalizers/` (`toVideoSubject`, `toUploadSubject`,
   `normalizeVideoResource`, `normalizeUploadResource`) that the helpers wrap resources with.
 - Types in `src/types/`: `UserContext`, `Role`, `parseRole` (the boundary parser from untrusted input),

@@ -12,6 +12,7 @@ import type {
   CreatorStudioService,
   DlqService,
   FeedService,
+  PlaylistService,
   QueueService,
   ReactionService,
   SseHub,
@@ -20,6 +21,7 @@ import type {
   UploadService,
   VideoService,
   ViewService,
+  WatchHistoryService,
 } from '../services/index';
 import type { Poller } from '../services/poller';
 import type { ReadinessService } from '../services/readiness-service';
@@ -36,6 +38,8 @@ export interface ServiceSet {
   commentService: CommentService;
   viewService: ViewService;
   analyticsService: AnalyticsService;
+  playlistService: PlaylistService;
+  watchHistoryService: WatchHistoryService;
   queueService: QueueService;
   dlqService: DlqService;
   sseService: SseService;
@@ -58,6 +62,8 @@ export const Services = {
   CommentService: token<CommentService>('CommentService'),
   ViewService: token<ViewService>('ViewService'),
   AnalyticsService: token<AnalyticsService>('AnalyticsService'),
+  PlaylistService: token<PlaylistService>('PlaylistService'),
+  WatchHistoryService: token<WatchHistoryService>('WatchHistoryService'),
   QueueService: token<QueueService>('QueueService'),
   DlqService: token<DlqService>('DlqService'),
   SseService: token<SseService>('SseService'),

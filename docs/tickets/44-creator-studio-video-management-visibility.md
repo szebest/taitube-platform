@@ -82,7 +82,7 @@ This ticket delivers:
 
 ## Open questions
 
-- Decided: `category_id` and its index already existed (ticket 37), so migration 0012 adds only `tags text[] NOT NULL DEFAULT '{}'`, `custom_thumbnail_key text` and the GIN index `videos_tags_idx`. `schema.ts` sat at the 10 KB ceiling, so `video_reactions` and `channel_subscriptions` moved to `social-schema.ts`; the move generates no SQL.
+- Decided: `category_id` and its index already existed (ticket 37), so migration 0013 adds only `tags text[] NOT NULL DEFAULT '{}'`, `custom_thumbnail_key text` and the GIN index `videos_tags_idx`. `schema.ts` sat at the 10 KB ceiling, so `video_reactions` and `channel_subscriptions` moved to `social-schema.ts`; the move generates no SQL.
 - Decided: `videoOwnerScope(user)` does not exist; the library query composes the existing `ownerScope(videos, ownerId)` and `notDeletedScope(videos)` through `drizzleWhere` in `PostgresVideoStudioRepository.listLibrary`.
 - Decided: the ACs name `assertCan(canUpdateVideo(...))`, which ADR-24 replaced. The edit goes through `decideVideoMetadataUpdate` and the takedown through `decideVideoTakedown` in `@vp/domain-rules`, both over the CASL helpers, and nothing checks a role inline.
 - Decided: an admin takedown is a new CASL action, `moderate Video`, which only `manage all` grants. It is one CAS to `REJECTED` and `private` that bumps `version` and appends `video.taken_down`, so an edit read before it is a `VERSION_CONFLICT`. Afterwards the owner may still edit the video but not its visibility (`cannot('update', 'Video', 'visibility', { ownerId, status: 'REJECTED' })`); `getUserPermissions` now applies the admin rules last, so `manage all` overrides that.
