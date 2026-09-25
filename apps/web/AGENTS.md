@@ -57,9 +57,8 @@ src/
 ├── components/                 <Can> — app-wide, presentational
 ├── hooks/                      useCan
 ├── layout/                     chrome: components/ (header, sidebar, login, logo), containers/ (default-layout)
-├── lib/                        time-ago
 ├── modules/<Feature>/          one folder per page: components/, api/, models/
-│   └── shared/                 api/ (RTK Query endpoints), providers/, components/, hooks/, helpers/, models/
+│   └── shared/                 api/ (RTK Query endpoints), providers/, components/, hooks/, models/
 └── styles/                     SCSS: abstract/, base/, components/
 ```
 
@@ -73,7 +72,7 @@ src/
 
 ## 2. Rules that hold today
 
-Rules 1, 2, 3 and 5 are enforced by code or by review **now**. Rule 4 is the rule for new code and is not
+Rules 1, 2, 3, 5 and 6 are enforced by code or by review **now**. Rule 4 is the rule for new code and is not
 built yet.
 
 ### Rule 1: Declarative authorization only
@@ -126,7 +125,17 @@ Not built yet: `apps/web` depends on neither `@vp/validation` nor `@vp/domain-ru
   presenter, and the reason a new failure variant breaks this build too. The frontend and the backend share
   the **rule**, never the presenter: a `Problem` and a toast are different answers to the same failure.
 
-### Rule 5: Nothing phones home
+### Rule 5: Components never format
+
+Every number, date, duration and count reaches the page through `@vp/intl-react`, which `App.tsx` mounts as
+`<IntlProvider>`: `<Format value={...} />` for a value on its own, `useT().tOr('videos.views', { count }, '')`
+for a value inside words, and `useFormat()` when a component needs the string (a `title`, a grapheme-safe
+`truncate`). No `toLocaleString()`, no `toFixed` for display, no `Intl` constructor and no `${n} views` in a
+component: `no-adhoc-formatting.test.ts` fails on the first three. Specs render through `renderPage`, which
+mounts the provider in `en` and UTC. The authority is
+[docs/standards/formatting-and-i18n.md](../../docs/standards/formatting-and-i18n.md).
+
+### Rule 6: Nothing phones home
 No absolute third-party host in `src/` or `public/*.html`, no analytics beacon; `bootstrap-icons` is bundled
 from `node_modules`. Everything resolves against `API_BASE_URL` (`local-first.test.ts`). See
 [docs/LOCAL_FIRST.md](../../docs/LOCAL_FIRST.md).

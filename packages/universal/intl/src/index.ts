@@ -22,7 +22,6 @@ export * from './formatters/list';
 export * from './formatters/money';
 export * from './formatters/number';
 export * from './formatters/number-range';
-export * from './formatters/ordinal';
 export * from './formatters/percent';
 export * from './formatters/plural';
 export * from './formatters/relative';

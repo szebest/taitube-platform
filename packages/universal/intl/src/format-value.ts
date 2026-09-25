@@ -14,7 +14,6 @@ import { type ListValue, list } from './formatters/list';
 import { type MoneyValue, money } from './formatters/money';
 import { type NumberValue, number } from './formatters/number';
 import { type NumberRangeValue, numberRange } from './formatters/number-range';
-import { type OrdinalValue, ordinal } from './formatters/ordinal';
 import { type PercentValue, percent } from './formatters/percent';
 import { type RelativeValue, relative } from './formatters/relative';
 import { type TimeValue, time } from './formatters/time';
@@ -25,7 +24,6 @@ export type TaggedValue =
   | PercentValue
   | BytesValue
   | BitrateValue
-  | OrdinalValue
   | NumberRangeValue
   | MoneyValue
   | DateValue
@@ -47,7 +45,6 @@ export const FORMAT_KINDS = [
   'percent',
   'bytes',
   'bitrate',
-  'ordinal',
   'numberRange',
   'money',
   'date',
@@ -92,8 +89,6 @@ export function formatValue(
       return bytes(value, context);
     case 'bitrate':
       return bitrate(value, context);
-    case 'ordinal':
-      return ordinal(value, context);
     case 'numberRange':
       return numberRange(value, context);
     case 'money':

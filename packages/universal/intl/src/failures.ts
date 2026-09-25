@@ -53,7 +53,3 @@ export function unrenderable(formatter: string, reason: string): Unrenderable {
     reason,
   };
 }
-
-export function describeCause(cause: unknown): string {
-  return cause instanceof Error ? cause.message : String(cause);
-}

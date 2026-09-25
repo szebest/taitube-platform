@@ -2,7 +2,6 @@ import { ErrorCodes } from '@vp/errors';
 import { assertNever } from '@vp/result';
 import {
   type FormatFailure,
-  describeCause,
   unknownOption,
   unrenderable,
   unsupportedLocale,
@@ -38,15 +37,5 @@ describe('@vp/intl: format failures', () => {
     expect(failure.code).toBe(code);
     expect(subjectOf(failure)).toBe(subject);
     expect(failure.message).toContain(subject);
-  });
-
-  it.each([
-    {
-      cause: new RangeError('Incorrect locale information provided'),
-      expected: 'Incorrect locale information provided',
-    },
-    { cause: 'thrown text', expected: 'thrown text' },
-  ])('describes a thrown $cause', ({ cause, expected }) => {
-    expect(describeCause(cause)).toBe(expected);
   });
 });

@@ -4,15 +4,18 @@ import { type FormatFailure, unrenderable } from '../failures';
 import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';
 
-export const DURATION_OPTION_KEYS = ['style', 'unitDisplay'] as const satisfies OptionKeys<
-  Record<never, never>,
-  'style' | 'unitDisplay'
->;
-
-export interface DurationOptions {
-  readonly style?: 'clock' | 'words';
-  readonly unitDisplay?: 'short' | 'long' | 'narrow';
+/** `Intl.DurationFormat` has no TypeScript options type yet, so the shape this formatter offers is its own. */
+interface DurationChoices {
+  readonly style: 'clock' | 'words';
+  readonly unitDisplay: 'short' | 'long' | 'narrow';
 }
+
+export const DURATION_OPTION_KEYS = [
+  'style',
+  'unitDisplay',
+] as const satisfies OptionKeys<DurationChoices>;
+
+export type DurationOptions = Partial<Pick<DurationChoices, (typeof DURATION_OPTION_KEYS)[number]>>;
 
 /** In seconds: `765` is `12:45` as a clock, `12 min, 45 sec` in words. */
 export interface DurationValue {

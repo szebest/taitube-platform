@@ -4,12 +4,11 @@ import { Link } from "react-router-dom";
 import styles from './video-card.module.scss';
 
 import type { VideoSummary } from "@vp/api-contracts";
+import { publishedAt } from "@vp/intl";
+import { Format, useT } from "@vp/intl-react";
 import { canUpdateVideo } from "@vp/permissions";
 
 import { Can } from "src/components";
-import { formatTimeAgo } from "src/lib";
-
-import { formatNumbers } from "../../helpers";
 
 import { VideoSettingsDropdown } from "..";
 
@@ -19,6 +18,7 @@ export type VideoCardProps = {
 }
 
 export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
+	const { tOr } = useT();
 	const videoRoute = `/watch/${video.id}`;
 
 	return (
@@ -35,9 +35,9 @@ export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
 							</div>
 							<div className={styles.container__meta}>
 								<div className={styles.container__meta__stats}>
-									<span className={styles.text}>{formatNumbers(video.viewsCount ?? 0)} views</span>
+									<span className={styles.text}>{tOr('videos.views', { count: video.viewsCount ?? 0 }, '')}</span>
 									<span className={styles.seperator} />
-									<span className={styles.text}>{formatTimeAgo(new Date(video.createdAt))}</span>
+									<span className={styles.text}><Format value={publishedAt(video.createdAt).relative} /></span>
 								</div>
 							</div>
 						</div>

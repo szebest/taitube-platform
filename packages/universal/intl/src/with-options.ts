@@ -20,7 +20,7 @@ export function findUnknownOption(
  */
 export function withOptions<V extends { readonly options?: object }>(
   formatter: string,
-  allowed: readonly PropertyKey[],
+  allowed: readonly (keyof NonNullable<V['options']>)[],
   format: Formatter<V>
 ): Formatter<V> {
   return (value, context) => {

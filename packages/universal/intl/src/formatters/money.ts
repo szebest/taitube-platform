@@ -9,9 +9,10 @@ export const MONEY_OPTION_KEYS = [
   'signDisplay',
 ] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
 
-export type MoneyOptions = Pick<Intl.NumberFormatOptions, 'currencyDisplay' | 'signDisplay'> & {
-  readonly currency?: string | User;
-};
+export type MoneyOptions = Pick<
+  Intl.NumberFormatOptions,
+  Exclude<(typeof MONEY_OPTION_KEYS)[number], 'currency'>
+> & { readonly currency?: string | User };
 
 /** `minor` counts the currency's smallest unit (pence, öre), so `1250` GBP is £12.50. */
 export interface MoneyValue {

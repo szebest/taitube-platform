@@ -4,7 +4,7 @@ import {
   type DurationFormatOptions,
   createDurationFallback,
 } from './duration-fallback';
-import { type FormatFailure, describeCause, unrenderable, unsupportedLocale } from './failures';
+import { type FormatFailure, unrenderable, unsupportedLocale } from './failures';
 
 const MAX_ENTRIES_PER_KIND = 256;
 
@@ -76,7 +76,7 @@ function construct<T>(
     (found): Built<T> =>
       found.length === 0
         ? err(unsupportedLocale(locale))
-        : tryCatch(build, (cause) => unrenderable(kind, describeCause(cause)))
+        : tryCatch(build, (cause) => unrenderable(kind, String(cause)))
   );
 }
 

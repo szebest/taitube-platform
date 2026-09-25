@@ -66,6 +66,23 @@ function placeholder(
   }
 }
 
+export interface Placeholder {
+  readonly token: string;
+  readonly name: string;
+  readonly kind: string | undefined;
+  readonly index: number;
+}
+
+/** The placeholders `Params` reads at the type level, read here at runtime by the same grammar. */
+export function placeholders(template: string): Placeholder[] {
+  return Array.from(template.matchAll(PLACEHOLDER), (match) => ({
+    token: match[0],
+    name: match[1] ?? '',
+    kind: match[2],
+    index: match.index,
+  }));
+}
+
 /** Renders every placeholder through `@vp/intl`, so a message and a direct format agree. */
 export function substitute(
   message: Message,
@@ -75,11 +92,10 @@ export function substitute(
   const { template, config } = message;
   const pieces: Rendered[] = [];
   let copied = 0;
-  for (const match of template.matchAll(PLACEHOLDER)) {
-    const [token, name = '', kind] = match;
-    pieces.push(ok(template.slice(copied, match.index)));
+  for (const { token, name, kind, index } of placeholders(template)) {
+    pieces.push(ok(template.slice(copied, index)));
     pieces.push(placeholder(name, kind, args[name], config, intl));
-    copied = match.index + token.length;
+    copied = index + token.length;
   }
   pieces.push(ok(template.slice(copied)));
   return map(all(pieces), (parts) => parts.join(''));

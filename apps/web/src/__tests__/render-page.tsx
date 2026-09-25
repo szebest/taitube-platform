@@ -1,4 +1,5 @@
 import type { Account } from '@vp/api-contracts';
+import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -20,7 +21,7 @@ export type PageOptions = {
 };
 
 /**
- * Renders inside the providers `App` mounts, over a store a spec can seed. A `viewer` overrides
+ * Renders inside the providers `App` mounts, in a fixed locale and zone, over a store a spec can seed. A `viewer` overrides
  * the permissions the signed-in account would give.
  */
 export function renderPage(
@@ -29,15 +30,17 @@ export function renderPage(
 ): string {
   return renderToStaticMarkup(
     <Provider store={store}>
-      <AuthProvider>
-        <PermissionsProvider userContext={viewer}>
-          <MemoryRouter initialEntries={[url]}>
-            <Routes>
-              <Route path={route} element={page} />
-            </Routes>
-          </MemoryRouter>
-        </PermissionsProvider>
-      </AuthProvider>
+      <IntlProvider locale="en" timeZone="UTC">
+        <AuthProvider>
+          <PermissionsProvider userContext={viewer}>
+            <MemoryRouter initialEntries={[url]}>
+              <Routes>
+                <Route path={route} element={page} />
+              </Routes>
+            </MemoryRouter>
+          </PermissionsProvider>
+        </AuthProvider>
+      </IntlProvider>
     </Provider>
   );
 }

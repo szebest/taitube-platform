@@ -10,10 +10,8 @@ export const BYTES_OPTION_KEYS = [
 
 export type BytesOptions = Pick<
   Intl.NumberFormatOptions,
-  'maximumFractionDigits' | 'unitDisplay'
-> & {
-  readonly base?: 'decimal' | 'binary';
-};
+  Exclude<(typeof BYTES_OPTION_KEYS)[number], 'base'>
+> & { readonly base?: 'decimal' | 'binary' };
 
 export interface BytesValue {
   readonly type: 'bytes';

@@ -11,7 +11,6 @@ const ONE_OF_EACH: readonly { value: FormatValue; expected: RegExp }[] = [
   { value: { type: 'percent', value: 7 }, expected: /^7%$/ },
   { value: { type: 'bytes', value: 4_500_000 }, expected: /^4\.5 MB$/ },
   { value: { type: 'bitrate', value: 4_500_000 }, expected: /^4\.5 Mb\/s$/ },
-  { value: { type: 'ordinal', value: 3 }, expected: /^3rd$/ },
   { value: { type: 'numberRange', value: [1, 5] }, expected: /^1\s?–\s?5$/u },
   { value: { type: 'money', value: 1250, units: 'minor' }, expected: /^£12\.50$/ },
   { value: { type: 'date', value: ISO }, expected: /^19 Sept? 2026$/ },

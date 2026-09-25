@@ -100,6 +100,7 @@ document is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
+| `@vp/intl` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/pagination` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/permissions` | universal | `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
@@ -119,6 +120,7 @@ document is stale — fix it.
 |---|---|---|
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
+| `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@vp/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
 | `@vp/env-schema` | server | `@vp/domain`, `@vp/observability` (the `TraceSamplerName` type), `@vp/pagination`, `@vp/result` |
 
@@ -127,6 +129,7 @@ document is stale — fix it.
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
+| `@vp/intl-react` | client | `@vp/intl`, `@vp/messages`, `@vp/result` |
 | `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
 | `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
 
@@ -134,7 +137,7 @@ document is stale — fix it.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/permissions`, `@vp/result` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl`, `@vp/intl-react`, `@vp/messages`, `@vp/permissions`, `@vp/result` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 
@@ -147,7 +150,7 @@ document is stale — fix it.
 Its acceptance suite boots `apps/api` and a stub S3, so the package sits above the application it drives.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
-**Every package in `@vp/web`'s closure is `universal` or `client`** - seven of them, counting what
+**Every package in `@vp/web`'s closure is `universal` or `client`** - ten of them, counting what
 `@vp/api-contracts` and `@vp/permissions` pull in (`@vp/domain`, `@vp/errors`, `@vp/pagination`); `@vp/web`
 has no `@vp/*` devDependency. That is the invariant the whole scheme exists to protect. Verify it any time
 with `pnpm why bullmq` from `apps/web` — it returns nothing.

@@ -75,9 +75,9 @@ Shared packages live under `packages/<tier>/`, where the directory **is** the ti
 import rules; each tier directory has its own: [universal](packages/universal/AGENTS.md) · [server](packages/server/AGENTS.md) · [client](packages/client/AGENTS.md).
 
 - **`packages/universal/` — runs in a browser and on a server:**  
-  [api-contracts](packages/universal/api-contracts/AGENTS.md) · [domain](packages/universal/domain/AGENTS.md) · [domain-rules](packages/universal/domain-rules/AGENTS.md) · [errors](packages/universal/errors/AGENTS.md) · [pagination](packages/universal/pagination/AGENTS.md) · [permissions](packages/universal/permissions/AGENTS.md) · [result](packages/universal/result/AGENTS.md) · [tsconfig](packages/universal/tsconfig/AGENTS.md) · [validation](packages/universal/validation/AGENTS.md)
+  [api-contracts](packages/universal/api-contracts/AGENTS.md) · [domain](packages/universal/domain/AGENTS.md) · [domain-rules](packages/universal/domain-rules/AGENTS.md) · [errors](packages/universal/errors/AGENTS.md) · [intl](packages/universal/intl/AGENTS.md) · [messages](packages/universal/messages/AGENTS.md) · [pagination](packages/universal/pagination/AGENTS.md) · [permissions](packages/universal/permissions/AGENTS.md) · [result](packages/universal/result/AGENTS.md) · [tsconfig](packages/universal/tsconfig/AGENTS.md) · [validation](packages/universal/validation/AGENTS.md)
 - **`packages/client/` — browser only:**  
-  [api-client](packages/client/api-client/AGENTS.md)
+  [api-client](packages/client/api-client/AGENTS.md) · [intl-react](packages/client/intl-react/AGENTS.md)
 - **`packages/server/` — Node/Bun only:**  
   [adapters](packages/server/adapters/AGENTS.md) · [composition](packages/server/composition/AGENTS.md) · [concurrency](packages/server/concurrency/AGENTS.md) · [config](packages/server/config/AGENTS.md) · [core](packages/server/core/AGENTS.md) · [db](packages/server/db/AGENTS.md) · [env-schema](packages/server/env-schema/AGENTS.md) · [events](packages/server/events/AGENTS.md) · [ffmpeg](packages/server/ffmpeg/AGENTS.md) · [job-contracts](packages/server/job-contracts/AGENTS.md) · [logger](packages/server/logger/AGENTS.md) · [observability](packages/server/observability/AGENTS.md) · [storage](packages/server/storage/AGENTS.md) · [testing](packages/server/testing/AGENTS.md)  
   CLI packages: [compose-autoscaler](packages/server/compose-autoscaler/AGENTS.md) · [dev-token](packages/server/dev-token/AGENTS.md) · [gen-video](packages/server/gen-video/AGENTS.md) · [upload-client](packages/server/upload-client/AGENTS.md)
@@ -96,6 +96,7 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 - **File Discipline & Sizing:** [docs/standards/file-discipline.md](docs/standards/file-discipline.md)
 - **Package Boundaries — tiers & layers:** [packages/AGENTS.md](packages/AGENTS.md)
 - **Error handling, `Result` at the domain seam:** [docs/standards/error-handling.md](docs/standards/error-handling.md)
+- **Formatting & i18n, `Intl` and the catalogues:** [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and-i18n.md)
 - **Machine-enforced invariants:** [ARCHITECTURE.md §6](ARCHITECTURE.md) · `tests/architecture/`
 - **Declarative Authorization:** [docs/standards/authorization.md](docs/standards/authorization.md)
 - **Domain Glossary:** [CONTEXT.md](CONTEXT.md)

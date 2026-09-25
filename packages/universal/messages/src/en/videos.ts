@@ -6,6 +6,11 @@ export const videos = {
   }),
   publishedRelative: dt('Published {when:date}', { date: { when: { style: 'medium' } } }),
   categories: dt('In {names:list}', { list: { names: { type: 'conjunction' } } }),
+  rank: dt('{position:plural}', {
+    plural: {
+      position: { type: 'ordinal', one: '{?}st', two: '{?}nd', few: '{?}rd', other: '{?}th' },
+    },
+  }),
   resolution: dt('{height:number}p', { number: { height: { useGrouping: false } } }),
   visibility: dt('{visibility:enum}', {
     enum: { visibility: { public: 'Public', unlisted: 'Unlisted', private: 'Private' } },

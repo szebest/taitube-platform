@@ -1,6 +1,6 @@
 import { type Result, andThen, err, ok, tryCatch } from '@vp/result';
 import { type FormatContext, USER, type User, resolveCurrency } from '../context';
-import { type FormatFailure, describeCause, unrenderable } from '../failures';
+import { type FormatFailure, unrenderable } from '../failures';
 
 export type DisplayNameType = Intl.DisplayNamesType;
 
@@ -31,7 +31,7 @@ export function displayName(
       andThen(
         tryCatch(
           () => format.of(code),
-          (cause) => unrenderable('displayName', describeCause(cause))
+          (cause) => unrenderable('displayName', String(cause))
         ),
         (name) =>
           name === undefined
