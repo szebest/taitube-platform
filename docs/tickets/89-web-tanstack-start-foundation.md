@@ -8,7 +8,7 @@
 | Blocks | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 78, 86 |
 | Spec | [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD §1.3 Design principles](../SDD.md#13-design-principles-used-to-break-ties-throughout) · [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why this is first.** Every other frontend ticket assumes a router, loaders, SSR and Vite, and today
 > `apps/web` is a CRA 5 single-page app on `react-router-dom` 6 and RTK Query. This ticket is the foundation
