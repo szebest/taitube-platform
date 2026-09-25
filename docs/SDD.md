@@ -813,6 +813,11 @@ erDiagram
     users ||--o{ video_comments : writes
     video_comments ||--o{ video_comments : "replies to"
     videos ||--o{ video_views_daily : "is viewed on"
+    users ||--o{ playlists : owns
+    playlists ||--o{ playlist_items : holds
+    videos ||--o{ playlist_items : "is saved in"
+    users ||--o{ watch_history : watches
+    videos ||--o{ watch_history : "is resumed from"
     users ||--o{ channel_subscriptions : subscribes
     channels ||--o{ channel_subscriptions : has
     processing_steps ||--o{ dlq_entries : "may park in"
@@ -864,6 +869,29 @@ erDiagram
         bool is_pinned
         int like_count
         timestamptz deleted_at
+    }
+    playlists {
+        uuid id PK
+        uuid owner_id FK
+        text title
+        text visibility
+        bool is_system
+        text custom_thumbnail_key
+    }
+    playlist_items {
+        uuid id PK
+        uuid playlist_id FK
+        uuid video_id FK
+        int position
+        timestamptz added_at
+    }
+    watch_history {
+        uuid id PK
+        uuid user_id FK
+        uuid video_id FK
+        int progress_seconds
+        int duration_seconds
+        timestamptz watched_at
     }
     video_views_daily {
         uuid video_id PK
@@ -1118,7 +1146,49 @@ CREATE TABLE video_view_batches (                      -- the flush's idempotenc
   applied_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX video_view_batches_applied_at_idx ON video_view_batches (applied_at);
+
+CREATE TABLE playlists (
+  id                   uuid PRIMARY KEY,                -- UUIDv7
+  owner_id             uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title                text NOT NULL,
+  description          text NOT NULL DEFAULT '',
+  visibility           text NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'unlisted', 'public')),
+  is_system            boolean NOT NULL DEFAULT false,  -- Watch Later: never renamed, never deleted
+  custom_thumbnail_key text,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  updated_at           timestamptz NOT NULL DEFAULT now()   -- moved by item writes too
+);
+CREATE INDEX playlists_owner_visibility_idx ON playlists (owner_id, visibility);
+CREATE UNIQUE INDEX playlists_one_system_per_owner_idx ON playlists (owner_id) WHERE is_system;
+
+CREATE TABLE playlist_items (
+  id          uuid PRIMARY KEY,
+  playlist_id uuid NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+  video_id    uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  position    integer NOT NULL,                         -- sparse sort key, 1024 apart; the wire shows the 0-based place
+  added_at    timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (playlist_id, video_id)
+);
+CREATE INDEX playlist_items_playlist_position_idx ON playlist_items (playlist_id, position);
+CREATE INDEX playlist_items_video_idx ON playlist_items (video_id);
+
+CREATE TABLE watch_history (
+  id               uuid PRIMARY KEY,
+  user_id          uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  video_id         uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  progress_seconds integer NOT NULL,
+  duration_seconds integer NOT NULL,
+  watched_at       timestamptz NOT NULL,                -- an older write never overwrites a newer one
+  UNIQUE (user_id, video_id),
+  CHECK (progress_seconds >= 0 AND duration_seconds > 0)
+);
+CREATE INDEX watch_history_user_watched_idx ON watch_history (user_id, watched_at DESC, id DESC);
+CREATE INDEX watch_history_video_idx ON watch_history (video_id);
 ```
+
+Why playlist positions are sparse: a drag-and-drop move is the common write, and dense `0..n-1` positions make one move rewrite every row between the old place and the new one. Items are spaced 1024 apart instead, so a move takes the midpoint between its new neighbours and rewrites the moved row alone; only when two neighbours sit adjacent (about ten moves into the same gap) or a key would leave the integer range is the playlist respaced, in one `UPDATE ... FROM (VALUES ...)`. Removing an item deletes one row and leaves a gap. The API never shows the stored key: `position` on the wire is the 0-based place, ranked before the viewer's scope hides any video, so a hidden video keeps its place and a reorder sent back names the same slot. Every item write locks the playlist row, so concurrent appends and reorders serialise, and the reorder rule runs against the items as that transaction sees them.
+
+Why watch history goes through Redis: a player reports its position every few seconds, and one `UPDATE` per beat per viewer is the same hot-row problem the views buffer avoids. A heartbeat writes `taitube:user:{id}:playhead:{videoId}` (7-day TTL) and nothing else once the session has a row; the first beat of a session, a pause and the end also upsert `watch_history` with `ON CONFLICT (user_id, video_id) DO UPDATE ... WHERE watch_history.watched_at <= excluded.watched_at`. With Redis down every beat writes through, so the history never loses more than the beats since the last write. Clearing the history deletes the rows it returns and then their buffered playheads.
 
 Why views go through Redis and a ledger rather than `UPDATE videos SET views_count = views_count + 1`: one row lock per playback beacon serialises every viewer of a popular video on that row. `POST /v1/videos/:id/views` instead dedupes the viewer in a per-video, per-day HyperLogLog (`taitube:views:dedup:{videoId}:{YYYYMMDD}`, 24 h sliding TTL, about 12 KB whatever the audience) and increments the `taitube:views:buffer` hash, both in one Lua script, so a beacon costs one Redis round trip and no connection from the Postgres pool. The HyperLogLog's price is a distinct-viewer undercount of up to its ~0.81% standard error. The `flush-video-views` job (§9.8) renames the buffer to `taitube:views:flush:{batchId}` and records the id under `taitube:views:flushing` in a second script, applies the batch in one transaction that inserts its id into `video_view_batches`, adds per-video deltas with `UPDATE videos ... FROM (VALUES ...)` and upserts `video_views_daily`, and only then deletes the batch key. A flush that dies before the commit finds the same batch pending next time and applies it; one that dies after the commit finds the id already in the ledger and only releases it. When Redis is unreachable the API holds views in process behind a circuit breaker (`FallbackViewBuffer`, bounded by `views.fallbackCapacity`) and replays them through the same record script, pipelined, once Redis answers again, so a viewer counted during the outage lands in the HyperLogLog too.
 
@@ -1187,6 +1257,19 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `DELETE /comments/:id` | Delete comment | — | `204` | Author, video owner, moderator or admin (`comment:delete`). Removes the replies of a root too and decrements `comments_count` by all of them. |
 | `POST /comments/:id/pin` | Pin comment | — | `200 Comment` / `409 COMMENT_NOT_PINNABLE` | Video owner or admin (`comment:pin`). Top-level only; unpins whichever comment held the video's one pinned slot. |
 | `DELETE /comments/:id/pin` | Unpin comment | — | `200 Comment` | Video owner or admin (`comment:pin`). |
+| `POST /playlists` | Create playlist | `{ title, description?, visibility? }` | `201 Playlist` | Authenticated (`playlist:create`). Private unless asked otherwise. Title 1-150 characters, description up to 5000. |
+| `GET /playlists/:id` | Read playlist | — | `200 Playlist` (metadata, owner channel, `videoCount`, ordered `items[]`) / `404 PLAYLIST_NOT_FOUND` | Anonymous allowed. Scoped in SQL by `playlistReadScope` (the `playlist:read` rules): a private playlist of someone else is absent. Items the viewer may not watch are hidden and keep their place. |
+| `PATCH /playlists/:id` | Edit playlist | `{ title?, description?, visibility? }` | `200 Playlist` / `400 SYSTEM_PLAYLIST_IMMUTABLE` | Owner or admin (`playlist:update`). |
+| `DELETE /playlists/:id` | Delete playlist | — | `204` / `400 SYSTEM_PLAYLIST_IMMUTABLE` | Owner or admin (`playlist:delete`). Items go with it. |
+| `POST /playlists/:id/items` | Add video | `{ videoId }` | `201 Playlist` | Owner or admin (`playlist:update`). Appends after the last item; a video already there changes nothing; a video the caller may not watch is `VIDEO_NOT_FOUND`. |
+| `DELETE /playlists/:id/items/:videoId` | Remove video | — | `204` | Owner or admin. The items after it move up one place. |
+| `PUT /playlists/:id/reorder` | Reorder | `{ itemId, newPosition }` or `{ itemIds }` | `200 Playlist` / `404 PLAYLIST_ITEM_NOT_FOUND` / `409 VERSION_CONFLICT` | Owner or admin. A move rewrites one row (sparse positions, §5.2); a full order must name every item once, else it came from a stale view. |
+| `GET /me/playlists?videoId=` | My playlists | — | `200 { items:[{ id, title, visibility, isSystem, videoCount, containsVideo, updatedAt }] }` | Authenticated. Watch Later first, then by latest change: the "Save to playlist" dialog in one round trip. |
+| `POST /me/history` | Save playhead | `{ videoId, progressSeconds, durationSeconds, reason? }` | `200 WatchProgress` | Authenticated. `reason` is `heartbeat`, `pause` (default) or `ended`; see §5.2 for the Redis buffer. Watched to 92 % is `completed` and resumes at 0. |
+| `GET /me/history?cursor=&limit=` | Watch history | — | `200 { items:[WatchHistoryItem], nextCursor }` | Authenticated. Keyset on `(watched_at, id)` descending; videos the caller may no longer watch drop out. |
+| `GET /me/history/:videoId` | Resume point | — | `200 { playhead: WatchProgress \| null }` | Authenticated. From the Redis buffer, else the row. |
+| `DELETE /me/history` | Clear history | — | `204` | Authenticated. Rows and buffered playheads. |
+| `DELETE /me/history/:videoId` | Forget one video | — | `204` | Authenticated. |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`. |
 | `DELETE /videos/:id` | Soft delete | — | `202` | Enqueues `housekeeping:purge-video`. |
 | `GET /videos/:id/events` | SSE stream | header `Last-Event-ID?` | `text/event-stream` | See §10. |

@@ -109,6 +109,42 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
 - Privacy test: User A creates private playlist; assert User B receives 404 NOT_FOUND.
 - History test: Sync video progress at 45s; fetch history; assert `progress_seconds: 45`.
 
+## Open questions
+
+- Decided: sparse integer positions, 1024 apart, instead of dense `0..n-1`. A drag-and-drop move takes
+  the midpoint between its new neighbours and rewrites that one row; the playlist is respaced (one
+  `UPDATE ... FROM (VALUES ...)`) only when two neighbours sit adjacent or a key would leave the integer
+  range. Append is `COALESCE(MAX(position) + 1024, 0)` inside the locked transaction, and removing an item
+  deletes one row. The wire `position` is the 0-based place, so "removes video and shifts subsequent
+  positions down" holds for every client without rewriting rows. The pure planner is
+  `packages/universal/domain/src/playlist-position.ts`.
+- Decided: the testing plan's "reorder item 4 to position 1 -> [4, 0, 1, 2, 3]" is really position 0.
+  Both are tested: to 0 gives `[4, 0, 1, 2, 3]`, to 1 gives `[0, 4, 1, 2, 3]`.
+- Decided: a full reindex must name every item exactly once. Anything else was drawn from a stale view
+  and answers `409 VERSION_CONFLICT` rather than dropping or duplicating an item. The rule
+  (`decidePlaylistReorder`) runs inside the repository transaction, against the items it has locked.
+- Decided: packages stay `@vp/*` (ticket 48), so the ports are `core/repositories/playlist-repository.ts`
+  and `watch-history-repository.ts` and the Redis adapter is `redis/redis-playhead-cache.adapter.ts`.
+  `assertCan(...)` is `authorize(...)` from `@vp/domain-rules`, its `Result` form.
+- Decided: Watch Later is provisioned with the channel in `ensureProvisioned` (idempotent through a
+  partial unique index on `owner_id WHERE is_system`), and the migration backfills one for every user
+  that already exists. The backfilled ids are `gen_random_uuid()`, since Postgres before 18 has no
+  `uuidv7()`. Watch Later cannot be renamed either: `PATCH` answers `SYSTEM_PLAYLIST_IMMUTABLE` like
+  `DELETE`.
+- Decided: a playlist the caller cannot read answers `404 PLAYLIST_NOT_FOUND` for reads and writes alike;
+  one they can read but not edit answers `403`. Items whose video the viewer may not watch are hidden
+  and keep their place.
+- Decided: `POST /v1/me/history` takes a `reason` (`heartbeat`, `pause` by default, `ended`). A heartbeat
+  only writes the Redis buffer once the session has a row; the first beat, a pause and the end write
+  through. There is no periodic flush job: every pause and end already writes through, and with Redis
+  down every beat does. `GET /v1/me/history/:videoId` is the resume read the buffer exists for.
+- Decided: an older playhead never overwrites a newer one (`ON CONFLICT ... WHERE watched_at <=
+  excluded.watched_at`), so a late flush from a stale tab cannot rewind the history.
+- Decided: `CacheClient.del` takes several keys, so clearing a history drops every buffered playhead in
+  one round trip.
+- Decided: `GET /v1/playlists/:id` returns every item unpaginated. YouTube caps a playlist at 5000 videos;
+  a cap and paging are left to the frontend ticket (73) if a real playlist needs them.
+
 ## Definition of Done
 
 - [ ] All ACs green under `pnpm test` and `bun test`.

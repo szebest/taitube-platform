@@ -36,7 +36,8 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ### Rule 2: Deep Domain Services, Total Dependencies
 - Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`,
   `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`,
-  `SubscriptionService`, `CommentService`, `ViewService`, `AnalyticsService`, `SseService`, `DlqService`,
+  `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `ViewService`,
+  `AnalyticsService`, `SseService`, `DlqService`,
   `QueueService`, `ReadinessService`).
 - A service's dependencies are required. It never constructs, defaults or reads from `process.env` a
   collaborator or a setting it was not handed, and it imports nothing from `@vp/adapters`
