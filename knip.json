@@ -13,9 +13,15 @@
         "src/instrument.ts!",
         "src/migrate.ts!",
         "src/seed.ts!",
+        "src/gen-contracts.ts",
         "src/**/type-fixtures/*.ts"
       ],
-      "project": ["src/**/*.ts!", "!src/**/__tests__/**!", "!src/**/*.test.ts!"]
+      "project": [
+        "src/**/*.ts!",
+        "!src/**/__tests__/**!",
+        "!src/**/*.test.ts!",
+        "!src/composition/openapi-document.ts!"
+      ]
     },
     "apps/worker": {
       "entry": ["src/main.ts!", "src/instrument.ts!"],

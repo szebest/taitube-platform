@@ -411,10 +411,12 @@ rule that has already drifted, so a gap is named rather than left looking enforc
 | `shutdown-closure.test.ts` | regex: every `.provide(...)` in a `composition/` module that `new`s a class defining `close()` or `stop()` (from `packages/server/adapters/`, `apps/api/src/services/` or `apps/worker/src/`) also passes a `dispose` or `closeOnDispose` | `.provide(Redis, () => new RedisCacheClient({ type: 'url', url }))` |
 | `in-memory-off-boot-path.test.ts` | neither `main.ts` reaches an `adapters/in-memory/` module through its static, non-type imports (regex graph walk, `@vp/*` resolved through manifest `exports`), and the `@vp/adapters` root barrel does not re-export them | a planted boot path that reaches the doubles through a barrel |
 | `apps/api/src/__tests__/contract-drift.test.ts` | boots the real app over the in-memory adapters: every route an `onRoute` hook collects (vendor prefixes aside) has an `@vp/api-contracts` entry, every contract entry is routed, and each OpenAPI operation carries the contract's summary, description and tag | none - reads the repo |
+| `apps/api/src/composition/__tests__/openapi-document.test.ts` | renders the OpenAPI document the in-process app serves and compares it byte for byte with the committed `packages/universal/api-contracts/openapi.yaml`, so an endpoint changed without `pnpm gen:contracts` fails | none - reads the repo |
 
 The rows with a path run elsewhere: `tests/in-process/start-order.test.ts` and
 `tests/in-process/gen-index.test.ts` compose apps or spawn Python, so they are in-process specs and run in
-`pnpm test:unit`, not `pnpm test:architecture`, and the contract-drift assertion runs with `apps/api`'s own specs.
+`pnpm test:unit`, not `pnpm test:architecture`, and the contract-drift and OpenAPI document assertions run with
+`apps/api`'s own specs.
 
 The suite does not assert everything section 5 says. Invariant 4's `app.services` rule, Invariant 6's
 local and CI parity, Invariant 8's single adapter switch and Invariant 9's grace-period derivation are held by

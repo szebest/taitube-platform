@@ -30,6 +30,7 @@
     "fairness": "tsx scripts/fairness-simulation.ts",
     "e2e": "tsx tests/e2e/run-e2e.ts",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
+    "gen:contracts": "turbo run build --filter=@vp/api^... --output-logs=errors-only && tsx apps/api/src/gen-contracts.ts && turbo run build --filter=@vp/api-contracts --output-logs=errors-only",
     "db:migrate": "tsx --env-file-if-exists=.env apps/api/src/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=.env apps/api/src/seed.ts",
     "db:check": "pnpm --filter @vp/db check",
