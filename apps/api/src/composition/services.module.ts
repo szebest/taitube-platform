@@ -5,6 +5,7 @@ import { createLogger } from '@vp/logger';
 import { MetricsServer } from '@vp/observability';
 import { Paginator } from '@vp/pagination';
 import {
+  AnalyticsService,
   CategoryService,
   ChannelService,
   CommentService,
@@ -17,6 +18,7 @@ import {
   SubscriptionService,
   UploadService,
   VideoService,
+  ViewService,
   registerHousekeepingSchedulers,
 } from '../services/index';
 import { Poller } from '../services/poller';
@@ -133,6 +135,25 @@ export function registerServices(c: Container): Container {
           commentCache: c.get(Adapters.CommentCache),
           singleflight: new Singleflight(),
           paginator: c.get(Services.Paginator),
+        })
+    )
+    .provide(
+      Services.ViewService,
+      (c) =>
+        new ViewService({
+          viewBuffer: c.get(Adapters.ViewBuffer),
+          metrics: c.get(Adapters.Metrics),
+          limits: config().views,
+          now: Date.now,
+        })
+    )
+    .provide(
+      Services.AnalyticsService,
+      () =>
+        new AnalyticsService({
+          videos: repositories().videos,
+          videoViews: repositories().videoViews,
+          now: Date.now,
         })
     )
     .provide(Services.QueueService, (c) => new QueueService({ queues: c.get(Adapters.Queues) }))
