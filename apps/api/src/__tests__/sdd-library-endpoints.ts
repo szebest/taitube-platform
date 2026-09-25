@@ -6,7 +6,6 @@ const AUTHENTICATED = [VALIDATION_FAILED, UNAUTHORIZED];
 const OWNED_PLAYLIST = [...AUTHENTICATED, FORBIDDEN, PLAYLIST_NOT_FOUND];
 const IMMUTABLE = [...OWNED_PLAYLIST, ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE];
 
-/** Playlists and watch history, SDD §6.1. */
 export const SDD_LIBRARY_ENDPOINTS: SddEndpointContract[] = [
   {
     path: '/v1/playlists',

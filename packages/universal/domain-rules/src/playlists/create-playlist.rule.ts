@@ -23,7 +23,6 @@ export interface PlaylistToCreate {
 
 export type CreatePlaylistFailure = AuthorizationFailure | InvalidPlaylistDetails;
 
-/** A new playlist is private until its owner decides otherwise. */
 export function decidePlaylistCreate(
   input: CreatePlaylistInput
 ): Result<PlaylistToCreate, CreatePlaylistFailure> {
