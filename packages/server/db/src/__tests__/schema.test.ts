@@ -5,7 +5,7 @@ import {
   USER_ROLES,
   VIDEO_STATUSES,
 } from '@vp/domain';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { type PgTable, getTableConfig } from 'drizzle-orm/pg-core';
 import {
   categories,
   renditionStatusEnum,
@@ -13,12 +13,13 @@ import {
   uploadStatusEnum,
   userRoleEnum,
   users,
+  videoComments,
   videoStatusEnum,
   videos,
 } from '../schema';
 
-function referenceFrom(column: string) {
-  const foreignKey = getTableConfig(videos).foreignKeys.find((key) =>
+function referenceFrom(table: PgTable, column: string) {
+  const foreignKey = getTableConfig(table).foreignKeys.find((key) =>
     key.reference().columns.some((local) => local.name === column)
   );
   const reference = foreignKey?.reference();
@@ -48,14 +49,38 @@ describe('db: schema', () => {
     expect(users.role.notNull).toBe(true);
   });
 
-  it('keeps a video when its category is deleted', () => {
-    expect(referenceFrom('category_id')).toEqual({
-      table: getTableConfig(categories).name,
-      onDelete: 'set null',
-    });
-  });
-
-  it('refuses to delete a user who still owns a video', () => {
-    expect(referenceFrom('owner_id')).toEqual({ table: 'users', onDelete: 'no action' });
+  it.each([
+    {
+      scenario: 'keeps a video when its category is deleted',
+      table: videos,
+      column: 'category_id',
+      expected: { table: getTableConfig(categories).name, onDelete: 'set null' },
+    },
+    {
+      scenario: 'refuses to delete a user who still owns a video',
+      table: videos,
+      column: 'owner_id',
+      expected: { table: 'users', onDelete: 'no action' },
+    },
+    {
+      scenario: 'drops the comments of a deleted video',
+      table: videoComments,
+      column: 'video_id',
+      expected: { table: 'videos', onDelete: 'cascade' },
+    },
+    {
+      scenario: 'drops the replies of a deleted comment',
+      table: videoComments,
+      column: 'parent_id',
+      expected: { table: 'video_comments', onDelete: 'cascade' },
+    },
+    {
+      scenario: 'refuses to delete a user who still authors a comment',
+      table: videoComments,
+      column: 'author_id',
+      expected: { table: 'users', onDelete: 'no action' },
+    },
+  ])('$scenario', ({ table, column, expected }) => {
+    expect(referenceFrom(table, column)).toEqual(expected);
   });
 });

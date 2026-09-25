@@ -71,6 +71,13 @@
       "when": 1790003208076,
       "tag": "0009_add_video_views_count",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790335275890,
+      "tag": "0010_video_comments",
+      "breakpoints": true
     }
   ]
 }

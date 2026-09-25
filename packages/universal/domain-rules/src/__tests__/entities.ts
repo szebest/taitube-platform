@@ -1,4 +1,4 @@
-import type { Category, Channel, Upload, Video } from '@vp/domain';
+import type { Category, Channel, Comment, Upload, Video } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
 export const OWNER: UserContext = { id: 'owner-1', role: 'CREATOR' };
@@ -57,6 +57,25 @@ export function aChannel(overrides: Partial<Channel> = {}): Channel {
     bannerUrl: null,
     bio: null,
     subscriberCount: 0,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export const AUTHOR: UserContext = { id: 'author-1', role: 'USER' };
+export const MODERATOR: UserContext = { id: 'moderator-1', role: 'MODERATOR' };
+
+export function aComment(overrides: Partial<Comment> = {}): Comment {
+  return {
+    id: 'comment-1',
+    videoId: 'video-1',
+    authorId: AUTHOR.id,
+    parentId: null,
+    content: 'A comment',
+    isPinned: false,
+    isEdited: false,
+    likeCount: 0,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,

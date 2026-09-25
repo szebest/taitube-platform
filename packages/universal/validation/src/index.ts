@@ -10,3 +10,4 @@ export * from './channels/handle-format';
 export * from './categories/failures';
 export * from './categories/slug-format';
 export * from './categories/category-form';
+export * from './comments/content';

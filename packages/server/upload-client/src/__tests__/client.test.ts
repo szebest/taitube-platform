@@ -12,10 +12,10 @@ import { S3MultipartStorage, S3StorageClient } from '@vp/adapters/s3';
 import { composeApp } from '@vp/api';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { UploadClient } from '../client';
-import { SEEDED } from '@vp/testing';
 
 describe('upload-client reference upload client', () => {
   let app: FastifyInstance;

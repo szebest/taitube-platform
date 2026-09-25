@@ -14,6 +14,7 @@ import type { RepositoriesSubject } from './subjects';
 const TRUNCATE = sql.raw(
   `TRUNCATE ${[
     'channel_subscriptions',
+    'video_comments',
     'video_reactions',
     'outbox',
     'dlq_entries',
@@ -39,6 +40,9 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
       const moved = expectOk(await repositories.videos.findById(created.id));
       if (!moved) throw new Error(`video ${created.id} vanished while its createdAt was moved`);
       return moved;
+    },
+    adjustComment: async (id, patch) => {
+      await db.update(schema.videoComments).set(patch).where(eq(schema.videoComments.id, id));
     },
     reset: async () => {
       await db.execute(TRUNCATE);

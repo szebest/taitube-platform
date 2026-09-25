@@ -28,6 +28,7 @@ export interface Video {
   errorCode?: string | null;
   errorMessage?: string | null;
   viewsCount?: number;
+  commentsCount?: number;
   likesCount?: number;
   dislikesCount?: number;
   categoryId?: string | null;

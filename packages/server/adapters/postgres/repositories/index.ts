@@ -11,5 +11,6 @@ export * from './postgres-category-repository';
 export * from './postgres-channel-repository';
 export * from './postgres-video-reaction-repository';
 export * from './postgres-subscription-repository';
+export * from './postgres-comment-repository';
 export * from './postgres-repositories';
 export * from './types';
