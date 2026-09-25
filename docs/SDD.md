@@ -586,6 +586,10 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 |---|---|---|---|
 | **1** | **React 19 + TanStack Start (SSR/Streaming) + TanStack Router + Vite 6 + Tailwind CSS v4** | **Chosen** | 100% type-safe search params and route paths; streaming SSR without vendor lock-in to Vercel; perfect synergy with TanStack Query v5; client hydration and SSR play well with local-first Node/Docker deployment; no magic file conventions or Next.js server actions obfuscation. |
 | 2 | Next.js 15 (App Router) | Rejected | Explicitly rejected by user requirement. Heavy Vercel coupling, opaque server component caching bugs, proprietary cache tags, heavy server footprint for self-hosting. |
+
+In place since ticket 89: `apps/web` runs on TanStack Start over Vite 7 with React 19, file-based TanStack
+Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
+`srvx` serves. Tailwind CSS arrives with ticket 55; until then the legacy pages keep Bootstrap and RTK Query.
 ---
 
 ### ADR-22 — High-Throughput Reaction Counters & Probabilistic Cache Refresh (XFetch)
@@ -2106,7 +2110,7 @@ video-pipeline/
 │   │   │   ├── heartbeat.ts                # the liveness file timer
 │   │   │   └── stages/                     # probe, transcode, thumbnail, package, notify, segment-uploader; housekeeping/
 │   │   └── Dockerfile                      # ARG WORKER_RUNTIME=bun|node
-│   └── web/                                # React 18 · Create React App 5 (craco) · RTK Query · Bootstrap
+│   └── web/                                # React 19 · TanStack Start/Router/Query · Vite · SSR
 │       └── src/                            # modules/ (pages), components/can.tsx, hooks/use-can.ts
 ├── infra/
 │   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector

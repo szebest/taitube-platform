@@ -296,9 +296,11 @@ export const ROWS: readonly Row[] = [
       ':(exclude).agents',
       ':(exclude)pnpm-lock.yaml',
       ':(exclude)tests/architecture/zero-matches-rows.ts',
+      ':(exclude).claude/skills',
+      ':(exclude,glob)apps/*/.claude/skills',
     ],
     expected: 0,
-    fires: "const base = process.env['REACT_APP_API_BASE_URL'];",
+    fires: '"start": "craco start",',
   },
   {
     name: 'a web module reading the build environment outside src/config',

@@ -1,4 +1,9 @@
-import { parseWebEnv } from '../index';
+async function apiBaseUrl(configured: string | undefined): Promise<string> {
+  vi.stubEnv('VITE_API_BASE_URL', configured);
+  vi.resetModules();
+  const { API_BASE_URL } = await import('../index');
+  return API_BASE_URL;
+}
 
 describe('apps/web: config', () => {
   it.each([
@@ -17,20 +22,11 @@ describe('apps/web: config', () => {
       configured: '  ',
       expected: 'http://localhost:3000',
     },
-  ])('$scenario', ({ configured, expected }) => {
-    expect(parseWebEnv({ VITE_API_BASE_URL: configured }).apiBaseUrl).toBe(expected);
+  ])('$scenario', async ({ configured, expected }) => {
+    expect(await apiBaseUrl(configured)).toBe(expected);
   });
 
-  it('refuses an override that is not a URL', () => {
-    expect(() => parseWebEnv({ VITE_API_BASE_URL: 'not a url' })).toThrow();
-  });
-
-  it('reads the value Vite inlines into this build', async () => {
-    vi.stubEnv('VITE_API_BASE_URL', 'http://inlined.local:9999');
-    vi.resetModules();
-
-    const { API_BASE_URL } = await import('../index');
-
-    expect(API_BASE_URL).toBe('http://inlined.local:9999');
+  it('refuses to start on an override that is not a URL', async () => {
+    await expect(apiBaseUrl('not a url')).rejects.toThrow();
   });
 });

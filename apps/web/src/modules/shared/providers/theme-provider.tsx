@@ -5,14 +5,14 @@ import { useStoredState } from "src/hooks/use-stored-state";
 
 const ThemeSchema = z.enum(["light", "dark"]);
 
-export type Theme = z.infer<typeof ThemeSchema>;
+type Theme = z.infer<typeof ThemeSchema>;
 
 type ThemeContextValue = {
 	theme: Theme;
 	changeTheme: (_: Theme) => void;
 }
 
-export function getUsersPreferredTheme(): Theme {
+function getUsersPreferredTheme(): Theme {
 	if (window.matchMedia) {
 		if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
 		return 'light';

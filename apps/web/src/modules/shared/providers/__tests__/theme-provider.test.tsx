@@ -1,6 +1,11 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { stubBrowser } from '../../../../__tests__/browser';
-import { ThemeProvider, getUsersPreferredTheme, useTheme } from '../theme-provider';
+import { asLivePage } from '../../../../__tests__/live-page';
+import { ThemeProvider, useTheme } from '../theme-provider';
+
+vi.mock(import('react'), async (importOriginal) =>
+  (await import('../../../../__tests__/live-page')).withLivePage(await importOriginal())
+);
 
 type ThemeControls = Partial<ReturnType<typeof useTheme>>;
 
@@ -27,9 +32,15 @@ describe('apps/web: theme provider', () => {
     ({ prefersDark, theme }) => {
       stubBrowser({ prefersDark });
 
-      expect(getUsersPreferredTheme()).toBe(theme);
+      expect(asLivePage(() => renderTheme())).toContain(`theme=${theme}`);
     }
   );
+
+  it('keeps the theme the viewer chose over the system preference', () => {
+    stubBrowser({ prefersDark: true, stored: { THEME: '"light"' } });
+
+    expect(asLivePage(() => renderTheme())).toContain('theme=light');
+  });
 
   it('renders the light theme on the server, whatever the viewer chose', () => {
     stubBrowser({ prefersDark: true, stored: { THEME: '"dark"' } });

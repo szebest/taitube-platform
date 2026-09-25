@@ -1,7 +1,7 @@
+import { stubBrowser } from '../../../../../__tests__/browser';
 import { createApiStore, seed } from '../../../../../__tests__/api-store';
 import { videoSummary } from '../../../../../__tests__/fixtures';
 import { renderPage } from '../../../../../__tests__/render-page';
-import { storeValue } from '../../../../../__tests__/stored-value';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '../../../../../config';
 import { feedApi } from '../../../../shared/api/feed-api';
 import { AllVideosPage } from '../all-videos-page';
@@ -25,12 +25,9 @@ describe('apps/web: all videos page', () => {
     expect(await renderPage(<AllVideosPage />)).toContain('aria-label="Loading"');
   });
 
-  it.each([
-    { stored: false, gridIcon: 'bi-grid-3x2-gap-fill' },
-    { stored: true, gridIcon: 'bi-grid-3x2-gap"' },
-  ])('marks the view the viewer chose, list=$stored', async ({ stored, gridIcon }) => {
-    storeValue(IN_VIEW_LOCAL_STORAGE_KEY, stored);
+  it('server-renders the grid view marked, whatever the viewer chose', async () => {
+    stubBrowser({ stored: { [IN_VIEW_LOCAL_STORAGE_KEY]: 'true' } });
 
-    expect(await renderPage(<AllVideosPage />)).toContain(gridIcon);
+    expect(await renderPage(<AllVideosPage />)).toContain('bi-grid-3x2-gap-fill');
   });
 });

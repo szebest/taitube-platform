@@ -11,6 +11,8 @@ const TYPESCRIPT_SOURCES = [
   ':(glob)packages/**/*.mts',
   ':(glob)scripts/**/*.ts',
   ':(glob)tests/**/*.ts',
+  // TanStack Start writes the router import into the generated tree with its extension.
+  ':(exclude)apps/web/src/routeTree.gen.ts',
 ];
 
 const EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.jsx', '.ts', '.mts', '.cts', '.tsx']);

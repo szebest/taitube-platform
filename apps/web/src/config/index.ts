@@ -15,7 +15,7 @@ const WebEnvSchema = z.object({
     .pipe(z.string().url().optional()),
 });
 
-export function parseWebEnv(env: Record<string, unknown>) {
+function parseWebEnv(env: Record<string, unknown>) {
   const { VITE_API_BASE_URL } = WebEnvSchema.parse(env);
   return {
     apiBaseUrl: VITE_API_BASE_URL?.replace(/\/+$/, '') ?? DEFAULT_API_BASE_URL,

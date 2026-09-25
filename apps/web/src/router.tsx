@@ -12,8 +12,8 @@ export type RouterContext = {
   auth: Session;
 };
 
-export const PENDING_DELAY_MS = 1000;
-export const PENDING_MIN_MS = 500;
+const PENDING_DELAY_MS = 1000;
+const PENDING_MIN_MS = 500;
 
 export function getRouter(history?: RouterHistory) {
   const queryClient = createQueryClient();

@@ -14,7 +14,6 @@ export default mergeConfig(
       testTimeout: 30_000,
       hookTimeout: 30_000,
       include: ['src/**/__tests__/**/*.test.{ts,tsx}', 'vite/**/__tests__/**/*.test.ts'],
-      setupFiles: ['src/__tests__/local-storage.setup.ts'],
     },
   })
 );

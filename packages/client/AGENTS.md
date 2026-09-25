@@ -23,9 +23,9 @@ Current members: `api-client`, `intl-react`.
    contract. Keep that property for anything added here.
 4. **No host literals.** The base URL is injected (`apps/web/src/base-api.ts` passes `API_BASE_URL`); a
    hardcoded external host breaks local-first (Rule 1) and fails `tests/architecture/local-first.test.ts`.
-5. **Relative imports are extensionless**, as in every tier. `apps/web` resolves them through the one
-   webpack override in its `craco.config.js` (`resolve.fullySpecified: false` for workspace packages).
-6. **Declare `"sideEffects": false`**, or webpack keeps every module the frontend touches whole and an
+5. **Relative imports are extensionless**, as in every tier. `apps/web` reads the package from its
+   source through Vite, which resolves an extensionless specifier with no override.
+6. **Declare `"sideEffects": false`**, or the bundler keeps every module the frontend touches whole and an
    unused export still ships. `tests/architecture/frontend-vocabulary.test.ts` asserts it.
 
 ## Bundle awareness

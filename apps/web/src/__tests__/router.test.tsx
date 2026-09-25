@@ -1,6 +1,6 @@
 import { Link, createMemoryHistory } from '@tanstack/react-router';
 import { RouteError, RouteNotFound, RoutePending } from '../components/route-fallbacks';
-import { PENDING_DELAY_MS, PENDING_MIN_MS, getRouter } from '../router';
+import { getRouter } from '../router';
 import { jsonResponse, recordRequests } from './api-store';
 import { CHANNEL_ID, VIDEO_ID, video } from './fixtures';
 
@@ -55,9 +55,8 @@ describe('apps/web: router', () => {
   it('waits before showing a pending page, and then shows it long enough not to flash', () => {
     const { options } = getRouter();
 
-    expect(options.defaultPendingMs).toBe(PENDING_DELAY_MS);
-    expect(options.defaultPendingMinMs).toBe(PENDING_MIN_MS);
-    expect(PENDING_DELAY_MS).toBeGreaterThan(0);
+    expect(options.defaultPendingMs).toBeGreaterThan(0);
+    expect(options.defaultPendingMinMs).toBeGreaterThan(0);
   });
 
   it('registers the pending, error and not-found pages every route falls back to', () => {

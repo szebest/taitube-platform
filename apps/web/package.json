@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "node .output/server/index.mjs",
+    "start": "srvx serve --prod --port 5173 --static ../client --entry dist/server/server.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json"
   },
@@ -16,7 +16,6 @@
     "@tanstack/react-router": "^1.170.39",
     "@tanstack/react-router-ssr-query": "^1.167.3",
     "@tanstack/react-start": "^1.168.58",
-    "@uidotdev/usehooks": "^2.4.1",
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
     "@vp/intl": "workspace:*",
@@ -47,7 +46,6 @@
   "devDependencies": {
     "@tanstack/react-query-devtools": "^5.103.2",
     "@tanstack/react-router-devtools": "^1.167.2",
-    "@tanstack/router-plugin": "^1.168.40",
     "@types/lodash.debounce": "^4.0.7",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",

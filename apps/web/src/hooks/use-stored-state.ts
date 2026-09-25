@@ -28,11 +28,7 @@ function parseRaw<T>(raw: string | null, schema: z.ZodType<T>, fallback: () => T
   return parsed.success ? parsed.data : fallback();
 }
 
-export function readStoredState<T>(key: string, schema: z.ZodType<T>, fallback: () => T): T {
-  return parseRaw(readRaw(key), schema, fallback);
-}
-
-export function writeStoredState<T>(key: string, value: T): void {
+function write<T>(key: string, value: T): void {
   ignore(
     tryCatch(
       () => window.localStorage.setItem(key, JSON.stringify(value)),
@@ -43,7 +39,7 @@ export function writeStoredState<T>(key: string, value: T): void {
   window.dispatchEvent(new Event('storage'));
 }
 
-export type StoredStateUpdate<T> = T | ((current: T) => T);
+type StoredStateUpdate<T> = T | ((current: T) => T);
 
 /**
  * `localStorage` state that server-renders: the server and the hydration render `serverValue`, and
@@ -68,8 +64,8 @@ export function useStoredState<T>(
 
   const setValue = useCallback(
     (update: StoredStateUpdate<T>) => {
-      const current = readStoredState(key, schema, clientDefault);
-      writeStoredState(key, update instanceof Function ? update(current) : update);
+      const current = parseRaw(readRaw(key), schema, clientDefault);
+      write(key, update instanceof Function ? update(current) : update);
     },
     [key, schema, clientDefault]
   );
