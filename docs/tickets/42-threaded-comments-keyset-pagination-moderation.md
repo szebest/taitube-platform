@@ -9,7 +9,7 @@
 | Blocks | 45, 76 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -117,6 +117,6 @@ This ticket delivers:
 
 ## Definition of Done
 
-- [ ] All ACs green under pnpm test and bun test.
-- [ ] pnpm typecheck && pnpm lint pass with zero warnings or errors.
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [x] All ACs green under pnpm test and bun test.
+- [x] pnpm typecheck && pnpm lint pass with zero warnings or errors.
+- [x] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
