@@ -38,6 +38,18 @@ compile-checked already; no parity suite against an external frontend.
 - Integration tests for `GET /v1/bootstrap`, anonymous and authenticated.
 - Preflight header test through `app.inject()` for an allowed and a refused origin.
 
+## Open questions
+
+- Decided: the built TanStack Start server is expected on `http://localhost:4173`, Vite's preview port, because
+  the API holds 3000. [89](89-web-tanstack-start-foundation.md) serves `start` there, or changes the default
+  in `@vp/env-schema`, `.env.example`, the k8s base and SDD §16.1 together.
+- Decided: `featureFlags` comes from a new `FEATURE_FLAGS` key, a comma list of enabled names, each reported
+  as `true`; nothing else in the repo holds flags yet. Empty by default.
+- Decided: an authenticated caller whose account read fails gets that failure (401 or 404), not a guest
+  context, and an invalid bearer is a 401 like on every other anonymous-allowed route.
+- Decided: the CORS profile sends no `Access-Control-Allow-Credentials`. [56](56-frontend-universal-auth-session-security.md)
+  still owns the choice between a same-origin proxy and credentialed CORS; either one works from here.
+
 ## Definition of Done
 
 - [ ] All ACs green under `pnpm test` and `pnpm test:bun`.
