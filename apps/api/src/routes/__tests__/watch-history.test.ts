@@ -142,7 +142,7 @@ describe('watch history routes', () => {
     expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
   });
 
-  it('keeps each user’s history their own', async () => {
+  it("keeps each user's history their own", async () => {
     await save(V0, 30);
 
     const theirs = (await ctx.call('stranger', 'GET', '/v1/me/history')).json();

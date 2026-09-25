@@ -60,7 +60,7 @@ describe('playlists: privacy and ownership over HTTP', () => {
     }
   );
 
-  it('lets an admin curate and delete anyone’s playlist', async () => {
+  it("lets an admin curate and delete another user's playlist", async () => {
     const id = await ctx.playlist('owner');
 
     const added = await ctx.call('admin', 'POST', `/v1/playlists/${id}/items`, {
@@ -98,7 +98,7 @@ describe('playlists: privacy and ownership over HTTP', () => {
     expect(saved.statusCode).toBe(201);
   });
 
-  it('keeps a stranger’s own listing free of my playlists', async () => {
+  it("keeps a stranger's own listing free of my playlists", async () => {
     await ctx.playlist('owner', { title: 'Mine', visibility: 'public' });
 
     const listed = (await ctx.call('stranger', 'GET', '/v1/me/playlists')).json().items;

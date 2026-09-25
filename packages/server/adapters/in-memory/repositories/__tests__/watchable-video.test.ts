@@ -42,7 +42,7 @@ describe('watchableVideo', () => {
   });
 
   it.each([
-    { scenario: 'another user’s private video', viewer: VIEWER, visibility: 'private' as const },
+    { scenario: "another user's private video", viewer: VIEWER, visibility: 'private' as const },
     { scenario: 'a deleted video', viewer: OWNER, status: 'DELETED' as const },
   ])('hides $scenario', async ({ viewer, visibility, status }) => {
     const videoId = await seed(visibility ?? 'public', status);

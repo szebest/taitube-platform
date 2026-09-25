@@ -32,16 +32,14 @@ describe('adapters/postgres: playlist query', () => {
       }))
     );
     await db.insert(schema.playlists).values({ id: PLAYLIST, ownerId: OWNER, title: 'Mix' });
-    await db
-      .insert(schema.playlistItems)
-      .values(
-        ITEMS.map((id, index) => ({
-          id,
-          playlistId: PLAYLIST,
-          videoId: VIDEOS[index] ?? '',
-          position: index * 1024,
-        }))
-      );
+    await db.insert(schema.playlistItems).values(
+      ITEMS.map((id, index) => ({
+        id,
+        playlistId: PLAYLIST,
+        videoId: VIDEOS[index] ?? '',
+        position: index * 1024,
+      }))
+    );
   });
 
   afterAll(async () => {
