@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { createApiStore, jsonResponse, recordRequests } from '../../../../__tests__/api-store';
-import { VIDEO_ID } from '../../../../__tests__/fixtures';
-import { API_BASE_URL } from '../../../../config';
+import { createApiStore, jsonResponse, recordRequests } from '#app/__tests__/api-store';
+import { VIDEO_ID } from '#app/__tests__/fixtures';
+import { API_BASE_URL } from '#app/config';
 import { uploadsApi } from '../uploads-api';
 
 const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';

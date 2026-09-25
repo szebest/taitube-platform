@@ -1,7 +1,7 @@
 import { isNotFound } from '@tanstack/react-router';
-import { jsonResponse, recordRequests } from '../../../../__tests__/api-store';
-import { VIDEO_ID, video } from '../../../../__tests__/fixtures';
-import { createQueryClient } from '../../../../integrations/query/create-query-client';
+import { jsonResponse, recordRequests } from '#app/__tests__/api-store';
+import { VIDEO_ID, video } from '#app/__tests__/fixtures';
+import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { ensureVideo } from '../ensure-video';
 
 function problem(status: number): Response {

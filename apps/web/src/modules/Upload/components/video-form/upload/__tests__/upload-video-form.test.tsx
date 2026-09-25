@@ -1,5 +1,5 @@
-import { VIDEO_ID } from '../../../../../../__tests__/fixtures';
-import { renderPage } from '../../../../../../__tests__/render-page';
+import { VIDEO_ID } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
 import { VideoForm, type VideoFormProps } from '../upload-video-form';
 
 async function renderForm(overrides: Partial<VideoFormProps> = {}): Promise<string> {

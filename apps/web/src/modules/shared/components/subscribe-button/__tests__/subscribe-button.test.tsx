@@ -1,7 +1,7 @@
-import { type ApiStore, createApiStore, seed } from '../../../../../__tests__/api-store';
-import { CHANNEL_ID, account } from '../../../../../__tests__/fixtures';
-import { renderPage, signIn } from '../../../../../__tests__/render-page';
-import { subscriptionsApi } from '../../../api/subscriptions-api';
+import { type ApiStore, createApiStore, seed } from '#app/__tests__/api-store';
+import { CHANNEL_ID, account } from '#app/__tests__/fixtures';
+import { renderPage, signIn } from '#app/__tests__/render-page';
+import { subscriptionsApi } from '#app/modules/shared/api/subscriptions-api';
 import { SubscribeButton } from '../subscribe-button';
 
 async function renderButton(store: ApiStore): Promise<string> {

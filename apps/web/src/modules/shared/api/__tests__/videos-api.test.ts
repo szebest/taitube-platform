@@ -1,6 +1,6 @@
-import { type ApiStore, createApiStore, recordRequests } from '../../../../__tests__/api-store';
-import { VIDEO_ID } from '../../../../__tests__/fixtures';
-import { API_BASE_URL } from '../../../../config';
+import { type ApiStore, createApiStore, recordRequests } from '#app/__tests__/api-store';
+import { VIDEO_ID } from '#app/__tests__/fixtures';
+import { API_BASE_URL } from '#app/config';
 import { videosApi } from '../videos-api';
 
 const VIDEO_URL = `${API_BASE_URL}/v1/videos/${VIDEO_ID}`;

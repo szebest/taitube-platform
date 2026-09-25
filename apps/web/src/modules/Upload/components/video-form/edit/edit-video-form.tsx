@@ -5,7 +5,7 @@ import styles from '../video-form.module.scss';
 
 import { VIDEO_VISIBILITIES } from "@vp/api-contracts";
 
-import type { EditVideoFormModel } from "src/modules/shared/models";
+import type { EditVideoFormModel } from "#app/modules/shared/models";
 
 export type EditVideoFormProps = {
 	isError: boolean;

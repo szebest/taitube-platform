@@ -2,13 +2,13 @@ import { useParams } from '@tanstack/react-router';
 
 import styles from './user-page.module.scss';
 
-import { accountApi, videosApi } from 'src/modules/shared/api';
+import { accountApi, videosApi } from '#app/modules/shared/api';
 
-import { useInfiniteScroll, useIsView } from 'src/modules/shared/hooks';
-import { useAuth } from 'src/modules/shared/providers';
+import { useInfiniteScroll, useIsView } from '#app/modules/shared/hooks';
+import { useAuth } from '#app/modules/shared/providers';
 
-import { LoadingSpinner, VideosContainer } from "src/modules/shared/components";
-import { UserDetails } from '../../components';
+import { LoadingSpinner, VideosContainer } from "#app/modules/shared/components";
+import { UserDetails } from '#app/modules/UserPage/components';
 
 export function UserPage() {
 	const { channelId } = useParams({ from: '/channel/$channelId' });

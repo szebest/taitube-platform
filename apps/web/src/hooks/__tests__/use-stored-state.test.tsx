@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { z } from 'zod';
-import { asLivePage } from '../../__tests__/live-page';
+import { asLivePage } from '#app/__tests__/live-page';
 import { useStoredState } from '../use-stored-state';
 
 const Flag = z.boolean();

@@ -2,7 +2,7 @@ import { type PropsWithChildren, createContext, useContext, useMemo } from "reac
 
 import type { Account } from "@vp/api-contracts"
 
-import { readAuthToken } from "src/auth-token"
+import { readAuthToken } from "#app/auth-token"
 
 import { accountApi } from "../api"
 

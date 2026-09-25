@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { type ApiStore, createApiStore, seed } from '../../../../__tests__/api-store';
-import { CHANNEL_ID } from '../../../../__tests__/fixtures';
-import { subscriptionsApi } from '../../api/subscriptions-api';
+import { type ApiStore, createApiStore, seed } from '#app/__tests__/api-store';
+import { CHANNEL_ID } from '#app/__tests__/fixtures';
+import { subscriptionsApi } from '#app/modules/shared/api/subscriptions-api';
 import { useIsSubscribed } from '../useIsSubscribed';
 
 type ProbeProps = { channelId: string | undefined; isLoggedIn: boolean };

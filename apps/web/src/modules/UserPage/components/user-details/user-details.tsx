@@ -5,7 +5,7 @@ import styles from './user-details.module.scss';
 import type { Channel } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 
-import { ProfilePicture, SubscribeButton } from 'src/modules/shared/components';
+import { ProfilePicture, SubscribeButton } from '#app/modules/shared/components';
 
 export type UserDetailsProps = {
 	channel: Channel;

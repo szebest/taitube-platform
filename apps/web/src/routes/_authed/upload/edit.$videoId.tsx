@@ -2,8 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
 import { z } from 'zod';
 
-import { parseParam } from 'src/integrations/router/parse-param';
-import { EditPage } from 'src/modules/Upload';
+import { parseParam } from '#app/integrations/router/parse-param';
+import { EditPage } from '#app/modules/Upload';
 
 export const Route = createFileRoute('/_authed/upload/edit/$videoId')({
   staticData: { layoutMaxWidth: '1280px' },

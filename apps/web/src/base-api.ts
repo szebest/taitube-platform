@@ -2,8 +2,8 @@ import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 import { ApiError, createApiClient } from '@vp/api-client';
 import { fromPromise, isOk } from '@vp/result';
 
-import { readAuthToken } from 'src/auth-token';
-import { API_BASE_URL } from 'src/config';
+import { readAuthToken } from '#app/auth-token';
+import { API_BASE_URL } from '#app/config';
 
 export const apiClient = createApiClient({
   baseUrl: API_BASE_URL,

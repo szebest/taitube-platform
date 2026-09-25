@@ -1,6 +1,6 @@
-import { type ApiStore, createApiStore, jsonResponse, recordRequests } from '../../../../__tests__/api-store';
-import { VIDEO_ID, videoSummary } from '../../../../__tests__/fixtures';
-import { API_BASE_URL } from '../../../../config';
+import { type ApiStore, createApiStore, jsonResponse, recordRequests } from '#app/__tests__/api-store';
+import { VIDEO_ID, videoSummary } from '#app/__tests__/fixtures';
+import { API_BASE_URL } from '#app/config';
 import { feedApi } from '../feed-api';
 
 const CATEGORY_ID = '0190c3a0-5e1d-7000-8000-00000000d001';

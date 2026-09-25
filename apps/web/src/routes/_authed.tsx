@@ -1,7 +1,7 @@
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { AuthorizedContainer } from 'src/modules/shared/components';
+import { AuthorizedContainer } from '#app/modules/shared/components';
 
 export const Route = createFileRoute('/_authed')({
   validateSearch: z.object({}),

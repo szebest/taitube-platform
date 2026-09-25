@@ -4,7 +4,7 @@ import styles from "./subscription-card.module.scss";
 
 import type { SubscribedChannel } from "@vp/api-contracts";
 
-import { ProfilePicture, SubscribeButton } from "src/modules/shared/components";
+import { ProfilePicture, SubscribeButton } from "#app/modules/shared/components";
 
 export type SubscriptionCardProps = {
 	channel: SubscribedChannel;

@@ -3,10 +3,10 @@ import { Dropdown } from 'react-bootstrap';
 
 import styles from './login.module.scss';
 
-import { clearAuthToken } from 'src/auth-token';
-import { useAuth } from 'src/modules/shared/providers';
+import { clearAuthToken } from '#app/auth-token';
+import { useAuth } from '#app/modules/shared/providers';
 
-import { ProfilePicture } from 'src/modules/shared/components';
+import { ProfilePicture } from '#app/modules/shared/components';
 
 export function Login() {
 	const { account, isLoading } = useAuth();

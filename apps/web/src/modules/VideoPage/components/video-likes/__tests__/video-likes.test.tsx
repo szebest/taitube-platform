@@ -1,7 +1,7 @@
-import { createApiStore, seed } from '../../../../../__tests__/api-store';
-import { VIDEO_ID, account, video } from '../../../../../__tests__/fixtures';
-import { renderPage, signIn } from '../../../../../__tests__/render-page';
-import { reactionsApi } from '../../../../shared/api/reactions-api';
+import { createApiStore, seed } from '#app/__tests__/api-store';
+import { VIDEO_ID, account, video } from '#app/__tests__/fixtures';
+import { renderPage, signIn } from '#app/__tests__/render-page';
+import { reactionsApi } from '#app/modules/shared/api/reactions-api';
 import { VideoLikes } from '../video-likes';
 
 describe('apps/web: video likes', () => {

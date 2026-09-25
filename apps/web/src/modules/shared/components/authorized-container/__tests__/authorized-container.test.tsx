@@ -1,7 +1,7 @@
-import { type ApiStore, createApiStore } from '../../../../../__tests__/api-store';
-import { stubBrowser } from '../../../../../__tests__/browser';
-import { account } from '../../../../../__tests__/fixtures';
-import { renderPage, signIn } from '../../../../../__tests__/render-page';
+import { type ApiStore, createApiStore } from '#app/__tests__/api-store';
+import { stubBrowser } from '#app/__tests__/browser';
+import { account } from '#app/__tests__/fixtures';
+import { renderPage, signIn } from '#app/__tests__/render-page';
 import { AuthorizedContainer } from '../authorized-container';
 
 async function renderGuarded(store: ApiStore): Promise<string> {

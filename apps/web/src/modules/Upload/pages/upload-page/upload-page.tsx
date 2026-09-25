@@ -1,8 +1,8 @@
-import { uploadsApi } from '../../api';
+import { uploadsApi } from '#app/modules/Upload/api';
 
-import type { UploadFormModel } from '../../models';
+import type { UploadFormModel } from '#app/modules/Upload/models';
 
-import { VideoForm } from '../../components';
+import { VideoForm } from '#app/modules/Upload/components';
 
 export function UploadPage() {
 	const [upload, state] = uploadsApi.useUploadVideoMutation();

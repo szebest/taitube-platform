@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { stubBrowser } from '../../../../__tests__/browser';
+import { stubBrowser } from '#app/__tests__/browser';
 import { SidebarProvider, useSidebar } from '../sidebar-provider';
 
 type SidebarControls = Partial<ReturnType<typeof useSidebar>>;

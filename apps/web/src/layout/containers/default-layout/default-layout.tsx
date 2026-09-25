@@ -4,9 +4,9 @@ import { Outlet } from "@tanstack/react-router";
 
 import styles from './default-layout.module.scss';
 
-import { Header, Sidebar } from "src/layout/components";
-import { LoadingSpinner } from "src/modules/shared/components";
-import { useSidebar } from "src/modules/shared/providers";
+import { Header, Sidebar } from "#app/layout/components";
+import { LoadingSpinner } from "#app/modules/shared/components";
+import { useSidebar } from "#app/modules/shared/providers";
 
 export type DefaultLayoutProps = {
 	maxWidth?: string

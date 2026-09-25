@@ -1,4 +1,4 @@
-import { apiClient, baseApi, runApiQuery } from "src/base-api";
+import { apiClient, baseApi, runApiQuery } from "#app/base-api";
 
 import { type CompletedUpload, type UploadRequest, uploadVideo } from "./upload-video";
 

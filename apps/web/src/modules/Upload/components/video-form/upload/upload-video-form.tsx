@@ -7,8 +7,8 @@ import styles from '../video-form.module.scss';
 
 import { VIDEO_VISIBILITIES } from "@vp/api-contracts";
 
-import type { CompletedUpload } from "../../../api";
-import type { UploadFormModel } from "../../../models";
+import type { CompletedUpload } from "#app/modules/Upload/api";
+import type { UploadFormModel } from "#app/modules/Upload/models";
 import { DropzoneField, UploadProgress } from "../..";
 
 export type VideoFormProps = {

@@ -1,5 +1,5 @@
-import { videoSummary } from '../../../../../__tests__/fixtures';
-import { renderPage } from '../../../../../__tests__/render-page';
+import { videoSummary } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
 import { VideosContainer, type VideosContainerProps } from '../videos-container';
 
 const SECOND_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a002';

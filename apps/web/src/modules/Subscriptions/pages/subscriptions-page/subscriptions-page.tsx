@@ -1,9 +1,9 @@
 import styles from './subscriptions-page.module.scss';
 
-import { subscriptionsApi } from 'src/modules/shared/api';
+import { subscriptionsApi } from '#app/modules/shared/api';
 
-import { LoadingSpinner } from 'src/modules/shared/components';
-import { SubscriptionCard } from '../../components';
+import { LoadingSpinner } from '#app/modules/shared/components';
+import { SubscriptionCard } from '#app/modules/Subscriptions/components';
 
 export function SubscriptionsPage() {
 	const { data, isLoading } = subscriptionsApi.useMySubscriptionsQuery();

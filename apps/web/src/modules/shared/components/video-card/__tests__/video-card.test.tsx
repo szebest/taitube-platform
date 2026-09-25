@@ -1,6 +1,6 @@
 import type { UserContext } from '@vp/permissions';
-import { OWNER_ID, VIDEO_ID, videoSummary } from '../../../../../__tests__/fixtures';
-import { renderPage } from '../../../../../__tests__/render-page';
+import { OWNER_ID, VIDEO_ID, videoSummary } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
 import { VideoCard } from '../video-card';
 
 async function renderCard(viewer: UserContext | null, video = videoSummary()): Promise<string> {

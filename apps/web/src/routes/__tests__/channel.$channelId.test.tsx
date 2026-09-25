@@ -1,6 +1,6 @@
-import { recordRequests } from '../../__tests__/api-store';
-import { CHANNEL_ID } from '../../__tests__/fixtures';
-import { serverRender } from '../../__tests__/server-render';
+import { recordRequests } from '#app/__tests__/api-store';
+import { CHANNEL_ID } from '#app/__tests__/fixtures';
+import { serverRender } from '#app/__tests__/server-render';
 
 describe('apps/web: /channel/$channelId', () => {
   it.each([

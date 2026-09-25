@@ -8,7 +8,7 @@ import { publishedAt } from "@vp/intl";
 import { Format, useT } from "@vp/intl-react";
 import { canUpdateVideo } from "@vp/permissions";
 
-import { Can } from "src/components";
+import { Can } from "#app/components";
 
 import { VideoSettingsDropdown } from "..";
 

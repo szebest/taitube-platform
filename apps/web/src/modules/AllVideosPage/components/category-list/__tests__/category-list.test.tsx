@@ -1,6 +1,6 @@
-import { type ApiStore, createApiStore, seed } from '../../../../../__tests__/api-store';
-import { renderPage } from '../../../../../__tests__/render-page';
-import { categoriesApi } from '../../../../shared/api/categories-api';
+import { type ApiStore, createApiStore, seed } from '#app/__tests__/api-store';
+import { renderPage } from '#app/__tests__/render-page';
+import { categoriesApi } from '#app/modules/shared/api/categories-api';
 import { CategoryList } from '../category-list';
 
 const MUSIC_ID = '0190c3a0-5e1d-7000-8000-00000000d001';

@@ -7,10 +7,7 @@
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,
-    "incremental": false,
-    "paths": {
-      "src/*": ["./src/*"]
-    }
+    "incremental": false
   },
   "include": ["src"],
   "exclude": ["src/**/__tests__/**", "src/**/*.test.ts", "src/**/*.test.tsx"]

@@ -3,7 +3,7 @@ import { ScrollMenu, type VisibilityContext } from 'react-horizontal-scrolling-m
 
 import styles from './drag-scroll-menu.module.scss';
 
-import { useDrag } from '../../hooks';
+import { useDrag } from '#app/modules/shared/hooks';
 
 import { LeftArrow, RightArrow } from '../drag-scroll-arrow/drag-scroll-arrow';
 

@@ -3,9 +3,9 @@ import styles from './video-details.module.scss';
 import type { Video } from '@vp/api-contracts';
 import { canUpdateVideo } from '@vp/permissions';
 
-import { Can } from 'src/components';
+import { Can } from '#app/components';
 
-import { VideoSettingsDropdown } from 'src/modules/shared/components';
+import { VideoSettingsDropdown } from '#app/modules/shared/components';
 
 import { VideoDescription, VideoLikes } from '..';
 

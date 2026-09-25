@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { ApiClient } from '@vp/api-client';
-import { VIDEO_ID } from '../../../../__tests__/fixtures';
+import { VIDEO_ID } from '#app/__tests__/fixtures';
 import { uploadVideo } from '../upload-video';
 
 const UPLOAD_ID = '00000000-0000-7000-8000-0000000000u1';

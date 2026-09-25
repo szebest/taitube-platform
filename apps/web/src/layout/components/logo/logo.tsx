@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 import styles from "./logo.module.scss";
 
-import { useSidebar } from "src/modules/shared/providers";
+import { useSidebar } from "#app/modules/shared/providers";
 
 export type LogoProps = {
 	hideLogoPart: boolean;

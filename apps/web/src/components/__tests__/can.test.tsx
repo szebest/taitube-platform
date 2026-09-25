@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { canReactVideo, type UserContext } from '@vp/permissions';
-import { PermissionsProvider } from '../../modules/shared/providers/permissions-provider';
+import { PermissionsProvider } from '#app/modules/shared/providers/permissions-provider';
 import { Can, type CanProps } from '../can';
 
 type Props = CanProps<{ user: UserContext | null }>;

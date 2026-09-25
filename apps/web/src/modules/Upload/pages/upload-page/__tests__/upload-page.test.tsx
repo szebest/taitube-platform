@@ -1,4 +1,4 @@
-import { renderPage } from '../../../../../__tests__/render-page';
+import { renderPage } from '#app/__tests__/render-page';
 import { UploadPage } from '../upload-page';
 
 describe('apps/web: upload page', () => {

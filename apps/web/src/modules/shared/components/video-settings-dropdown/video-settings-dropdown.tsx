@@ -8,7 +8,7 @@ import styles from './video-settings-dropdown.module.scss';
 import type { VideoSummary } from "@vp/api-contracts";
 import { fromPromise, isErr } from "@vp/result";
 
-import { videosApi } from "../../api";
+import { videosApi } from "#app/modules/shared/api";
 
 export type VideoSettingsDropdownProps = {
 	video: Pick<VideoSummary, 'id'>;

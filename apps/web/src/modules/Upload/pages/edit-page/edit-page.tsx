@@ -4,12 +4,12 @@ import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
 import { fromPromise, isOk } from '@vp/result';
 import { z } from 'zod';
 
-import { videosApi } from 'src/modules/shared/api';
+import { videosApi } from '#app/modules/shared/api';
 
-import type { EditVideoFormModel } from 'src/modules/shared/models';
+import type { EditVideoFormModel } from '#app/modules/shared/models';
 
-import { EditVideoForm } from '../../components';
-import { LoadingSpinner } from 'src/modules/shared/components';
+import { EditVideoForm } from '#app/modules/Upload/components';
+import { LoadingSpinner } from '#app/modules/shared/components';
 
 const VersionConflictSchema = z.object({ status: z.literal(409) });
 

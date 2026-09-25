@@ -5,10 +5,10 @@ import { type AnimationSequence, useAnimate } from "framer-motion";
 
 import styles from "./subscribe-button.module.scss";
 
-import { subscriptionsApi } from "../../api";
+import { subscriptionsApi } from "#app/modules/shared/api";
 
-import { useAuth } from "../../providers";
-import { useIsSubscribed } from "../../hooks";
+import { useAuth } from "#app/modules/shared/providers";
+import { useIsSubscribed } from "#app/modules/shared/hooks";
 
 const randomNumberBetween = (min: number, max: number) => {
 	return Math.floor(Math.random() * (max - min + 1) + min);

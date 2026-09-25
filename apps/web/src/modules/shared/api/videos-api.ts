@@ -1,6 +1,6 @@
 import type { ListVideosQuery, UpdateVideoMetadata, Video, VideoListResponse } from "@vp/api-contracts";
 
-import { apiClient, baseApi, runApiQuery } from "src/base-api";
+import { apiClient, baseApi, runApiQuery } from "#app/base-api";
 
 import { appendPage } from "./page-merge";
 

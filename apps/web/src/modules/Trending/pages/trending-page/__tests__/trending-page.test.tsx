@@ -1,9 +1,9 @@
-import { stubBrowser } from '../../../../../__tests__/browser';
-import { createApiStore, seed } from '../../../../../__tests__/api-store';
-import { videoSummary } from '../../../../../__tests__/fixtures';
-import { renderPage } from '../../../../../__tests__/render-page';
-import { IN_VIEW_LOCAL_STORAGE_KEY } from '../../../../../config';
-import { feedApi } from '../../../../shared/api/feed-api';
+import { stubBrowser } from '#app/__tests__/browser';
+import { createApiStore, seed } from '#app/__tests__/api-store';
+import { videoSummary } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
+import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
+import { feedApi } from '#app/modules/shared/api/feed-api';
 import { TrendingPage } from '../trending-page';
 
 describe('apps/web: trending page', () => {

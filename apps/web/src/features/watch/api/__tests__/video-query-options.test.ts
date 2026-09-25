@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
-import { jsonResponse, recordRequests } from '../../../../__tests__/api-store';
-import { VIDEO_ID, video } from '../../../../__tests__/fixtures';
+import { jsonResponse, recordRequests } from '#app/__tests__/api-store';
+import { VIDEO_ID, video } from '#app/__tests__/fixtures';
 import { videoQueryOptions } from '../video-query-options';
 
 describe('apps/web: videoQueryOptions', () => {

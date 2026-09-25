@@ -1,6 +1,6 @@
 import type { Video } from '@vp/api-contracts';
 
-import { VideoPlayer } from 'src/modules/shared/components';
+import { VideoPlayer } from '#app/modules/shared/components';
 
 import { useBundledHls } from '../hooks/use-bundled-hls';
 
