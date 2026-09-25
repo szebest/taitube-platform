@@ -12,3 +12,5 @@ export * from './categories/slug-format';
 export * from './categories/category-form';
 export * from './comments/failures';
 export * from './comments/content';
+export * from './playlists/failures';
+export * from './playlists/details';

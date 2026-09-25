@@ -2,6 +2,7 @@ import type { ForcedSubject, InferSubjects, MongoAbility } from '@casl/ability';
 import type { CategoryResource } from './category';
 import type { ChannelResource } from './channel';
 import type { CommentResource } from './comment';
+import type { PlaylistResource } from './playlist';
 import type { UploadResource } from './upload';
 import type { VideoResource } from './video';
 
@@ -25,12 +26,14 @@ export type AppSubjects =
       | (CommentResource & ForcedSubject<'Comment'>)
       | (ChannelResource & ForcedSubject<'Channel'>)
       | (CategoryResource & ForcedSubject<'Category'>)
+      | (PlaylistResource & ForcedSubject<'Playlist'>)
     >
   | 'Video'
   | 'Upload'
   | 'Comment'
   | 'Channel'
   | 'Category'
+  | 'Playlist'
   | 'Analytics';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;
