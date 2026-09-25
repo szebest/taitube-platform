@@ -33,7 +33,11 @@ function moduleSpecifier(node: ts.Node): string | undefined {
   return undefined;
 }
 
+/** A quoted relative path ending in an extension: without one, no import in the file can carry it. */
+const RELATIVE_WITH_EXTENSION = /['"]\.\.?\/[^'"]*\.[cm]?[jt]sx?['"]/;
+
 function extensioned(name: string, source: string): string[] {
+  if (!RELATIVE_WITH_EXTENSION.test(source)) return [];
   const kind = name.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true, kind);
   const found: string[] = [];

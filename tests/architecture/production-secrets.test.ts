@@ -1,5 +1,6 @@
-import { execFileSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { loadAll } from 'js-yaml';
 import {
   AppEnvSchema,
@@ -16,18 +17,23 @@ interface Manifest {
   spec?: { data?: { secretKey: string }[] };
 }
 
-const rendered = new Map<string, Manifest[]>();
+const run = promisify(execFile);
 
-/** Each overlay rendered once per process: a `kustomize build` is most of what this file costs. */
-function render(overlay: string): Manifest[] {
-  let manifests = rendered.get(overlay);
-  if (!manifests) {
-    const output = execFileSync('kustomize', ['build', join(ROOT, overlay)], { encoding: 'utf8' });
-    manifests = loadAll(output) as Manifest[];
-    rendered.set(overlay, manifests);
-  }
-  return manifests;
+async function kustomize(...args: string[]): Promise<string> {
+  const { stdout } = await run('kustomize', args, { encoding: 'utf8' });
+  return stdout;
 }
+
+async function render(overlay: string): Promise<Manifest[]> {
+  return loadAll(await kustomize('build', join(ROOT, overlay))) as Manifest[];
+}
+
+/** Started together: the three `kustomize` runs are most of what this file costs. */
+const [version, base, cloud] = await Promise.all([
+  kustomize('version'),
+  render('infra/k8s/base'),
+  render('infra/k8s/overlays/cloud'),
+]);
 
 function named(manifests: Manifest[], kind: string, name: string): Manifest | undefined {
   return manifests.find((manifest) => manifest.kind === kind && manifest.metadata.name === name);
@@ -63,14 +69,14 @@ function strings(value: unknown): string[] {
 
 describe('architecture: rendered production manifests carry no local credential', () => {
   it('has a kustomize binary to render with', () => {
-    expect(execFileSync('kustomize', ['version'], { encoding: 'utf8' })).toMatch(/v5\./);
+    expect(version).toMatch(/v5\./);
   });
 
   it('refuses the base under production until every secret is overridden', () => {
-    const base = podEnv(render('infra/k8s/base'));
+    const env = podEnv(base);
 
-    expect(base['NODE_ENV']).toBe('production');
-    expect(refusedKeys(base)).toEqual(
+    expect(env['NODE_ENV']).toBe('production');
+    expect(refusedKeys(env)).toEqual(
       expect.arrayContaining([...SECRET_KEYS, 'AUTH_JWKS_URL'].sort())
     );
 
@@ -82,7 +88,7 @@ describe('architecture: rendered production manifests carry no local credential'
     );
     expect(
       refusedKeys({
-        ...base,
+        ...env,
         ...rotated,
         AUTH_JWKS_URL: 'https://idp.vp.local/.well-known/jwks.json',
       })
@@ -90,7 +96,7 @@ describe('architecture: rendered production manifests carry no local credential'
   });
 
   it('renders the cloud overlay with no Secret value at all', () => {
-    const secrets = render('infra/k8s/overlays/cloud').filter(
+    const secrets = cloud.filter(
       (manifest) => manifest.kind === 'Secret' && (manifest.data || manifest.stringData)
     );
 
@@ -98,7 +104,7 @@ describe('architecture: rendered production manifests carry no local credential'
   });
 
   it('declares one ExternalSecret entry for every secret the schema requires', () => {
-    const external = named(render('infra/k8s/overlays/cloud'), 'ExternalSecret', 'vp-secrets');
+    const external = named(cloud, 'ExternalSecret', 'vp-secrets');
     const keys = (external?.spec?.data ?? []).map((entry) => entry.secretKey);
 
     for (const key of SECRET_KEYS) {
@@ -107,7 +113,6 @@ describe('architecture: rendered production manifests carry no local credential'
   });
 
   it('gives every cloud key one owner: the ConfigMap or the ExternalSecret, never both', () => {
-    const cloud = render('infra/k8s/overlays/cloud');
     const configMapKeys = Object.keys(named(cloud, 'ConfigMap', 'vp-config')?.data ?? {});
     const secretKeys = new Set(
       (named(cloud, 'ExternalSecret', 'vp-secrets')?.spec?.data ?? []).map(
@@ -119,7 +124,7 @@ describe('architecture: rendered production manifests carry no local credential'
   });
 
   it('renders no credential the repo ships for local use into the cloud overlay', () => {
-    const leaked = strings(render('infra/k8s/overlays/cloud')).filter(heldLocalCredentials);
+    const leaked = strings(cloud).filter(heldLocalCredentials);
 
     expect(leaked).toEqual([]);
   });

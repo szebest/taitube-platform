@@ -3,21 +3,36 @@
 Instructions for any coding agent working on `@vp/testing`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
 
-`@vp/testing` provides shared test utilities, mock JWT generators, and test fixture helpers used across unit and integration test suites.
-- **Dev Token Generator:** Minting signed Ed25519 JWT tokens for test roles (`admin`, `user`, `guest`).
-- **Fixture Verification:** Checksum verification for deterministic synthetic media files.
-- **In-Memory Helpers:** Shared assertions and factories for port doubles.
+`@vp/testing` holds the helpers specs across the repo share. Tier `server`, `vp.layer` 2; its dependencies
+are in [package.json](package.json). Each subpath's `import` condition points at `src/`, so a spec needs no
+build.
+
+- **`.` (`src/index.ts`):** `definePackageTestConfig` (node environment, globals,
+  `src/**/__tests__/**/*.test.ts`; most package `vitest.config.ts` files build on it, a few define their
+  own), `FIXTURES` (`VIDEO_ID` and `DEV_USER_ID`, the ids the seed writes, and a
+  `TRACEPARENT`), `createMockJob` and `withEnv`.
+- **`./result`:** `expectOk` / `expectErr`, which unwrap a `Result` or fail naming what came back.
+- **`./jwt`:** `signingKey` and `signJwt`, a throwaway RS256, ES256 or EdDSA key and a token signed with
+  it, for the token-verifier and API auth specs.
+- **`./env`:** `PRODUCTION_ENV`, a complete production-shaped environment with fake secrets.
+- **`./log-capture`:** `captureLog`, a `destination` for `createLogger` that parses back what was written.
+- **`./run-entrypoint`:** `runEntrypoint`, which starts a TypeScript entrypoint under the runtime the
+  spec runs on (`tsx` under Node, as is under Bun).
+
+Its own `src/__tests__/` also holds the infra specs: compose, the k8s local and cloud overlays, KEDA, the
+Grafana dashboards and Terraform.
 
 ---
 
 ## 2. Invariants
 
 - Must execute completely offline without network calls.
-- Dev tokens generated here must never be used in production environments.
+- Nothing in production source imports it; it is a dev dependency everywhere but its own manifest.
 
 ---
 

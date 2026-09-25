@@ -6,21 +6,23 @@ Instructions for any coding agent working on Terraform infrastructure-as-code (`
 
 ## 1. Scope & Resources
 
-`infra/terraform` provisions the cloud reference architecture on Cloudflare:
-- `cloudflare_r2_bucket.raw`: Private S3-compatible bucket for video uploads.
-- `cloudflare_r2_bucket.public`: Public bucket for transcoded HLS playlists and media segments.
-- `cloudflare_r2_bucket_cors`: Configured CORS policies for direct-to-storage multipart uploads from web browsers.
-- `cloudflare_record`: DNS records mapping custom streaming domains to public buckets and API endpoints.
-- `cloudflare_api_token`: Scoped credentials for API and worker S3 clients.
-- `cloudflare_zero_trust_tunnel_cloudflared`: Cloudflare Tunnel for routing ingress without public IP exposure.
+`infra/terraform` provisions the cloud reference architecture on Cloudflare and Hetzner (providers pinned in `terraform.tf`, local state by default):
+- `cloudflare_r2_bucket.raw` (`vp-raw`): private bucket for uploads; `cloudflare_r2_bucket_lifecycle.raw` aborts incomplete multipart uploads after 1 day and expires objects after `raw_retention_days` (7).
+- `cloudflare_r2_bucket.public` (`vp-public`): HLS playlists, segments and thumbnails, served through `cloudflare_r2_custom_domain.public_cdn` at `cdn.<domain>`.
+- `cloudflare_tunnel.k3s_tunnel`, `cloudflare_tunnel_config.k3s_tunnel_config` and `cloudflare_record.api_tunnel`: the Cloudflare Tunnel that routes `api.<domain>` to the cluster without a public ingress.
+- `cloudflare_access_application.admin_portal` and `cloudflare_access_policy.admin_allow_operator`: Cloudflare Access in front of `api.<domain>/admin`.
+- `cloudflare_api_token.r2_api_app` and `cloudflare_api_token.r2_worker_app`: scoped R2 credentials for the API and the workers.
+- `hcloud_server.k3s_node`, `hcloud_firewall.vps_firewall` and `hcloud_ssh_key.operator_key`: the Hetzner k3s node, with SSH open only to `operator_ssh_ip`.
+
+No CORS rule is declared on either bucket.
 
 ---
 
 ## 2. Invariants & Rules
 
-1. **Parity with Local MinIO:** Cloudflare R2 bucket configurations (naming, CORS, public policies) must strictly match local MinIO conventions defined in `packages/server/storage/src/keys.ts` and `infra/compose/minio-init.sh`.
-2. **Deterministic Inputs:** Variables are declared in `variables.tf` with defaults; sensitive variables are passed via `.env` or CI secrets.
-3. **Automated Verification:** Any changes to Terraform definitions must pass the syntax and structure tests in `packages/server/testing/src/__tests__/cloud-terraform.test.ts`.
+1. **Parity with Local MinIO:** The two R2 buckets must keep the shape `infra/compose/minio-init.sh` gives MinIO: raw private with the same 7-day expiry, public readable. Bucket names differ (`vp-raw`/`vp-public` against `raw`/`public`) and reach the code only through `S3_BUCKET_RAW` / `S3_BUCKET_PUBLIC`; object keys belong to `packages/server/storage/src/keys.ts`.
+2. **Deterministic Inputs:** Variables are declared in `variables.tf`; the non-secret ones have defaults. Values go in a `terraform.tfvars` copied from `terraform.tfvars.example`; `cloudflare_api_token` and `hcloud_token` are `sensitive`. `.gitignore` covers `terraform.tfvars`, `*.tfstate` and `.terraform/`.
+3. **Automated Verification:** Nothing runs `terraform validate` or a plan in CI ([ticket 90](../../docs/tickets/90-cloud-terraform-provider-v5.md)); keep `terraform fmt -check` clean by hand. `packages/server/testing/src/__tests__/cloud-terraform.test.ts` reads the `.tf` files as text for the providers, variables and resource names, and `cloud-r2-tokens.test.ts` reads `main.tf` through `@cdktf/hcl2json` for each R2 token's buckets and permission groups; keep both in step with any rename.
 
 ---
 
@@ -28,6 +30,7 @@ Instructions for any coding agent working on Terraform infrastructure-as-code (`
 
 - **`cloudflare-r2`**: R2 bucket management, CORS, and Cloudflare Terraform provider.
 - **`terraform-style-guide`**: HashiCorp style conventions and HCL patterns.
+- **`hetzner-cloud`**: the `hcloud` side of the node.
 
 ---
 
@@ -37,9 +40,12 @@ Instructions for any coding agent working on Terraform infrastructure-as-code (`
 # Initialize Terraform
 cd infra/terraform && terraform init
 
+# Check formatting and configuration locally (no CI job does)
+cd infra/terraform && terraform fmt -check && terraform validate
+
 # Plan changes
 cd infra/terraform && terraform plan
 
-# Run automated tests
-pnpm --filter @vp/testing test:terraform
+# Run the text-level Terraform test
+pnpm --filter @vp/testing test cloud-terraform
 ```

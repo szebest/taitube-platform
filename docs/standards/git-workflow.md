@@ -9,7 +9,7 @@ This document specifies the branching, code review, merge policy, and CI standar
 Direct pushes and direct merges to the `main` branch are strictly blocked by GitHub branch protection rules.
 
 Every feature, ticket, and bug fix MUST adhere to the following workflow:
-1. **Branch Naming:** Create a dedicated branch off `main` named `ticket/NN-slug` for tickets (e.g. `ticket/42-threaded-comments`) or `<type>/<slug>` for non-ticket changes (e.g. `docs/modular-docs-refactor`).
+1. **Branch Naming:** Create a dedicated branch off `main` named `ticket/<NN>-<slug>` for tickets (e.g. `ticket/42-threaded-comments`) or `<type>/<slug>` for non-ticket changes (e.g. `chore/biome-error-on-warnings`).
 2. **Pull Request Requirement:** Submit all changes exclusively through a GitHub Pull Request targeting `main`.
 3. **Formal Approval:** The PR must receive at least one formal approval (`APPROVE`) from a reviewing agent or team member before merging.
 4. **All CI Checks Green:** All GitHub Actions status checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) must pass green. Merging with failing status checks is strictly forbidden.
@@ -39,7 +39,7 @@ Standard merge commits (`--merge`) and rebase merges (`--rebase`) are disabled r
 
 When AI coding agents (or pairs of engineers) work on tasks:
 1. **Implementor Agent:**
-   - Implements the feature or bug fix on `ticket/NN-slug`.
+   - Implements the feature or bug fix on `ticket/<NN>-<slug>`.
    - Runs local verification (`pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`).
    - Pushes the branch and creates the GitHub Pull Request.
    - Posts the PR URL in the conversation.
@@ -57,8 +57,7 @@ When AI coding agents (or pairs of engineers) work on tasks:
 
 ## 4. Ticket Status Synchronization
 
-When working on tracer-bullet tickets:
-1. After the PR is successfully squash-merged into `main`:
-   - Update `**Status:** done` on the ticket markdown in `docs/tickets/NN-slug.md`.
-   - Re-generate ticket index: `python3 docs/tickets/gen-index.py`.
-   - Sync ticket state to GitHub Issues: `pnpm sync:tickets` (or push to trigger `.github/workflows/sync-tickets.yml`).
+`main` takes no direct push, so a ticket's status changes inside its PR:
+1. The PR that starts a ticket sets its `**Status:**` line to `in-progress`; the PR that completes it sets `done`. The vocabulary is `ready`, `blocked`, `in-progress`, `done` and `blocked-by-date`, and `gen-index.py` refuses anything else.
+2. Re-generate the index in the same PR: `python3 docs/tickets/gen-index.py`. CI runs it with `--check` (`tests/in-process/gen-index.test.ts`, in `pnpm test:unit`), so a stale index fails the PR.
+3. After the merge, `.github/workflows/sync-tickets.yml` updates the GitHub issues on the push to `main`; `pnpm sync:tickets` does the same by hand.

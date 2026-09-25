@@ -2,9 +2,12 @@
 
 [![CI](https://github.com/szebest/taitube-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/szebest/taitube-platform/actions/workflows/ci.yml)
 
-TaiTube is an asynchronous video ingestion, processing, and streaming platform. It provides direct-to-storage multipart uploads, keyframe-aligned multi-rendition HLS transcoding via FFmpeg, distributed job coordination with BullMQ, real-time Server-Sent Events (SSE) progress tracking, and full observability out of the box.
+TaiTube is an asynchronous video ingestion, processing and streaming platform: multipart uploads straight to
+storage, keyframe-aligned multi-rendition HLS transcoding with FFmpeg, job coordination with BullMQ, SSE
+progress events, and metrics, traces and logs.
 
-The repository is structured as a modular TypeScript monorepo designed around hexagonal architecture (ports and adapters), dual-runtime execution (Node.js 24 and Bun 1.4), and a strict local-first approach that runs completely offline with zero external cloud dependencies.
+It is a TypeScript monorepo built on ports and adapters, with workers that run on Node.js 24 and Bun 1.4, and it
+runs offline with no external cloud dependency.
 
 ---
 
@@ -81,31 +84,44 @@ taitube-platform/
 ├── packages/                    # Shared libraries. The directory IS the runtime tier.
 │   ├── universal/               # Runs in a browser AND on a server
 │   │   ├── api-contracts/       # Zod request/response schemas for every HTTP endpoint
-│   │   ├── errors/              # Domain and HTTP error classifications (RFC 9457)
+│   │   ├── domain/              # Entity types and the status and role vocabularies
+│   │   ├── domain-rules/        # Pure rules over input plus an entity, returning Result
+│   │   ├── errors/              # ErrorCode vocabulary, Failure types, retry classes
+│   │   ├── pagination/          # Keyset cursor codec and page shapes
 │   │   ├── permissions/         # CASL ability rules shared by the API and the frontend
-│   │   └── tsconfig/            # Shared TypeScript presets, one per tier
+│   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
+│   │   ├── tsconfig/            # Shared TypeScript presets, one per tier
+│   │   └── validation/          # Pure input-only rules returning Result
 │   ├── client/                  # Browser only
-│   │   └── api-client/          # Typed HTTP client generated against api-contracts
+│   │   └── api-client/          # Typed HTTP client whose calls are typed by api-contracts
 │   └── server/                  # Node / Bun only
-│       ├── core/                # Pure domain models, entities, ports, repository interfaces
-│       ├── adapters/            # Concrete drivers: postgres/, redis/, bullmq/, s3/, in-memory/
-│       ├── config/              # Centralized environment variable validation (Zod)
-│       ├── db/                  # PostgreSQL schema definitions, migrations, and seeds
-│       ├── events/              # Event definitions and Redis pub/sub dispatcher
-│       ├── ffmpeg/              # FFmpeg argument builders, progress parsers, probe helpers
-│       ├── job-contracts/       # BullMQ job payload schemas and queue naming contracts
-│       ├── observability/       # OpenTelemetry, Prometheus metrics, and Pino logging
-│       ├── storage/             # S3 object key layout and presigned URL helpers
-│       ├── testing/             # Shared test utilities, fixtures, and assertion helpers
-│       └── …                    # CLIs: compose-autoscaler, dev-token, gen-video, upload-client
+│       ├── adapters/            # Concrete drivers (postgres, redis, bullmq, s3, auth, in-memory) and registerAdapters
+│       ├── compose-autoscaler/  # CLI: scales Compose worker services from the API's queue-depth metrics
+│       ├── composition/         # Typed dependency container, tokens, shutdown and signal handling
+│       ├── concurrency/         # Singleflight promise coalescing
+│       ├── config/              # loadEnv(): reads process.env once and validates it
+│       ├── core/                # Abstract class ports and repository interfaces
+│       ├── db/                  # Drizzle schema, client, migrations and migrate/seed functions
+│       ├── dev-token/           # CLI: mints local EdDSA JWTs and serves a dev JWKS
+│       ├── env-schema/          # Zod environment schema, AppConfig and toAppConfig
+│       ├── events/              # SSE envelope, pub/sub channels and Redis cache keys
+│       ├── ffmpeg/              # FFmpeg/ffprobe runners, ladder selection, master playlist, thumbnails
+│       ├── gen-video/           # CLI: generates deterministic test video fixtures
+│       ├── job-contracts/       # BullMQ queue names, job payload schemas, retry policies, rendition ladder
+│       ├── logger/              # Pino logger with json and pretty formats, log context, serializeError
+│       ├── observability/       # OpenTelemetry tracing, Prometheus metrics and the metrics server
+│       ├── storage/             # S3 object key layout, MIME map and multipart part math
+│       ├── testing/             # Shared test config, fixtures and test helpers
+│       └── upload-client/       # CLI: reference resumable multipart upload client
 ├── infra/
 │   ├── compose/                 # Docker Compose manifests (local infra, full stack, observability)
 │   ├── k8s/                     # Kubernetes manifests (Kustomize base, local k3d, cloud overlays)
 │   ├── observability/           # Grafana dashboards and Prometheus alert rules
-│   └── terraform/               # Cloud infrastructure definitions (Cloudflare R2, DNS, compute)
+│   └── terraform/               # Cloud infrastructure (Cloudflare R2, DNS, Tunnel, Access; Hetzner k3s node)
 ├── tests/
 │   ├── architecture/            # The conformance suite: tier, layer and boundary assertions
 │   ├── e2e/                     # Phase 2 acceptance suite (20 concurrent videos + hostile set)
+│   ├── in-process/              # In-process specs over a composed app (start order, request correlation)
 │   └── load/                    # k6 scenarios
 ├── tools/                       # Developer assets with no package.json (chaos/, hls-test-page/)
 ├── docs/                        # PRD, SDD (with the ADRs), standards, runbooks, and tickets
@@ -116,19 +132,31 @@ taitube-platform/
 
 ## Key Capabilities
 
-- **Local-First Architecture**: Runs fully offline with zero external network access. Local development uses MinIO, Redis, and PostgreSQL with default credentials.
-- **Dual-Runtime Worker Parity**: Worker services and packages execute interchangeably under Node.js 24 and Bun 1.4. All test suites pass under both `vitest` and `bun test`.
-- **Direct Multipart Storage Uploads**: S3-compatible chunked uploads with automatic part sizing (8 MiB to 64 MiB), concurrency control, checksum verification, resume from stored parts, and abort cleanup.
-- **Keyframe-Aligned HLS Ladder**: Transcodes multi-bitrate video streams (1080p, 720p, 480p) with identical keyframe cadence across renditions for clean adaptive bitrate switching in video players.
-- **Real-Time Progress Tracking**: Server-Sent Events (SSE) backed by Redis Pub/Sub broadcast per-rendition percentage, ETA, and state changes with snapshot replay on reconnect.
-- **Declarative RBAC & ABAC Permission Engine**: Pure domain authorization engine (`can(user, action, resource)`) evaluating role capabilities (`GUEST`, `USER`, `CREATOR`, `MODERATOR`, `ADMIN`) and dynamic attribute predicates (resource ownership, creator video comment moderation, superuser bypass). Domain services enforce the policies through `AuthorizationPort`, surfacing refusals as RFC 9457 Problem Details errors.
-- **Resilient State Machine**: Optimistic concurrency control via PostgreSQL CAS transactions and worker fencing tokens to guarantee exactly-once processing outcomes.
-- **Public Video Feed & High-Performance Caching**: Unauthenticated public video browsing (`GET /v1/feed`) with multi-sort (newest, views count, trending gravity decay) and category filtering, backed by Redis caching, Singleflight promise coalescing, and HTTP ETag/304 conditional responses.
-- **Dynamic Category Management & Multi-Tier L1/L2 Caching**: PostgreSQL-backed dynamic taxonomies (`GET /v1/categories`, `POST/PATCH/DELETE /v1/admin/categories`) with in-process LRU L1 cache (60s TTL), distributed Redis L2 cache, cluster-wide Redis Pub/Sub invalidation broadcast, and HTTP ETag/304 Not Modified conditional responses.
-- **High-Throughput Video Reactions & Counter Caching**: Video reactions (`PUT /v1/videos/:id/reactions` for LIKE/DISLIKE/NONE, `GET /v1/videos/:id/reactions/me`) with atomic PostgreSQL transactions and denormalized counter columns (`likesCount`, `dislikesCount`). Sub-millisecond reads powered by `RedisReactionCacheAdapter` featuring Singleflight concurrent request deduplication, XFetch probabilistic background recomputation, and scheduled reconciler drift repair.
-- **Channel Subscriptions & Subscribed Video Feed**: Channel subscription management (`POST /v1/channels/:id/subscribers`, `DELETE /v1/channels/:id/subscribers`, `GET /v1/channels/:id/subscribers/me`, `GET /v1/me/subscriptions`) with self-subscription prevention (`CANNOT_SUBSCRIBE_TO_SELF`), atomic subscriber counter updates, and O(1) Redis set caching (`taitube:user:{id}:subscriptions`). Authenticated curated video feed (`GET /v1/feed/subscriptions`) providing keyset-paginated public `READY` videos from subscribed creators.
-- **Dead Letter Queue and Reprocessing**: Permanent failures route to a dedicated DLQ queue with complete error classification and administrative retry capabilities.
-- **Comprehensive Observability**: Pre-configured OpenTelemetry tracing across all API calls and worker jobs, Prometheus RED metrics, Grafana dashboards, Loki log aggregation, and Alertmanager rules.
+- **Local-first**: runs offline; local development uses MinIO, Redis and PostgreSQL.
+- **Dual runtime**: worker code and packages run under Node.js 24 and Bun 1.4, and the specs pass under both
+  `vitest` and `bun test`.
+- **Multipart uploads**: parts between `S3_PART_SIZE_MIN_BYTES` and `S3_PART_SIZE_MAX_BYTES` (8 MiB to 64 MiB
+  by default), uploaded in parallel, resumable and abortable.
+- **HLS ladder**: 1080p, 720p and 480p renditions with the same keyframe cadence, so players can switch cleanly.
+- **Progress events**: SSE over Redis Pub/Sub with per-rendition percentage, ETA and state, and a snapshot on
+  reconnect.
+- **Authorization**: CASL rules over the roles `GUEST`, `USER`, `CREATOR`, `MODERATOR` and `ADMIN` plus
+  ownership predicates, enforced in domain services through `AuthorizationPort`; a refusal is an RFC 9457
+  Problem Details response.
+- **State machine**: PostgreSQL compare-and-set transitions and worker fencing tokens.
+- **Public feed**: `GET /v1/feed` sorted by newest, views or trending, filtered by category, with Redis
+  caching, Singleflight coalescing and ETag/304 responses.
+- **Categories**: `GET /v1/categories` and `POST/PATCH/DELETE /v1/admin/categories`, cached in process (60s
+  TTL) and in Redis, invalidated over Redis Pub/Sub, with ETag/304 responses.
+- **Reactions**: `PUT /v1/videos/:id/reactions` (LIKE/DISLIKE/NONE) and `GET /v1/videos/:id/reactions/me`,
+  with counter columns (`likesCount`, `dislikesCount`) cached by `RedisReactionCacheAdapter` and repaired by
+  a scheduled reconciler.
+- **Subscriptions**: `POST/DELETE /v1/channels/:id/subscribers`, `GET /v1/channels/:id/subscribers/me` and
+  `GET /v1/me/subscriptions`, with self-subscription refused (`CANNOT_SUBSCRIBE_TO_SELF`);
+  `GET /v1/feed/subscriptions` is a keyset-paginated feed of `READY` videos from subscribed channels.
+- **Dead letter queue**: permanent failures go to a DLQ that an admin can retry from.
+- **Observability**: OpenTelemetry traces for API calls and worker jobs, Prometheus metrics, Grafana
+  dashboards and Alertmanager rules; the apps write JSON logs to stdout.
 
 ---
 
@@ -140,7 +168,7 @@ taitube-platform/
 - **Docker**: Docker Engine with Docker Compose v2 (`docker compose version`)
 - **FFmpeg**: must include the `drawtext` filter (`ffmpeg -filters | grep drawtext`)
 
-`make doctor` checks all of the above except the `drawtext` filter.
+`make doctor` checks all of the above except Bun (`make check-bun`) and the `drawtext` filter.
 
 ### FFmpeg needs drawtext
 `pnpm gen-video` burns a timecode into most fixtures, so an FFmpeg built without
@@ -205,9 +233,14 @@ make down
 Start PostgreSQL, Redis, and MinIO storage containers:
 
 ```bash
+cp .env.example .env
 make up
 make check-redis
+pnpm db:migrate && pnpm db:seed
 ```
+
+`make up` starts the infrastructure only; `pnpm db:migrate` and `pnpm db:seed` read `.env` and create the
+schema and the dev user. `make up-all` runs the whole stack in containers instead, migrations included.
 
 ### 2. Install Dependencies and Run Verifications
 
@@ -258,7 +291,7 @@ pnpm dev-token serve --port 3001
 
 ### 1. Start API and Workers
 
-In separate terminals:
+Both `dev` scripts run the built `dist/`, so run `pnpm build` first. Then, in separate terminals:
 
 ```bash
 # Terminal 1: Fastify API
@@ -267,9 +300,10 @@ pnpm --filter @vp/api dev
 # Terminal 2: Probe Worker
 WORKER_STAGE=probe pnpm --filter @vp/worker dev
 
-# Terminal 3: Transcode Workers (run one or more renditions)
-WORKER_STAGE=transcode-720p pnpm --filter @vp/worker dev
+# Terminal 3: Transcode Workers (one per rendition)
 WORKER_STAGE=transcode-1080p pnpm --filter @vp/worker dev
+WORKER_STAGE=transcode-720p pnpm --filter @vp/worker dev
+WORKER_STAGE=transcode-480p pnpm --filter @vp/worker dev
 
 # Terminal 4: Thumbnail and Package Workers
 WORKER_STAGE=thumbnail pnpm --filter @vp/worker dev
@@ -277,6 +311,9 @@ WORKER_STAGE=package pnpm --filter @vp/worker dev
 
 # Terminal 5: Notification Worker
 WORKER_STAGE=notify pnpm --filter @vp/worker dev
+
+# Terminal 6: Housekeeping Worker
+WORKER_STAGE=housekeeping pnpm --filter @vp/worker dev
 ```
 
 ### 2. Upload a Video
@@ -330,7 +367,7 @@ make obs-check
   - **API Metrics**: RED metrics (Rate, Errors, Duration), active SSE connections, and HTTP request rates.
   - **Storage and Cost**: S3/R2 Class A and Class B operations, output volume, and operation latency.
 - **Prometheus**: `http://localhost:9090`
-- **Tempo Tracing**: `http://localhost:3200` (OTLP receiver on ports `4317` and `4318`)
+- **Tempo Tracing**: `http://localhost:3200` (OTLP gRPC on `4317`; the OpenTelemetry Collector takes OTLP HTTP on `4318`)
 - **Loki Logs**: `http://localhost:3100`
 - **Alertmanager**: `http://localhost:9093`
 
@@ -350,7 +387,7 @@ pnpm compose-autoscaler --dry-run
 pnpm compose-autoscaler --interval 10
 ```
 
-The autoscaler monitors BullMQ backlog metrics from Prometheus, computes target worker replica counts with active-job protection, and dynamically adjusts container instances using `docker compose scale`.
+The autoscaler polls the API's `/metrics` endpoint (`bullmq_queue_jobs`, port `9464` by default), computes a target replica count per stage that never drops below the active jobs, and applies it with `docker compose up -d --scale <service>=N --no-recreate`.
 
 ### Kubernetes Autoscaling with KEDA
 
@@ -385,36 +422,42 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | Command | Description |
 |---|---|
 | `make doctor` | Run environment pre-flight checks (Node, pnpm, Docker, FFmpeg) |
-| `make setup` | One-command fast bootstrap: creates .env, starts services, runs migrations |
-| `make dev` | Start infrastructure and run API/workers in dev mode |
+| `make setup` | Bootstrap: runs `make doctor`, creates `.env`, installs dependencies, runs `make up-all` |
+| `make dev` | Alias for `make setup` |
 | `make up` | Start local Postgres, Redis, and MinIO containers |
 | `make up-all` | Start full stack (infrastructure, migrations, API, and all worker stages) |
-| `make down` | Stop running containers instantly |
+| `make down` | Stop the Compose stack and delete its volumes |
 | `make prune` | Safe local pruning utility to reclaim Docker disk space |
 | `make obs-up` | Start Prometheus, Grafana, Tempo, Loki, and Alertmanager stack |
 | `make obs-down` | Stop observability stack |
 | `make obs-check` | Verify Prometheus scraping targets and Grafana data sources |
 | `make smoke` | Run end-to-end ingestion and playback smoke tests |
 | `make smoke-fast` | Fast-path local smoke test against existing running containers |
-| `make smoke-offline` | Run smoke tests with simulated network isolation |
+| `make smoke-offline` | Run the stack with the offline Compose overlay, assert zero internet egress, then run the smoke test |
 | `make e2e` | Run the Phase 2 acceptance suite (`E2E_REDUCED=true` for the smaller CI set) |
 | `make k3d-up` | Create local k3d Kubernetes cluster with in-cluster dependencies |
 | `make k3d-deploy` | Deploy API and worker stages to Kubernetes via Kustomize |
 | `make k3d-down` | Tear down local k3d Kubernetes cluster |
 | `make nuke` | Destroy all containers, networks, and persistent data volumes |
+| `make help` | List every Makefile target (load, chaos, psql, logs and more) |
 | `pnpm dev` | Run monorepo development services via Turborepo |
-| `pnpm build` | Build all workspace packages and applications |
+| `pnpm build` | Run `pnpm boundaries`, then build all workspace packages and applications |
 | `pnpm typecheck` | Run TypeScript compiler checks across all workspaces |
 | `pnpm lint` | Run Biome linter across the repository |
 | `pnpm boundaries` | Check package tiers, dependency layers, and `CLAUDE.md` symlinks (runs first inside `build` and `typecheck`) |
 | `pnpm sync:claude` | Create the `CLAUDE.md` symlink beside every `AGENTS.md` |
 | `pnpm format` | Format repository code using Biome |
-| `pnpm test` | Run Vitest test suites across all packages |
-| `pnpm test:bun` | Run worker and shared package test suites using Bun test runner |
+| `pnpm test` | Run every Vitest project, the architecture suite included |
+| `pnpm test:unit` | Run the Vitest projects without the architecture suite |
+| `pnpm test:architecture` | Run the architecture invariant suite in `tests/architecture/` |
+| `pnpm test:bun` | Run the worker and package suites under `bun test` |
+| `pnpm knip` | Report unused files, exports and dependencies |
+| `pnpm db:migrate` | Apply database migrations (`apps/api/src/migrate.ts`) |
+| `pnpm db:seed` | Seed the local database (`apps/api/src/seed.ts`; refuses under `production`) |
 | `pnpm gen-video` | Generate deterministic video test fixtures |
-| `pnpm dev-token` | Mint local Ed25519 JWTs and run mock JWKS server |
-| `pnpm upload-client` | Run reference multipart upload CLI |
-| `pnpm compose-autoscaler` | Run Docker Compose queue autoscaler daemon |
+| `pnpm dev-token` | Mint, verify and serve local EdDSA dev JWTs and their JWKS |
+| `pnpm upload-client` | Run the reference resumable upload CLI |
+| `pnpm compose-autoscaler` | Run the Docker Compose queue-depth autoscaler |
 | `pnpm sync:tickets` | Synchronize local markdown tickets with GitHub Issues |
 
 ---
@@ -423,11 +466,11 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 
 1. **Local-First Guarantees**: All core services function without internet access or third-party cloud accounts.
 2. **Dependency Inversion (Hexagonal Architecture)**: Domain business logic in `packages/server/core` depends only on abstract port interfaces. Concrete adapters (`postgres`, `redis`, `s3`, `bullmq`) are isolated in `packages/server/adapters` and wired at composition roots (`apps/api`, `apps/worker`).
-3. **Modular Repository Discipline**: Every repository implementation resides in its own dedicated file under `packages/server/adapters/*/repositories/` with strict modularity (<= 250 lines target).
-4. **Single-Source Contracts**: Job payloads are defined in `@vp/job-contracts`, storage paths in `@vp/storage`, error codes in `@vp/errors`, and environment configuration in `@vp/config`.
+3. **Modular Repository Discipline**: Every repository implementation resides in its own dedicated file under `packages/server/adapters/{postgres,in-memory}/repositories/` with strict modularity (<= 250 lines target).
+4. **Single-Source Contracts**: Job payloads are defined in `@vp/job-contracts`, storage paths in `@vp/storage`, error codes in `@vp/errors`, and the environment schema in `@vp/env-schema` (read once by `loadEnv()` in `@vp/config`).
 5. **State Durability**: All entity mutations execute through compare-and-set transactions that record audit events in `video_events` with fencing tokens.
 6. **Dual-Runtime Compatibility**: All worker logic and shared libraries run cleanly under both Node.js and Bun without runtime-specific proprietary APIs.
-7. **Package Runtime Tiers**: A package's directory under `packages/universal|server|client` declares where its code may run, and `vp.layer` declares which way its dependencies may point. `pnpm boundaries` fails the build on a violation. See [packages/AGENTS.md](packages/AGENTS.md).
+7. **Package Runtime Tiers**: A package's directory under `packages/{universal,server,client}` declares where its code may run, and `vp.layer` declares which way its dependencies may point. `pnpm boundaries` fails the build on a violation. See [packages/AGENTS.md](packages/AGENTS.md).
 8. **Optimal Execution & Zero-Waste Efficiency**: All developer setups, Docker builds, CI workflows, test suites, and scripts are strictly optimized for speed and caching (Buildx GHA layer caching, sub-second Biome linting, incremental TypeScript builds, fast-polling health checks, and ultra-short test fixtures). Sluggish developer feedback loops, un-cached container rebuilds, and slow test runs are treated as defects.
 
 ---
@@ -443,7 +486,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 - [Error Handling](docs/standards/error-handling.md): `Result` at the domain seam - rules return, services compose, the edge decides (SDD ADR-24).
 - [Domain Glossary & Model](CONTEXT.md): Ubiquitous domain language, entities, and seam discipline.
 - [Package Tiers & Dependency Layers](packages/AGENTS.md): Where each package may run, which way dependencies point, and how both are enforced.
-- [System Design Document (SDD)](docs/SDD.md): Deep dives, database schemas, and §4 — the Architecture Decision Records. There is no `docs/adr/`; every ADR lives in SDD §4.
+- [System Design Document (SDD)](docs/SDD.md): Deep dives, database schemas, and §4, the Architecture Decision Records (every ADR lives there).
 - [Product Requirements Document (PRD)](docs/PRD.md): Product goals, functional requirements, and service-level objectives.
 - [Local-First Architecture Guide](docs/LOCAL_FIRST.md): Guide for running and verifying offline operations.
 - [Backlog & Work Breakdown](docs/tickets/README.md): Roadmap of vertical tracer-bullet work items and dependency graphs.

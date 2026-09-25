@@ -1,18 +1,12 @@
 import { type ViteUserConfig, defineConfig } from 'vitest/config';
 
-/**
- * Standard test fixtures based on SDD domain model and .env.example contracts.
- */
+/** The video and the dev user `seedDatabase` in `@vp/db` writes, and a W3C trace context. */
 export const FIXTURES = {
-  VIDEO_ID: '00000000-0000-7000-8000-000000000001',
-  USER_ID: '00000000-0000-7000-8000-000000000002',
+  VIDEO_ID: '018f0000-0000-7000-8000-000000000001',
+  DEV_USER_ID: '00000000-0000-7000-8000-000000000001',
   TRACEPARENT: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
-  SAMPLE_MP4_KEY: '00000000-0000-7000-8000-000000000001/source.mp4',
 } as const;
 
-/**
- * Helper to define package-level Vitest configs with consistent defaults.
- */
 export function definePackageTestConfig(
   overrides: ViteUserConfig = {}
 ): ReturnType<typeof defineConfig> {
@@ -31,9 +25,6 @@ export function definePackageTestConfig(
   });
 }
 
-/**
- * Mock BullMQ job builder for testing worker stages.
- */
 export interface MockJob<T = Record<string, unknown>> {
   id: string;
   name: string;
@@ -59,9 +50,6 @@ export function createMockJob<T extends Record<string, unknown>>(
   };
 }
 
-/**
- * Helper to run a test with temporary environment variable overrides.
- */
 export async function withEnv<R>(
   envOverrides: Record<string, string | undefined>,
   fn: () => Promise<R> | R

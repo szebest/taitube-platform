@@ -11,6 +11,17 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "!**/*.md"]
     },
+    "//#typecheck:repo": {
+      "inputs": [
+        "tsconfig.repo.json",
+        "packages/universal/tsconfig/base.json",
+        "scripts/**/*.ts",
+        "tests/**/*.ts",
+        "apps/*/src/**/*.ts",
+        "packages/**/*.ts",
+        "!**/dist/**"
+      ]
+    },
     "test": {
       "dependsOn": ["build"],
       "inputs": ["$TURBO_DEFAULT$", "!**/*.md"]

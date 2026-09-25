@@ -7,13 +7,14 @@ CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 DEV_TOKEN := pnpm --silent dev-token mint --raw
 
-.PHONY: help up down logs psql redis-cli mc check-redis nuke test check-bun test-bun lint format typecheck clean smoke smoke-infra smoke-offline e2e chaos-kill chaos-readiness obs-up obs-down obs-check k3d-up k3d-down k3d-deploy k8s-local-secrets k8s-validate load-s1 load-s2 load-s3 load-smoke
+.PHONY: help up doctor setup dev up-all build-images down logs prune psql redis-cli mc check-redis nuke test check-bun test-bun lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-up: ## Start local infrastructure (Postgres, Redis, MinIO, minio-init)
-	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --wait
+up: ## Start local infrastructure (Postgres, Redis, MinIO and its buckets); no migrate, API or workers
+	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --wait postgres redis minio
+	docker compose -f $(COMPOSE_FILE) run --rm minio-init
 
 doctor: ## Check developer prerequisites
 	@echo "Checking prerequisites..."
@@ -181,11 +182,16 @@ load-s2: ## Run S2 Large File load test (requires Compose stack)
 load-s3: ## Run S3 Backlog Burst load test (requires Compose stack)
 	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run tests/load/s3-backlog-burst.js
 
-load-smoke: ## Run reduced S1 Load Smoke Test
-	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run --vus 60 --duration 2m tests/load/s1-upload-storm.js
+load-smoke: ## Run the nightly load smoke (S1, 5 VUs for 1 min) against a stack started with UPLOAD_RATE_LIMIT_MAX=100000
+	@API="http://localhost:3000" TOKEN=$$($(DEV_TOKEN)) k6 run --vus 5 --duration 1m tests/load/s1-upload-storm.js
 
 chaos-readiness: ## Stop MinIO and cut a worker's Redis via toxiproxy; /readyz must answer 503, then 200
 	bash scripts/chaos-readiness.sh
+
+hls-sample: ## Write the HLS sample tools/hls-test-page plays (s15 cut into 2 s segments)
+	@test -f tests/fixtures/s15.mp4 || pnpm gen-video --only s15
+	@mkdir -p tools/hls-test-page/sample
+	ffmpeg -y -loglevel error -i tests/fixtures/s15.mp4 -c copy -f hls -hls_time 2 -hls_playlist_type vod tools/hls-test-page/sample/index.m3u8
 
 toxiproxy-up: ## Start toxiproxy service fronting MinIO for chaos testing
 	docker compose -f $(COMPOSE_FILE) --profile chaos up -d toxiproxy

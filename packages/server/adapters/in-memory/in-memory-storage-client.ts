@@ -195,8 +195,12 @@ export class InMemoryStorageClient extends StorageClient {
     return ok(`http://localhost:9000/${params.bucket}/${params.key}?mock-presigned-get=true`);
   }
 
-  async close(): Promise<Result<void, StorageUnavailable>> {
+  clear(): void {
     this.storage.clear();
+  }
+
+  async close(): Promise<Result<void, StorageUnavailable>> {
+    this.clear();
     return ok();
   }
 }

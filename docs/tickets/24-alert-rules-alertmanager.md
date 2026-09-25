@@ -7,7 +7,7 @@
 | Size | S–M |
 | Blocked by | 22 — Metrics catalogue + dashboards |
 | Blocks | 29, 33 |
-| Spec | [PRD US-13](../PRD.md#54-operations) · [SDD §13.5 Alert rules table](../SDD.md#135-dashboards--alerts-committed-under-observability) · [SDD §9.6 rule 5 (systemic failure runbook)](../SDD.md#96-failure-handling-retries-dlq-poison-pills) |
+| Spec | [PRD US-13](../PRD.md#54-operations) · [SDD §13.5 Alert rules table](../SDD.md#135-dashboards--alerts-committed-under-infraobservability) · [SDD §9.6 rule 5 (systemic failure runbook)](../SDD.md#96-failure-handling-retries-dlq-poison-pills) |
 
 **Status:** done
 

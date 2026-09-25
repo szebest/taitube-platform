@@ -1,3 +1,4 @@
+import type { TraceSamplerName } from '@vp/observability';
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
 import { z } from 'zod';
 import { heldLocalCredentials } from './local-credentials';
@@ -132,10 +133,19 @@ const PipelineEnvSchema = z.object({
   WORKER_HEARTBEAT_PATH: z.string().default('/tmp/vp/heartbeat'),
 });
 
+const TRACE_SAMPLERS = [
+  'always_on',
+  'always_off',
+  'traceidratio',
+  'parentbased_always_on',
+  'parentbased_always_off',
+  'parentbased_traceidratio',
+] as const satisfies readonly TraceSamplerName[];
+
 const OtelEnvSchema = z.object({
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default('http://localhost:4318'),
-  OTEL_TRACES_SAMPLER: z.string().default('parentbased_always_on'),
-  OTEL_TRACES_SAMPLER_ARG: z.coerce.number().default(1.0),
+  OTEL_TRACES_SAMPLER: z.enum(TRACE_SAMPLERS).default('parentbased_always_on'),
+  OTEL_TRACES_SAMPLER_ARG: z.coerce.number().min(0).max(1).default(1.0),
   OTEL_RESOURCE_ATTRIBUTES: z.string().default('deployment.environment=local'),
 });
 

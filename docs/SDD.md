@@ -298,7 +298,7 @@ Every record lists the candidates **ranked** (1 = chosen), the reason the winner
 | Rank | Option | Fit | Velocity | Cost | Career | Notes |
 |---|---|---|---|---|---|---|
 | **1** | **TypeScript** — Node 24 LTS (API) + Bun 1.4 (workers) | 4 | 5 | 5 | 4 | Best queue library for Redis (BullMQ), shared types with the TS frontend, huge ecosystem; workload is I/O-bound orchestration, FFmpeg does the CPU work. |
-| 2 | Go | 5 | 3 | 5 | 5 | Best raw fit for worker concurrency and small images; but no BullMQ-class library (asynq/river are good, not equal), slower solo velocity, no type sharing with frontend. **Kept as the Phase-4+ worker rewrite path** (`apps/worker-go`). |
+| 2 | Go | 5 | 3 | 5 | 5 | Best raw fit for worker concurrency and small images; but no BullMQ-class library (asynq/river are good, not equal), slower solo velocity, no type sharing with frontend. **Kept as the Phase-4+ worker rewrite path** (a Go worker app beside the TypeScript one; not built). |
 | 3 | .NET 8/9 (C#) | 4 | 3 | 4 | 4 | Excellent async I/O, MassTransit/Hangfire mature; heavier images, less natural for R2/MinIO tooling, weaker fit with the frontend stack. |
 | 4 | Java / Spring Boot | 4 | 2 | 3 | 4 | Enterprise-standard but slowest cold start (kills scale-to-zero economics), heaviest memory footprint on 4 GB nodes, slowest solo iteration. |
 
@@ -459,7 +459,7 @@ The brief asked explicitly: transient task queue vs event-streaming log vs hybri
 | Rank | Option | Reason |
 |---|---|---|
 | **1** | **KEDA + Prometheus scaler** on `bullmq_queue_jobs{state=~"waiting|active|prioritized"}` | Scales on *waiting + active* so a busy worker is never counted as spare capacity; single metric source for dashboards, alerts and scaling; supports `activationThreshold` for scale-to-zero. |
-| 2 | KEDA + Redis list scaler (`listName: bull:transcode-1080p:wait`) | Zero dependency on Prometheus; but only sees the plain `wait` list — prioritized jobs live in a ZSET (`:prioritized`) and are invisible, and it ignores `active`. Fine as a fallback. |
+| 2 | KEDA + Redis list scaler (`listName: bull:transcode-1080p:wait`) | Zero dependency on Prometheus; but it reads a list length only, and a job with a priority lives in a ZSET (`:prioritized`), which every pipeline job does, so it would never wake a stage; it also ignores `active`. Not deployed. |
 | 3 | KEDA `ScaledJob` (one K8s Job per BullMQ job) | KEDA's own recommendation for long-running work, but it conflicts with BullMQ's pull model (the Job must still *pull* a job; if two Jobs start and one queue item exists, one Job idles). Kept as an experiment note. |
 | 4 | Compose-level scaler script (`docker compose up --scale`) | Used in **Phase 3-lite** for the non-Kubernetes path; demonstrates the loop (poll depth → set replicas) without a cluster. |
 | 5 | CPU-based HPA | Lagging indicator; workers are pegged at 100 % CPU by design while transcoding — CPU says nothing about backlog. |
@@ -560,7 +560,7 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 | Rank | Option | Status | Reason |
 |---|---|---|---|
 | **1** | **Single Monorepo (`video-pipeline`) with strict pnpm workspace boundaries (`apps/*`, `packages/<tier>/*`) + single-sourced Zod contracts (`@vp/api-contracts`)** | **Chosen** | Direct type-safety without build-time sync rituals or schema drift; `apps/web` consumes `@vp/api-client` with inferred route types; zero SDK leaks into frontend; backend route definitions share the identical schema; permissions (`@vp/permissions`, `universal` tier) shared between backend Fastify hooks and frontend UI guard components. |
-| 2 | Separate Git repositories (backend repo vs frontend repo) with published NPM packages | Rejected | High ceremony, slow solo iteration, version mismatch risk, tedious local package linking (`pnpm link`) during rapid API feature evolution. |
+| 2 | Separate Git repositories (backend repo vs frontend repo) with published NPM packages | Rejected | High ceremony, slow solo iteration, version mismatch risk, tedious local package linking during rapid API feature evolution. |
 | 3 | Backend-only monorepo with tRPC for client-server RPC | Rejected | Couples API transport to tRPC runtime; prevents clean REST/OpenAPI standard documentation for public consumers, third-party integrations, and standard load testing tools (k6). |
 
 **Consequences:**
@@ -1542,18 +1542,18 @@ flowchart LR
 | Area | Control |
 |---|---|
 | Authentication | A bearer token is verified by the `TokenVerifier` port (`@vp/core/ports`), and `AUTH_MODE` picks the adapter once, in `toAppConfig`. `jwks` verifies against `AUTH_JWKS_URL`: `iss` must equal `AUTH_ISSUER`, `aud` must name `AUTH_AUDIENCE`, `exp` is required, `alg` must be one of `AUTH_ALGORITHMS` and the one the JWK declares (never `none`), a kid-less token is refused while the key set holds more than one key, ES* signatures are read as JWS `r||s`, and an unknown `kid` refetches the key set at most once per 30 s so a rotated key is accepted at once. `dev` verifies `pnpm dev-token` tokens against the key derived from the committed seed and serves that key at `/.well-known/jwks.json`; production refuses `AUTH_MODE=dev` at `loadEnv()`, so neither the route nor the seed key exist there (`auth-hardening.test.ts`). `sub` becomes `users.id`, provisioned on first sight. An admin is a token whose verified role claim is `admin`; the static `x-admin-token` (constant-time compare) exists in dev mode only, acts as the provisioned `AUTH_DEV_USER_ID`, and production refuses any `ADMIN_TOKEN`. |
-| Authorisation | Declarative RBAC & ABAC permission engine powered by pure functional `@casl/ability` in `packages/universal/permissions` (`@vp/permissions`), decoupled from backend repository/port internals for full backend (`apps/api`) and frontend (`apps/web`) sharing without framework bloat. Strictly typed `Role = 'GUEST' | 'USER' | 'CREATOR' | 'MODERATOR' | 'ADMIN'` with boundary-only `parseRole` sanitization. Modular rule sets composed via global `getUserPermissions(user)` builder. Formalized through clean adapters: Postgres Scopes adapter in `packages/server/adapters/postgres/scopes/` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`, `traits`) for row-level database security with CASL `rulesToAST` compilation; `FastifyAuthorizationAdapter` for HTTP preHandlers and memoized `request.ability`; `ProblemDetailsErrorAdapter` for standardized RFC 9457 (401 UNAUTHORIZED vs 403 FORBIDDEN with structured error context); and `ReactPermissionsAdapter` (`useCan`, `PermissionsProvider`, `<Can />` headless slot) for reactive frontend gating. Consumed strictly via library-agnostic `canX({ user, resource })` action helpers and `assertCan(...)` guards; manual hand-checking of roles, user IDs, or ownership in routes/services/repositories is strictly forbidden. Video queries scoped by `owner_id` unless `visibility ∈ {public, unlisted}` for read. Uploads/renditions reachable only via owning video. |
-| Upload safety | Presigned URLs TTL 15 min; `Content-Type` and `Content-Length` are signed into the single-PUT URL; multipart verified via `HeadObject` after completion; server deletes and `REJECT`s on mismatch. Content-type allowlist (`video/mp4, video/quicktime, video/webm, video/x-matroska`). Per-user quota (`MAX_UPLOAD_BYTES`, `MAX_INFLIGHT_PER_USER`). |
-| Storage | Buckets private; CDN reads `public` via R2 custom domain (no public bucket URL exposed). Least-privilege access keys: API key may `Put/Get/Head/Multipart*` on `raw` only; worker key may `Get` on `raw` and `Put/Delete` on `public`. |
-| Command injection | FFmpeg invoked with argv arrays via `spawn` (never `exec`/shell); object keys are derived from UUIDs, never from user filenames (original filename stored as metadata only). |
+| Authorisation | CASL rules in `@vp/permissions` (`packages/universal/permissions`), shared by `apps/api` and `apps/web`. `Role` is `'GUEST' \| 'USER' \| 'CREATOR' \| 'MODERATOR' \| 'ADMIN'`; `parseRole` turns an untrusted claim into one at the boundary (anything unknown is `GUEST`), and `getUserPermissions(user)` builds the ability from the per-subject rule sets. The API decides access in its domain services only, through the `AuthorizationPort` (`@vp/core/ports`, implemented by `CaslAuthorizationAdapter`) with a `canX({ user, ... })` helper or `assertCan(...)`; routes read `request.user` or `requireAuth(request)` and never check a role. List queries apply the same rules in SQL: `packages/server/adapters/postgres/scopes/` compiles them with CASL `rulesToAST` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`). A failure is an RFC 9457 problem (401 `UNAUTHORIZED`, 403 `FORBIDDEN`) through `sendResult`. In `apps/web`, `PermissionsProvider`, `useCan` and `<Can />` gate the UI from the same rules. A video is readable when it is `public` or `unlisted`, by its owner, or by a `MODERATOR`; only its owner may update or delete it. |
+| Upload safety | Presigned URLs live `S3_PRESIGN_TTL_SEC` (900 s); `Content-Type` and `Content-Length` are signed into the single-PUT URL. On complete, both strategies `HeadObject` the source and compare its size to the declared one; on a mismatch the server deletes the object and moves the video to `REJECTED`. Content-type allowlist `ALLOWED_CONTENT_TYPES` in `@vp/validation` (`video/mp4`, `video/webm`, `video/quicktime`, `video/x-matroska`). Per-user limits `MAX_UPLOAD_BYTES` and `MAX_INFLIGHT_PER_USER`. |
+| Storage | Buckets private; the CDN reads `public` through the R2 custom domain (`infra/terraform/main.tf`). Terraform issues two scoped R2 tokens: the API's reads and writes `raw` only; the worker's reads and writes `raw` and `public`. The worker writes to `raw` only to delete: housekeeping (`expire-raw`, `purge-deleted`) removes sources there and `reconcile-uploads` aborts stale multipart uploads, and R2 grants a delete only with Item Write (`cloud-r2-tokens.test.ts` holds both tokens). |
+| Command injection | FFmpeg and ffprobe run through `spawn` with argv arrays (`@vp/ffmpeg`), never a shell. Object keys come from `@vp/storage` `keys.ts` and are built from the video UUID; the only part taken from the uploaded filename is the extension of `raw/<videoId>/source.<ext>`, and the filename is otherwise only the default title. |
 | Webhooks | Not built: no feature sends one, so `WEBHOOK_SIGNING_SECRET` and `WEBHOOK_URL_ALLOWLIST` are not declared. When outbound webhooks land they sign with HMAC-SHA256 (`X-Signature: t=…,v1=…`, 5-min replay window), go only to `https://` URLs behind an SSRF guard, and bring their keys back. |
-| Rate limiting | `@fastify/rate-limit` keyed by user (fallback IP): 30/min uploads, 300/min reads, 5/min reprocess, with admins on the reprocess `allowList`. The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names, and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
-| Transport | TLS terminated by Cloudflare (Tunnel/Proxy) in cloud; `HSTS`; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. |
+| Rate limiting | `@fastify/rate-limit`, registered with `global: false`, limits two routes, keyed by user (fallback IP): `POST /v1/uploads` at `UPLOAD_RATE_LIMIT_MAX` per minute (30) and reprocess at 5 per minute, with admins on the reprocess `allowList`. Reads are not rate-limited. The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names, and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
+| Transport | TLS terminated by Cloudflare (`cloudflared` tunnel) in cloud; `@fastify/helmet` sets its default headers, HSTS included, with CSP off; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. |
 | Secrets | Env only; `.env` git-ignored; no secrets in images. The cloud overlay holds no credential at all: an `ExternalSecret` (External Secrets Operator, `ClusterSecretStore` `vp-secret-store`) materialises `vp-secrets`, and the overlay deletes the base's local Secret. **No secret-shaped key has a default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`) are required under `NODE_ENV=production`, and every secret and every `*_URL` key is refused there if it holds a credential this repo ships for local use (`vp`, `minioadmin`, `admin`, `change-me*`, bare or as URL userinfo). No schema default and no production literal carries URL userinfo. `production-secrets.test.ts` renders the base and the cloud overlay with kustomize and holds both; `no-defaulted-secrets.test.ts` holds the schema. |
-| Containers | Non-root user, read-only root FS, `tmpfs`/emptyDir for `/tmp/vp`, `resources.limits` on every pod, distroless-ish base for API (`node:24-slim`), minimal ffmpeg layer for workers. |
-| Redis | `requirepass`, not exposed outside the network/cluster, `noeviction`. |
-| Supply chain | `pnpm audit` + Dependabot/Renovate; lockfile frozen in CI; images built in CI and pinned by digest in manifests; Trivy scan on images. |
-| Privacy | No PII beyond email; logs redact `Authorization`, presigned URLs (query string stripped). |
+| Containers | Non-root user (uid 10001), `runAsNonRoot` and `readOnlyRootFilesystem` in the k8s base, `/tmp/vp` on an `emptyDir` (8 Gi for transcode) or compose `tmpfs`, `resources.limits` on every pod. The API runs on `node:24-slim`; the worker on `oven/bun:1.4-slim` (default) or `node:24-slim`, with Debian's `ffmpeg` package. Both images remove npm and corepack and start under `tini`. |
+| Redis | `requirepass` everywhere; a cluster-internal Service in k8s (compose publishes 6379 to the host for local tools); `noeviction`, set in compose and the k3d chart and Redis's own default in the cloud overlay. |
+| Supply chain | Renovate (`renovate.json`); `pnpm install --frozen-lockfile` in CI; images built in CI and scanned with Trivy (`images.yml`); MinIO images pinned by digest (`minio-images-pinned.test.ts`). The app images are referenced by tag (`latest`), not digest, in the k8s manifests. |
+| Privacy | No PII beyond email. `@vp/logger` redacts the `authorization`, `cookie` and `x-admin-token` headers wherever a headers object is logged, and the access log records the route template, never the URL. |
 
 ---
 
@@ -1643,7 +1643,7 @@ services:
 volumes: { pgdata: {}, redisdata: {}, miniodata: {} }
 ```
 
-Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`docker compose up postgres redis minio minio-init`); `docker compose --profile observability up` adds the monitoring stack; `pnpm compose:scale transcode-1080p 3` is the Phase-3-lite scaler wrapper.
+Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`docker compose up postgres redis minio minio-init`); `docker compose --profile observability up` adds the monitoring stack; `pnpm compose-autoscaler` is the Phase-3-lite scaler (§13.2).
 
 **Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
 
@@ -1759,9 +1759,9 @@ Exposed by `packages/server/observability` (`prom-client` registry; API on `:946
 | `http_requests_in_flight` | gauge | — | API | load shedding |
 | `sse_connections` | gauge | `channel_type` | API | fan-out capacity |
 | `sse_events_published_total` | counter | `event` | workers | |
-| `bullmq_queue_jobs` | gauge | `queue, state ∈ {waiting, prioritized, active, delayed, failed, completed, waiting-children}` | API (`queue-metrics` poller every 5 s via `queue.getJobCounts()`) | **KEDA scaling**, dashboards |
+| `bullmq_queue_jobs` | gauge | `queue, state ∈ {waiting, prioritized, active, completed, failed, delayed}` (`QUEUE_JOB_STATES`) | API (`services/queue-poller.ts`, every 5 s via `getJobCounts()`) | **KEDA scaling**, dashboards |
 | `bullmq_queue_oldest_waiting_age_seconds` | gauge | `queue` | API poller | starvation alert |
-| `jobs_processed_total` | counter | `queue, result ∈ {completed, failed, dlq, stalled}` | workers | failure rate |
+| `jobs_processed_total` | counter | `queue, result ∈ {completed, failed, stalled}` | workers | failure rate; a parked job is `dlq_entries_total` |
 | `job_duration_seconds` | histogram | `queue` | workers | p95 job latency |
 | `job_wait_seconds` | histogram | `queue` | workers (`processedOn - timestamp`) | queue lag |
 | `transcode_realtime_factor` | histogram | `rendition, preset` | transcode | video-seconds per wall-second (>1 = faster than realtime) |
@@ -1782,40 +1782,29 @@ Exposed by `packages/server/observability` (`prom-client` registry; API on `:946
 ```yaml
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
-metadata: { name: worker-transcode-1080p }
+metadata: { name: vp-worker-transcode-1080p-scaledobject, namespace: video-pipeline }
 spec:
-  scaleTargetRef: { name: worker-transcode-1080p }
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: vp-worker-transcode-1080p }
   minReplicaCount: 0
-  maxReplicaCount: 6                 # overlay: 1 in cloud, 6 locally
+  maxReplicaCount: 6                 # the cloud overlay patches 1080p and 720p to 1, 480p and probe to 2
   pollingInterval: 10
   cooldownPeriod: 300                # wait 5 min of empty queue before scaling to zero
   advanced:
     horizontalPodAutoscalerConfig:
       behavior:
-        scaleUp:   { stabilizationWindowSeconds: 0,   policies: [{ type: Pods, value: 2, periodSeconds: 30 }] }
-        scaleDown: { stabilizationWindowSeconds: 300, policies: [{ type: Pods, value: 1, periodSeconds: 60 }] }
+        scaleUp:   { stabilizationWindowSeconds: 0,   policies: [{ type: Pods, value: 4, periodSeconds: 30 }, { type: Percent, value: 100, periodSeconds: 30 }] }
+        scaleDown: { stabilizationWindowSeconds: 300, policies: [{ type: Pods, value: 1, periodSeconds: 60 }, { type: Percent, value: 10, periodSeconds: 60 }] }
   triggers:
     - type: prometheus
       metadata:
-        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
         query: |
-          sum(max by (state) (bullmq_queue_jobs{queue="transcode-1080p", state=~"waiting|prioritized|active"}))
+          sum(max by (state) (bullmq_queue_jobs{queue="transcode-1080p", state=~"waiting|prioritized|active"})) or vector(0)
         threshold: "1"               # one pod per outstanding job (concurrency = 1)
         activationThreshold: "0"     # any job wakes the deployment from zero
 ```
 
-Fallback trigger (no Prometheus dependency):
-
-```yaml
-    - type: redis
-      metadata:
-        addressFromEnv: REDIS_ADDR          # host:port
-        passwordFromEnv: REDIS_PASSWORD
-        listName: "bull:transcode-1080p:wait"
-        listLength: "1"
-        activationListLength: "0"
-        databaseIndex: "0"
-```
+There is no Redis fallback trigger. KEDA's `redis` scaler reads a list length, and every pipeline job carries a priority, so it sits in the `:prioritized` ZSET and the `wait` list stays empty; the one fallback the base had, on `transcode-480p`, could never have fired. The Prometheus trigger reads `prioritized` and is the only one (`k8s-keda-autoscaling.test.ts`).
 
 Every API replica polls every queue and exports the same depth, so the query takes the `max` per state before it sums; a plain `sum` counts each job once per replica, and two replicas started two pods for one job. Why `waiting + prioritized + active` and threshold 1: every pipeline job carries a priority, and BullMQ keeps a job with one in `prioritized`, not `waiting`, so the API poller reads all three (`QUEUE_JOB_STATES` in `@vp/core/ports`). Workers never write `bullmq_queue_jobs`: a worker has no view of its queue's depth, and a gauge it set would outlive the job and hold the deployment above zero. And threshold 1: with concurrency 1 per pod, `desired = ceil(outstanding / 1)` means every queued job gets a pod and no busy pod is counted as free capacity. KEDA scales the Deployment; the HPA behaviour block prevents flapping and the long `terminationGracePeriodSeconds` plus `worker.close()` makes scale-in safe. Because the queue is *pulled*, over-provisioning during a burst is harmless — surplus pods idle and are removed after cooldown.
 
@@ -1823,36 +1812,36 @@ Every API replica polls every queue and exports the same depth, so the query tak
 
 ### 13.3 Tracing (OpenTelemetry)
 
-- `initTracing` in `@vp/observability` starts `@opentelemetry/sdk-node` with the OTLP/HTTP trace exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`) and the Node auto-instrumentations, `fs`, `dns` and `net` off. It is **preloaded**: each app's `src/instrument.ts` is the first module the process loads (`node --import ./dist/instrument.js dist/main.js`, the same flag under Bun), because the instrumentations patch only what is imported after them. The ESM hook wraps third-party modules only; this repo's own modules are excluded, since the hook cannot resolve their extensionless `export *`. The SDK exports traces only - metrics stay with Prometheus, logs with pino.
+- `initTracing` in `@vp/observability` starts `@opentelemetry/sdk-node` with the OTLP/HTTP trace exporter (`OTEL_EXPORTER_OTLP_ENDPOINT`) and the Node auto-instrumentations, `fs`, `dns` and `net` off; it is off under `NODE_ENV=test`. It is **preloaded**: each app's `src/instrument.ts` is the first module the process loads (`node --import ./dist/instrument.js dist/main.js`, the same flag under Bun), because the instrumentations patch only what is imported after them. The ESM hook wraps third-party modules only; this repo's own modules are excluded, since the hook cannot resolve their extensionless `export *`. The SDK exports traces only - metrics stay with Prometheus, logs with pino.
 - The API's HTTP server span is its own Fastify hook, `plugins/request-span.ts`: named `{method} {route template}`, parented on the caller's `traceparent`, and started from the root context, because the HTTP instrumentation hands a request it ignores over with tracing suppressed. The handler runs inside it, so `ioredis` spans and the `traceparent` a handler writes into a job both belong to the request's trace. `postgres` (postgres.js) has no OpenTelemetry instrumentation, so SQL is not a span.
-- BullMQ is instrumented by hand: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. Work nothing traced asked for, such as a reconciler repair, starts a root span of its own (`rootTraceparent`). `ffmpeg` runs are child spans with argv (redacted URLs) and exit code.
-- Result: one trace = `POST /uploads/:id/complete` → `probe` → three `transcode-*` → `thumbnail` → `package` → `notify`, viewable in Tempo; `trace_id` is also written to `video_events` so an operator can go from a video row to its trace.
-- Sampling: parent-based, 100 % in dev, 20 % in cloud (Grafana Cloud 50 GB/month is generous, but transcode spans are long-lived).
+- BullMQ is instrumented by hand: producers inject `traceparent` into `job.data` (`packages/server/job-contracts` makes it a required field); the worker wrapper `withTelemetry(processor)` extracts it and starts a span `bullmq.process {queue}` as a **child of the producer's span**, with `job.id`, `attemptsMade`, `videoId` attributes. Work nothing traced asked for, such as a reconciler repair, starts a root span of its own (`rootTraceparent`). Each `ffmpeg` run is a child span `ffmpeg` carrying `ffmpeg.stage`, the argv with URLs redacted (`ffmpeg.command`) and `ffmpeg.exit_code`.
+- Result: one trace = `POST /v1/uploads/:uploadId/complete` -> `probe` -> three `transcode-*` -> `thumbnail` -> `package` -> `notify`, viewable in Tempo (compose `observability` profile, through the otel-collector); the video repository writes the active `trace_id` into `video_events`, so an operator can go from a video row to its trace.
+- Sampling: `OTEL_TRACES_SAMPLER` takes the OpenTelemetry names `always_on`, `always_off`, `traceidratio` and their `parentbased_` forms, and `OTEL_TRACES_SAMPLER_ARG` is the ratio (0 to 1); any other value fails `loadEnv()`. Local runs default to `parentbased_always_on`; the cloud overlay sets `parentbased_traceidratio` at `0.2`, so a new trace is kept one time in five and a child follows its parent's decision (`resolveSampler` in `@vp/observability`, `sampler.test.ts`).
 
 ### 13.4 Logging
 
-pino JSON to stdout through one `createLogger` in `@vp/observability`, which redacts `authorization`, `cookie` and `x-admin-token` wherever a headers object is logged. The API hands it to Fastify: the request id is the caller's `x-request-id` when it is a plain token, otherwise a UUID, and is echoed back on the response; each request writes one `request completed` line with `method`, `route` (the template, `unmatched` on a 404), `status` and `durationMs`, and an unhandled error one `error` line, both carrying `reqId`. The id travels into job payloads as `requestId` beside `traceparent`, and a worker's `LogContext` puts it on every line of that job. Job lines also carry `{ videoId, jobId, attempt, traceId, spanId }`. Loki/Grafana Cloud Logs via Alloy/otel-collector; `ffmpeg` stderr is captured and attached to the failure record (last 50 lines) instead of being streamed as logs.
+One `createLogger` in `@vp/logger` (`packages/server/logger`, pino) with two formats. `json`, for the deployables, writes to stdout with an ISO timestamp, the `service` name, and the active span's `traceId`/`spanId` on every line, and redacts `authorization`, `cookie` and `x-admin-token` wherever a headers object is logged. `pretty`, for the CLIs, writes one `level message key=value` line to stderr through a destination of our own. The API hands the `json` logger to Fastify with Fastify's request logging off: the request id is the caller's `x-request-id` when it is a plain token, otherwise a UUID, and is echoed back on the response; `plugins/access-log.ts` writes one `request completed` line per request with `method`, `route` (the template, `unmatched` on a 404), `status` and `durationMs`, and an unhandled error writes one `unhandled exception` line, both carrying `reqId`. The id travels into job payloads as `requestId` beside `traceparent`, and a worker's `LogContext` puts it on every line of that job; stage loggers also bind `videoId`, `jobId` and `attempt`. Nothing in this repo ships the lines anywhere: the SDK exports traces only, so the collector's and Alloy's OTLP log pipelines receive nothing from the apps, and Loki sees only what a log agent outside this repo collects from stdout. `ffmpeg` stderr is not logged: the last 50 lines are kept, and the last 300 characters of them go into the classified error's message, which the failure record stores.
 
-### 13.5 Dashboards & alerts (committed under `observability/`)
+### 13.5 Dashboards & alerts (committed under `infra/observability/`)
 
-Dashboards (`dashboards/*.json`, provisioned): **Pipeline Overview** (videos by status, time-to-ready, throughput/min), **Queues** (per-queue waiting/active/delayed/failed, oldest age, wait p95, replicas vs backlog — the autoscaling proof graph), **Workers** (job duration p50/p95, realtime factor by rendition/preset, ffmpeg exit codes, tmp bytes, CPU/mem), **API** (RED, SSE connections, under-pressure events), **Storage & Cost** (Class A/B ops per hour, bytes written, projected monthly ops vs free tier).
+The files live under `infra/observability/`. Dashboards (`infra/observability/dashboards/*.json`, provisioned into the compose Grafana, and copied into `infra/k8s/base/dashboards-configmaps.yaml`, which `dashboards.test.ts` holds equal): **Pipeline Overview** (videos by status, throughput in jobs/min, time-to-ready p50/p95 and by duration bucket), **Queues** (per-queue jobs by state, replicas vs outstanding backlog - the autoscaling proof graph, oldest waiting age, wait p95), **Workers** (job duration p50/p95, realtime factor, ffmpeg exits by stage and code, tmp bytes, DLQ entries), **API** (RED, SSE connections and events published, requests in flight), **Storage & Cost** (Class A/B ops per hour, projected monthly Class A ops, output bytes, storage op p95, Grafana Cloud active series).
 
-Alert rules (`alerts/*.yaml`, PrometheusRule):
+Alert rules (`infra/observability/alerts/video-pipeline-alerts.yaml`, a Prometheus rule file the compose Prometheus loads; the k8s manifests carry no `PrometheusRule`). Each rule names a runbook under `docs/runbooks/`:
 
 | Alert | Expression (sketch) | For | Severity |
 |---|---|---|---|
 | `DLQNotEmpty` | `increase(dlq_entries_total[10m]) > 0` | 0m | warning |
 | `QueueStarvation` | `bullmq_queue_oldest_waiting_age_seconds > 900` | 5m | warning |
-| `JobFailureRateHigh` | `rate(jobs_processed_total{result="failed"}[10m]) / rate(jobs_processed_total[10m]) > 0.05` | 10m | critical |
-| `SystemicFailure` | same ratio `> 0.5` | 5m | critical (runbook: pause queue) |
-| `WorkerStalledJobs` | `increase(jobs_processed_total{result="stalled"}[30m]) > 3` | 0m | warning |
-| `WorkerStuck` | SQL exporter: `RUNNING` steps with `heartbeat_at < now()-5m` | 5m | warning |
-| `ScaleToZeroBroken` | `bullmq_queue_jobs{state="waiting"} > 0 and kube_deployment_status_replicas == 0` | 3m | critical |
+| `JobFailureRateHigh` | `sum by (queue) (rate(jobs_processed_total{result="failed"}[10m])) / sum by (queue) (rate(jobs_processed_total[10m])) > 0.05` | 10m | critical |
+| `SystemicFailure` | same ratio over `[5m]`, `> 0.5` | 5m | critical (runbook: pause queue) |
+| `WorkerStalledJobs` | `sum by (queue) (increase(jobs_processed_total{result="stalled"}[30m])) > 3` | 0m | warning |
+| `WorkerStuck` | `processing_steps_running_stale > 0` (the API's SQL poller: `RUNNING` steps with a heartbeat older than 5 min) | 5m | warning |
+| `ScaleToZeroBroken` | `sum(max by (queue, state) (bullmq_queue_jobs{state=~"waiting\|prioritized"})) > 0 and on() sum(kube_deployment_status_replicas{deployment=~"vp-worker-.*"}) == 0` | 3m | critical (k8s only) |
 | `R2ClassABudget` | `predict_linear(storage_ops_total{op="put"}[1d], 30*86400) > 900000` | 1h | info |
-| `APILatencyHigh` | `histogram_quantile(0.95, …http_request_duration_seconds…) > 0.2` | 10m | warning |
+| `APILatencyHigh` | `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 0.2` | 10m | warning |
 | `WorkerTmpDiskHigh` | `worker_tmp_bytes / 8e9 > 0.8` | 5m | warning |
 
-Alertmanager → Discord/Telegram webhook (free) locally; Grafana Cloud IRM (3 free users) in cloud.
+The compose Alertmanager (`infra/compose/alertmanager/alertmanager.yml`) routes by severity to placeholder webhooks on `http://localhost:5001`; no chat or paging receiver is configured, locally or in cloud.
 
 ---
 
@@ -1861,7 +1850,7 @@ Alertmanager → Discord/Telegram webhook (free) locally; Grafana Cloud IRM (3 f
 ### 14.1 Principles
 
 - **Synthetic media only.** `packages/server/gen-video` produces deterministic sources with `ffmpeg -f lavfi -i testsrc2=size=1920x1080:rate=24 -f lavfi -i sine=frequency=440 -t {sec}` at 15 s / 60 s / 10 min / 30 min and a "hostile" set (truncated file, audio-only, 4K/60fps, rotated portrait, HEVC-in-MKV). Checked into `packages/server/gen-video/manifest.json`, generated on demand (never committed as binaries).
-- **Every scenario has a threshold** (k6 `thresholds`) so it can fail CI, and a **Grafana snapshot** committed under `docs/load-tests/results/{date}-{scenario}/`.
+- **Every scenario has a threshold** (k6 `thresholds`) so it can fail CI, and a **Grafana snapshot** committed under `docs/load-tests/results/<date>-<scenario>/`.
 - **Two execution modes:** `k6 run` from the laptop against compose (Phases 2–3), and **k6-operator** `TestRun` CRDs inside the k3d/k3s cluster with `parallelism: N` for distributed runs (Phase 3–4). Optional: Grafana Cloud k6 (500 VU-h/month free) for a cloud-sourced run against the reference deployment.
 - k6 outputs to Prometheus remote-write (`K6_PROMETHEUS_RW_SERVER_URL`) so load-generator metrics and system metrics sit on the same dashboard timeline.
 
@@ -1926,122 +1915,103 @@ export default function () {
 ```
 video-pipeline/
 ├── packages/                               # every workspace library; the directory IS the runtime tier (ADR-23)
-│   ├── universal/                          # runs in a browser AND on a server — no node:*, no server SDK
-│   │   ├── api-contracts/                  # zod schema per endpoint: params, query, body, response, error codes (single source)
-│   │   ├── domain/                          # entities, value objects, ranking & eligibility policy, the status vocabulary
-│   │   ├── domain-rules/                    # T3 — policy, invariants and state transitions over an entity; returns Result (ADR-24)
-│   │   ├── errors/                          # ApiErrorCodes + PipelineErrorCodes, ErrorCode union, Failure<C,D>, RETRY_CLASS, Permanent/TransientError
-│   │   ├── pagination/                      # CursorCodec, Paginator, the limit+1 sentinel protocol
-│   │   ├── permissions/                     # declarative CASL rules, normalizers, helpers — the one isomorphic rule engine
-│   │   ├── result/                          # T1 — Result<T,E>, combinators, tryCatch/fromPromise, assertNever. Zero dependencies
-│   │   ├── tsconfig/                        # base + server/universal/client/spec presets
-│   │   └── validation/                      # T2 — predicates over submitted input only; wire-safe failures the browser runs first
+│   ├── universal/                          # runs in a browser AND on a server: no node:*, no server SDK
+│   │   ├── api-contracts/                  # zod schema per endpoint: params, query, body, response; problem+json
+│   │   ├── domain/                         # entities, value objects, ranking & eligibility policy, the status vocabulary
+│   │   ├── domain-rules/                   # policy, invariants and state transitions over an entity; returns Result (ADR-24)
+│   │   ├── errors/                         # ErrorCodes, Failure, RETRY_CLASS, Permanent/TransientError, infra failure factories
+│   │   ├── pagination/                     # CursorCodec, Paginator, PAGE_SIZE_DEFAULT/MAX
+│   │   ├── permissions/                    # CASL rules, normalizers, canX helpers, assertCan
+│   │   ├── result/                         # Result<T,E>, combinators, tryCatch/fromPromise, assertNever
+│   │   ├── tsconfig/                       # base + server/universal/client/spec presets
+│   │   └── validation/                     # predicates over submitted input only, ALLOWED_CONTENT_TYPES
 │   ├── client/                             # browser only
-│   │   └── api-client/                      # typed fetchers mapped from @vp/api-contracts; base URL injected
+│   │   └── api-client/                     # typed fetchers mapped from @vp/api-contracts; base URL injected
 │   └── server/                             # Node/Bun only
-│       ├── core/                            # @vp/core — abstract driver ports and repository interfaces
-│       │   ├── ports/                       # DatabaseClient, StorageClient, MultipartStorage, CacheClient, JobQueue, FlowProducer
-│       │   └── repositories/                # VideoRepository, UploadRepository, StepRepository, RenditionRepository, …
-│       ├── adapters/                        # @vp/adapters — concrete & in-memory implementations
-│       │   ├── postgres/                    # PostgresDatabaseClient & modular repositories/ (drizzle-orm + postgres.js)
-│       │   ├── s3/                          # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
-│       │   ├── redis/                       # RedisCacheClient (ioredis)
-│       │   ├── bullmq/                      # BullMqJobQueue & BullMqFlowProducer (bullmq)
-│       │   ├── composition/                 # adapter tokens + registerAdapters: the one in-memory/external switch
-│       │   ├── in-memory/                   # autonomous test doubles with encapsulated state (@vp/adapters/in-memory)
-│       │   └── __tests__/contract/          # one conformance suite per port, run against BOTH adapters (PGLite)
-│       ├── composition/                     # T2 — Token<T>, Container (start/dispose), shutdownOnce (ADR-25)
-│       ├── concurrency/                     # T1 — Singleflight
-│       ├── config/                          # loadEnv(): reads process.env against @vp/env-schema, exits 1 on failure
-│       ├── env-schema/                      # zod env fragments, AppConfig + toAppConfig, CdnBase; the one .env contract, no runtime access
-│       ├── db/                               # drizzle schema, migrations/, client, seed
-│       ├── events/                           # Redis Pub/Sub channels + SSE envelope schemas
-│       ├── ffmpeg/                           # probe(), transcode/thumbnail args, progress parser, ladder, master playlist
-│       ├── job-contracts/                    # job payload schemas, jobId builders, stagePolicies, BullMQ queue names
-│       ├── observability/                    # prom-client registry, otel bootstrap, pino logger factory
-│       ├── storage/                          # keys.ts, mime.ts, multipart.ts (part math/constants)
-│       ├── testing/                          # vitest config factory + shared fixtures
-│       └── dev-token/ gen-video/ upload-client/ compose-autoscaler/   # CLI packages
+│       ├── core/                           # @vp/core: ports/ (abstract classes) and repositories/ (interfaces)
+│       ├── adapters/                       # @vp/adapters: auth, authorization, bullmq, postgres, redis, s3, metered, in-memory
+│       │   ├── composition/                # adapter tokens + registerAdapters: the one in-memory/external switch
+│       │   └── __tests__/contract/         # one conformance suite per repository, run against both families (PGlite)
+│       ├── composition/                    # Token<T>, Container (start/dispose), shutdownOnce (ADR-25)
+│       ├── concurrency/                    # Singleflight
+│       ├── config/                         # loadEnv(): reads process.env against @vp/env-schema; register.js resolve hook
+│       ├── env-schema/                     # AppEnv, platform-env.json, SECRET_KEYS, AppConfig + toAppConfig, tuning.ts
+│       ├── db/                             # drizzle schema, client, migrate and seed library; migrations in drizzle/
+│       ├── events/                         # Redis Pub/Sub channels, SSE envelope schemas, cache keys
+│       ├── ffmpeg/                         # probe, transcode/thumbnail/sprite args, runFfmpeg, error classification, master playlist
+│       ├── job-contracts/                  # job payload schemas, jobId builders, stage policies, queue names, the rendition ladder
+│       ├── logger/                         # @vp/logger: pino, json and pretty formats, LogContext
+│       ├── observability/                  # prom-client registry and metrics server, OpenTelemetry bootstrap
+│       ├── storage/                        # keys.ts, mime.ts, multipart.ts (part math/constants)
+│       ├── testing/                        # vitest config factory + shared fixtures and helpers
+│       └── compose-autoscaler/ dev-token/ gen-video/ upload-client/   # CLI packages
 ├── apps/
-│   ├── api/                              # Node 24 LTS · Fastify 5
+│   ├── api/                                # Node 24 · Fastify 5
 │   │   ├── src/
-│   │   │   ├── main.ts                   # boot: loadEnv → toAppConfig → composeApp → container.start() → listen; drained shutdown
-│   │   │   ├── migrate.ts                # drizzle-kit migrate entrypoint (run as compose/k8s Job)
-│   │   │   ├── app.ts                    # composeApp()/buildApp(): container, decorators, plugins, the route table
-│   │   │   ├── composition/              # services.module.ts, adapter-set.ts (the test override seam), openapi
-│   │   │   ├── plugins/                  # auth (jwt/jwks), rate-limit, under-pressure, swagger, bull-board, metrics
-│   │   │   ├── routes/                   # thin transport adapters (uploads, videos, admin, health)
-│   │   │   ├── services/                 # deep domain services (UploadService, VideoService)
-│   │   │   ├── sse/                      # SseHub (redis psubscribe → connections), snapshot, replay
-│   │   │   └── queues/                   # QueueRegistry (BullMQ Queue instances), queue-metrics poller, schedulers
-│   │   ├── test/                         # vitest: unit + integration (in-memory e2e)
-│   │   ├── Dockerfile
-│   │   └── package.json
-│   └── worker/                           # Bun 1.4 (runtime-switchable) · one image, WORKER_STAGE picks role
-│       ├── src/
-│       │   ├── main.ts                   # loadEnv → toAppConfig → runner → metrics + heartbeat; drained shutdown
-│       │   ├── runner.ts                 # composition root: registerAdapters + stages.module over one container
-│       │   ├── composition/              # stages.module.ts: consumer and outbox relay as Startables
-│       │   ├── registry.ts               # { queue, createProcessor, concurrency, lockDuration, shutdownTimeoutMs } per stage
-│       │   ├── stages/
-│       │   │   ├── probe.ts
-│       │   │   ├── transcode.ts          # shared by transcode-1080p/720p/480p (rendition from payload)
-│       │   │   ├── thumbnail.ts
-│       │   │   ├── package.ts
-│       │   │   ├── notify.ts
-│       │   │   └── housekeeping/         # reconcile-uploads, reconcile-processing, purge-deleted, expire-raw, tmp-sweep
-│       │   ├── lib/
-│       │   │   ├── with-telemetry.ts     # traceparent extraction, spans, metrics, logger bindings
-│       │   │   ├── failure-handler.ts    # DLQ pattern: dlq_entries + dlq queue + rendition/video state
-│       │   │   ├── fencing.ts            # claimStep() / completeStep(lockToken)
-│       │   │   ├── tmpdir.ts             # per-job temp dir with guaranteed cleanup + heartbeat file
-│       │   │   └── segment-uploader.ts   # watches ffmpeg output dir, uploads closed segments, bounded concurrency
-│       │   └── config.ts
-│       ├── test/                         # vitest (node) + bun test (bun) — both in CI
-│       ├── Dockerfile                    # ARG WORKER_RUNTIME=bun|node
-│       └── package.json
-│   └── web/                              # Taitube Frontend: React 19 · TanStack Start/Router · Vite 6 · Tailwind v4
-│       ├── src/
-│       │   ├── routes/                   # TanStack Router file-based routes
-│       │   ├── components/               # Radix UI primitives, player, drawer, studio
-│       │   └── hooks/                    # TanStack Query hooks from @vp/api-client
-│       └── package.json
+│   │   │   ├── main.ts                     # reads process.env, calls run() in process.ts
+│   │   │   ├── process.ts · serve.ts       # loadEnv -> toAppConfig -> composeApp -> start -> listen; drained shutdown
+│   │   │   ├── instrument.ts               # tracing preload (--import ./dist/instrument.js)
+│   │   │   ├── app.ts                      # composeApp(): container, plugins, the route table
+│   │   │   ├── migrate.ts · seed.ts        # pnpm db:migrate (also the compose/k8s migrate job) and pnpm db:seed
+│   │   │   ├── composition/                # services.module.ts, adapter-set.ts (the test override seam), openapi, bull-board
+│   │   │   ├── plugins/                    # auth, errors, access-log, request-id, request-span, route-label, http-metrics
+│   │   │   ├── routes/                     # thin transport adapters; sendResult unwraps the Result; admin/
+│   │   │   └── services/                   # deep domain services, SSE hub, queue and SQL pollers, housekeeping schedulers
+│   │   └── Dockerfile
+│   ├── worker/                             # Bun 1.4 by default, Node 24 built with WORKER_RUNTIME=node · WORKER_STAGE picks the role
+│   │   ├── src/
+│   │   │   ├── main.ts · process.ts        # loadEnv -> toAppConfig -> runner; drained shutdown
+│   │   │   ├── instrument.ts               # tracing preload
+│   │   │   ├── runner.ts                   # composition root: registerAdapters + stages.module over one container
+│   │   │   ├── composition/                # stages.module.ts: consumer, outbox relay, metrics and heartbeat as Startables
+│   │   │   ├── registry.ts                 # per stage: queue, processor, concurrency, lock and shutdown settings
+│   │   │   ├── with-telemetry.ts           # traceparent extraction and the bullmq.process span
+│   │   │   ├── failure-handler.ts          # DLQ pattern: dlq_entries + dlq queue + rendition/video state
+│   │   │   ├── heartbeat.ts                # the liveness file timer
+│   │   │   └── stages/                     # probe, transcode, thumbnail, package, notify, segment-uploader; housekeeping/
+│   │   └── Dockerfile                      # ARG WORKER_RUNTIME=bun|node
+│   └── web/                                # React 18 · Create React App 5 (craco) · RTK Query · Bootstrap
+│       └── src/                            # modules/ (pages), components/can.tsx, hooks/use-can.ts
 ├── infra/
-│   ├── compose/                          # docker-compose.yml, minio-init.sh, prometheus.yml, tempo.yml, otel-collector.yml, grafana/provisioning, toxiproxy profile
+│   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/
-│   │   ├── base/                         # namespace, api, worker-<stage> deployments, scaledobjects, secrets(template), servicemonitors, prometheusrules
-│   │   ├── overlays/local/               # k3d/kind: MinIO + Postgres + Redis in-cluster, maxReplicaCount 6
-│   │   └── overlays/cloud/               # Neon + R2, cloudflared, Alloy → Grafana Cloud, maxReplicaCount 1–2
-│   ├── helm-values/                      # keda, kube-prometheus-stack, redis, minio
-│   ├── terraform/                        # cloudflare (R2 buckets, custom domain, tunnel, DNS), hetzner (server, firewall) — optional, small
+│   │   ├── base/                           # namespace, api, vp-worker-<stage> deployments, scaled-objects, configmap-secret, service-monitors, dashboards-configmaps
+│   │   ├── overlays/local/                 # k3d/kind: local images
+│   │   ├── overlays/cloud/                 # ExternalSecret, cloudflared, Alloy, in-cluster Redis, maxReplicaCount 1 (1080p, 720p) or 2 (480p, probe)
+│   │   └── helm-values/                    # keda, kube-prometheus-stack, redis, minio, postgres
+│   ├── terraform/                          # cloudflare (R2 buckets, custom domain, tunnel, DNS, Access, scoped tokens), hetzner (server, firewall)
 │   └── observability/
-│       ├── dashboards/                   # pipeline.json, queues.json, workers.json, api.json, storage-cost.json
-│       └── alerts/                       # prometheus rules yaml
-├── load-tests/
-│   ├── k6/scenarios/                     # s1-upload-storm.js … s7-soak.js, lib/ (auth, upload helpers, sse client)
-│   ├── k6-operator/                      # TestRun CRDs
-│   └── results/                          # committed snapshots + README template
-├── tools/                                # non-package assets only (no package.json, no tier)
-│   ├── hls-test-page/                    # index.html with hls.js, paste a videoId → plays master.m3u8 + shows SSE log
-│   └── chaos/                            # kill-worker.sh, redis-restart.sh, disk-fill.sh
+│       ├── dashboards/                     # api.json, pipeline.json, queues.json, storage-cost.json, workers.json
+│       └── alerts/                         # video-pipeline-alerts.yaml (Prometheus rule file)
+├── tests/
+│   ├── architecture/                       # the invariant suite (pnpm test:architecture)
+│   ├── e2e/                                # acceptance suite (make e2e)
+│   ├── in-process/                         # boots the composition roots in one process: start order, request correlation
+│   └── load/                               # k6 scenarios s1-upload-storm.js … s7-soak.js, common.js, a k6-operator TestRun
+├── scripts/                                # repo tooling run on tsx or sh: boundaries, e2e runner, chaos, bundle-app, cloud setup
+├── tools/                                  # non-package assets only (no package.json, no tier)
+│   ├── hls-test-page/                      # index.html with vendored hls.js: paste a videoId, play master.m3u8, see the SSE log
+│   └── chaos/                              # kill-worker.sh, redis-restart.sh, disk-fill.sh, toxiproxy-toxic.sh
 ├── docs/
-│   ├── PRD.md
-│   ├── SDD.md                            # this document
-│   ├── adr/                              # one file per ADR when they evolve beyond §4
-│   ├── runbooks/                         # dlq-replay.md, queue-paused.md, worker-stuck.md, storage-outage.md, cost-budget.md
-│   └── load-tests/                       # results & README
+│   ├── PRD.md · SDD.md · LOCAL_FIRST.md
+│   ├── standards/ · agents/ · reviews/ · diagrams/
+│   ├── tickets/                            # tracer-bullet tickets and the generated index
+│   ├── runbooks/                           # one per alert, plus cloud-accounts.md
+│   └── load-tests/                         # README and results/<date>-<scenario>/
 ├── .github/workflows/
-│   ├── ci.yml                            # typecheck · lint · unit · integration (services: postgres/redis/minio) · worker tests on bun AND node
-│   ├── images.yml                        # buildx multi-arch → ghcr.io/szebest/vp-api, vp-worker (tags: sha, latest) · Trivy scan
-│   └── load-smoke.yml                    # nightly: compose up → S1 (60 VU/2 min) → thresholds
-├── .env.example                          # §16 — the single env contract for api + worker
-├── package.json · pnpm-workspace.yaml · turbo.json · tsconfig.base.json
-├── biome.json                            # lint + format (Biome replaces eslint+prettier)
-├── Makefile                              # make up / down / observability / k3d-up / k3d-deploy / load-s1 / chaos-s4
+│   ├── ci.yml                              # build · lint-typecheck · unit · unit-bun · integration · e2e · publish-images
+│   ├── images.yml                          # buildx -> ghcr.io/szebest/vp-api, vp-worker (tags: git tag, sha, latest/node) · Trivy scan
+│   ├── load-smoke.yml                      # nightly and on load-test changes: compose up -> reduced S1 -> thresholds
+│   ├── deploy-cloud.yml                    # on a v* tag: kustomize the cloud overlay and apply it
+│   └── sync-tickets.yml                    # mirrors docs/tickets to GitHub issues
+├── .env.example                            # §16, the env contract for api + worker
+├── package.json · pnpm-workspace.yaml · turbo.json · tsconfig.base.json · docker-bake.hcl
+├── biome.json · knip.json · lefthook.yml · renovate.json
+├── Makefile                                # make up / down / up-all / obs-up / k3d-up / k3d-deploy / load-s1 / chaos-s4 / smoke / e2e
 └── README.md
 ```
 
-Package naming: `@vp/api`, `@vp/worker`, `@vp/job-contracts`, `@vp/db`, … Dependencies flow **apps → packages** only; packages never import apps; `job-contracts`, `errors`, `config` have zero runtime deps beyond zod.
+Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp/web` for the apps. Dependencies flow **apps -> packages** only, and between packages strictly down the `vp.layer` each `package.json` declares; `pnpm boundaries` fails on a violation (ADR-23).
 
 ### 15.2 Toolchain
 
@@ -2051,27 +2021,27 @@ Package naming: `@vp/api`, `@vp/worker`, `@vp/job-contracts`, `@vp/db`, … Depe
 | Task runner / cache | Turborepo | 2.x | remote cache optional (Vercel free) |
 | Language | TypeScript | 5.x, `strict`, `noUncheckedIndexedAccess`, ESM | |
 | API runtime | Node.js | 24 LTS (v26 becomes LTS 2026-10-28 — upgrade in Phase 4) | |
-| Worker runtime | Bun | 1.4.x (Node fallback) | |
-| HTTP | Fastify 5 + `fastify-type-provider-zod`, `@fastify/jwt`, `@fastify/rate-limit`, `@fastify/under-pressure`, `@fastify/swagger`, `@fastify/cors`, `@fastify/helmet` | | |
+| Worker runtime | Bun | 1.4.x by default, Node 24 in an image built with `--build-arg WORKER_RUNTIME=node` | |
+| HTTP | Fastify 5 + `fastify-type-provider-zod`, `@fastify/rate-limit`, `@fastify/swagger`, `@fastify/cors`, `@fastify/helmet` | | JWTs verified by the `TokenVerifier` adapters, not a Fastify plugin |
 | Queue | BullMQ 6 + ioredis 5 | | `@bull-board/api` + `@bull-board/fastify` |
 | DB | PostgreSQL 16, Drizzle ORM 0.45 (1.0 when GA) + drizzle-kit, `postgres` (postgres.js) driver | | |
-| Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `@aws-sdk/lib-storage` | 3.x | |
+| Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` | 3.x | |
 | Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
-| Validation | zod 4 | | |
+| Validation | zod 3 | | |
 | IDs | `uuidv7` | | |
 | Logging | pino 10 through `@vp/logger`, JSON or its own pretty destination | | |
 | Metrics | prom-client 15 | | |
 | Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
-| Testing | vitest 3 (unit/integration), `@testcontainers/postgresql`, `@testcontainers/redis`, `testcontainers` (MinIO), `bun test` for worker parity, supertest-style via `app.inject()` | | |
-| Lint/format | Biome 2 | | one tool, fast |
+| Testing | vitest 3, PGlite for the Postgres repositories in unit specs, `bun test` for worker and package parity, `app.inject()` for routes | | the `integration` job's services are CI service containers |
+| Lint/format | Biome 1.9, `--error-on-warnings` | | one tool, fast |
 | Git hooks | lefthook | | typecheck + biome on staged |
 | Containers | Docker 27 + buildx, Compose v2 | | |
 | Local Kubernetes | k3d (or kind) + kubectl + kustomize + helm | k3d 5.x | |
-| Autoscaling | KEDA 2.20 | | |
+| Autoscaling | KEDA 2.21 (chart pinned in the Makefile) | | |
 | Monitoring | kube-prometheus-stack (Prometheus 3, Grafana 12, Alertmanager), Tempo 2, Loki 3, Grafana Alloy / otel-collector-contrib | | |
 | Load testing | k6 2.x, k6-operator 1.6 | | |
 | Chaos | toxiproxy 2.x, shell scripts | | |
-| Secrets (cloud) | SOPS + age (encrypted in repo) or sealed-secrets | | |
+| Secrets (cloud) | External Secrets Operator: one `ExternalSecret` entry per `SECRET_KEYS` member, no ciphertext in the repo | | |
 | IaC (cloud) | Terraform 1.x with `cloudflare` and `hcloud` providers (optional) | | |
 | CI/CD | GitHub Actions, GHCR, Renovate | | |
 | API docs | OpenAPI 3.1 via `@fastify/swagger` + Scalar UI | | |
@@ -2112,22 +2082,24 @@ The schema is **closed over what the code reads**: every key the deployables rea
 
 ### 16.1 Core
 
-| Variable | Used by | Example (local) | Notes |
+| Variable | Used by | Default | Notes |
 |---|---|---|---|
-| `NODE_ENV` | both | `development` | `production` turns on the refusals of §11 |
-| `LOG_LEVEL` | both | `debug` | pino level |
-| `SERVICE_VERSION` | both | git sha | OTel resource attribute; the service name is set in code (`vp-api`, `vp-worker-<stage>`) |
+| `NODE_ENV` | both | `development` | `development` · `test` · `production`; `production` turns on the refusals of §11, `test` silences logs and turns tracing off |
+| `LOG_LEVEL` | both | `debug` | pino level: `trace` · `debug` · `info` · `warn` · `error` |
+| `SERVICE_VERSION` | both | `dev` | OTel resource attribute; nothing in the images or manifests sets it. The service name is set in code (`vp-api`, `vp-worker-<stage>`) |
 | `ADAPTER_FAMILY` | both | `external` | `in-memory` only for in-process tests; the one switch `registerAdapters` reads |
-| `CORS_ORIGINS` | api | `http://localhost:5173` | comma list of frontend origins; production refuses empty or `*` |
+| `CORS_ORIGINS` | api | `http://localhost:5173,http://localhost:8080` | comma list of frontend origins; production refuses empty or `*` |
 | `TRUST_PROXY` | api | empty | comma list of proxy addresses/CIDRs whose `X-Forwarded-For` is trusted |
 | `HTTP_BODY_LIMIT_BYTES` | api | `1048576` | JSON body cap; media goes straight to S3 |
-| `PORT` / `METRICS_PORT` | both | `3000` / `9464` | metrics bound to a separate port |
+| `PORT` | api | `3000` | HTTP listener; `0` picks a free port |
+| `METRICS_PORT` | both | `9464` | `/metrics` on a separate port; `0` picks a free port |
+| `PAGE_SIZE_DEFAULT` / `PAGE_SIZE_MAX` | api | `20` / `100` | keyset page size when `?limit` is omitted, and the most a request gets (a larger `limit` is clamped) |
 
 ### 16.2 PostgreSQL
 
-| Variable | Example (local) | Cloud (Neon) |
+| Variable | Default / local | Cloud (Neon) |
 |---|---|---|
-| `DATABASE_URL` 🔒 | `postgres://vp:vp@localhost:5432/vp` | `postgresql://user:pass@ep-xxx.eu-central-1.aws.neon.tech/vp?sslmode=require` (pooled endpoint `-pooler` for the API) |
+| `DATABASE_URL` 🔒 | required, no default; local `postgres://vp:vp@localhost:5432/vp` | `postgresql://user:pass@ep-xxx.eu-central-1.aws.neon.tech/vp?sslmode=require` (pooled endpoint `-pooler` for the API) |
 | `DATABASE_URL_MIGRATIONS` 🔒 | empty (= `DATABASE_URL`) | Neon **direct** (non-pooled) URL |
 | `DATABASE_POOL_MAX` | `10` | `5` per pod (Neon free ≈ 100 connections via pooler) |
 
@@ -2135,51 +2107,51 @@ The schema is **closed over what the code reads**: every key the deployables rea
 
 ### 16.3 Redis (BullMQ + Pub/Sub)
 
-| Variable | Example (local) | Notes |
+| Variable | Default | Notes |
 |---|---|---|
 | `REDIS_URL` | `redis://localhost:6379/0` | queues and cache; `rediss://` for TLS; no credential in the URL |
 | `REDIS_PUBSUB_URL` | `redis://localhost:6379/1` | the connection publish and subscribe use |
-| `REDIS_PASSWORD` 🔒 | `vp` | handed to BullMQ and to the cache client |
-| `BULLMQ_PREFIX` | `bull` | queue and flow key prefix; must match the KEDA `listName` prefix |
+| `REDIS_PASSWORD` 🔒 | none; local `vp` | handed to BullMQ and to the cache client |
+| `BULLMQ_PREFIX` | `bull` | queue and flow key prefix |
 
 ### 16.4 Object storage (S3-compatible)
 
-| Variable | MinIO (local) | Cloudflare R2 | Backblaze B2 |
+| Variable | MinIO (default) | Cloudflare R2 | Backblaze B2 |
 |---|---|---|---|
 | `S3_ENDPOINT` | `http://localhost:9000` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` | `https://s3.<region>.backblazeb2.com` |
 | `S3_REGION` | `us-east-1` | `auto` | `<region>` e.g. `eu-central-003` |
 | `S3_FORCE_PATH_STYLE` | `true` | `false` | `false` |
-| `S3_ACCESS_KEY_ID` 🔒 | `minioadmin` | R2 API token → Access Key ID | B2 application keyID |
-| `S3_SECRET_ACCESS_KEY` 🔒 | `minioadmin` | R2 Secret Access Key | B2 applicationKey |
+| `S3_ACCESS_KEY_ID` 🔒 | none; local `minioadmin` | R2 API token -> Access Key ID | B2 application keyID |
+| `S3_SECRET_ACCESS_KEY` 🔒 | none; local `minioadmin` | R2 Secret Access Key | B2 applicationKey |
 | `S3_BUCKET_RAW` | `raw` | `vp-raw` | `vp-raw` |
 | `S3_BUCKET_PUBLIC` | `public` | `vp-public` | `vp-public` |
 | `S3_PRESIGN_TTL_SEC` | `900` | `900` | `900` |
-| `CDN_BASE_URL` | `http://localhost:9000/public` | `https://cdn.example.com` (R2 custom domain) | `https://cdn.example.com` (Cloudflare → B2) |
+| `CDN_BASE_URL` | `http://localhost:9000/public` | `https://cdn.example.com` (R2 custom domain) | `https://cdn.example.com` (Cloudflare -> B2) |
 | `S3_MULTIPART_THRESHOLD_BYTES` | `104857600` (100 MB) | same | same |
 | `S3_PART_SIZE_MIN_BYTES` / `S3_PART_SIZE_MAX_BYTES` | `8388608` / `67108864` | same | same |
 | `RAW_RETENTION_DAYS` | `7` | `7` | `7` |
 
-The two bucket keys are the only spelling: every reader in both apps takes them through `AppConfig.buckets`. Worker and API should use **different** access keys with the scoped permissions from §11; env names are identical, values differ per deployment.
+The two bucket keys are the only spelling: every reader in both apps takes them through `AppConfig.buckets`. Terraform issues the API and the worker different R2 tokens with the scopes in §11; the env names are identical, the values differ per deployment.
 
 ### 16.5 Auth
 
-| Variable | Example | Notes |
+| Variable | Default | Notes |
 |---|---|---|
 | `AUTH_MODE` | `dev` | `dev` (the `pnpm dev-token` key) or `jwks` (your IdP); production refuses `dev` |
-| `AUTH_JWKS_URL` | empty in dev; `https://<clerk|supabase|auth0>/.well-known/jwks.json` | required when `AUTH_MODE=jwks` |
+| `AUTH_JWKS_URL` | empty | your IdP's key set, e.g. `https://<idp>/.well-known/jwks.json`; required when `AUTH_MODE=jwks` |
 | `AUTH_ISSUER` / `AUTH_AUDIENCE` | `vp-dev` / `vp-api` | compared to `iss` and `aud`, in both modes |
-| `AUTH_ALGORITHMS` | `RS256,ES256` | the algs a jwks token may use |
+| `AUTH_ALGORITHMS` | `RS256,ES256` | comma list from `RS256/384/512`, `ES256/384/512`, `EdDSA`: the algs a jwks token may use |
 | `AUTH_DEV_USER_ID` | `00000000-0000-7000-8000-000000000001` | dev mode: the provisioned user `ADMIN_TOKEN` acts as |
-| `ADMIN_TOKEN` 🔒 | random 32 bytes | dev mode `x-admin-token` for admin routes and Bull Board; unset admits nobody; production refuses any value |
+| `ADMIN_TOKEN` 🔒 | none; `.env.example` ships `change-me-32-bytes-random` | dev mode `x-admin-token` for admin routes and Bull Board; unset admits nobody; production refuses any value |
 
 ### 16.6 Pipeline tuning
 
 | Variable | Default | Notes |
 |---|---|---|
-| `WORKER_STAGE` | — (required in worker) | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` |
-| `WORKER_CONCURRENCY` | per stage registry | override |
+| `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` |
+| `WORKER_CONCURRENCY` | empty = the stage's registry value | override |
 | `FFMPEG_PATH` / `FFPROBE_PATH` | `ffmpeg` / `ffprobe` | the binaries the stages spawn |
-| `FFMPEG_THREADS` | CPU limit | K8s `resourceFieldRef` |
+| `FFMPEG_THREADS` | `2` | k8s sets it from the container's CPU limit (`resourceFieldRef`) |
 | `X264_PRESET` | `veryfast` | load-test variable |
 | `HLS_SEGMENT_SECONDS` | `6` | `-hls_time` |
 | `GOP_SECONDS` | `2` | GOP = `round(GOP_SECONDS × fps)`, a forced keyframe every `GOP_SECONDS` |
@@ -2198,15 +2170,13 @@ The upload content types are a typed constant in `@vp/validation` that the brows
 
 ### 16.7 Observability
 
-| Variable | Local | Grafana Cloud |
+| Variable | Default | Grafana Cloud |
 |---|---|---|
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318` | `https://otlp-gateway-<region>.grafana.net/otlp` |
-| `OTEL_TRACES_SAMPLER` / `OTEL_TRACES_SAMPLER_ARG` | `parentbased_always_on` | `parentbased_traceidratio` / `0.2` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318` | the cloud overlay points the apps at `http://alloy:4318`; Alloy forwards to `GRAFANA_OTLP_ENDPOINT` (§16.8) |
+| `OTEL_TRACES_SAMPLER` / `OTEL_TRACES_SAMPLER_ARG` | `parentbased_always_on` / `1.0` | see §13.3 for the values the code understands |
 | `OTEL_RESOURCE_ATTRIBUTES` | `deployment.environment=local` | `deployment.environment=cloud` |
-| `PROMETHEUS_REMOTE_WRITE_URL` 🔒 (Alloy/k6 only) | — | `https://prometheus-prod-xx.grafana.net/api/prom/push` + basic auth |
-| `LOKI_URL` 🔒 (Alloy only) | `http://loki:3100` | `https://logs-prod-xx.grafana.net/loki/api/v1/push` |
-| `SENTRY_DSN` 🔒 (optional) | — | |
-| `API` / `TOKEN` / `K6_PROMETHEUS_RW_SERVER_URL` (k6 only) | `http://localhost:3000` / dev JWT / `http://localhost:9090/api/v1/write` | reference deployment URL / Grafana Cloud k6 |
+
+`PROMETHEUS_REMOTE_WRITE_URL`, `LOKI_URL` and `SENTRY_DSN` appear only as comments in `.env.example`; no process of ours reads them. The k6 scripts in `tests/load` read `API`, `TOKEN`, `STORAGE_TARGET`, `KILL_AT_50` and `SOAK_DURATION` through k6's `__ENV`, outside the schema.
 
 ### 16.8 Platform keys (`platform-env.json`)
 
@@ -2217,17 +2187,12 @@ Handed to something other than this code, and declared so the schema stays close
 | `NODE_OPTIONS` | Node itself; the images and compose set `--import @vp/config/register` |
 | `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | turbo and every tool honouring the convention (P9) |
 | `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` 🔒 | Grafana Alloy's upstream (`Authorization=Basic <base64(instanceId:token)>`). Named apart from `OTEL_EXPORTER_OTLP_*` because `vp-secrets` reaches every app pod, and the OTel SDK there would read them in place of the ConfigMap's `http://alloy:4318` |
-| `WORKER_RUNTIME` | the worker image `CMD` and the k8s worker command (`bun` or `node`) |
-| `REDIS_ADDR` | the KEDA redis trigger (`addressFromEnv`) |
+| `WORKER_RUNTIME` | the worker image build (`--build-arg`, which picks the `runtime-bun` or `runtime-node` stage) and its `CMD`; setting it on a running pod does not change the binary the image has |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
 
 ### 16.9 Cloud-only (not read by any process in this repo)
 
-| Variable | Notes |
-|---|---|
-| `CLOUDFLARE_API_TOKEN` 🔒, `CLOUDFLARE_ACCOUNT_ID` | Terraform (R2 buckets, DNS, tunnel) |
-| `HCLOUD_TOKEN` 🔒 | Terraform (Hetzner) |
-| `GHCR_USERNAME` / `GHCR_TOKEN` 🔒 | image pull secret for private images (public images need none) |
+Terraform takes its credentials as variables, not environment keys: `cloudflare_api_token`, `cloudflare_account_id` and `hcloud_token` in `terraform.tfvars` (template `infra/terraform/terraform.tfvars.example`). No manifest carries an image pull secret, so the GHCR images must be public.
 
 ---
 
@@ -2243,7 +2208,7 @@ Items the design leans on, re-checked against vendor sources on the document dat
 | Supabase Free | 500 MB, 2 projects, paused after 1 week idle. | Fallback / auth only. |
 | Upstash Redis Free | 500k commands/**month**, 256 MB; Upstash documents BullMQ but warns about polling cost. | Self-host Redis (ADR-05). |
 | BullMQ | v6 (6.3.x, Sept 2026): ioredis optional peer dep, Job Schedulers replace repeatables, `Job#discard()` removed → `UnrecoverableError`. Queue names/job IDs cannot contain `:`. Flows ✔. Defaults: `lockDuration 30 s`, `stalledInterval 30 s`, `maxStalledCount 1`, `lockRenewTime = lockDuration/2`. Built-in `exponential/fixed` backoff with `jitter`; custom `backoffStrategy`. No native DLQ. | §9 throughout. |
-| KEDA | v2.20.x; `redis` list scaler (`listName`, `listLength`, `activationListLength`); `prometheus` scaler (`serverAddress`, `query`, `threshold`, `activationThreshold`); `minReplicaCount` default 0; ScaledJob recommended for long per-event jobs (we use ScaledObject deliberately — ADR-12). | §13.2 |
+| KEDA | v2.20.x; `redis` list scaler (`listName`, `listLength`, `activationListLength`; a list length only, so it cannot see BullMQ's `prioritized` ZSET); `prometheus` scaler (`serverAddress`, `query`, `threshold`, `activationThreshold`); `minReplicaCount` default 0; ScaledJob recommended for long per-event jobs (we use ScaledObject deliberately — ADR-12). | §13.2 |
 | Bun | 1.4.0 (Aug 2026); acquired by Anthropic Dec 2025; BullMQ works via ioredis (not `Bun.redis`); historical issues with `child_process` stdio piping and AWS SDK stream hangs on 1.3.x — mitigated by runtime switch. | ADR-01 guard-rails. |
 | Node.js | v24 Active LTS until 2026-10-20 (then Maintenance); v26 LTS from 2026-10-28. | Upgrade API base image in Phase 4. |
 | Fastify / Drizzle / Prisma | Fastify 5.12; Drizzle 0.45 stable, 1.0 RC; Prisma 7 Rust-free by default, Prisma 8 RC tagged `latest`. | ADR-02/04. |
@@ -2264,7 +2229,7 @@ Each phase ends with a demo and a **Definition of Done** that is binary. Estimat
 
 ### Phase 0 — Bootstrap (≈ 1 week)
 
-Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/{config,errors,job-contracts,db,storage,ffmpeg,observability,events}` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `packages/server/gen-video`, `packages/server/dev-token`, `tools/hls-test-page`.
+Build: monorepo (pnpm + Turborepo + Biome + vitest), `packages/server/{config,job-contracts,db,storage,ffmpeg,observability,events}` and `packages/universal/errors` skeletons with tests, compose infra (`postgres`, `redis`, `minio`, `minio-init`), Drizzle migration 0001, CI (`typecheck`, `lint`, `unit`, `integration` with service containers), multi-arch image build to GHCR, `packages/server/gen-video`, `packages/server/dev-token`, `tools/hls-test-page`.
 
 **DoD:** `git clone && make up && pnpm test` green on a fresh machine; `pnpm gen-video 60s` produces a playable synthetic MP4; images published for `amd64`+`arm64`.
 
@@ -2282,7 +2247,7 @@ Build: multipart uploads with resume + sweeper + lifecycle rules; ladder selecti
 
 ### Phase 3 — Observe & scale (≈ 3 weeks)
 
-Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler + Redis fallback), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
+Build: full metrics catalogue; OTel tracing across API → workers (traceparent in job data); Grafana dashboards + alert rules; Loki/Tempo via otel-collector; k3d overlay (Kustomize) with KEDA `ScaledObject`s (Prometheus scaler), HPA for API, graceful shutdown with long grace periods, liveness via heartbeat file; `packages/server/compose-autoscaler` for the non-k8s path; k6 S1–S3 with thresholds; nightly `load-smoke` workflow.
 
 **DoD:** On k3d: backlog of 1 000 probe jobs → KEDA scales `probe` and `transcode-*` to max within 60 s, drains, returns to 0 after cooldown — captured as a Grafana panel PNG in `docs/load-tests/results/`. One trace shows the full journey of a video. S1–S3 pass thresholds; results table committed.
 
@@ -2294,7 +2259,7 @@ Build: chaos scenarios S4–S7 with toxiproxy and kill scripts; transactional ou
 
 ### Phase 5 — Stretch backlog (unscheduled)
 
-Chunked parallel transcoding (§8.5) · CMAF/fMP4 + DASH manifest · `apps/worker-go` sibling consuming the same queues (proves the contract boundary) · BullMQ Pro groups or RabbitMQ implementation of the same topology as a comparative write-up · signed playback URLs · Redpanda tail of `video_events` for a search indexer · frontend integration with `youtube-frontend` (upload widget, SSE progress, hls.js player using `packages/server/events` types).
+Chunked parallel transcoding (§8.5) · CMAF/fMP4 + DASH manifest · a Go worker sibling consuming the same queues (proves the contract boundary) · BullMQ Pro groups or RabbitMQ implementation of the same topology as a comparative write-up · signed playback URLs · Redpanda tail of `video_events` for a search indexer · frontend integration with `youtube-frontend` (upload widget, SSE progress, hls.js player using `packages/server/events` types).
 
 ---
 

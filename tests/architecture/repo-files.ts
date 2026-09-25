@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { join, matchesGlob, resolve } from 'node:path';
+import { join, matchesGlob, posix, resolve } from 'node:path';
 
 export const ROOT = resolve(import.meta.dirname, '../..');
 
@@ -22,11 +22,36 @@ function allTracked(): readonly string[] {
 
 const globMatches = new Map<string, ReadonlySet<string>>();
 
-/** The tracked files a glob matches, worked out once per glob: `matchesGlob` compiles it on every call. */
+const WILDCARDS = ['*', '?', '[', ']', '{', '}', '(', ')'];
+
+/** The directory a glob names before its first wildcard, and the text after its last one. */
+function literalEnds(glob: string): { directory: string; ending: string } {
+  const positions = WILDCARDS.flatMap((wildcard) => [
+    glob.indexOf(wildcard),
+    glob.lastIndexOf(wildcard),
+  ]).filter((position) => position !== -1);
+  if (positions.length === 0) return { directory: glob, ending: glob };
+
+  const head = glob.slice(0, Math.min(...positions));
+  return {
+    directory: head.slice(0, head.lastIndexOf('/') + 1),
+    ending: glob.slice(Math.max(...positions) + 1),
+  };
+}
+
+/**
+ * The tracked files a glob matches, worked out once per glob. `matchesGlob` compiles the glob on
+ * every call, so it is asked only about the files under the glob's directory with its ending.
+ */
 function matchingGlob(glob: string): ReadonlySet<string> {
   let matched = globMatches.get(glob);
   if (matched === undefined) {
-    matched = new Set(allTracked().filter((file) => matchesGlob(file, glob)));
+    const { directory, ending } = literalEnds(glob);
+    matched = new Set(
+      allTracked().filter(
+        (file) => file.startsWith(directory) && file.endsWith(ending) && matchesGlob(file, glob)
+      )
+    );
     globMatches.set(glob, matched);
   }
   return matched;
@@ -66,6 +91,25 @@ export function trackedFiles(...pathspecs: string[]): string[] {
       (includes.length === 0 || includes.some((spec) => spec.matches(file))) &&
       !excludes.some((spec) => spec.matches(file))
   );
+}
+
+let paths: ReadonlySet<string> | undefined;
+
+/** Every tracked file and every directory above one: what a document may link to or name. */
+export function trackedPaths(): ReadonlySet<string> {
+  if (paths === undefined) {
+    const found = new Set<string>();
+    for (const file of allTracked()) {
+      found.add(file);
+      let directory = posix.dirname(file);
+      while (directory !== '.' && !found.has(directory)) {
+        found.add(directory);
+        directory = posix.dirname(directory);
+      }
+    }
+    paths = found;
+  }
+  return paths;
 }
 
 export function isSpec(file: string): boolean {

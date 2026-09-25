@@ -48,8 +48,9 @@ describe('infra/k8s: cloud overlay', () => {
     expect(config?.data).toMatchObject({
       DATABASE_POOL_MAX: '5',
       CDN_BASE_URL: 'https://cdn.example.com',
-      REDIS_ADDR: 'vp-redis-master:6379',
       OTEL_EXPORTER_OTLP_ENDPOINT: 'http://alloy:4318',
+      OTEL_TRACES_SAMPLER: 'parentbased_traceidratio',
+      OTEL_TRACES_SAMPLER_ARG: '0.2',
       AUTH_JWKS_URL: 'https://auth.example.com/.well-known/jwks.json',
     });
   });

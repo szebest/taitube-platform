@@ -3,25 +3,36 @@
 Instructions for any coding agent working on `@vp/ffmpeg`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
 
-`@vp/ffmpeg` encapsulates all FFmpeg and FFprobe execution parameters, CLI command builders, rendition presets, and output parsers.
-- **Probe Parser:** Parses FFprobe JSON output to extract container format, video/audio stream codecs, resolution, aspect ratio, frame rate, and duration.
-- **Ladder Presets:** Computes output ladder based on source height:
-  - `1080p`: 1920x1080, 4500k video, 128k audio
-  - `720p`: 1280x720, 2200k video, 96k audio
-  - `480p`: 854x480, 800k video, 64k audio (always included as lowest baseline)
-  - No upscaling: renditions exceeding source height are omitted.
-- **Keyframe Alignment:** Fixed GOP size (GOP = 2 * framerate) for 6-second MPEG-TS segments aligned across all renditions.
+`@vp/ffmpeg` builds the FFmpeg and FFprobe argument lists, runs the processes and parses what they
+print. Tier `server`, `vp.layer` 2; its dependencies are in [package.json](package.json). A stage reaches
+it through `MediaTools` / `mediaTools` (probe, transcode, thumbnail), which the worker's composition root
+hands in and a spec replaces with a double.
+
+- **Probe:** `runFfprobe` throws a `PermanentError` for a file with no video stream, a codec outside the
+  allowlist, or a duration over `maxDurationSec` (`MAX_DURATION_SEC`).
+- **Ladder:** the rungs are `CANONICAL_LADDER` in `@vp/job-contracts`; the selection keeps the rungs no
+  taller than the source and, when none is, the smallest one. It never upscales.
+- **Transcode:** HLS with MPEG-TS segments. The GOP is `gopSeconds * fps` frames with scene-cut keyframes
+  off, so segments align across renditions; `gopSeconds` and `hlsSegmentSeconds` come from config
+  (`GOP_SECONDS`, `HLS_SEGMENT_SECONDS`).
+- **Master playlist:** omits `FRAME-RATE` when the probe measured none.
 
 ---
 
 ## 2. Invariants
 
-- Must never run shell injections: execute FFmpeg using argument arrays (`child_process.spawn`), never raw interpolated strings.
-- Progress parsing captures `frame=`, `fps=`, `time=`, `speed=` to emit percentage and ETA.
+- FFmpeg and FFprobe run through `child_process.spawn` with an argument array, never an interpolated
+  shell string.
+- `runFfmpeg` owns every FFmpeg run: a traced span (a presigned URL in the command is stripped with
+  `sanitizeStorageUrl`), a hard timeout that sends SIGTERM and then SIGKILL after `killGraceMs`, an
+  optional `AbortSignal`, and a failure classified by `classifyFfmpegError` from the stderr tail.
+- Transcode progress is read from `-progress pipe:1` (`out_time_ms=` / `out_time_us=`, both
+  microseconds) and reported as `{ percent, outTimeMs }`.
 
 ---
 
@@ -37,4 +48,5 @@ Instructions for any coding agent working on `@vp/ffmpeg`.
 ```bash
 pnpm --filter @vp/ffmpeg typecheck
 pnpm --filter @vp/ffmpeg test
+pnpm --filter @vp/ffmpeg test:integration   # encodes real fixtures
 ```

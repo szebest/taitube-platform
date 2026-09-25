@@ -120,19 +120,11 @@ describe('cloud infrastructure and Terraform', () => {
     const dashboardPath = path.join(repoRoot, 'infra/observability/dashboards/storage-cost.json');
     const runbooksDir = path.join(repoRoot, 'docs/runbooks');
 
-    it('defines the R2ClassABudget alert, which fires when the threshold is lowered', () => {
+    it('defines the R2ClassABudget alert with its runbook', () => {
       expect(existsSync(alertRulesPath)).toBe(true);
       const alertRulesContent = readFileSync(alertRulesPath, 'utf-8');
       expect(alertRulesContent).toContain('alert: R2ClassABudget');
       expect(alertRulesContent).toContain('runbook_url: "docs/runbooks/cost-budget.md"');
-
-      const evalR2ClassABudget = (projectedMonthlyClassAOps: number, threshold = 900000) => {
-        return projectedMonthlyClassAOps > threshold;
-      };
-
-      expect(evalR2ClassABudget(500000)).toBe(false);
-      expect(evalR2ClassABudget(900001)).toBe(true);
-      expect(evalR2ClassABudget(500000, 400000)).toBe(true);
     });
 
     it('covers Class A/B ops and Grafana Cloud series on the Storage & Cost dashboard', () => {

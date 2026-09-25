@@ -189,14 +189,6 @@ spec:
           sum(max by (state) (bullmq_queue_jobs{queue="transcode-480p", state=~"waiting|prioritized|active"})) or vector(0)
         threshold: "1"
         activationThreshold: "0"
-    - type: redis
-      metadata:
-        addressFromEnv: REDIS_ADDR
-        passwordFromEnv: REDIS_PASSWORD
-        listName: "bull:transcode-480p:wait"
-        listLength: "1"
-        activationListLength: "0"
-        databaseIndex: "0"
 ---
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject

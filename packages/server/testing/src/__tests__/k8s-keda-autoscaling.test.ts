@@ -36,24 +36,11 @@ describe('infra/k8s: local KEDA autoscaling', () => {
     }
   );
 
-  it('declares a redis fallback trigger only where a stage asks for one', () => {
-    const withRedis = WORKER_STAGES.filter((s) =>
-      scaledObjectOf('local', s.name)?.spec.triggers.some((t) => t.type === 'redis')
-    );
-    expect(withRedis).toEqual(WORKER_STAGES.filter((s) => s.redisFallback));
-  });
-
-  it.each(WORKER_STAGES.filter((s) => s.redisFallback))(
-    '$name falls back to the redis list scaler',
+  it.each(WORKER_STAGES)(
+    '$name scales on the prometheus trigger alone, which counts a prioritized job',
     ({ name }) => {
-      const redis = scaledObjectOf('local', name)?.spec.triggers.find((t) => t.type === 'redis');
-      expect(redis?.metadata).toMatchObject({
-        addressFromEnv: 'REDIS_ADDR',
-        passwordFromEnv: 'REDIS_PASSWORD',
-        listName: `bull:${stage(name)}:wait`,
-        listLength: '1',
-        activationListLength: '0',
-      });
+      const triggers = scaledObjectOf('local', name)?.spec.triggers ?? [];
+      expect(triggers.map((trigger) => trigger.type)).toEqual(['prometheus']);
     }
   );
 });

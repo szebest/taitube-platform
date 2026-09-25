@@ -57,7 +57,7 @@ package is `server`, where its Postgres, Redis, S3 and auth vocabulary belongs.
 | **T1** Foundation | No `@vp/*` dependency at all. The vocabulary everything else speaks. |
 | **T2** Contracts and policy | Schemas and rules built on the foundation. |
 | **T3** Domain capability | Ports and repository contracts, and the policy they lean on. |
-| **T4** Integration | Concrete drivers and generated clients. |
+| **T4** Integration | Concrete drivers, typed clients and the environment loader. |
 | **T5** Application | Deployables. No library may depend on these. |
 | **T6** Reference tool | Drives a running application from its acceptance suite. |
 
@@ -80,8 +80,8 @@ with it.
 
 ## 3. The current map
 
-Generated from the manifests. If this table and `package.json` disagree, the manifest wins and this document
-is stale — fix it.
+Copied from the manifests by hand. If this table and `package.json` disagree, the manifest wins and this
+document is stale — fix it.
 
 ### T1 — Foundation (no `@vp/*` dependency)
 
@@ -120,7 +120,7 @@ is stale — fix it.
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
-| `@vp/env-schema` | server | `@vp/domain`, `@vp/pagination`, `@vp/result` |
+| `@vp/env-schema` | server | `@vp/domain`, `@vp/observability` (the `TraceSamplerName` type), `@vp/pagination`, `@vp/result` |
 
 ### T4 — Integration
 
@@ -147,10 +147,10 @@ is stale — fix it.
 Its acceptance suite boots `apps/api` and a stub S3, so the package sits above the application it drives.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
-**Every package in `@vp/web`'s closure is `universal` or `client`** — six of them, counting what
-`@vp/api-contracts` and `@vp/permissions` pull in, and it stays six once devDependencies count too. That is
-the invariant the whole scheme exists to protect.
-Verify it any time with `pnpm why bullmq` from `apps/web` — it returns nothing.
+**Every package in `@vp/web`'s closure is `universal` or `client`** - seven of them, counting what
+`@vp/api-contracts` and `@vp/permissions` pull in (`@vp/domain`, `@vp/errors`, `@vp/pagination`); `@vp/web`
+has no `@vp/*` devDependency. That is the invariant the whole scheme exists to protect. Verify it any time
+with `pnpm why bullmq` from `apps/web` — it returns nothing.
 
 Membership is necessary and not sufficient: `@vp/env-schema` was `universal` while the browser imported one
 constant from it, and the rest of the module — `DATABASE_URL`, `S3_SECRET_ACCESS_KEY`, `ADMIN_TOKEN`, the
@@ -184,19 +184,18 @@ The remaining hole is someone *adding the declaration* to `package.json`. TypeSc
 
 - tier compatibility of every `@vp/*` dependency, peerDependency and devDependency
 - layer direction (strictly down; same-layer is a violation), over the same three groups
-- the declared tier matches the directory the package lives in
-- every `AGENTS.md` has its `CLAUDE.md` symlink
+- no package under `packages/<tier>/` declares a `vp.tier` of its own, and one outside it does
+
+`pnpm boundaries` then runs `scripts/sync-claude-symlinks.ts --check`, which fails when an `AGENTS.md` has no
+`CLAUDE.md` symlink beside it.
 
 `pnpm build` and `pnpm typecheck` both run it **first**, so a bad manifest fails before turbo starts:
 
 ```
-Package boundary violations (3):
-
-  ✗ @vp/db (T2) depends on @vp/events (T2) — the same layer. Dependencies must point strictly down.
-  ✗ @vp/permissions (universal) depends on @vp/adapters (server) — a universal package may only
-    depend on universal
-  ✗ @vp/permissions (T2) depends on @vp/adapters (T3) — a higher layer. Dependencies must point
-    strictly down.
+error package boundary violation violation=@vp/db (T2) depends on @vp/events (T2) — the same layer. Dependencies must point strictly down.
+error package boundary violation violation=@vp/permissions (universal) depends on @vp/adapters (server) — a universal package may only depend on universal
+error package boundary violation violation=@vp/permissions (T2) depends on @vp/adapters (T4) — a higher layer. Dependencies must point strictly down.
+error package runtime tiers and dependency layers are inconsistent violations=3 see=ARCHITECTURE.md
 ```
 
 ### 4.3 The type system — tsconfig presets
@@ -209,10 +208,10 @@ src/mime.ts(1,23): error TS2307: Cannot find module 'node:path'
 src/mime.ts(3,20): error TS2591: Cannot find name 'process'
 ```
 
-A subtlety worth knowing: `types: []` alone is not enough, because a spec doing
-`import { describe } from 'vitest'` pulls `@types/node` into the whole program and `node:fs` starts resolving
-again. Universal packages therefore exclude their specs from `tsconfig.json` and typecheck them through a
-sibling `tsconfig.spec.json`.
+A subtlety worth knowing: `types: []` alone is not enough, because the vitest types a spec needs pull
+`@types/node` into the whole program and `node:fs` starts resolving again. Universal and client packages
+therefore exclude their specs from `tsconfig.json` and typecheck them through a sibling `tsconfig.spec.json`,
+which extends `@vp/tsconfig/spec.json`.
 
 `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite, so a violation also
 shows up as a failing test.
@@ -229,8 +228,7 @@ shows up as a failing test.
 3. Decide the **layer**: one more than the highest layer it depends on. If that forces a sibling edge, the
    design is wrong — fix the dependency, not the number.
 4. `package.json` gets `"vp": { "layer": ... }` - **not a `tier`**, the directory already fixes that and
-   declaring one fails `pnpm boundaries`. `tsconfig.json` extends
-   `@vp/tsconfig/<tier>.json`.
+   declaring one fails `pnpm boundaries`. `tsconfig.json` extends `@vp/tsconfig/<tier>.json`.
 5. Write `AGENTS.md` and run `pnpm sync:claude` for the symlink.
 6. `pnpm boundaries` must pass.
 
@@ -262,8 +260,8 @@ layer and have both depend on it. Do not add a sibling edge.
 
 ### Changing a package's tier
 
-Move the directory, then run `pnpm install` and `pnpm boundaries`. There is no `vp.tier` to update. The move is deliberate by
-design — a tier change should be a visible commit, not a one-word edit.
+Move the directory, then run `pnpm install` and `pnpm boundaries`. There is no `vp.tier` to update. The move
+is deliberate by design — a tier change should be a visible commit, not a one-word edit.
 
 ---
 

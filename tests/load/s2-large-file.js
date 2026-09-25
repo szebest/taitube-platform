@@ -3,7 +3,7 @@ import { sleep } from 'k6';
 import { SharedArray } from 'k6/data';
 import { STORAGE_HOSTS, completeUpload, initUpload, uploadPart } from './common.js';
 const videoData = new SharedArray('video-l30', () => {
-  return open('../../tools/gen-video/fixtures/l30.mp4', 'b');
+  return open('../fixtures/l30.mp4', 'b');
 });
 
 export const options = {

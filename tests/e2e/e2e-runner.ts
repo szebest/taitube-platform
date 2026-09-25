@@ -15,9 +15,9 @@ import type {
   FlowProducerPort,
   JobQueue,
   MultipartStorage,
-  Repositories,
   StorageClient,
 } from '../../packages/server/core/ports/index';
+import type { Repositories } from '../../packages/server/core/repositories/index';
 import { mintToken } from '../../packages/server/dev-token/src/index';
 import type { Logger } from '../../packages/server/logger/src/index';
 import {

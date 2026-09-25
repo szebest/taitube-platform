@@ -26,6 +26,9 @@ importers:
       fastify:
         specifier: ^5.12.1
         version: 5.12.1
+      github-slugger:
+        specifier: ^2.0.0
+        version: 2.0.0
       js-yaml:
         specifier: ^5.4.1
         version: 5.4.1
@@ -35,6 +38,9 @@ importers:
       lefthook:
         specifier: ^1.10.10
         version: 1.13.6
+      markdown-it:
+        specifier: ^15.0.2
+        version: 15.0.2
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -49,7 +55,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   apps/api:
     dependencies:
@@ -182,7 +188,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   apps/web:
     dependencies:
@@ -213,6 +219,9 @@ importers:
       bootstrap:
         specifier: ^5.2.3
         version: 5.3.8(@popperjs/core@2.11.8)
+      bootstrap-icons:
+        specifier: ^1.13.1
+        version: 1.13.1
       framer-motion:
         specifier: ^10.18.0
         version: 10.18.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -373,7 +382,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/client/api-client:
     dependencies:
@@ -407,7 +416,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/adapters:
     dependencies:
@@ -507,7 +516,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/compose-autoscaler:
     dependencies:
@@ -529,7 +538,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/composition:
     dependencies:
@@ -551,7 +560,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/concurrency:
     devDependencies:
@@ -569,7 +578,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/config:
     dependencies:
@@ -603,7 +612,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/core:
     dependencies:
@@ -631,7 +640,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/db:
     dependencies:
@@ -677,7 +686,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/dev-token:
     dependencies:
@@ -699,13 +708,16 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/env-schema:
     dependencies:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
+      '@vp/observability':
+        specifier: workspace:*
+        version: link:../observability
       '@vp/pagination':
         specifier: workspace:*
         version: link:../../universal/pagination
@@ -730,7 +742,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/events:
     dependencies:
@@ -758,7 +770,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/ffmpeg:
     dependencies:
@@ -795,7 +807,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/gen-video:
     dependencies:
@@ -817,7 +829,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/job-contracts:
     dependencies:
@@ -839,7 +851,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/logger:
     dependencies:
@@ -867,7 +879,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/observability:
     dependencies:
@@ -928,7 +940,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -949,7 +961,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/server/testing:
     dependencies:
@@ -958,8 +970,11 @@ importers:
         version: link:../../universal/result
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
     devDependencies:
+      '@cdktf/hcl2json':
+        specifier: ^0.21.0
+        version: 0.21.0
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
@@ -1014,7 +1029,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/universal/api-contracts:
     dependencies:
@@ -1045,7 +1060,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/universal/domain:
     devDependencies:
@@ -1063,7 +1078,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/universal/domain-rules:
     dependencies:
@@ -1100,7 +1115,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/universal/errors:
     devDependencies:
@@ -1118,7 +1133,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/universal/pagination:
     dependencies:
@@ -1143,7 +1158,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/universal/permissions:
     dependencies:
@@ -1168,7 +1183,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/universal/result:
     devDependencies:
@@ -1183,7 +1198,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   packages/universal/tsconfig: {}
 
@@ -1213,7 +1228,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.7
-        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
 packages:
 
@@ -2095,6 +2110,9 @@ packages:
 
   '@casl/ability@6.8.1':
     resolution: {integrity: sha512-VX5DD1JbSP/DdewZnNwXXaCzve+0pLe14mcUj2l93CdOFAQUT/ylAptNqxf3Wc/jlsuSanAgXza4Z1Iq23dzpQ==}
+
+  '@cdktf/hcl2json@0.21.0':
+    resolution: {integrity: sha512-cwX3i/mSJI/cRrtqwEPRfawB7pXgNioriSlkvou8LWiCrrcDe9ZtTbAbu8W1tEJQpe1pnX9VEgpzf/BbM7xF8Q==}
 
   '@craco/craco@7.1.0':
     resolution: {integrity: sha512-oRAcPIKYrfPXp9rSzlsDNeOaVtDiKhoyqSXUoqiK24jCkHr4T8m/a2f74yXIzCbIheoUWDOIfWZyRgFgT+cpqA==}
@@ -4285,6 +4303,9 @@ packages:
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
 
+  '@types/debug@4.1.13':
+    resolution: {integrity: sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw==}
+
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
@@ -4352,6 +4373,9 @@ packages:
 
   '@types/mime@1.3.5':
     resolution: {integrity: sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==}
+
+  '@types/ms@2.1.0':
+    resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
   '@types/node-forge@1.3.14':
     resolution: {integrity: sha512-mhVF2BnD4BO+jtOp7z1CdzaK4mbuK0LLQYAvdOLqHTavxFNq4zA1EmYkpnFjP8HOUzedfQkRnp0E2ulSAYSzAw==}
@@ -4752,6 +4776,9 @@ packages:
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
+  argparse@3.0.2:
+    resolution: {integrity: sha512-mFdDM6WqWKraGLsVb+C9CahPnzTXOefAOLq3jYcca2YZ8bEWpr++Tzj+zSaKW9+X9L5uSxcm1AZ3Y6aZJ09OhQ==}
+
   aria-hidden@1.2.6:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
     engines: {node: '>=10'}
@@ -4971,6 +4998,9 @@ packages:
 
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
+
+  bootstrap-icons@1.13.1:
+    resolution: {integrity: sha512-ijombt4v6bv5CLeXvRWKy7CuM3TRTuPEuGaGKvTV5cz65rQSY8RQ2JcHt6b90cBBAC7s8fsf2EkQDldzCoXUjw==}
 
   bootstrap@5.3.8:
     resolution: {integrity: sha512-HP1SZDqaLDPwsNiqRqi5NcP0SSXciX2s9E+RyqJIIqGo+vJeN5AJVM98CXmW/Wux0nQ5L7jeWUdplCEf0Ee+tg==}
@@ -5796,6 +5826,10 @@ packages:
     resolution: {integrity: sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g==}
     engines: {node: '>=0.12'}
 
+  entities@8.1.0:
+    resolution: {integrity: sha512-kxL7msIffSuh9aaFAMD7rxAIuTRMAHMeBtgHW2yUdWw732ZNh4MehkF2gdjvtdmikkaIP9bFDDJOPlsvm7avrA==}
+    engines: {node: '>=20.19.0'}
+
   error-ex@1.3.4:
     resolution: {integrity: sha512-sqQamAnR14VgCr1A618A3sGrygcpK+HEbenA/HiEAkkUwcZIIB/tgWqHFxWgOyDh4nB4JCRimh79dR5Ywc9MDQ==}
 
@@ -6292,6 +6326,10 @@ packages:
   fs-extra@10.1.0:
     resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
     engines: {node: '>=12'}
+
+  fs-extra@11.3.0:
+    resolution: {integrity: sha512-Z4XaCL6dUDHfP/jT25jJKMmtxvuwbkrD1vNSMFlo9lNLY2c5FHYSQgHPRZUjAB26TpDEoW9HCOgplrdbaPV/ew==}
+    engines: {node: '>=14.14'}
 
   fs-extra@9.1.0:
     resolution: {integrity: sha512-hcg3ZmepS30/7BSFqRvoo3DOMQu7IjqxO5nCDt+zM9XWjb33Wg7ziNT+Qvqbuc3+gWpzO02JubVyk2G4Zvo1OQ==}
@@ -7227,6 +7265,9 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
+  linkify-it@6.1.0:
+    resolution: {integrity: sha512-wJ/TwpSDTLepCrQoYWYIExIKg5Zchex2Nn5yk2mFnB+6PtdkHtyLx742md9csRjjOnGkKIS/RrbY7l8D6gT9Vw==}
+
   load-script@1.0.0:
     resolution: {integrity: sha512-kPEjMFtZvwL9TaZo0uZ2ml+Ye9HUMmPwbYRJ324qF9tqMejwykJ5ggTyvzmrbBeapCAbk98BSbTeovHEEP1uCA==}
 
@@ -7315,6 +7356,10 @@ packages:
   makeerror@1.0.12:
     resolution: {integrity: sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==}
 
+  markdown-it@15.0.2:
+    resolution: {integrity: sha512-q4IGxMv56jCqT4OCRCADBoDP3LO4MhmTXjFbphHPXs4g3j9Xg5RDnxqN8IF/3vIWEU+VCnUq+7JUg/cfy2E6Qw==}
+    hasBin: true
+
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
@@ -7324,6 +7369,9 @@ packages:
 
   mdn-data@2.0.4:
     resolution: {integrity: sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==}
+
+  mdurl@2.1.0:
+    resolution: {integrity: sha512-1+HBaOx0zi/dQWht8rNv9MYf9qqpqL/kxI0hXImU6Y547zM6Sni8BQibt7ifgMcYtQg41ao3Ivd6cnSM86inpg==}
 
   media-typer@0.3.0:
     resolution: {integrity: sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==}
@@ -8333,6 +8381,10 @@ packages:
 
   psl@1.15.0:
     resolution: {integrity: sha512-JZd3gMVBAVQkSs6HdNZo9Sdo0LNcQeMNP3CozBJb3JYC/QUYZTnKxP+f8oWRX4rHP5EurWxqAHTSwUCjlNKa1w==}
+
+  punycode.js@2.3.1:
+    resolution: {integrity: sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==}
+    engines: {node: '>=6'}
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -9454,6 +9506,9 @@ packages:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
     hasBin: true
+
+  uc.micro@3.0.0:
+    resolution: {integrity: sha512-U3PppEkleoTnIfi8BozMx3yju3qc/L6SwqWo2Sw+54PX+PX0q9I+r1Um5HCmqD7n9VDX5/v3vQH/AjA6deDdtw==}
 
   unbash@4.0.11:
     resolution: {integrity: sha512-FoSOKV7NEofQSkAefMVHam4ZPKYMxjAydxiV72UFEDNV/YofxjGfiZ2A9pZjdL/lRJzTjcu4PABo1JYJX8N5iQ==}
@@ -11133,6 +11188,10 @@ snapshots:
   '@casl/ability@6.8.1':
     dependencies:
       '@ucast/mongo2js': 1.4.1
+
+  '@cdktf/hcl2json@0.21.0':
+    dependencies:
+      fs-extra: 11.3.0
 
   '@craco/craco@7.1.0(@types/node@24.13.3)(postcss@8.5.27)(react-scripts@5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.104.1)(ts-node@10.9.2(@types/node@24.13.3)(typescript@5.9.3))(tsx@4.23.15)(type-fest@0.21.3)(typescript@5.9.3)(yaml@2.9.1))(typescript@5.9.3)':
     dependencies:
@@ -13347,6 +13406,11 @@ snapshots:
     dependencies:
       '@types/node': 24.13.3
 
+  '@types/debug@4.1.13':
+    dependencies:
+      '@types/ms': 2.1.0
+    optional: true
+
   '@types/deep-eql@4.0.2': {}
 
   '@types/eslint@8.56.12':
@@ -13426,6 +13490,9 @@ snapshots:
       '@types/node': 24.13.3
 
   '@types/mime@1.3.5': {}
+
+  '@types/ms@2.1.0':
+    optional: true
 
   '@types/node-forge@1.3.14':
     dependencies:
@@ -13875,6 +13942,8 @@ snapshots:
 
   argparse@2.0.1: {}
 
+  argparse@3.0.2: {}
+
   aria-hidden@1.2.6:
     dependencies:
       tslib: 2.8.1
@@ -14193,6 +14262,8 @@ snapshots:
       multicast-dns: 7.2.5
 
   boolbase@1.0.0: {}
+
+  bootstrap-icons@1.13.1: {}
 
   bootstrap@5.3.8(@popperjs/core@2.11.8):
     dependencies:
@@ -14878,6 +14949,8 @@ snapshots:
   entities@2.2.0: {}
 
   entities@6.0.1: {}
+
+  entities@8.1.0: {}
 
   error-ex@1.3.4:
     dependencies:
@@ -15653,6 +15726,12 @@ snapshots:
   fresh@0.5.2: {}
 
   fs-extra@10.1.0:
+    dependencies:
+      graceful-fs: 4.2.11
+      jsonfile: 6.2.1
+      universalify: 2.0.1
+
+  fs-extra@11.3.0:
     dependencies:
       graceful-fs: 4.2.11
       jsonfile: 6.2.1
@@ -16919,6 +16998,10 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
+  linkify-it@6.1.0:
+    dependencies:
+      uc.micro: 3.0.0
+
   load-script@1.0.0: {}
 
   loader-utils@2.0.4:
@@ -16998,11 +17081,22 @@ snapshots:
     dependencies:
       tmpl: 1.0.5
 
+  markdown-it@15.0.2:
+    dependencies:
+      argparse: 3.0.2
+      entities: 8.1.0
+      linkify-it: 6.1.0
+      mdurl: 2.1.0
+      punycode.js: 2.3.1
+      uc.micro: 3.0.0
+
   math-intrinsics@1.1.0: {}
 
   mdn-data@2.0.14: {}
 
   mdn-data@2.0.4: {}
+
+  mdurl@2.1.0: {}
 
   media-typer@0.3.0: {}
 
@@ -17987,6 +18081,8 @@ snapshots:
   psl@1.15.0:
     dependencies:
       punycode: 2.3.1
+
+  punycode.js@2.3.1: {}
 
   punycode@2.3.1: {}
 
@@ -19325,6 +19421,8 @@ snapshots:
 
   typescript@5.9.3: {}
 
+  uc.micro@3.0.0: {}
+
   unbash@4.0.11: {}
 
   unbox-primitive@1.1.0:
@@ -19459,7 +19557,7 @@ snapshots:
       tsx: 4.23.15
       yaml: 2.9.1
 
-  vitest@3.2.7(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1):
+  vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(jiti@2.7.0)(jsdom@26.1.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.7
@@ -19485,6 +19583,7 @@ snapshots:
       vite-node: 3.2.4(@types/node@24.13.3)(jiti@2.7.0)(sass@1.104.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
+      '@types/debug': 4.1.13
       '@types/node': 24.13.3
       jsdom: 26.1.0
     transitivePeerDependencies:

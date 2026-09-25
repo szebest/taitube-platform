@@ -7,13 +7,13 @@ This document describes the architectural boundaries, ports, and adapters layer 
 ## 1. Architectural Principles
 
 1. **Dependency Inversion:** High-level policy (domain services, routes, worker pipeline stages) must never import, instantiate, or depend directly on low-level details (concrete SDKs like `@aws-sdk/client-s3`, `ioredis`, `bullmq`, or Postgres/Drizzle drivers).
-2. **Ports as Abstract Classes:** Every boundary is defined by an abstract class in `@vp/core/ports`. Abstract classes are used instead of pure TypeScript interfaces to allow `instanceof` checks, centralized error wrapping, and runtime health check contract enforcement.
-3. **Single Injection Seam:** Concrete adapters are constructed only inside `@vp/adapters` and by composition modules; `registerAdapters` picks the family, and the composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`) resolve one `Container` over it and inject its values down into domain services and worker stage processors.
+2. **Ports in `@vp/core`:** Every driver boundary is an abstract class in `@vp/core/ports`, and every repository an abstract class or interface in `@vp/core/repositories`. An abstract class is also a runtime value, which is what lets the composition container use it as a token. Every I/O method returns `Promise<Result<T, E>>` with the port's narrow failure (`result-returning-ports.test.ts`).
+3. **Single Injection Seam:** Concrete adapters are constructed only inside `@vp/adapters` and by composition modules; `registerAdapters` picks the family, and the composition roots (`composeApp` in `apps/api/src/app.ts`, `composeWorker` in `apps/worker/src/runner.ts`) resolve one `Container` over it and inject its values down into domain services and worker stages.
 4. **Interface Segregation:** Distinct responsibilities are separated into dedicated ports rather than god-objects:
    - Standard object operations live in `StorageClient`; multi-part lifecycle operations live in `MultipartStorage`.
-   - Low-level database connection/transaction execution lives in `DatabaseClient`; domain entity data access lives in dedicated domain repositories (`VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, `CategoryRepositoryPort`, `VideoReactionRepositoryPort`).
+   - Low-level database connection/transaction execution lives in `DatabaseClient`; domain entity data access lives in one repository per entity, bundled by `Repositories` (section 3).
 5. **Modular Single-File Repository Design:** Each repository implementation has its own separate file in `repositories/`, adhering to single responsibility and clean file sizing (target <= 250 lines).
-6. **First-Class In-Memory Test Doubles:** Every port provides an in-memory adapter implementing realistic behavior (CAS transitions, fencing token validation, multipart chunk assembly, pub/sub simulation). All unit tests execute entirely in-memory with zero Docker, network sockets, or external dependencies.
+6. **First-Class In-Memory Test Doubles:** Every driver port (`DatabaseClient`, `Repositories`, `StorageClient`, `MultipartStorage`, `CacheClient`, `SubscriptionCachePort`, `JobQueue`, `FlowProducerPort`) has an in-memory adapter with realistic behaviour (CAS transitions, fencing token validation, multipart part assembly, pub/sub). The authorization adapter, the token verifier and the reaction and category caches are the same class in both families, since they run over those ports rather than an SDK. Unit specs run against the doubles, and the Postgres repositories against PGlite, with no Docker.
 
 ---
 
@@ -22,79 +22,94 @@ This document describes the architectural boundaries, ports, and adapters layer 
 Shared code sits under `packages/<tier>/`, where the directory **is** the runtime tier (Invariant 5).
 
 ```
-video-pipeline/
+taitube-platform/
 ├── apps/
-│   ├── api/                        # Fastify API — composition root apps/api/src/app.ts
-│   ├── worker/                     # BullMQ worker — composition root apps/worker/src/runner.ts
+│   ├── api/                        # Fastify API - composeApp in apps/api/src/app.ts, main.ts reads the env
+│   ├── worker/                     # BullMQ worker - composeWorker in apps/worker/src/runner.ts
 │   └── web/                        # Taitube web client (React 18 + CRA today; tickets 49-75 own the rewrite)
 │
 ├── packages/universal/             # runs in a browser AND on a server
-│   ├── api-contracts/              # @vp/api-contracts — every endpoint schema, one entry per route
-│   ├── domain/                     # @vp/domain — entities, value objects, status vocabulary, ranking policy
-│   ├── env-schema/                 # @vp/env-schema — the zod environment schema, no process access
-│   ├── errors/                     # @vp/errors — domain and RFC 9457 error classifications
-│   ├── pagination/                 # @vp/pagination — the one keyset Paginator and cursor codec
-│   ├── permissions/                # @vp/permissions — the pure CASL authorization engine
-│   └── tsconfig/                   # @vp/tsconfig — base / server / universal / client / spec presets
+│   ├── api-contracts/              # @vp/api-contracts - every endpoint schema, one entry per route
+│   ├── domain/                     # @vp/domain - entities, value objects, status vocabulary, ranking policy
+│   ├── domain-rules/               # @vp/domain-rules - pure rules over input plus an entity
+│   ├── errors/                     # @vp/errors - the ErrorCode vocabulary, failures, RFC 9457 mapping
+│   ├── pagination/                 # @vp/pagination - the one keyset Paginator and cursor codec
+│   ├── permissions/                # @vp/permissions - the pure CASL authorization engine
+│   ├── result/                     # @vp/result - Result, tryCatch/fromPromise, ignore
+│   ├── tsconfig/                   # @vp/tsconfig - base / server / universal / client / spec presets
+│   └── validation/                 # @vp/validation - pure rules over submitted input
 │
 ├── packages/client/                # browser only
-│   └── api-client/                 # @vp/api-client — typed client generated from @vp/api-contracts
+│   └── api-client/                 # @vp/api-client - typed client over @vp/api-contracts
 │
 ├── packages/server/                # Node/Bun only
-│   ├── core/                       # @vp/core — abstract driver ports and repository interfaces
-│   │   ├── ports/                  # authorization, cache-client, database-client, flow-producer,
-│   │   │                           #   health-checkable, job-queue, multipart-storage, reaction-cache,
-│   │   │                           #   storage-client, subscription-cache
-│   │   └── repositories/           # one interface per domain entity + the aggregating container
-│   ├── adapters/                   # @vp/adapters — the only home of concrete driver SDKs
+│   ├── core/                       # @vp/core - abstract ports and repository contracts
+│   │   ├── ports/                  # authorization, cache-client, category-cache, database-client,
+│   │   │                           #   flow-producer, health-checkable, job-queue, multipart-storage,
+│   │   │                           #   reaction-cache, storage-client, subscription-cache, token-verifier
+│   │   └── repositories/           # one contract per domain entity + the aggregating Repositories
+│   ├── adapters/                   # @vp/adapters - the only home of concrete driver SDKs
+│   │   ├── auth/                   # JwksTokenVerifier, DevTokenVerifier
 │   │   ├── authorization/          # CaslAuthorizationAdapter (@vp/permissions bridge)
-│   │   ├── postgres/               # Drizzle repositories, mappers/, scopes/ (CASL AST -> SQL, keyset)
-│   │   ├── s3/                     # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
-│   │   ├── redis/                  # RedisCacheClient, category/reaction/subscription caches, singleflight
-│   │   ├── bullmq/                 # BullMqJobQueue, BullMqFlowProducer, Bull Board wiring
-│   │   └── in-memory/              # autonomous test doubles for every port
-│   ├── config/                     # @vp/config — the server loader over @vp/env-schema
-│   ├── db/                         # @vp/db — Drizzle schema, client, migrations, seeds
-│   ├── events/                     # @vp/events — event definitions and the Redis pub/sub dispatcher
-│   ├── ffmpeg/                     # @vp/ffmpeg — argument builders, progress parsers, probe helpers
-│   ├── job-contracts/              # @vp/job-contracts — BullMQ payload schemas and queue names
-│   ├── observability/              # @vp/observability — OpenTelemetry, Prometheus, Pino
-│   ├── storage/                    # @vp/storage — S3 object key layout
-│   ├── testing/                    # @vp/testing — shared vitest config, fixtures, assertion helpers
-│   └── dev-token/ gen-video/ upload-client/ compose-autoscaler/   # developer CLIs
+│   │   ├── bullmq/                 # BullMqJobQueue, BullMqFlowProducer, the Bull Board queue adapters
+│   │   ├── composition/            # registerAdapters and the in-memory / external families
+│   │   ├── in-memory/              # the test doubles
+│   │   ├── metered/                # MeteredStorageClient, MeteredMultipartStorage (storage metrics)
+│   │   ├── postgres/               # repositories/, mappers/, scopes/ (CASL rules -> SQL, keyset)
+│   │   ├── redis/                  # RedisCacheClient and the category, reaction and subscription caches
+│   │   └── s3/                     # S3StorageClient, S3MultipartStorage (@aws-sdk/client-s3)
+│   ├── composition/                # @vp/composition - Container, tokens, shutdownOnce, exitOnSignals
+│   ├── concurrency/                # @vp/concurrency - Singleflight
+│   ├── config/                     # @vp/config - loadEnv(), the one reader of process.env
+│   ├── db/                         # @vp/db - Drizzle schema, client, migrations, the seed functions
+│   ├── env-schema/                 # @vp/env-schema - the zod schema, AppConfig and toAppConfig
+│   ├── events/                     # @vp/events - publishVideoEvent, SSE framing, channels, cache keys
+│   ├── ffmpeg/                     # @vp/ffmpeg - argument builders, progress parsers, probe rules
+│   ├── job-contracts/              # @vp/job-contracts - BullMQ payloads, queue names, the ladder
+│   ├── logger/                     # @vp/logger - createLogger (pino), json and pretty formats
+│   ├── observability/              # @vp/observability - OpenTelemetry and Prometheus metrics
+│   ├── storage/                    # @vp/storage - the S3 object key layout
+│   ├── testing/                    # @vp/testing - shared vitest config, fixtures, assertion helpers
+│   └── compose-autoscaler/ dev-token/ gen-video/ upload-client/   # developer CLIs
 │
 └── tests/
-    ├── architecture/               # the executable form of section 5 — see section 6
-    └── e2e/                        # the acceptance runner
+    ├── architecture/               # the executable form of section 5 - see section 6
+    ├── e2e/                        # the acceptance runner (pnpm e2e)
+    ├── in-process/                 # specs that compose both apps in one process
+    └── load/                       # k6 scenarios
 ```
 
 ---
 
 ## 3. Core Ports & Repositories
 
+Every I/O method below returns `Promise<Result<T, E>>`, where `E` is the port's own unavailability
+(`DatabaseUnavailable`, `StorageUnavailable`, `CacheUnavailable`, `QueueUnavailable`); the signatures list
+the method names only.
+
 ### `HealthCheckable`
 ```typescript
-export interface HealthCheckable {
-  checkHealth(): Promise<boolean>;
+export interface HealthCheckable<E extends InfraFailure = InfraFailure> {
+  checkHealth(): Promise<Result<void, E>>;
 }
 ```
-All ports extend `HealthCheckable` to ensure uniform liveness and readiness monitoring across all external integrations.
+Every driver port implements it, and `/readyz` reads the verdicts instead of catching one. The S3 adapters
+answer with a `HeadBucket` on the raw bucket.
 
 ### `DatabaseClient`
-Low-level client for executing parameterized queries, transactions, and health checks:
-- `query<T>(queryText, params?)` / `execute(queryText, params?)`
-- `transaction(fn)` / `checkHealth()` / `close()`
+`query`, `execute`, `transaction`, `checkHealth`, `close`.
 
 ### Domain Repositories (`@vp/core/repositories`)
-- **`VideoRepository`**: `findById`, `findWithDetails`, `create`, `updateMetadata` (optimistic version check), `transition` (atomic CAS with events).
+- **`VideoRepository`**: `findById`, `findWithDetails`, `create`, `listByOwner`, `listPublic`, `updateMetadata` (optimistic version check), `transition` (atomic CAS that appends to `video_events`), `scan`, `hardDelete`, `countByStatus`, `countInFlightByOwner`, `updateReactionCounters`.
 - **`UploadRepository`**: `findById`, `findByVideoId`, `findWithVideo`, `create`, `updateStatus`.
-- **`StepRepository`**: `claim`, `complete`, `fail` (worker fencing tokens), `heartbeat`, `findByVideoId`.
-- **`RenditionRepository`**: `create`, `findByVideoId`, `update`.
-- **`EventRepository`**: `create`, `findByVideoId`.
+- **`StepRepository`**: `claim`, `complete`, `fail`, `markDead` (all fenced by the worker's token), `heartbeat`, `findByVideoId`, `countRunningStale`.
+- **`RenditionRepository`**: `create`, `findByVideoId`, `findByVideoIds`, `update`.
+- **`EventRepository`**: `create`, `findByVideoId`, `findAfterId`, `findAfterIdForUser`, `getLatestEventId`.
 - **`UserRepository`**: `findById`, `upsert`.
-- **`CategoryRepositoryPort`**: Category listing, caching, admin management.
-- **`VideoReactionRepositoryPort`**: Atomic reaction recording and counter synchronization.
-- **`Repositories`**: Aggregating container interface bundling domain repositories.
+- **`DlqRepository`**: `create`, `findById`, `list`, `updateStatus`.
+- **`OutboxRepository`**: `enqueue`, `claimBatch`, `markPublished`, `recordAttempt`, `prune`, `findById`.
+- **`CategoryRepositoryPort`**, **`ChannelRepositoryPort`**, **`VideoReactionRepositoryPort`**, **`SubscriptionRepositoryPort`**: category taxonomy, channel identity, reactions with their counters, and subscriptions with the subscription feed.
+- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `uploads`, `steps`, `renditions`, `events`, `users`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`).
 
 ### `AuthorizationPort`
 Abstracts user authorization and declarative rule evaluation. It answers the verdict; the refusal is a
@@ -103,52 +118,58 @@ rule's, through `authorize(actor, allowed, context)` in `@vp/domain-rules` (ADR-
 - `can(action, subject)` / `can(helper, params)`: evaluates if an action is permitted.
 - `forUser(user)`: returns a new `AuthorizationPort` instance scoped to the target user.
 
+### `TokenVerifier`
+`verify(token)` answers `Result<Principal, AuthFailure>`. The JWKS adapter checks the signature, `iss`,
+`aud`, the allowed algorithms and `exp`/`nbf`; the dev adapter is registered only when `auth.type` is `dev`.
+
 ### `StorageClient`
-Abstracts standard S3-compatible object storage operations across local MinIO and Cloudflare R2:
-- `uploadObject(options)` / `downloadObject(bucket, key, targetFilePath)` / `headObject(bucket, key)`
-- `deleteObject(bucket, key)` / `getObject(bucket, key)`
-- `createPresignedPutUrl(params)`
+Object storage across local MinIO and Cloudflare R2: `uploadObject`, `downloadObject`, `headObject`,
+`deleteObject`, `deleteObjects`, `listObjects`, `purgePrefix`, `getObject`, `createPresignedPutUrl`,
+`createPresignedGetUrl`, `checkHealth`, `close`.
 
 ### `MultipartStorage`
-Abstracts multi-part uploads with part-level presigning and listing:
-- `createMultipartUpload(bucket, key, contentType)`
-- `createPresignedPartUrl(params)`
-- `listMultipartParts(bucket, key, uploadId)`
-- `completeMultipartUpload(bucket, key, uploadId, parts)`
-- `abortMultipartUpload(bucket, key, uploadId)`
+`createMultipartUpload`, `createPresignedPartUrl`, `listMultipartParts`, `listMultipartUploads`,
+`completeMultipartUpload`, `abortMultipartUpload`, `checkHealth`, `close`.
 
 ### `CacheClient`
-Abstracts key-value caching and Pub/Sub messaging:
-- `get(key)` / `set(key, value, ttlSeconds?)` / `del(key)`
-- `publish(channel, message)` / `subscribe(channel, handler)` / `unsubscribe(channel)`
+Key-value caching and Pub/Sub: `get`, `set`, `del`, `ping`, `publish`, `subscribe`, `unsubscribe`,
+`psubscribe`, `punsubscribe`, `checkHealth`, `close`. `CategoryCachePort`, `ReactionCachePort` and
+`SubscriptionCachePort` are the typed caches built over it.
 
-### `JobQueue` & `FlowProducer`
-Abstracts job queuing, lifecycle, and parent-child flows:
-- `add(name, data, options?)` / `process(handler, options?)`
-- `getJobCounts()` / `getJobs(types)`
-- `addFlow(flow)`
+### `JobQueue` & `FlowProducerPort`
+- `JobQueue`: `add`, `process`, `getName`, `getJobState`, `isPaused`, `pause`, `resume`, `getJobCounts`
+  (over `QUEUE_JOB_STATES`), `getJobs`, `upsertJobScheduler`, `getJobSchedulers`, `close`, plus the
+  `onFailed` / `onStalled` hooks.
+- `FlowProducerPort`: `add(node)` enqueues a parent with its children (`FlowJobNode`), `checkHealth`, `close`.
 
 ---
 
 ## 4. Adapters (`@vp/adapters`)
 
-| Port / Boundary | Production Adapter | In-Memory Adapter |
+| Port / Boundary | External Adapter | In-Memory Adapter |
 |-----------------|--------------------|-------------------|
-| `AuthorizationPort` | `CaslAuthorizationAdapter` | `PermissiveAuthorizationAdapter` / `StrictAuthorizationAdapter` |
 | `DatabaseClient` | `PostgresDatabaseClient` | `InMemoryDatabaseClient` |
 | `Repositories` | `PostgresRepositories` | `InMemoryRepositories` |
 | `StorageClient` | `S3StorageClient` | `InMemoryStorageClient` |
 | `MultipartStorage` | `S3MultipartStorage` | `InMemoryMultipartStorage` |
 | `CacheClient` | `RedisCacheClient` | `InMemoryCacheClient` |
+| `SubscriptionCachePort` | `RedisSubscriptionCacheAdapter` | `InMemorySubscriptionCache` |
 | `JobQueue` | `BullMqJobQueue` | `InMemoryJobQueue` |
-| `FlowProducer` | `BullMqFlowProducer` | `InMemoryFlowProducer` |
+| `FlowProducerPort` | `BullMqFlowProducer` | `InMemoryFlowProducer` |
+
+Both families wrap storage in `MeteredStorageClient` / `MeteredMultipartStorage`, and share
+`CaslAuthorizationAdapter`, the token verifier (`JwksTokenVerifier` or `DevTokenVerifier`, chosen by
+`auth.type`), `RedisReactionCacheAdapter` and `RedisCategoryCacheAdapter`, which run over `CacheClient`.
+`PermissiveAuthorizationAdapter` and `StrictAuthorizationAdapter` are the authorization doubles specs hand
+in directly.
 
 ---
 
 ## 5. Architectural Invariants
 
 ### Invariant 1: Dedicated Repository Files
-- Every repository implementation MUST live in its own dedicated file inside `repositories/` subfolders:
+- Every repository implementation MUST live in its own dedicated file inside `repositories/` subfolders
+  (`repository-files.test.ts`):
   - `packages/server/adapters/postgres/repositories/postgres-<domain>-repository.ts`
   - `packages/server/adapters/in-memory/repositories/in-memory-<domain>-repository.ts`
 - Monolithic multi-repository files are strictly forbidden.
@@ -160,7 +181,7 @@ Abstracts job queuing, lifecycle, and parent-child flows:
 - See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
 
 ### Invariant 3: Autonomous In-Memory Test Doubles
-- In-memory test doubles manage self-contained state and expose `.clear()`.
+- In-memory test doubles manage self-contained state and expose `.clear()` (`in-memory-doubles.test.ts`).
 - Repositories interact exclusively via port interfaces, never by reaching into foreign private collections.
 
 ### Invariant 4: Deep Domain Services vs Thin Transport Routes
@@ -185,7 +206,7 @@ packages/client/      browser only
 | Tier | Packages | May depend on |
 |---|---|---|
 | `universal` | `api-contracts`, `domain`, `domain-rules`, `errors`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
+| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
 | `client` | `api-client` | `universal` + `client` |
 
 Apps sit outside `packages/` and declare their tier in `package.json`: `apps/api` and `apps/worker` are
@@ -287,8 +308,8 @@ Both deployables build one object graph from one `Container` (`@vp/composition`,
   adapters take configuration as a value.
 - **The schema is closed in both directions.** Every key the deployables read is declared, every declared
   key is in `.env.example`, and every key compose, the k8s base, CI and `make` hand to this code is declared.
-- **`AdapterKind` is the one environment switch.** `registerAdapters(c, config)` in `@vp/adapters` picks the
-  in-memory or external family from `config.kind` and imports only that family.
+- **`ADAPTER_FAMILY` is the one adapter switch.** `toAppConfig()` turns it into `config.kind`
+  (`AdapterKind`), and `registerAdapters(c, config)` in `@vp/adapters` imports only that family.
 - **Dependencies are total.** A service or stage never constructs, defaults or infers a collaborator it was
   not handed; forgetting one in a composition module is a compile error.
 - **A concrete adapter is constructed only in a composition module** or inside `@vp/adapters` itself.
@@ -296,7 +317,7 @@ Both deployables build one object graph from one `Container` (`@vp/composition`,
 
 ### Invariant 9: A Process Drains Before It Closes
 
-- `buildApp()` / `createWorkerRunner()` construct; `container.start()` runs I/O. A test that builds the app
+- `composeApp()` / `composeWorker()` construct; `container.start()` runs I/O. A test that builds the app
   opens no subscription and leaves no timer.
 - On `SIGTERM`/`SIGINT` both processes run `shutdownOnce` from `@vp/composition`: readiness flips first,
   the listener keeps accepting for the drain delay, then the server closes and the container disposes in
@@ -308,48 +329,74 @@ Both deployables build one object graph from one `Container` (`@vp/composition`,
 
 ## 6. Verification & Enforcement
 
-Every invariant in section 5 is an assertion in `tests/architecture/`, run by `pnpm test:architecture`
-(≈1.5 s, no build) and again inside `pnpm test`. CI runs it as a named fail-fast step in `lint-typecheck`,
-before lint and typecheck. **An invariant that cannot be asserted is deleted from this document rather than
-left as decoration** — a rule a human has to remember to check is a rule that has already drifted.
+The invariants in section 5 are held by the assertions in `tests/architecture/`, run by
+`pnpm test:architecture` (no build; about 3 s locally, held to 6 s in CI by `.github/actions/budget`) and
+inside `pnpm test`. CI runs it once, in `lint-typecheck` ahead of lint and typecheck; `pnpm test:unit` leaves
+it out. What the suite does not hold is listed under the table: a rule a human has to remember to check is a
+rule that has already drifted, so a gap is named rather than left looking enforced.
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
-| `package-boundaries.test.ts` | a package under `packages/<tier>/` takes its tier from that directory and must not declare `vp.tier`; everything else must; `universal` never depends on `server`; dependencies point strictly down, devDependencies included | a manifest that declares a tier its directory already fixes |
-| `sdk-confinement.test.ts` | `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are imported only under `packages/server/adapters/` and `packages/server/db/`, and **declared** in no other manifest; `@vp/adapters` is imported only from a composition module | `import { Queue } from 'bullmq'` in `apps/api/src/app.ts`; `import { CaslAuthorizationAdapter } from '@vp/adapters'` in a service |
-| `lockfile-closure.test.ts` | `apps/web`'s resolved runtime closure holds no `server`-tier package — read from the lockfile, so a transitive edge is caught too | a `server` package linked into a `universal` package two hops from `apps/web` |
-| `local-first.test.ts` | no production source names an off-machine host; every uncommented `.env.example` default is local | a hardcoded `https://…onrender.com` |
-| `file-ceiling.test.ts` | no tracked `.ts`/`.tsx`/`.mts` file, specs and `tests/` included, over 400 lines or 10 KB; no exception list | a spec of 401 lines |
-| `no-process-comments.test.ts` | no comment and no `it`/`describe` title names a ticket, an AC, a workstream, a PR number or a numbered step, in production source, specs and `tests/` (AST); `ADR-NN` and `SDD §` stay allowed | `// AC 3` above a test, `describe('Outbox relay (Ticket 30)')` |
-| `redis-keys-owner.test.ts` | every Redis key and channel is built in `@vp/events` (`keys.ts`, `channels.ts`): no template literal starting `taitube:`, `video:` or `user:` and no `taitube:` string elsewhere in production source (AST) | `` `taitube:user:${userId}:reactions` `` in an adapter |
-| `test-correspondence.test.ts` | every production source with runtime code has `__tests__/<name>.test.ts` beside it | a new source file with no spec; a constant, a function or an abstract class with a concrete method still counts |
-| `esm-specifiers.test.ts` | no relative import in any tracked TypeScript source, specs included, carries an extension (`.js`, `.mjs`, `.ts`, `.tsx`); `apps/web` resolves extensionless workspace output through `craco.config.js` | `import { ok } from './result.js'` |
-| `core-barrels.test.ts` | each `@vp/core` barrel re-exports only its own folder; no `*.port.ts` anywhere | a barrel re-exporting a sibling folder |
-| `no-domain-throw.test.ts` | no `throw`, `*OrThrow(` helper or throwing `Schema.parse(` / `JSON.parse(` in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` or `apps/worker/src/stages/`, except a `throw assertNever` | `NotifyJob.parse({...})` in a stage |
-| `validation-is-input-only.test.ts` | `@vp/validation` imports no `@vp/domain` or `@vp/core`, in source **and** in its manifest | a predicate taking a `Video` added to `@vp/validation` |
-| `catch-confinement.test.ts` | a `try/catch` or a `.catch(` appears only in `@vp/result`, `packages/server/adapters/` and an entrypoint's exit-code handler, and a two-argument `.then(onOk, onErr)` only in an entrypoint (AST); no exception list | `load().then(undefined, () => 0)` in a service |
-| `result-returning-ports.test.ts` | every I/O method on a `@vp/core` port or repository, and every exported async function of `@vp/events`, returns `Promise<Result<…>>` | a port method returning a bare `Promise<T>` |
-| `no-discarded-result.test.ts` | no statement in production source leaves a `Result` or a promise of one unread, through `await`, `void`, parentheses or a trailing `.catch`/`.finally` (type-aware, on the shared `ts.Program`); a deliberate drop is `ignore(result, 'reason')` | `await cache.set(key, value)` with its failure dropped |
-| `error-vocabulary.test.ts` | no string literal assigned to a `code` / `errorCode` in server source is outside `ErrorCode`, and every repository write types its `errorCode` as `ErrorCode` | `errorCode: 'ORPHANED'` before it was a code |
+| `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/<tier>/` and `apps/`: a `packages/` package takes its tier from its directory and must not declare `vp.tier`, an app must; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, `@vp/tsconfig` and `@vp/testing` exempt | planted manifests: a `client` package depending (and dev-depending) on a `server` one; a T2 package depending on a T4 one |
+| `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
+| `lockfile-closure.test.ts` | `apps/web`'s runtime workspace closure, and its dev closure with build tooling aside, holds no `packages/server/` package - read line by line from the `importers` of `pnpm-lock.yaml`, so a transitive edge is caught too | none - reads the repo |
+| `workspace-closure.test.ts` | the line-based lockfile reader behind `lockfile-closure`, `frontend-vocabulary` and `load-smoke-triggers` follows `dependencies`, `optionalDependencies` and `devDependencies` and exempts build tooling only on a dev edge - asserted over a planted lockfile only | a planted lockfile where `apps/web` has a runtime `@vp/testing` edge that drags in `@vp/job-contracts` |
+| `repo-files.test.ts` | the index reader every text ratchet scans through: `trackedFiles` lists, for a `:(glob)` pathspec, exactly the tracked files `matchesGlob` matches, and `:(exclude,glob)` drops its matches | none - compares against `matchesGlob` over `git ls-files` |
+| `frontend-vocabulary.test.ts` | substring match over the `.ts`/`.tsx` under `src/` of `apps/web` and its lockfile runtime closure (outside `__tests__`/`__mocks__`): no server secret, key or queue name (`ADMIN_TOKEN`, `DATABASE_URL`, `transcode-1080p`, `minioadmin`, ...); every `packages/universal/` and `packages/client/` manifest that ships `src/` sets `sideEffects: false` | none - reads the repo |
+| `local-first.test.ts` | regex for `http(s)://` literals: no production source (`apps`, `packages`, `scripts`), no `apps/web/public/*.html` and no `tools/hls-test-page/*.html` names an off-machine host; every uncommented `.env.example` line is local | `'https://taitube-backend.onrender.com'` in a planted source |
+| `file-ceiling.test.ts` | no tracked `.ts`/`.tsx`/`.mts` file, specs and `tests/` included, over 400 lines or 10 KB; no exception list | a 401-line spec body; a one-line file over 10 KB |
+| `no-process-comments.test.ts` | no comment and no `it`/`test`/`describe`/`suite`/`bench` title names a ticket, an AC, a workstream, a PR number or a numbered step, over `.ts`/`.tsx`/`.js`/`.mjs`/`.mts` in `apps`, `packages`, `scripts` and `tests` (regex prefilter, then the TypeScript parser); `ADR-NN` and `SDD §` stay allowed | `const a = 1; // AC 3`, `describe('Outbox relay (Ticket 30)', ...)` |
+| `redis-keys-owner.test.ts` | every Redis key and channel is built in `@vp/events` (`keys.ts`, `channels.ts`): no template literal starting `taitube:`, `video:` or `user:` and no `taitube:` string elsewhere in production source (AST) | `` `taitube:user:${userId}:reactions` `` in a planted source |
+| `test-correspondence.test.ts` | every production source other than `index.ts` and `*.config.ts` whose transpiled output holds runtime code has `__tests__/<name>.test.ts(x)` beside it, against the shrink-only `untested-sources.ts` list, which fails on a stale entry too | `export const LIMIT = 3;` and an abstract class with a concrete method still ask a spec; an interface or an all-abstract class does not |
+| `esm-specifiers.test.ts` | no relative import, re-export, dynamic `import()`, `require` or `vi.mock` in any tracked `.ts`/`.tsx`/`.mts` under `apps`, `packages`, `scripts` and `tests`, specs included, carries an extension (`.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`) (AST) | `import { ok } from './result.js';`, `vi.mock('./adapter.js', ...)` |
+| `core-barrels.test.ts` | regex: the `index.ts` barrels of `@vp/core` `ports/` and `repositories/`, `@vp/domain` and `@vp/pagination` `export *` only from `./`; no `*.port.ts` under `apps/` or `packages/` | none - reads the repo |
+| `no-domain-throw.test.ts` | regex over production source in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` and `apps/worker/src/stages/`: no `throw` except `throw assertNever`, no `*OrThrow(` helper, no capitalised `X.parse(` (a zod schema or `JSON.parse`) | `NotifyJob.parse({ videoId })`, `unwrapOrThrow(await repo.f())` |
+| `validation-is-input-only.test.ts` | regex over import specifiers: `@vp/validation` imports no `@vp/domain` or `@vp/core`, in source **and** in its manifest's dependency groups; `@vp/domain-rules` still declares `@vp/domain` | none - reads the repo |
+| `catch-confinement.test.ts` | a `try/catch` or a `.catch(` (regex over text) appears in production source only in `@vp/result`, `packages/server/adapters/` and the `ENTRYPOINTS` files, and a two-argument `.then(onOk, onErr)` (AST) only in an `ENTRYPOINTS` file; no exception list | `load().then(undefined, () => 0)`, `storage.deleteObject(bucket, key).catch(() => {})` |
+| `result-returning-ports.test.ts` | regex over method signatures: every `Promise`-returning abstract or interface method in `@vp/core` `ports/` and `repositories/`, and every `export async function` in `@vp/events`, returns `Promise<Result<...>>` | none - reads the repo |
+| `no-discarded-result.test.ts` | no expression statement in production source leaves a `Result` or a promise of one unread, through `await`, `void`, parentheses or a trailing `.catch`/`.finally` (type-aware, on the shared `ts.Program`); a deliberate drop is `ignore(result, 'reason')` | a fixture program with `await repo.remove();`, `void repo.remove();`, `repo.remove().catch(() => {});` and `check();` |
+| `error-vocabulary.test.ts` | AST: no string literal assigned to a `code` / `errorCode` / `error_code` property in `apps/api`, `apps/worker`, `packages/server`, `packages/universal` or `scripts` is outside `ErrorCodes` (metric labels aside), and every `*Options`/`*Input` interface in `@vp/core` `repositories/` types its `errorCode` as `ErrorCode` | `{ errorCode: 'ORPHANED_VIDEO' }`; `interface FailStepOptions { errorCode: string }` |
 | `no-in-probes.test.ts` | no `'literal' in value` narrowing in production source, the browser tier included (AST) | `if ('rendition' in child)` |
-| `error-code-drift.test.ts` | every `ErrorCode` has a `PROBLEM_STATUS` entry, a `RETRY_CLASS` entry and a line in SDD §6.2 | a code added to `ApiErrorCodes` only |
-| `env-key-closure.test.ts` | every key the deployables read is declared in `@vp/env-schema`; every schema key is uncommented in `.env.example`; every key compose, the k8s base and overlays (patches and `ExternalSecret` entries included), CI and `make` hand the apps is declared | an overlay patch adding `/data/HOUSEKEEPING_INTERVAL_MS` |
-| `env-confinement.test.ts` | `process.env` appears only in the `ENTRYPOINTS` and `ENV_HOMES` `entrypoints.ts` lists, over `.ts`, `.tsx`, `.mts`, `.js` and `.mjs` in `apps`, `packages`, `scripts` and `tests` | a `process.env` read in a service, or in a `.mjs` helper |
-| `no-defaulted-secrets.test.ts` | no `TOKEN\|SECRET\|PASSWORD\|ACCESS_KEY` key carries a `.default()`, no production source holds a literal fallback for one, and no schema default or production literal carries URL userinfo | `REDIS_URL: z.string().default('redis://:vp@localhost:6379/0')` |
-| `env-keys-consumed.test.ts` | every `AppEnv` key is read by `toAppConfig`, every `AppConfig` leaf is read by production source outside `env-schema` (type-aware), and no `platform-env.json` key is also an `AppEnv` key | a config leaf nothing reads |
-| `no-tuning-literals.test.ts` | no numeric `??` fallback other than `0`/`1`, destructuring default or default parameter in `apps/api/src/services`, `apps/worker/src` or `packages/server/adapters` (AST) | `const { thresholdMs = 60 * 60 * 1000 } = options` |
-| `no-test-hooks.test.ts` | no fault-injection flag or header in production source or a job contract | `request.headers['x-test-crash-after-commit']` |
-| `production-secrets.test.ts` | `kustomize build` of the base fails `loadEnv()` under production until every secret is overridden; the cloud overlay renders no Secret value, one `ExternalSecret` entry per `SECRET_KEYS` member and no local credential | `S3_ACCESS_KEY_ID: minioadmin` rendered into the cloud overlay |
-| `zero-matches.test.ts` | each counted pattern stays at the count the change that moved it left it | a second `worker-${process.pid}` default |
-| `adapter-instantiation.test.ts` | a concrete adapter is **constructed** only in a composition module or inside `@vp/adapters`, and a service or a stage constructs values only (`Date`, `Map`, `Set`, `URL`, `Promise`, `AbortController`, an `*Error`, `SseConnection`) | `new Singleflight()` inside a service |
-| `total-dependencies.test.ts` | no service, stage, adapter or composition root recovers from a missing dependency: `?? new`, `\|\| new`, `?? default*`, `?? inProcessAppConfig()`, or a default parameter or destructuring default that is constructed, called or `default*` (AST) | `paginator: Paginator = defaultPaginator` |
-| `no-module-state.test.ts` | outside `ENTRYPOINTS`, no module-scope `let`/`var`, no module-scope `new` other than an immutable value or a `Readonly` collection, and no top-level call statement (AST) | `export const defaultPaginator = new Paginator()` |
-| `tests/in-process/start-order.test.ts` | both composition roots start every consumer after the metrics server, and the worker's after its heartbeat, read from `container.started()` | a consumer resolved before the metrics server |
-| `route-plugins.test.ts` | every route module exports a Fastify plugin, carries no options interface and appears in `routes/index.ts` | a route module exporting a bare `void` registrar |
-| `drain-before-close.test.ts` | the shared shutdown flips readiness before it closes, both mains use it, and `/readyz` reads the drain flag before any dependency | a shutdown that closes the server before flipping readiness |
-| `shutdown-closure.test.ts` | every resource a composition module constructs registers a disposer; `dispose()` releases in reverse construction order | an adapter registered with no disposer |
-| `in-memory-off-boot-path.test.ts` | neither `main.ts` reaches an `adapters/in-memory/` module on its static boot path, and the root barrel does not re-export them | a boot path that reaches the doubles through a barrel |
-| `apps/api/src/__tests__/contract-drift.test.ts` | every registered Fastify route has an `@vp/api-contracts` entry, and every contract entry is routed | a route registered with no contract entry |
+| `no-truthy-result.test.ts` | regex over production source in `apps/` and `packages/server/`: a `const x = await ....<repo>.<method>(` binding, for each `Repositories` property whose contract returns only `Promise<Result<...>>`, is not read in its block as a truthy value, a nullish or `\|\|` default, an `Object` walk, a spread, a serialisation, an interpolation, an index or a comparison | `const v = await repo.videos.findById(id);` then `if (!v) return;` |
+| `class-name-inference.test.ts` | regex over production source outside `@vp/errors` and `packages/server/adapters/s3/` (the S3 SDK `name` check is the documented exception): no `constructor.name` or `.name === '...Error'` comparison, no `.isRetryable` probe, no `.code` compared to a bare `ErrorCode` literal | `err.name === 'UnrecoverableError'`, `err.code === 'VERSION_CONFLICT'` |
+| `error-code-drift.test.ts` | regex over text: every code in `api-error-codes.ts` and `pipeline-error-codes.ts` has an `[ErrorCodes.X]` entry in `PROBLEM_STATUS` (`problem.ts`) and `RETRY_CLASS` (`retry-class.ts`), and the SDD §6.2 enumeration lists exactly those codes, both ways | none - reads the repo |
+| `env-key-closure.test.ts` | every `process.env` key read in the production source of the `@vp/api`/`@vp/worker` runtime package closure is declared in `@vp/env-schema`; every schema key is uncommented in `.env.example`; every key `docker-compose.yml`, the k8s base and overlays (patches and `ExternalSecret` entries included), a CI step running `pnpm` and a `make` recipe prefix hand the apps is declared (indent-based text reads, not a YAML parse) | `path: /data/HOUSEKEEPING_INTERVAL_MS` in a planted overlay patch; `process.env['STORAGE_RAW_BUCKET']` in a planted source |
+| `env-confinement.test.ts` | `process.env` appears only in the `ENTRYPOINTS` and `ENV_HOMES` `entrypoints.ts` lists, over `.ts`, `.tsx`, `.mts`, `.js` and `.mjs` in `apps`, `packages`, `scripts` and `tests` (specs, `__tests__` and `__mocks__` aside), and every listed entry exists | `process.env['S3_BUCKET_RAW']` at a service path; `process.env.REDIS_URL` in a `.mjs` path |
+| `no-defaulted-secrets.test.ts` | regex: no `TOKEN\|SECRET\|PASSWORD\|ACCESS_KEY` key in `app-env.ts` carries a `.default()`, no production source holds a `process.env.X \|\| '...'` literal fallback for one, and no production source line carries URL userinfo | `REDIS_URL: z.string().default('redis://:vp@localhost:6379/0')` |
+| `env-keys-consumed.test.ts` | every `AppEnv` key is read as `env.KEY` in `app-config.ts` (regex); every `AppConfig` leaf is read by production source in `apps/api/src`, `apps/worker/src` or `packages/server` outside `env-schema` (type-aware, on the shared `ts.Program`); no `platform-env.json` key is also an `AppEnv` key | a fixture program whose consumer never reads `http.host` or `pool.bogusTtlSeconds` |
+| `no-tuning-literals.test.ts` | AST over production source in `apps/api/src/services`, `apps/worker/src`, `packages/server/adapters` and `packages/server/ffmpeg/src`: no numeric `??` fallback other than `0`/`1`, no numeric destructuring or parameter default, no numeric module-scope constant, no minute/hour/day spelt as literal arithmetic | `const { concurrency = 4 } = deps;`, `export const QUEUE_POLL_INTERVAL_MS = 5_000;` |
+| `no-test-hooks.test.ts` | regex for named fault-injection flags (`forceFailure`, `simulateFailure`, `x-test-`, `killAtPercent`, ...) in production source, `@vp/job-contracts` included | `request.headers['x-test-crash-after-commit']` |
+| `log-calls.test.ts` | every `log`/`logger` level call carries a fixed lowercase literal message and puts its values in fields: no template, concatenation, printf args or non-literal message, in production source (scripts included) and `tests/e2e/*.ts` (AST) | ``log.warn(`probe of ${videoId} failed`)`` in a planted source |
+| `promql-labels-emitted.test.ts` | every dashboard JSON, alert rule and `scaled-objects.yaml` KEDA query parses with `@prometheus-io/lezer-promql`, names a metric the registry or a known exporter provides, and selects only label values recorded by code (read type-aware on the shared `ts.Program`) or, for `deployment`, the base's Deployment names | `jobs_processed_total{result="stalled"}` against a fixture that records only `completed`/`failed`; `neon_compute_hours_used` |
+| `minio-images-pinned.test.ts` | every MinIO image in `infra/compose/docker-compose*.yml`, and `image`/`mcImage` in `infra/k8s/helm-values/minio.yaml`, is pinned by `@sha256:` digest (YAML parse) | `image: "cgr.dev/chainguard/minio:latest"` in a planted compose file |
+| `production-secrets.test.ts` | `kustomize build` of the base fails `AppEnvSchema.safeParse` on every `SECRET_KEYS` member and `AUTH_JWKS_URL` until they are overridden; the cloud overlay renders no Secret value, exactly one `ExternalSecret` entry per `SECRET_KEYS` member, no key owned by both it and the ConfigMap, and no local credential | a planted `Secret` with `REDIS_URL: 'redis://:vp@redis:6379/0'` |
+| `zero-matches.test.ts` | regex over text: each of 32 counted patterns stays at its expected match count over its own scope (e.g. one `worker-${process.pid}` default, no `as unknown as`, no `console.`) | each row's own snippet, e.g. ``workerId: `worker-${process.pid}` `` |
+| `ci-shape.test.ts` | YAML parse of `.github/workflows/ci.yml`: each job's `timeout-minutes` is its budget, no `needs` chain sums past 6 minutes, `unit` and the architecture suite sit behind `.github/actions/budget`, the architecture suite runs in one job, the docs-only path filter gates every job, services and `db:migrate` appear only in `integration` and `e2e-smoke`, and only `unit-bun` sets up Bun | a fixture workflow that breaks every rule |
+| `load-smoke-triggers.test.ts` | YAML parse of `.github/workflows/load-smoke.yml`: its `pull_request.paths` cover `apps/api`, `apps/worker` and every package in their lockfile runtime closure, and end with `!**/*.md` | none - reads the repo |
+| `doc-links.test.ts` | every relative link and `#anchor` in every tracked `.md` outside `.agents/` (symlinked `CLAUDE.md` skipped) resolves, anchors slugged by `github-slugger` (markdown parsed with `markdown-it`) | `SDD.md#adr-24-result-typed-errors` for a heading with an em dash |
+| `doc-commands.test.ts` | every `pnpm <script>`, `make <target>` and backticked repo path in `README.md`, `ARCHITECTURE.md`, `CONTEXT.md`, `docs/SDD.md`, `docs/standards/`, `docs/runbooks/` and every `AGENTS.md` exists (git-ignored paths aside); the README tree draws exactly the workspace packages; `.PHONY` lists exactly the Makefile rules | `make up-all` with no such rule |
+| `architecture-table.test.ts` | the bare-named first-cell code spans of this section's tables are exactly the `*.test.ts` files in `tests/architecture/`; rows naming a path are not checked | a planted document whose section-5 row and second-cell code span are not read as rows |
+| `tests/in-process/gen-index.test.ts` | spawns `python3 docs/tickets/gen-index.py`: `--check` passes (index current, one status vocabulary, every spec anchor real), `--anchors` agrees with `github-slugger` on the SDD, the PRD and edge-case headings, and changing a status moves the computed frontier | a ticket with `**Status:** ready-for-agent` in a planted tickets directory |
+| `repository-files.test.ts` | every exported `*Repository` class under `packages/server/adapters/` lives under a `repositories/` folder, in a file named after it in kebab case, with no other class beside it (AST) | a planted repository outside `repositories/`, one under another file name, and two classes in one file |
+| `in-memory-doubles.test.ts` | every class under `packages/server/adapters/in-memory/` that keeps a `Map`, a `Set` or an array field has a `clear()` method (AST) | a planted double with a `Map` field and no `clear()`, beside one that has it and a stateless one |
+| `adapter-instantiation.test.ts` | a class exported from `packages/server/adapters` is `new`-ed (regex) only in a `composition/` module, `@vp/adapters` or `@vp/testing`; a service or a stage `new`s values only (`Date`, `Map`, `Set`, `URL`, `Promise`, `AbortController`, an `*Error`, `SseConnection`) (AST) | `new Singleflight()` in a planted service source; `new CaslAuthorizationAdapter()` at a service path |
+| `total-dependencies.test.ts` | no source in `apps/api/src/services/`, `apps/worker/src/stages/`, `packages/server/adapters/`, `apps/api/src/app.ts` or `apps/worker/src/runner.ts` recovers from a missing dependency: `?? new`, `\|\| new`, `?? default*`, `?? inProcessAppConfig(` (regex), or a parameter or destructuring default that is constructed, called or `default*` (AST) | `function f(cursor: string, paginator = defaultPaginator) {}`, `deps.authorization ?? new CaslAuthorizationAdapter()` |
+| `no-module-state.test.ts` | in production source outside `ENTRYPOINTS`: no module-scope `let`/`var`, no module-scope `new` other than an immutable value or a `Readonly` collection, and no top-level call statement, awaited or not (AST) | `export const paginator = new Paginator();`, `collectDefaultMetrics({ register });` |
+| `tests/in-process/start-order.test.ts` | both composition roots, built in process over `inProcessAppConfig()`, start every consumer after the metrics server, and the worker's after its heartbeat, read from `container.started()` | a start order `['Consumer', 'MetricsServer', 'Heartbeat', 'OutboxRelay']` |
+| `route-plugins.test.ts` | regex: every file under `apps/api/src/routes/` that registers a route exports `async function xRoutes(app: FastifyInstance): Promise<void>`, declares no `*Options` interface, and is named in `routes/index.ts` | `export function registerVideosRoutes(app, options): void`; `export interface VideosRouteOptions` |
+| `routes-unwrap-at-send-result.test.ts` | line regex over `apps/api/src/routes/`: no `throw` (except `throw assertNever`) and no `catch` clause, and no import from `@vp/core/ports`, `@vp/core/repositories` or `@vp/adapters` (`health.ts` reports on the adapters themselves) | `throw new PermanentError(e.code, e.message);`, `} catch (err) {` |
+| `drain-before-close.test.ts` | text order: `shutdownOnce` in `@vp/composition` calls `plan.drain()` before it closes, `apps/api/src/serve.ts` and `apps/worker/src/process.ts` both call it with a `drain`, and the readiness service reads `this.draining` before `checkHealth` | `await plan.close();\nplan.drain();` |
+| `shutdown-closure.test.ts` | regex: every `.provide(...)` in a `composition/` module that `new`s a class defining `close()` or `stop()` (from `packages/server/adapters/`, `apps/api/src/services/` or `apps/worker/src/`) also passes a `dispose` or `closeOnDispose` | `.provide(Redis, () => new RedisCacheClient({ type: 'url', url }))` |
+| `in-memory-off-boot-path.test.ts` | neither `main.ts` reaches an `adapters/in-memory/` module through its static, non-type imports (regex graph walk, `@vp/*` resolved through manifest `exports`), and the `@vp/adapters` root barrel does not re-export them | a planted boot path that reaches the doubles through a barrel |
+| `apps/api/src/__tests__/contract-drift.test.ts` | boots the real app over the in-memory adapters: every route in `printRoutes()` (vendor prefixes aside) has an `@vp/api-contracts` entry, every contract entry is routed, and each OpenAPI operation carries the contract's summary, description and tag | none - reads the repo |
+
+The rows with a path run elsewhere: `tests/in-process/start-order.test.ts` and
+`tests/in-process/gen-index.test.ts` compose apps or spawn Python, so they are in-process specs and run in
+`pnpm test:unit`, not `pnpm test:architecture`, and the contract-drift assertion runs with `apps/api`'s own specs.
+
+The suite does not assert everything section 5 says. Invariant 4's `app.services` rule, Invariant 6's
+local and CI parity, Invariant 8's single adapter switch and Invariant 9's grace-period derivation are held by
+unit specs (`apps/worker/src/__tests__/registry.test.ts`, `k8s-local-overlay.test.ts`) or by review, not here.
 
 The contract-drift assertion stays in `apps/api` because it has to boot the app: it builds a real Fastify
 instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
@@ -359,7 +406,7 @@ depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps
 already breached the 1:1 test mandate when it became executable. The assertion fails on a *new* breach **and**
 on a listed entry that has gained its spec, so the list can only get shorter. Nothing may be appended to it.
 
-Three further mechanisms sit outside the suite:
+Four further mechanisms sit outside the suite:
 
 1. **It does not resolve.** pnpm links only declared dependencies, so a server import in `apps/web` — or an
    SDK import in either composition root — is `error TS2307: Cannot find module`, not a lint warning.
