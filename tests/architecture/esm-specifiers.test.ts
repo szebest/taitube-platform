@@ -34,7 +34,11 @@ function moduleSpecifier(node: ts.Node): string | undefined {
   return undefined;
 }
 
+/** A quoted relative path ending in an extension; a file without one has nothing to parse for. */
+const QUOTED_RELATIVE_WITH_EXTENSION = /['"]\.\.?\/[^'"\n]*\.[cm]?[jt]sx?['"]/;
+
 function extensioned(name: string, source: string): string[] {
+  if (!QUOTED_RELATIVE_WITH_EXTENSION.test(source)) return [];
   const file = parseSource(name, source);
   const found: string[] = [];
   const visit = (node: ts.Node) => {

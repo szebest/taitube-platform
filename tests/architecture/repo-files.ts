@@ -22,11 +22,25 @@ function allTracked(): readonly string[] {
 
 const globMatches = new Map<string, ReadonlySet<string>>();
 
-/** The tracked files a glob matches, worked out once per glob: `matchesGlob` compiles it on every call. */
+const WILDCARD = /[*?[{]/;
+
+/**
+ * The files that can match: under the glob's literal directory and ending in its literal tail.
+ * `matchesGlob` compiles the glob on every call, so it only sees these.
+ */
+function candidates(glob: string): readonly string[] {
+  const firstWildcard = glob.search(WILDCARD);
+  const directory = glob.slice(0, glob.lastIndexOf('/', firstWildcard) + 1);
+  const tail = glob.slice(glob.lastIndexOf('*') + 1);
+  const suffix = WILDCARD.test(tail) ? '' : tail;
+  return allTracked().filter((file) => file.startsWith(directory) && file.endsWith(suffix));
+}
+
+/** The tracked files a glob matches, worked out once per glob. */
 function matchingGlob(glob: string): ReadonlySet<string> {
   let matched = globMatches.get(glob);
   if (matched === undefined) {
-    matched = new Set(allTracked().filter((file) => matchesGlob(file, glob)));
+    matched = new Set(candidates(glob).filter((file) => matchesGlob(file, glob)));
     globMatches.set(glob, matched);
   }
   return matched;
