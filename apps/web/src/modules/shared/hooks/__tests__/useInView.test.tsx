@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { storeValue } from '../../../../__tests__/stored-value';
+import { stubBrowser } from '../../../../__tests__/browser';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '../../../../config';
 import { useIsView } from '../useInView';
 
@@ -16,22 +16,19 @@ function renderView(controls: ViewControls = {}): string {
 }
 
 describe('apps/web: list or grid view preference', () => {
-  it('shows the grid when the viewer never chose', () => {
+  it('server-renders the grid, whatever the viewer chose', () => {
+    stubBrowser({ stored: { [IN_VIEW_LOCAL_STORAGE_KEY]: 'true' } });
+
     expect(renderView()).toContain('grid');
   });
 
-  it('shows the list the viewer chose last time', () => {
-    storeValue(IN_VIEW_LOCAL_STORAGE_KEY, true);
-
-    expect(renderView()).toContain('list');
-  });
-
-  it('remembers a new choice for the next render', () => {
+  it('remembers a new choice', () => {
+    const storage = stubBrowser();
     const controls: ViewControls = {};
     renderView(controls);
 
     controls.setIsListView?.(true);
 
-    expect(renderView()).toContain('list');
+    expect(storage.get(IN_VIEW_LOCAL_STORAGE_KEY)).toBe('true');
   });
 });

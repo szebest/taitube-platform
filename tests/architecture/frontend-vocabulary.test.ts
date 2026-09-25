@@ -46,7 +46,7 @@ describe('architecture: frontend vocabulary', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('lets webpack drop what the browser does not use from every browser-tier package', () => {
+  it('lets the bundler drop what the browser does not use from every browser-tier package', () => {
     const undeclared = trackedFiles(...BROWSER_TIERS)
       .filter((file) => file.endsWith('/package.json'))
       .filter((file) => shipsCode(file.replace('/package.json', '')))

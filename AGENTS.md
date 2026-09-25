@@ -60,7 +60,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 Agents working in a specific package or app MUST follow its dedicated `AGENTS.md`:
 
 - **Frontend Client (`apps/web`, client/T4):** [apps/web/AGENTS.md](apps/web/AGENTS.md)  
-  *React 18 + Create React App 5 + RTK Query + Bootstrap today; declarative `<Can>` authorization, all HTTP through `@vp/api-client`. Ticket 89 moves it to React 19 + TanStack Start/Router/Query on Vite with SSR, ahead of every other frontend ticket; Tailwind/Radix is 55.*
+  *React 19 + TanStack Start/Router/Query on Vite with SSR; legacy pages on RTK Query and Bootstrap until 53 and 55; declarative `<Can>` authorization, all HTTP through `@vp/api-client`.*
 - **Backend API (`apps/api`):** [apps/api/AGENTS.md](apps/api/AGENTS.md)  
   *Fastify 5, route plugins over `app.services`, deep domain services, one container composed in `composition/`.*
 - **Worker Runtime (`apps/worker`):** [apps/worker/AGENTS.md](apps/worker/AGENTS.md)  

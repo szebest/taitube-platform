@@ -18,7 +18,11 @@ const GUEST_ABILITY = ['ROLE:NONE', 'READ_VIDEO:YES', 'CANNOT_MANAGE_ALL:YES', '
 
 describe('PermissionsProvider', () => {
   it.each([
-    { scenario: 'guest permissions for a null userContext', userContext: null, expected: GUEST_ABILITY },
+    {
+      scenario: 'guest permissions for a null userContext',
+      userContext: null,
+      expected: GUEST_ABILITY,
+    },
     {
       scenario: 'the admin superuser ability for an admin',
       userContext: { id: 'admin-1', role: 'ADMIN', email: 'admin@example.com' } as UserContext,

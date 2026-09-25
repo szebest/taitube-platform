@@ -4,7 +4,7 @@ import { renderPage, signIn } from '../../../../../__tests__/render-page';
 import { subscriptionsApi } from '../../../api/subscriptions-api';
 import { SubscribeButton } from '../subscribe-button';
 
-function renderButton(store: ApiStore): string {
+async function renderButton(store: ApiStore): Promise<string> {
   return renderPage(<SubscribeButton channelId={CHANNEL_ID} />, { store });
 }
 
@@ -15,15 +15,15 @@ async function signedInStore(): Promise<ApiStore> {
 }
 
 describe('apps/web: subscribe button', () => {
-  it('offers a guest to subscribe', () => {
-    const markup = renderButton(createApiStore());
+  it('offers a guest to subscribe', async () => {
+    const markup = await renderButton(createApiStore());
 
     expect(markup).toContain('>Subscribe<');
     expect(markup).not.toContain('disabled=""');
   });
 
   it('waits for the answer before a signed-in viewer can press it', async () => {
-    const markup = renderButton(await signedInStore());
+    const markup = await renderButton(await signedInStore());
 
     expect(markup).toContain('disabled=""');
   });
@@ -31,17 +31,20 @@ describe('apps/web: subscribe button', () => {
   it.each([
     { subscribed: true, label: '>Subscribed<' },
     { subscribed: false, label: '>Subscribe<' },
-  ])('labels the button $label when the API says subscribed=$subscribed', async ({ subscribed, label }) => {
-    const store = await signedInStore();
-    await seed(
-      store,
-      (target) => target.dispatch(subscriptionsApi.endpoints.isSubscribed.initiate(CHANNEL_ID)),
-      { channelId: CHANNEL_ID, subscribed }
-    );
+  ])(
+    'labels the button $label when the API says subscribed=$subscribed',
+    async ({ subscribed, label }) => {
+      const store = await signedInStore();
+      await seed(
+        store,
+        (target) => target.dispatch(subscriptionsApi.endpoints.isSubscribed.initiate(CHANNEL_ID)),
+        { channelId: CHANNEL_ID, subscribed }
+      );
 
-    const markup = renderButton(store);
+      const markup = await renderButton(store);
 
-    expect(markup).toContain(label);
-    expect(markup).not.toContain('disabled=""');
-  });
+      expect(markup).toContain(label);
+      expect(markup).not.toContain('disabled=""');
+    }
+  );
 });

@@ -3,7 +3,7 @@ import { OWNER_ID, VIDEO_ID, videoSummary } from '../../../../../__tests__/fixtu
 import { renderPage } from '../../../../../__tests__/render-page';
 import { VideoCard } from '../video-card';
 
-function renderCard(viewer: UserContext | null, video = videoSummary()): string {
+async function renderCard(viewer: UserContext | null, video = videoSummary()): Promise<string> {
   return renderPage(<VideoCard video={video} />, { viewer });
 }
 
@@ -16,13 +16,17 @@ describe('apps/web: video card', () => {
       visible: false,
     },
     { scenario: 'a guest', viewer: null, visible: false },
-    { scenario: 'an admin', viewer: { id: '0190c3a0-5e1d-7000-8000-0000000000aa', role: 'ADMIN' }, visible: true },
-  ])('shows the video actions to $scenario: $visible', ({ viewer, visible }) => {
-    expect(renderCard(viewer).includes('video actions')).toBe(visible);
+    {
+      scenario: 'an admin',
+      viewer: { id: '0190c3a0-5e1d-7000-8000-0000000000aa', role: 'ADMIN' },
+      visible: true,
+    },
+  ])('shows the video actions to $scenario: $visible', async ({ viewer, visible }) => {
+    expect((await renderCard(viewer)).includes('video actions')).toBe(visible);
   });
 
-  it('links to the watch page and shows the title and view count', () => {
-    const markup = renderCard(null, videoSummary({ viewsCount: 1500 }));
+  it('links to the watch page and shows the title and view count', async () => {
+    const markup = await renderCard(null, videoSummary({ viewsCount: 1500 }));
 
     expect(markup).toContain(`href="/watch/${VIDEO_ID}"`);
     expect(markup).toContain('A video');
@@ -32,7 +36,10 @@ describe('apps/web: video card', () => {
   it.each([
     { posterUrl: 'http://localhost:9000/posters/a.jpg', shown: true },
     { posterUrl: undefined, shown: false },
-  ])('renders a poster only when the API supplied one: $posterUrl', ({ posterUrl, shown }) => {
-    expect(renderCard(null, videoSummary({ posterUrl })).includes('<img')).toBe(shown);
-  });
+  ])(
+    'renders a poster only when the API supplied one: $posterUrl',
+    async ({ posterUrl, shown }) => {
+      expect((await renderCard(null, videoSummary({ posterUrl }))).includes('<img')).toBe(shown);
+    }
+  );
 });

@@ -40,7 +40,7 @@ declares its own default now.
    trailing slashes `asCdnBase` strips once, and buckets, limits and connections are grouped for the
    module that uses them. `inProcessAppConfig(overrides)` is what a test or an in-process app runs on:
    the in-memory family over the schema defaults, overrides merged in `AppConfig`'s own shape.
-5. **A browser build variable is not an environment key.** `REACT_APP_*` is inlined by CRA at build
+5. **A browser build variable is not an environment key.** `VITE_*` is inlined by Vite at build
    time and no server process reads it, so it is declared in `apps/web/src/config/index.ts` and left
    commented in `.env.example`. Declaring it here is what put the whole schema in the frontend bundle.
 6. **A default the wire contract also states comes from the package that owns it.** `PAGE_SIZE_DEFAULT`

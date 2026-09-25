@@ -1,11 +1,24 @@
 import { type PropsWithChildren, createContext, useContext, useLayoutEffect, useMemo } from "react";
-import { useLocalStorage } from "@uidotdev/usehooks";
+import { z } from "zod";
 
-export type Theme = "light" | "dark";
+import { useStoredState } from "src/hooks/use-stored-state";
+
+const ThemeSchema = z.enum(["light", "dark"]);
+
+type Theme = z.infer<typeof ThemeSchema>;
 
 type ThemeContextValue = {
 	theme: Theme;
 	changeTheme: (_: Theme) => void;
+}
+
+function getUsersPreferredTheme(): Theme {
+	if (window.matchMedia) {
+		if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+		return 'light';
+	}
+
+	return 'light';
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
@@ -13,7 +26,7 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 export type ThemeProviderProps = PropsWithChildren;
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-	const [theme, setTheme] = useLocalStorage<Theme>('THEME', getUsersPreferredTheme());
+	const [theme, setTheme] = useStoredState('THEME', ThemeSchema, 'light', getUsersPreferredTheme);
 
 	const ctx = useMemo(() => ({
 		theme,
@@ -23,15 +36,6 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 	useLayoutEffect(() => {
 		document.body.dataset.theme = theme;
 	}, [theme]);
-
-	function getUsersPreferredTheme() {
-		if (window.matchMedia) {
-			if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
-			return 'light';
-		}
-
-		return 'light';
-	}
 
 	return (
 		<ThemeContext.Provider value={ctx}>

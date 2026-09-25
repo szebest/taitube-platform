@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 import styles from './video-card.module.scss';
 
@@ -19,10 +19,8 @@ export type VideoCardProps = {
 
 export const VideoCard = memo(({ video, zIndex }: VideoCardProps) => {
 	const { tOr } = useT();
-	const videoRoute = `/watch/${video.id}`;
-
 	return (
-		<Link style={{ zIndex }} to={videoRoute} className={styles.link}>
+		<Link style={{ zIndex }} to="/watch/$videoId" params={{ videoId: video.id }} className={styles.link}>
 			<div className={styles.container}>
 				{video.posterUrl &&
 					<img className={styles.container__thumb} src={video.posterUrl} loading="lazy" alt="thumbnail" />

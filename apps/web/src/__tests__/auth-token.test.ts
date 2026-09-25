@@ -22,7 +22,11 @@ describe('apps/web: auth token', () => {
       token: 'stored-jwt',
     },
     { scenario: 'null when nothing is stored', getItem: () => null, token: null },
-    { scenario: 'null when the storage partition is blocked', getItem: blockedStorage, token: null },
+    {
+      scenario: 'null when the storage partition is blocked',
+      getItem: blockedStorage,
+      token: null,
+    },
   ])('reads $scenario', ({ getItem, token }) => {
     stubStorage({ getItem });
 

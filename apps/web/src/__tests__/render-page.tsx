@@ -1,10 +1,20 @@
+import type { QueryClient } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import {
+  Outlet,
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
 import type { Account } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { createQueryClient } from '../integrations/query/create-query-client';
 import { accountApi } from '../modules/shared/api/account-api';
 import { AuthProvider } from '../modules/shared/providers/auth-provider';
 import { PermissionsProvider } from '../modules/shared/providers/permissions-provider';
@@ -15,37 +25,65 @@ import { stubBrowser } from './browser';
 
 export type PageOptions = {
   store?: ApiStore;
+  queryClient?: QueryClient;
   url?: string;
   route?: string;
+  /** The pathless layout route `route` sits under, as the page's own route does. */
+  layout?: string;
   viewer?: UserContext | null;
 };
 
 /**
- * Renders inside the providers `App` mounts, in a fixed locale and zone, over a store a spec can seed. A `viewer` overrides
- * the permissions the signed-in account would give.
+ * Renders inside the providers the root route mounts, in a fixed locale and zone, at `url` of a
+ * router whose one route is `route`, over a store a spec can seed. A `viewer` overrides the
+ * permissions the signed-in account would give.
  */
-export function renderPage(
+export async function renderPage(
   page: ReactElement,
-  { store = createApiStore(), url = '/', route = '*', viewer }: PageOptions = {}
-): string {
-  return renderToStaticMarkup(
-    <Provider store={store}>
-      <IntlProvider locale="en" timeZone="UTC">
-        <AuthProvider>
-          <PermissionsProvider userContext={viewer}>
-            <MemoryRouter initialEntries={[url]}>
-              <Routes>
-                <Route path={route} element={page} />
-              </Routes>
-            </MemoryRouter>
-          </PermissionsProvider>
-        </AuthProvider>
-      </IntlProvider>
-    </Provider>
-  );
+  {
+    store = createApiStore(),
+    queryClient = createQueryClient(),
+    url = '/',
+    route = '/',
+    layout,
+    viewer,
+  }: PageOptions = {}
+): Promise<string> {
+  const rootRoute = createRootRoute({
+    component: () => (
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient}>
+          <IntlProvider locale="en" timeZone="UTC">
+            <AuthProvider>
+              <PermissionsProvider userContext={viewer}>
+                <Outlet />
+              </PermissionsProvider>
+            </AuthProvider>
+          </IntlProvider>
+        </QueryClientProvider>
+      </Provider>
+    ),
+  });
+  const parentRoute = layout
+    ? createRoute({ getParentRoute: () => rootRoute, id: layout })
+    : undefined;
+  const pageRoute = createRoute({
+    getParentRoute: () => parentRoute ?? rootRoute,
+    path: route,
+    component: () => page,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([
+      parentRoute ? parentRoute.addChildren([pageRoute]) : pageRoute,
+    ]),
+    history: createMemoryHistory({ initialEntries: [url] }),
+  });
+
+  await router.load();
+  return renderToStaticMarkup(<RouterProvider router={router} />);
 }
 
-/** Adds the sidebar and theme providers the layout reads; a spec using it fakes `useLocalStorage`. */
+/** Adds the sidebar and theme providers the layout reads. */
 export function inChrome(page: ReactElement): ReactElement {
   return (
     <SidebarProvider>

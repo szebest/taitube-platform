@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 import styles from "./subscription-card.module.scss";
 
@@ -11,15 +11,13 @@ export type SubscriptionCardProps = {
 }
 
 export function SubscriptionCard({ channel }: SubscriptionCardProps) {
-	const channelRoute = `/channel/${channel.id}`;
-
 	return (
 		<div className={styles.container}>
-			<Link to={channelRoute}>
+			<Link to="/channel/$channelId" params={{ channelId: channel.id }}>
 				<ProfilePicture src={channel.avatarUrl} />
 			</Link>
 			<div className={styles.container__wrapper}>
-				<Link to={channelRoute} title={channel.displayName}>
+				<Link to="/channel/$channelId" params={{ channelId: channel.id }} title={channel.displayName}>
 					<p className={styles.text}>{channel.displayName}</p>
 				</Link>
 

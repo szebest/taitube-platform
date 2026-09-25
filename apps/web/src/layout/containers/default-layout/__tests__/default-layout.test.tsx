@@ -3,18 +3,18 @@ import { inChrome, renderPage } from '../../../../__tests__/render-page';
 import { DefaultLayout } from '../default-layout';
 
 describe('apps/web: default layout', () => {
-  it('frames the page with the header and the sidebar', () => {
+  it('frames the page with the header and the sidebar', async () => {
     stubBrowser();
 
-    const markup = renderPage(inChrome(<DefaultLayout />));
+    const markup = await renderPage(inChrome(<DefaultLayout />));
 
     expect(markup).toContain('aria-label="theme switch"');
     expect(markup).toContain('href="/trending"');
   });
 
-  it('holds the page back until the sidebar has reported which breakpoint it is at', () => {
+  it('server-renders the page area, so the HTML carries the page', async () => {
     stubBrowser();
 
-    expect(renderPage(inChrome(<DefaultLayout />))).not.toContain('<main');
+    expect(await renderPage(inChrome(<DefaultLayout />))).toContain('<main');
   });
 });
