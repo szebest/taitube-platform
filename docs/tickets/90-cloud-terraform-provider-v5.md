@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD ADR-15 Cloud hosting](../SDD.md#adr-15--cloud-hosting-for-the-reference-deployment) · [SDD §12.3 Rung 3 Cloud](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** blocked
+**Status:** ready
 
 ---
 
