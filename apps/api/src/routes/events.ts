@@ -61,6 +61,9 @@ async function stream(
     return sendResult(reply, request, replayed);
   }
 
+  for (const [name, value] of Object.entries(reply.getHeaders())) {
+    if (value !== undefined) reply.raw.setHeader(name, value);
+  }
   reply.raw.writeHead(200, SSE_HEADERS);
   reply.raw.flushHeaders?.();
 
