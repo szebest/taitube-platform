@@ -12,14 +12,12 @@ export interface CreatorLibraryRow {
 
 type CounterSort = Exclude<CreatorLibrarySort, 'newest'>;
 
-/** The video field each counter sort orders by, named as the entity and the table both name it. */
 export const CREATOR_LIBRARY_COUNTERS = {
   views: 'viewsCount',
   likes: 'likesCount',
   comments: 'commentsCount',
 } as const satisfies Record<CounterSort, keyof CreatorLibraryRow>;
 
-/** Where a library page resumes: the value its sort orders by, and the id breaking ties. */
 export type CreatorLibraryCursor =
   | { sort: 'newest'; value: Date; id: string }
   | { sort: CounterSort; value: number; id: string };

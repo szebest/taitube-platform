@@ -12,7 +12,6 @@ import { type CreatorLibraryCursor, creatorLibraryCursorOf } from '@vp/domain';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 
-/** The live rows the studio edits in place, as the video repository holds them. */
 export interface StudioVideos {
   getAllVideos(): VideoRecord[];
 }

@@ -84,7 +84,6 @@ function toStudioPatch(videoId: string, patch: VideoMetadataPatch): StudioMetada
   return { ...columns, customThumbnailKey: thumbnailKeyOf(videoId, selectedThumbnail) };
 }
 
-/** A creator's own library, their edits to it, and an admin's takedown of anyone's video. */
 export class CreatorStudioService {
   constructor(private readonly deps: CreatorStudioServiceDeps) {}
 

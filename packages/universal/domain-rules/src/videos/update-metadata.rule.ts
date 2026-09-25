@@ -26,7 +26,7 @@ export type UpdateVideoMetadataFailure = ReadVideoFailure | VideoMetadataFailure
 /**
  * Composes the read rather than restating it, so an editor who cannot even see the video gets the
  * read's verdict - which the public edge disguises - and one who can see it but may not edit gets a
- * refusal that hides nothing. A deleted video is gone to its owner too: nothing it shows is left.
+ * refusal that hides nothing.
  */
 export function decideVideoMetadataUpdate(
   input: UpdateVideoMetadataInput

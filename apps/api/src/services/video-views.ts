@@ -106,7 +106,6 @@ export function playbackUrl(video: PlayableVideo, cdn: CdnBase): string | undefi
   return cdnUrl(cdn, video.masterPlaylistKey || masterPlaylistKey(video.id));
 }
 
-/** The image a card shows: the creator's own when they picked one, else the pipeline poster. */
 export function thumbnailUrl(
   video: { customThumbnailKey?: string | null; posterKey?: string | null },
   cdn: CdnBase
