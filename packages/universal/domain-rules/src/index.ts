@@ -4,5 +4,6 @@ export * from './uploads/index';
 export * from './channels/index';
 export * from './categories/index';
 export * from './reactions/index';
+export * from './comments/index';
 export * from './admin/index';
 export * from './dlq/index';

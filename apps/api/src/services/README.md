@@ -2,7 +2,7 @@
 
 ## Architectural Principle: Deep Domain Services & Modular Composition
 
-Every domain resource and entity in the API has a corresponding service in `apps/api/src/services/` (e.g. `VideoService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `SseService`).
+Every domain resource and entity in the API has a corresponding service in `apps/api/src/services/` (e.g. `VideoService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `SseService`).
 
 Services are deep modules that encapsulate business rules, domain invariants, repository interactions, cache coordination, error classification, and entity-to-view transformations. They are completely decoupled from Fastify and HTTP transport concerns.
 
@@ -45,12 +45,14 @@ A service's collaborators arrive through its deps and are required; `composition
 | - | `upload-initiate.ts` · `upload-parts.ts` · `upload-complete.ts` · `upload-abort.ts` | One upload use case each |
 | - | `upload-context.ts` | Collaborator set plus `loadOwnedUpload`, the find-then-authorize step every use case starts with |
 | - | `probe-dispatch.ts` | The one probe job builder shared by upload completion and reprocess |
-| - | `cursor.ts` | Keyset cursor payloads and decoders for the video, feed, subscription and DLQ lists |
+| - | `cursor.ts` | Keyset cursor payloads and decoders for the video, feed, subscription, comment and DLQ lists |
 | `FeedService` | `feed-service.ts` | Public feed page cache, singleflight coalescing, conditional requests |
 | `ChannelService` | `channel-service.ts` | Account and channel reads, channel updates, handle claims, JIT provisioning |
 | `CategoryService` | `category-service.ts` | Category taxonomy queries, caching, admin CRUD, cache invalidation |
 | `ReactionService` | `reaction-service.ts` | Video reactions and their cached counts |
 | `SubscriptionService` | `subscription-service.ts` | Channel subscriptions and the subscribed video feed |
+| `CommentService` | `comment-service.ts` | Threaded comments, the hot first page behind singleflight, moderation through `@vp/domain-rules` |
+| - | `comment-views.ts` | The comment wire shape, with the creator badge |
 | `DlqService` | `dlq-service.ts` | Dead-letter queue listing, job replay with fresh suffixes, discarding |
 | `QueueService` | `queue-service.ts` | Queue counts and pause state, pause/resume, the Bull Board admin guard |
 | - | `http-cache.ts` | The repository's only ETag generation, conditional `If-None-Match` evaluation, `Cache-Control` header construction |

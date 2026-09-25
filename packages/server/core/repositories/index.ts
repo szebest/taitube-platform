@@ -10,4 +10,5 @@ export * from './category-repository';
 export * from './channel-repository';
 export * from './video-reaction-repository';
 export * from './subscription-repository';
+export * from './comment-repository';
 export * from './repositories';

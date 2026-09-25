@@ -17,6 +17,7 @@ export function defineCommentRules(
 
   if (isSignedInRole(role)) {
     can('create', 'Comment');
+    can('update', 'Comment', { authorId: user.id });
     can('delete', 'Comment', { authorId: user.id });
     can('delete', 'Comment', { videoOwnerId: user.id });
     can('pin', 'Comment', { videoOwnerId: user.id });

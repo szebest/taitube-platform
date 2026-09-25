@@ -22,6 +22,8 @@ export const errors = {
   handleAlreadyTaken: dt('This handle is already taken.'),
   invalidHandleFormat: dt('Handles use lowercase letters, digits and dashes only.'),
   cannotSubscribeToSelf: dt('You cannot subscribe to your own channel.'),
+  commentNotFound: dt('This comment does not exist or was removed.'),
+  commentNotPinnable: dt('Only a top-level comment can be pinned.'),
   databaseUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   cacheUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   queueUnavailable: dt('Processing is temporarily unavailable. Try again shortly.'),

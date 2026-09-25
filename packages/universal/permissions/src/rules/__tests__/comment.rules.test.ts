@@ -35,6 +35,27 @@ describe('rules/comment.rules: Declarative Comment Ability Rules', () => {
       expected: true,
     },
     {
+      scenario: 'the author edits their own comment',
+      user: standardUser,
+      action: 'update',
+      target: comment,
+      expected: true,
+    },
+    {
+      scenario: 'the video owner edits a comment someone else wrote',
+      user: creatorUser,
+      action: 'update',
+      target: comment,
+      expected: false,
+    },
+    {
+      scenario: 'a moderator edits a comment someone else wrote',
+      user: moderatorUser,
+      action: 'update',
+      target: comment,
+      expected: false,
+    },
+    {
       scenario: 'the video owner deletes a comment under their video',
       user: creatorUser,
       action: 'delete',

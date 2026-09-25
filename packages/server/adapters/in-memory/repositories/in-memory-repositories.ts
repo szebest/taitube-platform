@@ -2,6 +2,7 @@ import { Container, token } from '@vp/composition';
 import type { Repositories } from '@vp/core/repositories';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
+import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
@@ -26,6 +27,7 @@ const Repo = {
   channels: token<InMemoryChannelRepository>('channels'),
   videoReactions: token<InMemoryVideoReactionRepository>('videoReactions'),
   subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
+  comments: token<InMemoryCommentRepository>('comments'),
 } as const;
 
 /**
@@ -71,6 +73,14 @@ function graph(): Container {
           channelsRepo: c.get(Repo.channels),
           videosRepo: c.get(Repo.videos),
         })
+    )
+    .provide(
+      Repo.comments,
+      (c) =>
+        new InMemoryCommentRepository({
+          channelsRepo: c.get(Repo.channels),
+          videosRepo: c.get(Repo.videos),
+        })
     );
 }
 
@@ -87,6 +97,7 @@ export class InMemoryRepositories implements Repositories {
   readonly channels: InMemoryChannelRepository;
   readonly videoReactions: InMemoryVideoReactionRepository;
   readonly subscriptions: InMemorySubscriptionRepository;
+  readonly comments: InMemoryCommentRepository;
 
   constructor() {
     const c = graph();
@@ -102,6 +113,7 @@ export class InMemoryRepositories implements Repositories {
     this.channels = c.get(Repo.channels);
     this.videoReactions = c.get(Repo.videoReactions);
     this.subscriptions = c.get(Repo.subscriptions);
+    this.comments = c.get(Repo.comments);
   }
 
   clear(): void {
