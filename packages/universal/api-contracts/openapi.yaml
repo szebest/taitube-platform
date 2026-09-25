@@ -7113,6 +7113,206 @@ paths:
               schema:
                 not: {}
                 description: Not Modified
+  /v1/bootstrap:
+    get:
+      summary: Initial app context in one round trip
+      tags:
+        - Bootstrap
+      description: The caller channel (null for a guest), the active categories and the enabled feature flags. Public; a valid bearer token adds the channel, an invalid one is refused.
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      userId:
+                        type: string
+                        format: uuid
+                      handle:
+                        type: string
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                      bannerUrl:
+                        type: string
+                        nullable: true
+                      bio:
+                        type: string
+                        nullable: true
+                      subscriberCount:
+                        type: integer
+                      createdAt:
+                        type: string
+                      updatedAt:
+                        type: string
+                    required:
+                      - id
+                      - userId
+                      - handle
+                      - displayName
+                      - avatarUrl
+                      - bannerUrl
+                      - bio
+                      - subscriberCount
+                      - createdAt
+                      - updatedAt
+                    additionalProperties: false
+                    nullable: true
+                    description: The caller channel, or null for a guest
+                  categories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: Category unique identifier (UUID)
+                        slug:
+                          type: string
+                          description: Category URL-friendly slug
+                        name:
+                          type: string
+                          description: Category display name
+                        description:
+                          type: string
+                          nullable: true
+                          description: Optional category description
+                        iconUrl:
+                          type: string
+                          nullable: true
+                          description: Optional category icon URL
+                        sortOrder:
+                          type: integer
+                          description: Category display sort order
+                        isActive:
+                          type: boolean
+                          description: Whether category is active and visible to public
+                        createdAt:
+                          anyOf:
+                            - type: string
+                            - type: string
+                              format: date-time
+                          description: Creation timestamp
+                        updatedAt:
+                          anyOf:
+                            - type: string
+                            - type: string
+                              format: date-time
+                          description: Last update timestamp
+                      required:
+                        - id
+                        - slug
+                        - name
+                        - description
+                        - iconUrl
+                        - sortOrder
+                        - isActive
+                        - createdAt
+                        - updatedAt
+                      additionalProperties: false
+                    description: Active categories in display order
+                  featureFlags:
+                    type: object
+                    additionalProperties:
+                      type: boolean
+                    description: Enabled flags; a flag that is absent is off
+                required:
+                  - user
+                  - categories
+                  - featureFlags
+                additionalProperties: false
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - CHANNEL_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/admin/categories:
     post:
       summary: Create category

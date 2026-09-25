@@ -15,6 +15,7 @@ export * from './subscription-service';
 export * from './comment-service';
 export * from './view-service';
 export * from './analytics-service';
+export * from './bootstrap-service';
 export * from './playlist-service';
 export * from './watch-history-service';
 export * from './housekeeping-schedulers';

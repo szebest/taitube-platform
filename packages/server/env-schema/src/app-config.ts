@@ -63,6 +63,7 @@ export interface AppConfig {
     maxDurationSeconds: number;
   };
   pagination: { defaultLimit: number; maxLimit: number };
+  featureFlags: readonly string[];
   sse: { heartbeatMs: number; maxPerUser: number; maxPerPod: number; idleTimeoutMs: number };
   s3: {
     endpoint: string;
@@ -201,6 +202,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       maxDurationSeconds: env.MAX_DURATION_SEC,
     },
     pagination: { defaultLimit: env.PAGE_SIZE_DEFAULT, maxLimit: env.PAGE_SIZE_MAX },
+    featureFlags: env.FEATURE_FLAGS,
     sse: {
       heartbeatMs: env.SSE_HEARTBEAT_MS,
       maxPerUser: env.SSE_MAX_PER_USER,

@@ -6,6 +6,7 @@ import { adminDlqRoutes } from './admin/dlq';
 import { adminQueuesRoutes } from './admin/queues';
 import { adminVideosRoutes } from './admin/videos';
 import { analyticsRoutes } from './analytics';
+import { bootstrapRoutes } from './bootstrap';
 import { categoriesRoutes } from './categories';
 import { channelsRoutes } from './channels';
 import { commentsRoutes } from './comments';
@@ -34,6 +35,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   commentsRoutes,
   feedRoutes,
   categoriesRoutes,
+  bootstrapRoutes,
   adminCategoriesRoutes,
   adminVideosRoutes,
   meRoutes,
