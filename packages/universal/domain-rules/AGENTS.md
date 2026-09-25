@@ -36,9 +36,8 @@ sit above the policy and the validation they compose.
   missing row is a failure is decided here.
 - **One decision per file**, named `<thing>.rule.ts` (a mirrored pair shares one:
   `decideSubscribe`/`decideUnsubscribe`, `decideVideoReprocess`/`decideVideoDelete`), in a folder
-  per resource (`admin`, `categories`, `channels`, `comments`, `reactions`, `uploads`, `videos`) with its own
-  `index.ts`. Each resource except `admin` has
-  a `failures.ts` exporting its variants and unions; `dlq/` holds only failures, and `authorize.ts` is the
+  per resource (`admin`, `categories`, `channels`, `comments`, `playlists`, `reactions`, `uploads`,
+  `videos`) with its own `index.ts`. Each resource except `admin` has a `failures.ts` exporting its variants and unions; `dlq/` holds only failures, and `authorize.ts` is the
   shared `UNAUTHORIZED` / `FORBIDDEN` gate.
 - **Failures are `Failure`, not `InputFailure`.** They may carry ids, counts and internal state, so
   they name no `field` and `problemFor` keeps their payload off the wire.

@@ -32,6 +32,7 @@ export abstract class CacheClient implements HealthCheckable<CacheUnavailable> {
     value: string,
     ttlSeconds?: number
   ): Promise<Result<void, CacheUnavailable>>;
-  abstract del(key: string): Promise<Result<void, CacheUnavailable>>;
+  /** Deleting nothing, or keys that are not there, is a success. */
+  abstract del(...keys: string[]): Promise<Result<void, CacheUnavailable>>;
   abstract close(): Promise<Result<void, CacheUnavailable>>;
 }

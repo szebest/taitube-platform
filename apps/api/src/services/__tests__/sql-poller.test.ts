@@ -1,8 +1,8 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createMetricsRegistry } from '@vp/observability';
-import { pollSqlMetrics } from '../sql-poller';
 import { SEEDED } from '@vp/testing';
+import { pollSqlMetrics } from '../sql-poller';
 
 const OWNER_ID = SEEDED.userId;
 

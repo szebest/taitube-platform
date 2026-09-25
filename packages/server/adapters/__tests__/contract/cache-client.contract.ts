@@ -48,8 +48,19 @@ export function describeCacheClientContract(makeSubject: MakeCacheClientSubject)
       expect(expectOk(await cache.get(key))).toBeNull();
     });
 
-    it('treats deleting a key that is not there as a success', async () => {
+    it('treats deleting a key that is not there, or no key at all, as a success', async () => {
       expectOk(await cache.del(`${scope}:absent`));
+      expectOk(await cache.del());
+    });
+
+    it('deletes several keys in one call', async () => {
+      expectOk(await cache.set(`${scope}:a`, '1'));
+      expectOk(await cache.set(`${scope}:b`, '2'));
+
+      expectOk(await cache.del(`${scope}:a`, `${scope}:b`));
+
+      expect(expectOk(await cache.get(`${scope}:a`))).toBeNull();
+      expect(expectOk(await cache.get(`${scope}:b`))).toBeNull();
     });
 
     it('delivers a message to a channel subscriber and counts it as one receiver', async () => {

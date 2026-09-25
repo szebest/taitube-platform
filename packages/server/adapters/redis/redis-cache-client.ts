@@ -210,8 +210,12 @@ export class RedisCacheClient extends CacheClient {
     return map(stored, () => undefined);
   }
 
-  async del(key: string): Promise<Result<void, CacheUnavailable>> {
-    const deleted = await fromPromise(() => this.redis.del(key), cacheUnavailable.during('del'));
+  async del(...keys: string[]): Promise<Result<void, CacheUnavailable>> {
+    if (keys.length === 0) return ok();
+    const deleted = await fromPromise(
+      () => this.redis.del(...keys),
+      cacheUnavailable.during('del')
+    );
     return map(deleted, () => undefined);
   }
 

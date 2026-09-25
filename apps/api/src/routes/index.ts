@@ -14,11 +14,13 @@ import { eventsRoutes } from './events';
 import { feedRoutes } from './feed';
 import { healthRoutes } from './health';
 import { meRoutes } from './me';
+import { playlistsRoutes } from './playlists';
 import { reactionsRoutes } from './reactions';
 import { subscriptionsRoutes } from './subscriptions';
 import { uploadsRoutes } from './uploads';
 import { videosRoutes } from './videos';
 import { viewsRoutes } from './views';
+import { watchHistoryRoutes } from './watch-history';
 
 const ROUTES: readonly FastifyPluginAsync[] = [
   healthRoutes,
@@ -33,6 +35,8 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   adminCategoriesRoutes,
   adminVideosRoutes,
   meRoutes,
+  playlistsRoutes,
+  watchHistoryRoutes,
   channelsRoutes,
   subscriptionsRoutes,
   eventsRoutes,

@@ -14,3 +14,5 @@ export * from './views/failures';
 export * from './views/view-telemetry';
 export * from './comments/failures';
 export * from './comments/content';
+export * from './playlists/failures';
+export * from './playlists/details';
