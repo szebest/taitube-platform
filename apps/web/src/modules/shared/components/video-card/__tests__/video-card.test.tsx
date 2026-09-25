@@ -26,7 +26,7 @@ describe('apps/web: video card', () => {
 
     expect(markup).toContain(`href="/watch/${VIDEO_ID}"`);
     expect(markup).toContain('A video');
-    expect(markup).toContain('2K views');
+    expect(markup).toContain('1.5K views');
   });
 
   it.each([

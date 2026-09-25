@@ -87,13 +87,16 @@ taitube-platform/
 │   │   ├── domain/              # Entity types and the status and role vocabularies
 │   │   ├── domain-rules/        # Pure rules over input plus an entity, returning Result
 │   │   ├── errors/              # ErrorCode vocabulary, Failure types, retry classes
+│   │   ├── intl/                # Every user-facing number, date and duration format, on Intl
+│   │   ├── messages/            # Typed messages, the en catalogue and the copy for every error code
 │   │   ├── pagination/          # Keyset cursor codec and page shapes
 │   │   ├── permissions/         # CASL ability rules shared by the API and the frontend
 │   │   ├── result/              # Result type, combinators, tryCatch/fromPromise
 │   │   ├── tsconfig/            # Shared TypeScript presets, one per tier
 │   │   └── validation/          # Pure input-only rules returning Result
 │   ├── client/                  # Browser only
-│   │   └── api-client/          # Typed HTTP client whose calls are typed by api-contracts
+│   │   ├── api-client/          # Typed HTTP client whose calls are typed by api-contracts
+│   │   └── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
 │   └── server/                  # Node / Bun only
 │       ├── adapters/            # Concrete drivers (postgres, redis, bullmq, s3, auth, in-memory) and registerAdapters
 │       ├── compose-autoscaler/  # CLI: scales Compose worker services from the API's queue-depth metrics

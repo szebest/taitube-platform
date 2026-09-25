@@ -130,6 +130,10 @@ pnpm test:bun   # Bun, over apps/api, apps/worker and packages
 
 No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on `tsx`.
 
+`pnpm test:bun` skips one set of files by name: the `.test.tsx` specs of `@vp/intl-react`, which render
+React through Testing Library under jsdom, and Bun ships no DOM. That package is browser-only, so no
+runtime parity is at stake; its pure `resolve-locale.test.ts` still runs under both.
+
 ---
 
 ## 7. Commands

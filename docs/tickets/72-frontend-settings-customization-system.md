@@ -14,6 +14,8 @@
 > **Ticket 85/86 note:** the locale and time-zone preferences belong in this settings surface and this
 > preference store — not a bespoke key. The selector itself and the negotiation chain are [86](86-localisation-rollout-locale-negotiation-rtl.md), built on
 > the formatting core in [85](85-universal-intl-formatting-message-core.md).
+> Until then `@vp/intl-react` reads the saved locale from `LOCALE_STORAGE_KEY` (`vp.locale`); this ticket
+> moves it into the preference store.
 
 ## What to build
 

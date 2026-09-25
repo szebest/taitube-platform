@@ -3,8 +3,7 @@ import { memo } from 'react';
 import styles from './user-details.module.scss';
 
 import type { Channel } from '@vp/api-contracts';
-
-import { formatNumbers } from 'src/modules/shared/helpers';
+import { useT } from '@vp/intl-react';
 
 import { ProfilePicture, SubscribeButton } from 'src/modules/shared/components';
 
@@ -13,6 +12,8 @@ export type UserDetailsProps = {
 }
 
 export const UserDetails = memo(({ channel }: UserDetailsProps) => {
+	const { tOr } = useT();
+
 	return (
 		<div className={styles.container}>
 			<div>
@@ -21,7 +22,7 @@ export const UserDetails = memo(({ channel }: UserDetailsProps) => {
 			<div className={styles.container__wrapper}>
 				<h2 title={channel.displayName}>{channel.displayName}</h2>
 				<div className={styles.textWrapper}>
-					<span>{formatNumbers(channel.subscriberCount, channel.subscriberCount >= 10000 ? 0 : 1)} subscribers</span>
+					<span>{tOr('channels.subscribers', { count: channel.subscriberCount }, '')}</span>
 				</div>
 				<SubscribeButton channelId={channel.id} />
 			</div>

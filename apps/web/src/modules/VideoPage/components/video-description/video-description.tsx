@@ -3,8 +3,11 @@ import { useState } from 'react';
 import styles from './video-description.module.scss';
 
 import type { Video } from '@vp/api-contracts';
+import { publishedAt } from '@vp/intl';
+import { useFormat } from '@vp/intl-react';
+import { unwrapOr } from '@vp/result';
 
-import { formatTimeAgo } from 'src/lib';
+const PREVIEW_GRAPHEMES = 255;
 
 export type VideoDescriptionProps = {
 	video: Video;
@@ -12,17 +15,26 @@ export type VideoDescriptionProps = {
 
 export const VideoDescription = ({ video }: VideoDescriptionProps) => {
 	const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+	const { format, truncate } = useFormat();
 
 	const description = video.description ?? '';
-	const descriptionSubstring = description.substring(0, 255);
+	const preview = unwrapOr(truncate(description, PREVIEW_GRAPHEMES), description);
+	const published = publishedAt(video.createdAt);
+
+	const expandButtonClass = [
+		'btn',
+		styles.descriptionExpandBtn,
+		preview === description && styles.hide,
+		descriptionExpanded && styles.expanded,
+	].filter(Boolean).join(' ');
 
 	return (
 		<div className={styles.wrapper}>
 			<div className={styles.details}>
-				<span title={new Date(video.createdAt).toLocaleString()}>{formatTimeAgo(new Date(video.createdAt).getTime() - 10000)}</span>
+				<span title={unwrapOr(format(published.absolute), '')}>{unwrapOr(format(published.relative), '')}</span>
 			</div>
-			<span className={styles.description}>{descriptionExpanded ? description : descriptionSubstring}</span>
-			<button type="button" className={`${styles.descriptionExpandBtn} ${descriptionSubstring.length === description.length ? styles.hide : ''} ${descriptionExpanded ? styles.expanded : ''} btn`} onClick={() => setDescriptionExpanded(prev => !prev)}>
+			<span className={styles.description}>{descriptionExpanded ? description : preview}</span>
+			<button type="button" className={expandButtonClass} onClick={() => setDescriptionExpanded(prev => !prev)}>
 				{descriptionExpanded ? 'Show less' : 'Show more'}
 			</button>
 		</div>

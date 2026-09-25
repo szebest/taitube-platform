@@ -747,6 +747,54 @@ closure and the in-memory-free boot path (ARCHITECTURE.md §6). Tests build serv
 collaborators a case touches and build the app through `buildApp({ config, adapters })`, with
 `inProcessAppConfig(overrides)` merging overrides in `AppConfig`'s shape.
 
+### ADR-26 — Formatting and i18n: One Universal `Intl` Core, Catalogues Out of the Server
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| 1 | Three packages on the platform's own `Intl`: `@vp/intl` (universal, T2), `@vp/messages` (universal, T3), `@vp/intl-react` (client, T4) | **Accepted** | No runtime dependency; the core runs in Node for a server render and in the browser for its hydration; the API can format a byte count without linking the product's copy |
+| 2 | `react-intl` / FormatJS | Rejected | About 50 KB gzipped to wrap built-ins the platform ships, ICU message syntax the repo uses nowhere else, and React-coupled, which the universal core must not be |
+| 3 | `i18next` | Rejected | A runtime and plugin ecosystem for loading and interpolation the repo does not need, with untyped keys and arguments unless a codegen step is added |
+| 4 | `date-fns` plus hand-rolled number helpers | Rejected | A dependency for what `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` do natively, and the hand-rolled half is exactly what `format-numbers.helper.ts` was |
+| 5 | One `client` package | Rejected | Forbids the server render the frontend roadmap requires, and puts the copy inside the thing the API would link for a number |
+
+**Context.** Every number, date and count the web shows was formatted by hand, in English, at the call
+site: `['', 'K', 'M', ...]` suffixes with `toFixed`, `javascript-time-ago` for what `Intl.RelativeTimeFormat`
+does, `toLocaleString()` with no locale (so a server render and a browser hydration disagree), and
+`substring(0, 255)` over UTF-16 code units, which splits an emoji. There was no seam, so every new surface
+would grow its own helper, and no home for the copy that renders a failure code (ADR-24 deferred it).
+
+**Decision.**
+
+- **A formatter is `(value, context) => Result<string, FormatFailure>`.** The value is a tagged union with one
+  literal `type` per kind (`{ type: 'count', value: 1200 }`), not a key-as-tag shape (`{ count: 1200 }`), so the
+  dispatcher is an exhaustive `switch` and no `'x' in value` probe is needed; `FORMAT_KINDS` and the union are
+  held equal at compile time. The four failures are `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`,
+  `FORMAT_WRONG_KIND` and `FORMAT_UNRENDERABLE` (§6.2): 422 and permanent, authoring faults that surface in
+  tests and warnings rather than responses.
+- **The context is an argument.** Locale, time zone, currency and the reference instant arrive in
+  `FormatContext`; nothing in `@vp/intl` or `@vp/messages` reads `navigator`, the clock, `process` or a
+  `toLocale*` method. Detection lives in `@vp/intl-react` alone.
+- **Options are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>` and its
+  option type is derived from them; `withOptions` declines an unnamed key instead of letting `Intl` ignore it.
+- **`Intl` objects are memoised by an `IntlCache` value**, per `(locale, kind, options)`, bounded per kind, with
+  failures cached too. The cache is created by the owner of its lifetime: `IntlProvider` makes one per locale
+  in the browser. This departs from the ticket 87 note, which asked for the cache in the container:
+  `@vp/composition` is server tier and no server code formats anything yet, so a container registration would
+  have no consumer. When an API call site appears, `services.module.ts` provides one `createIntlCache()` value
+  like any other collaborator. It is never a module singleton either way (`no-module-state.test.ts`).
+- **Messages are typed by their template.** `dt('{count:plural}', { plural: { count: { one, other } } })`; the
+  argument names and types are read off `{name:type}` tokens by template literal types, and a runtime regex
+  over the same flat grammar substitutes them through `@vp/intl`. Plural and ordinal branches select through
+  `Intl.PluralRules`, so ordinal suffixes are catalogue copy, not formatter data. The grammar has no nesting
+  and no escapes; anything richer takes a real parser.
+- **The API returns codes, the client chooses words.** `@vp/messages` is unreachable from a server package,
+  and `ERROR_COPY` is total over `ErrorCode`.
+
+**Consequences.** `docs/standards/formatting-and-i18n.md` is the authority. `tests/architecture/` holds
+`intl-purity`, `no-adhoc-formatting`, `messages-are-client-only` and `error-copy-coverage` (ARCHITECTURE.md
+§6). `javascript-time-ago` left `apps/web`. A second language is a `PartialCatalogue` handed to the provider,
+a data change; negotiation, a switcher and RTL are ticket 86.
+
 ## 5. Domain Model & Database Schema
 
 ### 5.1 Entity relationship
@@ -1125,7 +1173,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -1922,13 +1970,16 @@ video-pipeline/
 │   │   ├── domain/                         # entities, value objects, ranking & eligibility policy, the status vocabulary
 │   │   ├── domain-rules/                   # policy, invariants and state transitions over an entity; returns Result (ADR-24)
 │   │   ├── errors/                         # ErrorCodes, Failure, RETRY_CLASS, Permanent/TransientError, infra failure factories
+│   │   ├── intl/                           # Intl formatters over a tagged value union, IntlCache, locale chain (ADR-26)
+│   │   ├── messages/                       # dt()/createTranslator, the en catalogue, ERROR_COPY; never imported by a server package
 │   │   ├── pagination/                     # CursorCodec, Paginator, PAGE_SIZE_DEFAULT/MAX
 │   │   ├── permissions/                    # CASL rules, normalizers, canX helpers, assertCan
 │   │   ├── result/                         # Result<T,E>, combinators, tryCatch/fromPromise, assertNever
 │   │   ├── tsconfig/                       # base + server/universal/client/spec presets
 │   │   └── validation/                     # predicates over submitted input only, ALLOWED_CONTENT_TYPES
 │   ├── client/                             # browser only
-│   │   └── api-client/                     # typed fetchers mapped from @vp/api-contracts; base URL injected
+│   │   ├── api-client/                     # typed fetchers mapped from @vp/api-contracts; base URL injected
+│   │   └── intl-react/                     # IntlProvider, useT, useFormat, <Format>, locale detection
 │   └── server/                             # Node/Bun only
 │       ├── core/                           # @vp/core: ports/ (abstract classes) and repositories/ (interfaces)
 │       ├── adapters/                       # @vp/adapters: auth, authorization, bullmq, postgres, redis, s3, metered, in-memory

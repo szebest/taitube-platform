@@ -4,8 +4,7 @@ import { toast } from "react-toastify";
 import styles from "./video-likes.module.scss";
 
 import type { Video } from "@vp/api-contracts";
-
-import { formatNumbers } from "src/modules/shared/helpers";
+import { Format } from "@vp/intl-react";
 
 import { reactionsApi } from "src/modules/shared/api";
 import { useAuth } from "src/modules/shared/providers";
@@ -14,16 +13,20 @@ export type VideoLikesProps = {
 	video: Video;
 };
 
+type Reaction = 'LIKE' | 'DISLIKE';
+
+const ICONS: Readonly<Record<Reaction, string>> = {
+	LIKE: 'bi-hand-thumbs-up',
+	DISLIKE: 'bi-hand-thumbs-down',
+};
+
 export const VideoLikes = ({ video }: VideoLikesProps) => {
 	const { account } = useAuth();
 
 	const { data: myReaction } = reactionsApi.useMyReactionQuery(video.id, { skip: account === undefined });
 	const [setReaction, { isLoading }] = reactionsApi.useSetReactionMutation();
 
-	const liked = myReaction?.reaction === 'LIKE';
-	const disliked = myReaction?.reaction === 'DISLIKE';
-
-	const react = (type: 'LIKE' | 'DISLIKE' | 'NONE') => {
+	const react = (type: Reaction | 'NONE') => {
 		if (account === undefined) {
 			toast("You must be logged in to like a video");
 			return;
@@ -32,16 +35,23 @@ export const VideoLikes = ({ video }: VideoLikesProps) => {
 		setReaction({ id: video.id, type });
 	}
 
-	return (
-		<ButtonGroup className={styles.container}>
+	const reactionButton = (type: Reaction, count: number) => {
+		const given = myReaction?.reaction === type;
+		return (
 			<Button
-				className={`${liked ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
-				onClick={() => react(liked ? 'NONE' : 'LIKE')}
+				className={`${given ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
+				onClick={() => react(given ? 'NONE' : type)}
 				disabled={isLoading}
 			>
-				<i className={`bi bi-hand-thumbs-up${liked ? '-fill' : ''}`} />
-				{formatNumbers(video.likesCount, video.likesCount >= 10000 ? 0 : 1)}
+				<i className={`bi ${ICONS[type]}${given ? '-fill' : ''}`} />
+				<Format value={{ type: 'count', value: count }} />
 			</Button>
+		);
+	};
+
+	return (
+		<ButtonGroup className={styles.container}>
+			{reactionButton('LIKE', video.likesCount)}
 
 			<button type="button"
 				role="separator"
@@ -49,14 +59,7 @@ export const VideoLikes = ({ video }: VideoLikesProps) => {
 				disabled
 			/>
 
-			<Button
-				className={`${disliked ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
-				onClick={() => react(disliked ? 'NONE' : 'DISLIKE')}
-				disabled={isLoading}
-			>
-				<i className={`bi bi-hand-thumbs-down${disliked ? '-fill' : ''}`} />
-				{formatNumbers(video.dislikesCount, video.dislikesCount >= 10000 ? 0 : 1)}
-			</Button>
+			{reactionButton('DISLIKE', video.dislikesCount)}
 		</ButtonGroup>
 	);
 };

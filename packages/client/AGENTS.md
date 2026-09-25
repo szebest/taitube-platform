@@ -10,7 +10,7 @@
 Browser-only libraries: code that needs the DOM, `window`, or browser-only APIs, and that no server
 process imports. If both a browser and a server need it, it is `universal/`, not here.
 
-Current member: `api-client`.
+Current members: `api-client`, `intl-react`.
 
 ## Rules
 
@@ -32,7 +32,7 @@ Current member: `api-client`.
 
 Everything here ships to a user's browser. Prefer a platform API over a dependency, and check what a
 package pulls in transitively before adding it — `pnpm why <pkg>` from `apps/web` is the quick check.
-`apps/web`'s runtime closure is seven workspace packages today (`@vp/api-client` plus six `universal`
-ones); keep it small.
+`apps/web`'s runtime closure is ten workspace packages today (`@vp/api-client`, `@vp/intl-react` and eight
+`universal` ones); keep it small.
 Membership is not the whole check — `@vp/env-schema` was `universal`, and one URL default the browser
 imported carried `DATABASE_URL`, `S3_SECRET_ACCESS_KEY` and the BullMQ queue names into `main.*.js` with it.
