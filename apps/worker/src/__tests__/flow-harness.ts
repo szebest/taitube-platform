@@ -14,10 +14,11 @@ import type {
 } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type LadderEntry } from '@vp/job-contracts';
 import { type Logger, createLogger } from '@vp/logger';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 
-export const OWNER_ID = '00000000-0000-7000-8000-000000000001';
+export const OWNER_ID = SEEDED.userId;
 
 export interface FlowWorld {
   repositories: InMemoryRepositories;
@@ -48,7 +49,12 @@ export function flowWorld(): FlowWorld {
   };
 }
 
-export async function uploadedVideo(world: FlowWorld, sourceKey: string): Promise<string> {
+/** An UPLOADED video whose source is in the raw bucket, holding `body` or its own key. */
+export async function uploadedVideo(
+  world: Pick<FlowWorld, 'repositories' | 'storage'>,
+  sourceKey: string,
+  body: Buffer = Buffer.from(sourceKey)
+): Promise<string> {
   const videoId = uuidv7();
   expectOk(
     await world.repositories.videos.create({
@@ -64,7 +70,7 @@ export async function uploadedVideo(world: FlowWorld, sourceKey: string): Promis
     await world.storage.uploadObject({
       bucket: 'raw',
       key: sourceKey,
-      body: Buffer.from(sourceKey),
+      body,
       contentType: 'video/mp4',
     })
   );
@@ -117,20 +123,14 @@ export async function encodeSegments(
   };
 }
 
-const writeThumbnails: MediaTools['thumbnail'] = async (options) => {
-  const at = (name: string) => path.join(options.outputDir, name);
-  await fs.writeFile(at('poster.jpg'), Buffer.alloc(100));
-  await fs.writeFile(at('sprite.jpg'), Buffer.alloc(100));
-  await fs.writeFile(at('sprite.vtt'), 'WEBVTT\n');
-  return {
-    outputDir: options.outputDir,
-    posterPath: at('poster.jpg'),
-    spritePath: at('sprite.jpg'),
-    vttPath: at('sprite.vtt'),
-    frameCount: 12,
-    rows: 2,
-    columns: 10,
-  };
+export const writeThumbnails: MediaTools['thumbnail'] = async ({ outputDir }) => {
+  const posterPath = path.join(outputDir, 'poster.jpg');
+  const spritePath = path.join(outputDir, 'sprite.jpg');
+  const vttPath = path.join(outputDir, 'sprite.vtt');
+  await fs.writeFile(posterPath, Buffer.alloc(100));
+  await fs.writeFile(spritePath, Buffer.alloc(100));
+  await fs.writeFile(vttPath, 'WEBVTT\n');
+  return { outputDir, posterPath, spritePath, vttPath, frameCount: 12, rows: 2, columns: 10 };
 };
 
 /** FFmpeg that probes as `metadata` and encodes every rendition as a single segment. */
@@ -139,4 +139,16 @@ export function fakeMedia(
   transcode: MediaTools['transcode'] = (options) => encodeSegments(options, 1)
 ): MediaTools {
   return { probe: async () => metadata, transcode, thumbnail: writeThumbnails };
+}
+
+/** Settles when `jobId` completes on `queue`, and rejects with its error when it fails. */
+export function completionOf(queue: InMemoryJobQueue, jobId: string): Promise<void> {
+  const { promise, resolve, reject } = Promise.withResolvers<void>();
+  queue.onJobCompleted((job) => {
+    if (job.id === jobId) resolve();
+  });
+  queue.onJobFailed((job, error) => {
+    if (job.id === jobId) reject(error);
+  });
+  return promise;
 }

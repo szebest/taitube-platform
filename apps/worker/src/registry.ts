@@ -20,11 +20,12 @@ import {
   ThumbnailJob,
   TranscodeJob,
 } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err } from '@vp/result';
 import { invalidField } from '@vp/validation';
 import type { ZodType } from 'zod';
+import type { Every } from './heartbeat';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
@@ -47,6 +48,7 @@ interface StageDeps {
   media: MediaTools;
   workerId: string;
   now: () => number;
+  every: Every;
 }
 
 export type StageProcessor = (job: QueueJob<unknown>) => Promise<Result<unknown, AnyFailure>>;

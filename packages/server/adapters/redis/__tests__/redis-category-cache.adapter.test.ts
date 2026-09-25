@@ -1,9 +1,11 @@
 import type { Category } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { cacheUnavailable } from '@vp/errors';
+import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { err, ok } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@vp/testing/result';
+import { describeCategoryCacheContract } from '../../__tests__/contract/category-cache.contract';
+import { redisCategoryCacheSubject } from '../../__tests__/contract/redis-subjects';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { RedisCategoryCacheAdapter } from '../redis-category-cache.adapter';
 
@@ -34,7 +36,7 @@ describe('RedisCategoryCacheAdapter', () => {
 
   const fetcher = async () => {
     fetches += 1;
-    return ok([MUSIC, GAMING, ART]);
+    return ok([ART, GAMING, MUSIC]);
   };
 
   beforeEach(() => {
@@ -45,11 +47,6 @@ describe('RedisCategoryCacheAdapter', () => {
 
   afterEach(async () => {
     await service.close();
-  });
-
-  it('sorts the fetched categories by sort order then name', async () => {
-    const categories = expectOk(await service.getCategories(fetcher));
-    expect(categories.map((c) => c.id)).toEqual(['art', 'gaming', 'music']);
   });
 
   it('serves the second read from L1 without touching the source', async () => {
@@ -156,6 +153,14 @@ describe('RedisCategoryCacheAdapter', () => {
     expect(replica.getL1Size()).toBe(1);
   });
 
+  it('passes a source failure through without caching it', async () => {
+    const failure = databaseUnavailable('findAll');
+
+    expect(expectErr(await service.getCategories(async () => err(failure)))).toBe(failure);
+    expect(service.getL1Size()).toBe(0);
+    expect(expectOk(await cache.get(CacheKeys.categories))).toBeNull();
+  });
+
   it('falls back to the source when the distributed cache is unusable', async () => {
     const broken = new RedisCategoryCacheAdapter({
       ...CACHES.categories,
@@ -208,3 +213,5 @@ describe('RedisCategoryCacheAdapter', () => {
     await local.close();
   });
 });
+
+describeCategoryCacheContract(redisCategoryCacheSubject);

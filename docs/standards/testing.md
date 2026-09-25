@@ -1,113 +1,163 @@
 # Testing Standards & Strategy
 
-This document outlines the testing pyramid, execution models, and verification standards for the `video-pipeline` monorepo.
+How the `video-pipeline` specs are layered, where each kind runs, and the rules every spec is held to. Every
+rule below that can be checked by a machine is, and the check is named next to it.
 
 ---
 
-## 1. Testing Pyramid & Strategy
-
-The repository strictly enforces a layered testing model designed for speed, isolation, and deterministic contracts:
+## 1. Layers
 
 ```
                   +--------------------------------+
                   |    E2E & Smoke Verification    |  (Docker Compose / Offline)
                   +--------------------------------+
-                  |  Durability & Integration Tests|  (Real PostgreSQL & Redis)
+                  |   Integration (real services)  |  (Postgres, Redis, MinIO)
                   +--------------------------------+
-                  | Deterministic Unit Test Suites |  (In-Memory Port Doubles)
+                  | Deterministic Unit Test Suites |  (doubles, PGlite)
                   +--------------------------------+
 ```
 
-### Layer 1: Deterministic Unit Tests (In-Memory Doubles)
-- **Target:** Domain services (`apps/api/src/services/`), route handlers (`apps/api/src/routes/`), worker pipeline stages (`apps/worker/src/stages/`), and core domain logic (`core/`).
-- **Isolation:** Never spin up Docker containers, network sockets, or external databases for unit tests.
-- **Port Doubles:** Depend exclusively on autonomous in-memory test doubles from `packages/server/adapters/in-memory` (`InMemoryDatabaseClient`, `InMemoryStorageClient`, `InMemoryCacheClient`, `InMemoryJobQueue`, `InMemoryRepositories`).
-- **Autonomous State:** Every in-memory double manages its own state and exposes `.clear()` to allow fast test teardown without recreating class instances.
+### Unit (`pnpm test:unit`, the `unit` CI job)
+- Domain services, routes, worker stages, adapters and the web app, against the in-memory doubles in
+  `packages/server/adapters/in-memory` and, for the Postgres repositories, PGlite.
+- No Docker, no network. A spec that needs a server binds port `0` (`listen({ port: 0 })`), never a port it
+  picked and then released.
+- The doubles own their state and expose `.clear()`.
 
-### Layer 2: Durability & Integration Tests (Real PostgreSQL)
-- **Target:** Concrete database repositories (`packages/server/adapters/postgres/repositories/`), schema migrations (`packages/server/db/`), and state machine transitions.
-- **Contract Verification:** Proves compare-and-set (CAS) state transitions, atomic append of `video_events`, and fencing token validations (`lock_token` UUIDs) against an authoritative PostgreSQL instance.
-- **Execution Parity:** Runs against PostgreSQL 16 provided via Docker Compose (`make up`) locally and GitHub Actions service containers in CI.
+### Integration (`pnpm test:integration`, the `integration` CI job)
+- Runs against real services: the job starts Postgres, Redis and MinIO with Docker Compose, migrates the
+  database, and reads their URLs through `loadEnv()` (`tests/integration/use-real-services.ts`).
+- It runs the **same contract specs** as unit, with the real service as the subject: the 12 Postgres
+  repository specs, and the Redis, S3 and BullMQ adapter specs (`tests/integration/vitest.config.ts`).
+- A spec there that would fall back to PGlite or a double fails instead: the setup fails any file in which no
+  contract claimed a real service, and a service that is not reachable fails the file.
+- `make test-r2` runs the S3 contracts against the R2 bucket the `S3_*` variables you export name.
 
-### Layer 3: End-to-End Smoke & Acceptance Tests
-- **Target:** Full-pipeline execution from presigned upload to FFmpeg transcode, thumbnail sprite generation, HLS manifest packaging, and playback readiness.
-- **Local-First & Offline:** Validated via `make smoke` and `make smoke-offline` (network isolation with Docker bridge `internal: true`).
-
----
-
-## 2. Dual-Runtime Worker Parity
-
-All worker stages, pipeline processors, and shared packages (`packages/*`, `core/*`, `adapters/*`) must execute identically under both target runtimes:
-
-1. **Node.js 24 LTS:** Primary API server and baseline worker runtime.
-2. **Bun 1.4+:** High-throughput execution runtime for queue workers.
-
-### Parity Constraints
-- Workers must import only Node.js standard library APIs (`node:fs`, `node:path`, `node:os`, `node:child_process`).
-- **Strictly Forbidden:** Calling `Bun.*` proprietary APIs in worker implementation files.
-- Test suites covering workers and shared packages must pass under both test runners:
-  ```bash
-  pnpm test       # Vitest (Node.js)
-  pnpm test:bun   # Bun test runner
-  ```
+### End to end
+- `make smoke` and `make smoke-offline` against the Compose stack, `E2E_REDUCED=true pnpm e2e` (or
+  `make e2e`) for the in-process acceptance suite. Every fixture the e2e specs read comes out of a plain
+  `pnpm gen-video` (`tests/in-process/e2e-fixtures.test.ts`).
 
 ---
 
-## 3. Test Execution Commands
+## 2. Contracts: one per port, run from each implementation's own spec
 
-| Scope | Command | Description |
-|---|---|---|
-| **All Unit Tests** | `pnpm test` | Run Vitest across all workspace packages |
-| **Worker Bun Parity** | `pnpm test:bun` | Run worker and shared package tests under Bun |
-| **Worker Unit Tests** | `pnpm --filter @vp/worker test` | Run worker tests using Vitest |
-| **API Unit Tests** | `pnpm --filter @vp/api test` | Run API route and service tests using Vitest |
-| **Database Durability** | `pnpm --filter @vp/db test` | Run migration and database schema tests |
-| **Adapters Suite** | `pnpm --filter @vp/adapters test` | Run adapter in-memory and concrete unit tests |
-| **Permissions Suite** | `pnpm --filter @vp/permissions test` | Run the declarative permission engine tests |
-| **Fast Smoke Test** | `make smoke-fast` | Fast smoke test against currently running containers |
-| **Full Smoke Test** | `make smoke` | Stand up fresh containers and run end-to-end smoke verification |
-| **Offline Smoke Test** | `make smoke-offline` | Run smoke test with simulated zero network egress |
-| **Acceptance Suite** | `make e2e` | Run comprehensive end-to-end acceptance test suite |
+A port or repository with more than one implementation has one contract, `describeXContract(subject)` in
+`packages/server/adapters/__tests__/contract/`. Every implementation file has its own spec beside it that runs
+the contract against itself:
 
-### A package's tests only run if `vitest.config.ts` lists it
-Root `pnpm test` runs Vitest with the `projects` array in `vitest.config.ts`. A package
-absent from that array is silently skipped: no error, no empty-suite warning, just a lower
-file count. `projects` supersedes the old `vitest.workspace.ts`, which is why that file no longer exists:
-two lists meant a package could appear in one and be skipped by the other. After adding a package that owns tests, confirm the file
-count in the `pnpm test` summary actually went up.
+- `in-memory/repositories/__tests__/in-memory-video-repository.test.ts` runs the video contract against the
+  double
+- `postgres/repositories/__tests__/postgres-video-repository.test.ts` runs it against PGlite in unit and
+  against Postgres in integration (`postgresSubject()` picks)
+- the Redis, S3 and BullMQ adapter specs run the cache, storage, multipart, queue and flow contracts the same
+  way, against the double in unit and the real service in integration
 
-`core` has no suite of its own. It holds abstract ports, repository interfaces and domain
-types with no runtime behaviour, so it is exercised through the adapter and app suites.
+A double that drifts from the real thing fails the shared contract assertion in its own spec. The contracts
+live in `@vp/adapters` rather than `@vp/testing`, because `@vp/testing` depending on `@vp/core` would make a
+workspace cycle (every package dev-depends on `@vp/testing`).
 
-### Turbo task inputs must cover where the code lives
-`turbo.json` tasks hash the whole package by default. Do not narrow them to `src/**`:
-`adapters/` and `core/` keep their source in `postgres/`, `ports/`, `repositories/` and
-similar, so a `src/**` filter matches nothing for them and every run replays a cached pass
-regardless of what changed. A green `pnpm typecheck` then means nothing. If you suspect a
-stale result, `pnpm typecheck --force` bypasses the cache.
+Each Postgres spec file gets a PGlite of its own, loaded from one migrated snapshot the adapters project
+builds in its global setup (`__tests__/contract/pglite-snapshot.ts`): a fresh PGlite runs initdb, most of a
+second, and one loaded from the snapshot starts in about a tenth of that. The engine is truncated between
+tests, not rebuilt.
 
 ---
 
-## 4. Test Authoring Best Practices & Invariants
+## 3. Time is injected
 
-1. **Zero Heuristic Skips:** Test suites must never swallow connection errors or conditionally skip test assertions (e.g. `try { connect() } catch { skip() }`). If a required service is unavailable, tests must fail immediately and loudly.
-2. **Deterministic Assertions:** Use deterministic seeds and synthetic test fixtures (`pnpm gen-video`). Never rely on unpredictable real-time clock delays; use fake timers (`vi.useFakeTimers()`) or explicit completion signals.
-3. **Seam Isolation:** Always test domain services directly through their port interfaces rather than spinning up full HTTP servers when verifying domain invariants.
-4. **Clean Teardown:** Test files must register `afterEach` or `afterAll` hooks to reset in-memory doubles (`repositories.clear()`), close database connection pools, and remove temporary test files.
+- A stage or adapter that waits takes a clock (`now: () => number`) or a scheduler (`every: Every`, the type
+  `Heartbeat`, `OutboxRelay` and `StreamingSegmentUploader` take), and the spec drives it.
+- Otherwise `vi.useFakeTimers()` and `vi.advanceTimersByTime` / `advanceTimersByTimeAsync`. Bun's `vi` has
+  both, but not `vi.setSystemTime`, so a spec that also runs under Bun injects the clock instead.
+- No fixed sleep (`setTimeout` inside a `new Promise`, `setImmediate` as a wait, a `sleep` / `settle` /
+  `delay` helper) and no assertion on elapsed wall-clock time. A spec waits for the thing itself: a promise
+  the code returns, a deferred it resolves, `onJobCompleted`.
+
+The e2e runners are the exception by nature: they poll a deployed stack on its own clock.
 
 ---
 
-## 5. Mandatory 1:1 Test File Correspondence & Mapping
+## 4. Spec discipline
 
-Every single source file, helper, util, rule, normalizer, or adapter MUST map to at least one dedicated test file matching its name. Grouping tests for multiple separate source files into a single bundled test file is a **strict architectural violation**.
+`tests/architecture/spec-discipline.test.ts` reads every spec and test helper and fails on:
 
-### Rules:
-- **Exact File Name Alignment:** A source file named `video.normalizer.ts` must have a corresponding `video.normalizer.test.ts` (or `video-normalizer.test.ts`). A module `drizzle-where.ts` must have `drizzle-where.test.ts` (or `drizzleWhere.test.ts`).
-- **No Bundled Catch-All Suites:** Creating catch-all files such as `normalizers.test.ts` covering multiple distinct units (`video.normalizer.ts`, `comment.normalizer.ts`, `channel.normalizer.ts`) is strictly forbidden.
-- **Granular Failure Isolation:** 1:1 test correspondence ensures rapid root-cause isolation, prevents test pollution across unrelated units, and maintains zero context ambiguity for autonomous agents.
-- **Machine-enforced:** `tests/architecture/test-correspondence.test.ts` requires `__tests__/<name>.test.ts`
-  beside every production source that has runtime code. A module that erases to nothing (types,
-  interfaces, an abstract class of abstract members) is not a target; the rule decides by transpiling it.
-  The sources that predate the rule are listed in
-  `tests/architecture/untested-sources.ts`; that list may only shrink — an entry that gains a spec must be
-  removed, and a new source may not be added to it.
+- a runtime import from `vitest` (`describe`, `it`, `expect`, `vi` are globals; `import type` is fine)
+- a timer wait or a sleep helper (section 3)
+- `Date.now() - start` or `performance.now() - start` on a snapshot the spec took
+- `typeof import(...)` or `importOriginal<...>`: mock a module as
+  `vi.mock(import('x'), async (importOriginal) => ({ ...(await importOriginal()), y: vi.fn() }))`
+- two tests with the same full title (describe titles plus the test's own) in one file
+- a `console` call
+- `.skip`, `.only`, `.todo`, `skipIf`, `runIf`
+
+Sibling tests that differ only by input are one `it.each`.
+
+Every test config restores spies and stubbed env vars before each test (`restoreMocks`, `unstubEnvs` in
+`definePackageTestConfig`, and in the configs that do not use it; `@vp/testing`'s own spec holds every project
+config to it). Bun reads no vitest config, so `bunfig.toml` preloads `tests/bun-restore-mocks.ts`, which does
+the same after each test. No spec needs an `afterEach` to undo a spy.
+
+The root run does not isolate spec files (`isolate: false` in `vitest.config.ts`): the files of one project
+share a worker and its module cache, which is most of what makes `unit` fit its budget. A spec therefore
+leaves no module state behind: state lives in what `beforeEach` builds, not at module level, and a mock of a
+package outlives the file that registered it, so a helper that mock reads from keeps its state where every
+file sees the same copy (`apps/web/src/__tests__/stored-value.ts`).
+
+---
+
+## 5. Shared fixtures
+
+`@vp/testing` owns what more than one package needs: `definePackageTestConfig`, `SEEDED` (the users, channels
+and videos the in-memory repositories and the development seed start with), `createMockJob`, `withEnv`,
+`expectOk` / `expectErr` (`@vp/testing/result`), log capture and `runEntrypoint` (a TypeScript entrypoint in a
+child of the runtime the spec runs on). A spec that acts as "the dev user" names `SEEDED.userId`; the literal
+never appears in a spec (`zero-matches`).
+
+What needs a higher layer lives in the app that owns it: the API's test app is `buildTestApp` in
+`apps/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/worker/src/__tests__/`.
+
+---
+
+## 6. Dual runtime
+
+Worker code and every shared package run on Node 24 and Bun 1.4, so their specs pass under both:
+
+```bash
+pnpm test       # Vitest (Node.js)
+pnpm test:bun   # Bun, over apps/api, apps/worker and packages
+```
+
+No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on `tsx`.
+
+---
+
+## 7. Commands
+
+| Scope | Command |
+|---|---|
+| Every Vitest project | `pnpm test` |
+| Unit, as CI runs it (no architecture suite) | `pnpm test:unit` |
+| The architecture invariants | `pnpm test:architecture` |
+| Real services | `pnpm test:integration` |
+| Bun parity | `pnpm test:bun` |
+| One package | `pnpm --filter @vp/adapters test`, any package name in place of `adapters` |
+| Smoke against Compose | `make smoke`, `make smoke-offline` |
+| In-process acceptance suite | `make e2e` |
+
+A package's specs run only if the root `vitest.config.ts` `projects` globs reach its `vitest*.config.ts`.
+After adding one, check the file count in the `pnpm test` summary went up.
+
+`turbo.json` tasks hash the whole package. Do not narrow them to `src/**`: `adapters/` and `core/` keep their
+source in `postgres/`, `ports/`, `repositories/`, so a `src/**` filter matches nothing for them and every run
+replays a cached pass. `pnpm typecheck --force` bypasses the cache.
+
+---
+
+## 8. One spec per source file
+
+Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`) beside it, in every tier,
+`apps/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
+members, with or without doc comments) needs none; `tests/architecture/runtime-code.ts` decides by
+transpiling it. One spec never covers several sources. `tests/architecture/test-correspondence.test.ts` is a
+flat assertion with no exception list.

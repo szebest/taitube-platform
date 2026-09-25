@@ -19,6 +19,10 @@ export function describeCategoryRepositoryContract(makeSubject: MakeRepositories
       subject = await makeSubject();
     });
 
+    afterAll(async () => {
+      await subject.close();
+    });
+
     beforeEach(async () => {
       await subject.reset();
       categories = subject.repositories.categories;
@@ -41,14 +45,17 @@ export function describeCategoryRepositoryContract(makeSubject: MakeRepositories
     });
 
     it('applies the declared defaults on create', async () => {
-      expect(expectOk(await categories.findById(CATEGORY_MUSIC_ID))).toMatchObject({
-        slug: 'music',
-        name: 'Music',
+      const created = expectOk(await categories.create({ slug: 'art', name: 'Art' }));
+
+      expect(created).toMatchObject({
+        slug: 'art',
+        name: 'Art',
         description: null,
         iconUrl: null,
-        sortOrder: 1,
+        sortOrder: 0,
         isActive: true,
       });
+      expect(expectOk(await categories.findById(created.id))).toEqual(created);
     });
 
     it('lists by sort order then name', async () => {
@@ -119,6 +126,22 @@ export function describeCategoryRepositoryContract(makeSubject: MakeRepositories
 
       expect(expectOk(await categories.countVideos(CATEGORY_MUSIC_ID))).toBe(2);
       expect(expectOk(await categories.countVideos(CATEGORY_GAMING_ID))).toBe(1);
+    });
+
+    it('stops counting a video once it is soft-deleted', async () => {
+      await seedOwners(subject.repositories);
+      const { videos } = subject.repositories;
+      await videos.create(publicVideo({ id: VIDEO_IDS.a, categoryId: CATEGORY_MUSIC_ID }));
+
+      await videos.transition({
+        videoId: VIDEO_IDS.a,
+        from: 'READY',
+        to: 'DELETED',
+        eventType: 'video.deleted',
+        patch: { deletedAt: new Date() },
+      });
+
+      expect(expectOk(await categories.countVideos(CATEGORY_MUSIC_ID))).toBe(0);
     });
   });
 }

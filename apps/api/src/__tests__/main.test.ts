@@ -1,35 +1,31 @@
-vi.mock(import('../process'), () => ({ run: vi.fn(async () => undefined) }));
+import { fileURLToPath } from 'node:url';
+import { runEntrypoint } from '@vp/testing/run-entrypoint';
 
-async function boot(nodeEnv: string) {
-  vi.stubEnv('NODE_ENV', nodeEnv);
-  vi.resetModules();
-  await import('../main');
-  return vi.mocked((await import('../process')).run);
-}
+const MAIN = fileURLToPath(new URL('../main.ts', import.meta.url));
 
 describe('apps/api: main', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.restoreAllMocks();
+  it('starts nothing, and installs no signal handler, when a spec loads it', async () => {
+    const on = vi.spyOn(process, 'on');
+    const exit = vi.spyOn(process, 'exit').mockImplementation((code) => {
+      throw new Error(`exit ${code}`);
+    });
+
+    await import('../main');
+
+    expect(on).not.toHaveBeenCalledWith('SIGTERM', expect.any(Function));
+    expect(exit).not.toHaveBeenCalled();
   });
 
-  it('starts nothing when a spec loads it', async () => {
-    expect(await boot('test')).not.toHaveBeenCalled();
-  });
+  it('reads the real environment and exits the real process with its code', () => {
+    const child = runEntrypoint(MAIN, [], {
+      PATH: process.env.PATH,
+      NODE_ENV: 'production',
+      DATABASE_URL: 'postgres://localhost:5432/vp',
+      PORT: '0',
+    });
 
-  it('runs the API against the real environment, signals and exit', async () => {
-    const on = vi.spyOn(process, 'on').mockReturnValue(process);
-    const exit = vi.spyOn(process, 'exit').mockReturnValue(undefined as never);
-    const handler = () => {};
-
-    const run = await boot('production');
-    const [host] = run.mock.calls[0] ?? [];
-    host?.onSignal('SIGTERM', handler);
-    host?.exit(3);
-
-    expect(run).toHaveBeenCalledTimes(1);
-    expect(host?.env).toBe(process.env);
-    expect(on).toHaveBeenCalledWith('SIGTERM', handler);
-    expect(exit).toHaveBeenCalledWith(3);
+    expect(child.status).toBe(1);
+    expect(child.stdout).toContain('api could not start');
+    expect(child.stdout).toContain('S3_ACCESS_KEY_ID: is required in production');
   });
 });

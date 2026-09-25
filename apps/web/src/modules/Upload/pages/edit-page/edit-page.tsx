@@ -4,7 +4,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { fromPromise, isOk } from '@vp/result';
 import { z } from 'zod';
 
-import { useUpdateVideoMutation, useVideoQuery } from 'src/modules/shared/api';
+import { videosApi } from 'src/modules/shared/api';
 
 import type { EditVideoFormModel } from 'src/modules/shared/models';
 
@@ -16,9 +16,9 @@ const VersionConflictSchema = z.object({ status: z.literal(409) });
 export function EditPage() {
 	const { videoId } = useParams();
 
-	const { data: video, isFetching, isError } = useVideoQuery(videoId ?? '', { skip: !videoId });
+	const { data: video, isFetching, isError } = videosApi.useVideoQuery(videoId ?? '', { skip: !videoId });
 
-	const [edit, state] = useUpdateVideoMutation();
+	const [edit, state] = videosApi.useUpdateVideoMutation();
 
 	const navigate = useNavigate();
 

@@ -1,6 +1,5 @@
 import { trace } from '@opentelemetry/api';
 import {
-  DEFAULT_VIDEO_SCAN_LIMIT,
   type EventRepository,
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
@@ -26,12 +25,9 @@ import { canReadVideo } from '@vp/permissions';
 import { type Result, assertNever, err, isErr, map, ok, unwrapOr } from '@vp/result';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';
+import { newVideoRecord } from './new-video-record';
 import { selectPublicFeed } from './public-feed-query';
-import {
-  DEFAULT_VIDEO_RECORD,
-  type InMemoryVideoRepositoryOptions,
-  type UploadLookup,
-} from './types';
+import type { InMemoryVideoRepositoryOptions, UploadLookup } from './types';
 
 export type { InMemoryVideoRepositoryOptions };
 
@@ -99,18 +95,7 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   async create(data: NewVideoInput): Promise<Result<VideoRecord, DatabaseUnavailable>> {
-    const now = new Date();
-    const record: VideoRecord = {
-      ...DEFAULT_VIDEO_RECORD,
-      ...data,
-      visibility: data.visibility ?? 'private',
-      status: data.status ?? 'UPLOADING',
-      generation: data.generation ?? 1,
-      version: 1,
-      createdAt: now,
-      updatedAt: now,
-      readyAt: data.readyAt ?? (data.status === 'READY' ? now : null),
-    } as VideoRecord;
+    const record = newVideoRecord(data, new Date());
     this.videosMap.set(record.id, record);
     return ok(record);
   }
@@ -218,7 +203,7 @@ export class InMemoryVideoRepository extends VideoRepository {
   }
 
   async scan(filter: VideoScan): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
-    const { status, minGeneration, without, limit = DEFAULT_VIDEO_SCAN_LIMIT } = filter;
+    const { status, minGeneration, without, limit } = filter;
     const idle = filter.idleFor && {
       since: filter.idleFor.since,
       before: new Date(Date.now() - filter.idleFor.ms),

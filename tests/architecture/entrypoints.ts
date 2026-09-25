@@ -16,6 +16,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/server/upload-client/src/main.ts',
   'scripts/*.ts',
   'tests/e2e/e2e-runner.ts',
+  'tests/e2e/run-e2e.ts',
 ];
 
 /** Not entrypoints, and still allowed to touch the environment: the loader and the test harness. */

@@ -27,8 +27,7 @@ This is a **workspace package with a CLI**, not a loose script, which is why it 
 
 1. **Local-first (Rule 1):** runs fully offline, no external host, nothing phones home.
 2. **Dual runtime (Rule 2):** the root `pnpm gen-video` script runs it through `tsx`, and it must still run cleanly under `bun`, which `pnpm test:bun` proves.
-3. **1:1 tests (Rule 12):** every source file has a name-matching test file, except `src/generator.ts`,
-   which is on the shrink-only list in `tests/architecture/untested-sources.ts`.
+3. **1:1 tests (Rule 12):** every source file has a name-matching test file.
 
 ---
 

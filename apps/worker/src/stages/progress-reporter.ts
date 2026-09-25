@@ -12,6 +12,7 @@ export interface ProgressReporterDeps {
   videoId: string;
   rendition: string;
   logger: Logger;
+  now: () => number;
 }
 
 /** What one transcode names; the cache, the store and the metrics come from composition. */
@@ -35,7 +36,7 @@ export class TranscodeProgressReporter implements ProgressReporter {
   constructor(private readonly deps: ProgressReporterDeps) {}
 
   async report(percent: number): Promise<void> {
-    const now = Date.now();
+    const now = this.deps.now();
     if (now - this.lastPublishTime < 2000 && percent < 100) return;
     this.lastPublishTime = now;
 

@@ -7,7 +7,7 @@ import type { Video } from "@vp/api-contracts";
 
 import { formatNumbers } from "src/modules/shared/helpers";
 
-import { useMyReactionQuery, useSetReactionMutation } from "src/modules/shared/api";
+import { reactionsApi } from "src/modules/shared/api";
 import { useAuth } from "src/modules/shared/providers";
 
 export type VideoLikesProps = {
@@ -17,8 +17,8 @@ export type VideoLikesProps = {
 export const VideoLikes = ({ video }: VideoLikesProps) => {
 	const { account } = useAuth();
 
-	const { data: myReaction } = useMyReactionQuery(video.id, { skip: account === undefined });
-	const [setReaction, { isLoading }] = useSetReactionMutation();
+	const { data: myReaction } = reactionsApi.useMyReactionQuery(video.id, { skip: account === undefined });
+	const [setReaction, { isLoading }] = reactionsApi.useSetReactionMutation();
 
 	const liked = myReaction?.reaction === 'LIKE';
 	const disliked = myReaction?.reaction === 'DISLIKE';

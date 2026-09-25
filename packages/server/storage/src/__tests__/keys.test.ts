@@ -1,4 +1,4 @@
-import { FIXTURES } from '@vp/testing';
+import { SEEDED } from '@vp/testing';
 import {
   masterPlaylistKey,
   posterKey,
@@ -15,7 +15,7 @@ import {
 } from '../keys';
 
 describe('packages/storage: object keys', () => {
-  const videoId = FIXTURES.VIDEO_ID;
+  const videoId = SEEDED.videoId;
   const segmentKeyOf = (generation: number) =>
     renditionObjectKey(videoId, '720p', 'seg_00001.ts', generation);
 

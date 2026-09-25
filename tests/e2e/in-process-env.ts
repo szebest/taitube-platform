@@ -13,7 +13,6 @@ import {
 import type {
   CacheClient,
   FlowProducerPort,
-  JobQueue,
   MultipartStorage,
   StorageClient,
 } from '../../packages/server/core/ports/index';
@@ -33,7 +32,7 @@ export interface InProcessEnv {
   storage: StorageClient;
   multipart: MultipartStorage;
   cache: CacheClient;
-  queuesMap: Map<string, JobQueue>;
+  queuesMap: Map<string, InMemoryJobQueue>;
   flowProducer: FlowProducerPort;
   teardown: () => Promise<void>;
 }
@@ -44,7 +43,7 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
   const multipart = new InMemoryMultipartStorage(storage);
   const cache = new InMemoryCacheClient();
 
-  const queuesMap = new Map<string, JobQueue>();
+  const queuesMap = new Map<string, InMemoryJobQueue>();
   const queueNames = [
     'probe',
     'transcode-1080p',
@@ -58,7 +57,7 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
   ];
   for (const q of queueNames) queuesMap.set(q, new InMemoryJobQueue(q));
 
-  const getQueue = (name: string): JobQueue => {
+  const getQueue = (name: string): InMemoryJobQueue => {
     let q = queuesMap.get(name);
     if (!q) {
       q = new InMemoryJobQueue(name);
@@ -142,6 +141,7 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
         maxInflightPerUser: 100,
         uploadingThresholdMs: 60 * 60 * 1000,
         uploadedThresholdMs: 500,
+        scanLimit: 100,
       }),
       'the next tick retries a pass the database refused'
     );

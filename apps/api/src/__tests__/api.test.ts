@@ -1,30 +1,26 @@
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ok } from '@vp/result';
+import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 import { serve } from '../serve';
+import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
 
 describe('HTTP and auth foundations', () => {
   let app: FastifyInstance;
-  const repositories = new InMemoryRepositories();
-  const cache = new InMemoryCacheClient();
-  const storage = new InMemoryStorageClient();
   const cdnBase = 'http://localhost:9000/public';
 
-  const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-  const SEED_VIDEO_ID = '018f0000-0000-7000-8000-000000000001';
-  const OTHER_PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000002';
+  const SEED_VIDEO_ID = SEEDED.videoId;
+  const OTHER_PRIVATE_VIDEO_ID = SEEDED.otherVideoId;
 
   beforeAll(async () => {
+    const testApp = await buildTestApp({ config: inProcessAppConfig({ cdn: cdnBase }) });
+    app = testApp.app;
+    const { repositories } = testApp;
     await repositories.videos.create({
       id: SEED_VIDEO_ID,
-      ownerId: DEV_USER_ID,
+      ownerId: SEEDED.userId,
       title: 'Test Sintel Trailer',
       description: 'Sintel trailer test video',
       visibility: 'public',
@@ -77,64 +73,25 @@ describe('HTTP and auth foundations', () => {
       playlistKey: `videos/${SEED_VIDEO_ID}/hls/480p/index.m3u8`,
     });
 
-    await repositories.videos.create({
+    await seedVideo(repositories, {
       id: OTHER_PRIVATE_VIDEO_ID,
-      ownerId: '00000000-0000-7000-8000-000000000002',
+      ownerId: SEEDED.otherUserId,
       title: 'Other Private Video',
       visibility: 'private',
-      status: 'READY',
-      sourceKey: `raw/${OTHER_PRIVATE_VIDEO_ID}/source.mp4`,
     });
-
-    app = (
-      await composeApp({
-        adapters: {
-          repositories,
-          cache,
-          storage,
-        },
-        config: inProcessAppConfig({ cdn: cdnBase }),
-      })
-    ).app;
-    await app.ready();
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it.each(['/healthz', '/livez'])('GET %s returns 200 liveness', async (url) => {
-    const res = await app.inject({ method: 'GET', url });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ status: 'ok' });
-  });
-
-  it('GET /.well-known/jwks.json returns valid Ed25519 dev JWKS', async () => {
-    const res = await app.inject({
-      method: 'GET',
-      url: '/.well-known/jwks.json',
-    });
-    expect(res.statusCode).toBe(200);
-    const jwks = res.json();
-    expect(jwks.keys).toBeDefined();
-    expect(jwks.keys.length).toBeGreaterThan(0);
-    expect(jwks.keys[0].kty).toBe('OKP');
-    expect(jwks.keys[0].crv).toBe('Ed25519');
-  });
-
   it('GET /v1/videos/:id with a minted token returns 200 and the SDD §6.3 shape', async () => {
-    const token = mintToken({
-      sub: DEV_USER_ID,
-      role: 'admin',
-      ttl: '1h',
-    });
+    const token = mintToken({ sub: SEEDED.userId, role: 'admin', ttl: '1h' });
 
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${SEED_VIDEO_ID}`,
-      headers: {
-        authorization: `Bearer ${token}`,
-      },
+      headers: bearer(token),
     });
 
     expect(res.statusCode).toBe(200);
@@ -175,18 +132,10 @@ describe('HTTP and auth foundations', () => {
   });
 
   it("hides another owner's private video behind a 404", async () => {
-    const nonAdminToken = mintToken({
-      sub: DEV_USER_ID,
-      role: 'user',
-      ttl: '1h',
-    });
-
     const res = await app.inject({
       method: 'GET',
       url: `/v1/videos/${OTHER_PRIVATE_VIDEO_ID}`,
-      headers: {
-        authorization: `Bearer ${nonAdminToken}`,
-      },
+      headers: bearer(TOKENS.user),
     });
 
     expect(res.statusCode).toBe(404);
@@ -206,46 +155,6 @@ describe('HTTP and auth foundations', () => {
     const body = res.json();
     expect(body.id).toBe(SEED_VIDEO_ID);
     expect(body.title).toBe('Test Sintel Trailer');
-  });
-
-  it('/readyz returns 503 while Redis is down and 200 once it is back', async () => {
-    cache.setHealthy(true);
-    const resHealthy = await app.inject({
-      method: 'GET',
-      url: '/readyz',
-    });
-    expect(resHealthy.statusCode).toBe(200);
-    expect(resHealthy.json()).toEqual({
-      status: 'ok',
-      checks: {
-        postgres: 'ok',
-        redis: 'ok',
-        s3: 'ok',
-      },
-    });
-
-    cache.setHealthy(false);
-    const resDegraded = await app.inject({
-      method: 'GET',
-      url: '/readyz',
-    });
-    expect(resDegraded.statusCode).toBe(503);
-    expect(resDegraded.json()).toEqual({
-      status: 'degraded',
-      checks: {
-        postgres: 'ok',
-        redis: 'failed',
-        s3: 'ok',
-      },
-    });
-
-    cache.setHealthy(true);
-    const resRecovered = await app.inject({
-      method: 'GET',
-      url: '/readyz',
-    });
-    expect(resRecovered.statusCode).toBe(200);
-    expect(resRecovered.json().status).toBe('ok');
   });
 
   it('serves /metrics on the metrics port, never on the API port, with each process series once', async () => {

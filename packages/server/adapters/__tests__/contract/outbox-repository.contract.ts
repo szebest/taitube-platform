@@ -23,6 +23,10 @@ export function describeOutboxRepositoryContract(makeSubject: MakeRepositoriesSu
       subject = await makeSubject();
     });
 
+    afterAll(async () => {
+      await subject.close();
+    });
+
     beforeEach(async () => {
       await subject.reset();
       outbox = subject.repositories.outbox;

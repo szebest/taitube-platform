@@ -1,12 +1,12 @@
 import styles from './subscriptions-page.module.scss';
 
-import { useMySubscriptionsQuery } from 'src/modules/shared/api';
+import { subscriptionsApi } from 'src/modules/shared/api';
 
 import { LoadingSpinner } from 'src/modules/shared/components';
 import { SubscriptionCard } from '../../components';
 
 export function SubscriptionsPage() {
-	const { data, isLoading } = useMySubscriptionsQuery();
+	const { data, isLoading } = subscriptionsApi.useMySubscriptionsQuery();
 
 	if (isLoading) return <LoadingSpinner />
 	if (!data) return null;

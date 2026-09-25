@@ -1,41 +1,21 @@
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
+import type { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
-import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../app';
+import { TOKENS, bearer, buildTestApp } from './test-app';
 
 describe('user and channel identity profile with universal auth', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
-  let storage: InMemoryStorageClient;
 
-  const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
-  let devToken: string;
+  const DEV_USER_ID = SEEDED.userId;
+  const devToken = TOKENS.user;
 
   beforeAll(async () => {
-    devToken = mintToken({ sub: DEV_USER_ID, role: 'user', ttl: '1h' });
-
-    repositories = new InMemoryRepositories();
-    cache = new InMemoryCacheClient();
-    storage = new InMemoryStorageClient();
-
-    app = (
-      await composeApp({
-        config: inProcessAppConfig(),
-        adapters: {
-          repositories,
-          cache,
-          storage,
-        },
-      })
-    ).app;
+    ({ app, repositories, cache } = await buildTestApp());
   });
 
   afterAll(async () => {
@@ -50,11 +30,7 @@ describe('user and channel identity profile with universal auth', () => {
   describe('JIT (Just-In-Time) User & Channel Provisioning Hook', () => {
     it('auto-provisions user and default channel on first authenticated request', async () => {
       const NEW_USER_ID = '00000000-0000-7000-8000-000000000099';
-      const newToken = mintToken({
-        sub: NEW_USER_ID,
-        role: 'user',
-        ttl: '1h',
-      });
+      const newToken = mintToken({ sub: NEW_USER_ID, role: 'user', ttl: '1h' });
 
       expect(expectOk(await repositories.users.findById(NEW_USER_ID))).toBeNull();
       expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toBeNull();
@@ -62,13 +38,11 @@ describe('user and channel identity profile with universal auth', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/v1/me/account',
-        headers: {
-          authorization: `Bearer ${newToken}`,
-        },
+        headers: bearer(newToken),
       });
 
       expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
+      const body = response.json();
 
       expect(body.user).toBeDefined();
       expect(body.user.id).toBe(NEW_USER_ID);
@@ -94,13 +68,11 @@ describe('user and channel identity profile with universal auth', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/v1/me/account',
-        headers: {
-          authorization: `Bearer ${devToken}`,
-        },
+        headers: bearer(devToken),
       });
 
       expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
+      const body = response.json();
 
       expect(body.id).toBe(DEV_USER_ID);
       expect(body.email).toBe('dev@video-pipeline.local');
@@ -118,7 +90,7 @@ describe('user and channel identity profile with universal auth', () => {
       });
 
       expect(response.statusCode).toBe(401);
-      const body = JSON.parse(response.body);
+      const body = response.json();
       expect(body.code).toBe(ErrorCodes.UNAUTHORIZED);
     });
   });
@@ -128,10 +100,7 @@ describe('user and channel identity profile with universal auth', () => {
       const response = await app.inject({
         method: 'PATCH',
         url: '/v1/me/channel',
-        headers: {
-          authorization: `Bearer ${devToken}`,
-          'content-type': 'application/json',
-        },
+        headers: { ...bearer(devToken), 'content-type': 'application/json' },
         payload: {
           displayName: 'Updated Dev Name',
           bio: 'Updated channel bio description',
@@ -141,7 +110,7 @@ describe('user and channel identity profile with universal auth', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
+      const body = response.json();
 
       expect(body.displayName).toBe('Updated Dev Name');
       expect(body.bio).toBe('Updated channel bio description');
@@ -158,17 +127,14 @@ describe('user and channel identity profile with universal auth', () => {
       const response = await app.inject({
         method: 'PATCH',
         url: '/v1/me/channel',
-        headers: {
-          authorization: `Bearer ${devToken}`,
-          'content-type': 'application/json',
-        },
+        headers: { ...bearer(devToken), 'content-type': 'application/json' },
         payload: {
           handle: 'Dev_Channel_New',
         },
       });
 
       expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
+      const body = response.json();
       expect(body.handle).toBe('dev_channel_new');
 
       const publicRes = await app.inject({
@@ -176,7 +142,7 @@ describe('user and channel identity profile with universal auth', () => {
         url: '/v1/channels/@dev_channel_new',
       });
       expect(publicRes.statusCode).toBe(200);
-      const publicBody = JSON.parse(publicRes.body);
+      const publicBody = publicRes.json();
       expect(publicBody.userId).toBe(DEV_USER_ID);
     });
 
@@ -203,15 +169,12 @@ describe('user and channel identity profile with universal auth', () => {
       const response = await app.inject({
         method: 'PATCH',
         url: '/v1/me/channel',
-        headers: {
-          authorization: `Bearer ${devToken}`,
-          'content-type': 'application/json',
-        },
+        headers: { ...bearer(devToken), 'content-type': 'application/json' },
         payload: { handle },
       });
 
       expect(response.statusCode).toBe(status);
-      const body = JSON.parse(response.body);
+      const body = response.json();
       expect(body.code).toBe(code);
     });
   });
@@ -226,7 +189,7 @@ describe('user and channel identity profile with universal auth', () => {
         });
 
         expect(response.statusCode).toBe(200);
-        const body = JSON.parse(response.body);
+        const body = response.json();
         expect(body.userId).toBe(DEV_USER_ID);
         expect(body.handle).toBe('dev');
         expect(body.subscriberCount).toBe(42);
@@ -243,7 +206,7 @@ describe('user and channel identity profile with universal auth', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
+      const body = response.json();
       expect(body.id).toBe(devChannel?.id);
       expect(body.handle).toBe('dev');
     });
@@ -255,26 +218,8 @@ describe('user and channel identity profile with universal auth', () => {
       });
 
       expect(response.statusCode).toBe(404);
-      const body = JSON.parse(response.body);
+      const body = response.json();
       expect(body.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
-    });
-  });
-
-  describe('OpenAPI Documentation', () => {
-    it('serves openapi spec with /v1/me/account, /v1/me/channel, and /v1/channels/:idOrHandle', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/openapi.json',
-      });
-
-      expect(response.statusCode).toBe(200);
-      const spec = JSON.parse(response.body);
-      expect(spec.paths['/v1/me/account']).toBeDefined();
-      expect(spec.paths['/v1/me/account'].get).toBeDefined();
-      expect(spec.paths['/v1/me/channel']).toBeDefined();
-      expect(spec.paths['/v1/me/channel'].patch).toBeDefined();
-      expect(spec.paths['/v1/channels/{idOrHandle}']).toBeDefined();
-      expect(spec.paths['/v1/channels/{idOrHandle}'].get).toBeDefined();
     });
   });
 });

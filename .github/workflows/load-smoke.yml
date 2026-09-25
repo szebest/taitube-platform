@@ -73,13 +73,36 @@ jobs:
           docker compose -f infra/compose/docker-compose.yml logs --tail=50
           exit 1
 
+      # The runner class varies from run to run by more than any regression this smoke looks for, so
+      # the presign bar is a multiple of what one uploader sees on this runner, not a fixed number.
+      - name: Record the presign baseline on this runner
+        env:
+          # Pre-baked dev JWT: sub=00000000-0000-7000-8000-000000000001, role=user, exp=2036
+          TOKEN: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InZwLWRldi1rZXktMSJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlIjoidXNlciIsImlzcyI6InZwLWRldiIsImF1ZCI6InZwLWFwaSIsImlhdCI6MTc4OTE0NTQ1NiwiZXhwIjoyMTA0NTA1NDU2fQ.s309zkg-MQ6oDZHunmIfqrvyZgBETHgmuLRtcWsD_1hSZciougdfedfR2s7a2ac-oCnXmJG6TultN5c26_eeDQ
+          API: http://localhost:3000
+          LOAD_FACTOR: 6
+        run: |
+          k6 run --quiet --vus 1 --iterations 20 --no-thresholds --summary-trend-stats "p(95),p(99)" \
+            --summary-export "$RUNNER_TEMP/baseline.json" tests/load/s1-upload-storm.js
+          p95=$(jq '.metrics["http_req_duration{name:presign}"]["p(95)"]' "$RUNNER_TEMP/baseline.json")
+          p99=$(jq '.metrics["http_req_duration{name:presign}"]["p(99)"]' "$RUNNER_TEMP/baseline.json")
+          if [ "$p95" = null ] || [ "$p99" = null ]; then
+            echo "::error::the baseline run recorded no presign p95/p99; the bar cannot be set"
+            exit 1
+          fi
+          echo "presign baseline on this runner: p95=${p95} ms p99=${p99} ms, bar x${LOAD_FACTOR}"
+          echo "PRESIGN_P95_MS=$(awk "BEGIN { print int($p95 * $LOAD_FACTOR) + 1 }")" >> "$GITHUB_ENV"
+          echo "PRESIGN_P99_MS=$(awk "BEGIN { print int($p99 * $LOAD_FACTOR) + 1 }")" >> "$GITHUB_ENV"
+
       - name: Run S1 (Reduced for CI)
         env:
           # Pre-baked dev JWT: sub=00000000-0000-7000-8000-000000000001, role=user, exp=2036
           TOKEN: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InZwLWRldi1rZXktMSJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlIjoidXNlciIsImlzcyI6InZwLWRldiIsImF1ZCI6InZwLWFwaSIsImlhdCI6MTc4OTE0NTQ1NiwiZXhwIjoyMTA0NTA1NDU2fQ.s309zkg-MQ6oDZHunmIfqrvyZgBETHgmuLRtcWsD_1hSZciougdfedfR2s7a2ac-oCnXmJG6TultN5c26_eeDQ
           API: http://localhost:3000
         # --vus/--duration override the script's scenarios block entirely (k6 uses constant-vus instead)
-        run: k6 run --vus 5 --duration 1m tests/load/s1-upload-storm.js
+        run: |
+          echo "presign bar: p95<${PRESIGN_P95_MS} ms p99<${PRESIGN_P99_MS} ms"
+          k6 run --vus 5 --duration 1m tests/load/s1-upload-storm.js
 
       - name: Teardown
         if: always()

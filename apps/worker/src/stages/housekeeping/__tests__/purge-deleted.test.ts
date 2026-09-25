@@ -20,6 +20,7 @@ describe('housekeeping: purge-deleted', () => {
         rawBucket: 'raw',
         publicBucket: 'public',
         thresholdMs: 60_000,
+        scanLimit: 100,
       })
     );
 

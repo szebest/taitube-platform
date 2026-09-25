@@ -1,13 +1,10 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import * as http from 'node:http';
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
+import { TOKENS, buildTestApp, seedVideo } from '../../__tests__/test-app';
 
-const OWNER = '00000000-0000-7000-8000-000000000001';
-const STRANGER = '00000000-0000-7000-8000-000000000002';
+const OWNER = SEEDED.userId;
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000010';
 const PRIVATE_VIDEO = '018f0000-0000-7000-8000-000000000020';
 const ABSENT_VIDEO = '018f0000-0000-7000-8000-0000000000ff';
@@ -40,24 +37,23 @@ function openStream(url: string): Promise<StreamHead> {
 describe('SSE event routes', () => {
   let app: FastifyInstance;
   let baseUrl: string;
-  const strangerToken = mintToken({ sub: STRANGER, role: 'user', ttl: '1h' });
+  const strangerToken = TOKENS.otherUser;
 
   beforeAll(async () => {
-    const repositories = new InMemoryRepositories();
+    const testApp = await buildTestApp();
+    app = testApp.app;
     for (const [id, visibility] of [
       [PUBLIC_VIDEO, 'public'],
       [PRIVATE_VIDEO, 'private'],
     ] as const) {
-      await repositories.videos.create({
+      await seedVideo(testApp.repositories, {
         id,
         ownerId: OWNER,
         title: `${visibility} video`,
         visibility,
         status: 'PROCESSING',
-        sourceKey: `raw/${id}/source.mp4`,
       });
     }
-    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
     baseUrl = await app.listen({ port: 0, host: '127.0.0.1' });
   });
 

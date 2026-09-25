@@ -1,4 +1,4 @@
-import { type Container, closeOnDispose } from '@vp/composition';
+import { type Container, closeOnDispose, token } from '@vp/composition';
 import { portBoardQueues } from '../bullmq/port-board-queues';
 import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
@@ -12,6 +12,8 @@ import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
 import { MeteredStorageClient } from '../metered/metered-storage-client';
 import { Adapters } from './adapter-tokens';
 import { LazyQueueRegistry } from './queue-registry';
+
+const InMemoryQueues = token<LazyQueueRegistry<InMemoryJobQueue>>('QueueRegistry');
 
 export function registerFamily(c: Container): void {
   c.provide(Adapters.DbClient, () => new InMemoryDatabaseClient(), closeOnDispose)
@@ -32,15 +34,16 @@ export function registerFamily(c: Container): void {
       closeOnDispose
     )
     .provide(
-      Adapters.QueueRegistry,
+      InMemoryQueues,
       () => new LazyQueueRegistry((name) => new InMemoryJobQueue(name)),
       closeOnDispose
     )
+    .provide(Adapters.QueueRegistry, (c) => c.get(InMemoryQueues))
     .provide(
       Adapters.FlowProducer,
       (c) => {
-        const registry = c.get(Adapters.QueueRegistry);
-        return new InMemoryFlowProducer((name) => registry.get(name));
+        const queues = c.get(InMemoryQueues);
+        return new InMemoryFlowProducer((name) => queues.get(name));
       },
       closeOnDispose
     )

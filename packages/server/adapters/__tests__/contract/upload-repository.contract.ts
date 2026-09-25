@@ -15,6 +15,10 @@ export function describeUploadRepositoryContract(makeSubject: MakeRepositoriesSu
       subject = await makeSubject();
     });
 
+    afterAll(async () => {
+      await subject.close();
+    });
+
     beforeEach(async () => {
       await subject.reset();
       await seedOwners(subject.repositories);

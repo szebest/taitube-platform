@@ -1,7 +1,6 @@
 import { basename, dirname } from 'node:path';
-import { isSpec, productionSources, read, shrinkOnly, trackedFiles } from './repo-files';
+import { isSpec, productionSources, read, trackedFiles } from './repo-files';
 import { hasRuntimeCode } from './runtime-code';
-import { UNTESTED_SOURCES } from './untested-sources';
 
 function siblingSpecs(file: string): string[] {
   const stem = basename(file).replace(/\.tsx?$/, '');
@@ -22,6 +21,8 @@ function untested(): string[] {
 }
 
 describe('architecture: one test file per source file', () => {
+  const uncovered = untested();
+
   it.each([
     { scenario: 'an interface', source: 'export interface Port { read(): Promise<void>; }' },
     { scenario: 'a type alias', source: "export type Kind = 'a' | 'b';" },
@@ -34,6 +35,11 @@ describe('architecture: one test file per source file', () => {
       scenario: 'an abstract class of abstract members',
       source:
         "import { Base } from './base';\nexport abstract class Port extends Base {\n  abstract read(): void;\n}",
+    },
+    {
+      scenario: 'a documented abstract class of abstract members',
+      source:
+        '/** The verdict. */\nexport abstract class Port {\n  /** Reads. */\n  abstract read(): void;\n}',
     },
   ])('asks no spec of $scenario, which erases to nothing', ({ source }) => {
     expect(hasRuntimeCode('fixture.ts', source)).toBe(false);
@@ -54,17 +60,7 @@ describe('architecture: one test file per source file', () => {
     expect(coveredSources().length - uncovered.length).toBeGreaterThan(100);
   });
 
-  const uncovered = untested();
-
   it('gives every production source a name-matching spec beside it', () => {
-    const { unlisted } = shrinkOnly(uncovered, UNTESTED_SOURCES);
-
-    expect(unlisted).toEqual([]);
-  });
-
-  it('keeps the exception list shrinking: no entry that already has a spec', () => {
-    const { stale } = shrinkOnly(uncovered, UNTESTED_SOURCES);
-
-    expect(stale).toEqual([]);
+    expect(uncovered).toEqual([]);
   });
 });

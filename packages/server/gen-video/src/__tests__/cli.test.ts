@@ -21,12 +21,8 @@ function recordingHost(argv: string[]) {
 }
 
 describe('packages/gen-video: run', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('prints its usage for --help and generates nothing', async () => {
-    const { host, log } = recordingHost(['--help']);
+  it.each(['--help', '-h'])('prints its usage for %s and generates nothing', async (flag) => {
+    const { host, log } = recordingHost([flag]);
 
     await run(host);
 

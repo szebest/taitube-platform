@@ -4,13 +4,14 @@ import {
   InMemoryRepositories,
 } from '@vp/adapters/in-memory';
 import { ids } from '@vp/job-contracts';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { runReconcileUploads } from '../stages/housekeeping/reconcile-uploads';
 import { STAGE_SETTINGS, TASKS } from './stage-settings';
 
-const FREE_USER_ID = '00000000-0000-7000-8000-000000000002';
-const PRO_USER_ID = '00000000-0000-7000-8000-000000000001';
+const FREE_USER_ID = SEEDED.otherUserId;
+const PRO_USER_ID = SEEDED.userId;
 const FREE_PRIORITY = 5;
 const PRO_PRIORITY = 1;
 
@@ -109,7 +110,9 @@ describe('admission control in the uploads reconciler', () => {
 
     expect((await reconcile()).reenqueuedCount).toBe(0);
 
-    const activeVideo = expectOk(await repositories.videos.scan({ status: 'PROCESSING' }))[0];
+    const activeVideo = expectOk(
+      await repositories.videos.scan({ status: 'PROCESSING', limit: 1 })
+    )[0];
     if (!activeVideo) {
       throw new Error('Expected a PROCESSING video');
     }
@@ -147,20 +150,11 @@ describe('admission control in the uploads reconciler', () => {
       );
     }
 
-    let resolveFirstJob: () => void = () => {};
-    const firstJobStarted = new Promise<void>((r) => {
-      resolveFirstJob = r;
-    });
-    let continueFirstJob: () => void = () => {};
-    const holdFirstJob = new Promise<void>((r) => {
-      continueFirstJob = r;
-    });
-    const allDone = new Promise<void>((resolve) => {
-      queue.onJobCompleted(() => {
-        if (executionOrder.length === 21) {
-          resolve();
-        }
-      });
+    const { promise: firstJobStarted, resolve: resolveFirstJob } = Promise.withResolvers<void>();
+    const { promise: holdFirstJob, resolve: continueFirstJob } = Promise.withResolvers<void>();
+    const { promise: allDone, resolve: markAllDone } = Promise.withResolvers<void>();
+    queue.onJobCompleted(() => {
+      if (executionOrder.length === 21) markAllDone();
     });
 
     await queue.process(async (job) => {

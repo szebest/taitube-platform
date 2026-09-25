@@ -1,5 +1,6 @@
 import { extname } from 'node:path';
 import ts from 'typescript';
+import { parseSource } from './parsed-sources';
 import { read, trackedFiles } from './repo-files';
 
 const TYPESCRIPT_SOURCES = [
@@ -38,8 +39,7 @@ const RELATIVE_WITH_EXTENSION = /['"]\.\.?\/[^'"]*\.[cm]?[jt]sx?['"]/;
 
 function extensioned(name: string, source: string): string[] {
   if (!RELATIVE_WITH_EXTENSION.test(source)) return [];
-  const kind = name.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true, kind);
+  const file = parseSource(name, source);
   const found: string[] = [];
   const visit = (node: ts.Node) => {
     const specifier = moduleSpecifier(node);

@@ -1,11 +1,12 @@
 import type { IncomingMessage } from 'node:http';
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
-import { buildInMemoryApp, seedVideo } from './in-memory-app';
 import { readSseUntil } from './sse-stream';
+import { buildTestApp, seedVideo } from './test-app';
 
-const OWNER = '00000000-0000-7000-8000-000000000001';
+const OWNER = SEEDED.userId;
 const PUBLIC_ID = '018f0000-0000-7000-8000-000000000061';
 const UNLISTED_ID = '018f0000-0000-7000-8000-000000000062';
 const PRIVATE_ID = '018f0000-0000-7000-8000-000000000063';
@@ -16,7 +17,7 @@ describe('apps/api anonymous video access', () => {
   let repositories: InMemoryRepositories;
 
   beforeAll(async () => {
-    ({ app, repositories } = await buildInMemoryApp());
+    ({ app, repositories } = await buildTestApp());
     baseUrl = await app.listen({ port: 0, host: '127.0.0.1' });
     await seedVideo(repositories, { id: PUBLIC_ID, ownerId: OWNER, title: 'Public Detail' });
     await seedVideo(repositories, {

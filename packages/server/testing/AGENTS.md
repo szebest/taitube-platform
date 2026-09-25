@@ -12,10 +12,10 @@ Instructions for any coding agent working on `@vp/testing`.
 are in [package.json](package.json). Each subpath's `import` condition points at `src/`, so a spec needs no
 build.
 
-- **`.` (`src/index.ts`):** `definePackageTestConfig` (node environment, globals,
-  `src/**/__tests__/**/*.test.ts`; most package `vitest.config.ts` files build on it, a few define their
-  own), `FIXTURES` (`VIDEO_ID` and `DEV_USER_ID`, the ids the seed writes, and a
-  `TRACEPARENT`), `createMockJob` and `withEnv`.
+- **`.` (`src/index.ts`):** `definePackageTestConfig` (node environment, globals, `restoreMocks`,
+  `unstubEnvs`, `src/**/__tests__/**/*.test.ts`; most package `vitest.config.ts` files build on it, a few
+  define their own and set the same two), `SEEDED` (the users, channels and videos the dev seed and every
+  in-memory `Repositories` start with), `createMockJob` and `withEnv`.
 - **`./result`:** `expectOk` / `expectErr`, which unwrap a `Result` or fail naming what came back.
 - **`./jwt`:** `signingKey` and `signJwt`, a throwaway RS256, ES256 or EdDSA key and a token signed with
   it, for the token-verifier and API auth specs.

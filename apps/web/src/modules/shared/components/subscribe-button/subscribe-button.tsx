@@ -5,7 +5,7 @@ import { type animate, useAnimate } from "framer-motion";
 
 import styles from "./subscribe-button.module.scss";
 
-import { useSubscribeMutation, useUnsubscribeMutation } from "../../api";
+import { subscriptionsApi } from "../../api";
 
 import { useAuth } from "../../providers";
 import { useIsSubscribed } from "../../hooks";
@@ -27,8 +27,8 @@ export const SubscribeButton = memo(({ channelId }: SubscribeButtonProps) => {
 
 	const { isSubscribed, isLoading: isIssubscribedLoading } = useIsSubscribed(channelId, account !== undefined);
 
-	const [subscribe, { isLoading: isSubscribeLoading }] = useSubscribeMutation();
-	const [unsubscribe, { isLoading: isUnsubscribeLoading }] = useUnsubscribeMutation();
+	const [subscribe, { isLoading: isSubscribeLoading }] = subscriptionsApi.useSubscribeMutation();
+	const [unsubscribe, { isLoading: isUnsubscribeLoading }] = subscriptionsApi.useUnsubscribeMutation();
 
 	const isLoading = isLoadingUser || isSubscribeLoading || isUnsubscribeLoading || isIssubscribedLoading;
 

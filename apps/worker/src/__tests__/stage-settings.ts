@@ -7,6 +7,7 @@ import * as ffmpeg from '@vp/ffmpeg';
 import type { MediaTools } from '@vp/ffmpeg';
 import type { Logger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
+import { everyInterval } from '../heartbeat';
 import { housekeepingTasks } from '../stages/housekeeping/index';
 import type { TranscodeProcessorDeps } from '../stages/transcode';
 import { transcodeCollaborators } from '../transcode-collaborators';
@@ -78,6 +79,8 @@ export function transcodeDeps(parts: TranscodeParts): TranscodeProcessorDeps {
       storage,
       cache,
       metrics: STAGE_SETTINGS.metrics,
+      now: Date.now,
+      every: everyInterval,
     }),
   };
 }

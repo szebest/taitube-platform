@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { isSpanContextValid, trace } from '@opentelemetry/api';
 import { registeredTracing } from '@vp/observability';
 import { withEnv } from '@vp/testing';
@@ -10,7 +11,7 @@ const LOCAL_ENV = {
 
 /** A fresh module per call: each preload runs its top level again, as a new process would. */
 async function preload(env: Record<string, string>): Promise<boolean> {
-  const module = `../instrument?${env.NODE_ENV}`;
+  const module = `../instrument?${randomUUID()}`;
   await withEnv({ ...LOCAL_ENV, ...env }, () => import(module));
   return isSpanContextValid(trace.getTracer('probe').startSpan('probe').spanContext());
 }

@@ -25,6 +25,8 @@ export default defineConfig({
   test: {
     name: 'architecture-typed',
     globals: true,
+    restoreMocks: true,
+    unstubEnvs: true,
     environment: 'node',
     include: TYPE_AWARE,
     testTimeout: 30_000,

@@ -30,7 +30,9 @@ export class InMemorySubscriptionCache implements SubscriptionCachePort {
     userId: string,
     channelId: string
   ): Promise<Result<void, CacheUnavailable>> {
-    this.userSubscriptions.get(userId)?.delete(channelId);
+    const set = this.userSubscriptions.get(userId);
+    set?.delete(channelId);
+    if (set?.size === 0) this.userSubscriptions.delete(userId);
     return ok();
   }
 

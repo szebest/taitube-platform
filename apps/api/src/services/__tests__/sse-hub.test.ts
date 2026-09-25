@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import { PassThrough } from 'node:stream';
+import { PassThrough, Writable } from 'node:stream';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
@@ -60,8 +60,12 @@ describe('apps/api/services: SseHub', () => {
   });
 
   function attach(): void {
-    const stream = new PassThrough();
-    stream.on('data', (chunk) => chunks.push(String(chunk)));
+    const stream = new Writable({
+      write(chunk, _encoding, done) {
+        chunks.push(String(chunk));
+        done();
+      },
+    });
     expectOk(
       hub.register({
         channel: videoChannel(VIDEO_ID),
@@ -80,7 +84,6 @@ describe('apps/api/services: SseHub', () => {
         timestamp: new Date().toISOString(),
       })
     );
-    await new Promise((resolve) => setTimeout(resolve, 20));
   }
 
   it('delivers a published event to a registered connection', async () => {

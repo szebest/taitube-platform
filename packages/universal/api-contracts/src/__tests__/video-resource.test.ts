@@ -1,7 +1,7 @@
 import { VideoIdParamSchema, VideoListResponseSchema, VideoSummarySchema } from '../video-resource';
 
 const summary = {
-  id: '00000000-0000-7000-8000-000000000001',
+  id: '00000000-0000-7000-8000-0000000000f1',
   ownerId: '00000000-0000-7000-8000-000000000002',
   title: 'A video',
   description: null,

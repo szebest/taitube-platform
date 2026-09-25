@@ -8,7 +8,7 @@ import styles from './video-settings-dropdown.module.scss';
 import type { VideoSummary } from "@vp/api-contracts";
 import { fromPromise, isErr } from "@vp/result";
 
-import { useDeleteVideoMutation } from "../../api";
+import { videosApi } from "../../api";
 
 export type VideoSettingsDropdownProps = {
 	video: Pick<VideoSummary, 'id'>;
@@ -18,7 +18,7 @@ export type VideoSettingsDropdownProps = {
 export const VideoSettingsDropdown = memo(({ video, shouldRedirectOnDelete }: VideoSettingsDropdownProps) => {
 	const navigate = useNavigate();
 
-	const [deleteVideo, { isLoading: isDeleteLoading }] = useDeleteVideoMutation();
+	const [deleteVideo, { isLoading: isDeleteLoading }] = videosApi.useDeleteVideoMutation();
 
 	const handleEdit = () => {
 		navigate(`/upload/edit/${video.id}`);

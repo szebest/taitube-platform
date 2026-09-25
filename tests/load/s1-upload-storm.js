@@ -3,6 +3,11 @@ import { sleep } from 'k6';
 import { randomBytes } from 'k6/crypto';
 import { STORAGE_HOSTS, completeUpload, initUpload, uploadPart } from './common.js';
 
+// CI measures this on its own runner first (the one-VU baseline in load-smoke.yml); 200 ms is the
+// bar a developer machine is held to.
+const PRESIGN_P95_MS = __ENV.PRESIGN_P95_MS || 200;
+const PRESIGN_P99_MS = __ENV.PRESIGN_P99_MS || 500;
+
 export const options = {
   hosts: STORAGE_HOSTS,
   scenarios: {
@@ -16,7 +21,7 @@ export const options = {
     },
   },
   thresholds: {
-    'http_req_duration{name:presign}': ['p(95)<200', 'p(99)<500'],
+    'http_req_duration{name:presign}': [`p(95)<${PRESIGN_P95_MS}`, `p(99)<${PRESIGN_P99_MS}`],
     'http_req_duration{name:complete}': ['p(95)<300'],
     checks: ['rate>0.995'],
     http_req_failed: ['rate==0'], // zero 5xx

@@ -1,54 +1,34 @@
-import {
-  InMemoryJobQueue,
-  InMemoryMultipartStorage,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { InMemoryJobQueue, type InMemoryRepositories } from '@vp/adapters/in-memory';
+import type { StorageClient } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../app';
+import { TOKENS, buildTestApp } from './test-app';
 import { completeUpload, postUpload } from './upload-requests';
 
 describe('upload admission control and tier priorities', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
-  let storage: InMemoryStorageClient;
-  let multipart: InMemoryMultipartStorage;
-  let probeQueue: InMemoryJobQueue;
+  let storage: StorageClient;
+  const probeQueue = new InMemoryJobQueue('probe');
+  const freeToken = TOKENS.otherUser;
+  const proToken = TOKENS.user;
 
-  const FREE_USER_ID = '00000000-0000-7000-8000-000000000002';
-  const PRO_USER_ID = '00000000-0000-7000-8000-000000000001';
-
-  let freeToken: string;
-  let proToken: string;
-
-  beforeEach(async () => {
-    repositories = new InMemoryRepositories();
-    storage = new InMemoryStorageClient();
-    multipart = new InMemoryMultipartStorage();
-    probeQueue = new InMemoryJobQueue('probe');
-
-    app = (
-      await composeApp({
-        adapters: {
-          repositories,
-          storage,
-          multipart,
-          probeQueue,
-        },
-        config: inProcessAppConfig({ limits: { maxInflightPerUser: 3 } }),
-      })
-    ).app;
-    await app.ready();
-
-    freeToken = mintToken({ sub: FREE_USER_ID, role: 'user' });
-    proToken = mintToken({ sub: PRO_USER_ID, role: 'user' });
+  beforeAll(async () => {
+    ({ app, repositories, storage } = await buildTestApp({
+      config: inProcessAppConfig({ limits: { maxInflightPerUser: 3 } }),
+      adapters: { probeQueue },
+    }));
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    repositories.clear();
+    probeQueue.clear();
   });
 
   async function createAndCompleteUpload(token: string, filename: string) {
@@ -56,9 +36,7 @@ describe('upload admission control and tier priorities', () => {
     expect(initRes.statusCode).toBe(201);
     const { videoId, uploadId } = initRes.json();
     const video = expectOk(await repositories.videos.findById(videoId));
-    if (!video) {
-      throw new Error('Video not found');
-    }
+    if (!video) throw new Error('Video not found');
 
     await storage.uploadObject({
       bucket: 'raw',
@@ -73,12 +51,12 @@ describe('upload admission control and tier priorities', () => {
   }
 
   it.each([
-    { tier: 'free', token: () => freeToken, filename: 'video1.mp4', priority: 5 },
-    { tier: 'pro', token: () => proToken, filename: 'pro-video.mp4', priority: 1 },
+    { tier: 'free', token: freeToken, filename: 'video1.mp4', priority: 5 },
+    { tier: 'pro', token: proToken, filename: 'pro-video.mp4', priority: 1 },
   ])(
     'admits a $tier user under the limit and enqueues the probe at priority $priority',
     async ({ token, filename, priority }) => {
-      const { completeRes, videoId } = await createAndCompleteUpload(token(), filename);
+      const { completeRes, videoId } = await createAndCompleteUpload(token, filename);
 
       expect(completeRes.statusCode).toBe(202);
       expect(completeRes.json()).toEqual({ videoId, status: 'UPLOADED', admission: 'admitted' });
@@ -118,7 +96,7 @@ describe('upload admission control and tier priorities', () => {
       eventType: 'probe.started',
     });
 
-    const inflight = expectOk(await repositories.videos.countInFlightByOwner(FREE_USER_ID));
+    const inflight = expectOk(await repositories.videos.countInFlightByOwner(SEEDED.otherUserId));
     expect(inflight).toBe(3);
 
     const initialJobs = expectOk(await probeQueue.getJobs(['waiting', 'prioritized']));

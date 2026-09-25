@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { toAppConfig } from '../app-config';
 import { AppEnvSchema } from '../app-env';
+import { SEEDED } from '@vp/testing';
 
 function exampleEnv(): Record<string, string> {
   const content = readFileSync(resolve(__dirname, '../../../../../.env.example'), 'utf8');
@@ -85,7 +86,7 @@ describe('packages/env-schema: toAppConfig', () => {
       issuer: 'vp-dev',
       audience: 'vp-api',
       adminToken: 'operator',
-      adminUserId: '00000000-0000-7000-8000-000000000001',
+      adminUserId: SEEDED.userId,
     });
   });
 

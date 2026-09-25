@@ -1,59 +1,34 @@
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
+import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cache.adapter';
-import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../app';
-import { bearer } from './in-memory-app';
+import { ADMIN_TOKEN, type TestApp, bearer, buildTestApp } from './test-app';
 
-export const ADMIN_TOKEN = 'operator-token-for-tests';
-export const REGULAR_USER_ID = '00000000-0000-7000-8000-000000000001';
 export const CATEGORIES_CACHE_CONTROL = 'public, max-age=300, stale-while-revalidate=60';
 
-const ADMIN_USER_ID = '00000000-0000-7000-8000-000000000003';
-const CACHES = inProcessAppConfig().caches;
-
-export interface CategoriesApp {
-  app: FastifyInstance;
-  repositories: InMemoryRepositories;
-  cache: InMemoryCacheClient;
-  storage: InMemoryStorageClient;
+export interface CategoriesApp extends TestApp {
   categoryCache: RedisCategoryCacheAdapter;
-  adminJwt: string;
-  userJwt: string;
   reset(): void;
 }
 
 export function newCategoryCache(cache: InMemoryCacheClient): RedisCategoryCacheAdapter {
-  return new RedisCategoryCacheAdapter({ ...CACHES.categories, cache });
+  return new RedisCategoryCacheAdapter({ ...inProcessAppConfig().caches.categories, cache });
 }
 
+/** `reset()` empties the stores and this instance's in-process category cache between tests. */
 export async function buildCategoriesApp(): Promise<CategoriesApp> {
-  const repositories = new InMemoryRepositories();
   const cache = new InMemoryCacheClient();
-  const storage = new InMemoryStorageClient();
   const categoryCache = newCategoryCache(cache);
-  const app = (
-    await composeApp({
-      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
-      adapters: { repositories, cache, storage, categoryCache },
-    })
-  ).app;
+  const testApp = await buildTestApp({
+    config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+    adapters: { cache, categoryCache },
+  });
 
   return {
-    app,
-    repositories,
-    cache,
-    storage,
+    ...testApp,
     categoryCache,
-    adminJwt: mintToken({ sub: ADMIN_USER_ID, role: 'admin', ttl: '1h' }),
-    userJwt: mintToken({ sub: REGULAR_USER_ID, role: 'user', ttl: '1h' }),
     reset() {
-      repositories.clear();
+      testApp.repositories.clear();
       cache.clear();
       categoryCache.clearL1();
     },

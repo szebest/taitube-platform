@@ -1,6 +1,7 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { UserContext } from '@vp/permissions';
-import { expectOk } from '@vp/testing/result';
+import type { Result } from '@vp/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';
 import { uploadContext } from './service-deps';
@@ -8,6 +9,12 @@ import { uploadContext } from './service-deps';
 const MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024;
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'CREATOR' };
+const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000e002', role: 'CREATOR' };
+
+type Refusable = (
+  service: UploadService,
+  uploadId: string
+) => Promise<Result<unknown, { message: string }>>;
 
 describe('apps/api/services: UploadService', () => {
   let repositories: InMemoryRepositories;
@@ -83,5 +90,32 @@ describe('apps/api/services: UploadService', () => {
     const expiry = new Date(expiresAt).getTime();
     expect(expiry).toBeGreaterThanOrEqual(before + 60_000);
     expect(expiry).toBeLessThanOrEqual(after + 60_000);
+  });
+
+  it.each<{ operation: string; call: Refusable }>([
+    { operation: 'abort', call: (service, uploadId) => service.abort(STRANGER, uploadId) },
+    { operation: 'complete', call: (service, uploadId) => service.complete(STRANGER, uploadId) },
+    {
+      operation: 'resume',
+      call: (service, uploadId) => service.getResumeInfo(STRANGER, uploadId),
+    },
+    {
+      operation: 'sign parts of',
+      call: (service, uploadId) => service.issuePartUrls(STRANGER, uploadId, 1, 1),
+    },
+  ])('refuses to $operation an upload the caller does not own', async ({ call }) => {
+    const service = build();
+    const { uploadId, videoId } = expectOk(
+      await service.initiate(OWNER, {
+        filename: 'clip.mp4',
+        sizeBytes: MULTIPART_THRESHOLD_BYTES + 1,
+        contentType: 'video/mp4',
+      })
+    );
+
+    expect(expectErr(await call(service, uploadId)).message).toContain('Not authorized');
+    expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
+      status: 'UPLOADING',
+    });
   });
 });

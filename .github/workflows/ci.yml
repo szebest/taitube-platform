@@ -86,6 +86,7 @@ jobs:
         run: |
           echo "started=$(jq '.startTime' "$RUNNER_TEMP/architecture.json")" >> "$GITHUB_OUTPUT"
           echo "finished=$(jq '[.testResults[].endTime] | max | floor' "$RUNNER_TEMP/architecture.json")" >> "$GITHUB_OUTPUT"
+          jq -r '.startTime as $t0 | .testResults | sort_by(.startTime)[] | "\(.startTime - $t0 | floor) \(.endTime - .startTime | floor) \(.name | split("/") | last)"' "$RUNNER_TEMP/architecture.json"
 
       - name: Hold the architecture suite to its budget
         uses: ./.github/actions/budget
@@ -125,6 +126,9 @@ jobs:
 
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
+
+      - name: Set up kustomize
+        uses: ./.github/actions/setup-kustomize
 
       - name: Replay the build from the turbo cache
         run: pnpm exec turbo run build
@@ -168,14 +172,23 @@ jobs:
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
 
+      - name: Set up kustomize
+        uses: ./.github/actions/setup-kustomize
+
       - name: Replay the build from the turbo cache
         run: pnpm exec turbo run build
 
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
 
-      - name: Run worker & packages unit tests under Bun (runtime parity gate)
+      - name: Run the api, worker and packages unit tests under Bun (runtime parity gate)
         run: pnpm test:bun
+
+      - name: Run the two suites that once raced a real clock twenty times over
+        run: >-
+          bun test --timeout 30000 --rerun-each 20
+          apps/worker/src/stages/__tests__/segment-uploader.test.ts
+          packages/server/adapters/redis/__tests__/redis-reaction-cache.adapter.test.ts
 
   integration:
     name: integration
@@ -215,10 +228,13 @@ jobs:
           docker compose -f infra/compose/docker-compose.yml up minio-init
           DATABASE_URL="postgres://vp:vp@localhost:5432/vp" pnpm db:migrate
 
+      - name: Show the service containers the contract specs run against
+        run: docker compose -f infra/compose/docker-compose.yml ps postgres redis minio
+
       - name: Run infrastructure smoke test (infra/compose/test.sh)
         run: bash infra/compose/test.sh
 
-      - name: Run integration tests
+      - name: Run the FFmpeg specs and the adapter contracts against the real services
         env:
           NODE_ENV: test
           DATABASE_URL: postgres://vp:vp@localhost:5432/vp

@@ -5,6 +5,7 @@ import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
 import type { Logger } from '@vp/logger';
 import { type Result, err, fromPromise, ignore, isErr, ok, unwrapOr } from '@vp/result';
 import { getHeaderMapping, renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
+import type { Every, Repeating } from '../heartbeat';
 
 export interface SegmentUploaderOptions {
   outputDir: string;
@@ -16,6 +17,8 @@ export interface SegmentUploaderOptions {
   concurrency: number;
   maxRetries: number;
   retryDelayMs: number;
+  pollIntervalMs: number;
+  every: Every;
   logger: Logger;
 }
 
@@ -65,10 +68,11 @@ export class StreamingSegmentUploader implements SegmentUploader {
   private readonly concurrency: number;
   private readonly maxRetries: number;
   private readonly retryDelayMs: number;
+  private readonly pollIntervalMs: number;
+  private readonly every: Every;
   private readonly logger: Logger;
 
-  private isRunning = false;
-  private pollTimer: NodeJS.Timeout | null = null;
+  private polling: Repeating | undefined;
   private queue: string[] = [];
   private readonly queuedSet = new Set<string>();
   private readonly uploadedBytes = new Map<string, number>();
@@ -86,6 +90,8 @@ export class StreamingSegmentUploader implements SegmentUploader {
     this.concurrency = options.concurrency;
     this.maxRetries = options.maxRetries;
     this.retryDelayMs = options.retryDelayMs;
+    this.pollIntervalMs = options.pollIntervalMs;
+    this.every = options.every;
     this.logger = options.logger.child({
       component: 'streaming-uploader',
       rendition: options.rendition,
@@ -93,12 +99,15 @@ export class StreamingSegmentUploader implements SegmentUploader {
   }
 
   start(): void {
-    if (this.isRunning) return;
-    this.isRunning = true;
-    this.pollTimer = setInterval(() => {
-      void this.scanDirectory();
-    }, 100);
-    void this.scanDirectory();
+    if (this.polling) return;
+    this.polling = this.every(this.pollIntervalMs, () => this.poll());
+    void this.poll();
+  }
+
+  /** One scan, settled once every segment it found is uploaded or has failed the job. */
+  private async poll(): Promise<void> {
+    await this.scanDirectory();
+    await this.waitForIdle();
   }
 
   /** The directory may not exist yet, or be mid-rename, so an unreadable scan is simply retried. */
@@ -196,11 +205,8 @@ export class StreamingSegmentUploader implements SegmentUploader {
 
   /** `null` means the encode failed, so there is nothing to finish uploading. */
   async stop(success: boolean): Promise<Result<UploaderResult | null, MediaFailure>> {
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
-      this.pollTimer = null;
-    }
-    this.isRunning = false;
+    this.polling?.stop();
+    this.polling = undefined;
 
     if (!success) return ok(null);
 

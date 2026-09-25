@@ -4,6 +4,8 @@ import * as path from 'node:path';
 import { Readable } from 'node:stream';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { s3StorageClientSubject } from '../../__tests__/contract/s3-subjects';
+import { describeStorageClientContract } from '../../__tests__/contract/storage-client.contract';
 import { S3StorageClient } from '../s3-storage-client';
 import { type CommandHandler, fakeS3Client, notFound } from './fake-s3-client';
 
@@ -17,6 +19,8 @@ function fakeStorage(handlers?: Record<string, CommandHandler>) {
     storage: new S3StorageClient({ type: 'client', client: fake.client, healthBucket: BUCKET }),
   };
 }
+
+describeStorageClientContract(s3StorageClientSubject);
 
 describe('S3StorageClient', () => {
   describe('checkHealth', () => {

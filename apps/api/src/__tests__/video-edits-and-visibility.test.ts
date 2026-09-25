@@ -1,21 +1,19 @@
 import type { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { bearer, buildInMemoryApp, seedVideo } from './in-memory-app';
+import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
 
-const USER_A = '00000000-0000-7000-8000-000000000001';
-const USER_B = '00000000-0000-7000-8000-000000000002';
-const ADMIN_USER = '00000000-0000-7000-8000-000000000099';
+const USER_A = SEEDED.userId;
 
 describe('apps/api video metadata edits and visibility', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
-  const tokenA = mintToken({ sub: USER_A, role: 'user', ttl: '1h' });
-  const tokenB = mintToken({ sub: USER_B, role: 'user', ttl: '1h' });
-  const adminToken = mintToken({ sub: ADMIN_USER, role: 'admin', ttl: '1h' });
+  const tokenA = TOKENS.user;
+  const tokenB = TOKENS.otherUser;
+  const adminToken = TOKENS.admin;
 
   function patch(videoId: string, payload: Record<string, unknown>, token?: string) {
     return app.inject({
@@ -35,7 +33,7 @@ describe('apps/api video metadata edits and visibility', () => {
   }
 
   beforeAll(async () => {
-    ({ app, repositories, cache } = await buildInMemoryApp());
+    ({ app, repositories, cache } = await buildTestApp());
   });
 
   afterAll(async () => {

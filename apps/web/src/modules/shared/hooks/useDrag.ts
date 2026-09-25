@@ -1,11 +1,13 @@
 import React from "react";
 
+type Pointer = Pick<React.MouseEvent, 'clientX'>;
+
 export const useDrag = () => {
 	const [clicked, setClicked] = React.useState(false);
 	const [dragging, setDragging] = React.useState(false);
 	const position = React.useRef(0);
 
-	const dragStart = React.useCallback((ev: React.MouseEvent) => {
+	const dragStart = React.useCallback((ev: Pointer) => {
 		position.current = ev.clientX;
 		setClicked(true);
 	}, []);
@@ -19,7 +21,7 @@ export const useDrag = () => {
 		[]
 	);
 
-	const dragMove = (ev: React.MouseEvent, cb: (posDif: number) => void) => {
+	const dragMove = (ev: Pointer, cb: (posDif: number) => void) => {
 		const newDiff = position.current - ev.clientX;
 
 		const movedEnough = Math.abs(newDiff) > 5;
@@ -38,8 +40,6 @@ export const useDrag = () => {
 		dragStart,
 		dragStop,
 		dragMove,
-		dragging,
-		position,
-		setDragging
+		dragging
 	};
 }

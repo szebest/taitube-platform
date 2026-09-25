@@ -4,7 +4,7 @@ import type { Account } from "@vp/api-contracts"
 
 import { readAuthToken } from "src/auth-token"
 
-import { useAccountQuery } from "../api"
+import { accountApi } from "../api"
 
 type AuthContextValue = {
 	account?: Account
@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 export type AuthProviderProps = PropsWithChildren;
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-	const { isLoading, data: account } = useAccountQuery(undefined, { skip: !readAuthToken() });
+	const { isLoading, data: account } = accountApi.useAccountQuery(undefined, { skip: !readAuthToken() });
 
 	const ctx = useMemo(() => ({
 		account,

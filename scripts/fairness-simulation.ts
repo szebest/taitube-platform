@@ -61,6 +61,7 @@ async function runFairnessSimulation(log: Logger) {
       metrics,
       uploadingThresholdMs: Number.MAX_SAFE_INTEGER,
       uploadedThresholdMs: 0,
+      scanLimit: 100,
       maxInflightPerUser: MAX_INFLIGHT,
     });
     required(reconciled, 'reconciler');

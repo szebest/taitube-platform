@@ -14,9 +14,9 @@ import {
 } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';
+import type { PostgresDatabase } from './types';
 
 function mapRow(row: typeof categories.$inferSelect): Category {
   return {
@@ -33,7 +33,7 @@ function mapRow(row: typeof categories.$inferSelect): Category {
 }
 
 export class PostgresCategoryRepository implements CategoryRepositoryPort {
-  constructor(private readonly db: PostgresJsDatabase<Record<string, unknown>>) {}
+  constructor(private readonly db: PostgresDatabase) {}
 
   /** A unique index on `slug` is the only conflict this table can report. */
   private conflict(slug: string, operation: string) {

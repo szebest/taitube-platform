@@ -1,15 +1,12 @@
-import { createHash } from 'node:crypto';
-import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { isErr } from '@vp/result';
 import postgres from 'postgres';
 import { type Log, waitForDatabase } from './client';
+import { migrationsHash } from './migrations-hash';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const MIGRATIONS_FOLDER = path.resolve(import.meta.dirname, '../drizzle');
 
 export async function runMigrations(url: string, log: Log): Promise<void> {
   const sql = postgres(url, { max: 1 });
@@ -17,45 +14,18 @@ export async function runMigrations(url: string, log: Log): Promise<void> {
   const reached = await waitForDatabase(() => sql`SELECT 1`, { label: 'db:migrate', log });
   if (isErr(reached)) throw reached.error;
 
-  const db = drizzle(sql);
-
-  const candidates = [
-    path.resolve(process.cwd(), 'drizzle'),
-    path.resolve(process.cwd(), 'packages/server/db/drizzle'),
-    path.resolve(process.cwd(), 'node_modules/@vp/db/drizzle'),
-    path.resolve(__dirname, '../drizzle'),
-    path.resolve(__dirname, '../../packages/db/drizzle'),
-    path.resolve(__dirname, '../../../packages/db/drizzle'),
-    path.resolve(__dirname, '../../drizzle'),
-  ];
-  const migrationsFolder =
-    candidates.find((dir) => fs.existsSync(path.join(dir, 'meta', '_journal.json'))) ??
-    candidates.find((dir) => fs.existsSync(dir)) ??
-    (candidates[0] as string);
-  log.info({ migrationsFolder }, 'applying migrations');
-
-  const hash = createHash('sha256');
-  const files = fs.readdirSync(migrationsFolder).sort();
-  for (const file of files) {
-    if (file.endsWith('.sql')) {
-      hash.update(fs.readFileSync(path.join(migrationsFolder, file)));
-    }
-  }
-  const journalPath = path.join(migrationsFolder, 'meta', '_journal.json');
-  if (fs.existsSync(journalPath)) {
-    hash.update(fs.readFileSync(journalPath));
-  }
-  const currentHash = hash.digest('hex');
+  log.info({ migrationsFolder: MIGRATIONS_FOLDER }, 'applying migrations');
+  const currentHash = migrationsHash(MIGRATIONS_FOLDER);
 
   await sql`CREATE TABLE IF NOT EXISTS __vp_migration_hash (hash text PRIMARY KEY)`;
   const rows = await sql`SELECT hash FROM __vp_migration_hash LIMIT 1`;
-  if (rows.length > 0 && rows[0]?.hash === currentHash) {
+  if (rows[0]?.hash === currentHash) {
     log.info({}, 'migrations unchanged, nothing to apply');
     await sql.end();
     return;
   }
 
-  await migrate(db, { migrationsFolder });
+  await migrate(drizzle(sql), { migrationsFolder: MIGRATIONS_FOLDER });
   log.info({}, 'migrations applied');
 
   await sql`DELETE FROM __vp_migration_hash`;

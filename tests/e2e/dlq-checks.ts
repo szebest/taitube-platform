@@ -145,6 +145,7 @@ export async function runAbandonedUploadTest(ctx: DlqCheckContext): Promise<{
       metrics: createMetricsRegistry(),
       uploadingThresholdMs: 10,
       uploadedThresholdMs: 60 * 60 * 1000,
+      scanLimit: 100,
     });
   }
 

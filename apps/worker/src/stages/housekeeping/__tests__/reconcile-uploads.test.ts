@@ -31,6 +31,7 @@ describe('housekeeping: reconcile-uploads', () => {
         rawBucket: 'raw',
         uploadingThresholdMs: TEN_MINUTES_MS,
         uploadedThresholdMs: 5 * 60 * 1000,
+        scanLimit: 100,
         maxInflightPerUser: 3,
       })
     );

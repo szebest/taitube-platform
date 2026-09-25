@@ -1,5 +1,7 @@
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
+import { redisSubscriptionCacheSubject } from '../../__tests__/contract/redis-subjects';
+import { describeSubscriptionCacheContract } from '../../__tests__/contract/subscription-cache.contract';
 import { RedisSubscriptionCacheAdapter } from '../redis-subscription-cache.adapter';
 import { FakeRedis } from './fake-redis';
 
@@ -20,17 +22,6 @@ describe('RedisSubscriptionCacheAdapter', () => {
   });
 
   describe('isSubscribed', () => {
-    it('reports a miss as null rather than false', async () => {
-      expect(expectOk(await cache.isSubscribed(USER_ID, CHANNEL_ID))).toBeNull();
-    });
-
-    it('answers from a warmed set', async () => {
-      await cache.setUserSubscriptions(USER_ID, [CHANNEL_ID]);
-
-      expect(expectOk(await cache.isSubscribed(USER_ID, CHANNEL_ID))).toBe(true);
-      expect(expectOk(await cache.isSubscribed(USER_ID, 'other-channel'))).toBe(false);
-    });
-
     it('keeps a subscription-free user cached rather than re-reading the database', async () => {
       await cache.setUserSubscriptions(USER_ID, []);
 
@@ -64,10 +55,6 @@ describe('RedisSubscriptionCacheAdapter', () => {
   });
 
   describe('subscriber count', () => {
-    it('reports a miss as null', async () => {
-      expect(expectOk(await cache.getSubscriberCount(CHANNEL_ID))).toBeNull();
-    });
-
     it('round-trips a count with its ttl', async () => {
       await cache.setSubscriberCount(CHANNEL_ID, 42);
 
@@ -96,3 +83,5 @@ describe('RedisSubscriptionCacheAdapter', () => {
     expect(redis.ttls.get(COUNT_KEY)).toBe(30);
   });
 });
+
+describeSubscriptionCacheContract(redisSubscriptionCacheSubject);

@@ -1,27 +1,22 @@
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
-import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
+import { TOKENS, bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
 
-const OWNER = '00000000-0000-7000-8000-000000000001';
-const STRANGER = '00000000-0000-7000-8000-000000000002';
+const OWNER = SEEDED.userId;
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000001';
 const PRIVATE_VIDEO = '018f0000-0000-7000-8000-000000000002';
 
 describe('video routes', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
-  const owner = { authorization: `Bearer ${mintToken({ sub: OWNER, role: 'user', ttl: '1h' })}` };
-  const stranger = {
-    authorization: `Bearer ${mintToken({ sub: STRANGER, role: 'user', ttl: '1h' })}`,
-  };
+  const owner = bearer(TOKENS.user);
+  const stranger = bearer(TOKENS.otherUser);
 
   beforeAll(async () => {
-    repositories = new InMemoryRepositories();
-    app = (await composeApp({ config: inProcessAppConfig(), adapters: { repositories } })).app;
-    await app.ready();
+    ({ app, repositories } = await buildTestApp());
   });
 
   afterAll(async () => {
@@ -34,13 +29,11 @@ describe('video routes', () => {
       [PUBLIC_VIDEO, 'public'],
       [PRIVATE_VIDEO, 'private'],
     ] as const) {
-      await repositories.videos.create({
+      await seedVideo(repositories, {
         id,
         ownerId: OWNER,
         title: `${visibility} video`,
         visibility,
-        status: 'READY',
-        sourceKey: `raw/${id}/source.mp4`,
       });
     }
   });
@@ -143,7 +136,7 @@ describe('video routes', () => {
   ])(
     'limits the sixth reprocess in a minute from a $role: $limited',
     async ({ role, sub, limited }) => {
-      const headers = { authorization: `Bearer ${mintToken({ sub, role, ttl: '1h' })}` };
+      const headers = bearer(mintToken({ sub, role, ttl: '1h' }));
       const statuses: number[] = [];
       for (let attempt = 0; attempt < 6; attempt++) {
         const res = await app.inject({

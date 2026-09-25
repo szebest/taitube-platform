@@ -1,6 +1,6 @@
 import styles from './subscription-videos-page.module.scss';
 
-import { useSubscriptionFeedQuery } from 'src/modules/shared/api';
+import { feedApi } from 'src/modules/shared/api';
 
 import { useInfiniteScroll, useIsView } from 'src/modules/shared/hooks';
 
@@ -8,7 +8,7 @@ import { VideosContainer } from "src/modules/shared/components";
 
 export function SubscriptionVideosPage() {
 	const [isListView, setIsListView] = useIsView();
-	const { loadMore, queryData } = useInfiniteScroll(useSubscriptionFeedQuery, { limit: 30 });
+	const { loadMore, queryData } = useInfiniteScroll(feedApi.useSubscriptionFeedQuery, { limit: 30 });
 
 	return (
 		<div className={styles.container}>

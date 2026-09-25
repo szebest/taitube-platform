@@ -1,33 +1,26 @@
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
-import type { JobQueue } from '@vp/core/ports';
-import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../../app';
-
-const ADMIN_TOKEN = 'operator-token-for-tests';
-const USER = '00000000-0000-7000-8000-000000000001';
-const OPERATOR = '00000000-0000-7000-8000-000000000099';
+import {
+  ADMIN_TOKEN,
+  TOKENS,
+  bearer,
+  buildTestApp,
+  inMemoryQueues,
+} from '../../../__tests__/test-app';
 
 describe('admin queues board', () => {
   let app: FastifyInstance;
-  const userToken = mintToken({ sub: USER, role: 'user', ttl: '1h' });
-  const operatorToken = mintToken({ sub: OPERATOR, role: 'admin', ttl: '1h' });
+  const transcode = new InMemoryJobQueue('transcode-720p');
 
   beforeAll(async () => {
-    app = (
-      await composeApp({
-        config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
-        adapters: {
-          queues: new Map<string, JobQueue>(
-            QUEUES.map((name) => [name, new InMemoryJobQueue(name)])
-          ),
-        },
-      })
-    ).app;
-    await app.ready();
+    ({ app } = await buildTestApp({
+      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+      adapters: { queues: inMemoryQueues(transcode) },
+    }));
   });
 
   afterAll(async () => {
@@ -44,7 +37,7 @@ describe('admin queues board', () => {
     },
     {
       caller: 'a non-admin user',
-      headers: { authorization: `Bearer ${userToken}` },
+      headers: bearer(TOKENS.user),
       status: 403,
       code: ErrorCodes.FORBIDDEN,
     },
@@ -59,16 +52,39 @@ describe('admin queues board', () => {
     }
   );
 
-  it('serves the board to an operator with every pipeline queue', async () => {
+  it('serves the board UI to the operator token', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/admin/queues',
+      headers: { 'x-admin-token': ADMIN_TOKEN },
+    });
+
+    expect([200, 301, 302]).toContain(res.statusCode);
+  });
+
+  it('lists every pipeline queue and the DLQ to an admin', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/admin/queues/api/queues',
-      headers: { authorization: `Bearer ${operatorToken}` },
+      headers: bearer(TOKENS.admin),
     });
 
     expect(res.statusCode).toBe(200);
     expect(res.json().queues.map((queue: { name: string }) => queue.name)).toEqual(
-      expect.arrayContaining([...QUEUES])
+      expect.arrayContaining([...QUEUES, 'dlq'])
     );
+  });
+
+  it('pauses and resumes a queue for an admin', async () => {
+    const queueUrl = '/admin/queues/api/queues/transcode-720p';
+    const headers = bearer(TOKENS.admin);
+
+    const paused = await app.inject({ method: 'PUT', url: `${queueUrl}/pause`, headers });
+    expect(paused.statusCode).toBe(200);
+    expect(expectOk(await transcode.isPaused())).toBe(true);
+
+    const resumed = await app.inject({ method: 'PUT', url: `${queueUrl}/resume`, headers });
+    expect(resumed.statusCode).toBe(200);
+    expect(expectOk(await transcode.isPaused())).toBe(false);
   });
 });

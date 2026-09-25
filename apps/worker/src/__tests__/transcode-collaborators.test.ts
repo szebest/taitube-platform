@@ -6,6 +6,7 @@ import {
 import { inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
+import { everyInterval } from '../heartbeat';
 import { TranscodeProgressReporter } from '../stages/progress-reporter';
 import { StreamingSegmentUploader } from '../stages/segment-uploader';
 import { transcodeCollaborators } from '../transcode-collaborators';
@@ -19,6 +20,8 @@ describe('apps/worker: transcode collaborators', () => {
     repositories: new InMemoryRepositories(),
     storage: new InMemoryStorageClient(),
     metrics: createMetricsRegistry(),
+    now: Date.now,
+    every: everyInterval,
   });
 
   it('reports a rendition through the throttled progress reporter', () => {

@@ -46,9 +46,15 @@ export const HOUSEKEEPING = {
   stuckUploadedAfterMs: 5 * MS_PER_MINUTE,
   tmpSweepAfterMs: 2 * MS_PER_HOUR,
   reactionReconcileLimit: 500,
+  scanLimit: 100,
 } as const;
 
-export const SEGMENT_UPLOAD = { concurrency: 4, maxRetries: 3, retryDelayMs: 150 } as const;
+export const SEGMENT_UPLOAD = {
+  concurrency: 4,
+  maxRetries: 3,
+  retryDelayMs: 150,
+  pollIntervalMs: 100,
+} as const;
 
 /** 160x90 tiles, ten to a row: the geometry the player's scrub preview reads out of sprite.vtt. */
 export const SPRITE_GEOMETRY = { columns: 10, tileWidth: 160, tileHeight: 90 } as const;

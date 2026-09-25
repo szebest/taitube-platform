@@ -1,6 +1,6 @@
 import type { StepRepository } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
-import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { HOUR_MS, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const STEP_ID = '00000000-0000-7000-8000-000000000501';
@@ -27,6 +27,10 @@ export function describeStepRepositoryContract(makeSubject: MakeRepositoriesSubj
 
     beforeAll(async () => {
       subject = await makeSubject();
+    });
+
+    afterAll(async () => {
+      await subject.close();
     });
 
     beforeEach(async () => {
@@ -75,6 +79,20 @@ export function describeStepRepositoryContract(makeSubject: MakeRepositoriesSubj
         })
       );
       expect(fresh).toEqual({ completed: true, fenced: false });
+    });
+
+    it('stamps the finish time on the step it completes', async () => {
+      await claimProbe(STEP_ID, TOKEN_A, 1);
+      await steps.complete({
+        videoId: VIDEO_IDS.a,
+        step: 'probe',
+        rendition: '-',
+        lockToken: TOKEN_A,
+      });
+
+      const [stored] = expectOk(await steps.findByVideoId(VIDEO_IDS.a));
+      expect(stored).toMatchObject({ status: 'DONE' });
+      expect(stored?.finishedAt).toBeInstanceOf(Date);
     });
 
     it('refuses to re-claim a finished step', async () => {
@@ -144,7 +162,7 @@ export function describeStepRepositoryContract(makeSubject: MakeRepositoriesSubj
     it('counts the running steps that have gone quiet', async () => {
       await claimProbe(STEP_ID, TOKEN_A, 1);
 
-      expect(expectOk(await steps.countRunningStale(-1))).toBe(1);
+      expect(expectOk(await steps.countRunningStale(-HOUR_MS))).toBe(1);
       expect(expectOk(await steps.countRunningStale(3_600_000))).toBe(0);
     });
   });

@@ -1,21 +1,18 @@
-import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { type FakeS3, startFakeS3 } from './fake-s3';
-import { buildInMemoryApp } from './in-memory-app';
+import { TOKENS, buildTestApp } from './test-app';
 import { postUpload, putObject } from './upload-requests';
-
-const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
 
 describe('apps/api single-part upload initiation', () => {
   let app: FastifyInstance;
   let s3: FakeS3;
-  const authToken = mintToken({ sub: DEV_USER_ID, role: 'user', ttl: '1h' });
+  const authToken = TOKENS.user;
 
   beforeAll(async () => {
     s3 = await startFakeS3();
-    ({ app } = await buildInMemoryApp({
+    ({ app } = await buildTestApp({
       adapters: { storage: s3.storage, multipart: s3.multipart },
       config: inProcessAppConfig({ limits: { maxUploadBytes: 100 * 1024 * 1024 } }),
     }));
@@ -27,10 +24,8 @@ describe('apps/api single-part upload initiation', () => {
   });
 
   it('answers POST /v1/uploads with 201, a single presigned PUT URL and an expiry within 15 minutes', async () => {
-    const start = Date.now();
     const res = await postUpload(app, authToken, { filename: 'sintel.mp4', sizeBytes: 1024 * 100 });
 
-    expect(Date.now() - start).toBeLessThan(500);
     expect(res.statusCode).toBe(201);
     const body = res.json();
     expect(body.strategy).toBe('single');
@@ -73,34 +68,5 @@ describe('apps/api single-part upload initiation', () => {
     expect(res.statusCode).toBe(422);
     expect(res.headers['content-type']).toContain('application/problem+json');
     expect(res.json().code).toBe(code);
-  });
-
-  it('rate-limits POST /v1/uploads with 429 RATE_LIMITED', async () => {
-    const { app: limitedApp } = await buildInMemoryApp({
-      config: inProcessAppConfig({ limits: { uploadRateLimitMax: 3 } }),
-    });
-
-    try {
-      for (let i = 0; i < 3; i++) {
-        const res = await postUpload(limitedApp, authToken, {
-          filename: `video-${i}.mp4`,
-          sizeBytes: 100,
-        });
-        expect(res.statusCode).toBe(201);
-      }
-
-      const limitedRes = await postUpload(limitedApp, authToken, {
-        filename: 'overflow.mp4',
-        sizeBytes: 100,
-      });
-
-      expect(limitedRes.statusCode).toBe(429);
-      expect(limitedRes.headers['content-type']).toContain('application/problem+json');
-      const problem = limitedRes.json();
-      expect(problem.code).toBe(ErrorCodes.RATE_LIMITED);
-      expect(problem.status).toBe(429);
-    } finally {
-      await limitedApp.close();
-    }
   });
 });

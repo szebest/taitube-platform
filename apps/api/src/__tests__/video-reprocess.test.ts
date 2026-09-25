@@ -1,15 +1,17 @@
+import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { ids } from '@vp/job-contracts';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
-import { type AdminApp, OTHER_USER_ID, OWNER_USER_ID, buildAdminApp } from './admin-app';
-import { bearer } from './in-memory-app';
+import { TOKENS, type TestApp, bearer, buildTestApp } from './test-app';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000030';
 const OTHER_VIDEO_ID = '018f0000-0000-7000-8000-000000000031';
 const RATE_LIMIT_VIDEO_ID = '018f0000-0000-7000-8000-000000000040';
 
 describe('POST /videos/:id/reprocess', () => {
-  let ctx: AdminApp;
+  let ctx: TestApp;
+  const probeQueue = new InMemoryJobQueue('probe');
 
   function reprocess(videoId: string, token?: string) {
     return ctx.app.inject({
@@ -20,10 +22,10 @@ describe('POST /videos/:id/reprocess', () => {
   }
 
   beforeAll(async () => {
-    ctx = await buildAdminApp();
+    ctx = await buildTestApp({ adapters: { probeQueue } });
     await ctx.repositories.videos.create({
       id: VIDEO_ID,
-      ownerId: OWNER_USER_ID,
+      ownerId: SEEDED.userId,
       title: 'Reprocess Test Video',
       status: 'FAILED',
       sourceKey: `raw/${VIDEO_ID}/source.mp4`,
@@ -31,7 +33,7 @@ describe('POST /videos/:id/reprocess', () => {
     });
     await ctx.repositories.videos.create({
       id: OTHER_VIDEO_ID,
-      ownerId: OTHER_USER_ID,
+      ownerId: SEEDED.otherUserId,
       title: 'Other User Video',
       status: 'READY',
       sourceKey: `raw/${OTHER_VIDEO_ID}/source.mp4`,
@@ -43,27 +45,39 @@ describe('POST /videos/:id/reprocess', () => {
     await ctx.app.close();
   });
 
-  it('rejects unauthenticated request with 401', async () => {
-    const res = await reprocess(VIDEO_ID);
-    expect(res.statusCode).toBe(401);
-  });
+  it.each([
+    {
+      caller: 'an anonymous caller',
+      token: undefined,
+      videoId: VIDEO_ID,
+      status: 401,
+      code: ErrorCodes.UNAUTHORIZED,
+    },
+    {
+      caller: 'a user who neither owns it nor is an admin',
+      token: TOKENS.otherUser,
+      videoId: VIDEO_ID,
+      status: 403,
+      code: ErrorCodes.FORBIDDEN,
+    },
+    {
+      caller: 'an admin asking for a video that does not exist',
+      token: TOKENS.admin,
+      videoId: '018f0000-0000-7000-8000-000000000999',
+      status: 404,
+      code: ErrorCodes.VIDEO_NOT_FOUND,
+    },
+  ])('refuses $caller with $status', async ({ token, videoId, status, code }) => {
+    const res = await reprocess(videoId, token);
 
-  it('rejects non-owner non-admin with 403', async () => {
-    const res = await reprocess(VIDEO_ID, ctx.otherJwt);
-    expect(res.statusCode).toBe(403);
-    expect(res.json().code).toBe(ErrorCodes.FORBIDDEN);
-  });
-
-  it('returns 404 for nonexistent video', async () => {
-    const res = await reprocess('018f0000-0000-7000-8000-000000000999', ctx.adminJwt);
-    expect(res.statusCode).toBe(404);
-    expect(res.json().code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
+    expect(res.statusCode).toBe(status);
+    expect(res.json().code).toBe(code);
   });
 
   it('owner can reprocess: bumps generation, transitions to PROBING, enqueues probe job', async () => {
-    ctx.probeQueue.enqueuedJobs.length = 0;
+    probeQueue.enqueuedJobs.length = 0;
 
-    const res = await reprocess(VIDEO_ID, ctx.ownerJwt);
+    const res = await reprocess(VIDEO_ID, TOKENS.user);
 
     expect(res.statusCode).toBe(202);
     expect(res.json()).toMatchObject({ videoId: VIDEO_ID, status: 'PROBING', generation: 2 });
@@ -72,8 +86,8 @@ describe('POST /videos/:id/reprocess', () => {
     expect(video?.generation).toBe(2);
     expect(video?.status).toBe('PROBING');
 
-    expect(ctx.probeQueue.enqueuedJobs).toHaveLength(1);
-    const job = ctx.probeQueue.enqueuedJobs[0];
+    expect(probeQueue.enqueuedJobs).toHaveLength(1);
+    const job = probeQueue.enqueuedJobs[0];
     expect(job?.id).toBe(ids.probe(VIDEO_ID, 2));
     expect(job?.data).toMatchObject({ generation: 2, videoId: VIDEO_ID });
 
@@ -83,9 +97,9 @@ describe('POST /videos/:id/reprocess', () => {
   });
 
   it('admin can reprocess any video', async () => {
-    ctx.probeQueue.enqueuedJobs.length = 0;
+    probeQueue.enqueuedJobs.length = 0;
 
-    const res = await reprocess(OTHER_VIDEO_ID, ctx.adminJwt);
+    const res = await reprocess(OTHER_VIDEO_ID, TOKENS.admin);
 
     expect(res.statusCode).toBe(202);
     expect(res.json()).toMatchObject({
@@ -98,7 +112,7 @@ describe('POST /videos/:id/reprocess', () => {
   it('limits an owner to 5 reprocess requests per minute and exempts admins', async () => {
     await ctx.repositories.videos.create({
       id: RATE_LIMIT_VIDEO_ID,
-      ownerId: OWNER_USER_ID,
+      ownerId: SEEDED.userId,
       title: 'Rate Limit Test Video',
       status: 'READY',
       sourceKey: `raw/${RATE_LIMIT_VIDEO_ID}/source.mp4`,
@@ -115,16 +129,16 @@ describe('POST /videos/:id/reprocess', () => {
     // The owner's reprocess in the test above already counts toward this window.
     for (let i = 0; i < 4; i++) {
       await resetToReady();
-      const res = await reprocess(RATE_LIMIT_VIDEO_ID, ctx.ownerJwt);
+      const res = await reprocess(RATE_LIMIT_VIDEO_ID, TOKENS.user);
       expect(res.statusCode).toBe(202);
     }
 
     await resetToReady();
-    const limitedRes = await reprocess(RATE_LIMIT_VIDEO_ID, ctx.ownerJwt);
+    const limitedRes = await reprocess(RATE_LIMIT_VIDEO_ID, TOKENS.user);
     expect(limitedRes.statusCode).toBe(429);
     expect(limitedRes.json().code).toBe(ErrorCodes.RATE_LIMITED);
 
-    const adminRes = await reprocess(RATE_LIMIT_VIDEO_ID, ctx.adminJwt);
+    const adminRes = await reprocess(RATE_LIMIT_VIDEO_ID, TOKENS.admin);
     expect(adminRes.statusCode).toBe(202);
   });
 });

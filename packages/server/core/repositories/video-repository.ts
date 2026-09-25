@@ -108,10 +108,8 @@ export interface VideoScan {
   idleFor?: { since: VideoIdleClock; ms: number };
   minGeneration?: number;
   without?: VideoScanAbsence;
-  limit?: number;
+  limit: number;
 }
-
-export const DEFAULT_VIDEO_SCAN_LIMIT = 100;
 
 export interface VideoWithDetails {
   video: VideoRecord;

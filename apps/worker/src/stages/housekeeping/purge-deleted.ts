@@ -18,6 +18,7 @@ export interface PurgeDeletedOptions {
   rawBucket: string;
   publicBucket: string;
   thresholdMs: number;
+  scanLimit: number;
   logger?: Logger;
 }
 
@@ -33,7 +34,8 @@ export interface PurgeDeletedResult {
 export async function runPurgeDeleted(
   options: PurgeDeletedOptions
 ): Promise<Result<PurgeDeletedResult, DatabaseUnavailable>> {
-  const { repositories, storage, rawBucket, publicBucket, thresholdMs, logger } = options;
+  const { repositories, storage, rawBucket, publicBucket, thresholdMs, scanLimit, logger } =
+    options;
 
   let purgedVideosCount = 0;
   let purgedGenerationsCount = 0;
@@ -41,6 +43,7 @@ export async function runPurgeDeleted(
   const softDeletedVideos = await repositories.videos.scan({
     status: 'DELETED',
     idleFor: { since: 'deletedAt', ms: thresholdMs },
+    limit: scanLimit,
   });
   if (isErr(softDeletedVideos)) return softDeletedVideos;
 
@@ -80,6 +83,7 @@ export async function runPurgeDeleted(
     status: 'READY',
     minGeneration: 2,
     without: { type: 'event', event: 'video.generation_purged', forCurrentGeneration: true },
+    limit: scanLimit,
   });
   if (isErr(readyVideosWithOldGen)) return readyVideosWithOldGen;
 

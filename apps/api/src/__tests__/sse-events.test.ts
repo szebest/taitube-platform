@@ -1,18 +1,13 @@
 import type { IncomingMessage } from 'node:http';
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import { InMemoryCacheClient, type InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { publishVideoEvent } from '@vp/events';
+import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../app';
 import { readSseUntil } from './sse-stream';
+import { TOKENS, bearer, buildTestApp } from './test-app';
 
-const OWNER_USER_ID = '00000000-0000-7000-8000-000000000001';
-const OTHER_USER_ID = '00000000-0000-7000-8000-000000000002';
+const OWNER_USER_ID = SEEDED.userId;
 const PUBLIC_VIDEO_ID = '018f0000-0000-7000-8000-000000000010';
 const PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000020';
 const PLAYBACK_URL = `http://localhost:9000/public/videos/${PUBLIC_VIDEO_ID}/hls/master.m3u8`;
@@ -22,22 +17,15 @@ describe('apps/api SSE video event streams', () => {
   let baseUrl: string;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
-  let storage: InMemoryStorageClient;
-  const ownerToken = mintToken({ sub: OWNER_USER_ID, role: 'user' });
-  const otherToken = mintToken({ sub: OTHER_USER_ID, role: 'user' });
+  const ownerToken = TOKENS.user;
+  const otherToken = TOKENS.otherUser;
 
   beforeAll(async () => {
-    repositories = new InMemoryRepositories();
-    cache = new InMemoryCacheClient();
-    storage = new InMemoryStorageClient();
-    app = (
-      await composeApp({
-        adapters: { repositories, cache, storage },
-        config: inProcessAppConfig({
-          sse: { heartbeatMs: 100, idleTimeoutMs: 500, maxPerUser: 20 },
-        }),
-      })
-    ).app;
+    ({ app, repositories, cache } = await buildTestApp({
+      config: inProcessAppConfig({
+        sse: { heartbeatMs: 100, idleTimeoutMs: 500, maxPerUser: 20 },
+      }),
+    }));
     baseUrl = await app.listen({ port: 0, host: '127.0.0.1' });
   });
 
@@ -197,26 +185,19 @@ describe('apps/api SSE video event streams', () => {
     const res = await app.inject({
       method: 'GET',
       url,
-      headers: token ? { authorization: `Bearer ${token}` } : {},
+      headers: token ? bearer(token) : {},
     });
 
     expect(res.statusCode).toBe(statusCode);
-    expect(JSON.parse(res.body).code).toBe(code);
+    expect(res.json().code).toBe(code);
   });
 
   it('delivers an event for one video through two API instances that share a cache', async () => {
     const sharedCache = new InMemoryCacheClient();
-    const instances = await Promise.all(
-      [0, 1].map(
-        async () =>
-          (
-            await composeApp({
-              config: inProcessAppConfig(),
-              adapters: { repositories, cache: sharedCache, storage },
-            })
-          ).app
-      )
+    const built = await Promise.all(
+      [0, 1].map(() => buildTestApp({ adapters: { repositories, cache: sharedCache } }))
     );
+    const instances = built.map((instance) => instance.app);
     const addresses = await Promise.all(
       instances.map((instance) => instance.listen({ port: 0, host: '127.0.0.1' }))
     );
@@ -254,7 +235,7 @@ describe('apps/api SSE video event streams', () => {
     let published = false;
 
     const full = await readSseUntil(`${baseUrl}/v1/me/events`, {
-      headers: { authorization: `Bearer ${ownerToken}` },
+      headers: bearer(ownerToken),
       onResponse: (res) => {
         statusCode = res.statusCode;
       },

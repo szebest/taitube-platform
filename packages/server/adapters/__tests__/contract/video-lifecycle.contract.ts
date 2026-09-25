@@ -59,6 +59,7 @@ export function describeVideoLifecycleContract(ctx: VideoContractContext): void 
           await ctx.videos.scan({
             status: 'UPLOADING',
             idleFor: { since: 'updatedAt', ms: HOUR_MS },
+            limit: 100,
           })
         )
       ).toEqual([]);

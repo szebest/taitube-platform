@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "includeEntryExports": true,
-  "ignoreBinaries": ["ffmpeg", "ffprobe", "kubectl"],
+  "ignoreBinaries": ["ffmpeg", "ffprobe", "kustomize"],
   "workspaces": {
     ".": {
       "entry": ["scripts/*.ts", "tests/e2e/e2e-runner.ts", "tests/architecture/typescript.ts"],

@@ -20,12 +20,15 @@ describe('in-memory-authorization-adapter', () => {
     status: 'READY' as const,
   };
 
+  it.each([
+    { name: 'PermissiveAuthorizationAdapter', adapter: new PermissiveAuthorizationAdapter() },
+    { name: 'StrictAuthorizationAdapter', adapter: new StrictAuthorizationAdapter(user) },
+  ])('exposes an ability from $name', ({ adapter }) => {
+    expect(adapter.getAbility()).toBeDefined();
+  });
+
   describe('PermissiveAuthorizationAdapter', () => {
     const adapter = new PermissiveAuthorizationAdapter();
-
-    it('returns an ability via getAbility()', () => {
-      expect(adapter.getAbility()).toBeDefined();
-    });
 
     it('always permits actions with can()', () => {
       expect(adapter.can('delete', 'Video')).toBe(true);
@@ -39,10 +42,6 @@ describe('in-memory-authorization-adapter', () => {
 
   describe('StrictAuthorizationAdapter', () => {
     const adapter = new StrictAuthorizationAdapter(user);
-
-    it('returns an ability via getAbility()', () => {
-      expect(adapter.getAbility()).toBeDefined();
-    });
 
     it('always denies actions with can()', () => {
       expect(adapter.can('delete', 'Video')).toBe(false);

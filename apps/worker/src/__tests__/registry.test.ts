@@ -13,10 +13,11 @@ import type { QueueJob } from '@vp/core/ports';
 import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { QUEUES } from '@vp/job-contracts';
-import { createMetricsRegistry } from '@vp/observability';
 import { createLogger } from '@vp/logger';
+import { createMetricsRegistry } from '@vp/observability';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
+import { everyInterval } from '../heartbeat';
 import { STAGE_REGISTRY, type StageDefinition } from '../registry';
 
 type StageDeps = Parameters<StageDefinition['createProcessor']>[0];
@@ -58,6 +59,7 @@ function deps(): StageDeps {
     media: mediaTools,
     workerId: 'registry-test',
     now: Date.now,
+    every: everyInterval,
   };
 }
 

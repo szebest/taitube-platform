@@ -11,6 +11,8 @@ export default defineConfig({
   test: {
     name: 'architecture',
     globals: true,
+    restoreMocks: true,
+    unstubEnvs: true,
     environment: 'node',
     include: ['**/*.test.ts'],
     exclude: TYPE_AWARE,

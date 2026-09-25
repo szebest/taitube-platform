@@ -1,29 +1,20 @@
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../../app';
+import { ADMIN_TOKEN, TOKENS, bearer, buildTestApp } from '../../../__tests__/test-app';
 
-const ADMIN_TOKEN = 'operator-token-for-tests';
-const USER = '00000000-0000-7000-8000-000000000001';
 const ABSENT_CATEGORY = '00000000-0000-7000-8000-000000000999';
 
 describe('admin category routes', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
-  const userToken = mintToken({ sub: USER, role: 'user', ttl: '1h' });
   const admin = { 'x-admin-token': ADMIN_TOKEN };
 
   beforeAll(async () => {
-    repositories = new InMemoryRepositories();
-    app = (
-      await composeApp({
-        config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
-        adapters: { repositories },
-      })
-    ).app;
-    await app.ready();
+    ({ app, repositories } = await buildTestApp({
+      config: inProcessAppConfig({ auth: { adminToken: ADMIN_TOKEN } }),
+    }));
   });
 
   afterAll(async () => {
@@ -38,7 +29,7 @@ describe('admin category routes', () => {
     { caller: 'an anonymous caller', headers: {}, status: 401, code: ErrorCodes.UNAUTHORIZED },
     {
       caller: 'a non-admin user',
-      headers: { authorization: `Bearer ${userToken}` },
+      headers: bearer(TOKENS.user),
       status: 403,
       code: ErrorCodes.FORBIDDEN,
     },

@@ -1,12 +1,8 @@
-import { inProcessAppConfig } from '@vp/env-schema';
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
+import diagnostics from 'node:diagnostics_channel';
 import { contracts, endpointKey, isEndpoint } from '@vp/api-contracts';
-import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../app';
+import type { FastifyInstance, RouteOptions } from 'fastify';
+import { z } from 'zod';
+import { buildTestApp } from './test-app';
 
 /** Mounted by third-party plugins (@fastify/swagger, Scalar, Bull Board), not by this repo. */
 const VENDOR_PREFIXES = ['/docs', '/openapi.json', '/admin/queues'];
@@ -28,53 +24,54 @@ interface RegisteredRoute {
   path: string;
 }
 
+const IMPLICIT_METHODS = new Set(['HEAD', 'OPTIONS']);
+
+const FastifyInitialization = z.object({
+  fastify: z.custom<FastifyInstance>((value) => typeof value === 'object' && value !== null),
+});
+
+function asRoutes(route: RouteOptions): RegisteredRoute[] {
+  const methods = Array.isArray(route.method) ? route.method : [route.method];
+  if (route.url.includes('*')) return [];
+  return methods
+    .filter((method) => !IMPLICIT_METHODS.has(method))
+    .map((method) => ({ method, path: route.url }));
+}
+
 /**
- * Rebuilds the route table from `printRoutes`, which is the only public view of
- * every registered route — `findRoute` hands back a handler without its schema,
- * and an `onRoute` hook cannot be attached before `composeApp` mounts the routes.
+ * Every route Fastify registers, as `onRoute` reports it. The hook goes on through Fastify's
+ * `fastify.initialization` channel, which fires as `composeApp` creates the instance and before it
+ * mounts a single route.
  */
-function parseRouteTree(tree: string): RegisteredRoute[] {
+async function composeRecordingRoutes(): Promise<{
+  app: FastifyInstance;
+  routes: RegisteredRoute[];
+}> {
   const routes: RegisteredRoute[] = [];
-  const pathByDepth: string[] = [];
-
-  for (const line of tree.split('\n')) {
-    const match = /^((?:[│ ] {3})*)(?:[├└]── )(.*)$/.exec(line);
-    if (!match) continue;
-
-    const [, indent = '', node = ''] = match;
-    const depth = indent.length / 4;
-    const [, fragment = '', methodList] = /^(.*?)(?: \(([A-Z, ]+)\))?$/.exec(node) ?? [];
-
-    pathByDepth[depth] = (depth === 0 ? '' : (pathByDepth[depth - 1] ?? '')) + fragment;
-    pathByDepth.length = depth + 1;
-
-    const path = pathByDepth[depth];
-    if (!(methodList && path) || path.includes('*')) continue;
-
-    for (const method of methodList.split(', ')) {
-      if (method === 'HEAD' || method === 'OPTIONS') continue;
-      routes.push({ method, path });
-    }
-  }
-
-  return routes;
+  const onRoute = (route: RouteOptions) => {
+    routes.push(...asRoutes(route));
+  };
+  const attach = (message: unknown) => {
+    const { fastify } = FastifyInitialization.parse(message);
+    fastify.addHook('onRoute', onRoute);
+  };
+  diagnostics.subscribe('fastify.initialization', attach);
+  const { app } = await buildTestApp();
+  diagnostics.unsubscribe('fastify.initialization', attach);
+  return { app, routes };
 }
 
 /** `/videos/:id` is the unversioned alias of `/v1/videos/:id`; probes carry no version. */
 function canonicalPaths(path: string): string[] {
-  const versioned =
-    path.startsWith('/v1/') || UNVERSIONED_PATHS.has(path) ? [path] : [`/v1${path}`];
+  const isCanonical = path.startsWith('/v1/') || UNVERSIONED_PATHS.has(path);
+  const versioned = isCanonical ? path : `/v1${path}`;
 
-  return versioned.flatMap((candidate) =>
-    candidate
-      .split('/')
-      .slice(1)
-      .reduce<string[]>(
-        (prefixes, segment) =>
-          prefixes.flatMap((prefix) => segment.split('|').map((option) => `${prefix}/${option}`)),
-        ['']
-      )
-  );
+  let candidates = [''];
+  for (const segment of versioned.split('/').slice(1)) {
+    const options = segment.split('|');
+    candidates = candidates.flatMap((prefix) => options.map((option) => `${prefix}/${option}`));
+  }
+  return candidates;
 }
 
 describe('apps/api: contract drift', () => {
@@ -88,18 +85,8 @@ describe('apps/api: contract drift', () => {
   };
 
   beforeAll(async () => {
-    app = (
-      await composeApp({
-        config: inProcessAppConfig(),
-        adapters: {
-          repositories: new InMemoryRepositories(),
-          cache: new InMemoryCacheClient(),
-          storage: new InMemoryStorageClient(),
-        },
-      })
-    ).app;
+    ({ app, routes: registered } = await composeRecordingRoutes());
     await app.ready();
-    registered = parseRouteTree(app.printRoutes({ commonPrefix: false }));
     spec = app.swagger() as typeof spec;
   });
 

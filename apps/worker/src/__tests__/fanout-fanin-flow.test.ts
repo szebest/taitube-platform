@@ -1,6 +1,7 @@
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { LadderEntry, type ProbeJob } from '@vp/job-contracts';
+import { createMockJob } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { createFailureHandler } from '../failure-handler';
 import { createPackageProcessor } from '../stages/package';
@@ -9,6 +10,7 @@ import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import {
   type FlowWorld,
+  completionOf,
   encodeSegments,
   fakeMedia,
   flowWorld,
@@ -24,12 +26,10 @@ const S60 = probed(
   rungs('1080p', '720p', '480p')
 );
 
-const probeJob = (videoId: string, sourceKey: string): QueueJob<ProbeJob> => ({
-  id: `${videoId}--probe--g1`,
-  name: 'probe',
-  data: { videoId, sourceKey, generation: 1, traceparent: '00-01-01-01' },
-  attemptsMade: 0,
-});
+function probeJob(videoId: string, sourceKey: string): QueueJob<ProbeJob> {
+  const data = { videoId, sourceKey, generation: 1, traceparent: '00-01-01-01' };
+  return createMockJob('probe', data, { id: `${videoId}--probe--g1` });
+}
 
 describe('apps/worker: fan-out to renditions and fan-in to the package', () => {
   let world: FlowWorld;
@@ -67,8 +67,9 @@ describe('apps/worker: fan-out to renditions and fan-in to the package', () => {
     await world.getQueue('thumbnail').process(throughRunner(thumbnail));
     expect(await packageState()).toBe('waiting-children');
 
+    const packaged = completionOf(packageQueue, packageJobId);
     await world.getQueue('transcode-480p').process(transcode());
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await packaged;
     expect(await packageState()).toBe('completed');
 
     const video = expectOk(await world.repositories.videos.findById(videoId));

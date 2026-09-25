@@ -1,18 +1,11 @@
-import { inProcessAppConfig } from '@vp/env-schema';
-import {
-  InMemoryCacheClient,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
+import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../../app';
+import { TOKENS, bearer, buildTestApp } from '../../../__tests__/test-app';
 
-const OWNER = '00000000-0000-7000-8000-000000000001';
-const STRANGER = '00000000-0000-7000-8000-000000000002';
-const OPERATOR = '00000000-0000-7000-8000-000000000099';
+const OWNER = SEEDED.userId;
 const PRIVATE_VIDEO = '018f0000-0000-7000-8000-0000000000a1';
 const ABSENT_VIDEO = '018f0000-0000-7000-8000-0000000000ff';
 
@@ -23,25 +16,8 @@ const ABSENT_VIDEO = '018f0000-0000-7000-8000-0000000000ff';
 describe('two consumers of VideoService.get render the same failure differently', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
-  let strangerToken: string;
-  let operatorToken: string;
-
   beforeAll(async () => {
-    strangerToken = mintToken({ sub: STRANGER, role: 'user', ttl: '1h' });
-    operatorToken = mintToken({ sub: OPERATOR, role: 'admin', ttl: '1h' });
-
-    repositories = new InMemoryRepositories();
-    app = (
-      await composeApp({
-        config: inProcessAppConfig(),
-        adapters: {
-          repositories,
-          cache: new InMemoryCacheClient(),
-          storage: new InMemoryStorageClient(),
-        },
-      })
-    ).app;
-    await app.ready();
+    ({ app, repositories } = await buildTestApp());
   });
 
   afterAll(async () => {
@@ -67,12 +43,12 @@ describe('two consumers of VideoService.get render the same failure differently'
       app.inject({
         method: 'GET',
         url: `/v1/videos/${PRIVATE_VIDEO}`,
-        headers: { authorization: `Bearer ${strangerToken}` },
+        headers: bearer(TOKENS.otherUser),
       }),
       app.inject({
         method: 'GET',
         url: `/v1/videos/${PRIVATE_VIDEO.replace(/a1$/, 'a2')}`,
-        headers: { authorization: `Bearer ${strangerToken}` },
+        headers: bearer(TOKENS.otherUser),
       }),
     ]);
 
@@ -85,7 +61,7 @@ describe('two consumers of VideoService.get render the same failure differently'
     const res = await app.inject({
       method: 'GET',
       url: `/v1/admin/videos/${PRIVATE_VIDEO}`,
-      headers: { authorization: `Bearer ${strangerToken}` },
+      headers: bearer(TOKENS.otherUser),
     });
 
     expect(res.statusCode).toBe(403);
@@ -98,12 +74,12 @@ describe('two consumers of VideoService.get render the same failure differently'
       app.inject({
         method: 'GET',
         url: `/v1/videos/${ABSENT_VIDEO}`,
-        headers: { authorization: `Bearer ${strangerToken}` },
+        headers: bearer(TOKENS.otherUser),
       }),
       app.inject({
         method: 'GET',
         url: `/v1/admin/videos/${ABSENT_VIDEO}`,
-        headers: { authorization: `Bearer ${operatorToken}` },
+        headers: bearer(TOKENS.admin),
       }),
     ]);
 
@@ -117,7 +93,7 @@ describe('two consumers of VideoService.get render the same failure differently'
     const res = await app.inject({
       method: 'GET',
       url: `/v1/admin/videos/${PRIVATE_VIDEO}`,
-      headers: { authorization: `Bearer ${operatorToken}` },
+      headers: bearer(TOKENS.admin),
     });
 
     expect(res.statusCode).toBe(200);

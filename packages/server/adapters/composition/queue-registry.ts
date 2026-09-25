@@ -15,12 +15,12 @@ export function queueNamed(queues: ReadonlyMap<string, JobQueue>, name: string):
 }
 
 /** Opens a queue on first use, so a worker holds a connection only for the queues it touches. */
-export class LazyQueueRegistry implements QueueRegistry {
-  private readonly opened = new Map<string, JobQueue>();
+export class LazyQueueRegistry<Q extends JobQueue = JobQueue> implements QueueRegistry {
+  private readonly opened = new Map<string, Q>();
 
-  constructor(private readonly open: (name: string) => JobQueue) {}
+  constructor(private readonly open: (name: string) => Q) {}
 
-  get(name: string): JobQueue {
+  get(name: string): Q {
     const existing = this.opened.get(name);
     if (existing) return existing;
 

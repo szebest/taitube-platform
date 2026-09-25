@@ -1,18 +1,18 @@
 import type { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
+import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
-import { backdate, bearer, buildInMemoryApp, seedVideo } from './in-memory-app';
+import { TOKENS, backdate, bearer, buildTestApp, seedVideo } from './test-app';
 
-const USER_A = '00000000-0000-7000-8000-000000000001';
-const USER_B = '00000000-0000-7000-8000-000000000002';
+const USER_A = SEEDED.userId;
+const USER_B = SEEDED.otherUserId;
 const BASE_TIME = 1700000000000;
 
 describe('apps/api reading videos: keyset pagination and progress overlay', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
-  const tokenA = mintToken({ sub: USER_A, role: 'user', ttl: '1h' });
+  const tokenA = TOKENS.user;
 
   async function listTitles(url: string) {
     const res = await app.inject({ method: 'GET', url, headers: bearer(tokenA) });
@@ -23,7 +23,7 @@ describe('apps/api reading videos: keyset pagination and progress overlay', () =
   }
 
   beforeAll(async () => {
-    ({ app, repositories, cache } = await buildInMemoryApp());
+    ({ app, repositories, cache } = await buildTestApp());
   });
 
   afterAll(async () => {

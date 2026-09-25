@@ -1,5 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { describeMultipartStorageContract } from '../../__tests__/contract/multipart-storage.contract';
+import { s3MultipartStorageSubject } from '../../__tests__/contract/s3-subjects';
 import { S3MultipartStorage } from '../s3-multipart-storage';
 import { S3StorageClient } from '../s3-storage-client';
 import { type FakeS3, fakeS3Client } from './fake-s3-client';
@@ -18,6 +20,8 @@ function multipartOver(fake: FakeS3): S3MultipartStorage {
     }),
   });
 }
+
+describeMultipartStorageContract(s3MultipartStorageSubject);
 
 describe('S3MultipartStorage', () => {
   it('answers readiness with the storage client it shares', async () => {
@@ -188,39 +192,6 @@ describe('S3MultipartStorage', () => {
       expect(
         expectErr(await multipartOver(fake).abortMultipartUpload(BUCKET, KEY, UPLOAD_ID)).code
       ).toBe(ErrorCodes.STORAGE_UNAVAILABLE);
-    });
-  });
-
-  describe('cloudflare r2 compatibility', () => {
-    const r2Enabled = process.env['STORAGE_E2E_R2'] === '1';
-
-    it.skipIf(!r2Enabled)('drives a real R2 bucket through the same calls', async () => {
-      const bucket = process.env['S3_BUCKET_RAW'] || BUCKET;
-      const multipart = new S3MultipartStorage({
-        type: 'connection',
-        healthBucket: BUCKET,
-        endpoint: process.env['S3_ENDPOINT'] ?? '',
-        region: process.env['S3_REGION'] ?? 'auto',
-        accessKeyId: process.env['S3_ACCESS_KEY_ID'],
-        secretAccessKey: process.env['S3_SECRET_ACCESS_KEY'],
-      });
-
-      const uploadId = expectOk(await multipart.createMultipartUpload(bucket, KEY, 'video/mp4'));
-      expect(uploadId).toBeDefined();
-
-      const part = expectOk(
-        await multipart.createPresignedPartUrl({
-          bucket,
-          key: KEY,
-          uploadId,
-          partNumber: 1,
-          expiresInSeconds: 600,
-        })
-      );
-      expect(part.url).toContain('partNumber=1');
-      expect(part.url).toContain('uploadId=');
-
-      await multipart.abortMultipartUpload(bucket, KEY, uploadId);
     });
   });
 });

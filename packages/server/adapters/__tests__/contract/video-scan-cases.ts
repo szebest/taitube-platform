@@ -3,7 +3,8 @@ import { HOUR_MS, VIDEO_IDS, publicVideo } from './fixtures';
 
 const STEP_ID = '00000000-0000-7000-8000-000000000301';
 const STEP_LOCK_TOKEN = '00000000-0000-7000-8000-000000000302';
-const IDLE_NOW = { since: 'updatedAt', ms: -1 } as const;
+/** Idle as of now, with an hour of slack for a database clock that runs ahead of this one. */
+const IDLE_NOW = { since: 'updatedAt', ms: -HOUR_MS } as const;
 
 function hoursAgo(hours: number): Date {
   return new Date(Date.now() - hours * HOUR_MS);
@@ -15,6 +16,8 @@ export interface ScanCase {
   filter: VideoScan;
 }
 
+const SCAN_LIMIT = 100;
+
 export const SCAN_CASES: ScanCase[] = [
   {
     scenario: 'stale UPLOADING videos, ignoring other statuses',
@@ -22,7 +25,7 @@ export const SCAN_CASES: ScanCase[] = [
       await videos.create(publicVideo({ id: VIDEO_IDS.a, status: 'UPLOADING' }));
       await videos.create(publicVideo({ id: VIDEO_IDS.b, status: 'UPLOADED' }));
     },
-    filter: { status: 'UPLOADING', idleFor: IDLE_NOW },
+    filter: { limit: SCAN_LIMIT, status: 'UPLOADING', idleFor: IDLE_NOW },
   },
   {
     scenario: 'stale PROCESSING videos, ignoring other statuses',
@@ -30,7 +33,7 @@ export const SCAN_CASES: ScanCase[] = [
       await videos.create(publicVideo({ id: VIDEO_IDS.a, status: 'PROCESSING' }));
       await videos.create(publicVideo({ id: VIDEO_IDS.b, status: 'READY' }));
     },
-    filter: { status: 'PROCESSING', idleFor: IDLE_NOW },
+    filter: { limit: SCAN_LIMIT, status: 'PROCESSING', idleFor: IDLE_NOW },
   },
   {
     scenario: 'UPLOADED videos that never got a probe step',
@@ -48,7 +51,12 @@ export const SCAN_CASES: ScanCase[] = [
         lockToken: STEP_LOCK_TOKEN,
       });
     },
-    filter: { status: 'UPLOADED', idleFor: IDLE_NOW, without: { type: 'step', step: 'probe' } },
+    filter: {
+      limit: SCAN_LIMIT,
+      status: 'UPLOADED',
+      idleFor: IDLE_NOW,
+      without: { type: 'step', step: 'probe' },
+    },
   },
   {
     scenario: 'soft-deleted videos, measured from deletedAt rather than updatedAt',
@@ -60,7 +68,7 @@ export const SCAN_CASES: ScanCase[] = [
         publicVideo({ id: VIDEO_IDS.b, status: 'DELETED', deletedAt: new Date() })
       );
     },
-    filter: { status: 'DELETED', idleFor: { since: 'deletedAt', ms: HOUR_MS } },
+    filter: { limit: SCAN_LIMIT, status: 'DELETED', idleFor: { since: 'deletedAt', ms: HOUR_MS } },
   },
   {
     scenario: 'READY videos past raw retention that were not expired yet',
@@ -70,6 +78,7 @@ export const SCAN_CASES: ScanCase[] = [
       await events.create({ videoId: VIDEO_IDS.b, type: 'video.raw_expired' });
     },
     filter: {
+      limit: SCAN_LIMIT,
       status: 'READY',
       idleFor: { since: 'readyAt', ms: HOUR_MS },
       without: { type: 'event', event: 'video.raw_expired' },
@@ -88,6 +97,7 @@ export const SCAN_CASES: ScanCase[] = [
       });
     },
     filter: {
+      limit: SCAN_LIMIT,
       status: 'READY',
       minGeneration: 2,
       without: { type: 'event', event: 'video.generation_purged', forCurrentGeneration: true },

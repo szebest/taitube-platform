@@ -25,7 +25,11 @@ export function hasRuntimeCode(file: string, source: string): boolean {
 
   const { outputText } = ts.transpileModule(source, {
     fileName: file,
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      removeComments: true,
+    },
   });
 
   return (

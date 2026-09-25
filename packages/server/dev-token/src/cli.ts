@@ -17,9 +17,11 @@ function readArgs(argv: readonly string[]) {
       out: { type: 'string' },
       raw: { type: 'boolean', default: false },
       port: { type: 'string', default: '3001' },
+      help: { type: 'boolean', short: 'h', default: false },
     },
   });
-  const [command = 'help', token] = positionals;
+  const [positional = 'help', token] = positionals;
+  const command = values.help ? 'help' : positional;
   return { command, token, flags: values };
 }
 
@@ -45,6 +47,8 @@ JWKS Options:
 
 Serve Options:
   --port <port>      HTTP port (default: 3001)
+
+  --help, -h         Show this help message
 `);
 }
 

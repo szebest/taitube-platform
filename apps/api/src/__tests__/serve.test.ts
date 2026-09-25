@@ -25,10 +25,6 @@ function loggerTo(log: ReturnType<typeof captureLog>) {
 }
 
 describe('apps/api: serve', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it('finishes a request that is in flight when shutdown begins', async () => {
     const composed = await composeApp({ config: config() });
     let release = () => {};

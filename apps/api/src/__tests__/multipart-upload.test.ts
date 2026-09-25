@@ -1,15 +1,13 @@
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { type FakeS3, startFakeS3 } from './fake-s3';
-import { bearer, buildInMemoryApp } from './in-memory-app';
 import { MockProbeJobQueue } from './mock-probe-queue';
+import { TOKENS, bearer, buildTestApp } from './test-app';
 import { completeUpload, postUpload } from './upload-requests';
 
-const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
 const MB = 1024 * 1024;
 const PART_SIZE = 8 * MB;
 const BOTH_PARTS = [
@@ -22,7 +20,7 @@ describe('multipart upload with resume and abort', () => {
   let repositories: InMemoryRepositories;
   let s3: FakeS3;
   const probeQueue = new MockProbeJobQueue();
-  const token = mintToken({ sub: DEV_USER_ID, role: 'user', ttl: '2h' });
+  const token = TOKENS.user;
 
   function s3UploadOf(partUrl: string) {
     const upload = s3.multipartUploads.get(new URL(partUrl).searchParams.get('uploadId') ?? '');
@@ -32,7 +30,7 @@ describe('multipart upload with resume and abort', () => {
 
   beforeAll(async () => {
     s3 = await startFakeS3();
-    ({ app, repositories } = await buildInMemoryApp({
+    ({ app, repositories } = await buildTestApp({
       config: inProcessAppConfig({ limits: { multipartThresholdBytes: 10 * MB } }),
       adapters: { storage: s3.storage, multipart: s3.multipart, probeQueue },
     }));

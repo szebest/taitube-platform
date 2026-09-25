@@ -5,19 +5,16 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import type { QueueJob } from '@vp/core/ports';
 import { type ErrorCode, ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools, ProbeMetadata } from '@vp/ffmpeg';
-import { CANONICAL_LADDER, type ProbeJob } from '@vp/job-contracts';
+import type { ProbeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
+import { createMockJob } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
+import { rungs, uploadedVideo } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createProbeProcessor } from '../probe';
 
-const OWNER_ID = '00000000-0000-7000-8000-000000000001';
 const logger = createLogger({ format: 'json', service: 'worker-probe-test', level: 'silent' });
-
-function rungs(...names: string[]) {
-  return CANONICAL_LADDER.filter((rung) => names.includes(rung.name)).map((rung) => ({ ...rung }));
-}
 
 function metadata(overrides: Partial<ProbeMetadata>): ProbeMetadata {
   return {
@@ -44,30 +41,12 @@ describe('probe stage', () => {
     storage = new InMemoryStorageClient();
   });
 
-  async function uploadedVideo(sourceKey: string, body?: Buffer): Promise<string> {
-    const videoId = uuidv7();
-    await repositories.videos.create({
-      id: videoId,
-      ownerId: OWNER_ID,
-      title: sourceKey,
-      status: 'UPLOADED',
-      sourceKey,
-      sourceSizeBytes: 1000,
-    });
-    if (body) {
-      await storage.uploadObject({ bucket: 'raw', key: sourceKey, body, contentType: 'video/mp4' });
-    }
-    return videoId;
-  }
+  const uploaded = (sourceKey: string, body?: Buffer) =>
+    uploadedVideo({ repositories, storage }, sourceKey, body);
 
   function probeJob(videoId: string, sourceKey: string): QueueJob<ProbeJob> {
-    return {
-      id: `${videoId}--probe--g1`,
-      name: 'probe',
-      data: { videoId, sourceKey, generation: 1, traceparent: '00-01-01-01' },
-      attemptsMade: 0,
-      updateProgress: vi.fn().mockResolvedValue(undefined),
-    };
+    const data = { videoId, sourceKey, generation: 1, traceparent: '00-01-01-01' };
+    return createMockJob('probe', data, { id: `${videoId}--probe--g1` });
   }
 
   function processorProbing(probe: MediaTools['probe']) {
@@ -76,7 +55,8 @@ describe('probe stage', () => {
   }
 
   it('fails the video with SOURCE_MISSING when the source object is gone', async () => {
-    const videoId = await uploadedVideo('raw/non-existent.mp4');
+    const videoId = await uploaded('raw/non-existent.mp4');
+    expectOk(await storage.deleteObject('raw', 'raw/non-existent.mp4'));
     const processor = createProbeProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
 
     const failure = expectErr(await processor(probeJob(videoId, 'raw/non-existent.mp4')));
@@ -88,7 +68,7 @@ describe('probe stage', () => {
   });
 
   it('fences a step completion made with a lock token a later claim replaced', async () => {
-    const videoId = await uploadedVideo('raw/fencing-test.mp4');
+    const videoId = await uploaded('raw/fencing-test.mp4');
     const claim = (attempt: number, workerId: string, lockToken: string) =>
       repositories.steps.claim({
         id: uuidv7(),
@@ -122,7 +102,7 @@ describe('probe stage', () => {
 
   it('rejects a real source longer than the configured maximum with DURATION_EXCEEDED', async () => {
     const fixture = path.resolve(__dirname, '../../../../../tests/fixtures/s15.mp4');
-    const videoId = await uploadedVideo('raw/s15.mp4', await fs.readFile(fixture));
+    const videoId = await uploaded('raw/s15.mp4', await fs.readFile(fixture));
     const processor = createProbeProcessor({
       ...STAGE_SETTINGS,
       maxDurationSeconds: 10,
@@ -166,7 +146,7 @@ describe('probe stage', () => {
     },
   ])('fails a hostile $source source on the first attempt with $code', async (hostile) => {
     const sourceKey = `raw/${hostile.source}.mp4`;
-    const videoId = await uploadedVideo(sourceKey, hostile.body);
+    const videoId = await uploaded(sourceKey, hostile.body);
     const processor = processorProbing(() =>
       Promise.reject(new PermanentError(hostile.code, hostile.message))
     );
@@ -178,7 +158,7 @@ describe('probe stage', () => {
   });
 
   it('moves a good source to PROCESSING with pending renditions, probe events and no temp dir left', async () => {
-    const videoId = await uploadedVideo('raw/s60.mp4', Buffer.from('mock-media-content'));
+    const videoId = await uploaded('raw/s60.mp4', Buffer.from('mock-media-content'));
     const processor = processorProbing(() =>
       Promise.resolve(metadata({ audioCodec: 'aac', bitrateKbps: 5000 }))
     );
@@ -249,7 +229,7 @@ describe('probe stage', () => {
     },
   ])('stores the $source ladder and its rotation-aware dimensions', async (probeCase) => {
     const sourceKey = `raw/${probeCase.source}.mp4`;
-    const videoId = await uploadedVideo(sourceKey, Buffer.from(`mock-${probeCase.source}`));
+    const videoId = await uploaded(sourceKey, Buffer.from(`mock-${probeCase.source}`));
     const processor = processorProbing(() => Promise.resolve(probeCase.probed));
 
     expectOk(await processor(probeJob(videoId, sourceKey)));

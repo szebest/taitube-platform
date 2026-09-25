@@ -4,7 +4,7 @@ import { apiClient, baseApi, runApiQuery } from "src/base-api";
 
 import { appendPage } from "./page-merge";
 
-const videosApi = baseApi.injectEndpoints({
+export const videosApi =baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		video: builder.query<Video, string>({
 			providesTags: (_result, _error, id) => [{ type: 'VIDEO', id }],
@@ -28,10 +28,3 @@ const videosApi = baseApi.injectEndpoints({
 		}),
 	}),
 });
-
-export const {
-	useVideoQuery,
-	useMyVideosQuery,
-	useUpdateVideoMutation,
-	useDeleteVideoMutation,
-} = videosApi;

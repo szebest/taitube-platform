@@ -268,8 +268,7 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 
 ### Invariant 6: Deterministic Test Suite Parity
 - Every production source with runtime code has a spec of the same name beside it in `__tests__/`,
-  asserted by `tests/architecture/test-correspondence.test.ts` against a shrink-only exception list
-  (section 6). A module that erases to nothing - types, interfaces, an abstract class of abstract members -
+  asserted by `tests/architecture/test-correspondence.test.ts` with no exception list (section 6). A module that erases to nothing - types, interfaces, an abstract class of abstract members -
   is not a target: its spec could only assert that TypeScript compiles.
 - No heuristic skips: test suites never swallow connection errors or skip assertions conditionally.
 - Strict 1:1 parity between local developer environments and remote CI pipelines.
@@ -347,7 +346,7 @@ rule that has already drifted, so a gap is named rather than left looking enforc
 | `file-ceiling.test.ts` | no tracked `.ts`/`.tsx`/`.mts` file, specs and `tests/` included, over 400 lines or 10 KB; no exception list | a 401-line spec body; a one-line file over 10 KB |
 | `no-process-comments.test.ts` | no comment and no `it`/`test`/`describe`/`suite`/`bench` title names a ticket, an AC, a workstream, a PR number or a numbered step, over `.ts`/`.tsx`/`.js`/`.mjs`/`.mts` in `apps`, `packages`, `scripts` and `tests` (regex prefilter, then the TypeScript parser); `ADR-NN` and `SDD §` stay allowed | `const a = 1; // AC 3`, `describe('Outbox relay (Ticket 30)', ...)` |
 | `redis-keys-owner.test.ts` | every Redis key and channel is built in `@vp/events` (`keys.ts`, `channels.ts`): no template literal starting `taitube:`, `video:` or `user:` and no `taitube:` string elsewhere in production source (AST) | `` `taitube:user:${userId}:reactions` `` in a planted source |
-| `test-correspondence.test.ts` | every production source other than `index.ts` and `*.config.ts` whose transpiled output holds runtime code has `__tests__/<name>.test.ts(x)` beside it, against the shrink-only `untested-sources.ts` list, which fails on a stale entry too | `export const LIMIT = 3;` and an abstract class with a concrete method still ask a spec; an interface or an all-abstract class does not |
+| `test-correspondence.test.ts` | every production source other than `index.ts` and `*.config.ts` whose transpiled output holds runtime code has `__tests__/<name>.test.ts(x)` beside it, in every tier and `apps/web` included, with no exception list; comments are stripped first, so a documented abstract port asks for none | `export const LIMIT = 3;` and an abstract class with a concrete method still ask a spec; an interface or an all-abstract class does not |
 | `esm-specifiers.test.ts` | no relative import, re-export, dynamic `import()`, `require` or `vi.mock` in any tracked `.ts`/`.tsx`/`.mts` under `apps`, `packages`, `scripts` and `tests`, specs included, carries an extension (`.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`) (AST) | `import { ok } from './result.js';`, `vi.mock('./adapter.js', ...)` |
 | `core-barrels.test.ts` | regex: the `index.ts` barrels of `@vp/core` `ports/` and `repositories/`, `@vp/domain` and `@vp/pagination` `export *` only from `./`; no `*.port.ts` under `apps/` or `packages/` | none - reads the repo |
 | `no-domain-throw.test.ts` | regex over production source in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` and `apps/worker/src/stages/`: no `throw` except `throw assertNever`, no `*OrThrow(` helper, no capitalised `X.parse(` (a zod schema or `JSON.parse`) | `NotifyJob.parse({ videoId })`, `unwrapOrThrow(await repo.f())` |
@@ -370,7 +369,8 @@ rule that has already drifted, so a gap is named rather than left looking enforc
 | `promql-labels-emitted.test.ts` | every dashboard JSON, alert rule and `scaled-objects.yaml` KEDA query parses with `@prometheus-io/lezer-promql`, names a metric the registry or a known exporter provides, and selects only label values recorded by code (read type-aware on the shared `ts.Program`) or, for `deployment`, the base's Deployment names | `jobs_processed_total{result="stalled"}` against a fixture that records only `completed`/`failed`; `neon_compute_hours_used` |
 | `minio-images-pinned.test.ts` | every MinIO image in `infra/compose/docker-compose*.yml`, and `image`/`mcImage` in `infra/k8s/helm-values/minio.yaml`, is pinned by `@sha256:` digest (YAML parse) | `image: "cgr.dev/chainguard/minio:latest"` in a planted compose file |
 | `production-secrets.test.ts` | `kustomize build` of the base fails `AppEnvSchema.safeParse` on every `SECRET_KEYS` member and `AUTH_JWKS_URL` until they are overridden; the cloud overlay renders no Secret value, exactly one `ExternalSecret` entry per `SECRET_KEYS` member, no key owned by both it and the ConfigMap, and no local credential | a planted `Secret` with `REDIS_URL: 'redis://:vp@redis:6379/0'` |
-| `zero-matches.test.ts` | regex over text: each of 32 counted patterns stays at its expected match count over its own scope (e.g. one `worker-${process.pid}` default, no `as unknown as`, no `console.`) | each row's own snippet, e.g. ``workerId: `worker-${process.pid}` `` |
+| `zero-matches.test.ts` | regex over text: each of 35 counted patterns stays at its expected match count over its own scope (e.g. one `worker-${process.pid}` default, no `as unknown as`, no `console.`) | each row's own snippet, e.g. ``workerId: `worker-${process.pid}` `` |
+| `spec-discipline.test.ts` | AST over every spec, `__tests__` helper, `tests/architecture`, `tests/in-process` and e2e spec: no runtime import from `vitest`, no timer wait (`setTimeout`/`setImmediate`, bare or on `globalThis`, inside a `new Promise` or as its executor, a static or dynamic `import()` of `timers/promises`), no `sleep`/`settle`/`delay` helper, no elapsed wall-clock assertion, no `typeof import(` or `importOriginal<`, no repeated full test title, no `console` call, no `.skip`/`.only`/`.todo`/`skipIf`/`runIf` | one fixture per rule, and the look-alikes that must pass |
 | `ci-shape.test.ts` | YAML parse of `.github/workflows/ci.yml`: each job's `timeout-minutes` is its budget, no `needs` chain sums past 6 minutes, `unit` and the architecture suite sit behind `.github/actions/budget`, the architecture suite runs in one job, the docs-only path filter gates every job, services and `db:migrate` appear only in `integration` and `e2e-smoke`, and only `unit-bun` sets up Bun | a fixture workflow that breaks every rule |
 | `load-smoke-triggers.test.ts` | YAML parse of `.github/workflows/load-smoke.yml`: its `pull_request.paths` cover `apps/api`, `apps/worker` and every package in their lockfile runtime closure, and end with `!**/*.md` | none - reads the repo |
 | `doc-links.test.ts` | every relative link and `#anchor` in every tracked `.md` outside `.agents/` (symlinked `CLAUDE.md` skipped) resolves, anchors slugged by `github-slugger` (markdown parsed with `markdown-it`) | `SDD.md#adr-24-result-typed-errors` for a heading with an em dash |
@@ -388,7 +388,7 @@ rule that has already drifted, so a gap is named rather than left looking enforc
 | `drain-before-close.test.ts` | text order: `shutdownOnce` in `@vp/composition` calls `plan.drain()` before it closes, `apps/api/src/serve.ts` and `apps/worker/src/process.ts` both call it with a `drain`, and the readiness service reads `this.draining` before `checkHealth` | `await plan.close();\nplan.drain();` |
 | `shutdown-closure.test.ts` | regex: every `.provide(...)` in a `composition/` module that `new`s a class defining `close()` or `stop()` (from `packages/server/adapters/`, `apps/api/src/services/` or `apps/worker/src/`) also passes a `dispose` or `closeOnDispose` | `.provide(Redis, () => new RedisCacheClient({ type: 'url', url }))` |
 | `in-memory-off-boot-path.test.ts` | neither `main.ts` reaches an `adapters/in-memory/` module through its static, non-type imports (regex graph walk, `@vp/*` resolved through manifest `exports`), and the `@vp/adapters` root barrel does not re-export them | a planted boot path that reaches the doubles through a barrel |
-| `apps/api/src/__tests__/contract-drift.test.ts` | boots the real app over the in-memory adapters: every route in `printRoutes()` (vendor prefixes aside) has an `@vp/api-contracts` entry, every contract entry is routed, and each OpenAPI operation carries the contract's summary, description and tag | none - reads the repo |
+| `apps/api/src/__tests__/contract-drift.test.ts` | boots the real app over the in-memory adapters: every route an `onRoute` hook collects (vendor prefixes aside) has an `@vp/api-contracts` entry, every contract entry is routed, and each OpenAPI operation carries the contract's summary, description and tag | none - reads the repo |
 
 The rows with a path run elsewhere: `tests/in-process/start-order.test.ts` and
 `tests/in-process/gen-index.test.ts` compose apps or spawn Python, so they are in-process specs and run in
@@ -402,9 +402,9 @@ The contract-drift assertion stays in `apps/api` because it has to boot the app:
 instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
 depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/api` can answer.
 
-**One exception list left, shrink-only.** `tests/architecture/untested-sources.ts` records the sources that
-already breached the 1:1 test mandate when it became executable. The assertion fails on a *new* breach **and**
-on a listed entry that has gained its spec, so the list can only get shorter. Nothing may be appended to it.
+**No exception lists.** Every assertion here is flat: `test-correspondence` fails on any source with runtime
+code and no name-matching spec, in every tier, and `zero-matches` fails if an exception list or `shrinkOnly`
+comes back.
 
 Four further mechanisms sit outside the suite:
 

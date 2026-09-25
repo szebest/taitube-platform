@@ -20,9 +20,16 @@ function recordingHost(argv: string[]) {
 }
 
 describe('packages/dev-token: run', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+  it.each([{ argv: ['--help'] }, { argv: ['-h'] }, { argv: ['mint', '--help'] }, { argv: [] }])(
+    'prints its usage for $argv and mints nothing',
+    async ({ argv }) => {
+      const { host, printed } = recordingHost(argv);
+
+      await run(host);
+
+      expect(printed.join('')).toContain('Usage:');
+    }
+  );
 
   it('prints the dev JWKS for `jwks`', async () => {
     const { host, printed } = recordingHost(['jwks']);

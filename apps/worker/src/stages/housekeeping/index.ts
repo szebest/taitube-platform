@@ -52,9 +52,14 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
     uploads: {
       uploadingThresholdMs: housekeeping.stuckUploadingAfterMs,
       uploadedThresholdMs: housekeeping.stuckUploadedAfterMs,
+      scanLimit: housekeeping.scanLimit,
     },
-    processing: { thresholdMs: housekeeping.stuckProcessingAfterMs },
-    purge: { thresholdMs: housekeeping.purgeDeletedAfterMs },
+    processing: {
+      thresholdMs: housekeeping.stuckProcessingAfterMs,
+      scanLimit: housekeeping.scanLimit,
+    },
+    purge: { thresholdMs: housekeeping.purgeDeletedAfterMs, scanLimit: housekeeping.scanLimit },
+    expire: { scanLimit: housekeeping.scanLimit },
     tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },
     reactions: { limit: housekeeping.reactionReconcileLimit },
     outbox: {
@@ -116,6 +121,7 @@ export function createHousekeepingProcessor(
           storage,
           rawBucket,
           retentionDays,
+          ...tasks.expire,
           logger,
         });
 

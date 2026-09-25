@@ -1,14 +1,13 @@
-import { inProcessAppConfig } from '@vp/env-schema';
 import { mintToken } from '@vp/dev-token';
+import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../app';
+import { buildTestApp } from '../../__tests__/test-app';
 
 describe('dev JWKS route', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    app = (await composeApp({ config: inProcessAppConfig() })).app;
-    await app.ready();
+    ({ app } = await buildTestApp());
   });
 
   afterAll(async () => {
@@ -24,7 +23,7 @@ describe('dev JWKS route', () => {
   });
 
   it('publishes the key a minted dev token names', async () => {
-    const [header] = mintToken({ sub: '00000000-0000-7000-8000-000000000001' }).split('.');
+    const [header] = mintToken({ sub: SEEDED.userId }).split('.');
     const { kid } = JSON.parse(Buffer.from(header ?? '', 'base64url').toString('utf8'));
 
     const res = await app.inject({ method: 'GET', url: '/.well-known/jwks.json' });

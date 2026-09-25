@@ -4,13 +4,9 @@ import * as path from 'node:path';
 import { checkFixture } from '../check-fixture';
 import type { FixtureDefinition } from '../types';
 
-const fixture: FixtureDefinition = {
-  id: 'absent',
-  filename: 'absent.mp4',
-  description: 'a fixture that was never generated',
-  category: 'standard',
-  slow: false,
-};
+function fixtureNamed(id: string): FixtureDefinition {
+  return { id, filename: `${id}.mp4`, description: id, category: 'hostile', slow: false };
+}
 
 describe('gen-video: fixture verification', () => {
   let tmpDir: string;
@@ -24,16 +20,30 @@ describe('gen-video: fixture verification', () => {
   });
 
   it('fails a fixture whose file is missing and says so', () => {
-    const result = checkFixture(fixture, tmpDir);
-    expect(result.passed).toBe(false);
-    expect(result.id).toBe('absent');
+    const result = checkFixture(fixtureNamed('absent'), tmpDir);
+
+    expect(result).toMatchObject({ id: 'absent', passed: false });
     expect(result.message).toMatch(/does not exist/i);
   });
 
-  it('fails a fixture whose file is present but unreadable as media', () => {
-    fs.writeFileSync(path.join(tmpDir, 'absent.mp4'), 'not a container');
-    const result = checkFixture(fixture, tmpDir);
-    expect(result.passed).toBe(false);
-    expect(result.message).toBeTruthy();
+  it('fails a standard fixture whose file ffprobe cannot read', () => {
+    fs.writeFileSync(path.join(tmpDir, 'unreadable.mp4'), 'not a container');
+
+    const result = checkFixture({ ...fixtureNamed('unreadable'), category: 'standard' }, tmpDir);
+
+    expect(result).toMatchObject({
+      passed: false,
+      message: 'ffprobe failed to read file metadata',
+    });
+  });
+
+  it.each([
+    { id: 'zero-bytes', content: '', passed: true },
+    { id: 'zero-bytes', content: 'x', passed: false },
+    { id: 'not-a-video', content: 'plain text', passed: true },
+  ])('passes $id holding $content.length bytes: $passed', ({ id, content, passed }) => {
+    fs.writeFileSync(path.join(tmpDir, `${id}.mp4`), content);
+
+    expect(checkFixture(fixtureNamed(id), tmpDir).passed).toBe(passed);
   });
 });

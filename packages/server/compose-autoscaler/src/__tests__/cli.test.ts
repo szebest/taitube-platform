@@ -35,8 +35,8 @@ describe('packages/compose-autoscaler: run', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  it('prints its usage for --help and starts nothing', () => {
-    const cli = host(['--help']);
+  it.each(['--help', '-h'])('prints its usage for %s and starts nothing', (flag) => {
+    const cli = host([flag]);
 
     run(cli);
 

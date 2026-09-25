@@ -1,5 +1,4 @@
 import { randomBytes } from 'node:crypto';
-import { register } from 'node:module';
 import {
   type Context,
   ProxyTracerProvider,
@@ -10,25 +9,9 @@ import {
   isSpanContextValid,
   trace,
 } from '@opentelemetry/api';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { resourceFromAttributes } from '@opentelemetry/resources';
-import { NodeSDK } from '@opentelemetry/sdk-node';
 import { TracerProvider as SdkTracerProvider } from '@opentelemetry/sdk-trace';
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
-import { type Result, fromPromise, ok, tryCatch } from '@vp/result';
-import { type TraceSamplerName, resolveSampler } from './sampler';
-
-interface TracingConfig {
-  serviceName: string;
-  enabled: boolean;
-  serviceVersion: string;
-  endpoint: string;
-  sampler: TraceSamplerName;
-  samplerArg: number;
-  resourceAttributes: string;
-}
+import { type Result, fromPromise, ok } from '@vp/result';
 
 /** What a process flushes its spans through on shutdown. */
 export interface Tracing {
@@ -37,63 +20,7 @@ export interface Tracing {
 
 const TRACER_NAME = 'video-pipeline';
 
-/**
- * The hook wraps third-party modules only. It re-reads a module's `export *` itself, without the
- * loader that resolves this repo's extensionless specifiers, so wrapping our own code fails.
- */
-const WORKSPACE_PACKAGE = /\/node_modules\/@vp\//;
-const APP_SOURCE = /^file:\/\/(?!.*\/node_modules\/)/;
-
 const toError = (cause: unknown): Error => new Error('tracing failed', { cause });
-
-function parseResourceAttributes(raw?: string): Record<string, string> {
-  if (!raw) return {};
-  const attrs: Record<string, string> = {};
-  for (const item of raw.split(',')) {
-    const [k, v] = item.split('=');
-    if (k && v) {
-      attrs[k.trim()] = v.trim();
-    }
-  }
-  return attrs;
-}
-
-/**
- * Starts the OpenTelemetry SDK. It patches only what is imported after it, so a process calls it
- * from the module it preloads with `--import`, before `main` imports Fastify, `pg` or `ioredis`.
- * Incoming HTTP is left to the API's own request span, which knows the route; metrics stay with
- * Prometheus and logs with pino, so the SDK exports traces only.
- */
-export function initTracing(config: TracingConfig): Result<void, Error> {
-  if (!config.enabled) return ok();
-
-  return tryCatch(() => {
-    register('@opentelemetry/instrumentation/hook.mjs', import.meta.url, {
-      data: { exclude: [WORKSPACE_PACKAGE, APP_SOURCE] },
-    });
-    new NodeSDK({
-      resource: resourceFromAttributes({
-        [ATTR_SERVICE_NAME]: config.serviceName,
-        [ATTR_SERVICE_VERSION]: config.serviceVersion,
-        ...parseResourceAttributes(config.resourceAttributes),
-      }),
-      traceExporter: new OTLPTraceExporter({
-        url: `${config.endpoint.replace(/\/$/, '')}/v1/traces`,
-      }),
-      sampler: resolveSampler(config.sampler, config.samplerArg),
-      metricReaders: [],
-      logRecordProcessors: [],
-      instrumentations: [
-        getNodeAutoInstrumentations({
-          '@opentelemetry/instrumentation-fs': { enabled: false },
-          '@opentelemetry/instrumentation-dns': { enabled: false },
-          '@opentelemetry/instrumentation-net': { enabled: false },
-          '@opentelemetry/instrumentation-http': { ignoreIncomingRequestHook: () => true },
-        }),
-      ],
-    }).start();
-  }, toError);
-}
 
 /**
  * Flushes and stops whichever tracer provider the preload registered; with tracing off the global

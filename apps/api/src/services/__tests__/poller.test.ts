@@ -7,12 +7,12 @@ describe('apps/api/services: Poller', () => {
   });
 
   it('opens no timer until it is started', () => {
+    const intervals = vi.spyOn(globalThis, 'setInterval');
     const poll = vi.fn(async () => {});
-    const before = process.getActiveResourcesInfo().filter((r) => r === 'Timeout').length;
 
     new Poller(poll, 1_000);
 
-    expect(process.getActiveResourcesInfo().filter((r) => r === 'Timeout').length).toBe(before);
+    expect(intervals).not.toHaveBeenCalled();
     expect(poll).not.toHaveBeenCalled();
   });
 
@@ -41,13 +41,18 @@ describe('apps/api/services: Poller', () => {
     expect(poll).toHaveBeenCalledTimes(1);
   });
 
-  it('survives a sample that throws', async () => {
-    const poller = new Poller(async () => {
+  it('keeps sampling after a sample that throws', async () => {
+    vi.useFakeTimers();
+    const poll = vi.fn(async () => {
       throw new Error('scrape failed');
-    }, 1_000);
+    });
+    const poller = new Poller(poll, 1_000);
 
     expectOk(await poller.start());
-    await new Promise((resolve) => setImmediate(resolve));
+    await Promise.resolve();
+    vi.advanceTimersByTime(1_000);
     poller.stop();
+
+    expect(poll).toHaveBeenCalledTimes(2);
   });
 });

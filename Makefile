@@ -7,7 +7,7 @@ CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 DEV_TOKEN := pnpm --silent dev-token mint --raw
 
-.PHONY: help up doctor setup dev up-all build-images down logs prune psql redis-cli mc check-redis nuke test check-bun test-bun lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7
+.PHONY: help up doctor setup dev up-all build-images down logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline e2e chaos-kill obs-up obs-down obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -75,6 +75,9 @@ check-bun: ## Check for Bun 1.4, which only the Bun test run needs
 
 test-bun: check-bun ## Run Bun tests for worker runtime parity
 	pnpm test:bun
+
+test-r2: ## Run the S3 contracts against Cloudflare R2 (export the full app env with S3_* naming the R2 bucket)
+	pnpm exec vitest run --config tests/integration/vitest.config.ts packages/server/adapters/s3
 
 lint: ## Run Biome linter across workspace
 	pnpm lint

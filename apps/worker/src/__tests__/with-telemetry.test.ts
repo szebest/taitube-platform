@@ -1,5 +1,3 @@
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
 import { SpanKind, SpanStatusCode, type Tracer, context, trace } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import {
@@ -7,17 +5,11 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
-import {
-  InMemoryFlowProducer,
-  InMemoryJobQueue,
-  InMemoryRepositories,
-  InMemoryStorageClient,
-} from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import type { MediaTools } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type NotifyJob, type ProbeJob } from '@vp/job-contracts';
-import { createLogger } from '@vp/logger';
 import { getActiveTraceparent } from '@vp/observability';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createPackageProcessor } from '../stages/package';
@@ -25,10 +17,15 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { withTelemetry } from '../with-telemetry';
-import { encodeSegments } from './flow-harness';
+import {
+  type FlowWorld,
+  completionOf,
+  encodeSegments,
+  flowWorld,
+  probed,
+  writeThumbnails,
+} from './flow-harness';
 import { STAGE_SETTINGS, transcodeDeps } from './stage-settings';
-
-const logger = createLogger({ format: 'json', service: 'tracing-e2e-test', level: 'silent' });
 
 function endFfmpegSpan(tracer: Tracer, attributes: Record<string, string | number>): void {
   const span = tracer.startSpan('ffmpeg', {
@@ -41,20 +38,8 @@ function endFfmpegSpan(tracer: Tracer, attributes: Record<string, string | numbe
 
 function tracedMedia(tracer: Tracer): MediaTools {
   return {
-    probe: () =>
-      Promise.resolve({
-        durationMs: 60_000,
-        width: 1920,
-        height: 1080,
-        effectiveWidth: 1920,
-        effectiveHeight: 1080,
-        rotation: 0,
-        fps: 30,
-        videoCodec: 'h264',
-        audioCodec: 'aac',
-        bitrateKbps: 2500,
-        ladder: CANONICAL_LADDER.map((rung) => ({ ...rung })),
-      }),
+    probe: async () =>
+      probed({ width: 1920, height: 1080, durationMs: 60_000 }, [...CANONICAL_LADDER]),
     transcode: async (opts) => {
       endFfmpegSpan(tracer, {
         'ffmpeg.stage': 'transcode',
@@ -70,19 +55,7 @@ function tracedMedia(tracer: Tracer): MediaTools {
         'ffmpeg.command': 'ffmpeg -y -ss 00:00:01 -i mock.mp4 poster.jpg',
         'ffmpeg.duration_ms': 150,
       });
-      const file = (name: string) => path.join(opts.outputDir, name);
-      await fs.writeFile(file('poster.jpg'), Buffer.alloc(100));
-      await fs.writeFile(file('sprite.jpg'), Buffer.alloc(100));
-      await fs.writeFile(file('sprite.vtt'), 'WEBVTT\n');
-      return {
-        outputDir: opts.outputDir,
-        posterPath: file('poster.jpg'),
-        spritePath: file('sprite.jpg'),
-        vttPath: file('sprite.vtt'),
-        frameCount: 12,
-        rows: 2,
-        columns: 6,
-      };
+      return writeThumbnails(opts);
     },
   };
 }
@@ -90,19 +63,7 @@ function tracedMedia(tracer: Tracer): MediaTools {
 describe('withTelemetry across the pipeline', () => {
   let exporter: InMemorySpanExporter;
   let provider: BasicTracerProvider;
-  let repositories: InMemoryRepositories;
-  let storage: InMemoryStorageClient;
-  let queues: Map<string, InMemoryJobQueue>;
-  let flowProducer: InMemoryFlowProducer;
-
-  function getQueue(name: string): InMemoryJobQueue {
-    let q = queues.get(name);
-    if (!q) {
-      q = new InMemoryJobQueue(name);
-      queues.set(name, q);
-    }
-    return q;
-  }
+  let world: FlowWorld;
 
   beforeEach(() => {
     trace.disable();
@@ -110,18 +71,21 @@ describe('withTelemetry across the pipeline', () => {
     provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
     context.setGlobalContextManager(new AsyncLocalStorageContextManager().enable());
     trace.setGlobalTracerProvider(provider);
-    repositories = new InMemoryRepositories();
-    storage = new InMemoryStorageClient();
-    queues = new Map();
-    flowProducer = new InMemoryFlowProducer(getQueue);
+    world = flowWorld();
+  });
+
+  afterEach(() => {
+    trace.disable();
+    context.disable();
   });
 
   it('keeps one trace from upload complete through probe, transcodes, thumbnail, package and notify', async () => {
+    const { repositories, storage, getQueue } = world;
     const videoId = uuidv7();
     const sourceKey = 'raw/s60.mp4';
     await repositories.videos.create({
       id: videoId,
-      ownerId: '00000000-0000-7000-8000-000000000001',
+      ownerId: SEEDED.userId,
       title: 's60 E2E Traced Video',
       status: 'UPLOADING',
       sourceKey,
@@ -166,12 +130,12 @@ describe('withTelemetry across the pipeline', () => {
     });
 
     const media = tracedMedia(tracer);
-    const deps = { ...STAGE_SETTINGS, media, repositories, storage, getQueue, logger };
+    const deps = { ...STAGE_SETTINGS, ...world, media };
     const [probeJob] = expectOk(await getQueue('probe').getJobs(['waiting']));
     if (!probeJob) throw new Error('probe job missing');
     await withTelemetry(
       'probe',
-      createProbeProcessor({ ...deps, flowProducer })
+      createProbeProcessor(deps)
     )({
       id: probeJob.id,
       name: 'probe',
@@ -180,15 +144,14 @@ describe('withTelemetry across the pipeline', () => {
     });
 
     const packageQueue = getQueue('package');
+    const packaged = completionOf(packageQueue, `${videoId}--package--g1`);
     await packageQueue.process(withTelemetry('package', createPackageProcessor(deps)));
-    const transcode = createTranscodeProcessor(
-      transcodeDeps({ repositories, storage, logger, media })
-    );
+    const transcode = createTranscodeProcessor(transcodeDeps({ ...world, media }));
     for (const rung of ['1080p', '720p', '480p']) {
       await getQueue(`transcode-${rung}`).process(withTelemetry(`transcode-${rung}`, transcode));
     }
     await getQueue('thumbnail').process(withTelemetry('thumbnail', createThumbnailProcessor(deps)));
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await packaged;
 
     expect(expectOk(await packageQueue.getJobState(`${videoId}--package--g1`))).toBe('completed');
     const [notifyJob] = expectOk(await getQueue('notify').getJobs(['waiting']));

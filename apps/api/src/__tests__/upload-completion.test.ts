@@ -1,15 +1,12 @@
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { mintToken } from '@vp/dev-token';
 import { ErrorCodes, queueUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { type FakeS3, startFakeS3 } from './fake-s3';
-import { buildInMemoryApp } from './in-memory-app';
 import { MockProbeJobQueue } from './mock-probe-queue';
+import { TOKENS, buildTestApp } from './test-app';
 import { completeUpload, postUpload, putObject } from './upload-requests';
-
-const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';
 
 describe('apps/api completing a single-part upload', () => {
   let app: FastifyInstance;
@@ -17,7 +14,7 @@ describe('apps/api completing a single-part upload', () => {
   let s3: FakeS3;
   const probeQueue = new MockProbeJobQueue();
   const probeJobs = probeQueue.jobs;
-  const authToken = mintToken({ sub: DEV_USER_ID, role: 'user', ttl: '1h' });
+  const authToken = TOKENS.user;
 
   async function uploadBytes(filename: string, size: number) {
     const created = await postUpload(app, authToken, { filename, sizeBytes: size });
@@ -29,7 +26,7 @@ describe('apps/api completing a single-part upload', () => {
 
   beforeAll(async () => {
     s3 = await startFakeS3();
-    ({ app, repositories } = await buildInMemoryApp({
+    ({ app, repositories } = await buildTestApp({
       adapters: { storage: s3.storage, multipart: s3.multipart, probeQueue },
     }));
   });

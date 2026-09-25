@@ -1,7 +1,7 @@
 import { loadEnvOrExit } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
-import { initTracing } from '@vp/observability';
+import { initTracing } from '@vp/observability/tracing-sdk';
 import { isErr } from '@vp/result';
 
 const env = loadEnvOrExit('vp-worker', process);

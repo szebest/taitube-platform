@@ -2,9 +2,13 @@ import { QUEUE_JOB_STATES, type QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { isOk } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { bullMqJobQueueSubject } from '../../__tests__/contract/bullmq-subjects';
+import { describeJobQueueContract } from '../../__tests__/contract/job-queue.contract';
 import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue, fakeJob } from './fake-queue';
 import { type WorkerHandler, fakeWorkerFactory, workers } from './fake-worker';
+
+describeJobQueueContract(bullMqJobQueueSubject);
 
 describe('BullMqJobQueue', () => {
   let queue: FakeQueue;
@@ -127,18 +131,6 @@ describe('BullMqJobQueue', () => {
     });
   });
 
-  describe('pause and resume', () => {
-    it('toggles the paused state', async () => {
-      expect(expectOk(await jobQueue.isPaused())).toBe(false);
-
-      await jobQueue.pause();
-      expect(expectOk(await jobQueue.isPaused())).toBe(true);
-
-      await jobQueue.resume();
-      expect(expectOk(await jobQueue.isPaused())).toBe(false);
-    });
-  });
-
   describe('schedulers', () => {
     it('passes the repeat options and template through', async () => {
       const result = expectOk(
@@ -156,21 +148,21 @@ describe('BullMqJobQueue', () => {
       });
     });
 
-    it('projects the registered schedulers, falling back across the naming fields', async () => {
+    it('projects each registered scheduler under the key it was upserted with', async () => {
       const subject = new BullMqJobQueue({
         type: 'queue',
         name: 'probe',
         queue: new FakeQueue({
           schedulers: [
-            { id: 'a', name: 'reconcile', pattern: '* * * * *', template: { data: { x: 1 } } },
-            { key: 'k', every: 1000 },
+            { key: 'a', name: 'reconcile', pattern: '* * * * *', template: { data: { x: 1 } } },
+            { key: 'k', name: 'sweep', every: 1000 },
           ],
         }).asQueue(),
       });
 
       expect(expectOk(await subject.getJobSchedulers())).toEqual([
         { id: 'a', name: 'reconcile', pattern: '* * * * *', every: undefined, data: { x: 1 } },
-        { id: 'k', name: '', pattern: undefined, every: 1000, data: undefined },
+        { id: 'k', name: 'sweep', pattern: undefined, every: 1000, data: undefined },
       ]);
     });
   });
@@ -193,6 +185,12 @@ describe('BullMqJobQueue', () => {
         lockDuration: 30_000,
         connection: { host: 'fake', port: 6379 },
       });
+    });
+
+    it('leaves the worker defaults alone for every option the caller left unset', async () => {
+      await jobQueue.process(async () => 'ok');
+
+      expect(Object.keys(workers[0]?.options ?? {}).sort()).toEqual(['connection', 'prefix']);
     });
 
     it('hands the handler a job it can report progress and children through', async () => {

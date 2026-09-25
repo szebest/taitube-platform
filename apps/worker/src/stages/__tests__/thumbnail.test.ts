@@ -4,6 +4,7 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import type { QueueJob } from '@vp/core/ports';
 import type { ThumbnailJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
+import { SEEDED, createMockJob } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
@@ -25,7 +26,7 @@ describe('thumbnail stage', () => {
     const videoId = uuidv7();
     await repositories.videos.create({
       id: videoId,
-      ownerId: '00000000-0000-7000-8000-000000000001',
+      ownerId: SEEDED.userId,
       title: 'Thumbnail Video',
       status: 'PROCESSING',
       sourceKey,
@@ -37,12 +38,14 @@ describe('thumbnail stage', () => {
   }
 
   function thumbnailJob(videoId: string, sourceKey: string): QueueJob<ThumbnailJob> {
-    return {
-      id: `${videoId}--thumbnail--g1`,
-      name: 'thumbnail',
-      data: { videoId, sourceKey, generation: 1, durationMs: 15_000, traceparent: '00-01-01-01' },
-      attemptsMade: 0,
+    const data = {
+      videoId,
+      sourceKey,
+      generation: 1,
+      durationMs: 15_000,
+      traceparent: '00-01-01-01',
     };
+    return createMockJob('thumbnail', data, { id: `${videoId}--thumbnail--g1` });
   }
 
   const processor = () =>

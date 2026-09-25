@@ -101,6 +101,7 @@ export interface AppConfig {
     stuckUploadedAfterMs: number;
     tmpSweepAfterMs: number;
     reactionReconcileLimit: number;
+    scanLimit: number;
   };
   http: {
     port: number;
@@ -129,7 +130,12 @@ export interface AppConfig {
       thumbnailTimeoutMs: number;
     };
     sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
-    segmentUpload: { concurrency: number; maxRetries: number; retryDelayMs: number };
+    segmentUpload: {
+      concurrency: number;
+      maxRetries: number;
+      retryDelayMs: number;
+      pollIntervalMs: number;
+    };
   };
 }
 

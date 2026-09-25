@@ -133,10 +133,3 @@ export function read(file: string): string {
   }
   return text;
 }
-
-export function shrinkOnly(offenders: string[], allowed: readonly string[]) {
-  return {
-    unlisted: offenders.filter((file) => !allowed.includes(file)),
-    stale: allowed.filter((file) => !offenders.includes(file)),
-  };
-}

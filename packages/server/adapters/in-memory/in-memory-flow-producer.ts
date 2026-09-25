@@ -1,15 +1,30 @@
-import { type FlowJobNode, FlowProducerPort, type JobQueue, type QueueJob } from '@vp/core/ports';
+import { type FlowJobNode, FlowProducerPort, type QueueJob } from '@vp/core/ports';
 import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
-import { InMemoryJobQueue } from './in-memory-job-queue';
+import type { InMemoryJobQueue } from './in-memory-job-queue';
+
+/** `undefined` for a queue this producer cannot run: a flow naming one is refused, not parked. */
+export type InMemoryQueueLookup = (name: string) => InMemoryJobQueue | undefined;
+
+interface ChildPlan {
+  node: FlowJobNode;
+  queue: InMemoryJobQueue;
+  jobId: string;
+}
+
+interface ParentState {
+  queue: InMemoryJobQueue;
+  job: QueueJob<unknown>;
+  pending: number;
+  failed: boolean;
+  childrenValues: Record<string, unknown>;
+}
 
 export class InMemoryFlowProducer extends FlowProducerPort {
-  private readonly getQueue: (name: string) => JobQueue;
   private isHealthy = true;
 
-  constructor(getQueue: (name: string) => JobQueue) {
+  constructor(private readonly queueNamed: InMemoryQueueLookup) {
     super();
-    this.getQueue = getQueue;
   }
 
   setHealthy(healthy: boolean): void {
@@ -21,93 +36,77 @@ export class InMemoryFlowProducer extends FlowProducerPort {
   }
 
   async add<T = unknown>(node: FlowJobNode<T>): Promise<Result<unknown, QueueUnavailable>> {
-    const parentQueue = this.getQueue(node.queueName);
-    const parentJobId = node.opts?.jobId ?? `parent-${Date.now()}`;
+    const parentQueue = this.queueNamed(node.queueName);
+    if (!parentQueue) return err(queueUnavailable('add', `no in-memory queue ${node.queueName}`));
 
-    const children = node.children ?? [];
-    const childrenValues: Record<string, unknown> = {};
-    let pendingChildrenCount = children.length;
-    let parentFailed = false;
-
-    const initialState = children.length > 0 ? 'waiting-children' : 'waiting';
-    const added =
-      parentQueue instanceof InMemoryJobQueue
-        ? await parentQueue.add(node.name, node.data, {
-            ...node.opts,
-            jobId: parentJobId,
-            initialState,
-          })
-        : await parentQueue.add(node.name, node.data, {
-            ...node.opts,
-            jobId: parentJobId,
-          });
-    if (!added.ok) return added;
-    const parentJob = added.value;
-
-    parentJob.getChildrenValues = async <R = Record<string, unknown>>() => childrenValues as R;
-
-    if (children.length === 0) {
-      return ok({ job: parentJob, children: [] });
+    const plans: ChildPlan[] = [];
+    for (const child of node.children ?? []) {
+      const queue = this.queueNamed(child.queueName);
+      if (!queue) return err(queueUnavailable('add', `no in-memory queue ${child.queueName}`));
+      const jobId = child.opts?.jobId ?? `child-${Date.now()}-${child.name}`;
+      plans.push({ node: child, queue, jobId });
     }
 
+    const added = await parentQueue.add(node.name, node.data, {
+      ...node.opts,
+      jobId: node.opts?.jobId ?? `parent-${Date.now()}`,
+      initialState: plans.length > 0 ? 'waiting-children' : 'waiting',
+    });
+    if (!added.ok) return added;
+
+    const parent: ParentState = {
+      queue: parentQueue,
+      job: added.value,
+      pending: plans.length,
+      failed: false,
+      childrenValues: {},
+    };
+    parent.job.getChildrenValues = async <R = Record<string, unknown>>() =>
+      parent.childrenValues as R;
+
     const childJobs: QueueJob<unknown>[] = [];
-
-    for (const childNode of children) {
-      const childQueue = this.getQueue(childNode.queueName);
-      const childJobId = childNode.opts?.jobId ?? `child-${Date.now()}-${childNode.name}`;
-
-      if (childQueue instanceof InMemoryJobQueue) {
-        childQueue.onJobCompleted((job, result) => {
-          if (job.id === childJobId) {
-            childrenValues[childNode.name] = result;
-            childrenValues[job.id] = result;
-            if (childNode.queueName) {
-              childrenValues[`bull:${childNode.queueName}:${job.id}`] = result;
-            }
-            pendingChildrenCount--;
-            if (pendingChildrenCount === 0 && !parentFailed) {
-              // All children complete: transition parent from waiting-children to waiting
-              if (parentQueue instanceof InMemoryJobQueue) {
-                parentQueue.enqueueWaiting(parentJob);
-                parentQueue.executeJob(parentJob).catch(() => {});
-              }
-            }
-          }
-        });
-
-        childQueue.onJobFailed((job, err) => {
-          if (job.id === childJobId) {
-            if (childNode.opts?.failParentOnFailure && !parentFailed) {
-              parentFailed = true;
-              if (parentQueue instanceof InMemoryJobQueue) {
-                parentQueue.failJob(parentJob.id, err).catch(() => {});
-              }
-            } else if (childNode.opts?.ignoreDependencyOnFailure) {
-              pendingChildrenCount--;
-              if (pendingChildrenCount === 0 && !parentFailed) {
-                if (parentQueue instanceof InMemoryJobQueue) {
-                  parentQueue.enqueueWaiting(parentJob);
-                  parentQueue.executeJob(parentJob).catch(() => {});
-                }
-              }
-            }
-          }
-        });
-      }
-
-      const childJob = await childQueue.add(childNode.name, childNode.data, {
-        ...childNode.opts,
-        jobId: childJobId,
+    for (const plan of plans) {
+      this.watchChild(parent, plan);
+      const childJob = await plan.queue.add(plan.node.name, plan.node.data, {
+        ...plan.node.opts,
+        jobId: plan.jobId,
       });
       if (!childJob.ok) return childJob;
-
       childJobs.push(childJob.value);
     }
 
-    return ok({ job: parentJob, children: childJobs });
+    return ok({ job: parent.job, children: childJobs });
   }
 
   async close(): Promise<Result<void, QueueUnavailable>> {
     return ok();
+  }
+
+  private watchChild(parent: ParentState, plan: ChildPlan): void {
+    plan.queue.onJobCompleted((job, result) => {
+      if (job.id !== plan.jobId) return;
+      parent.childrenValues[plan.node.name] = result;
+      parent.childrenValues[job.id] = result;
+      parent.childrenValues[`bull:${plan.node.queueName}:${job.id}`] = result;
+      this.settleChild(parent);
+    });
+
+    plan.queue.onJobFailed((job, error) => {
+      if (job.id !== plan.jobId || parent.failed) return;
+      if (plan.node.opts?.failParentOnFailure) {
+        parent.failed = true;
+        parent.queue.failJob(parent.job.id, error).catch(() => {});
+        return;
+      }
+      if (plan.node.opts?.ignoreDependencyOnFailure) this.settleChild(parent);
+    });
+  }
+
+  /** The last child to settle moves the parent from waiting-children to waiting and runs it. */
+  private settleChild(parent: ParentState): void {
+    parent.pending -= 1;
+    if (parent.pending > 0 || parent.failed) return;
+    parent.queue.enqueueWaiting(parent.job);
+    parent.queue.executeJob(parent.job).catch(() => {});
   }
 }
