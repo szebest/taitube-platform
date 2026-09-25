@@ -175,6 +175,10 @@ export class ChannelService {
     if (isErr(existingChannel)) return existingChannel;
     if (existingChannel.value) return ok();
 
+    // The channel is the "already provisioned" marker, so Watch Later has to exist before it does.
+    const watchLater = await this.playlists.provisionWatchLater({ id: uuidv7(), ownerId: userId });
+    if (isErr(watchLater)) return watchLater;
+
     const handle = await this.claimHandle(userEmail, userId);
     if (isErr(handle)) return handle;
 
@@ -185,9 +189,9 @@ export class ChannelService {
     });
 
     // A concurrent request for the same identity got there first; that is a success for us.
-    if (isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN) return created;
-
-    return await this.playlists.provisionWatchLater({ id: uuidv7(), ownerId: userId });
+    return isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN
+      ? created
+      : ok();
   }
 
   private async claimHandle(

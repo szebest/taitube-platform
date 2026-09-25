@@ -120,26 +120,32 @@ This ticket delivers the **YouTube-Grade Playlist & Watch History Domain Engine*
   `packages/universal/domain/src/playlist-position.ts`.
 - Decided: the testing plan's "reorder item 4 to position 1 -> [4, 0, 1, 2, 3]" is really position 0.
   Both are tested: to 0 gives `[4, 0, 1, 2, 3]`, to 1 gives `[0, 4, 1, 2, 3]`.
-- Decided: a full reindex must name every item exactly once. Anything else was drawn from a stale view
-  and answers `409 VERSION_CONFLICT` rather than dropping or duplicating an item. The rule
-  (`decidePlaylistReorder`) runs inside the repository transaction, against the items it has locked.
+- Decided: a full reindex names every item the caller can see, exactly once. Anything else was drawn
+  from a stale view and answers `409 VERSION_CONFLICT` rather than dropping or duplicating an item. An
+  item whose video the caller may not watch (made private by its creator, or deleted) keeps its slot and
+  the caller's order fills the slots around it, so a hidden video never blocks a reindex. The rule
+  (`decidePlaylistReorder`) runs inside the repository transaction, against the slots it has locked.
 - Decided: packages stay `@vp/*` (ticket 48), so the ports are `core/repositories/playlist-repository.ts`
   and `watch-history-repository.ts` and the Redis adapter is `redis/redis-playhead-cache.adapter.ts`.
   `assertCan(...)` is `authorize(...)` from `@vp/domain-rules`, its `Result` form.
-- Decided: Watch Later is provisioned with the channel in `ensureProvisioned` (idempotent through a
-  partial unique index on `owner_id WHERE is_system`), and the migration backfills one for every user
-  that already exists. The backfilled ids are `gen_random_uuid()`, since Postgres before 18 has no
+- Decided: Watch Later is provisioned in `ensureProvisioned` before the channel (idempotent through a
+  partial unique index on `owner_id WHERE is_system`). The channel is what marks an identity as
+  provisioned, so an existing channel implies an existing Watch Later and a failed provision is retried
+  on the next request. The migration backfills one for every user that already exists. The backfilled ids are `gen_random_uuid()`, since Postgres before 18 has no
   `uuidv7()`. Watch Later cannot be renamed either: `PATCH` answers `SYSTEM_PLAYLIST_IMMUTABLE` like
   `DELETE`.
 - Decided: a playlist the caller cannot read answers `404 PLAYLIST_NOT_FOUND` for reads and writes alike;
   one they can read but not edit answers `403`. Items whose video the viewer may not watch are hidden
   and keep their place.
-- Decided: `POST /v1/me/history` takes a `reason` (`heartbeat`, `pause` by default, `ended`). A heartbeat
-  only writes the Redis buffer once the session has a row; the first beat, a pause and the end write
-  through. There is no periodic flush job: every pause and end already writes through, and with Redis
-  down every beat does. `GET /v1/me/history/:videoId` is the resume read the buffer exists for.
-- Decided: an older playhead never overwrites a newer one (`ON CONFLICT ... WHERE watched_at <=
-  excluded.watched_at`), so a late flush from a stale tab cannot rewind the history.
+- Decided: `POST /v1/me/history` takes a `reason` (`heartbeat`, `pause` by default, `ended`). The buffered
+  playhead carries `flushedAt`, when its row was last written. A heartbeat only writes Redis while that
+  is younger than `caches.playheads.flushIntervalMs` (60 s); the first beat, a beat past the interval, a
+  pause and the end write through. So the history list is at most a minute behind a long session, and a
+  buffer that expires loses at most a minute. There is no separate flush job, and with Redis down every
+  beat writes through. `GET /v1/me/history/:videoId` is the resume read the buffer exists for.
+- Decided: the upsert keeps the newest row (`ON CONFLICT ... WHERE watched_at <= excluded.watched_at`).
+  `watched_at` is stamped by the server, so this orders requests that arrive out of order; it does not
+  tell a stale tab's late write from a fresh one, and the Redis buffer is last writer wins.
 - Decided: `CacheClient.del` takes several keys, so clearing a history drops every buffered playhead in
   one round trip.
 - Decided: `GET /v1/playlists/:id` returns every item unpaginated. YouTube caps a playlist at 5000 videos;

@@ -22,7 +22,13 @@ import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@vp/resu
 import { and, asc, count, desc, eq, getTableColumns, inArray, max, sql } from 'drizzle-orm';
 import { drizzleWhere, playlistReadScope, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
-import { entriesOf, toPlaylist, toPlaylistEntry, writePositions } from './playlist-query';
+import {
+  entriesOf,
+  reorderSlots,
+  toPlaylist,
+  toPlaylistEntry,
+  writePositions,
+} from './playlist-query';
 import type { PostgresDatabase } from './types';
 
 const { playlists: p, playlistItems: pi, videos: v, channels: ch } = schema;
@@ -187,6 +193,7 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
     return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
+          if (!(await this.lockPlaylist(tx, playlistId))) return false;
           const removed = await tx
             .delete(pi)
             .where(and(eq(pi.playlistId, playlistId), eq(pi.videoId, videoId)))
@@ -200,13 +207,14 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
 
   async reorder<F>(
     playlistId: string,
+    viewer: UserContext,
     plan: ReorderPlan<F>
   ): Promise<Result<boolean, DatabaseUnavailable | F>> {
     const outcome = await fromPromise(
       () =>
         this.db.transaction(async (tx): Promise<Result<boolean, F>> => {
           if (!(await this.lockPlaylist(tx, playlistId))) return ok(false);
-          const writes = plan(await this.positions(tx, playlistId));
+          const writes = plan(await reorderSlots(tx, playlistId, viewer));
           if (isErr(writes)) return writes;
           await writePositions(tx, playlistId, writes.value);
           await this.touch(tx, playlistId);

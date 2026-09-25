@@ -15,7 +15,7 @@ export interface ListWatchHistoryOptions {
 
 /**
  * One row per user and video. A write carrying an older `watchedAt` than the stored one is dropped,
- * so a late flush from a stale tab never rewinds a newer playhead.
+ * so two requests that land out of order keep the later one.
  */
 export interface WatchHistoryRepositoryPort {
   record(progress: NewWatchProgress): Promise<Result<void, DatabaseUnavailable>>;

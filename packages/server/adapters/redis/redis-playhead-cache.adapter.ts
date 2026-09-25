@@ -1,5 +1,5 @@
 import type { CacheClient, PlayheadCachePort } from '@vp/core/ports';
-import type { WatchProgress } from '@vp/domain';
+import type { BufferedPlayhead } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { type Result, isOk, map, parseJson } from '@vp/result';
@@ -9,6 +9,7 @@ const PlayheadSchema = z.object({
   progressSeconds: z.number().int().nonnegative(),
   durationSeconds: z.number().int().positive(),
   watchedAt: z.coerce.date(),
+  flushedAt: z.coerce.date(),
 });
 
 export interface RedisPlayheadCacheAdapterConfig {
@@ -29,14 +30,14 @@ export class RedisPlayheadCacheAdapter implements PlayheadCachePort {
   async read(
     userId: string,
     videoId: string
-  ): Promise<Result<WatchProgress | null, CacheUnavailable>> {
+  ): Promise<Result<BufferedPlayhead | null, CacheUnavailable>> {
     const raw = await this.cache.get(CacheKeys.userPlayhead(userId, videoId));
     return map(raw, (value) => (value === null ? null : parsed(videoId, value)));
   }
 
   async write(
     userId: string,
-    { videoId, ...playhead }: WatchProgress
+    { videoId, ...playhead }: BufferedPlayhead
   ): Promise<Result<void, CacheUnavailable>> {
     return await this.cache.set(
       CacheKeys.userPlayhead(userId, videoId),
@@ -55,7 +56,7 @@ export class RedisPlayheadCacheAdapter implements PlayheadCachePort {
   }
 }
 
-function parsed(videoId: string, raw: string): WatchProgress | null {
+function parsed(videoId: string, raw: string): BufferedPlayhead | null {
   const json = parseJson(raw);
   if (!isOk(json)) return null;
   const playhead = PlayheadSchema.safeParse(json.value);

@@ -116,7 +116,7 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
       await addAll(ctx, FIVE);
       const itemId = itemIdFor(VIDEO_IDS.e);
 
-      const moved = await ctx.playlists.reorder(P.mix, (items) =>
+      const moved = await ctx.playlists.reorder(P.mix, OWNER, (items) =>
         ok(movePositions(items, itemId, to) ?? [])
       );
 
@@ -127,14 +127,47 @@ export function describePlaylistItemsContract(ctx: PlaylistContractContext): voi
     it('writes nothing when the plan refuses, and hands its failure back', async () => {
       await addAll(ctx, FIVE);
 
-      const refused = await ctx.playlists.reorder(P.mix, () => err('stale' as const));
+      const refused = await ctx.playlists.reorder(P.mix, OWNER, () => err('stale' as const));
 
       expect(expectErr(refused)).toBe('stale');
       expect(await orderOf(ctx)).toEqual(FIVE);
     });
 
     it('answers false for a playlist that is gone', async () => {
-      expect(expectOk(await ctx.playlists.reorder(P.absent, () => ok([])))).toBe(false);
+      expect(expectOk(await ctx.playlists.reorder(P.absent, OWNER, () => ok([])))).toBe(false);
+    });
+
+    it('flags the slots whose video the viewer may not watch', async () => {
+      await ctx.subject.repositories.videos.create(
+        publicVideo({ id: STRANGERS_PRIVATE_VIDEO, ownerId: OTHER_OWNER_ID, visibility: 'private' })
+      );
+      await addAll(ctx, [VIDEO_IDS.a, STRANGERS_PRIVATE_VIDEO]);
+      const seen: { viewer: string; hidden: boolean[] }[] = [];
+
+      for (const viewer of [OWNER, STRANGER]) {
+        await ctx.playlists.reorder(P.mix, viewer, (slots) => {
+          seen.push({ viewer: viewer.id, hidden: slots.map((slot) => slot.hidden) });
+          return ok([]);
+        });
+      }
+
+      expect(seen).toEqual([
+        { viewer: OWNER.id, hidden: [false, true] },
+        { viewer: STRANGER.id, hidden: [false, false] },
+      ]);
+    });
+
+    it('lets a removal and a reorder of the same playlist both land', async () => {
+      await addAll(ctx, FIVE);
+      const moved = itemIdFor(VIDEO_IDS.e);
+
+      const [removed, reordered] = await Promise.all([
+        ctx.playlists.removeItem(P.mix, VIDEO_IDS.b),
+        ctx.playlists.reorder(P.mix, OWNER, (items) => ok(movePositions(items, moved, 0) ?? [])),
+      ]);
+
+      expect([expectOk(removed), expectOk(reordered)]).toEqual([true, true]);
+      expect(await orderOf(ctx)).toEqual([VIDEO_IDS.e, VIDEO_IDS.a, VIDEO_IDS.c, VIDEO_IDS.d]);
     });
   });
 }

@@ -1,4 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
+import { expectOk } from '@vp/testing/result';
 import {
   ABSENT,
   type LibraryApp,
@@ -162,6 +163,30 @@ describe('playlist routes', () => {
     expect(res.statusCode).toBe(status);
     expect(res.json().code).toBe(code);
     expect(await ctx.order(id)).toEqual(VIDEOS);
+  });
+
+  it('reorders around a video its creator made private, which keeps its slot', async () => {
+    const id = await ctx.playlist('owner');
+    for (const videoId of [V0, V1, V2]) {
+      await ctx.call('owner', 'POST', `/v1/playlists/${id}/items`, { videoId });
+    }
+    const hidden = expectOk(await ctx.repositories.videos.findById(V1));
+    if (hidden) hidden.visibility = 'private';
+    const visible = (await ctx.call('owner', 'GET', `/v1/playlists/${id}`)).json().items;
+
+    const res = await ctx.call('owner', 'PUT', `/v1/playlists/${id}/reorder`, {
+      itemIds: visible.map((item: { id: string }) => item.id).reverse(),
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(
+      res
+        .json()
+        .items.map((item: { videoId: string; position: number }) => [item.videoId, item.position])
+    ).toEqual([
+      [V2, 0],
+      [V0, 2],
+    ]);
   });
 
   it('removes a video and moves the rest up one place', async () => {

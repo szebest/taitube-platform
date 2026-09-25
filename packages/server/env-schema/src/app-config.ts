@@ -87,7 +87,7 @@ export interface AppConfig {
     reactions: { ttlSeconds: number; userReactionTtlSeconds: number };
     subscriptions: { userSubscriptionsTtlSeconds: number; subscriberCountTtlSeconds: number };
     comments: { hotTtlSeconds: number };
-    playheads: { ttlSeconds: number };
+    playheads: { ttlSeconds: number; flushIntervalMs: number };
   };
   pollers: { queueIntervalMs: number; sqlIntervalMs: number; staleStepMs: number };
   httpCache: {

@@ -9494,7 +9494,7 @@ paths:
       summary: Reorder a playlist
       tags:
         - Playlists
-      description: Moves one item to a new place, or puts every item in the order given. A full order that misses or repeats an item was drawn from a stale view and answers 409.
+      description: Moves one item to a new place, or puts the items the caller can see in the order given; a video hidden from them keeps its slot. A full order that misses or repeats a visible item was drawn from a stale view and answers 409.
       requestBody:
         required: true
         content:
@@ -9521,7 +9521,7 @@ paths:
                       items:
                         type: string
                         format: uuid
-                      description: Every item id of the playlist, in the new order
+                      description: Every item id the caller sees in the playlist, in the new order
                   required:
                     - itemIds
                   additionalProperties: false
@@ -10091,7 +10091,7 @@ paths:
       summary: Save a playback position
       tags:
         - Watch history
-      description: A heartbeat is buffered in Redis for 7 days and reaches the history on the first beat of a session; a pause or the end is written through with ON CONFLICT (user_id, video_id) DO UPDATE.
+      description: A heartbeat is buffered in Redis for 7 days and reaches the history on the first beat and at most once a minute after that; a pause or the end is written through with ON CONFLICT (user_id, video_id) DO UPDATE.
       requestBody:
         required: true
         content:

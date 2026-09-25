@@ -36,7 +36,7 @@ export const recordWatchProgress = defineEndpoint({
   tag: 'Watch history',
   summary: 'Save a playback position',
   description:
-    'A heartbeat is buffered in Redis for 7 days and reaches the history on the first beat of a session; a pause or the end is written through with ON CONFLICT (user_id, video_id) DO UPDATE.',
+    'A heartbeat is buffered in Redis for 7 days and reaches the history on the first beat and at most once a minute after that; a pause or the end is written through with ON CONFLICT (user_id, video_id) DO UPDATE.',
   body: z.object({
     videoId: z.string().uuid(),
     progressSeconds: z.number().int().nonnegative(),

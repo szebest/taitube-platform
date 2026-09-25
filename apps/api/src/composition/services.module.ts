@@ -181,6 +181,8 @@ export function registerServices(c: Container): Container {
           playheads: c.get(Adapters.PlayheadCache),
           paginator: c.get(Services.Paginator),
           cdn: config().cdn,
+          flushIntervalMs: config().caches.playheads.flushIntervalMs,
+          now: Date.now,
         })
     )
     .provide(Services.QueueService, (c) => new QueueService({ queues: c.get(Adapters.Queues) }))

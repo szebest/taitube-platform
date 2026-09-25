@@ -11,6 +11,11 @@ export interface WatchProgress {
   watchedAt: Date;
 }
 
+/** A playhead in the write buffer, with when its row was last written. */
+export interface BufferedPlayhead extends WatchProgress {
+  flushedAt: Date;
+}
+
 export interface NewWatchProgress extends WatchProgress {
   id: string;
   userId: string;

@@ -180,7 +180,9 @@ const MoveSchema = z
 
 const ReindexSchema = z
   .object({
-    itemIds: z.array(z.string().uuid()).describe('Every item id of the playlist, in the new order'),
+    itemIds: z
+      .array(z.string().uuid())
+      .describe('Every item id the caller sees in the playlist, in the new order'),
   })
   .strict()
   .transform(({ itemIds }) => ({ type: 'reindex' as const, itemIds }));
@@ -191,7 +193,7 @@ export const reorderPlaylist = defineEndpoint({
   tag: 'Playlists',
   summary: 'Reorder a playlist',
   description:
-    'Moves one item to a new place, or puts every item in the order given. A full order that misses or repeats an item was drawn from a stale view and answers 409.',
+    'Moves one item to a new place, or puts the items the caller can see in the order given; a video hidden from them keeps its slot. A full order that misses or repeats a visible item was drawn from a stale view and answers 409.',
   params: PlaylistIdParamSchema,
   body: z.union([MoveSchema, ReindexSchema]),
   status: 200,

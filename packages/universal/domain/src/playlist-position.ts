@@ -13,6 +13,11 @@ export interface PositionedItem {
   readonly position: number;
 }
 
+/** A slot as the reorder sees it: `hidden` when the caller may not watch its video. */
+export interface ReorderSlot extends PositionedItem {
+  readonly hidden: boolean;
+}
+
 export interface PositionWrite {
   readonly id: string;
   readonly position: number;

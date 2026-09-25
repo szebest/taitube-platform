@@ -163,6 +163,24 @@ describe('ChannelService', () => {
       ]);
     });
 
+    it('creates no channel until Watch Later exists, so the next sign-in retries both', async () => {
+      const provision = vi
+        .spyOn(repositories.playlists, 'provisionWatchLater')
+        .mockResolvedValueOnce(err(databaseUnavailable('provisionWatchLater')));
+
+      const first = await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com');
+
+      expect(expectErr(first).code).toBe(ErrorCodes.DATABASE_UNAVAILABLE);
+      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toBeNull();
+
+      provision.mockRestore();
+      expectOk(await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com'));
+      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).not.toBeNull();
+      expect(
+        expectOk(await repositories.playlists.listOwned({ id: NEW_USER_ID, role: 'USER' }, null))
+      ).toHaveLength(1);
+    });
+
     it('synthesises an email when the identity carries none', async () => {
       expectOk(await channelService.ensureProvisioned(NEW_USER_ID));
 

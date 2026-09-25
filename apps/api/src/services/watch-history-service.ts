@@ -29,12 +29,15 @@ export interface WatchHistoryServiceDeps {
   playheads: PlayheadCachePort;
   paginator: Paginator;
   cdn: CdnBase;
+  flushIntervalMs: number;
+  now: () => number;
 }
 
 /**
- * Resumable playheads over a write-behind buffer. A heartbeat touches Redis alone once the session
- * has a row; the first beat, a pause and the end write through. A dead cache costs a write, never
- * an answer: without a buffer to trust, every beat writes through.
+ * Resumable playheads over a write-behind buffer. A heartbeat touches Redis alone while the row it
+ * last wrote is younger than the flush interval; the first beat, a later one past the interval, a
+ * pause and the end write through. A dead cache costs a write, never an answer: without a buffer
+ * to trust, every beat writes through.
  */
 export class WatchHistoryService {
   constructor(private readonly deps: WatchHistoryServiceDeps) {}
@@ -48,16 +51,21 @@ export class WatchHistoryService {
       videoId,
       progressSeconds: clampProgress(body.progressSeconds, durationSeconds),
       durationSeconds,
-      watchedAt: new Date(),
+      watchedAt: new Date(this.deps.now()),
     };
 
-    if (reason !== 'heartbeat' || !(await this.buffered(viewer, videoId))) {
+    const lastFlush = reason === 'heartbeat' ? await this.lastFlush(viewer, videoId) : null;
+    const buffered =
+      lastFlush !== null &&
+      progress.watchedAt.getTime() - lastFlush.getTime() < this.deps.flushIntervalMs;
+    if (!buffered) {
       const written = await this.writeThrough(viewer, progress);
       if (isErr(written)) return written;
     }
 
+    const flushedAt = buffered ? lastFlush : progress.watchedAt;
     ignore(
-      await this.deps.playheads.write(viewer.id, progress),
+      await this.deps.playheads.write(viewer.id, { ...progress, flushedAt }),
       'the row is the authority; a missed buffer write sends the next beat through'
     );
     return ok(toWatchProgressView(progress));
@@ -109,9 +117,9 @@ export class WatchHistoryService {
     return ok();
   }
 
-  private async buffered(viewer: UserContext, videoId: string): Promise<boolean> {
+  private async lastFlush(viewer: UserContext, videoId: string): Promise<Date | null> {
     const cached = await this.deps.playheads.read(viewer.id, videoId);
-    return isOk(cached) && cached.value !== null;
+    return isOk(cached) && cached.value ? cached.value.flushedAt : null;
   }
 
   private async writeThrough(

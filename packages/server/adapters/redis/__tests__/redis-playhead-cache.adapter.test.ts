@@ -11,6 +11,7 @@ const progress = (videoId: string, progressSeconds: number) => ({
   progressSeconds,
   durationSeconds: 600,
   watchedAt: new Date('2026-03-01T12:00:00.000Z'),
+  flushedAt: new Date('2026-03-01T11:59:00.000Z'),
 });
 
 describe('RedisPlayheadCacheAdapter', () => {
@@ -54,6 +55,10 @@ describe('RedisPlayheadCacheAdapter', () => {
   it.each([
     { scenario: 'is not JSON', raw: '{' },
     { scenario: 'has lost a field', raw: '{"progressSeconds":1}' },
+    {
+      scenario: 'predates the flush stamp',
+      raw: '{"progressSeconds":1,"durationSeconds":2,"watchedAt":"2026-03-01T12:00:00.000Z"}',
+    },
   ])('treats an entry that $scenario as a miss', async ({ raw }) => {
     expectOk(await cache.set(CacheKeys.userPlayhead(USER, 'video-1'), raw));
 

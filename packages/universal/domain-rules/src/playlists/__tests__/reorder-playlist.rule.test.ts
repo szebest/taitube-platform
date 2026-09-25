@@ -3,7 +3,11 @@ import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
 import { decidePlaylistReorder } from '../reorder-playlist.rule';
 
-const items = ['a', 'b', 'c'].map((id, index) => ({ id, position: index * POSITION_GAP }));
+const items = ['a', 'b', 'c'].map((id, index) => ({
+  id,
+  position: index * POSITION_GAP,
+  hidden: false,
+}));
 
 describe('@vp/domain-rules: decidePlaylistReorder', () => {
   it('moves one item by rewriting it alone', () => {
@@ -42,6 +46,35 @@ describe('@vp/domain-rules: decidePlaylistReorder', () => {
     const change: PlaylistReorder = { type: 'reindex', itemIds };
 
     const result = decidePlaylistReorder('p1', items, change);
+
+    expect(isErr(result) && result.error.code).toBe(ErrorCodes.VERSION_CONFLICT);
+  });
+
+  it('reorders the items the caller sees around one hidden from them, which keeps its slot', () => {
+    const withHidden = [
+      { id: 'a', position: 0, hidden: false },
+      { id: 'secret', position: POSITION_GAP, hidden: true },
+      { id: 'c', position: 2 * POSITION_GAP, hidden: false },
+    ];
+
+    const result = decidePlaylistReorder('p1', withHidden, {
+      type: 'reindex',
+      itemIds: ['c', 'a'],
+    });
+
+    expect(isOk(result) && result.value.map((write) => write.id)).toEqual(['c', 'secret', 'a']);
+  });
+
+  it('refuses a reindex that names an item hidden from the caller', () => {
+    const withHidden = [
+      { id: 'a', position: 0, hidden: false },
+      { id: 'secret', position: POSITION_GAP, hidden: true },
+    ];
+
+    const result = decidePlaylistReorder('p1', withHidden, {
+      type: 'reindex',
+      itemIds: ['secret', 'a'],
+    });
 
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.VERSION_CONFLICT);
   });

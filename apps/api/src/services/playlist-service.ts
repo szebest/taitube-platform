@@ -162,8 +162,8 @@ export class PlaylistService {
     const permitted = await this.itemsChange(actor, playlistId);
     if (isErr(permitted)) return permitted;
 
-    const reordered = await this.deps.playlists.reorder(playlistId, (items) =>
-      decidePlaylistReorder(playlistId, items, change)
+    const reordered = await this.deps.playlists.reorder(playlistId, actor, (slots) =>
+      decidePlaylistReorder(playlistId, slots, change)
     );
     if (isErr(reordered)) return reordered;
     return reordered.value

@@ -65,6 +65,21 @@ export function toPlaylistEntry({
   return { id, videoId, addedAt, position, video, channel: toChannelCard(card) };
 }
 
+/** Every slot in playlist order, `hidden` where the viewer may not watch the video. */
+export function reorderSlots(tx: PostgresDatabase, playlistId: string, viewer: UserContext) {
+  const watchable = watchableVideoScope(viewer) ?? sql`true`;
+  return tx
+    .select({
+      id: pi.id,
+      position: pi.position,
+      hidden: sql<boolean>`not coalesce(${watchable}, false)`.mapWith(Boolean),
+    })
+    .from(pi)
+    .innerJoin(v, eq(v.id, pi.videoId))
+    .where(eq(pi.playlistId, playlistId))
+    .orderBy(asc(pi.position), asc(pi.id));
+}
+
 /** One statement however many rows move: a renumber is a single round trip. */
 export async function writePositions(
   tx: PostgresDatabase,

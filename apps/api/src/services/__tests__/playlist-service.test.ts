@@ -65,10 +65,13 @@ describe('PlaylistService', () => {
   it('hands the reorder rule the items as the write transaction sees them', async () => {
     const id = await created();
     expectOk(await service.addItem(OWNER, id, VIDEO));
-    vi.spyOn(repositories.playlists, 'reorder').mockImplementation(async (_playlistId, plan) => {
-      const writes = plan([{ id: 'item-seen-inside', position: 0 }]);
-      return isErr(writes) ? writes : ok(true);
-    });
+    vi.spyOn(repositories.playlists, 'reorder').mockImplementation(
+      async (_playlistId, viewer, plan) => {
+        expect(viewer).toBe(OWNER);
+        const writes = plan([{ id: 'item-seen-inside', position: 0, hidden: false }]);
+        return isErr(writes) ? writes : ok(true);
+      }
+    );
 
     const reordered = await service.reorder(OWNER, id, {
       type: 'reindex',

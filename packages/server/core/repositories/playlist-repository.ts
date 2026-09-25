@@ -5,7 +5,7 @@ import type {
   PlaylistDetail,
   PlaylistPatch,
   PositionWrite,
-  PositionedItem,
+  ReorderSlot,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
@@ -18,8 +18,8 @@ export interface NewPlaylistItem {
   videoId: string;
 }
 
-/** Decides the position writes from the items as they stand inside the write transaction. */
-export type ReorderPlan<F> = (items: readonly PositionedItem[]) => Result<PositionWrite[], F>;
+/** Decides the position writes from the slots as they stand inside the write transaction. */
+export type ReorderPlan<F> = (slots: readonly ReorderSlot[]) => Result<PositionWrite[], F>;
 
 /**
  * `findById` is unscoped, for write decisions; every read a caller sees goes through the viewer's
@@ -52,9 +52,13 @@ export interface PlaylistRepositoryPort {
     item: NewPlaylistItem
   ): Promise<Result<AddPlaylistItemOutcome, DatabaseUnavailable>>;
   removeItem(playlistId: string, videoId: string): Promise<Result<boolean, DatabaseUnavailable>>;
-  /** Answers false, and writes nothing, when the playlist is gone. */
+  /**
+   * Hands the plan every slot, flagged `hidden` where the viewer may not watch the video. Answers
+   * false, and writes nothing, when the playlist is gone.
+   */
   reorder<F>(
     playlistId: string,
+    viewer: UserContext,
     plan: ReorderPlan<F>
   ): Promise<Result<boolean, DatabaseUnavailable | F>>;
 }

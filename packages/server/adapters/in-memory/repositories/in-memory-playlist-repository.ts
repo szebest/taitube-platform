@@ -186,10 +186,18 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
 
   async reorder<F>(
     playlistId: string,
+    viewer: UserContext,
     plan: ReorderPlan<F>
   ): Promise<Result<boolean, DatabaseUnavailable | F>> {
     if (!this.playlists.has(playlistId)) return ok(false);
-    const writes = plan(this.itemsOf(playlistId).map(({ id, position }) => ({ id, position })));
+    const slots = await Promise.all(
+      this.itemsOf(playlistId).map(async ({ id, position, videoId }) => ({
+        id,
+        position,
+        hidden: !(await watchableVideo(this.lookups, viewer, videoId)),
+      }))
+    );
+    const writes = plan(slots);
     if (isErr(writes)) return writes;
     this.write(writes.value);
     this.touch(playlistId);
