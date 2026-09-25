@@ -1,17 +1,18 @@
 # Terraform Cloud Infrastructure (`infra/terraform`)
 
-Infrastructure-as-Code for provisioning Cloudflare reference cloud services for `video-pipeline`.
+Infrastructure-as-Code for the `video-pipeline` cloud reference deployment, on the Cloudflare v5 provider and Hetzner Cloud.
 
 ---
 
 ## Provisioned Resources
 
 - **Cloudflare R2 Buckets:**
-  - `raw`: Secure private storage for incoming video uploads.
-  - `public`: High-throughput public storage with custom domain routing for HLS video playback.
-- **CORS Configuration:** Browser PUT/GET access policies matching local MinIO setup.
-- **Cloudflare DNS & Custom Domains:** CNAME routing for custom streaming CDNs.
-- **Cloudflare Tunnel:** Zero-trust reverse proxy routing incoming traffic without open inbound firewall ports.
+  - `vp-raw`: private storage for incoming uploads, with a lifecycle rule that aborts incomplete multipart uploads after a day and expires objects after `raw_retention_days`.
+  - `vp-public`: HLS playlists, segments and thumbnails, served through the `cdn.<domain>` custom domain.
+- **Scoped R2 API tokens:** the API's reads and writes `vp-raw` only; the worker's reads and writes both buckets.
+- **Cloudflare Tunnel:** routes `api.<domain>` to the k3s node without an open inbound port.
+- **Cloudflare Access:** in front of `api.<domain>/admin`, allowing `admin_email` only.
+- **Hetzner Cloud:** the k3s node and a firewall that opens SSH to `operator_ssh_ip` only.
 
 ---
 
@@ -25,9 +26,9 @@ terraform plan
 terraform apply
 ```
 
-To run automated HCL and resource validation tests:
+CI runs `terraform fmt -check -recursive` and `terraform validate` on every change; the specs that read the HCL run with:
 ```bash
-pnpm --filter @vp/testing test:terraform
+pnpm --filter @vp/testing test cloud-terraform cloud-r2-tokens
 ```
 
 See [AGENTS.md](AGENTS.md) for agent guidelines.

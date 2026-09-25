@@ -5,33 +5,34 @@ import { parse } from '@cdktf/hcl2json';
 const MAIN_TF = path.resolve(__dirname, '../../../../../infra/terraform/main.tf');
 
 interface TokenPolicy {
-  permission_groups: string[];
-  resources: Record<string, string>;
+  effect: string;
+  permission_groups: { id: string }[];
+  resources: string;
 }
 
 interface ApiToken {
-  policy: TokenPolicy[];
+  policies: TokenPolicy[];
 }
 
 const ITEM_READ = 'Workers R2 Storage Bucket Item Read';
 const ITEM_WRITE = 'Workers R2 Storage Bucket Item Write';
 
 const BUCKETS = ['raw', 'public'];
+const PERMISSION_GROUPS = [ITEM_READ, ITEM_WRITE];
 
-/** The bucket a token resource names, by the `cloudflare_r2_bucket.<name>` it interpolates. */
-function bucketOf(resource: string): string {
-  return (
-    BUCKETS.find((bucket) => resource.includes(`cloudflare_r2_bucket.${bucket}.name`)) ?? resource
-  );
+/** The permission group a policy's `id` looks up, by the quoted name it indexes. */
+function groupOf({ id }: { id: string }): string {
+  return PERMISSION_GROUPS.find((group) => id.includes(`"${group}"`)) ?? id;
 }
 
 /** Each bucket a token reaches, with the permission groups it holds there. */
 function grantsOf(token: ApiToken | undefined): Record<string, string[]> {
   const grants: Record<string, string[]> = {};
-  for (const policy of token?.policy ?? []) {
-    for (const resource of Object.keys(policy.resources)) {
-      const bucket = bucketOf(resource);
-      grants[bucket] = [...(grants[bucket] ?? []), ...policy.permission_groups].sort();
+  for (const policy of token?.policies ?? []) {
+    const groups = policy.permission_groups.map(groupOf);
+    for (const bucket of BUCKETS) {
+      if (!policy.resources.includes(`cloudflare_r2_bucket.${bucket}.name`)) continue;
+      grants[bucket] = [...(grants[bucket] ?? []), ...groups].sort();
     }
   }
   return grants;
@@ -57,5 +58,8 @@ describe('cloud infrastructure: the scoped R2 tokens', () => {
       public: [ITEM_READ, ITEM_WRITE],
     });
     expect(grantsOf(tokens.r2_api_app)).toEqual({ raw: [ITEM_READ, ITEM_WRITE] });
+    expect(
+      Object.values(tokens).flatMap(({ policies }) => policies.map(({ effect }) => effect))
+    ).toEqual(['allow', 'allow']);
   });
 });

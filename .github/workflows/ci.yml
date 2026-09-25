@@ -319,6 +319,38 @@ jobs:
         if: failure()
         run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml logs --tail=200 || true
 
+  terraform:
+    name: terraform
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      CHECKPOINT_DISABLE: 1
+      TF_IN_AUTOMATION: 1
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform-plugins
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: ./.github/actions/setup-terraform
+
+      - name: Restore the provider plugins the lock file selects
+        uses: actions/cache@v4
+        with:
+          path: .terraform-plugins
+          key: terraform-providers-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('infra/terraform/.terraform.lock.hcl') }}
+
+      - name: Check Terraform formatting
+        run: terraform -chdir=infra/terraform fmt -check -recursive -diff
+
+      - name: Validate the Terraform configuration without a backend
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+          terraform -chdir=infra/terraform init -backend=false -input=false -lockfile=readonly
+          terraform -chdir=infra/terraform validate
+
   publish-images:
     name: publish-images
     needs: [e2e]

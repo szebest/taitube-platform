@@ -32,6 +32,7 @@ const BUDGETS: Readonly<Record<string, number>> = {
   'unit-bun': 3,
   integration: 3,
   'e2e-smoke': 4,
+  terraform: 2,
 };
 
 const CRITICAL_PATH_MINUTES = 6;
@@ -47,6 +48,13 @@ const SECOND_BUDGETS = [
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
 /** Bun is a test runtime only: every script runs through `tsx`, so only `bun test` needs it. */
 const WITH_BUN = new Set(['unit-bun']);
+/** What the `terraform` job runs against `infra/terraform`, with the provider plugins cached by the lock file. */
+const TERRAFORM_CHECKS = [
+  /\bterraform -chdir=infra\/terraform fmt -check -recursive\b/,
+  /\bterraform -chdir=infra\/terraform init -backend=false -input=false -lockfile=readonly\b/,
+  /\bterraform -chdir=infra\/terraform validate\b/,
+];
+const PROVIDER_CACHE_KEY = "hashFiles('infra/terraform/.terraform.lock.hcl')";
 const DOCS_ONLY_FILTER = { code: ['**', '!**/*.md', '!docs/**'] };
 
 /** The scripts that run `pnpm boundaries` themselves, as `package.json` defines them. */
@@ -111,6 +119,17 @@ function shapeFindings(source: string): string[] {
     if (budget && wholeJob && !startsWithTheJob) {
       findings.push(`${name}: its budget does not run from the first step to the last`);
     }
+  }
+
+  const terraform = jobNamed('terraform');
+  if (terraform && !TERRAFORM_CHECKS.every((check) => check.test(runs(terraform)))) {
+    findings.push('terraform: does not check fmt, init and validate');
+  }
+  const providerCache = (terraform?.steps ?? []).find((step) =>
+    step.uses?.startsWith('actions/cache@')
+  );
+  if (terraform && !String(providerCache?.with?.key ?? '').includes(PROVIDER_CACHE_KEY)) {
+    findings.push('terraform: no provider cache keyed by the lock file');
   }
 
   const e2e = jobNamed('e2e-smoke');
@@ -204,6 +223,16 @@ jobs:
     timeout-minutes: 4
     steps:
       - run: pnpm test:architecture
+  terraform:
+    name: terraform
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
+    timeout-minutes: 2
+    steps:
+      - uses: actions/cache@v4
+        with:
+          key: terraform-providers
+      - run: terraform -chdir=infra/terraform fmt -check
 `;
 
 describe('architecture: the CI pipeline holds its budgets', () => {
@@ -225,6 +254,8 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'unit: its budget does not run from the first step to the last',
     'unit: sets up Bun',
     'unit-bun: does not set up Bun',
+    'terraform: does not check fmt, init and validate',
+    'terraform: no provider cache keyed by the lock file',
   ])('fires on a workflow where %s', (finding) => {
     expect(shapeFindings(BAD_WORKFLOW)).toContain(finding);
   });

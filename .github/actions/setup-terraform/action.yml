@@ -1,0 +1,49 @@
+name: Set up Terraform
+description: Installs the pinned, checksum-verified Terraform CLI the infra/terraform checks run, cached by version and arch.
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve release
+      id: release
+      shell: bash
+      env:
+        RUNNER_ARCH: ${{ runner.arch }}
+      run: |
+        version=1.16.4
+        case "$RUNNER_ARCH" in
+          X64) arch=amd64; sha256=dc94af0eef1147718ad7c8daea792ed199e3e0492eec180d0adafa2a65a879df ;;
+          ARM64) arch=arm64; sha256=8263f301cb1a24489a4adeed147bf28504053f77237b3ea97a0ef2972659de30 ;;
+          *) echo "::error::no pinned Terraform for runner arch $RUNNER_ARCH"; exit 1 ;;
+        esac
+        {
+          echo "version=$version"
+          echo "arch=$arch"
+          echo "sha256=$sha256"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Restore Terraform
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/terraform
+        key: terraform-${{ steps.release.outputs.version }}-linux-${{ steps.release.outputs.arch }}-${{ steps.release.outputs.sha256 }}
+
+    - name: Download and verify Terraform
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        VERSION: ${{ steps.release.outputs.version }}
+        ARCH: ${{ steps.release.outputs.arch }}
+        SHA256: ${{ steps.release.outputs.sha256 }}
+      run: |
+        archive="terraform_${VERSION}_linux_${ARCH}.zip"
+        curl -fsSL -o "$RUNNER_TEMP/$archive" \
+          "https://releases.hashicorp.com/terraform/${VERSION}/${archive}"
+        echo "${SHA256}  $RUNNER_TEMP/$archive" | sha256sum -c -
+        mkdir -p ~/.local/terraform
+        unzip -o -q "$RUNNER_TEMP/$archive" terraform -d ~/.local/terraform
+
+    - name: Put Terraform on PATH
+      shell: bash
+      run: echo "$HOME/.local/terraform" >> "$GITHUB_PATH"

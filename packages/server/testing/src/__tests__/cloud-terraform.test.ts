@@ -1,5 +1,24 @@
 import { existsSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
+import { parse } from '@cdktf/hcl2json';
+
+interface Terraform {
+  terraform: {
+    required_version: string;
+    required_providers: Record<string, { source: string; version: string }>[];
+  }[];
+  variable: Record<string, unknown[]>;
+  resource: Record<string, Record<string, Record<string, unknown>[]>>;
+}
+
+async function terraformFile(dir: string, file: string): Promise<Terraform> {
+  const {
+    terraform = [],
+    variable = {},
+    resource = {},
+  } = await parse(file, readFileSync(path.join(dir, file), 'utf-8'));
+  return { terraform, variable, resource };
+}
 
 describe('cloud infrastructure and Terraform', () => {
   const repoRoot = path.resolve(__dirname, '../../../../../');
@@ -34,63 +53,120 @@ describe('cloud infrastructure and Terraform', () => {
     expect(content).toContain('stage "Secrets: External Secrets Operator"');
   });
 
-  it('has the Terraform configuration files with pinned providers and the expected variables', () => {
-    const tfFiles = [
-      'terraform.tf',
-      'providers.tf',
-      'variables.tf',
-      'main.tf',
-      'outputs.tf',
-      'terraform.tfvars.example',
-    ];
-    for (const file of tfFiles) {
-      const fullPath = path.join(terraformDir, file);
-      expect(existsSync(fullPath), `Terraform file ${file} must exist`).toBe(true);
-      const content = readFileSync(fullPath, 'utf-8');
-      expect(content.length).toBeGreaterThan(20);
-    }
+  it('pins the Cloudflare v5 provider by minor version and commits the lock file that selects it', async () => {
+    const [settings] = (await terraformFile(terraformDir, 'terraform.tf')).terraform;
+    const [providers] = settings?.required_providers ?? [];
 
-    const terraformTf = readFileSync(path.join(terraformDir, 'terraform.tf'), 'utf-8');
-    expect(terraformTf).toContain('cloudflare =');
-    expect(terraformTf).toContain('hcloud =');
-    expect(terraformTf).toContain('required_version = ">= 1.5.0"');
+    expect(settings?.required_version).toBe('>= 1.5.0');
+    expect(providers?.cloudflare).toEqual({
+      source: 'cloudflare/cloudflare',
+      version: '~> 5.25.0',
+    });
+    expect(Object.keys(providers ?? {}).sort()).toEqual(['cloudflare', 'hcloud', 'random']);
 
-    const variablesTf = readFileSync(path.join(terraformDir, 'variables.tf'), 'utf-8');
-    expect(variablesTf).toContain('variable "cloudflare_account_id"');
-    expect(variablesTf).toContain('variable "cloudflare_api_token"');
-    expect(variablesTf).toContain('variable "domain"');
-    expect(variablesTf).toContain('variable "hcloud_token"');
-    expect(variablesTf).toContain('variable "operator_ssh_ip"');
+    const lock = readFileSync(path.join(terraformDir, '.terraform.lock.hcl'), 'utf-8');
+    expect(lock).toMatch(
+      /provider "registry\.terraform\.io\/cloudflare\/cloudflare" \{\s+version\s+= "5\.25\.\d+"/
+    );
   });
 
-  it('defines two R2 buckets, their lifecycle rules and the custom CDN domain', () => {
-    const mainTf = readFileSync(path.join(terraformDir, 'main.tf'), 'utf-8');
+  it('declares the variables the wizard fills in', async () => {
+    const { variable } = await terraformFile(terraformDir, 'variables.tf');
 
-    expect(mainTf).toContain('resource "cloudflare_r2_bucket" "raw"');
-    expect(mainTf).toContain('name       = "vp-raw"');
-    expect(mainTf).toContain('resource "cloudflare_r2_bucket" "public"');
-    expect(mainTf).toContain('name       = "vp-public"');
-
-    expect(mainTf).toContain('resource "cloudflare_r2_bucket_lifecycle" "raw"');
-    expect(mainTf).toContain('abort_multipart_uploads_transition');
-    expect(mainTf).toContain('max_age = 86400');
-    expect(mainTf).toContain('var.raw_retention_days * 86400');
-
-    expect(mainTf).toContain('resource "cloudflare_r2_custom_domain" "public_cdn"');
-    expect(mainTf).toContain('domain      = "cdn.${var.domain}"');
+    expect(Object.keys(variable)).toEqual(
+      expect.arrayContaining([
+        'cloudflare_account_id',
+        'cloudflare_api_token',
+        'domain',
+        'hcloud_token',
+        'operator_ssh_ip',
+      ])
+    );
+    expect(existsSync(path.join(terraformDir, 'terraform.tfvars.example'))).toBe(true);
   });
 
-  it('defines the Cloudflare Tunnel and Access policy and commits the cloudflared manifest', () => {
-    const mainTf = readFileSync(path.join(terraformDir, 'main.tf'), 'utf-8');
+  it('declares every resource of the cloud rung, and nothing else', async () => {
+    const { resource } = await terraformFile(terraformDir, 'main.tf');
+    const addresses = Object.entries(resource).flatMap(([type, named]) =>
+      Object.keys(named).map((name) => `${type}.${name}`)
+    );
 
-    expect(mainTf).toContain('resource "cloudflare_tunnel" "k3s_tunnel"');
-    expect(mainTf).toContain('resource "cloudflare_record" "api_tunnel"');
-    expect(mainTf).toContain('resource "cloudflare_tunnel_config" "k3s_tunnel_config"');
+    expect(addresses.sort()).toEqual([
+      'cloudflare_api_token.r2_api_app',
+      'cloudflare_api_token.r2_worker_app',
+      'cloudflare_dns_record.api_tunnel',
+      'cloudflare_r2_bucket.public',
+      'cloudflare_r2_bucket.raw',
+      'cloudflare_r2_bucket_lifecycle.raw',
+      'cloudflare_r2_custom_domain.public_cdn',
+      'cloudflare_zero_trust_access_application.admin_portal',
+      'cloudflare_zero_trust_access_policy.admin_allow_operator',
+      'cloudflare_zero_trust_tunnel_cloudflared.k3s_tunnel',
+      'cloudflare_zero_trust_tunnel_cloudflared_config.k3s_tunnel',
+      'hcloud_firewall.vps_firewall',
+      'hcloud_server.k3s_node',
+      'hcloud_ssh_key.operator_key',
+      'random_bytes.tunnel_secret',
+    ]);
+  });
 
-    expect(mainTf).toContain('resource "cloudflare_access_application" "admin_portal"');
-    expect(mainTf).toContain('domain                    = "api.${var.domain}/admin"');
-    expect(mainTf).toContain('resource "cloudflare_access_policy" "admin_allow_operator"');
+  it.each([
+    {
+      what: 'names the raw bucket vp-raw',
+      address: 'cloudflare_r2_bucket.raw',
+      holds: { name: 'vp-raw' },
+    },
+    {
+      what: 'names the public bucket vp-public',
+      address: 'cloudflare_r2_bucket.public',
+      holds: { name: 'vp-public' },
+    },
+    {
+      what: 'serves the public bucket at cdn.<domain>',
+      address: 'cloudflare_r2_custom_domain.public_cdn',
+      holds: { domain: 'cdn.${var.domain}' },
+    },
+    {
+      what: 'aborts raw multipart uploads after a day and expires raw objects after the retention',
+      address: 'cloudflare_r2_bucket_lifecycle.raw',
+      holds: {
+        rules: [
+          expect.objectContaining({
+            abort_multipart_uploads_transition: { condition: { type: 'Age', max_age: 86400 } },
+            delete_objects_transition: {
+              condition: { type: 'Age', max_age: '${var.raw_retention_days * 86400}' },
+            },
+          }),
+        ],
+      },
+    },
+    {
+      what: 'puts Access in front of api.<domain>/admin, with the operator policy attached',
+      address: 'cloudflare_zero_trust_access_application.admin_portal',
+      holds: {
+        domain: 'api.${var.domain}/admin',
+        policies: [
+          { id: '${cloudflare_zero_trust_access_policy.admin_allow_operator.id}', precedence: 1 },
+        ],
+      },
+    },
+    {
+      what: 'opens inbound SSH to the operator IP only',
+      address: 'hcloud_firewall.vps_firewall',
+      holds: {
+        rule: expect.arrayContaining([
+          expect.objectContaining({ direction: 'in', source_ips: ['${var.operator_ssh_ip}'] }),
+        ]),
+      },
+    },
+  ])('$what', async ({ address, holds }) => {
+    const [type = '', name = ''] = address.split('.');
+    const { resource } = await terraformFile(terraformDir, 'main.tf');
 
+    expect(resource[type]?.[name]?.[0]).toMatchObject(holds);
+  });
+
+  it('commits the cloudflared manifest the tunnel token runs', () => {
     const cloudflaredPath = path.join(cloudOverlayDir, 'cloudflared.yaml');
     expect(existsSync(cloudflaredPath)).toBe(true);
     const cloudflaredContent = readFileSync(cloudflaredPath, 'utf-8');
@@ -99,14 +175,7 @@ describe('cloud infrastructure and Terraform', () => {
     expect(cloudflaredContent).toContain('CLOUDFLARE_TUNNEL_TOKEN');
   });
 
-  it('defines the Hetzner server and SSH-restricted firewall and documents the Oracle alternative', () => {
-    const mainTf = readFileSync(path.join(terraformDir, 'main.tf'), 'utf-8');
-
-    expect(mainTf).toContain('resource "hcloud_server" "k3s_node"');
-    expect(mainTf).toContain('resource "hcloud_firewall" "vps_firewall"');
-    expect(mainTf).toContain('resource "hcloud_ssh_key" "operator_key"');
-    expect(mainTf).toContain('var.operator_ssh_ip');
-
+  it('documents the Oracle alternative to the Hetzner node', () => {
     const runbook = readFileSync(runbookPath, 'utf-8');
     expect(runbook).toContain('2 OCPU / 12 GB RAM A1 Arm');
     expect(runbook).toContain('Oracle Cloud Infrastructure');
