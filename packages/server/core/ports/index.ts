@@ -10,3 +10,4 @@ export * from './subscription-cache';
 export * from './authorization';
 export * from './category-cache';
 export * from './token-verifier';
+export * from './view-buffer';

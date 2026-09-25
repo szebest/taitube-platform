@@ -1,6 +1,7 @@
 import * as adminCategories from './admin-categories';
 import * as adminDlq from './admin-dlq';
 import * as adminVideos from './admin-videos';
+import * as analytics from './analytics';
 import * as categories from './categories';
 import * as channels from './channels';
 import * as events from './events';
@@ -11,10 +12,12 @@ import * as reactions from './reactions';
 import * as subscriptions from './subscriptions';
 import * as uploads from './uploads';
 import * as videos from './videos';
+import * as views from './views';
 
 export * from './admin-categories';
 export * from './admin-videos';
 export * from './admin-dlq';
+export * from './analytics';
 export * from './categories';
 export * from './channels';
 export * from './endpoint';
@@ -30,11 +33,13 @@ export * from './subscriptions';
 export * from './uploads';
 export * from './video-resource';
 export * from './videos';
+export * from './views';
 
 export const contracts = {
   adminCategories,
   adminDlq,
   adminVideos,
+  analytics,
   categories,
   channels,
   events,
@@ -45,6 +50,7 @@ export const contracts = {
   subscriptions,
   uploads,
   videos,
+  views,
 } as const;
 
 export function endpointKey(method: string, path: string): string {

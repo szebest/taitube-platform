@@ -5,6 +5,7 @@ import { adminCategoriesRoutes } from './admin/categories';
 import { adminDlqRoutes } from './admin/dlq';
 import { adminQueuesRoutes } from './admin/queues';
 import { adminVideosRoutes } from './admin/videos';
+import { analyticsRoutes } from './analytics';
 import { categoriesRoutes } from './categories';
 import { channelsRoutes } from './channels';
 import { devJwksRoutes } from './dev-jwks';
@@ -16,12 +17,15 @@ import { reactionsRoutes } from './reactions';
 import { subscriptionsRoutes } from './subscriptions';
 import { uploadsRoutes } from './uploads';
 import { videosRoutes } from './videos';
+import { viewsRoutes } from './views';
 
 const ROUTES: readonly FastifyPluginAsync[] = [
   healthRoutes,
   uploadsRoutes,
   videosRoutes,
   reactionsRoutes,
+  viewsRoutes,
+  analyticsRoutes,
   feedRoutes,
   categoriesRoutes,
   adminCategoriesRoutes,

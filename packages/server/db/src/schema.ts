@@ -33,7 +33,7 @@ export const stepStatusEnum = pgEnum('step_status', STEP_STATUSES);
 
 export const userRoleEnum = pgEnum('user_role', USER_ROLES);
 
-const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
+export const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
@@ -111,7 +111,7 @@ export const videos = pgTable(
     errorMessage: text('error_message'),
     generation: integer('generation').notNull().default(1),
     version: integer('version').notNull().default(0),
-    viewsCount: integer('views_count').notNull().default(0),
+    viewsCount: bigint('views_count', { mode: 'number' }).notNull().default(0),
     likesCount: integer('likes_count').notNull().default(0),
     dislikesCount: integer('dislikes_count').notNull().default(0),
     readyAt: timestamptz('ready_at'),
@@ -123,6 +123,7 @@ export const videos = pgTable(
     index('videos_owner_created_idx').on(table.ownerId, table.createdAt.desc()),
     index('videos_status_updated_idx').on(table.status, table.updatedAt),
     index('videos_category_id_idx').on(table.categoryId),
+    index('videos_views_count_idx').on(table.viewsCount.desc()),
   ]
 );
 

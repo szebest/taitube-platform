@@ -58,4 +58,9 @@ describe('db: schema', () => {
   it('refuses to delete a user who still owns a video', () => {
     expect(referenceFrom('owner_id')).toEqual({ table: 'users', onDelete: 'no action' });
   });
+
+  it('counts views in a bigint that starts at zero', () => {
+    expect(videos.viewsCount.getSQLType()).toBe('bigint');
+    expect(videos.viewsCount.default).toBe(0);
+  });
 });

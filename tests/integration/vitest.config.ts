@@ -21,6 +21,7 @@ export default defineConfig({
       `${ADAPTERS}/redis/__tests__/redis-cache-client.test.ts`,
       `${ADAPTERS}/redis/__tests__/redis-category-cache.adapter.test.ts`,
       `${ADAPTERS}/redis/__tests__/redis-subscription-cache.adapter.test.ts`,
+      `${ADAPTERS}/redis/__tests__/redis-view-buffer.adapter.test.ts`,
       `${ADAPTERS}/s3/__tests__/s3-storage-client.test.ts`,
       `${ADAPTERS}/s3/__tests__/s3-multipart-storage.test.ts`,
       `${ADAPTERS}/bullmq/__tests__/bullmq-job-queue.test.ts`,

@@ -1,11 +1,10 @@
 import { Adapters, queueNamed } from '@vp/adapters/composition';
-import { type Container, token } from '@vp/composition';
+import type { Container } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
-import type { JobQueue } from '@vp/core/ports';
+import { createLogger } from '@vp/logger';
 import { MetricsServer } from '@vp/observability';
-import { type Logger, createLogger } from '@vp/logger';
 import { Paginator } from '@vp/pagination';
-import type { FastifyPluginCallback } from 'fastify';
+import { AnalyticsService } from '../services/analytics-service';
 import { CategoryService } from '../services/category-service';
 import { ChannelService } from '../services/channel-service';
 import { DlqService } from '../services/dlq-service';
@@ -22,46 +21,11 @@ import { SseService } from '../services/sse-service';
 import { SubscriptionService } from '../services/subscription-service';
 import { UploadService } from '../services/upload-service';
 import { VideoService } from '../services/video-service';
+import { ViewService } from '../services/view-service';
 import { bullBoardPlugin } from './bull-board';
+import { Services } from './service-tokens';
 
-export interface ServiceSet {
-  videoService: VideoService;
-  uploadService: UploadService;
-  feedService: FeedService;
-  categoryService: CategoryService;
-  channelService: ChannelService;
-  reactionService: ReactionService;
-  subscriptionService: SubscriptionService;
-  queueService: QueueService;
-  dlqService: DlqService;
-  sseService: SseService;
-  sseHub: SseHub;
-  readiness: ReadinessService;
-  queueBoard: FastifyPluginCallback;
-}
-
-export const Services = {
-  Logger: token<Logger>('Logger'),
-  Paginator: token<Paginator>('Paginator'),
-  VideoService: token<VideoService>('VideoService'),
-  UploadService: token<UploadService>('UploadService'),
-  FeedService: token<FeedService>('FeedService'),
-  CategoryService: token<CategoryService>('CategoryService'),
-  ChannelService: token<ChannelService>('ChannelService'),
-  ReactionService: token<ReactionService>('ReactionService'),
-  SubscriptionService: token<SubscriptionService>('SubscriptionService'),
-  QueueService: token<QueueService>('QueueService'),
-  DlqService: token<DlqService>('DlqService'),
-  SseService: token<SseService>('SseService'),
-  SseHub: token<SseHub>('SseHub'),
-  Readiness: token<ReadinessService>('Readiness'),
-  QueuePoller: token<Poller>('QueuePoller'),
-  SqlPoller: token<Poller>('SqlPoller'),
-  HousekeepingQueue: token<JobQueue>('HousekeepingQueue'),
-  QueueBoard: token<FastifyPluginCallback>('QueueBoard'),
-  MetricsServer: token<MetricsServer>('MetricsServer'),
-  ServiceSet: token<ServiceSet>('ServiceSet'),
-} as const;
+export * from './service-tokens';
 
 /**
  * Resolving them is what makes `start()` run them, in this order: the scrape endpoint first, so
@@ -160,6 +124,25 @@ export function registerServices(c: Container): Container {
         })
     )
     .provide(
+      Services.ViewService,
+      (c) =>
+        new ViewService({
+          viewBuffer: c.get(Adapters.ViewBuffer),
+          metrics: c.get(Adapters.Metrics),
+          limits: config().views,
+          now: Date.now,
+        })
+    )
+    .provide(
+      Services.AnalyticsService,
+      () =>
+        new AnalyticsService({
+          videos: repositories().videos,
+          videoViews: repositories().videoViews,
+          now: Date.now,
+        })
+    )
+    .provide(
       Services.QueueService,
       (c) =>
         new QueueService({
@@ -241,7 +224,12 @@ export function registerServices(c: Container): Container {
     .provide(
       Services.HousekeepingQueue,
       (c) => queueNamed(c.get(Adapters.Queues), 'housekeeping'),
-      { start: (queue) => registerHousekeepingSchedulers(queue) }
+      {
+        start: (queue) =>
+          registerHousekeepingSchedulers(queue, {
+            flushIntervalMs: config().views.flushIntervalMs,
+          }),
+      }
     )
     .provide(
       Services.MetricsServer,
@@ -261,6 +249,8 @@ export function registerServices(c: Container): Container {
       channelService: c.get(Services.ChannelService),
       reactionService: c.get(Services.ReactionService),
       subscriptionService: c.get(Services.SubscriptionService),
+      viewService: c.get(Services.ViewService),
+      analyticsService: c.get(Services.AnalyticsService),
       queueService: c.get(Services.QueueService),
       dlqService: c.get(Services.DlqService),
       sseService: c.get(Services.SseService),

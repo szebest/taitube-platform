@@ -12,6 +12,7 @@ import type {
   StorageClient,
   SubscriptionCachePort,
   TokenVerifier,
+  ViewBufferPort,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
@@ -33,6 +34,7 @@ export const Adapters = {
   ReactionCache: token<ReactionCachePort>('ReactionCache'),
   SubscriptionCache: token<SubscriptionCachePort>('SubscriptionCache'),
   CategoryCache: token<CategoryCachePort>('CategoryCache'),
+  ViewBuffer: token<ViewBufferPort>('ViewBuffer'),
   Authorization: token<AuthorizationPort>('Authorization'),
   TokenVerifier: token<TokenVerifier>('TokenVerifier'),
   BoardQueues: token<(queues: Iterable<JobQueue>) => BaseAdapter[]>('BoardQueues'),

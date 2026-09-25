@@ -10,6 +10,7 @@ import type { UploadRepository } from './upload-repository';
 import type { UserRepository } from './user-repository';
 import type { VideoReactionRepositoryPort } from './video-reaction-repository';
 import type { VideoRepository } from './video-repository';
+import type { VideoViewRepositoryPort } from './video-view-repository';
 
 export interface Repositories {
   videos: VideoRepository;
@@ -24,4 +25,5 @@ export interface Repositories {
   channels: ChannelRepositoryPort;
   videoReactions: VideoReactionRepositoryPort;
   subscriptions: SubscriptionRepositoryPort;
+  videoViews: VideoViewRepositoryPort;
 }

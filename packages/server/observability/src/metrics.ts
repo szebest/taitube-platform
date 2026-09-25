@@ -29,6 +29,10 @@ export interface PipelineMetrics {
   reconcilerRepairsTotal: Counter<string>;
   outboxDrainDuration: Histogram<string>;
   outboxEventsPublished: Counter<string>;
+  viewsRecorded: Counter<string>;
+  viewBufferCircuitOpen: Gauge<string>;
+  viewsFlushed: Counter<string>;
+  viewFlushDuration: Histogram<string>;
 }
 
 /** Every process metric carries this, so a scrape of any deployable names each series once. */
@@ -197,6 +201,32 @@ export function createMetricsRegistry(): PipelineMetrics {
     registers: [registry],
   });
 
+  const viewsRecorded = new Counter({
+    name: 'video_views_recorded_total',
+    help: 'Playback beacons received, by what became of them',
+    labelNames: ['outcome'],
+    registers: [registry],
+  });
+
+  const viewBufferCircuitOpen = new Gauge({
+    name: 'video_view_buffer_circuit_open',
+    help: '1 while the view buffer is bypassed for the in-process fallback, 0 otherwise',
+    registers: [registry],
+  });
+
+  const viewsFlushed = new Counter({
+    name: 'video_views_flushed_total',
+    help: 'Views moved from the Redis buffer into PostgreSQL',
+    registers: [registry],
+  });
+
+  const viewFlushDuration = new Histogram({
+    name: 'video_view_flush_duration_seconds',
+    help: 'Time taken to drain the view buffer into PostgreSQL in seconds',
+    buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
+    registers: [registry],
+  });
+
   return {
     registry,
     httpRequestDuration,
@@ -221,5 +251,9 @@ export function createMetricsRegistry(): PipelineMetrics {
     reconcilerRepairsTotal,
     outboxDrainDuration,
     outboxEventsPublished,
+    viewsRecorded,
+    viewBufferCircuitOpen,
+    viewsFlushed,
+    viewFlushDuration,
   };
 }

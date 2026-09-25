@@ -6,6 +6,7 @@ import type {
   QueueJob,
   ReactionCachePort,
   StorageClient,
+  ViewBufferPort,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig, WorkerStageName } from '@vp/env-schema';
@@ -41,6 +42,7 @@ interface StageDeps {
   multipart: MultipartStorage;
   cache: CacheClient;
   reactionCache: ReactionCachePort;
+  viewBuffer: ViewBufferPort;
   getQueue: (name: string) => JobQueue;
   flowProducer: FlowProducerPort;
   logger: Logger;
@@ -245,9 +247,11 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           storage: d.storage,
           multipart: d.multipart,
           reactionCache: d.reactionCache,
+          viewBuffer: d.viewBuffer,
           getQueue: d.getQueue,
           workerId: d.workerId,
           metrics: d.metrics,
+          now: d.now,
           logger: d.logger,
           rawBucket: d.config.buckets.raw,
           publicBucket: d.config.buckets.public,
@@ -255,6 +259,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           maxInflightPerUser: d.config.limits.maxInflightPerUser,
           tmpDir: d.config.worker.tmpDir,
           housekeeping: d.config.housekeeping,
+          views: d.config.views,
         })
       ),
   },

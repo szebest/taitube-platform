@@ -1,4 +1,5 @@
 import type { Redis } from 'ioredis';
+import { VIEW_BUFFER_SCRIPTS } from '../redis-view-buffer.adapter';
 
 type Listener = (...args: string[]) => void;
 
@@ -10,6 +11,8 @@ export class FakeRedis {
   readonly strings = new Map<string, string>();
   readonly hashes = new Map<string, Map<string, string>>();
   readonly sets = new Map<string, Set<string>>();
+  /** HyperLogLogs, held exactly: a double that never collides is what makes counts assertable. */
+  readonly sketches = new Map<string, Set<string>>();
   readonly ttls = new Map<string, number>();
   readonly published: Array<{ channel: string; message: string }> = [];
   readonly subscribedChannels = new Set<string>();
@@ -90,12 +93,67 @@ export class FakeRedis {
     const existed = this.strings.delete(key);
     this.hashes.delete(key);
     this.sets.delete(key);
+    this.sketches.delete(key);
     this.ttls.delete(key);
     return existed ? 1 : 0;
   }
 
   async exists(key: string): Promise<number> {
     return this.strings.has(key) || this.hashes.has(key) || this.sets.has(key) ? 1 : 0;
+  }
+
+  /** Stands in for the scripts this package sends; any other script is a spec that needs one. */
+  async eval(script: string, numKeys: number, ...args: Array<string | number>): Promise<unknown> {
+    const keys = args.slice(0, numKeys).map(String);
+    const argv = args.slice(numKeys).map(String);
+
+    switch (script) {
+      case VIEW_BUFFER_SCRIPTS.record:
+        return this.recordView(keys, argv);
+      case VIEW_BUFFER_SCRIPTS.snapshot:
+        return this.snapshotViews(keys, argv);
+      case VIEW_BUFFER_SCRIPTS.release:
+        return this.releaseViews(keys, argv);
+      default:
+        throw new Error('FakeRedis has no stand-in for this script');
+    }
+  }
+
+  private recordView(keys: string[], argv: string[]): number {
+    const [dedupKey = '', bufferKey = ''] = keys;
+    const [viewer = '', ttl = '0', viewsField = '', watchField = '', watch = '0'] = argv;
+    const sketch = this.sketches.get(dedupKey) ?? new Set<string>();
+    const added = sketch.has(viewer) ? 0 : 1;
+    sketch.add(viewer);
+    this.sketches.set(dedupKey, sketch);
+    this.ttls.set(dedupKey, Number(ttl));
+    if (added === 1) {
+      void this.hincrby(bufferKey, viewsField, 1);
+      void this.hincrby(bufferKey, watchField, Number(watch));
+    }
+    return added;
+  }
+
+  private snapshotViews(keys: string[], argv: string[]): string | null {
+    const [pointer = '', buffer = '', batchKey = ''] = keys;
+    const [batchId = ''] = argv;
+    const pending = this.strings.get(pointer);
+    if (pending !== undefined) return pending;
+    const hash = this.hashes.get(buffer);
+    if (!hash) return null;
+    this.hashes.delete(buffer);
+    this.hashes.set(batchKey, hash);
+    this.strings.set(pointer, batchId);
+    return batchId;
+  }
+
+  private releaseViews(keys: string[], argv: string[]): number {
+    const [pointer = '', batchKey = ''] = keys;
+    const [batchId = ''] = argv;
+    if (this.strings.get(pointer) !== batchId) return 0;
+    this.strings.delete(pointer);
+    this.hashes.delete(batchKey);
+    return 1;
   }
 
   async expire(key: string, ttlSeconds: number): Promise<number> {

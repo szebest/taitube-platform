@@ -7,3 +7,4 @@ export * from './subscription';
 export * from './upload';
 export * from './user';
 export * from './video';
+export * from './views';
