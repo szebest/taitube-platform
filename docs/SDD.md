@@ -817,6 +817,7 @@ erDiagram
     videos ||--o{ video_comments : receives
     users ||--o{ video_comments : writes
     video_comments ||--o{ video_comments : "replies to"
+    videos ||--o{ video_views_daily : "is viewed on"
     users ||--o{ channel_subscriptions : subscribes
     channels ||--o{ channel_subscriptions : has
     processing_steps ||--o{ dlq_entries : "may park in"
@@ -854,7 +855,7 @@ erDiagram
         text master_playlist_key
         text error_code
         int version
-        int views_count
+        bigint views_count
         int comments_count
         int likes_count
         int dislikes_count
@@ -868,6 +869,16 @@ erDiagram
         bool is_pinned
         int like_count
         timestamptz deleted_at
+    }
+    video_views_daily {
+        uuid video_id PK
+        date view_date PK
+        int views
+        bigint watch_seconds
+    }
+    video_view_batches {
+        text batch_id PK
+        timestamptz applied_at
     }
     video_reactions {
         uuid id PK
@@ -980,6 +991,7 @@ CREATE TABLE videos (
   error_code          text,
   error_message       text,
   version             integer NOT NULL DEFAULT 0,     -- optimistic lock for metadata edits
+  views_count         bigint NOT NULL DEFAULT 0,      -- moved only by the view flush (§9.8)
   ready_at            timestamptz,
   deleted_at          timestamptz,
   created_at          timestamptz NOT NULL DEFAULT now(),
@@ -987,6 +999,7 @@ CREATE TABLE videos (
 );
 CREATE INDEX videos_owner_created_idx ON videos (owner_id, created_at DESC);
 CREATE INDEX videos_status_updated_idx ON videos (status, updated_at);   -- reconciler scans
+CREATE INDEX videos_views_count_idx ON videos (views_count DESC);         -- popular sort
 
 CREATE TABLE uploads (
   id                    uuid PRIMARY KEY,
@@ -1095,7 +1108,24 @@ CREATE TABLE video_comments (
 CREATE INDEX video_comments_top_idx ON video_comments (video_id, parent_id, is_pinned DESC, like_count DESC, created_at DESC, id DESC);
 CREATE INDEX video_comments_newest_idx ON video_comments (video_id, parent_id, is_pinned DESC, created_at DESC, id DESC);
 CREATE UNIQUE INDEX video_comments_one_pinned_per_video_idx ON video_comments (video_id) WHERE is_pinned AND deleted_at IS NULL;
+
+CREATE TABLE video_views_daily (                       -- written only by the view flush
+  video_id      uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  view_date     date NOT NULL,                         -- UTC day the view was counted
+  views         integer NOT NULL DEFAULT 0,
+  watch_seconds bigint NOT NULL DEFAULT 0,             -- feeds average retention
+  PRIMARY KEY (video_id, view_date)
+);
+CREATE INDEX video_views_daily_date_video_idx ON video_views_daily (view_date DESC, video_id);
+
+CREATE TABLE video_view_batches (                      -- the flush's idempotency ledger
+  batch_id   text PRIMARY KEY,
+  applied_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX video_view_batches_applied_at_idx ON video_view_batches (applied_at);
 ```
+
+Why views go through Redis and a ledger rather than `UPDATE videos SET views_count = views_count + 1`: one row lock per playback beacon serialises every viewer of a popular video on that row. `POST /v1/videos/:id/views` instead dedupes the viewer in a per-video, per-day HyperLogLog (`taitube:views:dedup:{videoId}:{YYYYMMDD}`, 24 h sliding TTL, about 12 KB whatever the audience) and increments the `taitube:views:buffer` hash, both in one Lua script, so a beacon costs one Redis round trip and no connection from the Postgres pool. The HyperLogLog's price is a distinct-viewer undercount of up to its ~0.81% standard error. The `flush-video-views` job (§9.8) renames the buffer to `taitube:views:flush:{batchId}` and records the id under `taitube:views:flushing` in a second script, applies the batch in one transaction that inserts its id into `video_view_batches`, adds per-video deltas with `UPDATE videos ... FROM (VALUES ...)` and upserts `video_views_daily`, and only then deletes the batch key. A flush that dies before the commit finds the same batch pending next time and applies it; one that dies after the commit finds the id already in the ledger and only releases it. When Redis is unreachable the API holds views in process behind a circuit breaker (`FallbackViewBuffer`, bounded by `views.fallbackCapacity`) and replays them through the same record script, pipelined, once Redis answers again, so a viewer counted during the outage lands in the HyperLogLog too.
 
 Why `dlq_entries` exists in Postgres when BullMQ already has a `dlq` queue: Redis is not the truth (P2). The Postgres mirror survives Redis loss, is queryable ("all DLQ entries for codec X this week"), and gives the admin UI a stable, paginated view. The Redis `dlq` queue holds the replayable job; the table holds the record.
 
@@ -1146,6 +1176,9 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /v1/categories` | Public categories list | — | `200 [Category]` | Unauthenticated active taxonomy list sorted by sort_order, name. L1/L2 cached + ETag 304. |
 | `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `likesCount`, `dislikesCount`, `error?`) | Owner or public/unlisted. |
 | `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. |
+| `POST /v1/videos/:id/views` | Playback beacon | `{ sessionId, watchSeconds, videoDuration }` | `202 { videoId }` | Anonymous allowed. No database access: HyperLogLog dedupe per viewer (the account when signed in, else the session) and a Redis buffer increment (§5.2). Under 5 s of watch time (or the whole of a shorter video) is accepted and not counted. An unknown video id is dropped at flush. |
+| `GET /v1/creator/videos/:id/analytics?range=7d\|30d\|90d` | Video analytics | — | `200 { videoId, range, from, to, timeline:[{viewDate, views, watchSeconds}], rangeViews, totalViews, averageDailyViews, averageRetention }` | Owner or admin (`read Analytics`). A stranger gets 403 on a video they can see and 404 on one they cannot. Reads what the last flush committed. |
+| `GET /v1/creator/channel/analytics?range=7d\|30d\|90d` | Channel analytics | — | `200 { range, from, to, timeline, rangeViews, totalViews, videoCount, dailyVelocity, topVideos:[{videoId, title, views, totalViews}] }` | Authenticated caller, over the videos they own. |
 | `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
 | `POST /channels/:id/subscribers` | Subscribe | — | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
 | `DELETE /channels/:id/subscribers` | Unsubscribe | — | `200 { channelId, subscriberCount, subscribed: false }` | Authenticated caller (`channel:subscribe`). Idempotent. Atomic DB mutation + Redis set sync. |
@@ -1575,6 +1608,7 @@ BullMQ 6 Job Schedulers (`queue.upsertJobScheduler(id, { pattern }, template)`) 
 | `expire-raw` | `30 3 * * *` | Delete `raw/` sources of `READY` videos older than `RAW_RETENTION_DAYS` (lifecycle rule is the primary mechanism; this is the audit trail). |
 | `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
 | `reconcile-reaction-counters` | `0 * * * *` | Detect and repair drift between exact `video_reactions` counts and cached counter columns (`videos.likes_count`, `videos.dislikes_count`). |
+| `flush-video-views` | every 10 s (`every`, not cron: cron has minute resolution) | Drain the Redis view buffer into `videos.views_count` and `video_views_daily` effectively-once (§5.2), then forget ledger batches older than a day. |
 
 ---
 
@@ -1871,6 +1905,10 @@ Exposed by `packages/server/observability` (`prom-client` registry; API on `:946
 | `reconciler_repairs_total` | counter | `type` | reconciler | stuck/lost jobs repaired (stays 0 under outbox) |
 | `outbox_drain_duration_seconds` | histogram | — | housekeeping | outbox batch drain latency |
 | `outbox_events_published_total` | counter | `kind` | housekeeping | outbox events published to BullMQ |
+| `video_views_recorded_total` | counter | `outcome ∈ {counted, duplicate, discarded, deferred, dropped}` | API | view ingestion mix, fraud filter hit rate, fallback losses |
+| `video_view_buffer_circuit_open` | gauge | — | API | 1 while Redis is bypassed for the in-process fallback |
+| `video_views_flushed_total` | counter | — | housekeeping | views moved from the Redis buffer into Postgres |
+| `video_view_flush_duration_seconds` | histogram | — | housekeeping | buffer drain latency |
 
 ### 13.2 KEDA ScaledObject (Prometheus scaler, primary)
 
@@ -2418,7 +2456,15 @@ export const NotifyJob    = z.object({
   eventSeq: z.number().int(), payload: z.record(z.unknown()), traceparent: z.string(),
 });
 export const HousekeepingJob = z.object({
-  task: z.enum(['reconcile-uploads', 'reconcile-processing', 'purge-deleted', 'expire-raw', 'tmp-sweep']),
+  task: z.enum([
+    'reconcile-uploads',
+    'reconcile-processing',
+    'purge-deleted',
+    'expire-raw',
+    'tmp-sweep',
+    'reconcile-reaction-counters',
+    'flush-video-views',
+  ]),
 });
 export const DlqJob = z.object({
   originQueue: z.enum(QUEUES), originJobId: z.string(), payload: z.unknown(),

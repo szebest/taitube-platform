@@ -15,15 +15,18 @@ class UnreachableQueue extends InMemoryJobQueue {
   }
 }
 
+const SETTINGS = { flushIntervalMs: 10_000 };
+
 describe('apps/api/services: housekeeping schedulers', () => {
   it('registers every configured scheduler with its cron pattern', async () => {
     const queue = new InMemoryJobQueue('housekeeping');
 
-    expectOk(await registerHousekeepingSchedulers(queue));
+    expectOk(await registerHousekeepingSchedulers(queue, SETTINGS));
 
     const registered = expectOk(await queue.getJobSchedulers());
     expect(registered.map((scheduler) => scheduler.id).sort()).toEqual([
       'expire-raw',
+      'flush-video-views',
       'purge-deleted',
       'reconcile-processing',
       'reconcile-reaction-counters',
@@ -35,10 +38,26 @@ describe('apps/api/services: housekeeping schedulers', () => {
     );
   });
 
+  it('repeats the view flush on its interval rather than a cron minute', async () => {
+    const queue = new InMemoryJobQueue('housekeeping');
+
+    expectOk(await registerHousekeepingSchedulers(queue, SETTINGS));
+
+    const flush = expectOk(await queue.getJobSchedulers()).find(
+      (scheduler) => scheduler.id === 'flush-video-views'
+    );
+    expect(flush).toMatchObject({ every: 10_000, data: { task: 'flush-video-views' } });
+  });
+
   it('takes an override for a scheduler pattern', async () => {
     const queue = new InMemoryJobQueue('housekeeping');
 
-    expectOk(await registerHousekeepingSchedulers(queue, { 'tmp-sweep': '*/5 * * * *' }));
+    expectOk(
+      await registerHousekeepingSchedulers(queue, {
+        ...SETTINGS,
+        patterns: { 'tmp-sweep': '*/5 * * * *' },
+      })
+    );
 
     const registered = expectOk(await queue.getJobSchedulers());
     expect(registered.find((scheduler) => scheduler.id === 'tmp-sweep')?.pattern).toBe(
@@ -47,8 +66,8 @@ describe('apps/api/services: housekeeping schedulers', () => {
   });
 
   it('reports a queue that cannot take a scheduler rather than registering none in silence', async () => {
-    expect(expectErr(await registerHousekeepingSchedulers(new UnreachableQueue())).code).toBe(
-      ErrorCodes.QUEUE_UNAVAILABLE
-    );
+    expect(
+      expectErr(await registerHousekeepingSchedulers(new UnreachableQueue(), SETTINGS)).code
+    ).toBe(ErrorCodes.QUEUE_UNAVAILABLE);
   });
 });

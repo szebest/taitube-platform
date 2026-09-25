@@ -7,6 +7,7 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
+  InMemoryViewBuffer,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { QueueJob } from '@vp/core/ports';
@@ -52,6 +53,7 @@ function deps(): StageDeps {
       ...CACHES.reactions,
       backend: { type: 'cache', cache },
     }),
+    viewBuffer: new InMemoryViewBuffer(),
     getQueue,
     flowProducer: new InMemoryFlowProducer(getQueue),
     logger: createLogger({ format: 'json', service: 'registry-test', level: 'silent' }),

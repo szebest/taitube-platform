@@ -4,3 +4,4 @@ export * from './comments';
 export * from './uploads';
 export * from './categories';
 export * from './admin';
+export * from './analytics';

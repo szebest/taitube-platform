@@ -3,6 +3,7 @@ import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
+  InMemoryViewBuffer,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import { inProcessAppConfig } from '@vp/env-schema';
@@ -14,6 +15,7 @@ import { inMemoryQueues } from './housekeeping-harness';
 
 describe('housekeeping: createHousekeepingProcessor', () => {
   let repositories: InMemoryRepositories;
+  let viewBuffer: InMemoryViewBuffer;
 
   const run = async (task: HousekeepingJob['task']) => {
     const storage = new InMemoryStorageClient();
@@ -26,6 +28,7 @@ describe('housekeeping: createHousekeepingProcessor', () => {
         ...inProcessAppConfig().caches.reactions,
         backend: { type: 'cache', cache: new InMemoryCacheClient() },
       }),
+      viewBuffer,
       getQueue: inMemoryQueues(),
     });
     return expectOk(await processor({ id: `job-${task}`, name: task, data: { task } }));
@@ -33,6 +36,7 @@ describe('housekeeping: createHousekeepingProcessor', () => {
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
+    viewBuffer = new InMemoryViewBuffer();
   });
 
   it('dispatches reconcile-uploads to the upload reconciler', async () => {
@@ -49,5 +53,16 @@ describe('housekeeping: createHousekeepingProcessor', () => {
       likesCount: 1,
       dislikesCount: 0,
     });
+  });
+
+  it('dispatches flush-video-views to the view flush', async () => {
+    await viewBuffer.record({
+      videoId: 'absent-video',
+      viewerId: 'viewer-1',
+      viewDate: '2026-03-10',
+      watchSeconds: 6,
+    });
+
+    expect(await run('flush-video-views')).toMatchObject({ type: 'applied', views: 0 });
   });
 });

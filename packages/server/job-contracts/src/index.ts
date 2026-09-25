@@ -71,6 +71,7 @@ export const HousekeepingJob = z.object({
     'expire-raw',
     'tmp-sweep',
     'reconcile-reaction-counters',
+    'flush-video-views',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;

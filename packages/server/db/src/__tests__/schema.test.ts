@@ -54,4 +54,9 @@ describe('db: schema', () => {
   ])('$scenario', ({ table, column, expected }) => {
     expect(referenceFrom(table, column)).toEqual(expected);
   });
+
+  it('counts views in a bigint that starts at zero', () => {
+    expect(videos.viewsCount.getSQLType()).toBe('bigint');
+    expect(videos.viewsCount.default).toBe(0);
+  });
 });
