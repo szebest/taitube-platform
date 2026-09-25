@@ -98,6 +98,12 @@ Every test config restores spies and stubbed env vars before each test (`restore
 config to it). Bun reads no vitest config, so `bunfig.toml` preloads `tests/bun-restore-mocks.ts`, which does
 the same after each test. No spec needs an `afterEach` to undo a spy.
 
+The root run does not isolate spec files (`isolate: false` in `vitest.config.ts`): the files of one project
+share a worker and its module cache, which is most of what makes `unit` fit its budget. A spec therefore
+leaves no module state behind: state lives in what `beforeEach` builds, not at module level, and a mock of a
+package outlives the file that registered it, so a helper that mock reads from keeps its state where every
+file sees the same copy (`apps/web/src/__tests__/stored-value.ts`).
+
 ---
 
 ## 5. Shared fixtures

@@ -1,6 +1,12 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-const storedValues = new Map<string, string>();
+declare global {
+  var storedValuesForSpecs: Map<string, string> | undefined;
+}
+
+// On globalThis: the mocked usehooks module outlives this one when spec files share a worker.
+globalThis.storedValuesForSpecs ??= new Map();
+const storedValues = globalThis.storedValuesForSpecs;
 
 export function clearStoredValues(): void {
   storedValues.clear();
