@@ -9,7 +9,7 @@
 | Blocks | 51, 52 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -41,18 +41,18 @@ This ticket establishes **End-to-End Type Safety** by single-sourcing all API sc
 
 ## Acceptance criteria
 
-- [ ] New monorepo package `packages/api-contracts` created and added to `pnpm-workspace.yaml`.
-- [ ] Zod schemas migrated and exported:
+- [x] New monorepo package `packages/api-contracts` created and added to `pnpm-workspace.yaml`.
+- [x] Zod schemas migrated and exported:
   - Video schemas (`VideoDto`, `VideoSummaryDto`, `CreateUploadDto`, `PatchVideoDto`).
   - Category schemas (`CategoryDto`, `CreateCategoryDto`).
   - Channel / User schemas (`ChannelProfileDto`, `UpdateAccountDto`).
   - Comments & Reactions schemas (`CommentDto`, `ReactionDto`).
   - Problem Details standard error schema (`ProblemDetailsDto`).
-- [ ] Fastify `apps/api` updated to consume schemas from `@taitube/api-contracts`.
-- [ ] Fastify type provider (`ZodTypeProvider`) infers route parameters directly from `@taitube/api-contracts`.
-- [ ] CLI command `pnpm gen:contracts` exports static types into `packages/api-contracts/dist/types.d.ts`.
-- [ ] CI drift guard test: Fails if an endpoint is changed in `apps/api` without running `pnpm gen:contracts`.
-- [ ] Dual runtime compatibility: `packages/api-contracts` passes all tests under both `vitest` and `bun test`.
+- [x] Fastify `apps/api` updated to consume schemas from `@taitube/api-contracts`.
+- [x] Fastify type provider (`ZodTypeProvider`) infers route parameters directly from `@taitube/api-contracts`.
+- [x] CLI command `pnpm gen:contracts` exports static types into `packages/api-contracts/dist/types.d.ts`.
+- [x] CI drift guard test: Fails if an endpoint is changed in `apps/api` without running `pnpm gen:contracts`.
+- [x] Dual runtime compatibility: `packages/api-contracts` passes all tests under both `vitest` and `bun test`.
 
 ## Out of scope
 
@@ -79,10 +79,10 @@ This ticket establishes **End-to-End Type Safety** by single-sourcing all API sc
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @taitube/api-contracts test` passes under Vitest and Bun.
-- [ ] `apps/api` builds and typechecks cleanly with the new package.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [x] `pnpm --filter @taitube/api-contracts test` passes under Vitest and Bun.
+- [x] `apps/api` builds and typechecks cleanly with the new package.
+- [x] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
+- [x] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
 
 ## Open questions
 
