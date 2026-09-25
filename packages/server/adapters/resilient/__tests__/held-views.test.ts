@@ -1,25 +1,24 @@
 import { HeldViews } from '../held-views';
 
 const VIEW = { videoId: 'video-1', viewerId: 'viewer-1', viewDate: '2026-03-10', watchSeconds: 8 };
+const OTHER = { ...VIEW, viewerId: 'viewer-2', watchSeconds: 4 };
 
 describe('HeldViews', () => {
-  it('holds one view per viewer, video and day', () => {
+  it('holds one view per viewer, video and day, as the events themselves', () => {
     const held = new HeldViews(10);
 
     expect(held.record(VIEW)).toBe('deferred');
     expect(held.record(VIEW)).toBe('duplicate');
-    expect(held.record({ ...VIEW, viewerId: 'viewer-2', watchSeconds: 4 })).toBe('deferred');
+    expect(held.record(OTHER)).toBe('deferred');
 
-    expect(held.drain()).toEqual([
-      { videoId: 'video-1', viewDate: '2026-03-10', views: 2, watchSeconds: 12 },
-    ]);
+    expect(held.drain()).toEqual([VIEW, OTHER]);
   });
 
   it('drops a new viewer once it holds as many as its capacity', () => {
     const held = new HeldViews(1);
     held.record(VIEW);
 
-    expect(held.record({ ...VIEW, viewerId: 'viewer-2' })).toBe('dropped');
+    expect(held.record(OTHER)).toBe('dropped');
   });
 
   it('empties on drain, viewers included', () => {
@@ -31,16 +30,15 @@ describe('HeldViews', () => {
     expect(held.record(VIEW)).toBe('deferred');
   });
 
-  it('takes back counts a failed hand-back returned', () => {
+  it('takes back what a failed hand-back returned, without doubling a viewer held since', () => {
     const held = new HeldViews(10);
     held.record(VIEW);
     const drained = held.drain();
-    held.record({ ...VIEW, viewerId: 'viewer-2' });
+    held.record(VIEW);
+    held.record(OTHER);
 
     held.restore(drained);
 
-    expect(held.drain()).toEqual([
-      { videoId: 'video-1', viewDate: '2026-03-10', views: 2, watchSeconds: 16 },
-    ]);
+    expect(held.drain()).toEqual([VIEW, OTHER]);
   });
 });

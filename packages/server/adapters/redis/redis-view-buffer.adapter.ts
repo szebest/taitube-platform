@@ -1,8 +1,8 @@
 import type { ViewBufferPort, ViewEvent, ViewRecordOutcome } from '@vp/core/ports';
-import type { ViewBatch, ViewCount } from '@vp/domain';
+import type { ViewBatch } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { type Result, andThenAsync, fromPromise, map, ok } from '@vp/result';
+import { type Result, andThen, andThenAsync, err, fromPromise, map, ok } from '@vp/result';
 import type { Redis } from 'ioredis';
 import { countsFromBuffer, viewBufferField } from './view-buffer-fields';
 
@@ -40,6 +40,10 @@ export interface RedisViewBufferAdapterConfig {
   dedupTtlSeconds: number;
 }
 
+function outcomeOf(added: unknown): ViewRecordOutcome {
+  return added === 1 ? 'counted' : 'duplicate';
+}
+
 export class RedisViewBufferAdapter implements ViewBufferPort {
   private readonly redis: Redis;
   private readonly dedupTtlSeconds: number;
@@ -51,50 +55,34 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
 
   async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
     const added = await fromPromise(
-      () =>
-        this.redis.eval(
-          VIEW_BUFFER_SCRIPTS.record,
-          2,
-          CacheKeys.viewDedup(view.videoId, view.viewDate),
-          CacheKeys.viewBuffer,
-          view.viewerId,
-          this.dedupTtlSeconds,
-          viewBufferField(view.videoId, view.viewDate, 'views'),
-          viewBufferField(view.videoId, view.viewDate, 'watch'),
-          view.watchSeconds
-        ),
+      () => this.redis.eval(...this.recordCall(view)),
       cacheUnavailable.during('recordView')
     );
 
-    return map(added, (count): ViewRecordOutcome => (count === 1 ? 'counted' : 'duplicate'));
+    return map(added, outcomeOf);
   }
 
-  async add(counts: readonly ViewCount[]): Promise<Result<void, CacheUnavailable>> {
-    if (counts.length === 0) return ok();
+  async recordAll(
+    views: readonly ViewEvent[]
+  ): Promise<Result<ViewRecordOutcome[], CacheUnavailable>> {
+    if (views.length === 0) return ok([]);
 
-    const done = await fromPromise(
+    const replies = await fromPromise(
       () =>
-        counts
+        views
           .reduce(
-            (transaction, count) =>
-              transaction
-                .hincrby(
-                  CacheKeys.viewBuffer,
-                  viewBufferField(count.videoId, count.viewDate, 'views'),
-                  count.views
-                )
-                .hincrby(
-                  CacheKeys.viewBuffer,
-                  viewBufferField(count.videoId, count.viewDate, 'watch'),
-                  count.watchSeconds
-                ),
-            this.redis.multi()
+            (pipeline, view) => pipeline.eval(...this.recordCall(view)),
+            this.redis.pipeline()
           )
           .exec(),
-      cacheUnavailable.during('addViews')
+      cacheUnavailable.during('recordViews')
     );
 
-    return map(done, () => undefined);
+    return andThen(replies, (settled): Result<ViewRecordOutcome[], CacheUnavailable> => {
+      const failed = (settled ?? []).find(([error]) => error !== null);
+      if (!settled || failed) return err(cacheUnavailable('recordViews', failed?.[0]));
+      return ok(settled.map(([, added]) => outcomeOf(added)));
+    });
   }
 
   async snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>> {
@@ -122,6 +110,20 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
         return map(hash, (fields) => ({ batchId: id, counts: countsFromBuffer(fields) }));
       }
     );
+  }
+
+  private recordCall(view: ViewEvent): [string, number, ...Array<string | number>] {
+    return [
+      VIEW_BUFFER_SCRIPTS.record,
+      2,
+      CacheKeys.viewDedup(view.videoId, view.viewDate),
+      CacheKeys.viewBuffer,
+      view.viewerId,
+      this.dedupTtlSeconds,
+      viewBufferField(view.videoId, view.viewDate, 'views'),
+      viewBufferField(view.videoId, view.viewDate, 'watch'),
+      view.watchSeconds,
+    ];
   }
 
   async release(batchId: string): Promise<Result<void, CacheUnavailable>> {

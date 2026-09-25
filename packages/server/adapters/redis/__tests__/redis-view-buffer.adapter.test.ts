@@ -48,15 +48,34 @@ describe('RedisViewBufferAdapter', () => {
     expect(redis.strings.get('taitube:views:flushing')).toBe('batch-1');
   });
 
+  it('reports a pipeline in which one script failed as CACHE_UNAVAILABLE', async () => {
+    const failing = {
+      pipeline: () => ({
+        eval: function (this: unknown) {
+          return this;
+        },
+        exec: async () => [
+          [null, 1],
+          [new Error('BUSY'), null],
+        ],
+      }),
+    } as unknown as Redis;
+    const adapter = new RedisViewBufferAdapter({ redis: failing, dedupTtlSeconds: 1 });
+
+    expect(expectErr(await adapter.recordAll([VIEW, VIEW])).code).toBe(
+      ErrorCodes.CACHE_UNAVAILABLE
+    );
+  });
+
   it.each<[string, (b: RedisViewBufferAdapter) => Promise<Result<unknown, CacheUnavailable>>]>([
     ['record', (b) => b.record(VIEW)],
     ['snapshot', (b) => b.snapshot('batch-1')],
     ['release', (b) => b.release('batch-1')],
-    ['add', (b) => b.add([{ ...VIEW, views: 1 }])],
+    ['recordAll', (b) => b.recordAll([VIEW])],
   ])('reports an unreachable Redis on %s as CACHE_UNAVAILABLE', async (_name, call) => {
     const down = {
       eval: () => Promise.reject(new Error('ECONNREFUSED')),
-      multi: () => {
+      pipeline: () => {
         throw new Error('ECONNREFUSED');
       },
     } as unknown as Redis;

@@ -1,4 +1,4 @@
-import type { ViewBatch, ViewCount, ViewDate } from '@vp/domain';
+import type { ViewBatch, ViewDate } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
 
@@ -20,7 +20,8 @@ export type ViewRecordOutcome = 'counted' | 'duplicate' | 'deferred' | 'dropped'
  */
 export interface ViewBufferPort {
   record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>>;
-  add(counts: readonly ViewCount[]): Promise<Result<void, CacheUnavailable>>;
+  /** Records each view as `record` would, in one round trip; outcomes follow the input order. */
+  recordAll(views: readonly ViewEvent[]): Promise<Result<ViewRecordOutcome[], CacheUnavailable>>;
   snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>>;
   release(batchId: string): Promise<Result<void, CacheUnavailable>>;
 }

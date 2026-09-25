@@ -1,6 +1,5 @@
 import { CircuitBreaker } from '@vp/concurrency';
 import type { ViewEvent, ViewRecordOutcome } from '@vp/core/ports';
-import type { ViewCount } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
 import { type Result, err } from '@vp/result';
@@ -10,14 +9,13 @@ import { FallbackViewBuffer } from '../fallback-view-buffer';
 
 class FlakyBuffer extends InMemoryViewBuffer {
   down = false;
-  addDown = false;
+  readonly failing: boolean[] = [];
 
-  override async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
-    return this.down ? err(cacheUnavailable('recordView')) : super.record(view);
-  }
-
-  override async add(counts: readonly ViewCount[]): Promise<Result<void, CacheUnavailable>> {
-    return this.down || this.addDown ? err(cacheUnavailable('addViews')) : super.add(counts);
+  override async recordAll(
+    views: readonly ViewEvent[]
+  ): Promise<Result<ViewRecordOutcome[], CacheUnavailable>> {
+    const fails = this.failing.shift() ?? this.down;
+    return fails ? err(cacheUnavailable('recordViews')) : super.recordAll(views);
   }
 }
 
@@ -102,9 +100,8 @@ describe('FallbackViewBuffer', () => {
     primary.down = true;
     await record();
     primary.down = false;
-    primary.addDown = true;
+    primary.failing.push(false, true);
     await record();
-    primary.addDown = false;
 
     await record();
 
@@ -130,11 +127,22 @@ describe('FallbackViewBuffer', () => {
     expect(expectOk(await primary.snapshot('batch-2'))).toBeNull();
   });
 
-  it('adds through the primary', async () => {
-    expectOk(await buffer.add([{ videoId: 'video-1', viewDate: DAY, views: 2, watchSeconds: 4 }]));
+  it('does not count again a viewer it held once the hold is handed back', async () => {
+    const heldViewer = view();
+    primary.down = true;
+    await record(heldViewer);
+    primary.down = false;
+    await record();
 
+    expect(await record(heldViewer)).toBe('duplicate');
     expect(await drained()).toEqual([
-      { videoId: 'video-1', viewDate: DAY, views: 2, watchSeconds: 4 },
+      { videoId: 'video-1', viewDate: DAY, views: 2, watchSeconds: 20 },
     ]);
+  });
+
+  it('holds a whole set of views when the primary cannot take them', async () => {
+    primary.down = true;
+
+    expect(expectOk(await buffer.recordAll([view(), view()]))).toEqual(['deferred', 'deferred']);
   });
 });

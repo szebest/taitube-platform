@@ -16,9 +16,19 @@ export class InMemoryViewBuffer implements ViewBufferPort {
   private pendingBatchId: string | undefined;
 
   async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
+    return ok(this.recordOne(view));
+  }
+
+  async recordAll(
+    views: readonly ViewEvent[]
+  ): Promise<Result<ViewRecordOutcome[], CacheUnavailable>> {
+    return ok(views.map((view) => this.recordOne(view)));
+  }
+
+  private recordOne(view: ViewEvent): ViewRecordOutcome {
     const key = countKey(view.videoId, view.viewDate);
     const seen = this.viewers.get(key);
-    if (seen?.has(view.viewerId)) return ok('duplicate');
+    if (seen?.has(view.viewerId)) return 'duplicate';
 
     if (seen) seen.add(view.viewerId);
     else this.viewers.set(key, new Set([view.viewerId]));
@@ -28,12 +38,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
       views: 1,
       watchSeconds: view.watchSeconds,
     });
-    return ok('counted');
-  }
-
-  async add(counts: readonly ViewCount[]): Promise<Result<void, CacheUnavailable>> {
-    for (const count of counts) this.addOne(count);
-    return ok();
+    return 'counted';
   }
 
   async snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>> {

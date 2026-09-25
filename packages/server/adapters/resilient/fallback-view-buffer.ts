@@ -1,9 +1,9 @@
 import type { CircuitBreaker } from '@vp/concurrency';
 import type { ViewBufferPort, ViewEvent, ViewRecordOutcome } from '@vp/core/ports';
-import type { ViewBatch, ViewCount } from '@vp/domain';
+import type { ViewBatch } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, isOk, ok } from '@vp/result';
+import { type Result, isOk, map, ok } from '@vp/result';
 import { HeldViews } from './held-views';
 
 export interface FallbackViewBufferConfig {
@@ -36,8 +36,14 @@ export class FallbackViewBuffer implements ViewBufferPort {
   }
 
   async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
+    return map(await this.recordAll([view]), ([outcome]) => outcome ?? 'dropped');
+  }
+
+  async recordAll(
+    views: readonly ViewEvent[]
+  ): Promise<Result<ViewRecordOutcome[], CacheUnavailable>> {
     if (this.breaker.allows()) {
-      const recorded = await this.primary.record(view);
+      const recorded = await this.primary.recordAll(views);
       if (isOk(recorded)) {
         this.succeeded();
         await this.handBack();
@@ -45,11 +51,7 @@ export class FallbackViewBuffer implements ViewBufferPort {
       }
       this.failed();
     }
-    return ok(this.held.record(view));
-  }
-
-  async add(counts: readonly ViewCount[]): Promise<Result<void, CacheUnavailable>> {
-    return this.primary.add(counts);
+    return ok(views.map((view) => this.held.record(view)));
   }
 
   async snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>> {
@@ -61,12 +63,12 @@ export class FallbackViewBuffer implements ViewBufferPort {
   }
 
   private async handBack(): Promise<void> {
-    const counts = this.held.drain();
-    if (counts.length === 0) return;
+    const views = this.held.drain();
+    if (views.length === 0) return;
 
-    const added = await this.primary.add(counts);
-    if (isOk(added)) return;
-    this.held.restore(counts);
+    const replayed = await this.primary.recordAll(views);
+    if (isOk(replayed)) return;
+    this.held.restore(views);
     this.failed();
   }
 

@@ -44,12 +44,8 @@ export async function runFlushVideoViews(
     const released = await viewBuffer.release(batch.batchId);
     if (isErr(released)) return released;
 
-    const outcome = applied.value;
-    flushed =
-      outcome.type === 'applied'
-        ? { type: 'applied', batchId: batch.batchId, views: outcome.views }
-        : { type: 'already-applied', batchId: batch.batchId };
-    if (outcome.type === 'applied') metrics.viewsFlushed.inc(outcome.views);
+    flushed = { ...applied.value, batchId: batch.batchId };
+    if (applied.value.type === 'applied') metrics.viewsFlushed.inc(applied.value.views);
     logger?.info(flushed, 'flushed buffered video views');
   }
 

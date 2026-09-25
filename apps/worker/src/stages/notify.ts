@@ -3,8 +3,8 @@ import type { Repositories } from '@vp/core/repositories';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { publishVideoEvent, userChannel, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { type Result, isErr, map, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 

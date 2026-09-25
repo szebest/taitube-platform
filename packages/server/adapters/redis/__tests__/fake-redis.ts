@@ -232,6 +232,7 @@ export class FakeRedis {
 
 export class FakePipeline {
   private readonly ops: PipelineOp[] = [];
+  private readonly evals: Array<() => Promise<unknown>> = [];
 
   constructor(private readonly redis: FakeRedis) {}
 
@@ -264,8 +265,15 @@ export class FakePipeline {
     return this.queue(() => void this.redis.hincrby(key, field, delta));
   }
 
+  eval(script: string, numKeys: number, ...args: Array<string | number>): this {
+    this.evals.push(() => this.redis.eval(script, numKeys, ...args));
+    return this;
+  }
+
   async exec(): Promise<Array<[Error | null, unknown]>> {
     for (const op of this.ops) op.run();
-    return this.ops.map(() => [null, 'OK'] as [Error | null, unknown]);
+    const replies: Array<[Error | null, unknown]> = this.ops.map(() => [null, 'OK']);
+    for (const run of this.evals) replies.push([null, await run()]);
+    return replies;
   }
 }

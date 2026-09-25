@@ -102,22 +102,30 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
       expect(expectOk(await buffer.snapshot(randomUUID()))?.batchId).toBe(pending);
     });
 
-    it('adds counts to what the next snapshot drains', async () => {
-      expectOk(await buffer.record(view({ watchSeconds: 5 })));
+    it('records many views at once against the same dedup, outcomes in input order', async () => {
+      const seen = view({ watchSeconds: 5 });
+      expectOk(await buffer.record(seen));
 
-      expectOk(
-        await buffer.add([
-          { videoId, viewDate: DAY, views: 4, watchSeconds: 40 },
-          { videoId, viewDate: NEXT_DAY, views: 2, watchSeconds: 12 },
+      const outcomes = expectOk(
+        await buffer.recordAll([
+          view({ viewerId: seen.viewerId, watchSeconds: 50 }),
+          view({ watchSeconds: 7 }),
+          view({ viewDate: NEXT_DAY, watchSeconds: 12 }),
         ])
       );
 
+      expect(outcomes).toEqual(['duplicate', 'counted', 'counted']);
       expect(await drain()).toEqual(
         expect.arrayContaining([
-          { videoId, viewDate: DAY, views: 5, watchSeconds: 45 },
-          { videoId, viewDate: NEXT_DAY, views: 2, watchSeconds: 12 },
+          { videoId, viewDate: DAY, views: 2, watchSeconds: 12 },
+          { videoId, viewDate: NEXT_DAY, views: 1, watchSeconds: 12 },
         ])
       );
+    });
+
+    it('records an empty set of views as nothing', async () => {
+      expect(expectOk(await buffer.recordAll([]))).toEqual([]);
+      expect(await drain()).toEqual([]);
     });
   });
 }

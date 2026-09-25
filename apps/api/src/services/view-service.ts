@@ -1,4 +1,4 @@
-import type { ViewTelemetryInput, ViewReceipt } from '@vp/api-contracts';
+import type { ViewReceipt, ViewTelemetryInput } from '@vp/api-contracts';
 import type { ViewBufferPort, ViewRecordOutcome } from '@vp/core/ports';
 import { viewDateOf } from '@vp/domain';
 import type { PipelineMetrics } from '@vp/observability';

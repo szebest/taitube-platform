@@ -36,7 +36,7 @@ const MISUSES: ReadonlyArray<{ readonly name: string; readonly pattern: (n: stri
   { name: 'a boolean cast', pattern: (n) => new RegExp(String.raw`(!!|Boolean\()${n}\b`) },
   { name: 'a serialisation', pattern: (n) => new RegExp(String.raw`JSON\.stringify\(${n}[,)]`) },
   { name: 'a string interpolation', pattern: (n) => new RegExp(String.raw`\$\{${n}\}`) },
-  { name: 'a spread', pattern: (n) => new RegExp(String.raw`\.\.\.${n}\b`) },
+  { name: 'a spread', pattern: (n) => new RegExp(String.raw`\.\.\.${n}(?![.\w])`) },
   { name: 'an index', pattern: (n) => new RegExp(String.raw`${n}\[`) },
   { name: 'an iteration', pattern: (n) => new RegExp(String.raw`of ${n}\)`) },
   { name: 'a comparison', pattern: (n) => new RegExp(String.raw`${n}\s*(<|>|<=|>=)\s*\w`) },
@@ -137,6 +137,10 @@ describe('architecture: nobody reads a Result as the thing it wraps', () => {
       name: 'a spread',
       line: 'const v = await repo.videos.listByOwner(o);\nconst all = [...v];',
     },
+    {
+      name: 'an object spread',
+      line: 'const v = await repo.videos.findById(id);\nreturn { ...v, id };',
+    },
   ])('recognises $name', ({ line }) => {
     const [, name] = /const (\w+) = await/.exec(line) as RegExpExecArray;
     expect(MISUSES.some(({ pattern }) => pattern(name as string).test(line))).toBe(true);
@@ -148,6 +152,7 @@ describe('architecture: nobody reads a Result as the thing it wraps', () => {
       'const v = await repo.videos.findById(id);\nreturn map(v, (row) => row?.id);',
       'const v = await repo.videos.findById(id);\nconst row = unwrapOr(v, null);',
       'const v = await repo.videos.findById(id);\nif (v.ok) return v.value;',
+      'const v = await repo.videos.findById(id);\nreturn { ...v.value, id };',
     ];
 
     for (const source of unwraps) {

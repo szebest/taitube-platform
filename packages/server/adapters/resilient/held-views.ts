@@ -1,12 +1,12 @@
 import type { ViewEvent } from '@vp/core/ports';
-import type { ViewCount } from '@vp/domain';
 
-type HeldCount = { -readonly [K in keyof ViewCount]: ViewCount[K] };
-
-/** Views counted in process, with the viewers already seen, up to `capacity` distinct viewers. */
+/**
+ * Views taken in process, one per viewer, video and day, up to `capacity`. They are kept as events
+ * rather than counts so the hand-back records each viewer in the buffer's dedup set as well.
+ */
 export class HeldViews {
   private readonly viewers = new Set<string>();
-  private readonly counts = new Map<string, HeldCount>();
+  private readonly views: ViewEvent[] = [];
 
   constructor(private readonly capacity: number) {}
 
@@ -16,36 +16,16 @@ export class HeldViews {
     if (this.viewers.size >= this.capacity) return 'dropped';
 
     this.viewers.add(viewer);
-    this.merge({
-      videoId: view.videoId,
-      viewDate: view.viewDate,
-      views: 1,
-      watchSeconds: view.watchSeconds,
-    });
+    this.views.push(view);
     return 'deferred';
   }
 
-  drain(): ViewCount[] {
-    const counts = [...this.counts.values()];
-    this.counts.clear();
+  drain(): ViewEvent[] {
     this.viewers.clear();
-    return counts;
+    return this.views.splice(0);
   }
 
-  restore(counts: readonly ViewCount[]): void {
-    for (const count of counts) this.merge(count);
-  }
-
-  private merge(count: ViewCount): void {
-    const key = [count.videoId, count.viewDate].join('|');
-    const held = this.counts.get(key) ?? {
-      videoId: count.videoId,
-      viewDate: count.viewDate,
-      views: 0,
-      watchSeconds: 0,
-    };
-    held.views += count.views;
-    held.watchSeconds += count.watchSeconds;
-    this.counts.set(key, held);
+  restore(views: readonly ViewEvent[]): void {
+    for (const view of views) this.record(view);
   }
 }
