@@ -4,7 +4,6 @@ import { ADMIN, MODERATOR, OWNER, STRANGER, aVideo } from '../../__tests__/entit
 import {
   DELETABLE_STATUSES,
   REPROCESSABLE_STATUSES,
-  TAKEDOWN_STATUSES,
   decideVideoDelete,
   decideVideoReprocess,
   decideVideoTakedown,
@@ -98,7 +97,7 @@ describe('@vp/domain-rules: decideVideoDelete', () => {
 });
 
 describe('@vp/domain-rules: decideVideoTakedown', () => {
-  it.each(TAKEDOWN_STATUSES.map((status) => ({ status })))(
+  it.each(DELETABLE_STATUSES.map((status) => ({ status })))(
     'lets an admin take down a video in $status',
     ({ status }) => {
       const subject = aVideo({ status });

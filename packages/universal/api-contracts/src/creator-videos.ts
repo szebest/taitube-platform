@@ -112,7 +112,3 @@ export const deleteCreatorVideo = defineEndpoint({
   result: z.object({ videoId: z.string().uuid(), status: z.literal('DELETED') }),
   errors: { ...CREATOR_VIDEO_ERRORS, 409: [ErrorCodes.VERSION_CONFLICT] },
 });
-
-export type CreatorLibraryQuery = z.infer<typeof CreatorLibraryQuerySchema>;
-export type UpdateCreatorVideo = z.infer<typeof UpdateCreatorVideoSchema>;
-export type CreatorVideo = z.infer<typeof CreatorVideoSchema>;

@@ -28,9 +28,6 @@ export const DELETABLE_STATUSES: readonly VideoStatus[] = [
   'ABANDONED',
 ];
 
-/** A takedown reaches anything still there, a video already taken down included. */
-export const TAKEDOWN_STATUSES: readonly VideoStatus[] = DELETABLE_STATUSES;
-
 export interface VideoLifecycleInput {
   readonly actor: UserContext | null;
   readonly video: Video | null;
@@ -96,6 +93,6 @@ export function decideVideoTakedown(
     input,
     (video) => canModerateVideo({ user: input.actor, video }),
     'moderate',
-    TAKEDOWN_STATUSES
+    DELETABLE_STATUSES
   );
 }

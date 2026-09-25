@@ -44,8 +44,6 @@ export interface Video {
 
 export const CUSTOM_THUMBNAIL_FORMATS = ['jpg', 'png', 'webp'] as const;
 
-export type CustomThumbnailFormat = (typeof CUSTOM_THUMBNAIL_FORMATS)[number];
-
 export type ThumbnailSelection =
   | { source: 'poster' }
-  | { source: 'custom'; thumbnailId: string; format: CustomThumbnailFormat };
+  | { source: 'custom'; thumbnailId: string; format: (typeof CUSTOM_THUMBNAIL_FORMATS)[number] };
