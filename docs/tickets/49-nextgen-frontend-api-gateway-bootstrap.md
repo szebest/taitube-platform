@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** in-progress
 
 Backend only. The frontend lives in this repo and its types come from `@vp/api-contracts`, so the contract is
 compile-checked already; no parity suite against an external frontend.
