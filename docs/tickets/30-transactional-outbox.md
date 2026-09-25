@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 16 — Retries/DLQ (generations, admin) |
 | Blocks | — |
-| Spec | [ADR-16 option 2](../SDD.md#adr-16-enqueue-reliability-idempotent-enqueue-reconciler-mvp-transactional-outbox-phase-4) · [PRD §3.3 Stretch](../PRD.md#33-stretch-phase-4-designed-for-but-not-built-in-mvp) · [SDD §5.3 (`SKIP LOCKED` pattern)](../SDD.md#53-key-queries-that-encode-the-guarantees) |
+| Spec | [ADR-16 option 2](../SDD.md#adr-16--enqueue-reliability-idempotent-enqueue--reconciler-mvp-transactional-outbox-phase-4) · [PRD §3.3 Stretch](../PRD.md#33-stretch-phase-4-designed-for-but-not-built-in-mvp) · [SDD §5.3 (`SKIP LOCKED` pattern)](../SDD.md#53-key-queries-that-encode-the-guarantees) |
 
 **Status:** done
 

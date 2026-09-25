@@ -3,9 +3,23 @@
 Usage: python3 docs/tickets/gen-index.py   (run from repo root or this folder). Also validates PRD/SDD anchors used by tickets."""
 import re, os, glob, collections, sys
 here=os.path.dirname(os.path.abspath(__file__)); os.chdir(here)
-def anchor(h):
-    a=h.strip().lower(); a=re.sub(r'[^\w\s-]','',a); return re.sub(r'\s+','-',a)
-anchors={f:{anchor(m.group(2)) for m in re.finditer(r'^(#{1,3}) (.+)$', open('../'+f, encoding='utf-8').read(), re.M)} for f in ['SDD.md','PRD.md']}
+def github_slug(heading, taken):
+    """GitHub's heading anchor, as `github-slugger` computes it: lowercase, drop everything but
+    letters, digits, `_`, `-` and spaces, turn each space into `-`, and number a repeat `-1`, `-2`.
+    An em dash between spaces therefore leaves two hyphens."""
+    base=re.sub(r'[^\w\- ]','',heading.strip().lower()).replace(' ','-')
+    slug=base; repeat=0
+    while slug in taken:
+        repeat+=1; slug=f'{base}-{repeat}'
+    taken.add(slug); return slug
+def heading_anchors(text):
+    taken=set(); fenced=False
+    for line in text.splitlines():
+        if line.startswith('```'): fenced=not fenced; continue
+        heading=re.match(r'#{1,6} (.+)$', line)
+        if heading and not fenced: github_slug(heading.group(1), taken)
+    return taken
+anchors={f:heading_anchors(open('../'+f, encoding='utf-8').read()) for f in ['SDD.md','PRD.md']}
 T={}
 for f in sorted(glob.glob('[0-9][0-9]-*.md')):
     s=open(f, encoding='utf-8').read(); n=int(f[:2])

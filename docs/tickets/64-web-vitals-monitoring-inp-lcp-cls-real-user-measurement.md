@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 62 — Frontend performance · 63 — TanStack Router SSR |
 | Blocks | 65, 75 |
-| Spec | [SDD §13 Observability](../SDD.md#13-autoscaling-observability) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
+| Spec | [SDD §13 Observability](../SDD.md#13-autoscaling--observability) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
 

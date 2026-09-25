@@ -7,7 +7,7 @@
 | Size | M–L |
 | Blocked by | 12 — Flows fan-out/fan-in |
 | Blocks | 20 |
-| Spec | [PRD §7 NFR (large file)](../PRD.md#7-non-functional-requirements-slos) · [PRD §11 Risk: disk exhaustion](../PRD.md#11-risks-mitigations) · [SDD §8.2 (independent_segments+temp_file, threads)](../SDD.md#82-transcode-one-rendition-to-hls-ts-segments) · [SDD §9.6 rule 6 (threads per attempt)](../SDD.md#96-failure-handling-retries-dlq-poison-pills) · [SDD §14.2 S2](../SDD.md#142-scenarios) |
+| Spec | [PRD §7 NFR (large file)](../PRD.md#7-non-functional-requirements--slos) · [PRD §11 Risk: disk exhaustion](../PRD.md#11-risks--mitigations) · [SDD §8.2 (independent_segments+temp_file, threads)](../SDD.md#82-transcode-one-rendition-to-hls-ts-segments) · [SDD §9.6 rule 6 (threads per attempt)](../SDD.md#96-failure-handling-retries-dlq-poison-pills) · [SDD §14.2 S2](../SDD.md#142-scenarios) |
 
 **Status:** done
 

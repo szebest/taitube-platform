@@ -39,7 +39,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
     **inferred**; only two places unwrap one - `sendResult` in `apps/api/src/routes/` and `instrument` in
     `apps/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS`. `catch` belongs to `tryCatch`/`fromPromise` at the
     exact line an SDK is called. The discriminant is the existing `ErrorCode`: never a second vocabulary.
-    See [docs/standards/error-handling.md](docs/standards/error-handling.md) and [SDD ADR-24](docs/SDD.md#adr-24-result-typed-error-handling-domain-returns-the-edge-decides).
+    See [docs/standards/error-handling.md](docs/standards/error-handling.md) and [SDD ADR-24](docs/SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides).
 
 ---
 

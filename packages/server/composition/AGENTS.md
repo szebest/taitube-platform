@@ -10,7 +10,7 @@ The mechanism both deployables build their object graph with, and nothing else: 
 resolved. Registrations live with their owners: `registerAdapters` in `@vp/adapters`,
 `apps/api/src/composition/services.module.ts`, `apps/worker/src/composition/stages.module.ts`.
 
-Decision record: [SDD ADR-25](../../../docs/SDD.md#adr-25-composition-one-container-configuration-is-a-value).
+Decision record: [SDD ADR-25](../../../docs/SDD.md#adr-25--composition-one-container-configuration-is-a-value).
 
 ---
 

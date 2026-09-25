@@ -7,7 +7,7 @@
 | Size | M–L |
 | Blocked by | 25 — Kubernetes locally · 22 — Metrics catalogue |
 | Blocks | 28 |
-| Spec | [PRD US-15, G6](../PRD.md#54-operations) · [SDD §13.2 KEDA ScaledObject (YAML)](../SDD.md#132-keda-scaledobject-prometheus-scaler-primary) · [ADR-12](../SDD.md#adr-12-autoscaling-keda-scaledobject-per-stage-prometheus-scaler-primary-redis-list-scaler-fallback) · [SDD §9.4 (concurrency 1 per pod)](../SDD.md#94-worker-process-model) · [SDD §12.2 (grace period, probes)](../SDD.md#122-rung-2-kubernetes-locally-kind-or-k3d-phase-3) |
+| Spec | [PRD US-15, G6](../PRD.md#54-operations) · [SDD §13.2 KEDA ScaledObject (YAML)](../SDD.md#132-keda-scaledobject-prometheus-scaler-primary) · [ADR-12](../SDD.md#adr-12--autoscaling-keda-scaledobject-per-stage-prometheus-scaler-primary-redis-list-scaler-fallback) · [SDD §9.4 (concurrency 1 per pod)](../SDD.md#94-worker-process-model) · [SDD §12.2 (grace period, probes)](../SDD.md#122-rung-2--kubernetes-locally-kind-or-k3d-phase-3) |
 
 **Status:** done
 

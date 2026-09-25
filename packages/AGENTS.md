@@ -15,7 +15,7 @@ fails the build rather than a review.
 They are orthogonal. A package can be `universal` and T1, or `server` and T3. Tier stops a Redis client
 reaching the browser; layer stops the dependency graph turning into a ball of mud.
 
-> Spec: [SDD ADR-23](../docs/SDD.md#adr-23-package-runtime-tiers-the-directory-is-the-tier) ·
+> Spec: [SDD ADR-23](../docs/SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) ·
 > [ARCHITECTURE.md Invariant 5](../ARCHITECTURE.md) · checker: `scripts/check-boundaries.ts`
 
 ---

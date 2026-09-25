@@ -1,7 +1,7 @@
 # Error handling: domain code returns, the edge decides
 
-The authority for how a failure travels through this repo. Spec: [SDD ADR-24](../SDD.md#adr-24-result-typed-error-handling-domain-returns-the-edge-decides) ·
-[ADR-18](../SDD.md#adr-18-error-taxonomy-decides-retry-policy) · [§6.2](../SDD.md#62-error-codes-stable-machine-readable) · [§6.4](../SDD.md#64-api-layer-architecture-thin-transport-routes-domain-services).
+The authority for how a failure travels through this repo. Spec: [SDD ADR-24](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) ·
+[ADR-18](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) · [§6.2](../SDD.md#62-error-codes-stable-machine-readable) · [§6.4](../SDD.md#64-api-layer-architecture-thin-transport-routes--domain-services).
 
 ## The problem this replaces
 

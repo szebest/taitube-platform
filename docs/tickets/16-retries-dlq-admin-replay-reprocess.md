@@ -7,7 +7,7 @@
 | Size | L |
 | Blocked by | 12 — Flows fan-out/fan-in · 10 — Bull Board + admin auth |
 | Blocks | 20, 30 |
-| Spec | [PRD US-8, US-9, US-14](../PRD.md#5-user-stories-acceptance-criteria) · [PRD FR-9, FR-10](../PRD.md#6-functional-requirements) · [SDD §9.6 Failure handling (diagram + rules)](../SDD.md#96-failure-handling-retries-dlq-poison-pills) · [SDD §9.1 policies](../SDD.md#91-queue-topology) · [SDD §9.2 generations](../SDD.md#92-job-identity-payload-contracts) · [SDD §5.2 `dlq_entries`](../SDD.md#52-ddl-drizzle-migration-0001-authoritative-excerpt) · [SDD §6.1 Admin endpoints](../SDD.md#61-endpoints) · [ADR-18](../SDD.md#adr-18-error-taxonomy-decides-retry-policy) |
+| Spec | [PRD US-8, US-9, US-14](../PRD.md#5-user-stories--acceptance-criteria) · [PRD FR-9, FR-10](../PRD.md#6-functional-requirements) · [SDD §9.6 Failure handling (diagram + rules)](../SDD.md#96-failure-handling-retries-dlq-poison-pills) · [SDD §9.1 policies](../SDD.md#91-queue-topology) · [SDD §9.2 generations](../SDD.md#92-job-identity--payload-contracts) · [SDD §5.2 `dlq_entries`](../SDD.md#52-ddl-drizzle-migration-0001--authoritative-excerpt) · [SDD §6.1 Admin endpoints](../SDD.md#61-endpoints) · [ADR-18](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) |
 
 **Status:** done
 

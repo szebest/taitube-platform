@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 01 — Repo skeleton |
 | Blocks | 32 |
-| Spec | [SDD §15.3 External services & accounts](../SDD.md#153-external-services-accounts-to-create-all-free-unless-noted) · [SDD §12.3 Rung 3 + cost model](../SDD.md#123-rung-3-cloud-reference-deployment-phase-4) · [SDD §16.4/16.8 env](../SDD.md#164-object-storage-s3-compatible) · [SDD §17 Fact sheet](../SDD.md#17-fact-sheet-verified-2026-09-03) · [ADR-06](../SDD.md#adr-06-object-storage-minio-locally-cloudflare-r2-in-cloud-backblaze-b2-fallback) · [ADR-15](../SDD.md#adr-15-cloud-hosting-for-the-reference-deployment) |
+| Spec | [SDD §15.3 External services & accounts](../SDD.md#153-external-services--accounts-to-create-all-free-unless-noted) · [SDD §12.3 Rung 3 + cost model](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) · [SDD §16.4/16.8 env](../SDD.md#164-object-storage-s3-compatible) · [SDD §17 Fact sheet](../SDD.md#17-fact-sheet-verified-2026-09-03) · [ADR-06](../SDD.md#adr-06--object-storage-minio-locally-cloudflare-r2-in-cloud-backblaze-b2-fallback) · [ADR-15](../SDD.md#adr-15--cloud-hosting-for-the-reference-deployment) |
 
 **Status:** done
 

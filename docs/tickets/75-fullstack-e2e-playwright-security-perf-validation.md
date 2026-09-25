@@ -7,7 +7,7 @@
 | Size | L |
 | Blocked by | 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74 |
 | Blocks | — |
-| Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13 Observability](../SDD.md#13-autoscaling-observability) |
+| Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
 **Status:** blocked
 
