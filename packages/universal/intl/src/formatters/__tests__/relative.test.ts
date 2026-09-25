@@ -1,8 +1,13 @@
 import { ARABIC_INDIC_DIGIT, NOW, contextFor } from '../../__tests__/fixtures';
+import {
+  DAY as DAY_SECONDS,
+  HOUR as HOUR_SECONDS,
+  MILLISECONDS_PER_SECOND,
+} from '../../time-spans';
 import { relative } from '../relative';
 
-const HOUR = 60 * 60 * 1000;
-const DAY = 24 * HOUR;
+const HOUR = HOUR_SECONDS * MILLISECONDS_PER_SECOND;
+const DAY = DAY_SECONDS * MILLISECONDS_PER_SECOND;
 
 function ago(ms: number): string {
   return new Date(Date.parse(NOW) - ms).toISOString();

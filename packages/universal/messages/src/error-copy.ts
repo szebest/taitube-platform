@@ -4,6 +4,7 @@ import type { ArgumentFreeKey } from './catalogue';
 /**
  * The words a person sees for each failure code. Declared over the whole `ErrorCode` union, so a
  * new code fails to compile until someone writes its copy.
+ * @public
  */
 export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.UPLOAD_TOO_LARGE]: 'errors.uploadTooLarge',

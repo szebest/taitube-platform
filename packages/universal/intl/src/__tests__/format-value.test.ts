@@ -1,4 +1,4 @@
-import { FORMAT_KINDS, type FormatValue, KINDS_MATCH_UNION, formatValue } from '../format-value';
+import { FORMAT_KINDS, type FormatValue, formatValue } from '../format-value';
 import { NOW, contextFor } from './fixtures';
 
 const ISO = '2026-09-19T18:30:00.000Z';
@@ -37,7 +37,6 @@ describe('@vp/intl: formatValue', () => {
     );
 
     expect([...routed].sort()).toEqual([...FORMAT_KINDS].sort());
-    expect(KINDS_MATCH_UNION).toBe(true);
   });
 
   it('declines an unsupported locale with a failure, not a throw', () => {

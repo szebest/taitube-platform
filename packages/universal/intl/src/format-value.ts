@@ -18,6 +18,7 @@ import { type PercentValue, percent } from './formatters/percent';
 import { type RelativeValue, relative } from './formatters/relative';
 import { type TimeValue, time } from './formatters/time';
 
+/** @public */
 export type TaggedValue =
   | CountValue
   | NumberValue
@@ -39,6 +40,7 @@ export type TaggedValue =
 /** What a placeholder may hold: text as authored, a bare number, or a value tagged with its kind. */
 export type FormatValue = string | number | TaggedValue;
 
+/** @public */
 export const FORMAT_KINDS = [
   'count',
   'number',
@@ -58,6 +60,7 @@ export const FORMAT_KINDS = [
   'displayName',
 ] as const;
 
+/** @public */
 export type FormatKind = (typeof FORMAT_KINDS)[number];
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
@@ -73,7 +76,7 @@ export type KindsMatchUnion<Kinds extends string, Tags extends string> = Same<
   ? true
   : never;
 
-export const KINDS_MATCH_UNION: KindsMatchUnion<FormatKind, TaggedValue['type']> = true;
+true satisfies KindsMatchUnion<FormatKind, TaggedValue['type']>;
 
 export function formatValue(
   value: FormatValue,

@@ -8,7 +8,7 @@
 | Blocks | 86 |
 | Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-20 Monorepo topology](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Ticket 87 note:** a formatter is a cached, configured object with a lifetime, which is exactly what
 > [87](87-composition-root-typed-container-config-value.md) gives a home to. Register the formatter cache in the
@@ -249,62 +249,62 @@ The three defects from the table, at their call sites. Small diff, immediate val
 ## Acceptance criteria
 
 ### W1 — Core values, options and failures
-- [ ] `packages/universal/intl` exists, tier `universal`, `"vp": { "layer": 2 }`, depending only on `@vp/result` and `@vp/errors`; `pnpm boundaries` passes.
-- [ ] `FormatValue` is the tagged union above, with a compile-time assertion that the kind list and the union members match exactly — proven by an expect-error fixture that adds a kind with no member.
-- [ ] Every formatter returns `Result<string, FormatFailure>`; `FormatFailure` variants are `Failure<ErrorCode, …>` from `@vp/errors` and narrow through `switch` with `assertNever` in the `default`.
-- [ ] `withOptions` declines an unnamed option with the offending key in the failure; a test asserts `date(stlye: 'short')` fails rather than silently rendering a default.
-- [ ] Option key lists are `as const satisfies readonly (keyof Intl.…Options | Ours)[]`; a misspelled key is a compile error at the declaration.
-- [ ] `Intl` instances are memoised per `(locale, kind, options)`; a benchmark in the PR shows the repeat-format path constructing **zero** new `Intl` objects, with before/after numbers for 1,000 formats.
-- [ ] **SSR purity**: no `navigator`, `Date.now()`, zero-argument `new Date()`, `process` or `toLocale*` anywhere in the package — asserted by W6.
-- [ ] `relative` and `calendarDay` take the reference instant as an argument; a test renders the same string from a fixed `now` in node and jsdom environments.
-- [ ] Unsupported locale and unknown currency are detected and cached, not thrown.
+- [x] `packages/universal/intl` exists, tier `universal`, `"vp": { "layer": 2 }`, depending only on `@vp/result` and `@vp/errors`; `pnpm boundaries` passes.
+- [x] `FormatValue` is the tagged union above, with a compile-time assertion that the kind list and the union members match exactly — proven by an expect-error fixture that adds a kind with no member.
+- [x] Every formatter returns `Result<string, FormatFailure>`; `FormatFailure` variants are `Failure<ErrorCode, …>` from `@vp/errors` and narrow through `switch` with `assertNever` in the `default`.
+- [x] `withOptions` declines an unnamed option with the offending key in the failure; a test asserts `date(stlye: 'short')` fails rather than silently rendering a default.
+- [x] Option key lists are `as const satisfies readonly (keyof Intl.…Options | Ours)[]`; a misspelled key is a compile error at the declaration.
+- [x] `Intl` instances are memoised per `(locale, kind, options)`; a benchmark in the PR shows the repeat-format path constructing **zero** new `Intl` objects, with before/after numbers for 1,000 formats.
+- [x] **SSR purity**: no `navigator`, `Date.now()`, zero-argument `new Date()`, `process` or `toLocale*` anywhere in the package — asserted by W6.
+- [x] `relative` and `calendarDay` take the reference instant as an argument; a test renders the same string from a fixed `now` in node and jsdom environments.
+- [x] Unsupported locale and unknown currency are detected and cached, not thrown.
 
 ### W2 — Formatter catalogue
-- [ ] Every formatter in the three family tables and every domain formatter exists, each in its own file with its own `__tests__/<name>.test.ts` (Rule 12), no file over 250 lines.
-- [ ] Each formatter is tested against **at least three locales** including one with a different grouping separator and one non-Latin script; the assertions pin ordering and structure, not a single hardcoded glyph.
-- [ ] `duration` renders clock form (`12:45`, `1:02:33`) and word form; `Intl.DurationFormat` is probed and the fallback produces the same string — a test runs both paths.
-- [ ] `truncate` cuts on graphemes: tests with an emoji sequence, a combining mark and a CJK string that the current `substring` breaks.
-- [ ] `collator` returns a comparator; a test sorts `['Ärger', 'Zebra', 'apple']` correctly in `de` and `sv` (where `Ä` sorts differently) and proves default `.sort()` disagrees.
-- [ ] `compact`, `percent` and `ordinal` are correct in a locale using a non-ASCII numbering system.
-- [ ] Domain formatters compose the primitives — no domain formatter builds an `Intl` object or a string of its own.
+- [x] Every formatter in the three family tables and every domain formatter exists, each in its own file with its own `__tests__/<name>.test.ts` (Rule 12), no file over 250 lines.
+- [x] Each formatter is tested against **at least three locales** including one with a different grouping separator and one non-Latin script; the assertions pin ordering and structure, not a single hardcoded glyph.
+- [x] `duration` renders clock form (`12:45`, `1:02:33`) and word form; `Intl.DurationFormat` is probed and the fallback produces the same string — a test runs both paths.
+- [x] `truncate` cuts on graphemes: tests with an emoji sequence, a combining mark and a CJK string that the current `substring` breaks.
+- [x] `collator` returns a comparator; a test sorts `['Ärger', 'Zebra', 'apple']` correctly in `de` and `sv` (where `Ä` sorts differently) and proves default `.sort()` disagrees.
+- [x] `compact`, `percent` and `ordinal` are correct in a locale using a non-ASCII numbering system.
+- [x] Domain formatters compose the primitives — no domain formatter builds an `Intl` object or a string of its own.
 
 ### W3 — Messages
-- [ ] `packages/universal/messages` exists, tier `universal`, layer **T3**, depending on `@vp/intl`; `pnpm boundaries` passes.
-- [ ] `dt()` extracts parameter names and types from the template literal: `t('videos.views', { conut: 5 })` and `t('videos.publishedRelative', { when: 5 })` are **compile errors**, proven by expect-error fixtures.
-- [ ] `{x:number}`, `{x:date}`, `{x:list}`, `{x:plural}` and `{x:enum}` all route through `@vp/intl`; a test asserts a message and the equivalent direct formatter call produce identical output.
-- [ ] Plurals select via `Intl.PluralRules`; `1 view` / `2 views` is tested, plus a locale with more than two plural categories.
-- [ ] The locale fallback chain walks `sv-FI` → `sv` → `en` per key; a partial catalogue resolves rather than failing wholesale.
-- [ ] `t` returns a `Result`; `tOr(key, args, fallback)` exists for render paths. A missing key produces a `Failure` carrying the key, not a thrown error and not a silent blank.
-- [ ] Every `ErrorCode` has copy, via an exhaustive `Record<ErrorCode, MessageKey>`; omitting one is a compile error. This closes the gap ticket 84 deferred.
-- [ ] One `en` catalogue ships, organised per feature; **no second language** is in this ticket.
+- [x] `packages/universal/messages` exists, tier `universal`, layer **T3**, depending on `@vp/intl`; `pnpm boundaries` passes.
+- [x] `dt()` extracts parameter names and types from the template literal: `t('videos.views', { conut: 5 })` and `t('videos.publishedRelative', { when: 5 })` are **compile errors**, proven by expect-error fixtures.
+- [x] `{x:number}`, `{x:date}`, `{x:list}`, `{x:plural}` and `{x:enum}` all route through `@vp/intl`; a test asserts a message and the equivalent direct formatter call produce identical output.
+- [x] Plurals select via `Intl.PluralRules`; `1 view` / `2 views` is tested, plus a locale with more than two plural categories.
+- [x] The locale fallback chain walks `sv-FI` → `sv` → `en` per key; a partial catalogue resolves rather than failing wholesale.
+- [x] `t` returns a `Result`; `tOr(key, args, fallback)` exists for render paths. A missing key produces a `Failure` carrying the key, not a thrown error and not a silent blank.
+- [x] Every `ErrorCode` has copy, via an exhaustive `Record<ErrorCode, MessageKey>`; omitting one is a compile error. This closes the gap ticket 84 deferred.
+- [x] One `en` catalogue ships, organised per feature; **no second language** is in this ticket.
 
 ### W4 — React binding
-- [ ] `packages/client/intl-react` exists, tier `client`, layer **T4**; `lockfile-closure.test.ts` still reports zero `server`-tier packages reachable from `apps/web`.
-- [ ] `IntlProvider`, `useT`, `useFormat` and `<Format>` exist and are tested with Testing Library.
-- [ ] Bindings are built once per locale, not per render — asserted by a render-count test.
-- [ ] Locale resolution order is explicit prop → persisted preference → `navigator.languages` → `en`, and locale detection exists **only** in this package.
-- [ ] The provider accepts a locale prop, so ticket 63 can inject a server-negotiated locale; a test renders the same markup with the same locale in jsdom and in a node string render.
-- [ ] `useT` outside the provider fails loudly with a message naming the provider, not silently.
+- [x] `packages/client/intl-react` exists, tier `client`, layer **T4**; `lockfile-closure.test.ts` still reports zero `server`-tier packages reachable from `apps/web`.
+- [x] `IntlProvider`, `useT`, `useFormat` and `<Format>` exist and are tested with Testing Library.
+- [x] Bindings are built once per locale, not per render — asserted by a render-count test.
+- [x] Locale resolution order is explicit prop → persisted preference → `navigator.languages` → `en`, and locale detection exists **only** in this package.
+- [x] The provider accepts a locale prop, so ticket 63 can inject a server-negotiated locale; a test renders the same markup with the same locale in jsdom and in a node string render.
+- [x] `useT` outside the provider fails loudly with a message naming the provider, not silently.
 
 ### W5 — Retiring the ad-hoc formatters
-- [ ] `format-numbers.helper.ts` is deleted along with its export; no caller remains.
-- [ ] `javascript-time-ago` is removed from `apps/web/package.json` and the lockfile; the PR records the bundle-size delta.
-- [ ] `video-description.tsx:22` formats with an explicit locale; `:17` truncates with `truncate`, proven by an emoji test that fails against the current code.
-- [ ] Category and channel sorting goes through `collator`.
-- [ ] No `toLocaleString` / `toLocaleDateString` / `Intl.` constructor remains outside `@vp/intl` — asserted by W6.
+- [x] `format-numbers.helper.ts` is deleted along with its export; no caller remains.
+- [x] `javascript-time-ago` is removed from `apps/web/package.json` and the lockfile; the PR records the bundle-size delta.
+- [x] `video-description.tsx:22` formats with an explicit locale; `:17` truncates with `truncate`, proven by an emoji test that fails against the current code.
+- [x] Category and channel sorting goes through `collator`.
+- [x] No `toLocaleString` / `toLocaleDateString` / `Intl.` constructor remains outside `@vp/intl` — asserted by W6.
 
 ### W6 — Enforcement & docs
-- [ ] The four assertions exist in `tests/architecture/`, run in `pnpm test:architecture` and in CI's `lint-typecheck` fail-fast step, each proven by a deliberately-violating fixture.
-- [ ] The four `FORMAT_*` codes exist in `ApiErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS` and SDD §6.2.
-- [ ] `docs/standards/formatting-and-i18n.md` exists with the value union, option allowlist, placeholder syntax, SSR rules and the formatter-vs-message decision.
-- [ ] SDD: **ADR-25** added with rejected alternatives; §15.1 lists the three packages.
-- [ ] `ARCHITECTURE.md`: Invariant 8 added; §6 table gains the four rows.
-- [ ] Root `AGENTS.md` index and `packages/AGENTS.md` tier/layer tables updated; `AGENTS.md` + `CLAUDE.md` symlink written for each new package; `apps/web/AGENTS.md` gains the "components never format" section.
-- [ ] Tickets 58, 59, 60, 61, 63, 70, 71, 72, 73, 74 and 83 carry the note; `python3 docs/tickets/gen-index.py` re-run.
+- [x] The four assertions exist in `tests/architecture/`, run in `pnpm test:architecture` and in CI's `lint-typecheck` fail-fast step, each proven by a deliberately-violating fixture.
+- [x] The four `FORMAT_*` codes exist in `ApiErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS` and SDD §6.2.
+- [x] `docs/standards/formatting-and-i18n.md` exists with the value union, option allowlist, placeholder syntax, SSR rules and the formatter-vs-message decision.
+- [x] SDD: **ADR-25** added with rejected alternatives; §15.1 lists the three packages.
+- [x] `ARCHITECTURE.md`: Invariant 8 added; §6 table gains the four rows.
+- [x] Root `AGENTS.md` index and `packages/AGENTS.md` tier/layer tables updated; `AGENTS.md` + `CLAUDE.md` symlink written for each new package; `apps/web/AGENTS.md` gains the "components never format" section.
+- [x] Tickets 58, 59, 60, 61, 63, 70, 71, 72, 73, 74 and 83 carry the note; `python3 docs/tickets/gen-index.py` re-run.
 
 ### Repo-wide
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm boundaries`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm build` and `make smoke-offline` green, with output pasted in the PR.
-- [ ] **No new runtime dependency** — the packages are `Intl` and nothing else (local-first, PRD G11 / SDD P9). The ticket's net dependency change is **negative**: `javascript-time-ago` leaves.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm boundaries`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm build` and `make smoke-offline` green, with output pasted in the PR.
+- [x] **No new runtime dependency** — the packages are `Intl` and nothing else (local-first, PRD G11 / SDD P9). The ticket's net dependency change is **negative**: `javascript-time-ago` leaves.
 
 ---
 
@@ -340,6 +340,18 @@ The three defects from the table, at their call sites. Small diff, immediate val
 - **One package or three?** *Decided:* three. A single package would put the product's copy inside the thing `apps/api` links for a byte count, and a single `client` package could not be server-rendered. Each boundary stops a specific thing; none is decorative.
 - **`Intl` directly, or FormatJS / `react-intl`?** *Decided:* `Intl` directly. `react-intl` is ~50 KB gzipped to wrap built-ins the platform already ships, brings ICU message syntax this repo does not otherwise use, and is React-coupled — which the universal core must not be. The crash-course design shows the typed-message half is tractable; the part a library would genuinely save, plural rules, is `Intl.PluralRules`.
 - **Does `t` returning a `Result` make render code noisy?** *Decided:* `tOr` is the render-path form and takes the fallback explicitly. `t` stays strict so that a missing key is visible in tests rather than rendering a raw key in production.
+- **`FormatValue` shape.** *Decided:* one literal `type` per member (`{ type: 'count', value }`) rather than
+  the key-as-tag shape above, so `formatValue` is an exhaustive `switch` and no `'x' in value` probe exists
+  (`no-in-probes.test.ts`). Recorded in SDD ADR-26.
+- **Ordinal suffixes.** *Decided:* copy, not formatter data. `videos.rank` is a `{position:plural}` message
+  with `type: 'ordinal'` branches, so a new language is a catalogue entry; `@vp/intl` keeps `pluralCategory`.
+- **The ticket 87 note.** *Decided:* the cache is a value its owner creates (`IntlProvider` per locale). No
+  server code formats yet, so nothing is registered in the api container until a call site exists; never a
+  module singleton. Recorded in SDD ADR-26.
+- **Collator call sites.** *Decided:* `apps/web` sorts no category or channel list today (categories arrive
+  ordered by `sortOrder`), so `collator` ships for the rewrite with no call site to replace.
+- **Bun.** *Decided:* `pnpm test:bun` skips `packages/client/intl-react/**/*.test.tsx` only, the Testing
+  Library specs that need a DOM; `resolve-locale.test.ts` runs under both.
 - **Where does the time zone come from?** *Open.* The formatters take one; whether it is a user setting (ticket 72), the browser's, or the channel's is a product decision. Until then, the browser's, passed by the provider.
 
 ## Definition of Done
