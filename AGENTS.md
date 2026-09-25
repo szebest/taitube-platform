@@ -107,4 +107,4 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 
 ## Global Commands Quick Reference
 
-`make up` (infra) · `make up-all` (everything) · `make smoke` · `make smoke-offline` · `pnpm dev` · `pnpm test` · `pnpm test:bun` · `pnpm test:architecture` (the invariant suite) · `pnpm lint` · `pnpm typecheck` · `pnpm boundaries` (tiers, layers, `CLAUDE.md` symlinks) · `pnpm sync:claude` · `make k3d-up && make k3d-deploy` (Kubernetes) · `make e2e` (acceptance suite; `E2E_REDUCED=true` for the CI set).
+`make up` (infra) · `make up-all` (everything) · `make smoke` · `make smoke-offline` · `pnpm dev` · `pnpm test` · `pnpm test:bun` · `pnpm test:architecture` (the invariant suite) · `pnpm lint` · `pnpm typecheck` · `pnpm boundaries` (tiers, layers, `CLAUDE.md` symlinks) · `pnpm sync:claude` · `pnpm gen:contracts` (the committed OpenAPI document) · `make k3d-up && make k3d-deploy` (Kubernetes) · `make e2e` (acceptance suite; `E2E_REDUCED=true` for the CI set).

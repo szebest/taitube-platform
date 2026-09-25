@@ -1,4 +1,10 @@
-﻿{
+{
   "extends": "./tsconfig.json",
-  "exclude": ["src/**/__tests__/**", "src/**/__mocks__/**", "src/**/*.test.ts"]
+  "exclude": [
+    "src/**/__tests__/**",
+    "src/**/__mocks__/**",
+    "src/**/*.test.ts",
+    "src/gen-contracts.ts",
+    "src/composition/openapi-document.ts"
+  ]
 }

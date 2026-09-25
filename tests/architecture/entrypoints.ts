@@ -3,6 +3,7 @@
  * here and nowhere else; every module below one takes what it needs as a value.
  */
 export const ENTRYPOINTS: readonly string[] = [
+  'apps/api/src/gen-contracts.ts',
   'apps/api/src/instrument.ts',
   'apps/api/src/main.ts',
   'apps/api/src/migrate.ts',
