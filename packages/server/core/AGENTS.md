@@ -41,9 +41,9 @@ core/
    health check. The cache ports (`CategoryCachePort`, `ReactionCachePort`, `SubscriptionCachePort`) and
    `ViewBufferPort` are interfaces, which the Redis and in-memory adapters implement.
 2. **Repository contracts:** `repositories/` defines data access signatures decoupled from any ORM or
-   database driver - abstract classes (`VideoRepository`, `UploadRepository`, `StepRepository`, ...) and
-   `*RepositoryPort` interfaces (channel, category, subscription, video reaction, video view). The `Repositories`
-   interface bundles them.
+   database driver - abstract classes (`VideoRepository`, `VideoStudioRepository`, `UploadRepository`,
+   `StepRepository`, ...) and `*RepositoryPort` interfaces (channel, category, subscription, video
+   reaction, video view). The `Repositories` interface bundles them.
 3. **Repository contracts stay with the ports.** An earlier draft split them into a universal
    `@vp/contracts`; it would have had no client consumer, because the frontend's response types come
    from `@vp/api-contracts` and `apps/web` does not import `@vp/core` at all.

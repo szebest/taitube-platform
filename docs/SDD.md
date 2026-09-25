@@ -859,6 +859,9 @@ erDiagram
         int comments_count
         int likes_count
         int dislikes_count
+        uuid category_id FK
+        text_array tags
+        text custom_thumbnail_key
     }
     video_comments {
         uuid id PK
@@ -1092,6 +1095,10 @@ CREATE INDEX channel_subscriptions_channel_idx ON channel_subscriptions (channel
 
 ALTER TABLE videos ADD COLUMN comments_count integer NOT NULL DEFAULT 0;  -- moved in the same transaction as each comment write
 
+ALTER TABLE videos ADD COLUMN tags text[] NOT NULL DEFAULT '{}';          -- at most 30, each 1-30 characters, trimmed, one per case-folded spelling
+ALTER TABLE videos ADD COLUMN custom_thumbnail_key text;                  -- videos/{id}/thumbs/custom/{thumbnailId}.{ext}; NULL shows the poster
+CREATE INDEX videos_tags_idx ON videos USING gin (tags);                  -- tag containment: tags @> ARRAY['lofi']
+
 CREATE TABLE video_comments (
   id          uuid PRIMARY KEY,                         -- UUIDv7
   video_id    uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
@@ -1179,6 +1186,9 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /v1/videos/:id/views` | Playback beacon | `{ sessionId, watchSeconds, videoDuration }` | `202 { videoId }` | Anonymous allowed. No database access: HyperLogLog dedupe per viewer (the account when signed in, else the session) and a Redis buffer increment (§5.2). Under 5 s of watch time (or the whole of a shorter video) is accepted and not counted. An unknown video id is dropped at flush. |
 | `GET /v1/creator/videos/:id/analytics?range=7d\|30d\|90d` | Video analytics | — | `200 { videoId, range, from, to, timeline:[{viewDate, views, watchSeconds}], rangeViews, totalViews, averageDailyViews, averageRetention }` | Owner or admin (`read Analytics`). A stranger gets 403 on a video they can see and 404 on one they cannot. Reads what the last flush committed. |
 | `GET /v1/creator/channel/analytics?range=7d\|30d\|90d` | Channel analytics | — | `200 { range, from, to, timeline, rangeViews, totalViews, videoCount, dailyVelocity, topVideos:[{videoId, title, views, totalViews}] }` | Authenticated caller, over the videos they own. |
+| `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
+| `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" } \| { source:"custom", thumbnailId, format }, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. |
+| `DELETE /v1/creator/videos/:id` | Studio delete | — | `202 { videoId, status:"DELETED" }` | Same soft delete as `DELETE /videos/:id`. |
 | `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
 | `POST /channels/:id/subscribers` | Subscribe | — | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
 | `DELETE /channels/:id/subscribers` | Unsubscribe | — | `200 { channelId, subscriberCount, subscribed: false }` | Authenticated caller (`channel:subscribe`). Idempotent. Atomic DB mutation + Redis set sync. |
@@ -1192,8 +1202,8 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `DELETE /comments/:id` | Delete comment | — | `204` | Author, video owner, moderator or admin (`comment:delete`). Removes the replies of a root too and decrements `comments_count` by all of them. |
 | `POST /comments/:id/pin` | Pin comment | — | `200 Comment` / `409 COMMENT_NOT_PINNABLE` | Video owner or admin (`comment:pin`). Top-level only; unpins whichever comment held the video's one pinned slot. |
 | `DELETE /comments/:id/pin` | Unpin comment | — | `200 Comment` | Video owner or admin (`comment:pin`). |
-| `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`. |
-| `DELETE /videos/:id` | Soft delete | — | `202` | Enqueues `housekeeping:purge-video`. |
+| `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`; the same service call as `PATCH /v1/creator/videos/:id`. |
+| `DELETE /videos/:id` | Soft delete | — | `202` | CAS to `DELETED` with `deleted_at` and a `video.deleted` event; the `purge-deleted` housekeeping job removes the objects later (§9.8). |
 | `GET /videos/:id/events` | SSE stream | header `Last-Event-ID?` | `text/event-stream` | See §10. |
 | `GET /me/events` | SSE for all my videos | — | `text/event-stream` | Channel `user:{userId}`. |
 | `POST /videos/:id/reprocess` | Re-run pipeline | `{ renditions?: ["720p"] }` | `202` | Owner (rate-limited) or admin. |
@@ -1202,6 +1212,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `PATCH /v1/admin/categories/:id` | Update category | `{ name?, slug?, description?, iconUrl?, sortOrder?, isActive? }` | `200 Category` / `404` / `409` | Invalidates L1/L2 category cache across pods. |
 | `DELETE /v1/admin/categories/:id` | Delete category | — | `204` / `404` / `409 CATEGORY_IN_USE` | Checks video usage. Invalidates L1/L2 cache. |
 | `GET /v1/admin/videos/:id` | Read a video as an operator | — | `200 Video` / `403 FORBIDDEN` / `404` | Same `VideoService.get` call as `GET /videos/:id`; renders `FORBIDDEN` as a detailed 403 where the public route disguises it as 404 (ADR-24). |
+| `POST /v1/admin/videos/:id/takedown` | Take a video down | `{ reason? }` | `200 Video` / `403` / `404` | Admin (`moderate Video`). One CAS moves any non-deleted video to `REJECTED` and `private`, bumps `version` so an edit read before it cannot land, and appends `video.taken_down { requestedBy, reason }`. |
 | `GET /admin/queues/*` | Bull Board UI | — | HTML | `@bull-board/fastify`. |
 | `GET /admin/dlq?cursor=` | List DLQ | — | `200 { items:[DlqEntry] }` | From Postgres mirror. |
 | `POST /admin/dlq/:id/replay` | Replay | `{ resetAttempts?: true }` | `202` | Re-adds to origin queue with fresh `jobId` suffix `--r{n}`; audit event. |
@@ -1273,6 +1284,8 @@ type Video = {
   ladder?: Array<{ name: string; width: number; height: number; videoKbps: number; audioKbps: number }>;
   renditions: Array<{ name: string; status: string; playlistUrl?: string }>;
   playbackUrl?: string; posterUrl?: string; spriteUrl?: string; spriteVttUrl?: string;
+  thumbnailUrl?: string;   // the custom thumbnail when one is set, else the poster
+  categoryId?: string | null; tags?: string[];
   error?: { code: string; message: string };
   version: number; createdAt: string; updatedAt: string; readyAt?: string;
 };
@@ -1315,7 +1328,8 @@ public/                                (private bucket, public read via CDN cust
     ├── thumbs/
     │   ├── poster.jpg                 (1280×720)
     │   ├── sprite.jpg                 (10×N grid of 160×90 frames, 1 frame / 5 s)
-    │   └── sprite.vtt                 (WebVTT thumbnails with #xywh= fragments)
+    │   ├── sprite.vtt                 (WebVTT thumbnails with #xywh= fragments)
+    │   └── custom/{thumbnailId}.{jpg|png|webp}   (a creator's own thumbnail; the key is built from the id, never taken from a client)
     └── meta.json                      (probe output snapshot; debugging aid)
 ```
 
@@ -1669,7 +1683,7 @@ flowchart LR
 | Area | Control |
 |---|---|
 | Authentication | A bearer token is verified by the `TokenVerifier` port (`@vp/core/ports`), and `AUTH_MODE` picks the adapter once, in `toAppConfig`. `jwks` verifies against `AUTH_JWKS_URL`: `iss` must equal `AUTH_ISSUER`, `aud` must name `AUTH_AUDIENCE`, `exp` is required, `alg` must be one of `AUTH_ALGORITHMS` and the one the JWK declares (never `none`), a kid-less token is refused while the key set holds more than one key, ES* signatures are read as JWS `r||s`, and an unknown `kid` refetches the key set at most once per 30 s so a rotated key is accepted at once. `dev` verifies `pnpm dev-token` tokens against the key derived from the committed seed and serves that key at `/.well-known/jwks.json`; production refuses `AUTH_MODE=dev` at `loadEnv()`, so neither the route nor the seed key exist there (`auth-hardening.test.ts`). `sub` becomes `users.id`, provisioned on first sight. An admin is a token whose verified role claim is `admin`; the static `x-admin-token` (constant-time compare) exists in dev mode only, acts as the provisioned `AUTH_DEV_USER_ID`, and production refuses any `ADMIN_TOKEN`. |
-| Authorisation | CASL rules in `@vp/permissions` (`packages/universal/permissions`), shared by `apps/api` and `apps/web`. `Role` is `'GUEST' \| 'USER' \| 'CREATOR' \| 'MODERATOR' \| 'ADMIN'`; `parseRole` turns an untrusted claim into one at the boundary (anything unknown is `GUEST`), and `getUserPermissions(user)` builds the ability from the per-subject rule sets. The API decides access in its domain services only, through the `AuthorizationPort` (`@vp/core/ports`, implemented by `CaslAuthorizationAdapter`) with a `canX({ user, ... })` helper or `assertCan(...)`; routes read `request.user` or `requireAuth(request)` and never check a role. List queries apply the same rules in SQL: `packages/server/adapters/postgres/scopes/` compiles them with CASL `rulesToAST` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`). A failure is an RFC 9457 problem (401 `UNAUTHORIZED`, 403 `FORBIDDEN`) through `sendResult`. In `apps/web`, `PermissionsProvider`, `useCan` and `<Can />` gate the UI from the same rules. A video is readable when it is `public` or `unlisted`, by its owner, or by a `MODERATOR`; only its owner may update or delete it. |
+| Authorisation | CASL rules in `@vp/permissions` (`packages/universal/permissions`), shared by `apps/api` and `apps/web`. `Role` is `'GUEST' \| 'USER' \| 'CREATOR' \| 'MODERATOR' \| 'ADMIN'`; `parseRole` turns an untrusted claim into one at the boundary (anything unknown is `GUEST`), and `getUserPermissions(user)` builds the ability from the per-subject rule sets. The API decides access in its domain services only, through the `AuthorizationPort` (`@vp/core/ports`, implemented by `CaslAuthorizationAdapter`) with a `canX({ user, ... })` helper or `assertCan(...)`; routes read `request.user` or `requireAuth(request)` and never check a role. List queries apply the same rules in SQL: `packages/server/adapters/postgres/scopes/` compiles them with CASL `rulesToAST` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`). A failure is an RFC 9457 problem (401 `UNAUTHORIZED`, 403 `FORBIDDEN`) through `sendResult`. In `apps/web`, `PermissionsProvider`, `useCan` and `<Can />` gate the UI from the same rules. A video is readable when it is `public` or `unlisted`, by its owner, or by a `MODERATOR`; only its owner or an admin may update or delete it. Only an admin may take one down (`moderate`), and its owner may then edit it but not change its visibility; `getUserPermissions` applies the admin rules last so `manage all` overrides that `cannot`. |
 | Upload safety | Presigned URLs live `S3_PRESIGN_TTL_SEC` (900 s); `Content-Type` and `Content-Length` are signed into the single-PUT URL. On complete, both strategies `HeadObject` the source and compare its size to the declared one; on a mismatch the server deletes the object and moves the video to `REJECTED`. Content-type allowlist `ALLOWED_CONTENT_TYPES` in `@vp/validation` (`video/mp4`, `video/webm`, `video/quicktime`, `video/x-matroska`). Per-user limits `MAX_UPLOAD_BYTES` and `MAX_INFLIGHT_PER_USER`. |
 | Storage | Buckets private; the CDN reads `public` through the R2 custom domain (`infra/terraform/main.tf`). Terraform issues two scoped R2 tokens: the API's reads and writes `raw` only; the worker's reads and writes `raw` and `public`. The worker writes to `raw` only to delete: housekeeping (`expire-raw`, `purge-deleted`) removes sources there and `reconcile-uploads` aborts stale multipart uploads, and R2 grants a delete only with Item Write (`cloud-r2-tokens.test.ts` holds both tokens). |
 | Command injection | FFmpeg and ffprobe run through `spawn` with argv arrays (`@vp/ffmpeg`), never a shell. Object keys come from `@vp/storage` `keys.ts` and are built from the video UUID; the only part taken from the uploaded filename is the extension of `raw/<videoId>/source.<ext>`, and the filename is otherwise only the default title. |

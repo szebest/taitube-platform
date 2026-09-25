@@ -37,9 +37,9 @@ describe('packages/api-contracts: creator videos', () => {
       name: 'a custom thumbnail named by a key, which a client never chooses',
       body: { version: 1, selectedThumbnail: { source: 'custom', key: 'videos/x/thumbs/a.jpg' } },
     },
-    { name: 'an edit without the version it was made against', body: { title: 'No version' } },
+    { name: 'no version to check it against', body: { title: 'No version' } },
     { name: 'a category that is not an id', body: { version: 1, categoryId: 'music' } },
-  ])('rejects $name', ({ body }) => {
+  ])('refuses an edit carrying $name', ({ body }) => {
     expect(updateCreatorVideo.body.safeParse(body).success).toBe(false);
   });
 

@@ -162,6 +162,10 @@ taitube-platform/
   is keyset-paginated under `sort=top` or `sort=newest` with the pinned comment first, the first top page
   is cached in Redis for 60s, and `videos.comments_count` moves with every write. The author edits, the
   video owner pins and moderates, moderators and admins delete.
+- **Creator studio**: `GET /v1/creator/videos` lists the caller's library with its counters, sorted by
+  newest, views, likes or comments; `PATCH/DELETE /v1/creator/videos/:id` edit title, description,
+  visibility, category, tags and thumbnail under an optimistic lock, and soft delete. An admin takes a
+  video down with `POST /v1/admin/videos/:id/takedown`, and its owner cannot publish it again.
 - **Dead letter queue**: permanent failures go to a DLQ that an admin can retry from.
 - **Observability**: OpenTelemetry traces for API calls and worker jobs, Prometheus metrics, Grafana
   dashboards and Alertmanager rules; the apps write JSON logs to stdout.
