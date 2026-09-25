@@ -1,6 +1,6 @@
 import { buildPath, defineEndpoint, isEndpoint } from '../endpoint';
-import { VideoIdParamSchema, VideoSchema } from '../video-resource';
 import { getVideo } from '../videos';
+import { VideoIdParamSchema, VideoSchema } from '../video-resource';
 
 describe('packages/api-contracts: endpoint', () => {
   it('returns the contract it was given', () => {

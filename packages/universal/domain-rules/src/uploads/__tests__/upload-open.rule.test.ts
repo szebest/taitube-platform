@@ -31,11 +31,7 @@ describe('@vp/domain-rules: decideUploadOpen', () => {
   it('takes the instant as an argument rather than reading a clock', () => {
     const upload = anUpload({ expiresAt: new Date('2026-01-01T01:00:00.000Z') });
 
-    expect(isOk(decideUploadOpen({ upload, now: new Date('2026-01-01T00:59:59.999Z') }))).toBe(
-      true
-    );
-    expect(isOk(decideUploadOpen({ upload, now: new Date('2026-01-01T01:00:00.000Z') }))).toBe(
-      false
-    );
+    expect(isOk(decideUploadOpen({ upload, now: new Date('2026-01-01T00:59:59.999Z') }))).toBe(true);
+    expect(isOk(decideUploadOpen({ upload, now: new Date('2026-01-01T01:00:00.000Z') }))).toBe(false);
   });
 });

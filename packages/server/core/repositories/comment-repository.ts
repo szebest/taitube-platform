@@ -47,7 +47,8 @@ export interface CommentRepositoryPort {
     root: CommentLocator,
     options: ListCommentRepliesOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>>;
-  create(input: NewCommentInput): Promise<Result<CommentThread, DatabaseUnavailable>>;
+  /** Answers null, and writes nothing, when the parent was removed before the reply landed. */
+  create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
   updateContent(
     id: string,
     content: string

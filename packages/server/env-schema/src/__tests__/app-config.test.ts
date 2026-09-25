@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { SEEDED } from '@vp/testing';
 import { toAppConfig } from '../app-config';
 import { AppEnvSchema } from '../app-env';
+import { SEEDED } from '@vp/testing';
 
 function exampleEnv(): Record<string, string> {
   const content = readFileSync(resolve(__dirname, '../../../../../.env.example'), 'utf8');

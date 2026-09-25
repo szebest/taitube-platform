@@ -1,6 +1,6 @@
 import type { Failure } from './failure';
-import { PipelineError } from './pipeline-error';
 import { type PipelineErrorCode, PipelineErrorCodes } from './pipeline-error-codes';
+import { PipelineError } from './pipeline-error';
 
 /**
  * What a pipeline stage rejected the media for. The union is `PipelineErrorCode` rather than a

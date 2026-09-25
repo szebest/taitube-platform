@@ -105,8 +105,9 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     return ok(await Promise.all(replies.map((comment) => this.toThread(comment))));
   }
 
-  async create(input: NewCommentInput): Promise<Result<CommentThread, DatabaseUnavailable>> {
+  async create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
     const video = unwrapOr(await this.videosRepo.findById(input.videoId), null);
+    if (input.parentId !== null && !this.liveById(input.parentId)) return ok(null);
     const now = new Date();
     const stored: StoredComment = {
       ...input,

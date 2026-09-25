@@ -150,6 +150,7 @@ export class CommentService {
       content: decided.value.content,
     });
     if (isErr(created)) return created;
+    if (!created.value) return err(commentNotFound(parentId ?? videoId));
 
     await this.purge(videoId);
     return ok(toCommentView(created.value, decided.value.video.ownerId));

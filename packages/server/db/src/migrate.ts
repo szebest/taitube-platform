@@ -1,7 +1,7 @@
 import * as path from 'node:path';
-import { isErr } from '@vp/result';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { isErr } from '@vp/result';
 import postgres from 'postgres';
 import { type Log, waitForDatabase } from './client';
 import { migrationsHash } from './migrations-hash';

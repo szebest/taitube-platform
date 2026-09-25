@@ -1,11 +1,11 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { Singleflight } from '@vp/concurrency';
 import type { CommentCachePort, HotComments } from '@vp/core/ports';
-import { cacheUnavailable } from '@vp/errors';
+import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isOk, ok } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { CommentService } from '../comment-service';
 
 const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', role: 'CREATOR' };
@@ -88,6 +88,15 @@ describe('CommentService', () => {
     await service.listForVideo(null, VIDEO_ID, query);
 
     expect(cache.pages.size).toBe(0);
+  });
+
+  it('answers COMMENT_NOT_FOUND when the root is removed before the reply lands', async () => {
+    const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
+    vi.spyOn(repositories.comments, 'create').mockResolvedValue(ok(null));
+
+    const reply = await service.create(VIEWER, VIDEO_ID, { content: 'late', parentId: root?.id });
+
+    expect(expectErr(reply).code).toBe(ErrorCodes.COMMENT_NOT_FOUND);
   });
 
   it('keeps a write that could not purge the cache', async () => {

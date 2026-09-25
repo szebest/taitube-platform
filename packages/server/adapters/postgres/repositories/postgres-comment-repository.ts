@@ -7,7 +7,7 @@ import type {
 import * as schema from '@vp/db';
 import type { Comment, CommentThread, NewCommentInput } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, andThen, err, fromPromise, map, ok } from '@vp/result';
+import { type Result, fromPromise, map } from '@vp/result';
 import { and, eq, ne, or, sql } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope } from '../scopes/index';
 import {
@@ -85,10 +85,13 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     return map(rows, (found) => found.map(toCommentThread));
   }
 
-  async create(input: NewCommentInput): Promise<Result<CommentThread, DatabaseUnavailable>> {
-    const created = await fromPromise(
+  async create(input: NewCommentInput): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
+    return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
+          await this.lockVideo(tx, input.videoId);
+          if (input.parentId !== null && !(await this.isLive(tx, input.parentId))) return null;
+
           const now = new Date();
           await tx.insert(c).values({ ...input, createdAt: now, updatedAt: now });
           await tx
@@ -98,9 +101,6 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
           return this.threadById(tx, input.id);
         }),
       databaseUnavailable.during('createComment')
-    );
-    return andThen(created, (thread) =>
-      thread ? ok(thread) : err(databaseUnavailable('createComment', 'insert returned no row'))
     );
   }
 
@@ -126,6 +126,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
+          await this.lockVideo(tx, target.videoId);
           const removed = await tx
             .update(c)
             .set({ deletedAt: new Date(), isPinned: false })
@@ -156,7 +157,8 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          await tx.select({ id: v.id }).from(v).where(eq(v.id, target.videoId)).for('update');
+          await this.lockVideo(tx, target.videoId);
+          if (!(await this.isLive(tx, target.id))) return null;
           if (pinned) {
             await tx
               .update(c)
@@ -172,6 +174,23 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
         }),
       databaseUnavailable.during('pinComment')
     );
+  }
+
+  /**
+   * Every write that adds, removes or pins a comment takes the video row first, so a reply cannot
+   * commit under a root whose removal is already running, and two pins cannot interleave.
+   */
+  private async lockVideo(tx: PostgresDatabase, videoId: string): Promise<void> {
+    await tx.select({ id: v.id }).from(v).where(eq(v.id, videoId)).for('update');
+  }
+
+  private async isLive(tx: PostgresDatabase, id: string): Promise<boolean> {
+    const [row] = await tx
+      .select({ id: c.id })
+      .from(c)
+      .where(drizzleWhere(eq(c.id, id), notDeletedScope(c)))
+      .for('update');
+    return Boolean(row);
   }
 
   private threads(db: PostgresDatabase) {

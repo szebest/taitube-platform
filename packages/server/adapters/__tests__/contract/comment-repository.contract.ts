@@ -76,7 +76,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
           avatarUrl: null,
         },
       });
-      expect(created.createdAt).toBeInstanceOf(Date);
+      expect(created?.createdAt).toBeInstanceOf(Date);
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(1);
     });
 
@@ -91,7 +91,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         })
       );
 
-      expect(created.author).toEqual({
+      expect(created?.author).toEqual({
         userId: OWNER_ID,
         channelId: null,
         handle: null,
@@ -119,6 +119,37 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
       );
 
       expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(10);
+    });
+
+    function reply(id: string, parentId: string) {
+      return comments.create({
+        id,
+        videoId: VIDEO_IDS.a,
+        authorId: OTHER_OWNER_ID,
+        parentId,
+        content: 'reply',
+      });
+    }
+
+    it('leaves no live reply under a root removed while the reply was written', async () => {
+      await seedComment(ctx, C.liked);
+
+      const [created, removed] = await Promise.all([
+        reply(C.reply1, C.liked),
+        comments.remove({ id: C.liked, videoId: VIDEO_IDS.a }),
+      ]);
+
+      expect(expectOk(removed)).toBe(expectOk(created) === null ? 1 : 2);
+      expect(expectOk(await comments.findById(C.reply1))).toBeNull();
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(0);
+    });
+
+    it('writes nothing for a reply to a removed root', async () => {
+      await seedComment(ctx, C.liked);
+      expectOk(await comments.remove({ id: C.liked, videoId: VIDEO_IDS.a }));
+
+      expect(expectOk(await reply(C.reply1, C.liked))).toBeNull();
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(0);
     });
 
     it('edits the content and marks the comment edited', async () => {
@@ -172,6 +203,16 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
       const unpinned = expectOk(await comments.setPinned(at(C.fresh), false));
       expect(unpinned?.isPinned).toBe(false);
+    });
+
+    it('keeps the current pin when the comment to pin was removed', async () => {
+      await seedThreads(ctx);
+      const at = (id: string) => ({ id, videoId: VIDEO_IDS.a });
+      expectOk(await comments.setPinned(at(C.old), true));
+      expectOk(await comments.remove(at(C.fresh)));
+
+      expect(expectOk(await comments.setPinned(at(C.fresh), true))).toBeNull();
+      expect(expectOk(await comments.findById(C.old))?.isPinned).toBe(true);
     });
 
     it('answers null when pinning a comment that is gone', async () => {
