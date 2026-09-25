@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import ReactPlayer from 'react-player';
-import { useLocalStorage } from '@uidotdev/usehooks';
+import { z } from 'zod';
 
 import styles from './video-player.module.scss';
+
+import { useStoredState } from 'src/hooks/use-stored-state';
 
 export type VideoPlayerProps = {
 	playbackUrl?: string;
@@ -10,8 +12,10 @@ export type VideoPlayerProps = {
 
 const VOLUME_KEY = "VOLUME";
 
+const Volume = z.number().min(0).max(1);
+
 export function VideoPlayer({ playbackUrl }: VideoPlayerProps) {
-	const [volume, setVolume] = useLocalStorage(VOLUME_KEY, 1);
+	const [volume, setVolume] = useStoredState(VOLUME_KEY, Volume, 1);
 	const [seeking, setSeeking] = useState(false);
 
 	if (!playbackUrl) return null;

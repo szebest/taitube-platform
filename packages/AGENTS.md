@@ -281,8 +281,8 @@ Stated plainly so nobody assumes more coverage than exists:
   it resolves in CI, and a type it carries lands in the emitted `.d.ts` where `pnpm deploy --prod` cannot
   resolve it.
 - **Bundler dead-code elimination is a declaration, not a guarantee.** Every browser-tier package that ships
-  code sets `"sideEffects": false`, which is what lets webpack drop an unused export instead of keeping the
+  code sets `"sideEffects": false`, which is what lets the bundler drop an unused export instead of keeping the
   whole module; `frontend-vocabulary.test.ts` asserts the declaration is there. It does not assert the
-  bundler acted on it — grep the built `apps/web/build/static/js/main.*.js` if that is the question.
+  bundler acted on it — grep the built `apps/web/dist/client/assets/*.js` if that is the question.
 - **`tools/` has no tier**, because nothing in it is a package. Anything there that grows a `package.json`
   must move under `packages/<tier>/`.

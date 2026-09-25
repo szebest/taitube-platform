@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Button } from "react-bootstrap";
 import { toast } from 'react-toastify';
-import { type animate, useAnimate } from "framer-motion";
+import { type AnimationSequence, useAnimate } from "framer-motion";
 
 import styles from "./subscribe-button.module.scss";
 
@@ -13,8 +13,6 @@ import { useIsSubscribed } from "../../hooks";
 const randomNumberBetween = (min: number, max: number) => {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 };
-
-type AnimationSequence = Parameters<typeof animate>[0];
 
 export type SubscribeButtonProps = {
 	channelId: string;

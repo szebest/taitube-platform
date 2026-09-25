@@ -25,8 +25,8 @@ client without existing in the contract**. `ApiClientOptions` (`request.ts`) inj
    `ApiContractError`; a non-2xx raises `ApiError` carrying the parsed RFC 9457 problem document.
 3. **No base URL literal.** The host is injected (`apps/web/src/base-api.ts` passes `API_BASE_URL`); a
    hardcoded external host breaks local-first (Rule 1) and fails `tests/architecture/local-first.test.ts`.
-4. **Relative imports are extensionless**, as in every tier. `apps/web` resolves them through the one
-   webpack override in its `craco.config.js` (`resolve.fullySpecified: false` for workspace packages).
+4. **Relative imports are extensionless**, as in every tier. `apps/web` reads the package from its
+   source through Vite, which resolves an extensionless specifier with no override.
 
 ---
 

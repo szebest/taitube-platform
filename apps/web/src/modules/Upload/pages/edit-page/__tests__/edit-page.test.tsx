@@ -4,17 +4,18 @@ import { renderPage } from '../../../../../__tests__/render-page';
 import { videosApi } from '../../../../shared/api/videos-api';
 import { EditPage } from '../edit-page';
 
-function renderEdit(store: ApiStore): string {
-  return renderPage(<EditPage />, { store, url: `/upload/edit/${VIDEO_ID}`, route: '/upload/edit/:videoId' });
+async function renderEdit(store: ApiStore): Promise<string> {
+  return renderPage(<EditPage />, {
+    store,
+    url: `/upload/edit/${VIDEO_ID}`,
+    route: '/upload/edit/$videoId',
+    layout: '_authed',
+  });
 }
 
 describe('apps/web: edit page', () => {
-  it('renders nothing without a video in the address', () => {
-    expect(renderPage(<EditPage />, { url: '/upload/edit' })).toBe('');
-  });
-
-  it('shows the spinner while the video loads', () => {
-    expect(renderEdit(createApiStore())).toContain('aria-label="Loading"');
+  it('shows the spinner while the video loads', async () => {
+    expect(await renderEdit(createApiStore())).toContain('aria-label="Loading"');
   });
 
   it('opens the edit form for the loaded video', async () => {
@@ -25,7 +26,7 @@ describe('apps/web: edit page', () => {
       video({ title: 'Launch day' })
     );
 
-    const markup = renderEdit(store);
+    const markup = await renderEdit(store);
 
     expect(markup).toContain('Editing video: Launch day');
     expect(markup).toContain('>Edit</button>');

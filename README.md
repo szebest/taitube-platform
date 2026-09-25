@@ -79,7 +79,7 @@ The monorepo is organized using `pnpm` workspaces and `Turborepo`:
 taitube-platform/
 ├── apps/                        # Deployables. Nothing may depend on these.
 │   ├── api/                     # Fastify REST API, SSE streaming, authentication, admin
-│   ├── web/                     # React SPA (Create React App 5) — see apps/web/AGENTS.md
+│   ├── web/                     # React 19 on TanStack Start (SSR, Vite) — see apps/web/AGENTS.md
 │   └── worker/                  # BullMQ distributed queue workers (switchable Node/Bun)
 ├── packages/                    # Shared libraries. The directory IS the runtime tier.
 │   ├── universal/               # Runs in a browser AND on a server

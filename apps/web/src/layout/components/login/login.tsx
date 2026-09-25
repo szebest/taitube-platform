@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { Dropdown } from 'react-bootstrap';
 
 import styles from './login.module.scss';

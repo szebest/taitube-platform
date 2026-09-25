@@ -14,21 +14,21 @@ async function storeWithChannel(): Promise<ApiStore> {
   return store;
 }
 
-function renderChannel(store: ApiStore): string {
-  return renderPage(<UserPage />, { store, url: `/channel/${CHANNEL_ID}`, route: '/channel/:channelId' });
+async function renderChannel(store: ApiStore): Promise<string> {
+  return renderPage(<UserPage />, {
+    store,
+    url: `/channel/${CHANNEL_ID}`,
+    route: '/channel/$channelId',
+  });
 }
 
 describe('apps/web: user page', () => {
-  it('renders nothing without a channel in the address', () => {
-    expect(renderPage(<UserPage />, { url: '/channel' })).toBe('');
-  });
-
-  it('shows the spinner while the channel loads', () => {
-    expect(renderChannel(createApiStore())).toContain('aria-label="Loading"');
+  it('shows the spinner while the channel loads', async () => {
+    expect(await renderChannel(createApiStore())).toContain('aria-label="Loading"');
   });
 
   it("shows someone else's channel without their video list", async () => {
-    const markup = renderChannel(await storeWithChannel());
+    const markup = await renderChannel(await storeWithChannel());
 
     expect(markup).toContain('The Creator');
     expect(markup).not.toContain('Your videos:');
@@ -38,6 +38,6 @@ describe('apps/web: user page', () => {
     const store = await storeWithChannel();
     await signIn(store, account());
 
-    expect(renderChannel(store)).toContain('Your videos:');
+    expect(await renderChannel(store)).toContain('Your videos:');
   });
 });

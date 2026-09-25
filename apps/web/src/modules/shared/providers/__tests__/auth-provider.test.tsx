@@ -16,28 +16,32 @@ function OptionalAuthProbe() {
 }
 
 describe('apps/web: auth provider', () => {
-  it('holds no account and is not loading for a viewer without a token', () => {
-    expect(renderPage(<AuthProbe />)).toContain('account=nobody loading=false');
+  it('holds no account and is not loading for a viewer without a token', async () => {
+    expect(await renderPage(<AuthProbe />)).toContain('account=nobody loading=false');
   });
 
-  it('is loading while the account of a viewer with a token is on its way', () => {
+  it('is loading while the account of a viewer with a token is on its way', async () => {
     stubBrowser({ token: 'signed-in' });
 
-    expect(renderPage(<AuthProbe />)).toContain('account=nobody loading=true');
+    expect(await renderPage(<AuthProbe />)).toContain('account=nobody loading=true');
   });
 
   it('holds the account the API returned for the token', async () => {
     const store = createApiStore();
     await signIn(store, account());
 
-    expect(renderPage(<AuthProbe />, { store })).toContain('account=The Creator loading=false');
+    expect(await renderPage(<AuthProbe />, { store })).toContain(
+      'account=The Creator loading=false'
+    );
   });
 
-  it('refuses useAuth outside the provider', () => {
-    expect(() => renderToStaticMarkup(<AuthProbe />)).toThrow('useAuth must be used within AuthProvider');
+  it('refuses useAuth outside the provider', async () => {
+    expect(() => renderToStaticMarkup(<AuthProbe />)).toThrow(
+      'useAuth must be used within AuthProvider'
+    );
   });
 
-  it('lets useOptionalAuth read nothing outside the provider', () => {
+  it('lets useOptionalAuth read nothing outside the provider', async () => {
     expect(renderToStaticMarkup(<OptionalAuthProbe />)).toContain('no auth context');
   });
 });

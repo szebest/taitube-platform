@@ -8,10 +8,10 @@ describe('apps/web: login', () => {
   it.each<{ scenario: string; token?: string }>([
     { scenario: 'a guest', token: undefined },
     { scenario: 'a viewer whose account is still loading', token: 'signed-in' },
-  ])('shows nothing to $scenario', ({ token }) => {
+  ])('shows nothing to $scenario', async ({ token }) => {
     stubBrowser({ token });
 
-    expect(renderPage(<Login />)).toBe('');
+    expect(await renderPage(<Login />)).toBe('');
   });
 
   it('shows a signed-in viewer their channel name and avatar behind the settings toggle', async () => {
@@ -21,7 +21,7 @@ describe('apps/web: login', () => {
       channel: channel({ avatarUrl: 'http://localhost:9000/avatars/creator.png' }),
     });
 
-    const markup = renderPage(<Login />, { store });
+    const markup = await renderPage(<Login />, { store });
 
     expect(markup).toContain('The Creator');
     expect(markup).toContain('aria-label="settings"');

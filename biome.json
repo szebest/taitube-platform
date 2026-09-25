@@ -53,7 +53,8 @@
       "skills-bundle",
       "tools/hls-test-page/vendor",
       "tests/fixtures",
-      "fixtures"
+      "fixtures",
+      "apps/web/src/routeTree.gen.ts"
     ]
   }
 }

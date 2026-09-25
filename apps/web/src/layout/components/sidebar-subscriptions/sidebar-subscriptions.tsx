@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MenuItem } from "react-pro-sidebar";
 import { Dropdown } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 import styles from "./sidebar-subscriptions.module.scss";
 
@@ -32,7 +32,7 @@ export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 			</MenuItem>
 
 			{shown?.map((channel) => (
-					<MenuItem key={channel.id} className={styles.item} component={<Link className="ps-menu-img" to={`/channel/${channel.id}`} onClick={close} />}>
+					<MenuItem key={channel.id} className={styles.item} component={<Link className="ps-menu-img" to="/channel/$channelId" params={{ channelId: channel.id }} onClick={close} />}>
 						<span className={styles.item__avatar}>
 							<ProfilePicture src={channel.avatarUrl} />
 						</span>

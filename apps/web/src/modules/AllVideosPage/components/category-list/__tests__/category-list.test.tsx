@@ -19,11 +19,16 @@ const music = {
 
 async function storeWithCategories(): Promise<ApiStore> {
   const store = createApiStore();
-  await seed(store, (target) => target.dispatch(categoriesApi.endpoints.categories.initiate()), [music]);
+  await seed(store, (target) => target.dispatch(categoriesApi.endpoints.categories.initiate()), [
+    music,
+  ]);
   return store;
 }
 
-function renderCategories(store: ApiStore, selectedCategoryId: string | undefined): string {
+async function renderCategories(
+  store: ApiStore,
+  selectedCategoryId: string | undefined
+): Promise<string> {
   return renderPage(
     <CategoryList onCategoryChange={() => {}} selectedCategoryId={selectedCategoryId} />,
     { store }
@@ -31,17 +36,22 @@ function renderCategories(store: ApiStore, selectedCategoryId: string | undefine
 }
 
 describe('apps/web: category list', () => {
-  it('offers All, selected, before the categories arrive', () => {
-    expect(renderCategories(createApiStore(), undefined)).toContain('class="btn btn-dark">All<');
+  it('offers All, selected, before the categories arrive', async () => {
+    expect(await renderCategories(createApiStore(), undefined)).toContain(
+      'class="btn btn-dark">All<'
+    );
   });
 
   it.each([
     { selectedCategoryId: undefined, selected: 'All', other: 'Music' },
     { selectedCategoryId: MUSIC_ID, selected: 'Music', other: 'All' },
-  ])('highlights $selected among the categories the API listed', async ({ selectedCategoryId, selected, other }) => {
-    const markup = renderCategories(await storeWithCategories(), selectedCategoryId);
+  ])(
+    'highlights $selected among the categories the API listed',
+    async ({ selectedCategoryId, selected, other }) => {
+      const markup = await renderCategories(await storeWithCategories(), selectedCategoryId);
 
-    expect(markup).toContain(`class="btn btn-dark">${selected}<`);
-    expect(markup).toContain(`class="btn btn-light">${other}<`);
-  });
+      expect(markup).toContain(`class="btn btn-dark">${selected}<`);
+      expect(markup).toContain(`class="btn btn-light">${other}<`);
+    }
+  );
 });

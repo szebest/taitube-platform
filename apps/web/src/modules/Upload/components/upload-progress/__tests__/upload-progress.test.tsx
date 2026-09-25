@@ -4,8 +4,8 @@ import { uploadsApi } from '../../../api/uploads-api';
 import { UploadProgress } from '../upload-progress';
 
 describe('apps/web: upload progress', () => {
-  it('reads 0% before any bytes are sent', () => {
-    expect(renderPage(<UploadProgress />)).toContain('Progress: 0%');
+  it('reads 0% before any bytes are sent', async () => {
+    expect(await renderPage(<UploadProgress />)).toContain('Progress: 0%');
   });
 
   it('shows the transfer progress rounded to a whole percent', async () => {
@@ -13,7 +13,7 @@ describe('apps/web: upload progress', () => {
     await store.dispatch(uploadsApi.endpoints.uploadProgress.initiate());
     store.dispatch(uploadsApi.util.updateQueryData('uploadProgress', undefined, () => 42.6));
 
-    const markup = renderPage(<UploadProgress />, { store });
+    const markup = await renderPage(<UploadProgress />, { store });
 
     expect(markup).toContain('Progress: 43%');
     expect(markup).toContain('aria-valuenow="42.6"');

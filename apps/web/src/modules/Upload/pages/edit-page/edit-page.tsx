@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
 import { fromPromise, isOk } from '@vp/result';
 import { z } from 'zod';
 
@@ -14,22 +14,22 @@ import { LoadingSpinner } from 'src/modules/shared/components';
 const VersionConflictSchema = z.object({ status: z.literal(409) });
 
 export function EditPage() {
-	const { videoId } = useParams();
+	const { videoId } = useParams({ from: '/_authed/upload/edit/$videoId' });
 
-	const { data: video, isFetching, isError } = videosApi.useVideoQuery(videoId ?? '', { skip: !videoId });
+	const { data: video, isFetching, isError } = videosApi.useVideoQuery(videoId);
 
 	const [edit, state] = videosApi.useUpdateVideoMutation();
 
 	const navigate = useNavigate();
+	const router = useRouter();
 
 	useEffect(() => {
 		if (!isError) return;
 
 		toast("No video with given id exists!");
-		navigate("/");
+		navigate({ to: '/' });
 	}, [isError, navigate])
 
-	if (!videoId) return <Navigate to="/" replace />
 
 	const submit = async (form: EditVideoFormModel) => {
 		if (!video) return;
@@ -42,7 +42,7 @@ export function EditPage() {
 		if (isOk(saved)) {
 			toast('Successfully edited the video');
 
-			navigate(-1);
+			router.history.back();
 			return;
 		}
 

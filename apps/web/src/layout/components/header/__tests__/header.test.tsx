@@ -2,37 +2,32 @@ import { createApiStore } from '../../../../__tests__/api-store';
 import { stubBrowser } from '../../../../__tests__/browser';
 import { account } from '../../../../__tests__/fixtures';
 import { inChrome, renderPage, signIn } from '../../../../__tests__/render-page';
-import { storeValue } from '../../../../__tests__/stored-value';
 import { Header } from '../header';
 
 describe('apps/web: header', () => {
-  it('holds back the controls while the account is loading', () => {
+  it('holds back the controls while the account is loading', async () => {
     stubBrowser({ token: 'signed-in' });
 
-    const markup = renderPage(inChrome(<Header />));
+    const markup = await renderPage(inChrome(<Header />));
 
     expect(markup).not.toContain('theme switch');
     expect(markup).not.toContain('toggle sidebar');
   });
 
-  it.each([
-    { theme: 'light', checked: false },
-    { theme: 'dark', checked: true },
-  ])('offers the theme switch, on for dark, showing $theme', ({ theme, checked }) => {
-    stubBrowser();
-    storeValue('THEME', theme);
+  it('server-renders the theme switch off, showing light, whatever the viewer chose', async () => {
+    stubBrowser({ prefersDark: true, stored: { THEME: '"dark"' } });
 
-    const markup = renderPage(inChrome(<Header />));
+    const markup = await renderPage(inChrome(<Header />));
 
     expect(markup).toContain('aria-label="theme switch"');
-    expect(markup).toContain(`>${theme}</label>`);
-    expect(markup.includes('checked=""')).toBe(checked);
+    expect(markup).toContain('>light</label>');
+    expect(markup).not.toContain('checked=""');
   });
 
-  it('shows a guest the logo and no account menu', () => {
+  it('shows a guest the logo and no account menu', async () => {
     stubBrowser();
 
-    const markup = renderPage(inChrome(<Header />));
+    const markup = await renderPage(inChrome(<Header />));
 
     expect(markup).toContain('toggle sidebar');
     expect(markup).not.toContain('The Creator');
@@ -42,6 +37,6 @@ describe('apps/web: header', () => {
     const store = createApiStore();
     await signIn(store, account());
 
-    expect(renderPage(inChrome(<Header />), { store })).toContain('The Creator');
+    expect(await renderPage(inChrome(<Header />), { store })).toContain('The Creator');
   });
 });

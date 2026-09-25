@@ -52,6 +52,10 @@ jobs:
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: pnpm exec turbo run build
 
+      - name: Fail when the committed route tree differs from the one the web build generated
+        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
+        run: git diff --exit-code -- apps/web/src/routeTree.gen.ts
+
       - name: Save the build for the jobs that follow
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: actions/cache/save@v4
