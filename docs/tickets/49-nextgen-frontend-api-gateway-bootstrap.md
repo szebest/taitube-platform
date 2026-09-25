@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** in-progress
+**Status:** done
 
 Backend only. The frontend lives in this repo and its types come from `@vp/api-contracts`, so the contract is
 compile-checked already; no parity suite against an external frontend.
@@ -27,10 +27,10 @@ compile-checked already; no parity suite against an external frontend.
 
 ## Acceptance criteria
 
-- [ ] Default `CORS_ORIGINS` and `.env.example` cover the Vite dev server and the local SSR server origin;
+- [x] Default `CORS_ORIGINS` and `.env.example` cover the Vite dev server and the local SSR server origin;
       production still refuses empty or `*`.
-- [ ] Preflight response carries `Access-Control-Max-Age`.
-- [ ] `GET /v1/bootstrap` returns the shape above for anonymous and authenticated callers, declared in
+- [x] Preflight response carries `Access-Control-Max-Age`.
+- [x] `GET /v1/bootstrap` returns the shape above for anonymous and authenticated callers, declared in
       `@vp/api-contracts`; p95 under 30 ms locally.
 
 ## Testing plan
@@ -52,7 +52,7 @@ compile-checked already; no parity suite against an external frontend.
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm test` and `pnpm test:bun`.
-- [ ] `pnpm typecheck && pnpm lint` pass.
-- [ ] `docs/SDD.md` §6.1 lists `/v1/bootstrap`.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All ACs green under `pnpm test` and `pnpm test:bun`.
+- [x] `pnpm typecheck && pnpm lint` pass.
+- [x] `docs/SDD.md` §6.1 lists `/v1/bootstrap`.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
