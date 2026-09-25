@@ -47,6 +47,16 @@ describe('architecture: local-first', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('imports no stylesheet or font from another host in the web app styles', () => {
+    const styles = trackedFiles(':(glob)apps/web/src/**/*.scss', ':(glob)apps/web/src/**/*.css');
+    const offenders = styles.flatMap((file) =>
+      externalHosts(read(file)).map((url) => `${file}: ${url}`)
+    );
+
+    expect(styles).toContain('apps/web/src/styles/abstract/_mixins.scss');
+    expect(offenders).toEqual([]);
+  });
+
   it('loads nothing from another host in the web app document or the HLS test page', () => {
     const pages = [WEB_DOCUMENT, ...trackedFiles(':(glob)tools/hls-test-page/*.html')];
     const offenders = pages.flatMap((file) =>
