@@ -1,5 +1,5 @@
-import { createApiStore, recordRequests } from '../../../../__tests__/api-store';
-import { API_BASE_URL } from '../../../../config';
+import { createApiStore, recordRequests } from '#app/__tests__/api-store';
+import { API_BASE_URL } from '#app/config';
 import { categoriesApi } from '../categories-api';
 
 describe('apps/web: categories api', () => {

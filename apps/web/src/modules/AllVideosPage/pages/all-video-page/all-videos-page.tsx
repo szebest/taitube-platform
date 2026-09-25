@@ -2,14 +2,14 @@ import { useCallback } from 'react';
 
 import styles from './all-video-page.module.scss';
 
-import type { PublicFeedQuery } from 'src/modules/shared/api';
-import { feedApi } from 'src/modules/shared/api';
+import type { PublicFeedQuery } from '#app/modules/shared/api';
+import { feedApi } from '#app/modules/shared/api';
 
-import { useInfiniteScroll, useIsView } from 'src/modules/shared/hooks';
+import { useInfiniteScroll, useIsView } from '#app/modules/shared/hooks';
 
-import { VideosContainer } from "src/modules/shared/components";
+import { VideosContainer } from "#app/modules/shared/components";
 
-import { CategoryList } from '../../components';
+import { CategoryList } from '#app/modules/AllVideosPage/components';
 
 export function AllVideosPage() {
 	const [isListView, setIsListView] = useIsView();

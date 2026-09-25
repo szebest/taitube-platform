@@ -24,10 +24,12 @@ async function appPlugins(mode: string): Promise<PluginOption[]> {
 
 export default defineConfig(async ({ mode }) => ({
   resolve: {
-    alias: [
-      { find: 'src', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
-      ...workspaceSourceAliases(fileURLToPath(new URL('../../packages', import.meta.url))),
-    ],
+    alias: workspaceSourceAliases(fileURLToPath(new URL('../../packages', import.meta.url))),
+  },
+  css: {
+    preprocessorOptions: {
+      scss: { loadPaths: [fileURLToPath(new URL('./src', import.meta.url))] },
+    },
   },
   server: { port: DEV_PORT, strictPort: true },
   preview: { port: DEV_PORT, strictPort: true },

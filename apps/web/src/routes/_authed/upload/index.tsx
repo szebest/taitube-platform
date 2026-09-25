@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { UploadPage } from 'src/modules/Upload';
+import { UploadPage } from '#app/modules/Upload';
 
 export const Route = createFileRoute('/_authed/upload/')({
   staticData: { layoutMaxWidth: '1280px' },

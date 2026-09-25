@@ -12,20 +12,20 @@ import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { z } from 'zod';
 
-import { baseApi } from 'src/base-api';
-import { DEVTOOLS_ENABLED } from 'src/config';
-import appStyles from 'src/index.scss?url';
-import { DefaultLayout } from 'src/layout/containers';
+import { baseApi } from '#app/base-api';
+import { DEVTOOLS_ENABLED } from '#app/config';
+import appStyles from '#app/index.scss?url';
+import { DefaultLayout } from '#app/layout/containers';
 import {
   AuthProvider,
   PermissionsProvider,
   SidebarProvider,
   ThemeProvider,
-} from 'src/modules/shared/providers';
-import type { RouterContext } from 'src/router';
+} from '#app/modules/shared/providers';
+import type { RouterContext } from '#app/router';
 
 const Devtools = DEVTOOLS_ENABLED
-  ? lazy(() => import('src/integrations/devtools/devtools'))
+  ? lazy(() => import('#app/integrations/devtools/devtools'))
   : () => null;
 
 export const Route = createRootRouteWithContext<RouterContext>()({

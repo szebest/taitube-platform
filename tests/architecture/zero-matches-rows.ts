@@ -1,3 +1,5 @@
+import { WEB_ROWS } from './zero-matches-web-rows';
+
 /** `apps`, `packages` and `scripts`, without specs, `__tests__` or `__mocks__`. */
 export const PRODUCTION_SOURCE = [
   ':(glob)apps/**/*.ts',
@@ -302,18 +304,7 @@ export const ROWS: readonly Row[] = [
     expected: 0,
     fires: '"start": "craco start",',
   },
-  {
-    name: 'a web module reading the build environment outside src/config',
-    pattern: /import\.meta\.env/g,
-    scope: [
-      ':(glob)apps/web/src/**/*.ts',
-      ':(glob)apps/web/src/**/*.tsx',
-      ':(exclude)apps/web/src/config/index.ts',
-      ':(exclude,glob)apps/web/src/**/__tests__/**',
-    ],
-    expected: 0,
-    fires: 'const base = import.meta.env.VITE_API_BASE_URL;',
-  },
+  ...WEB_ROWS,
   {
     name: 'a frontier written by hand',
     pattern: /Frontier Priority Policy:\*\* Ticket/g,

@@ -1,6 +1,6 @@
 import { isNotFound } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
-import { VIDEO_ID } from '../../../__tests__/fixtures';
+import { VIDEO_ID } from '#app/__tests__/fixtures';
 import { parseParam } from '../parse-param';
 
 const VideoId = VideoIdParamSchema.shape.id;

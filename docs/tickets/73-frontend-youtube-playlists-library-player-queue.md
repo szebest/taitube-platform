@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#73](https://github.com/szebest/taitube-platform/issues/73) |
 | Size | L |
-| Blocked by | 46 - Playlists and watch history engine · 57 - Video player · 59 - Watch page · 69 - URL state and modal routing · 89 - TanStack Start foundation |
+| Blocked by | 46 - Playlists and watch history engine · 57 - Video player · 59 - Watch page · 69 - URL state and modal routing · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 

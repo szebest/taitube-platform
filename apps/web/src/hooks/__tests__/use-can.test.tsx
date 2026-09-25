@@ -1,6 +1,6 @@
 import { type UserContext, canReactVideo } from '@vp/permissions';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PermissionsProvider } from '../../modules/shared/providers/permissions-provider';
+import { PermissionsProvider } from '#app/modules/shared/providers/permissions-provider';
 import { useCan } from '../use-can';
 
 function ActionConsumer() {

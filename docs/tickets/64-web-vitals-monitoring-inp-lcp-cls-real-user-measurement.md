@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#64](https://github.com/szebest/taitube-platform/issues/64) |
 | Size | M |
-| Blocked by | 89 - TanStack Start foundation |
+| Blocked by | 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | 65 |
 | Spec | [SDD §13 Observability](../SDD.md#13-autoscaling--observability) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 

@@ -5,7 +5,7 @@ import styles from './upload-progress.module.scss';
 import { uploadProgress } from '@vp/intl';
 import { Format } from '@vp/intl-react';
 
-import { uploadsApi } from '../../api';
+import { uploadsApi } from '#app/modules/Upload/api';
 
 export function UploadProgress() {
   const { data: loaded } = uploadsApi.useUploadProgressQuery();

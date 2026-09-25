@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { IN_VIEW_LOCAL_STORAGE_KEY } from "src/config";
-import { useStoredState } from "src/hooks/use-stored-state";
+import { IN_VIEW_LOCAL_STORAGE_KEY } from "#app/config";
+import { useStoredState } from "#app/hooks/use-stored-state";
 
 const ListView = z.boolean();
 

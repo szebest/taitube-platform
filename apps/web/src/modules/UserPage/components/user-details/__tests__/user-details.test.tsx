@@ -1,5 +1,5 @@
-import { channel } from '../../../../../__tests__/fixtures';
-import { renderPage } from '../../../../../__tests__/render-page';
+import { channel } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
 import { UserDetails } from '../user-details';
 
 describe('apps/web: user details', () => {

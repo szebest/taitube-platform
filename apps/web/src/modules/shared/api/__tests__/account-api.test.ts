@@ -1,6 +1,6 @@
-import { type ApiStore, createApiStore, recordRequests } from '../../../../__tests__/api-store';
-import { CHANNEL_ID } from '../../../../__tests__/fixtures';
-import { API_BASE_URL } from '../../../../config';
+import { type ApiStore, createApiStore, recordRequests } from '#app/__tests__/api-store';
+import { CHANNEL_ID } from '#app/__tests__/fixtures';
+import { API_BASE_URL } from '#app/config';
 import { accountApi } from '../account-api';
 
 describe('apps/web: account api', () => {

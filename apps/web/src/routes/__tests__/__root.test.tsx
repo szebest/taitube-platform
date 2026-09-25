@@ -1,5 +1,5 @@
-import { recordRequests } from '../../__tests__/api-store';
-import { serverRender } from '../../__tests__/server-render';
+import { recordRequests } from '#app/__tests__/api-store';
+import { serverRender } from '#app/__tests__/server-render';
 
 async function home(): Promise<string> {
   recordRequests();

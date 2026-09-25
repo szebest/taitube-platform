@@ -1,7 +1,7 @@
-import { createApiStore } from '../../../../__tests__/api-store';
-import { stubBrowser } from '../../../../__tests__/browser';
-import { CHANNEL_ID, account } from '../../../../__tests__/fixtures';
-import { inChrome, renderPage, signIn } from '../../../../__tests__/render-page';
+import { createApiStore } from '#app/__tests__/api-store';
+import { stubBrowser } from '#app/__tests__/browser';
+import { CHANNEL_ID, account } from '#app/__tests__/fixtures';
+import { inChrome, renderPage, signIn } from '#app/__tests__/render-page';
 import { Sidebar } from '../sidebar';
 
 const MEMBER_LINKS = [

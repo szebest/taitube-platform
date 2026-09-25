@@ -1,4 +1,4 @@
-import { renderPage } from '../../__tests__/render-page';
+import { renderPage } from '#app/__tests__/render-page';
 import { RouteError, RouteNotFound, RoutePending } from '../route-fallbacks';
 
 describe('apps/web: route fallbacks', () => {

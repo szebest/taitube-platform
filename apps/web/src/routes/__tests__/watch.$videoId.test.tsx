@@ -1,8 +1,8 @@
 import { hashKey } from '@tanstack/react-query';
-import { jsonResponse, recordRequests } from '../../__tests__/api-store';
-import { VIDEO_ID, video } from '../../__tests__/fixtures';
-import { serverRender } from '../../__tests__/server-render';
-import { videoQueryOptions } from '../../features/watch/api/video-query-options';
+import { jsonResponse, recordRequests } from '#app/__tests__/api-store';
+import { VIDEO_ID, video } from '#app/__tests__/fixtures';
+import { serverRender } from '#app/__tests__/server-render';
+import { videoQueryOptions } from '#app/features/watch/api/video-query-options';
 
 describe('apps/web: /watch/$videoId', () => {
   it('server-renders the video title, with the poster standing in for the player', async () => {

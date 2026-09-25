@@ -3,7 +3,7 @@ import { Form } from 'react-bootstrap';
 
 import styles from './header.module.scss';
 
-import { useAuth, useTheme } from 'src/modules/shared/providers';
+import { useAuth, useTheme } from '#app/modules/shared/providers';
 
 import { Logo, Login } from '..';
 

@@ -1,7 +1,7 @@
-import { createApiStore, seed } from '../../../../../__tests__/api-store';
-import { subscribedChannel } from '../../../../../__tests__/fixtures';
-import { renderPage } from '../../../../../__tests__/render-page';
-import { subscriptionsApi } from '../../../../shared/api/subscriptions-api';
+import { createApiStore, seed } from '#app/__tests__/api-store';
+import { subscribedChannel } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
+import { subscriptionsApi } from '#app/modules/shared/api/subscriptions-api';
 import { SubscriptionsPage } from '../subscriptions-page';
 
 describe('apps/web: subscriptions page', () => {

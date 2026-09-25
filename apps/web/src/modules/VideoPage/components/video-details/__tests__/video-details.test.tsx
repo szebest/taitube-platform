@@ -1,6 +1,6 @@
 import type { UserContext } from '@vp/permissions';
-import { OWNER_ID, video } from '../../../../../__tests__/fixtures';
-import { renderPage } from '../../../../../__tests__/render-page';
+import { OWNER_ID, video } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
 import { VideoDetails } from '../video-details';
 
 describe('apps/web: video details', () => {

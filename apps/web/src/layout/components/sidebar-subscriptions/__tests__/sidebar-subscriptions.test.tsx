@@ -1,8 +1,8 @@
 import { Menu } from 'react-pro-sidebar';
-import { type ApiStore, createApiStore, seed } from '../../../../__tests__/api-store';
-import { subscribedChannel } from '../../../../__tests__/fixtures';
-import { renderPage } from '../../../../__tests__/render-page';
-import { subscriptionsApi } from '../../../../modules/shared/api/subscriptions-api';
+import { type ApiStore, createApiStore, seed } from '#app/__tests__/api-store';
+import { subscribedChannel } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
+import { subscriptionsApi } from '#app/modules/shared/api/subscriptions-api';
 import { SidebarSubscriptions } from '../sidebar-subscriptions';
 
 function channels(count: number) {

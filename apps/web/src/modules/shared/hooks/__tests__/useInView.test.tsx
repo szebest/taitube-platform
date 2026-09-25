@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { stubBrowser } from '../../../../__tests__/browser';
-import { IN_VIEW_LOCAL_STORAGE_KEY } from '../../../../config';
+import { stubBrowser } from '#app/__tests__/browser';
+import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { useIsView } from '../useInView';
 
 type ViewControls = { setIsListView?: (isListView: boolean) => void };

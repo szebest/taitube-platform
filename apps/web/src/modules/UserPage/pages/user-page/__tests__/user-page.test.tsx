@@ -1,7 +1,7 @@
-import { type ApiStore, createApiStore, seed } from '../../../../../__tests__/api-store';
-import { CHANNEL_ID, account, channel } from '../../../../../__tests__/fixtures';
-import { renderPage, signIn } from '../../../../../__tests__/render-page';
-import { accountApi } from '../../../../shared/api/account-api';
+import { type ApiStore, createApiStore, seed } from '#app/__tests__/api-store';
+import { CHANNEL_ID, account, channel } from '#app/__tests__/fixtures';
+import { renderPage, signIn } from '#app/__tests__/render-page';
+import { accountApi } from '#app/modules/shared/api/account-api';
 import { UserPage } from '../user-page';
 
 async function storeWithChannel(): Promise<ApiStore> {

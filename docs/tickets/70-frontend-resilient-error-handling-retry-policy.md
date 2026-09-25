@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#70](https://github.com/szebest/taitube-platform/issues/70) |
 | Size | M |
-| Blocked by | 53 - Frontend architecture modernization · 55 - Modern design system foundation · 89 - TanStack Start foundation |
+| Blocked by | 53 - Frontend architecture modernization · 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | — |
 | Spec | [SDD ADR-18 Error taxonomy](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) · [PRD §1 Summary](../PRD.md#1-summary) |
 

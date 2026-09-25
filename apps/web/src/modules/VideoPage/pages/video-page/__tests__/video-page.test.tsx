@@ -1,7 +1,7 @@
-import { VIDEO_ID, video } from '../../../../../__tests__/fixtures';
-import { renderPage } from '../../../../../__tests__/render-page';
-import { videoQueryOptions } from '../../../../../features/watch/api/video-query-options';
-import { createQueryClient } from '../../../../../integrations/query/create-query-client';
+import { VIDEO_ID, video } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
+import { videoQueryOptions } from '#app/features/watch/api/video-query-options';
+import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { VideoPage } from '../video-page';
 
 describe('apps/web: video page', () => {

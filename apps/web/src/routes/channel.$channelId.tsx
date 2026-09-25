@@ -2,8 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { ChannelIdParamSchema } from '@vp/api-contracts';
 import { z } from 'zod';
 
-import { parseParam } from 'src/integrations/router/parse-param';
-import { UserPage } from 'src/modules/UserPage';
+import { parseParam } from '#app/integrations/router/parse-param';
+import { UserPage } from '#app/modules/UserPage';
 
 export const Route = createFileRoute('/channel/$channelId')({
   params: {

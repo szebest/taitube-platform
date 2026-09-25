@@ -1,6 +1,6 @@
-import { createApiStore } from '../../../../../__tests__/api-store';
-import { renderPage } from '../../../../../__tests__/render-page';
-import { uploadsApi } from '../../../api/uploads-api';
+import { createApiStore } from '#app/__tests__/api-store';
+import { renderPage } from '#app/__tests__/render-page';
+import { uploadsApi } from '#app/modules/Upload/api/uploads-api';
 import { UploadProgress } from '../upload-progress';
 
 describe('apps/web: upload progress', () => {

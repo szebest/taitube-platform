@@ -1,10 +1,10 @@
 import styles from './subscription-videos-page.module.scss';
 
-import { feedApi } from 'src/modules/shared/api';
+import { feedApi } from '#app/modules/shared/api';
 
-import { useInfiniteScroll, useIsView } from 'src/modules/shared/hooks';
+import { useInfiniteScroll, useIsView } from '#app/modules/shared/hooks';
 
-import { VideosContainer } from "src/modules/shared/components";
+import { VideosContainer } from "#app/modules/shared/components";
 
 export function SubscriptionVideosPage() {
 	const [isListView, setIsListView] = useIsView();

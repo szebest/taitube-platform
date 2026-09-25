@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#69](https://github.com/szebest/taitube-platform/issues/69) |
 | Size | M |
-| Blocked by | 55 - Modern design system foundation · 89 - TanStack Start foundation |
+| Blocked by | 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | 73 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 

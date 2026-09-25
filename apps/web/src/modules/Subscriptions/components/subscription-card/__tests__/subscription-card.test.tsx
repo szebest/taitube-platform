@@ -1,5 +1,5 @@
-import { CHANNEL_ID, subscribedChannel } from '../../../../../__tests__/fixtures';
-import { renderPage } from '../../../../../__tests__/render-page';
+import { CHANNEL_ID, subscribedChannel } from '#app/__tests__/fixtures';
+import { renderPage } from '#app/__tests__/render-page';
 import { SubscriptionCard } from '../subscription-card';
 
 describe('apps/web: subscription card', () => {

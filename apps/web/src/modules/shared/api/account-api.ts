@@ -1,6 +1,6 @@
 import type { Account, Channel } from "@vp/api-contracts";
 
-import { apiClient, baseApi, runApiQuery } from "src/base-api";
+import { apiClient, baseApi, runApiQuery } from "#app/base-api";
 
 export const accountApi =baseApi.injectEndpoints({
 	endpoints: (builder) => ({

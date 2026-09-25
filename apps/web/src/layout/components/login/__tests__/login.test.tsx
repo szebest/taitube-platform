@@ -1,7 +1,7 @@
-import { createApiStore } from '../../../../__tests__/api-store';
-import { stubBrowser } from '../../../../__tests__/browser';
-import { account, channel } from '../../../../__tests__/fixtures';
-import { renderPage, signIn } from '../../../../__tests__/render-page';
+import { createApiStore } from '#app/__tests__/api-store';
+import { stubBrowser } from '#app/__tests__/browser';
+import { account, channel } from '#app/__tests__/fixtures';
+import { renderPage, signIn } from '#app/__tests__/render-page';
 import { Login } from '../login';
 
 describe('apps/web: login', () => {

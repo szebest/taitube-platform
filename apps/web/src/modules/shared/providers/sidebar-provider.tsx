@@ -1,7 +1,7 @@
 import { type PropsWithChildren, createContext, useContext, useMemo, useState } from "react"
 import { z } from "zod";
 
-import { useStoredState } from "src/hooks/use-stored-state";
+import { useStoredState } from "#app/hooks/use-stored-state";
 
 type SidebarContextValue = {
 	collapsed: boolean;

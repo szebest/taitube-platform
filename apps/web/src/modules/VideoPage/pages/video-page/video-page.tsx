@@ -3,10 +3,10 @@ import { useParams } from '@tanstack/react-router';
 
 import styles from './video-page.module.scss';
 
-import { videoQueryOptions } from 'src/features/watch/api/video-query-options';
-import { WatchPlayer } from 'src/features/watch/components/watch-player';
+import { videoQueryOptions } from '#app/features/watch/api/video-query-options';
+import { WatchPlayer } from '#app/features/watch/components/watch-player';
 
-import { VideoDetails } from "../../components";
+import { VideoDetails } from "#app/modules/VideoPage/components";
 
 export function VideoPage() {
 	const { videoId } = useParams({ from: '/watch/$videoId' });

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { stubBrowser } from '../../../../__tests__/browser';
-import { asLivePage } from '../../../../__tests__/live-page';
+import { stubBrowser } from '#app/__tests__/browser';
+import { asLivePage } from '#app/__tests__/live-page';
 import { ThemeProvider, useTheme } from '../theme-provider';
 
 type ThemeControls = Partial<ReturnType<typeof useTheme>>;

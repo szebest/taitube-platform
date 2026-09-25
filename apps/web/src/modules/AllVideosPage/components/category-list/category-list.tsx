@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { categoriesApi } from 'src/modules/shared/api';
-import { DragScrollMenu } from 'src/modules/shared/components';
+import { categoriesApi } from '#app/modules/shared/api';
+import { DragScrollMenu } from '#app/modules/shared/components';
 
 export type CategoryListProps = {
 	onCategoryChange: (categoryId: string | undefined) => void;

@@ -1,5 +1,5 @@
-import { stubBrowser } from '../../../../__tests__/browser';
-import { inChrome, renderPage } from '../../../../__tests__/render-page';
+import { stubBrowser } from '#app/__tests__/browser';
+import { inChrome, renderPage } from '#app/__tests__/render-page';
 import { DefaultLayout } from '../default-layout';
 
 describe('apps/web: default layout', () => {

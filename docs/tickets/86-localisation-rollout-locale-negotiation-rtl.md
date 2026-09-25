@@ -4,7 +4,7 @@
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Size | M |
-| Blocked by | 63 - SEO and OpenGraph · 72 - Settings & customization system · 85 - Universal Intl formatting core · 89 - TanStack Start foundation |
+| Blocked by | 63 - SEO and OpenGraph · 72 - Settings & customization system · 85 - Universal Intl formatting core · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | — |
 | Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [PRD §1 Summary](../PRD.md#1-summary) |
 

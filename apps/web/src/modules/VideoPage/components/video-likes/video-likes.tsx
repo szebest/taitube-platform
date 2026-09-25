@@ -6,8 +6,8 @@ import styles from "./video-likes.module.scss";
 import type { Video } from "@vp/api-contracts";
 import { Format } from "@vp/intl-react";
 
-import { reactionsApi } from "src/modules/shared/api";
-import { useAuth } from "src/modules/shared/providers";
+import { reactionsApi } from "#app/modules/shared/api";
+import { useAuth } from "#app/modules/shared/providers";
 
 export type VideoLikesProps = {
 	video: Video;

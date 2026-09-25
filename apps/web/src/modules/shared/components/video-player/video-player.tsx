@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import styles from './video-player.module.scss';
 
-import { useStoredState } from 'src/hooks/use-stored-state';
+import { useStoredState } from '#app/hooks/use-stored-state';
 
 export type VideoPlayerProps = {
 	playbackUrl?: string;

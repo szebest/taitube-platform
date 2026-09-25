@@ -1,6 +1,6 @@
-import { type ApiStore, createApiStore, recordRequests } from '../../../../__tests__/api-store';
-import { CHANNEL_ID } from '../../../../__tests__/fixtures';
-import { API_BASE_URL } from '../../../../config';
+import { type ApiStore, createApiStore, recordRequests } from '#app/__tests__/api-store';
+import { CHANNEL_ID } from '#app/__tests__/fixtures';
+import { API_BASE_URL } from '#app/config';
 import { subscriptionsApi } from '../subscriptions-api';
 
 const SUBSCRIBERS_URL = `${API_BASE_URL}/v1/channels/${CHANNEL_ID}/subscribers`;

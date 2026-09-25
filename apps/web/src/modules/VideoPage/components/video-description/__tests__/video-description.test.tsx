@@ -1,6 +1,6 @@
 import { IntlProvider } from '@vp/intl-react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { video } from '../../../../../__tests__/fixtures';
+import { video } from '#app/__tests__/fixtures';
 import { VideoDescription } from '../video-description';
 
 const NOW = '2026-03-10T12:00:00.000Z';

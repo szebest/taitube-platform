@@ -5,9 +5,9 @@ import { Link } from "@tanstack/react-router";
 
 import styles from "./sidebar-subscriptions.module.scss";
 
-import { subscriptionsApi } from "src/modules/shared/api";
+import { subscriptionsApi } from "#app/modules/shared/api";
 
-import { ProfilePicture } from "src/modules/shared/components";
+import { ProfilePicture } from "#app/modules/shared/components";
 
 export type SidebarSubscriptionsProps = {
 	close: VoidFunction
