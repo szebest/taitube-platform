@@ -38,4 +38,13 @@ describe('apps/web: sidebar', () => {
 
     for (const link of MEMBER_LINKS) expect(markup).toContain(link);
   });
+
+  it('server-renders the wide layout on a narrow screen, so hydration matches it', async () => {
+    stubBrowser();
+    vi.stubGlobal('window', { ...window, matchMedia: () => ({ matches: true }) });
+
+    const markup = await renderPage(inChrome(<Sidebar />));
+
+    expect(markup).not.toMatch(/class="[^"]*ps-broken/);
+  });
 });

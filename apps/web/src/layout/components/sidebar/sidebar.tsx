@@ -5,7 +5,7 @@ import {
 	MenuItem
 } from "react-pro-sidebar";
 import { Dropdown } from "react-bootstrap";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 
 import styles from "./sidebar.module.scss";
 
@@ -16,6 +16,7 @@ import { Logo, SidebarSubscriptions } from "..";
 export function Sidebar() {
 	const { collapsed, isBelowBreakpoint, breakpointChanged, toggle, close } = useSidebar();
 	const { account, isLoading } = useAuth();
+	const hydrated = useHydrated();
 
 	const width = '220px';
 
@@ -28,7 +29,7 @@ export function Sidebar() {
 			collapsedWidth="0px"
 			collapsed={collapsed}
 			toggled={!collapsed}
-			breakPoint="md"
+			breakPoint={hydrated ? "md" : undefined}
 			onBreakPoint={breakpointChanged}
 			onBackdropClick={toggle}
 		>
