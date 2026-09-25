@@ -8,7 +8,7 @@
 | Blocks | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 86 |
 | Spec | [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD §1.3 Design principles](../SDD.md#13-design-principles-used-to-break-ties-throughout) |
 
-**Status:** in-progress
+**Status:** done
 
 > `apps/web/src` reaches the rest of the app three ways today: 82 `src/...` imports resolved by a tsconfig
 > `paths` entry plus a matching Vite alias, 138 relative imports three or more levels up (`../../../`) and 37
@@ -31,14 +31,14 @@
 
 ## Acceptance criteria
 
-- [ ] `apps/web` has 0 imports from `src/...` and 0 relative imports two or more levels up; both are
+- [x] `apps/web` has 0 imports from `src/...` and 0 relative imports two or more levels up; both are
       zero-matches rows in `tests/architecture/zero-matches-web-rows.ts`.
-- [ ] `apps/web/tsconfig.json` has no `paths`/`baseUrl`, and `apps/web/vite.config.ts` no `src` alias.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:architecture`, `pnpm knip`, `pnpm knip --production`
+- [x] `apps/web/tsconfig.json` has no `paths`/`baseUrl`, and `apps/web/vite.config.ts` no `src` alias.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:architecture`, `pnpm knip`, `pnpm knip --production`
       and `pnpm boundaries` green.
-- [ ] `pnpm --filter @vp/web build` builds the client and SSR bundles, and the route tree has no drift.
-- [ ] The dev server serves `/` and `/watch/<id>` server-rendered.
-- [ ] `apps/web/AGENTS.md` documents the convention; nothing else still documents the `src/` alias.
+- [x] `pnpm --filter @vp/web build` builds the client and SSR bundles, and the route tree has no drift.
+- [x] The dev server serves `/` and `/watch/<id>` server-rendered.
+- [x] `apps/web/AGENTS.md` documents the convention; nothing else still documents the `src/` alias.
 
 ## Out of scope
 
