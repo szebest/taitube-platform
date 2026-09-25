@@ -32,7 +32,7 @@
 ## Acceptance criteria
 
 - [ ] `apps/web` has 0 imports from `src/...` and 0 relative imports two or more levels up; both are
-      zero-matches rows in `tests/architecture/zero-matches-rows.ts`.
+      zero-matches rows in `tests/architecture/zero-matches-web-rows.ts`.
 - [ ] `apps/web/tsconfig.json` has no `paths`/`baseUrl`, and `apps/web/vite.config.ts` no `src` alias.
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:architecture`, `pnpm knip`, `pnpm knip --production`
       and `pnpm boundaries` green.
