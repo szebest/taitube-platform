@@ -1244,6 +1244,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
 | `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter, single-sourced in `packages/universal/domain/src/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis with singleflight & ETag 304. |
 | `GET /v1/categories` | Public categories list | — | `200 [Category]` | Unauthenticated active taxonomy list sorted by sort_order, name. L1/L2 cached + ETag 304. |
+| `GET /v1/bootstrap` | Initial app context | — | `200 { user: Channel \| null, categories:[Category], featureFlags: Record<string, boolean> }` | Anonymous allowed; a valid bearer adds the caller's channel, an invalid one is 401. Categories come from the same L1/L2 cache as `GET /v1/categories`; `featureFlags` holds each name in `FEATURE_FLAGS` as `true`. One round trip for the web root loader. |
 | `GET /videos/:id` | Detail | — | `200 Video` (status, progress, ladder, `playbackUrl`, `posterUrl`, `spriteUrl`, `renditions[]`, `likesCount`, `dislikesCount`, `error?`) | Owner or public/unlisted. |
 | `PUT /videos/:id/reactions` | Set/clear reaction | `{ type: "LIKE" \| "DISLIKE" \| "NONE" }` | `200 { videoId, likesCount, dislikesCount, userReaction }` | Authenticated caller (`video:react`). Atomically updates Postgres and Redis counters. |
 | `POST /v1/videos/:id/views` | Playback beacon | `{ sessionId, watchSeconds, videoDuration }` | `202 { videoId }` | Anonymous allowed. No database access: HyperLogLog dedupe per viewer (the account when signed in, else the session) and a Redis buffer increment (§5.2). Under 5 s of watch time (or the whole of a shorter video) is accepted and not counted. An unknown video id is dropped at flush. |
@@ -2307,12 +2308,13 @@ The schema is **closed over what the code reads**: every key the deployables rea
 | `LOG_LEVEL` | both | `debug` | pino level: `trace` · `debug` · `info` · `warn` · `error` |
 | `SERVICE_VERSION` | both | `dev` | OTel resource attribute; nothing in the images or manifests sets it. The service name is set in code (`vp-api`, `vp-worker-<stage>`) |
 | `ADAPTER_FAMILY` | both | `external` | `in-memory` only for in-process tests; the one switch `registerAdapters` reads |
-| `CORS_ORIGINS` | api | `http://localhost:5173,http://localhost:8080` | comma list of frontend origins; production refuses empty or `*` |
+| `CORS_ORIGINS` | api | `http://localhost:5173,http://localhost:4173,http://localhost:8080` | comma list of frontend origins: the Vite dev server, the built `apps/web` SSR server and the HLS test page; production refuses empty or `*` |
 | `TRUST_PROXY` | api | empty | comma list of proxy addresses/CIDRs whose `X-Forwarded-For` is trusted |
 | `HTTP_BODY_LIMIT_BYTES` | api | `1048576` | JSON body cap; media goes straight to S3 |
 | `PORT` | api | `3000` | HTTP listener; `0` picks a free port |
 | `METRICS_PORT` | both | `9464` | `/metrics` on a separate port; `0` picks a free port |
 | `PAGE_SIZE_DEFAULT` / `PAGE_SIZE_MAX` | api | `20` / `100` | keyset page size when `?limit` is omitted, and the most a request gets (a larger `limit` is clamped) |
+| `FEATURE_FLAGS` | api | empty | comma list of flag names `GET /v1/bootstrap` reports as `true`; a flag not listed is absent, which the web reads as off |
 
 ### 16.2 PostgreSQL
 
