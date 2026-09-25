@@ -14,7 +14,8 @@
 > `apps/web` is a CRA 5 single-page app on `react-router-dom` 6 and RTK Query. This ticket is the foundation
 > the rest of the frontend builds on, so it goes ahead of all of them even though it carries a higher number
 > (see the numbering note in [README](README.md)). It is a foundation, not a rewrite: legacy pages come across
-> as thin working routes, and the tickets that redesign them own deleting the legacy code.
+> as thin working routes with only the mechanical edits the new router and SSR force on them, and the tickets
+> that redesign them own deleting the legacy code.
 
 ## What to build
 
@@ -25,6 +26,9 @@
   not left beside the new setup.
 - Workspace packages resolve from source through Vite, so the webpack `resolve.fullySpecified` override goes
   with craco. Relative imports stay extensionless.
+- `apps/web/tsconfig.json` extends the client base from `@vp/tsconfig` with `moduleResolution: "bundler"`,
+  instead of its hand-written CRA config, and the `src/*` imports that lean on `baseUrl` get a matching Vite
+  alias so the app, its specs and `tsc` resolve them the same way.
 - Scripts: `dev` (Vite dev server with HMR, so the root `pnpm dev` starts the web app next to the API and
   worker), `build`, `start` (serves the built SSR server), `test`, `typecheck`. `apps/web/turbo.json` declares
   the real build output so turbo caches it.
@@ -50,9 +54,19 @@
 - The reference pattern, built once: the `/watch/$videoId` loader calls
   `queryClient.ensureQueryData(videoQueryOptions(videoId))` and the legacy watch page reads that one query
   with `useSuspenseQuery`. Every other endpoint stays on RTK Query until 53.
-- The server renders the existing pages and the browser hydrates them. A legacy component that touches
-  `window`, `localStorage` or `document` at render time gets `ssr: false` on its route (selective SSR)
-  instead of a rewrite; the table below records which.
+- The server renders the existing pages and the browser hydrates them. Route-level `ssr: false` is not the
+  escape hatch: `ThemeProvider` and `SidebarProvider` wrap every route, so turning SSR off for them turns it
+  off for the whole app. Instead:
+  - 89 owns an SSR-safe storage hook in `src/hooks/` (a server default on the first render, the stored value
+    read after mount) and the two root providers use it in place of `useLocalStorage` from
+    `@uidotdev/usehooks`, which throws on the server. `getUsersPreferredTheme()` stops reading
+    `window.matchMedia` during render and reads it after mount the same way.
+  - The legacy `VideoPlayer` (`react-player` plus `useLocalStorage`) renders client-only inside the watch
+    route, behind a mount check with the poster as the server fallback; the rest of the watch page renders on
+    the server.
+- `react-player` 2.16 loads hls.js from `cdn.jsdelivr.net` at runtime (`HLS_SDK_URL`), which breaks local-first.
+  89 bundles `hls.js` and sets `window.Hls` before the player mounts, so react-player's `getSDK` uses it and
+  never fetches the CDN copy.
 - Typed environment: `src/config` parses `import.meta.env` with Zod once, `VITE_API_BASE_URL` replaces
   `REACT_APP_API_BASE_URL` (defaulting to `http://localhost:3000`), and nothing else in `src/` reads
   `import.meta.env` or `process.env`.
@@ -65,7 +79,7 @@ apps/web/src/
 ├── features/<feature>/   new code: api/ (queryOptions, mutations), components/, hooks/
 ├── integrations/         query/ (QueryClient factory), auth/ (the auth seam in router context)
 ├── components/ui/        reserved for the design system (55)
-├── modules/              legacy pages, carried over untouched; each page ticket deletes its folder
+├── modules/              legacy pages: router imports swapped, nothing redesigned; each page ticket deletes its folder
 └── router.tsx            createRouter, context { queryClient, auth }, defaults
 ```
 
@@ -80,7 +94,16 @@ The seams each later ticket drops into without restructuring:
 
 ### 5. Legacy pages carried over
 
-Every URL that works today still resolves, with the legacy UI. Nothing below is polished or refactored.
+Every URL that works today still resolves, with the legacy UI. Nothing below is polished or redesigned, but
+the legacy code does get mechanical edits:
+
+- `Link`, `useParams`, `useNavigate`, `Navigate` and `Outlet` from `react-router-dom` (in `DefaultLayout`, the
+  sidebar, login, `VideoPage`, `EditPage`, `UserPage` and the video card) are swapped for their
+  `@tanstack/react-router` equivalents, one for one, typed against the route tree.
+- `renderPage`, `App.test.tsx` and `index.test.tsx` stop wrapping in `MemoryRouter` and render through the real
+  router with memory history.
+- `react-router-dom` and `react-router` are removed from `apps/web/package.json`.
+- The two root providers and the player get the SSR changes in section 3.
 
 | URL | Carried over as | Replaced by |
 |---|---|---|
@@ -129,7 +152,14 @@ Every URL that works today still resolves, with the legacy UI. Nothing below is 
       `VITE_API_BASE_URL`.
 - [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint`, `pnpm test:architecture` green; CI stays
       inside its budgets.
-- [ ] `make smoke-offline` passes; the page loads nothing from an off-machine host.
+- [ ] `react-router-dom` and `react-router` are gone from `apps/web/package.json` and from every import in
+      `src/`.
+- [ ] Server-rendering every URL in the table succeeds; the root providers render their server default and
+      read storage after mount, and the watch page's player renders client-only with the poster on the server.
+- [ ] `make smoke-offline` passes, and the page loads nothing from an off-machine host.
+- [ ] Playing a video on `/watch/<id>` makes no request to `cdn.jsdelivr.net` or any other off-machine host
+      (hls.js comes from the bundle through `window.Hls`); asserted by a spec on react-player's SDK loading
+      and by the network log of a local playback.
 - [ ] `apps/web/AGENTS.md` describes the stack as it now is and documents the structure and seams above;
       `packages/client/api-client/AGENTS.md`, `ARCHITECTURE.md`, `README.md` and SDD ADR-21 no longer mention CRA
       or craco as current.

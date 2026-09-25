@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#57](https://github.com/szebest/taitube-platform/issues/57) |
 | Size | L |
-| Blocked by | 55 - Design system · 89 - TanStack Start foundation |
+| Blocked by | 55 - Design system · 75 - Playwright harness · 89 - TanStack Start foundation |
 | Blocks | 59, 62, 65, 66, 73, 76, 77, 78 |
 | Spec | [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
@@ -99,6 +99,9 @@ in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-li
 - [ ] Every shortcut in the matrix works and none fires while an input has focus.
 - [ ] `onTimeUpdate`, `onEnded` and `onQualityChange` fire with typed payloads.
 - [ ] Unmount destroys the hls.js instance and removes every listener and timer (spec asserts it).
+- [ ] A playback flow in the Playwright suite from [75](75-fullstack-e2e-playwright-security-perf-validation.md):
+      the `<video>` element fires `playing` and `timeupdate` on the HLS master of a seeded READY video, with
+      no off-machine request.
 
 ## Out of scope
 

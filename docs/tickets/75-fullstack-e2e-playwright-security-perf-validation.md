@@ -6,7 +6,7 @@
 | Issue | [#75](https://github.com/szebest/taitube-platform/issues/75) |
 | Size | L |
 | Blocked by | 89 - TanStack Start foundation |
-| Blocks | — |
+| Blocks | 57 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
 **Status:** blocked
@@ -23,7 +23,9 @@ big suite at the end.
    runs a reduced set.
 2. **Core flows on the current app:**
    - Browse: home feed renders server-side, a card opens the watch page.
-   - Watch and playback: the `<video>` element fires `playing` and `timeupdate` on the HLS master.
+   - Watch: the watch page renders server-side for a seeded READY video. The playback flow (`playing` and
+     `timeupdate` on the HLS master) belongs to [57](57-production-video-player-hls-streaming-controls.md),
+     which adds it to this harness, so it tests the real player rather than the legacy react-player.
    - Upload: sign in with a dev persona, upload a fixture from the upload page, the video reaches READY
      (the full-stack smoke formerly planned in 52).
 3. **Security suite:**
@@ -42,14 +44,14 @@ them. Lighthouse and vitals are [64](64-web-vitals-monitoring-inp-lcp-cls-real-u
 ## Delivery slices
 
 1. Harness, `webServer`, seed, CI job and the browse flow.
-2. Watch/playback and upload to READY flows.
+2. Watch page and upload to READY flows.
 3. Security suite.
 
 ## Acceptance criteria
 
 - [ ] `pnpm --filter @vp/web test:e2e` runs the suite against the local compose stack with no off-machine
       requests at test time; CI runs the reduced set.
-- [ ] Browse, playback and upload-to-READY flows pass on the current app.
+- [ ] Browse, watch page and upload-to-READY flows pass on the current app.
 - [ ] Each XSS payload renders inert in every field it is placed in.
 - [ ] Each privilege escalation attempt gets 403 (or 401 when unauthenticated) with a problem+json body.
 - [ ] The HTML response carries the security headers above.
