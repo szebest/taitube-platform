@@ -8,15 +8,14 @@ const DATE_TIME_FIELD_KEYS = [
   ...TIME_FIELD_KEYS,
 ] as const satisfies OptionKeys<Intl.DateTimeFormatOptions>;
 
-export const DATE_TIME_OPTION_KEYS = [
-  'style',
-  ...DATE_TIME_FIELD_KEYS,
-] as const satisfies OptionKeys<Intl.DateTimeFormatOptions, 'style'>;
-
-export type DateTimeOptions = Pick<
+const DATE_TIME_OPTION_KEYS = ['style', ...DATE_TIME_FIELD_KEYS] as const satisfies OptionKeys<
   Intl.DateTimeFormatOptions,
-  (typeof DATE_TIME_FIELD_KEYS)[number]
-> & { readonly style?: DateStyle };
+  'style'
+>;
+
+type DateTimeOptions = Pick<Intl.DateTimeFormatOptions, (typeof DATE_TIME_FIELD_KEYS)[number]> & {
+  readonly style?: DateStyle;
+};
 
 export interface DateTimeValue {
   readonly type: 'dateTime';

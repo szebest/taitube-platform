@@ -1,7 +1,7 @@
 import type { DateOptions, ListOptions, NumberOptions } from '@vp/intl';
 
 /** The branches a count selects between; `{?}` in a branch is the count, formatted. */
-export interface PluralBranches {
+interface PluralBranches {
   readonly zero?: string;
   readonly one?: string;
   readonly two?: string;

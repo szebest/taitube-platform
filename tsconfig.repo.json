@@ -2,6 +2,7 @@
   "extends": "./packages/universal/tsconfig/base.json",
   "compilerOptions": {
     "noEmit": true,
+    "lib": ["ES2023"],
     "incremental": false,
     "types": ["node", "vitest/globals"],
     "paths": {

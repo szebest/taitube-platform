@@ -3,12 +3,12 @@ import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';
 import { scale } from './bytes';
 
-export const BITRATE_OPTION_KEYS = [
+const BITRATE_OPTION_KEYS = [
   'maximumFractionDigits',
   'unitDisplay',
 ] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
 
-export type BitrateOptions = Pick<Intl.NumberFormatOptions, (typeof BITRATE_OPTION_KEYS)[number]>;
+type BitrateOptions = Pick<Intl.NumberFormatOptions, (typeof BITRATE_OPTION_KEYS)[number]>;
 
 /** In bits per second. */
 export interface BitrateValue {

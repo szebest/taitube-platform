@@ -1,4 +1,4 @@
-import { LOCALE_STORAGE_KEY, readBrowserEnvironment } from '../browser-environment';
+import { readBrowserEnvironment } from '../browser-environment';
 
 describe('@vp/intl-react: readBrowserEnvironment', () => {
   beforeEach(() => {
@@ -6,7 +6,7 @@ describe('@vp/intl-react: readBrowserEnvironment', () => {
   });
 
   it("reads the saved locale, the browser's languages, its zone and the time", () => {
-    localStorage.setItem(LOCALE_STORAGE_KEY, 'sv-FI');
+    localStorage.setItem('vp.locale', 'sv-FI');
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['de-AT', 'en']);
 
     const environment = readBrowserEnvironment();

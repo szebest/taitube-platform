@@ -1,17 +1,28 @@
 import { andThen, map } from '@vp/result';
 import { parseInstant } from '../inputs';
 import { referenceInstant } from '../reference-instant';
+import {
+  DAY,
+  HOUR,
+  MILLISECONDS_PER_SECOND,
+  MINUTE,
+  MONTH,
+  SECOND,
+  WEEK,
+  YEAR,
+} from '../time-spans';
 import { type OptionKeys, withOptions } from '../with-options';
 
-export const RELATIVE_OPTION_KEYS = [
-  'numeric',
-  'style',
-] as const satisfies OptionKeys<Intl.RelativeTimeFormatOptions>;
-
-export type RelativeOptions = Pick<
+const RELATIVE_OPTION_KEYS = ['numeric', 'style', 'pastOnly'] as const satisfies OptionKeys<
   Intl.RelativeTimeFormatOptions,
-  (typeof RELATIVE_OPTION_KEYS)[number]
+  'pastOnly'
 >;
+
+/** `pastOnly` reads an instant after the reference as `now`: a publish date is never in the future. */
+type RelativeOptions = Pick<
+  Intl.RelativeTimeFormatOptions,
+  Exclude<(typeof RELATIVE_OPTION_KEYS)[number], 'pastOnly'>
+> & { readonly pastOnly?: boolean };
 
 export interface RelativeValue {
   readonly type: 'relative';
@@ -25,20 +36,20 @@ interface UnitSpan {
   readonly seconds: number;
 }
 
-const SECOND: UnitSpan = { unit: 'second', seconds: 1 };
+const SMALLEST: UnitSpan = { unit: 'second', seconds: SECOND };
 
 const LARGEST_FIRST: readonly UnitSpan[] = [
-  { unit: 'year', seconds: 365 * 24 * 60 * 60 },
-  { unit: 'month', seconds: 30 * 24 * 60 * 60 },
-  { unit: 'week', seconds: 7 * 24 * 60 * 60 },
-  { unit: 'day', seconds: 24 * 60 * 60 },
-  { unit: 'hour', seconds: 60 * 60 },
-  { unit: 'minute', seconds: 60 },
-  SECOND,
+  { unit: 'year', seconds: YEAR },
+  { unit: 'month', seconds: MONTH },
+  { unit: 'week', seconds: WEEK },
+  { unit: 'day', seconds: DAY },
+  { unit: 'hour', seconds: HOUR },
+  { unit: 'minute', seconds: MINUTE },
+  SMALLEST,
 ];
 
-export function largestUnit(elapsedSeconds: number): UnitSpan {
-  return LARGEST_FIRST.find(({ seconds }) => Math.abs(elapsedSeconds) >= seconds) ?? SECOND;
+function largestUnit(elapsedSeconds: number): UnitSpan {
+  return LARGEST_FIRST.find(({ seconds }) => Math.abs(elapsedSeconds) >= seconds) ?? SMALLEST;
 }
 
 export const relative = withOptions<RelativeValue>(
@@ -47,9 +58,11 @@ export const relative = withOptions<RelativeValue>(
   (value, context) =>
     andThen(parseInstant('relative', value.value), (then) =>
       andThen(referenceInstant('relative', value.now, context), (now) => {
-        const options = { numeric: 'auto' as const, ...value.options };
+        const { pastOnly = false, ...display } = value.options ?? {};
+        const options = { numeric: 'auto' as const, ...display };
         return map(context.cache.relativeTimeFormat(context.locale, options), (format) => {
-          const elapsedSeconds = (then.getTime() - now.getTime()) / 1000;
+          const signedSeconds = (then.getTime() - now.getTime()) / MILLISECONDS_PER_SECOND;
+          const elapsedSeconds = pastOnly ? Math.min(signedSeconds, 0) : signedSeconds;
           const { unit, seconds } = largestUnit(elapsedSeconds);
           return format.format(Math.round(elapsedSeconds / seconds), unit);
         });

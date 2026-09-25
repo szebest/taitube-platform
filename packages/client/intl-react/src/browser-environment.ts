@@ -1,6 +1,6 @@
 import { tryCatch, unwrapOr } from '@vp/result';
 
-export const LOCALE_STORAGE_KEY = 'vp.locale';
+const LOCALE_STORAGE_KEY = 'vp.locale';
 
 export interface BrowserEnvironment {
   readonly persistedLocale: string | undefined;
@@ -18,6 +18,10 @@ function persistedLocale(): string | undefined {
   return unwrapOr(stored, null) ?? undefined;
 }
 
+export function currentInstant(): string {
+  return new Date().toISOString();
+}
+
 /**
  * Everything the runtime says about the viewer, read in one place. It is the only module that may:
  * `@vp/intl` takes all of it as arguments, which is what lets a server render pass its own.
@@ -27,6 +31,6 @@ export function readBrowserEnvironment(): BrowserEnvironment {
     persistedLocale: persistedLocale(),
     languages: typeof navigator === 'undefined' ? [] : navigator.languages,
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    now: new Date().toISOString(),
+    now: currentInstant(),
   };
 }

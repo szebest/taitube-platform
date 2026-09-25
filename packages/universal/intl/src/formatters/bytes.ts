@@ -2,13 +2,13 @@ import { andThen, map } from '@vp/result';
 import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';
 
-export const BYTES_OPTION_KEYS = [
+const BYTES_OPTION_KEYS = [
   'maximumFractionDigits',
   'unitDisplay',
   'base',
 ] as const satisfies OptionKeys<Intl.NumberFormatOptions, 'base'>;
 
-export type BytesOptions = Pick<
+type BytesOptions = Pick<
   Intl.NumberFormatOptions,
   Exclude<(typeof BYTES_OPTION_KEYS)[number], 'base'>
 > & { readonly base?: 'decimal' | 'binary' };

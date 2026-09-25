@@ -1,12 +1,9 @@
 export * from './context';
 export * from './create-intl';
-export type { DurationFormatOptions, DurationParts } from './duration-fallback';
 export * from './failures';
 export * from './format-value';
-export { type IntlCache, createIntlCache } from './intl-cache';
+export { createIntlCache } from './intl-cache';
 export * from './locale-chain';
-export { type OptionKeys, type Formatter, withOptions } from './with-options';
-export type { DateStyle } from './format-instant';
 
 export * from './formatters/bitrate';
 export * from './formatters/bytes';

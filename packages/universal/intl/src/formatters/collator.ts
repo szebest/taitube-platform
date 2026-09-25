@@ -3,7 +3,7 @@ import type { FormatContext } from '../context';
 import { type FormatFailure, unknownOption } from '../failures';
 import { type OptionKeys, findUnknownOption } from '../with-options';
 
-export const COLLATOR_OPTION_KEYS = [
+const COLLATOR_OPTION_KEYS = [
   'sensitivity',
   'numeric',
   'caseFirst',

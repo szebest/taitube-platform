@@ -2,13 +2,11 @@ import { type Result, andThen, err, ok, tryCatch } from '@vp/result';
 import { type FormatContext, USER, type User, resolveCurrency } from '../context';
 import { type FormatFailure, unrenderable } from '../failures';
 
-export type DisplayNameType = Intl.DisplayNamesType;
-
 /** `USER` names the viewer's own language, or their own currency. */
 export interface DisplayNameValue {
   readonly type: 'displayName';
   readonly value: string | User;
-  readonly of: DisplayNameType;
+  readonly of: Intl.DisplayNamesType;
 }
 
 function resolveCode(

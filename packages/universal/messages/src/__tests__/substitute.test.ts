@@ -1,5 +1,5 @@
 import { type Params, dt } from '../define';
-import { placeholders, substitute } from '../substitute';
+import { substitute } from '../substitute';
 import { NOW, intlFor } from './fixtures';
 
 const LIKES = dt('{count:plural}', {
@@ -136,16 +136,10 @@ describe('@vp/messages: substitute', () => {
     expect(render(dt('[{a}] and {b}!'), { a: 'x', b: 'y' })).toBe('[x] and y!');
   });
 
-  it('reads the same placeholder names at runtime as Params does at compile time', () => {
-    const template = 'Hi {name}, {count:plural} new in {names:list} since {when:date}';
-    const args: Params<typeof template> = { name: 'Ada', count: 1, names: [], when: NOW };
+  it('reads at runtime exactly the placeholders Params reads at compile time', () => {
+    const template = 'Hi {name}, {count:number} new in {names:list} since {when:date}';
+    const args: Params<typeof template> = { name: 'Ada', count: 7, names: ['x', 'y'], when: NOW };
 
-    expect(placeholders(template).map(({ name }) => name)).toEqual(Object.keys(args));
-    expect(placeholders(template).map(({ kind }) => kind)).toEqual([
-      undefined,
-      'plural',
-      'list',
-      'date',
-    ]);
+    expect(render(dt(template), args)).toMatch(/^Hi Ada, 7 new in x and y since Sep 22, 2026$/);
   });
 });

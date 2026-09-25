@@ -56,6 +56,32 @@
         "!dist/**"
       ]
     },
+    "packages/universal/intl": {
+      "entry": ["src/**/type-fixtures/*.ts"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/universal/messages": {
+      "entry": ["src/**/type-fixtures/*.ts"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/client/intl-react": {
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
     "packages/universal/errors": {
       "entry": ["src/**/type-fixtures/*.ts"],
       "project": [

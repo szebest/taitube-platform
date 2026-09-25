@@ -66,7 +66,7 @@ function placeholder(
   }
 }
 
-export interface Placeholder {
+interface Placeholder {
   readonly token: string;
   readonly name: string;
   readonly kind: string | undefined;
@@ -74,7 +74,7 @@ export interface Placeholder {
 }
 
 /** The placeholders `Params` reads at the type level, read here at runtime by the same grammar. */
-export function placeholders(template: string): Placeholder[] {
+function placeholders(template: string): Placeholder[] {
   return Array.from(template.matchAll(PLACEHOLDER), (match) => ({
     token: match[0],
     name: match[1] ?? '',

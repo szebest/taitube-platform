@@ -1,7 +1,7 @@
 import { ARABIC_INDIC_DIGIT, contextFor } from '../../__tests__/fixtures';
-import { type BytesOptions, bytes, scale } from '../bytes';
+import { type BytesValue, bytes, scale } from '../bytes';
 
-function render(locale: string, value: number, options?: BytesOptions) {
+function render(locale: string, value: number, options?: BytesValue['options']) {
   const rendered = bytes({ type: 'bytes', value, options }, contextFor(locale));
   return rendered.ok ? rendered.value : rendered.error.code;
 }

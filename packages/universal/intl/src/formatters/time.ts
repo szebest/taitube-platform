@@ -10,12 +10,12 @@ export const TIME_FIELD_KEYS = [
   'timeZoneName',
 ] as const satisfies OptionKeys<Intl.DateTimeFormatOptions>;
 
-export const TIME_OPTION_KEYS = ['style', ...TIME_FIELD_KEYS] as const satisfies OptionKeys<
+const TIME_OPTION_KEYS = ['style', ...TIME_FIELD_KEYS] as const satisfies OptionKeys<
   Intl.DateTimeFormatOptions,
   'style'
 >;
 
-export type TimeOptions = Pick<Intl.DateTimeFormatOptions, (typeof TIME_FIELD_KEYS)[number]> & {
+type TimeOptions = Pick<Intl.DateTimeFormatOptions, (typeof TIME_FIELD_KEYS)[number]> & {
   readonly style?: DateStyle;
 };
 
@@ -25,7 +25,7 @@ export interface TimeValue {
   readonly options?: TimeOptions;
 }
 
-export function timeFormatOptions(options: TimeOptions = {}): Intl.DateTimeFormatOptions {
+function timeFormatOptions(options: TimeOptions = {}): Intl.DateTimeFormatOptions {
   const { style, ...fields } = options;
   if (style !== undefined) return { timeStyle: style };
   return Object.keys(fields).length === 0 ? { timeStyle: 'short' } : fields;

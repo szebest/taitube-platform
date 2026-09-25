@@ -10,9 +10,9 @@ import { type Result, err, unwrapOr } from '@vp/result';
 import { type ArgsOf, type Catalogues, type MessageKey, findMessage } from './catalogue';
 import { substitute } from './substitute';
 
-export type MissingMessage = Unrenderable & { readonly key: string };
+type MissingMessage = Unrenderable & { readonly key: string };
 
-export type MessageFailure = FormatFailure | MissingMessage;
+type MessageFailure = FormatFailure | MissingMessage;
 
 type ArgsTuple<K extends MessageKey> = keyof ArgsOf<K> extends never
   ? [args?: ArgsOf<K>]

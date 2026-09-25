@@ -1,10 +1,7 @@
 import { map } from '@vp/result';
 import { type OptionKeys, withOptions } from '../with-options';
 
-export const LIST_OPTION_KEYS = [
-  'type',
-  'style',
-] as const satisfies OptionKeys<Intl.ListFormatOptions>;
+const LIST_OPTION_KEYS = ['type', 'style'] as const satisfies OptionKeys<Intl.ListFormatOptions>;
 
 export type ListOptions = Pick<Intl.ListFormatOptions, (typeof LIST_OPTION_KEYS)[number]>;
 

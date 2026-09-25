@@ -2,14 +2,14 @@ import { andThen, map } from '@vp/result';
 import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';
 
-export const COMPACT_OPTION_KEYS = [
+const COMPACT_OPTION_KEYS = [
   'compactDisplay',
   'maximumFractionDigits',
   'minimumFractionDigits',
   'maximumSignificantDigits',
 ] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
 
-export type CompactOptions = Pick<Intl.NumberFormatOptions, (typeof COMPACT_OPTION_KEYS)[number]>;
+type CompactOptions = Pick<Intl.NumberFormatOptions, (typeof COMPACT_OPTION_KEYS)[number]>;
 
 export interface CountValue {
   readonly type: 'count';

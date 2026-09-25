@@ -2,6 +2,9 @@ import { ProgressBar } from 'react-bootstrap';
 
 import styles from './upload-progress.module.scss';
 
+import { uploadProgress } from '@vp/intl';
+import { Format } from '@vp/intl-react';
+
 import { uploadsApi } from '../../api';
 
 export function UploadProgress() {
@@ -9,7 +12,7 @@ export function UploadProgress() {
 
   return (
     <div className={styles.progress}>
-      <p>Progress: {Math.round(loaded ?? 0)}%</p>
+      <p>Progress: <Format value={uploadProgress(loaded ?? 0)} /></p>
       <ProgressBar now={loaded} />
     </div>
   )

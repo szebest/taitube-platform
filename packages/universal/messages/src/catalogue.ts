@@ -1,10 +1,10 @@
 import type { Message, Params } from './define';
 import type { en } from './en';
 
-export type Catalogue = typeof en;
+type Catalogue = typeof en;
 
 /** A translation: any feature or message may be missing, and the fallback chain fills the gap. */
-export type PartialCatalogue = {
+type PartialCatalogue = {
   readonly [F in keyof Catalogue]?: { readonly [M in keyof Catalogue[F]]?: Message };
 };
 

@@ -4,6 +4,7 @@ import type { FormatFailure } from '../failures';
 import { formatInstant } from '../format-instant';
 import { parseInstant } from '../inputs';
 import { referenceInstant } from '../reference-instant';
+import { DAY, MILLISECONDS_PER_SECOND } from '../time-spans';
 
 export interface CalendarDayValue {
   readonly type: 'calendarDay';
@@ -11,7 +12,7 @@ export interface CalendarDayValue {
   readonly now?: string;
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+const DAY_MS = DAY * MILLISECONDS_PER_SECOND;
 
 function partNumber(parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPartTypes): number {
   return Number(parts.find((part) => part.type === type)?.value);

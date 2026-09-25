@@ -4,12 +4,11 @@ import { uploadProgress } from '../upload-progress';
 
 describe('@vp/intl: uploadProgress', () => {
   it.each([
-    { uploaded: 0, total: 100, expected: '0%' },
-    { uploaded: 1, total: 3, expected: '33%' },
-    { uploaded: 100, total: 100, expected: '100%' },
-    { uploaded: 0, total: 0, expected: '0%' },
-  ])('renders $uploaded of $total bytes as $expected', ({ uploaded, total, expected }) => {
-    const progress = uploadProgress(uploaded, total);
+    { points: 0, expected: '0%' },
+    { points: 42.6, expected: '43%' },
+    { points: 100, expected: '100%' },
+  ])('renders $points percentage points as $expected', ({ points, expected }) => {
+    const progress = uploadProgress(points);
 
     expect(progress.type).toBe('percent');
     expect(createIntl(contextFor('en')).format(progress)).toEqual({ ok: true, value: expected });

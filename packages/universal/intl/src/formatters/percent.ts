@@ -2,13 +2,13 @@ import { andThen, map } from '@vp/result';
 import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';
 
-export const PERCENT_OPTION_KEYS = [
+const PERCENT_OPTION_KEYS = [
   'minimumFractionDigits',
   'maximumFractionDigits',
   'signDisplay',
 ] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
 
-export type PercentOptions = Pick<Intl.NumberFormatOptions, (typeof PERCENT_OPTION_KEYS)[number]>;
+type PercentOptions = Pick<Intl.NumberFormatOptions, (typeof PERCENT_OPTION_KEYS)[number]>;
 
 /** In percentage points: `7` renders as 7%, not 700%. */
 export interface PercentValue {

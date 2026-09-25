@@ -3,13 +3,13 @@ import { type User, resolveCurrency } from '../context';
 import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';
 
-export const MONEY_OPTION_KEYS = [
+const MONEY_OPTION_KEYS = [
   'currency',
   'currencyDisplay',
   'signDisplay',
 ] as const satisfies OptionKeys<Intl.NumberFormatOptions>;
 
-export type MoneyOptions = Pick<
+type MoneyOptions = Pick<
   Intl.NumberFormatOptions,
   Exclude<(typeof MONEY_OPTION_KEYS)[number], 'currency'>
 > & { readonly currency?: string | User };

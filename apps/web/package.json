@@ -10,7 +10,6 @@
     "@vp/api-contracts": "workspace:*",
     "@vp/intl": "workspace:*",
     "@vp/intl-react": "workspace:*",
-    "@vp/messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/result": "workspace:*",
     "axios": "^1.6.2",

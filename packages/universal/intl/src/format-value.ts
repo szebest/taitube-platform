@@ -62,7 +62,10 @@ export type FormatKind = (typeof FORMAT_KINDS)[number];
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
-/** Compiles only while `Kinds` and the union's tags are the same set, each way round. */
+/**
+ * Compiles only while `Kinds` and the union's tags are the same set, each way round.
+ * @public
+ */
 export type KindsMatchUnion<Kinds extends string, Tags extends string> = Same<
   Kinds,
   Tags

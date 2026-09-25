@@ -137,7 +137,7 @@ document is stale — fix it.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl`, `@vp/intl-react`, `@vp/messages`, `@vp/permissions`, `@vp/result` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/result` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 
@@ -151,7 +151,8 @@ Its acceptance suite boots `apps/api` and a stub S3, so the package sits above t
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
 **Every package in `@vp/web`'s closure is `universal` or `client`** - ten of them, counting what
-`@vp/api-contracts` and `@vp/permissions` pull in (`@vp/domain`, `@vp/errors`, `@vp/pagination`); `@vp/web`
+`@vp/api-contracts`, `@vp/permissions` and `@vp/intl-react` pull in (`@vp/domain`, `@vp/errors`,
+`@vp/pagination`, `@vp/messages`); `@vp/web`
 has no `@vp/*` devDependency. That is the invariant the whole scheme exists to protect. Verify it any time
 with `pnpm why bullmq` from `apps/web` — it returns nothing.
 

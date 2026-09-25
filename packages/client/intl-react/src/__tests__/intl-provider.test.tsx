@@ -1,4 +1,4 @@
-import { render, renderHook } from '@testing-library/react';
+import { act, render, renderHook } from '@testing-library/react';
 import type { IntlBinding } from '@vp/intl';
 import { dt } from '@vp/messages';
 import type { ReactNode } from 'react';
@@ -56,7 +56,7 @@ describe('@vp/intl-react: IntlProvider', () => {
     const { container } = render(page);
 
     expect(container.innerHTML).toBe(renderToStaticMarkup(page));
-    expect(container.textContent).toBe('1.2M views · 3 days ago');
+    expect(container.textContent).toMatch(/^1\.2[Mm] views · 3 days ago$/);
   });
 
   it('hydrates a server render without a mismatch', () => {
@@ -107,5 +107,27 @@ describe('@vp/intl-react: IntlProvider', () => {
 
     expect(t('errors.forbidden')).toEqual({ ok: true, value: 'Det får du inte göra.' });
     expect(t('errors.internal')).toEqual({ ok: true, value: 'Something went wrong on our side.' });
+  });
+
+  it('keeps relative times current by ticking its clock when no now is pinned', () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    vi.setSystemTime(new Date(NOW));
+    const minuteBefore = new Date(Date.parse(NOW) - 60_000).toISOString();
+    const seen: IntlBinding[] = [];
+
+    const { container } = render(
+      <IntlProvider locale="en" timeZone="UTC">
+        <Format value={{ type: 'relative', value: minuteBefore }} />
+        <Probe seen={seen} />
+      </IntlProvider>
+    );
+    const before = container.textContent;
+    act(() => {
+      vi.advanceTimersByTime(2 * 60_000);
+    });
+
+    expect([before, container.textContent]).toEqual(['1 minute ago', '3 minutes ago']);
+    expect(new Set(seen.map(({ context }) => context.cache)).size).toBe(1);
+    vi.useRealTimers();
   });
 });

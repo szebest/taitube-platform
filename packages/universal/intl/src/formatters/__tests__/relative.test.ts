@@ -1,5 +1,5 @@
 import { ARABIC_INDIC_DIGIT, NOW, contextFor } from '../../__tests__/fixtures';
-import { largestUnit, relative } from '../relative';
+import { relative } from '../relative';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -36,20 +36,36 @@ describe('@vp/intl: relative', () => {
     expect(render('en', NOW, later)).toBe('2 days ago');
   });
 
+  it.each([
+    { pastOnly: false, expected: 'in 2 hours' },
+    { pastOnly: true, expected: 'now' },
+  ])(
+    'with pastOnly $pastOnly reads an instant ahead of now as $expected',
+    ({ pastOnly, expected }) => {
+      const ahead = relative(
+        { type: 'relative', value: ago(-2 * HOUR), options: { pastOnly } },
+        contextFor('en')
+      );
+
+      expect(ahead).toEqual({ ok: true, value: expected });
+    }
+  );
+
+  it.each([
+    { pastOnly: false, expected: '3 days ago' },
+    { pastOnly: true, expected: '3 days ago' },
+  ])('with pastOnly $pastOnly leaves a past instant as $expected', ({ pastOnly, expected }) => {
+    const past = relative(
+      { type: 'relative', value: ago(3 * DAY), options: { pastOnly } },
+      contextFor('en')
+    );
+
+    expect(past).toEqual({ ok: true, value: expected });
+  });
+
   it('declines when neither the value nor the context says when now is', () => {
     expect(render('en', NOW, undefined, contextFor('en', { now: undefined }))).toBe(
       'FORMAT_UNRENDERABLE'
     );
-  });
-
-  it.each([
-    { seconds: 0, unit: 'second' },
-    { seconds: -59, unit: 'second' },
-    { seconds: 60, unit: 'minute' },
-    { seconds: 90_000, unit: 'day' },
-    { seconds: -700_000, unit: 'week' },
-    { seconds: 40_000_000, unit: 'year' },
-  ])('reads $seconds seconds in $unit', ({ seconds, unit }) => {
-    expect(largestUnit(seconds).unit).toBe(unit);
   });
 });
