@@ -32,6 +32,7 @@ describe('apps/api/composition: services module', () => {
     const c = await services();
 
     expect(Object.keys(c.get(Services.ServiceSet)).sort()).toEqual([
+      'analyticsService',
       'categoryService',
       'channelService',
       'commentService',
@@ -46,6 +47,7 @@ describe('apps/api/composition: services module', () => {
       'subscriptionService',
       'uploadService',
       'videoService',
+      'viewService',
     ]);
     expectOk(await c.dispose());
   });

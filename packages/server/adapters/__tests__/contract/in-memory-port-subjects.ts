@@ -7,6 +7,7 @@ import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../../in-memory/in-memory-subscription-cache';
+import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
 import type { CacheClientSubject } from './cache-client.contract';
 import type { CategoryCacheSubject } from './category-cache.contract';
 import type { FlowProducerSubject } from './flow-producer.contract';
@@ -14,6 +15,7 @@ import type { JobQueueSubject } from './job-queue.contract';
 import type { MultipartStorageSubject } from './multipart-storage.contract';
 import type { StorageClientSubject } from './storage-client.contract';
 import type { SubscriptionCacheSubject } from './subscription-cache.contract';
+import type { ViewBufferSubject } from './view-buffer.contract';
 
 export async function inMemoryJobQueueSubject(name: string): Promise<JobQueueSubject> {
   const queue = new InMemoryJobQueue(name);
@@ -81,4 +83,8 @@ export async function inMemoryMultipartStorageSubject(): Promise<MultipartStorag
       expectOk(await multipart.close());
     },
   };
+}
+
+export async function inMemoryViewBufferSubject(): Promise<ViewBufferSubject> {
+  return { buffer: new InMemoryViewBuffer(), close: async () => {} };
 }

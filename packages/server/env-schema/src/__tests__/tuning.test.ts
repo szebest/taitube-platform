@@ -16,4 +16,8 @@ describe('packages/env-schema: tuning', () => {
   it('keeps the JWKS fetch timeout under the refetch interval, so a hung fetch cannot stack', () => {
     expect(tuning.JWKS_FETCH_TIMEOUT_MS).toBeLessThan(tuning.JWKS_REFETCH_INTERVAL_MS);
   });
+
+  it('remembers an applied view batch far longer than a retried flush takes to reach it', () => {
+    expect(tuning.VIEWS.batchRetentionMs).toBeGreaterThan(100 * tuning.VIEWS.flushIntervalMs);
+  });
 });

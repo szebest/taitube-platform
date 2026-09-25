@@ -13,12 +13,12 @@ depends on `@vp/errors` and `@casl/ability` only, so `apps/web`, `apps/api`, `@v
 `@vp/adapters` and `@vp/domain-rules` all import it.
 
 - Rule factories in `src/rules/`: `defineVideoRules`, `defineCommentRules`, `defineChannelRules`,
-  `defineUploadRules`, `defineAdminRules` (`<resource>.rules.ts`).
+  `defineUploadRules`, `defineAnalyticsRules`, `defineAdminRules` (`<resource>.rules.ts`).
 - The ability builder `getUserPermissions(user: UserContext | null)` in `ability.ts`, which applies all
-  five.
+  six.
 - Typed helpers in `src/helpers/`: `canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canReactVideo`,
   `canAccessUpload`, `canSubscribeChannel`, `canCreateComment`, `canUpdateComment`,
-  `canDeleteComment`, `canPinComment`, `canManageCategory`, `canAccessAdmin`.
+  `canDeleteComment`, `canPinComment`, `canManageCategory`, `canAccessAdmin`, `canReadAnalytics`.
 - Subject normalizers in `src/normalizers/` (`toVideoSubject`, `toUploadSubject`,
   `normalizeVideoResource`, `normalizeUploadResource`) that the helpers wrap resources with.
 - Types in `src/types/`: `UserContext`, `Role`, `parseRole` (the boundary parser from untrusted input),

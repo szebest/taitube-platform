@@ -7,7 +7,6 @@ import { MetricsServer } from '../server';
  * Extracts metric names from the markdown table in docs/SDD.md §13.1.
  */
 function parseSddMetricNames(): string[] {
-  // Locate SDD.md relative to monorepo root: packages/observability/src/__tests__ -> 4 levels up
   const sddPath = path.resolve(__dirname, '../../../../../docs/SDD.md');
   const sddContent = fs.readFileSync(sddPath, 'utf-8');
 
@@ -27,7 +26,6 @@ function parseSddMetricNames(): string[] {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    // Table rows start and end with |
     if (!trimmed.startsWith('|') || trimmed.startsWith('|---') || trimmed.includes('| Metric |')) {
       continue;
     }
@@ -39,7 +37,6 @@ function parseSddMetricNames(): string[] {
 
     if (cells.length > 0 && cells[0]) {
       const metricCell = cells[0];
-      // May contain backticks and multiple metric names separated by / (e.g. `storage_ops_total` / `storage_op_duration_seconds`)
       const backtickMatches = metricCell.match(/`([^`]+)`/g);
       if (backtickMatches) {
         for (const match of backtickMatches) {
@@ -79,13 +76,13 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
       `Metrics present in code registry but missing in SDD §13.1: ${extraInCode.join(', ')}`
     ).toEqual([]);
 
-    expect(codeSet.size).toBe(22);
+    expect(codeSet.size).toBe(26);
   });
 
-  it('registers all 22 metrics in the registry', async () => {
+  it('registers all 26 metrics in the registry', async () => {
     const metrics = createMetricsRegistry();
     const registeredMetrics = await metrics.registry.getMetricsAsJSON();
-    expect(registeredMetrics.length).toBeGreaterThanOrEqual(22);
+    expect(registeredMetrics.length).toBeGreaterThanOrEqual(26);
   });
 
   const EXPECTED_METRICS = [
@@ -115,6 +112,10 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     { name: 'reconciler_repairs_total', type: 'counter', labels: ['type'] },
     { name: 'outbox_drain_duration_seconds', type: 'histogram', labels: [] },
     { name: 'outbox_events_published_total', type: 'counter', labels: ['kind'] },
+    { name: 'video_views_recorded_total', type: 'counter', labels: ['outcome'] },
+    { name: 'video_view_buffer_circuit_open', type: 'gauge', labels: [] },
+    { name: 'video_views_flushed_total', type: 'counter', labels: [] },
+    { name: 'video_view_flush_duration_seconds', type: 'histogram', labels: [] },
   ];
 
   it.each(EXPECTED_METRICS)(
@@ -162,6 +163,10 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     metrics.videosByStatus.set({ status: 'READY' }, 5);
     metrics.processingStepsRunningStale.set(1);
     metrics.timeToReady.observe({ bucket: '<1min' }, 25);
+    metrics.viewsRecorded.inc({ outcome: 'counted' });
+    metrics.viewBufferCircuitOpen.set(0);
+    metrics.viewsFlushed.inc(3);
+    metrics.viewFlushDuration.observe(0.02);
 
     const server = new MetricsServer({ port: 0, host: '127.0.0.1', registry: metrics.registry });
     expect((await server.listen()).ok).toBe(true);

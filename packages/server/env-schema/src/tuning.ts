@@ -50,6 +50,20 @@ export const HOUSEKEEPING = {
   scanLimit: 100,
 } as const;
 
+/**
+ * A beacon under `minWatchSeconds` is not a view. `fallbackCapacity` bounds what the API holds in
+ * memory while Redis is unreachable, counted in distinct viewers per video and day.
+ */
+export const VIEWS = {
+  minWatchSeconds: 5,
+  dedupTtlSeconds: SECONDS_PER_DAY,
+  fallbackCapacity: 10_000,
+  breakerFailureThreshold: 3,
+  breakerCooldownMs: 5 * MS_PER_SECOND,
+  flushIntervalMs: 10 * MS_PER_SECOND,
+  batchRetentionMs: MS_PER_DAY,
+} as const;
+
 export const SEGMENT_UPLOAD = {
   concurrency: 4,
   maxRetries: 3,
