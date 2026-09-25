@@ -1,4 +1,4 @@
-import { createRequestHandler, defaultRenderHandler } from '@tanstack/react-router/ssr/server';
+import { createRequestHandler, defaultStreamHandler } from '@tanstack/react-router/ssr/server';
 import { getRouter } from '../router';
 
 export type ServerRender = {
@@ -15,7 +15,7 @@ export async function serverRender(path: string): Promise<ServerRender> {
     request: new Request(`http://localhost:5173${path}`),
     createRouter: () => getRouter(),
   });
-  const response = await handler(defaultRenderHandler);
+  const response = await handler(defaultStreamHandler);
   const html = await response.text();
   return {
     status: response.status,
