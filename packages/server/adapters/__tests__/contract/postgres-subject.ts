@@ -49,6 +49,9 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
     adjustComment: async (id, patch) => {
       await db.update(schema.videoComments).set(patch).where(eq(schema.videoComments.id, id));
     },
+    backdatePlaylist: async (id, updatedAt) => {
+      await db.update(schema.playlists).set({ updatedAt }).where(eq(schema.playlists.id, id));
+    },
     reset: async () => {
       await db.execute(TRUNCATE);
     },

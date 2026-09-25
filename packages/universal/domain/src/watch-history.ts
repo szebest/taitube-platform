@@ -2,7 +2,7 @@ import type { ChannelCard } from './channel';
 import type { Video } from './video';
 
 /** A video watched this far counts as finished: the end card and credits are not worth resuming. */
-export const WATCH_COMPLETION_RATIO = 0.92;
+const WATCH_COMPLETION_RATIO = 0.92;
 
 export interface WatchProgress {
   videoId: string;

@@ -28,6 +28,7 @@ describe('ChannelService', () => {
     channelService = new ChannelService({
       users: repositories.users,
       channels: repositories.channels,
+      playlists: repositories.playlists,
     });
 
     expectOk(
@@ -150,6 +151,18 @@ describe('ChannelService', () => {
       });
     });
 
+    it('gives a new identity its private Watch Later, once however often it signs in', async () => {
+      expectOk(await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com'));
+      expectOk(await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com'));
+
+      const owned = expectOk(
+        await repositories.playlists.listOwned({ id: NEW_USER_ID, role: 'USER' }, null)
+      );
+      expect(owned).toMatchObject([
+        { title: 'Watch Later', visibility: 'private', isSystem: true },
+      ]);
+    });
+
     it('synthesises an email when the identity carries none', async () => {
       expectOk(await channelService.ensureProvisioned(NEW_USER_ID));
 
@@ -190,6 +203,7 @@ describe('ChannelService', () => {
     it('surfaces a dead store rather than leaving the caller without a channel', async () => {
       const broken = new ChannelService({
         users: repositories.users,
+        playlists: repositories.playlists,
         channels: Object.assign(Object.create(repositories.channels), {
           findByUserId: async () => err(databaseUnavailable('findByUserId')),
         }),

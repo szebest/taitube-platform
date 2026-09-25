@@ -11,6 +11,7 @@ import {
   CommentService,
   DlqService,
   FeedService,
+  PlaylistService,
   QueueService,
   ReactionService,
   SseHub,
@@ -19,6 +20,7 @@ import {
   UploadService,
   VideoService,
   ViewService,
+  WatchHistoryService,
   registerHousekeepingSchedulers,
 } from '../services/index';
 import { Poller } from '../services/poller';
@@ -104,7 +106,12 @@ export function registerServices(c: Container): Container {
     )
     .provide(
       Services.ChannelService,
-      () => new ChannelService({ users: repositories().users, channels: repositories().channels })
+      () =>
+        new ChannelService({
+          users: repositories().users,
+          channels: repositories().channels,
+          playlists: repositories().playlists,
+        })
     )
     .provide(
       Services.ReactionService,
@@ -154,6 +161,26 @@ export function registerServices(c: Container): Container {
           videos: repositories().videos,
           videoViews: repositories().videoViews,
           now: Date.now,
+        })
+    )
+    .provide(
+      Services.PlaylistService,
+      () =>
+        new PlaylistService({
+          playlists: repositories().playlists,
+          videos: repositories().videos,
+          cdn: config().cdn,
+        })
+    )
+    .provide(
+      Services.WatchHistoryService,
+      (c) =>
+        new WatchHistoryService({
+          history: repositories().watchHistory,
+          videos: repositories().videos,
+          playheads: c.get(Adapters.PlayheadCache),
+          paginator: c.get(Services.Paginator),
+          cdn: config().cdn,
         })
     )
     .provide(Services.QueueService, (c) => new QueueService({ queues: c.get(Adapters.Queues) }))
@@ -260,6 +287,8 @@ export function registerServices(c: Container): Container {
       commentService: c.get(Services.CommentService),
       viewService: c.get(Services.ViewService),
       analyticsService: c.get(Services.AnalyticsService),
+      playlistService: c.get(Services.PlaylistService),
+      watchHistoryService: c.get(Services.WatchHistoryService),
       queueService: c.get(Services.QueueService),
       dlqService: c.get(Services.DlqService),
       sseService: c.get(Services.SseService),

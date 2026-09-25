@@ -2,7 +2,13 @@ import type { OwnedPlaylistView, PlaylistView } from '@vp/api-contracts';
 import type { PlaylistRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import type { Playlist, PlaylistPatch, PlaylistReorder, PlaylistVisibility } from '@vp/domain';
 import {
+  type CreatePlaylistFailure,
+  type DeletePlaylistFailure,
   type ManagePlaylistFailure,
+  type PlaylistNotFound,
+  type ReorderPlaylistFailure,
+  type UpdatePlaylistFailure,
+  type VideoNotFound,
   decidePlaylistCreate,
   decidePlaylistDelete,
   decidePlaylistItemsChange,
@@ -26,6 +32,11 @@ export interface PlaylistServiceDeps {
   cdn: CdnBase;
 }
 
+type ReadPlaylistFailure = PlaylistNotFound | DatabaseUnavailable;
+type CreatePlaylistServiceFailure = CreatePlaylistFailure | ReadPlaylistFailure;
+type ItemsFailure = ManagePlaylistFailure | DatabaseUnavailable;
+type AddItemFailure = ItemsFailure | ReturnType<typeof publicReadFailure> | VideoNotFound;
+
 interface NewPlaylistBody {
   title: string;
   description?: string;
@@ -39,7 +50,10 @@ interface NewPlaylistBody {
 export class PlaylistService {
   constructor(private readonly deps: PlaylistServiceDeps) {}
 
-  async create(actor: UserContext, body: NewPlaylistBody) {
+  async create(
+    actor: UserContext,
+    body: NewPlaylistBody
+  ): Promise<Result<PlaylistView, CreatePlaylistServiceFailure>> {
     const decided = decidePlaylistCreate({ actor, ...body });
     if (isErr(decided)) return decided;
 
@@ -52,18 +66,28 @@ export class PlaylistService {
     return await this.detail(actor, created.value.id);
   }
 
-  async get(viewer: UserContext | null, playlistId: string) {
+  async get(
+    viewer: UserContext | null,
+    playlistId: string
+  ): Promise<Result<PlaylistView, ReadPlaylistFailure>> {
     return await this.detail(viewer, playlistId);
   }
 
-  async listMine(actor: UserContext, videoId: string | null) {
+  async listMine(
+    actor: UserContext,
+    videoId: string | null
+  ): Promise<Result<{ items: OwnedPlaylistView[] }, DatabaseUnavailable>> {
     const owned = await this.deps.playlists.listOwned(actor, videoId);
-    return map(owned, (rows): { items: OwnedPlaylistView[] } => ({
+    return map(owned, (rows) => ({
       items: rows.map(toOwnedPlaylistView),
     }));
   }
 
-  async update(actor: UserContext, playlistId: string, patch: PlaylistPatch) {
+  async update(
+    actor: UserContext,
+    playlistId: string,
+    patch: PlaylistPatch
+  ): Promise<Result<PlaylistView, UpdatePlaylistFailure | DatabaseUnavailable>> {
     const playlist = await this.deps.playlists.findById(playlistId);
     if (isErr(playlist)) return playlist;
 
@@ -75,7 +99,10 @@ export class PlaylistService {
     return updated.value ? await this.detail(actor, playlistId) : err(playlistNotFound(playlistId));
   }
 
-  async remove(actor: UserContext, playlistId: string) {
+  async remove(
+    actor: UserContext,
+    playlistId: string
+  ): Promise<Result<void, DeletePlaylistFailure | DatabaseUnavailable>> {
     const playlist = await this.deps.playlists.findById(playlistId);
     if (isErr(playlist)) return playlist;
 
@@ -87,7 +114,11 @@ export class PlaylistService {
     return removed.value ? ok() : err(playlistNotFound(playlistId));
   }
 
-  async addItem(actor: UserContext, playlistId: string, videoId: string) {
+  async addItem(
+    actor: UserContext,
+    playlistId: string,
+    videoId: string
+  ): Promise<Result<PlaylistView, AddItemFailure>> {
     const permitted = await this.itemsChange(actor, playlistId);
     if (isErr(permitted)) return permitted;
 
@@ -111,7 +142,11 @@ export class PlaylistService {
     }
   }
 
-  async removeItem(actor: UserContext, playlistId: string, videoId: string) {
+  async removeItem(
+    actor: UserContext,
+    playlistId: string,
+    videoId: string
+  ): Promise<Result<void, ItemsFailure>> {
     const permitted = await this.itemsChange(actor, playlistId);
     if (isErr(permitted)) return permitted;
 
@@ -119,7 +154,11 @@ export class PlaylistService {
     return map(removed, () => undefined);
   }
 
-  async reorder(actor: UserContext, playlistId: string, change: PlaylistReorder) {
+  async reorder(
+    actor: UserContext,
+    playlistId: string,
+    change: PlaylistReorder
+  ): Promise<Result<PlaylistView, ItemsFailure | ReorderPlaylistFailure>> {
     const permitted = await this.itemsChange(actor, playlistId);
     if (isErr(permitted)) return permitted;
 
@@ -135,17 +174,20 @@ export class PlaylistService {
   private async itemsChange(
     actor: UserContext,
     playlistId: string
-  ): Promise<Result<Playlist, ManagePlaylistFailure | DatabaseUnavailable>> {
+  ): Promise<Result<Playlist, ItemsFailure>> {
     const playlist = await this.deps.playlists.findById(playlistId);
     if (isErr(playlist)) return playlist;
     return decidePlaylistItemsChange({ actor, playlist: playlist.value, playlistId });
   }
 
-  private async detail(viewer: UserContext | null, playlistId: string) {
+  private async detail(
+    viewer: UserContext | null,
+    playlistId: string
+  ): Promise<Result<PlaylistView, ReadPlaylistFailure>> {
     const found = await this.deps.playlists.findDetail(playlistId, viewer);
     if (isErr(found)) return found;
     return found.value
-      ? ok<PlaylistView>(toPlaylistView(found.value, this.deps.cdn))
+      ? ok(toPlaylistView(found.value, this.deps.cdn))
       : err(playlistNotFound(playlistId));
   }
 }

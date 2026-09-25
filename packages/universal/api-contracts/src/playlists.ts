@@ -218,4 +218,3 @@ export const listMyPlaylists = defineEndpoint({
 
 export type PlaylistView = z.infer<typeof PlaylistSchema>;
 export type OwnedPlaylistView = z.infer<typeof OwnedPlaylistSchema>;
-export type ChannelCardView = z.infer<typeof ChannelCardSchema>;

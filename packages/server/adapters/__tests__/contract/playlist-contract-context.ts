@@ -2,7 +2,7 @@ import type { PlaylistRepositoryPort } from '@vp/core/repositories';
 import type { PlaylistVisibility } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
+import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
 import type { RepositoriesSubject } from './subjects';
 
 export interface PlaylistContractContext {
@@ -22,10 +22,8 @@ export const P = {
 
 export const FIVE = [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c, VIDEO_IDS.d, VIDEO_IDS.e];
 
-/** Postgres stamps microseconds and the in-memory double milliseconds; ordering specs need a gap. */
-export function tick(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 5));
-}
+export const AN_HOUR_AGO = new Date(Date.now() - HOUR_MS);
+export const TWO_HOURS_AGO = new Date(Date.now() - 2 * HOUR_MS);
 
 export async function seedPlaylist(
   ctx: PlaylistContractContext,

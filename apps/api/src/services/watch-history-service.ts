@@ -1,11 +1,15 @@
-import type { RecordWatchProgressBody, WatchHistoryItemView } from '@vp/api-contracts';
+import type {
+  RecordWatchProgressBody,
+  WatchHistoryItemView,
+  WatchProgressView,
+} from '@vp/api-contracts';
 import type { PlayheadCachePort } from '@vp/core/ports';
 import type { VideoRepository, WatchHistoryRepositoryPort } from '@vp/core/repositories';
 import { type WatchProgress, clampProgress } from '@vp/domain';
 import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import type { Paginator } from '@vp/pagination';
+import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, isOk, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
@@ -13,6 +17,11 @@ import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 import { toWatchHistoryItemView, toWatchProgressView } from './library-views';
 
 type PublicReadFailure = ReturnType<typeof publicReadFailure>;
+
+interface WatchHistoryPage {
+  items: WatchHistoryItemView[];
+  nextCursor: string | null;
+}
 
 export interface WatchHistoryServiceDeps {
   history: WatchHistoryRepositoryPort;
@@ -30,7 +39,10 @@ export interface WatchHistoryServiceDeps {
 export class WatchHistoryService {
   constructor(private readonly deps: WatchHistoryServiceDeps) {}
 
-  async record(viewer: UserContext, body: RecordWatchProgressBody) {
+  async record(
+    viewer: UserContext,
+    body: RecordWatchProgressBody
+  ): Promise<Result<WatchProgressView, DatabaseUnavailable | PublicReadFailure>> {
     const { videoId, durationSeconds, reason } = body;
     const progress: WatchProgress = {
       videoId,
@@ -51,7 +63,10 @@ export class WatchHistoryService {
     return ok(toWatchProgressView(progress));
   }
 
-  async playhead(viewer: UserContext, videoId: string) {
+  async playhead(
+    viewer: UserContext,
+    videoId: string
+  ): Promise<Result<{ playhead: WatchProgressView | null }, DatabaseUnavailable>> {
     const cached = await this.deps.playheads.read(viewer.id, videoId);
     if (isOk(cached) && cached.value) return ok({ playhead: toWatchProgressView(cached.value) });
 
@@ -59,7 +74,10 @@ export class WatchHistoryService {
     return map(stored, (found) => ({ playhead: found && toWatchProgressView(found) }));
   }
 
-  async list(viewer: UserContext, query: { cursor?: string; limit?: number }) {
+  async list(
+    viewer: UserContext,
+    query: { cursor?: string; limit?: number }
+  ): Promise<Result<WatchHistoryPage, DatabaseUnavailable | InvalidCursor>> {
     const { paginator } = this.deps;
     const limit = paginator.limit(query.limit);
     const cursor = decodeCreatedAtCursor(query.cursor, paginator);
@@ -77,14 +95,14 @@ export class WatchHistoryService {
     );
   }
 
-  async remove(viewer: UserContext, videoId: string) {
+  async remove(viewer: UserContext, videoId: string): Promise<Result<void, DatabaseUnavailable>> {
     const removed = await this.deps.history.remove(viewer.id, videoId);
     if (isErr(removed)) return removed;
     await this.forget(viewer, [videoId]);
     return ok();
   }
 
-  async clear(viewer: UserContext) {
+  async clear(viewer: UserContext): Promise<Result<void, DatabaseUnavailable>> {
     const removed = await this.deps.history.removeAll(viewer.id);
     if (isErr(removed)) return removed;
     await this.forget(viewer, removed.value);

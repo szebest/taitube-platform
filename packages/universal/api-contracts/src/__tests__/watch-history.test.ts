@@ -6,7 +6,7 @@ import {
   removeWatchHistoryEntry,
 } from '../watch-history';
 
-const VIDEO = '00000000-0000-7000-8000-000000000001';
+const VIDEO = '00000000-0000-7000-8000-00000000c0de';
 
 describe('packages/api-contracts: watch history', () => {
   it.each([

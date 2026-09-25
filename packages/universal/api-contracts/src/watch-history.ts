@@ -5,7 +5,7 @@ import { KeysetQuerySchema } from './pagination';
 import { ChannelCardSchema } from './playlists';
 import { VideoSummarySchema } from './video-resource';
 
-export const PLAYHEAD_REASONS = ['heartbeat', 'pause', 'ended'] as const;
+const PLAYHEAD_REASONS = ['heartbeat', 'pause', 'ended'] as const;
 
 const VideoIdParamSchema = z.object({ videoId: z.string().uuid() });
 

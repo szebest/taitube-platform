@@ -1,4 +1,8 @@
-import type { ChannelRepositoryPort, UserRepository } from '@vp/core/repositories';
+import type {
+  ChannelRepositoryPort,
+  PlaylistRepositoryPort,
+  UserRepository,
+} from '@vp/core/repositories';
 import type { Channel } from '@vp/domain';
 import {
   type ChannelNotFound,
@@ -9,10 +13,12 @@ import {
 import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
 import { type Result, err, isErr, ok } from '@vp/result';
 import { handleCandidates } from '@vp/validation';
+import { uuidv7 } from 'uuidv7';
 
 export interface ChannelServiceDeps {
   users: UserRepository;
   channels: ChannelRepositoryPort;
+  playlists: PlaylistRepositoryPort;
 }
 
 export interface ChannelView {
@@ -71,10 +77,12 @@ function toChannelView(channel: Channel): ChannelView {
 export class ChannelService {
   private readonly users: UserRepository;
   private readonly channels: ChannelRepositoryPort;
+  private readonly playlists: PlaylistRepositoryPort;
 
   constructor(deps: ChannelServiceDeps) {
     this.users = deps.users;
     this.channels = deps.channels;
+    this.playlists = deps.playlists;
   }
 
   async getAccount(userId: string): Promise<Result<UserAccountView, GetAccountFailure>> {
@@ -148,9 +156,9 @@ export class ChannelService {
   }
 
   /**
-   * Creates the user and channel rows a verified identity implies, on its first authenticated
-   * request. Both writes tolerate losing a race with a concurrent request for the same identity -
-   * and only that, so a dead store still surfaces instead of producing a channel-less user.
+   * Creates the user, channel and Watch Later rows a verified identity implies, on its first
+   * authenticated request. Every write tolerates losing a race with a concurrent request for the
+   * same identity - and only that, so a dead store still surfaces instead of a half-provisioned user.
    */
   async ensureProvisioned(userId: string, email?: string): Promise<Result<void, ProvisionFailure>> {
     const userEmail = email || `${userId}@taitube.local`;
@@ -177,9 +185,9 @@ export class ChannelService {
     });
 
     // A concurrent request for the same identity got there first; that is a success for us.
-    return isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN
-      ? created
-      : ok();
+    if (isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN) return created;
+
+    return await this.playlists.provisionWatchLater({ id: uuidv7(), ownerId: userId });
   }
 
   private async claimHandle(

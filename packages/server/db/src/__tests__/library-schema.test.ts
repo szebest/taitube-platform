@@ -100,13 +100,13 @@ describe('db: library migration', () => {
       .sort();
     for (const file of earlier) await apply(engine, file);
     await engine.exec(
-      "INSERT INTO users (id, email) VALUES ('00000000-0000-7000-8000-000000000001', 'a@x.local')"
+      "INSERT INTO users (id, email) VALUES ('00000000-0000-7000-8000-00000000c0de', 'a@x.local')"
     );
 
     await apply(engine, LIBRARY_MIGRATION);
     await expect(
       engine.exec(
-        "INSERT INTO playlists (id, owner_id, title, is_system) VALUES ('00000000-0000-7000-8000-0000000000f1', '00000000-0000-7000-8000-000000000001', 'Second', true)"
+        "INSERT INTO playlists (id, owner_id, title, is_system) VALUES ('00000000-0000-7000-8000-0000000000f1', '00000000-0000-7000-8000-00000000c0de', 'Second', true)"
       )
     ).rejects.toThrow();
     const { rows } = await engine.query<{ title: string; visibility: string }>(

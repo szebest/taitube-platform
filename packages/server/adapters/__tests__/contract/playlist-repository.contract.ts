@@ -3,14 +3,15 @@ import { WATCH_LATER_TITLE } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { OWNER_ID, VIDEO_IDS, seedOwners } from './fixtures';
 import {
+  AN_HOUR_AGO,
   OWNER,
   P,
   type PlaylistContractContext,
   STRANGER,
+  TWO_HOURS_AGO,
   addAll,
   seedPlaylist,
   seedVideos,
-  tick,
 } from './playlist-contract-context';
 import { describePlaylistItemsContract } from './playlist-items.contract';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
@@ -110,9 +111,9 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
     it('lists Watch Later first, then by latest change, with a count and a containsVideo flag', async () => {
       expectOk(await playlists.provisionWatchLater({ id: P.watchLater, ownerId: OWNER_ID }));
       await seedPlaylist(ctx, P.mix);
-      await tick();
       await seedPlaylist(ctx, P.other);
-      await tick();
+      await subject.backdatePlaylist(P.mix, TWO_HOURS_AGO);
+      await subject.backdatePlaylist(P.other, AN_HOUR_AGO);
       await addAll(ctx, [VIDEO_IDS.a, VIDEO_IDS.b]);
 
       const owned = expectOk(await playlists.listOwned(OWNER, VIDEO_IDS.a));
@@ -127,8 +128,7 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
 
     it('patches the fields given and moves updatedAt', async () => {
       await seedPlaylist(ctx, P.mix);
-      const before = expectOk(await playlists.findById(P.mix));
-      await tick();
+      await subject.backdatePlaylist(P.mix, AN_HOUR_AGO);
 
       const updated = expectOk(
         await playlists.update(P.mix, { title: 'Road trip', visibility: 'unlisted' })
@@ -139,7 +139,7 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
         visibility: 'unlisted',
         description: '',
       });
-      expect(updated?.updatedAt.getTime()).toBeGreaterThan(before?.updatedAt.getTime() ?? 0);
+      expect(updated?.updatedAt.getTime()).toBeGreaterThan(AN_HOUR_AGO.getTime());
       expect(expectOk(await playlists.update(P.absent, { title: 'x' }))).toBeNull();
     });
 

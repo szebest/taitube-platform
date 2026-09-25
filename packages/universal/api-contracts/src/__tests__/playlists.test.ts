@@ -9,7 +9,7 @@ import {
   updatePlaylist,
 } from '../playlists';
 
-const ITEM = '00000000-0000-7000-8000-000000000001';
+const ITEM = '00000000-0000-7000-8000-00000000c0de';
 
 describe('packages/api-contracts: playlists', () => {
   it.each([
