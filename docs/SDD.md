@@ -2313,7 +2313,7 @@ The schema is **closed over what the code reads**: every key the deployables rea
 | `LOG_LEVEL` | both | `debug` | pino level: `trace` · `debug` · `info` · `warn` · `error` |
 | `SERVICE_VERSION` | both | `dev` | OTel resource attribute; nothing in the images or manifests sets it. The service name is set in code (`vp-api`, `vp-worker-<stage>`) |
 | `ADAPTER_FAMILY` | both | `external` | `in-memory` only for in-process tests; the one switch `registerAdapters` reads |
-| `CORS_ORIGINS` | api | `http://localhost:5173,http://localhost:4173,http://localhost:8080` | comma list of frontend origins: the Vite dev server, the built `apps/web` SSR server and the HLS test page; production refuses empty or `*` |
+| `CORS_ORIGINS` | api | `http://localhost:5173,http://localhost:8080` | comma list of frontend origins: `apps/web` (its Vite dev server, `vite preview` and the built SSR server all serve `:5173`) and the HLS test page; production refuses empty or `*` |
 | `TRUST_PROXY` | api | empty | comma list of proxy addresses/CIDRs whose `X-Forwarded-For` is trusted |
 | `HTTP_BODY_LIMIT_BYTES` | api | `1048576` | JSON body cap; media goes straight to S3 |
 | `PORT` | api | `3000` | HTTP listener; `0` picks a free port |

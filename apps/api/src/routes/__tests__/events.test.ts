@@ -119,7 +119,7 @@ describe('SSE event routes', () => {
     { route: 'a public video stream', url: `/v1/videos/${PUBLIC_VIDEO}/events`, token: undefined },
     { route: 'the personal stream', url: '/v1/me/events', token: TOKENS.user },
   ])('keeps the CORS headers on $route for a listed origin', async ({ url, token }) => {
-    const origin = 'http://localhost:4173';
+    const origin = 'http://localhost:5173';
     const auth = token ? { authorization: `Bearer ${token}` } : {};
 
     const stream = await openStream(`${baseUrl}${url}`, { origin, ...auth });

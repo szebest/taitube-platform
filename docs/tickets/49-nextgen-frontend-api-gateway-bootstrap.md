@@ -40,9 +40,9 @@ compile-checked already; no parity suite against an external frontend.
 
 ## Open questions
 
-- Decided: the built TanStack Start server is expected on `http://localhost:4173`, Vite's preview port, because
-  the API holds 3000. [89](89-web-tanstack-start-foundation.md) serves `start` there, or changes the default
-  in `@vp/env-schema`, `.env.example`, the k8s base and SDD §16.1 together.
+- Decided: one web origin covers every local mode. [89](89-web-tanstack-start-foundation.md) serves `vite dev`,
+  `vite preview` and the built server (`start`) on `http://localhost:5173`, so the default stays
+  `:5173` plus the HLS test page on `:8080`.
 - Decided: `featureFlags` comes from a new `FEATURE_FLAGS` key, a comma list of enabled names, each reported
   as `true`; nothing else in the repo holds flags yet. Empty by default.
 - Decided: an authenticated caller whose account read fails gets that failure (401 or 404), not a guest
