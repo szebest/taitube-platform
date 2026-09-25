@@ -1,9 +1,8 @@
 import { type Result, err, ok } from '@vp/result';
-import { type InvalidField, type LengthBounds, invalidLength } from '../failures';
+import type { LengthBounds } from '../failures';
+import { type InvalidCommentContent, invalidCommentContent } from './failures';
 
-export const COMMENT_CONTENT_BOUNDS: LengthBounds = { minLength: 1, maxLength: 2000 };
-
-export type InvalidCommentContent = InvalidField<LengthBounds>;
+const COMMENT_CONTENT_BOUNDS: LengthBounds = { minLength: 1, maxLength: 2000 };
 
 const CONTROL_EXCEPT_LINE_BREAK_AND_TAB = /[^\P{Cc}\n\t]/gu;
 
@@ -19,5 +18,5 @@ export function validateCommentContent(content: string): Result<string, InvalidC
 
   return length >= minLength && length <= maxLength
     ? ok(normalized)
-    : err(invalidLength('content', COMMENT_CONTENT_BOUNDS));
+    : err(invalidCommentContent(COMMENT_CONTENT_BOUNDS));
 }

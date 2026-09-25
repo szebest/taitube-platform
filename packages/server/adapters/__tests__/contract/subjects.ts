@@ -11,7 +11,7 @@ export interface RepositoriesSubject {
   close(): Promise<void>;
 }
 
-export interface CommentAdjustment {
+interface CommentAdjustment {
   likeCount: number;
   createdAt: Date;
 }

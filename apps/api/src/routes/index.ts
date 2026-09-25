@@ -7,6 +7,7 @@ import { adminQueuesRoutes } from './admin/queues';
 import { adminVideosRoutes } from './admin/videos';
 import { categoriesRoutes } from './categories';
 import { channelsRoutes } from './channels';
+import { commentsRoutes } from './comments';
 import { devJwksRoutes } from './dev-jwks';
 import { eventsRoutes } from './events';
 import { feedRoutes } from './feed';
@@ -22,6 +23,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   uploadsRoutes,
   videosRoutes,
   reactionsRoutes,
+  commentsRoutes,
   feedRoutes,
   categoriesRoutes,
   adminCategoriesRoutes,

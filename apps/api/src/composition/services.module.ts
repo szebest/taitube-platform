@@ -2,26 +2,29 @@ import { Adapters, queueNamed } from '@vp/adapters/composition';
 import { type Container, token } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
 import type { JobQueue } from '@vp/core/ports';
-import { MetricsServer } from '@vp/observability';
 import { type Logger, createLogger } from '@vp/logger';
+import { MetricsServer } from '@vp/observability';
 import { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
-import { CategoryService } from '../services/category-service';
-import { ChannelService } from '../services/channel-service';
-import { DlqService } from '../services/dlq-service';
-import { FeedService } from '../services/feed-service';
-import { registerHousekeepingSchedulers } from '../services/housekeeping-schedulers';
+import {
+  CategoryService,
+  ChannelService,
+  CommentService,
+  DlqService,
+  FeedService,
+  QueueService,
+  ReactionService,
+  SseHub,
+  SseService,
+  SubscriptionService,
+  UploadService,
+  VideoService,
+  registerHousekeepingSchedulers,
+} from '../services/index';
 import { Poller } from '../services/poller';
 import { pollQueueMetrics } from '../services/queue-poller';
-import { QueueService } from '../services/queue-service';
-import { ReactionService } from '../services/reaction-service';
 import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
-import { SseHub } from '../services/sse-hub';
-import { SseService } from '../services/sse-service';
-import { SubscriptionService } from '../services/subscription-service';
-import { UploadService } from '../services/upload-service';
-import { VideoService } from '../services/video-service';
 import { bullBoardPlugin } from './bull-board';
 
 export interface ServiceSet {
@@ -32,6 +35,7 @@ export interface ServiceSet {
   channelService: ChannelService;
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
+  commentService: CommentService;
   queueService: QueueService;
   dlqService: DlqService;
   sseService: SseService;
@@ -50,6 +54,7 @@ export const Services = {
   ChannelService: token<ChannelService>('ChannelService'),
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
+  CommentService: token<CommentService>('CommentService'),
   QueueService: token<QueueService>('QueueService'),
   DlqService: token<DlqService>('DlqService'),
   SseService: token<SseService>('SseService'),
@@ -160,12 +165,17 @@ export function registerServices(c: Container): Container {
         })
     )
     .provide(
-      Services.QueueService,
+      Services.CommentService,
       (c) =>
-        new QueueService({
-          queues: c.get(Adapters.Queues),
+        new CommentService({
+          comments: repositories().comments,
+          videos: repositories().videos,
+          commentCache: c.get(Adapters.CommentCache),
+          singleflight: new Singleflight(),
+          paginator: c.get(Services.Paginator),
         })
     )
+    .provide(Services.QueueService, (c) => new QueueService({ queues: c.get(Adapters.Queues) }))
     .provide(Services.QueueBoard, (c) =>
       bullBoardPlugin({
         basePath: '/admin/queues',
@@ -261,6 +271,7 @@ export function registerServices(c: Container): Container {
       channelService: c.get(Services.ChannelService),
       reactionService: c.get(Services.ReactionService),
       subscriptionService: c.get(Services.SubscriptionService),
+      commentService: c.get(Services.CommentService),
       queueService: c.get(Services.QueueService),
       dlqService: c.get(Services.DlqService),
       sseService: c.get(Services.SseService),

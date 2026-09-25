@@ -3,6 +3,7 @@ import * as adminDlq from './admin-dlq';
 import * as adminVideos from './admin-videos';
 import * as categories from './categories';
 import * as channels from './channels';
+import * as comments from './comments';
 import * as events from './events';
 import * as feed from './feed';
 import * as health from './health';
@@ -17,6 +18,7 @@ export * from './admin-videos';
 export * from './admin-dlq';
 export * from './categories';
 export * from './channels';
+export * from './comments';
 export * from './endpoint';
 export * from './events';
 export * from './feed';
@@ -37,6 +39,7 @@ export const contracts = {
   adminVideos,
   categories,
   channels,
+  comments,
   events,
   feed,
   health,

@@ -1,43 +1,30 @@
-import type { CommentRepositoryPort, CommentWindow } from '@vp/core/repositories';
-import type { CommentThread } from '@vp/domain';
+import type { CommentRepositoryPort } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
 import {
-  HOUR_MS,
-  OTHER_OWNER_ID,
-  OWNER_ID,
-  VIDEO_IDS,
-  idsOf,
-  publicVideo,
-  seedOwners,
-} from './fixtures';
+  C,
+  CHANNEL_ID,
+  type CommentContractContext,
+  commentsCount,
+  keyset,
+  seedComment,
+  seedThreads,
+} from './comment-contract-context';
+import { describeCommentListingContract } from './comment-listing.contract';
+import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
-
-const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
-
-const C = {
-  old: '00000000-0000-7000-8000-000000000c01',
-  liked: '00000000-0000-7000-8000-000000000c02',
-  fresh: '00000000-0000-7000-8000-000000000c03',
-  reply1: '00000000-0000-7000-8000-000000000c04',
-  reply2: '00000000-0000-7000-8000-000000000c05',
-  other: '00000000-0000-7000-8000-000000000c06',
-} as const;
-
-const BASE = Date.parse('2026-03-01T12:00:00.000Z');
-
-function keyset(limit: number): CommentWindow {
-  return { type: 'keyset', cursor: null, limit };
-}
-
-function nextWindow(row: CommentThread, limit: number): CommentWindow {
-  const { isPinned, likeCount, createdAt, id } = row;
-  return { type: 'keyset', cursor: { isPinned, likeCount, createdAt, id }, limit };
-}
 
 export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
   describe('CommentRepository contract', () => {
     let subject: RepositoriesSubject;
     let comments: CommentRepositoryPort;
+    const ctx: CommentContractContext = {
+      get subject() {
+        return subject;
+      },
+      get comments() {
+        return comments;
+      },
+    };
 
     beforeAll(async () => {
       subject = await makeSubject();
@@ -46,37 +33,6 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     afterAll(async () => {
       await subject.close();
     });
-
-    async function commentsCount(videoId: string): Promise<number | undefined> {
-      return expectOk(await subject.repositories.videos.findById(videoId))?.commentsCount;
-    }
-
-    async function comment(
-      id: string,
-      options: { parentId?: string; hoursAgo?: number; likes?: number; videoId?: string } = {}
-    ) {
-      expectOk(
-        await comments.create({
-          id,
-          videoId: options.videoId ?? VIDEO_IDS.a,
-          authorId: OTHER_OWNER_ID,
-          parentId: options.parentId ?? null,
-          content: `comment ${id.slice(-2)}`,
-        })
-      );
-      await subject.adjustComment(id, {
-        createdAt: new Date(BASE - (options.hoursAgo ?? 0) * HOUR_MS),
-        likeCount: options.likes ?? 0,
-      });
-    }
-
-    async function seedThreads() {
-      await comment(C.old, { hoursAgo: 3, likes: 1 });
-      await comment(C.liked, { hoursAgo: 2, likes: 9 });
-      await comment(C.fresh, { hoursAgo: 1 });
-      await comment(C.reply1, { parentId: C.liked, hoursAgo: 0.5 });
-      await comment(C.reply2, { parentId: C.liked, hoursAgo: 0.25 });
-    }
 
     beforeEach(async () => {
       await subject.reset();
@@ -121,7 +77,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         },
       });
       expect(created.createdAt).toBeInstanceOf(Date);
-      expect(await commentsCount(VIDEO_IDS.a)).toBe(1);
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(1);
     });
 
     it('leaves the channel fields empty for an author without a channel', async () => {
@@ -162,108 +118,11 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         )
       );
 
-      expect(await commentsCount(VIDEO_IDS.a)).toBe(10);
-    });
-
-    it('ranks roots by likes then recency, carrying each thread reply count', async () => {
-      await seedThreads();
-
-      const top = expectOk(
-        await comments.listThreads(VIDEO_IDS.a, { sort: 'top', window: keyset(10) })
-      );
-
-      expect(idsOf(top)).toEqual([C.liked, C.old, C.fresh]);
-      expect(top.map((row) => row.replyCount)).toEqual([2, 0, 0]);
-    });
-
-    it('ranks roots by recency alone under newest', async () => {
-      await seedThreads();
-
-      const newest = expectOk(
-        await comments.listThreads(VIDEO_IDS.a, { sort: 'newest', window: keyset(10) })
-      );
-
-      expect(idsOf(newest)).toEqual([C.fresh, C.liked, C.old]);
-    });
-
-    it.each(['top', 'newest'] as const)('puts the pinned comment first under %s', async (sort) => {
-      await seedThreads();
-      expectOk(await comments.setPinned({ id: C.old, videoId: VIDEO_IDS.a }, true));
-
-      const [first] = expectOk(
-        await comments.listThreads(VIDEO_IDS.a, { sort, window: keyset(10) })
-      );
-
-      expect(first).toMatchObject({ id: C.old, isPinned: true });
-    });
-
-    it.each([
-      { sort: 'top' as const, order: [C.old, C.liked, C.fresh] },
-      { sort: 'newest' as const, order: [C.old, C.fresh, C.liked] },
-    ])('walks every root once from keyset cursors under $sort', async ({ sort, order }) => {
-      await seedThreads();
-      expectOk(await comments.setPinned({ id: C.old, videoId: VIDEO_IDS.a }, true));
-      const seen: string[] = [];
-      let window = keyset(1);
-
-      for (let page = 0; page < 5; page++) {
-        const rows = expectOk(await comments.listThreads(VIDEO_IDS.a, { sort, window }));
-        const [row] = rows;
-        if (!row) break;
-        seen.push(row.id);
-        if (rows.length < 2) break;
-        window = nextWindow(row, 1);
-      }
-
-      expect(seen).toEqual(order);
-    });
-
-    it('serves an offset window for the legacy page query', async () => {
-      await seedThreads();
-
-      const page = expectOk(
-        await comments.listThreads(VIDEO_IDS.a, {
-          sort: 'top',
-          window: { type: 'offset', offset: 1, limit: 1 },
-        })
-      );
-
-      expect(idsOf(page)).toEqual([C.old, C.fresh]);
-    });
-
-    it('keeps each video to its own comments', async () => {
-      await seedThreads();
-      await comment(C.other, { videoId: VIDEO_IDS.b });
-
-      const other = expectOk(
-        await comments.listThreads(VIDEO_IDS.b, { sort: 'top', window: keyset(10) })
-      );
-
-      expect(idsOf(other)).toEqual([C.other]);
-      expect(await commentsCount(VIDEO_IDS.b)).toBe(1);
-    });
-
-    it('lists a thread replies oldest first and resumes from a cursor', async () => {
-      await seedThreads();
-      const root = { id: C.liked, videoId: VIDEO_IDS.a };
-
-      const all = expectOk(await comments.listReplies(root, { cursor: null, limit: 10 }));
-      const [first] = all;
-      if (!first) throw new Error('the thread has no replies');
-      const rest = expectOk(
-        await comments.listReplies(root, {
-          cursor: { createdAt: first.createdAt, id: first.id },
-          limit: 10,
-        })
-      );
-
-      expect(idsOf(all)).toEqual([C.reply1, C.reply2]);
-      expect(all[0]?.author.handle).toBe('commenter');
-      expect(idsOf(rest)).toEqual([C.reply2]);
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(10);
     });
 
     it('edits the content and marks the comment edited', async () => {
-      await comment(C.old);
+      await seedComment(ctx, C.old);
 
       const edited = expectOk(await comments.updateContent(C.old, 'rewritten'));
 
@@ -272,12 +131,12 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     });
 
     it('removes a root with its replies and takes them all off the count', async () => {
-      await seedThreads();
+      await seedThreads(ctx);
 
       const removed = expectOk(await comments.remove({ id: C.liked, videoId: VIDEO_IDS.a }));
 
       expect(removed).toBe(3);
-      expect(await commentsCount(VIDEO_IDS.a)).toBe(2);
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(2);
       expect(expectOk(await comments.findById(C.liked))).toBeNull();
       expect(expectOk(await comments.findById(C.reply1))).toBeNull();
       expect(expectOk(await comments.updateContent(C.liked, 'too late'))).toBeNull();
@@ -289,7 +148,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
     });
 
     it('removes a reply and drops it from its root reply count', async () => {
-      await seedThreads();
+      await seedThreads(ctx);
 
       expect(expectOk(await comments.remove({ id: C.reply1, videoId: VIDEO_IDS.a }))).toBe(1);
       expect(expectOk(await comments.remove({ id: C.reply1, videoId: VIDEO_IDS.a }))).toBe(0);
@@ -298,11 +157,11 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         await comments.listThreads(VIDEO_IDS.a, { sort: 'top', window: keyset(1) })
       );
       expect(liked).toMatchObject({ id: C.liked, replyCount: 1 });
-      expect(await commentsCount(VIDEO_IDS.a)).toBe(4);
+      expect(await commentsCount(ctx, VIDEO_IDS.a)).toBe(4);
     });
 
     it('holds one pinned comment per video, unpinning the previous one', async () => {
-      await seedThreads();
+      await seedThreads(ctx);
       const at = (id: string) => ({ id, videoId: VIDEO_IDS.a });
 
       expectOk(await comments.setPinned(at(C.old), true));
@@ -320,5 +179,7 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
         expectOk(await comments.setPinned({ id: C.old, videoId: VIDEO_IDS.a }, true))
       ).toBeNull();
     });
+
+    describeCommentListingContract(ctx);
   });
 }

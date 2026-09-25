@@ -157,6 +157,11 @@ taitube-platform/
 - **Subscriptions**: `POST/DELETE /v1/channels/:id/subscribers`, `GET /v1/channels/:id/subscribers/me` and
   `GET /v1/me/subscriptions`, with self-subscription refused (`CANNOT_SUBSCRIBE_TO_SELF`);
   `GET /v1/feed/subscriptions` is a keyset-paginated feed of `READY` videos from subscribed channels.
+- **Comments**: `GET/POST /v1/videos/:id/comments`, `GET /v1/comments/:id/replies`,
+  `PATCH/DELETE /v1/comments/:id` and `POST/DELETE /v1/comments/:id/pin`. Threads nest one level, the list
+  is keyset-paginated under `sort=top` or `sort=newest` with the pinned comment first, the first top page
+  is cached in Redis for 60s, and `videos.comments_count` moves with every write. The author edits, the
+  video owner pins and moderates, moderators and admins delete.
 - **Dead letter queue**: permanent failures go to a DLQ that an admin can retry from.
 - **Observability**: OpenTelemetry traces for API calls and worker jobs, Prometheus metrics, Grafana
   dashboards and Alertmanager rules; the apps write JSON logs to stdout.

@@ -16,7 +16,7 @@ export interface Comment {
 }
 
 /** The author's channel, absent for a user who never claimed one. */
-export interface CommentAuthor {
+interface CommentAuthor {
   userId: string;
   channelId: string | null;
   handle: string | null;

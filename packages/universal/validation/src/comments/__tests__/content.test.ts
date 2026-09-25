@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { COMMENT_CONTENT_BOUNDS, validateCommentContent } from '../content';
+import { validateCommentContent } from '../content';
 
 describe('@vp/validation: validateCommentContent', () => {
   it.each([
@@ -31,7 +31,8 @@ describe('@vp/validation: validateCommentContent', () => {
     expect(isErr(result) && result.error).toMatchObject({
       code: ErrorCodes.VALIDATION_FAILED,
       field: 'content',
-      ...COMMENT_CONTENT_BOUNDS,
+      minLength: 1,
+      maxLength: 2000,
     });
   });
 });

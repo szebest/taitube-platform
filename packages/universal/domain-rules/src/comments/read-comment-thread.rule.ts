@@ -13,7 +13,6 @@ export interface ReadCommentThreadInput {
 
 export type ReadCommentThreadFailure = CommentNotFound | ReadVideoFailure;
 
-/** A thread is as readable as the video it hangs under. */
 export function decideCommentThreadRead(
   input: ReadCommentThreadInput
 ): Result<{ comment: Comment; video: Video }, ReadCommentThreadFailure> {

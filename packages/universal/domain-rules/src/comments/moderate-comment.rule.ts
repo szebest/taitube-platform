@@ -30,7 +30,6 @@ function located(input: ModerateCommentInput): Result<ModeratedComment, CommentN
     : err(commentNotFound(input.commentId));
 }
 
-/** The video owner moderates under their video; the author, a moderator and an admin may too. */
 export function decideCommentDelete(
   input: ModerateCommentInput
 ): Result<Comment, DeleteCommentFailure> {

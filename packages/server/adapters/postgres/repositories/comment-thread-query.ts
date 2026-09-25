@@ -99,7 +99,6 @@ export function commentThreadCursorScope(
   return cursor ? rowCompare(THREAD_KEYS[sort], '<', cursor) : undefined;
 }
 
-/** Replies read as a conversation, oldest first. */
 export function commentReplyOrderBy(): SQL[] {
   return REPLY_KEYS.map((key) => asc(key.column));
 }

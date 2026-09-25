@@ -11,4 +11,5 @@ export * from './http-cache';
 export * from './channel-service';
 export * from './reaction-service';
 export * from './subscription-service';
+export * from './comment-service';
 export * from './housekeeping-schedulers';

@@ -809,6 +809,9 @@ erDiagram
     videos ||--o{ video_events : emits
     videos ||--o{ video_reactions : receives
     users ||--o{ video_reactions : reacts
+    videos ||--o{ video_comments : receives
+    users ||--o{ video_comments : writes
+    video_comments ||--o{ video_comments : "replies to"
     users ||--o{ channel_subscriptions : subscribes
     channels ||--o{ channel_subscriptions : has
     processing_steps ||--o{ dlq_entries : "may park in"
@@ -847,8 +850,19 @@ erDiagram
         text error_code
         int version
         int views_count
+        int comments_count
         int likes_count
         int dislikes_count
+    }
+    video_comments {
+        uuid id PK
+        uuid video_id FK
+        uuid author_id FK
+        uuid parent_id FK
+        text content
+        bool is_pinned
+        int like_count
+        timestamptz deleted_at
     }
     video_reactions {
         uuid id PK
@@ -1057,6 +1071,25 @@ CREATE TABLE channel_subscriptions (
 );
 CREATE INDEX channel_subscriptions_subscriber_idx ON channel_subscriptions (subscriber_id, created_at DESC);
 CREATE INDEX channel_subscriptions_channel_idx ON channel_subscriptions (channel_id, created_at DESC);
+
+ALTER TABLE videos ADD COLUMN comments_count integer NOT NULL DEFAULT 0;  -- moved in the same transaction as each comment write
+
+CREATE TABLE video_comments (
+  id          uuid PRIMARY KEY,                         -- UUIDv7
+  video_id    uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  author_id   uuid NOT NULL REFERENCES users(id),
+  parent_id   uuid REFERENCES video_comments(id) ON DELETE CASCADE,  -- NULL for a root; a reply always points at a root
+  content     text NOT NULL,
+  is_pinned   boolean NOT NULL DEFAULT false,
+  is_edited   boolean NOT NULL DEFAULT false,
+  like_count  integer NOT NULL DEFAULT 0,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  updated_at  timestamptz NOT NULL DEFAULT now(),
+  deleted_at  timestamptz                               -- soft delete; a deleted root takes its replies with it
+);
+CREATE INDEX video_comments_top_idx ON video_comments (video_id, parent_id, is_pinned DESC, like_count DESC, created_at DESC, id DESC);
+CREATE INDEX video_comments_newest_idx ON video_comments (video_id, parent_id, is_pinned DESC, created_at DESC, id DESC);
+CREATE UNIQUE INDEX video_comments_one_pinned_per_video_idx ON video_comments (video_id) WHERE is_pinned AND deleted_at IS NULL;
 ```
 
 Why `dlq_entries` exists in Postgres when BullMQ already has a `dlq` queue: Redis is not the truth (P2). The Postgres mirror survives Redis loss, is queryable ("all DLQ entries for codec X this week"), and gives the admin UI a stable, paginated view. The Redis `dlq` queue holds the replayable job; the table holds the record.
@@ -1114,6 +1147,13 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /channels/:id/subscribers/me` | Check subscription | — | `200 { channelId, subscribed: boolean }` | Authenticated caller. Served from the Redis O(1) set; a miss primes the whole set from Postgres. |
 | `GET /me/subscriptions?cursor=&limit=` | Subscribed channels | — | `200 { items:[SubscribedChannelItem], nextCursor }` | Authenticated caller. Keyset pagination on `(created_at, channel_id)`. |
 | `GET /feed/subscriptions?cursor=&limit=` | Subscribed video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Authenticated caller. Keyset pagination on `(created_at, id)` for `READY` + `public` videos. |
+| `GET /videos/:id/comments?sort=&cursor=&limit=&page=&size=` | Video comments | — | `200 { items:[Comment], nextCursor, total }` | Anonymous allowed (video read rules). Root comments, pinned first; `sort=top` keys on `(is_pinned, like_count, created_at, id)`, `sort=newest` on `(is_pinned, created_at, id)`, all descending. Legacy `page`/`size` read as an offset. The first top page is cached in Redis (`taitube:video:{id}:comments:top`, 60 s) behind singleflight. |
+| `GET /comments/:id/replies?cursor=&limit=` | Comment replies | — | `200 { items:[Comment], nextCursor }` | Anonymous allowed. Oldest first, keyset on `(created_at, id)`. |
+| `POST /videos/:id/comments` | Comment or reply | `{ content, parentId? }` | `201 Comment` | Authenticated (`comment:create`). 1-2000 characters of plain text. A reply to a reply joins the root thread. Increments `comments_count`, purges the hot page. |
+| `PATCH /comments/:id` | Edit comment | `{ content }` | `200 Comment` | Author only (`comment:update`); sets `isEdited`. |
+| `DELETE /comments/:id` | Delete comment | — | `204` | Author, video owner, moderator or admin (`comment:delete`). Removes the replies of a root too and decrements `comments_count` by all of them. |
+| `POST /comments/:id/pin` | Pin comment | — | `200 Comment` / `409 COMMENT_NOT_PINNABLE` | Video owner or admin (`comment:pin`). Top-level only; unpins whichever comment held the video's one pinned slot. |
+| `DELETE /comments/:id/pin` | Unpin comment | — | `200 Comment` | Video owner or admin (`comment:pin`). |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`. |
 | `DELETE /videos/:id` | Soft delete | — | `202` | Enqueues `housekeeping:purge-video`. |
 | `GET /videos/:id/events` | SSE stream | header `Last-Event-ID?` | `text/event-stream` | See §10. |

@@ -8,6 +8,7 @@ import { InMemoryRepositories } from '../../in-memory/repositories/in-memory-rep
 import { PostgresRepositories } from '../../postgres/repositories/postgres-repositories';
 import { RedisCacheClient } from '../../redis/redis-cache-client';
 import { RedisCategoryCacheAdapter } from '../../redis/redis-category-cache.adapter';
+import { RedisCommentCacheAdapter } from '../../redis/redis-comment-cache.adapter';
 import { Adapters } from '../adapter-tokens';
 import { registerAdapters } from '../register-adapters';
 
@@ -52,6 +53,7 @@ describe('registerAdapters', () => {
 
     expect(c.get(Adapters.Authorization)).toBeInstanceOf(CaslAuthorizationAdapter);
     expect(c.get(Adapters.CategoryCache)).toBeInstanceOf(RedisCategoryCacheAdapter);
+    expect(c.get(Adapters.CommentCache)).toBeInstanceOf(RedisCommentCacheAdapter);
     expectOk(await c.dispose());
   });
 
