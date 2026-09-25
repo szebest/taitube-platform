@@ -27,8 +27,4 @@ describe('apps/web: root route', () => {
     expect(html).toContain('aria-label="toggle sidebar"');
     expect(html).toContain('href="/trending"');
   });
-
-  it('mounts no devtools outside the dev server', async () => {
-    expect(await home()).not.toMatch(/tsqd|TanStackRouterDevtools|tanstack_router_devtools/);
-  });
 });

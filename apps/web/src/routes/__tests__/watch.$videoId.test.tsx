@@ -1,6 +1,8 @@
+import { hashKey } from '@tanstack/react-query';
 import { jsonResponse, recordRequests } from '../../__tests__/api-store';
 import { VIDEO_ID, video } from '../../__tests__/fixtures';
 import { serverRender } from '../../__tests__/server-render';
+import { videoQueryOptions } from '../../features/watch/api/video-query-options';
 
 describe('apps/web: /watch/$videoId', () => {
   it('server-renders the video title, with the poster standing in for the player', async () => {
@@ -22,6 +24,15 @@ describe('apps/web: /watch/$videoId', () => {
     expect(html).toContain('src="http://localhost:9000/posters/p.jpg"');
     expect(html).not.toContain('<video');
     expect(sent.filter(({ url }) => url.endsWith(`/v1/videos/${VIDEO_ID}`))).toHaveLength(1);
+  });
+
+  it('dehydrates the loaded video into the page, so hydration reads it instead of refetching', async () => {
+    recordRequests(() => jsonResponse(video()));
+    const queryHash = hashKey(videoQueryOptions(VIDEO_ID).queryKey);
+
+    const { html } = await serverRender(`/watch/${VIDEO_ID}`);
+
+    expect(html).toContain(`queryHash:${JSON.stringify(queryHash)}`);
   });
 
   it('renders not-found for an id that is not a video id, without asking the API', async () => {
