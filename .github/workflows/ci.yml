@@ -328,7 +328,6 @@ jobs:
     env:
       CHECKPOINT_DISABLE: 1
       TF_IN_AUTOMATION: 1
-      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform-plugins
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -346,6 +345,8 @@ jobs:
         run: terraform -chdir=infra/terraform fmt -check -recursive -diff
 
       - name: Validate the Terraform configuration without a backend
+        env:
+          TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform-plugins
         run: |
           mkdir -p "$TF_PLUGIN_CACHE_DIR"
           terraform -chdir=infra/terraform init -backend=false -input=false -lockfile=readonly

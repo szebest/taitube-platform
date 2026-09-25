@@ -9,6 +9,7 @@ interface Terraform {
   }[];
   variable: Record<string, unknown[]>;
   resource: Record<string, Record<string, Record<string, unknown>[]>>;
+  provider: Record<string, { version: string; constraints: string }[]>;
 }
 
 async function terraformFile(dir: string, file: string): Promise<Terraform> {
@@ -16,8 +17,9 @@ async function terraformFile(dir: string, file: string): Promise<Terraform> {
     terraform = [],
     variable = {},
     resource = {},
+    provider = {},
   } = await parse(file, readFileSync(path.join(dir, file), 'utf-8'));
-  return { terraform, variable, resource };
+  return { terraform, variable, resource, provider };
 }
 
 describe('cloud infrastructure and Terraform', () => {
@@ -64,10 +66,11 @@ describe('cloud infrastructure and Terraform', () => {
     });
     expect(Object.keys(providers ?? {}).sort()).toEqual(['cloudflare', 'hcloud', 'random']);
 
-    const lock = readFileSync(path.join(terraformDir, '.terraform.lock.hcl'), 'utf-8');
-    expect(lock).toMatch(
-      /provider "registry\.terraform\.io\/cloudflare\/cloudflare" \{\s+version\s+= "5\.25\.\d+"/
-    );
+    const { provider } = await terraformFile(terraformDir, '.terraform.lock.hcl');
+    expect(provider['registry.terraform.io/cloudflare/cloudflare']?.[0]).toMatchObject({
+      constraints: '~> 5.25.0',
+      version: expect.stringMatching(/^5\.25\.\d+$/),
+    });
   });
 
   it('declares the variables the wizard fills in', async () => {
