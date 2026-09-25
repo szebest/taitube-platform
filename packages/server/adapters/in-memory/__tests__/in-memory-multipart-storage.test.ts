@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { expectErr } from '@vp/testing/result';
-import { describeMultipartStorageContract } from '../../__tests__/contract/multipart-storage.contract';
 import { inMemoryMultipartStorageSubject } from '../../__tests__/contract/in-memory-port-subjects';
+import { describeMultipartStorageContract } from '../../__tests__/contract/multipart-storage.contract';
 import { InMemoryMultipartStorage } from '../in-memory-multipart-storage';
 
 describeMultipartStorageContract(inMemoryMultipartStorageSubject);

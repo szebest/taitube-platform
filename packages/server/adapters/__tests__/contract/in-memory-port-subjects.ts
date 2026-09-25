@@ -1,15 +1,19 @@
 import { expectOk } from '@vp/testing/result';
 import { LazyQueueRegistry } from '../../composition/queue-registry';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
+import { InMemoryCategoryCache } from '../../in-memory/in-memory-category-cache';
 import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
+import { InMemorySubscriptionCache } from '../../in-memory/in-memory-subscription-cache';
 import type { CacheClientSubject } from './cache-client.contract';
+import type { CategoryCacheSubject } from './category-cache.contract';
 import type { FlowProducerSubject } from './flow-producer.contract';
 import type { JobQueueSubject } from './job-queue.contract';
 import type { MultipartStorageSubject } from './multipart-storage.contract';
 import type { StorageClientSubject } from './storage-client.contract';
+import type { SubscriptionCacheSubject } from './subscription-cache.contract';
 
 export async function inMemoryJobQueueSubject(name: string): Promise<JobQueueSubject> {
   const queue = new InMemoryJobQueue(name);
@@ -40,6 +44,14 @@ export async function inMemoryCacheClientSubject(): Promise<CacheClientSubject> 
       expectOk(await cache.close());
     },
   };
+}
+
+export async function inMemoryCategoryCacheSubject(): Promise<CategoryCacheSubject> {
+  return { cache: new InMemoryCategoryCache(), close: async () => {} };
+}
+
+export async function inMemorySubscriptionCacheSubject(): Promise<SubscriptionCacheSubject> {
+  return { cache: new InMemorySubscriptionCache(), close: async () => {} };
 }
 
 const LOCAL_BUCKET = 'contract';

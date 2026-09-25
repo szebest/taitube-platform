@@ -142,6 +142,7 @@ export class FakeRedis {
     if (!set) return 0;
     let removed = 0;
     for (const member of members) removed += set.delete(member) ? 1 : 0;
+    if (set.size === 0) this.sets.delete(key);
     return removed;
   }
 

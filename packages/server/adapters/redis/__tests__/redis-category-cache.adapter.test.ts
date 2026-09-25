@@ -4,6 +4,8 @@ import { cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { describeCategoryCacheContract } from '../../__tests__/contract/category-cache.contract';
+import { redisCategoryCacheSubject } from '../../__tests__/contract/redis-subjects';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
 import { RedisCategoryCacheAdapter } from '../redis-category-cache.adapter';
 
@@ -34,7 +36,7 @@ describe('RedisCategoryCacheAdapter', () => {
 
   const fetcher = async () => {
     fetches += 1;
-    return ok([MUSIC, GAMING, ART]);
+    return ok([ART, GAMING, MUSIC]);
   };
 
   beforeEach(() => {
@@ -45,11 +47,6 @@ describe('RedisCategoryCacheAdapter', () => {
 
   afterEach(async () => {
     await service.close();
-  });
-
-  it('sorts the fetched categories by sort order then name', async () => {
-    const categories = expectOk(await service.getCategories(fetcher));
-    expect(categories.map((c) => c.id)).toEqual(['art', 'gaming', 'music']);
   });
 
   it('serves the second read from L1 without touching the source', async () => {
@@ -216,3 +213,5 @@ describe('RedisCategoryCacheAdapter', () => {
     await local.close();
   });
 });
+
+describeCategoryCacheContract(redisCategoryCacheSubject);

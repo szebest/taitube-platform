@@ -130,12 +130,7 @@ export class RedisCategoryCacheAdapter implements CategoryCachePort {
     const fetched = await fetcher();
     if (!isOk(fetched)) return fetched;
 
-    const categories = [...fetched.value].sort((a, b) => {
-      if (a.sortOrder !== b.sortOrder) {
-        return a.sortOrder - b.sortOrder;
-      }
-      return a.name.localeCompare(b.name);
-    });
+    const categories = fetched.value;
 
     if (this.cache) {
       ignore(

@@ -1,7 +1,7 @@
 import { signJwt, signingKey } from '@vp/testing/jwt';
 import { expectErr, expectOk } from '@vp/testing/result';
-import type { Jwks } from '../jwt';
 import { JwksTokenVerifier } from '../jwks-token-verifier';
+import type { Jwks } from '../jwt';
 
 const JWKS_URL = 'https://idp.example/.well-known/jwks.json';
 const CACHE_TTL_MS = 300_000;

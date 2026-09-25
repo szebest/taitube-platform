@@ -1,10 +1,10 @@
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { describeMultipartStorageContract } from '../../__tests__/contract/multipart-storage.contract';
+import { s3MultipartStorageSubject } from '../../__tests__/contract/s3-subjects';
 import { S3MultipartStorage } from '../s3-multipart-storage';
 import { S3StorageClient } from '../s3-storage-client';
 import { type FakeS3, fakeS3Client } from './fake-s3-client';
-import { describeMultipartStorageContract } from '../../__tests__/contract/multipart-storage.contract';
-import { s3MultipartStorageSubject } from '../../__tests__/contract/s3-subjects';
 
 const BUCKET = 'raw';
 const KEY = '018f0000-0000-7000-8000-000000000001/source.mp4';

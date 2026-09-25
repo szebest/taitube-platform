@@ -4,10 +4,10 @@ import * as path from 'node:path';
 import { Readable } from 'node:stream';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { S3StorageClient } from '../s3-storage-client';
-import { type CommandHandler, fakeS3Client, notFound } from './fake-s3-client';
 import { s3StorageClientSubject } from '../../__tests__/contract/s3-subjects';
 import { describeStorageClientContract } from '../../__tests__/contract/storage-client.contract';
+import { S3StorageClient } from '../s3-storage-client';
+import { type CommandHandler, fakeS3Client, notFound } from './fake-s3-client';
 
 const BUCKET = 'raw';
 const KEY = '018f0000-0000-7000-8000-000000000001/source.mp4';
