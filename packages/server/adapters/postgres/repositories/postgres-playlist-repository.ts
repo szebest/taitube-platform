@@ -132,7 +132,7 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
       () =>
         this.db
           .update(p)
-          .set({ ...patch, updatedAt: new Date() })
+          .set({ ...patch, updatedAt: sql`now()` })
           .where(eq(p.id, id))
           .returning(),
       databaseUnavailable.during('updatePlaylist')
@@ -244,6 +244,6 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
   }
 
   private async touch(tx: PostgresDatabase, playlistId: string): Promise<void> {
-    await tx.update(p).set({ updatedAt: new Date() }).where(eq(p.id, playlistId));
+    await tx.update(p).set({ updatedAt: sql`now()` }).where(eq(p.id, playlistId));
   }
 }
