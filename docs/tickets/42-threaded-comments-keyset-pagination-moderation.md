@@ -48,22 +48,22 @@ This ticket delivers:
 
 ## Acceptance criteria
 
-- [ ] Migration creating `video_comments`:
+- [x] Migration creating `video_comments`:
   - `id UUIDv7 PK, video_id UUID not null references videos.id on delete cascade, author_id UUID not null references users.id, parent_id UUID references video_comments.id on delete cascade, content text not null, is_pinned boolean not null default false, is_edited boolean not null default false, like_count integer not null default 0, created_at, updated_at`.
   - Composite indexes: `(video_id, parent_id, is_pinned DESC, like_count DESC, created_at DESC)` and `(video_id, parent_id, is_pinned DESC, created_at DESC)`.
-- [ ] Add `comments_count integer not null default 0` to `videos` table.
-- [ ] `CommentRepositoryPort` in `@taitube/core/repositories/comment-repository.port.ts`.
-- [ ] `PostgresCommentRepository` in `adapters/postgres/repositories/postgres-comment-repository.ts` (<= 250 lines) composing queries via `drizzleWhere`.
-- [ ] `InMemoryCommentRepository` in `adapters/in-memory/repositories/in-memory-comment-repository.ts`.
-- [ ] Redis hot comments cache service (`adapters/redis/comment-cache.service.ts`).
-- [ ] Endpoints:
+- [x] Add `comments_count integer not null default 0` to `videos` table.
+- [x] `CommentRepositoryPort` in `@taitube/core/repositories/comment-repository.port.ts`.
+- [x] `PostgresCommentRepository` in `adapters/postgres/repositories/postgres-comment-repository.ts` (<= 250 lines) composing queries via `drizzleWhere`.
+- [x] `InMemoryCommentRepository` in `adapters/in-memory/repositories/in-memory-comment-repository.ts`.
+- [x] Redis hot comments cache service (`adapters/redis/comment-cache.service.ts`).
+- [x] Endpoints:
   - `GET /v1/videos/:id/comments`: Returns top-level comments (with pinned comments first), author channel profile, and reply counts. Supports `sort=top|newest`, keyset cursor + fallback `page`/`size`.
   - `GET /v1/comments/:commentId/replies`: Returns threaded replies under a specific comment (keyset paginated).
   - `POST /v1/videos/:id/comments`: Adds a comment or reply (validates max 2000 chars, non-empty, checks `canCreateComment`), increments `videos.comments_count`, and purges hot comments cache.
   - `PATCH /v1/comments/:id`: Edits comment content (`is_edited = true`, guards with `assertCan(canUpdateComment({ user, comment }))`).
   - `DELETE /v1/comments/:id`: Deletes comment (guards with `assertCan(canDeleteComment({ user, comment, videoOwnerId }))`), decrements `videos.comments_count`, purges cache.
   - `POST /v1/comments/:id/pin`: Pins comment (guards with `assertCan(canPinComment({ user, videoOwnerId }))`; unpins existing pinned comment on video).
-- [ ] Concurrency & route tests verifying threading, dual sorting, hot comments caching, and moderation guards.
+- [x] Concurrency & route tests verifying threading, dual sorting, hot comments caching, and moderation guards.
 
 ## Out of scope
 
@@ -85,6 +85,35 @@ This ticket delivers:
 - Unit tests for repository methods (tree retrieval, pinned ordering).
 - RBAC/ABAC tests: Author vs Video Creator vs Admin deletion rights.
 - Route tests via app.inject() testing CRUD operations.
+
+## Open questions
+
+- Decided: packages stay `@vp/*` (the rebrand is ticket 48), so the port is
+  `packages/server/core/repositories/comment-repository.ts` and the Redis cache is
+  `packages/server/adapters/redis/redis-comment-cache.adapter.ts`, following the repo naming rather than
+  the ticket's `comment-repository.port.ts` / `comment-cache.service.ts`.
+- Decided: `video_comments` carries a `deleted_at` column so `notDeletedScope` has something to scope.
+  A delete is soft; deleting a root removes its replies with it and `comments_count` drops by all of them.
+  `ON DELETE CASCADE` on `parent_id` stays for a video's hard delete.
+- Decided: both composite indexes end in `id DESC`, so the keyset tiebreaker is inside the index, and a
+  partial unique index (`video_id WHERE is_pinned AND deleted_at IS NULL`) holds one pinned comment per
+  video. Pinning locks the video row first, so two concurrent pins serialise.
+- Decided: `assertCan(...)` became `authorize(...)` from `@vp/domain-rules`, its `Result` form, because
+  services return failures and never throw (ADR-24). The author-edit rule (`update` on `authorId`) was
+  missing from `defineCommentRules` and is added there.
+- Decided: a reply to a reply joins the root's thread (one level of nesting). Only a root can be pinned;
+  pinning a reply is `409 COMMENT_NOT_PINNABLE`. `COMMENT_NOT_FOUND` (404) and `COMMENT_NOT_PINNABLE` are
+  new codes in `ApiErrorCodes`, `PROBLEM_STATUS`, `RETRY_CLASS`, `ERROR_COPY` and SDD §6.2.
+- Decided: `DELETE /v1/comments/:id/pin` unpins; the ticket named only the `POST`. The replies route uses
+  `:id` rather than `:commentId` so every `/v1/comments/:id...` route shares one param name.
+- Decided: content is plain text. Control characters are stripped and it is trimmed, then 1-2000 code
+  points; markup is kept and escaped by whoever renders it. Stripping tags would be a hand-rolled HTML parser.
+- Decided: the hot cache holds the first `sort=top` page at the default page size (`PAGE_SIZE_DEFAULT`,
+  20) plus the total, for 60 s (`CACHES.comments.hotTtlSeconds`), behind a `Singleflight`. Every write
+  (create, edit, delete, pin) purges it. A comment on a video the caller cannot read is reported as
+  `VIDEO_NOT_FOUND`, like the video read itself.
+- Decided: the `isCreator` badge on the author is presentation only; every permission goes through
+  `@vp/permissions`.
 
 ## Definition of Done
 
