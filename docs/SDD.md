@@ -1791,6 +1791,8 @@ Capacity reality check on a 2-vCPU node: the API (~150 MB), Redis (~50 MB), KEDA
 
 Guardrails: R2 Class A ops are the metric to watch (every segment upload is one PUT: a 10-min video ≈ 100 segments × 3 renditions ≈ 300 Class A ops → 1 M free ops ≈ 3 300 videos/month); Neon compute hours are burned by the reconciler's cron — keep its frequency at 15 min so autosuspend (5 min idle) still kicks in between runs; set `RAW_RETENTION_DAYS=7` to stay under 10 GB.
 
+**Infrastructure as code:** `infra/terraform` declares the cloud rung on the Cloudflare v5 provider, pinned by minor version (`~> 5.25.0`), and `hcloud`, with every provider's exact version in the committed `.terraform.lock.hcl`, and local state. The `terraform` CI job runs `terraform fmt -check -recursive`, `terraform init -backend=false -lockfile=readonly` and `terraform validate` with the provider plugins cached by the lock file's hash, inside a 2-minute budget `ci-shape.test.ts` holds. CI holds no Cloudflare or Hetzner credential, so nothing plans or applies there.
+
 **Provider fallback ladder** (all env-only switches): R2 → B2 (+Cloudflare CDN via Bandwidth Alliance) → MinIO on the VPS PVC. Neon → Supabase (note 1-week pause) → Postgres on the VPS. Hetzner → Oracle → any €5 VPS.
 
 ---
@@ -2093,7 +2095,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Load testing | k6 2.x, k6-operator 1.6 | | |
 | Chaos | toxiproxy 2.x, shell scripts | | |
 | Secrets (cloud) | External Secrets Operator: one `ExternalSecret` entry per `SECRET_KEYS` member, no ciphertext in the repo | | |
-| IaC (cloud) | Terraform 1.x with `cloudflare` and `hcloud` providers (optional) | | |
+| IaC (cloud) | Terraform 1.16 (pinned in CI) with the `cloudflare` v5 and `hcloud` providers (optional) | | |
 | CI/CD | GitHub Actions, GHCR, Renovate | | |
 | API docs | OpenAPI 3.1 via `@fastify/swagger` + Scalar UI | | |
 

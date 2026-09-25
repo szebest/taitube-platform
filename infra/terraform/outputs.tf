@@ -10,12 +10,12 @@ output "cdn_endpoint" {
 
 output "cloudflare_tunnel_id" {
   description = "ID of the Cloudflare Tunnel"
-  value       = cloudflare_tunnel.k3s_tunnel.id
+  value       = cloudflare_zero_trust_tunnel_cloudflared.k3s_tunnel.id
 }
 
 output "cloudflare_tunnel_token" {
   description = "Secret token for running cloudflared connector on the VPS / k3s"
-  value       = cloudflare_tunnel.k3s_tunnel.tunnel_token
+  value       = data.cloudflare_zero_trust_tunnel_cloudflared_token.k3s_tunnel.token
   sensitive   = true
 }
 
@@ -51,7 +51,7 @@ output "r2_endpoint" {
 }
 
 output "r2_worker_token_id" {
-  description = "API Token ID for apps/worker (raw bucket read, public bucket write)"
+  description = "API Token ID for apps/worker (raw and public bucket read/write)"
   value       = cloudflare_api_token.r2_worker_app.id
   sensitive   = true
 }
