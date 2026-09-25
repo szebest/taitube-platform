@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#65](https://github.com/szebest/taitube-platform/issues/65) |
 | Size | M |
-| Blocked by | 43 - Views buffer · 57 - Production player · 64 - Web Vitals · 89 - TanStack Start foundation |
+| Blocked by | 43 - Views buffer · 57 - Production player · 64 - Web Vitals · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 

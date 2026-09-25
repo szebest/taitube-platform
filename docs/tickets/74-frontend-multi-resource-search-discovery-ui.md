@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#74](https://github.com/szebest/taitube-platform/issues/74) |
 | Size | M |
-| Blocked by | 47 - Multi-resource search · 58 - Browse layout · 89 - TanStack Start foundation |
+| Blocked by | 47 - Multi-resource search · 58 - Browse layout · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | 62 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 

@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#58](https://github.com/szebest/taitube-platform/issues/58) |
 | Size | L |
-| Blocked by | 53 - Frontend data layer · 55 - Design system · 89 - TanStack Start foundation |
+| Blocked by | 53 - Frontend data layer · 55 - Design system · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | 62, 63, 74 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 

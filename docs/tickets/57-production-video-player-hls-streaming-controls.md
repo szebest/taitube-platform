@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#57](https://github.com/szebest/taitube-platform/issues/57) |
 | Size | L |
-| Blocked by | 55 - Design system · 75 - Playwright harness · 89 - TanStack Start foundation |
+| Blocked by | 55 - Design system · 75 - Playwright harness · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | 59, 62, 65, 66, 73, 76, 77, 78 |
 | Spec | [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 

@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#61](https://github.com/szebest/taitube-platform/issues/61) |
 | Size | M |
-| Blocked by | 37 - Admin category API · 39 - Declarative RBAC · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation |
+| Blocked by | 37 - Admin category API · 39 - Declarative RBAC · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 

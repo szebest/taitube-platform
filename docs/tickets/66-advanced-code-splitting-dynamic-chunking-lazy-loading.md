@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#66](https://github.com/szebest/taitube-platform/issues/66) |
 | Size | M |
-| Blocked by | 57 - Production video player · 60 - Creator studio · 89 - TanStack Start foundation |
+| Blocked by | 57 - Production video player · 60 - Creator studio · 89 - TanStack Start foundation · 91 - Web import aliases |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) |
 
