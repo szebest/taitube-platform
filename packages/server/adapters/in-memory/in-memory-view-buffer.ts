@@ -17,11 +17,11 @@ export class InMemoryViewBuffer implements ViewBufferPort {
 
   async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
     const key = countKey(view.videoId, view.viewDate);
-    const seen = this.viewers.get(key) ?? new Set<string>();
-    if (seen.has(view.viewerId)) return ok('duplicate');
+    const seen = this.viewers.get(key);
+    if (seen?.has(view.viewerId)) return ok('duplicate');
 
-    seen.add(view.viewerId);
-    this.viewers.set(key, seen);
+    if (seen) seen.add(view.viewerId);
+    else this.viewers.set(key, new Set([view.viewerId]));
     this.addOne({
       videoId: view.videoId,
       viewDate: view.viewDate,

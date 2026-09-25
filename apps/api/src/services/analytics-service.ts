@@ -72,8 +72,8 @@ export class AnalyticsService {
     const dates = viewDateRange(range, new Date(this.deps.now()));
     const rows = await this.deps.videoViews.channelTimeline(ownerId, dates);
     if (isErr(rows)) return rows;
-    const totals = await this.deps.videoViews.channelTotals(ownerId);
-    if (isErr(totals)) return totals;
+    const owned = await this.deps.videoViews.channelTotals(ownerId);
+    if (isErr(owned)) return owned;
     const topVideos = await this.deps.videoViews.topVideos(ownerId, dates, TOP_VIDEOS_LIMIT);
     if (isErr(topVideos)) return topVideos;
 
@@ -84,7 +84,8 @@ export class AnalyticsService {
       ...dates,
       timeline,
       rangeViews,
-      ...totals.value,
+      totalViews: owned.value.totalViews,
+      videoCount: owned.value.videoCount,
       dailyVelocity: rangeViews / rangeDays(range),
       topVideos: topVideos.value,
     });
