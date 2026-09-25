@@ -2,21 +2,11 @@ import { createApiStore } from '../../../../__tests__/api-store';
 import { stubBrowser } from '../../../../__tests__/browser';
 import { CHANNEL_ID, account } from '../../../../__tests__/fixtures';
 import { inChrome, renderPage, signIn } from '../../../../__tests__/render-page';
-import { clearStoredValues } from '../../../../__tests__/stored-value';
 import { Sidebar } from '../sidebar';
-
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('../../../../__tests__/stored-value')).useStoredValue,
-}));
 
 const MEMBER_LINKS = ['href="/subscriptions/videos"', `href="/channel/${CHANNEL_ID}"`, 'href="/subscriptions"'];
 
 describe('apps/web: sidebar', () => {
-  beforeEach(() => {
-    clearStoredValues();
-  });
-
   it('keeps its width but lists nothing while the account is loading', () => {
     stubBrowser({ token: 'signed-in' });
 

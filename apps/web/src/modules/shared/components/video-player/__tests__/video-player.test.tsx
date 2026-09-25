@@ -1,11 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { VideoPlayer } from '../video-player';
 
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('../../../../../__tests__/stored-value')).useStoredValue,
-}));
-
 describe('apps/web: video player', () => {
   it('renders nothing for a video with no playback URL yet', () => {
     expect(renderToStaticMarkup(<VideoPlayer />)).toBe('');

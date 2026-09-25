@@ -1,12 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { stubBrowser } from '../../../../__tests__/browser';
-import { clearStoredValues, storeValue } from '../../../../__tests__/stored-value';
+import { storeValue } from '../../../../__tests__/stored-value';
 import { ThemeProvider, useTheme } from '../theme-provider';
-
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('../../../../__tests__/stored-value')).useStoredValue,
-}));
 
 type ThemeControls = Partial<ReturnType<typeof useTheme>>;
 
@@ -25,10 +20,6 @@ function renderTheme(controls: ThemeControls = {}): string {
 }
 
 describe('apps/web: theme provider', () => {
-  beforeEach(() => {
-    clearStoredValues();
-  });
-
   it.each([
     { prefersDark: true, theme: 'dark' },
     { prefersDark: false, theme: 'light' },

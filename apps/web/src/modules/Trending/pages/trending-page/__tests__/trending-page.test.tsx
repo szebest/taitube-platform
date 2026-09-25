@@ -1,21 +1,12 @@
 import { createApiStore, seed } from '../../../../../__tests__/api-store';
 import { videoSummary } from '../../../../../__tests__/fixtures';
 import { renderPage } from '../../../../../__tests__/render-page';
-import { clearStoredValues, storeValue } from '../../../../../__tests__/stored-value';
+import { storeValue } from '../../../../../__tests__/stored-value';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '../../../../../config';
 import { feedApi } from '../../../../shared/api/feed-api';
 import { TrendingPage } from '../trending-page';
 
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('../../../../../__tests__/stored-value')).useStoredValue,
-}));
-
 describe('apps/web: trending page', () => {
-  beforeEach(() => {
-    clearStoredValues();
-  });
-
   it('shows the trending feed, not the newest one', async () => {
     const store = createApiStore();
     await seed(

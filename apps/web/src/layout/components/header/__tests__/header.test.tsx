@@ -2,19 +2,10 @@ import { createApiStore } from '../../../../__tests__/api-store';
 import { stubBrowser } from '../../../../__tests__/browser';
 import { account } from '../../../../__tests__/fixtures';
 import { inChrome, renderPage, signIn } from '../../../../__tests__/render-page';
-import { clearStoredValues, storeValue } from '../../../../__tests__/stored-value';
+import { storeValue } from '../../../../__tests__/stored-value';
 import { Header } from '../header';
 
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('../../../../__tests__/stored-value')).useStoredValue,
-}));
-
 describe('apps/web: header', () => {
-  beforeEach(() => {
-    clearStoredValues();
-  });
-
   it('holds back the controls while the account is loading', () => {
     stubBrowser({ token: 'signed-in' });
 

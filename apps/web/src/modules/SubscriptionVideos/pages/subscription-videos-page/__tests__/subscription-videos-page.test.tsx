@@ -1,21 +1,12 @@
 import { createApiStore, seed } from '../../../../../__tests__/api-store';
 import { videoSummary } from '../../../../../__tests__/fixtures';
 import { renderPage } from '../../../../../__tests__/render-page';
-import { clearStoredValues, storeValue } from '../../../../../__tests__/stored-value';
+import { storeValue } from '../../../../../__tests__/stored-value';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '../../../../../config';
 import { feedApi } from '../../../../shared/api/feed-api';
 import { SubscriptionVideosPage } from '../subscription-videos-page';
 
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('../../../../../__tests__/stored-value')).useStoredValue,
-}));
-
 describe('apps/web: subscription videos page', () => {
-  beforeEach(() => {
-    clearStoredValues();
-  });
-
   it('shows the videos of the subscribed channels', async () => {
     const store = createApiStore();
     await seed(

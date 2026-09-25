@@ -14,6 +14,7 @@ export default defineConfig({
     testTimeout: 30_000,
     hookTimeout: 30_000,
     include: ['src/**/__tests__/**/*.test.{ts,tsx}'],
+    setupFiles: ['src/__tests__/local-storage.setup.ts'],
     deps: {
       optimizer: {
         ssr: {

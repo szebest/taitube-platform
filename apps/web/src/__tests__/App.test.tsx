@@ -15,11 +15,6 @@ vi.mock(import('react-router-dom'), async (importOriginal) => {
   };
 });
 
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('./stored-value')).useStoredValue,
-}));
-
 describe('apps/web: app', () => {
   it.each([
     { path: '/', chrome: true },

@@ -2,11 +2,6 @@ import { inChrome, renderPage } from '../../../../__tests__/render-page';
 import { stubBrowser } from '../../../../__tests__/browser';
 import { Logo } from '../logo';
 
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('../../../../__tests__/stored-value')).useStoredValue,
-}));
-
 describe('apps/web: logo', () => {
   it('links home and offers the sidebar toggle', () => {
     stubBrowser();

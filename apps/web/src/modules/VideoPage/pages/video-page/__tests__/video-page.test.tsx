@@ -4,11 +4,6 @@ import { renderPage } from '../../../../../__tests__/render-page';
 import { videosApi } from '../../../../shared/api/videos-api';
 import { VideoPage } from '../video-page';
 
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('../../../../../__tests__/stored-value')).useStoredValue,
-}));
-
 function renderWatch(store: ApiStore): string {
   return renderPage(<VideoPage />, { store, url: `/watch/${VIDEO_ID}`, route: '/watch/:videoId' });
 }

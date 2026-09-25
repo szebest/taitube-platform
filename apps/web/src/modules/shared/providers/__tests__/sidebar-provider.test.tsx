@@ -1,11 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { clearStoredValues, storeValue } from '../../../../__tests__/stored-value';
+import { storeValue } from '../../../../__tests__/stored-value';
 import { SidebarProvider, useSidebar } from '../sidebar-provider';
-
-vi.mock(import('@uidotdev/usehooks'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  useLocalStorage: (await import('../../../../__tests__/stored-value')).useStoredValue,
-}));
 
 type SidebarControls = Partial<ReturnType<typeof useSidebar>>;
 
@@ -24,10 +19,6 @@ function renderSidebar(controls: SidebarControls = {}): string {
 }
 
 describe('apps/web: sidebar provider', () => {
-  beforeEach(() => {
-    clearStoredValues();
-  });
-
   it('opens the sidebar for a first visit', () => {
     expect(renderSidebar()).toContain('open');
   });
