@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) |
 
-**Status:** ready
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -41,18 +41,18 @@ This ticket establishes **End-to-End Type Safety** by single-sourcing all API sc
 
 ## Acceptance criteria
 
-- [ ] New monorepo package `packages/api-contracts` created and added to `pnpm-workspace.yaml`.
-- [ ] Zod schemas migrated and exported:
+- [x] New monorepo package `packages/api-contracts` created and added to `pnpm-workspace.yaml`.
+- [x] Zod schemas migrated and exported:
   - Video schemas (`VideoDto`, `VideoSummaryDto`, `CreateUploadDto`, `PatchVideoDto`).
   - Category schemas (`CategoryDto`, `CreateCategoryDto`).
   - Channel / User schemas (`ChannelProfileDto`, `UpdateAccountDto`).
   - Comments & Reactions schemas (`CommentDto`, `ReactionDto`).
   - Problem Details standard error schema (`ProblemDetailsDto`).
-- [ ] Fastify `apps/api` updated to consume schemas from `@taitube/api-contracts`.
-- [ ] Fastify type provider (`ZodTypeProvider`) infers route parameters directly from `@taitube/api-contracts`.
-- [ ] CLI command `pnpm gen:contracts` exports static types into `packages/api-contracts/dist/types.d.ts`.
-- [ ] CI drift guard test: Fails if an endpoint is changed in `apps/api` without running `pnpm gen:contracts`.
-- [ ] Dual runtime compatibility: `packages/api-contracts` passes all tests under both `vitest` and `bun test`.
+- [x] Fastify `apps/api` updated to consume schemas from `@taitube/api-contracts`.
+- [x] Fastify type provider (`ZodTypeProvider`) infers route parameters directly from `@taitube/api-contracts`.
+- [x] CLI command `pnpm gen:contracts` exports static types into `packages/api-contracts/dist/types.d.ts`.
+- [x] CI drift guard test: Fails if an endpoint is changed in `apps/api` without running `pnpm gen:contracts`.
+- [x] Dual runtime compatibility: `packages/api-contracts` passes all tests under both `vitest` and `bun test`.
 
 ## Out of scope
 
@@ -79,7 +79,27 @@ This ticket establishes **End-to-End Type Safety** by single-sourcing all API sc
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @taitube/api-contracts test` passes under Vitest and Bun.
-- [ ] `apps/api` builds and typechecks cleanly with the new package.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [x] `pnpm --filter @taitube/api-contracts test` passes under Vitest and Bun.
+- [x] `apps/api` builds and typechecks cleanly with the new package.
+- [x] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
+- [x] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+
+## Open questions
+
+- Decided: the package keeps its `@vp/api-contracts` name and its `packages/universal/api-contracts` home.
+  The `@taitube/*` naming belongs to the rebrand, ticket 48, and the tier directory is ADR-23.
+- Decided: the schemas were already single-sourced before this ticket, under the existing names rather than
+  `*Dto`: `VideoSchema`/`Video`, `VideoSummarySchema`/`VideoSummary`, `StartUploadSchema`/`StartUpload`,
+  `UpdateVideoMetadataSchema`/`UpdateVideoMetadata`, `CategorySchema`, `ChannelSchema`/`Channel`,
+  `AccountSchema`/`Account`, `CommentSchema`/`CommentView`, `VideoReactionSchema`/`VideoReaction`,
+  `ProblemSchema`/`Problem`. Renaming them would only churn every consumer, so they stay.
+- Decided: the committed artefact is the OpenAPI document, `packages/universal/api-contracts/openapi.yaml`,
+  written by `pnpm gen:contracts` from the in-process (dev-auth) app, the one configuration that mounts every
+  contract endpoint. YAML, so it carries a generated-file header. The TypeScript types are built from it by
+  `openapi-typescript` into `dist/openapi.d.ts` on every package build and exported as
+  `@vp/api-contracts/openapi`; they are not committed, since the generated file is thousands of lines and
+  would only be a second copy of the document.
+- Decided: the drift guard is `apps/api/src/composition/__tests__/openapi-document.test.ts`, which renders
+  the document and compares it with the committed file. It runs in `unit` and `unit-bun` and in a local
+  `pnpm test`, so it costs no extra CI step and fails before a push. The existing
+  `apps/api/src/__tests__/contract-drift.test.ts` still holds routes against contract entries.
