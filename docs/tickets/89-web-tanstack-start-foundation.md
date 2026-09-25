@@ -187,6 +187,19 @@ the legacy code does get mechanical edits:
   tickets move them (58 has `/feed/*`) and add the redirects when they do.
 - Open: whether the SSR server needs its own API base URL inside compose (the browser and the server reach the
   API at different hosts there). Not needed locally; [83](83-granular-container-topology-full-stack-deployment.md) decides when it adds the web service.
+- Decided (while building): `start` serves `dist/server/server.js` with `srvx`, the server Start itself uses
+  for `vite preview`, instead of adding Nitro. 83 can put a Nitro preset in front if the image wants one.
+- Decided: the route tree drift check runs in the `build` job, straight after the turbo build that writes it,
+  not in `lint-typecheck`, which never runs `vite build`.
+- Decided: every legacy `useLocalStorage` (the two root providers, the player volume and the list/grid
+  toggle) moved to `useStoredState`, and `@uidotdev/usehooks` is gone; leaving the two page-level ones would
+  have thrown on the server for `/`, `/trending` and `/channel`.
+- Decided: `react-pro-sidebar` reads `matchMedia` in its initial state, so the sidebar gets its `md`
+  breakpoint only after hydration. Without it every narrow screen failed hydration.
+- Decided: the dead Google Fonts `@import` in `_mixins.scss` is deleted (no rule used either font), and
+  `local-first.test.ts` now reads the web stylesheets too.
+- Decided: browser-tier workspace packages resolve from source through a Vite alias built from
+  `packages/{universal,client}/*/package.json` (`vite/workspace-sources.ts`), so a package edit hot-reloads.
 
 ## Definition of Done
 
