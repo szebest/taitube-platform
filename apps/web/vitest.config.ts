@@ -15,6 +15,14 @@ export default mergeConfig(
       hookTimeout: 30_000,
       include: ['src/**/__tests__/**/*.test.{ts,tsx}', 'vite/**/__tests__/**/*.test.ts'],
       setupFiles: ['src/__tests__/live-page.setup.ts'],
+      deps: {
+        optimizer: {
+          ssr: {
+            enabled: true,
+            include: ['@tanstack/react-router-devtools', '@tanstack/react-query-devtools'],
+          },
+        },
+      },
     },
   })
 );
