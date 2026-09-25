@@ -39,12 +39,15 @@ patches:
       - op: replace
         path: /data/S3_FORCE_PATH_STYLE
         value: "false"
-      - op: replace
-        path: /data/REDIS_ADDR
-        value: "vp-redis-master:6379"
       - op: add
         path: /data/OTEL_EXPORTER_OTLP_ENDPOINT
         value: "http://alloy:4318"
+      - op: add
+        path: /data/OTEL_TRACES_SAMPLER
+        value: "parentbased_traceidratio"
+      - op: add
+        path: /data/OTEL_TRACES_SAMPLER_ARG
+        value: "0.2"
       - op: add
         path: /data/AUTH_JWKS_URL
         value: "https://auth.example.com/.well-known/jwks.json"

@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 21 — Observability stack · 12 — Flows fan-out/fan-in |
 | Blocks | — |
-| Spec | [PRD US-16](../PRD.md#54-operations) · [SDD §13.3 Tracing](../SDD.md#133-tracing-opentelemetry) · [SDD §13.4 Logging correlation](../SDD.md#134-logging) · [SDD §20 (`traceparent` field)](../SDD.md#20-appendix-job-contracts-code) |
+| Spec | [PRD US-16](../PRD.md#54-operations) · [SDD §13.3 Tracing](../SDD.md#133-tracing-opentelemetry) · [SDD §13.4 Logging correlation](../SDD.md#134-logging) · [SDD §20 (`traceparent` field)](../SDD.md#20-appendix--job-contracts-code) |
 
 **Status:** done
 

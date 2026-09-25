@@ -100,7 +100,7 @@ jobs:
         run: pnpm lint
 
       - name: Run TypeScript typecheck
-        run: pnpm exec turbo run typecheck
+        run: pnpm exec turbo run typecheck typecheck:repo
 
       - name: Find unused files, exports and dependencies (knip)
         run: pnpm knip

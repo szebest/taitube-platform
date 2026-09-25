@@ -1,3 +1,4 @@
+import type { TraceSamplerName } from '@vp/observability';
 import { assertNever } from '@vp/result';
 import type { AppEnv, JWS_ALGORITHMS } from './app-env';
 import { type CdnBase, asCdnBase } from './cdn-base';
@@ -75,7 +76,7 @@ export interface AppConfig {
     enabled: boolean;
     serviceVersion: string;
     endpoint: string;
-    sampler: string;
+    sampler: TraceSamplerName;
     samplerArg: number;
     resourceAttributes: string;
   };

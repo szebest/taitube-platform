@@ -7,12 +7,24 @@ Instructions for any coding agent (Codex, Gemini CLI, Cursor, Copilot, OpenCode,
 ## What this repo is
 An asynchronous video ingestion, transcoding, and streaming platform: Fastify API (Node 24), BullMQ workers (Bun 1.4 / Node 24 dual-runtime), PostgreSQL + Drizzle, Redis, S3-compatible storage (MinIO locally, Cloudflare R2 in cloud), FFmpeg, KEDA autoscaling, and k6 load tests. Read `docs/PRD.md` for requirements and `docs/SDD.md` for the system design — **but only the sections a ticket links to**; the SDD is comprehensive by design.
 
+### Which runtime runs what
+
+| What | Runtime | Why |
+|---|---|---|
+| API in production | Node 24 | OpenTelemetry auto-instrumentation needs Node's module hooks (`--import ./dist/instrument.js`) |
+| Worker in production | Bun 1.4 (`oven/bun:1.4-slim`) by default, Node 24 from an image built with `--build-arg WORKER_RUNTIME=node` | dual runtime, rule 2; the build arg picks the image stage, and the Bun image has no Node |
+| Repo scripts, CLIs, `pnpm db:migrate` / `pnpm db:seed`, the e2e runner | `tsx` | Node parity with production for migrate and seed, and CI installs Bun only where `bun test` runs; the cost is about 150 ms of startup (`dev-token help` 0.19 s against Bun's 0.04 s) |
+| Unit and architecture specs | vitest | `vi.mock(import())`, fake timers, `restoreMocks`, a jsdom run proving a universal package works in a browser (`vitest.jsdom.config.ts`), and the JSON reporter the CI budget reads |
+| Worker and package specs, a second time | `bun test` (`pnpm test:bun`) | the dual-runtime proof |
+
+`zero-matches` fails on a `bun <path>.ts` script in `package.json`, the `Makefile` or `.github`, and `ci-shape` on a CI job other than `unit-bun` that sets up Bun.
+
 ---
 
 ## How work is organised
-- Work items are tracer-bullet tickets in `docs/tickets/NN-slug.md`; the index `docs/tickets/README.md` shows the frontier (tickets whose blockers are done). Use the `vp-work-ticket` skill to pick one up.
+- Work items are tracer-bullet tickets in `docs/tickets/<NN>-<slug>.md`. Use the `vp-work-ticket` skill to pick one up.
 - Numbering represents dependency order, not priority. Never start a ticket whose blockers are not `done`.
-- **Frontier Priority Policy:** Ticket **84** (Result-typed error handling - domain code returns, the edge decides) is done, along with 79 (offline smoke runner refactor & CI cleanup), 80 (developer experience, local dev setup & CI/CD acceleration) and 82 (architecture remediation). The frontier is **83** (granular container topology - per-app images and a one-app dev loop), **85** (the universal `Intl` formatting core) and **87** (one composition root - a typed container, configuration as a value, no hidden dependencies), the last two of which 84 unblocks. Prefer **87**: it closes two defects that are live in the cloud overlay (`S3_BUCKET_RAW` is validated but never read; the API installs no `SIGTERM` handler) and 83 ships the images those defects deploy. Ticket 86 is unreachable: it is blocked by 63 and 72, which sit behind roughly twenty blocked frontend tickets, whatever its own prose claims.
+- The frontier is computed: [docs/tickets/README.md#frontier](docs/tickets/README.md#frontier) lists every ticket whose blockers are done and which nobody has started. Pick from it.
 - Ticket status lives in the ticket's `**Status:**` line; run `python3 docs/tickets/gen-index.py` after changing it.
 
 ---
@@ -28,7 +40,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 7. **Errors classified at throw site:** Classify errors as `PermanentError` vs `TransientError` from `@vp/errors` (ADR-18).
 8. **Declarative authorization & zero hand-checked permissions:** Centralized in `@vp/permissions` evaluated via CASL rules. Never hand-check user IDs or roles inline. See [docs/standards/authorization.md](docs/standards/authorization.md).
 9. **Prove, don't claim:** Run typecheck, lint, and relevant test suites and paste output before declaring work done (`verification-before-completion`). See [docs/standards/testing.md](docs/standards/testing.md).
-10. **Branch protection & squash-only PR merges:** Direct pushes to `main` are blocked. Work on `ticket/NN-slug` or `<type>/<slug>` branches, require PR approval and green CI checks, and squash merge (`NN: <ticket title> (#<pr_number>)`). See [docs/standards/git-workflow.md](docs/standards/git-workflow.md).
+10. **Branch protection & squash-only PR merges:** Direct pushes to `main` are blocked. Work on `ticket/<NN>-<slug>` or `<type>/<slug>` branches, require PR approval and green CI checks, and squash merge (`NN: <ticket title> (#<pr_number>)`). See [docs/standards/git-workflow.md](docs/standards/git-workflow.md).
 11. **Enforce optimal execution & zero-waste workflows:** All developer setups, Docker builds, CI jobs, test suites, and scripts must be engineered for speed and caching. Performance or cycle-time regressions are treated as blocking defects.
 12. **Mandatory 1:1 test file correspondence:** Every single source file, helper, util, rule, normalizer, or adapter MUST map to at least one dedicated test file matching its name; grouping tests for multiple separate source files into a single bundled test file is a strict architectural violation. See [docs/standards/testing.md](docs/standards/testing.md).
 13. **Package tiers & dependency layers:** A shared package's **directory** declares where its code may run — `packages/universal/` (browser and server), `packages/server/` (Node/Bun only), `packages/client/` (browser only) — and `vp.layer` in its `package.json` declares which way its dependencies may point (strictly down; a same-layer edge is a violation). `server` and `client` never see each other, so no path leads from `apps/web` to a server package. `pnpm boundaries` runs ahead of `pnpm build` and `pnpm typecheck` and fails on a violation. See [packages/AGENTS.md](packages/AGENTS.md).
@@ -39,7 +51,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
     **inferred**; only two places unwrap one - `sendResult` in `apps/api/src/routes/` and `instrument` in
     `apps/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS`. `catch` belongs to `tryCatch`/`fromPromise` at the
     exact line an SDK is called. The discriminant is the existing `ErrorCode`: never a second vocabulary.
-    See [docs/standards/error-handling.md](docs/standards/error-handling.md) and [SDD ADR-24](docs/SDD.md#adr-24-result-typed-error-handling-domain-returns-the-edge-decides).
+    See [docs/standards/error-handling.md](docs/standards/error-handling.md) and [SDD ADR-24](docs/SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides).
 
 ---
 

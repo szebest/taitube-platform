@@ -4,7 +4,7 @@
   "ignoreBinaries": ["ffmpeg", "ffprobe", "kustomize"],
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.ts", "tests/e2e/e2e-runner.ts"],
+      "entry": ["scripts/*.ts", "tests/e2e/e2e-runner.ts", "tests/architecture/typescript.ts"],
       "project": ["scripts/**/*.ts", "tests/**/*.ts"]
     },
     "apps/api": {

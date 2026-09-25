@@ -8,21 +8,52 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
 
 `infra/k8s` contains the declarative Kubernetes resources organized using Kustomize:
 
-- `infra/k8s/base/`: Common manifests for API Deployments, Service definitions, Ingress, Worker Deployments (`probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`), and KEDA `ScaledObject` resources.
-- `infra/k8s/overlays/local/`: Local k3d/kind overlay with in-cluster dependencies and nodePort/hostPort mappings.
-- `infra/k8s/overlays/cloud/`: Production cloud overlay targeting external managed services (Neon PostgreSQL, Cloudflare R2, secrets through an `ExternalSecret`).
-- `infra/k8s/helm-values/`: Configuration values for cluster addons (KEDA, Traefik).
+- `infra/k8s/base/`:
+  - namespace, the `vp-config` ConfigMap, the `vp-secrets` Secret and the `vp-migrate` Job;
+  - the API Deployment, Service and Ingress;
+  - one worker Deployment per stage (`probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`,
+    `thumbnail`, `package`, `notify`, `housekeeping`), each with a KEDA `ScaledObject`;
+  - ServiceMonitors and the Grafana dashboard ConfigMaps.
+- `infra/k8s/overlays/local/`: the k3d/kind overlay.
+  - Swaps the images for `vp-api:local` / `vp-worker:local` with `imagePullPolicy: IfNotPresent`.
+  - Sets `NODE_ENV=development` and `AUTH_MODE=dev`.
+  - Adds a placeholder `ADMIN_TOKEN` that `make k3d-deploy` replaces with the git-ignored `secrets.env` value.
+  - Postgres, Redis and MinIO come from Helm, not from the overlay.
+- `infra/k8s/overlays/cloud/`: the cloud overlay.
+  - Replaces the base `Secret` with an `ExternalSecret` (database URL, Redis password, R2 endpoint and keys,
+    Grafana OTLP, tunnel token).
+  - Adds an in-cluster Redis, `cloudflared` and Grafana Alloy.
+  - Patches the ConfigMap for R2, JWKS auth and CORS.
+  - Lowers `maxReplicaCount` for probe and the transcodes.
+- `infra/k8s/helm-values/`: values for the charts `make k3d-up` installs (`postgres.yaml`, `redis.yaml`,
+  `minio.yaml`, `keda.yaml`, `kube-prometheus-stack.yaml`).
+- `infra/k8s/kind-config.yaml`: the cluster config when `CLUSTER_TOOL=kind`.
 
 ---
 
 ## 2. Invariants & Rules
 
-1. **KEDA Queue Autoscaling:** Worker Deployments autoscale based on BullMQ queue depth (`waiting + active`) using KEDA `ScaledObject` triggers.
-   - Scale-to-zero: Workers scale to 0 when queues are empty.
-   - Scale-in Protection: Grace periods (`terminationGracePeriodSeconds: 300`) must allow in-flight video transcodes to finish.
-2. **Resource Boundaries:** Every container MUST specify explicit `resources.requests` and `resources.limits` for CPU and memory.
-3. **Kustomize Discipline:** Never duplicate manifest definitions; place base specs in `base/` and apply transformations in overlays (`kustomization.yaml`).
-4. **Validation:** All manifests must validate against Kubernetes schemas via `scripts/validate-k8s.sh`.
+1. **KEDA Queue Autoscaling:** each worker Deployment scales on one Prometheus trigger
+   (`base/scaled-objects.yaml`):
+   `sum(max by (state) (bullmq_queue_jobs{queue="<stage>", state=~"waiting|prioritized|active"}))`.
+   - There is no Redis list trigger: a prioritized job is not in the `wait` list
+     (`k8s-keda-autoscaling.test.ts`).
+   - Scale-to-zero: every ScaledObject has `minReplicaCount: 0`.
+   - Scale-in protection: `terminationGracePeriodSeconds` is sized per stage so an in-flight job can finish:
+     30 (API, notify), 60 (probe, housekeeping), 120 (thumbnail, package), 300 / 600 / 900
+     (480p / 720p / 1080p transcode).
+   - `apps/worker/src/__tests__/registry.test.ts` reads these manifests to keep each stage's
+     `shutdownTimeoutMs` at the grace period less the 5 s preStop and a 5 s margin.
+2. **Resource Boundaries:** every container MUST specify explicit `resources.requests` and
+   `resources.limits` for CPU and memory. The cloud overlay's `alloy.yaml` is the one container that sets
+   none yet.
+3. **Kustomize Discipline:** never duplicate manifest definitions; place base specs in `base/` and apply
+   transformations in overlays (`kustomization.yaml`).
+4. **Validation:** both overlays must render and pass kubeconform.
+   - `make k8s-validate` runs `scripts/validate-k8s.sh`, which falls back to rendering only when kubeconform
+     is neither installed nor runnable in Docker.
+   - CI runs no kubeconform; `tests/architecture/production-secrets.test.ts` renders the base and the cloud
+     overlay with `kustomize build`.
 
 ---
 
@@ -35,14 +66,14 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
 ## 4. Local Commands
 
 ```bash
-# Create local k3d cluster with Helm addons
+# Create local k3d (or kind with CLUSTER_TOOL=kind) cluster and install the Helm charts
 make k3d-up
 
-# Deploy application and workers via Kustomize
+# Build images, import them and apply the local overlay
 make k3d-deploy
 
-# Validate manifests against kubeconform
-scripts/validate-k8s.sh
+# Render both overlays and validate them with kubeconform
+make k8s-validate
 
 # Tear down local k3d cluster
 make k3d-down

@@ -7,7 +7,7 @@
 | Size | S–M |
 | Blocked by | 12 — Flows fan-out/fan-in |
 | Blocks | 20 |
-| Spec | [PRD FR-5](../PRD.md#6-functional-requirements) · [PRD OQ-4](../PRD.md#12-open-questions-to-resolve-during-phase-01) · [SDD §8.3 Thumbnails](../SDD.md#83-thumbnails) · [SDD §7 Storage layout (thumbs)](../SDD.md#7-object-storage-layout) · [SDD §9.3 (`ignoreDependencyOnFailure`)](../SDD.md#93-fan-out-fan-in-with-flows) |
+| Spec | [PRD FR-5](../PRD.md#6-functional-requirements) · [PRD OQ-4](../PRD.md#12-open-questions-to-resolve-during-phase-01) · [SDD §8.3 Thumbnails](../SDD.md#83-thumbnails) · [SDD §7 Storage layout (thumbs)](../SDD.md#7-object-storage-layout) · [SDD §9.3 (`ignoreDependencyOnFailure`)](../SDD.md#93-fan-out--fan-in-with-flows) |
 
 **Status:** done
 

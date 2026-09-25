@@ -3,11 +3,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
 import { InMemoryJobQueue } from '../../packages/server/adapters/in-memory/in-memory-job-queue';
-import type {
-  MultipartStorage,
-  Repositories,
-  StorageClient,
-} from '../../packages/server/core/ports/index';
+import type { MultipartStorage, StorageClient } from '../../packages/server/core/ports/index';
+import type { Repositories } from '../../packages/server/core/repositories/index';
+import { createMetricsRegistry } from '../../packages/server/observability/src/index';
 import { expectOk } from '../../packages/server/testing/src/result';
 import { UploadClient } from '../../packages/server/upload-client/src/index';
 import { ErrorCodes } from '../../packages/universal/errors/src/index';
@@ -144,7 +142,9 @@ export async function runAbandonedUploadTest(ctx: DlqCheckContext): Promise<{
       repositories,
       multipart,
       probeQueue: new InMemoryJobQueue('probe'),
+      metrics: createMetricsRegistry(),
       uploadingThresholdMs: 10,
+      uploadedThresholdMs: 60 * 60 * 1000,
       scanLimit: 100,
     });
   }

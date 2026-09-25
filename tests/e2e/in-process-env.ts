@@ -14,13 +14,14 @@ import type {
   CacheClient,
   FlowProducerPort,
   MultipartStorage,
-  Repositories,
   StorageClient,
 } from '../../packages/server/core/ports/index';
+import type { Repositories } from '../../packages/server/core/repositories/index';
 import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
 import { mediaTools } from '../../packages/server/ffmpeg/src/index';
 import { LogContext, type Logger, createLogger } from '../../packages/server/logger/src/index';
 import { createMetricsRegistry } from '../../packages/server/observability/src/index';
+import { ignore } from '../../packages/universal/result/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
 export interface InProcessEnv {
@@ -130,15 +131,20 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
   ).app;
 
   const reconcilerTimer = setInterval(() => {
-    runReconcileUploads({
-      rawBucket: 'raw',
-      repositories,
-      multipart,
-      probeQueue: getQueue('probe'),
-      maxInflightPerUser: 100,
-      uploadedThresholdMs: 500,
-      scanLimit: 100,
-    }).catch(() => {});
+    ignore(
+      runReconcileUploads({
+        rawBucket: 'raw',
+        repositories,
+        multipart,
+        probeQueue: getQueue('probe'),
+        metrics,
+        maxInflightPerUser: 100,
+        uploadingThresholdMs: 60 * 60 * 1000,
+        uploadedThresholdMs: 500,
+        scanLimit: 100,
+      }),
+      'the next tick retries a pass the database refused'
+    );
   }, 1000);
   workerClosers.push(async () => clearInterval(reconcilerTimer));
 

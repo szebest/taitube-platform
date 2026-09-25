@@ -2,30 +2,21 @@
 
 ## 1. Domain Glossary
 
-- **Video**: The core media entity (`videos` table). Represents a user-submitted video moving through lifecycle states: `UPLOADING` &rarr; `UPLOADED` &rarr; `PROBING` &rarr; `PROCESSING` &rarr; `READY` (or `REJECTED` / `ABANDONED` / `FAILED` / `DELETED`). Controls visibility (`PUBLIC`, `UNLISTED`, `PRIVATE`) and content metadata.
-- **Channel**: The canonical creator identity and publication home for a user. Encapsulates a unique lowercase `@handle`, display name, branding assets (avatar, banner), biography, and subscriber count metrics.
-- **Upload**: An active or terminal upload session (`uploads` table). Can be single presigned PUT (`<= 100 MB`) or multipart (`> 100 MB`). Tracks parts, declared size, strategy, and status (`OPEN` &rarr; `COMPLETED` / `ABORTED`).
-- **Rendition**: A specific encoded video ladder rung (`renditions` table), e.g., `1080p`, `720p`, `480p`, tracking independent processing states (`PENDING` &rarr; `RUNNING` &rarr; `DONE` / `FAILED`).
-- **Processing Step**: An idempotent stage execution (`processing_steps` table) fenced by a monotonic UUIDv7 token to prevent zombie worker double-writes.
-- **Video Event**: An append-only audit log row (`video_events` table) written in the exact same transaction as CAS state changes, driving SSE real-time updates and webhook dispatches.
-- **Ladder**: The set of output renditions computed during probe (`height <= sourceHeight`, keeping at least the lowest 480p rung).
-- **Reaction**: A viewer's recorded sentiment (`LIKE` or `DISLIKE`) on a video. Maintains mutually exclusive state per viewer and drives atomic counter caches in Redis and PostgreSQL.
-- **Comment**: A viewer discussion item anchored to a video. Supports hierarchical parent-child threading, author attribution, pinned status, editing flags, and moderation state.
-- **Subscription**: A directional follower relationship linking a viewer to a creator's channel. Dictates the personalized subscribed feed and cached channel subscriber metrics.
-- **View Session**: A playback telemetry event representing verified media consumption by a viewer. Deduplicated via a sliding cooldown window in Redis and flushed periodically to daily historical aggregates (`video_views_daily`) and total view counts.
-- **Watch History**: An append/upsert log (`watch_history` table) tracking an authenticated user's per-video playback progress (`progress_seconds`), completion status, and timestamp. Powers resume playback, user library feeds, and historical re-watching.
-- **User Preferences & Customization**: User-specific configuration governing visual presentation (theme: Dark, Light, OLED; accent color, card density), player behavior (default quality, playback speed, autoplay, ambient glow toggle), and privacy controls (pause watch history, clear history).
-- **Playback Telemetry & Analytics Beacon**: High-throughput, privacy-preserving event stream capturing playback start latency, buffering stalls, ABR rendition switches, and second-by-second audience retention curves to drive Creator Studio dashboards and Prometheus QoS metrics.
-- **Live Stream**: A real-time broadcast session (`live_streams` table) ingested via RTMP/WHIP, packaged into Low-Latency HLS (LL-HLS) sliding manifests, and automatically converted to a durable VOD video entity upon stream conclusion. Supported by a real-time Redis Pub/Sub chat sidecar.
-- **Playlist**: An ordered, user-curated collection of videos with custom sequencing and visibility settings.
-- **Category**: A platform taxonomy classification assigned to videos for curated discovery, filtering, and administration.
-- **Multi-Resource Search Facet**: A unified query abstraction executing weighted lexical and trigram matching across disparate domain entities (`videos`, `channels`, `playlists`) with polymorphic result projection and Redis caching.
-- **Problem Detail / Failure Policy**: Standardized RFC 9457 machine-readable error representation. Strictly distinguishes between **Permanent** errors (invalid input, unauthorized, nonexistent entity, conflict) which must not be retried, and **Transient** errors (network interruption, 5xx server error, rate limiting 429) that trigger classified exponential backoff and jitter.
-- **Discord Integration & Community Connection**: A bidirectional platform integration connecting Taitube accounts to Discord. Features an official Discord bot (slash commands `/watch`, `/live`, `/channel`, real-time creator upload/live alert webhooks), Discord Linked Roles / subscriber sync, a voice channel "Watch Together" activity powered by the Discord Embedded App SDK with lockstep playback synchronization, and Rich Presence (RPC) status broadcasting.
-- **Presentation State**:
-  - **Skeleton State**: A dimensionally calibrated placeholder matching the exact aspect ratio and typography geometry of pending components (CLS < 0.05).
-  - **Error Boundary**: A hierarchical UI containment boundary isolating catastrophic route failures from non-critical widget errors (e.g. failing comments do not interrupt ongoing video playback).
-  - **URL State Model**: The architectural paradigm where URL search parameters serve as the canonical single source of truth for view filters, active tabs, and modal overlays (the STS pattern), guaranteeing deep-linkability, browser back-button navigation, and refresh durability.
+- **Video**: The core media entity (`videos` table). Represents a user-submitted video moving through lifecycle states: `UPLOADING` &rarr; `UPLOADED` &rarr; `PROBING` &rarr; `PROCESSING` &rarr; `READY` (or `REJECTED` / `ABANDONED` / `FAILED` / `DELETED`). Controls visibility (`public`, `unlisted`, `private`) and content metadata. The vocabularies live in `@vp/domain` (`status-vocabulary.ts`).
+- **Channel**: The canonical creator identity and publication home for a user (`channels` table, one per user). Holds a unique lowercase `handle`, display name, avatar and banner URLs, bio, and `subscriberCount`.
+- **Upload**: An active or terminal upload session (`uploads` table). Single presigned PUT up to `S3_MULTIPART_THRESHOLD_BYTES` (100 MiB by default), multipart above it. Tracks parts, declared size, strategy, and status (`OPEN` &rarr; `COMPLETED` / `ABORTED`).
+- **Rendition**: A specific encoded video ladder rung (`renditions` table), e.g., `1080p`, `720p`, `480p`, tracking independent processing states (`PENDING` &rarr; `RUNNING` &rarr; `DONE` / `FAILED` / `SKIPPED`).
+- **Processing Step**: An idempotent stage execution (`processing_steps` table, `QUEUED` &rarr; `RUNNING` &rarr; `DONE` / `FAILED` / `DEAD`) fenced by a `lock_token` UUID to prevent zombie worker double-writes.
+- **Video Event**: An append-only audit log row (`video_events` table) written in the same transaction as CAS state changes; SSE streams replay from it.
+- **Outbox**: A row (`outbox` table) committed with a state transition that describes the job to enqueue, so a job is delivered even when the fast-path enqueue fails.
+- **DLQ Entry**: A job that failed permanently or ran out of retries (`dlq_entries` table), listed, replayed or discarded by operators.
+- **Ladder**: The set of output renditions computed during probe (`height <= sourceHeight`, keeping at least the lowest 480p rung). `CANONICAL_LADDER` and `RENDITIONS` live in `@vp/job-contracts`; `selectLadder` in `@vp/ffmpeg`.
+- **Reaction**: A viewer's recorded sentiment (`LIKE` or `DISLIKE`) on a video (`video_reactions` table, one per viewer and video). Drives the denormalized `likesCount` / `dislikesCount` columns and their Redis cache.
+- **Subscription**: A directional follower relationship linking a viewer to a creator's channel (`channel_subscriptions` table). Dictates the subscribed feed and the channel's subscriber count.
+- **Category**: A platform taxonomy classification assigned to videos for curated discovery, filtering, and administration (`categories` table).
+- **Comment**: Not built. `@vp/permissions` carries comment rules (`comment.rules.ts`, `CommentResource`), but no table, endpoint or service exists.
+- **Problem Detail / Failure Policy**: Standardized RFC 9457 machine-readable error representation. Every failure carries an `ErrorCode` from `@vp/errors`, and `RETRY_CLASS` classifies each code as **permanent** (invalid input, unauthorized, nonexistent entity, conflict), which must not be retried, or **transient** (a dependency unavailable), which BullMQ retries with backoff.
+- **Error Boundary**: The web layout (`apps/web/src/layout/containers/default-layout/default-layout.tsx`) wraps the routed page in `react-error-boundary`'s `ErrorBoundary`, so a failing page does not take down the shell.
 
 ### Architecture vocabulary
 
@@ -36,8 +27,8 @@ defined once here and specified in full in [packages/AGENTS.md](packages/AGENTS.
   only) or `client` (browser only). The tier is the package's **directory** (`packages/<tier>/<name>`), not a
   reviewer's opinion, and `server` and `client` can never see each other. This is what makes `ioredis`
   unreachable from `apps/web`. _Avoid_: "platform", "environment", "scope".
-- **Dependency Layer**: *which way dependencies may point* — `vp.layer` in `package.json`, T1 Foundation → T2
-  Contracts & domain capability → T3 Integration → T4 Application. Dependencies point strictly down; a
+- **Dependency Layer**: *which way dependencies may point* - `vp.layer` in `package.json`: T1 Foundation, T2
+  Contracts and policy, T3 Domain capability, T4 Integration, T5 Application, T6 Reference tool. Dependencies point strictly down; a
   same-layer (sibling) edge is a violation, not a shortcut. Orthogonal to the tier: a package can be
   `universal` and T1, or `server` and T3. _Avoid_: "level", "depth" (depth is a property of a module's
   interface, see §2).
@@ -52,7 +43,7 @@ defined once here and specified in full in [packages/AGENTS.md](packages/AGENTS.
 - **Invariant Suite**: `tests/architecture/` — the tests that assert the repo's own rules, over the manifest
   graph and over source text, each proven against a deliberately violating fixture. It is the enforcement
   half of every "documented vs actual" gap: a rule stated only in prose has drifted, a rule with an assertion
-  has not. `pnpm test:architecture` runs it in under a second, CI runs it ahead of lint and typecheck, and
+  has not. `pnpm test:architecture` runs it, CI runs it in `lint-typecheck` ahead of lint and typecheck under a 6-second budget, and
   `pnpm boundaries` runs the manifest half as a fail-fast script before `pnpm build` and `pnpm typecheck`.
   See [ARCHITECTURE.md §6](ARCHITECTURE.md).
 
@@ -64,28 +55,28 @@ Following the deep module principles (`codebase-design`):
 
 ### Deep Domain Services (`apps/api/src/services/`)
 - All domain workflows, multi-subsystem coordination, and business invariants live inside **Deep Service Modules**:
-  - `UploadService`: Encapsulates single vs multipart strategy selection, presigned S3 URL issuance, S3 `ListParts` resume inspection, `HeadObject` size verification, rejected file cleanup, CAS video state transitions, and BullMQ queue dispatching.
-  - `VideoService`: Encapsulates access control (private vs unlisted/public), CDN URL formatting, rendition progress aggregation, and RFC 9457 compliant projections.
+  - `UploadService`: Encapsulates single vs multipart strategy selection, presigned S3 URL issuance, S3 `ListParts` resume inspection, `HeadObject` size verification, rejected file cleanup, CAS video state transitions, and the probe dispatch (an outbox row plus a fast-path enqueue).
+  - `VideoService`: Encapsulates read access (`decideVideoRead` from `@vp/domain-rules`), CDN URL formatting, rendition progress aggregation, metadata updates, reprocess and soft delete.
 - **Interface Depth**: Each service exposes a minimal interface (e.g. 5 domain methods on `UploadService`) that hides the complexity of underlying systems (Postgres, S3, BullMQ).
 - **Locality**: Invariants (e.g. "only upload owner can request parts", "size must match declared bytes before UPLOADED transition") are concentrated in one module.
 - **Testability**: Services are directly testable in-process across their seam without HTTP server overhead.
 
 ### Thin Transport Adapters (`apps/api/src/routes/`)
 - Fastify route files are **thin transport adapters**:
-  - Define Zod route validation schemas, query/body params, and OpenAPI responses.
+  - Declare their Zod params, querystring and body schemas and render the rest of the route schema from `@vp/api-contracts` through `contractSchema` (`routes/contract-schema.ts`).
   - Apply HTTP-level concerns: rate limiting, auth extraction (`requireAuth`), status codes (`201`, `202`, `204`, `422`, `429`).
-  - **Rule**: Route handlers NEVER perform direct database mutations, raw S3 SDK calls, or BullMQ queue additions. They delegate directly to the service layer.
+  - **Rule**: Route handlers NEVER perform direct database mutations, raw S3 SDK calls, or BullMQ queue additions. They delegate to the service layer and render its `Result` through `sendResult`.
 
 ---
 
 ## 3. Ports, Adapters & Repository Boundaries
 
 ### Dependency Inversion & Segregation
-- **Ports (`@vp/core/ports`)**: Abstract class contracts extending `HealthCheckable` (`DatabaseClient`, `StorageClient`, `MultipartStorage`, `CacheClient`, `JobQueue`, `FlowProducer`).
+- **Ports (`@vp/core/ports`)**: Abstract class contracts. The driver-backed ones implement `HealthCheckable` (`DatabaseClient`, `StorageClient`, `MultipartStorage`, `CacheClient`, `JobQueue`, `FlowProducerPort`); `AuthorizationPort` and `TokenVerifier` do not. The cache-shaped ports (`CategoryCachePort`, `ReactionCachePort`, `SubscriptionCachePort`) sit beside them.
 - **Repositories (`@vp/core/repositories`)**: Pure domain entity contracts decoupled from the driver:
-  - `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, `CategoryRepositoryPort`, `VideoReactionRepositoryPort`, and the aggregating `Repositories` container.
-- **Adapters (`@vp/adapters`)**: Concrete implementations (`packages/server/adapters/s3/`, `packages/server/adapters/redis/`, `packages/server/adapters/bullmq/`, `packages/server/adapters/postgres/`, `packages/server/adapters/in-memory/`).
-- **Composition Roots**: Only `apps/api/src/app.ts` and `apps/worker/src/runner.ts` instantiate concrete adapters.
+  - `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, `DlqRepository`, `OutboxRepository`, `CategoryRepositoryPort`, `ChannelRepositoryPort`, `SubscriptionRepositoryPort`, `VideoReactionRepositoryPort`, and the aggregating `Repositories` interface.
+- **Adapters (`@vp/adapters`)**: Concrete implementations (`packages/server/adapters/{s3,redis,bullmq,postgres,auth,authorization,metered,in-memory}/`).
+- **Composition Roots**: `apps/api/src/app.ts` and `apps/worker/src/runner.ts` call `registerAdapters` (`packages/server/adapters/composition/register-adapters.ts`), the only place concrete adapters are built.
 
 ### Modular Repository Rules & File Limits
 See [docs/standards/file-discipline.md](docs/standards/file-discipline.md) for modular single-file repository rules, size bounds (<= 250 lines target, 400 lines max), and autonomous in-memory test doubles.

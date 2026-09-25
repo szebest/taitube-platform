@@ -7,7 +7,7 @@
 | Size | L |
 | Blocked by | 08 — Containerise + compose |
 | Blocks | 26, 32 |
-| Spec | [SDD §12.2 Rung 2 (manifests, Deployment essentials)](../SDD.md#122-rung-2-kubernetes-locally-kind-or-k3d-phase-3) · [SDD §15.1 `infra/k8s`](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §11 Containers](../SDD.md#11-security) |
+| Spec | [SDD §12.2 Rung 2 (manifests, Deployment essentials)](../SDD.md#122-rung-2--kubernetes-locally-kind-or-k3d-phase-3) · [SDD §15.1 `infra/k8s`](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §11 Containers](../SDD.md#11-security) |
 
 **Status:** done
 

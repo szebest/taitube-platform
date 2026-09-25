@@ -48,6 +48,7 @@
     "vitest": "^3.0.7"
   },
   "devDependencies": {
+    "@cdktf/hcl2json": "^0.21.0",
     "@types/node": "^24.0.0",
     "@vp/tsconfig": "workspace:*",
     "js-yaml": "^5.4.1",

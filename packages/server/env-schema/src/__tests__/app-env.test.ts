@@ -173,6 +173,22 @@ describe('packages/env-schema: the environment contract', () => {
     }
   );
 
+  it.each([
+    { key: 'OTEL_TRACES_SAMPLER', raw: 'ratio' },
+    { key: 'OTEL_TRACES_SAMPLER', raw: 'parentbased_ratio' },
+    { key: 'OTEL_TRACES_SAMPLER_ARG', raw: '1.5' },
+    { key: 'OTEL_TRACES_SAMPLER_ARG', raw: '-0.1' },
+  ] as const)('refuses $key $raw', ({ key, raw }) => {
+    expect(SHAPE[key].safeParse(raw).success).toBe(false);
+  });
+
+  it('reads a ratio sampler with its argument', () => {
+    expect(SHAPE.OTEL_TRACES_SAMPLER.parse('parentbased_traceidratio')).toBe(
+      'parentbased_traceidratio'
+    );
+    expect(SHAPE.OTEL_TRACES_SAMPLER_ARG.parse('0.2')).toBe(0.2);
+  });
+
   it('defaults the connection pool without being told', () => {
     expect(SHAPE.DATABASE_POOL_MAX.parse(undefined)).toBe(10);
   });

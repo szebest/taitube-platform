@@ -130,7 +130,7 @@ the compiler proves it, so an identity function would only create a place for th
 drift. `toOutboxRecord` is the exception, confining the one assertion that jsonb requires.
 
 ### 2. Dependency Inversion in Domain Services (`AuthorizationPort`)
-Domain services depend on the abstract port `AuthorizationPort` (`packages/server/core/ports/authorization.port.ts`).
+Domain services depend on the abstract port `AuthorizationPort` (`packages/server/core/ports/authorization.ts`).
 - Concrete implementation: `CaslAuthorizationAdapter` (`packages/server/adapters/authorization/casl-authorization-adapter.ts`).
 - Holds memoized `AppAbility`, implements `can(action, subject)` and `.forUser(user)`. It answers the
   verdict only: the refusal belongs to `authorize(actor, allowed, context)` in `@vp/domain-rules` (ADR-24).

@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 04 — API skeleton + schema |
 | Blocks | 06, 11 |
-| Spec | [PRD US-1, US-4](../PRD.md#51-upload) · [PRD FR-1, FR-2](../PRD.md#6-functional-requirements) · [SDD §3.1 Upload flow](../SDD.md#31-upload-multipart-direct-to-storage) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §9.2 Job identity](../SDD.md#92-job-identity-payload-contracts) · [SDD §20 Job contracts](../SDD.md#20-appendix-job-contracts-code) · [ADR-06](../SDD.md#adr-06-object-storage-minio-locally-cloudflare-r2-in-cloud-backblaze-b2-fallback) · [ADR-09](../SDD.md#adr-09-upload-completion-trigger-explicit-complete-call-server-verification-reconciler) · [ADR-16](../SDD.md#adr-16-enqueue-reliability-idempotent-enqueue-reconciler-mvp-transactional-outbox-phase-4) |
+| Spec | [PRD US-1, US-4](../PRD.md#51-upload) · [PRD FR-1, FR-2](../PRD.md#6-functional-requirements) · [SDD §3.1 Upload flow](../SDD.md#31-upload-multipart-direct-to-storage) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §9.2 Job identity](../SDD.md#92-job-identity--payload-contracts) · [SDD §20 Job contracts](../SDD.md#20-appendix--job-contracts-code) · [ADR-06](../SDD.md#adr-06--object-storage-minio-locally-cloudflare-r2-in-cloud-backblaze-b2-fallback) · [ADR-09](../SDD.md#adr-09--upload-completion-trigger-explicit-complete-call--server-verification--reconciler) · [ADR-16](../SDD.md#adr-16--enqueue-reliability-idempotent-enqueue--reconciler-mvp-transactional-outbox-phase-4) |
 
 **Status:** done
 

@@ -21,8 +21,8 @@ Current member: `api-client`.
 3. **Nothing is hand-written that a contract already owns.** `@vp/api-client` derives every fetcher from
    the `@vp/api-contracts` registry, so an endpoint cannot exist in the client without existing in the
    contract. Keep that property for anything added here.
-4. **No host literals.** URLs are injected from config — a hardcoded host breaks local-first (Rule 1) and
-   is asserted against.
+4. **No host literals.** The base URL is injected (`apps/web/src/base-api.ts` passes `API_BASE_URL`); a
+   hardcoded external host breaks local-first (Rule 1) and fails `tests/architecture/local-first.test.ts`.
 5. **Relative imports are extensionless**, as in every tier. `apps/web` resolves them through the one
    webpack override in its `craco.config.js` (`resolve.fullySpecified: false` for workspace packages).
 6. **Declare `"sideEffects": false`**, or webpack keeps every module the frontend touches whole and an
@@ -32,6 +32,7 @@ Current member: `api-client`.
 
 Everything here ships to a user's browser. Prefer a platform API over a dependency, and check what a
 package pulls in transitively before adding it — `pnpm why <pkg>` from `apps/web` is the quick check.
-`apps/web`'s runtime closure is six packages today, every one of them `universal` or `client`; keep it small.
+`apps/web`'s runtime closure is seven workspace packages today (`@vp/api-client` plus six `universal`
+ones); keep it small.
 Membership is not the whole check — `@vp/env-schema` was `universal`, and one URL default the browser
 imported carried `DATABASE_URL`, `S3_SECRET_ACCESS_KEY` and the BullMQ queue names into `main.*.js` with it.

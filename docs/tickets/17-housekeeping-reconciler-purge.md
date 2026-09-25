@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 11 — Multipart upload · 06 — Worker runtime |
 | Blocks | 18, 20 |
-| Spec | [PRD US-3](../PRD.md#51-upload) · [PRD FR-2, FR-14](../PRD.md#6-functional-requirements) · [SDD §9.8 Housekeeping schedulers](../SDD.md#98-housekeeping-job-schedulers) · [SDD §5.3 Reconciler query](../SDD.md#53-key-queries-that-encode-the-guarantees) · [SDD §7 (generations, raw retention)](../SDD.md#7-object-storage-layout) · [ADR-09](../SDD.md#adr-09-upload-completion-trigger-explicit-complete-call-server-verification-reconciler) · [ADR-16](../SDD.md#adr-16-enqueue-reliability-idempotent-enqueue-reconciler-mvp-transactional-outbox-phase-4) |
+| Spec | [PRD US-3](../PRD.md#51-upload) · [PRD FR-2, FR-14](../PRD.md#6-functional-requirements) · [SDD §9.8 Housekeeping schedulers](../SDD.md#98-housekeeping-job-schedulers) · [SDD §5.3 Reconciler query](../SDD.md#53-key-queries-that-encode-the-guarantees) · [SDD §7 (generations, raw retention)](../SDD.md#7-object-storage-layout) · [ADR-09](../SDD.md#adr-09--upload-completion-trigger-explicit-complete-call--server-verification--reconciler) · [ADR-16](../SDD.md#adr-16--enqueue-reliability-idempotent-enqueue--reconciler-mvp-transactional-outbox-phase-4) |
 
 **Status:** done
 

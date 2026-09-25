@@ -141,7 +141,7 @@ No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on 
 | The architecture invariants | `pnpm test:architecture` |
 | Real services | `pnpm test:integration` |
 | Bun parity | `pnpm test:bun` |
-| One package | `pnpm --filter @vp/<name> test` |
+| One package | `pnpm --filter @vp/adapters test`, any package name in place of `adapters` |
 | Smoke against Compose | `make smoke`, `make smoke-offline` |
 | In-process acceptance suite | `make e2e` |
 

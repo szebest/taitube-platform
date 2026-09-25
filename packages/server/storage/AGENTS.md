@@ -3,22 +3,28 @@
 Instructions for any coding agent working on `@vp/storage`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
 
-`@vp/storage` standardizes S3-compatible object keys, bucket topologies, and upload parameters for MinIO and Cloudflare R2:
-- **Bucket Topologies:**
-  - `raw`: Private bucket for unprocessed uploads (`raw/<videoId>/<uploadId>/source.<ext>`).
-  - `public`: Public bucket for finished HLS playlists, video segments, posters, and WebVTT scrub thumbnails (`videos/<videoId>/...`).
-- **Single Source of Truth:** Key formats are defined exclusively in `packages/server/storage/src/keys.ts`.
-- **MIME Types:** Validation and mapping for video files (`video/mp4`, `video/quicktime`, `video/webm`).
+`@vp/storage` holds the S3 conventions the API, the worker, `@vp/adapters`, `@vp/db` and `@vp/ffmpeg`
+share: object keys, per-extension headers and multipart sizing. Pure functions and constants, no SDK. Tier
+`server`, `vp.layer` 1; its dependencies are in [package.json](package.json). Besides `.` it exports `./keys`.
+
+- **Keys (`src/keys.ts`, SDD §7):** the raw upload is `raw/<videoId>/source.<ext>`; everything published
+  sits under `videos/<videoId>/`: HLS under `hls/` for generation 1 and `hls/g<n>/` after, thumbnails under
+  `thumbs/`.
+- **Headers (`src/mime.ts`):** `getHeaderMapping` gives an object's `Content-Type` and `Cache-Control` by
+  extension, `application/octet-stream` for an unknown one.
+- **Multipart (`src/multipart.ts`):** a part is a thousandth of the file, clamped to `PartSizeBounds`.
 
 ---
 
 ## 2. Invariants
 
-- Never assemble hardcoded S3 key strings in application code; always call `storageKeys.*` helper functions.
+- Production source never builds a `raw/` or `videos/` key by hand; it calls the helpers in `keys.ts`
+  (a zero-matches row in `tests/architecture/zero-matches.test.ts`).
 - Updating key conventions requires updating `docs/SDD.md` §7 in the same PR.
 
 ---

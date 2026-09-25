@@ -7,9 +7,11 @@
 | Size | S |
 | Blocked by | 08 — Containerise + compose |
 | Blocks | — |
-| Spec | [SDD §17 Fact sheet (Node.js row)](../SDD.md#17-fact-sheet-verified-2026-09-03) · [SDD §15.2 Toolchain](../SDD.md#152-toolchain) · [SDD §18 Phase 4](../SDD.md#phase-4-resilience-cloud-34-weeks) |
+| Spec | [SDD §17 Fact sheet (Node.js row)](../SDD.md#17-fact-sheet-verified-2026-09-03) · [SDD §15.2 Toolchain](../SDD.md#152-toolchain) · [SDD §18 Phase 4](../SDD.md#phase-4--resilience--cloud--34-weeks) |
 
-**Status:** blocked-by-date (ready after Node 26 enters Active LTS on 2026-10-28)
+**Status:** blocked-by-date
+
+Ready after Node 26 enters Active LTS on 2026-10-28.
 
 ## What to build
 The API image, `.node-version`, `engines`, CI matrix and Dockerfiles move from Node 24 to Node 26 LTS; Bun to the current 1.x; BullMQ/Fastify/Drizzle to current minors (Drizzle 1.0 if GA, with the migration guide applied). The smoke, E2E and load-smoke suites stay green; image sizes and cold-start numbers are re-measured and noted in SDD §2.3.

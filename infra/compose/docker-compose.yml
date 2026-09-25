@@ -4,7 +4,6 @@ x-app-env: &app-env
   DATABASE_URL: postgres://vp:vp@postgres:5432/vp
   REDIS_URL: redis://redis:6379/0
   REDIS_PUBSUB_URL: redis://redis:6379/1
-  REDIS_ADDR: redis:6379
   REDIS_PASSWORD: vp
   S3_ENDPOINT: http://minio:9000
   S3_FORCE_PATH_STYLE: "true"

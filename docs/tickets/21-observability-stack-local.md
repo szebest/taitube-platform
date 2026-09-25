@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 08 — Containerise + compose |
 | Blocks | 22, 23 |
-| Spec | [SDD §12.1 observability profile](../SDD.md#121-rung-1-docker-compose-local-dev-phase-02) · [SDD §13.3–13.5](../SDD.md#133-tracing-opentelemetry) · [ADR-14](../SDD.md#adr-14-observability-stack-opentelemetry-prometheus-grafana-tempo-loki-grafana-cloud-free-in-cloud) · [SDD §16.7 env](../SDD.md#167-observability) |
+| Spec | [SDD §12.1 observability profile](../SDD.md#121-rung-1--docker-compose-local-dev-phase-02) · [SDD §13.3–13.5](../SDD.md#133-tracing-opentelemetry) · [ADR-14](../SDD.md#adr-14--observability-stack-opentelemetry--prometheus--grafana--tempo--loki-grafana-cloud-free-in-cloud) · [SDD §16.7 env](../SDD.md#167-observability) |
 
 **Status:** done
 

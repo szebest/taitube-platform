@@ -26,30 +26,48 @@ Every domain entity data access layer must be structured as dedicated single-fil
 packages/server/adapters/
 ├── postgres/
 │   ├── postgres-database-client.ts
+│   ├── pg-errors.ts
+│   ├── mappers/                            # Row -> entity mappers, one file per entity
+│   ├── scopes/                             # SQL filters: CASL rules to SQL, keyset, soft delete
 │   ├── repositories/
 │   │   ├── postgres-category-repository.ts
+│   │   ├── postgres-channel-repository.ts
+│   │   ├── postgres-dlq-repository.ts
+│   │   ├── postgres-event-repository.ts
+│   │   ├── postgres-outbox-repository.ts
+│   │   ├── postgres-rendition-repository.ts
+│   │   ├── postgres-step-repository.ts
+│   │   ├── postgres-subscription-repository.ts
+│   │   ├── postgres-upload-repository.ts
+│   │   ├── postgres-user-repository.ts
 │   │   ├── postgres-video-reaction-repository.ts
 │   │   ├── postgres-video-repository.ts
-│   │   ├── postgres-upload-repository.ts
-│   │   ├── postgres-step-repository.ts
-│   │   ├── postgres-rendition-repository.ts
-│   │   ├── postgres-event-repository.ts
-│   │   ├── postgres-user-repository.ts
 │   │   ├── postgres-repositories.ts        # Lightweight factory container
+│   │   ├── public-feed-query.ts            # Query helpers the repositories share
+│   │   ├── video-scan-query.ts
+│   │   ├── types.ts
 │   │   └── index.ts
 │   └── index.ts
 └── in-memory/
     ├── in-memory-database-client.ts
+    ├── in-memory-*.ts                      # The other port doubles (cache, queue, storage, ...)
     ├── repositories/
     │   ├── in-memory-category-repository.ts
+    │   ├── in-memory-channel-repository.ts
+    │   ├── in-memory-dlq-repository.ts
+    │   ├── in-memory-event-repository.ts
+    │   ├── in-memory-outbox-repository.ts
+    │   ├── in-memory-rendition-repository.ts
+    │   ├── in-memory-step-repository.ts
+    │   ├── in-memory-subscription-repository.ts
+    │   ├── in-memory-upload-repository.ts
+    │   ├── in-memory-user-repository.ts
     │   ├── in-memory-video-reaction-repository.ts
     │   ├── in-memory-video-repository.ts
-    │   ├── in-memory-upload-repository.ts
-    │   ├── in-memory-step-repository.ts
-    │   ├── in-memory-rendition-repository.ts
-    │   ├── in-memory-event-repository.ts
-    │   ├── in-memory-user-repository.ts
     │   ├── in-memory-repositories.ts       # Lightweight factory container
+    │   ├── keyset.ts                       # Query helpers the repositories share
+    │   ├── public-feed-query.ts
+    │   ├── types.ts
     │   └── index.ts
     └── index.ts
 ```

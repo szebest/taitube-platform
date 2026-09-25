@@ -7,7 +7,7 @@
 | Size | L |
 | Blocked by | 21 — Observability stack · 12 — Flows fan-out/fan-in |
 | Blocks | 24, 26, 27, 32 |
-| Spec | [PRD US-13, FR-16](../PRD.md#54-operations) · [SDD §13.1 Metrics catalogue](../SDD.md#131-metrics-catalogue) · [SDD §13.5 Dashboards](../SDD.md#135-dashboards-alerts-committed-under-observability) · [SDD §12.3 cost guardrails (Class A ops)](../SDD.md#123-rung-3-cloud-reference-deployment-phase-4) |
+| Spec | [PRD US-13, FR-16](../PRD.md#54-operations) · [SDD §13.1 Metrics catalogue](../SDD.md#131-metrics-catalogue) · [SDD §13.5 Dashboards](../SDD.md#135-dashboards--alerts-committed-under-infraobservability) · [SDD §12.3 cost guardrails (Class A ops)](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) |
 
 **Status:** done
 

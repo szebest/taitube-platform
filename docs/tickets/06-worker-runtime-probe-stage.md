@@ -7,7 +7,7 @@
 | Size | L |
 | Blocked by | 05 — Upload slice · 03 — Dev tooling (fixtures) |
 | Blocks | 07, 17 |
-| Spec | [PRD US-6, US-8](../PRD.md#52-processing) · [PRD FR-3, FR-12](../PRD.md#6-functional-requirements) · [SDD §2.2 Components](../SDD.md#22-components-and-responsibilities) · [SDD §2.3 Runtime split](../SDD.md#23-runtime-split-why-two-runtimes) · [SDD §8.1 Probe](../SDD.md#81-probe) · [SDD §9.4 Worker process model](../SDD.md#94-worker-process-model) · [SDD §9.5 Long-running jobs](../SDD.md#95-long-running-jobs-heartbeats-crashes-double-processing) · [SDD §9.7 Idempotency](../SDD.md#97-idempotency-guarantees-per-step) · [ADR-01](../SDD.md#adr-01-primary-language-runtime-typescript-node-lts-api-bun-workers) · [ADR-18](../SDD.md#adr-18-error-taxonomy-decides-retry-policy) |
+| Spec | [PRD US-6, US-8](../PRD.md#52-processing) · [PRD FR-3, FR-12](../PRD.md#6-functional-requirements) · [SDD §2.2 Components](../SDD.md#22-components-and-responsibilities) · [SDD §2.3 Runtime split](../SDD.md#23-runtime-split--why-two-runtimes) · [SDD §8.1 Probe](../SDD.md#81-probe) · [SDD §9.4 Worker process model](../SDD.md#94-worker-process-model) · [SDD §9.5 Long-running jobs](../SDD.md#95-long-running-jobs-heartbeats-crashes-double-processing) · [SDD §9.7 Idempotency](../SDD.md#97-idempotency-guarantees-per-step) · [ADR-01](../SDD.md#adr-01--primary-language--runtime-typescript-node-lts-api--bun-workers) · [ADR-18](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) |
 
 **Status:** done
 

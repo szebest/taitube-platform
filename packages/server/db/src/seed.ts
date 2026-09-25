@@ -50,85 +50,81 @@ export async function seedDatabase(connectionUrl: string, log: Log): Promise<voi
     audioKbps,
   }));
 
-  await db
-    .insert(videos)
-    .values([
-      {
-        id: SEED_VIDEO_ID,
-        ownerId: DEV_USER_ID,
-        title: 'Test Sintel Trailer',
-        description: 'Open-source Blender movie trailer sample',
-        visibility: 'public',
-        status: 'READY',
-        sourceKey: rawSourceKey(SEED_VIDEO_ID),
-        sourceSizeBytes: 15200000,
-        sourceContentType: 'video/mp4',
-        durationMs: 52000,
-        width: 1920,
-        height: 1080,
-        fps: 24,
-        videoCodec: 'h264',
-        audioCodec: 'aac',
-        ladder,
-        masterPlaylistKey: masterPlaylistKey(SEED_VIDEO_ID),
-        posterKey: posterKey(SEED_VIDEO_ID),
-        spriteKey: spriteKey(SEED_VIDEO_ID),
-        version: 1,
-        readyAt: new Date(),
-      },
-      {
-        id: OTHER_PRIVATE_VIDEO_ID,
-        ownerId: OTHER_USER_ID,
-        title: 'Other User Private Video',
-        description: 'Should not be visible to DEV_USER_ID',
-        visibility: 'private',
-        status: 'READY',
-        sourceKey: rawSourceKey(OTHER_PRIVATE_VIDEO_ID),
-        sourceSizeBytes: 10000000,
-        sourceContentType: 'video/mp4',
-        durationMs: 30000,
-        width: 1280,
-        height: 720,
-        fps: 30,
-        videoCodec: 'h264',
-        audioCodec: 'aac',
-        ladder: ladder.slice(1),
-        masterPlaylistKey: masterPlaylistKey(OTHER_PRIVATE_VIDEO_ID),
-        version: 1,
-        readyAt: new Date(),
-      },
-    ])
-    .onConflictDoUpdate({
-      target: videos.id,
-      set: {
-        status: 'READY',
-        title: 'Test Sintel Trailer',
-      },
-    });
+  const seedVideos: (typeof videos.$inferInsert)[] = [
+    {
+      id: SEED_VIDEO_ID,
+      ownerId: DEV_USER_ID,
+      title: 'Test Sintel Trailer',
+      description: 'Open-source Blender movie trailer sample',
+      visibility: 'public',
+      status: 'READY',
+      sourceKey: rawSourceKey(SEED_VIDEO_ID),
+      sourceSizeBytes: 15200000,
+      sourceContentType: 'video/mp4',
+      durationMs: 52000,
+      width: 1920,
+      height: 1080,
+      fps: 24,
+      videoCodec: 'h264',
+      audioCodec: 'aac',
+      ladder,
+      masterPlaylistKey: masterPlaylistKey(SEED_VIDEO_ID),
+      posterKey: posterKey(SEED_VIDEO_ID),
+      spriteKey: spriteKey(SEED_VIDEO_ID),
+      version: 1,
+    },
+    {
+      id: OTHER_PRIVATE_VIDEO_ID,
+      ownerId: OTHER_USER_ID,
+      title: 'Other User Private Video',
+      description: 'Should not be visible to DEV_USER_ID',
+      visibility: 'private',
+      status: 'READY',
+      sourceKey: rawSourceKey(OTHER_PRIVATE_VIDEO_ID),
+      sourceSizeBytes: 10000000,
+      sourceContentType: 'video/mp4',
+      durationMs: 30000,
+      width: 1280,
+      height: 720,
+      fps: 30,
+      videoCodec: 'h264',
+      audioCodec: 'aac',
+      ladder: ladder.slice(1),
+      masterPlaylistKey: masterPlaylistKey(OTHER_PRIVATE_VIDEO_ID),
+      version: 1,
+    },
+  ];
 
-  await db
-    .insert(renditions)
-    .values(
-      CANONICAL_LADDER.map((rung) => ({
-        ...SEED_RENDITIONS[rung.name],
-        videoId: SEED_VIDEO_ID,
-        name: rung.name,
-        width: rung.width,
-        height: rung.height,
-        videoBitrateKbps: rung.videoKbps,
-        audioBitrateKbps: rung.audioKbps,
-        status: 'DONE' as const,
-        playlistKey: renditionPlaylistKey(SEED_VIDEO_ID, rung.name),
-        segmentCount: 9,
-      }))
-    )
-    .onConflictDoUpdate({
-      target: renditions.id,
-      set: {
-        status: 'DONE',
-      },
-    });
+  for (const video of seedVideos) {
+    await db
+      .insert(videos)
+      .values({ ...video, readyAt: new Date() })
+      .onConflictDoUpdate({ target: videos.id, set: video });
+  }
 
-  log.info({}, 'database seeded with the dev user and a ready video');
+  const seedRenditions: (typeof renditions.$inferInsert)[] = CANONICAL_LADDER.map((rung) => ({
+    ...SEED_RENDITIONS[rung.name],
+    videoId: SEED_VIDEO_ID,
+    name: rung.name,
+    width: rung.width,
+    height: rung.height,
+    videoBitrateKbps: rung.videoKbps,
+    audioBitrateKbps: rung.audioKbps,
+    status: 'DONE',
+    playlistKey: renditionPlaylistKey(SEED_VIDEO_ID, rung.name),
+    segmentCount: 9,
+  }));
+
+  for (const rendition of seedRenditions) {
+    await db
+      .insert(renditions)
+      .values(rendition)
+      .onConflictDoUpdate({ target: renditions.id, set: rendition });
+  }
+
+  log.info(
+    { users: SEED_USERS.length, videos: seedVideos.length, renditions: seedRenditions.length },
+    'database seeded'
+  );
   await sql.end();
 }

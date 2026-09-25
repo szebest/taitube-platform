@@ -3,16 +3,18 @@
 Instructions for any coding agent working on `@vp/pagination`.
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
+
 ---
 
 ## 1. Scope & Purpose
 
 `@vp/pagination` is the one keyset pagination mechanism in the repo: `Paginator`, the `limit + 1`
-protocol, and the pluggable `CursorCodec` that decides how a cursor travels over HTTP.
+protocol, and the pluggable `CursorCodec` (default `Base64UrlCursorCodec`) that decides how a cursor
+travels over HTTP. `invalidCursor` is its `INVALID_CURSOR` input failure.
 
 It is `universal` because both sides of the wire need the same codec. `@vp/api-contracts` validates an
-inbound cursor with it and the API mints one with it; before the split, a server-tier home forced
-`@vp/api-contracts` to carry a second, browser-safe decoder.
+inbound cursor with `Base64UrlCursorCodec` (`videos.ts`) and the API mints one through the `Paginator`
+built in `apps/api/src/composition/services.module.ts`.
 
 ---
 

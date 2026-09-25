@@ -280,4 +280,18 @@ export const ROWS: readonly Row[] = [
     expected: 0,
     fires: 'Relative imports carry `.js` so Node resolves them.',
   },
+  {
+    name: 'a tool path that moved under packages/server',
+    pattern: /\btools\/(dev-token|gen-video|upload-client|compose-autoscaler)\b/g,
+    scope: ['Makefile', '.env.example', 'tests/load', '.agents'],
+    expected: 0,
+    fires: '# TOKEN=<dev jwt from tools/dev-token>',
+  },
+  {
+    name: 'a frontier written by hand',
+    pattern: /Frontier Priority Policy:\*\* Ticket/g,
+    scope: ['AGENTS.md', 'docs/tickets/gen-index.py'],
+    expected: 0,
+    fires: '**Frontier Priority Policy:** Ticket **84** is done',
+  },
 ];

@@ -19,7 +19,7 @@ resource "cloudflare_r2_bucket" "raw" {
 
 # Lifecycle rule for raw bucket: abort incomplete multiparts after 1d, expire objects after 7d
 resource "cloudflare_r2_bucket_lifecycle" "raw" {
-  account_id = var.cloudflare_account_id
+  account_id  = var.cloudflare_account_id
   bucket_name = cloudflare_r2_bucket.raw.name
 
   rules {
@@ -49,7 +49,7 @@ resource "cloudflare_r2_bucket" "public" {
 
 # Custom domain fronted by Cloudflare CDN for cdn.<domain> (never expose raw *.r2.dev)
 resource "cloudflare_r2_custom_domain" "public_cdn" {
-  account_id = var.cloudflare_account_id
+  account_id  = var.cloudflare_account_id
   bucket_name = cloudflare_r2_bucket.public.name
   domain      = "cdn.${var.domain}"
   zone_id     = data.cloudflare_zone.primary.id
@@ -142,12 +142,14 @@ resource "cloudflare_api_token" "r2_api_app" {
   }
 }
 
-# Token for apps/worker: Read on vp-raw (source), Read & Write on vp-public (transcode outputs)
+# Token for apps/worker: Read & Write on vp-raw and vp-public. Housekeeping deletes sources and
+# aborts multipart uploads in vp-raw, and R2 grants a delete only with Item Write.
 resource "cloudflare_api_token" "r2_worker_app" {
   name = "vp-worker-r2-scoped"
 
   policy {
     permission_groups = [
+      "Workers R2 Storage Bucket Item Write",
       "Workers R2 Storage Bucket Item Read"
     ]
     resources = {
@@ -218,11 +220,11 @@ resource "hcloud_firewall" "vps_firewall" {
 
 # Server instance running Ubuntu 24.04
 resource "hcloud_server" "k3s_node" {
-  name        = "vp-${var.environment}-node"
-  server_type = var.hcloud_server_type
-  image       = "ubuntu-24.04"
-  location    = var.hcloud_location
-  ssh_keys    = [hcloud_ssh_key.operator_key.id]
+  name         = "vp-${var.environment}-node"
+  server_type  = var.hcloud_server_type
+  image        = "ubuntu-24.04"
+  location     = var.hcloud_location
+  ssh_keys     = [hcloud_ssh_key.operator_key.id]
   firewall_ids = [hcloud_firewall.vps_firewall.id]
 
   # Disable password authentication; SSH key only

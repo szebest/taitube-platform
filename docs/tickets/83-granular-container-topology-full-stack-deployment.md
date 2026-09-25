@@ -6,9 +6,9 @@
 | Size | L |
 | Blocked by | 82 — Architecture remediation, package runtime tiers & contract seams |
 | Blocks | — |
-| Spec | [SDD §12.1 Rung 1 Compose](../SDD.md#121-rung-1-docker-compose-local-dev-phase-02) · [SDD §12.2 Rung 2 Kubernetes](../SDD.md#122-rung-2-kubernetes-locally-kind-or-k3d-phase-3) · [SDD §12.3 Rung 3 Cloud](../SDD.md#123-rung-3-cloud-reference-deployment-phase-4) · [SDD §11 Security](../SDD.md#11-security) |
+| Spec | [SDD §12.1 Rung 1 Compose](../SDD.md#121-rung-1--docker-compose-local-dev-phase-02) · [SDD §12.2 Rung 2 Kubernetes](../SDD.md#122-rung-2--kubernetes-locally-kind-or-k3d-phase-3) · [SDD §12.3 Rung 3 Cloud](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready-for-agent
+**Status:** ready
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input

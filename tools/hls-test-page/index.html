@@ -329,7 +329,7 @@
 
       <div class="btn-group">
         <button id="btn-play">Load & Play</button>
-        <button class="secondary" id="btn-sample">Play Public Sample</button>
+        <button class="secondary" id="btn-sample">Play Local Sample</button>
         <button class="secondary" id="btn-demo-thumbnails">Demo Poster & Hover Scrub</button>
       </div>
 
@@ -457,6 +457,7 @@
     const streamUrlInput = document.getElementById('stream-url');
     const btnPlay = document.getElementById('btn-play');
     const btnSample = document.getElementById('btn-sample');
+    const LOCAL_SAMPLE_URL = new URL('sample/index.m3u8', window.location.href).href;
     const playerStatus = document.getElementById('player-status');
     const streamInfo = document.getElementById('stream-info');
 
@@ -586,10 +587,9 @@
     });
 
     btnSample.addEventListener('click', () => {
-      const sampleUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-      streamUrlInput.value = sampleUrl;
-      loadStream(sampleUrl);
-      log('info', 'Loaded public test HLS sample stream (Mux big buck bunny).');
+      streamUrlInput.value = LOCAL_SAMPLE_URL;
+      loadStream(LOCAL_SAMPLE_URL);
+      log('info', 'Loaded the local HLS sample (make hls-sample writes it next to this page).');
     });
 
     // Handle incoming SSE Event conforming to SDD §20 SseEvent schema
@@ -640,7 +640,7 @@
         { event: 'progress', data: { rendition: '1080p', percent: 85, overall: 90 } },
         { event: 'progress', data: { rendition: '720p', percent: 100, overall: 95 } },
         { event: 'progress', data: { rendition: '1080p', percent: 100, overall: 100 } },
-        { event: 'status', data: { status: 'READY', playbackUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' } },
+        { event: 'status', data: { status: 'READY', playbackUrl: LOCAL_SAMPLE_URL } },
       ];
 
       let idx = 0;

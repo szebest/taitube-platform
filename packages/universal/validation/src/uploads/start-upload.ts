@@ -5,10 +5,6 @@ import { validateUploadSize } from './upload-size';
 
 const MAX_TITLE_LENGTH = 200;
 
-/**
- * The ceiling and the allowed list are supplied, never read here: the backend takes them from
- * env and the browser from a config endpoint, and it is the same rule either way.
- */
 export interface UploadLimits {
   readonly maxBytes: number;
   readonly allowedContentTypes: readonly string[];

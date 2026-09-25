@@ -17,16 +17,16 @@ The whole system must run on one machine with zero external accounts and no inte
 - [ ] **No phone-home**: `TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1` in `.env.example`, Dockerfiles and CI; OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; no new library with telemetry enabled by default (check its docs; disable via env).
 - [ ] **Vendored browser assets**: `tools/hls-test-page` and any HTML tooling load scripts from the repo, not `cdnjs`/`unpkg`/`jsdelivr`.
 - [ ] **Images are self-contained**: no `apt-get`/`npm install`/`curl` at container start; FFmpeg, fonts and CA certs baked at build; compose has no `pull_policy: always`.
-- [ ] **Auth stays local**: dev JWKS issuer (`tools/dev-token`) works; `AUTH_JWKS_URL` default is local.
+- [ ] **Auth stays local**: `.env.example` keeps `AUTH_MODE=dev` and an empty `AUTH_JWKS_URL`, and a token from `pnpm dev-token mint` is accepted.
 - [ ] **Observability stays local**: compose `observability` profile (Prometheus/Grafana/Tempo/Loki/collector) covers everything the cloud overlay sends to Grafana Cloud.
 - [ ] **Docs**: if something *does* need the internet (initial install, optional cloud), it is listed in `docs/LOCAL_FIRST.md`.
 
 ## Offline smoke (`make smoke-offline`)
-1. `docker network create --internal vp-offline` (or a compose override with `networks: { default: { internal: true } }`) — blocks egress, keeps inter-container traffic and host port publishing.
-2. Start the full stack on that network with the unmodified `.env.example` values (service hostnames instead of `localhost`).
-3. Run the standard smoke (`scripts/e2e-smoke.sh`: upload `s15` → `READY` → fetch master + one segment).
-4. Optional: `tcpdump -i any 'not net 172.16.0.0/12 and not host 127.0.0.1'` on the host during the run — zero packets expected.
-5. Runs in CI on changes to `infra/`, Dockerfiles, or `tools/`.
+1. The stack starts with `infra/compose/docker-compose.offline.yml` layered on the base file: its network is `internal: true`, which blocks egress and keeps inter-container traffic and host port publishing.
+2. The target checks that the `api` container cannot reach `1.1.1.1`.
+3. It then runs the standard smoke (`scripts/e2e-smoke.sh`: upload `s2` -> `READY` -> fetch master + one segment).
+4. Optional: `tcpdump -i any 'not net 172.16.0.0/12 and not host 127.0.0.1'` on the host during the run, zero packets expected.
+5. CI's `e2e-smoke` job runs the same offline start and smoke on every PR that changes code.
 
 ## What is allowed to touch the network
 | Activity | Needs internet? | Notes |

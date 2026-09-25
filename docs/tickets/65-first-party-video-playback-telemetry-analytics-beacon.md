@@ -7,7 +7,7 @@
 | Size | M |
 | Blocked by | 43 — Views buffer · 57 — Production player · 64 — Web Vitals |
 | Blocks | 75 |
-| Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §13 Observability](../SDD.md#13-autoscaling-observability) |
+| Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
 **Status:** blocked
 
