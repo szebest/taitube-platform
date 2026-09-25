@@ -3,6 +3,7 @@ export * from './sse-hub';
 export * from './sse-service';
 export * from './upload-service';
 export * from './video-service';
+export * from './creator-studio-service';
 export * from './category-service';
 export * from './dlq-service';
 export * from './queue-service';

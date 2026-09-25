@@ -1,4 +1,5 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
+import { SDD_STUDIO_ENDPOINTS } from './sdd-studio-endpoints';
 
 export interface SddEndpointContract {
   path: string;
@@ -337,4 +338,5 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   },
   { path: '/healthz', method: 'get', expectedStatuses: [200] },
   { path: '/readyz', method: 'get', expectedStatuses: [200, 503] },
+  ...SDD_STUDIO_ENDPOINTS,
 ];

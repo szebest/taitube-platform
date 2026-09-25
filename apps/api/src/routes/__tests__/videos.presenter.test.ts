@@ -1,4 +1,5 @@
 import {
+  categoryNotFound,
   videoEditForbidden,
   videoForbidden,
   videoNotFound,
@@ -42,6 +43,7 @@ describe('presentPublicVideoFailure', () => {
 
   it.each([
     { name: 'a stale version', failure: versionConflict('v1', 2), status: 409 },
+    { name: 'a category that is not there', failure: categoryNotFound('c1'), status: 404 },
     { name: 'a dead database', failure: databaseUnavailable('findWithDetails'), status: 503 },
   ])('gives $name the standard $status', ({ failure, status }) => {
     expect(presentPublicVideoFailure(failure, instance).status).toBe(status);

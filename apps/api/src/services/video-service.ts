@@ -1,17 +1,12 @@
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
-import type { VideoStatus, VideoVisibility } from '@vp/domain';
-import {
-  type ReadVideoFailure,
-  type UpdateVideoMetadataFailure,
-  decideVideoMetadataUpdate,
-  decideVideoRead,
-  videoNotFound,
-} from '@vp/domain-rules';
+import type { VideoStatus } from '@vp/domain';
+import { type ReadVideoFailure, decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
+import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import { type UserContext, canAccessAdmin } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
+import type { DispatchOrigin } from './probe-dispatch';
 import {
   type ReprocessResult,
   type SoftDeleteResult,
@@ -20,7 +15,6 @@ import {
   reprocessVideo,
   softDeleteVideo,
 } from './video-lifecycle';
-import type { DispatchOrigin } from './probe-dispatch';
 
 import {
   type FeedSort,
@@ -49,11 +43,6 @@ export interface VideoServiceDeps extends VideoLifecycleDeps {
 export type ListVideosFailure = DatabaseUnavailable | InvalidCursor;
 
 export type ReadVideoServiceFailure = ReadVideoFailure | DatabaseUnavailable;
-
-export type UpdateVideoServiceFailure =
-  | UpdateVideoMetadataFailure
-  | ReadVideoServiceFailure
-  | VersionConflict;
 
 export class VideoService {
   constructor(private readonly deps: VideoServiceDeps) {}
@@ -156,44 +145,6 @@ export class VideoService {
     view.dislikesCount = counts.dislikesCount;
 
     return ok(view);
-  }
-
-  async updateMetadata(
-    user: UserContext,
-    videoId: string,
-    input: {
-      title?: string;
-      description?: string;
-      visibility?: VideoVisibility;
-      version: number;
-    }
-  ): Promise<Result<VideoDetailView, UpdateVideoServiceFailure>> {
-    const existing = await this.deps.videos.findById(videoId);
-    if (isErr(existing)) return existing;
-
-    const { version, ...patch } = input;
-    const decided = decideVideoMetadataUpdate({
-      editor: user,
-      video: existing.value,
-      videoId,
-      patch,
-    });
-    if (isErr(decided)) return decided;
-
-    if (existing.value && existing.value.version !== version) {
-      return err(versionConflict(videoId, version));
-    }
-
-    const updated = await this.deps.videos.updateMetadata({
-      videoId,
-      expectedVersion: version,
-      patch,
-      userId: user.id,
-    });
-    if (isErr(updated)) return updated;
-    if (!updated.value) return err(videoNotFound(videoId));
-
-    return await this.get(user, videoId);
   }
 
   /**

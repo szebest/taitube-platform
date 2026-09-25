@@ -1,11 +1,13 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
+import { ADMIN, MODERATOR, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import {
   DELETABLE_STATUSES,
   REPROCESSABLE_STATUSES,
+  TAKEDOWN_STATUSES,
   decideVideoDelete,
   decideVideoReprocess,
+  decideVideoTakedown,
 } from '../lifecycle.rule';
 
 const video = aVideo();
@@ -92,5 +94,38 @@ describe('@vp/domain-rules: decideVideoDelete', () => {
 
   it('lets an admin delete a video they do not own', () => {
     expect(isOk(decideVideoDelete({ actor: ADMIN, video, videoId: video.id }))).toBe(true);
+  });
+});
+
+describe('@vp/domain-rules: decideVideoTakedown', () => {
+  it.each(TAKEDOWN_STATUSES.map((status) => ({ status })))(
+    'lets an admin take down a video in $status',
+    ({ status }) => {
+      const subject = aVideo({ status });
+
+      expect(isOk(decideVideoTakedown({ actor: ADMIN, video: subject, videoId: subject.id }))).toBe(
+        true
+      );
+    }
+  );
+
+  it.each([
+    { name: 'an anonymous caller', actor: null, code: ErrorCodes.UNAUTHORIZED },
+    { name: 'the owner', actor: OWNER, code: ErrorCodes.FORBIDDEN },
+    { name: 'a moderator', actor: MODERATOR, code: ErrorCodes.FORBIDDEN },
+  ])('refuses $name', ({ actor, code }) => {
+    const result = decideVideoTakedown({ actor, video, videoId: video.id });
+
+    expect(isErr(result) && result.error.code).toBe(code);
+  });
+
+  it('refuses a video already deleted, which has nothing left to take down', () => {
+    const result = decideVideoTakedown({
+      actor: ADMIN,
+      video: aVideo({ status: 'DELETED' }),
+      videoId: video.id,
+    });
+
+    expect(isErr(result) && result.error.code).toBe(ErrorCodes.VALIDATION_FAILED);
   });
 });

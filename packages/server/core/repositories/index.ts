@@ -1,4 +1,5 @@
 export * from './video-repository';
+export * from './video-studio-repository';
 export * from './upload-repository';
 export * from './step-repository';
 export * from './rendition-repository';

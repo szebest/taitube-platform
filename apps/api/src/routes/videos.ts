@@ -7,7 +7,7 @@ import { sendResult } from './send-result';
 import { presentPublicVideoFailure } from './videos.presenter';
 
 export async function videosRoutes(app: FastifyInstance): Promise<void> {
-  const { videoService } = app.services;
+  const { videoService, creatorStudioService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(listVideos)) {
@@ -60,7 +60,7 @@ export async function videosRoutes(app: FastifyInstance): Promise<void> {
         return sendResult(
           reply,
           request,
-          await videoService.updateMetadata(user, id, request.body),
+          await creatorStudioService.update(user, id, request.body),
           {
             present: (failure) => presentPublicVideoFailure(failure, request.url),
           }

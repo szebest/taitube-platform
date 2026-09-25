@@ -1,8 +1,8 @@
 import type { VideoRecord, VideoRepository, VideoWithDetails } from '@vp/core/repositories';
 import type { VideoStatus } from '@vp/domain';
-import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
+import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
-import { expectErr, expectOk } from '@vp/testing/result';
+import { expectOk } from '@vp/testing/result';
 import {
   HOUR_MS,
   OTHER_OWNER_ID,
@@ -106,47 +106,6 @@ export function describeVideoRepositoryContract(makeSubject: MakeRepositoriesSub
       ])('$scenario', async ({ status, expected }) => {
         const rows = expectOk(await videos.listByOwner({ ownerId: OWNER_ID, limit: 10, status }));
         expect(idsOf(rows)).toEqual(expected);
-      });
-    });
-
-    describe('updateMetadata', () => {
-      it('bumps the version and reports a stale one as VERSION_CONFLICT', async () => {
-        const { version } = expectOk(
-          await videos.create(publicVideo({ id: VIDEO_IDS.a, title: 'Before' }))
-        );
-
-        const updated = expectOk(
-          await videos.updateMetadata({
-            videoId: VIDEO_IDS.a,
-            expectedVersion: version,
-            patch: { title: 'After' },
-          })
-        );
-
-        expect(updated?.title).toBe('After');
-        expect(updated?.version).toBe(version + 1);
-
-        const failure = expectErr(
-          await videos.updateMetadata({
-            videoId: VIDEO_IDS.a,
-            expectedVersion: version,
-            patch: { title: 'Stale' },
-          })
-        );
-
-        expect(failure.code).toBe(ErrorCodes.VERSION_CONFLICT);
-      });
-
-      it('answers ok(null) for a video that is not there, not a version conflict', async () => {
-        expect(
-          expectOk(
-            await videos.updateMetadata({
-              videoId: VIDEO_IDS.f,
-              expectedVersion: 1,
-              patch: { title: 'Ghost' },
-            })
-          )
-        ).toBeNull();
       });
     });
 

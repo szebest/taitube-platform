@@ -1,11 +1,18 @@
-import type { PublicFeedCursor, PublicFeedSort } from '@vp/domain';
+import {
+  type CreatorLibraryCursor,
+  type CreatorLibraryRow,
+  type CreatorLibrarySort,
+  type PublicFeedCursor,
+  type PublicFeedSort,
+  creatorLibraryCursorOf,
+} from '@vp/domain';
 import {
   type CursorPayload,
   type InvalidCursor,
   type Paginator,
   invalidCursor,
 } from '@vp/pagination';
-import { type Result, andThen, err, ok } from '@vp/result';
+import { type Result, andThen, err, isErr, map, ok } from '@vp/result';
 
 export type FeedSort = PublicFeedSort;
 
@@ -79,6 +86,16 @@ export function feedCursorPayload(v: FeedCursorRow, instant: number): CursorPayl
   return { createdAt: isoOf(v.createdAt), viewsCount: v.viewsCount ?? 0, instant, id: v.id };
 }
 
+/** Names its sort, because a view count resumes nothing in a walk ordered by likes. */
+export function creatorLibraryCursorPayload(
+  row: CreatorLibraryRow,
+  sort: CreatorLibrarySort
+): CursorPayload {
+  const cursor = creatorLibraryCursorOf(row, sort);
+  const value = cursor.sort === 'newest' ? cursor.value.toISOString() : cursor.value;
+  return { sort: cursor.sort, value, id: cursor.id };
+}
+
 /** An absent cursor is the first page, so it stays `ok(null)` rather than becoming a failure. */
 function decodeWith<T>(
   cursor: string | undefined,
@@ -140,4 +157,20 @@ export function decodeFeedCursor(
       )
     )
   );
+}
+
+export function decodeCreatorLibraryCursor(
+  cursor: string | undefined,
+  sort: CreatorLibrarySort,
+  paginator: Paginator
+): Result<CreatorLibraryCursor | null, InvalidCursor> {
+  return decodeWith(cursor, paginator, (payload): Result<CreatorLibraryCursor, InvalidCursor> => {
+    if (payload['sort'] !== sort) return err(invalidCursor());
+    const id = asId(payload['id']);
+    if (isErr(id)) return id;
+    if (sort === 'newest') {
+      return map(asDate(payload['value']), (value) => ({ sort, value, id: id.value }));
+    }
+    return map(asNumber(payload['value']), (value) => ({ sort, value, id: id.value }));
+  });
 }

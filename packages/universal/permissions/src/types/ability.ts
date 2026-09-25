@@ -13,6 +13,7 @@ export type AppAction =
   | 'update'
   | 'delete'
   | 'publish'
+  | 'moderate'
   | 'react'
   | 'pin'
   | 'subscribe'

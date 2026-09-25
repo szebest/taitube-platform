@@ -59,4 +59,20 @@ describe('db: schema', () => {
     expect(videos.viewsCount.getSQLType()).toBe('bigint');
     expect(videos.viewsCount.default).toBe(0);
   });
+
+  it('starts a video with no tags, indexed for containment queries', () => {
+    const tagsIndex = getTableConfig(videos).indexes.find(
+      (index) => index.config.name === 'videos_tags_idx'
+    );
+
+    expect(videos.tags.getSQLType()).toBe('text[]');
+    expect(videos.tags.notNull).toBe(true);
+    expect(videos.tags.default).toEqual([]);
+    expect(tagsIndex?.config.method).toBe('gin');
+  });
+
+  it('leaves the custom thumbnail empty until a creator picks one', () => {
+    expect(videos.customThumbnailKey.notNull).toBe(false);
+    expect(videos.customThumbnailKey.default).toBeUndefined();
+  });
 });

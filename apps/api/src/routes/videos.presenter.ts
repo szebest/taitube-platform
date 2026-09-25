@@ -1,7 +1,8 @@
 import { type Problem, problemFor } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
 import { assertNever } from '@vp/result';
-import type { ReadVideoServiceFailure, UpdateVideoServiceFailure } from '../services/video-service';
+import type { UpdateVideoServiceFailure } from '../services/creator-studio-service';
+import type { ReadVideoServiceFailure } from '../services/video-service';
 
 export type PublicVideoFailure = ReadVideoServiceFailure | UpdateVideoServiceFailure;
 
@@ -18,6 +19,7 @@ export function presentPublicVideoFailure(failure: PublicVideoFailure, instance:
     case 'FORBIDDEN':
       return problemFor(publicReadFailure(failure), instance);
     case 'VIDEO_NOT_FOUND':
+    case 'CATEGORY_NOT_FOUND':
     case 'UNAUTHORIZED':
     case 'VALIDATION_FAILED':
     case 'VERSION_CONFLICT':

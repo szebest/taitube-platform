@@ -9,6 +9,7 @@ import { analyticsRoutes } from './analytics';
 import { categoriesRoutes } from './categories';
 import { channelsRoutes } from './channels';
 import { commentsRoutes } from './comments';
+import { creatorVideosRoutes } from './creator-videos';
 import { devJwksRoutes } from './dev-jwks';
 import { eventsRoutes } from './events';
 import { feedRoutes } from './feed';
@@ -27,6 +28,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   reactionsRoutes,
   viewsRoutes,
   analyticsRoutes,
+  creatorVideosRoutes,
   commentsRoutes,
   feedRoutes,
   categoriesRoutes,

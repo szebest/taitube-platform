@@ -1,5 +1,10 @@
 import type { Video, VideoStatus } from '@vp/domain';
-import { type UserContext, canDeleteVideo, canUpdateVideo } from '@vp/permissions';
+import {
+  type UserContext,
+  canDeleteVideo,
+  canModerateVideo,
+  canUpdateVideo,
+} from '@vp/permissions';
 import { type Result, andThen, err, isErr, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import {
@@ -22,6 +27,9 @@ export const DELETABLE_STATUSES: readonly VideoStatus[] = [
   'REJECTED',
   'ABANDONED',
 ];
+
+/** A takedown reaches anything still there, a video already taken down included. */
+export const TAKEDOWN_STATUSES: readonly VideoStatus[] = DELETABLE_STATUSES;
 
 export interface VideoLifecycleInput {
   readonly actor: UserContext | null;
@@ -78,5 +86,16 @@ export function decideVideoDelete(
     (video) => canDeleteVideo({ user: input.actor, video }),
     'delete',
     DELETABLE_STATUSES
+  );
+}
+
+export function decideVideoTakedown(
+  input: VideoLifecycleInput
+): Result<Video, VideoLifecycleFailure> {
+  return decide(
+    input,
+    (video) => canModerateVideo({ user: input.actor, video }),
+    'moderate',
+    TAKEDOWN_STATUSES
   );
 }

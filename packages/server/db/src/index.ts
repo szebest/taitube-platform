@@ -1,4 +1,5 @@
 export * from './schema';
+export * from './social-schema';
 export * from './comments-schema';
 export * from './view-schema';
 export * from './client';

@@ -9,6 +9,7 @@ import type {
   CategoryService,
   ChannelService,
   CommentService,
+  CreatorStudioService,
   DlqService,
   FeedService,
   QueueService,
@@ -25,6 +26,7 @@ import type { ReadinessService } from '../services/readiness-service';
 
 export interface ServiceSet {
   videoService: VideoService;
+  creatorStudioService: CreatorStudioService;
   uploadService: UploadService;
   feedService: FeedService;
   categoryService: CategoryService;
@@ -46,6 +48,7 @@ export const Services = {
   Logger: token<Logger>('Logger'),
   Paginator: token<Paginator>('Paginator'),
   VideoService: token<VideoService>('VideoService'),
+  CreatorStudioService: token<CreatorStudioService>('CreatorStudioService'),
   UploadService: token<UploadService>('UploadService'),
   FeedService: token<FeedService>('FeedService'),
   CategoryService: token<CategoryService>('CategoryService'),

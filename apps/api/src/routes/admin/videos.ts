@@ -1,19 +1,21 @@
-import { getVideoAsAdmin, problemFor } from '@vp/api-contracts';
+import { getVideoAsAdmin, problemFor, takeDownVideo } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { requireAuth } from '../../plugins/auth';
 import { contractPaths, contractSchema } from '../contract-schema';
 import { sendResult } from '../send-result';
 
 /**
- * The operator's read of a video. It calls the same `VideoService.get` as the public route and
- * differs only in what it does with `FORBIDDEN`: the public route disguises it as a 404 so that a
- * private video is indistinguishable from a missing one, and an operator is told the truth.
+ * The operator's read of a video, and its takedown. The read calls the same `VideoService.get` as
+ * the public route and differs only in what it does with `FORBIDDEN`: the public route disguises it
+ * as a 404 so that a private video is indistinguishable from a missing one, and an operator is told
+ * the truth.
  *
  * `VideoService` has no branch for either. That is the property ADR-24 exists to provide, and it is
  * asserted in `apps/api/src/routes/admin/__tests__/videos.test.ts`.
  */
 export async function adminVideosRoutes(app: FastifyInstance): Promise<void> {
-  const { videoService } = app.services;
+  const { videoService, creatorStudioService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(getVideoAsAdmin)) {
@@ -42,4 +44,24 @@ export async function adminVideosRoutes(app: FastifyInstance): Promise<void> {
         )
     );
   }
+
+  server.post(
+    takeDownVideo.path,
+    {
+      schema: {
+        ...contractSchema(takeDownVideo),
+        params: takeDownVideo.params,
+        body: takeDownVideo.body,
+      },
+    },
+    async (request, reply) => {
+      const moderator = requireAuth(request);
+      const { id } = request.params;
+      return sendResult(
+        reply,
+        request,
+        await creatorStudioService.takeDown(moderator, id, request.body.reason)
+      );
+    }
+  );
 }

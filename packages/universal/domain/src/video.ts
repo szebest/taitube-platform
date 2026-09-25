@@ -32,6 +32,8 @@ export interface Video {
   likesCount?: number;
   dislikesCount?: number;
   categoryId?: string | null;
+  tags?: string[];
+  customThumbnailKey?: string | null;
   generation: number;
   version: number;
   createdAt: Date;
@@ -39,3 +41,12 @@ export interface Video {
   readyAt: Date | null;
   deletedAt?: Date | null;
 }
+
+export const CUSTOM_THUMBNAIL_FORMATS = ['jpg', 'png', 'webp'] as const;
+
+export type CustomThumbnailFormat = (typeof CUSTOM_THUMBNAIL_FORMATS)[number];
+
+/** The pipeline's poster, or an image the creator supplied under the video's own prefix. */
+export type ThumbnailSelection =
+  | { source: 'poster' }
+  | { source: 'custom'; thumbnailId: string; format: CustomThumbnailFormat };

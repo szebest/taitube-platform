@@ -35,6 +35,8 @@ describe('newVideoRecord', () => {
       likesCount: 0,
       dislikesCount: 0,
       categoryId: null,
+      tags: [],
+      customThumbnailKey: null,
       generation: 1,
       version: 1,
       createdAt: NOW,
@@ -46,7 +48,15 @@ describe('newVideoRecord', () => {
 
   it('keeps what the caller supplied over the defaults', () => {
     const record = newVideoRecord(
-      { ...REQUIRED, title: 'Given', visibility: 'public', viewsCount: 9, generation: 3 },
+      {
+        ...REQUIRED,
+        title: 'Given',
+        visibility: 'public',
+        viewsCount: 9,
+        commentsCount: 2,
+        tags: ['lofi'],
+        generation: 3,
+      },
       NOW
     );
 
@@ -54,6 +64,8 @@ describe('newVideoRecord', () => {
       title: 'Given',
       visibility: 'public',
       viewsCount: 9,
+      commentsCount: 2,
+      tags: ['lofi'],
       generation: 3,
     });
   });

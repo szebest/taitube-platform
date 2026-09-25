@@ -5,6 +5,7 @@ import {
   moderatorUser,
   privateVideo,
   publicVideo,
+  rejectedVideo,
   standardUser,
   unlistedVideo,
 } from '../../__mocks__/fixtures';
@@ -108,5 +109,14 @@ describe('rules/video.rules: Declarative Video Ability Rules', () => {
     },
   ])('$scenario: $expected', ({ user, action, target, expected }) => {
     expect(buildAbility(defineVideoRules, user).can(action, target)).toBe(expected);
+  });
+
+  it.each([
+    { field: 'visibility', expected: false },
+    { field: 'title', expected: true },
+  ])('the owner of a video taken down may change its $field: $expected', ({ field, expected }) => {
+    const ability = buildAbility(defineVideoRules, creatorUser);
+
+    expect(ability.can('update', subject('Video', rejectedVideo), field)).toBe(expected);
   });
 });

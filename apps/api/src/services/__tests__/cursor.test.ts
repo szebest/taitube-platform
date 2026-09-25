@@ -6,8 +6,10 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import {
   commentThreadCursorPayload,
   createdAtCursorPayload,
+  creatorLibraryCursorPayload,
   decodeCommentThreadCursor,
   decodeCreatedAtCursor,
+  decodeCreatorLibraryCursor,
   decodeFeedCursor,
   decodeSubscriptionCursor,
   feedCursorPayload,
@@ -152,6 +154,49 @@ describe('apps/api/services: pagination cursors', () => {
     it('returns null for an absent subscription cursor and rejects a broken one', () => {
       expect(decodeSubscriptionCursor(undefined, paginator)).toEqual(ok(null));
       expectRejected(decodeSubscriptionCursor('not-a-cursor', paginator));
+    });
+  });
+
+  describe('creator library cursor', () => {
+    const LIBRARY_ROW = { ...ROW, likesCount: 7, commentsCount: 2 };
+
+    it.each([
+      { sort: 'newest' as const, value: CREATED_AT },
+      { sort: 'views' as const, value: 42 },
+      { sort: 'likes' as const, value: 7 },
+      { sort: 'comments' as const, value: 2 },
+    ])('round-trips the $sort keyset', ({ sort, value }) => {
+      const cursor = paginator.encodeCursor(creatorLibraryCursorPayload(LIBRARY_ROW, sort));
+
+      expect(expectOk(decodeCreatorLibraryCursor(cursor, sort, paginator))).toEqual({
+        sort,
+        value,
+        id: 'video-1',
+      });
+    });
+
+    it('refuses a cursor minted for another sort, whose value orders nothing here', () => {
+      const cursor = paginator.encodeCursor(creatorLibraryCursorPayload(LIBRARY_ROW, 'views'));
+
+      expectRejected(decodeCreatorLibraryCursor(cursor, 'likes', paginator));
+    });
+
+    it.each<{
+      scenario: string;
+      sort: 'newest' | 'views';
+      payload: Record<string, string | number>;
+    }>([
+      { scenario: 'a count that is not a number', sort: 'views', payload: { value: 'x', id: 'v' } },
+      { scenario: 'a date that is not a date', sort: 'newest', payload: { value: 'x', id: 'v' } },
+      { scenario: 'no id', sort: 'views', payload: { value: 1 } },
+    ])('rejects a cursor with $scenario', ({ sort, payload }) => {
+      const cursor = paginator.encodeCursor({ sort, ...payload });
+
+      expectRejected(decodeCreatorLibraryCursor(cursor, sort, paginator));
+    });
+
+    it('returns null for an absent cursor', () => {
+      expect(decodeCreatorLibraryCursor(undefined, 'newest', paginator)).toEqual(ok(null));
     });
   });
 });

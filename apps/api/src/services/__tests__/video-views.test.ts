@@ -1,6 +1,12 @@
 import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import { asCdnBase } from '@vp/env-schema';
-import { playbackUrl, toVideoDetailView, toVideoSummaryView } from '../video-views';
+import {
+  playbackUrl,
+  thumbnailUrl,
+  toCreatorVideoView,
+  toVideoDetailView,
+  toVideoSummaryView,
+} from '../video-views';
 
 const CDN = asCdnBase('http://localhost:9000/public');
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000e1';
@@ -48,6 +54,40 @@ describe('apps/api/services: video views', () => {
     });
   });
 
+  describe('thumbnailUrl', () => {
+    it.each([
+      {
+        name: 'the custom image over the poster',
+        keys: { posterKey: 'p.jpg', customThumbnailKey: 'c.png' },
+        expected: `${CDN}/c.png`,
+      },
+      {
+        name: 'the poster without a custom image',
+        keys: { posterKey: 'p.jpg' },
+        expected: `${CDN}/p.jpg`,
+      },
+      { name: 'nothing before the pipeline made a poster', keys: {}, expected: undefined },
+    ])('shows $name', ({ keys, expected }) => {
+      expect(thumbnailUrl(keys, CDN)).toBe(expected);
+    });
+  });
+
+  describe('toCreatorVideoView', () => {
+    it('adds the comment counter and the tags to the summary', () => {
+      const subject = video({ commentsCount: 4, tags: ['lofi'], customThumbnailKey: 'c.png' });
+
+      expect(toCreatorVideoView(subject, CDN)).toEqual({
+        ...toVideoSummaryView(subject, CDN),
+        commentsCount: 4,
+        tags: ['lofi'],
+      });
+    });
+
+    it('reads absent counters and tags as their column defaults', () => {
+      expect(toCreatorVideoView(video(), CDN)).toMatchObject({ commentsCount: 0, tags: [] });
+    });
+  });
+
   describe('toVideoSummaryView', () => {
     it('projects counters, ISO timestamps and asset URLs', () => {
       const view = toVideoSummaryView(
@@ -63,12 +103,27 @@ describe('apps/api/services: video views', () => {
         likesCount: 3,
         dislikesCount: 0,
         categoryId: null,
+        thumbnailUrl: `${CDN}/posters/a.jpg`,
         createdAt: CREATED_AT.toISOString(),
       });
     });
   });
 
   describe('toVideoDetailView', () => {
+    it('carries the studio fields a creator edits', () => {
+      const view = toVideoDetailView(
+        video({ categoryId: 'category-1', tags: ['jazz'], customThumbnailKey: 'c.png' }),
+        [],
+        CDN
+      );
+
+      expect(view).toMatchObject({
+        categoryId: 'category-1',
+        tags: ['jazz'],
+        thumbnailUrl: `${CDN}/c.png`,
+      });
+    });
+
     it('agrees with the summary view on the playback URL', () => {
       const subject = video();
 

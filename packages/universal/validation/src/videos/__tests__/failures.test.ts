@@ -1,5 +1,5 @@
 import { ErrorCodes, isInputFailure } from '@vp/errors';
-import { invalidVideoDescription, invalidVideoTitle } from '../failures';
+import { invalidVideoDescription, invalidVideoTags, invalidVideoTitle } from '../failures';
 
 describe('@vp/validation: video metadata failures', () => {
   it.each([
@@ -12,6 +12,11 @@ describe('@vp/validation: video metadata failures', () => {
       name: 'invalidVideoDescription',
       failure: invalidVideoDescription(5000),
       field: 'description',
+    },
+    {
+      name: 'invalidVideoTags',
+      failure: invalidVideoTags({ maxTags: 30, maxLength: 30 }),
+      field: 'tags',
     },
   ])('$name names $field, carries VALIDATION_FAILED and is wire-safe', ({ failure, field }) => {
     expect(failure.code).toBe(ErrorCodes.VALIDATION_FAILED);

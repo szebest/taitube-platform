@@ -88,6 +88,8 @@ export const videos = pgTable(
       .notNull()
       .references(() => users.id),
     categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
+    tags: text('tags').array().notNull().default([]),
+    customThumbnailKey: text('custom_thumbnail_key'),
     title: text('title').notNull().default(''),
     description: text('description').notNull().default(''),
     visibility: text('visibility').$type<VideoVisibility>().notNull().default('private'),
@@ -123,6 +125,7 @@ export const videos = pgTable(
     index('videos_status_updated_idx').on(table.status, table.updatedAt),
     index('videos_category_id_idx').on(table.categoryId),
     index('videos_views_count_idx').on(table.viewsCount.desc()),
+    index('videos_tags_idx').using('gin', table.tags),
   ]
 );
 
@@ -250,49 +253,4 @@ export const outbox = pgTable(
     attempts: integer('attempts').notNull().default(0),
   },
   (table) => [index('outbox_drain_idx').on(table.publishedAt, table.createdAt)]
-);
-
-export const videoReactions = pgTable(
-  'video_reactions',
-  {
-    id: uuid('id').primaryKey(),
-    videoId: uuid('video_id')
-      .notNull()
-      .references(() => videos.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    type: text('type').notNull(),
-    createdAt: timestamptz('created_at').notNull().defaultNow(),
-    updatedAt: timestamptz('updated_at').notNull().defaultNow(),
-  },
-  (table) => [
-    unique('video_reactions_user_id_video_id_unique').on(table.userId, table.videoId),
-    index('video_reactions_video_id_type_idx').on(table.videoId, table.type),
-  ]
-);
-
-export const channelSubscriptions = pgTable(
-  'channel_subscriptions',
-  {
-    id: uuid('id').primaryKey(),
-    subscriberId: uuid('subscriber_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    channelId: uuid('channel_id')
-      .notNull()
-      .references(() => channels.id, { onDelete: 'cascade' }),
-    createdAt: timestamptz('created_at').notNull().defaultNow(),
-  },
-  (table) => [
-    unique('channel_subscriptions_subscriber_channel_unique').on(
-      table.subscriberId,
-      table.channelId
-    ),
-    index('channel_subscriptions_subscriber_created_idx').on(
-      table.subscriberId,
-      table.createdAt.desc()
-    ),
-    index('channel_subscriptions_channel_created_idx').on(table.channelId, table.createdAt.desc()),
-  ]
 );
