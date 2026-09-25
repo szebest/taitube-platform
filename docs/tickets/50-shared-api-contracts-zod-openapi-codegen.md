@@ -83,3 +83,23 @@ This ticket establishes **End-to-End Type Safety** by single-sourcing all API sc
 - [ ] `apps/api` builds and typechecks cleanly with the new package.
 - [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
 - [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+
+## Open questions
+
+- Decided: the package keeps its `@vp/api-contracts` name and its `packages/universal/api-contracts` home.
+  The `@taitube/*` naming belongs to the rebrand, ticket 48, and the tier directory is ADR-23.
+- Decided: the schemas were already single-sourced before this ticket, under the existing names rather than
+  `*Dto`: `VideoSchema`/`Video`, `VideoSummarySchema`/`VideoSummary`, `StartUploadSchema`/`StartUpload`,
+  `UpdateVideoMetadataSchema`/`UpdateVideoMetadata`, `CategorySchema`, `ChannelSchema`/`Channel`,
+  `AccountSchema`/`Account`, `CommentSchema`/`CommentView`, `VideoReactionSchema`/`VideoReaction`,
+  `ProblemSchema`/`Problem`. Renaming them would only churn every consumer, so they stay.
+- Decided: the committed artefact is the OpenAPI document, `packages/universal/api-contracts/openapi.yaml`,
+  written by `pnpm gen:contracts` from the in-process (dev-auth) app, the one configuration that mounts every
+  contract endpoint. YAML, so it carries a generated-file header. The TypeScript types are built from it by
+  `openapi-typescript` into `dist/openapi.d.ts` on every package build and exported as
+  `@vp/api-contracts/openapi`; they are not committed, since the generated file is thousands of lines and
+  would only be a second copy of the document.
+- Decided: the drift guard is `apps/api/src/composition/__tests__/openapi-document.test.ts`, which renders
+  the document and compares it with the committed file. It runs in `unit` and `unit-bun` and in a local
+  `pnpm test`, so it costs no extra CI step and fails before a push. The existing
+  `apps/api/src/__tests__/contract-drift.test.ts` still holds routes against contract entries.

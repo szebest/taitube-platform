@@ -571,6 +571,11 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
   (`package-boundaries.test.ts`) and the resolved lockfile (`lockfile-closure.test.ts`), which catches a
   transitive edge no import scan would see. See [ARCHITECTURE.md §6](../ARCHITECTURE.md).
 - API endpoints are authored once in `packages/universal/api-contracts` (Zod) and compiled to OpenAPI schemas.
+- `pnpm gen:contracts` writes the OpenAPI 3.1 document `apps/api` serves to
+  `packages/universal/api-contracts/openapi.yaml`, and the package build turns it into static types with
+  `openapi-typescript` (`@vp/api-contracts/openapi`: `paths`, `components`, `operations`). The committed
+  document is a checked artefact: `apps/api/src/composition/__tests__/openapi-document.test.ts` fails when it
+  differs from what the routes render.
 - `packages/client/api-client` generates TanStack React Query hooks and type-safe fetchers from `@vp/api-contracts`.
 
 ---
