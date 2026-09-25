@@ -20,7 +20,7 @@ extends it.
 | `spec.json` | `tsconfig.spec.json` in every `universal` and `client` package, and in `packages/server/env-schema` | the client libs **plus** node/vitest types, `noEmit: true` |
 
 `apps/web` is the one consumer that extends nothing here: it is a Create React App workspace with its own
-hand-written `tsconfig.json` (`moduleResolution: "node"`, `jsx: "react-jsx"`). Tickets 49–75 fold it in.
+hand-written `tsconfig.json` (`moduleResolution: "node"`, `jsx: "react-jsx"`). Ticket 89 folds it in.
 
 A package's own `tsconfig.json` adds `rootDir` / `outDir` / `include` and excludes its specs; a sibling
 `tsconfig.build.json` extends it and excludes `__tests__`, `__mocks__` and `*.test.ts` from the emitted

@@ -5,8 +5,8 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#59](https://github.com/szebest/taitube-platform/issues/59) |
 | Size | L |
-| Blocked by | 57 — Production video player · 58 — Modern browse layout |
-| Blocks | 62, 71, 73, 75, 76 |
+| Blocked by | 53 - Frontend data layer · 55 - Design system · 57 - Video player · 89 - TanStack Start foundation |
+| Blocks | 62, 63, 73, 76 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
@@ -16,58 +16,103 @@
 > Components never call `Intl.*`, `toLocaleString` or `toFixed`, and never hold a copy literal — an
 > architecture test enforces both. See [85](85-universal-intl-formatting-message-core.md).
 
+> **Builds on 89.** Replaces the legacy watch page (`src/modules/VideoPage`) that
+> [89](89-web-tanstack-start-foundation.md) carries over on `/watch/$videoId`, keeping 89's loader and
+> `videoQueryOptions`. This ticket owns deleting `src/modules/VideoPage`, its RTK Query endpoints and its SCSS
+> if 53 and 55 have not already.
+
 ## What to build
 
-The watch page is the core destination of the application. The original frontend suffered from several awkward UI flaws: comments were placed in a rigid list without collapse controls, the description box had no expandable show-more mechanism, the subscribe button had no active subscribed state, and related videos in the right column lacked layout balance.
+Route file `apps/web/src/routes/watch.$videoId.tsx`, feature code in `apps/web/src/features/watch/`, the player
+from [57](57-production-video-player-hls-streaming-controls.md).
 
-This ticket delivers a completely modernized, polished **Watch Page (`/watch/:id`)**:
+### 1. Route and data
 
-1. **Fluid Two-Column Responsive Layout**:
-   - **Primary Column (Left/Top):** The Vidstack Player (Ticket 55), primary video title, channel identity bar, engagement action bar, expandable description card, and comment section.
-   - **Secondary Column (Right/Bottom):** Up Next / Related videos rail with compact horizontal cards and autoplay toggle.
-   - **Theater Mode Adaptation:** When theater mode is toggled, player spans 100% width across the top, shifting the two-column layout directly below it.
-2. **Interactive Engagement & Channel Bar**:
-   - **Creator Channel Pill:** Avatar with verified badge, channel name, subscriber count, and dynamic Subscribe button (states: `Subscribe` -> `Subscribed` with notification bell dropdown).
-   - **Segmented Like / Dislike Pill:** Single unified pill button with animated thumb icons, optimistic counter updates, and active glowing states.
-   - **Share Modal & Action Buttons:** One-click link copy with toast alert, timestamped URL checkbox (`?t=120`), and Add to Playlist modal.
-3. **Expandable Rich Description Card**:
-   - Collapsed state showing view count, upload date, and first 3 lines of description.
-   - Clickable expanded state supporting clickable timestamps (clicking `02:15` seeks the player to 2m15s) and external links.
-4. **Polished Threaded Comments UI**:
-   - Sort selector: *"Top comments"* (most likes) vs *"Newest first"*.
-   - Pinned comment card highlighted with creator avatar and pin badge.
-   - In-place reply input box with collapsible reply threads (`"View 14 replies"`).
-   - In-place editing and deletion with creator moderation badges.
+- The loader keeps `ensureQueryData(videoQueryOptions(videoId))` and adds the channel; the page reads both
+  with `useSuspenseQuery`. The viewer's reaction and subscription state stay plain `useQuery` calls in the
+  components that need them (53's split between primary and secondary data).
+- `validateSearch` owns `t` (start time in seconds). [73](73-frontend-youtube-playlists-library-player-queue.md)
+  adds `list` and `index`.
+- Comments are not in the loader: their query starts when the comments section nears the viewport, so the
+  video and description render first.
+- `pendingComponent` is a skeleton of this page (player box, title, rail cards, comment rows) with the loaded
+  dimensions; a video that does not exist throws `notFound()` from the loader.
+
+### 2. Layout
+
+- Two columns on desktop (player, title, channel bar, actions, description, comments | up next rail), one
+  column on mobile. Theater mode from the player puts the player full width above both columns.
+- Miniplayer: when the player scrolls out of view the page docks the player's compact variant bottom-right.
+
+### 3. Channel and engagement bar
+
+- Channel avatar, name, subscriber count, Subscribe button (`Subscribe` / `Subscribed`) with an optimistic
+  mutation against [41](41-channel-subscriptions-subscriber-feed.md).
+- Like / dislike pill with optimistic counts against [40](40-high-throughput-video-reactions-counter-caching.md).
+- Share: a dialog with copy link and an optional `?t=` for the current time, toast on copy. It is a plain
+  dialog here; [69](69-frontend-url-state-search-params-modal-routing.md) can deep-link it later.
+- Save to playlist button appears once 73 lands.
+
+### 4. Description
+
+- Collapsed to views, date and three lines; expanded shows the full text with links and timestamps
+  (`02:15`) that seek the player.
+
+### 5. Comments
+
+- Threaded comments from [42](42-threaded-comments-keyset-pagination-moderation.md): sort (top, newest) as
+  local state, pinned comment first, reply box, collapsible reply threads with keyset pagination through
+  `useSuspenseInfiniteQuery`, edit and delete gated by `useCan`.
+- The comments section has its own error boundary, so a failing comments call never breaks the video.
+
+### 6. Up next rail
+
+- Compact cards with a skeleton; the data source is the public feed until a related-videos endpoint exists.
+
+## Delivery slices
+
+1. New route component with layout, title, channel bar and description on 89's loader; `src/modules/VideoPage`
+   deleted; page skeleton.
+2. Subscribe and like / dislike with optimistic mutations; share dialog.
+3. Comments: viewport-deferred query, threads, reply, edit, delete, own error boundary.
+4. Up next rail, theater layout, miniplayer, description timestamps.
 
 ## Acceptance criteria
 
-- [ ] Responsive watch layout shifts gracefully between 2-column desktop and single-column mobile viewports.
-- [ ] Theater mode expands player across top while keeping description and related rail organized below.
-- [ ] Channel subscription button toggles state optimistically with backend synchronization (Ticket 41).
-- [ ] Unified like/dislike pill reflects user state with instant optimistic feedback (Ticket 40).
-- [ ] Share modal with copy link and timestamp checkbox (`?t=...`).
-- [ ] Expandable description box with auto-detected timestamps that seek the video player on click.
-- [ ] Threaded comments UI displaying pinned comments at top, reply toggles, and creator badges.
-- [ ] Zero layout shift during data loading (matching skeleton cards for right rail and comment stream).
+- [ ] `/watch/<id>` server-renders title, channel and description from the loader, with no refetch on hydrate.
+- [ ] `?t=90` starts playback at 90 s; an invalid `t` is dropped by `validateSearch`.
+- [ ] Unknown video renders the not-found component without a client error.
+- [ ] Layout switches between two columns and one; theater mode puts the player above both.
+- [ ] Subscribe and reactions update instantly and roll back on a failed mutation.
+- [ ] Share dialog copies the link, with `?t=` when the checkbox is on.
+- [ ] Clicking a timestamp in the description seeks the player.
+- [ ] The comments request is not sent until the section nears the viewport.
+- [ ] Comments show pinned first, reply threads expand and paginate, edit and delete follow `useCan`.
+- [ ] A failing comments request shows a section error with retry while the video keeps playing.
+- [ ] The `pendingComponent` skeleton matches the loaded layout (no layout shift when data arrives).
+- [ ] `src/modules/VideoPage`, its RTK Query endpoints and SCSS are deleted.
 
 ## Out of scope
 
-- Live streaming chat (chat room sidecar).
+- Live chat: [76](76-live-streaming-rtmp-whip-llhls-packaging-chat.md).
+- Playlist queue tray: 73.
+- Virtualized comments: [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md).
 
 ## Notes for the implementer
 
-- Timestamp parser regex: `/(?:(\d{1,2}):)?(\d{2}):(\d{2})/g` converts timecodes to seconds and attaches `player.seek(seconds)` click handlers.
-- Modularize components under `apps/web/src/pages/watch/` with <= 200 lines per file (`WatchLayout`, `EngagementBar`, `DescriptionBox`, `CommentThread`).
+- Timestamps: `/(?:(\d{1,2}):)?(\d{2}):(\d{2})/g` finds timecodes in the description; convert to seconds and
+  seek the player.
 
 ## Testing plan
 
-- Interaction test: Click timestamp in description box -> assert video player seeks to target time.
-- Subscribe test: Click subscribe -> verify button changes to "Subscribed" and counter increments.
-- Comment test: Submit reply -> verify reply renders directly under parent comment thread.
+- Timestamp click seeks the player.
+- Subscribe toggles and rolls back on a 500 (MSW).
+- Reply renders under its parent.
+- Comments deferral: no comments request before the section intersects.
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @taitube/web test` passes.
-- [ ] Watch page responsive across mobile, tablet, and desktop.
+- [ ] `pnpm --filter @vp/web test` and `pnpm typecheck` pass.
+- [ ] Watch page verified on mobile, tablet and desktop.
 - [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | L |
 | Blocked by | 84 — Result-typed error handling, shared domain rules & one transport seam |
-| Blocks | 86 |
+| Blocks | 86, 89 |
 | Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD ADR-20 Monorepo topology](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) |
 
 **Status:** done

@@ -1,12 +1,12 @@
-# 53: Frontend architecture modernization — TanStack suite (Query, Form, Table), typed API client & state cleanup
+# 53: Frontend data layer on TanStack Query and TanStack Form - loaders, query options, RTK Query removed
 
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Issue | [#53](https://github.com/szebest/taitube-platform/issues/53) |
 | Size | L |
-| Blocked by | 51 — Type-safe query client · 52 — Frontend monorepo integration |
-| Blocks | 54, 55, 57, 67, 68, 69, 70, 72, 75 |
+| Blocked by | 89 - TanStack Start foundation |
+| Blocks | 56, 58, 59, 60, 61, 68, 70, 72 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
@@ -24,76 +24,76 @@
 
 ## What to build
 
-The imported legacy frontend code suffered from several classic frontend anti-patterns:
-1. Direct, untyped `axios` / `fetch` calls scattered across React components with manual `useEffect` chains.
-2. Race conditions on fast route navigation and lack of automatic query deduplication.
-3. Brittle in-memory state with no cache invalidation strategies when mutations occurred (such as liking a video or adding a comment).
-4. Fragile form state with manual controlled inputs and untyped error validations.
-5. Inflexible, un-paginated UI tables lacking headless sorting, filtering, and selection capabilities.
+89 leaves one endpoint (video detail) on TanStack Query and every other legacy page on RTK Query through
+`ApiProvider` and `base-api.ts`. This ticket moves the rest and deletes RTK Query. It does not redesign any
+page; the legacy components keep their markup and only swap how they get data.
 
-This ticket establishes the **Unified TanStack Architecture** across state, data-fetching, forms, and tables:
-1. **Tooling & Foundation**:
-   - Upgraded to **React 19**, **Tailwind CSS v4**, and strict **TypeScript 5.7+**.
-2. **Type-Safe API Client with Zod Validation**:
-   - Centralized HTTP client (`apps/web/src/lib/api-client.ts`) utilizing shared DTO schemas from `@taitube/api-contracts`.
-   - Automatic injection of Authorization headers with refresh handling.
-   - RFC 9457 Problem Details error interceptor that translates backend machine-readable codes into user-friendly UI toasts.
-3. **TanStack Query (React Query v5)**:
-   - Declarative data-fetching hooks for all core resources: `useVideo(id)`, `useFeed(category, cursor)`, `useComments(videoId)`, `useReactions(videoId)`, `useChannel(handle)`.
-   - Optimistic updates for engagement: liking/disliking immediately updates the local UI counter and reverts cleanly if the network request fails.
-   - Smart cache keys (`['videos', id]`, `['feed', category]`) and fine-grained invalidation on mutations.
-   - Dehydration/hydration infrastructure ready for TanStack Start SSR loaders.
-4. **TanStack Form (`@tanstack/react-form` + `@tanstack/zod-form-adapter`)**:
-   - Standardizes all user inputs on type-safe, reactive TanStack Form primitives with zero unnecessary component re-renders.
-   - Direct integration with `@taitube/api-contracts` Zod validation schemas for field-level and form-level errors.
-5. **TanStack Table (`@tanstack/react-table` v8)**:
-   - Headless table infrastructure providing type-safe sorting, filtering, column visibility, and row selection for tabular views.
-6. **Zustand v5 Lightweight Client UI State**:
-   - Replaces convoluted Redux / Prop-drilling with a minimalist Zustand v5 store for client-only transient state: active audio volume/preferences and UI sidebar toggle.
-7. **Headless UI & Pure Presentational Views (Rule 14)**:
-   - All UI components must remain purely presentational views that consume custom headless hooks (`useQuery`, `useMutation`, `useCan`, `useForm`).
-   - Embedding complex business logic, raw API calls, inline authorization checks, or state manipulation directly inside UI components is a **STRICT ARCHITECTURAL VIOLATION**.
+### 1. Queries
+
+- Every RTK Query endpoint in `src/modules/shared/api/` and `src/modules/Upload/api/` becomes a
+  `queryOptions` / `infiniteQueryOptions` factory in `src/features/<feature>/api/` (videos, feed, channels,
+  account, categories, reactions, subscriptions, upload), with its query key factory beside it.
+- Each legacy route's loader calls `queryClient.ensureQueryData(...)` for the page's primary data, and the
+  component reads it with `useSuspenseQuery`. Secondary data (my reaction, is-subscribed) stays a plain
+  `useQuery` in the component that needs it.
+- Keyset feeds use `useSuspenseInfiniteQuery` with the cursor as `pageParam`; `page-merge.ts` goes.
+- The `apiClient` instance moves out of `base-api.ts` into `src/integrations/api/`, so 56 has one place to
+  attach auth.
+
+### 2. Mutations
+
+- Reactions and subscribe/unsubscribe are optimistic: `onMutate` snapshots and writes the cache, `onError`
+  restores it, `onSettled` invalidates.
+- Update and delete video invalidate the affected detail and list keys.
+- Upload progress is local state of the upload mutation, not a fake `uploadProgress` query.
+
+### 3. Forms
+
+- TanStack Form replaces `react-hook-form` in the legacy upload and edit forms. A `createFormHook` setup in
+  `src/integrations/form/` provides the field components, and field validators call `@vp/validation` rules.
+
+### 4. The Result seam
+
+- `toViewState(result)` (the ticket 84 note, carried from 51) lands in `src/hooks/`: it maps a `Result` to
+  `{ status, data?, failure? }` for a hook that consumes a rule result. Rules never call it.
+
+### 5. Removal
+
+- `@reduxjs/toolkit`, `react-redux`, `ApiProvider`, `baseApi`, `runApiQuery` and the RTK tag types are gone.
+  Client-only UI state (sidebar, theme) stays in its provider; no Zustand, no Redux.
+
+## Delivery slices
+
+1. Read queries: video, channel, account, categories, plus `toViewState`.
+2. Public and subscription feeds on infinite queries.
+3. Optimistic reactions and subscriptions.
+4. Upload and edit on TanStack Form with the upload mutation.
+5. Delete RTK Query and its dependencies.
 
 ## Acceptance criteria
 
-- [ ] React 19, TanStack Query v5, TanStack Form, and TanStack Table installed and configured.
-- [ ] TanStack Query configured with `QueryClientProvider`, `staleTime: 60_000`, `gcTime: 300_000`, and SSR dehydrate/hydrate support.
-- [ ] Centralized API client module with typed request/response wrappers.
-- [ ] Refactored feed and video detail pages using `useQuery` / `useInfiniteQuery`.
-- [ ] Optimistic mutation hooks:
-  - `useLikeVideoMutation` optimistically toggles like state and updates counts in cache before server responds.
-  - `useCreateCommentMutation` prepends pending comment to comment list and invalidates upon server 201 response.
-- [ ] Reusable TanStack Form field wrappers created with accessible error messages and Zod validation.
-- [ ] Reusable headless table components configured with `@tanstack/react-table` for data grid views.
-- [ ] Toast notification system triggered by API client error interceptor whenever backend returns RFC 9457 error payload.
-- [ ] Enforce Rule 14: All view components consume headless hooks; zero inline business logic or permission calculations in component files.
-- [ ] Unit tests for API client error handling, TanStack Form validation, and TanStack Query hooks using Vitest 3 and React Testing Library.
+- [ ] No import of `@reduxjs/toolkit` or `react-redux` remains; both are gone from `apps/web/package.json`, and
+      a zero-matches row fails on them.
+- [ ] Every legacy route loads its primary data in the loader; navigating between two pages that share a
+      query makes no second request for it (spec over the router with a stubbed `apiClient`).
+- [ ] Optimistic reaction and subscription mutations roll the cache back when the request fails (spec on a
+      `QueryClient` with a failing stub).
+- [ ] Upload and edit forms run on TanStack Form with `@vp/validation` validators; `react-hook-form` is gone.
+- [ ] `toViewState` has its own spec covering success and each failure shape.
+- [ ] No `useEffect` fetching in `src/`.
+- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
 
 ## Out of scope
 
-- Visual redesign of UI components (handled in ticket 54 & 55).
-- Server-Side Rendering (SSR) configuration (handled in ticket 56).
-
-## Notes for the implementer
-
-- Keep query key factories organized in `apps/web/src/lib/query-keys.ts`:
-  ```ts
-  export const videoKeys = {
-    all: ['videos'] as const,
-    detail: (id: string) => [...videoKeys.all, id] as const,
-    comments: (id: string) => [...videoKeys.detail(id), 'comments'] as const,
-  };
-  ```
-- File discipline: Break down hooks into dedicated files under `apps/web/src/hooks/` <= 200 lines each.
-
-## Testing plan
-
-- Unit tests with mock server / `msw` testing optimistic like rollback upon server error.
-- Smoke test verifying navigation between pages does not trigger duplicate background network requests.
+- Router, SSR, `QueryClient` setup, React 19: [89](89-web-tanstack-start-foundation.md).
+- Tailwind and visual changes: [55](55-design-system-tailwind-radix-dark-theme.md).
+- TanStack Table: [60](60-creator-studio-dashboard-video-management-ui.md) and [61](61-admin-control-panel-category-moderation-ui.md), where the tables are.
+- Retry policy and error toasts: [70](70-frontend-resilient-error-handling-retry-policy.md).
+- Page-level integration tests on MSW: [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) and the page tickets.
+- Deleting legacy pages: the page ticket that replaces each one.
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @taitube/web test` and `pnpm --filter @taitube/web typecheck` pass.
-- [ ] No direct unmanaged `useEffect` fetching remains in video playback or feed views.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] All acceptance criteria proved with command output in the PR.
+- [ ] `apps/web/AGENTS.md` describes the query, mutation and form patterns.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

@@ -6,7 +6,7 @@
 | Issue | [#46](https://github.com/szebest/taitube-platform/issues/46) |
 | Size | L |
 | Blocked by | 38 — User & channel identity · 39 — Declarative RBAC & ABAC permission engine |
-| Blocks | 47, 49, 73 |
+| Blocks | 47, 73 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** ready

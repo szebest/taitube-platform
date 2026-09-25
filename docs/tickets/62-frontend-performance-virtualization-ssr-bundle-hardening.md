@@ -1,63 +1,49 @@
-# 62: Frontend performance, list virtualization & production bundle hardening
+# 62: Remove the legacy frontend and virtualize long lists
 
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Issue | [#62](https://github.com/szebest/taitube-platform/issues/62) |
 | Size | L |
-| Blocked by | 57, 58, 59, 60, 61 |
-| Blocks | 63, 64, 66, 75 |
+| Blocked by | 56 - Frontend auth · 57 - Production video player · 58 - Modern browse layout · 59 - Modern watch page · 60 - Creator studio · 74 - Multi-resource search UI · 89 - TanStack Start foundation |
+| Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
 
+The cleanup ticket after the page rewrites: once 57 to 60 have replaced every legacy page from
+[89's table](89-web-tanstack-start-foundation.md#5-legacy-pages-carried-over), the legacy stack goes, and the
+long lists get virtualized. SEO is [63](63-tanstack-router-start-ssr-seo-streaming.md); bundle budget and
+component-level splitting are [66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md).
+
 ## What to build
 
-High-traffic streaming frontends face severe client-side performance hurdles: DOM node explosion from infinite feeds and thousands of comments, heavy player bundle sizes, lack of video SEO metadata (OpenGraph/Twitter Cards), and slow initial bundle load times.
+1. **Legacy removal.** Delete whatever is left of `apps/web/src/modules/`, the legacy providers and root
+   layout pieces, their SCSS, and the dependencies nothing imports any more: `bootstrap`, `react-bootstrap`,
+   `sass`, `react-player`. A zero-matches row keeps them out.
+2. **List virtualization.** `@tanstack/react-virtual` on the feed grid (window scroller), the comment thread
+   and the search results, with dynamic row measurement so infinite queries keep paging as the user scrolls.
 
-This ticket delivers production performance engineering and bundle hardening for `apps/web`:
-1. **List Virtualization with TanStack Virtual (`@tanstack/react-virtual` v3)**:
-   - Virtualizes the public video feed grid, playlist drawer, search results, and heavy comment threads.
-   - Dynamic element measurement with `useVirtualizer`, allowing smooth 60fps scrolling across 10,000+ items with constant DOM node count (< 40 DOM nodes in viewport).
-   - Window scrolling integration (`getScrollElement: () => window`) for the home feed and dedicated container virtualization for the comments thread.
-2. **TanStack Start Streaming SSR & Bundle Chunk Splitting**:
-   - Leverage TanStack Start code-splitting and `React.lazy` for heavy modules: `<TaitubePlayer />` (Vidstack + HLS.js), Creator Studio chart libraries (Recharts), and Admin panel modules.
-   - Initial entry bundle kept below 150 KB (gzip).
-3. **OpenGraph & Video SEO Meta Tags (TanStack Start Head)**:
-   - Dynamic meta tags generation for video pages (`og:title`, `og:description`, `og:image` poster, `og:video` HLS stream URL, and JSON-LD schema `VideoObject` structured data via TanStack Start `head` functions).
-4. **Image & Poster Optimization**:
-   - Modern `srcset` responsive poster images with WebP fallback and blur placeholder skeletons during loading.
-5. **Lighthouse Audit & Core Web Vitals**:
-   - Lighthouse performance score >= 90 on Desktop and Mobile.
-   - Cumulative Layout Shift (CLS) < 0.05, Largest Contentful Paint (LCP) < 1.8s.
+## Delivery slices
+
+1. Legacy removal and the zero-matches row.
+2. Feed grid virtualization.
+3. Comments and search results virtualization.
 
 ## Acceptance criteria
 
-- [ ] `@tanstack/react-virtual` v3 integrated into home feed, search results, and video comments list.
-- [ ] DOM node count remains strictly under 50 nodes even when browsing feeds with 2,000+ videos.
-- [ ] Code splitting configured: `HlsPlayer`, `StudioDashboard`, and `AdminPanel` load in separate async chunks.
-- [ ] Initial bundle analyzer report verifies main JS bundle is under 150 KB gzipped.
-- [ ] Video detail page outputs complete OpenGraph meta tags and JSON-LD `VideoObject` structured data via TanStack Start SSR.
-- [ ] Skeleton loading states implemented for video cards, channel headers, and comment sections to prevent layout shift.
-- [ ] Lighthouse audit passes with >= 90 score across Performance, Accessibility, Best Practices, and SEO.
-
-## Out of scope
-
-- Native iOS/Android apps.
-
-## Notes for the implementer
-
-- Run `pnpm --filter @taitube/web build --analyze` or `rollup-plugin-visualizer` to audit chunk sizes.
-- Ensure all images have explicit `aspect-ratio` or `width`/`height` attributes to guarantee zero CLS.
+- [ ] `apps/web/src/modules/` is gone; `bootstrap`, `react-bootstrap`, `sass` and `react-player` are out of
+      `apps/web/package.json`, and a zero-matches row fails on any of them.
+- [ ] Feed, comments and search results render a bounded number of rows however many items are loaded (a
+      spec with 2,000 items asserts the mounted row count stays under 50).
+- [ ] Scrolling to the end of a virtualized list still fetches the next page.
 
 ## Testing plan
 
-- Virtualization test: Seed 2,000 comments, scroll to bottom, inspect browser DOM to verify fewer than 50 comment DOM nodes exist simultaneously.
-- SEO test: Fetch video page with headless crawler / curl and assert valid `VideoObject` JSON-LD schema.
+- Virtualization specs per list with a large fixture, asserting mounted row count and next-page fetch.
 
 ## Definition of Done
 
-- [ ] Lighthouse CI audit scores >= 90 on all metrics.
-- [ ] `pnpm --filter @taitube/web build` succeeds with zero bundle size warnings.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint`, `pnpm test:architecture` green.
+- [ ] `apps/web/AGENTS.md` no longer mentions the legacy stack.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

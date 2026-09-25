@@ -189,8 +189,9 @@ This lands here because the shim sits in the entrypoint this ticket is rewriting
 
 ## Out of scope
 
-- The `apps/web` framework rewrite (React 19 / TanStack Start / Tailwind). Tickets 49–75 own it. This ticket
-  ships whatever `apps/web` is at the time.
+- The `apps/web` framework rewrite. The framework rewrite is [89](89-web-tanstack-start-foundation.md) (then
+  53-74). This ticket ships whatever `apps/web` is at the time; after 89 that is a TanStack Start Node server
+  (`start` script), not static files.
 - The full Playwright acceptance suite — ticket 75.
 - Cloud deployment of the frontend (Terraform, CDN, custom domains). Tickets 31–33 own the cloud rungs;
   extend them once the local topology is proven.

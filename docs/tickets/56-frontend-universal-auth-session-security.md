@@ -5,59 +5,86 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#56](https://github.com/szebest/taitube-platform/issues/56) |
 | Size | M |
-| Blocked by | 38 — User identity · 54 — Frontend testing infrastructure · 55 — Modern design system |
-| Blocks | 60, 61, 75 |
+| Blocked by | 38 - User identity · 53 - Data layer on TanStack Query · 54 - Frontend testing infrastructure · 89 - TanStack Start foundation |
+| Blocks | 60, 61, 62, 72 |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
 
 ## What to build
 
-The legacy frontend stored sensitive tokens directly in `localStorage` without XSS sanitization, depended exclusively on Facebook OAuth, and had no clean session renewal or RBAC role awareness in the UI.
+Today the web app reads a bearer JWT (minted with `pnpm dev-token`) from `localStorage` in
+`src/auth-token.ts`, there is no sign-in flow, and SSR renders every page as a guest. This ticket moves the
+session to a cookie the server can read, puts the user in router context, and replaces the legacy
+`AuthorizedContainer` and login component.
 
-This ticket delivers enterprise-grade frontend authentication and security:
-1. **Universal Auth Integration**:
-   - Seamless compatibility with standard OIDC/JWKS providers (Clerk, Supabase, Auth0, or local dev tokens).
-   - Local offline dev mode: One-click "Login as Dev User" / "Login as Admin" when running in `NODE_ENV=development`.
-2. **Secure Token & Session Management**:
-   - Defense-in-depth token handling: Access tokens held in memory with silent refresh via `httpOnly` secure cookies or refresh handlers.
-   - Automatic 401 token refresh interceptor: transparently refreshes expired tokens before retrying queued requests.
-3. **Frontend Permission Directives & `useCan` Hook**:
-   - Import typed `canX` action helpers (`canUpdateVideo`, `canDeleteVideo`, `canPinComment`, `canManageCategory`) directly from `@vp/permissions` (`@taitube/permissions`).
-   - Pure functional integration: provide lightweight `useCan(helperFn, params)` hook without `@casl/react` or class bloat.
-   - UI seamlessly shows/hides edit, delete, pin, and moderation actions based on current user role and resource attributes.
-   - Strict ban on manual hand-checks (`if (user.role === 'admin')`) in UI components.
-4. **XSS & Content Security Hardening**:
-   - Strict DOMPurify sanitization on all rendered user comments and video markdown descriptions.
-   - Elimination of `dangerouslySetInnerHTML` anti-patterns.
+### 1. Session
+
+- The token lives in an `httpOnly`, `SameSite=Lax` cookie (`Secure` outside localhost), set and cleared by
+  `signIn` / `signOut` server functions (`createServerFn`) in `src/features/auth/`. JavaScript never reads it.
+- Request middleware reads the cookie, loads the account from `GET /v1/me/account`, and fills `auth` in the
+  router context 89 created, so SSR renders the signed-in page.
+- A 401 from the API goes through the `apiClient` seam in `src/integrations/api/`: with a refresh token (an
+  OIDC provider), the server refreshes once and the request is retried; without one (dev tokens), the session
+  is cleared and the user lands on `/login?redirect=<current>`. No full-page reload.
+- `src/auth-token.ts` and every `localStorage` token read are deleted.
+
+### 2. Routes
+
+- `/login`: sign in with the configured OIDC provider (from 38), or, in development only, the persona
+  switcher.
+- The `_authed` layout route gets a `beforeLoad` that redirects a guest to `/login?redirect=...`. The legacy
+  `AuthorizedContainer` is deleted.
+- The legacy account dropdown in `src/layout/components/login/` becomes an account menu in
+  `src/features/auth/components/` (plain markup; [58](58-modern-browse-layout-microinteractions-motion.md) styles it in the new shell) with sign out through `signOut`.
+
+### 3. Dev personas
+
+- A dev-only switcher (Guest, User, Creator, Admin) signs in with a locally minted token, so a fresh clone can
+  act as any persona after `pnpm dev`. `@vp/dev-token` is a server package the web app cannot import, so the
+  switcher calls a mint endpoint added to the local `dev-token serve` process. The switcher and the endpoint
+  are absent from production builds.
+
+### 4. Permissions
+
+- `useCan` and `<Can>` already exist (`src/hooks/use-can.ts`, `src/components/can.tsx`). `PermissionsProvider`
+  takes its user from router context instead of the legacy `AuthProvider`, which is deleted.
+- Edit video, delete video, pin comment and the admin link render through `useCan`; no role comparison in a
+  component.
+- No `dangerouslySetInnerHTML` anywhere in `src/`; user text renders as React text.
 
 ## Acceptance criteria
 
-- [ ] Auth provider context (`AuthProvider`) supporting login, logout, user profile, and current token.
-- [ ] Dev bypass toolbar rendered only in development mode enabling instant switching between Guest, Normal User, Creator, and Admin personas.
-- [ ] Centralized Axios/fetch interceptor handling 401 expiration and refreshing without forcing full-page reloads.
-- [ ] `useCan` hook and functional permission guards integrated with `@vp/permissions` typed helpers.
-- [ ] UI action buttons (Edit Video, Delete Video, Pin Comment, Admin Panel link) conditionally render via `useCan(canX, ...)` with zero hand-written role comparisons.
-- [ ] User input sanitization: Video descriptions and comment bodies sanitized against script injection and hostile iframe exploits.
-- [ ] Unit tests testing `useCan` authorization rendering across all user personas.
+- [ ] SSR HTML for a signed-in cookie contains the user's channel name; for no cookie it renders the guest
+      header.
+- [ ] No `localStorage` token read remains; the cookie is `httpOnly` (asserted on the `signIn` response).
+- [ ] A guest opening `/upload` is redirected to `/login?redirect=/upload`, and signing in lands back on
+      `/upload` (route spec through `renderRoute` from 54).
+- [ ] 401 handling: with a refresh token the request is retried once; without one the session is cleared and
+      the user is redirected (specs with MSW).
+- [ ] The persona switcher works in dev and is absent from the production build (asserted on build output).
+- [ ] Per persona, the admin link and the edit/delete actions show or hide as `@vp/permissions` decides (one
+      `it.each` over personas).
+- [ ] Zero-matches rows for `dangerouslySetInnerHTML` and `localStorage` token access in `apps/web/src`.
+- [ ] `AuthorizedContainer`, `AuthProvider`, `src/auth-token.ts` and `src/layout/components/login/` are gone.
+- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green; `make smoke-offline` passes.
 
 ## Out of scope
 
-- Multi-factor authentication (MFA) UI flows.
+- MFA flows.
+- Styling the login page and account menu beyond plain markup: [58](58-modern-browse-layout-microinteractions-motion.md).
+- The XSS and privilege-escalation browser suite: [75](75-fullstack-e2e-playwright-security-perf-validation.md).
+- Admin route guards: [61](61-admin-control-panel-category-moderation-ui.md).
 
-## Notes for the implementer
+## Open questions
 
-- Do not store unencrypted JWT tokens with long expiry in `localStorage`.
-- Provide zero-config development auth out of the box so any developer can clone the repository, run `pnpm dev`, and immediately interact as any persona.
-
-## Testing plan
-
-- Security test: Inject malicious `<script>` and `javascript:alert(1)` payloads in comment bodies and verify clean rendering.
-- Role test: Assert Admin persona sees Admin Panel link, standard user sees only personal channel options.
+- The browser still needs the token for API calls. Default: the browser calls the API through a same-origin
+  server route that attaches the bearer from the cookie, so the token is never readable. The alternative is
+  the API accepting the session cookie directly, which needs credentialed CORS from 49. Decide in the PR and
+  record it in SDD §11.
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @taitube/web test` passes.
-- [ ] Security audit and linter check pass with zero XSS vulnerabilities.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [ ] All acceptance criteria proved with command output in the PR.
+- [ ] SDD §11 and `apps/web/AGENTS.md` describe the session model.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
