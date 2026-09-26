@@ -1,5 +1,9 @@
 name: video-pipeline
 
+x-app-build: &app-build
+  context: ../..
+  dockerfile: Dockerfile
+
 x-app-env: &app-env
   DATABASE_URL: postgres://vp:vp@postgres:5432/vp
   REDIS_URL: redis://redis:6379/0
@@ -7,7 +11,6 @@ x-app-env: &app-env
   REDIS_PASSWORD: vp
   S3_ENDPOINT: http://minio:9000
   S3_FORCE_PATH_STYLE: "true"
-  NODE_OPTIONS: "--import @vp/config/register"
 
 services:
   postgres:
@@ -81,9 +84,11 @@ services:
   migrate:
     image: vp-api:local
     build:
-      context: ../..
-      dockerfile: apps/api/Dockerfile
+      <<: *app-build
+      target: api
     container_name: vp-migrate
+    profiles:
+      - migrate
     env_file:
       - ../../.env
     environment:
@@ -97,9 +102,11 @@ services:
   api:
     image: vp-api:local
     build:
-      context: ../..
-      dockerfile: apps/api/Dockerfile
+      <<: *app-build
+      target: api
     container_name: vp-api
+    profiles:
+      - api
     env_file:
       - ../../.env
     environment:
@@ -125,14 +132,43 @@ services:
       retries: 30
       start_period: 1s
 
+  web:
+    image: vp-web:local
+    build:
+      <<: *app-build
+      target: web
+    container_name: vp-web
+    profiles:
+      - web
+    environment:
+      SSR_API_BASE_URL: http://api:3000
+    ports:
+      - "5173:5173"
+    depends_on:
+      api:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    stop_signal: SIGTERM
+    stop_grace_period: 10s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:5173/robots.txt || exit 1"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 1s
+
   # ---- workers: one image, WORKER_STAGE picks the role (SDD §12.1) ----
   worker-probe: &worker
     image: vp-worker:local
     build:
-      context: ../..
-      dockerfile: apps/worker/Dockerfile
+      <<: *app-build
+      target: worker
       args:
         WORKER_RUNTIME: ${WORKER_RUNTIME:-bun}
+    profiles:
+      - worker
     env_file:
       - ../../.env
     environment:
@@ -144,6 +180,8 @@ services:
       redis:
         condition: service_healthy
       minio-init:
+        condition: service_completed_successfully
+      migrate:
         condition: service_completed_successfully
     tmpfs:
       - /tmp/vp:size=2g,mode=1777

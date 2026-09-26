@@ -66,8 +66,9 @@ have none.
 ### A — Ship `apps/web`
 
 - **Dockerfile** for `apps/web`, matching the topology `apps/api/Dockerfile` already uses: `turbo prune
-  --docker` → install → build → a minimal static runtime stage. Non-root, read-only root filesystem, no
-  build toolchain in the final image.
+  --docker` → install → build → a minimal Node runtime stage serving the SSR build
+  (after 89, the `start` script: srvx on port 5173). Non-root, read-only root filesystem, no build toolchain
+  in the final image.
 - **Compose service** `web`, with the API base URL injected as configuration rather than baked at build time
   where the runtime allows it. It joins the same network as `api`.
 - **k8s manifest** under `infra/k8s/base/` plus an `ingress.yaml` route, consistent with the existing

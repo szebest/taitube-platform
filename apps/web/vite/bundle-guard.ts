@@ -4,6 +4,7 @@ export interface BundledChunk {
   fileName: string;
   isEntry: boolean;
   moduleIds: readonly string[];
+  code: string;
 }
 
 const DEVTOOLS =
@@ -26,10 +27,16 @@ function chunkViolations(chunk: BundledChunk): string[] {
       ? routes.map((route) => `${chunk.fileName} is an entry chunk but carries the route ${route}`)
       : []),
     ...(routes.length > 1 ? [`${chunk.fileName} carries two routes: ${routes.join(', ')}`] : []),
+    ...(chunk.code.includes('process.env')
+      ? [`${chunk.fileName} reads process.env, which only the SSR server has`]
+      : []),
   ];
 }
 
-/** What a production client bundle must not do: ship devtools, or stop splitting per route. */
+/**
+ * What a production client bundle must not do: ship devtools, stop splitting per route, or read the
+ * server's environment (`SSR_API_BASE_URL` is read behind `import.meta.env.SSR`, which the build drops).
+ */
 export function bundleViolations(chunks: readonly BundledChunk[]): string[] {
   const violations = chunks.flatMap(chunkViolations);
   const split = chunks.some((chunk) => !chunk.isEntry && routesIn(chunk).length > 0);
@@ -44,7 +51,14 @@ export function bundleGuard(): Plugin {
     generateBundle(_options, bundle) {
       const chunks = Object.values(bundle).flatMap((output) =>
         output.type === 'chunk'
-          ? [{ fileName: output.fileName, isEntry: output.isEntry, moduleIds: output.moduleIds }]
+          ? [
+              {
+                fileName: output.fileName,
+                isEntry: output.isEntry,
+                moduleIds: output.moduleIds,
+                code: output.code,
+              },
+            ]
           : []
       );
       const violations = bundleViolations(chunks);

@@ -2,8 +2,8 @@ import { type BundledChunk, bundleViolations } from '../bundle-guard';
 
 const ROUTES = '/repo/apps/web/src/routes';
 
-function chunk(fileName: string, moduleIds: string[], isEntry = false): BundledChunk {
-  return { fileName, isEntry, moduleIds };
+function chunk(fileName: string, moduleIds: string[], isEntry = false, code = ''): BundledChunk {
+  return { fileName, isEntry, moduleIds, code };
 }
 
 const entry = chunk('assets/main.js', ['/repo/apps/web/src/router.tsx'], true);
@@ -43,6 +43,14 @@ describe('apps/web: bundle guard', () => {
 
     expect(bundleViolations([entry, shared])).toEqual([
       'assets/shared.js carries two routes: src/routes/trending.tsx, src/routes/watch.$videoId.tsx',
+    ]);
+  });
+
+  it('refuses a client chunk that reads the server environment', () => {
+    const leaked = chunk(watch.fileName, [...watch.moduleIds], false, 'const u = process.env.X;');
+
+    expect(bundleViolations([entry, leaked])).toEqual([
+      'assets/watch.js reads process.env, which only the SSR server has',
     ]);
   });
 

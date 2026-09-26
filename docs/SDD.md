@@ -2172,7 +2172,7 @@ video-pipeline/
 │       │   └── __tests__/contract/         # one conformance suite per repository, run against both families (PGlite)
 │       ├── composition/                    # Token<T>, Container (start/dispose), shutdownOnce (ADR-25)
 │       ├── concurrency/                    # Singleflight
-│       ├── config/                         # loadEnv(): reads process.env against @vp/env-schema; register.js resolve hook
+│       ├── config/                         # loadEnv(): reads process.env against @vp/env-schema
 │       ├── env-schema/                     # AppEnv, platform-env.json, SECRET_KEYS, AppConfig + toAppConfig, tuning.ts
 │       ├── db/                             # drizzle schema, client, migrate and seed library; migrations in drizzle/
 │       ├── events/                         # Redis Pub/Sub channels, SSE envelope schemas, cache keys
@@ -2419,15 +2419,15 @@ The upload content types are a typed constant in `@vp/validation` that the brows
 
 ### 16.8 Platform keys (`platform-env.json`)
 
-Handed to something other than this code, and declared so the schema stays closed:
+Handed to something other than the API and the worker, and declared so the schema stays closed:
 
 | Variable | Consumer |
 |---|---|
-| `NODE_OPTIONS` | Node itself; the images and compose set `--import @vp/config/register` |
 | `TURBO_TELEMETRY_DISABLED` / `DO_NOT_TRACK` | turbo and every tool honouring the convention (P9) |
 | `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` 🔒 | Grafana Alloy's upstream (`Authorization=Basic <base64(instanceId:token)>`). Named apart from `OTEL_EXPORTER_OTLP_*` because `vp-secrets` reaches every app pod, and the OTel SDK there would read them in place of the ConfigMap's `http://alloy:4318` |
 | `WORKER_RUNTIME` | the worker image build (`--build-arg`, which picks the `runtime-bun` or `runtime-node` stage) and its `CMD`; setting it on a running pod does not change the binary the image has |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
+| `SSR_API_BASE_URL` | `apps/web`'s SSR server, read at start and parsed by the web's own schema in `apps/web/src/config`: the API address for server-side renders, which inside compose (`http://api:3000`) and a cluster (`http://vp-api:3000`) is a service name no browser resolves. Unset, it falls back to the build-time `VITE_API_BASE_URL` the browser uses. Not `VITE_`-prefixed on purpose: Vite inlines those into both bundles at build time, and this one must stay out of the browser's |
 
 ### 16.9 Cloud-only (not read by any process in this repo)
 

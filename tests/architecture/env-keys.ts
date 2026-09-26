@@ -54,7 +54,7 @@ export function composeAppKeys(source: string): string[] {
 
   const services = source.split(/\n(?= {2}[\w-]+:\n)/);
   for (const service of services) {
-    if (!/dockerfile: apps\/|<<: \*worker/.test(service)) continue;
+    if (!/image: vp-[\w-]+:local|<<: \*worker/.test(service)) continue;
     const serviceLines = service.split('\n');
     serviceLines.forEach((line, at) => {
       if (/^\s{4}environment:\s*$/.test(line)) keys.push(...childKeys(serviceLines, at));
