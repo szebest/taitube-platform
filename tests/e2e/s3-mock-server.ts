@@ -17,10 +17,21 @@ export interface MockS3ServerInstance {
 export async function startMockS3Server(options: {
   storage: InMemoryStorageClient;
   multipart: InMemoryMultipartStorage;
+  port?: number;
 }): Promise<MockS3ServerInstance> {
-  const { storage, multipart } = options;
+  const { storage, multipart, port = 0 } = options;
 
   const server = http.createServer(async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Expose-Headers', 'ETag');
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT');
+      res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] ?? '*');
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
+
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     const parts = url.pathname.replace(/^\/+/, '').split('/');
     const bucket = parts[0] || 'raw';
@@ -90,13 +101,12 @@ export async function startMockS3Server(options: {
   });
 
   await new Promise<void>((resolve) => {
-    server.listen(0, '127.0.0.1', () => resolve());
+    server.listen(port, '127.0.0.1', () => resolve());
   });
 
   const s3Address = server.address() as { port: number };
   const baseUrl = `http://127.0.0.1:${s3Address.port}`;
 
-  // Configure presigned URL hooks on the in-memory adapters
   storage.createPresignedPutUrl = async (params) => {
     const expiresIn = params.expiresInSeconds ?? 900;
     return ok({

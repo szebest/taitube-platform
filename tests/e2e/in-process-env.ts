@@ -37,7 +37,16 @@ export interface InProcessEnv {
   teardown: () => Promise<void>;
 }
 
-export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
+export interface InProcessEnvOptions {
+  apiPort?: number;
+  s3Port?: number;
+  corsOrigins?: string[];
+}
+
+export async function setupInProcessEnv(
+  log: Logger,
+  { apiPort = 0, s3Port = 0, corsOrigins }: InProcessEnvOptions = {}
+): Promise<InProcessEnv> {
   const repositories = new InMemoryRepositories();
   const storage = new InMemoryStorageClient();
   const multipart = new InMemoryMultipartStorage(storage);
@@ -67,7 +76,7 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
   };
   const flowProducer = new InMemoryFlowProducer(getQueue);
 
-  const s3Instance = await startMockS3Server({ storage, multipart });
+  const s3Instance = await startMockS3Server({ storage, multipart, port: s3Port });
   const workerClosers: Array<() => Promise<void>> = [];
 
   const workerStages = [
@@ -126,6 +135,7 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
         cdn: `${s3Instance.baseUrl}/public`,
         limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 },
         sse: { heartbeatMs: 2000 },
+        http: { corsOrigins },
       }),
     })
   ).app;
@@ -148,7 +158,7 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
   }, 1000);
   workerClosers.push(async () => clearInterval(reconcilerTimer));
 
-  const apiUrl = await app.listen({ port: 0, host: '127.0.0.1' });
+  const apiUrl = await app.listen({ port: apiPort, host: '127.0.0.1' });
   log.info({ apiUrl, s3BaseUrl: s3Instance.baseUrl }, 'in-process environment ready');
 
   const teardown = async (): Promise<void> => {
