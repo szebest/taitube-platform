@@ -1,4 +1,3 @@
-import { ApiProvider } from '@reduxjs/toolkit/query/react';
 import {
   HeadContent,
   Scripts,
@@ -12,7 +11,6 @@ import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { z } from 'zod';
 
-import { baseApi } from '#app/base-api';
 import { DEVTOOLS_ENABLED } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
@@ -74,7 +72,7 @@ function RootLayout() {
   const maxWidth = useLayoutMaxWidth();
 
   return (
-    <ApiProvider api={baseApi}>
+    <>
       <IntlProvider locale="en" timeZone="UTC">
         <AuthProvider>
           <PermissionsProvider>
@@ -90,6 +88,6 @@ function RootLayout() {
       <Suspense>
         <Devtools />
       </Suspense>
-    </ApiProvider>
+    </>
   );
 }

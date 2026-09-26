@@ -1,15 +1,3 @@
-import { configureStore } from '@reduxjs/toolkit';
-import { baseApi } from '../base-api';
-
-export function createApiStore() {
-  return configureStore({
-    reducer: { [baseApi.reducerPath]: baseApi.reducer },
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(baseApi.middleware),
-  });
-}
-
-export type ApiStore = ReturnType<typeof createApiStore>;
-
 export type SentRequest = {
   method: string;
   url: string;
@@ -41,14 +29,4 @@ export function recordRequests(respond: Respond = noContent): SentRequest[] {
 
 export function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
-}
-
-/** Fills a query's cache entry by letting it fetch `body`, so the cache holds what the contract parsed. */
-export async function seed(
-  store: ApiStore,
-  query: (store: ApiStore) => unknown,
-  body: unknown
-): Promise<void> {
-  recordRequests(() => jsonResponse(body));
-  await query(store);
 }

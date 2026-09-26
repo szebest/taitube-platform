@@ -5,15 +5,15 @@ import styles from './upload-progress.module.scss';
 import { uploadProgress } from '@vp/intl';
 import { Format } from '@vp/intl-react';
 
-import { uploadsApi } from '#app/modules/Upload/api';
+export type UploadProgressProps = {
+  percent: number;
+};
 
-export function UploadProgress() {
-  const { data: loaded } = uploadsApi.useUploadProgressQuery();
-
+export function UploadProgress({ percent }: UploadProgressProps) {
   return (
     <div className={styles.progress}>
-      <p>Progress: <Format value={uploadProgress(loaded ?? 0)} /></p>
-      <ProgressBar now={loaded} />
+      <p>Progress: <Format value={uploadProgress(percent)} /></p>
+      <ProgressBar now={percent} />
     </div>
   )
 }
