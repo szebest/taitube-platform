@@ -127,29 +127,40 @@ than sleeps, and finishes by printing what is running and where to reach it.
 
 ### F - Bundle each app, and retire the extensionless-import loader shim
 
-`packages/server/config/src/loader.mjs` is a `register()` hook whose only job is to catch
-`ERR_MODULE_NOT_FOUND` and retry the specifier with `.js` appended. Every app boots through it
-(`node --import @vp/config/register dist/main.js`), because every package builds with plain `tsc`, is
-`"type": "module"`, and `tsc` emits relative specifiers verbatim while Node does no extension resolution.
+`packages/server/config/src/register.js` is a `registerHooks()` resolve hook whose only job is to catch
+`ERR_MODULE_NOT_FOUND` and retry the specifier with `.js` (or `/index.js`) appended. The API and the worker
+boot through it (`NODE_OPTIONS="--import @vp/config/register"`), because every package builds with plain
+`tsc`, is `"type": "module"`, and `tsc` emits relative specifiers verbatim while Node does no extension
+resolution.
 
-The fix is not to change the source. **Relative imports stay extensionless in every tier**, and nothing in this
-ticket adds an extension anywhere. What changes is what Node is handed: each deployable is bundled.
+**Decided: relative imports stay extensionless in every tier, and nothing adds an extension.** No `.js` on any
+relative import, in source, specs or generated code, and no resolver flag that exists to tolerate one
+(`resolve.fullySpecified` and friends). What changes is what Node is handed: each deployable is bundled, so
+the bundler resolves the extensionless specifiers at build time and the runtime sees none.
 
-- `apps/api` and `apps/worker` build with esbuild (a devDependency) into one ESM file per entrypoint -
-  `dist/main.js` for both, `dist/migrate.js` for the API. Workspace `@vp/*` packages are inlined; npm
-  dependencies stay external and come from `pnpm deploy --prod`, as today. esbuild resolves extensionless
-  specifiers itself, so the bundle has none left for Node to resolve.
-- The per-app images (A-D) copy the bundle, not `dist/` trees of every workspace package, which also shrinks
-  the `COPY` list D asks for.
-- `loader.mjs` is deleted and `@vp/config/register` loses its resolver duty; if nothing else is left in it,
-  it is deleted and `NODE_OPTIONS` in the Dockerfiles and compose drops the `--import`.
-- The CLIs keep running through `bun`, which resolves extensionless imports; vitest and `bun test` already do.
+- **Decided:** `apps/api` and `apps/worker` build with esbuild into one ESM file per entrypoint, in
+  `dist/bundle/`: `main.js` and `instrument.js` for both, `migrate.js` and `seed.js` for the API. Shared code
+  lands in chunks beside them, so `--import ./dist/instrument.js dist/main.js` loads one copy. Workspace
+  `@vp/*` packages are inlined; npm dependencies stay external, because OpenTelemetry patches them through
+  Node's module hooks and pino resolves its transports by path. They come from
+  `pnpm deploy --prod --config.node-linker=hoisted`, which puts every one of them at the top of
+  `node_modules`, and the deploy's `node_modules/@vp` copies are then deleted. `tsc` keeps emitting `dist/`
+  for the typecheck and for `@vp/api`'s library export (`composeApp`, which `upload-client`'s spec imports).
+- **Decided:** `apps/web` needs no extra step. 89 made it TanStack Start on Vite, which already bundles: the
+  `@vp/*` packages resolve from source through `vite/workspace-sources.ts` and are inlined into
+  `dist/server/server.js` and `dist/client`, npm dependencies stay external, and `start` serves the build
+  with srvx on port 5173. Its image takes the same deploy with `node_modules/@vp` removed.
+- The images copy the bundle to `/app/dist` and no `dist/` tree of any workspace package, which also shrinks
+  the `COPY` list D asks for. The image paths stay `dist/main.js`, `dist/instrument.js` and `dist/migrate.js`,
+  so the k8s commands and the migrate Job are unchanged.
+- `register.js` is deleted, with the `./register` export of `@vp/config`, and `NODE_OPTIONS` leaves the
+  Dockerfiles, compose, `.env.example` and `@vp/env-schema`. The apps' `dev` scripts run the bundle.
+- Repo scripts and CLIs keep running through `tsx` (the root runtime table), which resolves extensionless
+  imports; vitest and `bun test` already do.
 - `tsc` stays the typecheck and declaration build for packages. `moduleResolution: "bundler"` in
   `packages/universal/tsconfig/base.json` is now accurate rather than a convenience, so it stays.
-- `esm-specifiers.test.ts` is not widened. [Ticket 88](88-codebase-health-ratchets.md) W6 inverts it: no
-  relative import in any tier carries an extension, and `apps/web` gets `resolve.fullySpecified: false` for the
-  workspace packages it consumes. Either ticket can land first - until 83 lands, the loader covers an
-  extensionless `universal` package exactly as it covers `server` today.
+- `esm-specifiers.test.ts` is not touched. [Ticket 88](88-codebase-health-ratchets.md) W6 already inverted
+  it: no relative import in any tier carries an extension.
 
 This lands here because the shim sits in the entrypoint this ticket is rewriting anyway.
 
@@ -176,8 +187,8 @@ This lands here because the shim sits in the entrypoint this ticket is rewriting
 - [ ] A browser-driven check uploads, waits for `READY` and plays back through the deployed web container.
 - [ ] `apps/api` and `apps/worker` ship an esbuild bundle per entrypoint; the images contain no workspace
       package `dist/` tree and boot with no `--import` loader.
-- [ ] `loader.mjs` is deleted and nothing registers a resolve hook; `grep -rn "register(" packages/server/config`
-      returns nothing, or the package is gone.
+- [ ] `register.js` is deleted and nothing registers a resolve hook; `grep -rn "registerHooks\|register(" packages/server/config`
+      returns nothing.
 - [ ] No relative import in any tier gains an extension in this ticket, and `esm-specifiers.test.ts` is not
       widened.
 - [ ] `make smoke-offline` passes from the bundled images; migrate runs from `dist/migrate.js` in the Job.
