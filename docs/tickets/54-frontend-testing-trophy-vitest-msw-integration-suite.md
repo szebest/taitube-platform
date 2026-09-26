@@ -9,7 +9,7 @@
 | Blocks | 55, 56 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** in-progress
+**Status:** done
 
 ## What to build
 
