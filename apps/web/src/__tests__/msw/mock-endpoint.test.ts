@@ -40,10 +40,10 @@ describe('apps/web: mockEndpoint', () => {
   ])('answers $code as the API does, at $status', async ({ code, status }) => {
     apiServer.use(mockEndpoint(getVideo, () => problemReply(code)));
 
-    const failed = await apiClient.videos.getVideo({ params: { id: VIDEO_ID } }).catch((e) => e);
+    const answered = apiClient.videos.getVideo({ params: { id: VIDEO_ID } });
 
-    expect(failed).toBeInstanceOf(ApiError);
-    expect(failed).toMatchObject({ status, code });
+    await expect(answered).rejects.toEqual(expect.any(ApiError));
+    await expect(answered).rejects.toMatchObject({ status, code });
   });
 
   it('refuses to compile a body the contract does not return', () => {
