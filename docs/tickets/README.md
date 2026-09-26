@@ -8,7 +8,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 
 - [47: Multi-resource search engine — unified weighted full-text search across videos, channels & playlists with Redis caching](47-multi-resource-search-engine.md)
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
-- [53: Frontend data layer on TanStack Query and TanStack Form - loaders, query options, RTK Query removed](53-frontend-architecture-modernization-tanstack-query.md)
 - [54: Frontend testing infrastructure & integration suite (Vitest 3, Testing Library & MSW mock API)](54-frontend-testing-trophy-vitest-msw-integration-suite.md)
 - [64: Core Web Vitals real-user measurement (LCP, INP, CLS) and OpenTelemetry web traces](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md)
 - [75: Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md)
@@ -89,7 +88,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 50 | [Shared API contracts package (`@taitube/api-contracts`) & automated OpenAPI TypeScript codegen](50-shared-api-contracts-zod-openapi-codegen.md) | 5 | M | 19, 37, 38 | — | done |
 | 51 | [Type-safe API client SDK (`@taitube/api-client`) with auto-generated TanStack Query hooks](51-type-safe-query-client-tanstack-react-hooks.md) | 5 | M | — | — | done |
 | 52 | [Frontend integration as monorepo app (`apps/web`) with shared contracts & unified DX](52-integrate-frontend-pnpm-monorepo-app-web.md) | 5 | L | — | — | done |
-| 53 | [Frontend data layer on TanStack Query and TanStack Form - loaders, query options, RTK Query removed](53-frontend-architecture-modernization-tanstack-query.md) | 5 | L | 89, 91 | 56, 58, 59, 60, 61, 68, 70, 72 | ready |
+| 53 | [Frontend data layer on TanStack Query and TanStack Form - loaders, query options, RTK Query removed](53-frontend-architecture-modernization-tanstack-query.md) | 5 | L | 89, 91 | 56, 58, 59, 60, 61, 68, 70, 72 | in-progress |
 | 54 | [Frontend testing infrastructure & integration suite (Vitest 3, Testing Library & MSW mock API)](54-frontend-testing-trophy-vitest-msw-integration-suite.md) | 5 | M | 89, 91 | 55, 56 | ready |
 | 55 | [Modern design system foundation — Tailwind CSS v4, Radix UI primitives & theme engine](55-design-system-tailwind-radix-dark-theme.md) | 5 | L | 54, 89, 91 | 57, 58, 59, 60, 61, 69, 70, 72 | blocked |
 | 56 | [Frontend universal auth, session security & XSS / token hardening](56-frontend-universal-auth-session-security.md) | 5 | M | 38, 53, 54, 89, 91 | 60, 61, 62, 72 | blocked |
