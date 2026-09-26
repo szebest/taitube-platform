@@ -5,6 +5,7 @@ import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
 import { InMemoryFlowProducer } from '../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../in-memory/in-memory-multipart-storage';
+import { InMemorySearchSuggestionIndex } from '../in-memory/in-memory-search-suggestion-index';
 import { InMemoryStorageClient } from '../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../in-memory/in-memory-view-buffer';
@@ -49,6 +50,7 @@ export function registerFamily(c: Container): void {
       closeOnDispose
     )
     .provide(Adapters.SubscriptionCache, () => new InMemorySubscriptionCache())
+    .provide(Adapters.SearchSuggestions, () => new InMemorySearchSuggestionIndex())
     .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
     .provide(Adapters.BoardQueues, () => portBoardQueues);
 }

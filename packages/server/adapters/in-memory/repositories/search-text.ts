@@ -18,7 +18,10 @@ export interface WeightedField {
  * `or` and `-` are for Postgres to parse.
  */
 export function lexicalScore(query: string, fields: readonly WeightedField[]): number {
-  const tokenized = fields.map((field) => ({ ...field, tokens: new Set(searchTokens(field.text)) }));
+  const tokenized = fields.map((field) => ({
+    ...field,
+    tokens: new Set(searchTokens(field.text)),
+  }));
   let score = 0;
   for (const token of searchTokens(query)) {
     const weights = tokenized

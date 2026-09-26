@@ -6,6 +6,7 @@ import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
+import { InMemorySearchSuggestionIndex } from '../../in-memory/in-memory-search-suggestion-index';
 import { InMemorySubscriptionCache } from '../../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
 import type { MeteredMultipartStorage } from '../../metered/metered-multipart-storage';
@@ -33,6 +34,7 @@ describe('in-memory adapter family', () => {
     );
     expect(c.get(Adapters.SubscriptionCache)).toBeInstanceOf(InMemorySubscriptionCache);
     expect(c.get(Adapters.ViewBuffer)).toBeInstanceOf(InMemoryViewBuffer);
+    expect(c.get(Adapters.SearchSuggestions)).toBeInstanceOf(InMemorySearchSuggestionIndex);
   });
 
   it('opens in-memory queues and a flow producer that routes into them', () => {

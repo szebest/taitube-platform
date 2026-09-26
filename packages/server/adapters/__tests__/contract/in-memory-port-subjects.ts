@@ -5,6 +5,7 @@ import { InMemoryCategoryCache } from '../../in-memory/in-memory-category-cache'
 import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
+import { InMemorySearchSuggestionIndex } from '../../in-memory/in-memory-search-suggestion-index';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
@@ -13,6 +14,7 @@ import type { CategoryCacheSubject } from './category-cache.contract';
 import type { FlowProducerSubject } from './flow-producer.contract';
 import type { JobQueueSubject } from './job-queue.contract';
 import type { MultipartStorageSubject } from './multipart-storage.contract';
+import type { SearchSuggestionIndexSubject } from './search-suggestion-index.contract';
 import type { StorageClientSubject } from './storage-client.contract';
 import type { SubscriptionCacheSubject } from './subscription-cache.contract';
 import type { ViewBufferSubject } from './view-buffer.contract';
@@ -50,6 +52,10 @@ export async function inMemoryCacheClientSubject(): Promise<CacheClientSubject> 
 
 export async function inMemoryCategoryCacheSubject(): Promise<CategoryCacheSubject> {
   return { cache: new InMemoryCategoryCache(), close: async () => {} };
+}
+
+export async function inMemorySearchSuggestionIndexSubject(): Promise<SearchSuggestionIndexSubject> {
+  return { index: new InMemorySearchSuggestionIndex(), close: async () => {} };
 }
 
 export async function inMemorySubscriptionCacheSubject(): Promise<SubscriptionCacheSubject> {

@@ -10,6 +10,7 @@ import { MeteredStorageClient } from '../metered/metered-storage-client';
 import { PostgresDatabaseClient } from '../postgres/postgres-database-client';
 import { PostgresRepositories } from '../postgres/repositories/postgres-repositories';
 import { RedisCacheClient } from '../redis/redis-cache-client';
+import { RedisSearchSuggestionIndexAdapter } from '../redis/redis-search-suggestion-index.adapter';
 import { RedisSubscriptionCacheAdapter } from '../redis/redis-subscription-cache.adapter';
 import { RedisViewBufferAdapter } from '../redis/redis-view-buffer.adapter';
 import { FallbackViewBuffer } from '../resilient/fallback-view-buffer';
@@ -111,6 +112,10 @@ export function registerFamily(c: Container): void {
           redis: c.get(Redis).getRedis(),
           ...config.caches.subscriptions,
         })
+    )
+    .provide(
+      Adapters.SearchSuggestions,
+      (c) => new RedisSearchSuggestionIndexAdapter(c.get(Redis).getRedis())
     )
     .provide(
       Adapters.ViewBuffer,

@@ -159,7 +159,10 @@ export class InMemorySearchRepository implements SearchRepositoryPort {
           [playlist.title]
         );
         if (!match.matched) return [];
-        const detail = unwrapOr(await this.lookups.playlistsRepo.findDetail(playlist.id, null), null);
+        const detail = unwrapOr(
+          await this.lookups.playlistsRepo.findDetail(playlist.id, null),
+          null
+        );
         if (!detail) return [];
         const videoCount = detail.items.length;
         const keys = {

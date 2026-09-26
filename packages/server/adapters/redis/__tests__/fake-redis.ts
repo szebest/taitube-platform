@@ -7,10 +7,17 @@ interface PipelineOp {
   run(): void;
 }
 
+function byRank([a, aScore]: [string, number], [b, bScore]: [string, number]): number {
+  if (aScore !== bScore) return aScore - bScore;
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
 export class FakeRedis {
   readonly strings = new Map<string, string>();
   readonly hashes = new Map<string, Map<string, string>>();
   readonly sets = new Map<string, Set<string>>();
+  readonly sortedSets = new Map<string, Map<string, number>>();
   /** HyperLogLogs, held exactly: a double that never collides is what makes counts assertable. */
   readonly sketches = new Map<string, Set<string>>();
   readonly ttls = new Map<string, number>();
@@ -93,6 +100,7 @@ export class FakeRedis {
     const existed = this.strings.delete(key);
     this.hashes.delete(key);
     this.sets.delete(key);
+    this.sortedSets.delete(key);
     this.sketches.delete(key);
     this.ttls.delete(key);
     return existed ? 1 : 0;
@@ -208,6 +216,39 @@ export class FakeRedis {
     return this.sets.get(key)?.has(member) ? 1 : 0;
   }
 
+  async zincrby(key: string, delta: number, member: string): Promise<string> {
+    const set = this.sortedSets.get(key) ?? new Map<string, number>();
+    const next = (set.get(member) ?? 0) + delta;
+    set.set(member, next);
+    this.sortedSets.set(key, set);
+    return String(next);
+  }
+
+  /** Members ascending by score, then by member, as Redis ranks them. */
+  private ranked(key: string): string[] {
+    return [...(this.sortedSets.get(key) ?? new Map<string, number>())]
+      .sort(byRank)
+      .map(([member]) => member);
+  }
+
+  private slice(members: string[], start: number, stop: number): string[] {
+    const from = Math.max(0, start < 0 ? members.length + start : start);
+    const to = stop < 0 ? members.length + stop : stop;
+    return to < from ? [] : members.slice(from, to + 1);
+  }
+
+  async zremrangebyrank(key: string, start: number, stop: number): Promise<number> {
+    const set = this.sortedSets.get(key);
+    if (!set) return 0;
+    const doomed = this.slice(this.ranked(key), start, stop);
+    for (const member of doomed) set.delete(member);
+    return doomed.length;
+  }
+
+  async zrevrange(key: string, start: number, stop: number): Promise<string[]> {
+    return this.slice(this.ranked(key).reverse(), start, stop);
+  }
+
   pipeline(): FakePipeline {
     return new FakePipeline(this);
   }
@@ -255,6 +296,14 @@ export class FakePipeline {
 
   expire(key: string, ttlSeconds: number): this {
     return this.queue(() => void this.redis.expire(key, ttlSeconds));
+  }
+
+  zincrby(key: string, delta: number, member: string): this {
+    return this.queue(() => void this.redis.zincrby(key, delta, member));
+  }
+
+  zremrangebyrank(key: string, start: number, stop: number): this {
+    return this.queue(() => void this.redis.zremrangebyrank(key, start, stop));
   }
 
   hset(key: string, fieldOrMap: string | Record<string, string>, value?: string): this {
