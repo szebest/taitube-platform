@@ -1,16 +1,11 @@
 import type { Redis } from 'ioredis';
 import { VIEW_BUFFER_SCRIPTS } from '../redis-view-buffer.adapter';
+import { rankRange, ranked } from './fake-sorted-set';
 
 type Listener = (...args: string[]) => void;
 
 interface PipelineOp {
   run(): void;
-}
-
-function byRank([a, aScore]: [string, number], [b, bScore]: [string, number]): number {
-  if (aScore !== bScore) return aScore - bScore;
-  if (a === b) return 0;
-  return a < b ? -1 : 1;
 }
 
 export class FakeRedis {
@@ -224,29 +219,16 @@ export class FakeRedis {
     return String(next);
   }
 
-  /** Members ascending by score, then by member, as Redis ranks them. */
-  private ranked(key: string): string[] {
-    return [...(this.sortedSets.get(key) ?? new Map<string, number>())]
-      .sort(byRank)
-      .map(([member]) => member);
-  }
-
-  private slice(members: string[], start: number, stop: number): string[] {
-    const from = Math.max(0, start < 0 ? members.length + start : start);
-    const to = stop < 0 ? members.length + stop : stop;
-    return to < from ? [] : members.slice(from, to + 1);
-  }
-
   async zremrangebyrank(key: string, start: number, stop: number): Promise<number> {
     const set = this.sortedSets.get(key);
     if (!set) return 0;
-    const doomed = this.slice(this.ranked(key), start, stop);
+    const doomed = rankRange(ranked(set), start, stop);
     for (const member of doomed) set.delete(member);
     return doomed.length;
   }
 
   async zrevrange(key: string, start: number, stop: number): Promise<string[]> {
-    return this.slice(this.ranked(key).reverse(), start, stop);
+    return rankRange(ranked(this.sortedSets.get(key) ?? new Map()).reverse(), start, stop);
   }
 
   pipeline(): FakePipeline {

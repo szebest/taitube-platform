@@ -15,7 +15,7 @@ export class InMemorySearchSuggestionIndex implements SearchSuggestionIndexPort 
 
   async record(text: string): Promise<Result<void, CacheUnavailable>> {
     for (const prefix of searchSuggestionPrefixes(text)) {
-      const counts = this.prefixes.get(prefix) ?? new Map<string, number>();
+      const counts = new Map(this.prefixes.get(prefix));
       counts.set(text, (counts.get(text) ?? 0) + 1);
       const kept = [...counts].sort(mostSearched).slice(0, SEARCH_SUGGESTIONS.keptPerPrefix);
       this.prefixes.set(prefix, new Map(kept));
@@ -24,7 +24,7 @@ export class InMemorySearchSuggestionIndex implements SearchSuggestionIndexPort 
   }
 
   async suggest(prefix: string, limit: number): Promise<Result<string[], CacheUnavailable>> {
-    const counts = [...(this.prefixes.get(prefix) ?? new Map<string, number>())];
+    const counts = [...(this.prefixes.get(prefix) ?? [])];
     return ok(
       counts
         .sort(mostSearched)
