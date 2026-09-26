@@ -11,6 +11,8 @@ describe('@vp/events cache keys', () => {
     [CacheKeys.userSubscriptions('u1'), 'taitube:user:u1:subscriptions'],
     [CacheKeys.userPlayhead('u1', 'v1'), 'taitube:user:u1:playhead:v1'],
     [CacheKeys.channelSubscriberCount('c1'), 'taitube:channel:c1:subscriber_count'],
+    [CacheKeys.searchQuery('all', 'ab12'), 'taitube:search:q:all:ab12'],
+    [CacheKeys.searchSuggest('rea'), 'taitube:search:suggest:rea'],
     [CacheKeys.viewBuffer, 'taitube:views:buffer'],
     [CacheKeys.viewFlushPointer, 'taitube:views:flushing'],
     [CacheKeys.viewFlushBatch('b1'), 'taitube:views:flush:b1'],

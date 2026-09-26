@@ -14,6 +14,8 @@ export const CacheKeys = {
   userSubscriptions: (userId: string) => `${NAMESPACE}:user:${userId}:subscriptions`,
   channelSubscriberCount: (channelId: string) =>
     `${NAMESPACE}:channel:${channelId}:subscriber_count`,
+  searchQuery: (type: string, hash: string) => `${NAMESPACE}:search:q:${type}:${hash}`,
+  searchSuggest: (prefix: string) => `${NAMESPACE}:search:suggest:${prefix}`,
   viewBuffer: `${NAMESPACE}:views:buffer`,
   viewFlushPointer: `${NAMESPACE}:views:flushing`,
   viewFlushBatch: (batchId: string) => `${NAMESPACE}:views:flush:${batchId}`,

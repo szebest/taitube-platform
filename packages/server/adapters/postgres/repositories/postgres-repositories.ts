@@ -10,6 +10,7 @@ import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresPlaylistRepository } from './postgres-playlist-repository';
+import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
 import { PostgresSubscriptionRepository } from './postgres-subscription-repository';
@@ -46,6 +47,7 @@ export class PostgresRepositories implements Repositories {
   readonly comments: PostgresCommentRepository;
   readonly playlists: PostgresPlaylistRepository;
   readonly watchHistory: PostgresWatchHistoryRepository;
+  readonly search: PostgresSearchRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -70,6 +72,7 @@ export class PostgresRepositories implements Repositories {
     this.comments = new PostgresCommentRepository(db);
     this.playlists = new PostgresPlaylistRepository(db);
     this.watchHistory = new PostgresWatchHistoryRepository(db);
+    this.search = new PostgresSearchRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {
