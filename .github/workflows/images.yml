@@ -34,19 +34,24 @@ jobs:
         image:
           - name: api
             repository: ghcr.io/szebest/vp-api
-            file: apps/api/Dockerfile
+            target: api
             runtime: ''
             suffix: ''
           - name: worker-bun
             repository: ghcr.io/szebest/vp-worker
-            file: apps/worker/Dockerfile
+            target: worker
             runtime: bun
             suffix: ''
           - name: worker-node
             repository: ghcr.io/szebest/vp-worker
-            file: apps/worker/Dockerfile
+            target: worker
             runtime: node
             suffix: -node
+          - name: web
+            repository: ghcr.io/szebest/vp-web
+            target: web
+            runtime: ''
+            suffix: ''
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -82,7 +87,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ matrix.image.file }}
+          target: ${{ matrix.image.target }}
           build-args: |
             WORKER_RUNTIME=${{ matrix.image.runtime }}
           platforms: linux/amd64
@@ -106,7 +111,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ matrix.image.file }}
+          target: ${{ matrix.image.target }}
           build-args: |
             WORKER_RUNTIME=${{ matrix.image.runtime }}
           platforms: linux/amd64,linux/arm64

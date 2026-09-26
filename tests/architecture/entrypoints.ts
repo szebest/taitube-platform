@@ -15,6 +15,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/server/gen-video/src/main.ts',
   'packages/server/upload-client/src/main.ts',
   'scripts/*.ts',
+  'tests/browser/playback.ts',
   'tests/e2e/e2e-runner.ts',
   'tests/e2e/run-e2e.ts',
 ];

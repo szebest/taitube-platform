@@ -1,0 +1,25 @@
+{
+  "name": "@vp/stack",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vp/result": "workspace:*",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@vp/testing": "workspace:*",
+    "@vp/tsconfig": "workspace:*",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  },
+  "vp": {
+    "layer": 2
+  }
+}

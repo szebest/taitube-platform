@@ -12,7 +12,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [54: Frontend testing infrastructure & integration suite (Vitest 3, Testing Library & MSW mock API)](54-frontend-testing-trophy-vitest-msw-integration-suite.md)
 - [64: Core Web Vitals real-user measurement (LCP, INP, CLS) and OpenTelemetry web traces](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md)
 - [75: Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md)
-- [83: Granular container topology — per-app images, a one-app dev loop and a single orchestrated launch](83-granular-container-topology-full-stack-deployment.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -119,7 +118,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 80 | [Full-spectrum developer experience, local environment setup & CI/CD pipeline acceleration](80-ci-test-pipeline-optimization-speed.md) | 3 | L | 02, 08, 35 | — | done |
 | 81 | [Declarative permissions refactor with @casl/ability & elimination of ad-hoc checks](81-casl-declarative-permissions-refactor.md) | 5 | M | 39 | 82 | done |
 | 82 | [Architecture remediation — package runtime tiers, contract seams & machine-enforced boundaries](82-architecture-remediation-package-scoping-contract-seams.md) | 5 | L | 81 | 83, 84 | done |
-| 83 | [Granular container topology — per-app images, a one-app dev loop and a single orchestrated launch](83-granular-container-topology-full-stack-deployment.md) | 5 | L | 82 | — | ready |
+| 83 | [Granular container topology — per-app images, a one-app dev loop and a single orchestrated launch](83-granular-container-topology-full-stack-deployment.md) | 5 | L | 82 | — | in-progress |
 | 84 | [Result-typed error handling — domain code returns, the edge decides](84-result-typed-error-handling-shared-domain-rules.md) | 5 | L | 82 | 85, 87 | done |
 | 85 | [Universal `Intl` formatting core — global formatters, typed placeholders & message catalogues](85-universal-intl-formatting-message-core.md) | 5 | L | 84 | 86, 89 | done |
 | 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85, 89, 91 | — | blocked |

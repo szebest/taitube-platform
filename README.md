@@ -113,6 +113,7 @@ taitube-platform/
 │       ├── job-contracts/       # BullMQ queue names, job payload schemas, retry policies, rendition ladder
 │       ├── logger/              # Pino logger with json and pretty formats, log context, serializeError
 │       ├── observability/       # OpenTelemetry tracing, Prometheus metrics and the metrics server
+│       ├── stack/               # CLI behind make up/down/status: starts the Compose stack a tier at a time
 │       ├── storage/             # S3 object key layout, MIME map and multipart part math
 │       ├── testing/             # Shared test config, fixtures and test helpers
 │       └── upload-client/       # CLI: reference resumable multipart upload client
@@ -228,14 +229,31 @@ You can run the full platform using Docker Compose without installing Node, Bun,
 # 1. Copy local environment variables
 cp .env.example .env
 
-# 2. Start all infrastructure, API, and worker services
-make up-all
+# 2. Build the images and start everything: infrastructure, migrate, API, every worker stage and the web app
+make up all
 
 # 3. Run the end-to-end smoke test
 make smoke
 ```
 
+`make up` starts a tier at a time (infrastructure, then migrate and the bucket setup, then the API and the
+workers, then the web app), waits for each tier's health checks, and ends with a table of every service and
+the URL it answers on. When a service fails, it names it and prints its last log lines. It starts less when
+asked for less; each service's dependencies come from `depends_on` in `infra/compose/docker-compose.yml`:
+
+```bash
+make up                     # infrastructure only: Postgres, Redis, MinIO and its buckets
+make up api                 # infrastructure, migrate and the API
+make up web                 # the same plus the web app
+make up worker              # infrastructure, migrate and every worker stage
+make up worker:thumbnail    # one stage; worker:transcode is the three renditions
+make up all observability   # everything, plus Prometheus, Grafana, Tempo, Loki and Alertmanager
+make status                 # every service, its state and its URL
+make down                   # stop everything and delete the volumes
+```
+
 Service endpoints once running:
+- **Web app**: `http://localhost:5173`
 - **Fastify API**: `http://localhost:3000`
 - **MinIO Storage Console**: `http://localhost:9001` (User: `minioadmin`, Password: `minioadmin`)
 - **Bull Board Queue UI**: `http://localhost:3000/admin/queues` (Requires admin token)
@@ -262,7 +280,7 @@ pnpm db:migrate && pnpm db:seed
 ```
 
 `make up` starts the infrastructure only; `pnpm db:migrate` and `pnpm db:seed` read `.env` and create the
-schema and the dev user. `make up-all` runs the whole stack in containers instead, migrations included.
+schema and the dev user. `make up all` runs the whole stack in containers instead, migrations included.
 
 ### 2. Install Dependencies and Run Verifications
 
@@ -375,7 +393,7 @@ A dedicated observability profile provisions Prometheus, Grafana, Tempo, Loki, O
 
 ```bash
 # Start observability services
-make obs-up
+make up observability
 
 # Verify scraper targets and data sources
 make obs-check
@@ -444,21 +462,19 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | Command | Description |
 |---|---|
 | `make doctor` | Run environment pre-flight checks (Node, pnpm, Docker, FFmpeg) |
-| `make setup` | Bootstrap: runs `make doctor`, creates `.env`, installs dependencies, runs `make up-all` |
+| `make setup` | Bootstrap: runs `make doctor`, creates `.env`, installs dependencies, runs `make up all` |
 | `make dev` | Alias for `make setup` |
-| `make up` | Start local Postgres, Redis, and MinIO containers |
-| `make up-all` | Start full stack (infrastructure, migrations, API, and all worker stages) |
-| `make down` | Stop the Compose stack and delete its volumes |
+| `make up` | Build and start a tier at a time, gated on health: no target is the infrastructure; `api`, `web`, `worker`, `worker:<stage>`, `all` and the `observability`, `tools` and `chaos` profiles start that and what it needs |
+| `make status` | Every service, its state and the URL it answers on |
+| `make down` | Stop every service, every profile included, and delete the volumes |
 | `make prune` | Safe local pruning utility to reclaim Docker disk space |
-| `make obs-up` | Start Prometheus, Grafana, Tempo, Loki, and Alertmanager stack |
-| `make obs-down` | Stop observability stack |
 | `make obs-check` | Verify Prometheus scraping targets and Grafana data sources |
 | `make smoke` | Run end-to-end ingestion and playback smoke tests |
 | `make smoke-fast` | Fast-path local smoke test against existing running containers |
-| `make smoke-offline` | Run the stack with the offline Compose overlay, assert zero internet egress, then run the smoke test |
+| `make smoke-offline` | Run the stack, web app included, with the offline Compose overlay, assert the API and web containers have zero internet egress, then run the smoke test and the browser playback check |
 | `make e2e` | Run the Phase 2 acceptance suite (`E2E_REDUCED=true` for the smaller CI set) |
 | `make k3d-up` | Create local k3d Kubernetes cluster with in-cluster dependencies |
-| `make k3d-deploy` | Deploy API and worker stages to Kubernetes via Kustomize |
+| `make k3d-deploy` | Deploy the API, the worker stages and the web app to Kubernetes via Kustomize |
 | `make k3d-down` | Tear down local k3d Kubernetes cluster |
 | `make nuke` | Destroy all containers, networks, and persistent data volumes |
 | `make help` | List every Makefile target (load, chaos, psql, logs and more) |
