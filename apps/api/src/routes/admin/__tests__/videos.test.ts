@@ -100,3 +100,63 @@ describe('two consumers of VideoService.get render the same failure differently'
     expect(res.json().id).toBe(PRIVATE_VIDEO);
   });
 });
+
+describe('POST /v1/admin/videos/:id/takedown', () => {
+  let app: FastifyInstance;
+  let repositories: InMemoryRepositories;
+
+  const takeDown = (token: string, videoId = PRIVATE_VIDEO) =>
+    app.inject({
+      method: 'POST',
+      url: `/v1/admin/videos/${videoId}/takedown`,
+      headers: bearer(token),
+      payload: { reason: 'Terms of service' },
+    });
+
+  beforeAll(async () => {
+    ({ app, repositories } = await buildTestApp());
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    repositories.clear();
+    expectOk(
+      await repositories.videos.create({
+        id: PRIVATE_VIDEO,
+        ownerId: OWNER,
+        title: 'Public for now',
+        status: 'READY',
+        visibility: 'public',
+        sourceKey: `${PRIVATE_VIDEO}/source.mp4`,
+      })
+    );
+  });
+
+  it('rejects and hides the video for an admin, recording why', async () => {
+    const res = await takeDown(TOKENS.admin);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ status: 'REJECTED', visibility: 'private' });
+    const events = expectOk(await repositories.events.findByVideoId(PRIVATE_VIDEO));
+    expect(events.find((event) => event.type === 'video.taken_down')?.payload).toMatchObject({
+      reason: 'Terms of service',
+    });
+  });
+
+  it.each([
+    { name: 'the owner', token: TOKENS.user },
+    { name: 'another user', token: TOKENS.otherUser },
+  ])('refuses $name with 403 and leaves the video up', async ({ token }) => {
+    const res = await takeDown(token);
+
+    expect(res.statusCode).toBe(403);
+    expect(expectOk(await repositories.videos.findById(PRIVATE_VIDEO))?.status).toBe('READY');
+  });
+
+  it('answers 404 for a video that is not there', async () => {
+    expect((await takeDown(TOKENS.admin, ABSENT_VIDEO)).statusCode).toBe(404);
+  });
+});

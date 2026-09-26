@@ -1501,6 +1501,9 @@ paths:
                         posterUrl:
                           type: string
                           description: Public CDN URL to poster thumbnail (PRD US-12)
+                        thumbnailUrl:
+                          type: string
+                          description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                         playbackUrl:
                           type: string
                           description: Public CDN playback URL to master.m3u8 if ready
@@ -1781,6 +1784,19 @@ paths:
                   spriteVttUrl:
                     type: string
                     description: Public CDN URL to WebVTT thumbnail cue sheet
+                  thumbnailUrl:
+                    type: string
+                    description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
+                  categoryId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                    description: Category UUID identifier
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: Tags the creator set
                   likesCount:
                     type: integer
                     minimum: 0
@@ -2126,6 +2142,19 @@ paths:
                   spriteVttUrl:
                     type: string
                     description: Public CDN URL to WebVTT thumbnail cue sheet
+                  thumbnailUrl:
+                    type: string
+                    description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
+                  categoryId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                    description: Category UUID identifier
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: Tags the creator set
                   likesCount:
                     type: integer
                     minimum: 0
@@ -3896,6 +3925,1000 @@ paths:
                     type: string
                     enum:
                       - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/creator/videos:
+    get:
+      summary: List the caller video library
+      tags:
+        - Creator Studio
+      description: Every video the caller owns except deleted ones, with its counters. Keyset-paginated on the chosen sort, then id; a cursor only continues the sort it came from.
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: cursor
+          required: false
+          description: Opaque base64url keyset pagination cursor
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          in: query
+          name: limit
+          required: false
+          description: 'Page size limit (1-100, default 20). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.'
+        - schema:
+            type: string
+            enum:
+              - newest
+              - views
+              - likes
+              - comments
+            default: newest
+          in: query
+          name: sort
+          required: false
+          description: newest by upload time, or most views, likes or comments first
+        - schema:
+            type: string
+            enum:
+              - UPLOADING
+              - UPLOADED
+              - PROBING
+              - PROCESSING
+              - READY
+              - FAILED
+              - REJECTED
+              - ABANDONED
+          in: query
+          name: status
+          required: false
+          description: Only videos in this pipeline status
+        - schema:
+            type: string
+            enum:
+              - private
+              - unlisted
+              - public
+          in: query
+          name: visibility
+          required: false
+          description: Only videos with this visibility
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: Video UUIDv7 identifier
+                        ownerId:
+                          type: string
+                          format: uuid
+                          description: Owning user UUID, for client-side ownership rules
+                        title:
+                          type: string
+                          nullable: true
+                          description: Video title
+                        description:
+                          type: string
+                          nullable: true
+                          description: Video description
+                        visibility:
+                          type: string
+                          enum:
+                            - private
+                            - unlisted
+                            - public
+                          description: Access visibility level
+                        status:
+                          type: string
+                          enum:
+                            - UPLOADING
+                            - UPLOADED
+                            - PROBING
+                            - PROCESSING
+                            - READY
+                            - FAILED
+                            - REJECTED
+                            - ABANDONED
+                            - DELETED
+                          description: Current pipeline lifecycle state
+                        durationMs:
+                          type: number
+                          description: Video duration in milliseconds
+                        posterUrl:
+                          type: string
+                          description: Public CDN URL to poster thumbnail (PRD US-12)
+                        thumbnailUrl:
+                          type: string
+                          description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
+                        playbackUrl:
+                          type: string
+                          description: Public CDN playback URL to master.m3u8 if ready
+                        viewsCount:
+                          type: number
+                          description: Total view count
+                        likesCount:
+                          type: integer
+                          minimum: 0
+                          description: Total like reactions count
+                        dislikesCount:
+                          type: integer
+                          minimum: 0
+                          description: Total dislike reactions count
+                        categoryId:
+                          type: string
+                          format: uuid
+                          nullable: true
+                          description: Category UUID identifier
+                        version:
+                          type: integer
+                          minimum: 0
+                          description: Optimistic locking record version
+                        createdAt:
+                          type: string
+                          description: ISO 8601 creation timestamp
+                        updatedAt:
+                          type: string
+                          description: ISO 8601 last update timestamp
+                        readyAt:
+                          type: string
+                          description: ISO 8601 ready timestamp if ready
+                        commentsCount:
+                          type: integer
+                          minimum: 0
+                          description: Comments on the video
+                        tags:
+                          type: array
+                          items:
+                            type: string
+                          description: Tags the creator set
+                      required:
+                        - id
+                        - ownerId
+                        - title
+                        - description
+                        - visibility
+                        - status
+                        - version
+                        - createdAt
+                        - updatedAt
+                        - commentsCount
+                        - tags
+                      additionalProperties: false
+                    description: Page of the caller videos
+                  nextCursor:
+                    type: string
+                    nullable: true
+                    description: Opaque cursor for the next page of the same sort
+                required:
+                  - items
+                  - nextCursor
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - INVALID_CURSOR
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/creator/videos/{id}:
+    patch:
+      summary: Edit video metadata, tags, category and thumbnail
+      tags:
+        - Creator Studio
+      description: Owner or admin. Requires the version the edit was made against and answers 409 VERSION_CONFLICT when the video moved on. A video an admin took down keeps its visibility until an admin changes it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 255
+                  description: Video title
+                description:
+                  type: string
+                  maxLength: 5000
+                  description: Video description
+                visibility:
+                  type: string
+                  enum:
+                    - private
+                    - unlisted
+                    - public
+                  description: Access visibility level
+                categoryId:
+                  type: string
+                  format: uuid
+                  nullable: true
+                  description: Active category, null for none
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Replaces every tag; at most 30, each 1 to 30 characters once trimmed
+                selectedThumbnail:
+                  anyOf:
+                    - type: object
+                      properties:
+                        source:
+                          type: string
+                          enum:
+                            - poster
+                      required:
+                        - source
+                      additionalProperties: false
+                  description: The thumbnail to show; the generated poster until custom uploads exist
+                version:
+                  type: integer
+                  minimum: 0
+                  description: The version the edit was made against
+              required:
+                - version
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Video UUIDv7 identifier
+                  ownerId:
+                    type: string
+                    format: uuid
+                    description: Owning user UUID, for client-side ownership rules
+                  title:
+                    type: string
+                    nullable: true
+                    description: Video title
+                  description:
+                    type: string
+                    nullable: true
+                    description: Video description
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: Access visibility level
+                  status:
+                    type: string
+                    enum:
+                      - UPLOADING
+                      - UPLOADED
+                      - PROBING
+                      - PROCESSING
+                      - READY
+                      - FAILED
+                      - REJECTED
+                      - ABANDONED
+                      - DELETED
+                    description: Current pipeline lifecycle state
+                  progress:
+                    type: object
+                    properties:
+                      overall:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                        description: Overall encoding progress percentage 0-100
+                      byRendition:
+                        type: object
+                        additionalProperties:
+                          type: number
+                          minimum: 0
+                          maximum: 100
+                        description: Encoding progress per rendition name
+                    required:
+                      - overall
+                      - byRendition
+                    additionalProperties: false
+                    description: Encoding progress
+                  durationMs:
+                    type: number
+                    description: Video duration in milliseconds
+                  width:
+                    type: number
+                    description: Source video frame width in pixels
+                  height:
+                    type: number
+                    description: Source video frame height in pixels
+                  fps:
+                    type: number
+                    description: Source video frame rate
+                  ladder:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Rendition name
+                        width:
+                          type: number
+                          description: Width in pixels
+                        height:
+                          type: number
+                          description: Height in pixels
+                        videoKbps:
+                          type: number
+                          description: Video bitrate in kbps
+                        audioKbps:
+                          type: number
+                          description: Audio bitrate in kbps
+                      required:
+                        - name
+                        - width
+                        - height
+                      additionalProperties: false
+                      description: Transcoding ladder entry
+                    description: Transcoding ladder configurations computed from probe
+                  renditions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Rendition name (e.g. 1080p, 720p, 480p)
+                        status:
+                          type: string
+                          description: Rendition encoding status (PENDING, RUNNING, DONE, FAILED)
+                        playlistUrl:
+                          type: string
+                          description: URL to the rendition HLS playlist index.m3u8
+                      required:
+                        - name
+                        - status
+                      additionalProperties: false
+                    description: List of renditions for this video
+                  playbackUrl:
+                    type: string
+                    description: Public CDN playback URL to master.m3u8 (PRD OQ-2)
+                  posterUrl:
+                    type: string
+                    description: Public CDN URL to poster image
+                  spriteUrl:
+                    type: string
+                    description: Public CDN URL to thumbnail sprite sheet
+                  spriteVttUrl:
+                    type: string
+                    description: Public CDN URL to WebVTT thumbnail cue sheet
+                  thumbnailUrl:
+                    type: string
+                    description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
+                  categoryId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                    description: Category UUID identifier
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: Tags the creator set
+                  likesCount:
+                    type: integer
+                    minimum: 0
+                    default: 0
+                    description: Total like reactions count
+                  dislikesCount:
+                    type: integer
+                    minimum: 0
+                    default: 0
+                    description: Total dislike reactions count
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Machine-readable failure error code
+                      message:
+                        type: string
+                        description: Human-readable error details
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                    description: Failure error details
+                  version:
+                    type: integer
+                    minimum: 0
+                    description: Optimistic locking record version
+                  createdAt:
+                    type: string
+                    description: ISO 8601 creation timestamp
+                  updatedAt:
+                    type: string
+                    description: ISO 8601 last update timestamp
+                  readyAt:
+                    type: string
+                    description: ISO 8601 ready transition timestamp
+                required:
+                  - id
+                  - ownerId
+                  - title
+                  - description
+                  - visibility
+                  - status
+                  - progress
+                  - renditions
+                  - version
+                  - createdAt
+                  - updatedAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                      - CATEGORY_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    delete:
+      summary: Delete a video from the library
+      tags:
+        - Creator Studio
+      description: Owner or admin. Moves the video to DELETED and appends video.deleted; housekeeping purges its objects afterwards.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: id
+          required: true
+      responses:
+        '202':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videoId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum:
+                      - DELETED
+                required:
+                  - videoId
+                  - status
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -5912,6 +6935,9 @@ paths:
                         posterUrl:
                           type: string
                           description: Public CDN URL to poster thumbnail (PRD US-12)
+                        thumbnailUrl:
+                          type: string
+                          description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                         playbackUrl:
                           type: string
                           description: Public CDN playback URL to master.m3u8 if ready
@@ -7178,6 +8204,19 @@ paths:
                   spriteVttUrl:
                     type: string
                     description: Public CDN URL to WebVTT thumbnail cue sheet
+                  thumbnailUrl:
+                    type: string
+                    description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
+                  categoryId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                    description: Category UUID identifier
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: Tags the creator set
                   likesCount:
                     type: integer
                     minimum: 0
@@ -7331,6 +8370,428 @@ paths:
                     type: string
                     enum:
                       - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/admin/videos/{id}/takedown:
+    post:
+      summary: Take down a video that violates the terms
+      tags:
+        - Admin
+      description: Admin only. Moves the video to REJECTED and private in one step and appends video.taken_down with the reason. Its owner can still edit it but not publish it again.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+                  description: Why the video came down, kept in its events
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Video UUIDv7 identifier
+                  ownerId:
+                    type: string
+                    format: uuid
+                    description: Owning user UUID, for client-side ownership rules
+                  title:
+                    type: string
+                    nullable: true
+                    description: Video title
+                  description:
+                    type: string
+                    nullable: true
+                    description: Video description
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: Access visibility level
+                  status:
+                    type: string
+                    enum:
+                      - UPLOADING
+                      - UPLOADED
+                      - PROBING
+                      - PROCESSING
+                      - READY
+                      - FAILED
+                      - REJECTED
+                      - ABANDONED
+                      - DELETED
+                    description: Current pipeline lifecycle state
+                  progress:
+                    type: object
+                    properties:
+                      overall:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                        description: Overall encoding progress percentage 0-100
+                      byRendition:
+                        type: object
+                        additionalProperties:
+                          type: number
+                          minimum: 0
+                          maximum: 100
+                        description: Encoding progress per rendition name
+                    required:
+                      - overall
+                      - byRendition
+                    additionalProperties: false
+                    description: Encoding progress
+                  durationMs:
+                    type: number
+                    description: Video duration in milliseconds
+                  width:
+                    type: number
+                    description: Source video frame width in pixels
+                  height:
+                    type: number
+                    description: Source video frame height in pixels
+                  fps:
+                    type: number
+                    description: Source video frame rate
+                  ladder:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Rendition name
+                        width:
+                          type: number
+                          description: Width in pixels
+                        height:
+                          type: number
+                          description: Height in pixels
+                        videoKbps:
+                          type: number
+                          description: Video bitrate in kbps
+                        audioKbps:
+                          type: number
+                          description: Audio bitrate in kbps
+                      required:
+                        - name
+                        - width
+                        - height
+                      additionalProperties: false
+                      description: Transcoding ladder entry
+                    description: Transcoding ladder configurations computed from probe
+                  renditions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Rendition name (e.g. 1080p, 720p, 480p)
+                        status:
+                          type: string
+                          description: Rendition encoding status (PENDING, RUNNING, DONE, FAILED)
+                        playlistUrl:
+                          type: string
+                          description: URL to the rendition HLS playlist index.m3u8
+                      required:
+                        - name
+                        - status
+                      additionalProperties: false
+                    description: List of renditions for this video
+                  playbackUrl:
+                    type: string
+                    description: Public CDN playback URL to master.m3u8 (PRD OQ-2)
+                  posterUrl:
+                    type: string
+                    description: Public CDN URL to poster image
+                  spriteUrl:
+                    type: string
+                    description: Public CDN URL to thumbnail sprite sheet
+                  spriteVttUrl:
+                    type: string
+                    description: Public CDN URL to WebVTT thumbnail cue sheet
+                  thumbnailUrl:
+                    type: string
+                    description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
+                  categoryId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                    description: Category UUID identifier
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                    description: Tags the creator set
+                  likesCount:
+                    type: integer
+                    minimum: 0
+                    default: 0
+                    description: Total like reactions count
+                  dislikesCount:
+                    type: integer
+                    minimum: 0
+                    default: 0
+                    description: Total dislike reactions count
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Machine-readable failure error code
+                      message:
+                        type: string
+                        description: Human-readable error details
+                    required:
+                      - code
+                      - message
+                    additionalProperties: false
+                    description: Failure error details
+                  version:
+                    type: integer
+                    minimum: 0
+                    description: Optimistic locking record version
+                  createdAt:
+                    type: string
+                    description: ISO 8601 creation timestamp
+                  updatedAt:
+                    type: string
+                    description: ISO 8601 last update timestamp
+                  readyAt:
+                    type: string
+                    description: ISO 8601 ready transition timestamp
+                required:
+                  - id
+                  - ownerId
+                  - title
+                  - description
+                  - visibility
+                  - status
+                  - progress
+                  - renditions
+                  - version
+                  - createdAt
+                  - updatedAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -7911,6 +9372,9 @@ paths:
                             posterUrl:
                               type: string
                               description: Public CDN URL to poster thumbnail (PRD US-12)
+                            thumbnailUrl:
+                              type: string
+                              description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                             playbackUrl:
                               type: string
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -8258,6 +9722,9 @@ paths:
                             posterUrl:
                               type: string
                               description: Public CDN URL to poster thumbnail (PRD US-12)
+                            thumbnailUrl:
+                              type: string
+                              description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                             playbackUrl:
                               type: string
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -8624,6 +10091,9 @@ paths:
                             posterUrl:
                               type: string
                               description: Public CDN URL to poster thumbnail (PRD US-12)
+                            thumbnailUrl:
+                              type: string
+                              description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                             playbackUrl:
                               type: string
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -9247,6 +10717,9 @@ paths:
                             posterUrl:
                               type: string
                               description: Public CDN URL to poster thumbnail (PRD US-12)
+                            thumbnailUrl:
+                              type: string
+                              description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                             playbackUrl:
                               type: string
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -9853,6 +11326,9 @@ paths:
                             posterUrl:
                               type: string
                               description: Public CDN URL to poster thumbnail (PRD US-12)
+                            thumbnailUrl:
+                              type: string
+                              description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                             playbackUrl:
                               type: string
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -10589,6 +12065,9 @@ paths:
                             posterUrl:
                               type: string
                               description: Public CDN URL to poster thumbnail (PRD US-12)
+                            thumbnailUrl:
+                              type: string
+                              description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                             playbackUrl:
                               type: string
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -11962,6 +13441,9 @@ paths:
                         posterUrl:
                           type: string
                           description: Public CDN URL to poster thumbnail (PRD US-12)
+                        thumbnailUrl:
+                          type: string
+                          description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                         playbackUrl:
                           type: string
                           description: Public CDN playback URL to master.m3u8 if ready

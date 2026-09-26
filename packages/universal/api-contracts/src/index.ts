@@ -6,6 +6,7 @@ import * as bootstrap from './bootstrap';
 import * as categories from './categories';
 import * as channels from './channels';
 import * as comments from './comments';
+import * as creatorVideos from './creator-videos';
 import * as events from './events';
 import * as feed from './feed';
 import * as health from './health';
@@ -26,6 +27,7 @@ export * from './bootstrap';
 export * from './categories';
 export * from './channels';
 export * from './comments';
+export * from './creator-videos';
 export * from './endpoint';
 export * from './events';
 export * from './feed';
@@ -52,6 +54,7 @@ export const contracts = {
   categories,
   channels,
   comments,
+  creatorVideos,
   events,
   feed,
   health,

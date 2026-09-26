@@ -45,6 +45,9 @@ export interface VideoDetailView {
   posterUrl?: string;
   spriteUrl?: string;
   spriteVttUrl?: string;
+  thumbnailUrl?: string;
+  categoryId: string | null;
+  tags: string[];
   likesCount: number;
   dislikesCount: number;
   error?: VideoErrorView;
@@ -63,6 +66,7 @@ export interface VideoSummaryView {
   status: VideoStatus;
   durationMs?: number;
   posterUrl?: string;
+  thumbnailUrl?: string;
   playbackUrl?: string;
   viewsCount?: number;
   likesCount?: number;
@@ -72,6 +76,11 @@ export interface VideoSummaryView {
   createdAt: string;
   updatedAt: string;
   readyAt?: string;
+}
+
+export interface CreatorVideoView extends VideoSummaryView {
+  commentsCount: number;
+  tags: string[];
 }
 
 export function cdnUrl(cdn: CdnBase, key: string): string {
@@ -97,16 +106,25 @@ export function playbackUrl(video: PlayableVideo, cdn: CdnBase): string | undefi
   return cdnUrl(cdn, video.masterPlaylistKey || masterPlaylistKey(video.id));
 }
 
+function thumbnailUrl(
+  video: { customThumbnailKey?: string | null; posterKey?: string | null },
+  cdn: CdnBase
+): string | undefined {
+  const key = video.customThumbnailKey || video.posterKey;
+  return key ? cdnUrl(cdn, key) : undefined;
+}
+
 export function toVideoSummaryView(v: VideoRecord, cdn: CdnBase): VideoSummaryView {
   return {
     id: v.id,
     ownerId: v.ownerId,
     title: v.title,
     description: v.description,
-    visibility: v.visibility as VideoVisibility,
+    visibility: v.visibility,
     status: v.status,
     durationMs: v.durationMs ?? undefined,
     posterUrl: v.posterKey ? cdnUrl(cdn, v.posterKey) : undefined,
+    thumbnailUrl: thumbnailUrl(v, cdn),
     playbackUrl: playbackUrl(v, cdn),
     viewsCount: v.viewsCount ?? 0,
     likesCount: v.likesCount ?? 0,
@@ -116,6 +134,14 @@ export function toVideoSummaryView(v: VideoRecord, cdn: CdnBase): VideoSummaryVi
     createdAt: isoOf(v.createdAt),
     updatedAt: isoOf(v.updatedAt),
     readyAt: v.readyAt ? isoOf(v.readyAt) : undefined,
+  };
+}
+
+export function toCreatorVideoView(v: VideoRecord, cdn: CdnBase): CreatorVideoView {
+  return {
+    ...toVideoSummaryView(v, cdn),
+    commentsCount: v.commentsCount ?? 0,
+    tags: v.tags ?? [],
   };
 }
 
@@ -169,7 +195,7 @@ export function toVideoDetailView(
     ownerId: video.ownerId,
     title: video.title,
     description: video.description,
-    visibility: video.visibility as VideoVisibility,
+    visibility: video.visibility,
     status: video.status,
     progress: { overall, byRendition },
     durationMs: video.durationMs ?? undefined,
@@ -184,6 +210,9 @@ export function toVideoDetailView(
     spriteVttUrl: video.spriteKey
       ? cdnUrl(cdn, video.spriteKey.replace(/\.[^.]+$/, '.vtt'))
       : undefined,
+    thumbnailUrl: thumbnailUrl(video, cdn),
+    categoryId: video.categoryId ?? null,
+    tags: video.tags ?? [],
     likesCount: video.likesCount ?? 0,
     dislikesCount: video.dislikesCount ?? 0,
     error: video.errorCode

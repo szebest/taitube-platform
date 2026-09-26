@@ -5,6 +5,7 @@ export * from './uploads/upload-size';
 export * from './uploads/start-upload';
 export * from './videos/failures';
 export * from './videos/metadata';
+export * from './videos/tags';
 export * from './channels/failures';
 export * from './channels/handle-format';
 export * from './categories/failures';

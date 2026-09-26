@@ -14,6 +14,7 @@ import { InMemoryUploadRepository } from './in-memory-upload-repository';
 import { InMemoryUserRepository } from './in-memory-user-repository';
 import { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
 import { InMemoryVideoRepository } from './in-memory-video-repository';
+import { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 import { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
 
@@ -23,6 +24,7 @@ const Repo = {
   steps: token<InMemoryStepRepository>('steps'),
   users: token<InMemoryUserRepository>('users'),
   videos: token<InMemoryVideoRepository>('videos'),
+  videoStudio: token<InMemoryVideoStudioRepository>('videoStudio'),
   uploads: token<InMemoryUploadRepository>('uploads'),
   dlq: token<InMemoryDlqRepository>('dlq'),
   outbox: token<InMemoryOutboxRepository>('outbox'),
@@ -60,6 +62,15 @@ function graph(): Container {
           stepsRepo: c.get(Repo.steps),
           outboxRepo: c.get(Repo.outbox),
           uploadsRepo: { findByVideoId: (id) => c.get(Repo.uploads).findByVideoId(id) },
+        })
+    )
+    .provide(
+      Repo.videoStudio,
+      (c) =>
+        new InMemoryVideoStudioRepository({
+          videos: c.get(Repo.videos),
+          categories: c.get(Repo.categories),
+          events: c.get(Repo.events),
         })
     )
     .provide(Repo.uploads, (c) => new InMemoryUploadRepository({ videosRepo: c.get(Repo.videos) }))
@@ -113,6 +124,7 @@ export class InMemoryRepositories implements Repositories {
   readonly steps: InMemoryStepRepository;
   readonly users: InMemoryUserRepository;
   readonly videos: InMemoryVideoRepository;
+  readonly videoStudio: InMemoryVideoStudioRepository;
   readonly uploads: InMemoryUploadRepository;
   readonly dlq: InMemoryDlqRepository;
   readonly outbox: InMemoryOutboxRepository;
@@ -132,6 +144,7 @@ export class InMemoryRepositories implements Repositories {
     this.steps = c.get(Repo.steps);
     this.users = c.get(Repo.users);
     this.videos = c.get(Repo.videos);
+    this.videoStudio = c.get(Repo.videoStudio);
     this.uploads = c.get(Repo.uploads);
     this.dlq = c.get(Repo.dlq);
     this.outbox = c.get(Repo.outbox);

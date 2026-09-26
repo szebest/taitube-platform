@@ -9,7 +9,7 @@
 | Blocks | 47, 60 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** blocked
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -42,22 +42,22 @@ This ticket delivers:
 
 ## Acceptance criteria
 
-- [ ] Migration adding category_id (FK to categories), tags (text[] default '{}'), and custom_thumbnail_key (text) to videos table.
-- [ ] GIN index on videos.tags for tag queries.
-- [ ] GET /v1/creator/videos:
+- [x] Migration adding category_id (FK to categories), tags (text[] default '{}'), and custom_thumbnail_key (text) to videos table.
+- [x] GIN index on videos.tags for tag queries.
+- [x] GET /v1/creator/videos:
   - Scoped via `drizzleWhere` with `videoOwnerScope(user)` and `notDeletedScope(videos)`.
   - Returns array of video items including viewsCount, likesCount, commentsCount, status, and visibility.
   - Supports filters by status, visibility, and pagination.
-- [ ] PATCH /v1/creator/videos/:id:
+- [x] PATCH /v1/creator/videos/:id:
   - Verifies ownership or admin via `assertCan(canUpdateVideo({ user, video }))` from `@vp/permissions` (zero manual checks).
   - Validates tags (max 30 tags, max 30 chars each).
   - Validates categoryId exists in categories table.
   - Optimistic locking via version number (prevents concurrent overwrite conflicts).
-- [ ] DELETE /v1/creator/videos/:id:
+- [x] DELETE /v1/creator/videos/:id:
   - Verifies deletion authorization via `assertCan(canDeleteVideo({ user, video }))` from `@vp/permissions`.
   - Soft-deletes video (status = 'DELETED', deleted_at = NOW()).
   - Appends video.deleted audit event in video_events.
-- [ ] Integration tests verifying metadata updates, optimistic lock protection, and creator studio library query results.
+- [x] Integration tests verifying metadata updates, optimistic lock protection, and creator studio library query results.
 
 ## Out of scope
 
@@ -79,3 +79,17 @@ This ticket delivers:
 - [ ] All ACs green under pnpm test and bun test.
 - [ ] pnpm typecheck && pnpm lint pass with zero warnings or errors.
 - [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+
+## Open questions
+
+- Decided: `category_id` and its index already existed (ticket 37), so migration 0013 adds only `tags text[] NOT NULL DEFAULT '{}'`, `custom_thumbnail_key text` and the GIN index `videos_tags_idx`. `schema.ts` sat at the 10 KB ceiling, so `video_reactions` and `channel_subscriptions` moved to `social-schema.ts`; the move generates no SQL.
+- Decided: `videoOwnerScope(user)` does not exist; the library query composes the existing `ownerScope(videos, ownerId)` and `notDeletedScope(videos)` through `drizzleWhere` in `PostgresVideoStudioRepository.listLibrary`.
+- Decided: the ACs name `assertCan(canUpdateVideo(...))`, which ADR-24 replaced. The edit goes through `decideVideoMetadataUpdate` and the takedown through `decideVideoTakedown` in `@vp/domain-rules`, both over the CASL helpers, and nothing checks a role inline.
+- Decided: an admin takedown is a new CASL action, `moderate Video`, which only `manage all` grants. It is one CAS to `REJECTED` and `private` that bumps `version` and appends `video.taken_down`, so an edit read before it is a `VERSION_CONFLICT`. Afterwards the owner may still edit the video but not its visibility (`cannot('update', 'Video', 'visibility', { ownerId, status: 'REJECTED' })`); `getUserPermissions` now applies the admin rules last, so `manage all` overrides that.
+- Decided: the edit's version must equal the version of the row the rule was decided against, and the repository's CAS runs on that version, so a takedown or another edit between the read and the write can never let a stale decision land.
+- Decided: the category is checked `FOR SHARE` inside the edit's transaction and must be active; a missing or inactive one answers `404 CATEGORY_NOT_FOUND` and writes nothing.
+- Decided: tag and title failures answer `422 VALIDATION_FAILED` (the rule, not the transport schema, owns the limits, as for every other domain validation). Tags are trimmed and a repeat in another case is dropped before the 30 by 30 limits apply.
+- Decided: `selectedThumbnail` is a tagged union with the single member `{ source: 'poster' }`, which clears `custom_thumbnail_key`. A `custom` member is left out until an image can be uploaded, because a key pointing at a missing object would lose the poster fallback. Adding it later is additive. Responses gain `thumbnailUrl` (the custom key if set, else the poster) next to the unchanged `posterUrl`; the column stays.
+- Decided: the existing `PATCH /v1/videos/:id` and the new `PATCH /v1/creator/videos/:id` share `CreatorStudioService.update`; `VideoRepository.updateMetadata` moved to `VideoStudioRepository`.
+- Open: the `custom` thumbnail branch waits on an upload path. The API's R2 token covers only the `raw` bucket (SDD §11) and the API config knows no public bucket, so it needs a scoped write grant on `public` or a worker copy step first. The key helper (`customThumbnailKey` in `@vp/storage`) comes back with that upload.
+

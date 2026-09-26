@@ -5,7 +5,7 @@ export function defineVideoRules(
   user: UserContext | null,
   builder: AbilityBuilder<AppAbility>
 ): void {
-  const { can } = builder;
+  const { can, cannot } = builder;
 
   can('read', 'Video', { visibility: 'public' });
   can('read', 'Video', { visibility: 'unlisted' });
@@ -27,6 +27,7 @@ export function defineVideoRules(
     can('react', 'Video');
 
     can('update', 'Video', { ownerId: user.id });
+    cannot('update', 'Video', 'visibility', { ownerId: user.id, status: 'REJECTED' });
     can('delete', 'Video', { ownerId: user.id });
   }
 

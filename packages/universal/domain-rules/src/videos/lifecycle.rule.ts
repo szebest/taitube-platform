@@ -1,5 +1,10 @@
 import type { Video, VideoStatus } from '@vp/domain';
-import { type UserContext, canDeleteVideo, canUpdateVideo } from '@vp/permissions';
+import {
+  type UserContext,
+  canDeleteVideo,
+  canModerateVideo,
+  canUpdateVideo,
+} from '@vp/permissions';
 import { type Result, andThen, err, isErr, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import {
@@ -77,6 +82,17 @@ export function decideVideoDelete(
     input,
     (video) => canDeleteVideo({ user: input.actor, video }),
     'delete',
+    DELETABLE_STATUSES
+  );
+}
+
+export function decideVideoTakedown(
+  input: VideoLifecycleInput
+): Result<Video, VideoLifecycleFailure> {
+  return decide(
+    input,
+    (video) => canModerateVideo({ user: input.actor, video }),
+    'moderate',
     DELETABLE_STATUSES
   );
 }

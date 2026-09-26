@@ -12,11 +12,13 @@ import type { UploadRepository } from './upload-repository';
 import type { UserRepository } from './user-repository';
 import type { VideoReactionRepositoryPort } from './video-reaction-repository';
 import type { VideoRepository } from './video-repository';
+import type { VideoStudioRepository } from './video-studio-repository';
 import type { VideoViewRepositoryPort } from './video-view-repository';
 import type { WatchHistoryRepositoryPort } from './watch-history-repository';
 
 export interface Repositories {
   videos: VideoRepository;
+  videoStudio: VideoStudioRepository;
   uploads: UploadRepository;
   steps: StepRepository;
   renditions: RenditionRepository;

@@ -5,7 +5,6 @@ import {
   type ListVideosOptions,
   type NewVideoInput,
   type TransitionVideoOptions,
-  type UpdateVideoMetadataOptions,
   type VideoRecord,
   VideoRepository,
   type VideoScan,
@@ -13,12 +12,7 @@ import {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { publicFeedWalkInstant } from '@vp/domain';
-import {
-  type DatabaseUnavailable,
-  type VersionConflict,
-  databaseUnavailable,
-  versionConflict,
-} from '@vp/errors';
+import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
@@ -127,53 +121,6 @@ export class PostgresVideoRepository extends VideoRepository {
       total: total.value,
       instant: instantMs,
     }));
-  }
-
-  async updateMetadata(
-    options: UpdateVideoMetadataOptions
-  ): Promise<Result<VideoRecord | null, DatabaseUnavailable | VersionConflict>> {
-    const { videoId, expectedVersion, patch, userId } = options;
-
-    const committed = await fromPromise(
-      () =>
-        this.db.transaction(async (tx): Promise<Result<VideoRecord | null, VersionConflict>> => {
-          const [updated] = await tx
-            .update(v)
-            .set({
-              version: sql`${v.version} + 1`,
-              updatedAt: new Date(),
-              ...patch,
-            })
-            .where(and(eq(v.id, videoId), eq(v.version, expectedVersion)))
-            .returning();
-
-          if (!updated) {
-            // A zero-row update is a stale version or a video that is not there; only the second is ok(null).
-            const [present] = await tx
-              .select({ id: v.id })
-              .from(v)
-              .where(eq(v.id, videoId))
-              .limit(1);
-            return present ? err(versionConflict(videoId, expectedVersion)) : ok(null);
-          }
-
-          await tx.insert(ve).values({
-            videoId,
-            type: 'video.metadata_updated',
-            payload: {
-              patch,
-              expectedVersion,
-              newVersion: updated.version,
-              ...(userId ? { requestedBy: userId } : {}),
-            },
-            createdAt: new Date(),
-          });
-          return ok(updated);
-        }),
-      databaseUnavailable.during('updateMetadata')
-    );
-
-    return committed.ok ? committed.value : committed;
   }
 
   async transition(options: TransitionVideoOptions): Promise<Result<boolean, DatabaseUnavailable>> {

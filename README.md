@@ -172,6 +172,10 @@ taitube-platform/
 - **Watch history**: `POST/GET/DELETE /v1/me/history` and `GET/DELETE /v1/me/history/:videoId`. Playback
   heartbeats buffer in Redis for 7 days and reach the `watch_history` row at most once a minute; a pause
   and the end write it straight away, and a video watched past 92 % resumes from the start.
+- **Creator studio**: `GET /v1/creator/videos` lists the caller's library with its counters, sorted by
+  newest, views, likes or comments; `PATCH/DELETE /v1/creator/videos/:id` edit title, description,
+  visibility, category, tags and thumbnail under an optimistic lock, and soft delete. An admin takes a
+  video down with `POST /v1/admin/videos/:id/takedown`, and its owner cannot publish it again.
 - **Dead letter queue**: permanent failures go to a DLQ that an admin can retry from.
 - **Observability**: OpenTelemetry traces for API calls and worker jobs, Prometheus metrics, Grafana
   dashboards and Alertmanager rules; the apps write JSON logs to stdout.

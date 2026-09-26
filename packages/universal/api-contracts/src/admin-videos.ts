@@ -1,4 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
+import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { VideoIdParamSchema, VideoSchema } from './video-resource';
 
@@ -21,5 +22,27 @@ export const getVideoAsAdmin = defineEndpoint({
     401: [ErrorCodes.UNAUTHORIZED],
     403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
+  },
+});
+
+export const takeDownVideo = defineEndpoint({
+  method: 'POST',
+  path: '/v1/admin/videos/:id/takedown',
+  tag: 'Admin',
+  summary: 'Take down a video that violates the terms',
+  description:
+    'Admin only. Moves the video to REJECTED and private in one step and appends video.taken_down with the reason. Its owner can still edit it but not publish it again.',
+  params: VideoIdParamSchema,
+  body: z.object({
+    reason: z.string().max(500).optional().describe('Why the video came down, kept in its events'),
+  }),
+  status: 200,
+  result: VideoSchema,
+  errors: {
+    400: [ErrorCodes.VALIDATION_FAILED],
+    401: [ErrorCodes.UNAUTHORIZED],
+    403: [ErrorCodes.FORBIDDEN],
+    404: [ErrorCodes.VIDEO_NOT_FOUND],
+    409: [ErrorCodes.VERSION_CONFLICT],
   },
 });

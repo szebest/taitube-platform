@@ -32,6 +32,8 @@ export interface Video {
   likesCount?: number;
   dislikesCount?: number;
   categoryId?: string | null;
+  tags?: string[];
+  customThumbnailKey?: string | null;
   generation: number;
   version: number;
   createdAt: Date;
@@ -39,3 +41,6 @@ export interface Video {
   readyAt: Date | null;
   deletedAt?: Date | null;
 }
+
+/** One member until a custom upload exists; a `custom` member is added beside it then. */
+export type ThumbnailSelection = { source: 'poster' };

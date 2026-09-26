@@ -11,7 +11,6 @@ import {
   type RenditionRepository,
   type StepRepository,
   type TransitionVideoOptions,
-  type UpdateVideoMetadataOptions,
   type UploadRecord,
   type VideoEventRecord,
   type VideoRecord,
@@ -20,9 +19,9 @@ import {
   type VideoScanAbsence,
   type VideoWithDetails,
 } from '@vp/core/repositories';
-import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
+import type { DatabaseUnavailable } from '@vp/errors';
 import { canReadVideo } from '@vp/permissions';
-import { type Result, assertNever, err, isErr, map, ok, unwrapOr } from '@vp/result';
+import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@vp/result';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { newVideoRecord } from './new-video-record';
@@ -131,29 +130,6 @@ export class InMemoryVideoRepository extends VideoRepository {
     options: ListPublicVideosOptions
   ): Promise<Result<ListPublicVideosResult, DatabaseUnavailable>> {
     return ok(selectPublicFeed(this.videosMap.values(), options));
-  }
-
-  async updateMetadata(
-    options: UpdateVideoMetadataOptions
-  ): Promise<Result<VideoRecord | null, DatabaseUnavailable | VersionConflict>> {
-    const { videoId, expectedVersion, patch, userId } = options;
-    const video = this.videosMap.get(videoId);
-    if (!video) return ok(null);
-    if (video.version !== expectedVersion) {
-      return err(versionConflict(videoId, expectedVersion));
-    }
-    video.version += 1;
-    video.updatedAt = new Date();
-    if (patch.title !== undefined) video.title = patch.title;
-    if (patch.description !== undefined) video.description = patch.description;
-    if (patch.visibility !== undefined) video.visibility = patch.visibility;
-    const recorded = await this.emitEvent(videoId, 'video.metadata_updated', {
-      patch,
-      expectedVersion,
-      newVersion: video.version,
-      ...(userId ? { requestedBy: userId } : {}),
-    });
-    return map(recorded, () => video);
   }
 
   async transition(options: TransitionVideoOptions): Promise<Result<boolean, DatabaseUnavailable>> {

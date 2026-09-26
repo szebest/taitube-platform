@@ -7,6 +7,7 @@ describe('@vp/validation: validateVideoMetadata', () => {
     { name: 'an absent title', input: { description: 'fine' } },
     { name: 'a null description', input: { title: 'ok', description: null } },
     { name: 'an empty patch', input: {} },
+    { name: 'an empty tag list', input: { tags: [] } },
   ])('accepts $name', ({ input }) => {
     expect(isOk(validateVideoMetadata(input))).toBe(true);
   });
@@ -28,5 +29,17 @@ describe('@vp/validation: validateVideoMetadata', () => {
 
     expect(isOk(result)).toBe(false);
     expect(!isOk(result) && result.error.field).toBe(field);
+  });
+
+  it('hands back the tags as the tag rule normalized them and the rest untouched', () => {
+    const result = validateVideoMetadata({ title: 'ok', tags: [' lofi', 'LOFI', 'jazz '] });
+
+    expect(isOk(result) && result.value).toEqual({ title: 'ok', tags: ['lofi', 'jazz'] });
+  });
+
+  it('rejects tags past the ceiling and names the field', () => {
+    const result = validateVideoMetadata({ tags: Array.from({ length: 31 }, (_, i) => `t${i}`) });
+
+    expect(!isOk(result) && result.error.field).toBe('tags');
   });
 });

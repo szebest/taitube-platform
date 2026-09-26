@@ -5,7 +5,7 @@ import type {
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
-import type { DatabaseUnavailable, ErrorCode, VersionConflict } from '@vp/errors';
+import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { Result } from '@vp/result';
 
@@ -37,23 +37,14 @@ export interface NewVideoInput {
   viewsCount?: number;
   likesCount?: number;
   dislikesCount?: number;
+  commentsCount?: number;
   categoryId?: string | null;
+  tags?: string[];
   errorCode?: ErrorCode | null;
   errorMessage?: string | null;
   generation?: number;
   readyAt?: Date | null;
   deletedAt?: Date | null;
-}
-
-export interface UpdateVideoMetadataOptions {
-  videoId: string;
-  expectedVersion: number;
-  patch: {
-    title?: string;
-    description?: string;
-    visibility?: VideoVisibility;
-  };
-  userId?: string;
 }
 
 export interface ListVideosOptions {
@@ -120,8 +111,9 @@ export interface VideoWithDetails {
 }
 
 /**
- * Absence is not a failure: `findById`, `findWithDetails` and `updateMetadata` answer `ok(null)` for
- * a row that is not there, and the rule that asked decides whether that is an error.
+ * Absence is not a failure: `findById` and `findWithDetails` answer `ok(null)` for a row that is
+ * not there, and the rule that asked decides whether that is an error. Metadata edits live on
+ * `VideoStudioRepository`.
  */
 export abstract class VideoRepository {
   abstract findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>>;
@@ -135,9 +127,6 @@ export abstract class VideoRepository {
   abstract listPublic(
     options: ListPublicVideosOptions
   ): Promise<Result<ListPublicVideosResult, DatabaseUnavailable>>;
-  abstract updateMetadata(
-    options: UpdateVideoMetadataOptions
-  ): Promise<Result<VideoRecord | null, DatabaseUnavailable | VersionConflict>>;
   abstract transition(
     options: TransitionVideoOptions
   ): Promise<Result<boolean, DatabaseUnavailable>>;

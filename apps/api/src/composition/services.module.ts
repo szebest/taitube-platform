@@ -30,6 +30,7 @@ import { pollSqlMetrics } from '../services/sql-poller';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
 import { Services } from './service-tokens';
+import { registerStudioServices } from './studio.module';
 
 export * from './service-tokens';
 
@@ -49,7 +50,7 @@ export function registerServices(c: Container): Container {
   const config = () => c.get(Adapters.Config);
   const repositories = () => c.get(Adapters.Repositories);
 
-  return registerBootstrap(c)
+  return registerStudioServices(registerBootstrap(c))
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
     )
@@ -281,6 +282,7 @@ export function registerServices(c: Container): Container {
     )
     .provide(Services.ServiceSet, (c) => ({
       videoService: c.get(Services.VideoService),
+      creatorStudioService: c.get(Services.CreatorStudioService),
       uploadService: c.get(Services.UploadService),
       feedService: c.get(Services.FeedService),
       categoryService: c.get(Services.CategoryService),

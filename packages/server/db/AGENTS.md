@@ -11,9 +11,10 @@ Instructions for any coding agent working on `@vp/db`.
 `@vp/db` owns the PostgreSQL schema and the Drizzle vocabulary, and exports library functions only
 (no CLI, no `migrate` / `seed` scripts):
 - **Schema Definitions:** Drizzle ORM tables (`src/schema.ts`, subpath `@vp/db/schema`, with
-  `src/comments-schema.ts` for `video_comments`, `src/view-schema.ts` for `video_views_daily` and
-  `video_view_batches`, and `src/library-schema.ts` for `playlists`, `playlist_items` and
-  `watch_history`; `drizzle.config.ts` reads all four).
+  `src/social-schema.ts` for `video_reactions` and `channel_subscriptions`, `src/comments-schema.ts` for
+  `video_comments`, `src/view-schema.ts` for `video_views_daily` and `video_view_batches`, and
+  `src/library-schema.ts` for `playlists`, `playlist_items` and `watch_history`; `drizzle.config.ts`
+  reads all five). `schema.ts` sits near the 10 KB ceiling, so a new table goes in a module of its own.
 - **Database Migrations:** `runMigrations(url, log)` (`src/migrate.ts`, `@vp/db/migrate`) applies the
   drizzle-kit output in `drizzle/`, skipping the run when the recorded migration hash is unchanged.
 - **Development Seeds:** `seedDatabase(url, log)` (`src/seed.ts`, `@vp/db/seed`) upserts two users, two

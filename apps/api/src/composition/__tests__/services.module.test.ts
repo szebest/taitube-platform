@@ -37,6 +37,7 @@ describe('apps/api/composition: services module', () => {
       'categoryService',
       'channelService',
       'commentService',
+      'creatorStudioService',
       'dlqService',
       'feedService',
       'playlistService',

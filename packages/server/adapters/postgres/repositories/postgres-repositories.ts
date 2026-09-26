@@ -17,6 +17,7 @@ import { PostgresUploadRepository } from './postgres-upload-repository';
 import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
+import { PostgresVideoStudioRepository } from './postgres-video-studio-repository';
 import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
 import type { PostgresDatabase } from './types';
@@ -29,6 +30,7 @@ export type PostgresRepositoriesConfig =
 
 export class PostgresRepositories implements Repositories {
   readonly videos: PostgresVideoRepository;
+  readonly videoStudio: PostgresVideoStudioRepository;
   readonly uploads: PostgresUploadRepository;
   readonly steps: PostgresStepRepository;
   readonly renditions: PostgresRenditionRepository;
@@ -52,6 +54,7 @@ export class PostgresRepositories implements Repositories {
     this.ownedPool = ownedPool;
 
     this.videos = new PostgresVideoRepository(db);
+    this.videoStudio = new PostgresVideoStudioRepository(db);
     this.uploads = new PostgresUploadRepository(db);
     this.steps = new PostgresStepRepository(db);
     this.renditions = new PostgresRenditionRepository(db);

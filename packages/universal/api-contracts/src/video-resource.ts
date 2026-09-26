@@ -62,6 +62,12 @@ export const VideoSchema = z.object({
   posterUrl: z.string().optional().describe('Public CDN URL to poster image'),
   spriteUrl: z.string().optional().describe('Public CDN URL to thumbnail sprite sheet'),
   spriteVttUrl: z.string().optional().describe('Public CDN URL to WebVTT thumbnail cue sheet'),
+  thumbnailUrl: z
+    .string()
+    .optional()
+    .describe('Public CDN URL of the thumbnail to show: the custom one if set, else the poster'),
+  categoryId: z.string().uuid().nullable().optional().describe('Category UUID identifier'),
+  tags: z.array(z.string()).optional().describe('Tags the creator set'),
   likesCount: z.number().int().nonnegative().default(0).describe('Total like reactions count'),
   dislikesCount: z
     .number()
@@ -85,6 +91,10 @@ export const VideoSummarySchema = z.object({
   status: VideoStatusSchema,
   durationMs: z.number().optional().describe('Video duration in milliseconds'),
   posterUrl: z.string().optional().describe('Public CDN URL to poster thumbnail (PRD US-12)'),
+  thumbnailUrl: z
+    .string()
+    .optional()
+    .describe('Public CDN URL of the thumbnail to show: the custom one if set, else the poster'),
   playbackUrl: z.string().optional().describe('Public CDN playback URL to master.m3u8 if ready'),
   viewsCount: z.number().optional().describe('Total view count'),
   likesCount: z.number().int().nonnegative().optional().describe('Total like reactions count'),

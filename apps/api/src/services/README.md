@@ -2,7 +2,7 @@
 
 ## Architectural Principle: Deep Domain Services & Modular Composition
 
-Every domain resource and entity in the API has a corresponding service in `apps/api/src/services/` (e.g. `VideoService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `ViewService`, `AnalyticsService`, `SseService`).
+Every domain resource and entity in the API has a corresponding service in `apps/api/src/services/` (e.g. `VideoService`, `CreatorStudioService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `ViewService`, `AnalyticsService`, `SseService`).
 
 Services are deep modules that encapsulate business rules, domain invariants, repository interactions, cache coordination, error classification, and entity-to-view transformations. They are completely decoupled from Fastify and HTTP transport concerns.
 
@@ -38,7 +38,8 @@ A service's collaborators arrive through its deps and are required; `composition
 | Service | File | Purpose |
 |---|---|---|
 | - | `index.ts` | Barrel re-exporting the service modules |
-| `VideoService` | `video-service.ts` | Video reads, caller video listing, public feed, metadata updates |
+| `VideoService` | `video-service.ts` | Video reads, caller video listing, public feed, reprocess and soft delete |
+| `CreatorStudioService` | `creator-studio-service.ts` | The creator library, metadata, tag, category and thumbnail edits under optimistic locking, and admin takedowns; registered by `composition/studio.module.ts` |
 | - | `video-lifecycle.ts` | Reprocess and soft-delete state transitions |
 | - | `video-views.ts` | `VideoRecord` to client view projections, including the one playback-URL rule |
 | `UploadService` | `upload-service.ts` | The upload seam routes depend on; owns the shared `UploadContext` |

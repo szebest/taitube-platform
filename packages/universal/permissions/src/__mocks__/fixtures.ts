@@ -41,6 +41,13 @@ export const privateVideo: VideoResource = {
   status: 'READY',
 };
 
+export const rejectedVideo: VideoResource = {
+  id: 'vid-rejected',
+  ownerId: 'creator-1',
+  visibility: 'private',
+  status: 'REJECTED',
+};
+
 export const foreignVideo: VideoResource = {
   id: 'vid-foreign',
   ownerId: 'creator-2',

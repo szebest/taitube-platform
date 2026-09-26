@@ -3,6 +3,7 @@ import { defineConfig } from 'drizzle-kit';
 export default defineConfig({
   schema: [
     './src/schema.ts',
+    './src/social-schema.ts',
     './src/comments-schema.ts',
     './src/view-schema.ts',
     './src/library-schema.ts',

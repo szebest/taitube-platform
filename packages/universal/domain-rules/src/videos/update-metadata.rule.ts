@@ -1,14 +1,17 @@
-import type { Video, VideoVisibility } from '@vp/domain';
+import type { ThumbnailSelection, Video, VideoVisibility } from '@vp/domain';
 import { type UserContext, canUpdateVideo } from '@vp/permissions';
-import { type Result, err, isErr, map } from '@vp/result';
+import { type Result, err, isErr } from '@vp/result';
 import { type VideoMetadataFailure, validateVideoMetadata } from '@vp/validation';
 import { type ReadVideoFailure, videoEditForbidden } from './failures';
 import { decideVideoRead } from './read-video.rule';
 
 export interface VideoMetadataPatch {
-  readonly title?: string | null;
-  readonly description?: string | null;
+  readonly title?: string;
+  readonly description?: string;
   readonly visibility?: VideoVisibility;
+  readonly categoryId?: string | null;
+  readonly tags?: string[];
+  readonly selectedThumbnail?: ThumbnailSelection;
 }
 
 export interface UpdateVideoMetadataInput {
@@ -30,7 +33,7 @@ export function decideVideoMetadataUpdate(
 ): Result<VideoMetadataPatch, UpdateVideoMetadataFailure> {
   const readable = decideVideoRead({
     viewer: input.editor,
-    video: input.video,
+    video: input.video?.status === 'DELETED' ? null : input.video,
     videoId: input.videoId,
   });
   if (isErr(readable)) return readable;
@@ -40,5 +43,5 @@ export function decideVideoMetadataUpdate(
     return err(videoEditForbidden(input.videoId));
   }
 
-  return map(validateVideoMetadata(input.patch), () => input.patch);
+  return validateVideoMetadata(input.patch);
 }

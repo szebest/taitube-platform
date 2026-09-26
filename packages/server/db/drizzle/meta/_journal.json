@@ -92,6 +92,13 @@
       "when": 1790341282085,
       "tag": "0012_watch_later_playlists_and_history",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790361050839,
+      "tag": "0013_video_studio_metadata",
+      "breakpoints": true
     }
   ]
 }

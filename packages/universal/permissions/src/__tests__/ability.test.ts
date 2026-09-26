@@ -1,4 +1,12 @@
-import { adminUser, guestUser, standardUser } from '../__mocks__/fixtures';
+import { subject } from '@casl/ability';
+import {
+  adminUser,
+  creatorUser,
+  guestUser,
+  moderatorUser,
+  rejectedVideo,
+  standardUser,
+} from '../__mocks__/fixtures';
 import { getUserPermissions } from '../ability';
 import type { AppAction, AppSubjects, UserContext } from '../types/index';
 
@@ -54,5 +62,21 @@ describe('permissions: getUserPermissions', () => {
     },
   ])('builds one ability from every rule set: $scenario', ({ user, action, target, allowed }) => {
     expect(getUserPermissions(user).can(action, target)).toBe(allowed);
+  });
+
+  it.each([
+    { scenario: 'an admin', user: adminUser, allowed: true },
+    { scenario: 'a moderator', user: moderatorUser, allowed: false },
+    { scenario: 'the creator who owns it', user: creatorUser, allowed: false },
+  ])('$scenario takes a video down: $allowed', ({ user, allowed }) => {
+    expect(getUserPermissions(user).can('moderate', subject('Video', rejectedVideo))).toBe(allowed);
+  });
+
+  it('lets an admin reopen the visibility an owner may not touch after a takedown', () => {
+    const admin = { ...adminUser, id: rejectedVideo.ownerId ?? '' };
+
+    expect(
+      getUserPermissions(admin).can('update', subject('Video', rejectedVideo), 'visibility')
+    ).toBe(true);
   });
 });

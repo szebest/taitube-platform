@@ -6,11 +6,18 @@ import {
   moderatorUser,
   privateVideo,
   publicVideo,
+  rejectedVideo,
   standardUser,
   unlistedVideo,
 } from '../../__mocks__/fixtures';
 import type { UserContext, VideoResource } from '../../types/index';
-import { canDeleteVideo, canReactVideo, canReadVideo, canUpdateVideo } from '../videos';
+import {
+  canDeleteVideo,
+  canModerateVideo,
+  canReactVideo,
+  canReadVideo,
+  canUpdateVideo,
+} from '../videos';
 
 type VideoCase = {
   scenario: string;
@@ -103,6 +110,37 @@ describe('helpers/videos: Video Action Helpers', () => {
       },
     ])('$scenario: $expected', ({ user, video, expected }) => {
       expect(check({ user, video })).toBe(expected);
+    });
+  });
+
+  describe('canModerateVideo', () => {
+    it.each<VideoCase>([
+      { scenario: 'a guest', user: guestUser, video: foreignVideo, expected: false },
+      { scenario: 'the video owner', user: creatorUser, video: publicVideo, expected: false },
+      { scenario: 'a moderator', user: moderatorUser, video: foreignVideo, expected: false },
+      { scenario: 'an admin', user: adminUser, video: foreignVideo, expected: true },
+    ])('$scenario: $expected', ({ user, video, expected }) => {
+      expect(canModerateVideo({ user, video })).toBe(expected);
+    });
+  });
+
+  describe('canUpdateVideo over named fields of a video taken down', () => {
+    it.each([
+      { scenario: 'the owner retitling it', user: creatorUser, fields: ['title'], expected: true },
+      {
+        scenario: 'the owner making it public again',
+        user: creatorUser,
+        fields: ['title', 'visibility'],
+        expected: false,
+      },
+      {
+        scenario: 'an admin making it public again',
+        user: adminUser,
+        fields: ['visibility'],
+        expected: true,
+      },
+    ])('$scenario: $expected', ({ user, fields, expected }) => {
+      expect(canUpdateVideo({ user, video: rejectedVideo, fields })).toBe(expected);
     });
   });
 });

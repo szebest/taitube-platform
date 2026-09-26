@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { OWNER, STRANGER, aVideo } from '../../__tests__/entities';
+import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import { decideVideoMetadataUpdate } from '../update-metadata.rule';
 
 const video = aVideo();
@@ -49,6 +49,60 @@ describe('@vp/domain-rules: decideVideoMetadataUpdate', () => {
     });
 
     expect(isErr(result) && result.error.code).toBe(ErrorCodes.VALIDATION_FAILED);
+  });
+});
+
+describe('@vp/domain-rules: decideVideoMetadataUpdate over studio fields', () => {
+  it('hands back the patch with its tags as the tag rule normalized them', () => {
+    const result = decideVideoMetadataUpdate({
+      editor: OWNER,
+      video,
+      videoId: video.id,
+      patch: { tags: ['LoFi ', 'lofi'], categoryId: 'category-1' },
+    });
+
+    expect(isOk(result) && result.value).toEqual({ tags: ['LoFi'], categoryId: 'category-1' });
+  });
+
+  it('rejects more tags than the ceiling as a validation failure on tags', () => {
+    const result = decideVideoMetadataUpdate({
+      editor: OWNER,
+      video,
+      videoId: video.id,
+      patch: { tags: Array.from({ length: 31 }, (_, i) => `tag-${i}`) },
+    });
+
+    expect(isErr(result) && result.error).toMatchObject({
+      code: ErrorCodes.VALIDATION_FAILED,
+      field: 'tags',
+    });
+  });
+
+  it('treats a deleted video as gone, even to its owner', () => {
+    const deleted = aVideo({ status: 'DELETED' });
+    const result = decideVideoMetadataUpdate({
+      editor: OWNER,
+      video: deleted,
+      videoId: deleted.id,
+      patch: { title: 'Back' },
+    });
+
+    expect(isErr(result) && result.error.code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
+  });
+
+  it.each([
+    { name: 'the owner', editor: OWNER, allowed: false },
+    { name: 'an admin', editor: ADMIN, allowed: true },
+  ])('lets $name reopen a video taken down: $allowed', ({ editor, allowed }) => {
+    const takenDown = aVideo({ status: 'REJECTED', visibility: 'private' });
+    const result = decideVideoMetadataUpdate({
+      editor,
+      video: takenDown,
+      videoId: takenDown.id,
+      patch: { visibility: 'public' },
+    });
+
+    expect(isOk(result)).toBe(allowed);
   });
 });
 

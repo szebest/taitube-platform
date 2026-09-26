@@ -1,5 +1,6 @@
 export * from './category';
 export * from './comment';
+export * from './creator-library';
 export * from './channel';
 export * from './playlist';
 export * from './playlist-position';
