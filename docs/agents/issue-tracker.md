@@ -5,8 +5,9 @@ Issues for this repo live as one markdown file per ticket in `docs/tickets/`, ge
 ## Conventions
 
 - Tickets: `docs/tickets/NN-<slug>.md`, numbered from `01` in **dependency order** (blockers have lower numbers, except a foundation ticket added later, which keeps the next free number and may block lower-numbered tickets; the graph stays acyclic). One ticket per file, never a combined file.
-- Ticket body: header table (`Phase`, `Size`, `Blocked by`, `Blocks`, `Spec` links to PRD/SDD anchors), a `**Status:**` line holding one word of `ready` | `blocked` | `in-progress` | `done` | `blocked-by-date` (`gen-index.py` refuses anything else), then `## What to build`, `## Acceptance criteria` (checkboxes), `## Out of scope`, `## Notes for the implementer`, `## Testing plan`, `## Open questions`, `## Definition of Done`.
-- `Blocked by` is authoritative. `Blocks`, the frontier, the status board, the Mermaid graph and the lane table are **generated**: run `python3 docs/tickets/gen-index.py` after any change (it also validates PRD/SDD anchors, and CI runs it with `--check`).
+- Ticket body: header table (`Phase`, `Size`, `Blocked by`, `Blocks`, `Spec` links to PRD/SDD anchors), a `**Status:**` line holding one word of `ready` | `blocked` | `in-progress` | `done` | `blocked-by-date` (`gen-index.py` refuses anything else; who sets which is below), then `## What to build`, `## Acceptance criteria` (checkboxes), `## Out of scope`, `## Notes for the implementer`, `## Testing plan`, `## Open questions`, `## Definition of Done`.
+- `Blocked by` is authoritative. `Blocks`, the frontier, the status board, the Mermaid graph and the lane table are **generated**: run `python3 docs/tickets/gen-index.py` after any change (it also validates PRD/SDD anchors, and CI runs it with `--check` through `tests/in-process/gen-index.test.ts`).
+- Only `in-progress` and `done` are set by hand. `blocked` and `ready` are derived from `Blocked by`: the generator writes `blocked` while any blocker is not `done` and `ready` once they all are, and `--check` names every ticket whose line disagrees. `blocked-by-date` is set by hand on a ticket waiting for a date, and falls back to `blocked` while a blocker is open.
 - Specs are the PRD (`docs/PRD.md`) and SDD (`docs/SDD.md`); a feature spec produced by `to-spec` goes to `docs/specs/<feature-slug>.md`.
 - Comments/decisions append to the ticket under `## Open questions` as `Decided: …` lines, or under a `## Comments` heading.
 
@@ -22,7 +23,7 @@ A ticket cannot be marked `done` or merged until all of the following are satisf
 
 ## When a skill says "publish to the issue tracker"
 
-Create `docs/tickets/NN-<slug>.md` with the next free number **after every ticket it is blocked by**, using the template at the bottom of `docs/tickets/README.md`; set `**Status:** ready`; run `gen-index.py`.
+Create `docs/tickets/NN-<slug>.md` with the next free number **after every ticket it is blocked by**, using the template at the bottom of `docs/tickets/README.md`; set `**Status:** ready`; run `gen-index.py`, which turns it into `blocked` if a blocker is not done yet.
 
 ## When a skill says "fetch the relevant ticket"
 

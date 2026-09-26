@@ -1,6 +1,6 @@
 # Tickets — video-pipeline
 
-Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers have lower numbers), not priority, with one exception: a foundation ticket added after the tickets that build on it keeps the next free number and blocks them anyway, so the graph may point from a higher number to a lower one but never in a cycle. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the frontier, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). Change a ticket's `**Status:**` line and re-run to update the board.
+Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers have lower numbers), not priority, with one exception: a foundation ticket added after the tickets that build on it keeps the next free number and blocks them anyway, so the graph may point from a higher number to a lower one but never in a cycle. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the frontier, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). The same run derives `blocked` and `ready` from the blockers and writes them into each ticket's `**Status:**` line. Only `in-progress` and `done` are set by hand (plus `blocked-by-date` on a ticket waiting for a date, which falls back to `blocked` while a blocker is open), so change one of those and re-run to update the board.
 
 ## Frontier
 
@@ -129,7 +129,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 90 | [Cloud Terraform on the Cloudflare v5 provider, validated in CI](90-cloud-terraform-provider-v5.md) | 5 | M | 88 | — | done |
 | 91 | [Web app imports on `#app/` subpath imports - no `src/` alias, no deep relative paths](91-web-import-aliases.md) | 5 | S | 89 | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 86 | done |
 
-> Board statuses derive from each ticket's `**Status:**` line and its blockers: `ready` = all blockers done (the frontier) · `blocked` · `in-progress` · `done` · `blocked-by-date` (blockers done, waiting for a date the ticket names).
+> `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
 ## Dependency graph
 

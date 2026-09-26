@@ -146,6 +146,33 @@ async function refusedCycle(): Promise<Run> {
   return run;
 }
 
+const STATUS_FIXTURE: readonly TicketFixture[] = [
+  { number: '01', status: 'done', blockedBy: 'None' },
+  { number: '02', status: 'blocked', blockedBy: '01' },
+  { number: '03', status: 'ready', blockedBy: '04' },
+  { number: '04', status: 'in-progress', blockedBy: '06' },
+  { number: '05', status: 'done', blockedBy: '06' },
+  { number: '06', status: 'ready', blockedBy: 'None' },
+  { number: '07', status: 'blocked-by-date', blockedBy: '04' },
+];
+
+async function statusesAfterARun(): Promise<{
+  check: Run;
+  statuses: Record<string, string | undefined>;
+}> {
+  const dir = ticketsDirectory(STATUS_FIXTURE);
+  const check = await genIndex(['--check', '--dir', dir]);
+  await genIndex(['--dir', dir]);
+  const statuses = Object.fromEntries(
+    STATUS_FIXTURE.map(({ number }) => [
+      number,
+      readFileSync(join(dir, `${number}-ticket.md`), 'utf8').match(/^\*\*Status:\*\* (\S+)$/m)?.[1],
+    ])
+  );
+  rmSync(join(dir, '..'), { recursive: true });
+  return { check, statuses };
+}
+
 describe('architecture: gen-index', () => {
   let check: Run;
   let anchors: Run;
@@ -153,16 +180,18 @@ describe('architecture: gen-index', () => {
   let frontier: { whileOpen: string[]; afterDone: string[] };
   let foundation: { run: Run; readme: string; blocked: string };
   let cycle: Run;
+  let derived: { check: Run; statuses: Record<string, string | undefined> };
 
   beforeAll(async () => {
     writeFileSync(EDGE_CASES_FILE, EDGE_CASES);
-    [check, anchors, refusal, frontier, foundation, cycle] = await Promise.all([
+    [check, anchors, refusal, frontier, foundation, cycle, derived] = await Promise.all([
       genIndex(['--check']),
       genIndex(['--anchors', ...SLUGGED.map(({ file }) => file)]),
       refusedStatus(),
       frontierAcrossAStatusChange(),
       foundationAddedLate(),
       refusedCycle(),
+      statusesAfterARun(),
     ]);
     rmSync(dirname(EDGE_CASES_FILE), { recursive: true });
   });
@@ -204,5 +233,27 @@ describe('architecture: gen-index', () => {
       '- none: every ticket is done, in progress or behind a blocker',
     ]);
     expect(frontier.afterDone).toEqual(['- [02: Ticket 02](02-ticket.md)']);
+  });
+
+  it.each([
+    ['02', 'ready', 'blocked, blockers all done'],
+    ['03', 'blocked', 'ready, a blocker open'],
+    ['04', 'in-progress', 'in-progress, a blocker open'],
+    ['05', 'done', 'done, a blocker open'],
+    ['06', 'ready', 'ready, no blockers'],
+    ['07', 'blocked', 'blocked-by-date, a blocker open'],
+  ])('writes %s as %s when stored %s', (number, status) => {
+    expect(derived.statuses[number]).toBe(status);
+  });
+
+  it('fails --check naming every status that disagrees with its blockers', () => {
+    expect(derived.check.status).toBe(1);
+    expect(derived.check.output.split('\n').filter((line) => line.includes('Status says'))).toEqual(
+      [
+        '02: Status says blocked, blockers are all done; run python3 docs/tickets/gen-index.py',
+        '03: Status says ready, 04 not done; run python3 docs/tickets/gen-index.py',
+        '07: Status says blocked-by-date, 04 not done; run python3 docs/tickets/gen-index.py',
+      ]
+    );
   });
 });

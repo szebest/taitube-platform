@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Regenerate README.md (frontier, status board, dependency graph, lanes) and each ticket's `Blocks` row
-from its `Blocked by` row, and check every PRD/SDD anchor the tickets link to.
+"""Regenerate README.md (frontier, status board, dependency graph, lanes), each ticket's `Blocks` row from
+its `Blocked by` row and each derived `**Status:**` line (`blocked`, `ready`) from its blockers, and check every PRD/SDD anchor the tickets link to.
 
-    python3 docs/tickets/gen-index.py              write README.md and the Blocks rows
+    python3 docs/tickets/gen-index.py              write README.md, the Blocks rows and the derived statuses
     python3 docs/tickets/gen-index.py --check      write nothing; exit 1 when anything would change
     python3 docs/tickets/gen-index.py --anchors F  print `F<TAB>anchor` for every heading of each file F
 
@@ -137,7 +137,7 @@ def levels_of(tickets):
 
 
 def board_status(tickets, number):
-    """The stored status for work in hand; otherwise what the blockers allow."""
+    """The stored status for work in hand, which only a human sets; otherwise what the blockers allow."""
     status = tickets[number]['status']
     if status in ('done', 'in-progress'):
         return status
@@ -162,13 +162,29 @@ def two_digits(numbers):
     return ', '.join(f'{number:02d}' for number in numbers) or '—'
 
 
-def with_blocks_row(ticket, blocks):
-    return re.sub(r'\| Blocks \| .*? \|', f'| Blocks | {two_digits(sorted(blocks))} |', ticket['text'], count=1)
+def with_blocks_row(text, blocks):
+    return re.sub(r'\| Blocks \| .*? \|', f'| Blocks | {two_digits(sorted(blocks))} |', text, count=1)
+
+
+def with_status_line(text, status):
+    return re.sub(r'^\*\*Status:\*\* \S+$', f'**Status:** {status}', text, count=1, flags=re.M)
+
+
+def status_drift(tickets):
+    drift = []
+    for number in sorted(tickets):
+        stored, derived = tickets[number]['status'], board_status(tickets, number)
+        if stored == derived:
+            continue
+        open_blockers = [dep for dep in tickets[number]['deps'] if tickets[dep]['status'] != 'done']
+        reason = f'{two_digits(open_blockers)} not done' if open_blockers else 'blockers are all done'
+        drift.append(f'{number:02d}: Status says {stored}, {reason}; run python3 docs/tickets/gen-index.py')
+    return drift
 
 
 HEADER = """# Tickets — video-pipeline
 
-Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers have lower numbers), not priority, with one exception: a foundation ticket added after the tickets that build on it keeps the next free number and blocks them anyway, so the graph may point from a higher number to a lower one but never in a cycle. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the frontier, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). Change a ticket's `**Status:**` line and re-run to update the board.
+Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD.md) following the `to-tickets` method (Matt Pocock's skills library): each ticket is a **vertical slice** that is demoable on its own and sized for one fresh agent context window; numbering is **dependency order** (blockers have lower numbers), not priority, with one exception: a foundation ticket added after the tickets that build on it keeps the next free number and blocks them anyway, so the graph may point from a higher number to a lower one but never in a cycle. Each ticket's `Blocked by` row is authoritative; the `Blocks` rows, the frontier, the status board, the graph and the lanes below are generated from it by `python3 docs/tickets/gen-index.py` (which also validates every PRD/SDD anchor the tickets link to). The same run derives `blocked` and `ready` from the blockers and writes them into each ticket's `**Status:**` line. Only `in-progress` and `done` are set by hand (plus `blocked-by-date` on a ticket waiting for a date, which falls back to `blocked` while a blocker is open), so change one of those and re-run to update the board.
 """
 
 HOW_TO = """## How to work a ticket (humans and agents)
@@ -214,9 +230,9 @@ def readme(tickets, blocks, footer):
             f"{two_digits(ticket['deps'])} | {two_digits(sorted(blocks[number]))} | {board_status(tickets, number)} |"
         )
     lines.append(
-        "\n> Board statuses derive from each ticket's `**Status:**` line and its blockers: `ready` = all blockers "
-        'done (the frontier) · `blocked` · `in-progress` · `done` · `blocked-by-date` (blockers done, waiting for '
-        'a date the ticket names).\n'
+        "\n> `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to "
+        'each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, '
+        'waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).\n'
     )
     lines.append('## Dependency graph\n\n```mermaid\nflowchart LR')
     phases = collections.OrderedDict()
@@ -251,7 +267,7 @@ def planned_writes(tickets):
     blocks = blocks_of(tickets)
     writes = {}
     for number, ticket in tickets.items():
-        updated = with_blocks_row(ticket, blocks[number])
+        updated = with_status_line(with_blocks_row(ticket['text'], blocks[number]), board_status(tickets, number))
         if updated != ticket['text']:
             writes[ticket['file']] = updated
     index, level_count = readme(tickets, blocks, open('_footer.md', encoding='utf-8').read())
@@ -267,8 +283,11 @@ def generate(check):
         raise TicketError('broken anchors:\n  ' + '\n  '.join(broken))
     writes, level_count = planned_writes(tickets)
     if check:
+        problems = status_drift(tickets)
         if writes:
-            raise TicketError('out of date, run python3 docs/tickets/gen-index.py: ' + ', '.join(sorted(writes)))
+            problems.append('out of date, run python3 docs/tickets/gen-index.py: ' + ', '.join(sorted(writes)))
+        if problems:
+            raise TicketError('\n'.join(problems))
     else:
         for file, text in writes.items():
             open(file, 'w', encoding='utf-8').write(text)

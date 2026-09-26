@@ -25,7 +25,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 - Work items are tracer-bullet tickets in `docs/tickets/<NN>-<slug>.md`. Use the `vp-work-ticket` skill to pick one up.
 - Numbering represents dependency order, not priority. The one exception is a foundation ticket added after the tickets that build on it: it keeps the next free number and blocks them anyway (89 blocks the frontend tickets). `gen-index.py` accepts any acyclic graph. Never start a ticket whose blockers are not `done`.
 - The frontier is computed: [docs/tickets/README.md#frontier](docs/tickets/README.md#frontier) lists every ticket whose blockers are done and which nobody has started. Pick from it.
-- Ticket status lives in the ticket's `**Status:**` line; run `python3 docs/tickets/gen-index.py` after changing it.
+- Ticket status lives in the ticket's `**Status:**` line. Set only `in-progress` and `done` by hand, then run `python3 docs/tickets/gen-index.py`: it derives `blocked` and `ready` from the blockers and writes them back.
 
 ---
 

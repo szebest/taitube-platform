@@ -9,7 +9,7 @@
 | Blocks | 65 |
 | Spec | [SDD §13 Observability](../SDD.md#13-autoscaling--observability) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** ready
 
 Measurement only. The optimisations (poster preload, `fetchpriority`, aspect-ratio
 placeholders, `startTransition`) belong to the page tickets that render those elements and to

@@ -13,7 +13,7 @@ Tickets are tracer-bullet vertical slices in `docs/tickets/`, numbered in depend
 
 ## 1. Claim
 1. Open `docs/tickets/README.md`; confirm the ticket is on the frontier (all `Blocked by` tickets show `done`). If not, stop and say which blocker is missing.
-2. Set the ticket's `**Status:**` line to `in-progress`, run `python3 docs/tickets/gen-index.py`, commit on branch `ticket/NN-slug`.
+2. Set the ticket's `**Status:**` line to `in-progress` (only `in-progress` and `done` are set by hand; `gen-index.py` derives `blocked` and `ready` from the blockers), run `python3 docs/tickets/gen-index.py`, commit on branch `ticket/NN-slug`.
 
 ## 2. Load context — and nothing else
 - Read the ticket fully. Then read **only** the PRD/SDD anchors in its `Spec` row. The SDD is ~18k words; the links are your context budget.
