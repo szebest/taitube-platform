@@ -15,7 +15,7 @@ describe('packages/stack: up', () => {
       'build migrate api web',
       `up ${WAIT} postgres`,
       `up ${WAIT} migrate`,
-      'wait migrate',
+      'ps --all --quiet migrate',
       `up ${WAIT} api`,
       `up ${WAIT} web`,
       'ps --all --format json postgres migrate api web',
@@ -68,17 +68,20 @@ describe('packages/stack: up', () => {
 
   it('names the service that failed and prints its logs, then stops', async () => {
     const docker = fakeDocker({
-      wait: { code: 1 },
-      ps: {
-        stdout: [
-          psRow('postgres'),
-          psRow('migrate', { State: 'exited', Health: '', ExitCode: 3 }),
-        ].join('\n'),
-      },
+      wait: (ids) => ({ stdout: ids.map(() => '3').join('\n') }),
+      ps: (args) => ({
+        stdout: args.includes('--quiet')
+          ? 'c0ffee\n'
+          : [
+              psRow('postgres'),
+              psRow('migrate', { State: 'exited', Health: '', ExitCode: 3 }),
+            ].join('\n'),
+      }),
       logs: (args) => ({ stdout: `logs of ${args.at(-1)}: relation "videos" already exists\n` }),
     });
 
     expect(await up(docker.host, ['web'], OPTIONS)).toBe(1);
+    expect(docker.subcommands()).toContain('wait c0ffee');
     expect(docker.subcommands().at(-1)).toBe('logs --no-color --no-log-prefix --tail 40 migrate');
     expect(docker.printed).toEqual([
       '\nmigrate failed: exited (3). Its last 40 lines:',

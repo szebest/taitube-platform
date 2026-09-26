@@ -4,7 +4,7 @@ const completed = { condition: 'service_completed_successfully' };
 const healthy = { condition: 'service_healthy' };
 const app = { context: '../..', dockerfile: 'Dockerfile' };
 
-export const COMPOSE_CONFIG = JSON.stringify({
+const COMPOSE_CONFIG = JSON.stringify({
   services: {
     postgres: {},
     migrate: { build: app, profiles: ['migrate'], depends_on: { postgres: healthy } },
@@ -37,6 +37,7 @@ export function fakeDocker(
   const calls: string[][] = [];
   const printed: string[] = [];
   const subcommand = (args: readonly string[]) => {
+    if (args[0] !== 'compose') return [...args];
     const flags = new Set(['-f', '--profile']);
     const rest = args.slice(1);
     for (let i = 0; i < rest.length; i++) {

@@ -2,7 +2,7 @@ import { type Result, err, ok } from '@vp/result';
 import { describeState, formatTable, hasFailed, parseContainers } from './containers';
 import { type Topology, parseTopology, profilesOf, selectServices, tiers } from './topology';
 
-export interface Docker {
+interface Docker {
   /** Runs `docker <args>` with its output going to the terminal, and resolves to its exit code. */
   show(args: readonly string[]): Promise<number>;
   /** Runs `docker <args>` and resolves to its exit code and what it printed. */
@@ -84,6 +84,21 @@ async function reportFailure(
   }
 }
 
+/** `up --wait` counts a one-shot as done once it runs, so this blocks until each one has exited. */
+async function exitedCleanly(
+  host: StackHost,
+  compose: (...args: string[]) => string[],
+  oneShots: readonly string[]
+): Promise<boolean> {
+  if (oneShots.length === 0) return true;
+  const ps = await host.docker.capture(compose('ps', '--all', '--quiet', ...oneShots));
+  const ids = ps.stdout.split('\n').filter((line) => line.trim() !== '');
+  if (ids.length === 0) return true;
+  const waited = await host.docker.capture(['wait', ...ids]);
+  const codes = waited.stdout.split('\n').filter((line) => line.trim() !== '');
+  return waited.code === 0 && codes.every((code) => code.trim() === '0');
+}
+
 /** Starts what the targets name and everything it depends on, one tier at a time, each gated on health. */
 export function up(
   host: StackHost,
@@ -125,11 +140,7 @@ async function upTopology(
       compose('up', '--detach', '--no-build', ...wait, ...level)
     );
     const oneShots = level.filter((name) => topology.get(name)?.oneShot);
-    const waitCode =
-      upCode === 0 && oneShots.length > 0
-        ? await host.docker.show(compose('wait', ...oneShots))
-        : 0;
-    if (upCode !== 0 || waitCode !== 0) {
+    if (upCode !== 0 || !(await exitedCleanly(host, compose, oneShots))) {
       await reportFailure(host, compose, topology, started);
       return 1;
     }

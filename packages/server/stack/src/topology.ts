@@ -11,7 +11,7 @@ const ComposeConfigSchema = z.object({
   ),
 });
 
-export interface Service {
+interface Service {
   readonly name: string;
   readonly profiles: readonly string[];
   readonly dependsOn: readonly string[];
