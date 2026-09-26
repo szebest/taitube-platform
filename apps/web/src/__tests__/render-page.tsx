@@ -11,6 +11,7 @@ import {
 import type { Account } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
+import type { HttpHandler } from 'msw';
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Provider } from 'react-redux';
@@ -22,6 +23,7 @@ import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
 import { ThemeProvider } from '../modules/shared/providers/theme-provider';
 import { type ApiStore, createApiStore, seed } from './api-store';
 import { stubBrowser } from './browser';
+import { apiServer } from './msw/api-server';
 
 export type PageOptions = {
   store?: ApiStore;
@@ -31,6 +33,8 @@ export type PageOptions = {
   /** The pathless layout route `route` sits under, as the page's own route does. */
   layout?: string;
   viewer?: UserContext | null;
+  /** How the API answers while the page renders; a call none of them answers fails the test. */
+  handlers?: HttpHandler[];
 };
 
 /**
@@ -47,8 +51,10 @@ export async function renderPage(
     route = '/',
     layout,
     viewer,
+    handlers = [],
   }: PageOptions = {}
 ): Promise<string> {
+  apiServer.use(...handlers);
   const rootRoute = createRootRoute({
     component: () => (
       <Provider store={store}>

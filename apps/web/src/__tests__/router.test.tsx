@@ -1,11 +1,13 @@
 import { Link, createMemoryHistory } from '@tanstack/react-router';
+import { guestSession } from '#app/integrations/auth/session';
+import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { RouteError, RouteNotFound, RoutePending } from '../components/route-fallbacks';
 import { getRouter } from '../router';
 import { jsonResponse, recordRequests } from './api-store';
 import { CHANNEL_ID, VIDEO_ID, video } from './fixtures';
 
 async function resolve(path: string) {
-  const router = getRouter(createMemoryHistory({ initialEntries: [path] }));
+  const router = getRouter({ history: createMemoryHistory({ initialEntries: [path] }) });
   await router.load();
   return router;
 }
@@ -50,6 +52,20 @@ describe('apps/web: router', () => {
 
   it('renders for a guest', () => {
     expect(getRouter().options.context.auth).toEqual({ status: 'guest' });
+  });
+
+  it('puts the query cache and session it is handed in context', () => {
+    const queryClient = createQueryClient();
+    const auth = guestSession();
+
+    const { context } = getRouter({ queryClient, auth }).options;
+
+    expect(context.queryClient).toBe(queryClient);
+    expect(context.auth).toBe(auth);
+  });
+
+  it("stamps the request's CSP nonce on the scripts it renders", () => {
+    expect(getRouter({ nonce: 'n0nce' }).options.ssr?.nonce).toBe('n0nce');
   });
 
   it('waits before showing a pending page, and then shows it long enough not to flash', () => {
