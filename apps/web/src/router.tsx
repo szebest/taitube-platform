@@ -15,12 +15,22 @@ export type RouterContext = {
 const PENDING_DELAY_MS = 1000;
 const PENDING_MIN_MS = 500;
 
-export function getRouter(history?: RouterHistory) {
-  const queryClient = createQueryClient();
+export type RouterOptions = Partial<RouterContext> & {
+  history?: RouterHistory;
+  nonce?: string;
+};
+
+export function getRouter({
+  history,
+  queryClient = createQueryClient(),
+  auth = guestSession(),
+  nonce,
+}: RouterOptions = {}) {
   const router = createRouter({
     routeTree,
     history,
-    context: { queryClient, auth: guestSession() } satisfies RouterContext,
+    ssr: { nonce },
+    context: { queryClient, auth } satisfies RouterContext,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
     defaultPendingMs: PENDING_DELAY_MS,
