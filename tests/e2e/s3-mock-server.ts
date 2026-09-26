@@ -26,7 +26,10 @@ export async function startMockS3Server(options: {
     res.setHeader('Access-Control-Expose-Headers', 'ETag');
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT');
-      res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] ?? '*');
+      res.setHeader(
+        'Access-Control-Allow-Headers',
+        req.headers['access-control-request-headers'] ?? '*'
+      );
       res.statusCode = 204;
       res.end();
       return;

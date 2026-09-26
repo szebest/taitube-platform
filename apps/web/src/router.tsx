@@ -5,6 +5,7 @@ import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query
 import { RouteError, RouteNotFound, RoutePending } from './components/route-fallbacks';
 import { type Session, guestSession } from './integrations/auth/session';
 import { createQueryClient } from './integrations/query/create-query-client';
+import { requestNonce } from './integrations/security/request-nonce';
 import { routeTree } from './routeTree.gen';
 
 export type RouterContext = {
@@ -24,7 +25,7 @@ export function getRouter({
   history,
   queryClient = createQueryClient(),
   auth = guestSession(),
-  nonce,
+  nonce = requestNonce(),
 }: RouterOptions = {}) {
   const router = createRouter({
     routeTree,

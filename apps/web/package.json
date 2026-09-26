@@ -4,20 +4,15 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#app/*": [
-      "./src/*",
-      "./src/*.ts",
-      "./src/*.tsx",
-      "./src/*/index.ts",
-      "./src/*/index.tsx"
-    ]
+    "#app/*": ["./src/*", "./src/*.ts", "./src/*.tsx", "./src/*/index.ts", "./src/*/index.tsx"]
   },
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
     "start": "srvx serve --prod --port 5173 --static ../client --entry dist/server/server.js",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json"
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
@@ -53,7 +48,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "^1.63.0",
     "@tanstack/react-query-devtools": "^5.103.2",
     "@tanstack/react-router-devtools": "^1.167.2",
     "@testing-library/dom": "^10.4.2",
