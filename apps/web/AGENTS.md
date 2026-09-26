@@ -168,6 +168,32 @@ import { WatchPlayer } from '../components/watch-player';   // one level up, sti
 - SCSS does not use it (Vite's Sass importer drops everything after `#` as a URL fragment). Stylesheets import
   from `src/` through Sass `loadPaths`: `@import "styles/abstract/variables";`.
 
+### Rule 9: The API in a spec is MSW, typed by the contracts
+Every web spec runs with an MSW server (`src/__tests__/msw/api-server.ts`, installed by
+`api-server.setup.ts`). A handler is built from the `@vp/api-contracts` endpoint the app calls, so a body
+the contract does not return, or a param it does not declare, fails the typecheck:
+
+```ts
+import { getVideo } from '@vp/api-contracts';
+import { ErrorCodes } from '@vp/errors';
+import { HttpResponse } from 'msw';
+import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
+
+const answered = mockEndpoint(getVideo, ({ params }) => HttpResponse.json(video({ id: params.id })));
+const failed = mockEndpoint(getVideo, () => problemReply(ErrorCodes.INTERNAL));
+
+await serverRender(`/watch/${VIDEO_ID}`, { handlers: [answered] });
+await renderPage(<Page />, { handlers: [failed] });
+```
+
+- `handlers` on `serverRender` and `renderPage` (or `apiServer.use(...)`) lasts one test; handlers reset
+  after each.
+- A request no handler answers never leaves the process: MSW answers it with a 500 and the test that made it
+  fails after it ends, naming the request.
+- `problemReply(code)` is the RFC 9457 body at the status the API reports that code as; pass a status to
+  override it.
+- `recordRequests` in `api-store.ts` stubs `fetch` outright and predates this; new specs use MSW.
+
 ---
 
 ## 4. Local commands
