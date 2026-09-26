@@ -37,3 +37,10 @@ spec:
                 name: vp-api
                 port:
                   number: 3000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vp-web
+                port:
+                  number: 5173

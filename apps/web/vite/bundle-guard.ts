@@ -9,6 +9,7 @@ export interface BundledChunk {
 
 const DEVTOOLS =
   /\/node_modules\/(@tanstack\/(?:react-router-devtools|react-query-devtools|router-devtools-core|query-devtools))\//;
+const SERVER_ENVIRONMENT = /\bprocess\.env\b/;
 const ROUTE_SPLIT = /\/(src\/routes\/[^?]+)\?tsr-split=/;
 
 function routesIn(chunk: BundledChunk): string[] {
@@ -27,8 +28,8 @@ function chunkViolations(chunk: BundledChunk): string[] {
       ? routes.map((route) => `${chunk.fileName} is an entry chunk but carries the route ${route}`)
       : []),
     ...(routes.length > 1 ? [`${chunk.fileName} carries two routes: ${routes.join(', ')}`] : []),
-    ...(chunk.code.includes('process.env')
-      ? [`${chunk.fileName} reads process.env, which only the SSR server has`]
+    ...(SERVER_ENVIRONMENT.test(chunk.code)
+      ? [`${chunk.fileName} reads the server environment, which only the SSR server has`]
       : []),
   ];
 }

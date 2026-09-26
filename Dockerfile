@@ -34,6 +34,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter
  && sh scripts/bundle-app.sh worker /out
 
 FROM deps AS build-web
+ARG VITE_API_BASE_URL=
 COPY --from=pruner /repo/out/web/full/ .
 COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/bundle-entrypoints.ts scripts/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter=@vp/web... \

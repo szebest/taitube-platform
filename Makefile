@@ -110,7 +110,8 @@ smoke-offline: ## Run the smoke against every app, web included, on an internal 
 	which iptables >/dev/null 2>&1 && (sudo iptables -t nat -C POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null) || true
 	$(STACK) up all --file $(COMPOSE_FILE) --file $(OFFLINE_FILE)
 	bash scripts/assert-no-egress.sh $(COMPOSE_FILE) $(OFFLINE_FILE)
-	API_URL=http://127.0.0.1:3000 WEB_URL=http://127.0.0.1:5173 bash scripts/e2e-smoke.sh
+	API_URL=http://127.0.0.1:3000 bash scripts/e2e-smoke.sh
+	pnpm test:browser
 
 e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostile set; E2E_REDUCED=true for the CI set)
 	pnpm e2e

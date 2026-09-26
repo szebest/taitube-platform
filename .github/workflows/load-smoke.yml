@@ -45,7 +45,7 @@ jobs:
           cp .env.example .env
           # The load profile drives far more uploads per user than the production limit allows.
           echo "UPLOAD_RATE_LIMIT_MAX=100000" >> .env
-          make up-all
+          make up all
 
       # Installed from the release tarball: the apt repo needs a keyserver fetch that times out on runners.
       - name: Install k6

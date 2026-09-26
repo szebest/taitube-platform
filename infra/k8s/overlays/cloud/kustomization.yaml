@@ -19,6 +19,9 @@ images:
   - name: ghcr.io/szebest/vp-worker
     newName: ghcr.io/szebest/vp-worker
     newTag: latest
+  - name: ghcr.io/szebest/vp-web
+    newName: ghcr.io/szebest/vp-web
+    newTag: latest
 
 # Cloud-specific ConfigMap overrides and ScaledObject sizing per SDD §12.3:
 # maxReplicaCount is 1 for 1080p and 720p; 2 for 480p and probe.

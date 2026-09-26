@@ -46,8 +46,8 @@ cp .env.example .env
 
 ### Step 2: Start local stack
 ```bash
-# Start infrastructure and workers inside Docker
-make up-all
+# Start infrastructure, the API, the workers and the web app inside Docker
+make up all
 ```
 
 ### Step 3: Verify with Wi-Fi / Ethernet disconnected
@@ -58,6 +58,9 @@ make smoke-offline
 ```
 
 The offline smoke test executes inside a Docker network with `internal: true`, mechanically barring any packet from leaving the host machine.
+It checks the API and the web container both have no route out (`scripts/assert-no-egress.sh`), runs the
+API smoke, and then drives a browser through the web container: upload, `READY`, the server-rendered watch
+page and playback (`pnpm test:browser`).
 
 ---
 
@@ -68,6 +71,10 @@ The offline smoke test executes inside a Docker network with `internal: true`, m
    - OpenTelemetry tracing defaults to an inactive no-op whenever `OTEL_EXPORTER_OTLP_ENDPOINT` is unconfigured.
 2. **Vendored Client Libraries**:
    - Frontend and player tools vendor all dependencies locally (e.g. `tools/hls-test-page/vendor/hls.min.js`). No script or stylesheet loads from `unpkg.com`, `cdnjs`, or `jsdelivr`.
+   - The web image serves everything from inside the compose network: its client assets, fonts and `hls.js`
+     are bundled by the Vite build, and its SSR server is one esbuild bundle with every dependency inside,
+     so the container has no `node_modules` to fetch from and nothing to call but the API, which it reaches
+     on the compose network at `SSR_API_BASE_URL` (`http://api:3000`).
 3. **Self-Contained Container Images**:
    - Container startup scripts never invoke `apt-get`, `npm install`, or `curl` to fetch assets at runtime. Fonts (such as `fonts-dejavu-core` for FFmpeg subtitle/text filters) are pre-baked at build time.
 4. **Offline CI Verification**:

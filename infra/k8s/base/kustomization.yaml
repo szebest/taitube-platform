@@ -8,6 +8,7 @@ resources:
   - configmap-secret.yaml
   - migrate-job.yaml
   - api.yaml
+  - web.yaml
   - worker-probe.yaml
   - worker-transcode-1080p.yaml
   - worker-transcode-720p.yaml

@@ -50,7 +50,7 @@ describe('apps/web: bundle guard', () => {
     const leaked = chunk(watch.fileName, [...watch.moduleIds], false, 'const u = process.env.X;');
 
     expect(bundleViolations([entry, leaked])).toEqual([
-      'assets/watch.js reads process.env, which only the SSR server has',
+      'assets/watch.js reads the server environment, which only the SSR server has',
     ]);
   });
 
