@@ -115,7 +115,11 @@ child of the runtime the spec runs on). A spec that acts as "the dev user" names
 never appears in a spec (`zero-matches`).
 
 What needs a higher layer lives in the app that owns it: the API's test app is `buildTestApp` in
-`apps/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/worker/src/__tests__/`.
+`apps/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/worker/src/__tests__/`, and the web
+app's are in `apps/web/src/__tests__/`: an MSW server whose handlers are typed from `@vp/api-contracts`
+(`msw/mock-endpoint.ts`), `serverRender` for the server's answer, and `renderRoute` for a route in the
+browser. The web app runs two Vitest projects, `node` and `jsdom` (the `*.dom.test.tsx` specs);
+[apps/web/AGENTS.md](../../apps/web/AGENTS.md) Rules 7 and 9 show how to write a route spec.
 
 ---
 
@@ -160,8 +164,8 @@ replays a cached pass. `pnpm typecheck --force` bypasses the cache.
 
 ## 8. One spec per source file
 
-Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`) beside it, in every tier,
-`apps/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
+Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`, or `.dom.test.tsx` for a web
+spec that runs under jsdom) beside it, in every tier, `apps/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
 members, with or without doc comments) needs none; `tests/architecture/runtime-code.ts` decides by
 transpiling it. One spec never covers several sources. `tests/architecture/test-correspondence.test.ts` is a
 flat assertion with no exception list.
