@@ -1,7 +1,7 @@
-import { createApiStore, seed } from '#app/__tests__/api-store';
 import { VIDEO_ID, account, video } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
-import { reactionsApi } from '#app/modules/shared/api/reactions-api';
+import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
+import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { VideoLikes } from '../video-likes';
 
 describe('apps/web: video likes', () => {
@@ -23,18 +23,20 @@ describe('apps/web: video likes', () => {
   it.each([
     { reaction: 'LIKE', filled: 'bi-hand-thumbs-up-fill', unfilled: 'bi-hand-thumbs-down"' },
     { reaction: 'DISLIKE', filled: 'bi-hand-thumbs-down-fill', unfilled: 'bi-hand-thumbs-up"' },
-  ])('marks the $reaction the signed-in viewer gave', async ({ reaction, filled, unfilled }) => {
-    const store = createApiStore();
-    await signIn(store, account());
-    await seed(
-      store,
-      (target) => target.dispatch(reactionsApi.endpoints.myReaction.initiate(VIDEO_ID)),
-      { videoId: VIDEO_ID, reaction }
-    );
+  ] as const)(
+    'marks the $reaction the signed-in viewer gave',
+    async ({ reaction, filled, unfilled }) => {
+      const queryClient = createQueryClient();
+      signIn(queryClient, account());
+      queryClient.setQueryData(myReactionQueryOptions(VIDEO_ID).queryKey, {
+        videoId: VIDEO_ID,
+        reaction,
+      });
 
-    const markup = await renderPage(<VideoLikes video={video()} />, { store });
+      const markup = await renderPage(<VideoLikes video={video()} />, { queryClient });
 
-    expect(markup).toContain(filled);
-    expect(markup).toContain(unfilled);
-  });
+      expect(markup).toContain(filled);
+      expect(markup).toContain(unfilled);
+    }
+  );
 });

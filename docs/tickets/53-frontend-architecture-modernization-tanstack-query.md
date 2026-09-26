@@ -92,6 +92,23 @@ page; the legacy components keep their markup and only swap how they get data.
 - Page-level integration tests on MSW: [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) and the page tickets.
 - Deleting legacy pages: the page ticket that replaces each one.
 
+## Open questions
+
+- Decided: `_authed` is `ssr: false`. Its loaders read members-only data and the token lives in
+  `localStorage`, so on the server they could only fail with a 401. The layout renders on the server and the
+  page loads in the browser. 56 removes the flag when the session moves to a cookie.
+- Decided: a mutation is a `xMutationOptions(id)` factory next to its `useX` hook. The options reach the
+  cache through the `client` TanStack Query hands every callback, so a spec runs them on a `QueryClient`
+  with no component mounted.
+- Decided: the upload limits stay out of the browser for now. The dropzone offers `ALLOWED_CONTENT_TYPES`
+  from `@vp/validation` (it offered `.mp4` only) and the file field runs `validateContentType`; the size
+  check needs `MAX_UPLOAD_BYTES` as data, which no endpoint returns yet, so the API stays the only size
+  check.
+- Decided: form fields validate with `validateVideoMetadata`, so an empty description is allowed, as the
+  rule allows it. The legacy form required one.
+- Noted, not changed: `validateVideoMetadata` caps a description at 5000 characters and a title at 200,
+  while `UpdateVideoMetadataSchema` caps them at 4000 and 255.
+
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.

@@ -1,6 +1,6 @@
-import axios from 'axios';
 import type { ApiClient } from '@vp/api-client';
 import type { PresignedPart, StartUpload } from '@vp/api-contracts';
+import axios from 'axios';
 
 export type UploadRequest = StartUpload & { file: File };
 

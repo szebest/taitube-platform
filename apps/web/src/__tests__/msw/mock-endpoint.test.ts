@@ -4,7 +4,7 @@ import { ErrorCodes } from '@vp/errors';
 import { HttpResponse } from 'msw';
 
 import { VIDEO_ID, video } from '#app/__tests__/fixtures';
-import { apiClient } from '#app/base-api';
+import { apiClient } from '#app/integrations/api/api-client';
 import { apiServer } from './api-server';
 import { mockEndpoint, problemReply } from './mock-endpoint';
 

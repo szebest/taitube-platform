@@ -1,45 +1,97 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { IntlProvider } from '@vp/intl-react';
 import { VIDEO_ID } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
 import { VideoForm, type VideoFormProps } from '../upload-video-form';
 
-async function renderForm(overrides: Partial<VideoFormProps> = {}): Promise<string> {
-  return renderPage(
-    <VideoForm
-      isError={false}
-      isSuccess={false}
-      reset={() => {}}
-      submit={() => {}}
-      {...overrides}
-    />
+const FORM_DEFAULTS: VideoFormProps = {
+  isError: false,
+  isSuccess: false,
+  progress: 0,
+  reset: () => {},
+  submit: () => {},
+};
+
+const clip = new File(['bytes'], 'clip.mp4', { type: 'video/mp4' });
+
+function renderForm(overrides: Partial<VideoFormProps> = {}) {
+  const { container } = render(
+    <IntlProvider locale="en" timeZone="UTC">
+      <VideoForm {...FORM_DEFAULTS} {...overrides} />
+    </IntlProvider>
   );
+  const fileInput = container.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!fileInput) throw new Error('the upload form has no file input');
+  return { fileInput };
 }
 
+function uploadButton(): HTMLButtonElement {
+  return screen.getByRole<HTMLButtonElement>('button', { name: 'upload' });
+}
+
+afterEach(cleanup);
+
 describe('apps/web: upload video form', () => {
-  it('asks for a video file, a title and the visibility', async () => {
-    const markup = await renderForm();
+  it('asks for a video file of a type the API accepts, a title and the visibility', () => {
+    const { fileInput } = renderForm();
 
-    expect(markup).toContain('click to select video file');
-    expect(markup).toContain('accept="video/mp4,.mp4"');
-    expect(markup).toContain('Video title');
-    expect(markup).toContain('aria-label="Video visibility"');
+    expect(screen.getByText("Drag 'n' drop, or click to select video file")).toBeTruthy();
+    expect(fileInput.accept).toBe('video/mp4,video/webm,video/quicktime,video/x-matroska');
+    expect(screen.getByLabelText<HTMLSelectElement>('Video visibility').value).toBe('private');
   });
 
-  it('holds the upload button until a file and a title are given', async () => {
-    const markup = await renderForm();
+  it.each([
+    { given: 'nothing', file: false, title: '', disabled: true },
+    { given: 'a title only', file: false, title: 'Clip', disabled: true },
+    { given: 'a file only', file: true, title: '', disabled: true },
+    { given: 'a file and a title', file: true, title: 'Clip', disabled: false },
+  ])(
+    'holds the upload button given $given: disabled=$disabled',
+    async ({ file, title, disabled }) => {
+      const { fileInput } = renderForm();
 
-    expect(markup).toContain('>Upload</button>');
-    expect(markup).toContain('disabled=""');
+      if (file) await userEvent.upload(fileInput, clip);
+      if (title) await userEvent.type(screen.getByLabelText('Video title'), title);
+
+      expect(uploadButton().disabled).toBe(disabled);
+    }
+  );
+
+  it('submits the chosen file with the title and the visibility', async () => {
+    const submit = vi.fn();
+    const { fileInput } = renderForm({ submit });
+
+    await userEvent.upload(fileInput, clip);
+    await userEvent.type(screen.getByLabelText('Video title'), 'Clip');
+    await userEvent.selectOptions(screen.getByLabelText('Video visibility'), 'public');
+    await userEvent.click(uploadButton());
+
+    expect(submit).toHaveBeenCalledWith({ file: [clip], title: 'Clip', visibility: 'public' });
+    expect(screen.getByText('clip.mp4')).toBeTruthy();
   });
 
-  it('turns the button into a retry after a failed upload', async () => {
-    expect(await renderForm({ isError: true })).toContain('aria-label="retry"');
+  it('shows the transfer progress once submitted', async () => {
+    const { fileInput } = renderForm({ progress: 42.6 });
+
+    await userEvent.upload(fileInput, clip);
+    await userEvent.type(screen.getByLabelText('Video title'), 'Clip');
+    await userEvent.click(uploadButton());
+
+    expect(screen.getByText(/Progress: 43%/)).toBeTruthy();
+  });
+
+  it('turns the button into a retry after a failed upload', () => {
+    renderForm({ isError: true });
+
+    expect(screen.getByRole('button', { name: 'retry' })).toBeTruthy();
   });
 
   it('links to the uploaded video and offers another upload once done', async () => {
-    const markup = await renderForm({
-      isSuccess: true,
-      data: { videoId: VIDEO_ID, status: 'UPLOADED' },
-    });
+    const markup = await renderPage(
+      <VideoForm {...FORM_DEFAULTS} isSuccess data={{ videoId: VIDEO_ID, status: 'UPLOADED' }} />
+    );
 
     expect(markup).toContain(`href="/watch/${VIDEO_ID}"`);
     expect(markup).toContain('Submit another video');

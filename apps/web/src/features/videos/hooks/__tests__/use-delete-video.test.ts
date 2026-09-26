@@ -17,7 +17,10 @@ describe('apps/web: deleteVideoMutationOptions', () => {
       )
     );
     const detailKey = videoQueryOptions(VIDEO_ID).queryKey;
-    const listKeys = [myVideosQueryOptions().queryKey, publicFeedQueryOptions({ sort: 'recent' }).queryKey];
+    const listKeys = [
+      myVideosQueryOptions().queryKey,
+      publicFeedQueryOptions({ sort: 'recent' }).queryKey,
+    ];
     const client = createQueryClient();
     client.setQueryData(detailKey, video());
     for (const queryKey of listKeys) client.setQueryData(queryKey, { pages: [], pageParams: [] });

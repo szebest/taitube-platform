@@ -40,7 +40,13 @@ function answerUpload() {
 
 function storageReportsHalfway() {
   vi.spyOn(axios, 'put').mockImplementation(async (_url, _file, config) => {
-    config?.onUploadProgress?.({ loaded: 2, total: 4, progress: 0.5, bytes: 2, lengthComputable: true });
+    config?.onUploadProgress?.({
+      loaded: 2,
+      total: 4,
+      progress: 0.5,
+      bytes: 2,
+      lengthComputable: true,
+    });
     return { headers: {} };
   });
 }
@@ -57,18 +63,28 @@ describe('apps/web: uploadVideoMutationOptions', () => {
       request
     );
 
-    expect(settled).toEqual({ status: 'fulfilled', value: { videoId: VIDEO_ID, status: 'UPLOADED' } });
+    expect(settled).toEqual({
+      status: 'fulfilled',
+      value: { videoId: VIDEO_ID, status: 'UPLOADED' },
+    });
     expect(progress).toEqual([0, 50]);
   });
 
   it("marks the caller's videos and the feeds stale once the upload settles", async () => {
     answerUpload();
     storageReportsHalfway();
-    const listKeys = [myVideosQueryOptions().queryKey, publicFeedQueryOptions({ sort: 'recent' }).queryKey];
+    const listKeys = [
+      myVideosQueryOptions().queryKey,
+      publicFeedQueryOptions({ sort: 'recent' }).queryKey,
+    ];
     const client = createQueryClient();
     for (const queryKey of listKeys) client.setQueryData(queryKey, { pages: [], pageParams: [] });
 
-    await runMutation(client, uploadVideoMutationOptions(() => {}), request);
+    await runMutation(
+      client,
+      uploadVideoMutationOptions(() => {}),
+      request
+    );
 
     for (const queryKey of listKeys) {
       expect(client.getQueryState(queryKey)?.isInvalidated).toBe(true);

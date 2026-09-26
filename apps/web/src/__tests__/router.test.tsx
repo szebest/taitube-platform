@@ -1,10 +1,12 @@
+// @vitest-environment jsdom
 import { Link, createMemoryHistory } from '@tanstack/react-router';
 import { guestSession } from '#app/integrations/auth/session';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { RouteError, RouteNotFound, RoutePending } from '../components/route-fallbacks';
 import { getRouter } from '../router';
-import { jsonResponse, recordRequests } from './api-store';
-import { CHANNEL_ID, VIDEO_ID, video } from './fixtures';
+import { CHANNEL_ID, VIDEO_ID } from './fixtures';
+import { loaderApi } from './loader-api';
+import { apiServer } from './msw/api-server';
 
 async function resolve(path: string) {
   const router = getRouter({ history: createMemoryHistory({ initialEntries: [path] }) });
@@ -23,7 +25,7 @@ describe('apps/web: router', () => {
     { path: '/upload', routeId: '/_authed/upload/' },
     { path: `/upload/edit/${VIDEO_ID}`, routeId: '/_authed/upload/edit/$videoId' },
   ])('resolves $path to $routeId', async ({ path, routeId }) => {
-    recordRequests(() => jsonResponse(video()));
+    apiServer.use(...loaderApi());
 
     const router = await resolve(path);
 
@@ -36,12 +38,36 @@ describe('apps/web: router', () => {
     { path: '/channel/not-a-channel' },
     { path: '/upload/edit/not-a-video' },
   ])('answers $path with not-found and no API call', async ({ path }) => {
-    const sent = recordRequests();
+    const answered: string[] = [];
+    apiServer.use(...loaderApi(answered));
 
     const router = await resolve(path);
 
     expect(router.state.matches.some((match) => match.status === 'notFound')).toBe(true);
-    expect(sent).toEqual([]);
+    expect(answered).toEqual([]);
+  });
+
+  it('loads the video once when the watch page and the edit page both need it', async () => {
+    const answered: string[] = [];
+    apiServer.use(...loaderApi(answered));
+    const router = await resolve(`/watch/${VIDEO_ID}`);
+
+    await router.navigate({ to: '/upload/edit/$videoId', params: { videoId: VIDEO_ID } });
+
+    expect(router.state.matches.at(-1)?.routeId).toBe('/_authed/upload/edit/$videoId');
+    expect(answered).toEqual([`/v1/videos/${VIDEO_ID}`]);
+  });
+
+  it('serves a feed page already visited from the cache when the viewer comes back to it', async () => {
+    const answered: string[] = [];
+    apiServer.use(...loaderApi(answered));
+    const router = await resolve('/');
+
+    await router.navigate({ to: '/trending' });
+    await router.navigate({ to: '/' });
+
+    expect(answered.filter((path) => path === '/v1/feed')).toHaveLength(2);
+    expect(answered.filter((path) => path === '/v1/categories')).toHaveLength(1);
   });
 
   it('builds a new query cache for every router, so no two requests share one', () => {

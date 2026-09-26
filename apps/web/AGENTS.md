@@ -10,7 +10,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/web`)
 |---|---|
 | Framework | **TanStack Start** on **Vite 7**, **React 19**, server-rendered and hydrated |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
-| Data | **TanStack Query** for new code (one `QueryClient` per request and per tab, in router context); **RTK Query** still serves the legacy pages until 53 deletes it |
+| Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
 | Styling | Bootstrap 5 + `react-bootstrap`, global SCSS under `src/styles/`, `*.module.scss` beside components, until 55 |
 | Playback | legacy `react-player` 2, fed the bundled `hls.js` so it never fetches the CDN copy, until 57 |
 | Tests | Vitest through the app's own Vite config (`vitest.config.ts` merges `vite.config.ts`), `environment: 'node'`, `globals: true` |
@@ -31,11 +31,13 @@ src/
 │   ├── __root.tsx        the HTML document, global styles, provider stack, legacy layout, devtools
 │   ├── _authed.tsx       pathless members-only layout (legacy AuthorizedContainer today)
 │   └── $.tsx             the legacy redirects for unmatched paths
-├── features/<feature>/   new code: api/ (queryOptions, loaders), components/, hooks/
-├── integrations/         query/ (QueryClient factory), auth/ (the session in router context),
-│                         router/ (param parsing), devtools/ (dev server only)
+├── features/<feature>/   new code: api/ (query options and key factories), hooks/ (mutations),
+│                         forms/ (field validators), components/
+├── integrations/         api/ (the apiClient), query/ (QueryClient factory, ensureFound, keyset
+│                         paging), form/ (useAppForm and its fields), auth/ (the session in router
+│                         context), router/ (param parsing), devtools/ (dev server only)
 ├── components/           app-wide pieces: <Can>, the route fallbacks; ui/ is the design system (55)
-├── hooks/                useCan, useStoredState
+├── hooks/                useCan, useStoredState, useVideoPages, toViewState
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
 ├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
 ├── config/               the only reader of import.meta.env, parsed with Zod
@@ -52,7 +54,8 @@ export const Route = createFileRoute('/watch/$videoId')({
     stringify: ({ videoId }) => ({ videoId }),
   },
   validateSearch: z.object({}),
-  loader: ({ context: { queryClient }, params: { videoId } }) => ensureVideo(queryClient, videoId),
+  loader: ({ context: { queryClient }, params: { videoId } }) =>
+    ensureFound(queryClient, videoQueryOptions(videoId)),
   component: VideoPage,
 });
 ```
@@ -61,10 +64,9 @@ export const Route = createFileRoute('/watch/$videoId')({
   schema refuses, so a malformed id renders the not-found page and never reaches the API.
 - **Every route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
   state lives there, never in component state that should survive a refresh or a shared link (69).
-- **Data loads in the loader** through `queryClient.ensureQueryData(xQueryOptions(...))`; the component reads
-  the same options with `useSuspenseQuery`. The `/watch/$videoId` route is the reference: `videoQueryOptions`
-  and `ensureVideo` in `src/features/watch/api/`. The server's fetch is dehydrated into the page, and the
-  default `staleTime` keeps the browser from asking again on hydration.
+- **Data loads in the loader**; the component reads the same options with `useSuspenseQuery`. See
+  [Queries, mutations and forms](#queries-mutations-and-forms). The server's fetch is dehydrated into the
+  page, and the default `staleTime` keeps the browser from asking again on hydration.
 - **Loading and error UI come from the router**: `defaultPendingComponent`, `defaultErrorComponent` and
   `defaultNotFoundComponent` in `router.tsx`, with a pending delay so a fast navigation never flashes.
 - **Links are typed against the tree**: `<Link to="/channel/$channelId" params={{ channelId }}>`, never an
@@ -84,15 +86,41 @@ Everything under `src/` runs on the server first. A component that reads `window
   the server's markup, the player mounts after hydration.
 
 The session token lives in `localStorage`, so every server render is a guest's (`guestSession()` in
-router context). 56 moves the session to a cookie and puts a `beforeLoad` guard on `_authed`.
+router context), and `_authed` is `ssr: false`: its loaders read members-only data the server cannot
+authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on `_authed` and drops the flag.
+
+### Queries, mutations and forms
+
+- **A query is a factory in `features/<feature>/api/<feature>-queries.ts`** beside its key factory:
+  `videoKeys.detail(id)` feeds `videoQueryOptions(id)`. Every key of a feature starts with `videoKeys.all`, so
+  one `invalidateQueries({ queryKey: videoKeys.all })` reaches all of them. A component and a loader never
+  spell a key; they call the factory and read `.queryKey` for a cache write.
+- **The loader fetches the page's primary data**: `ensureFound(queryClient, xQueryOptions(...))` for an entity
+  (an API 404 renders the not-found page), `queryClient.ensureQueryData` for a list,
+  `queryClient.ensureInfiniteQueryData` for a keyset feed. The component reads it with `useSuspenseQuery`, or
+  `useVideoPages` (over `useSuspenseInfiniteQuery`) for a feed of videos. Data only a signed-in viewer has
+  (my reaction, is-subscribed) is a plain `useQuery({ ...options, enabled })` in the component that needs it.
+- **Keyset feeds** spread `keysetPaging` into `infiniteQueryOptions`: the cursor is the `pageParam` and
+  `KEYSET_PAGE_SIZE` is the page size, so the loader and the page ask for the same key.
+- **A mutation is `xMutationOptions(id)` next to its `useX(id)` hook** in `features/<feature>/hooks/`. The
+  callbacks reach the cache through the `client` TanStack Query passes them, never a closed-over client, so
+  a spec runs the options on a `QueryClient` with `runMutation` (`src/__tests__/run-mutation.ts`).
+  Optimistic ones (`useSetReaction`, `useSetSubscription`) snapshot and write in `onMutate`, put the
+  snapshot back with `restoreQueryData` in `onError` and invalidate in `onSettled`; the rest invalidate the
+  detail and list keys they change. Per-call reactions (a toast, a navigation) go in `mutate(vars, { onSuccess })`.
+- **A form is `useAppForm`** (`integrations/form/use-app-form.ts`), which binds `TextField`, `SelectField`
+  and `FileField` to `form.AppField`. A field validator is `validateWith(rule)` over a `@vp/validation`
+  rule, so the browser runs the check the API runs; the video fields live in
+  `features/videos/forms/video-field-validators.ts`. Gate the submit button on
+  `form.Subscribe selector={(state) => state.canSubmit}`; `onMount` validators run after hydration, so a spec
+  of that gate renders in jsdom (`// @vitest-environment jsdom`).
 
 ### Seams for the tickets that follow
 
 | Ticket | Where it plugs in |
 |---|---|
-| 53 data layer | `integrations/query/`, the `videoQueryOptions` + `ensureVideo` pattern; `base-api.ts` and `modules/shared/api/` are the RTK Query it deletes |
 | 55 design system | `components/ui/`; global styles are linked once, in `__root.tsx` |
-| 56 auth | `auth` in router context (`integrations/auth/session.ts`) and the `_authed` layout route |
+| 56 auth | `auth` in router context (`integrations/auth/session.ts`), the `_authed` layout route, and `integrations/api/api-client.ts` for the token |
 | 69 URL state | the `validateSearch` every route already declares |
 | 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
 
@@ -114,20 +142,20 @@ A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX.
 [docs/standards/authorization.md](../../docs/standards/authorization.md).
 
 ### Rule 2: Every HTTP call goes through `apiClient`
-`apiClient` in `src/base-api.ts` wraps `createApiClient` from `@vp/api-client` with `API_BASE_URL` from
-`src/config`. `axios` carries no API traffic; its one use is the PUT of file bytes to presigned storage URLs
-in `src/modules/Upload/api/upload-video.ts`. A component consumes a hook or a query and renders; it never
+`apiClient` in `src/integrations/api/api-client.ts` wraps `createApiClient` from `@vp/api-client` with
+`API_BASE_URL` from `src/config`. `axios` carries no API traffic; its one use is the PUT of file bytes to
+presigned storage URLs in `src/features/upload/api/upload-video.ts`. A component consumes a hook or a query and renders; it never
 calls `apiClient` itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
-Nothing new goes into `src/modules/` or RTK Query. A legacy page gets mechanical edits only; the page ticket
+Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
 that replaces it owns the redesign.
 
 ### Rule 4: Rules come from a package, and the component holds none
-Not built yet; 53 and 70 build it. `@vp/validation` is where a form check comes from and `@vp/domain-rules`
-an entity-dependent decision, the same functions the API runs. A hook unwraps the `Result` and returns a
-`ViewState`; a component is `(viewState) => JSX`, with no API call, `try/catch` or validation literal.
-`present(failure)` is a total `switch` ending in `assertNever`. The authority is
+`@vp/validation` is where a form check comes from and `@vp/domain-rules` an entity-dependent decision, the
+same functions the API runs. A hook unwraps the `Result` with `toViewState` (`src/hooks/to-view-state.ts`)
+into a `ViewState`; a component is `(viewState) => JSX`, with no API call, `try/catch` or validation literal.
+`present(failure)` is a total `switch` ending in `assertNever` (70 builds it). The authority is
 [docs/standards/error-handling.md](../../docs/standards/error-handling.md).
 
 ### Rule 5: Components never format
@@ -154,7 +182,7 @@ TypeScript, Vite, Vitest and the SSR build resolve it without a tsconfig `paths`
 
 ```ts
 import { API_BASE_URL } from '#app/config';          // outside the feature folder
-import { videoQueryOptions } from './video-query-options';  // a sibling
+import { videoQueryOptions } from './video-queries';        // a sibling
 import { WatchPlayer } from '../components/watch-player';   // one level up, still the same feature
 ```
 

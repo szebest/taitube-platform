@@ -33,7 +33,10 @@ describe('apps/web: updateVideoMutationOptions', () => {
       })
     );
 
-    await runMutation(seeded(), updateVideoMutationOptions(VIDEO_ID), { title: 'After', version: 3 });
+    await runMutation(seeded(), updateVideoMutationOptions(VIDEO_ID), {
+      title: 'After',
+      version: 3,
+    });
 
     expect(bodies).toEqual([{ title: 'After', version: 3 }]);
   });

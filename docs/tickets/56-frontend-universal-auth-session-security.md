@@ -35,6 +35,7 @@ session to a cookie the server can read, puts the user in router context, and re
   switcher.
 - The `_authed` layout route gets a `beforeLoad` that redirects a guest to `/login?redirect=...`. The legacy
   `AuthorizedContainer` is deleted.
+- `_authed` drops the `ssr: false` 53 gave it, so its loaders run on the server with the cookie session.
 - The legacy account dropdown in `src/layout/components/login/` becomes an account menu in
   `src/features/auth/components/` (plain markup; [58](58-modern-browse-layout-microinteractions-motion.md) styles it in the new shell) with sign out through `signOut`.
 

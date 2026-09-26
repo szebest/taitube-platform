@@ -1,5 +1,5 @@
-import axios from 'axios';
 import type { ApiClient } from '@vp/api-client';
+import axios from 'axios';
 import { VIDEO_ID } from '#app/__tests__/fixtures';
 import { uploadVideo } from '../upload-video';
 
@@ -14,7 +14,9 @@ function stubObjectStorage() {
 function clientWith(started: Record<string, unknown>) {
   const completeUpload = vi.fn(async () => ({ videoId: VIDEO_ID, status: 'UPLOADED' }));
   const issueUploadParts = vi.fn(async ({ query }: { query: { from: number } }) => ({
-    parts: [{ partNumber: query.from, url: `https://example.invalid/part-${query.from}`, expiresAt: '' }],
+    parts: [
+      { partNumber: query.from, url: `https://example.invalid/part-${query.from}`, expiresAt: '' },
+    ],
   }));
 
   const client = {
@@ -47,7 +49,11 @@ describe('apps/web: upload orchestration', () => {
       (percent) => progress.push(percent)
     );
 
-    expect(put).toHaveBeenCalledWith('http://localhost:9000/raw/source.mp4', file, expect.anything());
+    expect(put).toHaveBeenCalledWith(
+      'http://localhost:9000/raw/source.mp4',
+      file,
+      expect.anything()
+    );
     expect(completeUpload).toHaveBeenCalledWith({ params: { uploadId: UPLOAD_ID }, body: {} });
     expect(progress).toEqual([]);
   });

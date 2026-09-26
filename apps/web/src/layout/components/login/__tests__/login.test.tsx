@@ -1,7 +1,7 @@
-import { createApiStore } from '#app/__tests__/api-store';
 import { stubBrowser } from '#app/__tests__/browser';
 import { account, channel } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
+import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { Login } from '../login';
 
 describe('apps/web: login', () => {
@@ -15,13 +15,13 @@ describe('apps/web: login', () => {
   });
 
   it('shows a signed-in viewer their channel name and avatar behind the settings toggle', async () => {
-    const store = createApiStore();
-    await signIn(store, {
+    const queryClient = createQueryClient();
+    signIn(queryClient, {
       ...account(),
       channel: channel({ avatarUrl: 'http://localhost:9000/avatars/creator.png' }),
     });
 
-    const markup = await renderPage(<Login />, { store });
+    const markup = await renderPage(<Login />, { queryClient });
 
     expect(markup).toContain('The Creator');
     expect(markup).toContain('aria-label="settings"');
