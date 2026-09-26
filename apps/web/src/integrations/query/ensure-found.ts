@@ -1,16 +1,16 @@
-import type { QueryClient } from '@tanstack/react-query';
+import type { EnsureQueryDataOptions, QueryClient, QueryKey } from '@tanstack/react-query';
 import { notFound } from '@tanstack/react-router';
 import { ApiError } from '@vp/api-client';
-import type { Video } from '@vp/api-contracts';
 import { fromPromise, isOk } from '@vp/result';
-
-import { videoQueryOptions } from './video-query-options';
 
 const NOT_FOUND = 404;
 
-export async function ensureVideo(queryClient: QueryClient, videoId: string): Promise<Video> {
+export async function ensureFound<T, TKey extends QueryKey>(
+  queryClient: QueryClient,
+  options: EnsureQueryDataOptions<T, Error, T, TKey>
+): Promise<T> {
   const loaded = await fromPromise(
-    () => queryClient.ensureQueryData(videoQueryOptions(videoId)),
+    () => queryClient.ensureQueryData(options),
     (cause) => cause
   );
   if (isOk(loaded)) return loaded.value;

@@ -4,7 +4,13 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#app/*": ["./src/*", "./src/*.ts", "./src/*.tsx", "./src/*/index.ts", "./src/*/index.tsx"]
+    "#app/*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
   },
   "scripts": {
     "dev": "vite dev",
@@ -15,6 +21,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
+    "@tanstack/react-form": "^1.33.5",
     "@tanstack/react-query": "^5.103.2",
     "@tanstack/react-router": "^1.170.39",
     "@tanstack/react-router-ssr-query": "^1.167.3",
@@ -25,6 +32,7 @@
     "@vp/intl-react": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/result": "workspace:*",
+    "@vp/validation": "workspace:*",
     "axios": "^1.6.2",
     "bootstrap": "^5.2.3",
     "bootstrap-icons": "^1.13.1",
