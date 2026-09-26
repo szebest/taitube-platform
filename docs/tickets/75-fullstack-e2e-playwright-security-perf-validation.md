@@ -66,3 +66,18 @@ them. Lighthouse and vitals are [64](64-web-vitals-monitoring-inp-lcp-cls-real-u
 
 - [ ] `pnpm --filter @vp/web test:e2e` green locally and in CI; `pnpm typecheck`, `pnpm lint` green.
 - [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+
+## Open questions
+
+- Decided: the suite runs against the in-process stack (`tests/e2e/in-process-env.ts`, the one `make e2e`
+  uses: real API, real workers and FFmpeg, in-memory adapters, mock S3) started by Playwright's `webServer`,
+  not `make up-all`. Compose pins container names and ports 3000/9000, so a second stack cannot run beside
+  a developer's, and CI needs no Docker. `E2E_API_URL=http://localhost:3000` points the same specs at the
+  compose stack; a compose-backed CI run can follow once 83's `web` container lands.
+- Decided: the stack seeds through the pipeline itself (upload, transcode, READY) instead of `pnpm db:seed`,
+  whose rows name storage objects that do not exist in memory.
+- Decided: comments have no UI on the current app, so the XSS suite covers titles and descriptions (watch
+  page heading, description and document title, home feed card). The ticket that renders comments adds them.
+- Decided: the home feed is still RTK Query and renders client-side; the browse flow asserts the server
+  renders the page shell and the card appears after hydration. 53 moves the feed to a loader and tightens it.
+- Decided: CI runs every flow except those tagged `@extended` (none yet); the whole suite takes about 35 s.

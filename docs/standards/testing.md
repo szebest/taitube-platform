@@ -37,6 +37,10 @@ rule below that can be checked by a machine is, and the check is named next to i
 - `make smoke` and `make smoke-offline` against the Compose stack, `E2E_REDUCED=true pnpm e2e` (or
   `make e2e`) for the in-process acceptance suite. Every fixture the e2e specs read comes out of a plain
   `pnpm gen-video` (`tests/in-process/e2e-fixtures.test.ts`).
+- `pnpm --filter @vp/web test:e2e` (or `make e2e-web`, the `e2e-web` CI job) for the Playwright browser
+  suite in `apps/web/e2e/`, against the same in-process stack plus the built web app. Its specs are held to
+  the spec discipline below, apart from the Vitest rules. Where a page ticket adds its flows:
+  [apps/web/AGENTS.md](../../apps/web/AGENTS.md) Rule 10.
 
 ---
 
@@ -148,6 +152,7 @@ runtime parity is at stake; its pure `resolve-locale.test.ts` still runs under b
 | One package | `pnpm --filter @vp/adapters test`, any package name in place of `adapters` |
 | Smoke against Compose | `make smoke`, `make smoke-offline` |
 | In-process acceptance suite | `make e2e` |
+| Browser suite (Playwright) | `make e2e-web` |
 
 A package's specs run only if the root `vitest.config.ts` `projects` globs reach its `vitest*.config.ts`.
 After adding one, check the file count in the `pnpm test` summary went up.
