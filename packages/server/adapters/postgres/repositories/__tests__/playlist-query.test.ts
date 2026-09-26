@@ -1,7 +1,7 @@
-import { PGlite } from '@electric-sql/pglite';
+import type { PGlite } from '@electric-sql/pglite';
 import * as schema from '@vp/db';
 import { drizzle } from 'drizzle-orm/pglite';
-import { migratedDataDir } from '../../../__tests__/contract/pglite-snapshot';
+import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
 import { entriesOf, writePositions } from '../playlist-query';
 import type { PostgresDatabase } from '../types';
 
@@ -16,7 +16,7 @@ describe('adapters/postgres: playlist query', () => {
   let db: PostgresDatabase;
 
   beforeAll(async () => {
-    engine = new PGlite({ loadDataDir: await migratedDataDir() });
+    engine = await migratedPglite();
     db = drizzle(engine, { schema });
     await db.insert(schema.users).values([
       { id: OWNER, email: 'owner@x.local' },
