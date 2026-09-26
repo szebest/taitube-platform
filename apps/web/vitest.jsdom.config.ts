@@ -1,6 +1,6 @@
 import { DOM_SPECS, MSW_SETUP, webTestConfig } from './vitest.config';
 
-export default webTestConfig({
+export default await webTestConfig({
   name: 'web (jsdom)',
   environment: 'jsdom',
   include: [DOM_SPECS],

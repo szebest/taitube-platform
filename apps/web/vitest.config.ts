@@ -23,7 +23,7 @@ export async function webTestConfig(test: NonNullable<ViteUserConfig['test']>) {
   );
 }
 
-export default webTestConfig({
+export default await webTestConfig({
   environment: 'node',
   include: ['src/**/__tests__/**/*.test.{ts,tsx}', 'vite/**/__tests__/**/*.test.ts'],
   exclude: ['**/node_modules/**', DOM_SPECS],
