@@ -6,6 +6,9 @@ export const ROOT = resolve(import.meta.dirname, '../..');
 
 const SOURCE_ROOTS = ['apps', 'packages', 'scripts'];
 
+/** The browser suite is test code that Playwright runs, not source that ships. */
+const BROWSER_SUITE = 'apps/web/e2e/';
+
 let tracked: readonly string[] | undefined;
 
 /** The index, listed once per process: every ratchet filters the same list instead of forking git. */
@@ -120,7 +123,8 @@ export function productionSources(): string[] {
   return trackedFiles(...SOURCE_ROOTS)
     .filter((file) => /\.tsx?$/.test(file) && !file.endsWith('.d.ts'))
     .filter((file) => !isSpec(file))
-    .filter((file) => !/\/__(tests|mocks)__\//.test(file));
+    .filter((file) => !/\/__(tests|mocks)__\//.test(file))
+    .filter((file) => !file.startsWith(BROWSER_SUITE));
 }
 
 const contents = new Map<string, string>();

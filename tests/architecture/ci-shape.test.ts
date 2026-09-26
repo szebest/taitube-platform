@@ -32,6 +32,7 @@ const BUDGETS: Readonly<Record<string, number>> = {
   'unit-bun': 3,
   integration: 3,
   'e2e-smoke': 4,
+  'e2e-web': 4,
   terraform: 2,
 };
 

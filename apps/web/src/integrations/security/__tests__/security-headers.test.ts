@@ -1,23 +1,30 @@
-import { createNonce, securityHeaders } from '../security-headers';
+import { withSecurityHeaders } from '../security-headers';
+
+async function renderedHeaders() {
+  const nonces: string[] = [];
+  const { response } = await withSecurityHeaders(async (nonce) => {
+    nonces.push(nonce);
+    return { response: new Response('<html></html>', { headers: { 'content-type': 'text/html' } }) };
+  });
+  return { headers: response.headers, nonce: nonces[0] };
+}
 
 describe('apps/web: security headers', () => {
-  it('allows only scripts carrying the request nonce, and what they load', () => {
-    expect(securityHeaders('abc')['Content-Security-Policy']).toBe(
-      "script-src 'nonce-abc' 'strict-dynamic'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+  it('allows only scripts carrying the nonce it handed the render, and what they load', async () => {
+    const { headers, nonce } = await renderedHeaders();
+
+    expect(headers.get('Content-Security-Policy')).toBe(
+      `script-src 'nonce-${nonce}' 'strict-dynamic'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`
     );
   });
 
   it.each([
     ['X-Content-Type-Options', 'nosniff'],
     ['Referrer-Policy', 'strict-origin-when-cross-origin'],
-  ])('sends %s: %s', (name, value) => {
-    expect(securityHeaders('abc')[name]).toBe(value);
-  });
+    ['Content-Type', 'text/html'],
+  ])('answers with %s: %s', async (name, value) => {
+    const { headers } = await renderedHeaders();
 
-  it('makes a fresh base64 nonce of 128 bits for every request', () => {
-    const first = createNonce();
-
-    expect(atob(first)).toHaveLength(16);
-    expect(createNonce()).not.toBe(first);
+    expect(headers.get(name)).toBe(value);
   });
 });

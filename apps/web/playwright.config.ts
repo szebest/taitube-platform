@@ -5,7 +5,6 @@ const API_PORT = 3391;
 const S3_PORT = 9391;
 
 const externalApiUrl = process.env['E2E_API_URL'];
-const reduced = process.env['E2E_REDUCED'] === 'true';
 const ci = process.env['CI'] === 'true';
 
 const web = externalApiUrl
@@ -26,7 +25,6 @@ export default defineConfig<object, { stackUrl: string }>({
   forbidOnly: true,
   fullyParallel: true,
   workers: ci ? 2 : undefined,
-  grepInvert: reduced ? /@extended/ : undefined,
   reporter: ci
     ? [['list'], ['html', { open: 'never', outputFolder: 'e2e/playwright-report' }]]
     : 'list',

@@ -8,6 +8,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'apps/api/src/main.ts',
   'apps/api/src/migrate.ts',
   'apps/api/src/seed.ts',
+  'apps/web/playwright.config.ts',
   'apps/worker/src/instrument.ts',
   'apps/worker/src/main.ts',
   'packages/server/compose-autoscaler/src/main.ts',
@@ -17,6 +18,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'scripts/*.ts',
   'tests/e2e/e2e-runner.ts',
   'tests/e2e/run-e2e.ts',
+  'tests/e2e/web-stack.ts',
 ];
 
 /** Not entrypoints, and still allowed to touch the environment: the loader and the test harness. */
