@@ -1,6 +1,8 @@
-import { jsonResponse, recordRequests } from '#app/__tests__/api-store';
+import { getChannel } from '@vp/api-contracts';
+import { HttpResponse } from 'msw';
 import { CHANNEL_ID, channel } from '#app/__tests__/fixtures';
-import { API_BASE_URL } from '#app/config';
+import { apiServer } from '#app/__tests__/msw/api-server';
+import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { channelKeys, channelQueryOptions } from '../channel-queries';
 
@@ -14,11 +16,14 @@ describe('apps/web: channel queries', () => {
   });
 
   it('loads the channel through the API client', async () => {
-    const sent = recordRequests(() => jsonResponse(channel({ displayName: 'Studio' })));
+    apiServer.use(
+      mockEndpoint(getChannel, ({ params }) =>
+        HttpResponse.json(channel({ id: String(params.idOrHandle), displayName: 'Studio' }))
+      )
+    );
 
     const loaded = await createQueryClient().fetchQuery(channelQueryOptions(CHANNEL_ID));
 
-    expect(loaded.displayName).toBe('Studio');
-    expect(sent.map(({ url }) => url)).toEqual([`${API_BASE_URL}/v1/channels/${CHANNEL_ID}`]);
+    expect(loaded).toMatchObject({ id: CHANNEL_ID, displayName: 'Studio' });
   });
 });

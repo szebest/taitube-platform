@@ -12,9 +12,17 @@ export async function runMutation<TData, TVariables, TContext>(
   return settled;
 }
 
-export function problemResponse(status: number): Response {
-  return new Response(
-    JSON.stringify({ type: 'about:blank', title: 'x', status, code: 'X', detail: 'x' }),
-    { status, headers: { 'content-type': 'application/problem+json' } }
-  );
+/** A reply the spec releases by hand, so it can look at the cache while the request is in flight. */
+export function heldReply<T>(reply: () => T): { answer: () => Promise<T>; release: () => void } {
+  let resolve = () => {};
+  const released = new Promise<void>((settle) => {
+    resolve = settle;
+  });
+  return {
+    answer: async () => {
+      await released;
+      return reply();
+    },
+    release: () => resolve(),
+  };
 }

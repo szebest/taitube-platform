@@ -1,8 +1,8 @@
-import type { InfiniteData } from '@tanstack/react-query';
-import type { FeedResponse } from '@vp/api-contracts';
-import { jsonResponse, recordRequests } from '#app/__tests__/api-store';
+import { getFeed, getSubscriptionFeed } from '@vp/api-contracts';
+import { HttpResponse } from 'msw';
 import { VIDEO_ID, videoSummary } from '#app/__tests__/fixtures';
-import { API_BASE_URL } from '#app/config';
+import { apiServer } from '#app/__tests__/msw/api-server';
+import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { feedKeys, publicFeedQueryOptions, subscriptionFeedQueryOptions } from '../feed-queries';
 
@@ -16,45 +16,54 @@ const secondPage = {
   total: 2,
 };
 
-function ids(feed: InfiniteData<FeedResponse>): string[] {
-  return feed.pages.flatMap((page) => page.items.map((item) => item.id));
+function pagedFeed(searches: string[]) {
+  return mockEndpoint(getFeed, ({ request }) => {
+    const { searchParams } = new URL(request.url);
+    searches.push(searchParams.toString());
+    return HttpResponse.json(searchParams.has('cursor') ? secondPage : firstPage);
+  });
 }
 
 describe('apps/web: feed queries', () => {
-  it.each<{ feed: string; fetch: () => Promise<unknown>; url: string }>([
-    {
-      feed: 'the public feed',
-      fetch: () =>
-        createQueryClient().fetchInfiniteQuery(
-          publicFeedQueryOptions({ sort: 'trending', categoryId: CATEGORY_ID })
-        ),
-      url: `${API_BASE_URL}/v1/feed?sort=trending&categoryId=${CATEGORY_ID}&limit=30`,
-    },
-    {
-      feed: 'the subscription feed',
-      fetch: () => createQueryClient().fetchInfiniteQuery(subscriptionFeedQueryOptions()),
-      url: `${API_BASE_URL}/v1/feed/subscriptions?limit=30`,
-    },
-  ])('reads the first page of $feed with GET $url', async ({ fetch, url }) => {
-    const sent = recordRequests(() => jsonResponse(firstPage));
+  it('reads the public feed for its sort and category, a page at a time', async () => {
+    const searches: string[] = [];
+    apiServer.use(pagedFeed(searches));
 
-    await fetch();
+    await createQueryClient().fetchInfiniteQuery(
+      publicFeedQueryOptions({ sort: 'trending', categoryId: CATEGORY_ID })
+    );
 
-    expect(sent).toEqual([{ method: 'GET', url, body: undefined }]);
+    expect(searches).toEqual([`sort=trending&categoryId=${CATEGORY_ID}&limit=30`]);
+  });
+
+  it('reads the subscription feed a page at a time', async () => {
+    const searches: string[] = [];
+    apiServer.use(
+      mockEndpoint(getSubscriptionFeed, ({ request }) => {
+        searches.push(new URL(request.url).searchParams.toString());
+        return HttpResponse.json(secondPage);
+      })
+    );
+
+    await createQueryClient().fetchInfiniteQuery(subscriptionFeedQueryOptions());
+
+    expect(searches).toEqual(['limit=30']);
   });
 
   it('asks for the next page with the cursor the last one returned', async () => {
-    const sent = recordRequests((url) =>
-      jsonResponse(url.includes('cursor=') ? secondPage : firstPage)
-    );
+    const searches: string[] = [];
+    apiServer.use(pagedFeed(searches));
 
     const feed = await createQueryClient().fetchInfiniteQuery({
       ...publicFeedQueryOptions({ sort: 'recent' }),
       pages: 2,
     });
 
-    expect(ids(feed)).toEqual([VIDEO_ID, SECOND_VIDEO_ID]);
-    expect(sent.at(-1)?.url).toBe(`${API_BASE_URL}/v1/feed?sort=recent&limit=30&cursor=next`);
+    expect(feed.pages.flatMap((page) => page.items.map((item) => item.id))).toEqual([
+      VIDEO_ID,
+      SECOND_VIDEO_ID,
+    ]);
+    expect(searches.at(-1)).toBe('sort=recent&limit=30&cursor=next');
   });
 
   it('keeps a feed per sort and category, so switching either starts from its first page', () => {

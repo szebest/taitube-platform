@@ -1,27 +1,27 @@
-import { jsonResponse } from '#app/__tests__/api-store';
+import { getVideo } from '@vp/api-contracts';
+import { HttpResponse } from 'msw';
 import { stubBrowser } from '#app/__tests__/browser';
 import { VIDEO_ID, video } from '#app/__tests__/fixtures';
-import { API_BASE_URL } from '#app/config';
+import { apiServer } from '#app/__tests__/msw/api-server';
+import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { apiClient } from '../api-client';
 
-type Sent = { url: string; headers: Headers };
-
-function recordSent(): Sent[] {
-  const sent: Sent[] = [];
-  vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
-    sent.push({ url, headers: new Headers(init.headers) });
-    return jsonResponse(video());
-  });
+function recordAuthorization(): (string | null)[] {
+  const sent: (string | null)[] = [];
+  apiServer.use(
+    mockEndpoint(getVideo, ({ request }) => {
+      sent.push(request.headers.get('authorization'));
+      return HttpResponse.json(video());
+    })
+  );
   return sent;
 }
 
 describe('apps/web: apiClient', () => {
   it('calls the configured API host', async () => {
-    const sent = recordSent();
+    recordAuthorization();
 
-    await apiClient.videos.getVideo({ params: { id: VIDEO_ID } });
-
-    expect(sent.map(({ url }) => url)).toEqual([`${API_BASE_URL}/v1/videos/${VIDEO_ID}`]);
+    await expect(apiClient.videos.getVideo({ params: { id: VIDEO_ID } })).resolves.toEqual(video());
   });
 
   it.each([
@@ -29,10 +29,10 @@ describe('apps/web: apiClient', () => {
     { viewer: 'a guest', token: undefined, authorization: null },
   ])('authenticates $viewer from the stored token', async ({ token, authorization }) => {
     stubBrowser({ token });
-    const sent = recordSent();
+    const sent = recordAuthorization();
 
     await apiClient.videos.getVideo({ params: { id: VIDEO_ID } });
 
-    expect(sent[0]?.headers.get('authorization')).toBe(authorization);
+    expect(sent).toEqual([authorization]);
   });
 });

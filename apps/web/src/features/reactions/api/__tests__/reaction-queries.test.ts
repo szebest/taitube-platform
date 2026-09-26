@@ -1,19 +1,22 @@
-import { jsonResponse, recordRequests } from '#app/__tests__/api-store';
+import { getMyReaction } from '@vp/api-contracts';
+import { HttpResponse } from 'msw';
 import { VIDEO_ID } from '#app/__tests__/fixtures';
-import { API_BASE_URL } from '#app/config';
+import { apiServer } from '#app/__tests__/msw/api-server';
+import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { myReactionQueryOptions } from '../reaction-queries';
 
 describe('apps/web: reaction queries', () => {
   it("reads the caller's reaction to a video", async () => {
-    const sent = recordRequests(() => jsonResponse({ videoId: VIDEO_ID, reaction: 'LIKE' }));
+    apiServer.use(
+      mockEndpoint(getMyReaction, ({ params }) =>
+        HttpResponse.json({ videoId: String(params.id), reaction: 'LIKE' })
+      )
+    );
 
     const loaded = await createQueryClient().fetchQuery(myReactionQueryOptions(VIDEO_ID));
 
-    expect(loaded.reaction).toBe('LIKE');
-    expect(sent.map(({ url }) => url)).toEqual([
-      `${API_BASE_URL}/v1/videos/${VIDEO_ID}/reactions/me`,
-    ]);
+    expect(loaded).toEqual({ videoId: VIDEO_ID, reaction: 'LIKE' });
   });
 
   it('keys the reaction by the video', () => {

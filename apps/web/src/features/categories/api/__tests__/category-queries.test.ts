@@ -1,15 +1,15 @@
-import { jsonResponse, recordRequests } from '#app/__tests__/api-store';
-import { API_BASE_URL } from '#app/config';
+import { listCategories } from '@vp/api-contracts';
+import { HttpResponse } from 'msw';
+import { apiServer } from '#app/__tests__/msw/api-server';
+import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { categoriesQueryOptions } from '../category-queries';
 
 describe('apps/web: category queries', () => {
   it('loads the categories through the API client', async () => {
-    const sent = recordRequests(() => jsonResponse([]));
+    apiServer.use(mockEndpoint(listCategories, () => HttpResponse.json([])));
 
-    await createQueryClient().fetchQuery(categoriesQueryOptions());
-
-    expect(sent.map(({ url }) => url)).toEqual([`${API_BASE_URL}/v1/categories`]);
+    await expect(createQueryClient().fetchQuery(categoriesQueryOptions())).resolves.toEqual([]);
   });
 
   it('keeps the categories fresh longer than the app default, as they rarely change', () => {

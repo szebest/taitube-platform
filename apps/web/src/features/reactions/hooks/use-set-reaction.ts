@@ -39,7 +39,10 @@ export function setReactionMutationOptions(videoId: string) {
 
       client.setQueryData(reactionKey, { videoId, reaction });
       if (previousVideo) {
-        client.setQueryData(videoKey, recount(previousVideo, previousReaction?.reaction ?? null, reaction));
+        client.setQueryData(
+          videoKey,
+          recount(previousVideo, previousReaction?.reaction ?? null, reaction)
+        );
       }
       return { previousReaction, previousVideo };
     },

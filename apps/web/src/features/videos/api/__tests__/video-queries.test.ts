@@ -1,6 +1,8 @@
-import { jsonResponse, recordRequests } from '#app/__tests__/api-store';
+import { getVideo, listVideos } from '@vp/api-contracts';
+import { HttpResponse } from 'msw';
 import { VIDEO_ID, video, videoSummary } from '#app/__tests__/fixtures';
-import { API_BASE_URL } from '#app/config';
+import { apiServer } from '#app/__tests__/msw/api-server';
+import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { myVideosQueryOptions, videoKeys, videoQueryOptions } from '../video-queries';
 
@@ -19,23 +21,29 @@ describe('apps/web: video queries', () => {
   });
 
   it('loads the video detail through the API client', async () => {
-    const sent = recordRequests(() => jsonResponse(video({ title: 'Launch day' })));
+    apiServer.use(
+      mockEndpoint(getVideo, ({ params }) =>
+        HttpResponse.json(video({ id: String(params.id), title: 'Launch day' }))
+      )
+    );
 
     const loaded = await createQueryClient().fetchQuery(videoQueryOptions(VIDEO_ID));
 
-    expect(loaded.title).toBe('Launch day');
-    expect(sent.map(({ method, url }) => `${method} ${url}`)).toEqual([
-      `GET ${API_BASE_URL}/v1/videos/${VIDEO_ID}`,
-    ]);
+    expect(loaded).toMatchObject({ id: VIDEO_ID, title: 'Launch day' });
   });
 
   it("pages through the caller's videos by cursor", async () => {
-    const sent = recordRequests((url) =>
-      jsonResponse(
-        url.includes('cursor=')
-          ? { items: [videoSummary({ id: SECOND_VIDEO_ID })], nextCursor: null }
-          : { items: [videoSummary()], nextCursor: 'next' }
-      )
+    const cursors: (string | null)[] = [];
+    apiServer.use(
+      mockEndpoint(listVideos, ({ request }) => {
+        const cursor = new URL(request.url).searchParams.get('cursor');
+        cursors.push(cursor);
+        return HttpResponse.json(
+          cursor
+            ? { items: [videoSummary({ id: SECOND_VIDEO_ID })], nextCursor: null }
+            : { items: [videoSummary()], nextCursor: 'next' }
+        );
+      })
     );
 
     const pages = await createQueryClient().fetchInfiniteQuery({
@@ -47,6 +55,6 @@ describe('apps/web: video queries', () => {
       VIDEO_ID,
       SECOND_VIDEO_ID,
     ]);
-    expect(sent.map(({ url }) => url)).toContain(`${API_BASE_URL}/v1/videos?limit=30&cursor=next`);
+    expect(cursors).toEqual([null, 'next']);
   });
 });
