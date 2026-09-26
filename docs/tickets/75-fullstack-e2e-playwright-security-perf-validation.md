@@ -9,7 +9,7 @@
 | Blocks | 57 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
-**Status:** blocked
+**Status:** ready
 
 The browser-level suite, started early on the app [89](89-web-tanstack-start-foundation.md) leaves (legacy
 pages included) so every later page ticket adds its own flows to a harness that already runs, instead of one
