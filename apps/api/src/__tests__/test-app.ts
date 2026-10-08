@@ -8,6 +8,7 @@ import {
 import type { Container } from '@vp/composition';
 import type { JobQueue, StorageClient } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
+import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
@@ -53,7 +54,8 @@ export async function buildTestApp(options: TestAppOptions = {}): Promise<TestAp
   const cache = options.adapters?.cache ?? new InMemoryCacheClient();
   const storage = options.adapters?.storage ?? new InMemoryStorageClient();
   const searchSuggestions =
-    options.adapters?.searchSuggestions ?? new InMemorySearchSuggestionIndex(Date.now);
+    options.adapters?.searchSuggestions ??
+    new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix);
   const { app, container } = await composeApp({
     config: options.config ?? inProcessAppConfig(),
     adapters: { ...options.adapters, repositories, cache, storage, searchSuggestions },

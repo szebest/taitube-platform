@@ -141,7 +141,13 @@ export function describeSearchRepositoryContract(makeSubject: MakeRepositoriesSu
           visibility: 'private',
         })
       );
-      for (const [n, videoId] of [S.secret, S.takenDown, S.course, S.tricks].entries()) {
+      for (const [n, videoId] of [
+        S.secret,
+        S.takenDown,
+        S.unlisted,
+        S.course,
+        S.tricks,
+      ].entries()) {
         const id = `00000000-0000-7000-8000-0000000047d${n}`;
         expectOk(await playlists.addItem(S.essentials, { id, videoId }));
       }
@@ -192,7 +198,7 @@ export function describeSearchRepositoryContract(makeSubject: MakeRepositoriesSu
       expect(new Set(page.hits.map((hit) => hit.kind))).toEqual(new Set([only]));
     });
 
-    it('describes a playlist by its public ready videos, not the private or taken-down ones', async () => {
+    it('describes a playlist by its public ready videos, not private, unlisted or taken-down ones', async () => {
       const [hit] = (await run({ kinds: ['playlist'] })).hits;
 
       expect(hit?.kind === 'playlist' && hit.card).toMatchObject({
@@ -256,6 +262,13 @@ export function describeSearchRepositoryContract(makeSubject: MakeRepositoriesSu
       );
       expect(positions(byViews)[0]).toBe(`channel:${S.channel}`);
     });
+
+    it.each(['javascript', 'javascript -fast', '"learn javascript"'])(
+      'reads %j as a query that narrows the search',
+      async (text) => {
+        expect(expectOk(await search.restricts(text))).toBe(true);
+      }
+    );
 
     it('suggests channels by handle or name prefix, most subscribed first', async () => {
       expect(expectOk(await search.suggestChannels('jsm', 3)).map((c) => c.id)).toEqual([

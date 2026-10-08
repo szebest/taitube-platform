@@ -12,7 +12,10 @@ describeSearchSuggestionIndexContract(redisSearchSuggestionIndexSubject);
 describe('RedisSearchSuggestionIndexAdapter', () => {
   it('files the query under each prefix key and refreshes each one for a week', async () => {
     const redis = new FakeRedis();
-    const index = new RedisSearchSuggestionIndexAdapter(redis.asRedis());
+    const index = new RedisSearchSuggestionIndexAdapter({
+      redis: redis.asRedis(),
+      keptPerPrefix: SEARCH_SUGGESTIONS.keptPerPrefix,
+    });
 
     expectOk(await index.record('go'));
 
@@ -26,7 +29,10 @@ describe('RedisSearchSuggestionIndexAdapter', () => {
   it('reports a Redis that is down as CACHE_UNAVAILABLE', async () => {
     const redis = new FakeRedis();
     vi.spyOn(redis, 'zrevrange').mockRejectedValue(new Error('connection refused'));
-    const index = new RedisSearchSuggestionIndexAdapter(redis.asRedis());
+    const index = new RedisSearchSuggestionIndexAdapter({
+      redis: redis.asRedis(),
+      keptPerPrefix: SEARCH_SUGGESTIONS.keptPerPrefix,
+    });
 
     const suggested = await index.suggest('go', 3);
 

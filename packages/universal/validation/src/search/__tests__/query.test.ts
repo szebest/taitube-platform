@@ -45,6 +45,9 @@ describe('@vp/validation: validateSearchQuery', () => {
     { text: 'react -class', plain: false },
     { text: 'react or vue', plain: false },
     { text: '"react hooks"', plain: false },
+    { text: 'react!', plain: false },
+    { text: 'react?.', plain: false },
+    { text: 'żółć 2026', plain: true },
   ])('treats $text as a plain query: $plain', ({ text, plain }) => {
     expect(isPlainSearchQuery(text)).toBe(plain);
   });

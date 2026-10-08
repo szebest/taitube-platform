@@ -9,6 +9,7 @@ import { type Channel, type SearchResultKind, compareSearchPositions } from '@vp
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, all, andThen, fromPromise, map } from '@vp/result';
 import { desc, or, sql } from 'drizzle-orm';
+import { restrictsQuery } from './search-query';
 import { type SearchSource, channelSource, playlistSource, videoSource } from './search-sources';
 import type { PostgresDatabase } from './types';
 
@@ -46,6 +47,17 @@ export class PostgresSearchRepository implements SearchRepositoryPort {
         .slice(0, query.limit + 1),
       total: kinds.reduce((sum, page) => sum + page.total, 0),
     }));
+  }
+
+  async restricts(text: string): Promise<Result<boolean, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ restricts: sql<boolean>`${restrictsQuery(text)}`.mapWith(Boolean) })
+          .from(sql`(select 1) as probe`),
+      databaseUnavailable.during('searchRestricts')
+    );
+    return map(rows, ([row]) => row?.restricts ?? false);
   }
 
   async suggestChannels(

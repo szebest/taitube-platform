@@ -5,8 +5,14 @@ import { withinLength } from '../plain-text';
 const SEARCH_QUERY_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };
 
 const WORDLIKE = /[\p{L}\p{N}]/u;
+const PLAIN_WORD = /^[\p{L}\p{N}]+$/u;
 
 export type InvalidSearchQuery = InvalidField<LengthBounds> | InvalidField;
+
+/** The query parses to nothing that narrows a search, as `-lofi` or `-"lo fi"` does. */
+export function searchQueryWithoutTerms(): InvalidField {
+  return invalidField('q', 'q must hold at least one word to search for', {});
+}
 
 function words(text: string): string[] {
   return text.split(' ');
@@ -25,12 +31,13 @@ function isPositiveTerm(word: string): boolean {
 export function validateSearchQuery(q: string): Result<string, InvalidSearchQuery> {
   const text = q.trim().replace(/\s+/g, ' ').toLowerCase();
   if (!withinLength(text, SEARCH_QUERY_BOUNDS)) return err(invalidLength('q', SEARCH_QUERY_BOUNDS));
-  return words(text).some(isPositiveTerm)
-    ? ok(text)
-    : err(invalidField('q', 'q must hold at least one word to search for', {}));
+  return words(text).some(isPositiveTerm) ? ok(text) : err(searchQueryWithoutTerms());
 }
 
-/** Plain words only: no phrase quotes, no `or`, no exclusions. Only such a query is worth suggesting. */
+/**
+ * Letters and digits only, so `react`, `react!` and `react?.` cannot become three suggestions of
+ * one search, and no quote, `or` or exclusion reaches the index.
+ */
 export function isPlainSearchQuery(text: string): boolean {
-  return !text.includes('"') && words(text).every(isPositiveTerm);
+  return words(text).every((word) => word !== 'or' && PLAIN_WORD.test(word));
 }

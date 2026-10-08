@@ -1,6 +1,7 @@
 import type { Redis } from 'ioredis';
+import { SEARCH_SUGGESTION_SCRIPT } from '../redis-search-suggestion-index.adapter';
 import { VIEW_BUFFER_SCRIPTS } from '../redis-view-buffer.adapter';
-import { rankRange, ranked } from './fake-sorted-set';
+import { rankRange, ranked, recordSuggestion } from './fake-sorted-set';
 
 type Listener = (...args: string[]) => void;
 
@@ -124,6 +125,8 @@ export class FakeRedis {
         return this.snapshotViews(keys, argv);
       case VIEW_BUFFER_SCRIPTS.release:
         return this.releaseViews(keys, argv);
+      case SEARCH_SUGGESTION_SCRIPT:
+        return recordSuggestion(this.sortedSets, this.ttls, keys, argv);
       default:
         throw new Error('FakeRedis has no stand-in for this script');
     }
@@ -218,22 +221,6 @@ export class FakeRedis {
     return this.sets.get(key)?.has(member) ? 1 : 0;
   }
 
-  async zincrby(key: string, delta: number, member: string): Promise<string> {
-    const set = this.sortedSets.get(key) ?? new Map<string, number>();
-    const next = (set.get(member) ?? 0) + delta;
-    set.set(member, next);
-    this.sortedSets.set(key, set);
-    return String(next);
-  }
-
-  async zremrangebyrank(key: string, start: number, stop: number): Promise<number> {
-    const set = this.sortedSets.get(key);
-    if (!set) return 0;
-    const doomed = rankRange(ranked(set), start, stop);
-    for (const member of doomed) set.delete(member);
-    return doomed.length;
-  }
-
   async zrevrange(key: string, start: number, stop: number): Promise<string[]> {
     return rankRange(ranked(this.sortedSets.get(key) ?? new Map()).reverse(), start, stop);
   }
@@ -285,14 +272,6 @@ export class FakePipeline {
 
   expire(key: string, ttlSeconds: number): this {
     return this.queue(() => void this.redis.expire(key, ttlSeconds));
-  }
-
-  zincrby(key: string, delta: number, member: string): this {
-    return this.queue(() => void this.redis.zincrby(key, delta, member));
-  }
-
-  zremrangebyrank(key: string, start: number, stop: number): this {
-    return this.queue(() => void this.redis.zremrangebyrank(key, start, stop));
   }
 
   hset(key: string, fieldOrMap: string | Record<string, string>, value?: string): this {

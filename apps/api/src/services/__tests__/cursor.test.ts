@@ -228,6 +228,16 @@ describe('apps/api/services: pagination cursors', () => {
         sort: 'relevance' as const,
       },
       {
+        scenario: 'an instant past the year 9999',
+        payload: { instant: 3e14 },
+        sort: 'relevance' as const,
+      },
+      {
+        scenario: 'an instant before 1970',
+        payload: { instant: -1 },
+        sort: 'relevance' as const,
+      },
+      {
         scenario: 'an instant past what a date holds',
         payload: { instant: 9e15 },
         sort: 'relevance' as const,

@@ -9,6 +9,7 @@ import type {
 import {
   type Channel,
   PUBLIC_FEED_STATUS,
+  PUBLIC_FEED_VISIBILITY,
   type Playlist,
   SEARCH_RANKING,
   type SearchResultKind,
@@ -73,6 +74,11 @@ export class InMemorySearchRepository implements SearchRepositoryPort {
       ? matched.filter((hit) => compareSearchPositions(hit, cursor) > 0)
       : matched;
     return ok({ hits: after.slice(0, query.limit + 1), total: matched.length });
+  }
+
+  /** The double reads plain words only, so to it every query that passed validation narrows. */
+  async restricts(_text: string): Promise<Result<boolean, DatabaseUnavailable>> {
+    return ok(true);
   }
 
   async suggestChannels(
@@ -166,7 +172,10 @@ export class InMemorySearchRepository implements SearchRepositoryPort {
           null
         );
         if (!detail) return [];
-        const listed = detail.items.filter((item) => item.video.status === PUBLIC_FEED_STATUS);
+        const listed = detail.items.filter(
+          ({ video }) =>
+            video.status === PUBLIC_FEED_STATUS && video.visibility === PUBLIC_FEED_VISIBILITY
+        );
         const videoCount = listed.length;
         const keys = {
           relevance: () => playlistSearchScore(match.score, videoCount),

@@ -16,7 +16,10 @@ import type { CategoryCacheSubject } from './category-cache.contract';
 import type { FlowProducerSubject } from './flow-producer.contract';
 import type { JobQueueSubject } from './job-queue.contract';
 import type { MultipartStorageSubject } from './multipart-storage.contract';
-import type { SearchSuggestionIndexSubject } from './search-suggestion-index.contract';
+import {
+  CONTRACT_KEPT_PER_PREFIX,
+  type SearchSuggestionIndexSubject,
+} from './search-suggestion-index.contract';
 import type { StorageClientSubject } from './storage-client.contract';
 import type { SubscriptionCacheSubject } from './subscription-cache.contract';
 import type { ViewBufferSubject } from './view-buffer.contract';
@@ -59,7 +62,7 @@ export async function inMemoryCategoryCacheSubject(): Promise<CategoryCacheSubje
 export async function inMemorySearchSuggestionIndexSubject(): Promise<SearchSuggestionIndexSubject> {
   let now = 0;
   return {
-    index: new InMemorySearchSuggestionIndex(() => now),
+    index: new InMemorySearchSuggestionIndex(() => now, CONTRACT_KEPT_PER_PREFIX),
     endWindow: async () => {
       now += SEARCH_SUGGESTIONS.countWindowSeconds * MS_PER_SECOND;
     },

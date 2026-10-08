@@ -22,6 +22,11 @@ const { A, B, C, D } = SEARCH_RANKING.weights;
 /** `ts_rank_cd` reads its weights lowest first: D, C, B, A. */
 const RANK_WEIGHTS = sql.raw(`'{${D},${C},${B},${A}}'::float4[]`);
 
+/** `querytree` reduces a query that excludes and never includes to `T`, which matches everything. */
+export function restrictsQuery(text: string): SQL {
+  return sql`querytree(${tsqueryOf(text)}) <> 'T'`;
+}
+
 export function instantOf(instant: number): SQL {
   return sql`${new Date(instant).toISOString()}::timestamptz`;
 }

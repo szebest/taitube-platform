@@ -205,10 +205,12 @@ function asUuid(value: unknown): Result<string, InvalidCursor> {
   return parsed.success ? ok(parsed.data) : err(invalidCursor());
 }
 
-/** A millisecond instant `Date` can hold, so `toISOString()` never throws on it downstream. */
+/** The last millisecond of 9999: past it `toISOString()` writes `+011476-...`, which Postgres refuses. */
+const LAST_FOUR_DIGIT_YEAR_MS = Date.UTC(9999, 11, 31, 23, 59, 59, 999);
+
 function asInstant(value: unknown): Result<number, InvalidCursor> {
   return andThen(asNumber(value), (instant) =>
-    Number.isNaN(new Date(instant).getTime()) ? err(invalidCursor()) : ok(instant)
+    instant >= 0 && instant <= LAST_FOUR_DIGIT_YEAR_MS ? ok(instant) : err(invalidCursor())
   );
 }
 

@@ -158,6 +158,7 @@ function playlistStats() {
       drizzleWhere(
         eq(pi.playlistId, p.id),
         watchableVideoScope(null),
+        publicVisibilityScope(v),
         eq(v.status, PUBLIC_FEED_STATUS)
       )
     )

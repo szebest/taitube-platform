@@ -1,4 +1,5 @@
 import { type Container, closeOnDispose, token } from '@vp/composition';
+import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { portBoardQueues } from '../bullmq/port-board-queues';
 import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
@@ -50,7 +51,10 @@ export function registerFamily(c: Container): void {
       closeOnDispose
     )
     .provide(Adapters.SubscriptionCache, () => new InMemorySubscriptionCache())
-    .provide(Adapters.SearchSuggestions, () => new InMemorySearchSuggestionIndex(Date.now))
+    .provide(
+      Adapters.SearchSuggestions,
+      () => new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix)
+    )
     .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
     .provide(Adapters.BoardQueues, () => portBoardQueues);
 }

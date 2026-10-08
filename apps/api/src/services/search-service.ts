@@ -21,8 +21,8 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import { CacheKeys } from '@vp/events';
 import type { Paginator } from '@vp/pagination';
-import { andThen, andThenAsync, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
-import { isPlainSearchQuery, validateSearchQuery } from '@vp/validation';
+import { andThen, andThenAsync, err, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
+import { isPlainSearchQuery, searchQueryWithoutTerms, validateSearchQuery } from '@vp/validation';
 import { decodeSearchCursor, searchCursorPayload } from './cursor';
 import { toChannelSuggestion, toSearchResultItem } from './search-views';
 
@@ -69,11 +69,9 @@ export class SearchService {
       const cached = await this.readCache(plan.key);
       if (cached) return ok(this.timed(cached, 'HIT', startedAt));
 
-      const computed = await this.deps.singleflight.do(plan.key, async () => {
-        const body = await this.compute(request, plan);
-        if (isOk(body)) await this.remember(plan, body.value);
-        return body;
-      });
+      const computed = await this.deps.singleflight.do(plan.key, () =>
+        this.searchUncached(request, plan)
+      );
       return map(computed, (body) => this.timed(body, 'MISS', startedAt));
     });
   }
@@ -108,6 +106,17 @@ export class SearchService {
         (cursor): Plan => ({ text, sort, cursor, key: this.cacheKey(request, text) })
       )
     );
+  }
+
+  private async searchUncached(request: SearchRequest, plan: Plan) {
+    const narrowing = andThen(await this.deps.search.restricts(plan.text), (narrows) =>
+      narrows ? ok(plan) : err(searchQueryWithoutTerms())
+    );
+    return andThenAsync(narrowing, async (narrowed) => {
+      const body = await this.compute(request, narrowed);
+      if (isOk(body)) await this.remember(narrowed, body.value);
+      return body;
+    });
   }
 
   private async compute(request: SearchRequest, { text, sort, cursor }: Plan) {

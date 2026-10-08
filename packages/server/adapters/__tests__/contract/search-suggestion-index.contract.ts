@@ -9,6 +9,9 @@ export interface SearchSuggestionIndexSubject {
   close(): Promise<void>;
 }
 
+/** Small enough that a spec fills a prefix in a handful of writes. */
+export const CONTRACT_KEPT_PER_PREFIX = 3;
+
 export type MakeSearchSuggestionIndexSubject = () => Promise<SearchSuggestionIndexSubject>;
 
 export function describeSearchSuggestionIndexContract(
@@ -69,13 +72,17 @@ export function describeSearchSuggestionIndexContract(
       expect(expectOk(await index.suggest(`${stem}x`, 5))).toEqual([`${stem}x`]);
     });
 
-    it('keeps a new query even when many older ones were searched more', async () => {
-      for (let n = 0; n < 60; n += 1) {
-        await searchedInWindows(`${stem}-${String(n).padStart(2, '0')}`, 2);
-      }
-      await searchedInWindows(`${stem}-new`, 1);
+    it('lets a new query into a full prefix in place of the least searched one', async () => {
+      await searchedInWindows(`${stem}-a`, 3);
+      await searchedInWindows(`${stem}-b`, 2);
+      await searchedInWindows(`${stem}-c`, 2);
+      await searchedInWindows(`${stem}-d`, 1);
 
-      expect(expectOk(await index.suggest(stem, 100))).toContain(`${stem}-new`);
+      expect(expectOk(await index.suggest(stem, 5))).toEqual([
+        `${stem}-d`,
+        `${stem}-a`,
+        `${stem}-c`,
+      ]);
     });
   });
 }

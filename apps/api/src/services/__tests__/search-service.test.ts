@@ -4,7 +4,7 @@ import {
   InMemorySearchSuggestionIndex,
 } from '@vp/adapters/in-memory';
 import { Singleflight } from '@vp/concurrency';
-import { SEARCH_CACHE_TTL_SECONDS } from '@vp/domain';
+import { SEARCH_CACHE_TTL_SECONDS, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
@@ -28,7 +28,7 @@ describe('apps/api/services: SearchService', () => {
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
-    suggestions = new InMemorySearchSuggestionIndex(Date.now);
+    suggestions = new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix);
     clock = 1_000;
     service = new SearchService({
       search: repositories.search,
@@ -115,6 +115,18 @@ describe('apps/api/services: SearchService', () => {
     expect(failure.code).toBe(ErrorCodes.DATABASE_UNAVAILABLE);
     expect(set).not.toHaveBeenCalled();
     expect(expectOk(await suggestions.suggest('ru', 10))).toEqual([]);
+  });
+
+  it('refuses a query the parser reads as matching everything, and caches nothing', async () => {
+    vi.spyOn(repositories.search, 'restricts').mockResolvedValue(ok(false));
+    const search = vi.spyOn(repositories.search, 'search');
+    const set = vi.spyOn(cache, 'set');
+
+    const failure = expectErr(await service.search(request('-"lo fi"')));
+
+    expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'q' });
+    expect(search).not.toHaveBeenCalled();
+    expect(set).not.toHaveBeenCalled();
   });
 
   it('suggests the channels alone while the suggestion index is down', async () => {

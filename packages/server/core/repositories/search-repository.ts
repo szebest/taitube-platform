@@ -54,6 +54,11 @@ export interface SearchPage {
 export interface SearchRepositoryPort {
   /** Up to `limit + 1` hits after the cursor, merged across kinds in `compareSearchPositions` order. */
   search(query: SearchQuery): Promise<Result<SearchPage, DatabaseUnavailable>>;
+  /**
+   * Whether the parsed query narrows anything at all. A negated phrase, `-"lo fi"`, holds words
+   * yet parses to a query every row satisfies; only the adapter's parser can tell.
+   */
+  restricts(text: string): Promise<Result<boolean, DatabaseUnavailable>>;
   /** Channels whose handle or display name starts with `prefix`, most subscribed first. */
   suggestChannels(prefix: string, limit: number): Promise<Result<Channel[], DatabaseUnavailable>>;
 }

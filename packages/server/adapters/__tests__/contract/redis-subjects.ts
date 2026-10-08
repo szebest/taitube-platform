@@ -12,7 +12,10 @@ import type { CacheClientSubject } from './cache-client.contract';
 import type { CategoryCacheSubject } from './category-cache.contract';
 import { inMemoryCacheClientSubject } from './in-memory-port-subjects';
 import { claimRealServices } from './real-services';
-import type { SearchSuggestionIndexSubject } from './search-suggestion-index.contract';
+import {
+  CONTRACT_KEPT_PER_PREFIX,
+  type SearchSuggestionIndexSubject,
+} from './search-suggestion-index.contract';
 import type { SubscriptionCacheSubject } from './subscription-cache.contract';
 import type { ViewBufferSubject } from './view-buffer.contract';
 
@@ -89,7 +92,10 @@ export async function redisSearchSuggestionIndexSubject(): Promise<SearchSuggest
     ? new Redis(services.redis.url, { password: services.redis.password })
     : new FakeRedis().asRedis();
   return {
-    index: new RedisSearchSuggestionIndexAdapter(redis),
+    index: new RedisSearchSuggestionIndexAdapter({
+      redis,
+      keptPerPrefix: CONTRACT_KEPT_PER_PREFIX,
+    }),
     endWindow: async (text) => {
       await redis.del(CacheKeys.searchCounted(text));
     },

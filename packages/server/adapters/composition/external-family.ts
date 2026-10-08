@@ -1,6 +1,7 @@
 import { type Container, closeOnDispose, token } from '@vp/composition';
 import { CircuitBreaker } from '@vp/concurrency';
 import type { Repositories } from '@vp/core/repositories';
+import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { bullBoardQueues } from '../bullmq/bull-board-queues';
 import { BullMqFlowProducer } from '../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../bullmq/bullmq-job-queue';
@@ -115,7 +116,11 @@ export function registerFamily(c: Container): void {
     )
     .provide(
       Adapters.SearchSuggestions,
-      (c) => new RedisSearchSuggestionIndexAdapter(c.get(Redis).getRedis())
+      (c) =>
+        new RedisSearchSuggestionIndexAdapter({
+          redis: c.get(Redis).getRedis(),
+          keptPerPrefix: SEARCH_SUGGESTIONS.keptPerPrefix,
+        })
     )
     .provide(
       Adapters.ViewBuffer,

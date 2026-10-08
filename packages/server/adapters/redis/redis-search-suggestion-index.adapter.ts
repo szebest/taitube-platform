@@ -6,12 +6,44 @@ import { type Result, andThenAsync, fromPromise, map, ok } from '@vp/result';
 import type { Redis } from 'ioredis';
 
 /**
+ * Space-saving: a full set evicts its least searched member and the newcomer inherits that count
+ * plus one, so a new query always gets a place and a set of old favourites never freezes.
+ */
+export const SEARCH_SUGGESTION_SCRIPT = `
+local member, kept, ttl = ARGV[1], tonumber(ARGV[2]), tonumber(ARGV[3])
+for _, key in ipairs(KEYS) do
+  if redis.call('ZSCORE', key, member) then
+    redis.call('ZINCRBY', key, 1, member)
+  elseif redis.call('ZCARD', key) < kept then
+    redis.call('ZADD', key, 1, member)
+  else
+    local lowest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
+    redis.call('ZREM', key, lowest[1])
+    redis.call('ZADD', key, tonumber(lowest[2]) + 1, member)
+  end
+  redis.call('EXPIRE', key, ttl)
+end
+return 1
+`;
+
+export interface RedisSearchSuggestionIndexConfig {
+  redis: Redis;
+  keptPerPrefix: number;
+}
+
+/**
  * One sorted set per prefix, scored by the windows the query was searched in. `SET NX` on the text
- * claims the window. Each set keeps its most searched members and expires when nobody searches
- * under it for a week, so the index stays bounded without a sweeper.
+ * claims the window. Each set expires when nobody searches under it for a week, so the index stays
+ * bounded without a sweeper.
  */
 export class RedisSearchSuggestionIndexAdapter implements SearchSuggestionIndexPort {
-  constructor(private readonly redis: Redis) {}
+  private readonly redis: Redis;
+  private readonly keptPerPrefix: number;
+
+  constructor(config: RedisSearchSuggestionIndexConfig) {
+    this.redis = config.redis;
+    this.keptPerPrefix = config.keptPerPrefix;
+  }
 
   async record(text: string): Promise<Result<void, CacheUnavailable>> {
     const { countWindowSeconds } = SEARCH_SUGGESTIONS;
@@ -23,16 +55,19 @@ export class RedisSearchSuggestionIndexAdapter implements SearchSuggestionIndexP
   }
 
   private async count(text: string): Promise<Result<void, CacheUnavailable>> {
-    const { keptPerPrefix, ttlSeconds } = SEARCH_SUGGESTIONS;
-    const pipeline = this.redis.pipeline();
-    for (const prefix of searchSuggestionPrefixes(text)) {
-      const key = CacheKeys.searchSuggest(prefix);
-      pipeline
-        .zincrby(key, 1, text)
-        .zremrangebyrank(key, 0, -(keptPerPrefix + 1))
-        .expire(key, ttlSeconds);
-    }
-    const done = await fromPromise(() => pipeline.exec(), cacheUnavailable.during('recordSearch'));
+    const keys = searchSuggestionPrefixes(text).map(CacheKeys.searchSuggest);
+    const done = await fromPromise(
+      () =>
+        this.redis.eval(
+          SEARCH_SUGGESTION_SCRIPT,
+          keys.length,
+          ...keys,
+          text,
+          this.keptPerPrefix,
+          SEARCH_SUGGESTIONS.ttlSeconds
+        ),
+      cacheUnavailable.during('recordSearch')
+    );
     return map(done, () => undefined);
   }
 
