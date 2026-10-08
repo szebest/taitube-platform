@@ -12,7 +12,7 @@ function recount(channel: Channel, subscribed: boolean): Channel {
   return { ...channel, subscriberCount: channel.subscriberCount + (subscribed ? 1 : -1) };
 }
 
-export function setSubscriptionMutationOptions(channelId: string) {
+function setSubscriptionMutationOptions(channelId: string) {
   const statusKey = subscriptionStatusQueryOptions(channelId).queryKey;
   const channelKey = channelQueryOptions(channelId).queryKey;
   const target = { params: { id: channelId } };

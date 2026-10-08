@@ -10,15 +10,15 @@ const clip = (type: string) => new File(['bytes'], 'clip', { type });
 describe('apps/web: video field validators', () => {
   it.each([
     { title: 'Launch day', error: undefined },
-    { title: '', error: 'title must be between 1 and 200 characters' },
-    { title: 'x'.repeat(201), error: 'title must be between 1 and 200 characters' },
+    { title: '', error: 'title must be between 1 and 255 characters' },
+    { title: 'x'.repeat(256), error: 'title must be between 1 and 255 characters' },
   ])('checks a title of $title.length characters', ({ title, error }) => {
     expect(validateVideoTitle({ value: title })).toBe(error);
   });
 
   it.each([
     { description: '', error: undefined },
-    { description: 'x'.repeat(5001), error: 'Description must be at most 5000 characters' },
+    { description: 'x'.repeat(4001), error: 'Description must be at most 4000 characters' },
   ])('checks a description of $description.length characters', ({ description, error }) => {
     expect(validateVideoDescription({ value: description })).toBe(error);
   });

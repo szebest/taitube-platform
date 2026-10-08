@@ -1,8 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { stubBrowser } from '#app/__tests__/browser';
-import { account } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useAuth, useOptionalAuth } from '../auth-provider';
 
 function AuthProbe() {
@@ -27,8 +25,7 @@ describe('apps/web: auth provider', () => {
   });
 
   it('holds the account the API returned for the token', async () => {
-    const queryClient = createQueryClient();
-    signIn(queryClient, account());
+    const queryClient = signIn();
 
     expect(await renderPage(<AuthProbe />, { queryClient })).toContain(
       'account=The Creator loading=false'

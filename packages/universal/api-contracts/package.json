@@ -26,6 +26,7 @@
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/pagination": "workspace:*",
+    "@vp/validation": "workspace:*",
     "zod": "^3.24.2"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
+import { VIDEO_TITLE_BOUNDS } from '@vp/validation';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { VideoVisibilitySchema } from './video-resource';
@@ -23,7 +24,7 @@ const StartUploadSchema = z.object({
   contentType: z.string(),
   strategy: UploadStrategySchema.optional(),
   sha256: z.string().optional(),
-  title: z.string().optional(),
+  title: z.string().max(VIDEO_TITLE_BOUNDS.maxLength).optional(),
   visibility: VideoVisibilitySchema.optional(),
 });
 
@@ -179,4 +180,3 @@ export const abortUpload = defineEndpoint({
 });
 
 export type StartUpload = z.infer<typeof StartUploadSchema>;
-export type PresignedPart = z.infer<typeof PresignedPartSchema>;

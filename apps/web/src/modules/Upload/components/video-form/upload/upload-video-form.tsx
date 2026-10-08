@@ -9,10 +9,10 @@ import type { CompletedUpload } from '#app/features/upload/api/upload-video';
 import {
   VIDEO_FILE_ACCEPT,
   validateVideoFile,
-  validateVideoTitle,
+  videoTitleValidators,
 } from '#app/features/videos/forms/video-field-validators';
 import { useAppForm } from '#app/integrations/form/use-app-form';
-import { UploadProgress } from '../..';
+import { UploadProgress } from '#app/modules/Upload/components/upload-progress/upload-progress';
 
 export type UploadFormValues = Required<Pick<StartUpload, 'title' | 'visibility'>> & {
   file: File[];
@@ -61,10 +61,7 @@ export const VideoForm = ({
         )}
       </form.AppField>
 
-      <form.AppField
-        name="title"
-        validators={{ onMount: validateVideoTitle, onChange: validateVideoTitle }}
-      >
+      <form.AppField name="title" validators={videoTitleValidators}>
         {(field) => <field.TextField label="Video title" />}
       </form.AppField>
 

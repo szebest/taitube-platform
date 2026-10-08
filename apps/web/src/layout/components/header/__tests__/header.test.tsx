@@ -1,7 +1,5 @@
 import { stubBrowser } from '#app/__tests__/browser';
-import { account } from '#app/__tests__/fixtures';
 import { inChrome, renderPage, signIn } from '#app/__tests__/render-page';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { Header } from '../header';
 
 describe('apps/web: header', () => {
@@ -34,8 +32,7 @@ describe('apps/web: header', () => {
   });
 
   it('shows a signed-in viewer their channel', async () => {
-    const queryClient = createQueryClient();
-    signIn(queryClient, account());
+    const queryClient = signIn();
 
     expect(await renderPage(inChrome(<Header />), { queryClient })).toContain('The Creator');
   });

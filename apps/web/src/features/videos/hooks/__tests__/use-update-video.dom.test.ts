@@ -5,11 +5,11 @@ import { HttpResponse } from 'msw';
 import { VIDEO_ID, video } from '#app/__tests__/fixtures';
 import { apiServer } from '#app/__tests__/msw/api-server';
 import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
-import { runMutation } from '#app/__tests__/run-mutation';
+import { runMutation } from '#app/__tests__/render-mutation';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { myVideosQueryOptions, videoQueryOptions } from '#app/features/videos/api/video-queries';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
-import { updateVideoMutationOptions } from '../use-update-video';
+import { useUpdateVideo } from '../use-update-video';
 
 const detailKey = videoQueryOptions(VIDEO_ID).queryKey;
 const mineKey = myVideosQueryOptions().queryKey;
@@ -23,7 +23,7 @@ function seeded(): QueryClient {
   return client;
 }
 
-describe('apps/web: updateVideoMutationOptions', () => {
+describe('apps/web: useUpdateVideo', () => {
   it('sends the changes with the version the edit started from', async () => {
     const bodies: unknown[] = [];
     apiServer.use(
@@ -33,7 +33,7 @@ describe('apps/web: updateVideoMutationOptions', () => {
       })
     );
 
-    await runMutation(seeded(), updateVideoMutationOptions(VIDEO_ID), {
+    await runMutation(seeded(), () => useUpdateVideo(VIDEO_ID), {
       title: 'After',
       version: 3,
     });
@@ -47,7 +47,7 @@ describe('apps/web: updateVideoMutationOptions', () => {
     );
     const client = seeded();
 
-    await runMutation(client, updateVideoMutationOptions(VIDEO_ID), { title: 'After', version: 3 });
+    await runMutation(client, () => useUpdateVideo(VIDEO_ID), { title: 'After', version: 3 });
 
     expect(client.getQueryData(detailKey)?.title).toBe('After');
     for (const queryKey of [detailKey, mineKey, feedKey]) {
@@ -59,7 +59,7 @@ describe('apps/web: updateVideoMutationOptions', () => {
     apiServer.use(mockEndpoint(updateVideo, () => problemReply(ErrorCodes.VERSION_CONFLICT)));
     const client = seeded();
 
-    const settled = await runMutation(client, updateVideoMutationOptions(VIDEO_ID), {
+    const settled = await runMutation(client, () => useUpdateVideo(VIDEO_ID), {
       title: 'After',
       version: 3,
     });

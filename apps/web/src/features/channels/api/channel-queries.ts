@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 
 import { apiClient } from '#app/integrations/api/api-client';
 
-export const channelKeys = {
+const channelKeys = {
   all: ['channels'] as const,
   detail: (channelId: string) => [...channelKeys.all, 'detail', channelId] as const,
 };

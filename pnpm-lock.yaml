@@ -1136,6 +1136,9 @@ importers:
       '@vp/pagination':
         specifier: workspace:*
         version: link:../pagination
+      '@vp/validation':
+        specifier: workspace:*
+        version: link:../validation
       zod:
         specifier: ^3.24.2
         version: 3.25.76

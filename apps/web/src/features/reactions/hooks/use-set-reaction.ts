@@ -21,7 +21,7 @@ function recount(video: Video, from: Reaction, to: Reaction): Video {
   };
 }
 
-export function setReactionMutationOptions(videoId: string) {
+function setReactionMutationOptions(videoId: string) {
   const reactionKey = myReactionQueryOptions(videoId).queryKey;
   const videoKey = videoQueryOptions(videoId).queryKey;
 

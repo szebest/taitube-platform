@@ -9,6 +9,6 @@ describe('apps/web: validateWith', () => {
   });
 
   it("answers a value the rule refuses with the rule's message", () => {
-    expect(validateTitle({ value: '' })).toBe('title must be between 1 and 200 characters');
+    expect(validateTitle({ value: '' })).toBe('title must be between 1 and 255 characters');
   });
 });

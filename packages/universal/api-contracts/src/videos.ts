@@ -1,5 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { Base64UrlCursorCodec } from '@vp/pagination';
+import { VIDEO_DESCRIPTION_MAX_LENGTH, VIDEO_TITLE_BOUNDS } from '@vp/validation';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
@@ -30,8 +31,12 @@ const ListVideosQuerySchema = z.object({
 });
 
 const UpdateVideoMetadataSchema = z.object({
-  title: z.string().max(255).optional().describe('Updated video title'),
-  description: z.string().max(4000).optional().describe('Updated video description'),
+  title: z.string().max(VIDEO_TITLE_BOUNDS.maxLength).optional().describe('Updated video title'),
+  description: z
+    .string()
+    .max(VIDEO_DESCRIPTION_MAX_LENGTH)
+    .optional()
+    .describe('Updated video description'),
   visibility: VideoVisibilitySchema.optional().describe(
     'Updated visibility: private, unlisted, or public'
   ),

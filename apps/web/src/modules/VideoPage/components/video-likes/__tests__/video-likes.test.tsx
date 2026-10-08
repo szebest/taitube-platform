@@ -1,7 +1,6 @@
-import { VIDEO_ID, account, video } from '#app/__tests__/fixtures';
+import { VIDEO_ID, video } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { VideoLikes } from '../video-likes';
 
 describe('apps/web: video likes', () => {
@@ -26,8 +25,7 @@ describe('apps/web: video likes', () => {
   ] as const)(
     'marks the $reaction the signed-in viewer gave',
     async ({ reaction, filled, unfilled }) => {
-      const queryClient = createQueryClient();
-      signIn(queryClient, account());
+      const queryClient = signIn();
       queryClient.setQueryData(myReactionQueryOptions(VIDEO_ID).queryKey, {
         videoId: VIDEO_ID,
         reaction,

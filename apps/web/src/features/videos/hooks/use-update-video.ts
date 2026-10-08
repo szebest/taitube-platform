@@ -6,7 +6,7 @@ import { apiClient } from '#app/integrations/api/api-client';
 
 import { videoKeys, videoQueryOptions } from '../api/video-queries';
 
-export function updateVideoMutationOptions(videoId: string) {
+function updateVideoMutationOptions(videoId: string) {
   const detailKey = videoQueryOptions(videoId).queryKey;
 
   return mutationOptions({

@@ -1,9 +1,8 @@
 import { type Result, andThen, err, map, ok } from '@vp/result';
+import { VIDEO_TITLE_BOUNDS } from '../videos/metadata';
 import { validateContentType } from './allowed-content-type';
 import { type StartUploadFailure, invalidTitle } from './failures';
 import { validateUploadSize } from './upload-size';
-
-const MAX_TITLE_LENGTH = 200;
 
 export interface UploadLimits {
   readonly maxBytes: number;
@@ -30,7 +29,7 @@ export function validateStartUpload(
   input: StartUploadInput,
   limits: UploadLimits
 ): Result<StartUploadInput, StartUploadFailure> {
-  const maxTitleLength = limits.maxTitleLength ?? MAX_TITLE_LENGTH;
+  const maxTitleLength = limits.maxTitleLength ?? VIDEO_TITLE_BOUNDS.maxLength;
 
   return andThen(validateUploadSize(input.sizeBytes, limits.maxBytes), () =>
     andThen(validateContentType(input.contentType, limits.allowedContentTypes), () =>

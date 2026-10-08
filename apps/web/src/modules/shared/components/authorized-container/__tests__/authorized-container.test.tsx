@@ -1,6 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { stubBrowser } from '#app/__tests__/browser';
-import { account } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { AuthorizedContainer } from '../authorized-container';
@@ -16,8 +15,7 @@ async function renderGuarded(queryClient: QueryClient): Promise<string> {
 
 describe('apps/web: authorized container', () => {
   it('shows its content to a signed-in viewer', async () => {
-    const queryClient = createQueryClient();
-    signIn(queryClient, account());
+    const queryClient = signIn();
 
     expect(await renderGuarded(queryClient)).toContain('members only');
   });

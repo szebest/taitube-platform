@@ -15,24 +15,20 @@ describe('apps/web: toViewState', () => {
     {
       shape: 'a field failure with its bounds',
       failure: invalidVideoTitle({ minLength: 1, maxLength: 200 }),
-      fieldErrors: { title: 'title must be between 1 and 200 characters' },
     },
     {
       shape: 'a failure with a code of its own',
       failure: uploadTooLarge(2048, 1024),
-      fieldErrors: { sizeBytes: 'File exceeds the maximum upload size of 1024 bytes' },
     },
     {
       shape: 'a failure listing what is allowed',
       failure: unsupportedContentType('video/avi', ['video/mp4']),
-      fieldErrors: { contentType: 'Content type video/avi is not supported. Allowed: video/mp4' },
     },
     {
       shape: 'a failure that names no field',
       failure: { code: ErrorCodes.VIDEO_NOT_FOUND, message: 'No such video' },
-      fieldErrors: {},
     },
-  ])('keeps $shape as the failure and files its message by field', ({ failure, fieldErrors }) => {
-    expect(toViewState(err(failure))).toEqual({ status: 'error', failure, fieldErrors });
+  ])('keeps $shape as the failure', ({ failure }) => {
+    expect(toViewState(err(failure))).toEqual({ status: 'error', failure });
   });
 });

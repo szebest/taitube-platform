@@ -37,17 +37,11 @@ export const EditVideoForm = ({
       }}
       className={styles.form}
     >
-      <form.AppField
-        name="title"
-        validators={{ onMount: validateVideoTitle, onChange: validateVideoTitle }}
-      >
+      <form.AppField name="title" validators={{ onChange: validateVideoTitle }}>
         {(field) => <field.TextField label="Video title" />}
       </form.AppField>
 
-      <form.AppField
-        name="description"
-        validators={{ onMount: validateVideoDescription, onChange: validateVideoDescription }}
-      >
+      <form.AppField name="description" validators={{ onChange: validateVideoDescription }}>
         {(field) => (
           <field.TextField label="Video description" multiline className={styles.form__textarea} />
         )}

@@ -61,6 +61,11 @@ export function subscribedChannel(overrides: Partial<SubscribedChannel> = {}): S
   return { ...channel(), subscribedAt: CREATED_AT, ...overrides };
 }
 
+/** One page of a keyset feed, as an infinite query caches it after the loader's first fetch. */
+export function feedPages(items: VideoSummary[]) {
+  return { pages: [{ items, nextCursor: null, total: items.length }], pageParams: [undefined] };
+}
+
 export function account(): Account {
   const user = { id: OWNER_ID, email: 'creator@example.com', tier: 'free', createdAt: CREATED_AT };
   return { ...user, user, channel: channel() };

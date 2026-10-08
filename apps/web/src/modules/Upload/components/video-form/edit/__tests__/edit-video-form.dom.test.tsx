@@ -36,12 +36,12 @@ describe('apps/web: edit video form', () => {
   });
 
   it.each([
-    { values: 'valid values', title: 'A video', disabled: false },
-    { values: 'an empty title', title: '', disabled: true },
-  ])('lets the edit through with $values: disabled=$disabled', ({ title, disabled }) => {
+    { video: 'a short title', title: 'A video' },
+    { video: 'the longest title the API accepts', title: 'x'.repeat(255) },
+  ])('opens a video with $video ready to edit', ({ title }) => {
     renderForm({ defaultValues: { title, description: '', visibility: 'public' } });
 
-    expect(editButton().disabled).toBe(disabled);
+    expect(editButton().disabled).toBe(false);
   });
 
   it('shows the rule message under a title the viewer cleared', async () => {
@@ -49,7 +49,7 @@ describe('apps/web: edit video form', () => {
 
     await userEvent.setup().clear(screen.getByLabelText('Video title'));
 
-    expect(await screen.findByText('title must be between 1 and 200 characters')).toBeTruthy();
+    expect(await screen.findByText('title must be between 1 and 255 characters')).toBeTruthy();
     expect(editButton().disabled).toBe(true);
   });
 

@@ -1,5 +1,6 @@
 import { CREATOR_LIBRARY_SORTS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
+import { VIDEO_DESCRIPTION_MAX_LENGTH, VIDEO_TITLE_BOUNDS } from '@vp/validation';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
@@ -29,8 +30,12 @@ const ThumbnailSelectionSchema = z
   .describe('The thumbnail to show; the generated poster until custom uploads exist');
 
 const UpdateCreatorVideoSchema = z.object({
-  title: z.string().max(255).optional().describe('Video title'),
-  description: z.string().max(5000).optional().describe('Video description'),
+  title: z.string().max(VIDEO_TITLE_BOUNDS.maxLength).optional().describe('Video title'),
+  description: z
+    .string()
+    .max(VIDEO_DESCRIPTION_MAX_LENGTH)
+    .optional()
+    .describe('Video description'),
   visibility: VideoVisibilitySchema.optional(),
   categoryId: z.string().uuid().nullable().optional().describe('Active category, null for none'),
   tags: z

@@ -1,7 +1,6 @@
 import { stubBrowser } from '#app/__tests__/browser';
-import { CHANNEL_ID, account } from '#app/__tests__/fixtures';
+import { CHANNEL_ID } from '#app/__tests__/fixtures';
 import { inChrome, renderPage, signIn } from '#app/__tests__/render-page';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { Sidebar } from '../sidebar';
 
 const MEMBER_LINKS = [
@@ -31,8 +30,7 @@ describe('apps/web: sidebar', () => {
   });
 
   it('adds the member pages for a signed-in viewer', async () => {
-    const queryClient = createQueryClient();
-    signIn(queryClient, account());
+    const queryClient = signIn();
 
     const markup = await renderPage(inChrome(<Sidebar />), { queryClient });
 

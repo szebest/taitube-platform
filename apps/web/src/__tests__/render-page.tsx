@@ -20,6 +20,7 @@ import { PermissionsProvider } from '../modules/shared/providers/permissions-pro
 import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
 import { ThemeProvider } from '../modules/shared/providers/theme-provider';
 import { stubBrowser } from './browser';
+import { account } from './fixtures';
 import { apiServer } from './msw/api-server';
 
 export type PageOptions = {
@@ -91,7 +92,11 @@ export function inChrome(page: ReactElement): ReactElement {
 }
 
 /** Stores a token and caches `signedIn` as the account it resolves to, so no request is made for it. */
-export function signIn(queryClient: QueryClient, signedIn: Account): void {
+export function signIn(
+  signedIn: Account = account(),
+  queryClient: QueryClient = createQueryClient()
+): QueryClient {
   stubBrowser({ token: 'signed-in' });
   queryClient.setQueryData(accountQueryOptions().queryKey, signedIn);
+  return queryClient;
 }

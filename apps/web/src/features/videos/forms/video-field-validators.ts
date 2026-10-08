@@ -10,6 +10,8 @@ export const VIDEO_FILE_ACCEPT: Accept = Object.fromEntries(
 
 export const validateVideoTitle = validateWith((title: string) => validateVideoMetadata({ title }));
 
+export const videoTitleValidators = { onMount: validateVideoTitle, onChange: validateVideoTitle };
+
 export const validateVideoDescription = validateWith((description: string) =>
   validateVideoMetadata({ description })
 );

@@ -145,6 +145,7 @@ paths:
                   type: string
                 title:
                   type: string
+                  maxLength: 255
                 visibility:
                   type: string
                   enum:
@@ -4222,7 +4223,7 @@ paths:
                   description: Video title
                 description:
                   type: string
-                  maxLength: 5000
+                  maxLength: 4000
                   description: Video description
                 visibility:
                   type: string

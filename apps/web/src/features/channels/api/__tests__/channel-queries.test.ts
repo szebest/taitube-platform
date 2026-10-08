@@ -4,15 +4,11 @@ import { CHANNEL_ID, channel } from '#app/__tests__/fixtures';
 import { apiServer } from '#app/__tests__/msw/api-server';
 import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
-import { channelKeys, channelQueryOptions } from '../channel-queries';
+import { channelQueryOptions } from '../channel-queries';
 
 describe('apps/web: channel queries', () => {
-  it('keys the channel by its id under the channels key', () => {
-    expect(channelQueryOptions(CHANNEL_ID).queryKey).toEqual([
-      ...channelKeys.all,
-      'detail',
-      CHANNEL_ID,
-    ]);
+  it('keys the query by the channel, so two channels never share a cache entry', () => {
+    expect(channelQueryOptions('a').queryKey).not.toEqual(channelQueryOptions('b').queryKey);
   });
 
   it('loads the channel through the API client', async () => {

@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { stubBrowser } from '#app/__tests__/browser';
-import { videoSummary } from '#app/__tests__/fixtures';
+import { feedPages, videoSummary } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { categoriesQueryOptions } from '#app/features/categories/api/category-queries';
@@ -11,10 +11,10 @@ import { AllVideosPage } from '../all-videos-page';
 function loaded(): QueryClient {
   const queryClient = createQueryClient();
   queryClient.setQueryData(categoriesQueryOptions().queryKey, []);
-  queryClient.setQueryData(publicFeedQueryOptions({ sort: 'recent' }).queryKey, {
-    pages: [{ items: [videoSummary({ title: 'Newest upload' })], nextCursor: null, total: 1 }],
-    pageParams: [undefined],
-  });
+  queryClient.setQueryData(
+    publicFeedQueryOptions({ sort: 'recent' }).queryKey,
+    feedPages([videoSummary({ title: 'Newest upload' })])
+  );
   return queryClient;
 }
 

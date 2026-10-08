@@ -4,11 +4,11 @@ import { HttpResponse } from 'msw';
 import { VIDEO_ID } from '#app/__tests__/fixtures';
 import { apiServer } from '#app/__tests__/msw/api-server';
 import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
-import { runMutation } from '#app/__tests__/run-mutation';
+import { renderMutation, runMutation } from '#app/__tests__/render-mutation';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { myVideosQueryOptions } from '#app/features/videos/api/video-queries';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
-import { uploadVideoMutationOptions } from '../use-upload-video';
+import { useUploadVideo } from '../use-upload-video';
 
 const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
 
@@ -51,23 +51,17 @@ function storageReportsHalfway() {
   });
 }
 
-describe('apps/web: uploadVideoMutationOptions', () => {
-  it('reports the transfer progress, starting from zero', async () => {
+describe('apps/web: useUploadVideo', () => {
+  it('holds the transfer progress the storage reported', async () => {
     answerUpload();
     storageReportsHalfway();
-    const progress: number[] = [];
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient());
 
-    const settled = await runMutation(
-      createQueryClient(),
-      uploadVideoMutationOptions((percent) => progress.push(percent)),
-      request
-    );
+    expect(upload.current.progress).toBe(0);
+    const completed = await upload.current.mutateAsync(request);
 
-    expect(settled).toEqual({
-      status: 'fulfilled',
-      value: { videoId: VIDEO_ID, status: 'UPLOADED' },
-    });
-    expect(progress).toEqual([0, 50]);
+    expect(completed).toEqual({ videoId: VIDEO_ID, status: 'UPLOADED' });
+    await vi.waitFor(() => expect(upload.current.progress).toBe(50));
   });
 
   it("marks the caller's videos and the feeds stale once the upload settles", async () => {
@@ -80,11 +74,7 @@ describe('apps/web: uploadVideoMutationOptions', () => {
     const client = createQueryClient();
     for (const queryKey of listKeys) client.setQueryData(queryKey, { pages: [], pageParams: [] });
 
-    await runMutation(
-      client,
-      uploadVideoMutationOptions(() => {}),
-      request
-    );
+    await runMutation(client, () => useUploadVideo(), request);
 
     for (const queryKey of listKeys) {
       expect(client.getQueryState(queryKey)?.isInvalidated).toBe(true);

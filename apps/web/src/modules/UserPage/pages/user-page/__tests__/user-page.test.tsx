@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { CHANNEL_ID, account, channel, videoSummary } from '#app/__tests__/fixtures';
+import { CHANNEL_ID, account, channel, feedPages, videoSummary } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { myVideosQueryOptions } from '#app/features/videos/api/video-queries';
@@ -30,11 +30,11 @@ describe('apps/web: user page', () => {
 
   it("adds the video list on the viewer's own channel", async () => {
     const queryClient = withChannel();
-    signIn(queryClient, account());
-    queryClient.setQueryData(myVideosQueryOptions().queryKey, {
-      pages: [{ items: [videoSummary({ title: 'My upload' })], nextCursor: null }],
-      pageParams: [undefined],
-    });
+    signIn(account(), queryClient);
+    queryClient.setQueryData(
+      myVideosQueryOptions().queryKey,
+      feedPages([videoSummary({ title: 'My upload' })])
+    );
 
     const markup = await renderChannel(queryClient);
 

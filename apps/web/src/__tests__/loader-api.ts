@@ -1,5 +1,6 @@
 import {
   type EndpointContract,
+  getAccount,
   getChannel,
   getFeed,
   getSubscriptionFeed,
@@ -9,13 +10,13 @@ import {
 } from '@vp/api-contracts';
 import { type HttpHandler, HttpResponse } from 'msw';
 
-import { channel, video, videoSummary } from './fixtures';
+import { account, channel, video, videoSummary } from './fixtures';
 import { type EndpointResolver, mockEndpoint } from './msw/mock-endpoint';
 
 const FEED = { items: [videoSummary({ title: 'Feed video' })], nextCursor: null, total: 1 };
 
 /**
- * Answers every endpoint a route loader reads, each with one fixture, and writes the path of every
+ * Answers the signed-in account and every endpoint a route loader reads, each with one fixture, and writes the path of every
  * request it answers into `answered`, so a spec can count what a navigation asked for.
  */
 export function loaderApi(answered: string[] = []): HttpHandler[] {
@@ -27,6 +28,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
   }
 
   return [
+    recorded(getAccount, () => HttpResponse.json(account())),
     recorded(getFeed, () => HttpResponse.json(FEED)),
     recorded(getSubscriptionFeed, () => HttpResponse.json(FEED)),
     recorded(listCategories, () => HttpResponse.json([])),

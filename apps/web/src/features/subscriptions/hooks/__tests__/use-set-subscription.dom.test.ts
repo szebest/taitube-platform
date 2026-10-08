@@ -1,15 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
-import {
-  type SubscriptionState,
-  subscribeToChannel,
-  unsubscribeFromChannel,
-} from '@vp/api-contracts';
+import { type ContractResult, subscribeToChannel, unsubscribeFromChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { type HttpHandler, HttpResponse } from 'msw';
 import { CHANNEL_ID, channel, subscribedChannel } from '#app/__tests__/fixtures';
 import { apiServer } from '#app/__tests__/msw/api-server';
 import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
-import { heldReply, runMutation } from '#app/__tests__/run-mutation';
+import { heldReply, runMutation } from '#app/__tests__/render-mutation';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import {
@@ -17,8 +13,9 @@ import {
   subscriptionStatusQueryOptions,
 } from '#app/features/subscriptions/api/subscription-queries';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
-import { setSubscriptionMutationOptions } from '../use-set-subscription';
+import { useSetSubscription } from '../use-set-subscription';
 
+type SubscriptionState = ContractResult<typeof subscribeToChannel>;
 const statusKey = subscriptionStatusQueryOptions(CHANNEL_ID).queryKey;
 const channelKey = channelQueryOptions(CHANNEL_ID).queryKey;
 const listKey = mySubscriptionsQueryOptions().queryKey;
@@ -45,7 +42,7 @@ function cached(client: QueryClient) {
   };
 }
 
-describe('apps/web: setSubscriptionMutationOptions', () => {
+describe('apps/web: useSetSubscription', () => {
   type Answer = () => Promise<HttpResponse<SubscriptionState>>;
 
   it.each<{
@@ -74,7 +71,7 @@ describe('apps/web: setSubscriptionMutationOptions', () => {
     apiServer.use(handler(held.answer));
     const client = seeded(from);
 
-    const running = runMutation(client, setSubscriptionMutationOptions(CHANNEL_ID), to);
+    const running = runMutation(client, () => useSetSubscription(CHANNEL_ID), to);
     await vi.waitFor(() => expect(cached(client).subscribed).toBe(to));
 
     expect(cached(client)).toEqual({ subscribed: to, subscribers });
@@ -86,7 +83,7 @@ describe('apps/web: setSubscriptionMutationOptions', () => {
     apiServer.use(mockEndpoint(subscribeToChannel, () => problemReply(ErrorCodes.INTERNAL)));
     const client = seeded(false);
 
-    const settled = await runMutation(client, setSubscriptionMutationOptions(CHANNEL_ID), true);
+    const settled = await runMutation(client, () => useSetSubscription(CHANNEL_ID), true);
 
     expect(settled.status).toBe('rejected');
     expect(cached(client)).toEqual({ subscribed: false, subscribers: 5 });
@@ -96,7 +93,7 @@ describe('apps/web: setSubscriptionMutationOptions', () => {
     apiServer.use(mockEndpoint(subscribeToChannel, state(true)));
     const client = seeded(false);
 
-    await runMutation(client, setSubscriptionMutationOptions(CHANNEL_ID), true);
+    await runMutation(client, () => useSetSubscription(CHANNEL_ID), true);
 
     for (const queryKey of [statusKey, channelKey, listKey, feedKey]) {
       expect(client.getQueryState(queryKey)?.isInvalidated).toBe(true);
