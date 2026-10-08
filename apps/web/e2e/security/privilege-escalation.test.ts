@@ -1,5 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
-import { type Stack, expect, test } from '../fixtures';
+import { expect, test } from '../fixtures';
+import type { Stack } from '../stack';
 
 type Attempt = {
   name: string;
@@ -11,42 +12,42 @@ type Attempt = {
 
 const ATTEMPTS: Attempt[] = [
   {
-    name: 'edit the video',
+    name: "edit another creator's video",
     method: 'PATCH',
     path: (id) => `/v1/videos/${id}`,
     data: { title: 'hijacked', version: 1 },
   },
-  { name: 'delete the video', method: 'DELETE', path: (id) => `/v1/videos/${id}` },
+  { name: "delete another creator's video", method: 'DELETE', path: (id) => `/v1/videos/${id}` },
   {
-    name: 'reprocess the video',
+    name: "reprocess another creator's video",
     method: 'POST',
     path: (id) => `/v1/videos/${id}/reprocess`,
     data: {},
   },
   {
-    name: 'edit the video in the studio',
+    name: "edit another creator's video in the studio",
     method: 'PATCH',
     path: (id) => `/v1/creator/videos/${id}`,
     data: { title: 'hijacked', version: 1 },
   },
   {
-    name: 'delete the video in the studio',
+    name: "delete another creator's video in the studio",
     method: 'DELETE',
     path: (id) => `/v1/creator/videos/${id}`,
   },
   {
-    name: 'read the video analytics',
+    name: "read another creator's video analytics",
     method: 'GET',
     path: (id) => `/v1/creator/videos/${id}/analytics`,
   },
   {
-    name: 'read a private video as an operator',
+    name: "read another creator's private video as an operator",
     method: 'GET',
     path: (id) => `/v1/admin/videos/${id}`,
     target: 'draft',
   },
   {
-    name: 'take the video down',
+    name: "take another creator's video down",
     method: 'POST',
     path: (id) => `/v1/admin/videos/${id}/takedown`,
     data: { reason: 'hijacked' },
@@ -73,7 +74,7 @@ function send(client: APIRequestContext, attempt: Attempt, stack: Stack) {
 test.describe('privilege escalation is refused with problem+json', () => {
   for (const { caller, persona, status, code } of CALLERS) {
     for (const attempt of ATTEMPTS) {
-      test(`${caller} cannot ${attempt.name} owned by another creator`, async ({ api, stack }) => {
+      test(`${caller} cannot ${attempt.name}`, async ({ api, stack }) => {
         const client = await api(persona);
 
         const response = await send(client, attempt, stack);

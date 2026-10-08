@@ -362,8 +362,8 @@ jobs:
         if: steps.chromium.outputs.cache-hit != 'true'
         run: pnpm --filter @vp/web exec playwright install --only-shell chromium
 
-      - name: Run the browser suite, without the flows tagged @extended
-        run: pnpm --filter @vp/web test:e2e --grep-invert @extended
+      - name: Run the browser suite
+        run: pnpm --filter @vp/web test:e2e
 
       - name: Keep the report, traces and screenshots of a failed run
         if: failure()

@@ -221,11 +221,12 @@ await renderPage(<Page />, { handlers: [failed] });
 
 ### Rule 10: A page ticket adds its browser flows to `e2e/`
 `e2e/` is the Playwright suite (Chromium, headless). `playwright.config.ts` starts two servers: the stack
-(`tests/e2e/web-stack.ts`, the in-process API, workers and mock S3 that `make e2e` also runs, on ports 3391,
-9391 and 5392) and this app, built into `e2e/dist` and served on 5391. The stack seeds before it answers:
-a READY public video (`stack.videos.watchable`), a READY video titled and described with every XSS payload
-(`canvas`), and a private draft (`draft`). `E2E_API_URL=http://localhost:3000` points the same specs at
-`make up-all` and serves the app on 5173, the origin the compose API allows.
+(`tests/e2e/web-stack.ts`, the in-process API, workers and mock S3 that `make e2e` also runs) and this
+app, built into `e2e/dist`. Ports count up from `E2E_PORT_BASE` (default 5390: web +1, stack +2, API +3,
+S3 +4); give each checkout running the suite at once its own base. The stack seeds before it answers: a
+READY public video (`stack.videos.watchable`), a READY video titled and described with every XSS payload
+(`canvas`), and a private draft (`draft`), every title suffixed per run. `E2E_API_URL=http://localhost:3000`
+points the same specs at `make up-all` and serves the app on 5173, the origin the compose API allows.
 
 - A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces the legacy flow it retires.
 - Import `test` and `expect` from `e2e/fixtures.ts`: it hands a spec the seeded `stack`, `signIn(persona)`
@@ -233,7 +234,8 @@ a READY public video (`stack.videos.watchable`), a READY video titled and descri
   a host other than this machine.
 - Seed what a flow reads in `web-stack.ts`, before the stack answers. A spec that mutates a seeded video
   races the specs that read it, and the feed is cached for 30 s.
-- Tag a slow flow `@extended` (`test('...', { tag: '@extended' }, ...)`); CI runs `--grep-invert @extended`.
+- Find a seeded video by its id (`videoCard(page, id)`), never by its title: a compose database keeps the
+  rows of every earlier run.
 - A page that renders user text (a comment, a channel name) adds a case to `e2e/security/xss.test.ts` over
   a seeded row carrying `HOSTILE_TEXT`; a new creator or admin endpoint adds a row to
   `privilege-escalation.test.ts`.

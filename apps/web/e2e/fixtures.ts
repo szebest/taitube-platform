@@ -1,14 +1,6 @@
 import { type APIRequestContext, type Page, test as base, expect } from '@playwright/test';
 
-export type Persona = 'creator' | 'viewer';
-
-type SeededVideo = { id: string; title: string };
-
-export type Stack = {
-  apiUrl: string;
-  personas: Record<Persona, string>;
-  videos: { watchable: SeededVideo; canvas: SeededVideo; draft: SeededVideo };
-};
+import type { Persona, Stack } from './stack';
 
 type WorkerFixtures = {
   stackUrl: string;
@@ -41,11 +33,14 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   offMachineRequests: [
     async ({ context }, use) => {
       const offMachine: string[] = [];
-      await context.route('**/*', (route) => {
-        const url = new URL(route.request().url());
-        if (LOCAL_HOSTS.has(url.hostname)) return route.continue();
-        offMachine.push(url.href);
+      const leavesTheMachine = (url: URL) => !LOCAL_HOSTS.has(url.hostname);
+      await context.route(leavesTheMachine, (route) => {
+        offMachine.push(route.request().url());
         return route.abort('blockedbyclient');
+      });
+      await context.routeWebSocket(leavesTheMachine, (socket) => {
+        offMachine.push(socket.url());
+        return socket.close();
       });
       await use(offMachine);
       expect(offMachine, 'requests that left the machine').toEqual([]);
@@ -77,6 +72,10 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 });
 
 export { expect, type Page };
+
+export function videoCard(page: Page, videoId: string) {
+  return page.locator(`a[href="/watch/${videoId}"]`);
+}
 
 export async function serverHtml(page: Page, path: string): Promise<string> {
   const response = await page.request.get(path);

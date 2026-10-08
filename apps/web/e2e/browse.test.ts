@@ -1,4 +1,4 @@
-import { expect, serverHtml, test } from './fixtures';
+import { expect, serverHtml, test, videoCard } from './fixtures';
 
 test.describe('browse', () => {
   test('the server renders the home page', async ({ page }) => {
@@ -9,7 +9,7 @@ test.describe('browse', () => {
     const { watchable } = stack.videos;
 
     await page.goto('/');
-    await page.getByRole('link', { name: watchable.title }).click();
+    await videoCard(page, watchable.id).click();
 
     await expect(page).toHaveURL(`/watch/${watchable.id}`);
     await expect(page.getByRole('heading', { name: watchable.title })).toBeVisible();

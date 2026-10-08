@@ -49,13 +49,13 @@ them. Lighthouse and vitals are [64](64-web-vitals-monitoring-inp-lcp-cls-real-u
 
 ## Acceptance criteria
 
-- [ ] `pnpm --filter @vp/web test:e2e` runs the suite against the local compose stack with no off-machine
+- [x] `pnpm --filter @vp/web test:e2e` runs the suite against the local compose stack with no off-machine
       requests at test time; CI runs the reduced set.
-- [ ] Browse, watch page and upload-to-READY flows pass on the current app.
-- [ ] Each XSS payload renders inert in every field it is placed in.
-- [ ] Each privilege escalation attempt gets 403 (or 401 when unauthenticated) with a problem+json body.
-- [ ] The HTML response carries the security headers above.
-- [ ] `apps/web/AGENTS.md` says where a page ticket adds its flows.
+- [x] Browse, watch page and upload-to-READY flows pass on the current app.
+- [x] Each XSS payload renders inert in every field it is placed in.
+- [x] Each privilege escalation attempt gets 403 (or 401 when unauthenticated) with a problem+json body.
+- [x] The HTML response carries the security headers above.
+- [x] `apps/web/AGENTS.md` says where a page ticket adds its flows.
 
 ## Out of scope
 
@@ -64,8 +64,8 @@ them. Lighthouse and vitals are [64](64-web-vitals-monitoring-inp-lcp-cls-real-u
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @vp/web test:e2e` green locally and in CI; `pnpm typecheck`, `pnpm lint` green.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] `pnpm --filter @vp/web test:e2e` green locally and in CI; `pnpm typecheck`, `pnpm lint` green.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
 
 ## Open questions
 
@@ -80,4 +80,4 @@ them. Lighthouse and vitals are [64](64-web-vitals-monitoring-inp-lcp-cls-real-u
   page heading, description and document title, home feed card). The ticket that renders comments adds them.
 - Decided: the home feed is still RTK Query and renders client-side; the browse flow asserts the server
   renders the page shell and the card appears after hydration. 53 moves the feed to a loader and tightens it.
-- Decided: CI runs every flow except those tagged `@extended` (none yet); the whole suite takes about 35 s.
+- Decided: CI runs the whole suite, not a reduced set: it takes about 45 s.

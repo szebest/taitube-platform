@@ -1,22 +1,22 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const STACK_PORT = 5392;
-const API_PORT = 3391;
-const S3_PORT = 9391;
+const DEFAULT_PORT_BASE = 5390;
 
+const portBase = Number(process.env['E2E_PORT_BASE'] ?? DEFAULT_PORT_BASE);
 const externalApiUrl = process.env['E2E_API_URL'];
 const ci = process.env['CI'] === 'true';
 
+const ports = { web: portBase + 1, stack: portBase + 2, api: portBase + 3, s3: portBase + 4 };
 const web = externalApiUrl
   ? { port: 5173, origin: 'http://localhost:5173' }
-  : { port: 5391, origin: 'http://127.0.0.1:5391' };
-const apiUrl = externalApiUrl ?? `http://127.0.0.1:${API_PORT}`;
-const stackUrl = `http://127.0.0.1:${STACK_PORT}/`;
+  : { port: ports.web, origin: `http://127.0.0.1:${ports.web}` };
+const apiUrl = externalApiUrl ?? `http://127.0.0.1:${ports.api}`;
+const stackUrl = `http://127.0.0.1:${ports.stack}/`;
 
 const stackArgs = [
-  `--stack-port ${STACK_PORT}`,
+  `--stack-port ${ports.stack}`,
   `--web-origin ${web.origin}`,
-  externalApiUrl ? `--api-url ${externalApiUrl}` : `--api-port ${API_PORT} --s3-port ${S3_PORT}`,
+  externalApiUrl ? `--api-url ${externalApiUrl}` : `--api-port ${ports.api} --s3-port ${ports.s3}`,
 ].join(' ');
 
 export default defineConfig<object, { stackUrl: string }>({
@@ -45,7 +45,7 @@ export default defineConfig<object, { stackUrl: string }>({
     },
     {
       name: 'web',
-      command: `vite build --outDir e2e/dist && srvx serve --prod --port ${web.port} --static ../client --entry e2e/dist/server/server.js`,
+      command: `vite build --outDir e2e/dist && srvx serve --prod --host 127.0.0.1 --port ${web.port} --static ../client --entry e2e/dist/server/server.js`,
       env: { VITE_API_BASE_URL: apiUrl },
       url: web.origin,
       timeout: 120_000,

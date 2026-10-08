@@ -11,16 +11,15 @@ export interface MockS3ServerInstance {
   close: () => Promise<void>;
 }
 
-/**
- * Creates and starts an in-process S3 HTTP server simulating presigned PUT/GET operations.
- */
-export async function startMockS3Server(options: {
+export async function startMockS3Server({
+  storage,
+  multipart,
+  port = 0,
+}: {
   storage: InMemoryStorageClient;
   multipart: InMemoryMultipartStorage;
   port?: number;
 }): Promise<MockS3ServerInstance> {
-  const { storage, multipart, port = 0 } = options;
-
   const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Expose-Headers', 'ETag');
@@ -58,7 +57,7 @@ export async function startMockS3Server(options: {
           bucket,
           key,
           body,
-          contentType: (req.headers['content-type'] as string) || 'application/octet-stream',
+          contentType: req.headers['content-type'] ?? 'application/octet-stream',
         });
       }
 
@@ -107,8 +106,11 @@ export async function startMockS3Server(options: {
     server.listen(port, '127.0.0.1', () => resolve());
   });
 
-  const s3Address = server.address() as { port: number };
-  const baseUrl = `http://127.0.0.1:${s3Address.port}`;
+  const address = server.address();
+  if (address === null || typeof address === 'string') {
+    throw new Error('the mock S3 server is not listening on a TCP port');
+  }
+  const baseUrl = `http://127.0.0.1:${address.port}`;
 
   storage.createPresignedPutUrl = async (params) => {
     const expiresIn = params.expiresInSeconds ?? 900;

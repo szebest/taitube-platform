@@ -1,4 +1,4 @@
-import { expect, test } from '../fixtures';
+import { expect, test, videoCard } from '../fixtures';
 
 const PAGES = [
   { page: 'the home page', path: () => '/' },
@@ -29,7 +29,7 @@ test.describe('security headers on the server HTML', () => {
     });
 
     await page.goto('/');
-    await page.getByRole('link', { name: watchable.title }).click();
+    await videoCard(page, watchable.id).click();
 
     await expect(page.getByRole('heading', { name: watchable.title })).toBeVisible();
     expect(violations).toEqual([]);

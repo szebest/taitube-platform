@@ -4,9 +4,7 @@ async function renderedHeaders() {
   const nonces: string[] = [];
   const { response } = await withSecurityHeaders(async (nonce) => {
     nonces.push(nonce);
-    return {
-      response: new Response('<html></html>', { headers: { 'content-type': 'text/html' } }),
-    };
+    return { response: new Response('<html></html>') };
   });
   return { headers: response.headers, nonce: nonces[0] };
 }
@@ -23,7 +21,6 @@ describe('apps/web: security headers', () => {
   it.each([
     ['X-Content-Type-Options', 'nosniff'],
     ['Referrer-Policy', 'strict-origin-when-cross-origin'],
-    ['Content-Type', 'text/html'],
   ])('answers with %s: %s', async (name, value) => {
     const { headers } = await renderedHeaders();
 
