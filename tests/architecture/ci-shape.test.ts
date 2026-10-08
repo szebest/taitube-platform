@@ -35,7 +35,7 @@ const BUDGETS: Readonly<Record<string, number>> = {
   build: 2,
   'lint-typecheck': 2,
   unit: 3,
-  'unit-bun': 3,
+  'unit-bun': 4,
   integration: 3,
   'e2e-smoke': 4,
   terraform: 2,

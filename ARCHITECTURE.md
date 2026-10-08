@@ -358,6 +358,14 @@ from 25 September to 8 October the fast ones took 3.3-4.2 s and the slow ones, m
 slow p95 and 1.3 s over the worst run seen, so the runner alone does not fail a PR, while a change that adds
 2-3 s still fails on a slow one. Raise it only from a fresh sample of CI timings, never from one red run.
 
+`unit-bun` is held by its `timeout-minutes` alone, 4. Over 112 runs in the same window it took 119 s at the
+median and 154 s at p95 when the video fixtures came from the cache, and up to 213 s when they did not: the
+fixtures take about 27 s to generate and FFmpeg's packages up to 29 s to download. 7 of the 8 runs the old 3
+minute limit cancelled were such misses, every step green. The misses come from the cache, not the code: an
+entry nobody reads for 7 days is evicted, a pull request can only restore what `main` or its own ref saved,
+and after 12 idle days `main` had nothing left, so every PR generated and saved its own 317 MB copy. CI
+therefore also runs on `main` twice a week, which keeps its entries alive for every PR to restore.
+
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
 | `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/<tier>/` and `apps/`: a `packages/` package takes its tier from its directory and must not declare `vp.tier`, an app must; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, `@vp/tsconfig` and `@vp/testing` exempt | planted manifests: a `client` package depending (and dev-depending) on a `server` one; a T2 package depending on a T4 one |

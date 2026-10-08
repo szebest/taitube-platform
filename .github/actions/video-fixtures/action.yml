@@ -14,7 +14,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: tests/fixtures
-        key: fixtures-${{ inputs.only || 'all' }}-${{ hashFiles('packages/server/gen-video/src/**', 'packages/server/gen-video/manifest.json') }}
+        key: fixtures-${{ inputs.only || 'all' }}-${{ hashFiles('packages/server/gen-video/src/**', '!packages/server/gen-video/src/__tests__/**', 'packages/server/gen-video/manifest.json') }}
 
     - name: Set up FFmpeg
       if: steps.cache.outputs.cache-hit != 'true'
