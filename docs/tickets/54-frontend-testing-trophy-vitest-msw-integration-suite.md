@@ -50,7 +50,7 @@ written by the ticket that builds the page.
 
 - [ ] All acceptance criteria proved with command output in the PR.
 - [x] `docs/standards/testing.md` or `apps/web/AGENTS.md` shows how to write a route spec with `renderRoute`.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
 
 ## Open questions
 
@@ -58,7 +58,7 @@ written by the ticket that builds the page.
   `renderPage` and `serverRender`. Everything under `__tests__/` is left out of the app's `tsconfig.json`, typed
   with the Vitest globals by `tsconfig.spec.json`, and not a production source for the architecture suite; a
   `src/test/` folder would be all three.
-- Decided: a jsdom spec is named `<stem>.dom.test.tsx`. The file name says which project runs it, the `node`
+- Decided: a jsdom spec is named `<stem>.dom.test.ts(x)`. The file name says which project runs it, the `node`
   project excludes the pattern, and `test-correspondence` accepts it as the spec of `<stem>.tsx`, so a page
   ticket can write a route spec that only runs in the browser.
 - Decided: MSW runs in both projects, so `serverRender` and `renderPage` take `handlers` too. A request no

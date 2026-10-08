@@ -102,7 +102,10 @@ The root run does not isolate spec files (`isolate: false` in `vitest.config.ts`
 share a worker and its module cache, which is most of what makes `unit` fit its budget. A spec therefore
 leaves no module state behind: state lives in what `beforeEach` builds, not at module level, and a mock of a
 package outlives the file that registered it, so a helper that mock reads from keeps its state where every
-file sees the same copy (`apps/web/src/__tests__/live-page.ts`).
+file sees the same copy (`apps/web/src/__tests__/live-page.ts`). The exception is `apps/web`'s jsdom project: it
+runs on `forks`, which the root config isolates, because Testing Library binds the first document it is loaded
+with. Every other project declares `pool: 'threads'` (`definePackageTestConfig` sets it), and `unit` passes no
+`--pool`: a pool on the command line overrides every project's.
 
 ---
 
@@ -118,7 +121,7 @@ What needs a higher layer lives in the app that owns it: the API's test app is `
 `apps/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/worker/src/__tests__/`, and the web
 app's are in `apps/web/src/__tests__/`: an MSW server whose handlers are typed from `@vp/api-contracts`
 (`msw/mock-endpoint.ts`), `serverRender` for the server's answer, and `renderRoute` for a route in the
-browser. The web app runs two Vitest projects, `node` and `jsdom` (the `*.dom.test.tsx` specs);
+browser. The web app runs two Vitest projects, `node` and `jsdom` (the `*.dom.test.{ts,tsx}` specs);
 [apps/web/AGENTS.md](../../apps/web/AGENTS.md) Rules 7 and 9 show how to write a route spec.
 
 ---
@@ -164,7 +167,7 @@ replays a cached pass. `pnpm typecheck --force` bypasses the cache.
 
 ## 8. One spec per source file
 
-Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`, or `.dom.test.tsx` for a web
+Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`, or `.dom.test.ts(x)` for a web
 spec that runs under jsdom) beside it, in every tier, `apps/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
 members, with or without doc comments) needs none; `tests/architecture/runtime-code.ts` decides by
 transpiling it. One spec never covers several sources. `tests/architecture/test-correspondence.test.ts` is a

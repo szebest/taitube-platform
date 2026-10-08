@@ -13,7 +13,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/web`)
 | Data | **TanStack Query** for new code (one `QueryClient` per request and per tab, in router context); **RTK Query** still serves the legacy pages until 53 deletes it |
 | Styling | Bootstrap 5 + `react-bootstrap`, global SCSS under `src/styles/`, `*.module.scss` beside components, until 55 |
 | Playback | legacy `react-player` 2, fed the bundled `hls.js` so it never fetches the CDN copy, until 57 |
-| Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.tsx` specs) with Testing Library; MSW answers for the API in both |
+| Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
 
 `apps/web` is **tier `client`, layer T5**. It may import `packages/universal/*` and `packages/client/*`
@@ -148,7 +148,7 @@ renders through `renderPage` (`src/__tests__/render-page.tsx`), which mounts it 
 router over memory history with the root's providers; a route renders through `serverRender`
 (`src/__tests__/server-render.ts`), which answers a request with the real route tree the way the server does.
 
-A spec that clicks, types or waits for the browser to update is a `*.dom.test.tsx` and runs under jsdom;
+A spec that clicks, types or waits for the browser to update is a `*.dom.test.{ts,tsx}` and runs under jsdom;
 `<stem>.dom.test.tsx` counts as the spec of `<stem>.tsx`. A route in the browser renders through
 `renderRoute(url, { handlers?, auth? })` (`src/__tests__/render-route.tsx`): the real router from
 `routeTree.gen.ts` over memory history, a fresh `QueryClient` that never retries, and `auth` as the session
@@ -166,8 +166,10 @@ it('renders the video the loader fetched', async () => {
 
 It returns Testing Library's render result plus `router`, `queryClient` and a `user` from `userEvent.setup()`.
 `src/__tests__/jsdom.setup.ts` fills in the browser APIs jsdom lacks (`matchMedia`, `scrollTo`,
-`IntersectionObserver`). A spec that expects an error page silences the error React logs with
-`vi.spyOn(console, 'error').mockImplementation(() => undefined)`.
+`IntersectionObserver`). jsdom specs run isolated, each file in a fresh fork (`pool: 'forks'` in
+`vitest.jsdom.config.ts`, `poolOptions.forks.isolate` in the root config), so Testing Library's `screen`,
+`userEvent` and its automatic cleanup always work on the file's own document. A spec that expects an error page
+silences the error React logs with `vi.spyOn(console, 'error').mockImplementation(() => undefined)`.
 
 ### Rule 8: `#app/` for anything outside the feature folder
 `#app/*` is a Node subpath import declared once in `package.json` `"imports"` and pointing at `src/`, so
@@ -210,7 +212,8 @@ await renderPage(<Page />, { handlers: [failed] });
 - `handlers` on `renderRoute`, `serverRender` and `renderPage` (or `apiServer.use(...)`) lasts one test;
   handlers reset after each.
 - A request no handler answers never leaves the process: MSW answers it with a 500 and the test that made it
-  fails after it ends, naming the request.
+  fails after it ends, naming the request and the test. One that lands after the file's last test fails the
+  file.
 - `problemReply(code)` is the RFC 9457 body at the status the API reports that code as; pass a status to
   override it.
 - `recordRequests` in `api-store.ts` stubs `fetch` outright and predates this; new specs use MSW.
