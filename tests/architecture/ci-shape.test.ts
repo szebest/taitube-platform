@@ -19,7 +19,13 @@ interface Job {
   uses?: string;
 }
 
+interface PullRequestTrigger {
+  branches?: string[];
+  'branches-ignore'?: string[];
+}
+
 interface Workflow {
+  on?: { pull_request?: PullRequestTrigger | null };
   permissions?: Record<string, string>;
   jobs: Record<string, Job>;
 }
@@ -99,6 +105,15 @@ function shapeFindings(source: string): string[] {
   const jobNamed = (name: string) => jobs.find((check) => check.name === name)?.job;
   const findings: string[] = [];
 
+  const pullRequest = workflow.on?.pull_request;
+  if (
+    pullRequest === undefined ||
+    pullRequest?.branches !== undefined ||
+    pullRequest?.['branches-ignore'] !== undefined
+  ) {
+    findings.push('a pull request into a branch other than main gets no CI');
+  }
+
   if (workflow.permissions?.packages === 'write') {
     findings.push('the workflow grants packages: write to every job');
   }
@@ -177,6 +192,9 @@ function shapeFindings(source: string): string[] {
 }
 
 const BAD_WORKFLOW = `
+on:
+  pull_request:
+    branches: [main]
 permissions:
   packages: write
 jobs:
@@ -250,6 +268,7 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'build: no path filter that skips a docs-only change',
     'build: the path filter matches a file on any one pattern',
     'the workflow grants packages: write to every job',
+    'a pull request into a branch other than main gets no CI',
     'lint-typecheck: test:architecture is not held to 8 s',
     'unit: its budget does not run from the first step to the last',
     'unit: sets up Bun',
