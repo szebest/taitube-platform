@@ -13,7 +13,8 @@ const THEME_COOKIE = 'vp.theme';
 const ONE_YEAR_S = 60 * 60 * 24 * 365;
 
 export function requestThemePreference(): ThemePreference {
-  return ThemePreferenceSchema.catch('dark').parse(readCookie(THEME_COOKIE));
+  const stored = ThemePreferenceSchema.safeParse(readCookie(THEME_COOKIE));
+  return stored.success ? stored.data : 'dark';
 }
 
 export function saveThemePreference(preference: ThemePreference): void {
