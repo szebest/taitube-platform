@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { variantNames } from '#app/__tests__/variant-names';
 import { Field, fieldVariants } from '../field';
 import { Input } from '../input';
+import { variantNames } from '../variant-names';
 
 const ORIENTATIONS = variantNames(fieldVariants.variants.orientation);
 

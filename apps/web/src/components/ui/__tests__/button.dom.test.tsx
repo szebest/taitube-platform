@@ -3,8 +3,8 @@ import { userEvent } from '@testing-library/user-event';
 import { Plus } from 'lucide-react';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { variantNames } from '#app/__tests__/variant-names';
 import { Button, IconButton, buttonVariants } from '../button';
+import { variantNames } from '../variant-names';
 
 const VARIANTS = variantNames(buttonVariants.variants.variant);
 const SIZES = variantNames(buttonVariants.variants.size);

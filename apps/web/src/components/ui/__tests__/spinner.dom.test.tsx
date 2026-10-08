@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { variantNames } from '#app/__tests__/variant-names';
 import { Spinner, spinnerVariants } from '../spinner';
+import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(spinnerVariants.variants.size);
 

@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { variantNames } from '#app/__tests__/variant-names';
 import { Button } from '../button';
 import {
   Sheet,
@@ -13,6 +12,7 @@ import {
   SheetTrigger,
   sheetVariants,
 } from '../sheet';
+import { variantNames } from '../variant-names';
 
 const SIDES = variantNames(sheetVariants.variants.side);
 

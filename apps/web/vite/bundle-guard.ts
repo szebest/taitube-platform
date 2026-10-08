@@ -6,8 +6,10 @@ export interface BundledChunk {
   moduleIds: readonly string[];
 }
 
-const DEVTOOLS =
-  /\/node_modules\/(@tanstack\/(?:react-router-devtools|react-query-devtools|router-devtools-core|query-devtools))\//;
+const DEV_ONLY = [
+  /\/node_modules\/(@tanstack\/(?:react-router-devtools|react-query-devtools|router-devtools-core|query-devtools))\//,
+  /\/(src\/features\/design-system)\//,
+];
 const ROUTE_SPLIT = /\/(src\/routes\/[^?]+)\?tsr-split=/;
 
 function routesIn(chunk: BundledChunk): string[] {
@@ -16,10 +18,12 @@ function routesIn(chunk: BundledChunk): string[] {
 }
 
 function chunkViolations(chunk: BundledChunk): string[] {
-  const devtools = chunk.moduleIds.flatMap((id) => DEVTOOLS.exec(id)?.[1] ?? []);
+  const devOnly = chunk.moduleIds.flatMap((id) =>
+    DEV_ONLY.flatMap((pattern) => pattern.exec(id)?.[1] ?? [])
+  );
   const routes = routesIn(chunk);
   return [
-    ...[...new Set(devtools)].map(
+    ...[...new Set(devOnly)].map(
       (name) => `${chunk.fileName} carries ${name}, which only the dev server may load`
     ),
     ...(chunk.isEntry
@@ -29,7 +33,10 @@ function chunkViolations(chunk: BundledChunk): string[] {
   ];
 }
 
-/** What a production client bundle must not do: ship devtools, or stop splitting per route. */
+/**
+ * What a production client bundle must not do: ship devtools or the design-system showcase, or
+ * stop splitting per route.
+ */
 export function bundleViolations(chunks: readonly BundledChunk[]): string[] {
   const violations = chunks.flatMap(chunkViolations);
   const split = chunks.some((chunk) => !chunk.isEntry && routesIn(chunk).length > 0);

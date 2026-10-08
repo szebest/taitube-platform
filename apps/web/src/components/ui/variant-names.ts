@@ -1,4 +1,4 @@
-/** The names a `tv()` variant offers, `button.variants.size` for instance, to drive an `it.each`. */
+/** The names a `tv()` variant offers, `buttonVariants.variants.size` for one, to list every look. */
 export function variantNames<Variant extends Record<string, unknown>>(
   variant: Variant
 ): (keyof Variant & string)[] {

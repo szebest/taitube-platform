@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { variantNames } from '#app/__tests__/variant-names';
 import { Avatar, avatarVariants } from '../avatar';
+import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(avatarVariants.variants.size);
 

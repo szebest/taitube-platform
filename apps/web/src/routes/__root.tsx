@@ -18,6 +18,8 @@ import designSystem from '#app/components/ui/design-system.css?url';
 import { SYSTEM_THEME_SCRIPT } from '#app/components/ui/theme/system-theme';
 import { requestThemePreference } from '#app/components/ui/theme/theme-preference';
 import { ThemeProvider, useTheme } from '#app/components/ui/theme/theme-provider';
+import { ToastProvider } from '#app/components/ui/toast';
+import { TooltipProvider } from '#app/components/ui/tooltip';
 import { DEVTOOLS_ENABLED } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
@@ -94,8 +96,12 @@ function RootLayout() {
         <AuthProvider>
           <PermissionsProvider>
             <SidebarProvider>
-              <DefaultLayout maxWidth={maxWidth} />
-              <ToastContainer limit={3} />
+              <TooltipProvider>
+                <ToastProvider closeLabel="Dismiss">
+                  <DefaultLayout maxWidth={maxWidth} />
+                  <ToastContainer limit={3} />
+                </ToastProvider>
+              </TooltipProvider>
             </SidebarProvider>
           </PermissionsProvider>
         </AuthProvider>

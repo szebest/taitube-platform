@@ -48,6 +48,12 @@ describe('apps/web: root route', () => {
     expect(head(html)).toContain(`<script>${SYSTEM_THEME_SCRIPT};document.currentScript.remove()`);
   });
 
+  it('mounts the one toast region every page shows its toasts in', async () => {
+    const html = await home();
+
+    expect(html.match(/aria-label="Notifications \(F8\)"/g)).toHaveLength(1);
+  });
+
   it('frames every page in the legacy layout', async () => {
     const html = await home();
 

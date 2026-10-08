@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { variantNames } from '#app/__tests__/variant-names';
 import { controlVariants } from '../field';
 import { Input } from '../input';
+import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(controlVariants.variants.size);
 

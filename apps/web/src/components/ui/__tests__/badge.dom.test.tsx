@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { variantNames } from '#app/__tests__/variant-names';
 import { Badge, badgeVariants } from '../badge';
+import { variantNames } from '../variant-names';
 
 const VARIANTS = variantNames(badgeVariants.variants.variant);
 
