@@ -102,14 +102,14 @@ Every test config restores spies and stubbed env vars before each test (`restore
 config to it). Bun reads no vitest config, so `bunfig.toml` preloads `tests/bun-restore-mocks.ts`, which does
 the same after each test. No spec needs an `afterEach` to undo a spy.
 
-The root run does not isolate spec files (`isolate: false` in `vitest.config.ts`): the files of one project
-share a worker and its module cache, which is most of what makes `unit` fit its budget. A spec therefore
+Spec files are not isolated: every project config sets `isolate: false` (`definePackageTestConfig` does it
+for the packages, and a project config inherits nothing from the root `vitest.config.ts`), so the files of one
+project share a worker and its module cache, which is most of what makes `unit` fit its budget. A spec therefore
 leaves no module state behind: state lives in what `beforeEach` builds, not at module level, and a mock of a
 package outlives the file that registered it, so a helper that mock reads from keeps its state where every
-file sees the same copy (`apps/web/src/__tests__/live-page.ts`). The exception is `apps/web`'s jsdom project: it
-runs on `forks`, which the root config isolates, because Testing Library binds the first document it is loaded
-with. Every other project declares `pool: 'threads'` (`definePackageTestConfig` sets it), and `unit` passes no
-`--pool`: a pool on the command line overrides every project's.
+file sees the same copy (`apps/web/src/__tests__/live-page.ts`). The exception is `apps/web`'s jsdom project
+(`isolate: true`): Testing Library registers its automatic cleanup once per module load, so a jsdom file that
+shared a worker with another would keep the previous test's DOM.
 
 ---
 

@@ -149,7 +149,7 @@ jobs:
             vitest-results-${{ runner.os }}-
 
       - name: Run unit tests (Node 24)
-        run: pnpm test:unit --maxWorkers=4
+        run: pnpm test:unit --pool=threads --maxWorkers=4
 
       - name: Hold unit to its budget
         uses: ./.github/actions/budget

@@ -8,13 +8,8 @@ import {
   problemStatus,
 } from '@vp/api-contracts';
 import type { ErrorCode } from '@vp/errors';
-import {
-  http,
-  type HttpHandler,
-  HttpResponse,
-  type HttpResponseResolver,
-  type PathParams,
-} from 'msw';
+import type { PathParams } from 'msw';
+import { http, type HttpHandler, HttpResponse, type HttpResponseResolver } from 'msw/http';
 import type { z } from 'zod';
 
 import { API_BASE_URL } from '#app/config';

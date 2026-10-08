@@ -1,7 +1,7 @@
 import { RouterProvider, createMemoryHistory } from '@tanstack/react-router';
 import { render } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import type { HttpHandler } from 'msw';
+import type { HttpHandler } from 'msw/http';
 
 import { type Session, guestSession } from '#app/integrations/auth/session';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
