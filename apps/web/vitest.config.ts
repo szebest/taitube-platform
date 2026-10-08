@@ -25,7 +25,7 @@ export async function webTestConfig(test: NonNullable<ViteUserConfig['test']>) {
 
 export default await webTestConfig({
   environment: 'node',
-  pool: 'threads',
+  isolate: false,
   include: ['src/**/__tests__/**/*.test.{ts,tsx}', 'vite/**/__tests__/**/*.test.ts'],
   exclude: ['**/node_modules/**', DOM_SPECS],
   setupFiles: ['src/__tests__/live-page.setup.ts', MSW_SETUP],
