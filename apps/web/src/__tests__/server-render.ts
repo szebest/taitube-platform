@@ -1,6 +1,7 @@
 import { createRequestHandler, defaultStreamHandler } from '@tanstack/react-router/ssr/server';
 import type { HttpHandler } from 'msw';
-import { getRouter } from '../router';
+
+import { getRouter } from '#app/router';
 import { apiServer } from './msw/api-server';
 
 export type ServerRender = {
@@ -11,8 +12,7 @@ export type ServerRender = {
   main: string;
 };
 
-export type ServerRenderOptions = {
-  /** How the API answers during the render; a call none of them answers fails the test. */
+type ServerRenderOptions = {
   handlers?: HttpHandler[];
 };
 

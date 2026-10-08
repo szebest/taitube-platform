@@ -1,9 +1,9 @@
-// @vitest-environment jsdom
 import { Link, createMemoryHistory } from '@tanstack/react-router';
+
+import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
 import { guestSession } from '#app/integrations/auth/session';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
-import { RouteError, RouteNotFound, RoutePending } from '../components/route-fallbacks';
-import { getRouter } from '../router';
+import { getRouter } from '#app/router';
 import { CHANNEL_ID, VIDEO_ID } from './fixtures';
 import { loaderApi } from './loader-api';
 import { apiServer } from './msw/api-server';

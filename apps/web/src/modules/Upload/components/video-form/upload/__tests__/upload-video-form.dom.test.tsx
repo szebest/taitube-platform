@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IntlProvider } from '@vp/intl-react';
