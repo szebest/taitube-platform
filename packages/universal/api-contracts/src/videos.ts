@@ -98,6 +98,7 @@ export const updateVideo = defineEndpoint({
     403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
     409: [ErrorCodes.VERSION_CONFLICT],
+    422: [ErrorCodes.VALIDATION_FAILED],
   },
 });
 

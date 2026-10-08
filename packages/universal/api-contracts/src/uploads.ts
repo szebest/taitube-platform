@@ -91,6 +91,7 @@ export const startUpload = defineEndpoint({
       ErrorCodes.UPLOAD_TOO_LARGE,
       ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
       ErrorCodes.QUOTA_EXCEEDED,
+      ErrorCodes.VALIDATION_FAILED,
     ],
     429: [ErrorCodes.RATE_LIMITED],
   },

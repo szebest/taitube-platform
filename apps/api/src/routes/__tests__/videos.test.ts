@@ -88,6 +88,12 @@ describe('video routes', () => {
       status: 409,
       code: ErrorCodes.VERSION_CONFLICT,
     },
+    {
+      edit: 'a title over the rule limit',
+      payload: { title: 'a'.repeat(256), version: 1 },
+      status: 422,
+      code: ErrorCodes.VALIDATION_FAILED,
+    },
     { edit: 'the current version', payload: { title: 'New', version: 1 }, status: 200 },
   ])('answers a metadata edit carrying $edit with $status', async ({ payload, status, code }) => {
     const res = await app.inject({

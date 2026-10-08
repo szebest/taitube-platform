@@ -316,6 +316,7 @@ paths:
                       - UPLOAD_TOO_LARGE
                       - UNSUPPORTED_CONTENT_TYPE
                       - QUOTA_EXCEEDED
+                      - VALIDATION_FAILED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -2387,6 +2388,46 @@ paths:
                     type: string
                     enum:
                       - VERSION_CONFLICT
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    type: array
+                    items: {}
+                    description: Validation issues if status is 400
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
                     description: Machine-readable error code
                   instance:
                     type: string
