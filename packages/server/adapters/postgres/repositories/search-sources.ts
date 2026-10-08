@@ -41,12 +41,14 @@ interface SourceSpec<M extends TextMatch> {
   match(query: SearchQuery): M;
   scope(query: SearchQuery, match: M): SQL | undefined;
   keys(query: SearchQuery, match: M): SortKeys;
-  rows(
-    db: PostgresDatabase,
-    where: SQL | undefined,
-    key: SQL<number>,
-    limit: number
-  ): Promise<SearchHit[]>;
+  rows(db: PostgresDatabase, window: RowWindow<M>): Promise<SearchHit[]>;
+}
+
+interface RowWindow<M> {
+  where: SQL | undefined;
+  key: SQL<number>;
+  limit: number;
+  match: M;
 }
 
 export interface SearchSource {
@@ -61,12 +63,12 @@ function sourceOf<M extends TextMatch>(spec: SourceSpec<M>) {
     const key = sortKey(query.sort, spec.keys(query, match));
     return {
       hits: (db) =>
-        spec.rows(
-          db,
-          drizzleWhere(where, afterCursor(spec.kind, key, spec.id, query.cursor)),
+        spec.rows(db, {
+          where: drizzleWhere(where, afterCursor(spec.kind, key, spec.id, query.cursor)),
           key,
-          query.limit + 1
-        ),
+          limit: query.limit + 1,
+          match,
+        }),
       total: async (db) => {
         const [row] = await db.select({ n: count() }).from(spec.table).where(where);
         return row?.n ?? 0;
@@ -97,7 +99,7 @@ export const videoSource = sourceOf({
       views: sql`${v.viewsCount}`,
     };
   },
-  rows: async (db, where, key, limit) => {
+  rows: async (db, { where, key, limit }) => {
     const rows = await db
       .select({ video: getTableColumns(v), key })
       .from(v)
@@ -130,7 +132,7 @@ export const channelSource = sourceOf({
       views: sql`${ch.subscriberCount}`,
     };
   },
-  rows: async (db, where, key, limit) => {
+  rows: async (db, { where, key, limit }) => {
     const rows = await db
       .select({ channel: getTableColumns(ch), key })
       .from(ch)
@@ -141,42 +143,47 @@ export const channelSource = sourceOf({
   },
 });
 
-const stats = new QueryBuilder()
-  .select({
-    videoCount: sql<number>`count(*)::int`.as('video_count'),
-    views: sql<number>`coalesce(sum(${v.viewsCount}), 0)`.as('views'),
-    coverKey: sql<
-      string | null
-    >`(array_agg(${v.posterKey} order by ${pi.position}, ${pi.id}))[1]`.as('cover_key'),
-  })
-  .from(pi)
-  .innerJoin(v, eq(v.id, pi.videoId))
-  .where(
-    drizzleWhere(
-      eq(pi.playlistId, p.id),
-      watchableVideoScope(null),
-      eq(v.status, PUBLIC_FEED_STATUS)
+function playlistStats() {
+  return new QueryBuilder()
+    .select({
+      videoCount: sql<number>`count(*)::int`.as('video_count'),
+      views: sql<number>`coalesce(sum(${v.viewsCount}), 0)`.as('views'),
+      coverKey: sql<
+        string | null
+      >`(array_agg(${v.posterKey} order by ${pi.position}, ${pi.id}))[1]`.as('cover_key'),
+    })
+    .from(pi)
+    .innerJoin(v, eq(v.id, pi.videoId))
+    .where(
+      drizzleWhere(
+        eq(pi.playlistId, p.id),
+        watchableVideoScope(null),
+        eq(v.status, PUBLIC_FEED_STATUS)
+      )
     )
-  )
-  .as('stats');
+    .as('stats');
+}
 
 export const playlistSource = sourceOf({
   kind: 'playlist',
   table: p,
   id: p.id,
-  match: (query) => textMatch(query.mode, query.text, searchVectors.playlists, [p.title]),
+  match: (query) => ({
+    ...textMatch(query.mode, query.text, searchVectors.playlists, [p.title]),
+    stats: playlistStats(),
+  }),
   scope: (_query, match) =>
     drizzleWhere(
       playlistReadScope(null),
       sql`${p.visibility} = 'public' and not ${p.isSystem}`,
       match.where
     ),
-  keys: (_query, match) => ({
-    relevance: sql`${match.score} * log((${stats.videoCount} + ${constant(R.playlistVideosOffset)})::double precision)`,
+  keys: (_query, { score, stats }) => ({
+    relevance: sql`${score} * log((${stats.videoCount} + ${constant(R.playlistVideosOffset)})::double precision)`,
     date: epochOf(p.createdAt),
     views: sql`${stats.views}`,
   }),
-  rows: async (db, where, key, limit) => {
+  rows: async (db, { where, key, limit, match: { stats } }) => {
     const rows = await db
       .select({
         playlist: getTableColumns(p),
