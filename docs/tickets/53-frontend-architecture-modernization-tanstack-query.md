@@ -9,7 +9,7 @@
 | Blocks | 56, 58, 59, 60, 61, 68, 70, 72 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -72,16 +72,16 @@ page; the legacy components keep their markup and only swap how they get data.
 
 ## Acceptance criteria
 
-- [ ] No import of `@reduxjs/toolkit` or `react-redux` remains; both are gone from `apps/web/package.json`, and
+- [x] No import of `@reduxjs/toolkit` or `react-redux` remains; both are gone from `apps/web/package.json`, and
       a zero-matches row fails on them.
-- [ ] Every legacy route loads its primary data in the loader; navigating between two pages that share a
+- [x] Every legacy route loads its primary data in the loader; navigating between two pages that share a
       query makes no second request for it (spec over the router with a stubbed `apiClient`).
-- [ ] Optimistic reaction and subscription mutations roll the cache back when the request fails (spec on a
+- [x] Optimistic reaction and subscription mutations roll the cache back when the request fails (spec on a
       `QueryClient` with a failing stub).
-- [ ] Upload and edit forms run on TanStack Form with `@vp/validation` validators; `react-hook-form` is gone.
-- [ ] `toViewState` has its own spec covering success and each failure shape.
-- [ ] No `useEffect` fetching in `src/`.
-- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
+- [x] Upload and edit forms run on TanStack Form with `@vp/validation` validators; `react-hook-form` is gone.
+- [x] `toViewState` has its own spec covering success and each failure shape.
+- [x] No `useEffect` fetching in `src/`.
+- [x] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
 
 ## Out of scope
 
@@ -111,6 +111,6 @@ page; the legacy components keep their markup and only swap how they get data.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] `apps/web/AGENTS.md` describes the query, mutation and form patterns.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] `apps/web/AGENTS.md` describes the query, mutation and form patterns.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
