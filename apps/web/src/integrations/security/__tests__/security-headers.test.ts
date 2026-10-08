@@ -4,7 +4,9 @@ async function renderedHeaders() {
   const nonces: string[] = [];
   const { response } = await withSecurityHeaders(async (nonce) => {
     nonces.push(nonce);
-    return { response: new Response('<html></html>', { headers: { 'content-type': 'text/html' } }) };
+    return {
+      response: new Response('<html></html>', { headers: { 'content-type': 'text/html' } }),
+    };
   });
   return { headers: response.headers, nonce: nonces[0] };
 }
