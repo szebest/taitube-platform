@@ -1,4 +1,4 @@
-# 54: Frontend testing infrastructure & integration suite (Vitest 3, Testing Library & MSW mock API)
+# 54: Frontend testing infrastructure & integration suite (Vitest, Testing Library & MSW mock API)
 
 | Field | Value |
 |---|---|
@@ -20,7 +20,7 @@ written by the ticket that builds the page.
 - A `jsdom` Vitest project for component and route specs next to the existing `node` one, with
   `@testing-library/react`, `@testing-library/user-event` and `@testing-library/jest-dom/vitest`.
   `globals: true` stays, so specs import none of the test APIs.
-- MSW v2 on the Node side, in `src/test/msw/`: handlers typed from `@vp/api-contracts` (a handler for a path
+- MSW on the Node side, in `src/test/msw/`: handlers typed from `@vp/api-contracts` (a handler for a path
   or response the contracts do not have fails to compile), reset after each test, unhandled requests fail
   the test.
 - A `renderRoute(url, { handlers?, auth? })` helper in `src/test/`: builds the real router from

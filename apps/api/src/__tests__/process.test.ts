@@ -3,11 +3,12 @@ import * as net from 'node:net';
 import type { ProcessHost } from '@vp/composition';
 import { createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
+import type { Mock } from 'vitest';
 import { run } from '../process';
 import { boundPort } from './bound-port';
 
-function host(env: Record<string, string>): ProcessHost & { exit: ReturnType<typeof vi.fn> } {
-  return { env, onSignal: () => {}, exit: vi.fn() };
+function host(env: Record<string, string>): ProcessHost & { exit: Mock<ProcessHost['exit']> } {
+  return { env, onSignal: () => {}, exit: vi.fn<ProcessHost['exit']>() };
 }
 
 function loggerTo(log: ReturnType<typeof captureLog>) {

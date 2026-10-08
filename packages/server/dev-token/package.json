@@ -23,7 +23,7 @@
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.7"
+    "vitest": "^5.0.3"
   },
   "vp": {
     "layer": 2

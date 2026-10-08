@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { getFeed, getVideo, listCategories } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 
 import { VIDEO_ID, videoSummary } from './fixtures';
 import { mockEndpoint, problemReply } from './msw/mock-endpoint';

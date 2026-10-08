@@ -18,6 +18,7 @@ export default defineConfig({
     exclude: TYPE_AWARE,
     testTimeout: 30_000,
     pool: 'threads',
-    poolOptions: { threads: { singleThread: true, isolate: false } },
+    maxWorkers: 1,
+    isolate: false,
   },
 });
