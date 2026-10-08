@@ -20,7 +20,7 @@ big suite at the end.
 1. **Harness in `apps/web/e2e/`.** Playwright (Chromium, headless) against the compose stack (`make up-all`)
    with the web app built and started by Playwright's `webServer`, seeded with `pnpm db:seed`. Traces and
    screenshots on failure. One command, `pnpm --filter @vp/web test:e2e`, and a `make e2e-web` alias; a CI job
-   runs a reduced set.
+   runs the whole suite.
 2. **Core flows on the current app:**
    - Browse: home feed renders server-side, a card opens the watch page.
    - Watch: the watch page renders server-side for a seeded READY video. The playback flow (`playing` and
@@ -50,7 +50,7 @@ them. Lighthouse and vitals are [64](64-web-vitals-monitoring-inp-lcp-cls-real-u
 ## Acceptance criteria
 
 - [x] `pnpm --filter @vp/web test:e2e` runs the suite against the local compose stack with no off-machine
-      requests at test time; CI runs the reduced set.
+      requests at test time; CI runs the whole suite.
 - [x] Browse, watch page and upload-to-READY flows pass on the current app.
 - [x] Each XSS payload renders inert in every field it is placed in.
 - [x] Each privilege escalation attempt gets 403 (or 401 when unauthenticated) with a problem+json body.
