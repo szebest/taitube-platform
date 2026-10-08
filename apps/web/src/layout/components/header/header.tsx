@@ -3,13 +3,14 @@ import { Form } from 'react-bootstrap';
 
 import styles from './header.module.scss';
 
-import { useAuth, useTheme } from '#app/modules/shared/providers';
+import { useTheme } from '#app/components/ui/theme/theme-provider';
+import { useAuth } from '#app/modules/shared/providers';
 
 import { Logo, Login } from '..';
 
 export const Header = memo(() => {
 	const { isLoading } = useAuth();
-	const { theme, changeTheme } = useTheme();
+	const { theme, setPreference } = useTheme();
 
 	if (isLoading)
 		return <div className={styles.header} />;
@@ -26,7 +27,7 @@ export const Header = memo(() => {
 						<Form.Check
 							type="switch"
 							aria-label='theme switch'
-							onChange={() => changeTheme(theme === 'light' ? 'dark' : 'light')}
+							onChange={() => setPreference(theme === 'light' ? 'dark' : 'light')}
 							checked={theme === 'dark'}
 						/>
 					</Form.Group>

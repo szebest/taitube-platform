@@ -14,15 +14,21 @@ describe('apps/web: header', () => {
     expect(markup).not.toContain('toggle sidebar');
   });
 
-  it('server-renders the theme switch off, showing light, whatever the viewer chose', async () => {
-    stubBrowser({ prefersDark: true, stored: { THEME: '"dark"' } });
+  it.each([
+    { theme: 'dark', checked: true },
+    { theme: 'light', checked: false },
+  ] as const)(
+    'server-renders the switch for the $theme theme the server read',
+    async ({ theme, checked }) => {
+      stubBrowser();
 
-    const markup = await renderPage(inChrome(<Header />));
+      const markup = await renderPage(inChrome(<Header />, theme));
 
-    expect(markup).toContain('aria-label="theme switch"');
-    expect(markup).toContain('>light</label>');
-    expect(markup).not.toContain('checked=""');
-  });
+      expect(markup).toContain('aria-label="theme switch"');
+      expect(markup).toContain(`>${theme}</label>`);
+      expect(markup.includes('checked=""')).toBe(checked);
+    }
+  );
 
   it('shows a guest the logo and no account menu', async () => {
     stubBrowser();

@@ -1,0 +1,105 @@
+@layer theme;
+@import "tailwindcss/theme.css" layer(theme) prefix(tw);
+@import "tailwindcss/utilities.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --vp-surface: #0f0f0f;
+  --vp-surface-elevated: #1f1f1f;
+  --vp-surface-hover: #272727;
+  --vp-border: #272727;
+  --vp-fg: #f1f1f1;
+  --vp-fg-muted: #aaaaaa;
+  --vp-accent: #e00025;
+  --vp-accent-hover: #c4001f;
+  --vp-danger: #d92a2a;
+  --vp-danger-hover: #bd2323;
+  --vp-success: #2ba640;
+  --vp-warning: #f2a60c;
+  --vp-ring: #3ea6ff;
+  --vp-overlay: rgb(0 0 0 / 0.6);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --vp-surface: #ffffff;
+  --vp-surface-elevated: #f2f2f2;
+  --vp-surface-hover: #e5e5e5;
+  --vp-border: #e5e5e5;
+  --vp-fg: #0f0f0f;
+  --vp-fg-muted: #606060;
+  --vp-accent: #cc0000;
+  --vp-accent-hover: #a80000;
+  --vp-danger: #c5221f;
+  --vp-danger-hover: #a51c1a;
+  --vp-success: #187a2f;
+  --vp-warning: #9a5300;
+  --vp-ring: #065fd4;
+  --vp-overlay: rgb(0 0 0 / 0.4);
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-surface: var(--vp-surface);
+  --color-surface-elevated: var(--vp-surface-elevated);
+  --color-surface-hover: var(--vp-surface-hover);
+  --color-border: var(--vp-border);
+  --color-fg: var(--vp-fg);
+  --color-fg-muted: var(--vp-fg-muted);
+  --color-accent: var(--vp-accent);
+  --color-accent-hover: var(--vp-accent-hover);
+  --color-on-accent: #ffffff;
+  --color-danger: var(--vp-danger);
+  --color-danger-hover: var(--vp-danger-hover);
+  --color-on-danger: #ffffff;
+  --color-success: var(--vp-success);
+  --color-warning: var(--vp-warning);
+  --color-ring: var(--vp-ring);
+  --color-overlay: var(--vp-overlay);
+}
+
+@theme {
+  --font-*: initial;
+  --font-sans: system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --text-*: initial;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+
+  --radius-*: initial;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --spacing: 0.25rem;
+
+  --animate-shimmer: shimmer 1.5s ease-in-out infinite;
+
+  @keyframes shimmer {
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--vp-ring);
+    outline-offset: 2px;
+  }
+}

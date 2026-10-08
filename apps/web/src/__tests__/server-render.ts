@@ -1,4 +1,5 @@
 import { createRequestHandler, defaultStreamHandler } from '@tanstack/react-router/ssr/server';
+import { requestHandler } from '@tanstack/react-start/server';
 import type { HttpHandler } from 'msw';
 import { getRouter } from '../router';
 import { apiServer } from './msw/api-server';
@@ -14,19 +15,23 @@ export type ServerRender = {
 export type ServerRenderOptions = {
   /** How the API answers during the render; a call none of them answers fails the test. */
   handlers?: HttpHandler[];
+  /** The request's headers, the theme cookie among them. */
+  headers?: HeadersInit;
 };
 
-/** What the server answers for `path`: the real route tree and router, rendered to a string. */
+/**
+ * What the server answers for `path`: the real route tree and router, rendered to a string inside
+ * the request context Start gives the server's code.
+ */
 export async function serverRender(
   path: string,
-  { handlers = [] }: ServerRenderOptions = {}
+  { handlers = [], headers }: ServerRenderOptions = {}
 ): Promise<ServerRender> {
   apiServer.use(...handlers);
-  const handler = createRequestHandler({
-    request: new Request(`http://localhost:5173${path}`),
-    createRouter: () => getRouter(),
-  });
-  const response = await handler(defaultStreamHandler);
+  const answer = requestHandler((request) =>
+    createRequestHandler({ request, createRouter: () => getRouter() })(defaultStreamHandler)
+  );
+  const response = await answer(new Request(`http://localhost:5173${path}`, { headers }), {});
   const html = await response.text();
   return {
     status: response.status,

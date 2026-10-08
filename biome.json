@@ -31,6 +31,10 @@
     "lineWidth": 100,
     "lineEnding": "lf"
   },
+  "css": {
+    "linter": { "enabled": false },
+    "formatter": { "enabled": false }
+  },
   "javascript": {
     "formatter": {
       "quoteStyle": "single",

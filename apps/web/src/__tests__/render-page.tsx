@@ -15,12 +15,13 @@ import type { HttpHandler } from 'msw';
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Provider } from 'react-redux';
+import type { ThemePreference } from '../components/ui/theme/theme-preference';
+import { ThemeProvider } from '../components/ui/theme/theme-provider';
 import { createQueryClient } from '../integrations/query/create-query-client';
 import { accountApi } from '../modules/shared/api/account-api';
 import { AuthProvider } from '../modules/shared/providers/auth-provider';
 import { PermissionsProvider } from '../modules/shared/providers/permissions-provider';
 import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
-import { ThemeProvider } from '../modules/shared/providers/theme-provider';
 import { type ApiStore, createApiStore, seed } from './api-store';
 import { stubBrowser } from './browser';
 import { apiServer } from './msw/api-server';
@@ -89,11 +90,11 @@ export async function renderPage(
   return renderToStaticMarkup(<RouterProvider router={router} />);
 }
 
-/** Adds the sidebar and theme providers the layout reads. */
-export function inChrome(page: ReactElement): ReactElement {
+/** Adds the sidebar and theme providers the layout reads, the theme as the server read it. */
+export function inChrome(page: ReactElement, theme: ThemePreference = 'dark'): ReactElement {
   return (
     <SidebarProvider>
-      <ThemeProvider>{page}</ThemeProvider>
+      <ThemeProvider preference={theme}>{page}</ThemeProvider>
     </SidebarProvider>
   );
 }
