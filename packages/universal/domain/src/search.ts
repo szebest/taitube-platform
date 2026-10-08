@@ -113,7 +113,7 @@ export interface SearchCursor extends SearchPosition {
 
 const KIND_ORDER: Record<SearchResultKind, number> = { channel: 0, video: 1, playlist: 2 };
 
-export function searchKindOrder(kind: SearchResultKind): number {
+function searchKindOrder(kind: SearchResultKind): number {
   return KIND_ORDER[kind];
 }
 

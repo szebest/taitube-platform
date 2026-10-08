@@ -16,7 +16,7 @@ export function constant(value: number): SQL {
 }
 
 /** `websearch_to_tsquery` parses the text, quotes, `or` and `-` included; nothing here does. */
-export function tsqueryOf(text: string): SQL {
+function tsqueryOf(text: string): SQL {
   return sql`websearch_to_tsquery(${SEARCH_TEXT_CONFIG}::regconfig, ${text})`;
 }
 

@@ -119,7 +119,5 @@ export const searchSuggestions = defineEndpoint({
 export type SearchRequest = z.input<typeof SearchQuerySchema>;
 export type SearchResponse = z.infer<typeof SearchResponseSchema>;
 export type SearchResultItem = z.infer<typeof SearchResultItemSchema>;
-export type ChannelSummaryView = z.infer<typeof ChannelSummarySchema>;
-export type PlaylistSummaryView = z.infer<typeof PlaylistSummarySchema>;
 export type SearchSuggestion = z.infer<typeof SearchSuggestionSchema>;
 export type SearchSuggestionsResponse = z.infer<typeof searchSuggestions.result>;

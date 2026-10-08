@@ -2,7 +2,7 @@ import { type Result, err, ok } from '@vp/result';
 import { type InvalidField, type LengthBounds, invalidLength } from '../failures';
 import { withinLength } from '../plain-text';
 
-export const SEARCH_QUERY_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };
+const SEARCH_QUERY_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };
 
 export type InvalidSearchQuery = InvalidField<LengthBounds>;
 

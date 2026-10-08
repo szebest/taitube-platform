@@ -1,6 +1,6 @@
 import { PGlite } from '@electric-sql/pglite';
-import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket';
+import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 
 export interface SocketDatabase {
   url: string;

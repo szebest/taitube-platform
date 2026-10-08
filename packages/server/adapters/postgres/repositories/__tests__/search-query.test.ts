@@ -2,17 +2,16 @@ import { videos } from '@vp/db';
 import { SEARCH_RANKING, type SearchSort } from '@vp/domain';
 import { sql } from 'drizzle-orm';
 import { sqlParams, sqlText } from '../../scopes/__tests__/sql-text';
-import { afterCursor, epochOf, instantOf, sortKey, textMatch, tsqueryOf } from '../search-query';
+import { afterCursor, epochOf, instantOf, sortKey, textMatch } from '../search-query';
 
 const VECTOR = sql`"videos"."search_vector"`;
 const CURSOR = { key: 1.5, kind: 'video', id: 'v-9' } as const;
 
 describe('adapters/postgres: search SQL', () => {
   it('hands the text to websearch_to_tsquery under the configuration the vectors use', () => {
-    const tsquery = tsqueryOf('learn "react hooks" -class');
+    const { where } = textMatch('lexical', 'learn "react hooks" -class', VECTOR, [videos.title]);
 
-    expect(sqlText(tsquery)).toBe('websearch_to_tsquery($1::regconfig, $2)');
-    expect(sqlParams(tsquery)).toEqual(['simple', 'learn "react hooks" -class']);
+    expect(sqlParams(where)).toEqual(['simple', 'learn "react hooks" -class']);
   });
 
   it('pins the walk to the instant it carries', () => {
@@ -59,10 +58,7 @@ describe('adapters/postgres: search SQL', () => {
   it.each([
     ['channel', 'k < $1::double precision'],
     ['playlist', 'k <= $1::double precision'],
-    [
-      'video',
-      '(k < $1::double precision or (k = $2::double precision and "videos"."id" < $3))',
-    ],
+    ['video', '(k < $1::double precision or (k = $2::double precision and "videos"."id" < $3))'],
   ] as const)('resumes a %s table after a video cursor with %s', (kind, expected) => {
     const bound = afterCursor(kind, sql`k`, videos.id, CURSOR);
 

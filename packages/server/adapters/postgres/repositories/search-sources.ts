@@ -54,7 +54,9 @@ export const videoSource: SearchSource = {
     const rows = await db
       .select({ video: getTableColumns(v), key })
       .from(v)
-      .where(drizzleWhere(videoScope(query, match.where), afterCursor('video', key, v.id, query.cursor)))
+      .where(
+        drizzleWhere(videoScope(query, match.where), afterCursor('video', key, v.id, query.cursor))
+      )
       .orderBy(desc(key), desc(v.id))
       .limit(query.limit + 1);
     return rows.map(({ video, key }) => ({ kind: 'video', key, id: video.id, video }));
@@ -68,7 +70,10 @@ export const videoSource: SearchSource = {
 function channelMatch(query: SearchQuery) {
   const wanted = searchHandleOf(query.text);
   const exact = sql`(lower(${ch.handle}) = ${wanted} or lower(${ch.displayName}) = ${wanted})`;
-  const match = textMatch(query.mode, query.text, searchVectors.channels, [ch.handle, ch.displayName]);
+  const match = textMatch(query.mode, query.text, searchVectors.channels, [
+    ch.handle,
+    ch.displayName,
+  ]);
   return { exact, where: or(match.where, exact), score: match.score };
 }
 
@@ -109,9 +114,9 @@ function playlistStats(db: PostgresDatabase) {
     .select({
       videoCount: sql<number>`count(*)::int`.as('video_count'),
       views: sql<number>`coalesce(sum(${v.viewsCount}), 0)`.as('views'),
-      coverKey: sql<string | null>`(array_agg(${v.posterKey} order by ${pi.position}, ${pi.id}))[1]`.as(
-        'cover_key'
-      ),
+      coverKey: sql<
+        string | null
+      >`(array_agg(${v.posterKey} order by ${pi.position}, ${pi.id}))[1]`.as('cover_key'),
     })
     .from(pi)
     .innerJoin(v, eq(v.id, pi.videoId))
@@ -139,7 +144,9 @@ export const playlistSource: SearchSource = {
       .from(p)
       .innerJoinLateral(stats, sql`true`)
       .leftJoin(ch, eq(ch.userId, p.ownerId))
-      .where(drizzleWhere(playlistScope(match.where), afterCursor('playlist', key, p.id, query.cursor)))
+      .where(
+        drizzleWhere(playlistScope(match.where), afterCursor('playlist', key, p.id, query.cursor))
+      )
       .orderBy(desc(key), desc(p.id))
       .limit(query.limit + 1);
     return rows.map(({ playlist, videoCount, coverKey, key, ...owner }) => ({
