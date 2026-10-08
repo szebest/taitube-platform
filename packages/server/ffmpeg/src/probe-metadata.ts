@@ -37,6 +37,8 @@ export interface RawFfprobeOutput {
 
 export interface ProbeMetadata {
   durationMs: number;
+  /** The span the sprite covers; a longer audio track stretches `durationMs` past it. */
+  videoDurationMs: number;
   width: number;
   height: number;
   effectiveWidth: number;
@@ -139,6 +141,9 @@ export function validateAndParseProbe(
     throw new PermanentError(ErrorCodes.CORRUPT_CONTAINER, 'Invalid or missing video duration');
   }
 
+  const streamDurationMs = Math.round(Number(videoStream.duration) * MS_PER_SECOND);
+  const videoDurationMs = streamDurationMs > 0 ? streamDurationMs : durationMs;
+
   if (durationSec > maxDurationSec) {
     throw new PermanentError(
       ErrorCodes.DURATION_EXCEEDED,
@@ -156,6 +161,7 @@ export function validateAndParseProbe(
 
   return {
     durationMs,
+    videoDurationMs,
     width,
     height,
     effectiveWidth,

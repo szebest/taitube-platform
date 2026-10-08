@@ -14,6 +14,7 @@ export const errors = {
   rateLimited: dt('Too many requests. Wait a moment and try again.'),
   unauthorized: dt('Sign in to continue.'),
   validationFailed: dt('Some of the details are not valid.'),
+  routeNotFound: dt('This address does not exist.'),
   invalidCursor: dt('This page link is no longer valid. Start from the first page.'),
   categoryNotFound: dt('This category does not exist.'),
   categorySlugConflict: dt('A category with this address already exists.'),

@@ -36,6 +36,7 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE]: 400,
   [ErrorCodes.UNAUTHORIZED]: 401,
   [ErrorCodes.FORBIDDEN]: 403,
+  [ErrorCodes.ROUTE_NOT_FOUND]: 404,
   [ErrorCodes.VIDEO_NOT_FOUND]: 404,
   [ErrorCodes.DLQ_ENTRY_NOT_FOUND]: 404,
   [ErrorCodes.CATEGORY_NOT_FOUND]: 404,
