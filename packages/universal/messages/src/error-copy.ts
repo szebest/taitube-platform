@@ -20,6 +20,7 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.RATE_LIMITED]: 'errors.rateLimited',
   [ErrorCodes.UNAUTHORIZED]: 'errors.unauthorized',
   [ErrorCodes.VALIDATION_FAILED]: 'errors.validationFailed',
+  [ErrorCodes.ROUTE_NOT_FOUND]: 'errors.routeNotFound',
   [ErrorCodes.INVALID_CURSOR]: 'errors.invalidCursor',
   [ErrorCodes.CATEGORY_NOT_FOUND]: 'errors.categoryNotFound',
   [ErrorCodes.CATEGORY_SLUG_CONFLICT]: 'errors.categorySlugConflict',
