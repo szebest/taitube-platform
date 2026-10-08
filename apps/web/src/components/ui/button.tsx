@@ -12,7 +12,7 @@ export const buttonVariants = tv({
       outline:
         'tw:border tw:border-border-strong tw:bg-transparent tw:text-fg tw:hover:bg-surface-hover',
       ghost: 'tw:bg-transparent tw:text-fg tw:hover:bg-surface-hover',
-      destructive: 'tw:bg-danger tw:text-on-danger tw:hover:bg-danger-hover',
+      destructive: 'tw:bg-danger-solid tw:text-on-danger tw:hover:bg-danger-solid-hover',
     },
     size: {
       sm: 'tw:h-8 tw:text-sm tw:[&_svg]:size-4',

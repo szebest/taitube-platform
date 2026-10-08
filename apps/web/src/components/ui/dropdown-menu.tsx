@@ -9,7 +9,7 @@ const dropdownMenuItemVariants = tv({
     variant: {
       default: '',
       destructive:
-        'tw:text-danger tw:data-highlighted:bg-danger tw:data-highlighted:text-on-danger',
+        'tw:text-danger tw:data-highlighted:bg-danger-solid tw:data-highlighted:text-on-danger',
     },
     /** Lines the text up with the checkbox and radio items' text. */
     inset: {
@@ -128,8 +128,8 @@ export function DropdownMenuRadioItem({
       className={dropdownMenuItemVariants({ inset: true, className })}
       {...props}
     >
-      <MenuPrimitive.ItemIndicator className="tw:absolute tw:left-3 tw:inline-flex tw:size-4 tw:items-center tw:justify-center">
-        <span className="tw:size-2 tw:rounded-full tw:bg-current" />
+      <MenuPrimitive.ItemIndicator className="tw:absolute tw:left-3 tw:inline-flex tw:items-center tw:justify-center">
+        <Check aria-hidden="true" />
       </MenuPrimitive.ItemIndicator>
       {children}
     </MenuPrimitive.RadioItem>

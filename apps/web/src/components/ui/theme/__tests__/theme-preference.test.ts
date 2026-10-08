@@ -12,8 +12,8 @@ describe('apps/web: theme preference', () => {
     { cookie: 'vp.theme=light', preference: 'light' },
     { cookie: 'vp.theme=dark', preference: 'dark' },
     { cookie: 'vp.theme=system', preference: 'system' },
-    { cookie: '', preference: 'dark' },
-    { cookie: 'vp.theme=sepia', preference: 'dark' },
+    { cookie: '', preference: 'system' },
+    { cookie: 'vp.theme=sepia', preference: 'system' },
   ])('reads "$cookie" from the request as $preference', async ({ cookie, preference }) => {
     expect(await preferenceFor(cookie)).toBe(preference);
   });

@@ -10,23 +10,20 @@ describe('apps/web: header', () => {
 
     const markup = await renderPage(inChrome(<Header />));
 
-    expect(markup).not.toContain('theme switch');
+    expect(markup).not.toContain('aria-label="Theme:');
     expect(markup).not.toContain('toggle sidebar');
   });
 
   it.each([
-    { theme: 'dark', checked: true },
-    { theme: 'light', checked: false },
+    { theme: 'dark', name: 'Theme: Dark' },
+    { theme: 'light', name: 'Theme: Light' },
+    { theme: 'system', name: 'Theme: System' },
   ] as const)(
-    'server-renders the switch for the $theme theme the server read',
-    async ({ theme, checked }) => {
+    'server-renders the theme control for the $theme choice the server read',
+    async ({ theme, name }) => {
       stubBrowser();
 
-      const markup = await renderPage(inChrome(<Header />, theme));
-
-      expect(markup).toContain('aria-label="theme switch"');
-      expect(markup).toContain(`>${theme}</label>`);
-      expect(markup.includes('checked=""')).toBe(checked);
+      expect(await renderPage(inChrome(<Header />, theme))).toContain(`aria-label="${name}"`);
     }
   );
 

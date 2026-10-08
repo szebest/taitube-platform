@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react';
 
+import { pauseTransitions } from './pause-transitions';
 import { useSystemTheme } from './system-theme';
 import {
   type Theme,
@@ -31,6 +32,7 @@ export function ThemeProvider({ preference: initialPreference, children }: Theme
 
   const setPreference = useCallback((next: ThemePreference) => {
     saveThemePreference(next);
+    pauseTransitions();
     setPreferenceState(next);
   }, []);
 

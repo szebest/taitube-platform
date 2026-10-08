@@ -14,7 +14,7 @@ const ONE_YEAR_S = 60 * 60 * 24 * 365;
 
 export function requestThemePreference(): ThemePreference {
   const stored = ThemePreferenceSchema.safeParse(readCookie(THEME_COOKIE));
-  return stored.success ? stored.data : 'dark';
+  return stored.success ? stored.data : 'system';
 }
 
 export function saveThemePreference(preference: ThemePreference): void {

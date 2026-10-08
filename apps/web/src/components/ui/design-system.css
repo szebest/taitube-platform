@@ -24,8 +24,9 @@
   --vp-fg-muted: #aaaaaa;
   --vp-accent: #e00025;
   --vp-accent-hover: #c4001f;
-  --vp-danger: #d92a2a;
-  --vp-danger-hover: #bd2323;
+  --vp-danger: #ff6b6b;
+  --vp-danger-solid: #d92a2a;
+  --vp-danger-solid-hover: #bd2323;
   --vp-success: #2ba640;
   --vp-warning: #f2a60c;
   --vp-ring: #3ea6ff;
@@ -45,7 +46,8 @@
   --vp-accent: #cc0000;
   --vp-accent-hover: #a80000;
   --vp-danger: #c5221f;
-  --vp-danger-hover: #a51c1a;
+  --vp-danger-solid: #c5221f;
+  --vp-danger-solid-hover: #a51c1a;
   --vp-success: #187a2f;
   --vp-warning: #9a5300;
   --vp-ring: #065fd4;
@@ -66,7 +68,8 @@
   --color-accent-hover: var(--vp-accent-hover);
   --color-on-accent: #ffffff;
   --color-danger: var(--vp-danger);
-  --color-danger-hover: var(--vp-danger-hover);
+  --color-danger-solid: var(--vp-danger-solid);
+  --color-danger-solid-hover: var(--vp-danger-solid-hover);
   --color-on-danger: #ffffff;
   --color-success: var(--vp-success);
   --color-warning: var(--vp-warning);
@@ -201,6 +204,12 @@
       translate: -100% 0;
     }
   }
+}
+
+[data-theme-switching] *,
+[data-theme-switching] *::before,
+[data-theme-switching] *::after {
+  transition: none !important;
 }
 
 @utility focus-ring {

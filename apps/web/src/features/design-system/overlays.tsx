@@ -113,23 +113,25 @@ export function Overlays() {
   return (
     <>
       <ShowcaseSection title="Dialog">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Open dialog</Button>
-          </DialogTrigger>
-          <DialogContent closeLabel="Close">
-            <DialogHeader>
-              <DialogTitle>Delete video?</DialogTitle>
-              <DialogDescription>It cannot be restored.</DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button>Cancel</Button>
-              </DialogClose>
-              <Button variant="destructive">Delete</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>Open dialog</Button>
+            </DialogTrigger>
+            <DialogContent closeLabel="Close">
+              <DialogHeader>
+                <DialogTitle>Delete video?</DialogTitle>
+                <DialogDescription>It cannot be restored.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button>Cancel</Button>
+                </DialogClose>
+                <Button variant="destructive">Delete</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </ShowcaseSection>
 
       <ShowcaseSection title="Sheet">

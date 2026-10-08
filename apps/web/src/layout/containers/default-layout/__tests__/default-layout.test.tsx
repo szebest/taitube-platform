@@ -8,7 +8,7 @@ describe('apps/web: default layout', () => {
 
     const markup = await renderPage(inChrome(<DefaultLayout />));
 
-    expect(markup).toContain('aria-label="theme switch"');
+    expect(markup).toContain('aria-label="Theme: Dark"');
     expect(markup).toContain('href="/trending"');
   });
 

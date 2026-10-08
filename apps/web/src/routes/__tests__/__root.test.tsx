@@ -30,8 +30,6 @@ describe('apps/web: root route', () => {
   it.each([
     { cookie: 'vp.theme=light', theme: 'light' },
     { cookie: 'vp.theme=dark', theme: 'dark' },
-    { cookie: '', theme: 'dark' },
-    { cookie: 'vp.theme=sepia', theme: 'dark' },
   ])(
     'server-renders the theme of cookie "$cookie" on <html>: $theme',
     async ({ cookie, theme }) => {
@@ -42,11 +40,17 @@ describe('apps/web: root route', () => {
     }
   );
 
-  it('resolves a system preference in the head, before the body paints', async () => {
-    const html = await home('vp.theme=system');
+  it.each(['vp.theme=system', '', 'vp.theme=sepia'])(
+    'resolves the system theme in the head, before the body paints, for cookie "%s"',
+    async (cookie) => {
+      const html = await home(cookie);
 
-    expect(head(html)).toContain(`<script>${SYSTEM_THEME_SCRIPT};document.currentScript.remove()`);
-  });
+      expect(html).toContain('<html lang="en" data-theme="dark">');
+      expect(head(html)).toContain(
+        `<script>${SYSTEM_THEME_SCRIPT};document.currentScript.remove()`
+      );
+    }
+  );
 
   it('mounts the one toast region every page shows its toasts in', async () => {
     const html = await home();

@@ -43,9 +43,11 @@ export function FormControls() {
             </Button>
           </div>
         ))}
-        <Button asChild variant="outline">
-          <a href="/">A link styled as a button</a>
-        </Button>
+        <div>
+          <Button asChild variant="outline">
+            <a href="/">A link styled as a button</a>
+          </Button>
+        </div>
       </ShowcaseSection>
 
       <ShowcaseSection title="Field, Input, Textarea">
