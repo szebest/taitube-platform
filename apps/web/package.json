@@ -10,7 +10,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "start": "srvx serve --prod --port 5173 --static ../client --entry dist/server/server.js",
-    "test": "vitest run",
+    "test": "vitest run && vitest run --config vitest.jsdom.config.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json"
   },
