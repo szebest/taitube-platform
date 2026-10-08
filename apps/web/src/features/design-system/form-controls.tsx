@@ -2,12 +2,15 @@ import { Plus, Upload } from 'lucide-react';
 
 import { Button, IconButton, buttonVariants } from '#app/components/ui/button';
 import { Checkbox } from '#app/components/ui/checkbox';
-import { Field, controlVariants } from '#app/components/ui/field';
+import { Field, controlVariants, fieldVariants } from '#app/components/ui/field';
 import { Input } from '#app/components/ui/input';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '#app/components/ui/select';
@@ -51,6 +54,16 @@ export function FormControls() {
             <Input size={size} placeholder="Add a title" />
           </Field>
         ))}
+        {variantNames(fieldVariants.variants.orientation).map((orientation) => (
+          <Field
+            key={orientation}
+            label={`Handle, ${orientation}`}
+            orientation={orientation}
+            description="Letters, digits and dots"
+          >
+            <Input />
+          </Field>
+        ))}
         <Field label="Title" error="A title is required">
           <Input defaultValue="" />
         </Field>
@@ -70,7 +83,11 @@ export function FormControls() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="public">Public</SelectItem>
+                <SelectGroup>
+                  <SelectLabel>Listed</SelectLabel>
+                  <SelectItem value="public">Public</SelectItem>
+                </SelectGroup>
+                <SelectSeparator />
                 <SelectItem value="unlisted">Unlisted</SelectItem>
                 <SelectItem value="private">Private</SelectItem>
               </SelectContent>

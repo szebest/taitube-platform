@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { readCookie, writeCookie } from '#app/integrations/cookies/cookie';
 
-export const ThemePreferenceSchema = z.enum(['dark', 'light', 'system']);
+const ThemePreferenceSchema = z.enum(['dark', 'light', 'system']);
 
 export type ThemePreference = z.infer<typeof ThemePreferenceSchema>;
 

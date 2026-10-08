@@ -3,7 +3,7 @@ import { Check, ChevronRight } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { type VariantProps, cn, tv } from 'tailwind-variants';
 
-export const dropdownMenuItemVariants = tv({
+const dropdownMenuItemVariants = tv({
   base: 'tw:relative tw:flex tw:cursor-pointer tw:items-center tw:gap-2 tw:rounded-sm tw:px-3 tw:py-2 tw:text-sm tw:outline-none tw:select-none tw:focus-ring tw:data-disabled:pointer-events-none tw:data-disabled:opacity-50 tw:data-highlighted:bg-surface-hover tw:[&_svg]:size-4 tw:[&_svg]:shrink-0',
   variants: {
     variant: {

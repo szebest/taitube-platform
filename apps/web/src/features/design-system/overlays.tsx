@@ -16,6 +16,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -29,8 +30,10 @@ import {
 } from '#app/components/ui/dropdown-menu';
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -38,7 +41,7 @@ import {
 } from '#app/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#app/components/ui/tabs';
 import { toastVariants, useToast } from '#app/components/ui/toast';
-import { Tooltip } from '#app/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipRoot, TooltipTrigger } from '#app/components/ui/tooltip';
 import { variantNames } from '#app/components/ui/variant-names';
 import { ShowcaseSection } from './showcase-section';
 
@@ -54,13 +57,15 @@ function VideoMenu() {
         </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem>
-          Share
-          <DropdownMenuShortcut>S</DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuCheckboxItem checked={captions} onCheckedChange={setCaptions}>
-          Captions
-        </DropdownMenuCheckboxItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            Share
+            <DropdownMenuShortcut>S</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuCheckboxItem checked={captions} onCheckedChange={setCaptions}>
+            Captions
+          </DropdownMenuCheckboxItem>
+        </DropdownMenuGroup>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Quality</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
@@ -139,6 +144,11 @@ export function Overlays() {
                   <SheetTitle>Taitube</SheetTitle>
                   <SheetDescription>{`A sheet from the ${side}`}</SheetDescription>
                 </SheetHeader>
+                <SheetFooter>
+                  <SheetClose asChild>
+                    <Button>Done</Button>
+                  </SheetClose>
+                </SheetFooter>
               </SheetContent>
             </Sheet>
           ))}
@@ -153,6 +163,12 @@ export function Overlays() {
               <ThumbsUp aria-hidden="true" />
             </IconButton>
           </Tooltip>
+          <TooltipRoot>
+            <TooltipTrigger asChild>
+              <Button size="sm">Composed from parts</Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Opens below its trigger</TooltipContent>
+          </TooltipRoot>
         </div>
       </ShowcaseSection>
 

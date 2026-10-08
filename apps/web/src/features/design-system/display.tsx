@@ -10,7 +10,7 @@ import {
 } from '#app/components/ui/card';
 import { Field } from '#app/components/ui/field';
 import { Progress, progressVariants } from '#app/components/ui/progress';
-import { Separator } from '#app/components/ui/separator';
+import { Separator, separatorVariants } from '#app/components/ui/separator';
 import { Skeleton } from '#app/components/ui/skeleton';
 import { Spinner, spinnerVariants } from '#app/components/ui/spinner';
 import { variantNames } from '#app/components/ui/variant-names';
@@ -52,6 +52,11 @@ export function Display() {
             <Badge variant="success">Live</Badge>
           </CardFooter>
         </Card>
+        <div className="tw:flex tw:h-6 tw:items-center tw:gap-3">
+          {variantNames(separatorVariants.variants.orientation).map((orientation) => (
+            <Separator key={orientation} orientation={orientation} decorative={false} />
+          ))}
+        </div>
       </ShowcaseSection>
 
       <ShowcaseSection title="Skeleton">
