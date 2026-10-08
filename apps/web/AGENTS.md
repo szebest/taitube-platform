@@ -166,7 +166,9 @@ it('renders the video the loader fetched', async () => {
 
 It returns Testing Library's render result plus `router`, `queryClient` and a `user` from `userEvent.setup()`.
 `src/__tests__/jsdom.setup.ts` fills in the browser APIs jsdom lacks (`matchMedia`, `scrollTo`,
-`IntersectionObserver`). A spec that expects an error page silences the error React logs with
+`IntersectionObserver`). The root run shares a worker between spec files (`isolate: false`) and gives each
+file a new document, so the setup also points Testing Library's `screen` and `userEvent.setup()` at the
+current one: use them as documented, with no `within(document.body)` or `{ document }` workaround. A spec that expects an error page silences the error React logs with
 `vi.spyOn(console, 'error').mockImplementation(() => undefined)`.
 
 ### Rule 8: `#app/` for anything outside the feature folder

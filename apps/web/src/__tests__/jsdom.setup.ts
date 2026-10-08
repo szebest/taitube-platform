@@ -1,3 +1,7 @@
+import type { Options } from '@testing-library/user-event';
+
+import { bindScreen } from './bind-screen';
+
 function unmatchedQuery(media: string): MediaQueryList {
   return {
     media,
@@ -27,3 +31,15 @@ class NeverIntersecting implements IntersectionObserver {
 window.matchMedia = unmatchedQuery;
 window.scrollTo = () => undefined;
 window.IntersectionObserver = NeverIntersecting;
+
+// Spec files share a worker's modules but each gets a new document; both libraries bind the first.
+bindScreen();
+
+vi.mock(import('@testing-library/user-event'), async (importOriginal) => {
+  const actual = await importOriginal();
+  const userEvent = {
+    ...actual.userEvent,
+    setup: (options: Options = {}) => actual.userEvent.setup({ document, ...options }),
+  };
+  return { ...actual, userEvent, default: userEvent };
+});
