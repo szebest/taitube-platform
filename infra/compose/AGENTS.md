@@ -50,7 +50,10 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
      `turbo-cache` for the turbo build, so a package two apps need builds once.
    `scripts/bundle-app.sh` writes what an image copies. CI builds the bundles on the runner and hands them to
    the `api-bundle`, `worker-bundle` and `web-bundle` stages as build contexts.
-4. **Clean Volume Mounts:**
+4. **No fixed container names.** Compose derives them from the project (`video-pipeline-api-1`), so a
+   second stack under another project name (`COMPOSE_PROJECT_NAME`, `-p`) never collides with this one.
+   Scripts find a container through its service: `docker compose -f infra/compose/docker-compose.yml ps -q api`.
+5. **Clean Volume Mounts:**
    - Named volumes (`pgdata`, `redisdata`, `miniodata`) hold local state outside the checkout.
    - Workers get a `/tmp/vp` tmpfs.
    - `make down` and `make nuke` both remove the volumes.

@@ -314,11 +314,11 @@ jobs:
       - name: Prove the API and web containers have no egress
         run: bash scripts/assert-no-egress.sh infra/compose/docker-compose.yml infra/compose/docker-compose.offline.yml
 
-      - name: Run E2E smoke test (validates pipeline correctness under offline mode)
-        run: API_URL=http://127.0.0.1:3000 make smoke
-
-      - name: Upload, wait for READY and play back through the web container in Chrome
-        run: pnpm test:browser
+      - name: Run the E2E smoke and, beside it, upload and play back through the web container in Chrome
+        run: |
+          API_URL=http://127.0.0.1:3000 make smoke 2>&1 | sed -u 's/^/[smoke] /' &
+          pnpm test:browser 2>&1 | sed -u 's/^/[browser] /'
+          wait $!
 
       - name: Dump container logs on failure
         if: failure()

@@ -49,7 +49,7 @@ Slow API routes are typically caused by downstream dependencies:
 ### Step 3: Check API Server Saturation
 Inspect container CPU and memory usage:
 ```bash
-docker stats vp-api
+docker stats "$(docker compose -f infra/compose/docker-compose.yml ps -q api)"
 # or in Kubernetes:
 kubectl top pods -l app.kubernetes.io/component=api
 ```

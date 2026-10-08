@@ -20,9 +20,9 @@ const { values } = parseArgs({
  * answers on is forwarded to its container.
  */
 const PUBLISHED = [
-  { container: 'vp-web', port: 5173 },
-  { container: 'vp-api', port: 3000 },
-  { container: 'vp-minio', port: 9000 },
+  { service: 'web', port: 5173 },
+  { service: 'api', port: 3000 },
+  { service: 'minio', port: 9000 },
 ];
 
 const FIXTURE = resolve(import.meta.dirname, '../fixtures/s2.mp4');
@@ -45,13 +45,26 @@ function answers(port: number): Promise<boolean> {
   });
 }
 
-function forward(port: number, container: string): Server {
-  const host = execFileSync(
-    'docker',
-    ['inspect', '-f', '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}', container],
-    { encoding: 'utf8' }
-  ).trim();
-  step(`forwarding 127.0.0.1:${port} to ${container} at ${host}:${port}`);
+function docker(...args: string[]): string {
+  return execFileSync('docker', args, { encoding: 'utf8' }).trim();
+}
+
+function forward(port: number, service: string): Server {
+  const container = docker(
+    'compose',
+    '-f',
+    'infra/compose/docker-compose.yml',
+    'ps',
+    '-q',
+    service
+  );
+  const host = docker(
+    'inspect',
+    '-f',
+    '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}',
+    container
+  );
+  step(`forwarding 127.0.0.1:${port} to ${service} at ${host}:${port}`);
   return createServer((client) => {
     const upstream = createConnection({ host, port });
     client.on('error', () => upstream.destroy());
@@ -59,6 +72,21 @@ function forward(port: number, container: string): Server {
     client.pipe(upstream).pipe(client);
   }).listen(port, '127.0.0.1');
 }
+
+interface VideoState {
+  src: string;
+  currentTime: number;
+  paused: boolean;
+  readyState: number;
+  error: number | null;
+}
+
+const VIDEO_STATE = `(() => {
+  const video = document.querySelector('video');
+  if (video === null) return null;
+  const { currentSrc: src, currentTime, paused, readyState } = video;
+  return { src, currentTime, paused, readyState, error: video.error?.code ?? null };
+})()`;
 
 async function statusOf(videoId: string): Promise<string> {
   const res = await fetch(`${values.api}/v1/videos/${videoId}`, {
@@ -69,8 +97,8 @@ async function statusOf(videoId: string): Promise<string> {
 }
 
 const forwarders: Server[] = [];
-for (const { container, port } of PUBLISHED) {
-  if (!(await answers(port))) forwarders.push(forward(port, container));
+for (const { service, port } of PUBLISHED) {
+  if (!(await answers(port))) forwarders.push(forward(port, service));
 }
 
 const browser = await chromium.launch({
@@ -90,6 +118,12 @@ try {
   });
   const page = await context.newPage();
   page.setDefaultTimeout(30_000);
+  page.on('console', (message) => {
+    if (message.type() === 'error') step(`browser console error: ${message.text()}`);
+  });
+  page.on('requestfailed', (request) => {
+    step(`browser request failed: ${request.url()} ${request.failure()?.errorText ?? ''}`);
+  });
 
   step(`uploading ${FIXTURE} through ${values.web}/upload`);
   await page.goto(`${values.web}/upload`);
@@ -120,7 +154,12 @@ try {
   step('the SSR server rendered the watch page with the video from the API');
 
   await link.click();
-  await page.waitForFunction("(document.querySelector('video')?.currentTime ?? 0) > 1");
+  let video: VideoState | null = await page.evaluate(VIDEO_STATE);
+  while ((video?.currentTime ?? 0) <= 1) {
+    if (Date.now() > deadline) throw new Error(`the video did not play: ${JSON.stringify(video)}`);
+    await new Promise((settle) => setTimeout(settle, 250));
+    video = await page.evaluate(VIDEO_STATE);
+  }
   step('the browser played the video past one second');
 } finally {
   await browser.close();
