@@ -30,7 +30,7 @@ Authoritative spec: `docs/SDD.md` §8 (commands), §7 (object keys), ADR-07/08/1
 - Play in the vendored hls.js test page; throttle bandwidth in DevTools and confirm level switches without a decode error.
 
 ## Thumbnails (§8.3)
-Poster at 10 % of duration (`-ss T -frames:v 1 -vf thumbnail,scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 -q:v 3`); sprite `fps=1/5,scale=160:90…,tile=10xROWS`; VTT generated in TS with `#xywh=` cues. Scale 4K sources before tiling.
+Poster at 10 % of duration (`-ss T -frames:v 1 -vf thumbnail,scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2 -q:v 3`); sprite `fps=1/5:round=up,scale=160:90…,tile=10xROWS`; VTT generated in TS with `#xywh=` cues. Scale 4K sources before tiling.
 
 ## Do not
 - Use `fluent-ffmpeg` (unmaintained) or shell interpolation.

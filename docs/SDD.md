@@ -1485,7 +1485,7 @@ Notes that matter for correctness at scale:
 # poster at 10% of duration (fallback: first frame if duration unknown), 1280x720 letterboxed
 ffmpeg -ss "$T10" -i "$SOURCE" -frames:v 1 -vf "thumbnail,scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2" -q:v 3 "$OUT/poster.jpg"
 # sprite sheet: one 160x90 frame every 5 s, 10 columns
-ffmpeg -i "$SOURCE" -vf "fps=1/5,scale=160:90:force_original_aspect_ratio=decrease,pad=160:90:(ow-iw)/2:(oh-ih)/2,tile=10x${ROWS}" -frames:v 1 -q:v 5 "$OUT/sprite.jpg"
+ffmpeg -i "$SOURCE" -vf "fps=1/5:round=up,scale=160:90:force_original_aspect_ratio=decrease,pad=160:90:(ow-iw)/2:(oh-ih)/2,tile=10x${ROWS}" -frames:v 1 -q:v 5 "$OUT/sprite.jpg"
 ```
 
 `sprite.vtt` is generated in TypeScript from `durationMs` (`00:00:00.000 --> 00:00:05.000` / `sprite.jpg#xywh=0,0,160,90`, …).

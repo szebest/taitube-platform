@@ -1,53 +1,60 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { runFfmpegThumbnail } from '../thumbnail';
 import { ENCODER, LIMITS, SPRITE } from './encoder-settings';
 
+function dimensions(imagePath: string): string {
+  return execFileSync(
+    'ffprobe',
+    [
+      '-v',
+      'error',
+      '-select_streams',
+      'v:0',
+      '-show_entries',
+      'stream=width,height',
+      '-of',
+      'csv=s=x:p=0',
+      imagePath,
+    ],
+    { encoding: 'utf-8' }
+  ).trim();
+}
+
 describe('@vp/ffmpeg: runFfmpegThumbnail', () => {
-  it('runs real FFmpeg on s15.mp4 and validates the poster, sprite and VTT', async () => {
-    const fixturePath = path.resolve(__dirname, '../../../../../tests/fixtures/s15.mp4');
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vp-thumb-test-'));
+  it.each([
+    { fixture: 's15.mp4', durationMs: 15_000, frameCount: 3 },
+    { fixture: 's2.mp4', durationMs: 2_000, frameCount: 1 },
+  ])(
+    'runs real FFmpeg on $fixture and writes a poster, a sprite and $frameCount VTT cues',
+    async ({ fixture, durationMs, frameCount }) => {
+      const fixturePath = path.resolve(__dirname, '../../../../../tests/fixtures', fixture);
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vp-thumb-test-'));
 
-    try {
-      const result = await runFfmpegThumbnail({
-        ffmpegPath: ENCODER.ffmpegPath,
-        sourcePath: fixturePath,
-        outputDir: tmpDir,
-        durationMs: 15000,
-        layout: SPRITE,
-        timeoutMs: 60_000,
-        limits: LIMITS,
-      });
+      try {
+        const result = await runFfmpegThumbnail({
+          ffmpegPath: ENCODER.ffmpegPath,
+          sourcePath: fixturePath,
+          outputDir: tmpDir,
+          durationMs,
+          layout: SPRITE,
+          timeoutMs: 60_000,
+          limits: LIMITS,
+        });
 
-      expect(result.frameCount).toBe(3);
-      expect(result.rows).toBe(1);
-      expect(result.columns).toBe(10);
+        expect(result).toMatchObject({ frameCount, rows: 1, columns: 10 });
 
-      const posterStat = await fs.stat(result.posterPath);
-      expect(posterStat.size).toBeGreaterThan(0);
+        const vttContent = await fs.readFile(result.vttPath, 'utf-8');
+        const timings = vttContent.split('\n').filter((line) => line.includes(' --> '));
+        expect(timings).toHaveLength(frameCount);
 
-      const spriteStat = await fs.stat(result.spritePath);
-      expect(spriteStat.size).toBeGreaterThan(0);
-
-      const vttContent = await fs.readFile(result.vttPath, 'utf-8');
-      const timings = vttContent.split('\n').filter((line) => line.includes(' --> '));
-      expect(timings).toHaveLength(3);
-
-      const posterDims = execSync(
-        `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${result.posterPath}"`,
-        { encoding: 'utf-8' }
-      ).trim();
-      expect(posterDims).toBe('1280x720');
-
-      const spriteDims = execSync(
-        `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${result.spritePath}"`,
-        { encoding: 'utf-8' }
-      ).trim();
-      expect(spriteDims).toBe('1600x90');
-    } finally {
-      await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+        expect(dimensions(result.posterPath)).toBe('1280x720');
+        expect(dimensions(result.spritePath)).toBe('1600x90');
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
     }
-  });
+  );
 });
