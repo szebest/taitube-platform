@@ -30,7 +30,9 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
   - Patches the ConfigMap for R2, JWKS auth and CORS.
   - Lowers `maxReplicaCount` for probe and the transcodes.
 - `infra/k8s/helm-values/`: values for the charts `make k3d-up` installs (`postgres.yaml`, `redis.yaml`,
-  `minio.yaml`, `keda.yaml`, `kube-prometheus-stack.yaml`).
+  `minio.yaml`, `keda.yaml`, `kube-prometheus-stack.yaml`). The Makefile pins each chart's `--version`
+  (bitnami/postgresql 18.12.4 runs Postgres 18, bitnami/redis 28.3.1 runs Redis 8). A PVC a Postgres 16
+  release wrote will not start under 18: `make k3d-down && make k3d-up` for a local cluster.
 - `infra/k8s/kind-config.yaml`: the cluster config when `CLUSTER_TOOL=kind`.
 
 ---

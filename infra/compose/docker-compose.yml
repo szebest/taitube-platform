@@ -251,7 +251,7 @@ services:
       WORKER_STAGE: housekeeping
 
   hls-test-page:
-    image: nginx:alpine
+    image: nginx:1.31.6-alpine
     profiles:
       - tools
     ports:
@@ -261,7 +261,7 @@ services:
 
   # ---- observability (profile: observability) ---------------------------------
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.15.0
     profiles:
       - observability
     ports:
@@ -276,7 +276,7 @@ services:
     restart: on-failure
 
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.34.1
     profiles:
       - observability
     ports:
@@ -289,7 +289,7 @@ services:
     restart: on-failure
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.2.3
     profiles:
       - observability
     ports:
@@ -304,7 +304,7 @@ services:
     restart: on-failure
 
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:3.1.0
     profiles:
       - observability
     ports:
@@ -317,7 +317,7 @@ services:
     restart: on-failure
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.7.8
     profiles:
       - observability
     ports:
@@ -329,7 +329,7 @@ services:
     restart: on-failure
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
+    image: otel/opentelemetry-collector-contrib:0.162.0
     profiles:
       - observability
     ports:

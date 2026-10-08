@@ -59,6 +59,11 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
    - Named volumes (`pgdata`, `redisdata`, `miniodata`) hold local state outside the checkout.
    - Workers get a `/tmp/vp` tmpfs.
    - `make down` and `make nuke` both remove the volumes.
+   - Postgres 18 keeps its data in `/var/lib/postgresql/18/docker`, so `pgdata` mounts at
+     `/var/lib/postgresql`. A volume a Postgres 16 container wrote will not start under 18: `make down`
+     drops it (local data is disposable), or `pg_upgrade` it by hand.
+6. **Explicit image tags.** Every image names its version (the MinIO pair a digest, which
+   `minio-images-pinned.test.ts` holds); no `:latest`, so a rebuild next month runs what this one ran.
 
 ---
 
