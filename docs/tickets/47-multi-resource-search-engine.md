@@ -9,7 +9,7 @@
 | Blocks | 74 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -91,14 +91,14 @@ This ticket delivers the **Multi-Resource Search & Discovery Engine**:
 
 ## Acceptance criteria
 
-- [ ] Database migration:
+- [x] Database migration:
   - Enables `pg_trgm` extension.
   - Adds generated stored `search_vector tsvector` columns and GIN indexes to `videos`, `channels`, and `playlists`.
   - Creates trigram indexes on `channels.handle`, `channels.display_name`, and `playlists.title`.
-- [ ] `SearchRepositoryPort` in `@taitube/core/repositories/search-repository.port.ts` supporting multi-entity queries.
-- [ ] Modular `PostgresSearchRepository` in `adapters/postgres/repositories/postgres-search-repository.ts` (<= 250 lines).
-- [ ] `InMemorySearchRepository` double with `.clear()`.
-- [ ] Endpoints:
+- [x] `SearchRepositoryPort` in `@taitube/core/repositories/search-repository.port.ts` supporting multi-entity queries.
+- [x] Modular `PostgresSearchRepository` in `adapters/postgres/repositories/postgres-search-repository.ts` (<= 250 lines).
+- [x] `InMemorySearchRepository` double with `.clear()`.
+- [x] Endpoints:
   - `GET /v1/search`:
     - Supports `type=all|video|channel|playlist`.
     - Returns typed polymorphic items array with discrimination field `type`.
@@ -106,7 +106,7 @@ This ticket delivers the **Multi-Resource Search & Discovery Engine**:
     - Integrates Redis query cache.
   - `GET /v1/search/suggestions?q=...`:
     - Returns combined query text and channel quick-hit suggestions.
-- [ ] Integration tests via `app.inject()`:
+- [x] Integration tests via `app.inject()`:
   - Multi-resource search for a shared keyword returns a mix of matching videos, channels, and playlists.
   - Channel name match ranks prominently at the top when searching channel handle.
   - Filter `type=playlist` returns only playlists; `type=channel` returns only channels.
@@ -131,10 +131,10 @@ This ticket delivers the **Multi-Resource Search & Discovery Engine**:
 
 ## Definition of Done
 
-- [ ] All ACs green under `pnpm test` and `bun test`.
-- [ ] `pnpm typecheck && pnpm lint` pass with zero warnings or errors.
-- [ ] Architecture docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
-- [ ] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
+- [x] All ACs green under `pnpm test` and `bun test`.
+- [x] `pnpm typecheck && pnpm lint` pass with zero warnings or errors.
+- [x] Architecture docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
+- [x] Ticket status set to `done` and `python docs/tickets/gen-index.py` re-run.
 
 ## Open questions
 
