@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useAppForm } from '../use-app-form';
 
@@ -15,8 +15,6 @@ function SizeForm({ onSize }: { onSize: (size: string) => void }) {
     </form.AppField>
   );
 }
-
-afterEach(cleanup);
 
 describe('apps/web: SelectField', () => {
   it('lists every option with the field value selected', () => {

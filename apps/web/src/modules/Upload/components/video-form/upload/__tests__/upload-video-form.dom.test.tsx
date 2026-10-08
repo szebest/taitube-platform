@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IntlProvider } from '@vp/intl-react';
 import { VIDEO_ID } from '#app/__tests__/fixtures';
@@ -29,8 +29,6 @@ function renderForm(overrides: Partial<VideoFormProps> = {}) {
 function uploadButton(): HTMLButtonElement {
   return screen.getByRole<HTMLButtonElement>('button', { name: 'upload' });
 }
-
-afterEach(cleanup);
 
 describe('apps/web: upload video form', () => {
   it('asks for a video file of a type the API accepts, a title and the visibility', () => {

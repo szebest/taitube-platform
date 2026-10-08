@@ -1,13 +1,10 @@
-import { cleanup, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 
 import { loaderApi } from '#app/__tests__/loader-api';
 import { renderRoute } from '#app/__tests__/render-route';
 import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '#app/config';
 
-afterEach(() => {
-  cleanup();
-  window.localStorage.clear();
-});
+afterEach(() => window.localStorage.clear());
 
 describe('apps/web: /subscriptions in the browser', () => {
   it("loads the viewer's subscriptions in the loader", async () => {

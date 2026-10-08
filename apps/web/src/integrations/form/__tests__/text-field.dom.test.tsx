@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ErrorCodes } from '@vp/errors';
 import { err, ok } from '@vp/result';
@@ -17,8 +17,6 @@ function NoteForm({ multiline = false }: { multiline?: boolean }) {
     </form.AppField>
   );
 }
-
-afterEach(cleanup);
 
 describe('apps/web: TextField', () => {
   it.each([

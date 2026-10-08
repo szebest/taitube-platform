@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useAppForm } from '../use-app-form';
 
@@ -16,8 +16,6 @@ function fileInput(container: HTMLElement): HTMLInputElement {
   if (!input) throw new Error('the field has no file input');
   return input;
 }
-
-afterEach(cleanup);
 
 describe('apps/web: FileField', () => {
   it('invites a drop while no file is chosen', () => {

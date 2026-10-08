@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { EditVideoForm, type EditVideoFormProps } from '../edit-video-form';
 
@@ -16,8 +16,6 @@ function renderForm(overrides: Partial<EditVideoFormProps> = {}) {
 function editButton(): HTMLButtonElement {
   return screen.getByRole<HTMLButtonElement>('button', { name: 'upload' });
 }
-
-afterEach(cleanup);
 
 describe('apps/web: edit video form', () => {
   it('asks for the title, the description and the visibility, filled with the video', () => {
