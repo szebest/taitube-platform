@@ -46,7 +46,8 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
      share);
    - build each app from its own pruned source (`build-api`, `build-worker`, `build-web`), so a change to one
      app's source leaves the other two images' layers cached;
-   - mount the shared `pnpm-store` BuildKit cache for `pnpm install` and the turbo build.
+   - mount the shared `pnpm-store` BuildKit cache for `pnpm install` and the turbo build, and the shared
+     `turbo-cache` for the turbo build, so a package two apps need builds once.
    `scripts/bundle-app.sh` writes what an image copies. CI builds the bundles on the runner and hands them to
    the `api-bundle`, `worker-bundle` and `web-bundle` stages as build contexts.
 4. **Clean Volume Mounts:**

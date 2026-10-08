@@ -1901,8 +1901,8 @@ once, in its `depends_on`. `make up [targets]`, `make down` and `make status` al
 
 It builds the images of what it starts (`--no-build` skips that, as CI does), then starts the dependency
 closure a tier at a time (a service's tier is one more than its deepest dependency's), each with
-`up --wait` on the health checks and a `wait` on the tier's one-shots (a service something waits on with
-`service_completed_successfully`). It prints every service with its state and URL; on a failure it names
+`up --wait` on the health checks and `docker wait` on the tier's one-shots (a service something waits on
+with `service_completed_successfully`, started without `--wait`, which fails on any exit, 0 included). It prints every service with its state and URL; on a failure it names
 the service and prints its last 40 log lines.
 
 **The browser and the SSR server reach the API at different addresses.** The browser bundle carries the

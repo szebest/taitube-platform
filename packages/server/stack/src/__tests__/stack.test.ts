@@ -14,7 +14,7 @@ describe('packages/stack: up', () => {
       'config --format json',
       'build migrate api web',
       `up ${WAIT} postgres`,
-      `up ${WAIT} migrate`,
+      'up --detach --no-build migrate',
       'ps --all --quiet migrate',
       `up ${WAIT} api`,
       `up ${WAIT} web`,

@@ -84,7 +84,6 @@ async function reportFailure(
   }
 }
 
-/** `up --wait` counts a one-shot as done once it runs, so this blocks until each one has exited. */
 async function exitedCleanly(
   host: StackHost,
   compose: (...args: string[]) => string[],
@@ -97,6 +96,33 @@ async function exitedCleanly(
   const waited = await host.docker.capture(['wait', ...ids]);
   const codes = waited.stdout.split('\n').filter((line) => line.trim() !== '');
   return waited.code === 0 && codes.every((code) => code.trim() === '0');
+}
+
+/**
+ * A one-shot starts without `--wait`, which fails on any container that exits, 0 included; `docker wait`
+ * then blocks until each one has.
+ */
+async function startTier(
+  host: StackHost,
+  compose: (...args: string[]) => string[],
+  topology: Topology,
+  level: readonly string[],
+  waitTimeoutSec: number
+): Promise<boolean> {
+  const oneShots = level.filter((name) => topology.get(name)?.oneShot);
+  const longRunning = level.filter((name) => !topology.get(name)?.oneShot);
+  const up = ['up', '--detach', '--no-build'];
+  if (oneShots.length > 0 && (await host.docker.show(compose(...up, ...oneShots))) !== 0) {
+    return false;
+  }
+  const wait = ['--wait', '--wait-timeout', String(waitTimeoutSec)];
+  if (
+    longRunning.length > 0 &&
+    (await host.docker.show(compose(...up, ...wait, ...longRunning))) !== 0
+  ) {
+    return false;
+  }
+  return exitedCleanly(host, compose, oneShots);
 }
 
 /** Starts what the targets name and everything it depends on, one tier at a time, each gated on health. */
@@ -135,12 +161,7 @@ async function upTopology(
   const started: string[] = [];
   for (const level of levels) {
     started.push(...level);
-    const wait = ['--wait', '--wait-timeout', String(options.waitTimeoutSec)];
-    const upCode = await host.docker.show(
-      compose('up', '--detach', '--no-build', ...wait, ...level)
-    );
-    const oneShots = level.filter((name) => topology.get(name)?.oneShot);
-    if (upCode !== 0 || !(await exitedCleanly(host, compose, oneShots))) {
+    if (!(await startTier(host, compose, topology, level, options.waitTimeoutSec))) {
       await reportFailure(host, compose, topology, started);
       return 1;
     }

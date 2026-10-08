@@ -18,9 +18,9 @@ the Makefile keeps a second list.
   profiles a set of services needs enabled.
 - `src/containers.ts` reads `docker compose ps --format json`, decides which container failed, and prints
   the service table.
-- `src/stack.ts` is `up`, `down` and `status` over a `Docker` port: build what is started, then one
-  `up --wait` per tier and a `wait` for its one-shots; on a failure it names the service and prints its
-  last log lines.
+- `src/stack.ts` is `up`, `down` and `status` over a `Docker` port: build what is started, then per tier
+  `up --wait` for the long-running services and `up` plus `docker wait` for the one-shots (`--wait` fails
+  on any container that exits, 0 included); on a failure it names the service and prints its last log lines.
 - `src/cli.ts` parses arguments; `src/main.ts` wires `child_process` and the process.
 
 Targets: none is the infrastructure (every service without a profile), `all` is the infrastructure and

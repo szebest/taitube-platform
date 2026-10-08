@@ -24,20 +24,23 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lo
 FROM deps AS build-api
 COPY --from=pruner /repo/out/api/full/ .
 COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/bundle-entrypoints.ts scripts/
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter=@vp/api... \
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=turbo-cache,target=/repo/.turbo/cache \
+    turbo run build --filter=@vp/api... \
  && sh scripts/bundle-app.sh api /out
 
 FROM deps AS build-worker
 COPY --from=pruner /repo/out/worker/full/ .
 COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/bundle-entrypoints.ts scripts/
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter=@vp/worker... \
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=turbo-cache,target=/repo/.turbo/cache \
+    turbo run build --filter=@vp/worker... \
  && sh scripts/bundle-app.sh worker /out
 
 FROM deps AS build-web
 ARG VITE_API_BASE_URL=
 COPY --from=pruner /repo/out/web/full/ .
 COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/bundle-entrypoints.ts scripts/
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store turbo run build --filter=@vp/web... \
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=turbo-cache,target=/repo/.turbo/cache \
+    turbo run build --filter=@vp/web... \
  && sh scripts/bundle-app.sh web /out
 
 # CI replaces these three with the bundles it built on the runner (`--build-context api-bundle=<dir>`).
