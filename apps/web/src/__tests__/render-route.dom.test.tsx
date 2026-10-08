@@ -15,6 +15,10 @@ describe('apps/web: renderRoute', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('This page does not exist.');
   });
 
+  it('starts from an empty page, whatever the test before it rendered', () => {
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('puts the session it is handed in router context', async () => {
     const auth = { status: 'guest' } as const;
 
