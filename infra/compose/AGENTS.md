@@ -11,7 +11,7 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
   `worker`, `web`); workers build with `WORKER_RUNTIME` (default `bun`). Every service's dependencies are its
   `depends_on`, and nothing else lists them: `make up` (`pnpm stack`, `packages/server/stack`) reads them
   from `docker compose config` to decide what a target needs and in which order.
-  - No profile, the infrastructure: PostgreSQL 16, Redis 7, MinIO and `minio-init` (runs `minio-init.sh`).
+  - No profile, the infrastructure: PostgreSQL 18, Redis 8, MinIO and `minio-init` (runs `minio-init.sh`).
   - `migrate` (profile `migrate`): migrations, then seed, from `dist/migrate.js` and `dist/seed.js`.
   - `api` (profile `api`), after migrate and the buckets.
   - `web` (profile `web`): the TanStack Start SSR server on `:5173`, after a healthy `api`. The browser calls

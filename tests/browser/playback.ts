@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { type Server, createConnection, createServer } from 'node:net';
+import { type Socket, createConnection, createServer } from 'node:net';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from 'playwright-core';
@@ -50,7 +50,7 @@ function docker(...args: string[]): string {
   return execFileSync('docker', args, { encoding: 'utf8' }).trim();
 }
 
-function forward(port: number, service: string): Server {
+function forward(port: number, service: string): () => void {
   const container = docker(
     'ps',
     '-q',
@@ -66,12 +66,21 @@ function forward(port: number, service: string): Server {
     container
   );
   step(`forwarding 127.0.0.1:${port} to ${service} at ${host}:${port}`);
-  return createServer((client) => {
+  const sockets = new Set<Socket>();
+  const server = createServer((client) => {
     const upstream = createConnection({ host, port });
+    for (const socket of [client, upstream]) {
+      sockets.add(socket);
+      socket.on('close', () => sockets.delete(socket));
+    }
     client.on('error', () => upstream.destroy());
     upstream.on('error', () => client.destroy());
     client.pipe(upstream).pipe(client);
   }).listen(port, '127.0.0.1');
+  return () => {
+    server.close();
+    for (const socket of sockets) socket.destroy();
+  };
 }
 
 interface VideoState {
@@ -97,7 +106,7 @@ async function statusOf(videoId: string): Promise<string> {
   return body.status ?? `HTTP ${res.status}`;
 }
 
-const forwarders: Server[] = [];
+const forwarders: (() => void)[] = [];
 for (const { service, port } of PUBLISHED) {
   if (!(await answers(port))) forwarders.push(forward(port, service));
 }
@@ -169,5 +178,5 @@ try {
   step('the browser played the video past one second');
 } finally {
   await browser.close();
-  for (const forwarder of forwarders) forwarder.close();
+  for (const stop of forwarders) stop();
 }

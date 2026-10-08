@@ -317,7 +317,8 @@ jobs:
       - name: Run the E2E smoke and, beside it, upload and play back through the web container in Chrome
         run: |
           set -o pipefail
-          API_URL=http://127.0.0.1:3000 make smoke 2>&1 | sed -u 's/^/[smoke] /' &
+          ip() { docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$(docker ps -q --filter "label=com.docker.compose.service=$1")"; }
+          API_URL="http://$(ip api):3000" MINIO_TARGET_IP="$(ip minio)" make smoke 2>&1 | sed -u 's/^/[smoke] /' &
           pnpm test:browser 2>&1 | sed -u 's/^/[browser] /'
           wait $!
 

@@ -10,8 +10,8 @@ The `video-pipeline` system is engineered from the ground up to be **local-first
 |---|---|---|
 | **API Server** | Fastify 5 (Node 24) on `:3000` | No cloud API dependencies |
 | **Workers** | BullMQ 6 workers on Node 24 / Bun 1.4 | Probe, transcode, package, notify |
-| **Database** | PostgreSQL 16 (local or compose) | Drizzle ORM, atomic migrations |
-| **Queue & Pub/Sub** | Redis 7 (`noeviction` + AOF) | Local BullMQ and SSE fanout |
+| **Database** | PostgreSQL 18 (local or compose) | Drizzle ORM, atomic migrations |
+| **Queue & Pub/Sub** | Redis 8 (`noeviction` + AOF) | Local BullMQ and SSE fanout |
 | **Object Storage** | MinIO (`raw` and `public` buckets) | Full S3 API parity with presigned PUT |
 | **Authentication** | Ed25519 JWT issuer (`packages/server/dev-token`) | Deterministic offline dev keypair & JWKS |
 | **Video Processing** | Local FFmpeg 6/7 binary | Bundled inside worker Docker image |
@@ -26,7 +26,7 @@ The internet is **never** contacted during normal operation or test execution. E
 
 1. **One-time Initial Setup**:
    - `pnpm install` (fetching npm packages).
-   - Base Docker image downloads (`node:24-slim`, `postgres:16-alpine`, `redis:7-alpine`, `cgr.dev/chainguard/minio`).
+   - Base Docker image downloads (`node:24-slim`, `postgres:18-alpine`, `redis:8-alpine`, `cgr.dev/chainguard/minio`).
 2. **Optional Cloud Reference Deployment (Phase 4, Tickets 31–33)**:
    - Cloudflare R2 object storage and CDN custom domain.
    - Neon serverless PostgreSQL.

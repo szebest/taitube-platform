@@ -139,8 +139,8 @@ flowchart LR
 |---|---|---|---|
 | `apps/api` | Node.js 24 LTS · Fastify 5 | Auth, upload orchestration (presign / multipart / complete / verify), video CRUD, SSE hub, admin (Bull Board, DLQ replay), `/metrics`, `/healthz`, `/readyz`. Stateless. | Horizontally, on CPU/RPS (HPA). Long-running, so cold start is irrelevant. |
 | `apps/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`. | Per stage, on queue depth (KEDA), 0 → N. |
-| PostgreSQL 16 | Neon (cloud) / container (local) | Source of truth: users, videos, uploads, renditions, processing steps, append-only `video_events`, DLQ mirror. | Vertical; read replicas out of scope. |
-| Redis 7 / Valkey 8 | container / same VPS | BullMQ queues (`noeviction`), Pub/Sub for SSE fan-out, small caches (presign throttles, idempotency keys). | Single node; persistence AOF `everysec`. |
+| PostgreSQL 18 | Neon (cloud) / container (local) | Source of truth: users, videos, uploads, renditions, processing steps, append-only `video_events`, DLQ mirror. | Vertical; read replicas out of scope. |
+| Redis 8 / Valkey 8 | container / same VPS | BullMQ queues (`noeviction`), Pub/Sub for SSE fan-out, small caches (presign throttles, idempotency keys). | Single node; persistence AOF `everysec`. |
 | Object storage | MinIO (local) / Cloudflare R2 (cloud) | `raw` bucket (private, sources, 7-day lifecycle) and `public` bucket (HLS, thumbnails, CDN-fronted). | Managed. |
 | Cloudflare CDN | free plan | Caches segments/playlists in front of `public` bucket; custom domain; zero egress from R2. | Managed. |
 | Prometheus · Grafana · Tempo · Loki | containers (local) / Grafana Cloud free (cloud) | Metrics, dashboards, traces, logs. | Managed in cloud. |
@@ -1797,14 +1797,14 @@ Three rungs, same images, same env contract. Moving up a rung changes manifests,
 name: video-pipeline
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment: { POSTGRES_USER: vp, POSTGRES_PASSWORD: vp, POSTGRES_DB: vp }
     ports: ["5432:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
+    volumes: [pgdata:/var/lib/postgresql]          # 18+ keeps PGDATA in a versioned subdirectory
     healthcheck: { test: ["CMD-SHELL", "pg_isready -U vp"], interval: 5s }
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec",
               "--maxmemory", "256mb", "--maxmemory-policy", "noeviction", "--requirepass", "vp"]
     ports: ["6379:6379"]
@@ -2299,7 +2299,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Worker runtime | Bun | 1.4.x by default, Node 24 in an image built with `--build-arg WORKER_RUNTIME=node` | |
 | HTTP | Fastify 5 + `fastify-type-provider-zod`, `@fastify/rate-limit`, `@fastify/swagger`, `@fastify/cors`, `@fastify/helmet` | | JWTs verified by the `TokenVerifier` adapters, not a Fastify plugin |
 | Queue | BullMQ 6 + ioredis 5 | | `@bull-board/api` + `@bull-board/fastify` |
-| DB | PostgreSQL 16, Drizzle ORM 0.45 (1.0 when GA) + drizzle-kit, `postgres` (postgres.js) driver | | |
+| DB | PostgreSQL 18, Drizzle ORM 0.45 (1.0 when GA) + drizzle-kit, `postgres` (postgres.js) driver | | |
 | Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` | 3.x | |
 | Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
 | Validation | zod 3 | | |

@@ -14,7 +14,7 @@ x-app-env: &app-env
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-vp}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vp}
@@ -22,7 +22,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vp}"]
       interval: 1s
@@ -31,7 +31,7 @@ services:
       start_period: 1s
 
   redis:
-    image: ${REDIS_IMAGE:-redis:7-alpine}
+    image: ${REDIS_IMAGE:-redis:8-alpine}
     command:
       [
         "redis-server",
@@ -58,7 +58,7 @@ services:
       start_period: 1s
 
   minio:
-    image: cgr.dev/chainguard/minio@sha256:bd014394a80898e68c149f2311fdf8d5a2c2f3bb2c33b9327ae6d02b4b065ae1
+    image: cgr.dev/chainguard/minio@sha256:59667194421209c2c1eacbe761e24787e047985c5dfa96b15da9b59fe9b55cd0
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
       MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY_ID:-minioadmin}
@@ -70,7 +70,7 @@ services:
       - miniodata:/data
 
   minio-init:
-    image: cgr.dev/chainguard/minio-client@sha256:614e083a12c6dc779f13f97e01b13afda4021a8ce3f4021a2fcf23ec86f46837
+    image: cgr.dev/chainguard/minio-client@sha256:603a402c2cd1543109c39eb5d1f731bd83b3c8f6ee8299b3785c8519fad0f5b5
     depends_on:
       - minio
     entrypoint: ["/bin/sh", "/init/minio-init.sh"]
@@ -342,7 +342,7 @@ services:
     restart: on-failure
 
   toxiproxy:
-    image: ghcr.io/shopify/toxiproxy:2.9.0
+    image: ghcr.io/shopify/toxiproxy:2.12.0
     profiles:
       - chaos
     ports:

@@ -8,7 +8,7 @@ This directory contains Docker Compose configurations for running the `video-pip
 
 | File | Purpose |
 |---|---|
-| `docker-compose.yml` | Primary compose file defining PostgreSQL 16, Redis 7, MinIO, migrate, the API, the worker stages and the web app, with one profile per app. |
+| `docker-compose.yml` | Primary compose file defining PostgreSQL 18, Redis 8, MinIO, migrate, the API, the worker stages and the web app, with one profile per app. |
 | `docker-compose.offline.yml` | Network isolation overlay (`internal: true`) for testing offline operation (`make smoke-offline`). |
 | `docker-compose.chaos.yml` | Routes a worker's Redis through toxiproxy for the readiness chaos run (`make chaos-readiness`). |
 | `test.sh` | Infrastructure smoke checks (`make smoke-infra`). |
@@ -17,8 +17,8 @@ This directory contains Docker Compose configurations for running the `video-pip
 
 ## Infrastructure Services
 
-- **PostgreSQL 16**: Port `5432` (Database: `vp`, User: `vp`, Password: `vp`).
-- **Redis 7**: Port `6379` (Password: `vp`, configured with `noeviction` and AOF durability).
+- **PostgreSQL 18**: Port `5432` (Database: `vp`, User: `vp`, Password: `vp`).
+- **Redis 8**: Port `6379` (Password: `vp`, configured with `noeviction` and AOF durability).
 - **MinIO**: API on port `9000`, Console UI on port `9001` (User: `minioadmin`, Password: `minioadmin`).
   - Buckets initialized automatically via `minio-init.sh`: `raw` (private) and `public` (download policy enabled).
 - **Web app**: port `5173` (profile `web`).

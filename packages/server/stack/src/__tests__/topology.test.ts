@@ -8,7 +8,7 @@ const app = { context: '../..', dockerfile: 'Dockerfile' };
 const CONFIG = JSON.stringify({
   name: 'video-pipeline',
   services: {
-    postgres: { image: 'postgres:16-alpine' },
+    postgres: { image: 'postgres:18-alpine' },
     minio: { image: 'minio' },
     'minio-init': { image: 'mc', depends_on: { minio: started } },
     migrate: { build: app, profiles: ['migrate'], depends_on: { postgres: healthy } },
