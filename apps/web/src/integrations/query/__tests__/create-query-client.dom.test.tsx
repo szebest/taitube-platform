@@ -2,7 +2,7 @@ import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { getAccount } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import type { ReactNode } from 'react';
 
 import { apiServer } from '#app/__tests__/msw/api-server';

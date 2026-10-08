@@ -8,7 +8,7 @@ import {
   listCategories,
   listMySubscriptions,
 } from '@vp/api-contracts';
-import { type HttpHandler, HttpResponse } from 'msw';
+import { type HttpHandler, HttpResponse } from 'msw/http';
 
 import { account, channel, video, videoSummary } from './fixtures';
 import { type EndpointResolver, mockEndpoint } from './msw/mock-endpoint';

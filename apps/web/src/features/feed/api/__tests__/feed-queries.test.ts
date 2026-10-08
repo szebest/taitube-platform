@@ -1,5 +1,5 @@
 import { getFeed, getSubscriptionFeed } from '@vp/api-contracts';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { VIDEO_ID, videoSummary } from '#app/__tests__/fixtures';
 import { apiServer } from '#app/__tests__/msw/api-server';
 import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';

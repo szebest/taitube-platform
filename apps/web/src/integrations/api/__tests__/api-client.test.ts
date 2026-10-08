@@ -1,5 +1,5 @@
 import { getVideo } from '@vp/api-contracts';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { stubBrowser } from '#app/__tests__/browser';
 import { VIDEO_ID, video } from '#app/__tests__/fixtures';
 import { apiServer } from '#app/__tests__/msw/api-server';

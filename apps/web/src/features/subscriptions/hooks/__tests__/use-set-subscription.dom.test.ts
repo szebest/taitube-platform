@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { type ContractResult, subscribeToChannel, unsubscribeFromChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { type HttpHandler, HttpResponse } from 'msw';
+import { type HttpHandler, HttpResponse } from 'msw/http';
 import { CHANNEL_ID, channel, subscribedChannel } from '#app/__tests__/fixtures';
 import { apiServer } from '#app/__tests__/msw/api-server';
 import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';

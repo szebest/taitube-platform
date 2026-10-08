@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { type ContractResult, type UserReaction, setReaction } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { VIDEO_ID, video } from '#app/__tests__/fixtures';
 import { apiServer } from '#app/__tests__/msw/api-server';
 import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';

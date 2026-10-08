@@ -1,5 +1,5 @@
 import { listCategories } from '@vp/api-contracts';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { apiServer } from '#app/__tests__/msw/api-server';
 import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
