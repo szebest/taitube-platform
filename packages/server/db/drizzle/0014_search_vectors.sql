@@ -22,4 +22,6 @@ CREATE INDEX "playlists_search_vector_idx" ON "playlists" USING gin ("search_vec
 CREATE INDEX "videos_title_trgm_idx" ON "videos" USING gin ("title" gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "channels_handle_trgm_idx" ON "channels" USING gin ("handle" gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "channels_display_name_trgm_idx" ON "channels" USING gin ("display_name" gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "channels_handle_lower_idx" ON "channels" (lower("handle") text_pattern_ops);--> statement-breakpoint
+CREATE INDEX "channels_display_name_lower_idx" ON "channels" (lower("display_name") text_pattern_ops);--> statement-breakpoint
 CREATE INDEX "playlists_title_trgm_idx" ON "playlists" USING gin ("title" gin_trgm_ops) WHERE "visibility" = 'public' AND NOT "is_system";

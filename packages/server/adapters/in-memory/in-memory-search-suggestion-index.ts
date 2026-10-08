@@ -1,5 +1,6 @@
 import type { SearchSuggestionIndexPort } from '@vp/core/ports';
 import { SEARCH_SUGGESTIONS, searchSuggestionPrefixes } from '@vp/domain';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
 
@@ -12,8 +13,14 @@ function mostSearched([a, aScore]: [string, number], [b, bScore]: [string, numbe
 
 export class InMemorySearchSuggestionIndex implements SearchSuggestionIndexPort {
   private readonly prefixes = new Map<string, Map<string, number>>();
+  private readonly countedUntil = new Map<string, number>();
+
+  constructor(private readonly now: () => number) {}
 
   async record(text: string): Promise<Result<void, CacheUnavailable>> {
+    const now = this.now();
+    if ((this.countedUntil.get(text) ?? 0) > now) return ok();
+    this.countedUntil.set(text, now + SEARCH_SUGGESTIONS.countWindowSeconds * MS_PER_SECOND);
     for (const prefix of searchSuggestionPrefixes(text)) {
       const counts = new Map(this.prefixes.get(prefix));
       counts.set(text, (counts.get(text) ?? 0) + 1);
@@ -35,5 +42,6 @@ export class InMemorySearchSuggestionIndex implements SearchSuggestionIndexPort 
 
   clear(): void {
     this.prefixes.clear();
+    this.countedUntil.clear();
   }
 }

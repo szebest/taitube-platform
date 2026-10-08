@@ -13,17 +13,17 @@ import {
   SEARCH_SUGGESTIONS,
   type SearchCursor,
   type SearchMode,
+  type SearchSort,
   searchHandleOf,
   searchKinds,
-  searchSuggestionPrefixes,
-  searchWalkInstant,
+  searchSuggestionKey,
 } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
 import { CacheKeys } from '@vp/events';
 import type { Paginator } from '@vp/pagination';
 import { andThen, andThenAsync, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
-import { validateSearchQuery } from '@vp/validation';
-import { decodeSearchCursor, searchCursorPayload } from './search-cursor';
+import { isPlainSearchQuery, validateSearchQuery } from '@vp/validation';
+import { decodeSearchCursor, searchCursorPayload } from './cursor';
 import { toChannelSuggestion, toSearchResultItem } from './search-views';
 
 export interface SearchServiceDeps {
@@ -49,6 +49,7 @@ const CachedBodySchema = search.result.omit({ tookMs: true });
 
 interface Plan {
   text: string;
+  sort: SearchSort;
   cursor: SearchCursor | null;
   key: string;
 }
@@ -81,8 +82,10 @@ export class SearchService {
     const { limit, channelHits } = SEARCH_SUGGESTIONS;
     return andThenAsync(validateSearchQuery(q), async (text) => {
       const channels = await this.deps.search.suggestChannels(searchHandleOf(text), channelHits);
-      const filedUnder = searchSuggestionPrefixes(text).at(-1) ?? text;
-      const popular = unwrapOr(await this.deps.suggestions.suggest(filedUnder, limit), []);
+      const popular = unwrapOr(
+        await this.deps.suggestions.suggest(searchSuggestionKey(text), limit),
+        []
+      );
       return map(
         channels,
         (found): SearchSuggestionsResponse => ({
@@ -98,23 +101,21 @@ export class SearchService {
   }
 
   private plan(request: SearchRequest) {
-    const sort = request.sort ?? 'relevance';
+    const { sort } = request;
     return andThen(validateSearchQuery(request.q), (text) =>
       map(
         decodeSearchCursor(request.cursor, sort, this.deps.paginator),
-        (cursor): Plan => ({ text, cursor, key: this.cacheKey(request, text) })
+        (cursor): Plan => ({ text, sort, cursor, key: this.cacheKey(request, text) })
       )
     );
   }
 
-  /** The first page of a walk that matched nothing as typed walks the trigram fallback instead. */
-  private async compute(request: SearchRequest, { text, cursor }: Plan) {
-    const sort = request.sort ?? 'relevance';
-    const instant = searchWalkInstant(cursor, this.deps.now());
+  private async compute(request: SearchRequest, { text, sort, cursor }: Plan) {
+    const instant = cursor?.instant ?? this.deps.now();
     const limit = this.deps.paginator.limit(request.limit);
     const query = (mode: SearchMode): SearchQuery => ({
       text,
-      kinds: searchKinds(request.type ?? 'all'),
+      kinds: searchKinds(request.type),
       sort,
       mode,
       instant,
@@ -147,13 +148,11 @@ export class SearchService {
   }
 
   private cacheKey(request: SearchRequest, text: string): string {
-    const type = request.type ?? 'all';
+    const { sort, categoryId, cursor, limit } = request;
     const hash = createHash('sha256')
-      .update(
-        JSON.stringify([text, request.sort, request.categoryId, request.cursor, request.limit])
-      )
+      .update(JSON.stringify([text, sort, categoryId ?? null, cursor ?? null, limit]))
       .digest('hex');
-    return CacheKeys.searchQuery(type, hash);
+    return CacheKeys.searchQuery(request.type, hash);
   }
 
   private async readCache(key: string): Promise<SearchBody | null> {
@@ -165,13 +164,12 @@ export class SearchService {
     return body.success ? body.data : null;
   }
 
-  /** Only a first page that found something teaches the suggestion index a query. */
   private async remember({ text, cursor, key }: Plan, body: SearchBody): Promise<void> {
     ignore(
       await this.deps.cache.set(key, JSON.stringify(body), SEARCH_CACHE_TTL_SECONDS),
       'a missed write costs the next searcher one query'
     );
-    if (cursor || body.total === 0) return;
+    if (cursor || body.total === 0 || body.fuzzyFallback || !isPlainSearchQuery(text)) return;
     ignore(
       await this.deps.suggestions.record(text),
       'a query the index missed is suggested a little less often'

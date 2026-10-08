@@ -1,4 +1,9 @@
-import type { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import type {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemorySearchSuggestionIndex,
+} from '@vp/adapters/in-memory';
+import { SEARCH_RATE_LIMITS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
@@ -75,11 +80,12 @@ describe('search routes', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
+  let searchSuggestions: InMemorySearchSuggestionIndex;
 
   const get = (url: string) => app.inject({ method: 'GET', url });
 
   beforeAll(async () => {
-    ({ app, repositories, cache } = await buildTestApp());
+    ({ app, repositories, cache, searchSuggestions } = await buildTestApp());
   });
 
   afterAll(async () => {
@@ -89,6 +95,7 @@ describe('search routes', () => {
   beforeEach(async () => {
     repositories.clear();
     cache.clear();
+    searchSuggestions.clear();
     await seed(repositories);
   });
 
@@ -163,8 +170,24 @@ describe('search routes', () => {
       expect(res.json().code).toBe(ErrorCodes.INVALID_CURSOR);
     });
 
+    it('refuses an edited cursor before it reaches the database', async () => {
+      const first = await get('/v1/search?q=javascript&limit=1');
+      const payload = JSON.parse(
+        Buffer.from(first.json().nextCursor, 'base64url').toString('utf8')
+      );
+      const edited = Buffer.from(JSON.stringify({ ...payload, id: "x' or 1=1" })).toString(
+        'base64url'
+      );
+
+      const res = await get(`/v1/search?q=javascript&cursor=${edited}`);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.json().code).toBe(ErrorCodes.INVALID_CURSOR);
+    });
+
     it.each([
       { name: 'a blank query', url: '/v1/search?q=%20%20', status: 422 },
+      { name: 'a query of exclusions alone', url: '/v1/search?q=-javascript', status: 422 },
       { name: 'a query past 100 characters', url: `/v1/search?q=${'x'.repeat(101)}`, status: 422 },
       { name: 'no query', url: '/v1/search', status: 400 },
       { name: 'a page past 50', url: '/v1/search?q=react&limit=51', status: 400 },
@@ -177,12 +200,6 @@ describe('search routes', () => {
   });
 
   describe('GET /v1/search/suggestions', () => {
-    beforeEach(async () => {
-      await app.close();
-      ({ app, repositories, cache } = await buildTestApp());
-      await seed(repositories);
-    });
-
     it('offers matching channels first, then the queries people searched', async () => {
       await get('/v1/search?q=fireship%20shorts');
 
@@ -201,10 +218,35 @@ describe('search routes', () => {
       ]);
     });
 
-    it('never learns a query that found nothing', async () => {
-      await get('/v1/search?q=zzzzzz');
+    it.each([
+      { name: 'a query that found nothing', q: 'zzzzzz', prefix: 'zzz' },
+      { name: 'a typo the fallback rescued', q: 'javascrip', prefix: 'javas' },
+      { name: 'a query built on operators', q: 'javascript -fast', prefix: 'javas' },
+    ])('never learns $name', async ({ q, prefix }) => {
+      await get(`/v1/search?q=${encodeURIComponent(q)}`);
 
-      expect((await get('/v1/search/suggestions?q=zzz')).json().items).toEqual([]);
+      const res = await get(`/v1/search/suggestions?q=${prefix}`);
+
+      expect(res.json().items.filter((item: { type: string }) => item.type === 'query')).toEqual(
+        []
+      );
+    });
+  });
+
+  describe('rate limits', () => {
+    it.each([
+      { path: '/v1/search?q=javascript', max: SEARCH_RATE_LIMITS.search },
+      { path: '/v1/search/suggestions?q=java', max: SEARCH_RATE_LIMITS.suggestions },
+    ])('answers 429 past $max requests a minute on $path', async ({ path, max }) => {
+      const limited = await buildTestApp();
+      const statuses: number[] = [];
+      for (let n = 0; n <= max; n += 1) {
+        statuses.push((await limited.app.inject({ method: 'GET', url: path })).statusCode);
+      }
+      await limited.app.close();
+
+      expect(statuses.slice(0, max).every((status) => status === 200)).toBe(true);
+      expect(statuses[max]).toBe(429);
     });
   });
 });

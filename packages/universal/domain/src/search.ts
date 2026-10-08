@@ -1,4 +1,4 @@
-import { MS_PER_DAY, SECONDS_PER_DAY } from '@vp/domain/time';
+import { MS_PER_DAY, SECONDS_PER_DAY, SECONDS_PER_MINUTE } from '@vp/domain/time';
 
 export const SEARCH_TYPES = ['all', 'video', 'channel', 'playlist'] as const;
 export type SearchType = (typeof SEARCH_TYPES)[number];
@@ -13,11 +13,15 @@ export type SearchMode = 'lexical' | 'fuzzy';
 export const SEARCH_PAGE_SIZE_MAX = 50;
 export const SEARCH_CACHE_TTL_SECONDS = 120;
 
+/** Per caller, per minute. */
+export const SEARCH_RATE_LIMITS = { search: 60, suggestions: 120 } as const;
+
 export const SEARCH_SUGGESTIONS = {
   limit: 10,
   channelHits: 3,
   prefixMaxLength: 20,
-  keptPerPrefix: 50,
+  keptPerPrefix: 1000,
+  countWindowSeconds: 10 * SECONDS_PER_MINUTE,
   ttlSeconds: 7 * SECONDS_PER_DAY,
 } as const;
 
@@ -50,7 +54,6 @@ export function searchKinds(type: SearchType): readonly SearchResultKind[] {
   }
 }
 
-/** A leading `@` names a handle; it is not part of the handle. */
 export function searchHandleOf(text: string): string {
   return text.startsWith('@') ? text.slice(1) : text;
 }
@@ -93,7 +96,6 @@ export function playlistSearchScore(match: number, videoCount: number): number {
   return match * Math.log10(videoCount + SEARCH_RANKING.playlistVideosOffset);
 }
 
-/** Where a hit sits in the merged order: its sort key, then its kind, then its id. */
 export interface SearchPosition {
   key: number;
   kind: SearchResultKind;
@@ -113,20 +115,11 @@ export interface SearchCursor extends SearchPosition {
 
 const KIND_ORDER: Record<SearchResultKind, number> = { channel: 0, video: 1, playlist: 2 };
 
-function searchKindOrder(kind: SearchResultKind): number {
-  return KIND_ORDER[kind];
-}
-
-/** Descending key, then channels before videos before playlists, then descending id. */
 export function compareSearchPositions(a: SearchPosition, b: SearchPosition): number {
   if (a.key !== b.key) return b.key - a.key;
-  if (a.kind !== b.kind) return searchKindOrder(a.kind) - searchKindOrder(b.kind);
+  if (a.kind !== b.kind) return KIND_ORDER[a.kind] - KIND_ORDER[b.kind];
   if (a.id === b.id) return 0;
   return a.id < b.id ? 1 : -1;
-}
-
-export function isAfterSearchPosition(candidate: SearchPosition, cursor: SearchPosition): boolean {
-  return compareSearchPositions(candidate, cursor) > 0;
 }
 
 /**
@@ -137,19 +130,17 @@ export function isAfterSearchPosition(candidate: SearchPosition, cursor: SearchP
 export type SearchKeyBound = 'at-or-below' | 'below' | 'keyset';
 
 export function searchKeyBound(kind: SearchResultKind, cursor: SearchPosition): SearchKeyBound {
-  const order = searchKindOrder(kind) - searchKindOrder(cursor.kind);
+  const order = KIND_ORDER[kind] - KIND_ORDER[cursor.kind];
   if (order > 0) return 'at-or-below';
   if (order < 0) return 'below';
   return 'keyset';
 }
 
-/** The first page samples the clock; later pages score against the instant their cursor carries. */
-export function searchWalkInstant(cursor: SearchCursor | null | undefined, nowMs: number): number {
-  return cursor ? cursor.instant : nowMs;
+export function searchSuggestionKey(text: string): string {
+  return Array.from(text).slice(0, SEARCH_SUGGESTIONS.prefixMaxLength).join('');
 }
 
-/** Every prefix a normalized query is filed under, shortest first, capped so a long one stays cheap. */
 export function searchSuggestionPrefixes(text: string): string[] {
-  const chars = Array.from(text).slice(0, SEARCH_SUGGESTIONS.prefixMaxLength);
+  const chars = Array.from(searchSuggestionKey(text));
   return chars.map((_, index) => chars.slice(0, index + 1).join(''));
 }

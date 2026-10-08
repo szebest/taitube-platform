@@ -1,4 +1,5 @@
 import { inProcessAppConfig } from '@vp/env-schema';
+import { CacheKeys } from '@vp/events';
 import { expectOk } from '@vp/testing/result';
 import { Redis } from 'ioredis';
 import { FakeRedis } from '../../redis/__tests__/fake-redis';
@@ -89,6 +90,9 @@ export async function redisSearchSuggestionIndexSubject(): Promise<SearchSuggest
     : new FakeRedis().asRedis();
   return {
     index: new RedisSearchSuggestionIndexAdapter(redis),
+    endWindow: async (text) => {
+      await redis.del(CacheKeys.searchCounted(text));
+    },
     close: async () => {
       await redis.quit();
     },

@@ -8,12 +8,12 @@ import type {
 } from '@vp/core/repositories';
 import {
   type Channel,
+  PUBLIC_FEED_STATUS,
   type Playlist,
   SEARCH_RANKING,
   type SearchResultKind,
   channelSearchScore,
   compareSearchPositions,
-  isAfterSearchPosition,
   isExactChannelMatch,
   isPublicFeedEligible,
   playlistSearchScore,
@@ -69,7 +69,9 @@ export class InMemorySearchRepository implements SearchRepositoryPort {
       .flat()
       .sort(compareSearchPositions);
     const { cursor } = query;
-    const after = cursor ? matched.filter((hit) => isAfterSearchPosition(hit, cursor)) : matched;
+    const after = cursor
+      ? matched.filter((hit) => compareSearchPositions(hit, cursor) > 0)
+      : matched;
     return ok({ hits: after.slice(0, query.limit + 1), total: matched.length });
   }
 
@@ -164,13 +166,14 @@ export class InMemorySearchRepository implements SearchRepositoryPort {
           null
         );
         if (!detail) return [];
-        const videoCount = detail.items.length;
+        const listed = detail.items.filter((item) => item.video.status === PUBLIC_FEED_STATUS);
+        const videoCount = listed.length;
         const keys = {
           relevance: () => playlistSearchScore(match.score, videoCount),
           date: () => epochSeconds(playlist.createdAt),
-          views: () => detail.items.reduce((sum, item) => sum + (item.video.viewsCount ?? 0), 0),
+          views: () => listed.reduce((sum, item) => sum + (item.video.viewsCount ?? 0), 0),
         };
-        const coverKey = detail.items[0]?.video.posterKey ?? null;
+        const coverKey = listed[0]?.video.posterKey ?? null;
         const card = { playlist: detail.playlist, owner: detail.owner, videoCount, coverKey };
         return [{ kind: 'playlist', key: keys[query.sort](), id: playlist.id, card }];
       })

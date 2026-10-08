@@ -1,17 +1,15 @@
 import {
   SEARCH_RANKING,
   SEARCH_SUGGESTIONS,
-  type SearchCursor,
   type SearchPosition,
   channelSearchScore,
   compareSearchPositions,
-  isAfterSearchPosition,
   isExactChannelMatch,
   playlistSearchScore,
   searchKeyBound,
   searchKinds,
+  searchSuggestionKey,
   searchSuggestionPrefixes,
-  searchWalkInstant,
   videoSearchScore,
 } from '../search';
 
@@ -107,7 +105,7 @@ describe('packages/domain: search rules', () => {
       { candidate: at(1, 'channel', 'a'), after: false },
       { candidate: at(2, 'playlist', 'a'), after: false },
     ])('places $candidate after the cursor: $after', ({ candidate, after }) => {
-      expect(isAfterSearchPosition(candidate, at(1, 'video', 'm'))).toBe(after);
+      expect(compareSearchPositions(candidate, at(1, 'video', 'm')) > 0).toBe(after);
     });
 
     it.each([
@@ -119,22 +117,17 @@ describe('packages/domain: search rules', () => {
     });
   });
 
-  it('keeps the instant of the walk it resumes and samples the clock for a first page', () => {
-    const cursor: SearchCursor = {
-      ...at(1, 'video', 'm'),
-      sort: 'relevance',
-      mode: 'lexical',
-      instant: 7,
-    };
-
-    expect(searchWalkInstant(cursor, NOW)).toBe(7);
-    expect(searchWalkInstant(null, NOW)).toBe(NOW);
-  });
-
   it('files a suggestion under every prefix, up to the cap', () => {
     expect(searchSuggestionPrefixes('react')).toEqual(['r', 're', 'rea', 'reac', 'react']);
     expect(searchSuggestionPrefixes('x'.repeat(40))).toHaveLength(
       SEARCH_SUGGESTIONS.prefixMaxLength
+    );
+  });
+
+  it('completes a query past the cap from its longest filed prefix', () => {
+    expect(searchSuggestionKey('react')).toBe('react');
+    expect(searchSuggestionKey('é'.repeat(40))).toBe(
+      'é'.repeat(SEARCH_SUGGESTIONS.prefixMaxLength)
     );
   });
 });

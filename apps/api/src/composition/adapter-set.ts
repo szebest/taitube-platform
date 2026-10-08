@@ -9,6 +9,7 @@ import type {
   JobQueue,
   MultipartStorage,
   ReactionCachePort,
+  SearchSuggestionIndexPort,
   StorageClient,
   SubscriptionCachePort,
   TokenVerifier,
@@ -30,6 +31,7 @@ export interface AdapterOverrides {
   categoryCache?: CategoryCachePort;
   viewBuffer?: ViewBufferPort;
   commentCache?: CommentCachePort;
+  searchSuggestions?: SearchSuggestionIndexPort;
   authorization?: AuthorizationPort;
   tokenVerifier?: TokenVerifier;
 }
@@ -47,6 +49,7 @@ const OVERRIDABLE: Record<keyof AdapterOverrides, { readonly name: string }> = {
   categoryCache: Adapters.CategoryCache,
   viewBuffer: Adapters.ViewBuffer,
   commentCache: Adapters.CommentCache,
+  searchSuggestions: Adapters.SearchSuggestions,
   authorization: Adapters.Authorization,
   tokenVerifier: Adapters.TokenVerifier,
 };

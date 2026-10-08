@@ -25,7 +25,7 @@ describe('adapters/postgres: search SQL', () => {
       '"videos"."search_vector" @@ websearch_to_tsquery($1::regconfig, $2)'
     );
     expect(sqlText(match.score)).toBe(
-      'ts_rank_cd("videos"."search_vector", websearch_to_tsquery($1::regconfig, $2))'
+      `ts_rank_cd('{0.1,0.2,0.4,1}'::float4[], "videos"."search_vector", websearch_to_tsquery($1::regconfig, $2))`
     );
   });
 

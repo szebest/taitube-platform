@@ -65,16 +65,17 @@ describe('adapters/postgres: search sources', () => {
     await engine.close();
   });
 
-  it.each<[string, SearchSource]>([
+  it.each<[string, (query: SearchQuery) => SearchSource]>([
     ['video', videoSource],
     ['channel', channelSource],
     ['playlist', playlistSource],
   ])('cuts the %s page at the window and counts past the cursor', async (_kind, source) => {
-    const [first, second] = await source.hits(db, query());
-    const rest = await source.hits(db, query({ cursor: second ?? null }));
+    const [first, second] = await source(query()).hits(db);
+    const resumed = source(query({ cursor: second ?? null }));
+    const rest = await resumed.hits(db);
 
     expect([first, second].every(Boolean)).toBe(true);
     expect(rest.map((hit) => hit.id)).not.toContain(first?.id);
-    expect(await source.total(db, query({ cursor: second ?? null }))).toBe(3);
+    expect(await resumed.total(db)).toBe(3);
   });
 });

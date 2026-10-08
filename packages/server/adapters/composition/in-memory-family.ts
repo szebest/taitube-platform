@@ -50,7 +50,7 @@ export function registerFamily(c: Container): void {
       closeOnDispose
     )
     .provide(Adapters.SubscriptionCache, () => new InMemorySubscriptionCache())
-    .provide(Adapters.SearchSuggestions, () => new InMemorySearchSuggestionIndex())
+    .provide(Adapters.SearchSuggestions, () => new InMemorySearchSuggestionIndex(Date.now))
     .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
     .provide(Adapters.BoardQueues, () => portBoardQueues);
 }

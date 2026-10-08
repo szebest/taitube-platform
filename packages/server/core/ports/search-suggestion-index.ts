@@ -3,7 +3,9 @@ import type { Result } from '@vp/result';
 
 /**
  * Popular queries filed under each of their prefixes, so completing one is a single ranged read.
- * Only a query that found something is recorded, so a suggestion always leads somewhere.
+ * A text counts at most once per `SEARCH_SUGGESTIONS.countWindowSeconds`, so one client repeating a
+ * query cannot lift it, and each prefix keeps a pool far larger than it serves, so a new query is
+ * not evicted on arrival by an older one with a higher count.
  */
 export interface SearchSuggestionIndexPort {
   record(text: string): Promise<Result<void, CacheUnavailable>>;

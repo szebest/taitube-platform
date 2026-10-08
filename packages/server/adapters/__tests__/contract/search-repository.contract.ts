@@ -141,7 +141,7 @@ export function describeSearchRepositoryContract(makeSubject: MakeRepositoriesSu
           visibility: 'private',
         })
       );
-      for (const [n, videoId] of [S.secret, S.course, S.tricks].entries()) {
+      for (const [n, videoId] of [S.secret, S.takenDown, S.course, S.tricks].entries()) {
         const id = `00000000-0000-7000-8000-0000000047d${n}`;
         expectOk(await playlists.addItem(S.essentials, { id, videoId }));
       }
@@ -192,7 +192,7 @@ export function describeSearchRepositoryContract(makeSubject: MakeRepositoriesSu
       expect(new Set(page.hits.map((hit) => hit.kind))).toEqual(new Set([only]));
     });
 
-    it('describes a playlist by what an anonymous viewer may watch of it', async () => {
+    it('describes a playlist by its public ready videos, not the private or taken-down ones', async () => {
       const [hit] = (await run({ kinds: ['playlist'] })).hits;
 
       expect(hit?.kind === 'playlist' && hit.card).toMatchObject({

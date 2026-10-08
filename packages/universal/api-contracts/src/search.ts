@@ -2,9 +2,10 @@ import { SEARCH_PAGE_SIZE_MAX, SEARCH_SORTS, SEARCH_TYPES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { PAGE_SIZE_DEFAULT } from '@vp/pagination';
 import { z } from 'zod';
+import { ChannelSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema } from './pagination';
-import { ChannelCardSchema } from './playlists';
+import { PlaylistSchema } from './playlists';
 import { VideoSummarySchema } from './video-resource';
 
 const QueryTextSchema = z
@@ -36,24 +37,25 @@ const SearchQuerySchema = z.object({
     .describe(`Page size, 1-${SEARCH_PAGE_SIZE_MAX}`),
 });
 
-const ChannelSummarySchema = z.object({
-  id: z.string().uuid(),
-  handle: z.string(),
-  displayName: z.string(),
-  avatarUrl: z.string().nullable(),
-  bio: z.string().nullable(),
-  subscriberCount: z.number().int().nonnegative(),
+const ChannelSummarySchema = ChannelSchema.pick({
+  id: true,
+  handle: true,
+  displayName: true,
+  avatarUrl: true,
+  bio: true,
+  subscriberCount: true,
 });
 
-const PlaylistSummarySchema = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  description: z.string(),
-  thumbnailUrl: z.string().nullable().describe('The custom thumbnail, else the first video poster'),
-  videoCount: z.number().int().nonnegative().describe('Videos an anonymous viewer may watch'),
-  owner: ChannelCardSchema.nullable(),
-  createdAt: z.string().describe('ISO 8601 creation timestamp'),
-  updatedAt: z.string().describe('ISO 8601 timestamp of the last change'),
+const PlaylistSummarySchema = PlaylistSchema.pick({
+  id: true,
+  title: true,
+  description: true,
+  thumbnailUrl: true,
+  owner: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  videoCount: z.number().int().nonnegative().describe('Its public ready videos'),
 });
 
 const SearchResultItemSchema = z.discriminatedUnion('type', [
@@ -86,6 +88,7 @@ const SearchSuggestionSchema = z.discriminatedUnion('type', [
 const SEARCH_ERRORS = {
   400: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.INVALID_CURSOR],
   422: [ErrorCodes.VALIDATION_FAILED],
+  429: [ErrorCodes.RATE_LIMITED],
 } as const;
 
 export const search = defineEndpoint({
@@ -113,10 +116,14 @@ export const searchSuggestions = defineEndpoint({
   query: z.object({ q: QueryTextSchema }),
   status: 200,
   result: z.object({ items: z.array(SearchSuggestionSchema) }),
-  errors: { 400: [ErrorCodes.VALIDATION_FAILED], 422: [ErrorCodes.VALIDATION_FAILED] },
+  errors: {
+    400: [ErrorCodes.VALIDATION_FAILED],
+    422: [ErrorCodes.VALIDATION_FAILED],
+    429: [ErrorCodes.RATE_LIMITED],
+  },
 });
 
-export type SearchRequest = z.input<typeof SearchQuerySchema>;
+export type SearchRequest = z.output<typeof SearchQuerySchema>;
 export type SearchResponse = z.infer<typeof SearchResponseSchema>;
 export type SearchResultItem = z.infer<typeof SearchResultItemSchema>;
 export type SearchSuggestion = z.infer<typeof SearchSuggestionSchema>;

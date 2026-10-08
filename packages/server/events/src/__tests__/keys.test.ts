@@ -13,6 +13,7 @@ describe('@vp/events cache keys', () => {
     [CacheKeys.channelSubscriberCount('c1'), 'taitube:channel:c1:subscriber_count'],
     [CacheKeys.searchQuery('all', 'ab12'), 'taitube:search:q:all:ab12'],
     [CacheKeys.searchSuggest('rea'), 'taitube:search:suggest:rea'],
+    [CacheKeys.searchCounted('react hooks'), 'taitube:search:counted:react hooks'],
     [CacheKeys.viewBuffer, 'taitube:views:buffer'],
     [CacheKeys.viewFlushPointer, 'taitube:views:flushing'],
     [CacheKeys.viewFlushBatch('b1'), 'taitube:views:flush:b1'],

@@ -28,7 +28,7 @@ describe('apps/api/services: SearchService', () => {
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
-    suggestions = new InMemorySearchSuggestionIndex();
+    suggestions = new InMemorySearchSuggestionIndex(Date.now);
     clock = 1_000;
     service = new SearchService({
       search: repositories.search,

@@ -49,6 +49,24 @@ describe('db: search migration', () => {
     expect(await vectorOf(table)).toBe(vector);
   });
 
+  it.each([
+    [
+      'an exact handle or name match',
+      "lower(handle) = 'fireship' or lower(display_name) = 'fireship'",
+    ],
+    ['a handle or name prefix', "lower(handle) like 'fire%' or lower(display_name) like 'fire%'"],
+  ])('finds %s through the lower() indexes, not a scan', async (_name, where) => {
+    await database.engine.exec('set enable_seqscan = off');
+    const { rows } = await database.engine.query<{ 'QUERY PLAN': string }>(
+      `explain select id from channels where ${where}`
+    );
+    await database.engine.exec('reset enable_seqscan');
+    const plan = rows.map((row) => row['QUERY PLAN']).join('\n');
+
+    expect(plan).toContain('channels_handle_lower_idx');
+    expect(plan).toContain('channels_display_name_lower_idx');
+  });
+
   it('recomputes a vector when the text it is built from changes', async () => {
     await database.engine.exec(`update videos set tags = '{backend}' where id = '${USER}'`);
 
@@ -57,11 +75,13 @@ describe('db: search migration', () => {
 
   it('indexes the vectors and the fuzzy fallback columns, public playlists only', async () => {
     const { rows } = await database.engine.query<{ indexname: string; indexdef: string }>(
-      "select indexname, indexdef from pg_indexes where indexname like '%search_vector%' or indexname like '%trgm%' order by indexname"
+      "select indexname, indexdef from pg_indexes where indexname like '%search_vector%' or indexname like '%trgm%' or indexname like '%lower%' order by indexname"
     );
 
     expect(rows.map((row) => row.indexname)).toEqual([
+      'channels_display_name_lower_idx',
       'channels_display_name_trgm_idx',
+      'channels_handle_lower_idx',
       'channels_handle_trgm_idx',
       'channels_search_vector_idx',
       'playlists_search_vector_idx',

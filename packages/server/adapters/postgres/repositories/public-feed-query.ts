@@ -8,6 +8,7 @@ import {
 } from '@vp/domain';
 import { type SQL, desc, eq, isNull, sql } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, publicVisibilityScope } from '../scopes/index';
+import { constant } from './sql-constant';
 
 interface RankInput {
   createdAt: SQL;
@@ -18,10 +19,6 @@ const ROW_RANK_INPUT: RankInput = {
   createdAt: sql`${videos.createdAt}`,
   viewsCount: sql`${videos.viewsCount}`,
 };
-
-function constant(value: number): SQL {
-  return sql.raw(String(value));
-}
 
 function ageHours(createdAt: SQL, instant: Date): SQL {
   return sql`greatest(0, extract(epoch from (${instant.toISOString()}::timestamptz - ${createdAt})) / 3600.0)`;

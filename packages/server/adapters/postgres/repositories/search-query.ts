@@ -10,15 +10,17 @@ import {
 import { type SQL, type SQLWrapper, or, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { keysetBefore } from '../scopes/index';
-
-export function constant(value: number): SQL {
-  return sql.raw(String(value));
-}
+import { constant } from './sql-constant';
 
 /** `websearch_to_tsquery` parses the text, quotes, `or` and `-` included; nothing here does. */
 function tsqueryOf(text: string): SQL {
   return sql`websearch_to_tsquery(${SEARCH_TEXT_CONFIG}::regconfig, ${text})`;
 }
+
+const { A, B, C, D } = SEARCH_RANKING.weights;
+
+/** `ts_rank_cd` reads its weights lowest first: D, C, B, A. */
+const RANK_WEIGHTS = sql.raw(`'{${D},${C},${B},${A}}'::float4[]`);
 
 export function instantOf(instant: number): SQL {
   return sql`${new Date(instant).toISOString()}::timestamptz`;
@@ -42,7 +44,10 @@ export function textMatch(
   switch (mode) {
     case 'lexical': {
       const tsquery = tsqueryOf(text);
-      return { where: sql`${vector} @@ ${tsquery}`, score: sql`ts_rank_cd(${vector}, ${tsquery})` };
+      return {
+        where: sql`${vector} @@ ${tsquery}`,
+        score: sql`ts_rank_cd(${RANK_WEIGHTS}, ${vector}, ${tsquery})`,
+      };
     }
     case 'fuzzy': {
       const threshold = constant(SEARCH_RANKING.fuzzyThreshold);
@@ -72,7 +77,6 @@ export function sortKey(sort: SearchSort, keys: SortKeys): SQL<number> {
   return sql<number>`(${keys[sort]})::double precision`.mapWith(Number);
 }
 
-/** The rows of one kind that come after the cursor in the merged, cross-kind order. */
 export function afterCursor(
   kind: SearchResultKind,
   key: SQL,

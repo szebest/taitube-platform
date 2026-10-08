@@ -1,3 +1,5 @@
+import { SEARCH_SUGGESTIONS } from '@vp/domain';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import { LazyQueueRegistry } from '../../composition/queue-registry';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
@@ -55,7 +57,14 @@ export async function inMemoryCategoryCacheSubject(): Promise<CategoryCacheSubje
 }
 
 export async function inMemorySearchSuggestionIndexSubject(): Promise<SearchSuggestionIndexSubject> {
-  return { index: new InMemorySearchSuggestionIndex(), close: async () => {} };
+  let now = 0;
+  return {
+    index: new InMemorySearchSuggestionIndex(() => now),
+    endWindow: async () => {
+      now += SEARCH_SUGGESTIONS.countWindowSeconds * MS_PER_SECOND;
+    },
+    close: async () => {},
+  };
 }
 
 export async function inMemorySubscriptionCacheSubject(): Promise<SubscriptionCacheSubject> {

@@ -8,13 +8,13 @@ import * as schema from '@vp/db';
 import { type Channel, type SearchResultKind, compareSearchPositions } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, all, andThen, fromPromise, map } from '@vp/result';
-import { desc, ilike, or } from 'drizzle-orm';
+import { desc, or, sql } from 'drizzle-orm';
 import { type SearchSource, channelSource, playlistSource, videoSource } from './search-sources';
 import type { PostgresDatabase } from './types';
 
 const { channels: ch } = schema;
 
-const SOURCES: Record<SearchResultKind, SearchSource> = {
+const SOURCES: Record<SearchResultKind, (query: SearchQuery) => SearchSource> = {
   video: videoSource,
   channel: channelSource,
   playlist: playlistSource,
@@ -58,7 +58,12 @@ export class PostgresSearchRepository implements SearchRepositoryPort {
         this.db
           .select()
           .from(ch)
-          .where(or(ilike(ch.handle, pattern), ilike(ch.displayName, pattern)))
+          .where(
+            or(
+              sql`lower(${ch.handle}) like ${pattern}`,
+              sql`lower(${ch.displayName}) like ${pattern}`
+            )
+          )
           .orderBy(desc(ch.subscriberCount), desc(ch.id))
           .limit(limit),
       databaseUnavailable.during('suggestChannels')
@@ -69,10 +74,10 @@ export class PostgresSearchRepository implements SearchRepositoryPort {
     kind: SearchResultKind,
     query: SearchQuery
   ): Promise<Result<KindPage, DatabaseUnavailable>> {
-    const source = SOURCES[kind];
+    const source = SOURCES[kind](query);
     const [hits, total] = await Promise.all([
-      fromPromise(() => source.hits(this.db, query), databaseUnavailable.during('search')),
-      fromPromise(() => source.total(this.db, query), databaseUnavailable.during('searchTotal')),
+      fromPromise(() => source.hits(this.db), databaseUnavailable.during('search')),
+      fromPromise(() => source.total(this.db), databaseUnavailable.during('searchTotal')),
     ]);
     return andThen(hits, (found) => map(total, (matched) => ({ hits: found, total: matched })));
   }

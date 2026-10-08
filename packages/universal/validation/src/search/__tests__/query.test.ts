@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { validateSearchQuery } from '../query';
+import { isPlainSearchQuery, validateSearchQuery } from '../query';
 
 describe('@vp/validation: validateSearchQuery', () => {
   it.each([
@@ -26,5 +26,26 @@ describe('@vp/validation: validateSearchQuery', () => {
       minLength: 1,
       maxLength: 100,
     });
+  });
+
+  it.each(['-lofi', '-lofi -jazz', 'or', '!!!'])(
+    'rejects %j, which holds no word to search for',
+    (raw) => {
+      const result = validateSearchQuery(raw);
+
+      expect(isErr(result) && result.error).toMatchObject({
+        code: ErrorCodes.VALIDATION_FAILED,
+        field: 'q',
+      });
+    }
+  );
+
+  it.each([
+    { text: 'learn react', plain: true },
+    { text: 'react -class', plain: false },
+    { text: 'react or vue', plain: false },
+    { text: '"react hooks"', plain: false },
+  ])('treats $text as a plain query: $plain', ({ text, plain }) => {
+    expect(isPlainSearchQuery(text)).toBe(plain);
   });
 });

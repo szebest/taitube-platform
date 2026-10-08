@@ -85,7 +85,14 @@ export class FakeRedis {
     return this.strings.get(key) ?? null;
   }
 
-  async set(key: string, value: string, mode?: string, ttlSeconds?: number): Promise<'OK'> {
+  async set(
+    key: string,
+    value: string,
+    mode?: string,
+    ttlSeconds?: number,
+    condition?: 'NX'
+  ): Promise<'OK' | null> {
+    if (condition === 'NX' && this.strings.has(key)) return null;
     this.strings.set(key, value);
     if (mode === 'EX' && ttlSeconds !== undefined) this.ttls.set(key, ttlSeconds);
     return 'OK';

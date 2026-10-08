@@ -8,7 +8,7 @@ describeSearchSuggestionIndexContract(inMemorySearchSuggestionIndexSubject);
 
 describe('InMemorySearchSuggestionIndex', () => {
   it('forgets every prefix on clear', async () => {
-    const index = new InMemorySearchSuggestionIndex();
+    const index = new InMemorySearchSuggestionIndex(Date.now);
     expectOk(await index.record('react'));
 
     index.clear();
