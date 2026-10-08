@@ -13,6 +13,7 @@ describe('apps/web: generated route tree', () => {
       '/_authed/upload/',
       '/_authed/upload/edit/$videoId',
       '/channel/$channelId',
+      '/design-system',
       '/trending',
       '/watch/$videoId',
       '__root__',

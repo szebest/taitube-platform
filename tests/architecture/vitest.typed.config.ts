@@ -31,6 +31,7 @@ export default defineConfig({
     include: TYPE_AWARE,
     testTimeout: 30_000,
     pool: 'forks',
-    poolOptions: { forks: { singleFork: true, isolate: false } },
+    maxWorkers: 1,
+    isolate: false,
   },
 });

@@ -1,7 +1,7 @@
 import { ApiError } from '@vp/api-client';
 import { getVideo, updateVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 
 import { VIDEO_ID, video } from '#app/__tests__/fixtures';
 import { apiClient } from '#app/base-api';

@@ -1,3 +1,4 @@
+import { HttpNetworkFrame } from 'msw/experimental';
 import { setupServer } from 'msw/node';
 
 export const apiServer = setupServer();
@@ -17,9 +18,12 @@ function failOn(missed: readonly string[]): void {
 
 export function listen(): void {
   apiServer.listen({
-    onUnhandledRequest: (request) => {
-      const test = expect.getState().currentTestName ?? 'no test';
-      const described = `${request.method} ${request.url} from "${test}"`;
+    onUnhandledFrame: ({ frame }) => {
+      const what =
+        frame instanceof HttpNetworkFrame
+          ? `${frame.data.request.method} ${frame.data.request.url}`
+          : `a ${frame.protocol} frame`;
+      const described = `${what} from "${expect.getState().currentTestName ?? 'no test'}"`;
       unhandled.push(described);
       // Throwing keeps the request in the process: MSW answers it with a 500 instead of sending it on.
       throw new UnhandledRequestError([described]);

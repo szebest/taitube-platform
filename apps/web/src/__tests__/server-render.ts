@@ -1,6 +1,6 @@
 import { createRequestHandler, defaultStreamHandler } from '@tanstack/react-router/ssr/server';
 import { requestHandler } from '@tanstack/react-start/server';
-import type { HttpHandler } from 'msw';
+import type { HttpHandler } from 'msw/http';
 
 import { getRouter } from '#app/router';
 import { apiServer } from './msw/api-server';

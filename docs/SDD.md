@@ -2270,7 +2270,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Logging | pino 10 through `@vp/logger`, JSON or its own pretty destination | | |
 | Metrics | prom-client 15 | | |
 | Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
-| Testing | vitest 3, PGlite for the Postgres repositories in unit specs, `bun test` for worker and package parity, `app.inject()` for routes | | the `integration` job's services are CI service containers |
+| Testing | vitest, PGlite for the Postgres repositories in unit specs, `bun test` for worker and package parity, `app.inject()` for routes | | the `integration` job's services are CI service containers |
 | Lint/format | Biome 1.9, `--error-on-warnings` | | one tool, fast |
 | Git hooks | lefthook | | typecheck + biome on staged |
 | Containers | Docker 27 + buildx, Compose v2 | | |
