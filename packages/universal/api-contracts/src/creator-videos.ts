@@ -30,12 +30,16 @@ const ThumbnailSelectionSchema = z
   .describe('The thumbnail to show; the generated poster until custom uploads exist');
 
 const UpdateCreatorVideoSchema = z.object({
-  title: z.string().max(VIDEO_TITLE_BOUNDS.maxLength).optional().describe('Video title'),
+  title: z
+    .string()
+    .optional()
+    .describe(
+      `Video title, ${VIDEO_TITLE_BOUNDS.minLength}-${VIDEO_TITLE_BOUNDS.maxLength} characters`
+    ),
   description: z
     .string()
-    .max(VIDEO_DESCRIPTION_MAX_LENGTH)
     .optional()
-    .describe('Video description'),
+    .describe(`Video description, at most ${VIDEO_DESCRIPTION_MAX_LENGTH} characters`),
   visibility: VideoVisibilitySchema.optional(),
   categoryId: z.string().uuid().nullable().optional().describe('Active category, null for none'),
   tags: z

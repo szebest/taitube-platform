@@ -1,11 +1,9 @@
 import type { AnyFailure } from '@vp/errors';
-import type { Result } from '@vp/result';
-
-import { toViewState } from '#app/hooks/to-view-state';
+import { type Result, isErr } from '@vp/result';
 
 export function validateWith<V>(rule: (value: V) => Result<unknown, AnyFailure>) {
   return ({ value }: { value: V }): string | undefined => {
-    const view = toViewState(rule(value));
-    return view.status === 'error' ? view.failure.message : undefined;
+    const checked = rule(value);
+    return isErr(checked) ? checked.error.message : undefined;
   };
 }

@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, environmentManager } from '@tanstack/react-query';
 import { ApiError } from '@vp/api-client';
 
 const SECOND_MS = 1000;
@@ -13,8 +13,10 @@ function retriesAfter(failureCount: number, error: Error): boolean {
   return !refused && failureCount < MAX_RETRIES;
 }
 
+// A server render waits on its loaders, so a retried outage would hold the response for seconds.
 export function createQueryClient(): QueryClient {
+  const retry = environmentManager.isServer() ? false : retriesAfter;
   return new QueryClient({
-    defaultOptions: { queries: { staleTime: QUERY_STALE_TIME_MS, retry: retriesAfter } },
+    defaultOptions: { queries: { staleTime: QUERY_STALE_TIME_MS, retry } },
   });
 }

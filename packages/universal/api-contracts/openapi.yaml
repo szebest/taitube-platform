@@ -145,7 +145,7 @@ paths:
                   type: string
                 title:
                   type: string
-                  maxLength: 255
+                  description: Video title, 1-255 characters
                 visibility:
                   type: string
                   enum:
@@ -1982,12 +1982,10 @@ paths:
               properties:
                 title:
                   type: string
-                  maxLength: 255
-                  description: Updated video title
+                  description: Updated video title, 1-255 characters
                 description:
                   type: string
-                  maxLength: 4000
-                  description: Updated video description
+                  description: Updated video description, at most 4000 characters
                 visibility:
                   type: string
                   enum:
@@ -4219,12 +4217,10 @@ paths:
               properties:
                 title:
                   type: string
-                  maxLength: 255
-                  description: Video title
+                  description: Video title, 1-255 characters
                 description:
                   type: string
-                  maxLength: 4000
-                  description: Video description
+                  description: Video description, at most 4000 characters
                 visibility:
                   type: string
                   enum:

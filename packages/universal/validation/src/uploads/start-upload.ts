@@ -7,7 +7,6 @@ import { validateUploadSize } from './upload-size';
 export interface UploadLimits {
   readonly maxBytes: number;
   readonly allowedContentTypes: readonly string[];
-  readonly maxTitleLength?: number;
 }
 
 export interface StartUploadInput {
@@ -18,10 +17,10 @@ export interface StartUploadInput {
 }
 
 function validateTitle(
-  title: string | null | undefined,
-  maxLength: number
+  title: string | null | undefined
 ): Result<string | null | undefined, StartUploadFailure> {
   if (title === undefined || title === null) return ok(title);
+  const { maxLength } = VIDEO_TITLE_BOUNDS;
   return title.length === 0 || title.length > maxLength ? err(invalidTitle(maxLength)) : ok(title);
 }
 
@@ -29,11 +28,9 @@ export function validateStartUpload(
   input: StartUploadInput,
   limits: UploadLimits
 ): Result<StartUploadInput, StartUploadFailure> {
-  const maxTitleLength = limits.maxTitleLength ?? VIDEO_TITLE_BOUNDS.maxLength;
-
   return andThen(validateUploadSize(input.sizeBytes, limits.maxBytes), () =>
     andThen(validateContentType(input.contentType, limits.allowedContentTypes), () =>
-      map(validateTitle(input.title, maxTitleLength), () => input)
+      map(validateTitle(input.title), () => input)
     )
   );
 }

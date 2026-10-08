@@ -3,6 +3,7 @@ import { screen } from '@testing-library/react';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { renderRoute } from '#app/__tests__/render-route';
 import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '#app/config';
+import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 
 afterEach(() => window.localStorage.clear());
 
@@ -11,7 +12,11 @@ describe('apps/web: /subscriptions in the browser', () => {
     window.localStorage.setItem(AUTH_TOKEN_LOCAL_STORAGE_KEY, 'signed-in');
     const answered: string[] = [];
 
-    await renderRoute('/subscriptions', { handlers: loaderApi(answered) });
+    const { queryClient } = await renderRoute('/subscriptions', { handlers: loaderApi(answered) });
+
+    expect(queryClient.getQueryState(mySubscriptionsQueryOptions().queryKey)?.status).toBe(
+      'success'
+    );
 
     expect(await screen.findByText('Your subsciptions:')).toBeInTheDocument();
     expect(answered).toContain('/v1/me/subscriptions');

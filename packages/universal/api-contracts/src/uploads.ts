@@ -24,7 +24,12 @@ const StartUploadSchema = z.object({
   contentType: z.string(),
   strategy: UploadStrategySchema.optional(),
   sha256: z.string().optional(),
-  title: z.string().max(VIDEO_TITLE_BOUNDS.maxLength).optional(),
+  title: z
+    .string()
+    .optional()
+    .describe(
+      `Video title, ${VIDEO_TITLE_BOUNDS.minLength}-${VIDEO_TITLE_BOUNDS.maxLength} characters`
+    ),
   visibility: VideoVisibilitySchema.optional(),
 });
 

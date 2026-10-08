@@ -31,12 +31,16 @@ const ListVideosQuerySchema = z.object({
 });
 
 const UpdateVideoMetadataSchema = z.object({
-  title: z.string().max(VIDEO_TITLE_BOUNDS.maxLength).optional().describe('Updated video title'),
+  title: z
+    .string()
+    .optional()
+    .describe(
+      `Updated video title, ${VIDEO_TITLE_BOUNDS.minLength}-${VIDEO_TITLE_BOUNDS.maxLength} characters`
+    ),
   description: z
     .string()
-    .max(VIDEO_DESCRIPTION_MAX_LENGTH)
     .optional()
-    .describe('Updated video description'),
+    .describe(`Updated video description, at most ${VIDEO_DESCRIPTION_MAX_LENGTH} characters`),
   visibility: VideoVisibilitySchema.optional().describe(
     'Updated visibility: private, unlisted, or public'
   ),

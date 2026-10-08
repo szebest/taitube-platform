@@ -37,7 +37,7 @@ src/
 │                         paging), form/ (useAppForm and its fields), auth/ (the session in router
 │                         context), router/ (param parsing), devtools/ (dev server only)
 ├── components/           app-wide pieces: <Can>, the route fallbacks; ui/ is the design system (55)
-├── hooks/                useCan, useStoredState, useVideoPages, toViewState
+├── hooks/                useCan, useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
 ├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
 ├── config/               the only reader of import.meta.env, parsed with Zod
@@ -153,8 +153,10 @@ that replaces it owns the redesign.
 
 ### Rule 4: Rules come from a package, and the component holds none
 `@vp/validation` is where a form check comes from and `@vp/domain-rules` an entity-dependent decision, the
-same functions the API runs. A hook unwraps the `Result` with `toViewState` (`src/hooks/to-view-state.ts`)
-into a `ViewState`; a component is `(viewState) => JSX`, with no API call, `try/catch` or validation literal.
+same functions the API runs. The code that calls a rule unwraps its `Result` with `isOk` / `isErr` (a form
+field through `validateWith`); loading and error state come from TanStack Query, so there is no view-state
+adapter between them. A component renders what its hooks return, with no API call, `try/catch` or
+validation literal.
 `present(failure)` is a total `switch` ending in `assertNever` (70 builds it). The authority is
 [docs/standards/error-handling.md](../../docs/standards/error-handling.md).
 

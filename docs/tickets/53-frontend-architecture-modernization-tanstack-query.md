@@ -79,7 +79,8 @@ page; the legacy components keep their markup and only swap how they get data.
 - [x] Optimistic reaction and subscription mutations roll the cache back when the request fails (spec on a
       `QueryClient` with a failing stub).
 - [x] Upload and edit forms run on TanStack Form with `@vp/validation` validators; `react-hook-form` is gone.
-- [x] `toViewState` has its own spec covering success and each failure shape.
+- [x] ~~`toViewState` has its own spec covering success and each failure shape.~~ Dropped: see the
+      `toViewState` entry under Open questions.
 - [x] No `useEffect` fetching in `src/`.
 - [x] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
 
@@ -104,6 +105,10 @@ page; the legacy components keep their markup and only swap how they get data.
   from `@vp/validation` (it offered `.mp4` only) and the file field runs `validateContentType`; the size
   check needs `MAX_UPLOAD_BYTES` as data, which no endpoint returns yet, so the API stays the only size
   check.
+- Decided: no `toViewState`. TanStack Query hooks own the loading and error state, so with `idle` and
+  `loading` gone it was a `Result` with renamed keys, and its one caller unwrapped it straight away.
+  `validateWith` reads the rule's `Result` with `isErr`. This replaces section 4 and its acceptance
+  criterion.
 - Decided: form fields validate with `validateVideoMetadata`, so an empty description is allowed, as the
   rule allows it. The legacy form required one.
 - Decided: the video title and description limits are single-sourced in `@vp/validation`
