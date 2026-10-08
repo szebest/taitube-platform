@@ -30,7 +30,7 @@ jobs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Detect a change CI can affect
         id: changes
@@ -58,7 +58,7 @@ jobs:
 
       - name: Save the build for the jobs that follow
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ github.sha }}
@@ -71,7 +71,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
@@ -123,7 +123,7 @@ jobs:
         run: echo "JOB_STARTED_AT=$(date +%s%3N)" >> "$GITHUB_ENV"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
@@ -141,7 +141,7 @@ jobs:
         uses: ./.github/actions/video-fixtures
 
       - name: Restore the last run's spec durations, so the slowest specs start first
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules/.vite/vitest
           key: vitest-results-${{ runner.os }}-${{ github.sha }}
@@ -166,7 +166,7 @@ jobs:
     timeout-minutes: 3
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
@@ -202,7 +202,7 @@ jobs:
     timeout-minutes: 3
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Start infrastructure services with Docker Compose
         env:
@@ -261,7 +261,7 @@ jobs:
     timeout-minutes: 4
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
@@ -281,12 +281,12 @@ jobs:
           only: s2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           cleanup: false
 
       - name: Build the images around the bundles
-        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6.10.0
+        uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
         env:
           API_BUNDLE: ${{ runner.temp }}/bundle-api
           WORKER_BUNDLE: ${{ runner.temp }}/bundle-worker
@@ -334,13 +334,13 @@ jobs:
       TF_IN_AUTOMATION: 1
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Terraform
         uses: ./.github/actions/setup-terraform
 
       - name: Restore the provider plugins the lock file selects
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .terraform-plugins
           key: terraform-providers-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('infra/terraform/.terraform.lock.hcl') }}

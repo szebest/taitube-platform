@@ -10,10 +10,10 @@ runs:
   using: composite
   steps:
     - name: Install pnpm
-      uses: pnpm/action-setup@v4
+      uses: pnpm/action-setup@v6
 
     - name: Set up Node.js 24
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: 24
         cache: pnpm
@@ -22,14 +22,14 @@ runs:
       if: inputs.bun == 'true'
       uses: oven-sh/setup-bun@v2
       with:
-        bun-version: 1.4.0
+        bun-version: 1.4.2
 
     - name: Install dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
 
     - name: Restore the turbo cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: .turbo/cache
         key: turbo-${{ runner.os }}-${{ github.sha }}
