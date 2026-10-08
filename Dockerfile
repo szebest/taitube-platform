@@ -53,10 +53,11 @@ COPY --from=build-worker /out /
 FROM scratch AS web-bundle
 COPY --from=build-web /out /
 
-# The runtimes run the app, not a package manager: npm and corepack only carry CVEs in here.
+# The runtimes run the app, not a package manager: npm, corepack and yarn only carry CVEs in here.
 FROM node:24-slim AS node-runtime
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ca-certificates tini curl \
- && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -r -u 10001 -m appuser
 WORKDIR /app
@@ -84,7 +85,8 @@ FROM worker-base-${WORKER_RUNTIME} AS worker
 ARG WORKER_RUNTIME=bun
 ENV WORKER_RUNTIME=${WORKER_RUNTIME}
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core ca-certificates tini curl \
- && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg \
  && rm -rf /var/lib/apt/lists/* \
  && (id -u 10001 >/dev/null 2>&1 || useradd -r -u 10001 -m appuser) \
  && mkdir -p /tmp/vp && chown -R 10001:10001 /tmp/vp
