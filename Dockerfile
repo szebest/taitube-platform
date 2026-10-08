@@ -81,7 +81,7 @@ CMD ["node", "--run", "start"]
 FROM oven/bun:1.4-slim AS worker-base-bun
 FROM node:24-slim AS worker-base-node
 
-FROM worker-base-${WORKER_RUNTIME} AS worker
+FROM worker-base-${WORKER_RUNTIME:-bun} AS worker
 ARG WORKER_RUNTIME=bun
 ENV WORKER_RUNTIME=${WORKER_RUNTIME}
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core ca-certificates tini curl \
