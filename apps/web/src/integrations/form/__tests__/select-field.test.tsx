@@ -1,7 +1,19 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useAppForm } from '../use-app-form';
+
+/**
+ * Bound to the current document on every call: with `isolate: false`, the module-level `screen` and
+ * `userEvent` can still hold an earlier spec's document.
+ */
+function page() {
+  return within(document.body);
+}
+
+function user() {
+  return userEvent.setup({ document });
+}
 
 const SIZES = ['small', 'large'] as const;
 
@@ -23,17 +35,21 @@ describe('apps/web: SelectField', () => {
   it('lists every option with the field value selected', () => {
     render(<SizeForm onSize={() => {}} />);
 
-    const select = screen.getByLabelText<HTMLSelectElement>('Pick a size');
+    const select = page().getByLabelText<HTMLSelectElement>('Pick a size');
     expect(select.value).toBe('small');
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([...SIZES]);
+    expect(
+      page()
+        .getAllByRole('option')
+        .map((option) => option.textContent)
+    ).toEqual([...SIZES]);
   });
 
   it('writes the chosen option into the field', async () => {
     const onSize = vi.fn();
     render(<SizeForm onSize={onSize} />);
 
-    await userEvent.selectOptions(screen.getByLabelText('Pick a size'), 'large');
+    await user().selectOptions(page().getByLabelText('Pick a size'), 'large');
 
-    expect(onSize).toHaveBeenLastCalledWith('large');
+    await vi.waitFor(() => expect(onSize).toHaveBeenLastCalledWith('large'));
   });
 });

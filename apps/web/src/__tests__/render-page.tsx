@@ -29,7 +29,6 @@ export type PageOptions = {
   /** The pathless layout route `route` sits under, as the page's own route does. */
   layout?: string;
   viewer?: UserContext | null;
-  /** How the API answers while the page renders; a call none of them answers fails the test. */
   handlers?: HttpHandler[];
 };
 

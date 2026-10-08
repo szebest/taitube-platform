@@ -1,7 +1,19 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useAppForm } from '../use-app-form';
+
+/**
+ * Bound to the current document on every call: with `isolate: false`, the module-level `screen` and
+ * `userEvent` can still hold an earlier spec's document.
+ */
+function page() {
+  return within(document.body);
+}
+
+function user() {
+  return userEvent.setup({ document });
+}
 
 function FilesForm({ multiple = false }: { multiple?: boolean }) {
   const form = useAppForm({ defaultValues: { files: [] as File[] } });
@@ -24,7 +36,7 @@ describe('apps/web: FileField', () => {
   it('invites a drop while no file is chosen', () => {
     render(<FilesForm />);
 
-    expect(screen.getByText('Drop a video here')).toBeTruthy();
+    expect(page().getByText('Drop a video here')).toBeTruthy();
   });
 
   it.each([
@@ -33,13 +45,13 @@ describe('apps/web: FileField', () => {
   ])('lists the chosen files under $heading', async ({ names, multiple, heading }) => {
     const { container } = render(<FilesForm multiple={multiple} />);
 
-    await userEvent.upload(
+    await user().upload(
       fileInput(container),
       names.map((name) => new File(['bytes'], name))
     );
 
-    expect(screen.getByText((_, element) => heading.test(element?.textContent ?? ''))).toBeTruthy();
-    for (const name of names) expect(screen.getByText(name)).toBeTruthy();
-    expect(screen.queryByText('Drop a video here')).toBeNull();
+    expect(page().getByText((_, element) => heading.test(element?.textContent ?? ''))).toBeTruthy();
+    for (const name of names) expect(page().getByText(name)).toBeTruthy();
+    expect(page().queryByText('Drop a video here')).toBeNull();
   });
 });

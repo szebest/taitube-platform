@@ -1,10 +1,22 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IntlProvider } from '@vp/intl-react';
 import { VIDEO_ID } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
 import { VideoForm, type VideoFormProps } from '../upload-video-form';
+
+/**
+ * Bound to the current document on every call: with `isolate: false`, the module-level `screen` and
+ * `userEvent` can still hold an earlier spec's document.
+ */
+function page() {
+  return within(document.body);
+}
+
+function user() {
+  return userEvent.setup({ document });
+}
 
 const FORM_DEFAULTS: VideoFormProps = {
   isError: false,
@@ -28,7 +40,7 @@ function renderForm(overrides: Partial<VideoFormProps> = {}) {
 }
 
 function uploadButton(): HTMLButtonElement {
-  return screen.getByRole<HTMLButtonElement>('button', { name: 'upload' });
+  return page().getByRole<HTMLButtonElement>('button', { name: 'upload' });
 }
 
 afterEach(cleanup);
@@ -37,9 +49,9 @@ describe('apps/web: upload video form', () => {
   it('asks for a video file of a type the API accepts, a title and the visibility', () => {
     const { fileInput } = renderForm();
 
-    expect(screen.getByText("Drag 'n' drop, or click to select video file")).toBeTruthy();
+    expect(page().getByText("Drag 'n' drop, or click to select video file")).toBeTruthy();
     expect(fileInput.accept).toBe('video/mp4,video/webm,video/quicktime,video/x-matroska');
-    expect(screen.getByLabelText<HTMLSelectElement>('Video visibility').value).toBe('private');
+    expect(page().getByLabelText<HTMLSelectElement>('Video visibility').value).toBe('private');
   });
 
   it.each([
@@ -52,10 +64,10 @@ describe('apps/web: upload video form', () => {
     async ({ file, title, disabled }) => {
       const { fileInput } = renderForm();
 
-      if (file) await userEvent.upload(fileInput, clip);
-      if (title) await userEvent.type(screen.getByLabelText('Video title'), title);
+      if (file) await user().upload(fileInput, clip);
+      if (title) await user().type(page().getByLabelText('Video title'), title);
 
-      expect(uploadButton().disabled).toBe(disabled);
+      await vi.waitFor(() => expect(uploadButton().disabled).toBe(disabled));
     }
   );
 
@@ -63,29 +75,31 @@ describe('apps/web: upload video form', () => {
     const submit = vi.fn();
     const { fileInput } = renderForm({ submit });
 
-    await userEvent.upload(fileInput, clip);
-    await userEvent.type(screen.getByLabelText('Video title'), 'Clip');
-    await userEvent.selectOptions(screen.getByLabelText('Video visibility'), 'public');
-    await userEvent.click(uploadButton());
+    await user().upload(fileInput, clip);
+    await user().type(page().getByLabelText('Video title'), 'Clip');
+    await user().selectOptions(page().getByLabelText('Video visibility'), 'public');
+    await user().click(uploadButton());
 
-    expect(submit).toHaveBeenCalledWith({ file: [clip], title: 'Clip', visibility: 'public' });
-    expect(screen.getByText('clip.mp4')).toBeTruthy();
+    await vi.waitFor(() =>
+      expect(submit).toHaveBeenCalledWith({ file: [clip], title: 'Clip', visibility: 'public' })
+    );
+    expect(page().getByText('clip.mp4')).toBeTruthy();
   });
 
   it('shows the transfer progress once submitted', async () => {
     const { fileInput } = renderForm({ progress: 42.6 });
 
-    await userEvent.upload(fileInput, clip);
-    await userEvent.type(screen.getByLabelText('Video title'), 'Clip');
-    await userEvent.click(uploadButton());
+    await user().upload(fileInput, clip);
+    await user().type(page().getByLabelText('Video title'), 'Clip');
+    await user().click(uploadButton());
 
-    expect(screen.getByText(/Progress: 43%/)).toBeTruthy();
+    expect(await page().findByText(/Progress: 43%/)).toBeTruthy();
   });
 
   it('turns the button into a retry after a failed upload', () => {
     renderForm({ isError: true });
 
-    expect(screen.getByRole('button', { name: 'retry' })).toBeTruthy();
+    expect(page().getByRole('button', { name: 'retry' })).toBeTruthy();
   });
 
   it('links to the uploaded video and offers another upload once done', async () => {
