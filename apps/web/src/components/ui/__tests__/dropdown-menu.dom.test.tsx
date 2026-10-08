@@ -75,7 +75,7 @@ describe('apps/web: DropdownMenu', () => {
     await openFromKeyboard();
 
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('menuitem', { name: 'Share S' })).toHaveFocus();
+    expect(screen.getByRole('menuitem', { name: /^Share/ })).toHaveFocus();
   });
 
   it.each([
