@@ -19,6 +19,7 @@ const logger = createLogger({ format: 'json', service: 'worker-probe-test', leve
 function metadata(overrides: Partial<ProbeMetadata>): ProbeMetadata {
   return {
     durationMs: 60_000,
+    videoDurationMs: 60_000,
     width: 1920,
     height: 1080,
     effectiveWidth: 1920,

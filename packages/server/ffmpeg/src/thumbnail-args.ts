@@ -42,7 +42,7 @@ export function buildPosterArgs(options: PosterOptions): string[] {
 /**
  * Builds FFmpeg argument array for tiled thumbnail sprite sheet (SDD §8.3, PRD OQ-4).
  * 4K sources are scaled down before tiling to keep memory bounded.
- * `round=up` yields one tile per VTT cue; the default yields none under half an interval.
+ * `round=up` yields one tile per VTT cue.
  */
 export function buildSpriteArgs(options: SpriteOptions): string[] {
   const { sourcePath, outputPath, durationMs, layout } = options;
