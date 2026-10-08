@@ -26,6 +26,16 @@ describe('RedisSearchSuggestionIndexAdapter', () => {
     expect(redis.ttls.get('taitube:search:suggest:go')).toBe(SEARCH_SUGGESTIONS.ttlSeconds);
   });
 
+  it('refuses a pool with no room for a single query', () => {
+    expect(
+      () =>
+        new RedisSearchSuggestionIndexAdapter({
+          redis: new FakeRedis().asRedis(),
+          keptPerPrefix: 0,
+        })
+    ).toThrow(RangeError);
+  });
+
   it('reports a Redis that is down as CACHE_UNAVAILABLE', async () => {
     const redis = new FakeRedis();
     vi.spyOn(redis, 'zrevrange').mockRejectedValue(new Error('connection refused'));

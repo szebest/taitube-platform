@@ -16,10 +16,14 @@ describe('PostgresSearchRepository', () => {
     await subject.close();
   });
 
-  it.each(['-lofi', '-"lo fi"', '-lofi -"jazz hop"'])(
-    'reads %j, which excludes and never includes, as matching everything',
-    async (text) => {
-      expect(expectOk(await subject.repositories.search.restricts(text))).toBe(false);
-    }
-  );
+  it.each([
+    { text: '-lofi', restricts: false },
+    { text: '-"lo fi"', restricts: false },
+    { text: '-lofi -"jazz hop"', restricts: false },
+    { text: 'lofi -jazz', restricts: true },
+    { text: 'lo-fi', restricts: true },
+    { text: 'lofi', restricts: true },
+  ])('reads $text as narrowing the search: $restricts', async ({ text, restricts }) => {
+    expect(expectOk(await subject.repositories.search.restricts(text))).toBe(restricts);
+  });
 });

@@ -17,9 +17,13 @@ for _, key in ipairs(KEYS) do
   elseif redis.call('ZCARD', key) < kept then
     redis.call('ZADD', key, 1, member)
   else
-    local lowest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
-    redis.call('ZREM', key, lowest[1])
-    redis.call('ZADD', key, tonumber(lowest[2]) + 1, member)
+    local inherited = 0
+    while redis.call('ZCARD', key) >= kept do
+      local lowest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
+      redis.call('ZREM', key, lowest[1])
+      inherited = tonumber(lowest[2])
+    end
+    redis.call('ZADD', key, inherited + 1, member)
   end
   redis.call('EXPIRE', key, ttl)
 end
@@ -41,6 +45,7 @@ export class RedisSearchSuggestionIndexAdapter implements SearchSuggestionIndexP
   private readonly keptPerPrefix: number;
 
   constructor(config: RedisSearchSuggestionIndexConfig) {
+    if (config.keptPerPrefix < 1) throw new RangeError('keptPerPrefix must be at least 1');
     this.redis = config.redis;
     this.keptPerPrefix = config.keptPerPrefix;
   }

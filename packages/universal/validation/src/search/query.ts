@@ -5,7 +5,7 @@ import { withinLength } from '../plain-text';
 const SEARCH_QUERY_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };
 
 const WORDLIKE = /[\p{L}\p{N}]/u;
-const PLAIN_WORD = /^[\p{L}\p{N}]+$/u;
+const PLAIN_WORD = /^[\p{L}\p{M}\p{N}]+$/u;
 
 export type InvalidSearchQuery = InvalidField<LengthBounds> | InvalidField;
 

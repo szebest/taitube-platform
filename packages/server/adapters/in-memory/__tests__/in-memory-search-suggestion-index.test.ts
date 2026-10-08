@@ -7,6 +7,10 @@ import { InMemorySearchSuggestionIndex } from '../in-memory-search-suggestion-in
 describeSearchSuggestionIndexContract(inMemorySearchSuggestionIndexSubject);
 
 describe('InMemorySearchSuggestionIndex', () => {
+  it('refuses a pool with no room for a single query', () => {
+    expect(() => new InMemorySearchSuggestionIndex(Date.now, 0)).toThrow(RangeError);
+  });
+
   it('forgets every prefix on clear', async () => {
     const index = new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix);
     expectOk(await index.record('react'));

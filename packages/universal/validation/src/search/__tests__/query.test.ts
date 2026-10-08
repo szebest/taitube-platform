@@ -48,6 +48,9 @@ describe('@vp/validation: validateSearchQuery', () => {
     { text: 'react!', plain: false },
     { text: 'react?.', plain: false },
     { text: 'żółć 2026', plain: true },
+    { text: 'हिन्दी गाने', plain: true },
+    { text: 'เพลงไทย', plain: true },
+    { text: 'cafe\u0301', plain: true },
   ])('treats $text as a plain query: $plain', ({ text, plain }) => {
     expect(isPlainSearchQuery(text)).toBe(plain);
   });

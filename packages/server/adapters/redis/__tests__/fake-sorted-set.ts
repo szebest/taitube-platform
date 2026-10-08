@@ -25,10 +25,13 @@ export function recordSuggestion(
     } else if (set.size < Number(kept)) {
       set.set(member, 1);
     } else {
-      const [lowest = ''] = ranked(set);
-      const lowestScore = set.get(lowest) ?? 0;
-      set.delete(lowest);
-      set.set(member, lowestScore + 1);
+      let inherited = 0;
+      while (set.size >= Number(kept)) {
+        const [lowest = ''] = ranked(set);
+        inherited = set.get(lowest) ?? 0;
+        set.delete(lowest);
+      }
+      set.set(member, inherited + 1);
     }
     ttls.set(key, Number(ttl));
   }

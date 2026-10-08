@@ -76,7 +76,10 @@ export class InMemorySearchRepository implements SearchRepositoryPort {
     return ok({ hits: after.slice(0, query.limit + 1), total: matched.length });
   }
 
-  /** The double reads plain words only, so to it every query that passed validation narrows. */
+  /**
+   * The double cannot parse negation, so it answers true even for `-"lo fi"`, which passes
+   * validation; the Postgres spec owns the false case.
+   */
   async restricts(_text: string): Promise<Result<boolean, DatabaseUnavailable>> {
     return ok(true);
   }

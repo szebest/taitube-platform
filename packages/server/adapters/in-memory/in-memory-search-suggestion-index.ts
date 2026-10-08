@@ -26,7 +26,9 @@ export class InMemorySearchSuggestionIndex implements SearchSuggestionIndexPort 
   constructor(
     private readonly now: () => number,
     private readonly keptPerPrefix: number
-  ) {}
+  ) {
+    if (keptPerPrefix < 1) throw new RangeError('keptPerPrefix must be at least 1');
+  }
 
   async record(text: string): Promise<Result<void, CacheUnavailable>> {
     const now = this.now();
@@ -44,9 +46,13 @@ export class InMemorySearchSuggestionIndex implements SearchSuggestionIndexPort 
       } else if (counts.size < this.keptPerPrefix) {
         counts.set(text, 1);
       } else {
-        const [lowest = '', lowestScore = 0] = leastSearched(counts) ?? [];
-        counts.delete(lowest);
-        counts.set(text, lowestScore + 1);
+        let inherited = 0;
+        while (counts.size >= this.keptPerPrefix) {
+          const [lowest = '', lowestScore = 0] = leastSearched(counts) ?? [];
+          inherited = lowestScore;
+          counts.delete(lowest);
+        }
+        counts.set(text, inherited + 1);
       }
     }
     return ok();
