@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 
 import { apiClient } from '#app/integrations/api/api-client';
 
-export const reactionKeys = {
+const reactionKeys = {
   all: ['reactions'] as const,
   mine: (videoId: string) => [...reactionKeys.all, 'mine', videoId] as const,
 };

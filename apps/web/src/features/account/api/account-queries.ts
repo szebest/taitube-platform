@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 
 import { apiClient } from '#app/integrations/api/api-client';
 
-export const accountKeys = {
+const accountKeys = {
   all: ['account'] as const,
 };
 

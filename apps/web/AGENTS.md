@@ -220,7 +220,6 @@ await renderPage(<Page />, { handlers: [failed] });
   fails after it ends, naming the request.
 - `problemReply(code)` is the RFC 9457 body at the status the API reports that code as; pass a status to
   override it.
-- `recordRequests` in `api-store.ts` stubs `fetch` outright and predates this; new specs use MSW.
 
 ---
 

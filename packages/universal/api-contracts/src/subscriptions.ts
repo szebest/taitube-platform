@@ -119,6 +119,4 @@ export const getSubscriptionFeed = defineEndpoint({
 });
 
 export type SubscriptionState = z.infer<typeof SubscriptionStateSchema>;
-export type IsSubscribed = z.infer<typeof IsSubscribedSchema>;
 export type SubscribedChannel = z.infer<typeof SubscribedChannelSchema>;
-export type ListSubscriptionsResponse = z.infer<typeof ListSubscriptionsResponseSchema>;

@@ -1,7 +1,7 @@
 import { type AnyFailure, isInputFailure } from '@vp/errors';
 import { type Result, isOk } from '@vp/result';
 
-export type ViewState<T, F extends AnyFailure> =
+type ViewState<T, F extends AnyFailure> =
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'success'; data: T }

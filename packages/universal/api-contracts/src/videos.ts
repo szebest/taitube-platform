@@ -140,5 +140,4 @@ export const reprocessVideo = defineEndpoint({
   },
 });
 
-export type ListVideosQuery = z.input<typeof ListVideosQuerySchema>;
 export type UpdateVideoMetadata = z.infer<typeof UpdateVideoMetadataSchema>;

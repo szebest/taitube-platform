@@ -4,7 +4,7 @@ import { apiClient } from '#app/integrations/api/api-client';
 
 const CATEGORIES_STALE_TIME_MS = 5 * 60 * 1000;
 
-export const categoryKeys = {
+const categoryKeys = {
   all: ['categories'] as const,
 };
 
