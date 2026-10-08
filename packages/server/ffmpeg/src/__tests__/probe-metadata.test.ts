@@ -100,6 +100,24 @@ describe('@vp/ffmpeg: validateAndParseProbe', () => {
     expect(res.ladder.length).toBe(3);
   });
 
+  it.each([
+    {
+      label: 'a video stream shorter than the container',
+      stream: '10.000',
+      videoDurationMs: 10000,
+    },
+    {
+      label: 'a video stream with no duration of its own',
+      stream: undefined,
+      videoDurationMs: 11000,
+    },
+  ])('reads the video duration of $label', ({ stream, videoDurationMs }) => {
+    const raw = videoProbe({ width: 1920, height: 1080, duration: stream }, '11.000');
+
+    const res = validateAndParseProbe(raw, PROBE_LIMITS.maxDurationSec);
+    expect(res).toMatchObject({ durationMs: 11000, videoDurationMs });
+  });
+
   it.each<{ label: string; raw: RawFfprobeOutput; maxDurationSec: number; code: ErrorCode }>([
     {
       label: 'a container with no video stream',

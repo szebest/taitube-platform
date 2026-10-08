@@ -31,6 +31,7 @@ describe('@vp/ffmpeg: thumbnail arguments (SDD §8.3)', () => {
   });
 
   it.each([
+    { durationMs: 2000, tile: '10x1' },
     { durationMs: 60000, tile: '10x2' },
     { durationMs: 600000, tile: '10x12' },
   ])('builds a $tile sprite grid for a $durationMs ms source', ({ durationMs, tile }) => {
@@ -41,7 +42,7 @@ describe('@vp/ffmpeg: thumbnail arguments (SDD §8.3)', () => {
       layout: SPRITE,
     });
     expect(args).toContain(
-      `fps=1/5,scale=160:90:force_original_aspect_ratio=decrease,pad=160:90:(ow-iw)/2:(oh-ih)/2,tile=${tile}`
+      `fps=1/5:round=up,scale=160:90:force_original_aspect_ratio=decrease,pad=160:90:(ow-iw)/2:(oh-ih)/2,tile=${tile}`
     );
   });
 });
