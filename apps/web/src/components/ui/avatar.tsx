@@ -1,18 +1,23 @@
 import { useState } from 'react';
+import { type VariantProps, tv } from 'tailwind-variants';
 
-import { cn } from './cn';
+export const avatarVariants = tv({
+  base: 'tw:relative tw:inline-flex tw:shrink-0 tw:overflow-hidden tw:rounded-full tw:bg-surface-hover tw:font-sans tw:font-medium tw:text-fg tw:select-none',
+  variants: {
+    size: {
+      sm: 'tw:size-6 tw:text-xs',
+      md: 'tw:size-9 tw:text-sm',
+      lg: 'tw:size-12 tw:text-lg',
+      xl: 'tw:size-20 tw:text-2xl',
+    },
+  },
+  defaultVariants: { size: 'md' },
+});
 
-const SIZES = {
-  sm: 'tw:size-6 tw:text-xs',
-  md: 'tw:size-9 tw:text-sm',
-  lg: 'tw:size-20 tw:text-2xl',
-};
-
-export type AvatarProps = {
+export type AvatarProps = VariantProps<typeof avatarVariants> & {
   /** Names the picture for assistive technology and gives the monogram its letter. */
   name: string;
   src?: string | null;
-  size?: keyof typeof SIZES;
   className?: string;
 };
 
@@ -21,27 +26,29 @@ function monogram(name: string): string {
   return first.toUpperCase();
 }
 
-export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
+export function Avatar({ name, src, size, className }: AvatarProps) {
   const [failedSrc, setFailedSrc] = useState<string>();
-  const classes = cn(
-    'tw:inline-flex tw:shrink-0 tw:items-center tw:justify-center tw:overflow-hidden tw:rounded-full tw:bg-surface-hover tw:font-sans tw:font-medium tw:text-fg tw:select-none',
-    SIZES[size],
-    className
-  );
 
-  if (src && src !== failedSrc) {
-    return (
-      <img
-        src={src}
-        alt={name}
-        onError={() => setFailedSrc(src)}
-        className={cn(classes, 'tw:object-cover')}
-      />
-    );
-  }
   return (
-    <span role="img" aria-label={name} className={classes}>
-      {monogram(name)}
+    <span data-slot="avatar" className={avatarVariants({ size, className })}>
+      {src && src !== failedSrc ? (
+        <img
+          data-slot="avatar-image"
+          src={src}
+          alt={name}
+          onError={() => setFailedSrc(src)}
+          className="tw:size-full tw:object-cover"
+        />
+      ) : (
+        <span
+          data-slot="avatar-fallback"
+          role="img"
+          aria-label={name}
+          className="tw:flex tw:size-full tw:items-center tw:justify-center"
+        >
+          {monogram(name)}
+        </span>
+      )}
     </span>
   );
 }

@@ -1,11 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { Avatar } from '../avatar';
+import { variantNames } from '#app/__tests__/variant-names';
+import { Avatar, avatarVariants } from '../avatar';
+
+const SIZES = variantNames(avatarVariants.variants.size);
 
 describe('apps/web: Avatar', () => {
-  it('shows the picture, named after its owner', () => {
-    render(<Avatar name="The Creator" src="/avatars/creator.png" />);
+  it.each(SIZES)('shows a %s picture, named after its owner', (size) => {
+    render(<Avatar name="The Creator" src="/avatars/creator.png" size={size} />);
 
     expect(screen.getByRole('img', { name: 'The Creator' })).toHaveAttribute(
       'src',
@@ -23,20 +26,13 @@ describe('apps/web: Avatar', () => {
     expect(screen.getByRole('img', { name: name.trim() })).toHaveTextContent(monogram);
   });
 
-  it('falls back to the monogram when the picture fails to load', () => {
-    render(<Avatar name="The Creator" src="/avatars/missing.png" />);
-
-    fireEvent.error(screen.getByRole('img', { name: 'The Creator' }));
-
-    expect(screen.getByRole('img', { name: 'The Creator' })).toHaveTextContent('T');
-  });
-
-  it('tries a new picture after the old one failed', () => {
+  it('falls back to the monogram when the picture fails to load, and tries a new one', () => {
     const { rerender } = render(<Avatar name="The Creator" src="/avatars/missing.png" />);
+
     fireEvent.error(screen.getByRole('img', { name: 'The Creator' }));
+    expect(screen.getByRole('img', { name: 'The Creator' })).toHaveTextContent('T');
 
     rerender(<Avatar name="The Creator" src="/avatars/new.png" />);
-
     expect(screen.getByRole('img', { name: 'The Creator' })).toHaveAttribute(
       'src',
       '/avatars/new.png'

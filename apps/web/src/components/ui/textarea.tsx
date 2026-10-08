@@ -1,8 +1,16 @@
 import type { ComponentProps } from 'react';
 
-import { cn } from './cn';
-import { FIELD } from './input';
+import { controlVariants, useFieldControl } from './field';
 
 export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
-  return <textarea className={cn(FIELD, 'tw:min-h-20 tw:py-2', className)} {...props} />;
+  const field = useFieldControl();
+
+  return (
+    <textarea
+      data-slot="textarea"
+      className={controlVariants({ kind: 'textarea', className })}
+      {...field}
+      {...props}
+    />
+  );
 }

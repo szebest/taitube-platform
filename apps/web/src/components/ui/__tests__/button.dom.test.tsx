@@ -1,49 +1,72 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { Plus } from 'lucide-react';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { Button } from '../button';
+import { variantNames } from '#app/__tests__/variant-names';
+import { Button, IconButton, buttonVariants } from '../button';
+
+const VARIANTS = variantNames(buttonVariants.variants.variant);
+const SIZES = variantNames(buttonVariants.variants.size);
+const EVERY_LOOK = VARIANTS.flatMap((variant) => SIZES.map((size) => ({ variant, size })));
 
 describe('apps/web: Button', () => {
-  it.each(['primary', 'secondary', 'ghost', 'destructive'] as const)(
-    'renders a %s button named by its text',
-    (variant) => {
-      render(<Button variant={variant}>Save</Button>);
-
-      expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('type', 'button');
-    }
-  );
-
-  it('names an icon button by its label', () => {
+  it.each(EVERY_LOOK)('renders a $variant $size button named by its text', ({ variant, size }) => {
     render(
-      <Button size="icon" aria-label="Close">
-        <svg aria-hidden="true" />
+      <Button variant={variant} size={size}>
+        Save
       </Button>
     );
 
-    expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: 'Save' });
+    expect(button).toHaveAttribute('type', 'button');
+    expect(button).toHaveAttribute('data-slot', 'button');
+  });
+
+  it.each(EVERY_LOOK)('names a $variant $size icon button by its label', ({ variant, size }) => {
+    render(
+      <IconButton variant={variant} size={size} aria-label="Add">
+        <Plus aria-hidden="true" />
+      </IconButton>
+    );
+
+    expect(screen.getByRole('button', { name: 'Add' })).toHaveAttribute('data-slot', 'icon-button');
   });
 
   it('refuses an icon button without a label at compile time', () => {
-    // @ts-expect-error an icon button has no text, so it must carry a label
-    render(<Button size="icon" />);
+    // @ts-expect-error an icon button shows no text, so it must carry a label
+    render(<IconButton />);
 
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
-  it('is reached with Tab and pressed with Enter and Space', async () => {
+  it('is reached with Tab and pressed with Enter and Space, with the shared focus ring', async () => {
     const onClick = vi.fn();
     render(<Button onClick={onClick}>Save</Button>);
 
     await userEvent.tab();
     await userEvent.keyboard('{Enter}[Space]');
 
-    expect(screen.getByRole('button', { name: 'Save' })).toHaveFocus();
-    expect(screen.getByRole('button', { name: 'Save' })).toHaveClass('tw:focus-ring');
+    const button = screen.getByRole('button', { name: 'Save' });
+    expect(button).toHaveFocus();
+    expect(button).toHaveClass('tw:focus-ring');
     expect(onClick).toHaveBeenCalledTimes(2);
   });
 
-  it('styles the element it is given, such as a link', () => {
+  it('ignores a click while disabled', async () => {
+    const onClick = vi.fn();
+    render(
+      <Button disabled onClick={onClick}>
+        Save
+      </Button>
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it('styles the element it is given, a link for one, without a button type', () => {
     render(
       <Button asChild variant="primary">
         <a href="/upload">Upload</a>
@@ -55,19 +78,25 @@ describe('apps/web: Button', () => {
     expect(link).not.toHaveAttribute('type');
   });
 
-  it('lets a caller override a class without a conflict', () => {
+  it('lets a caller override a class without leaving the conflicting one behind', () => {
     render(<Button className="tw:px-8">Save</Button>);
 
-    expect(screen.getByRole('button', { name: 'Save' }).className).not.toContain('tw:px-4');
+    const { className } = screen.getByRole('button', { name: 'Save' });
+    expect(className).toContain('tw:px-8');
+    expect(className).not.toContain('tw:px-4');
   });
 
   it.each(THEMES)('passes axe in the %s theme', async (theme) => {
     render(
       <>
-        <Button variant="primary">Save</Button>
-        <Button size="icon" variant="ghost" aria-label="Close">
-          <svg aria-hidden="true" />
-        </Button>
+        {VARIANTS.map((variant) => (
+          <Button key={variant} variant={variant}>
+            {variant}
+          </Button>
+        ))}
+        <IconButton aria-label="Add">
+          <Plus aria-hidden="true" />
+        </IconButton>
         <Button disabled>Disabled</Button>
       </>
     );

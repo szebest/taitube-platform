@@ -4,6 +4,14 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+:root {
+  --vp-duration-fast: 150ms;
+  --vp-duration-normal: 250ms;
+  --vp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --vp-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --vp-modal-max-height: calc(100dvh - 2rem);
+}
+
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
@@ -11,6 +19,7 @@
   --vp-surface-elevated: #1f1f1f;
   --vp-surface-hover: #272727;
   --vp-border: #272727;
+  --vp-border-strong: #3f3f3f;
   --vp-fg: #f1f1f1;
   --vp-fg-muted: #aaaaaa;
   --vp-accent: #e00025;
@@ -21,6 +30,7 @@
   --vp-warning: #f2a60c;
   --vp-ring: #3ea6ff;
   --vp-overlay: rgb(0 0 0 / 0.6);
+  --vp-shadow-color: rgb(0 0 0 / 0.5);
 }
 
 [data-theme="light"] {
@@ -29,6 +39,7 @@
   --vp-surface-elevated: #f2f2f2;
   --vp-surface-hover: #e5e5e5;
   --vp-border: #e5e5e5;
+  --vp-border-strong: #c6c6c6;
   --vp-fg: #0f0f0f;
   --vp-fg-muted: #606060;
   --vp-accent: #cc0000;
@@ -39,6 +50,7 @@
   --vp-warning: #9a5300;
   --vp-ring: #065fd4;
   --vp-overlay: rgb(0 0 0 / 0.4);
+  --vp-shadow-color: rgb(0 0 0 / 0.15);
 }
 
 @theme inline {
@@ -47,6 +59,7 @@
   --color-surface-elevated: var(--vp-surface-elevated);
   --color-surface-hover: var(--vp-surface-hover);
   --color-border: var(--vp-border);
+  --color-border-strong: var(--vp-border-strong);
   --color-fg: var(--vp-fg);
   --color-fg-muted: var(--vp-fg-muted);
   --color-accent: var(--vp-accent);
@@ -59,6 +72,11 @@
   --color-warning: var(--vp-warning);
   --color-ring: var(--vp-ring);
   --color-overlay: var(--vp-overlay);
+
+  --shadow-*: initial;
+  --shadow-sm: 0 1px 2px var(--vp-shadow-color);
+  --shadow-md: 0 4px 12px var(--vp-shadow-color);
+  --shadow-lg: 0 12px 32px var(--vp-shadow-color);
 }
 
 @theme {
@@ -88,11 +106,99 @@
 
   --spacing: 0.25rem;
 
-  --animate-shimmer: shimmer 1.5s ease-in-out infinite;
+  --z-index-*: initial;
+  --z-index-dropdown: 40;
+  --z-index-overlay: 50;
+  --z-index-modal: 50;
+  --z-index-toast: 60;
+  --z-index-tooltip: 70;
 
+  --animate-*: initial;
+  --animate-spin: spin 1s linear infinite;
+  --animate-shimmer: shimmer 1.5s ease-in-out infinite;
+  --animate-fade-in: fade-in var(--vp-duration-fast) var(--vp-ease-out);
+  --animate-fade-out: fade-out var(--vp-duration-fast) var(--vp-ease-in);
+  --animate-pop-in: pop-in var(--vp-duration-fast) var(--vp-ease-out);
+  --animate-pop-out: pop-out var(--vp-duration-fast) var(--vp-ease-in);
+  --animate-slide-in-from-top: slide-in-from-top var(--vp-duration-normal) var(--vp-ease-out);
+  --animate-slide-in-from-right: slide-in-from-right var(--vp-duration-normal) var(--vp-ease-out);
+  --animate-slide-in-from-bottom: slide-in-from-bottom var(--vp-duration-normal) var(--vp-ease-out);
+  --animate-slide-in-from-left: slide-in-from-left var(--vp-duration-normal) var(--vp-ease-out);
+  --animate-slide-out-to-top: slide-out-to-top var(--vp-duration-fast) var(--vp-ease-in);
+  --animate-slide-out-to-right: slide-out-to-right var(--vp-duration-fast) var(--vp-ease-in);
+  --animate-slide-out-to-bottom: slide-out-to-bottom var(--vp-duration-fast) var(--vp-ease-in);
+  --animate-slide-out-to-left: slide-out-to-left var(--vp-duration-fast) var(--vp-ease-in);
+
+  @keyframes spin {
+    to {
+      rotate: 360deg;
+    }
+  }
   @keyframes shimmer {
     50% {
       opacity: 0.5;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      scale: 0.95;
+    }
+  }
+  @keyframes pop-out {
+    to {
+      opacity: 0;
+      scale: 0.95;
+    }
+  }
+  @keyframes slide-in-from-top {
+    from {
+      translate: 0 -100%;
+    }
+  }
+  @keyframes slide-in-from-right {
+    from {
+      translate: 100% 0;
+    }
+  }
+  @keyframes slide-in-from-bottom {
+    from {
+      translate: 0 100%;
+    }
+  }
+  @keyframes slide-in-from-left {
+    from {
+      translate: -100% 0;
+    }
+  }
+  @keyframes slide-out-to-top {
+    to {
+      translate: 0 -100%;
+    }
+  }
+  @keyframes slide-out-to-right {
+    to {
+      translate: 100% 0;
+    }
+  }
+  @keyframes slide-out-to-bottom {
+    to {
+      translate: 0 100%;
+    }
+  }
+  @keyframes slide-out-to-left {
+    to {
+      translate: -100% 0;
     }
   }
 }

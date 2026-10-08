@@ -23,7 +23,18 @@ class NeverIntersecting implements IntersectionObserver {
   }
 }
 
-// jsdom implements none of these; the legacy chrome and the router call them while rendering.
+class UnobservedSize implements ResizeObserver {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+// jsdom implements none of these; the legacy chrome, the router and the Radix primitives in
+// components/ui call them while rendering or handling a key.
 window.matchMedia = unmatchedQuery;
 window.scrollTo = () => undefined;
 window.IntersectionObserver = NeverIntersecting;
+window.ResizeObserver = UnobservedSize;
+Element.prototype.scrollIntoView = () => undefined;
+Element.prototype.hasPointerCapture = () => false;
+Element.prototype.releasePointerCapture = () => undefined;

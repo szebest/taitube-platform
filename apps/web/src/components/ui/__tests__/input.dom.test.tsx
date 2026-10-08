@@ -2,38 +2,36 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { variantNames } from '#app/__tests__/variant-names';
+import { controlVariants } from '../field';
 import { Input } from '../input';
 
-function TitleField({ invalid = false }: { invalid?: boolean }) {
-  return (
-    <>
-      <label htmlFor="title">Title</label>
-      <Input id="title" aria-invalid={invalid} placeholder="Add a title" />
-    </>
-  );
-}
+const SIZES = variantNames(controlVariants.variants.size);
 
 describe('apps/web: Input', () => {
-  it('is a text box named by its label, typed into from the keyboard', async () => {
-    render(<TitleField />);
+  it.each(SIZES)(
+    'is a %s text box typed into from the keyboard, with the focus ring',
+    async (size) => {
+      render(<Input aria-label="Title" size={size} />);
 
-    await userEvent.tab();
-    await userEvent.keyboard('Launch day');
+      await userEvent.tab();
+      await userEvent.keyboard('Launch day');
 
-    const input = screen.getByRole('textbox', { name: 'Title' });
-    expect(input).toHaveFocus();
-    expect(input).toHaveValue('Launch day');
-    expect(input).toHaveClass('tw:focus-ring');
-  });
+      const input = screen.getByRole('textbox', { name: 'Title' });
+      expect(input).toHaveFocus();
+      expect(input).toHaveValue('Launch day');
+      expect(input).toHaveClass('tw:focus-ring');
+    }
+  );
 
-  it('marks an invalid value for assistive technology', () => {
-    render(<TitleField invalid />);
+  it('lets its own props win over the field it sits in', () => {
+    render(<Input aria-label="Title" id="own-id" />);
 
-    expect(screen.getByRole('textbox', { name: 'Title' })).toBeInvalid();
+    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveAttribute('id', 'own-id');
   });
 
   it.each(THEMES)('passes axe in the %s theme', async (theme) => {
-    render(<TitleField />);
+    render(<Input aria-label="Title" placeholder="Add a title" />);
 
     expect(await axeViolations(theme)).toEqual([]);
   });

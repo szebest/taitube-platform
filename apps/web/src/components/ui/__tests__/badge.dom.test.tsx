@@ -1,15 +1,16 @@
 import { render, screen } from '@testing-library/react';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
-import { Badge } from '../badge';
+import { variantNames } from '#app/__tests__/variant-names';
+import { Badge, badgeVariants } from '../badge';
 
-const VARIANTS = ['neutral', 'accent', 'success', 'warning', 'danger'] as const;
+const VARIANTS = variantNames(badgeVariants.variants.variant);
 
 describe('apps/web: Badge', () => {
   it.each(VARIANTS)('reads its %s label as plain text', (variant) => {
     render(<Badge variant={variant}>READY</Badge>);
 
-    expect(screen.getByText('READY')).toBeInTheDocument();
+    expect(screen.getByText('READY')).toHaveAttribute('data-slot', 'badge');
   });
 
   it.each(THEMES)('passes axe in the %s theme', async (theme) => {

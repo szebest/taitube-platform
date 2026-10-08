@@ -2,20 +2,16 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
 import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { Field } from '../field';
 import { Textarea } from '../textarea';
 
-function DescriptionField() {
-  return (
-    <>
-      <label htmlFor="description">Description</label>
-      <Textarea id="description" />
-    </>
-  );
-}
-
 describe('apps/web: Textarea', () => {
-  it('is a multi-line text box named by its label', async () => {
-    render(<DescriptionField />);
+  it('is a multi-line text box named by its field', async () => {
+    render(
+      <Field label="Description">
+        <Textarea />
+      </Field>
+    );
 
     await userEvent.tab();
     await userEvent.keyboard('first{Enter}second');
@@ -27,7 +23,11 @@ describe('apps/web: Textarea', () => {
   });
 
   it.each(THEMES)('passes axe in the %s theme', async (theme) => {
-    render(<DescriptionField />);
+    render(
+      <Field label="Description" error="Too long">
+        <Textarea />
+      </Field>
+    );
 
     expect(await axeViolations(theme)).toEqual([]);
   });
