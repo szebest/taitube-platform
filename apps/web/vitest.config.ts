@@ -1,7 +1,7 @@
 import { type ViteUserConfig, defineConfig, mergeConfig } from 'vitest/config';
 import viteConfig from './vite.config';
 
-export const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.tsx';
+export const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.{ts,tsx}';
 
 export const MSW_SETUP = 'src/__tests__/msw/api-server.setup.ts';
 

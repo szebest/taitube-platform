@@ -16,7 +16,7 @@ export type RouterContext = {
 const PENDING_DELAY_MS = 1000;
 const PENDING_MIN_MS = 500;
 
-export type RouterOptions = Partial<RouterContext> & {
+type RouterOptions = Partial<RouterContext> & {
   history?: RouterHistory;
   nonce?: string;
 };
