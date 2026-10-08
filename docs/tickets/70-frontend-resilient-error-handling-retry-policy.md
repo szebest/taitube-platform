@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#70](https://github.com/szebest/taitube-platform/issues/70) |
 | Size | M |
-| Blocked by | 53 - Frontend architecture modernization · 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases |
+| Blocked by | 53 - Frontend architecture modernization · 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
 | Blocks | — |
 | Spec | [SDD ADR-18 Error taxonomy](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) · [PRD §1 Summary](../PRD.md#1-summary) |
 
@@ -39,7 +39,7 @@
 Presentation of failures on the TanStack Start app from [89](89-web-tanstack-start-foundation.md). The taxonomy,
 `RETRY_CLASS` and the copy are imports (see the notes above).
 
-1. **Retry policy in `apps/web/src/integrations/query/`.** The `QueryClient` factory's default `retry` reads
+1. **Retry policy in the `QueryClient` factory in `@vp/queries`** (both apps use it since [93](93-creator-studio-separate-app.md)). The `QueryClient` factory's default `retry` reads
    the failure's `RETRY_CLASS` from `@vp/errors`: permanent never retries, transient retries up to 3 times
    with exponential backoff and jitter, rate limited waits for `Retry-After`. Mutations default to
    `retry: false`. Offline pauses retries (the Query `onlineManager`).

@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#48](https://github.com/szebest/taitube-platform/issues/48) |
 | Size | L |
-| Blocked by | 01 — Repo skeleton |
+| Blocked by | 01 — Repo skeleton · 92 — Apps grouped by tier · 93 — Creator Studio as its own app |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-20 Monorepo topology](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
 
-**Status:** ready
+**Status:** blocked
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -49,9 +49,11 @@ This ticket delivers a **Comprehensive Monorepo Rebrand & Namespace Unification*
      - `@vp/testing` &rarr; `@taitube/testing`
      - `@vp/tsconfig` &rarr; `@taitube/tsconfig`
    - **All Deployable Applications:**
-     - `apps/api` &rarr; package name `@taitube/api`
-     - `apps/worker` &rarr; package name `@taitube/worker`
-     - `apps/web` &rarr; package name `@taitube/web`
+     - `apps/server/api` &rarr; package name `@taitube/api`
+     - `apps/server/worker` &rarr; package name `@taitube/worker`
+     - `apps/client/web` &rarr; package name `@taitube/web`
+     - `apps/client/studio` &rarr; package name `@taitube/studio` (from [93](93-creator-studio-separate-app.md), with the client packages it adds)
+     - Paths are [92](92-apps-grouped-by-tier.md)'s `apps/server/*` and `apps/client/*`; a rename this wide waits for that move and for 93's new packages, so they never conflict.
    - **Root Workspace:**
      - Monorepo root `package.json` named `"taitube"`.
      - `tsconfig.base.json` path mappings updated from `@vp/*` to `@taitube/*`.
@@ -113,7 +115,7 @@ This ticket delivers a **Comprehensive Monorepo Rebrand & Namespace Unification*
 
 ## Notes for the implementer
 
-- **Systematic Search & Replace:** Execute replacements package by package. Start with `@vp/tsconfig` and `@vp/config`, then `@vp/core`, `@vp/adapters`, and outward to `apps/api` and `apps/worker`.
+- **Systematic Search & Replace:** Execute replacements package by package. Start with `@vp/tsconfig` and `@vp/config`, then `@vp/core`, `@vp/adapters`, and outward to `apps/server/api` and `apps/server/worker`.
 - **Git Rename Preservation:** Git history is preserved automatically because file paths inside packages remain identical; only `package.json` names, `tsconfig` paths, and imports are updated.
 - **Backward-Compatible Env Aliases:** In `packages/config`, maintain fallback support for legacy `VP_*` environment variables so existing `.env` files continue to function seamlessly.
 

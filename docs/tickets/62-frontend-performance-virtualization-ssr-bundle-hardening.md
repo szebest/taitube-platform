@@ -18,7 +18,7 @@ component-level splitting are [66](66-advanced-code-splitting-dynamic-chunking-l
 
 ## What to build
 
-1. **Legacy removal.** Delete whatever is left of `apps/web/src/modules/`, the legacy providers and root
+1. **Legacy removal.** Delete whatever is left of `apps/client/web/src/modules/`, the legacy providers and root
    layout pieces, their SCSS, and the dependencies nothing imports any more: `bootstrap`, `react-bootstrap`,
    `sass`, `react-player`. A zero-matches row keeps them out.
 2. **List virtualization.** `@tanstack/react-virtual` on the feed grid (window scroller), the comment thread
@@ -32,8 +32,8 @@ component-level splitting are [66](66-advanced-code-splitting-dynamic-chunking-l
 
 ## Acceptance criteria
 
-- [ ] `apps/web/src/modules/` is gone; `bootstrap`, `react-bootstrap`, `sass` and `react-player` are out of
-      `apps/web/package.json`, and a zero-matches row fails on any of them.
+- [ ] `apps/client/web/src/modules/` is gone; `bootstrap`, `react-bootstrap`, `sass` and `react-player` are out of
+      `apps/client/web/package.json`, and a zero-matches row fails on any of them.
 - [ ] Feed, comments and search results render a bounded number of rows however many items are loaded (a
       spec with 2,000 items asserts the mounted row count stays under 50).
 - [ ] Scrolling to the end of a virtualized list still fetches the next page.
@@ -45,5 +45,5 @@ component-level splitting are [66](66-advanced-code-splitting-dynamic-chunking-l
 ## Definition of Done
 
 - [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint`, `pnpm test:architecture` green.
-- [ ] `apps/web/AGENTS.md` no longer mentions the legacy stack.
+- [ ] `apps/client/web/AGENTS.md` no longer mentions the legacy stack.
 - [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

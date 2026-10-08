@@ -21,7 +21,7 @@
 
 ## What to build
 
-Route `apps/web/src/routes/search.tsx`, feature code in `apps/web/src/features/search/`, backend
+Route `apps/client/web/src/routes/search.tsx`, feature code in `apps/client/web/src/features/search/`, backend
 [47](47-multi-resource-search-engine.md).
 
 ### 1. Results `/search`

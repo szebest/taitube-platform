@@ -23,7 +23,7 @@
 
 ## What to build
 
-Route file `apps/web/src/routes/watch.$videoId.tsx`, feature code in `apps/web/src/features/watch/`, the player
+Route file `apps/client/web/src/routes/watch.$videoId.tsx`, feature code in `apps/client/web/src/features/watch/`, the player
 from [57](57-production-video-player-hls-streaming-controls.md).
 
 ### 1. Route and data

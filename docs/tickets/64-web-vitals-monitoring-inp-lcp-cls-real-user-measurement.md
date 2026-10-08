@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#64](https://github.com/szebest/taitube-platform/issues/64) |
 | Size | M |
-| Blocked by | 89 - TanStack Start foundation · 91 - Web import aliases |
+| Blocked by | 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
 | Blocks | 65 |
 | Spec | [SDD §13 Observability](../SDD.md#13-autoscaling--observability) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** blocked
 
 Measurement only. The optimisations (poster preload, `fetchpriority`, aspect-ratio
 placeholders, `startTransition`) belong to the page tickets that render those elements and to
@@ -17,10 +17,11 @@ placeholders, `startTransition`) belong to the page tickets that render those el
 
 ## What to build
 
-1. **RUM beacon.** `web-vitals` (`onLCP`, `onINP`, `onCLS`, `onFCP`, `onTTFB`) in `apps/web/src/features/telemetry/`,
-   started from the root route on the client only, batched and sent with `navigator.sendBeacon` (or
+1. **RUM beacon.** `web-vitals` (`onLCP`, `onINP`, `onCLS`, `onFCP`, `onTTFB`) in a client-tier package both apps
+   mount (`apps/client/web` and the studio from [93](93-creator-studio-separate-app.md), tagged with the app),
+   started from each root route on the client only, batched and sent with `navigator.sendBeacon` (or
    `fetch` with `keepalive`) to `POST /v1/telemetry/vitals`, tagged with the route id rather than the URL.
-2. **Vitals endpoint.** `POST /v1/telemetry/vitals` in `apps/api`, contract in `@vp/api-contracts`, exporting
+2. **Vitals endpoint.** `POST /v1/telemetry/vitals` in `apps/server/api`, contract in `@vp/api-contracts`, exporting
    histograms to Prometheus (`frontend_lcp_seconds`, `frontend_inp_seconds`, `frontend_cls_ratio`,
    `frontend_ttfb_seconds`) by route, plus a Grafana panel row.
 3. **Web traces.** `@opentelemetry/sdk-trace-web` with fetch instrumentation propagating `traceparent`, so a

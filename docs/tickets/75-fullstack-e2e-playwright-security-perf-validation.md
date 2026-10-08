@@ -6,7 +6,7 @@
 | Issue | [#75](https://github.com/szebest/taitube-platform/issues/75) |
 | Size | L |
 | Blocked by | 89 - TanStack Start foundation |
-| Blocks | 57 |
+| Blocks | 57, 92, 93 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
 **Status:** ready
