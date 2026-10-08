@@ -347,10 +347,16 @@ Authority: [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and
 ## 6. Verification & Enforcement
 
 The invariants in section 5 are held by the assertions in `tests/architecture/`, run by
-`pnpm test:architecture` (no build; about 3 s locally, held to 6 s in CI by `.github/actions/budget`) and
+`pnpm test:architecture` (no build; about 3-4 s locally, held to 8 s in CI by `.github/actions/budget`) and
 inside `pnpm test`. CI runs it once, in `lint-typecheck` ahead of lint and typecheck; `pnpm test:unit` leaves
 it out. What the suite does not hold is listed under the table: a rule a human has to remember to check is a
 rule that has already drifted, so a gap is named rather than left looking enforced.
+
+The budget is set from the runners, not from a laptop. CI runs at two speeds: over 72 runs
+from 25 September to 8 October the fast ones took 3.3-4.2 s and the slow ones, most runs, 4.4-6.7 s (median
+5.1 s, p95 5.9 s). At 6 s that failed 3 of the 72 for no change of their own. 8 s is about a third over the
+slow p95 and 1.3 s over the worst run seen, so the runner alone does not fail a PR, while a change that adds
+2-3 s still fails on a slow one. Raise it only from a fresh sample of CI timings, never from one red run.
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
