@@ -52,7 +52,9 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
    the `api-bundle`, `worker-bundle` and `web-bundle` stages as build contexts.
 4. **No fixed container names.** Compose derives them from the project (`video-pipeline-api-1`), so a
    second stack under another project name (`COMPOSE_PROJECT_NAME`, `-p`) never collides with this one.
-   Scripts find a container through its service: `docker compose -f infra/compose/docker-compose.yml ps -q api`.
+   Scripts find a container through its compose labels, which need no profile enabled:
+   `docker ps -q --filter label=com.docker.compose.project=video-pipeline --filter label=com.docker.compose.service=api`
+   (`docker compose ps -q api` refuses while `migrate`'s profile is off).
 5. **Clean Volume Mounts:**
    - Named volumes (`pgdata`, `redisdata`, `miniodata`) hold local state outside the checkout.
    - Workers get a `/tmp/vp` tmpfs.

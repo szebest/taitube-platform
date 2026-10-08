@@ -316,6 +316,7 @@ jobs:
 
       - name: Run the E2E smoke and, beside it, upload and play back through the web container in Chrome
         run: |
+          set -o pipefail
           API_URL=http://127.0.0.1:3000 make smoke 2>&1 | sed -u 's/^/[smoke] /' &
           pnpm test:browser 2>&1 | sed -u 's/^/[browser] /'
           wait $!

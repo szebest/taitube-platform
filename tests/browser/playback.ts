@@ -10,6 +10,7 @@ const { values } = parseArgs({
     web: { type: 'string', default: 'http://localhost:5173' },
     api: { type: 'string', default: 'http://localhost:3000' },
     'host-rules': { type: 'string', default: 'MAP minio 127.0.0.1' },
+    project: { type: 'string', default: 'video-pipeline' },
     'timeout-sec': { type: 'string', default: '180' },
   },
 });
@@ -51,12 +52,12 @@ function docker(...args: string[]): string {
 
 function forward(port: number, service: string): Server {
   const container = docker(
-    'compose',
-    '-f',
-    'infra/compose/docker-compose.yml',
     'ps',
     '-q',
-    service
+    '--filter',
+    `label=com.docker.compose.project=${values.project}`,
+    '--filter',
+    `label=com.docker.compose.service=${service}`
   );
   const host = docker(
     'inspect',
