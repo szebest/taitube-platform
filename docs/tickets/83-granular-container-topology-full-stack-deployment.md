@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §12.1 Rung 1 Compose](../SDD.md#121-rung-1--docker-compose-local-dev-phase-02) · [SDD §12.2 Rung 2 Kubernetes](../SDD.md#122-rung-2--kubernetes-locally-kind-or-k3d-phase-3) · [SDD §12.3 Rung 3 Cloud](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -173,33 +173,68 @@ This lands here because the shim sits in the entrypoint this ticket is rewriting
 
 ## Acceptance criteria
 
-- [ ] `apps/web` has a Dockerfile, a compose service, a k8s manifest and an ingress route; `vp-web` is built
-      multi-arch in CI and Trivy-scanned.
-- [ ] The web container runs as non-root with a read-only root filesystem and contains no build toolchain.
-- [ ] `make up <app>` starts that app and only the infrastructure it needs, for `api`, `web`, `worker` and a
-      single worker stage; `make up` alone still starts infrastructure only.
-- [ ] Each service's dependencies are declared in exactly one place, read by both the Make target and the
-      orchestrator — no second hand-maintained list.
-- [ ] One orchestrated entrypoint brings the full stack up in dependency order, gates on container health
+- [x] `apps/web` has a Dockerfile, a compose service, a k8s manifest and an ingress route; `vp-web` is built
+      multi-arch in CI and Trivy-scanned. **The `web` target of the root `Dockerfile`, the `web` compose
+      service, `infra/k8s/base/web.yaml` and the Ingress catch-all `/`; `images.yml` builds and scans it (the
+      dispatched run passed its Trivy gate).**
+- [x] The web container runs as non-root with a read-only root filesystem and contains no build toolchain.
+      **uid 10001, `read_only: true` in compose and `readOnlyRootFilesystem` in k8s; `/app` is `dist/` and
+      `node_modules/srvx` (9 MB), and npm, npx, corepack and yarn are removed from the runtime.**
+- [x] `make up <app>` starts that app and only the infrastructure it needs, for `api`, `web`, `worker` and a
+      single worker stage; `make up` alone still starts infrastructure only. **`topology.test.ts` per target;
+      local run of `make up web` and `make up worker`.**
+- [x] Each service's dependencies are declared in exactly one place, read by both the Make target and the
+      orchestrator - no second hand-maintained list. **`depends_on`, read from `docker compose config`.**
+- [x] One orchestrated entrypoint brings the full stack up in dependency order, gates on container health
       checks rather than sleeps, prints a service/URL table on success, and on failure names the failing
-      service and shows its logs.
-- [ ] `make down` and `make status` are served by the same entrypoint; the old
-      `up` → `build-images` → `up-all` → `obs-up` chain is gone, not wrapped.
-- [ ] The three app images share one base stage; buildx caching is keyed so it hits; image sizes and
+      service and shows its logs. **`pnpm stack` (`packages/server/stack`); a broken migrate printed
+      `migrate failed: exited (3)` and its log.**
+- [x] `make down` and `make status` are served by the same entrypoint; the old
+      `up` -> `build-images` -> `up-all` -> `obs-up` chain is gone, not wrapped.
+- [x] The three app images share one base stage; buildx caching is keyed so it hits; image sizes and
       cold/warm build times are recorded in the PR and no worse than today's for `api`/`worker`.
-- [ ] A frontend-only change does not invalidate the API or worker image layers — demonstrated.
-- [ ] `make smoke-offline` covers `apps/web`; the web container serves with zero external egress.
-- [ ] A browser-driven check uploads, waits for `READY` and plays back through the deployed web container.
-- [ ] `apps/api` and `apps/worker` ship an esbuild bundle per entrypoint; the images contain no workspace
+- [x] A frontend-only change does not invalidate the API or worker image layers - demonstrated. **A line
+      appended to `apps/web/src/router.tsx` re-runs `pruner` only; `deps`, `build-api`, `api-bundle` and
+      `api` are CACHED (4 s), the worker likewise (3 s).**
+- [x] `make smoke-offline` covers `apps/web`; the web container serves with zero external egress.
+      **`scripts/assert-no-egress.sh` checks api and web; CI `e2e-smoke` runs it.**
+- [x] A browser-driven check uploads, waits for `READY` and plays back through the deployed web container.
+      **`pnpm test:browser` (`tests/browser/playback.ts`), in CI `e2e-smoke` beside the API smoke.**
+- [x] `apps/api` and `apps/worker` ship an esbuild bundle per entrypoint; the images contain no workspace
       package `dist/` tree and boot with no `--import` loader.
-- [ ] `register.js` is deleted and nothing registers a resolve hook; `grep -rn "registerHooks\|register(" packages/server/config`
+- [x] `register.js` is deleted and nothing registers a resolve hook; `grep -rn "registerHooks\|register(" packages/server/config`
       returns nothing.
-- [ ] No relative import in any tier gains an extension in this ticket, and `esm-specifiers.test.ts` is not
+- [x] No relative import in any tier gains an extension in this ticket, and `esm-specifiers.test.ts` is not
       widened.
-- [ ] `make smoke-offline` passes from the bundled images; migrate runs from `dist/migrate.js` in the Job.
-- [ ] **Docs:** SDD §12.1/§12.2 updated with the `web` service and the profile map; `README.md` quick-start
+- [x] `make smoke-offline` passes from the bundled images; migrate runs from `dist/migrate.js` in the Job.
+      **CI `e2e-smoke` is the same sequence on the offline overlay.**
+- [x] **Docs:** SDD §12.1/§12.2 updated with the `web` service and the profile map; `README.md` quick-start
       updated to the new entrypoint; `Makefile` help text accurate; `docs/LOCAL_FIRST.md` covers the frontend.
-- [ ] `python3 docs/tickets/gen-index.py` re-run.
+- [x] `python3 docs/tickets/gen-index.py` re-run.
+
+## Open questions
+
+- **Decided:** one root `Dockerfile` with `api`, `worker` and `web` targets, not three per-app files. A
+  shared `deps` stage needs one file; each app still builds from its own `turbo prune` output.
+- **Decided:** the dependency map is compose's own `depends_on`. App services get a profile each
+  (`migrate`, `api`, `web`, `worker`), the infrastructure none, and `pnpm stack` enables the profiles of
+  the dependency closure it starts.
+- **Decided:** `SSR_API_BASE_URL`, not a `VITE_` name: it is read by the SSR server when it starts, and a
+  `VITE_` key is inlined by Vite into both bundles at build time. It is parsed by the web's own schema in
+  `apps/web/src/config` behind `import.meta.env.SSR`, declared in `platform-env.json` (the API and the
+  worker never read it), and `vite/bundle-guard.ts` fails a client chunk that reads `process.env`.
+- **Decided:** no fixed `container_name` in compose. Names derive from the project, so a second stack under
+  another project name cannot collide with or remove this one; scripts find a container by its compose
+  labels.
+- **Decided:** the browser check uses `playwright-core` against the runner's own Chrome (no browser
+  download). It presses play itself, because the legacy player pauses on hls.js's opening seek.
+- **Decided:** every image carries an explicit current tag, no `:latest`: Postgres 16 -> 18 and Redis 7 -> 8
+  in compose and k8s (a Postgres 16 data directory needs `make down` or `pg_upgrade`; 18 mounts at
+  `/var/lib/postgresql`), the observability images pinned to the versions `:latest` resolved to (Tempo to
+  3.1.0, checked against `tempo.yml`), and the Helm charts pinned in `make k3d-up`. Node stays on 24: Node 26
+  moves in its own PR with Vitest 5.
+- Left for a security chore: `images.yml` fails its Trivy gate on `main` and here alike (fastify 5.12.1,
+  @grpc/grpc-js 1.14.4, brace-expansion 2.1.4 and 5.0.9); the fix is lockfile bumps.
 
 ---
 
