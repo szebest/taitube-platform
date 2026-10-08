@@ -398,11 +398,13 @@ paths:
                   strategy:
                     type: string
                   partSizeBytes:
-                    type: number
-                    nullable: true
+                    type:
+                      - number
+                      - 'null'
                   partsExpected:
-                    type: number
-                    nullable: true
+                    type:
+                      - number
+                      - 'null'
                   uploadedParts:
                     type: array
                     items:
@@ -644,7 +646,6 @@ paths:
               schema:
                 enum:
                   - 'null'
-                nullable: true
                 description: Upload successfully aborted
         '400':
           description: Problem Details (RFC 9457)
@@ -1468,12 +1469,14 @@ paths:
                           format: uuid
                           description: Owning user UUID, for client-side ownership rules
                         title:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Video title
                         description:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Video description
                         visibility:
                           type: string
@@ -1519,9 +1522,10 @@ paths:
                           minimum: 0
                           description: Total dislike reactions count
                         categoryId:
-                          type: string
+                          type:
+                            - string
+                            - 'null'
                           format: uuid
-                          nullable: true
                           description: Category UUID identifier
                         version:
                           type: integer
@@ -1549,8 +1553,9 @@ paths:
                       additionalProperties: false
                     description: Page of video summary items
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Opaque base64url keyset pagination cursor for next page
                 required:
                   - items
@@ -1667,12 +1672,14 @@ paths:
                     format: uuid
                     description: Owning user UUID, for client-side ownership rules
                   title:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video title
                   description:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video description
                   visibility:
                     type: string
@@ -1788,9 +1795,10 @@ paths:
                     type: string
                     description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                   categoryId:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     format: uuid
-                    nullable: true
                     description: Category UUID identifier
                   tags:
                     type: array
@@ -2025,12 +2033,14 @@ paths:
                     format: uuid
                     description: Owning user UUID, for client-side ownership rules
                   title:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video title
                   description:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video description
                   visibility:
                     type: string
@@ -2146,9 +2156,10 @@ paths:
                     type: string
                     description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                   categoryId:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     format: uuid
-                    nullable: true
                     description: Category UUID identifier
                   tags:
                     type: array
@@ -2649,14 +2660,15 @@ paths:
             schema:
               anyOf:
                 - not: {}
-                - type: object
+                - type:
+                    - object
+                    - 'null'
                   properties:
                     renditions:
                       type: array
                       items:
                         type: string
                   additionalProperties: false
-                  nullable: true
       parameters:
         - schema:
             type: string
@@ -3009,11 +3021,12 @@ paths:
                     format: uuid
                     description: Video UUID identifier
                   reaction:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     enum:
                       - LIKE
                       - DISLIKE
-                    nullable: true
                     description: 'User reaction state: LIKE, DISLIKE, or null'
                   likesCount:
                     type: integer
@@ -3215,11 +3228,12 @@ paths:
                     format: uuid
                     description: Video UUID identifier
                   reaction:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     enum:
                       - LIKE
                       - DISLIKE
-                    nullable: true
                     description: 'Authenticated user reaction: LIKE, DISLIKE, or null'
                 required:
                   - videoId
@@ -3486,10 +3500,11 @@ paths:
                     minimum: 0
                     description: Range views divided by the days in it
                   averageRetention:
-                    type: number
+                    type:
+                      - number
+                      - 'null'
                     minimum: 0
                     maximum: 1
-                    nullable: true
                     description: Share of the video the average view in the range watched; null with no views
                   range:
                     type: string
@@ -4023,12 +4038,14 @@ paths:
                           format: uuid
                           description: Owning user UUID, for client-side ownership rules
                         title:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Video title
                         description:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Video description
                         visibility:
                           type: string
@@ -4074,9 +4091,10 @@ paths:
                           minimum: 0
                           description: Total dislike reactions count
                         categoryId:
-                          type: string
+                          type:
+                            - string
+                            - 'null'
                           format: uuid
-                          nullable: true
                           description: Category UUID identifier
                         version:
                           type: integer
@@ -4115,8 +4133,9 @@ paths:
                       additionalProperties: false
                     description: Page of the caller videos
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Opaque cursor for the next page of the same sort
                 required:
                   - items
@@ -4232,9 +4251,10 @@ paths:
                     - public
                   description: Access visibility level
                 categoryId:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
                   format: uuid
-                  nullable: true
                   description: Active category, null for none
                 tags:
                   type: array
@@ -4284,12 +4304,14 @@ paths:
                     format: uuid
                     description: Owning user UUID, for client-side ownership rules
                   title:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video title
                   description:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video description
                   visibility:
                     type: string
@@ -4405,9 +4427,10 @@ paths:
                     type: string
                     description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                   categoryId:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     format: uuid
-                    nullable: true
                     description: Category UUID identifier
                   tags:
                     type: array
@@ -5010,9 +5033,10 @@ paths:
                           type: string
                           format: uuid
                         parentId:
-                          type: string
+                          type:
+                            - string
+                            - 'null'
                           format: uuid
-                          nullable: true
                           description: The root comment of a reply, null for a root
                         content:
                           type: string
@@ -5033,19 +5057,23 @@ paths:
                               type: string
                               format: uuid
                             channelId:
-                              type: string
+                              type:
+                                - string
+                                - 'null'
                               format: uuid
-                              nullable: true
                               description: Null for an author without a channel
                             handle:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                             displayName:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                             avatarUrl:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                             isCreator:
                               type: boolean
                               description: The author owns the video, shown as a creator badge
@@ -5077,8 +5105,9 @@ paths:
                         - updatedAt
                       additionalProperties: false
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                   total:
                     type: integer
                     minimum: 0
@@ -5253,9 +5282,10 @@ paths:
                     type: string
                     format: uuid
                   parentId:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     format: uuid
-                    nullable: true
                     description: The root comment of a reply, null for a root
                   content:
                     type: string
@@ -5276,19 +5306,23 @@ paths:
                         type: string
                         format: uuid
                       channelId:
-                        type: string
+                        type:
+                          - string
+                          - 'null'
                         format: uuid
-                        nullable: true
                         description: Null for an author without a channel
                       handle:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       displayName:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       isCreator:
                         type: boolean
                         description: The author owns the video, shown as a creator badge
@@ -5569,9 +5603,10 @@ paths:
                           type: string
                           format: uuid
                         parentId:
-                          type: string
+                          type:
+                            - string
+                            - 'null'
                           format: uuid
-                          nullable: true
                           description: The root comment of a reply, null for a root
                         content:
                           type: string
@@ -5592,19 +5627,23 @@ paths:
                               type: string
                               format: uuid
                             channelId:
-                              type: string
+                              type:
+                                - string
+                                - 'null'
                               format: uuid
-                              nullable: true
                               description: Null for an author without a channel
                             handle:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                             displayName:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                             avatarUrl:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                             isCreator:
                               type: boolean
                               description: The author owns the video, shown as a creator badge
@@ -5636,8 +5675,9 @@ paths:
                         - updatedAt
                       additionalProperties: false
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                 required:
                   - items
                   - nextCursor
@@ -5804,9 +5844,10 @@ paths:
                     type: string
                     format: uuid
                   parentId:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     format: uuid
-                    nullable: true
                     description: The root comment of a reply, null for a root
                   content:
                     type: string
@@ -5827,19 +5868,23 @@ paths:
                         type: string
                         format: uuid
                       channelId:
-                        type: string
+                        type:
+                          - string
+                          - 'null'
                         format: uuid
-                        nullable: true
                         description: Null for an author without a channel
                       handle:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       displayName:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       isCreator:
                         type: boolean
                         description: The author owns the video, shown as a creator badge
@@ -6090,7 +6135,6 @@ paths:
               schema:
                 enum:
                   - 'null'
-                nullable: true
                 description: Comment deleted
         '400':
           description: Problem Details (RFC 9457)
@@ -6280,9 +6324,10 @@ paths:
                     type: string
                     format: uuid
                   parentId:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     format: uuid
-                    nullable: true
                     description: The root comment of a reply, null for a root
                   content:
                     type: string
@@ -6303,19 +6348,23 @@ paths:
                         type: string
                         format: uuid
                       channelId:
-                        type: string
+                        type:
+                          - string
+                          - 'null'
                         format: uuid
-                        nullable: true
                         description: Null for an author without a channel
                       handle:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       displayName:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       isCreator:
                         type: boolean
                         description: The author owns the video, shown as a creator badge
@@ -6573,9 +6622,10 @@ paths:
                     type: string
                     format: uuid
                   parentId:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     format: uuid
-                    nullable: true
                     description: The root comment of a reply, null for a root
                   content:
                     type: string
@@ -6596,19 +6646,23 @@ paths:
                         type: string
                         format: uuid
                       channelId:
-                        type: string
+                        type:
+                          - string
+                          - 'null'
                         format: uuid
-                        nullable: true
                         description: Null for an author without a channel
                       handle:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       displayName:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       isCreator:
                         type: boolean
                         description: The author owns the video, shown as a creator badge
@@ -6902,12 +6956,14 @@ paths:
                           format: uuid
                           description: Owning user UUID, for client-side ownership rules
                         title:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Video title
                         description:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Video description
                         visibility:
                           type: string
@@ -6953,9 +7009,10 @@ paths:
                           minimum: 0
                           description: Total dislike reactions count
                         categoryId:
-                          type: string
+                          type:
+                            - string
+                            - 'null'
                           format: uuid
-                          nullable: true
                           description: Category UUID identifier
                         version:
                           type: integer
@@ -6983,8 +7040,9 @@ paths:
                       additionalProperties: false
                     description: Page of public video summary items
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Opaque base64url keyset pagination cursor for next page
                   total:
                     type: integer
@@ -7070,12 +7128,14 @@ paths:
                       type: string
                       description: Category display name
                     description:
-                      type: string
-                      nullable: true
+                      type:
+                        - string
+                        - 'null'
                       description: Optional category description
                     iconUrl:
-                      type: string
-                      nullable: true
+                      type:
+                        - string
+                        - 'null'
                       description: Optional category icon URL
                     sortOrder:
                       type: integer
@@ -7129,7 +7189,9 @@ paths:
                 type: object
                 properties:
                   user:
-                    type: object
+                    type:
+                      - object
+                      - 'null'
                     properties:
                       id:
                         type: string
@@ -7142,14 +7204,17 @@ paths:
                       displayName:
                         type: string
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       bannerUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       bio:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       subscriberCount:
                         type: integer
                       createdAt:
@@ -7168,7 +7233,6 @@ paths:
                       - createdAt
                       - updatedAt
                     additionalProperties: false
-                    nullable: true
                     description: The caller channel, or null for a guest
                   categories:
                     type: array
@@ -7186,12 +7250,14 @@ paths:
                           type: string
                           description: Category display name
                         description:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Optional category description
                         iconUrl:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Optional category icon URL
                         sortOrder:
                           type: integer
@@ -7337,14 +7403,16 @@ paths:
                   maxLength: 100
                   description: URL-friendly unique slug
                 description:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
                   maxLength: 500
-                  nullable: true
                   description: Optional category description
                 iconUrl:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
                   maxLength: 2000
-                  nullable: true
                   description: Optional icon URL
                 sortOrder:
                   type: integer
@@ -7377,12 +7445,14 @@ paths:
                     type: string
                     description: Category display name
                   description:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Optional category description
                   iconUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Optional category icon URL
                   sortOrder:
                     type: integer
@@ -7597,14 +7667,16 @@ paths:
                   maxLength: 100
                   description: URL-friendly unique slug
                 description:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
                   maxLength: 500
-                  nullable: true
                   description: Optional category description
                 iconUrl:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
                   maxLength: 2000
-                  nullable: true
                   description: Optional icon URL
                 sortOrder:
                   type: integer
@@ -7640,12 +7712,14 @@ paths:
                     type: string
                     description: Category display name
                   description:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Optional category description
                   iconUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Optional category icon URL
                   sortOrder:
                     type: integer
@@ -8087,12 +8161,14 @@ paths:
                     format: uuid
                     description: Owning user UUID, for client-side ownership rules
                   title:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video title
                   description:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video description
                   visibility:
                     type: string
@@ -8208,9 +8284,10 @@ paths:
                     type: string
                     description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                   categoryId:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     format: uuid
-                    nullable: true
                     description: Category UUID identifier
                   tags:
                     type: array
@@ -8429,12 +8506,14 @@ paths:
                     format: uuid
                     description: Owning user UUID, for client-side ownership rules
                   title:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video title
                   description:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Video description
                   visibility:
                     type: string
@@ -8550,9 +8629,10 @@ paths:
                     type: string
                     description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                   categoryId:
-                    type: string
+                    type:
+                      - string
+                      - 'null'
                     format: uuid
-                    nullable: true
                     description: Category UUID identifier
                   tags:
                     type: array
@@ -8868,14 +8948,17 @@ paths:
                       displayName:
                         type: string
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       bannerUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       bio:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                       subscriberCount:
                         type: integer
                       createdAt:
@@ -9002,17 +9085,20 @@ paths:
                 handle:
                   type: string
                 avatarUrl:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
                   format: uri
-                  nullable: true
                 bannerUrl:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
                   format: uri
-                  nullable: true
                 bio:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
                   maxLength: 1000
-                  nullable: true
               additionalProperties: false
       security:
         - bearerAuth: []
@@ -9035,14 +9121,17 @@ paths:
                   displayName:
                     type: string
                   avatarUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                   bannerUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                   bio:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                   subscriberCount:
                     type: integer
                   createdAt:
@@ -9280,15 +9369,18 @@ paths:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
                   thumbnailUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: The custom thumbnail, else the first video poster
                   videoCount:
                     type: integer
                     minimum: 0
                     description: Videos this viewer may watch
                   owner:
-                    type: object
+                    type:
+                      - object
+                      - 'null'
                     properties:
                       id:
                         type: string
@@ -9298,8 +9390,9 @@ paths:
                       displayName:
                         type: string
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                     required:
                       - id
                       - handle
@@ -9307,7 +9400,6 @@ paths:
                       - avatarUrl
                     additionalProperties: false
                     description: The channel that owns the resource, null for a user without one
-                    nullable: true
                   items:
                     type: array
                     items:
@@ -9339,12 +9431,14 @@ paths:
                               format: uuid
                               description: Owning user UUID, for client-side ownership rules
                             title:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video title
                             description:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video description
                             visibility:
                               type: string
@@ -9390,9 +9484,10 @@ paths:
                               minimum: 0
                               description: Total dislike reactions count
                             categoryId:
-                              type: string
+                              type:
+                                - string
+                                - 'null'
                               format: uuid
-                              nullable: true
                               description: Category UUID identifier
                             version:
                               type: integer
@@ -9419,7 +9514,9 @@ paths:
                             - updatedAt
                           additionalProperties: false
                         channel:
-                          type: object
+                          type:
+                            - object
+                            - 'null'
                           properties:
                             id:
                               type: string
@@ -9429,8 +9526,9 @@ paths:
                             displayName:
                               type: string
                             avatarUrl:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                           required:
                             - id
                             - handle
@@ -9438,7 +9536,6 @@ paths:
                             - avatarUrl
                           additionalProperties: false
                           description: The channel that owns the resource, null for a user without one
-                          nullable: true
                       required:
                         - id
                         - videoId
@@ -9630,15 +9727,18 @@ paths:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
                   thumbnailUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: The custom thumbnail, else the first video poster
                   videoCount:
                     type: integer
                     minimum: 0
                     description: Videos this viewer may watch
                   owner:
-                    type: object
+                    type:
+                      - object
+                      - 'null'
                     properties:
                       id:
                         type: string
@@ -9648,8 +9748,9 @@ paths:
                       displayName:
                         type: string
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                     required:
                       - id
                       - handle
@@ -9657,7 +9758,6 @@ paths:
                       - avatarUrl
                     additionalProperties: false
                     description: The channel that owns the resource, null for a user without one
-                    nullable: true
                   items:
                     type: array
                     items:
@@ -9689,12 +9789,14 @@ paths:
                               format: uuid
                               description: Owning user UUID, for client-side ownership rules
                             title:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video title
                             description:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video description
                             visibility:
                               type: string
@@ -9740,9 +9842,10 @@ paths:
                               minimum: 0
                               description: Total dislike reactions count
                             categoryId:
-                              type: string
+                              type:
+                                - string
+                                - 'null'
                               format: uuid
-                              nullable: true
                               description: Category UUID identifier
                             version:
                               type: integer
@@ -9769,7 +9872,9 @@ paths:
                             - updatedAt
                           additionalProperties: false
                         channel:
-                          type: object
+                          type:
+                            - object
+                            - 'null'
                           properties:
                             id:
                               type: string
@@ -9779,8 +9884,9 @@ paths:
                             displayName:
                               type: string
                             avatarUrl:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                           required:
                             - id
                             - handle
@@ -9788,7 +9894,6 @@ paths:
                             - avatarUrl
                           additionalProperties: false
                           description: The channel that owns the resource, null for a user without one
-                          nullable: true
                       required:
                         - id
                         - videoId
@@ -9999,15 +10104,18 @@ paths:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
                   thumbnailUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: The custom thumbnail, else the first video poster
                   videoCount:
                     type: integer
                     minimum: 0
                     description: Videos this viewer may watch
                   owner:
-                    type: object
+                    type:
+                      - object
+                      - 'null'
                     properties:
                       id:
                         type: string
@@ -10017,8 +10125,9 @@ paths:
                       displayName:
                         type: string
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                     required:
                       - id
                       - handle
@@ -10026,7 +10135,6 @@ paths:
                       - avatarUrl
                     additionalProperties: false
                     description: The channel that owns the resource, null for a user without one
-                    nullable: true
                   items:
                     type: array
                     items:
@@ -10058,12 +10166,14 @@ paths:
                               format: uuid
                               description: Owning user UUID, for client-side ownership rules
                             title:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video title
                             description:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video description
                             visibility:
                               type: string
@@ -10109,9 +10219,10 @@ paths:
                               minimum: 0
                               description: Total dislike reactions count
                             categoryId:
-                              type: string
+                              type:
+                                - string
+                                - 'null'
                               format: uuid
-                              nullable: true
                               description: Category UUID identifier
                             version:
                               type: integer
@@ -10138,7 +10249,9 @@ paths:
                             - updatedAt
                           additionalProperties: false
                         channel:
-                          type: object
+                          type:
+                            - object
+                            - 'null'
                           properties:
                             id:
                               type: string
@@ -10148,8 +10261,9 @@ paths:
                             displayName:
                               type: string
                             avatarUrl:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                           required:
                             - id
                             - handle
@@ -10157,7 +10271,6 @@ paths:
                             - avatarUrl
                           additionalProperties: false
                           description: The channel that owns the resource, null for a user without one
-                          nullable: true
                       required:
                         - id
                         - videoId
@@ -10407,7 +10520,6 @@ paths:
               schema:
                 enum:
                   - 'null'
-                nullable: true
                 description: Playlist deleted
         '400':
           description: Problem Details (RFC 9457)
@@ -10625,15 +10737,18 @@ paths:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
                   thumbnailUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: The custom thumbnail, else the first video poster
                   videoCount:
                     type: integer
                     minimum: 0
                     description: Videos this viewer may watch
                   owner:
-                    type: object
+                    type:
+                      - object
+                      - 'null'
                     properties:
                       id:
                         type: string
@@ -10643,8 +10758,9 @@ paths:
                       displayName:
                         type: string
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                     required:
                       - id
                       - handle
@@ -10652,7 +10768,6 @@ paths:
                       - avatarUrl
                     additionalProperties: false
                     description: The channel that owns the resource, null for a user without one
-                    nullable: true
                   items:
                     type: array
                     items:
@@ -10684,12 +10799,14 @@ paths:
                               format: uuid
                               description: Owning user UUID, for client-side ownership rules
                             title:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video title
                             description:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video description
                             visibility:
                               type: string
@@ -10735,9 +10852,10 @@ paths:
                               minimum: 0
                               description: Total dislike reactions count
                             categoryId:
-                              type: string
+                              type:
+                                - string
+                                - 'null'
                               format: uuid
-                              nullable: true
                               description: Category UUID identifier
                             version:
                               type: integer
@@ -10764,7 +10882,9 @@ paths:
                             - updatedAt
                           additionalProperties: false
                         channel:
-                          type: object
+                          type:
+                            - object
+                            - 'null'
                           properties:
                             id:
                               type: string
@@ -10774,8 +10894,9 @@ paths:
                             displayName:
                               type: string
                             avatarUrl:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                           required:
                             - id
                             - handle
@@ -10783,7 +10904,6 @@ paths:
                             - avatarUrl
                           additionalProperties: false
                           description: The channel that owns the resource, null for a user without one
-                          nullable: true
                       required:
                         - id
                         - videoId
@@ -11000,7 +11120,6 @@ paths:
               schema:
                 enum:
                   - 'null'
-                nullable: true
                 description: Video removed
         '400':
           description: Problem Details (RFC 9457)
@@ -11234,15 +11353,18 @@ paths:
                     type: boolean
                     description: 'Watch Later: cannot be renamed or deleted'
                   thumbnailUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: The custom thumbnail, else the first video poster
                   videoCount:
                     type: integer
                     minimum: 0
                     description: Videos this viewer may watch
                   owner:
-                    type: object
+                    type:
+                      - object
+                      - 'null'
                     properties:
                       id:
                         type: string
@@ -11252,8 +11374,9 @@ paths:
                       displayName:
                         type: string
                       avatarUrl:
-                        type: string
-                        nullable: true
+                        type:
+                          - string
+                          - 'null'
                     required:
                       - id
                       - handle
@@ -11261,7 +11384,6 @@ paths:
                       - avatarUrl
                     additionalProperties: false
                     description: The channel that owns the resource, null for a user without one
-                    nullable: true
                   items:
                     type: array
                     items:
@@ -11293,12 +11415,14 @@ paths:
                               format: uuid
                               description: Owning user UUID, for client-side ownership rules
                             title:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video title
                             description:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video description
                             visibility:
                               type: string
@@ -11344,9 +11468,10 @@ paths:
                               minimum: 0
                               description: Total dislike reactions count
                             categoryId:
-                              type: string
+                              type:
+                                - string
+                                - 'null'
                               format: uuid
-                              nullable: true
                               description: Category UUID identifier
                             version:
                               type: integer
@@ -11373,7 +11498,9 @@ paths:
                             - updatedAt
                           additionalProperties: false
                         channel:
-                          type: object
+                          type:
+                            - object
+                            - 'null'
                           properties:
                             id:
                               type: string
@@ -11383,8 +11510,9 @@ paths:
                             displayName:
                               type: string
                             avatarUrl:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                           required:
                             - id
                             - handle
@@ -11392,7 +11520,6 @@ paths:
                             - avatarUrl
                           additionalProperties: false
                           description: The channel that owns the resource, null for a user without one
-                          nullable: true
                       required:
                         - id
                         - videoId
@@ -12032,12 +12159,14 @@ paths:
                               format: uuid
                               description: Owning user UUID, for client-side ownership rules
                             title:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video title
                             description:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                               description: Video description
                             visibility:
                               type: string
@@ -12083,9 +12212,10 @@ paths:
                               minimum: 0
                               description: Total dislike reactions count
                             categoryId:
-                              type: string
+                              type:
+                                - string
+                                - 'null'
                               format: uuid
-                              nullable: true
                               description: Category UUID identifier
                             version:
                               type: integer
@@ -12112,7 +12242,9 @@ paths:
                             - updatedAt
                           additionalProperties: false
                         channel:
-                          type: object
+                          type:
+                            - object
+                            - 'null'
                           properties:
                             id:
                               type: string
@@ -12122,8 +12254,9 @@ paths:
                             displayName:
                               type: string
                             avatarUrl:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                           required:
                             - id
                             - handle
@@ -12131,7 +12264,6 @@ paths:
                             - avatarUrl
                           additionalProperties: false
                           description: The channel that owns the resource, null for a user without one
-                          nullable: true
                       required:
                         - videoId
                         - progressSeconds
@@ -12145,8 +12277,9 @@ paths:
                         - channel
                       additionalProperties: false
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                 required:
                   - items
                   - nextCursor
@@ -12245,7 +12378,6 @@ paths:
               schema:
                 enum:
                   - 'null'
-                nullable: true
                 description: History cleared
         '401':
           description: Problem Details (RFC 9457)
@@ -12309,7 +12441,9 @@ paths:
                 type: object
                 properties:
                   playhead:
-                    type: object
+                    type:
+                      - object
+                      - 'null'
                     properties:
                       videoId:
                         type: string
@@ -12344,7 +12478,6 @@ paths:
                       - resumeAtSeconds
                       - watchedAt
                     additionalProperties: false
-                    nullable: true
                 required:
                   - playhead
                 additionalProperties: false
@@ -12448,7 +12581,6 @@ paths:
               schema:
                 enum:
                   - 'null'
-                nullable: true
                 description: Entry removed
         '400':
           description: Problem Details (RFC 9457)
@@ -12563,14 +12695,17 @@ paths:
                   displayName:
                     type: string
                   avatarUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                   bannerUrl:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                   bio:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                   subscriberCount:
                     type: integer
                   createdAt:
@@ -13253,14 +13388,17 @@ paths:
                         displayName:
                           type: string
                         avatarUrl:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                         bannerUrl:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                         bio:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                         subscriberCount:
                           type: integer
                           minimum: 0
@@ -13278,8 +13416,9 @@ paths:
                         - subscribedAt
                       additionalProperties: false
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                 required:
                   - items
                   - nextCursor
@@ -13408,12 +13547,14 @@ paths:
                           format: uuid
                           description: Owning user UUID, for client-side ownership rules
                         title:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Video title
                         description:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                           description: Video description
                         visibility:
                           type: string
@@ -13459,9 +13600,10 @@ paths:
                           minimum: 0
                           description: Total dislike reactions count
                         categoryId:
-                          type: string
+                          type:
+                            - string
+                            - 'null'
                           format: uuid
-                          nullable: true
                           description: Category UUID identifier
                         version:
                           type: integer
@@ -13489,8 +13631,9 @@ paths:
                       additionalProperties: false
                     description: Page of public video summary items
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                     description: Opaque base64url keyset pagination cursor for next page
                   total:
                     type: integer
@@ -13928,23 +14071,28 @@ paths:
                         jobId:
                           type: string
                         videoId:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                         payload: {}
                         errorCode:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                         errorMessage:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                         stack:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                         attemptsMade:
                           type: number
                         workerId:
-                          type: string
-                          nullable: true
+                          type:
+                            - string
+                            - 'null'
                         status:
                           type: string
                         createdAt:
@@ -13957,7 +14105,6 @@ paths:
                             - type: string
                             - type: string
                               format: date-time
-                          nullable: true
                       required:
                         - id
                         - queue
@@ -13967,8 +14114,9 @@ paths:
                         - createdAt
                       additionalProperties: false
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                 required:
                   - items
                 additionalProperties: false
@@ -14065,7 +14213,9 @@ paths:
             schema:
               anyOf:
                 - not: {}
-                - type: object
+                - type:
+                    - object
+                    - 'null'
                   properties:
                     resetAttempts:
                       type: boolean
@@ -14074,7 +14224,6 @@ paths:
                       type: boolean
                       description: Force replay even if already processed
                   additionalProperties: false
-                  nullable: true
       parameters:
         - schema:
             type: string
@@ -14284,7 +14433,6 @@ paths:
               schema:
                 enum:
                   - 'null'
-                nullable: true
                 description: DLQ entry discarded
         '400':
           description: Problem Details (RFC 9457)

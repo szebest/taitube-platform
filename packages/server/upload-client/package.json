@@ -25,14 +25,14 @@
     "@vp/result": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.19.1",
     "@vp/adapters": "workspace:*",
     "@vp/api": "workspace:*",
     "@vp/dev-token": "workspace:*",
     "@vp/env-schema": "workspace:*",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
-    "fastify": "^5.2.1",
+    "fastify": "^5.12.5",
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
   },

@@ -49,10 +49,10 @@
   },
   "devDependencies": {
     "@cdktf/hcl2json": "^0.21.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.19.1",
     "@vp/tsconfig": "workspace:*",
-    "js-yaml": "^5.4.1",
-    "rimraf": "^6.0.1",
+    "js-yaml": "^5.4.3",
+    "rimraf": "^6.1.3",
     "typescript": "^5.7.3"
   },
   "vp": {

@@ -4,7 +4,11 @@ import { asCdnBase } from './cdn-base';
 
 type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 
-/** `cdn` is taken as a plain string and branded on the way in, so an override cannot skip it. */
+/**
+ * `cdn` is taken as a plain string and branded on the way in, so an override cannot skip it.
+ *
+ * @internal
+ */
 export type AppConfigOverrides = DeepPartial<Omit<AppConfig, 'cdn'>> & { cdn?: string };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -25,6 +29,8 @@ function merged<T>(base: T, overrides: unknown): T {
  * What an in-process app runs on: the in-memory family over the schema defaults, with any
  * overrides merged in `AppConfig`'s own shape. Port 0 lets the OS pick, so two in-process apps
  * never contend for the metrics port.
+ *
+ * @internal
  */
 export function inProcessAppConfig(overrides: AppConfigOverrides = {}): AppConfig {
   const { cdn, ...rest } = overrides;

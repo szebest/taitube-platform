@@ -7,6 +7,7 @@ import {
   getUserPermissions,
 } from '@vp/permissions';
 
+/** @internal */
 export class PermissiveAuthorizationAdapter extends AuthorizationPort {
   private readonly ability: AppAbility;
 
@@ -33,6 +34,7 @@ export class PermissiveAuthorizationAdapter extends AuthorizationPort {
   }
 }
 
+/** @internal */
 export class StrictAuthorizationAdapter extends AuthorizationPort {
   private readonly ability: AppAbility;
   private readonly user: UserContext | null;

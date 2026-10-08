@@ -13,8 +13,10 @@ export const TRENDING_GRAVITY = {
   exponent: 1.5,
 } as const;
 
+/** @internal */
 export const PUBLIC_FEED_INSTANT_GRANULARITY_MS = 60_000;
 
+/** @internal */
 export function publicFeedInstant(nowMs: number = Date.now()): number {
   return (
     Math.floor(nowMs / PUBLIC_FEED_INSTANT_GRANULARITY_MS) * PUBLIC_FEED_INSTANT_GRANULARITY_MS
