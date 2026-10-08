@@ -28,6 +28,10 @@ interface ErrorWithStatusCode {
   statusCode?: number;
 }
 
+interface SocketWithResponse {
+  _httpMessage?: { headersSent: boolean } | null;
+}
+
 /** The vocabulary's name for a Fastify 4xx; a status with none reads as a request that failed validation. */
 const TRANSPORT_CODES: ReadonlyMap<number, ErrorCode> = new Map([
   [401, ErrorCodes.UNAUTHORIZED],
@@ -35,7 +39,6 @@ const TRANSPORT_CODES: ReadonlyMap<number, ErrorCode> = new Map([
   [415, ErrorCodes.UNSUPPORTED_CONTENT_TYPE],
 ]);
 
-/** The statuses Fastify's own client error handler answers Node's parser failures with. */
 const CLIENT_ERROR_STATUS: ReadonlyMap<string, number> = new Map([
   ['ERR_HTTP_REQUEST_TIMEOUT', 408],
   ['HPE_HEADER_OVERFLOW', 431],
@@ -71,7 +74,7 @@ function domainProblem(code: string, message: string, instance: string): Problem
   });
 }
 
-export function problemErrorHandler(
+function problemErrorHandler(
   error: FastifyError | Error,
   request: FastifyRequest,
   reply: FastifyReply
@@ -132,11 +135,10 @@ export function problemErrorHandler(
   );
 }
 
-/** Answers a request Node's HTTP parser refused, which never reaches the error handler. */
 export function problemClientErrorHandler(error: ConnectionError, socket: Socket): void {
   if (error.code === 'ECONNRESET' || socket.destroyed) return;
 
-  if (socket.writable) {
+  if (socket.writable && !(socket as SocketWithResponse)._httpMessage?.headersSent) {
     const status = CLIENT_ERROR_STATUS.get(error.code) ?? 400;
     const body = JSON.stringify(transportProblem(status, error.message, ''));
     socket.write(
@@ -151,6 +153,18 @@ export function problemClientErrorHandler(error: ConnectionError, socket: Socket
     );
   }
   socket.destroy(error);
+}
+
+/** Fastify runs this outside every hook, so @fastify/cors and helmet never add their headers. */
+export function problemFrameworkErrorHandler(corsOrigins: readonly string[]) {
+  return (error: FastifyError, request: FastifyRequest, reply: FastifyReply): FastifyReply => {
+    const { origin } = request.headers;
+    reply.header('vary', 'Origin').header('x-content-type-options', 'nosniff');
+    if (origin !== undefined && corsOrigins.includes(origin)) {
+      reply.header('access-control-allow-origin', origin);
+    }
+    return problemErrorHandler(error, request, reply);
+  };
 }
 
 export function registerErrorHandler(app: FastifyInstance): void {

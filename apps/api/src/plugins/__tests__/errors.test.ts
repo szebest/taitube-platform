@@ -5,10 +5,20 @@ import fastify from 'fastify';
 import { boundPort } from '../../__tests__/bound-port';
 import { problemClientErrorHandler, registerErrorHandler } from '../errors';
 
-/** What a client reads back when the server hands its connection to the client error handler. */
-async function answerToClientError(code: string) {
+interface ClientErrorAnswer {
+  status: number | undefined;
+  headers: http.IncomingHttpHeaders;
+  body: string;
+}
+
+async function answerToClientError(
+  code: string,
+  inFlightResponse: { headersSent: boolean } | null = null
+): Promise<ClientErrorAnswer> {
+  const serverSocketClosed: Promise<unknown>[] = [];
   const server = net.createServer((socket) => {
     socket.on('error', () => {});
+    serverSocketClosed.push(new Promise((resolve) => socket.once('close', resolve)));
     socket.once('data', () =>
       problemClientErrorHandler(
         Object.assign(new Error('refused'), {
@@ -16,34 +26,33 @@ async function answerToClientError(code: string) {
           bytesParsed: 0,
           rawPacket: { type: 'Buffer', data: [] },
         }),
-        socket
+        Object.assign(socket, { _httpMessage: inFlightResponse })
       )
     );
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   try {
-    return await new Promise<{ status?: number; contentType?: string; body: string }>(
-      (resolve, reject) => {
-        http
-          .get({ host: '127.0.0.1', port: boundPort(server), path: '/v1/videos' }, (response) => {
+    const answer = await new Promise<ClientErrorAnswer>((resolve, reject) => {
+      http
+        .get(
+          { host: '127.0.0.1', port: boundPort(server), path: '/v1/videos', agent: false },
+          (response) => {
             let body = '';
             response.setEncoding('utf-8');
             response.on('data', (chunk: string) => {
               body += chunk;
             });
             response.on('end', () =>
-              resolve({
-                status: response.statusCode,
-                contentType: response.headers['content-type'],
-                body,
-              })
+              resolve({ status: response.statusCode, headers: response.headers, body })
             );
-          })
-          .on('error', reject);
-      }
-    );
+          }
+        )
+        .on('error', reject);
+    });
+    await Promise.all(serverSocketClosed);
+    return answer;
   } finally {
-    server.close();
+    await new Promise((resolve) => server.close(resolve));
   }
 }
 
@@ -86,12 +95,21 @@ describe('apps/api/plugins: problemClientErrorHandler', () => {
     const response = await answerToClientError(code);
 
     expect(response.status).toBe(status);
-    expect(response.contentType).toBe(PROBLEM_CONTENT_TYPE);
+    expect(response.headers).toMatchObject({
+      'content-type': PROBLEM_CONTENT_TYPE,
+      connection: 'close',
+    });
     expect(JSON.parse(response.body)).toMatchObject({
       status,
       title,
       code: 'VALIDATION_FAILED',
       detail: 'refused',
     });
+  });
+
+  it('closes the connection without a second status line over a response already sent', async () => {
+    await expect(answerToClientError('HPE_INVALID_METHOD', { headersSent: true })).rejects.toThrow(
+      'socket hang up'
+    );
   });
 });

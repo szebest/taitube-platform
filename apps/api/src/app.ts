@@ -15,7 +15,7 @@ import { registerAccessLog } from './plugins/access-log';
 import { registerAuth } from './plugins/auth';
 import {
   problemClientErrorHandler,
-  problemErrorHandler,
+  problemFrameworkErrorHandler,
   rateLimitProblem,
   registerErrorHandler,
 } from './plugins/errors';
@@ -67,7 +67,7 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
     genReqId: (request) => requestIdFrom(request.headers),
     trustProxy: [...config.http.trustProxy],
     bodyLimit: config.http.bodyLimitBytes,
-    frameworkErrors: problemErrorHandler,
+    frameworkErrors: problemFrameworkErrorHandler(config.http.corsOrigins),
     clientErrorHandler: problemClientErrorHandler,
   });
   app.decorate('services', services);

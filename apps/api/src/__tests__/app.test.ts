@@ -148,6 +148,7 @@ describe('apps/api: composeApp', () => {
   });
 
   const MISSING_VIDEO = '/v1/videos/00000000-0000-7000-8000-000000000099';
+  const WEB_ORIGIN = 'http://localhost:5173';
 
   it.each([
     {
@@ -214,7 +215,7 @@ describe('apps/api: composeApp', () => {
       code: 'ROUTE_NOT_FOUND',
     },
   ] as const)(
-    'answers $name with a $status $code problem',
+    'answers $name with a $status $code problem the web app can read',
     async ({ method, url, contentType, payload, status, code }) => {
       const app = (
         await composeApp({ config: inProcessAppConfig({ http: { bodyLimitBytes: 64 } }) })
@@ -225,17 +226,37 @@ describe('apps/api: composeApp', () => {
         url,
         headers: {
           ...bearer(TOKENS.user),
+          origin: WEB_ORIGIN,
           ...(contentType ? { 'content-type': contentType } : {}),
         },
         payload,
       });
 
       expect(res.statusCode).toBe(status);
-      expect(res.headers['content-type']).toBe(PROBLEM_CONTENT_TYPE);
+      expect(res.headers).toMatchObject({
+        'content-type': PROBLEM_CONTENT_TYPE,
+        'access-control-allow-origin': WEB_ORIGIN,
+        'x-content-type-options': 'nosniff',
+      });
       expect(res.json()).toMatchObject({ status, code, instance: url });
       await app.close();
     }
   );
+
+  it('leaves an origin it does not list out of a bad URL problem', async () => {
+    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/v1/videos/%E0%A4%A',
+      headers: { origin: 'https://evil.example' },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    expect(res.headers.vary).toContain('Origin');
+    await app.close();
+  });
 
   it('answers a request the HTTP parser rejects with a 400 problem', async () => {
     const app = (await composeApp({ config: inProcessAppConfig() })).app;
