@@ -2,8 +2,9 @@
 # Writes one app's image contents to a directory. The Dockerfile runs it inside the image build; CI runs
 # it on the runner against the build it already has, and hands the directory to the image as its
 # `<app>-bundle` context.
-#   api, worker: the esbuild bundle in dist/, and the npm packages it leaves external, hoisted so the
-#                bundle resolves them. Workspace packages are inside the bundle, so their copies go.
+#   api, worker: the esbuild bundle in dist/, and the npm packages it leaves external, every one linked
+#                at the top of node_modules so the bundle resolves it. Workspace packages are inside the
+#                bundle, so their copies go.
 #   web:         the client assets and the SSR server bundled with every dependency, so the image
 #                needs only srvx, which serves them through the `start` script.
 set -eu
@@ -21,9 +22,9 @@ case $app in
     ln -s ../srvx/bin/srvx.mjs "$out/node_modules/.bin/srvx"
     ;;
   *)
-    pnpm deploy --legacy --filter="@vp/$app" --prod --config.node-linker=hoisted "$out"
+    pnpm deploy --legacy --filter="@vp/$app" --prod --config.public-hoist-pattern='*' "$out"
     find "$out" -mindepth 1 -maxdepth 1 ! -name node_modules ! -name package.json -exec rm -rf {} +
-    rm -rf "$out/node_modules/@vp"
+    rm -rf "$out/node_modules/@vp" "$out"/node_modules/.pnpm/@vp+*
     cp -r "apps/$app/dist/bundle" "$out/dist"
     ;;
 esac

@@ -144,13 +144,17 @@ the bundler resolves the extensionless specifiers at build time and the runtime 
   lands in chunks beside them, so `--import ./dist/instrument.js dist/main.js` loads one copy. Workspace
   `@vp/*` packages are inlined; npm dependencies stay external, because OpenTelemetry patches them through
   Node's module hooks and pino resolves its transports by path. They come from
-  `pnpm deploy --prod --config.node-linker=hoisted`, which puts every one of them at the top of
-  `node_modules`, and the deploy's `node_modules/@vp` copies are then deleted. `tsc` keeps emitting `dist/`
+  `pnpm deploy --prod --config.public-hoist-pattern='*'`, which links every one of them at the top of
+  `node_modules` while the store keeps one copy of each version (`node-linker=hoisted` copies duplicates
+  and made the image 20 MB bigger), and the deploy's `@vp` copies are then deleted. `tsc` keeps emitting `dist/`
   for the typecheck and for `@vp/api`'s library export (`composeApp`, which `upload-client`'s spec imports).
-- **Decided:** `apps/web` needs no extra step. 89 made it TanStack Start on Vite, which already bundles: the
+- **Decided:** `apps/web` keeps its build. 89 made it TanStack Start on Vite, which already bundles: the
   `@vp/*` packages resolve from source through `vite/workspace-sources.ts` and are inlined into
   `dist/server/server.js` and `dist/client`, npm dependencies stay external, and `start` serves the build
-  with srvx on port 5173. Its image takes the same deploy with `node_modules/@vp` removed.
+  with srvx on port 5173. Those externals drag Vite, Rollup, esbuild and Babel into a `pnpm deploy --prod`
+  (`@tanstack/react-start` depends on them), so the image takes `dist/server` bundled once more by
+  `scripts/bundle-entrypoints.ts --inline-npm` with every dependency inside, plus `dist/client` and srvx:
+  9 MB of app instead of 260 MB of `node_modules` with a build toolchain in it.
 - The images copy the bundle to `/app/dist` and no `dist/` tree of any workspace package, which also shrinks
   the `COPY` list D asks for. The image paths stay `dist/main.js`, `dist/instrument.js` and `dist/migrate.js`,
   so the k8s commands and the migrate Job are unchanged.

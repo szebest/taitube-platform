@@ -1935,7 +1935,7 @@ FROM worker-base-${WORKER_RUNTIME} AS worker   # oven/bun:1.4-slim or node:24-sl
 
 What an image copies is a bundle, never a workspace package's `dist/`. The API and the worker build with
 esbuild (`scripts/bundle-entrypoints.ts`) into one ESM file per entrypoint with the `@vp/*` packages inlined
-and npm packages external, which a hoisted `pnpm deploy --prod` provides; relative imports stay
+and npm packages external, which `pnpm deploy --prod` links at the top of `node_modules` (`public-hoist-pattern=*`); relative imports stay
 extensionless and nothing resolves them at runtime. The web image takes Vite's client assets and its SSR
 server bundled again with every dependency inside, so it carries srvx and nothing else from npm. A change to
 one app's source leaves the other two images' layers cached. (`tini` forwards `SIGTERM` and reaps zombie
