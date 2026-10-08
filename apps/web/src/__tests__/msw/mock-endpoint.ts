@@ -43,10 +43,6 @@ const ROUTE_BY_METHOD = {
   DELETE: http.delete,
 } satisfies Record<EndpointContract['method'], typeof http.get>;
 
-/**
- * An MSW handler for one `@vp/api-contracts` endpoint, at the URL the app's `apiClient` calls. The
- * resolver answers with the contract's result as it travels on the wire, or with a problem.
- */
 export function mockEndpoint<T extends EndpointContract>(
   contract: T,
   resolver: EndpointResolver<T>
@@ -57,7 +53,6 @@ export function mockEndpoint<T extends EndpointContract>(
   );
 }
 
-/** The RFC 9457 body the API answers `code` with, at the status the API reports it as. */
 export function problemReply(code: ErrorCode, status = problemStatus(code)): HttpResponse<Problem> {
   return HttpResponse.json(
     problemDetails({ code, status, title: code, detail: code, instance: 'msw' }),

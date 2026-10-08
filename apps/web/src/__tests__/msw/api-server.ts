@@ -5,21 +5,23 @@ export const apiServer = setupServer();
 const unhandled: string[] = [];
 
 export class UnhandledRequestError extends Error {
-  constructor(readonly requests: readonly string[]) {
+  constructor(requests: readonly string[]) {
     super(`No MSW handler answered: ${requests.join(', ')}`);
     this.name = 'UnhandledRequestError';
   }
 }
 
-/**
- * Starts intercepting. A request no handler answers never leaves the process: MSW answers it with
- * a 500, and it is remembered until `takeUnhandled` hands it over.
- */
+function failOn(missed: readonly string[]): void {
+  if (missed.length > 0) throw new UnhandledRequestError(missed);
+}
+
 export function listen(): void {
   apiServer.listen({
     onUnhandledRequest: (request) => {
-      const described = `${request.method} ${request.url}`;
+      const test = expect.getState().currentTestName ?? 'no test';
+      const described = `${request.method} ${request.url} from "${test}"`;
       unhandled.push(described);
+      // Throwing keeps the request in the process: MSW answers it with a 500 instead of sending it on.
       throw new UnhandledRequestError([described]);
     },
   });
@@ -29,9 +31,13 @@ export function takeUnhandled(): string[] {
   return unhandled.splice(0);
 }
 
-/** Drops the handlers a test added, and fails that test if it made a request nothing answered. */
 export function endTest(): void {
   apiServer.resetHandlers();
+  failOn(takeUnhandled());
+}
+
+export function endFile(): void {
   const missed = takeUnhandled();
-  if (missed.length > 0) throw new UnhandledRequestError(missed);
+  apiServer.close();
+  failOn(missed);
 }

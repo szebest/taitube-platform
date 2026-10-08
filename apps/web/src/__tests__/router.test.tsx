@@ -1,8 +1,9 @@
 import { Link, createMemoryHistory } from '@tanstack/react-router';
+
+import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
 import { guestSession } from '#app/integrations/auth/session';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
-import { RouteError, RouteNotFound, RoutePending } from '../components/route-fallbacks';
-import { getRouter } from '../router';
+import { getRouter } from '#app/router';
 import { jsonResponse, recordRequests } from './api-store';
 import { CHANNEL_ID, VIDEO_ID, video } from './fixtures';
 

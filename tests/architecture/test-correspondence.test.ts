@@ -4,7 +4,7 @@ import { hasRuntimeCode } from './runtime-code';
 
 function siblingSpecs(file: string): string[] {
   const stem = basename(file).replace(/\.tsx?$/, '');
-  return ['test.ts', 'test.tsx', 'dom.test.tsx'].map(
+  return ['test.ts', 'test.tsx', 'dom.test.ts', 'dom.test.tsx'].map(
     (suffix) => `${dirname(file)}/__tests__/${stem}.${suffix}`
   );
 }
