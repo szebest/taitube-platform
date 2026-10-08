@@ -6,6 +6,8 @@ export default defineConfig({
     hookTimeout: 30_000,
     // Spec files share a worker's module cache; see docs/standards/testing.md before turning it on.
     isolate: false,
+    // Only forks restart per file: apps/web's jsdom project runs there, or Testing Library keeps one document.
+    poolOptions: { forks: { isolate: true } },
     /**
      * `vitest*.config.ts` rather than `vitest.config.ts`: a package that must prove it runs in a
      * browser as well as on a server ships a second config, and the root run picks it up. Nested

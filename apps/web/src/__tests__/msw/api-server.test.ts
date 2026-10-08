@@ -37,16 +37,19 @@ describe('apps/web: apiServer', () => {
     expect(takeUnhandled()).toEqual([]);
   });
 
-  it('fails the file on a request that landed after its last test ended', async () => {
+  it('fails the file on an unanswered request no test has reported yet', async () => {
     await fetch(HEALTH_URL);
 
-    expect(endFile).toThrow(
-      new UnhandledRequestError([
-        madeBy('fails the file on a request that landed after its last test ended'),
-      ])
-    );
-    expect(takeUnhandled()).toEqual([]);
-    listen();
+    try {
+      expect(endFile).toThrow(
+        new UnhandledRequestError([
+          madeBy('fails the file on an unanswered request no test has reported yet'),
+        ])
+      );
+      expect(takeUnhandled()).toEqual([]);
+    } finally {
+      listen();
+    }
   });
 
   it("drops a test's handlers once the test ends", async () => {

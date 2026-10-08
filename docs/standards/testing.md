@@ -106,7 +106,10 @@ The root run does not isolate spec files (`isolate: false` in `vitest.config.ts`
 share a worker and its module cache, which is most of what makes `unit` fit its budget. A spec therefore
 leaves no module state behind: state lives in what `beforeEach` builds, not at module level, and a mock of a
 package outlives the file that registered it, so a helper that mock reads from keeps its state where every
-file sees the same copy (`apps/web/src/__tests__/live-page.ts`).
+file sees the same copy (`apps/web/src/__tests__/live-page.ts`). The exception is `apps/web`'s jsdom project: it
+runs on `forks`, which the root config isolates, because Testing Library binds the first document it is loaded
+with. Every other project declares `pool: 'threads'` (`definePackageTestConfig` sets it), and `unit` passes no
+`--pool`: a pool on the command line overrides every project's.
 
 ---
 

@@ -24,6 +24,7 @@ export function definePackageTestConfig(overrides: ViteUserConfig = {}): ViteUse
     ...rootOverrides,
     test: {
       environment: 'node',
+      pool: 'threads',
       globals: true,
       restoreMocks: true,
       unstubEnvs: true,
