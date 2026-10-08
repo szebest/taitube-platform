@@ -1,3 +1,4 @@
+import { cleanup } from '@testing-library/react';
 import type { Options } from '@testing-library/user-event';
 
 import { bindScreen } from './bind-screen';
@@ -32,8 +33,10 @@ window.matchMedia = unmatchedQuery;
 window.scrollTo = () => undefined;
 window.IntersectionObserver = NeverIntersecting;
 
-// Spec files share a worker's modules but each gets a new document; both libraries bind the first.
+// Spec files share a worker's modules but each gets a new document; both libraries bind the first,
+// and Testing Library's own cleanup registers for the first file only, hence RTL_SKIP_AUTO_CLEANUP.
 bindScreen();
+afterEach(cleanup);
 
 vi.mock(import('@testing-library/user-event'), async (importOriginal) => {
   const actual = await importOriginal();
